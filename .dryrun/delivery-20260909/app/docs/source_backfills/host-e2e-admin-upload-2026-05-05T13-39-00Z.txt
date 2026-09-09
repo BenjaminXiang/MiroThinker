@@ -1,0 +1,166 @@
+# Host Admin Upload E2E 2026-05-05T13-39-00Z
+root=/home/longxiang/MiroThinker
+admin_dir=/home/longxiang/MiroThinker/apps/admin-console
+log_file=/home/longxiang/MiroThinker/docs/source_backfills/host-e2e-admin-upload-2026-05-05T13-39-00Z.txt
+work_dir=/tmp/mirothinker-admin-upload-e2e.L7ezmi
+company_xlsx=/home/longxiang/MiroThinker/docs/专辑项目导出1768807339.xlsx
+patent_xlsx=/home/longxiang/MiroThinker/docs/2025-12-05 专利.xlsx
+
+## Environment
+DATABASE_URL_DEFAULTED=true
+CHAT_MILVUS_URI_DEFAULTED=true
+DEFAULT_MILVUS_URI_EXISTS=true
+POLL_SECONDS=300
+
+## Start admin server
+base_url=http://127.0.0.1:60643
+server_pid=511264
+INFO:     Started server process [511271]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:60643 (Press CTRL+C to quit)
+INFO:     127.0.0.1:49522 - "GET /api/health HTTP/1.1" 200 OK
+admin_health=OK
+
+## Before upload DB snapshot
+
++ admin_python -
+DATABASE_URL= postgresql://***@localhost:15432/miroflow_real
+DATABASE_URL_TEST= UNSET
+database= miroflow_real
+company_count= 1024
+company_snapshot_count= 7175
+patent_count= 1931
+company_patent_link_count= 105
+pipeline_run_count= 53
+source_page_count= 5606
+admin_upload_source_page_count= 12
+recent_admin_pipeline_run= (UUID('6380c909-eee7-4e79-991d-2909fbe974c8'), 'import_xlsx', 'succeeded', 'patent', 'admin-console', 1930, 0, datetime.datetime(2026, 5, 5, 11, 47, 10, 706046, tzinfo=zoneinfo.ZoneInfo(key='Etc/UTC')), datetime.datetime(2026, 5, 5, 11, 47, 47, 327309, tzinfo=zoneinfo.ZoneInfo(key='Etc/UTC')))
+recent_admin_pipeline_run= (UUID('705de5c8-ebc5-4910-a026-e16474a02b62'), 'import_xlsx', 'succeeded', None, 'admin-console', 1025, 0, datetime.datetime(2026, 5, 5, 11, 47, 7, 726274, tzinfo=zoneinfo.ZoneInfo(key='Etc/UTC')), datetime.datetime(2026, 5, 5, 11, 47, 7, 726274, tzinfo=zoneinfo.ZoneInfo(key='Etc/UTC')))
+recent_admin_pipeline_run= (UUID('cb8c8e5f-ef99-49d3-b4de-cdac09e22231'), 'import_xlsx', 'succeeded', 'company', 'admin-console', 1025, 0, datetime.datetime(2026, 5, 5, 11, 47, 6, 318665, tzinfo=zoneinfo.ZoneInfo(key='Etc/UTC')), datetime.datetime(2026, 5, 5, 11, 47, 10, 468989, tzinfo=zoneinfo.ZoneInfo(key='Etc/UTC')))
+recent_admin_pipeline_run= (UUID('d839059f-5161-45ff-b5cf-76a8e46876cd'), 'import_xlsx', 'succeeded', 'patent', 'admin-console', 1930, 0, datetime.datetime(2026, 5, 5, 11, 42, 14, 817147, tzinfo=zoneinfo.ZoneInfo(key='Etc/UTC')), datetime.datetime(2026, 5, 5, 11, 42, 51, 731466, tzinfo=zoneinfo.ZoneInfo(key='Etc/UTC')))
+recent_admin_pipeline_run= (UUID('8cdd7641-8ea7-4ba7-8165-52ab0193d477'), 'import_xlsx', 'succeeded', None, 'admin-console', 1025, 0, datetime.datetime(2026, 5, 5, 11, 42, 11, 878294, tzinfo=zoneinfo.ZoneInfo(key='Etc/UTC')), datetime.datetime(2026, 5, 5, 11, 42, 11, 878294, tzinfo=zoneinfo.ZoneInfo(key='Etc/UTC')))
+recent_admin_pipeline_run= (UUID('d512bdb8-546e-4e55-8f5c-d7dc4448c45d'), 'import_xlsx', 'succeeded', 'company', 'admin-console', 1025, 0, datetime.datetime(2026, 5, 5, 11, 42, 10, 444629, tzinfo=zoneinfo.ZoneInfo(key='Etc/UTC')), datetime.datetime(2026, 5, 5, 11, 42, 14, 252858, tzinfo=zoneinfo.ZoneInfo(key='Etc/UTC')))
+recent_admin_pipeline_run= (UUID('177d77a1-d2d9-4302-b2b8-252bc028ad6f'), 'import_xlsx', 'succeeded', 'patent', 'admin-console', 1930, 0, datetime.datetime(2026, 5, 5, 5, 14, 49, 365671, tzinfo=zoneinfo.ZoneInfo(key='Etc/UTC')), datetime.datetime(2026, 5, 5, 5, 15, 27, 458075, tzinfo=zoneinfo.ZoneInfo(key='Etc/UTC')))
+recent_admin_pipeline_run= (UUID('09b34579-047a-4c77-97a9-94cd926e23af'), 'import_xlsx', 'succeeded', None, 'admin-console', 1025, 0, datetime.datetime(2026, 5, 5, 5, 14, 46, 506782, tzinfo=zoneinfo.ZoneInfo(key='Etc/UTC')), datetime.datetime(2026, 5, 5, 5, 14, 46, 506782, tzinfo=zoneinfo.ZoneInfo(key='Etc/UTC')))
+exit_code=0
+
+## Upload company
+upload_file=/home/longxiang/MiroThinker/docs/专辑项目导出1768807339.xlsx
+INFO:     127.0.0.1:49530 - "POST /api/upload/company HTTP/1.1" 200 OK
+upload_response_file=/tmp/mirothinker-admin-upload-e2e.L7ezmi/company-upload-response.json
+{"imported":0,"skipped":0,"total_in_store":1024,"task_id":"fa974b1c-0830-4fe3-b3a0-e3231cf2d50c","source_page_id":"4ac6b76f-ab04-4631-b54f-7b5df9803b1d"}
+task_id=fa974b1c-0830-4fe3-b3a0-e3231cf2d50c
+INFO:     127.0.0.1:49544 - "GET /api/pipeline/runs/fa974b1c-0830-4fe3-b3a0-e3231cf2d50c HTTP/1.1" 200 OK
+poll domain=company task_id=fa974b1c-0830-4fe3-b3a0-e3231cf2d50c status=running items_processed= items_failed=
+INFO:     127.0.0.1:49548 - "GET /api/pipeline/runs/fa974b1c-0830-4fe3-b3a0-e3231cf2d50c HTTP/1.1" 200 OK
+poll domain=company task_id=fa974b1c-0830-4fe3-b3a0-e3231cf2d50c status=running items_processed= items_failed=
+INFO:     127.0.0.1:38738 - "GET /api/pipeline/runs/fa974b1c-0830-4fe3-b3a0-e3231cf2d50c HTTP/1.1" 200 OK
+poll domain=company task_id=fa974b1c-0830-4fe3-b3a0-e3231cf2d50c status=running items_processed= items_failed=
+INFO:     127.0.0.1:38746 - "GET /api/pipeline/runs/fa974b1c-0830-4fe3-b3a0-e3231cf2d50c HTTP/1.1" 200 OK
+poll domain=company task_id=fa974b1c-0830-4fe3-b3a0-e3231cf2d50c status=succeeded items_processed=1025 items_failed=0
+task_detail_file=/tmp/mirothinker-admin-upload-e2e.L7ezmi/company-task-detail.json
+{"run_id":"fa974b1c-0830-4fe3-b3a0-e3231cf2d50c","run_kind":"import_xlsx","status":"succeeded","run_scope":{"domain":"company","source":"admin-console-upload","filename":"专辑项目导出1768807339.xlsx","upload_path":"/tmp/mirothinker-admin-uploads/company-b6f301b9ab4bc600-专辑项目导出1768807339.xlsx","result_summary":{"batch_id":"724e2182-a7b5-4d95-a818-6d92f7ebea00","imported":1025,"lineage_rows":1025,"team_members_inserted":1302,"milvus_backfill_status":"not_triggered","funding_events_inserted":0,"milvus_backfill_command":"cd apps/miroflow-agent && uv run python scripts/run_milvus_backfill.py --domain company --milvus-uri \"${CHAT_MILVUS_URI:-./milvus.db}\"","milvus_backfill_required":true},"file_content_hash":"b6f301b9ab4bc6006800dcb3ce46bf89fa6369c122e8aa8cf78a646e81b02fef"},"triggered_by":"admin-console","started_at":"2026-05-05T13:39:03.314941Z","finished_at":"2026-05-05T13:39:07.642617Z","items_processed":1025,"items_failed":0,"error_summary":null,"source_pages":[{"page_id":"4ac6b76f-ab04-4631-b54f-7b5df9803b1d","url":"admin-upload://company/fa974b1c-0830-4fe3-b3a0-e3231cf2d50c/b6f301b9ab4bc6006800dcb3ce46bf89fa6369c122e8aa8cf78a646e81b02fef","title":"专辑项目导出1768807339.xlsx","clean_text_path":"/tmp/mirothinker-admin-uploads/company-b6f301b9ab4bc600-专辑项目导出1768807339.xlsx","fetched_at":"2026-05-05T13:39:03.314941Z"}]}
+
+## Upload patent
+upload_file=/home/longxiang/MiroThinker/docs/2025-12-05 专利.xlsx
+INFO:     127.0.0.1:38758 - "POST /api/upload/patent HTTP/1.1" 200 OK
+upload_response_file=/tmp/mirothinker-admin-upload-e2e.L7ezmi/patent-upload-response.json
+{"imported":0,"skipped":0,"total_in_store":1931,"task_id":"2c52416e-4e02-4a79-9100-36e87367c4e0","source_page_id":"f740196e-2134-4da7-a4cf-0ea1548616f4"}
+task_id=2c52416e-4e02-4a79-9100-36e87367c4e0
+INFO:     127.0.0.1:38762 - "GET /api/pipeline/runs/2c52416e-4e02-4a79-9100-36e87367c4e0 HTTP/1.1" 200 OK
+poll domain=patent task_id=2c52416e-4e02-4a79-9100-36e87367c4e0 status=running items_processed= items_failed=
+INFO:     127.0.0.1:38776 - "GET /api/pipeline/runs/2c52416e-4e02-4a79-9100-36e87367c4e0 HTTP/1.1" 200 OK
+poll domain=patent task_id=2c52416e-4e02-4a79-9100-36e87367c4e0 status=running items_processed= items_failed=
+INFO:     127.0.0.1:38780 - "GET /api/pipeline/runs/2c52416e-4e02-4a79-9100-36e87367c4e0 HTTP/1.1" 200 OK
+poll domain=patent task_id=2c52416e-4e02-4a79-9100-36e87367c4e0 status=running items_processed= items_failed=
+INFO:     127.0.0.1:56632 - "GET /api/pipeline/runs/2c52416e-4e02-4a79-9100-36e87367c4e0 HTTP/1.1" 200 OK
+poll domain=patent task_id=2c52416e-4e02-4a79-9100-36e87367c4e0 status=running items_processed= items_failed=
+INFO:     127.0.0.1:56642 - "GET /api/pipeline/runs/2c52416e-4e02-4a79-9100-36e87367c4e0 HTTP/1.1" 200 OK
+poll domain=patent task_id=2c52416e-4e02-4a79-9100-36e87367c4e0 status=running items_processed= items_failed=
+INFO:     127.0.0.1:56658 - "GET /api/pipeline/runs/2c52416e-4e02-4a79-9100-36e87367c4e0 HTTP/1.1" 200 OK
+poll domain=patent task_id=2c52416e-4e02-4a79-9100-36e87367c4e0 status=running items_processed= items_failed=
+INFO:     127.0.0.1:56666 - "GET /api/pipeline/runs/2c52416e-4e02-4a79-9100-36e87367c4e0 HTTP/1.1" 200 OK
+poll domain=patent task_id=2c52416e-4e02-4a79-9100-36e87367c4e0 status=running items_processed= items_failed=
+INFO:     127.0.0.1:56676 - "GET /api/pipeline/runs/2c52416e-4e02-4a79-9100-36e87367c4e0 HTTP/1.1" 200 OK
+poll domain=patent task_id=2c52416e-4e02-4a79-9100-36e87367c4e0 status=running items_processed= items_failed=
+INFO:     127.0.0.1:34890 - "GET /api/pipeline/runs/2c52416e-4e02-4a79-9100-36e87367c4e0 HTTP/1.1" 200 OK
+poll domain=patent task_id=2c52416e-4e02-4a79-9100-36e87367c4e0 status=running items_processed= items_failed=
+INFO:     127.0.0.1:34898 - "GET /api/pipeline/runs/2c52416e-4e02-4a79-9100-36e87367c4e0 HTTP/1.1" 200 OK
+poll domain=patent task_id=2c52416e-4e02-4a79-9100-36e87367c4e0 status=running items_processed= items_failed=
+INFO:     127.0.0.1:34912 - "GET /api/pipeline/runs/2c52416e-4e02-4a79-9100-36e87367c4e0 HTTP/1.1" 200 OK
+poll domain=patent task_id=2c52416e-4e02-4a79-9100-36e87367c4e0 status=running items_processed= items_failed=
+INFO:     127.0.0.1:34928 - "GET /api/pipeline/runs/2c52416e-4e02-4a79-9100-36e87367c4e0 HTTP/1.1" 200 OK
+poll domain=patent task_id=2c52416e-4e02-4a79-9100-36e87367c4e0 status=running items_processed= items_failed=
+INFO:     127.0.0.1:49054 - "GET /api/pipeline/runs/2c52416e-4e02-4a79-9100-36e87367c4e0 HTTP/1.1" 200 OK
+poll domain=patent task_id=2c52416e-4e02-4a79-9100-36e87367c4e0 status=running items_processed= items_failed=
+INFO:     127.0.0.1:49060 - "GET /api/pipeline/runs/2c52416e-4e02-4a79-9100-36e87367c4e0 HTTP/1.1" 200 OK
+poll domain=patent task_id=2c52416e-4e02-4a79-9100-36e87367c4e0 status=running items_processed= items_failed=
+INFO:     127.0.0.1:49072 - "GET /api/pipeline/runs/2c52416e-4e02-4a79-9100-36e87367c4e0 HTTP/1.1" 200 OK
+poll domain=patent task_id=2c52416e-4e02-4a79-9100-36e87367c4e0 status=running items_processed= items_failed=
+INFO:     127.0.0.1:49088 - "GET /api/pipeline/runs/2c52416e-4e02-4a79-9100-36e87367c4e0 HTTP/1.1" 200 OK
+poll domain=patent task_id=2c52416e-4e02-4a79-9100-36e87367c4e0 status=running items_processed= items_failed=
+INFO:     127.0.0.1:49100 - "GET /api/pipeline/runs/2c52416e-4e02-4a79-9100-36e87367c4e0 HTTP/1.1" 200 OK
+poll domain=patent task_id=2c52416e-4e02-4a79-9100-36e87367c4e0 status=running items_processed= items_failed=
+INFO:     127.0.0.1:38830 - "GET /api/pipeline/runs/2c52416e-4e02-4a79-9100-36e87367c4e0 HTTP/1.1" 200 OK
+poll domain=patent task_id=2c52416e-4e02-4a79-9100-36e87367c4e0 status=succeeded items_processed=1930 items_failed=0
+task_detail_file=/tmp/mirothinker-admin-upload-e2e.L7ezmi/patent-task-detail.json
+{"run_id":"2c52416e-4e02-4a79-9100-36e87367c4e0","run_kind":"import_xlsx","status":"succeeded","run_scope":{"domain":"patent","source":"admin-console-upload","filename":"2025-12-05 专利.xlsx","upload_path":"/tmp/mirothinker-admin-uploads/patent-7a5d6eedeeb0cd34-2025-12-05 专利.xlsx","result_summary":{"imported":1930,"rows_read":1930,"artifact_dir":"/tmp/mirothinker-admin-uploads/patent-7a5d6eedeeb0cd34-2025-12-05 专利-patent-release","skip_reasons":{},"skipped_rows":0,"records_parsed":1930,"released_record_count":1930,"milvus_backfill_status":"not_triggered","milvus_backfill_command":"cd apps/miroflow-agent && uv run python scripts/run_milvus_backfill.py --domain patent --milvus-uri \"${CHAT_MILVUS_URI:-./milvus.db}\"","milvus_backfill_required":true,"company_patent_link_errors":0,"company_patent_links_written":105,"company_patent_link_candidates":105},"file_content_hash":"7a5d6eedeeb0cd34233b75310878545622e3d968d097100215b408ed52f43609"},"triggered_by":"admin-console","started_at":"2026-05-05T13:39:09.786358Z","finished_at":"2026-05-05T13:39:46.332329Z","items_processed":1930,"items_failed":0,"error_summary":null,"source_pages":[{"page_id":"f740196e-2134-4da7-a4cf-0ea1548616f4","url":"admin-upload://patent/2c52416e-4e02-4a79-9100-36e87367c4e0/7a5d6eedeeb0cd34233b75310878545622e3d968d097100215b408ed52f43609","title":"2025-12-05 专利.xlsx","clean_text_path":"/tmp/mirothinker-admin-uploads/patent-7a5d6eedeeb0cd34-2025-12-05 专利.xlsx","fetched_at":"2026-05-05T13:39:09.786358Z"}]}
+
+## Trigger Milvus backfill dry-run for company
+INFO:     127.0.0.1:38846 - "POST /api/pipeline/runs/fa974b1c-0830-4fe3-b3a0-e3231cf2d50c/milvus-backfill?dry_run=true HTTP/1.1" 200 OK
+milvus_backfill_response_file=/tmp/mirothinker-admin-upload-e2e.L7ezmi/company-milvus-backfill-response.json
+{"task_id":"095ab067-ae25-451e-8f4b-c359198653ac","status":"scheduled","domain":"company","parent_run_id":"fa974b1c-0830-4fe3-b3a0-e3231cf2d50c"}
+milvus_backfill_task_id=095ab067-ae25-451e-8f4b-c359198653ac
+INFO:     127.0.0.1:38862 - "GET /api/pipeline/runs/095ab067-ae25-451e-8f4b-c359198653ac HTTP/1.1" 200 OK
+poll domain=milvus-company task_id=095ab067-ae25-451e-8f4b-c359198653ac status=running items_processed= items_failed=
+INFO:     127.0.0.1:38866 - "GET /api/pipeline/runs/095ab067-ae25-451e-8f4b-c359198653ac HTTP/1.1" 200 OK
+poll domain=milvus-company task_id=095ab067-ae25-451e-8f4b-c359198653ac status=running items_processed= items_failed=
+INFO:     127.0.0.1:38870 - "GET /api/pipeline/runs/095ab067-ae25-451e-8f4b-c359198653ac HTTP/1.1" 200 OK
+poll domain=milvus-company task_id=095ab067-ae25-451e-8f4b-c359198653ac status=succeeded items_processed=1 items_failed=0
+task_detail_file=/tmp/mirothinker-admin-upload-e2e.L7ezmi/milvus-company-task-detail.json
+{"run_id":"095ab067-ae25-451e-8f4b-c359198653ac","run_kind":"backfill_real","status":"succeeded","run_scope":{"action":"milvus_backfill","domain":"company","source":"admin-console","dry_run":true,"parent_run_id":"fa974b1c-0830-4fe3-b3a0-e3231cf2d50c","result_summary":{"domain":"company","stderr":"warning: `VIRTUAL_ENV=/home/longxiang/MiroThinker/apps/admin-console/.venv` does not match the project environment path `.venv` and will be ignored; use `--active` to target the active environment instead\n/home/longxiang/MiroThinker/apps/miroflow-agent/.venv/lib/python3.12/site-packages/milvus_lite/__init__.py:15: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.\n  from pkg_resources import DistributionNotFound, get_distribution\n","stdout":"{\"collection\": \"company_profiles\", \"exists\": true, \"existing_fields\": [\"id\", \"name\", \"industry\", \"hq_city\", \"description\", \"profile_summary\", \"technology_route_summary\", \"profile_vector\"], \"expected_fields\": [\"id\", \"name\", \"industry\", \"hq_city\", \"description\", \"profile_summary\", \"technology_route_summary\", \"profile_vector\"], \"missing_fields\": []}\n","command":"uv run python scripts/run_milvus_backfill.py --domain company --milvus-uri /home/longxiang/MiroThinker/apps/miroflow-agent/milvus.db --dry-run","dry_run":true,"returncode":0,"milvus_backfill_status":"succeeded"},"parent_run_kind":"import_xlsx"},"triggered_by":"admin-console","started_at":"2026-05-05T13:39:46.907489Z","finished_at":"2026-05-05T13:39:49.217646Z","items_processed":1,"items_failed":0,"error_summary":null,"source_pages":[]}
+
+## Trigger Milvus backfill dry-run for patent
+INFO:     127.0.0.1:38880 - "POST /api/pipeline/runs/2c52416e-4e02-4a79-9100-36e87367c4e0/milvus-backfill?dry_run=true HTTP/1.1" 200 OK
+milvus_backfill_response_file=/tmp/mirothinker-admin-upload-e2e.L7ezmi/patent-milvus-backfill-response.json
+{"task_id":"789fcf90-c95b-4389-9da7-b4021d25ceca","status":"scheduled","domain":"patent","parent_run_id":"2c52416e-4e02-4a79-9100-36e87367c4e0"}
+milvus_backfill_task_id=789fcf90-c95b-4389-9da7-b4021d25ceca
+INFO:     127.0.0.1:38888 - "GET /api/pipeline/runs/789fcf90-c95b-4389-9da7-b4021d25ceca HTTP/1.1" 200 OK
+poll domain=milvus-patent task_id=789fcf90-c95b-4389-9da7-b4021d25ceca status=running items_processed= items_failed=
+INFO:     127.0.0.1:38890 - "GET /api/pipeline/runs/789fcf90-c95b-4389-9da7-b4021d25ceca HTTP/1.1" 200 OK
+poll domain=milvus-patent task_id=789fcf90-c95b-4389-9da7-b4021d25ceca status=succeeded items_processed=1 items_failed=0
+task_detail_file=/tmp/mirothinker-admin-upload-e2e.L7ezmi/milvus-patent-task-detail.json
+{"run_id":"789fcf90-c95b-4389-9da7-b4021d25ceca","run_kind":"backfill_real","status":"succeeded","run_scope":{"action":"milvus_backfill","domain":"patent","source":"admin-console","dry_run":true,"parent_run_id":"2c52416e-4e02-4a79-9100-36e87367c4e0","result_summary":{"domain":"patent","stderr":"warning: `VIRTUAL_ENV=/home/longxiang/MiroThinker/apps/admin-console/.venv` does not match the project environment path `.venv` and will be ignored; use `--active` to target the active environment instead\n/home/longxiang/MiroThinker/apps/miroflow-agent/.venv/lib/python3.12/site-packages/milvus_lite/__init__.py:15: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.\n  from pkg_resources import DistributionNotFound, get_distribution\n","stdout":"{\"collection\": \"patent_profiles\", \"exists\": true, \"existing_fields\": [\"id\", \"patent_number\", \"title\", \"abstract\", \"technology_effect\", \"patent_type\", \"ipc_codes\", \"profile_vector\"], \"expected_fields\": [\"id\", \"patent_number\", \"title\", \"abstract\", \"technology_effect\", \"patent_type\", \"ipc_codes\", \"profile_vector\"], \"missing_fields\": []}\n","command":"uv run python scripts/run_milvus_backfill.py --domain patent --milvus-uri /home/longxiang/MiroThinker/apps/miroflow-agent/milvus.db --dry-run","dry_run":true,"returncode":0,"milvus_backfill_status":"succeeded"},"parent_run_kind":"import_xlsx"},"triggered_by":"admin-console","started_at":"2026-05-05T13:39:51.266222Z","finished_at":"2026-05-05T13:39:53.378125Z","items_processed":1,"items_failed":0,"error_summary":null,"source_pages":[]}
+
+## Recent admin upload API runs
+INFO:     127.0.0.1:38906 - "GET /api/pipeline/runs?triggered_by=admin-console&limit=8 HTTP/1.1" 200 OK
+{"items":[{"run_id":"789fcf90-c95b-4389-9da7-b4021d25ceca","run_kind":"backfill_real","status":"succeeded","run_scope":{"action":"milvus_backfill","domain":"patent","source":"admin-console","dry_run":true,"parent_run_id":"2c52416e-4e02-4a79-9100-36e87367c4e0","result_summary":{"domain":"patent","stderr":"warning: `VIRTUAL_ENV=/home/longxiang/MiroThinker/apps/admin-console/.venv` does not match the project environment path `.venv` and will be ignored; use `--active` to target the active environment instead\n/home/longxiang/MiroThinker/apps/miroflow-agent/.venv/lib/python3.12/site-packages/milvus_lite/__init__.py:15: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.\n  from pkg_resources import DistributionNotFound, get_distribution\n","stdout":"{\"collection\": \"patent_profiles\", \"exists\": true, \"existing_fields\": [\"id\", \"patent_number\", \"title\", \"abstract\", \"technology_effect\", \"patent_type\", \"ipc_codes\", \"profile_vector\"], \"expected_fields\": [\"id\", \"patent_number\", \"title\", \"abstract\", \"technology_effect\", \"patent_type\", \"ipc_codes\", \"profile_vector\"], \"missing_fields\": []}\n","command":"uv run python scripts/run_milvus_backfill.py --domain patent --milvus-uri /home/longxiang/MiroThinker/apps/miroflow-agent/milvus.db --dry-run","dry_run":true,"returncode":0,"milvus_backfill_status":"succeeded"},"parent_run_kind":"import_xlsx"},"triggered_by":"admin-console","started_at":"2026-05-05T13:39:51.266222Z","finished_at":"2026-05-05T13:39:53.378125Z","items_processed":1,"items_failed":0,"error_summary":null},{"run_id":"095ab067-ae25-451e-8f4b-c359198653ac","run_kind":"backfill_real","status":"succeeded","run_scope":{"action":"milvus_backfill","domain":"company","source":"admin-console","dry_run":true,"parent_run_id":"fa974b1c-0830-4fe3-b3a0-e3231cf2d50c","result_summary":{"domain":"company","stderr":"warning: `VIRTUAL_ENV=/home/longxiang/MiroThinker/apps/admin-console/.venv` does not match the project environment path `.venv` and will be ignored; use `--active` to target the active environment instead\n/home/longxiang/MiroThinker/apps/miroflow-agent/.venv/lib/python3.12/site-packages/milvus_lite/__init__.py:15: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.\n  from pkg_resources import DistributionNotFound, get_distribution\n","stdout":"{\"collection\": \"company_profiles\", \"exists\": true, \"existing_fields\": [\"id\", \"name\", \"industry\", \"hq_city\", \"description\", \"profile_summary\", \"technology_route_summary\", \"profile_vector\"], \"expected_fields\": [\"id\", \"name\", \"industry\", \"hq_city\", \"description\", \"profile_summary\", \"technology_route_summary\", \"profile_vector\"], \"missing_fields\": []}\n","command":"uv run python scripts/run_milvus_backfill.py --domain company --milvus-uri /home/longxiang/MiroThinker/apps/miroflow-agent/milvus.db --dry-run","dry_run":true,"returncode":0,"milvus_backfill_status":"succeeded"},"parent_run_kind":"import_xlsx"},"triggered_by":"admin-console","started_at":"2026-05-05T13:39:46.907489Z","finished_at":"2026-05-05T13:39:49.217646Z","items_processed":1,"items_failed":0,"error_summary":null},{"run_id":"2c52416e-4e02-4a79-9100-36e87367c4e0","run_kind":"import_xlsx","status":"succeeded","run_scope":{"domain":"patent","source":"admin-console-upload","filename":"2025-12-05 专利.xlsx","upload_path":"/tmp/mirothinker-admin-uploads/patent-7a5d6eedeeb0cd34-2025-12-05 专利.xlsx","result_summary":{"imported":1930,"rows_read":1930,"artifact_dir":"/tmp/mirothinker-admin-uploads/patent-7a5d6eedeeb0cd34-2025-12-05 专利-patent-release","skip_reasons":{},"skipped_rows":0,"records_parsed":1930,"released_record_count":1930,"milvus_backfill_status":"not_triggered","milvus_backfill_command":"cd apps/miroflow-agent && uv run python scripts/run_milvus_backfill.py --domain patent --milvus-uri \"${CHAT_MILVUS_URI:-./milvus.db}\"","milvus_backfill_required":true,"company_patent_link_errors":0,"company_patent_links_written":105,"company_patent_link_candidates":105},"file_content_hash":"7a5d6eedeeb0cd34233b75310878545622e3d968d097100215b408ed52f43609"},"triggered_by":"admin-console","started_at":"2026-05-05T13:39:09.786358Z","finished_at":"2026-05-05T13:39:46.332329Z","items_processed":1930,"items_failed":0,"error_summary":null},{"run_id":"d5e46250-76b5-41b6-b950-c47dfa220d52","run_kind":"import_xlsx","status":"succeeded","run_scope":{"xlsx_path":"/tmp/mirothinker-admin-uploads/company-b6f301b9ab4bc600-专辑项目导出1768807339.xlsx","file_content_hash":"b6f301b9ab4bc6006800dcb3ce46bf89fa6369c122e8aa8cf78a646e81b02fef"},"triggered_by":"admin-console","started_at":"2026-05-05T13:39:04.732104Z","finished_at":"2026-05-05T13:39:04.732104Z","items_processed":1025,"items_failed":0,"error_summary":{}},{"run_id":"fa974b1c-0830-4fe3-b3a0-e3231cf2d50c","run_kind":"import_xlsx","status":"succeeded","run_scope":{"domain":"company","source":"admin-console-upload","filename":"专辑项目导出1768807339.xlsx","upload_path":"/tmp/mirothinker-admin-uploads/company-b6f301b9ab4bc600-专辑项目导出1768807339.xlsx","result_summary":{"batch_id":"724e2182-a7b5-4d95-a818-6d92f7ebea00","imported":1025,"lineage_rows":1025,"team_members_inserted":1302,"milvus_backfill_status":"not_triggered","funding_events_inserted":0,"milvus_backfill_command":"cd apps/miroflow-agent && uv run python scripts/run_milvus_backfill.py --domain company --milvus-uri \"${CHAT_MILVUS_URI:-./milvus.db}\"","milvus_backfill_required":true},"file_content_hash":"b6f301b9ab4bc6006800dcb3ce46bf89fa6369c122e8aa8cf78a646e81b02fef"},"triggered_by":"admin-console","started_at":"2026-05-05T13:39:03.314941Z","finished_at":"2026-05-05T13:39:07.642617Z","items_processed":1025,"items_failed":0,"error_summary":null},{"run_id":"6380c909-eee7-4e79-991d-2909fbe974c8","run_kind":"import_xlsx","status":"succeeded","run_scope":{"domain":"patent","source":"admin-console-upload","filename":"2025-12-05 专利.xlsx","upload_path":"/tmp/mirothinker-admin-uploads/patent-7a5d6eedeeb0cd34-2025-12-05 专利.xlsx","result_summary":{"imported":1930,"rows_read":1930,"artifact_dir":"/tmp/mirothinker-admin-uploads/patent-7a5d6eedeeb0cd34-2025-12-05 专利-patent-release","skip_reasons":{},"skipped_rows":0,"records_parsed":1930,"released_record_count":1930,"milvus_backfill_status":"not_triggered","milvus_backfill_command":"cd apps/miroflow-agent && uv run python scripts/run_milvus_backfill.py --domain patent --milvus-uri \"${CHAT_MILVUS_URI:-./milvus.db}\"","milvus_backfill_required":true,"company_patent_link_errors":0,"company_patent_links_written":105,"company_patent_link_candidates":105},"file_content_hash":"7a5d6eedeeb0cd34233b75310878545622e3d968d097100215b408ed52f43609"},"triggered_by":"admin-console","started_at":"2026-05-05T11:47:10.706046Z","finished_at":"2026-05-05T11:47:47.327309Z","items_processed":1930,"items_failed":0,"error_summary":null},{"run_id":"705de5c8-ebc5-4910-a026-e16474a02b62","run_kind":"import_xlsx","status":"succeeded","run_scope":{"xlsx_path":"/tmp/mirothinker-admin-uploads/company-b6f301b9ab4bc600-专辑项目导出1768807339.xlsx","file_content_hash":"b6f301b9ab4bc6006800dcb3ce46bf89fa6369c122e8aa8cf78a646e81b02fef"},"triggered_by":"admin-console","started_at":"2026-05-05T11:47:07.726274Z","finished_at":"2026-05-05T11:47:07.726274Z","items_processed":1025,"items_failed":0,"error_summary":{}},{"run_id":"cb8c8e5f-ef99-49d3-b4de-cdac09e22231","run_kind":"import_xlsx","status":"succeeded","run_scope":{"domain":"company","source":"admin-console-upload","filename":"专辑项目导出1768807339.xlsx","upload_path":"/tmp/mirothinker-admin-uploads/company-b6f301b9ab4bc600-专辑项目导出1768807339.xlsx","result_summary":{"batch_id":"1553f094-1bd9-4df6-934b-45bd8c96d546","imported":1025,"lineage_rows":1025,"team_members_inserted":1302,"milvus_backfill_status":"not_triggered","funding_events_inserted":0,"milvus_backfill_command":"cd apps/miroflow-agent && uv run python scripts/run_milvus_backfill.py --domain company --milvus-uri \"${CHAT_MILVUS_URI:-./milvus.db}\"","milvus_backfill_required":true},"file_content_hash":"b6f301b9ab4bc6006800dcb3ce46bf89fa6369c122e8aa8cf78a646e81b02fef"},"triggered_by":"admin-console","started_at":"2026-05-05T11:47:06.318665Z","finished_at":"2026-05-05T11:47:10.468989Z","items_processed":1025,"items_failed":0,"error_summary":null}],"total":25}
+
+## After upload DB snapshot
+
++ admin_python -
+DATABASE_URL= postgresql://***@localhost:15432/miroflow_real
+DATABASE_URL_TEST= UNSET
+database= miroflow_real
+company_count= 1024
+company_snapshot_count= 8200
+patent_count= 1931
+company_patent_link_count= 105
+pipeline_run_count= 58
+source_page_count= 5608
+admin_upload_source_page_count= 14
+recent_admin_pipeline_run= (UUID('789fcf90-c95b-4389-9da7-b4021d25ceca'), 'backfill_real', 'succeeded', 'patent', 'admin-console', 1, 0, datetime.datetime(2026, 5, 5, 13, 39, 51, 266222, tzinfo=zoneinfo.ZoneInfo(key='Etc/UTC')), datetime.datetime(2026, 5, 5, 13, 39, 53, 378125, tzinfo=zoneinfo.ZoneInfo(key='Etc/UTC')))
+recent_admin_pipeline_run= (UUID('095ab067-ae25-451e-8f4b-c359198653ac'), 'backfill_real', 'succeeded', 'company', 'admin-console', 1, 0, datetime.datetime(2026, 5, 5, 13, 39, 46, 907489, tzinfo=zoneinfo.ZoneInfo(key='Etc/UTC')), datetime.datetime(2026, 5, 5, 13, 39, 49, 217646, tzinfo=zoneinfo.ZoneInfo(key='Etc/UTC')))
+recent_admin_pipeline_run= (UUID('2c52416e-4e02-4a79-9100-36e87367c4e0'), 'import_xlsx', 'succeeded', 'patent', 'admin-console', 1930, 0, datetime.datetime(2026, 5, 5, 13, 39, 9, 786358, tzinfo=zoneinfo.ZoneInfo(key='Etc/UTC')), datetime.datetime(2026, 5, 5, 13, 39, 46, 332329, tzinfo=zoneinfo.ZoneInfo(key='Etc/UTC')))
+recent_admin_pipeline_run= (UUID('d5e46250-76b5-41b6-b950-c47dfa220d52'), 'import_xlsx', 'succeeded', None, 'admin-console', 1025, 0, datetime.datetime(2026, 5, 5, 13, 39, 4, 732104, tzinfo=zoneinfo.ZoneInfo(key='Etc/UTC')), datetime.datetime(2026, 5, 5, 13, 39, 4, 732104, tzinfo=zoneinfo.ZoneInfo(key='Etc/UTC')))
+recent_admin_pipeline_run= (UUID('fa974b1c-0830-4fe3-b3a0-e3231cf2d50c'), 'import_xlsx', 'succeeded', 'company', 'admin-console', 1025, 0, datetime.datetime(2026, 5, 5, 13, 39, 3, 314941, tzinfo=zoneinfo.ZoneInfo(key='Etc/UTC')), datetime.datetime(2026, 5, 5, 13, 39, 7, 642617, tzinfo=zoneinfo.ZoneInfo(key='Etc/UTC')))
+recent_admin_pipeline_run= (UUID('6380c909-eee7-4e79-991d-2909fbe974c8'), 'import_xlsx', 'succeeded', 'patent', 'admin-console', 1930, 0, datetime.datetime(2026, 5, 5, 11, 47, 10, 706046, tzinfo=zoneinfo.ZoneInfo(key='Etc/UTC')), datetime.datetime(2026, 5, 5, 11, 47, 47, 327309, tzinfo=zoneinfo.ZoneInfo(key='Etc/UTC')))
+recent_admin_pipeline_run= (UUID('705de5c8-ebc5-4910-a026-e16474a02b62'), 'import_xlsx', 'succeeded', None, 'admin-console', 1025, 0, datetime.datetime(2026, 5, 5, 11, 47, 7, 726274, tzinfo=zoneinfo.ZoneInfo(key='Etc/UTC')), datetime.datetime(2026, 5, 5, 11, 47, 7, 726274, tzinfo=zoneinfo.ZoneInfo(key='Etc/UTC')))
+recent_admin_pipeline_run= (UUID('cb8c8e5f-ef99-49d3-b4de-cdac09e22231'), 'import_xlsx', 'succeeded', 'company', 'admin-console', 1025, 0, datetime.datetime(2026, 5, 5, 11, 47, 6, 318665, tzinfo=zoneinfo.ZoneInfo(key='Etc/UTC')), datetime.datetime(2026, 5, 5, 11, 47, 10, 468989, tzinfo=zoneinfo.ZoneInfo(key='Etc/UTC')))
+exit_code=0
+
+## Result
+failures=0
+log_file=/home/longxiang/MiroThinker/docs/source_backfills/host-e2e-admin-upload-2026-05-05T13-39-00Z.txt
+result=PASS

@@ -1,0 +1,285 @@
+cases:
+- qid: S1-H
+  turn_group: S1-r2-o3-professor-company
+  is_head_turn: true
+  query: 有哪些做具身智能和灵巧手的教授
+  answer: 做具身智能/灵巧手的教授包括:柯文德、任尔夫、王强、刘桂良、冀晓强、戴建生等。
+  key_point: 头轮展示教授集合，后续用于 R2 集合指代和 O3 跨域遍历。
+  required_entities:
+  - 柯文德
+  - 任尔夫
+  - 王强
+  - 刘桂良
+  forbidden_entities: []
+  coref_needs_label: false
+  refusal_expected: false
+  disambiguation_expected: false
+  source: synthesized-layer-d
+- qid: S1-F
+  turn_group: S1-r2-o3-professor-company
+  is_head_turn: false
+  query: 上述教授参与的企业
+  answer: ''
+  key_point: R2×O3 traversal; targets must be derived from the displayed professor set.
+  required_entities: []
+  forbidden_entities: []
+  coref_needs_label: true
+  refusal_expected: false
+  disambiguation_expected: false
+  expected_query_type: C_cross_domain_related
+  expected_set_derived: true
+  source: synthesized-layer-d-routing-only
+- qid: S2-H
+  turn_group: S2-bare-pronoun-professor-papers
+  is_head_turn: true
+  query: 有哪些做具身智能和灵巧手的教授
+  answer: 做具身智能/灵巧手的教授包括:柯文德、任尔夫、王强、刘桂良、冀晓强、戴建生等。
+  key_point: 头轮展示教授集合，后续裸“他们”应解析为该集合。
+  required_entities:
+  - 柯文德
+  - 任尔夫
+  - 王强
+  - 刘桂良
+  forbidden_entities: []
+  coref_needs_label: false
+  refusal_expected: false
+  disambiguation_expected: false
+  source: synthesized-layer-d
+- qid: S2-F
+  turn_group: S2-bare-pronoun-professor-papers
+  is_head_turn: false
+  query: 他们发表了哪些论文
+  answer: ''
+  key_point: 裸集合代词“他们”应解析为上一轮展示的教授集合，而不是全局重搜。
+  required_entities: []
+  forbidden_entities: []
+  coref_needs_label: true
+  refusal_expected: false
+  disambiguation_expected: false
+  expected_query_type: C_cross_domain_related
+  expected_set_derived: true
+  source: synthesized-layer-d-routing-only
+- qid: S3-H
+  turn_group: S3-list-then-singular-clarification
+  is_head_turn: true
+  query: 有哪些做具身智能和灵巧手的教授
+  answer: 做具身智能/灵巧手的教授包括:柯文德、任尔夫、王强、刘桂良、冀晓强、戴建生等。
+  key_point: 头轮是列表，不应创建单实体 anchor。
+  required_entities:
+  - 柯文德
+  - 任尔夫
+  - 王强
+  - 刘桂良
+  forbidden_entities: []
+  coref_needs_label: false
+  refusal_expected: false
+  disambiguation_expected: false
+  source: synthesized-layer-d
+- qid: S3-F
+  turn_group: S3-list-then-singular-clarification
+  is_head_turn: false
+  query: 他的论文是哪些
+  answer: ''
+  key_point: 列表后 singular pronoun 应澄清具体教授，而不是任选一个成员作答。
+  required_entities: []
+  forbidden_entities: []
+  coref_needs_label: true
+  refusal_expected: false
+  disambiguation_expected: true
+  expected_query_type:
+  - G_ambiguous_clarification
+  - C_cross_domain_clarification
+  source: synthesized-layer-d
+- qid: S4-H
+  turn_group: S4-empty-set-domain-mismatch
+  is_head_turn: true
+  query: 中国有哪些成熟的酒店送餐机器人供应商
+  answer: 深圳安赛步机器人有限公司 深圳市小村机器人智能科技有限公司 深圳中科世界机器人有限公司 深圳市艾唯尔科技有限公司 深圳市锐曼智能技术有限公司 深圳市普渡科技股份有限公司 云迹科技 擎朗智能
+  key_point: 头轮展示企业集合，后续引用不存在的教授集合应澄清。
+  required_entities:
+  - 普渡
+  - 云迹
+  - 擎朗智能
+  forbidden_entities: []
+  coref_needs_label: false
+  refusal_expected: false
+  disambiguation_expected: false
+  source: synthesized-layer-d
+- qid: S4-F
+  turn_group: S4-empty-set-domain-mismatch
+  is_head_turn: false
+  query: 上述教授参与的企业
+  answer: 澄清 教授 上下文 企业
+  key_point: 上文只有企业集合，没有教授集合；应澄清且不能全局重搜或替换为企业集合。
+  required_entities: []
+  forbidden_entities: []
+  coref_needs_label: true
+  refusal_expected: false
+  disambiguation_expected: true
+  expected_query_type:
+  - G_ambiguous_clarification
+  - C_cross_domain_clarification
+  source: synthesized-layer-d
+- qid: S5-H
+  turn_group: S5-three-turn-prof-company-patent
+  is_head_turn: true
+  query: 有哪些做具身智能和灵巧手的教授
+  answer: 做具身智能/灵巧手的教授包括:柯文德、任尔夫、王强、刘桂良、冀晓强、戴建生等。
+  key_point: 三轮链路第 1 轮：展示教授集合。
+  required_entities:
+  - 柯文德
+  - 任尔夫
+  - 王强
+  - 刘桂良
+  forbidden_entities: []
+  coref_needs_label: false
+  refusal_expected: false
+  disambiguation_expected: false
+  source: synthesized-layer-d
+- qid: S5-F1
+  turn_group: S5-three-turn-prof-company-patent
+  is_head_turn: false
+  query: 上述教授参与的企业
+  answer: ''
+  key_point: 三轮链路第 2 轮：教授集合跨域遍历到企业，结果集应更新为显示的企业。
+  required_entities: []
+  forbidden_entities: []
+  coref_needs_label: true
+  refusal_expected: false
+  disambiguation_expected: false
+  expected_query_type: C_cross_domain_related
+  expected_set_derived: true
+  source: synthesized-layer-d-routing-only
+- qid: S5-F2
+  turn_group: S5-three-turn-prof-company-patent
+  is_head_turn: false
+  query: 这些公司有哪些专利
+  answer: ''
+  key_point: 三轮链路第 3 轮必须基于第 2 轮展示的公司集合，而不是第 1 轮教授或全局重搜。
+  required_entities: []
+  forbidden_entities: []
+  coref_needs_label: true
+  refusal_expected: false
+  disambiguation_expected: false
+  expected_query_type: C_cross_domain_related
+  expected_set_derived: true
+  source: synthesized-layer-d-routing-only
+- qid: S6A-H
+  turn_group: S6-chip-professor-papers
+  is_head_turn: true
+  query: 有哪些做具身智能和灵巧手的教授
+  answer: 做具身智能/灵巧手的教授包括:柯文德、任尔夫、王强、刘桂良、冀晓强、戴建生等。
+  key_point: S6 chip matrix setup for professor-list chip.
+  required_entities:
+  - 柯文德
+  - 任尔夫
+  - 王强
+  - 刘桂良
+  forbidden_entities: []
+  coref_needs_label: false
+  refusal_expected: false
+  disambiguation_expected: false
+  source: synthesized-layer-d
+- qid: S6A-F
+  turn_group: S6-chip-professor-papers
+  is_head_turn: false
+  query: 看看这些教授的论文
+  answer: ''
+  key_point: Exact chip string; assert routing, not answer quality.
+  required_entities: []
+  forbidden_entities: []
+  coref_needs_label: true
+  refusal_expected: false
+  disambiguation_expected: false
+  expected_query_type: C_cross_domain_related
+  expected_set_derived: true
+  source: synthesized-layer-d-chip-routing
+- qid: S6B-H
+  turn_group: S6-chip-professor-shenzhen
+  is_head_turn: true
+  query: 有哪些做具身智能和灵巧手的教授
+  answer: 做具身智能/灵巧手的教授包括:柯文德、任尔夫、王强、刘桂良、冀晓强、戴建生等。
+  key_point: S6 chip matrix setup for same-domain professor predicate.
+  required_entities:
+  - 柯文德
+  - 任尔夫
+  - 王强
+  - 刘桂良
+  forbidden_entities: []
+  coref_needs_label: false
+  refusal_expected: false
+  disambiguation_expected: false
+  source: synthesized-layer-d
+- qid: S6B-F
+  turn_group: S6-chip-professor-shenzhen
+  is_head_turn: false
+  query: 上述哪些在深圳
+  answer: ''
+  key_point: Exact chip string; assert same-domain set narrowing route, not answer quality.
+  required_entities: []
+  forbidden_entities: []
+  coref_needs_label: true
+  refusal_expected: false
+  disambiguation_expected: false
+  expected_query_type: D_narrowing
+  expected_set_derived: true
+  source: synthesized-layer-d-chip-routing
+- qid: S6C-H
+  turn_group: S6-chip-company-patents
+  is_head_turn: true
+  query: 中国有哪些成熟的酒店送餐机器人供应商
+  answer: 深圳安赛步机器人有限公司 深圳市小村机器人智能科技有限公司 深圳中科世界机器人有限公司 深圳市艾唯尔科技有限公司 深圳市锐曼智能技术有限公司 深圳市普渡科技股份有限公司 云迹科技 擎朗智能
+  key_point: S6 chip matrix setup for company-list chip.
+  required_entities:
+  - 普渡
+  - 云迹
+  - 擎朗智能
+  forbidden_entities: []
+  coref_needs_label: false
+  refusal_expected: false
+  disambiguation_expected: false
+  source: synthesized-layer-d
+- qid: S6C-F
+  turn_group: S6-chip-company-patents
+  is_head_turn: false
+  query: 这些公司有哪些专利
+  answer: ''
+  key_point: Exact chip string; assert company-set to patent traversal route, not answer quality.
+  required_entities: []
+  forbidden_entities: []
+  coref_needs_label: true
+  refusal_expected: false
+  disambiguation_expected: false
+  expected_query_type: C_cross_domain_related
+  expected_set_derived: true
+  source: synthesized-layer-d-chip-routing
+- qid: S6D-H
+  turn_group: S6-chip-patent-granted
+  is_head_turn: true
+  query: 优必选有哪些专利
+  answer: 异常姿态检测系统和割草机器人 CN117742201A 机器人障碍物感知方法 CN117789171A 直线关节及机器人 CN117621134A 扭矩传递组件 CN117506999A
+  key_point: S6 chip matrix setup for patent-list chip.
+  required_entities:
+  - 异常姿态检测系统
+  - 割草机器人
+  - 机器人障碍物感知
+  - 直线关节
+  forbidden_entities: []
+  coref_needs_label: false
+  refusal_expected: false
+  disambiguation_expected: false
+  source: synthesized-layer-d
+- qid: S6D-F
+  turn_group: S6-chip-patent-granted
+  is_head_turn: false
+  query: 上述哪些已授权
+  answer: ''
+  key_point: Exact chip string; assert patent-set grant-status narrowing route, not answer quality.
+  required_entities: []
+  forbidden_entities: []
+  coref_needs_label: true
+  refusal_expected: false
+  disambiguation_expected: false
+  expected_query_type: D_narrowing
+  expected_set_derived: true
+  source: synthesized-layer-d-chip-routing

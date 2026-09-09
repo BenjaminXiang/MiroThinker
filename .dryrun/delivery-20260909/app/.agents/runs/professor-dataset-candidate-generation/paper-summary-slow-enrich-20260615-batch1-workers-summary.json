@@ -1,0 +1,46 @@
+{
+  "artifact_type": "paper_summary_slow_enrich_batch_workers_summary",
+  "generated_at": "2026-06-15T09:59:00Z",
+  "database_url_label": "miroflow_real",
+  "batch": "batch1",
+  "worker_count": 4,
+  "worker_reports": [
+    "../../.agents/runs/professor-dataset-candidate-generation/paper-summary-slow-enrich-20260615-batch1-worker0-summary.json",
+    "../../.agents/runs/professor-dataset-candidate-generation/paper-summary-slow-enrich-20260615-batch1-worker1-summary.json",
+    "../../.agents/runs/professor-dataset-candidate-generation/paper-summary-slow-enrich-20260615-batch1-worker2-summary.json",
+    "../../.agents/runs/professor-dataset-candidate-generation/paper-summary-slow-enrich-20260615-batch1-worker3-summary.json"
+  ],
+  "totals": {
+    "papers_total": 1600,
+    "papers_processed": 49,
+    "papers_skipped": 1551,
+    "summaries_written": 48,
+    "summaries_rejected": 1,
+    "metadata_enrichment_attempted": 1600,
+    "metadata_enrichment_skipped_bad_doi": 1,
+    "metadata_enriched": 24,
+    "full_text_enrichment_attempted": 430,
+    "full_text_enriched": 48,
+    "abstract_clean_backfilled_from_full_text": 20,
+    "identifier_contradictions": 0,
+    "pipeline_issues_inserted": 0,
+    "papers_with_errors": 0
+  },
+  "run_ids": [
+    "94d218a3-73bd-4fde-a891-6f6784d907fa",
+    "66aae55d-abb3-454d-968b-e31d937bf898",
+    "51d00fca-10b5-4e57-b533-3dc045950593",
+    "6eb25098-5cdf-47ed-b017-f9a00e820fc2"
+  ],
+  "durations_seconds": [
+    1472.28,
+    1759.52,
+    1274.57,
+    1547.34
+  ],
+  "notes": [
+    "Slow lane selected rows with identifiers but no usable abstract_for_summary.",
+    "Most rows remained skipped after metadata/full-text enrichment could not recover usable abstract.",
+    "These failures are source-acquisition residuals, not LLM summary-generation misses."
+  ]
+}

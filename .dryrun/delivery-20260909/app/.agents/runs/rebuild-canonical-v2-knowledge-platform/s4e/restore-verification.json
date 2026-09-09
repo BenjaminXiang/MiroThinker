@@ -1,0 +1,533 @@
+{
+  "archive_list_exit_code": 0,
+  "candidate_snapshot_after_restore": {
+    "landing_metrics": {
+      "artifact_kind_counts": {
+        "historical_jsonl": 1,
+        "historical_sqlite": 1,
+        "historical_xlsx": 1,
+        "milvus_verified_copy_records": 1,
+        "recorded_collected_response": 1,
+        "verified_backup_copy": 6,
+        "verified_restore_copy": 3,
+        "wal_fpi_salvage_records": 1
+      },
+      "error_kind_counts": {
+        "missing_external_content": 3,
+        "schema_mismatch": 3
+      },
+      "integrity_violation_counts": {
+        "artifact_cycle": 0,
+        "artifact_invalid_identity": 0,
+        "artifact_orphan_parent": 0,
+        "artifact_self_parent": 0,
+        "error_orphan_record": 0,
+        "ingest_orphan_artifact_or_parser": 0,
+        "parser_incomplete_identity": 0,
+        "parser_orphan_artifact": 0,
+        "partial_record_without_error": 0,
+        "record_incomplete_identity": 0,
+        "record_orphan_artifact_or_parser": 0
+      },
+      "lineage_counts": {
+        "matching_parent_edges": 9,
+        "orphan_parent_edges": 0,
+        "parent_edges": 9,
+        "roots": 6
+      },
+      "record_status_counts": {
+        "parsed": 17,
+        "partial": 4
+      },
+      "run_status_counts": {
+        "accepted": 4,
+        "partial": 2
+      }
+    },
+    "logical_sha256": "6328e811d9c63f519c47f4dd7fe1a662e34b71ca6afb266688a5171d063054e8",
+    "non_landing_row_count": 0,
+    "revision": "C2_0004",
+    "schema_fingerprint": {
+      "normalized_bytes": 67194,
+      "normalized_sha256": "7237483f3d3bc5f4776e149e2ba633b355f5711f451f6a72f93504e5629f4aef",
+      "removed_control_lines": 2
+    },
+    "schema_version": "canonical-v2-postgres-logical-snapshot-v1",
+    "table_count": 26,
+    "tables": {
+      "knowledge.canonical_decision": {
+        "row_count": 0,
+        "rows_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "knowledge.canonical_decision_assertion": {
+        "row_count": 0,
+        "rows_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "knowledge.canonical_identity": {
+        "row_count": 0,
+        "rows_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "knowledge.identity_decision": {
+        "row_count": 0,
+        "rows_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "knowledge.identity_decision_input": {
+        "row_count": 0,
+        "rows_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "knowledge.identity_decision_output": {
+        "row_count": 0,
+        "rows_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "knowledge.identity_decision_record": {
+        "row_count": 0,
+        "rows_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "knowledge.identity_decision_source_identity": {
+        "row_count": 0,
+        "rows_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "knowledge.policy": {
+        "row_count": 0,
+        "rows_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "knowledge.relationship_assertion": {
+        "row_count": 0,
+        "rows_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "knowledge.relationship_decision": {
+        "row_count": 0,
+        "rows_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "knowledge.relationship_decision_assertion": {
+        "row_count": 0,
+        "rows_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "knowledge.relationship_type": {
+        "row_count": 0,
+        "rows_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "knowledge.release": {
+        "row_count": 0,
+        "rows_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "knowledge.source_assertion": {
+        "row_count": 0,
+        "rows_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "knowledge.source_identity": {
+        "row_count": 0,
+        "rows_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "knowledge.source_identity_record": {
+        "row_count": 0,
+        "rows_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "landing.evidence_artifact": {
+        "row_count": 15,
+        "rows_sha256": "dffd506908daf852d4a8ca37cea8e8ba6f63596472791be050f86212b12d8474"
+      },
+      "landing.ingest_run": {
+        "row_count": 6,
+        "rows_sha256": "a82942cd4cfc4c5a44f32eac2a9b31f48ffa40743dde60071a0823f98b2d25de"
+      },
+      "landing.parser_run": {
+        "row_count": 6,
+        "rows_sha256": "8db2d6e4ed5235accf670c95ab25c2dd1140354ecbc756c5c60103e3a1c478a7"
+      },
+      "landing.source_error": {
+        "row_count": 6,
+        "rows_sha256": "07eccc4b2f31c651c50c2c25345a1935d431ca26e2d8ed04328001adaa2cd4bc"
+      },
+      "landing.source_record": {
+        "row_count": 21,
+        "rows_sha256": "91004dd0ca28f5985575c5187c2ae26bbf12d705b5dde86abdd985951570a7c0"
+      },
+      "public.canonical_v2_alembic_version": {
+        "row_count": 1,
+        "rows_sha256": "08ebc122d9a5c39ff8a268ea77e1cea6f3b82e6f5261bd68496b1379a3768c9e"
+      },
+      "publish.active_release": {
+        "row_count": 0,
+        "rows_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "publish.build_manifest": {
+        "row_count": 0,
+        "rows_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "publish.manifest_section": {
+        "row_count": 0,
+        "rows_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    }
+  },
+  "candidate_target_after_restore": {
+    "container_name": "canonical-v2-s3b-pg-20260711",
+    "container_running": true,
+    "database": "miroflow_canonical_v2_candidate_s3b",
+    "database_marker": "miroflow:destructive-target:v1:isolated-candidate:miroflow_canonical_v2_candidate_s3b",
+    "error_kind_counts": {
+      "missing_external_content": 3,
+      "schema_mismatch": 3
+    },
+    "kind": "isolated-candidate",
+    "landing_counts": {
+      "evidence_artifact": 15,
+      "ingest_run": 6,
+      "parser_run": 6,
+      "source_error": 6,
+      "source_record": 21
+    },
+    "lineage_counts": {
+      "matching_parent_edges": 9,
+      "orphan_parent_edges": 0,
+      "parent_edges": 9,
+      "roots": 6
+    },
+    "network_mode": "none",
+    "non_landing_row_count": 0,
+    "pgdata_volume": "canonical-v2-s3b-pgdata-20260711",
+    "published_ports": [],
+    "record_status_counts": {
+      "parsed": 17,
+      "partial": 4
+    },
+    "restart_policy": "no",
+    "revision": "C2_0004",
+    "run_status_counts": {
+      "accepted": 4,
+      "partial": 2
+    },
+    "system_identifier": "7661313446684311592",
+    "validated_prestate": "bounded-replay"
+  },
+  "checkpoint_id": "canonical-v2-s4-landing-20260711T215953Z-cef42a1",
+  "checkpoint_manifest_sha256": "ab091aac1cfbf2ba1699f521b9a5629d4d9b02dfb236e0600a4f711219c966b1",
+  "cleanup": {
+    "container_absent": true,
+    "owned_container_id": "dd68e0b707cbcab9fd383055022241b45b2576f0d2021777039405a45b43ee10",
+    "socket_root_absent": true
+  },
+  "command_evidence": [
+    {
+      "command_id": "start-isolated-restore",
+      "exit_code": 0,
+      "sanitized_argv": [
+        "docker",
+        "run",
+        "--detach",
+        "--name",
+        "canonical-v2-s4e-restore-20260711t215953z",
+        "--network",
+        "none",
+        "--restart",
+        "no",
+        "--read-only",
+        "--tmpfs",
+        "/var/lib/postgresql/data:rw,noexec,nosuid,size=1073741824",
+        "--tmpfs",
+        "/tmp:rw,noexec,nosuid,size=67108864",
+        "--volume",
+        "/md1/mirothinker-backups/canonical-v2-s4-landing-20260711T215953Z-cef42a1:/checkpoint:ro",
+        "--volume",
+        "/var/tmp/mirothinker-canonical-v2/s4e-restore-20260711t215953z/postgresql:/var/run/postgresql:rw",
+        "--env",
+        "POSTGRES_HOST_AUTH_METHOD=trust",
+        "--env",
+        "POSTGRES_USER=miroflow",
+        "--env",
+        "POSTGRES_DB=miroflow_canonical_v2_s4e_restore_20260711t215953z",
+        "--env",
+        "PGDATA=/var/lib/postgresql/data/pgdata",
+        "sha256:8ed3192326bb9d114cd5ef9acace453d5dae17425bd089d089330584c84c5a34"
+      ],
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "9f0c7d9128d96cf0391bf91385c745d23a0d53ee2be831199ec14045f8b964af"
+    },
+    {
+      "attempt_count": 5,
+      "command_id": "restore-final-postgres-readiness",
+      "consecutive_successes": 3,
+      "exit_code": 0,
+      "pid1_command": "postgres",
+      "sanitized_argv": [
+        "docker",
+        "exec",
+        "canonical-v2-s4e-restore-20260711t215953z",
+        "<pid1-postgres-and-pg-isready-x3>"
+      ]
+    },
+    {
+      "command_id": "restore-candidate-dump",
+      "exit_code": 0,
+      "sanitized_argv": [
+        "docker",
+        "exec",
+        "canonical-v2-s4e-restore-20260711t215953z",
+        "pg_restore",
+        "--exit-on-error",
+        "--no-owner",
+        "--no-privileges",
+        "-U",
+        "miroflow",
+        "-d",
+        "miroflow_canonical_v2_s4e_restore_20260711t215953z",
+        "/checkpoint/candidate-landing.dump"
+      ],
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "command_id": "schema-fingerprint-dump",
+      "exit_code": 0,
+      "sanitized_argv": [
+        "docker",
+        "exec",
+        "canonical-v2-s4e-restore-20260711t215953z",
+        "pg_dump",
+        "-U",
+        "miroflow",
+        "-d",
+        "miroflow_canonical_v2_s4e_restore_20260711t215953z",
+        "--schema-only",
+        "--no-owner",
+        "--no-privileges"
+      ],
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "b43ef71a2a146c84f5bfe4eed21aa4e0b378783934b4748ee1d6c251937adcb1"
+    },
+    {
+      "command_id": "stop-owned-restore-container",
+      "exit_code": 0,
+      "sanitized_argv": [
+        "docker",
+        "stop",
+        "--time",
+        "30",
+        "dd68e0b707cbcab9fd383055022241b45b2576f0d2021777039405a45b43ee10"
+      ],
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "f774183facc73977027810672634c330941ce62b1dbfab8f80339523d12878a0"
+    },
+    {
+      "command_id": "remove-owned-restore-container",
+      "exit_code": 0,
+      "sanitized_argv": [
+        "docker",
+        "rm",
+        "--volumes",
+        "dd68e0b707cbcab9fd383055022241b45b2576f0d2021777039405a45b43ee10"
+      ],
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "9f0c7d9128d96cf0391bf91385c745d23a0d53ee2be831199ec14045f8b964af"
+    }
+  ],
+  "docker_volume_set_after": "5c36305d61ebdf69189f04d4d9345d33b47a84fbefce519d8770bd254474ee5c",
+  "docker_volume_set_before": "5c36305d61ebdf69189f04d4d9345d33b47a84fbefce519d8770bd254474ee5c",
+  "dump_sha256": "0a3da115bc590505ee375473421421badec8232e58315d0351ff476dc6dfcdd2",
+  "final_candidate_schema_command": {
+    "command_id": "schema-fingerprint-dump",
+    "exit_code": 0,
+    "sanitized_argv": [
+      "docker",
+      "exec",
+      "canonical-v2-s3b-pg-20260711",
+      "pg_dump",
+      "-U",
+      "miroflow",
+      "-d",
+      "miroflow_canonical_v2_candidate_s3b",
+      "--schema-only",
+      "--no-owner",
+      "--no-privileges"
+    ],
+    "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "stdout_sha256": "6bd0664c97332cc2cabd2c8ac94007f2c3701098c91754790d594cf62f21b92e"
+  },
+  "logical_parity": true,
+  "pg_restore_exit_code": 0,
+  "provider_calls": 0,
+  "restore_snapshot": {
+    "landing_metrics": {
+      "artifact_kind_counts": {
+        "historical_jsonl": 1,
+        "historical_sqlite": 1,
+        "historical_xlsx": 1,
+        "milvus_verified_copy_records": 1,
+        "recorded_collected_response": 1,
+        "verified_backup_copy": 6,
+        "verified_restore_copy": 3,
+        "wal_fpi_salvage_records": 1
+      },
+      "error_kind_counts": {
+        "missing_external_content": 3,
+        "schema_mismatch": 3
+      },
+      "integrity_violation_counts": {
+        "artifact_cycle": 0,
+        "artifact_invalid_identity": 0,
+        "artifact_orphan_parent": 0,
+        "artifact_self_parent": 0,
+        "error_orphan_record": 0,
+        "ingest_orphan_artifact_or_parser": 0,
+        "parser_incomplete_identity": 0,
+        "parser_orphan_artifact": 0,
+        "partial_record_without_error": 0,
+        "record_incomplete_identity": 0,
+        "record_orphan_artifact_or_parser": 0
+      },
+      "lineage_counts": {
+        "matching_parent_edges": 9,
+        "orphan_parent_edges": 0,
+        "parent_edges": 9,
+        "roots": 6
+      },
+      "record_status_counts": {
+        "parsed": 17,
+        "partial": 4
+      },
+      "run_status_counts": {
+        "accepted": 4,
+        "partial": 2
+      }
+    },
+    "logical_sha256": "6328e811d9c63f519c47f4dd7fe1a662e34b71ca6afb266688a5171d063054e8",
+    "non_landing_row_count": 0,
+    "revision": "C2_0004",
+    "schema_fingerprint": {
+      "normalized_bytes": 67194,
+      "normalized_sha256": "7237483f3d3bc5f4776e149e2ba633b355f5711f451f6a72f93504e5629f4aef",
+      "removed_control_lines": 2
+    },
+    "schema_version": "canonical-v2-postgres-logical-snapshot-v1",
+    "table_count": 26,
+    "tables": {
+      "knowledge.canonical_decision": {
+        "row_count": 0,
+        "rows_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "knowledge.canonical_decision_assertion": {
+        "row_count": 0,
+        "rows_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "knowledge.canonical_identity": {
+        "row_count": 0,
+        "rows_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "knowledge.identity_decision": {
+        "row_count": 0,
+        "rows_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "knowledge.identity_decision_input": {
+        "row_count": 0,
+        "rows_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "knowledge.identity_decision_output": {
+        "row_count": 0,
+        "rows_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "knowledge.identity_decision_record": {
+        "row_count": 0,
+        "rows_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "knowledge.identity_decision_source_identity": {
+        "row_count": 0,
+        "rows_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "knowledge.policy": {
+        "row_count": 0,
+        "rows_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "knowledge.relationship_assertion": {
+        "row_count": 0,
+        "rows_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "knowledge.relationship_decision": {
+        "row_count": 0,
+        "rows_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "knowledge.relationship_decision_assertion": {
+        "row_count": 0,
+        "rows_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "knowledge.relationship_type": {
+        "row_count": 0,
+        "rows_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "knowledge.release": {
+        "row_count": 0,
+        "rows_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "knowledge.source_assertion": {
+        "row_count": 0,
+        "rows_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "knowledge.source_identity": {
+        "row_count": 0,
+        "rows_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "knowledge.source_identity_record": {
+        "row_count": 0,
+        "rows_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "landing.evidence_artifact": {
+        "row_count": 15,
+        "rows_sha256": "dffd506908daf852d4a8ca37cea8e8ba6f63596472791be050f86212b12d8474"
+      },
+      "landing.ingest_run": {
+        "row_count": 6,
+        "rows_sha256": "a82942cd4cfc4c5a44f32eac2a9b31f48ffa40743dde60071a0823f98b2d25de"
+      },
+      "landing.parser_run": {
+        "row_count": 6,
+        "rows_sha256": "8db2d6e4ed5235accf670c95ab25c2dd1140354ecbc756c5c60103e3a1c478a7"
+      },
+      "landing.source_error": {
+        "row_count": 6,
+        "rows_sha256": "07eccc4b2f31c651c50c2c25345a1935d431ca26e2d8ed04328001adaa2cd4bc"
+      },
+      "landing.source_record": {
+        "row_count": 21,
+        "rows_sha256": "91004dd0ca28f5985575c5187c2ae26bbf12d705b5dde86abdd985951570a7c0"
+      },
+      "public.canonical_v2_alembic_version": {
+        "row_count": 1,
+        "rows_sha256": "08ebc122d9a5c39ff8a268ea77e1cea6f3b82e6f5261bd68496b1379a3768c9e"
+      },
+      "publish.active_release": {
+        "row_count": 0,
+        "rows_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "publish.build_manifest": {
+        "row_count": 0,
+        "rows_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "publish.manifest_section": {
+        "row_count": 0,
+        "rows_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    }
+  },
+  "restore_target": {
+    "checkpoint_mount_read_only": true,
+    "container_id": "dd68e0b707cbcab9fd383055022241b45b2576f0d2021777039405a45b43ee10",
+    "container_name": "canonical-v2-s4e-restore-20260711t215953z",
+    "container_read_only": true,
+    "database": "miroflow_canonical_v2_s4e_restore_20260711t215953z",
+    "database_marker": "miroflow:destructive-target:v1:disposable:miroflow_canonical_v2_s4e_restore_20260711t215953z",
+    "image_id": "sha256:8ed3192326bb9d114cd5ef9acace453d5dae17425bd089d089330584c84c5a34",
+    "network_mode": "none",
+    "persistent_volume_count": 0,
+    "pgdata_storage": "tmpfs",
+    "published_ports": [],
+    "restart_policy": "no",
+    "socket_mount_gid": 1004,
+    "socket_mount_mode": "1775",
+    "socket_parent_mode": "0770",
+    "system_identifier": "7661394091808735279"
+  },
+  "schema_version": "canonical-v2-s4-landing-restore-verification-v1",
+  "source_revalidation_after_restore": "passed",
+  "state": "passed",
+  "verified_at": "2026-07-11T22:01:59.822320+00:00"
+}

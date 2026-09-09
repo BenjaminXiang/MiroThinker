@@ -1,0 +1,609 @@
+{
+  "generated_at": "2026-05-28T09:28:50.491545+00:00",
+  "batch_id": "382fb63b-1a81-4ff2-8841-95ab87c717b1",
+  "companies_total": 100,
+  "companies_selected": 100,
+  "selection_count": 100,
+  "companies": [
+    {
+      "company_id": "COMP-46240f3defcc",
+      "canonical_name": "交浦科技（深圳）",
+      "website": "http://www.elonxi.cn/",
+      "identity_status": "resolved"
+    },
+    {
+      "company_id": "COMP-df4ce21aba87",
+      "canonical_name": "深圳晓清电子科技",
+      "website": null,
+      "identity_status": "resolved"
+    },
+    {
+      "company_id": "COMP-ce9eb4403173",
+      "canonical_name": "爱康智联科技",
+      "website": null,
+      "identity_status": "resolved"
+    },
+    {
+      "company_id": "COMP-01a76a672dfb",
+      "canonical_name": "野申（深圳）科技",
+      "website": null,
+      "identity_status": "resolved"
+    },
+    {
+      "company_id": "COMP-843f3f32dab7",
+      "canonical_name": "昆仑智联科技",
+      "website": "http://www.kunlunlink.com/",
+      "identity_status": "resolved"
+    },
+    {
+      "company_id": "COMP-1b1fea865e40",
+      "canonical_name": "思定睦教育科技",
+      "website": null,
+      "identity_status": "resolved"
+    },
+    {
+      "company_id": "COMP-c142c8ab20f4",
+      "canonical_name": "湃岛科技",
+      "website": null,
+      "identity_status": "resolved"
+    },
+    {
+      "company_id": "COMP-3cf42e547578",
+      "canonical_name": "深圳道道网络科技",
+      "website": "http://www.daodao.pro",
+      "identity_status": "resolved"
+    },
+    {
+      "company_id": "COMP-02a26304c3a6",
+      "canonical_name": "深圳新视智科技术",
+      "website": "http://www.zvit.com.cn/",
+      "identity_status": "resolved"
+    },
+    {
+      "company_id": "COMP-e8a8688eaf11",
+      "canonical_name": "康佳芯盈半导体科技（深圳）",
+      "website": "https://www.kowin.com.cn",
+      "identity_status": "resolved"
+    },
+    {
+      "company_id": "COMP-c58ac55e0244",
+      "canonical_name": "深圳库犸动力科技",
+      "website": "https://mammotion.com/",
+      "identity_status": "resolved"
+    },
+    {
+      "company_id": "COMP-9472d5724f27",
+      "canonical_name": "深圳猎聘科技",
+      "website": null,
+      "identity_status": "resolved"
+    },
+    {
+      "company_id": "COMP-e0f2fdd3f2bf",
+      "canonical_name": "图灵集市（深圳）科技",
+      "website": null,
+      "identity_status": "resolved"
+    },
+    {
+      "company_id": "COMP-536085419a9a",
+      "canonical_name": "盛博智能机器人科技",
+      "website": "http://www.qifeng-robot.com",
+      "identity_status": "resolved"
+    },
+    {
+      "company_id": "COMP-54222ea4aa44",
+      "canonical_name": "深圳亘存科技",
+      "website": "https://www.smartnvy.com/",
+      "identity_status": "resolved"
+    },
+    {
+      "company_id": "COMP-d2fd5d03160d",
+      "canonical_name": "注能科技",
+      "website": "http://www.energizelab.cn",
+      "identity_status": "resolved"
+    },
+    {
+      "company_id": "COMP-3d1101bb905e",
+      "canonical_name": "万校引擎科技",
+      "website": "http://www.beidouyu.com",
+      "identity_status": "resolved"
+    },
+    {
+      "company_id": "COMP-c4a96fe4211f",
+      "canonical_name": "天刊科技",
+      "website": null,
+      "identity_status": "resolved"
+    },
+    {
+      "company_id": "COMP-ec4d36c3523d",
+      "canonical_name": "奇丰科技",
+      "website": "https://www.qicrm.cn",
+      "identity_status": "resolved"
+    },
+    {
+      "company_id": "COMP-1e42490da182",
+      "canonical_name": "深圳和聚智控科技",
+      "website": null,
+      "identity_status": "resolved"
+    },
+    {
+      "company_id": "COMP-44ef55d9b0f6",
+      "canonical_name": "深圳纳百信息技术",
+      "website": "https://neptune-robotics.com/",
+      "identity_status": "resolved"
+    },
+    {
+      "company_id": "COMP-e22096104010",
+      "canonical_name": "同昇光电",
+      "website": "https://www.sublime-sz.com",
+      "identity_status": "resolved"
+    },
+    {
+      "company_id": "COMP-cff54e822fc5",
+      "canonical_name": "深圳元戎启行科技",
+      "website": "https://www.deeproute.ai",
+      "identity_status": "resolved"
+    },
+    {
+      "company_id": "COMP-a589cd75e2e1",
+      "canonical_name": "摩芯控制技术",
+      "website": "http://www.motionmicro.cn",
+      "identity_status": "resolved"
+    },
+    {
+      "company_id": "COMP-aeacf5cfe38d",
+      "canonical_name": "卓驭科技",
+      "website": "https://auto.dji.com",
+      "identity_status": "resolved"
+    },
+    {
+      "company_id": "COMP-678e60011c81",
+      "canonical_name": "达米亚科技",
+      "website": null,
+      "identity_status": "resolved"
+    },
+    {
+      "company_id": "COMP-4322fb07693d",
+      "canonical_name": "陆飞智能创新科技",
+      "website": null,
+      "identity_status": "resolved"
+    },
+    {
+      "company_id": "COMP-3537a8dff4b2",
+      "canonical_name": "御铠机器人（深圳）",
+      "website": null,
+      "identity_status": "resolved"
+    },
+    {
+      "company_id": "COMP-8e8163f07c4a",
+      "canonical_name": "乐牧科技（深圳）",
+      "website": "http://lemutechnology.com/",
+      "identity_status": "resolved"
+    },
+    {
+      "company_id": "COMP-00d053ec2a24",
+      "canonical_name": "飞拓星驰科技",
+      "website": "https://www.fitx.games/",
+      "identity_status": "resolved"
+    },
+    {
+      "company_id": "COMP-c468c0e6f936",
+      "canonical_name": "芯友微电子科技",
+      "website": null,
+      "identity_status": "resolved"
+    },
+    {
+      "company_id": "COMP-95791ebe18d4",
+      "canonical_name": "华力创科学（深圳）",
+      "website": "http://www.haptron-scientific.com/",
+      "identity_status": "resolved"
+    },
+    {
+      "company_id": "COMP-86148f2ee6cf",
+      "canonical_name": "灵起科技（深圳）",
+      "website": "https://living.ai/",
+      "identity_status": "resolved"
+    },
+    {
+      "company_id": "COMP-89a631c5e09c",
+      "canonical_name": "三农振兴科技（深圳）",
+      "website": "http://www.sanongo.com",
+      "identity_status": "resolved"
+    },
+    {
+      "company_id": "COMP-6383786332fa",
+      "canonical_name": "深圳磐石机器人技术",
+      "website": null,
+      "identity_status": "resolved"
+    },
+    {
+      "company_id": "COMP-ce5192c532bc",
+      "canonical_name": "睿驰（深圳）智能",
+      "website": null,
+      "identity_status": "resolved"
+    },
+    {
+      "company_id": "COMP-510dcababd11",
+      "canonical_name": "深圳卡睿智行科技",
+      "website": null,
+      "identity_status": "resolved"
+    },
+    {
+      "company_id": "COMP-8cedaf3de377",
+      "canonical_name": "深圳扑浪量子半导体",
+      "website": "http://planckinnovation.com/",
+      "identity_status": "resolved"
+    },
+    {
+      "company_id": "COMP-11d9299a8ed8",
+      "canonical_name": "深圳世纪源丰电子",
+      "website": "http://www.cyf-ic.com/",
+      "identity_status": "resolved"
+    },
+    {
+      "company_id": "COMP-b3873686de5b",
+      "canonical_name": "中科智高科技",
+      "website": "http://www.zkzgao.com/",
+      "identity_status": "resolved"
+    },
+    {
+      "company_id": "COMP-1495c56536af",
+      "canonical_name": "深圳微控无线科技",
+      "website": "http://www.sz-wkwx.com",
+      "identity_status": "resolved"
+    },
+    {
+      "company_id": "COMP-ae484cae038b",
+      "canonical_name": "芯片测试技术",
+      "website": null,
+      "identity_status": "resolved"
+    },
+    {
+      "company_id": "COMP-3294d70e176d",
+      "canonical_name": "深圳闪移技术",
+      "website": "http://www.cfwcloud.com/",
+      "identity_status": "resolved"
+    },
+    {
+      "company_id": "COMP-ce591fa9d083",
+      "canonical_name": "智源空间创新科技",
+      "website": null,
+      "identity_status": "resolved"
+    },
+    {
+      "company_id": "COMP-5e5e0e277d3d",
+      "canonical_name": "深圳灵图创新科技",
+      "website": null,
+      "identity_status": "resolved"
+    },
+    {
+      "company_id": "COMP-c76f2462dfa5",
+      "canonical_name": "颐康鑫悦科技（深圳）",
+      "website": "https://www.yikangxy.com/",
+      "identity_status": "resolved"
+    },
+    {
+      "company_id": "COMP-f7d7ffbb7fd0",
+      "canonical_name": "深圳昔音科技",
+      "website": null,
+      "identity_status": "resolved"
+    },
+    {
+      "company_id": "COMP-c5435386c50b",
+      "canonical_name": "深圳云集智能信息",
+      "website": "http://www.szyunjizn.com",
+      "identity_status": "resolved"
+    },
+    {
+      "company_id": "COMP-b8bbffe61cbc",
+      "canonical_name": "深圳悦享智眠科技",
+      "website": null,
+      "identity_status": "resolved"
+    },
+    {
+      "company_id": "COMP-8e3331e62f7a",
+      "canonical_name": "深圳津渡生物医学科技",
+      "website": "http://www.oxtium.com/",
+      "identity_status": "resolved"
+    },
+    {
+      "company_id": "COMP-efaddbd90d59",
+      "canonical_name": "深圳小墨智能科技",
+      "website": "https://www.moorebot.com/",
+      "identity_status": "resolved"
+    },
+    {
+      "company_id": "COMP-09b40e9b3e92",
+      "canonical_name": "奇普乐芯片技术",
+      "website": "https://www.chipuller.com/",
+      "identity_status": "resolved"
+    },
+    {
+      "company_id": "COMP-9986de45a425",
+      "canonical_name": "安室智能",
+      "website": "https://www.anshismart.com/",
+      "identity_status": "resolved"
+    },
+    {
+      "company_id": "COMP-e38d7374abf4",
+      "canonical_name": "海芯机器人技术",
+      "website": null,
+      "identity_status": "resolved"
+    },
+    {
+      "company_id": "COMP-84ddd28cf17a",
+      "canonical_name": "留形三维控股（深圳）",
+      "website": "https://www.manifoldtech.cn/",
+      "identity_status": "resolved"
+    },
+    {
+      "company_id": "COMP-fa271e8e5a4b",
+      "canonical_name": "遇见森林科技",
+      "website": "https://moriverse.xyz/",
+      "identity_status": "resolved"
+    },
+    {
+      "company_id": "COMP-19601385a880",
+      "canonical_name": "宇舜微电子",
+      "website": null,
+      "identity_status": "resolved"
+    },
+    {
+      "company_id": "COMP-fc31cecbc809",
+      "canonical_name": "繁盛微电子（深圳）",
+      "website": null,
+      "identity_status": "resolved"
+    },
+    {
+      "company_id": "COMP-ae22917f7dca",
+      "canonical_name": "九一智造（深圳）信息装备",
+      "website": null,
+      "identity_status": "resolved"
+    },
+    {
+      "company_id": "COMP-6d435dcab66e",
+      "canonical_name": "亚洲星电子",
+      "website": "http://www.szhengjiawei.com",
+      "identity_status": "resolved"
+    },
+    {
+      "company_id": "COMP-418f538f511b",
+      "canonical_name": "芯物源科技（深圳）",
+      "website": "http://www.torigin.tech/",
+      "identity_status": "resolved"
+    },
+    {
+      "company_id": "COMP-dd31350b03fe",
+      "canonical_name": "深圳国芯微半导体",
+      "website": null,
+      "identity_status": "resolved"
+    },
+    {
+      "company_id": "COMP-64e864f702e8",
+      "canonical_name": "杭州精控集成半导体",
+      "website": "https://www.pisemi.com/",
+      "identity_status": "resolved"
+    },
+    {
+      "company_id": "COMP-f4333315f1ca",
+      "canonical_name": "深圳安赛步机器人",
+      "website": null,
+      "identity_status": "resolved"
+    },
+    {
+      "company_id": "COMP-8c50790ce21f",
+      "canonical_name": "拓普智造科技",
+      "website": "https://www.toptechim.com/",
+      "identity_status": "resolved"
+    },
+    {
+      "company_id": "COMP-950312e21c33",
+      "canonical_name": "深圳智机视觉科技",
+      "website": "https://imtechsz.com/",
+      "identity_status": "resolved"
+    },
+    {
+      "company_id": "COMP-8da8dd57dba7",
+      "canonical_name": "深圳聚德寿科技",
+      "website": "http://www.wangsensor.com",
+      "identity_status": "resolved"
+    },
+    {
+      "company_id": "COMP-7ca61a692b3b",
+      "canonical_name": "深圳无限数科技",
+      "website": null,
+      "identity_status": "resolved"
+    },
+    {
+      "company_id": "COMP-668295f484e9",
+      "canonical_name": "深圳大争智能科技",
+      "website": null,
+      "identity_status": "resolved"
+    },
+    {
+      "company_id": "COMP-9035b11c201b",
+      "canonical_name": "智芯华玺信息技术",
+      "website": null,
+      "identity_status": "resolved"
+    },
+    {
+      "company_id": "COMP-e7426857d672",
+      "canonical_name": "小楠智能制造",
+      "website": null,
+      "identity_status": "resolved"
+    },
+    {
+      "company_id": "COMP-660673448cc4",
+      "canonical_name": "勃望初芯半导体科技",
+      "website": null,
+      "identity_status": "resolved"
+    },
+    {
+      "company_id": "COMP-d35e74740879",
+      "canonical_name": "深圳业昇科技",
+      "website": null,
+      "identity_status": "resolved"
+    },
+    {
+      "company_id": "COMP-edb739fbafb8",
+      "canonical_name": "元存半导体（深圳）",
+      "website": null,
+      "identity_status": "resolved"
+    },
+    {
+      "company_id": "COMP-ec42d944017c",
+      "canonical_name": "国微三代半导体技术",
+      "website": null,
+      "identity_status": "resolved"
+    },
+    {
+      "company_id": "COMP-1764f9b80fc2",
+      "canonical_name": "深圳问止中医健康科技",
+      "website": "https://techtcm.com",
+      "identity_status": "resolved"
+    },
+    {
+      "company_id": "COMP-06dc6a30b7a8",
+      "canonical_name": "深圳夸夸菁领科技",
+      "website": "http://aquaintelling.com/",
+      "identity_status": "resolved"
+    },
+    {
+      "company_id": "COMP-8a374f1f3fe7",
+      "canonical_name": "深圳行动湃科技",
+      "website": null,
+      "identity_status": "resolved"
+    },
+    {
+      "company_id": "COMP-2c9582b85d1e",
+      "canonical_name": "深圳前海妙互联网络科技",
+      "website": "http://www.miaohulian.com",
+      "identity_status": "resolved"
+    },
+    {
+      "company_id": "COMP-2f487edaca9a",
+      "canonical_name": "酷选科技",
+      "website": "http://www.coolsel.com/",
+      "identity_status": "resolved"
+    },
+    {
+      "company_id": "COMP-25f539084d16",
+      "canonical_name": "盘古盈时科技（深圳）",
+      "website": "http://www.pangoing.com.cn/",
+      "identity_status": "resolved"
+    },
+    {
+      "company_id": "COMP-61d7b7253f94",
+      "canonical_name": "深圳瀚霖信息科技",
+      "website": "http://www.hl-lift.com/",
+      "identity_status": "resolved"
+    },
+    {
+      "company_id": "COMP-329b5f2c4349",
+      "canonical_name": "昂视智能（深圳）",
+      "website": "http://www.piqs.com/",
+      "identity_status": "resolved"
+    },
+    {
+      "company_id": "COMP-e7137f40e8e0",
+      "canonical_name": "深圳广合霖科技",
+      "website": "http://www.rainontrees.com",
+      "identity_status": "resolved"
+    },
+    {
+      "company_id": "COMP-d9434174e97a",
+      "canonical_name": "华仁智信技术",
+      "website": "https://www.credithuaren.com",
+      "identity_status": "resolved"
+    },
+    {
+      "company_id": "COMP-54d0c246788e",
+      "canonical_name": "眺月科技（深圳）",
+      "website": null,
+      "identity_status": "resolved"
+    },
+    {
+      "company_id": "COMP-9875f8832283",
+      "canonical_name": "钛锋智能",
+      "website": "https://www.superquant.fund",
+      "identity_status": "resolved"
+    },
+    {
+      "company_id": "COMP-72fde8c0f333",
+      "canonical_name": "德展智能科技",
+      "website": "http://www.dz-ai.com",
+      "identity_status": "resolved"
+    },
+    {
+      "company_id": "COMP-23d32572d133",
+      "canonical_name": "深圳跃瓦创新科技",
+      "website": null,
+      "identity_status": "resolved"
+    },
+    {
+      "company_id": "COMP-27fda4dc49d3",
+      "canonical_name": "深圳术源创新科技",
+      "website": null,
+      "identity_status": "resolved"
+    },
+    {
+      "company_id": "COMP-33ba70a26b45",
+      "canonical_name": "好奇心探索科技",
+      "website": null,
+      "identity_status": "resolved"
+    },
+    {
+      "company_id": "COMP-b6d55eb13a82",
+      "canonical_name": "枢途科技（深圳）",
+      "website": "http://www.synapath.com",
+      "identity_status": "resolved"
+    },
+    {
+      "company_id": "COMP-e0065e06d673",
+      "canonical_name": "加德纳智能科技",
+      "website": "http://www.jdnzn.com",
+      "identity_status": "resolved"
+    },
+    {
+      "company_id": "COMP-8554f527b293",
+      "canonical_name": "深圳云松鼠智能科技",
+      "website": null,
+      "identity_status": "resolved"
+    },
+    {
+      "company_id": "COMP-644ee491964b",
+      "canonical_name": "南图科技服务",
+      "website": "http://nantutech.com/",
+      "identity_status": "resolved"
+    },
+    {
+      "company_id": "COMP-dcd14c10c29e",
+      "canonical_name": "足下科技",
+      "website": null,
+      "identity_status": "resolved"
+    },
+    {
+      "company_id": "COMP-b17b0fe905f5",
+      "canonical_name": "路可为科技",
+      "website": "http://www.lookerway.com",
+      "identity_status": "resolved"
+    },
+    {
+      "company_id": "COMP-12dbf6a4f5b0",
+      "canonical_name": "和意精工智能制造",
+      "website": "http://www.heyi-robot.com/",
+      "identity_status": "resolved"
+    },
+    {
+      "company_id": "COMP-7e0087e94af9",
+      "canonical_name": "艾欧智能（深圳）",
+      "website": "https://io-ai.tech/",
+      "identity_status": "resolved"
+    },
+    {
+      "company_id": "COMP-4e8e879c4a40",
+      "canonical_name": "禾启智能科技",
+      "website": "https://www.hequavtech.com/",
+      "identity_status": "resolved"
+    }
+  ]
+}

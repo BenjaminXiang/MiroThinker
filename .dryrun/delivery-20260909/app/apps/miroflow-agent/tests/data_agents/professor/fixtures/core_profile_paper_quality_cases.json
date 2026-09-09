@@ -1,0 +1,46 @@
+[
+  {
+    "case_id": "ahmed-elazab",
+    "entity_type": "professor",
+    "professor_id": "PROF-823D4761D493",
+    "canonical_name": "Ahmed Elazab",
+    "institution": "清华大学深圳国际研究生院",
+    "source": "user_reported_badcase",
+    "expected_failures": [
+      "missing_research_overview_zh",
+      "duplicate_verified_paper",
+      "missing_paper_summary"
+    ],
+    "duplicate_paper_title": "Improved Alzheimer's disease diagnosis using multimodal sparse similarity feature selection and auxiliary data"
+  },
+  {
+    "case_id": "ding-wenbo",
+    "entity_type": "professor",
+    "professor_id": "PROF-EB3DFC72A1BD",
+    "canonical_name": "丁文伯",
+    "institution": "清华大学深圳国际研究生院",
+    "source": "docs/测试集答案.xlsx row 2 and row 3",
+    "expected_profile_sections": [
+      "identity",
+      "education",
+      "work_experience",
+      "research_directions",
+      "academic_positions",
+      "awards",
+      "non_repetitive_profile_summary"
+    ],
+    "professor_core_readiness_excludes": [
+      "hidden_company_roles"
+    ]
+  },
+  {
+    "case_id": "pfedgpa",
+    "entity_type": "paper",
+    "paper_id": "PAPER-80EC1A859E64",
+    "title": "pFedGPA: Diffusion-based Generative Parameter Aggregation for Personalized Federated Learning",
+    "source": "docs/测试集答案.xlsx row 17 and row 18",
+    "expected_external_identifier": "arxiv:2409.05701",
+    "expected_pdf_url": "http://arxiv.org/pdf/2409.05701v3",
+    "expected_route_shape": "/paper/<paper_id>"
+  }
+]

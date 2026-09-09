@@ -1,0 +1,14 @@
+[Unit]
+Description=Canonical V2 knowledge platform backend (port 18188)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+ExecStart=/home/longxiang/MiroThinker/.worktrees/canonical-v2-s11-consolidation/deploy/start-canonical-v2.sh
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=30
+
+[Install]
+WantedBy=default.target

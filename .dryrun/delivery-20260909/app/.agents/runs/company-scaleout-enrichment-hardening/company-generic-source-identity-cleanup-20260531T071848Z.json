@@ -1,0 +1,589 @@
+{
+  "generated_at": "2026-05-31T07:18:48.500856+00:00",
+  "audit_artifact": ".agents/runs/company-scaleout-enrichment-hardening/company-generic-source-identity-guard-audit-after-3char-alias-20260531T071721Z.json",
+  "scope": {
+    "invalid_sources_input": 90,
+    "affected_company_count": 56,
+    "affected_companies": [
+      "COMP-022ba3545989",
+      "COMP-023097e9b55d",
+      "COMP-0311817f7250",
+      "COMP-03215767f7fc",
+      "COMP-03ad82319140",
+      "COMP-065e3cb4dac8",
+      "COMP-0696d91754ed",
+      "COMP-07f14ec62e5c",
+      "COMP-07f772839ee2",
+      "COMP-09aa809ec89e",
+      "COMP-09b40e9b3e92",
+      "COMP-0c33016e8091",
+      "COMP-0dd6b7b967cd",
+      "COMP-0e7ea3a9e563",
+      "COMP-10047ff88d61",
+      "COMP-13d7272fd56f",
+      "COMP-14e479cbfe18",
+      "COMP-1764f9b80fc2",
+      "COMP-17d68ddf7fd6",
+      "COMP-1998f9b7f2ea",
+      "COMP-1b1fea865e40",
+      "COMP-1cd84b2ae529",
+      "COMP-219afcacba21",
+      "COMP-2466866beb8a",
+      "COMP-2482684e2ff8",
+      "COMP-2919d3af3d1f",
+      "COMP-2d9a7505bdab",
+      "COMP-302ee093a2d1",
+      "COMP-329b5f2c4349",
+      "COMP-32b3c0a83596",
+      "COMP-3595cb259124",
+      "COMP-40b2fff69ff7",
+      "COMP-467bb9e6ed99",
+      "COMP-5584b3cf41d2",
+      "COMP-5cfb1b0e4f54",
+      "COMP-67942b79a226",
+      "COMP-67bf09ce7cc8",
+      "COMP-6877a3f5af6c",
+      "COMP-739e5c384cb9",
+      "COMP-79167faf0c77",
+      "COMP-807c94f9d2fd",
+      "COMP-894338aff924",
+      "COMP-9465315a8a9e",
+      "COMP-96bcd8d187b3",
+      "COMP-9b0a43c74d5e",
+      "COMP-9d1ad0faac73",
+      "COMP-9dbac97b9320",
+      "COMP-a1cc8c4c739d",
+      "COMP-a30d0fbb9270",
+      "COMP-a90ec5fd4daa",
+      "COMP-ab7c03a0aec0",
+      "COMP-b27c7a9a2a35",
+      "COMP-b8e17afbc33a",
+      "COMP-d90d20eca885",
+      "COMP-e636e2b24af2",
+      "COMP-ec4f36d8b630"
+    ]
+  },
+  "deleted_counts": {
+    "company_news_item": 90,
+    "company_signal_event": 0,
+    "company_product_evidence": 187,
+    "company_product": 48,
+    "company_application_scenario": 32
+  },
+  "deleted_news_preview": [
+    {
+      "news_id": "4ef9c807-6fd2-4b6f-b96e-0f36b2ed0517",
+      "company_id": "COMP-065e3cb4dac8",
+      "title": "關於我們- PowerArena (TC)",
+      "source_url": "https://www.powerarena.com/zh-hant/about/"
+    },
+    {
+      "news_id": "269e317e-fa58-4a7d-b4b2-24cb28d0cbd4",
+      "company_id": "COMP-065e3cb4dac8",
+      "title": "确保关键人因作业行为 - PowerArena",
+      "source_url": "https://www.powerarena.com/zh-hans/"
+    },
+    {
+      "news_id": "5a6d31a8-f15b-48f4-8a38-58b64808ccc9",
+      "company_id": "COMP-10047ff88d61",
+      "title": "一款好的AI Native 硬件，硬件只是脚手架，真正壁垒一定是Agent",
+      "source_url": "https://zhuanlan.zhihu.com/p/2027384746913612912"
+    },
+    {
+      "news_id": "d5a4fc32-f87c-4a08-9a68-ca5a9425a8bb",
+      "company_id": "COMP-10047ff88d61",
+      "title": "从拍学机的混战中，拆出一个认知相机新物种 - 知乎专栏",
+      "source_url": "https://zhuanlan.zhihu.com/p/2026052579272958419"
+    },
+    {
+      "news_id": "ee230109-fda5-4813-93fa-2687307d1b85",
+      "company_id": "COMP-10047ff88d61",
+      "title": "教育硬件老兵再创业，推出“十万个为什么AI儿童探索相机” - 多知网",
+      "source_url": "http://www.duozhi.com/industry/insight/2025111517895.shtml"
+    },
+    {
+      "news_id": "3f323fbe-fb17-4555-8231-cec4b57abcae",
+      "company_id": "COMP-03ad82319140",
+      "title": "人工智能创新发展论坛暨AI场景应用供需对接会成功举办",
+      "source_url": "https://www.zs.gov.cn/zsjxj/gkmlpt/content/2/2518/post_2518850.html"
+    },
+    {
+      "news_id": "9ba484a1-877e-4953-a0de-f50d18fa8436",
+      "company_id": "COMP-03ad82319140",
+      "title": "携手卓梅尼集团，共筑电梯AI 大模型时代-企业官网",
+      "source_url": "http://www.witcloudnet.com/newsinfo/8439520.html?templateId=73940"
+    },
+    {
+      "news_id": "69c76a9c-d6f7-4485-b3bb-9a256bf0a5d8",
+      "company_id": "COMP-0dd6b7b967cd",
+      "title": "佳安智能机器人【官网】-工业具身;移动机器人;核心部件",
+      "source_url": "https://kaanh.cn/"
+    },
+    {
+      "news_id": "70ace74d-9f49-4ac2-9a3b-20175ae93db2",
+      "company_id": "COMP-0dd6b7b967cd",
+      "title": "佳安智能完成A2轮融资，加速工业具身智能生态布局 - 新浪财经",
+      "source_url": "https://cj.sina.cn/articles/view/1999913061/7734406500101acbm?froms=ggmp&vt=4"
+    },
+    {
+      "news_id": "92bb6fa9-3db7-42aa-abd2-2bd1f8ea8dfa",
+      "company_id": "COMP-219afcacba21",
+      "title": "無穹創新科技有限公司",
+      "source_url": "https://www.hkstp.org/zh-cn/directory/electronics/skyland-innovation-company-limited"
+    },
+    {
+      "news_id": "1181e5e1-f87d-4eaf-93ec-dc4591b61064",
+      "company_id": "COMP-219afcacba21",
+      "title": "無穹創新科技有限公司",
+      "source_url": "https://www.hkstp.org/zh-hk/directory/electronics/skyland-innovation-company-limited"
+    },
+    {
+      "news_id": "02063182-466c-4f66-82d9-cbfec4042cc6",
+      "company_id": "COMP-1998f9b7f2ea",
+      "title": "安杰信_公司介绍_新三板_新浪财经",
+      "source_url": "http://stock.finance.sina.com.cn/thirdmarket/view/OTC_gsjs.php?symbol=834926"
+    },
+    {
+      "news_id": "bf812b8e-423e-4c36-b6e1-5b66007543dc",
+      "company_id": "COMP-2482684e2ff8",
+      "title": "赋能全球企业，芯片一站式解决方案生产商",
+      "source_url": "https://www.coretong.com/aboutus/"
+    },
+    {
+      "news_id": "f001db62-1bcf-48ab-8ba9-6305e0edeb85",
+      "company_id": "COMP-302ee093a2d1",
+      "title": "中国湾测传感世界：以研发及品质为核心的国产高端传感器品牌商",
+      "source_url": "https://www.wonsor.com/"
+    },
+    {
+      "news_id": "2aa1017f-cf55-431a-ad7b-79cdd20351e2",
+      "company_id": "COMP-329b5f2c4349",
+      "title": "公司介绍1昂视工业技术（深圳）有限公司",
+      "source_url": "http://www.twxw.com.cn/com/piqs/introduce/"
+    },
+    {
+      "news_id": "60fd2e42-9fbb-4788-8c4e-3169e6c40d4f",
+      "company_id": "COMP-3595cb259124",
+      "title": "泰科机器人: 人形机器人关节模组-线性关节-厂家定制",
+      "source_url": "https://techsoft-robots.com/"
+    },
+    {
+      "news_id": "3e496e1f-1abe-4fe6-9843-148f95d6355a",
+      "company_id": "COMP-40b2fff69ff7",
+      "title": "合肥方晶科技有限公司",
+      "source_url": "https://www.moneic.com/"
+    },
+    {
+      "news_id": "c9aea0d0-cbcd-4e99-a67c-d538c6ae98aa",
+      "company_id": "COMP-40b2fff69ff7",
+      "title": "Fangjing(方晶)",
+      "source_url": "https://www.xcc.com/brand-detail/12235"
+    },
+    {
+      "news_id": "e3d874a8-6ec0-413b-aa47-92cf66ab874c",
+      "company_id": "COMP-467bb9e6ed99",
+      "title": "嘉值科技股份有限公司",
+      "source_url": "http://www.elitekcorp.com/"
+    },
+    {
+      "news_id": "387cd97b-0596-483c-a0c1-0dc5160ea254",
+      "company_id": "COMP-467bb9e6ed99",
+      "title": "中国电信上海公司合作伙伴引入公示（2015年——2018年）",
+      "source_url": "http://www.shtel.com.cn/shgg/dwhz/yrgs/17459.html"
+    }
+  ],
+  "deleted_products_preview": [
+    {
+      "product_id": "PROD-c01f1b5c786e",
+      "company_id": "COMP-10047ff88d61",
+      "canonical_name": "奇朵AI相机",
+      "quality_status": "needs_review"
+    },
+    {
+      "product_id": "PROD-9f1859f1fdb7",
+      "company_id": "COMP-10047ff88d61",
+      "canonical_name": "十万个为什么AI儿童探索相机",
+      "quality_status": "needs_review"
+    },
+    {
+      "product_id": "PROD-5865bb73b007",
+      "company_id": "COMP-065e3cb4dac8",
+      "canonical_name": "PowerArena HOP 人因作業平台",
+      "quality_status": "needs_review"
+    },
+    {
+      "product_id": "PROD-7a68a13a6eca",
+      "company_id": "COMP-065e3cb4dac8",
+      "canonical_name": "PowerArena HOP 人因作业平台",
+      "quality_status": "needs_review"
+    },
+    {
+      "product_id": "PROD-d2cf8bc54bee",
+      "company_id": "COMP-219afcacba21",
+      "canonical_name": "3D 扫描仪",
+      "quality_status": "needs_review"
+    },
+    {
+      "product_id": "PROD-33e09ac22c61",
+      "company_id": "COMP-219afcacba21",
+      "canonical_name": "自主飞行无人机",
+      "quality_status": "needs_review"
+    },
+    {
+      "product_id": "PROD-0f267ac3ecda",
+      "company_id": "COMP-219afcacba21",
+      "canonical_name": "移动检测机器人",
+      "quality_status": "needs_review"
+    },
+    {
+      "product_id": "PROD-ca0a4e571bd8",
+      "company_id": "COMP-219afcacba21",
+      "canonical_name": "3D 掃描儀",
+      "quality_status": "needs_review"
+    },
+    {
+      "product_id": "PROD-c6434c777eb1",
+      "company_id": "COMP-219afcacba21",
+      "canonical_name": "自主飛行無人機",
+      "quality_status": "needs_review"
+    },
+    {
+      "product_id": "PROD-e11820a4c47b",
+      "company_id": "COMP-219afcacba21",
+      "canonical_name": "移動檢測機器人",
+      "quality_status": "needs_review"
+    },
+    {
+      "product_id": "PROD-52f9cf958627",
+      "company_id": "COMP-894338aff924",
+      "canonical_name": "人形机器人",
+      "quality_status": "needs_review"
+    },
+    {
+      "product_id": "PROD-1370a209eb78",
+      "company_id": "COMP-6877a3f5af6c",
+      "canonical_name": "DRAM chips",
+      "quality_status": "needs_review"
+    },
+    {
+      "product_id": "PROD-cfdcbaaaaa58",
+      "company_id": "COMP-329b5f2c4349",
+      "canonical_name": "视觉传感器",
+      "quality_status": "needs_review"
+    },
+    {
+      "product_id": "PROD-d1dc76f2b0d1",
+      "company_id": "COMP-ec4f36d8b630",
+      "canonical_name": "海豚云-低代码开发平台",
+      "quality_status": "needs_review"
+    },
+    {
+      "product_id": "PROD-a839b6e8ef6b",
+      "company_id": "COMP-ec4f36d8b630",
+      "canonical_name": "海豚云海外仓WMS系统",
+      "quality_status": "needs_review"
+    },
+    {
+      "product_id": "PROD-889c7c676fca",
+      "company_id": "COMP-9dbac97b9320",
+      "canonical_name": "博华超高清率先推出基于国产硬件的智能超分系统",
+      "quality_status": "needs_review"
+    },
+    {
+      "product_id": "PROD-dfd79ee343c9",
+      "company_id": "COMP-1b1fea865e40",
+      "canonical_name": "Mind2Mood 一站式育兒平台",
+      "quality_status": "needs_review"
+    },
+    {
+      "product_id": "PROD-156765ffa096",
+      "company_id": "COMP-03215767f7fc",
+      "canonical_name": "3D打印教育解决方案",
+      "quality_status": "needs_review"
+    },
+    {
+      "product_id": "PROD-f8f904f7c7d3",
+      "company_id": "COMP-2d9a7505bdab",
+      "canonical_name": "AI视觉算法商城",
+      "quality_status": "needs_review"
+    },
+    {
+      "product_id": "PROD-c14b8d178655",
+      "company_id": "COMP-2466866beb8a",
+      "canonical_name": "UWB空指遥控器模组方案",
+      "quality_status": "needs_review"
+    },
+    {
+      "product_id": "PROD-4bc500366c11",
+      "company_id": "COMP-1cd84b2ae529",
+      "canonical_name": "本原元宇宙",
+      "quality_status": "needs_review"
+    },
+    {
+      "product_id": "PROD-a24ecd021d14",
+      "company_id": "COMP-022ba3545989",
+      "canonical_name": "车用空调压缩机",
+      "quality_status": "needs_review"
+    },
+    {
+      "product_id": "PROD-7deef4ec8ef7",
+      "company_id": "COMP-022ba3545989",
+      "canonical_name": "新能源客车空调",
+      "quality_status": "needs_review"
+    },
+    {
+      "product_id": "PROD-684d2aaa22c0",
+      "company_id": "COMP-022ba3545989",
+      "canonical_name": "电动大巴空调",
+      "quality_status": "needs_review"
+    },
+    {
+      "product_id": "PROD-cc4ad63b573c",
+      "company_id": "COMP-022ba3545989",
+      "canonical_name": "地铁空调",
+      "quality_status": "needs_review"
+    },
+    {
+      "product_id": "PROD-00d4b9ec563a",
+      "company_id": "COMP-022ba3545989",
+      "canonical_name": "磁悬浮列车空调",
+      "quality_status": "needs_review"
+    },
+    {
+      "product_id": "PROD-7d936c4e5657",
+      "company_id": "COMP-022ba3545989",
+      "canonical_name": "新能源汽车空调",
+      "quality_status": "needs_review"
+    },
+    {
+      "product_id": "PROD-248e29d4de87",
+      "company_id": "COMP-022ba3545989",
+      "canonical_name": "常规汽车变频空调",
+      "quality_status": "needs_review"
+    },
+    {
+      "product_id": "PROD-88998f8f8e32",
+      "company_id": "COMP-022ba3545989",
+      "canonical_name": "轨道交通空调",
+      "quality_status": "needs_review"
+    },
+    {
+      "product_id": "PROD-5bdf4f865950",
+      "company_id": "COMP-40b2fff69ff7",
+      "canonical_name": "ESD保护器件和集成电路等产品",
+      "quality_status": "needs_review"
+    }
+  ],
+  "deleted_scenarios_preview": [
+    {
+      "scenario_id": "SCEN-7751dc30a629",
+      "company_id": "COMP-0dd6b7b967cd",
+      "scenario_name": "磨抛工作站",
+      "source_url": "https://cj.sina.cn/articles/view/1999913061/7734406500101acbm?froms=ggmp&vt=4",
+      "related_product_id": "PROD-7751dc30a629"
+    },
+    {
+      "scenario_id": "SCEN-db2ab94a9150",
+      "company_id": "COMP-10047ff88d61",
+      "scenario_name": "户外自然探索与提问",
+      "source_url": "https://zhuanlan.zhihu.com/p/2027384746913612912",
+      "related_product_id": "PROD-c01f1b5c786e"
+    },
+    {
+      "scenario_id": "SCEN-25c235a7f884",
+      "company_id": "COMP-0dd6b7b967cd",
+      "scenario_name": "复合机器人",
+      "source_url": "https://cj.sina.cn/articles/view/1999913061/7734406500101acbm?froms=ggmp&vt=4",
+      "related_product_id": "PROD-25c235a7f884"
+    },
+    {
+      "scenario_id": "SCEN-dfa16927085c",
+      "company_id": "COMP-10047ff88d61",
+      "scenario_name": "主动智能场景触发",
+      "source_url": "https://zhuanlan.zhihu.com/p/2027384746913612912",
+      "related_product_id": "PROD-c01f1b5c786e"
+    },
+    {
+      "scenario_id": "SCEN-e1ab3fa49e7f",
+      "company_id": "COMP-065e3cb4dac8",
+      "scenario_name": "成熟生產線增長",
+      "source_url": "https://www.powerarena.com/zh-hant/about/",
+      "related_product_id": "PROD-5865bb73b007"
+    },
+    {
+      "scenario_id": "SCEN-8d13ad4b2177",
+      "company_id": "COMP-065e3cb4dac8",
+      "scenario_name": "質量保障",
+      "source_url": "https://www.powerarena.com/zh-hant/about/",
+      "related_product_id": "PROD-5865bb73b007"
+    },
+    {
+      "scenario_id": "SCEN-6998b250f68d",
+      "company_id": "COMP-065e3cb4dac8",
+      "scenario_name": "人因装配线优化",
+      "source_url": "https://www.powerarena.com/zh-hans/",
+      "related_product_id": "PROD-7a68a13a6eca"
+    },
+    {
+      "scenario_id": "SCEN-ecb50d118af7",
+      "company_id": "COMP-6877a3f5af6c",
+      "scenario_name": "Data centers",
+      "source_url": "https://baike.baidu.com/en/item/Shenzhen%20Shengweixu%20Technology%20Co.,%20Ltd./38325",
+      "related_product_id": "PROD-1370a209eb78"
+    },
+    {
+      "scenario_id": "SCEN-411b5a80b28d",
+      "company_id": "COMP-6877a3f5af6c",
+      "scenario_name": "Smartphones",
+      "source_url": "https://baike.baidu.com/en/item/Shenzhen%20Shengweixu%20Technology%20Co.,%20Ltd./38325",
+      "related_product_id": "PROD-1370a209eb78"
+    },
+    {
+      "scenario_id": "SCEN-073024f4213f",
+      "company_id": "COMP-0dd6b7b967cd",
+      "scenario_name": "类人形机器人",
+      "source_url": "https://cj.sina.cn/articles/view/1999913061/7734406500101acbm?froms=ggmp&vt=4",
+      "related_product_id": "PROD-073024f4213f"
+    },
+    {
+      "scenario_id": "SCEN-9d97034555e3",
+      "company_id": "COMP-03215767f7fc",
+      "scenario_name": "专业建设顶层规划",
+      "source_url": "http://wisdom3d.com.cn/",
+      "related_product_id": "PROD-156765ffa096"
+    },
+    {
+      "scenario_id": "SCEN-2b4987c33078",
+      "company_id": "COMP-03215767f7fc",
+      "scenario_name": "实训室建设",
+      "source_url": "http://wisdom3d.com.cn/",
+      "related_product_id": "PROD-156765ffa096"
+    },
+    {
+      "scenario_id": "SCEN-b5a8b2713683",
+      "company_id": "COMP-03215767f7fc",
+      "scenario_name": "教学资源开发",
+      "source_url": "http://wisdom3d.com.cn/",
+      "related_product_id": "PROD-156765ffa096"
+    },
+    {
+      "scenario_id": "SCEN-448824659e87",
+      "company_id": "COMP-03215767f7fc",
+      "scenario_name": "师资队伍建设",
+      "source_url": "http://wisdom3d.com.cn/",
+      "related_product_id": "PROD-156765ffa096"
+    },
+    {
+      "scenario_id": "SCEN-6250491302a4",
+      "company_id": "COMP-03215767f7fc",
+      "scenario_name": "增值服务",
+      "source_url": "http://wisdom3d.com.cn/",
+      "related_product_id": "PROD-156765ffa096"
+    },
+    {
+      "scenario_id": "SCEN-818985b547ad",
+      "company_id": "COMP-2d9a7505bdab",
+      "scenario_name": "多行业图像识别应用",
+      "source_url": "https://www.extremevision.com.cn/",
+      "related_product_id": "PROD-f8f904f7c7d3"
+    },
+    {
+      "scenario_id": "SCEN-aa26ef2fdd04",
+      "company_id": "COMP-1cd84b2ae529",
+      "scenario_name": "景城空间品质升级",
+      "source_url": "https://static.nfnews.com/content/202511/28/c11949108.html?enterColumnId=1667",
+      "related_product_id": "PROD-4bc500366c11"
+    },
+    {
+      "scenario_id": "SCEN-ac89396d470c",
+      "company_id": "COMP-065e3cb4dac8",
+      "scenario_name": "全球生產管線透明化",
+      "source_url": "https://www.powerarena.com/zh-hant/",
+      "related_product_id": "PROD-15000c39c1d2"
+    },
+    {
+      "scenario_id": "SCEN-921f83996f26",
+      "company_id": "COMP-065e3cb4dac8",
+      "scenario_name": "工廠管理洞察與效率提升",
+      "source_url": "https://www.powerarena.com/zh-hant/",
+      "related_product_id": "PROD-15000c39c1d2"
+    },
+    {
+      "scenario_id": "SCEN-132c85851f5c",
+      "company_id": "COMP-022ba3545989",
+      "scenario_name": "新能源客车空调应用",
+      "source_url": "http://www.vaqoung.com/",
+      "related_product_id": "PROD-7deef4ec8ef7"
+    },
+    {
+      "scenario_id": "SCEN-6224cb26ff68",
+      "company_id": "COMP-022ba3545989",
+      "scenario_name": "电动大巴空调应用",
+      "source_url": "http://www.vaqoung.com/",
+      "related_product_id": "PROD-684d2aaa22c0"
+    },
+    {
+      "scenario_id": "SCEN-fa435ebbc184",
+      "company_id": "COMP-022ba3545989",
+      "scenario_name": "地铁空调应用",
+      "source_url": "http://www.vaqoung.com/",
+      "related_product_id": "PROD-cc4ad63b573c"
+    },
+    {
+      "scenario_id": "SCEN-9131aa17e981",
+      "company_id": "COMP-022ba3545989",
+      "scenario_name": "磁悬浮列车空调应用",
+      "source_url": "http://www.vaqoung.com/",
+      "related_product_id": "PROD-00d4b9ec563a"
+    },
+    {
+      "scenario_id": "SCEN-664268322a19",
+      "company_id": "COMP-022ba3545989",
+      "scenario_name": "车用空调压缩机制造",
+      "source_url": "http://www.vaqoung.com/",
+      "related_product_id": "PROD-a24ecd021d14"
+    },
+    {
+      "scenario_id": "SCEN-40d59f95d25a",
+      "company_id": "COMP-022ba3545989",
+      "scenario_name": "新能源汽车空调应用",
+      "source_url": "https://pitchhub.36kr.com/project/2073772499419395",
+      "related_product_id": "PROD-7d936c4e5657"
+    },
+    {
+      "scenario_id": "SCEN-6896e440b1e3",
+      "company_id": "COMP-022ba3545989",
+      "scenario_name": "常规汽车变频空调应用",
+      "source_url": "https://pitchhub.36kr.com/project/2073772499419395",
+      "related_product_id": "PROD-248e29d4de87"
+    },
+    {
+      "scenario_id": "SCEN-f957dba93667",
+      "company_id": "COMP-022ba3545989",
+      "scenario_name": "轨道交通空调应用",
+      "source_url": "https://pitchhub.36kr.com/project/2073772499419395",
+      "related_product_id": "PROD-88998f8f8e32"
+    },
+    {
+      "scenario_id": "SCEN-e299abfccfc0",
+      "company_id": "COMP-022ba3545989",
+      "scenario_name": "车用空调压缩机应用",
+      "source_url": "https://pitchhub.36kr.com/project/2073772499419395",
+      "related_product_id": "PROD-a24ecd021d14"
+    },
+    {
+      "scenario_id": "SCEN-166533dd6bc6",
+      "company_id": "COMP-3595cb259124",
+      "scenario_name": "人形机器人关节",
+      "source_url": "https://techsoft-robots.com/",
+      "related_product_id": "PROD-b0433214e3e5"
+    },
+    {
+      "scenario_id": "SCEN-13c1162a78c2",
+      "company_id": "COMP-a1cc8c4c739d",
+      "scenario_name": "盲人操作智能手机",
+      "source_url": "http://side.cuhk.edu.cn/zh-hans/article/972",
+      "related_product_id": "PROD-bb9e986cb034"
+    }
+  ]
+}

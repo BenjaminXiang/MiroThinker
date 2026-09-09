@@ -1,0 +1,75 @@
+{
+  "schema_version": "canonical-v2-s8l1-release-scoped-exact-lookup-receipt-v1",
+  "change_id": "rebuild-canonical-v2-knowledge-platform",
+  "slice_id": "s8l1-release-scoped-exact-lookup-green",
+  "status": "accepted",
+  "accepted_at": "2026-07-16T05:31:12Z",
+  "git_head": "f0e6224e1c675c6d6c58993676783b2fbe0cd8f6",
+  "formal_task_ledger": "55/80",
+  "implementation": {
+    "knowledge_read_sha256": "a9668b10a53dd8b2f942eeb5028168b8366d1732b3a04fdb7d1d98b379e37e7e",
+    "knowledge_read_isolated_sha256": "9016e2e64e14db7f4e6297d4f404b508d97902024f52acd2484684ef0002ae6d",
+    "owner_test_sha256": "94617a0e9f45af331e8291329de12da6ad6209995d1c319903c5f64f0e4952ca",
+    "slice_contract_sha256_before_acceptance_evidence": "8de3aca4cfc7a06de6a82d9f2c48adc7da4ce23f657dada4bfb5e3e49108c490",
+    "implementation_plan_sha256": "7ccf814e107163a775bb3adbea9963302e4c67c98d204131e32577a8095a54d1"
+  },
+  "tdd": {
+    "red_normal": "1 xfailed, 44 deselected; direct missing knowledge_read_isolated sentinel",
+    "red_forced": "1 failed, 44 deselected; exact _MissingIsolatedKnowledgeReadModule",
+    "green_focused": "1 passed, 44 deselected",
+    "green_s7_s8_pair": "2 passed with one shared physical bundle build"
+  },
+  "verification": {
+    "shared_s7_s8_owner": "43 passed, 2 skipped",
+    "knowledge_read_owner_matrix": "16 passed",
+    "canonical_v2_no_external": "331 passed, 141 skipped, 0 xfailed, 3 existing hostile-model serialization warnings",
+    "ruff_check": "passed for complete src/data_agents/canonical_v2 and tests/canonical_v2",
+    "ruff_format": "passed for the three changed files",
+    "py_compile": "passed",
+    "pyright": "0 errors, 0 warnings, 0 informations for complete Canonical V2 source/tests",
+    "strict_openspec": "passed",
+    "git_diff_check": "passed",
+    "scope_secret_cache": "passed"
+  },
+  "wheel": {
+    "path": "/var/tmp/canonical-v2-s8l1-wheel-20260716T0530Z/miroflow_agent-0.1.0-py3-none-any.whl",
+    "sha256": "3180d0c94a52eee0c4d23f8ef3d15dfd6c0a3e16ef519541191c5269b9b2fdc5",
+    "entry_count": 276,
+    "contains_knowledge_read": true,
+    "contains_knowledge_read_isolated": true,
+    "contains_tests_or_agents": false,
+    "packaged_production_hashes_match_source": true
+  },
+  "frozen_targets": {
+    "original_milvus_sha256": "43ef203e0b101fcbed2a6c8fcde19a35d426199d3f02bc72525d0acf618867cc",
+    "original_pgtest_paused": true,
+    "original_pgtest_volume": "d81c6381b0c7c0a975ca0ff4a0054037e72b0d4cb80174f682abceb1127cd241",
+    "recovery_lab_network": "none",
+    "recovery_lab_published_ports": false,
+    "recovery_lab_restart_policy": "no"
+  },
+  "review": {
+    "initial": {
+      "critical": 0,
+      "important": 3,
+      "closed_important": [
+        "protected exact slots now admit original and planner-shaped lane text",
+        "empty/cross-domain local output is closed in the adapter and KnowledgeRead seam",
+        "excluded terms now cover complete normalized typed-projection scalar content"
+      ]
+    },
+    "targeted_re_review": {
+      "critical": 0,
+      "important": 0,
+      "new_minor": 0,
+      "new_yagni": 0,
+      "verdict": "accepted",
+      "focused_recheck": "1 passed, 44 deselected"
+    }
+  },
+  "nonblocking_minor_yagni": [
+    "Minor: source_authority=canonical_release names release provenance rather than upstream source authority; no current ranking path consumes it.",
+    "YAGNI: the explicit service-state set check is redundant after PublishedRelease dump revalidation but remains harmless defense/documentation."
+  ],
+  "forbidden_actions_performed": []
+}

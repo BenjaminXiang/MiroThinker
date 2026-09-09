@@ -1,0 +1,1994 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="color-scheme" content="light" />
+    <title>国先检索助手</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23143d59'/%3E%3Cpath d='M17 19h8v11l12-11h10L33 32l15 13H37L25 34v11h-8z' fill='white'/%3E%3C/svg%3E" />
+    <style>
+      :root {
+        --ink: #17252f;
+        --muted: #677984;
+        --navy: #143d59;
+        --navy-strong: #0d2c41;
+        --teal: #168b82;
+        --teal-soft: #e7f5f2;
+        --blue-soft: #edf4f8;
+        --canvas: #f3f6f7;
+        --surface: #ffffff;
+        --line: #dce4e7;
+        --amber: #a86319;
+        --amber-soft: #fff4df;
+        --danger: #a83f4c;
+        --shadow: 0 18px 42px rgba(24, 55, 70, 0.09);
+      }
+
+      * { box-sizing: border-box; }
+
+      html, body {
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+      }
+
+      body {
+        margin: 0;
+        color: var(--ink);
+        background:
+          radial-gradient(circle at 90% 0%, rgba(22, 139, 130, 0.08), transparent 26rem),
+          var(--canvas);
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+          "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+        line-height: 1.55;
+      }
+
+      button, input, textarea, a { font: inherit; }
+      button:focus-visible, input:focus-visible, textarea:focus-visible, a:focus-visible {
+        outline: 3px solid rgba(22, 139, 130, 0.26);
+        outline-offset: 2px;
+      }
+
+      .shell {
+        /* fixed 定位 + translateY 补偿 visualViewport.offsetTop：
+           iOS 键盘弹出时 Safari 向下平移可视窗口，普通文档流会把整个 shell 顶出可视区。 */
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        transform: translateY(var(--vv-offset, 0px));
+        width: min(980px, calc(100% - 32px));
+        height: 100vh;
+        height: var(--app-height, 100vh);
+        min-width: 0;
+        min-height: 0;
+        margin: 0 auto;
+        overflow: hidden;
+        display: grid;
+        grid-template-rows: auto auto minmax(0, 1fr) auto;
+      }
+      .shell > .header { grid-row: 1; }
+      .shell > .demo-strip { grid-row: 2; }
+      .shell > .messages { grid-row: 3; }
+      .shell > .composer { grid-row: 4; }
+
+      @supports (height: 100dvh) {
+        .shell {
+          height: 100dvh;
+          height: var(--app-height, 100dvh);
+        }
+      }
+
+      .header {
+        --header-padding-block: 18px;
+        --header-padding-inline: 20px;
+        min-width: 0;
+        margin-top: 18px;
+        padding: var(--header-padding-block) var(--header-padding-inline);
+        padding:
+          calc(var(--header-padding-block) + env(safe-area-inset-top, 0px))
+          calc(var(--header-padding-inline) + env(safe-area-inset-right, 0px))
+          var(--header-padding-block)
+          calc(var(--header-padding-inline) + env(safe-area-inset-left, 0px));
+        color: #fff;
+        background: var(--navy-strong);
+        border-radius: 19px 19px 0 0;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 20px;
+      }
+
+      .brand { display: flex; align-items: center; gap: 13px; min-width: 0; }
+      .brand-mark {
+        width: 43px;
+        height: 43px;
+        flex: 0 0 auto;
+        display: grid;
+        place-items: center;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 13px;
+        background: rgba(255, 255, 255, 0.08);
+        font-weight: 800;
+      }
+      .header h1 { margin: 0; font-size: clamp(19px, 2.5vw, 25px); }
+      .header p { margin: 3px 0 0; color: #bdd0d9; font-size: 12px; }
+      .demo-toggle {
+        min-width: 44px;
+        min-height: 44px;
+        display: none;
+        align-items: center;
+        padding: 7px 10px;
+        color: #fff;
+        background: transparent;
+        border: 1px solid rgba(255, 255, 255, 0.42);
+        border-radius: 999px;
+        cursor: pointer;
+        font-size: 12px;
+        font-weight: 700;
+        white-space: nowrap;
+      }
+      .demo-toggle:hover { background: rgba(255, 255, 255, 0.1); }
+      .demo-toggle:focus-visible {
+        outline: 3px solid rgba(255, 255, 255, 0.48);
+        outline-offset: 2px;
+      }
+      .shell[data-presentation-state="conversation"] .demo-strip { display: none; }
+      .shell[data-presentation-state="conversation"] .demo-toggle,
+      .shell[data-presentation-state="demo-expanded"] .demo-toggle { display: inline-flex; }
+      .browse-link {
+        padding: 8px 12px;
+        color: var(--navy-strong);
+        background: #fff;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 760;
+        text-decoration: none;
+        white-space: nowrap;
+      }
+
+      .demo-strip {
+        min-width: 0;
+        padding: 15px 18px;
+        background: #fff;
+        border: 1px solid var(--line);
+        border-top: 0;
+      }
+
+      .demo-title { margin: 0 0 10px; color: var(--muted); font-size: 12px; font-weight: 700; }
+      .demo-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; }
+      .demo-chip {
+        min-width: 44px;
+        min-height: 44px;
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr);
+        align-items: start;
+        gap: 9px;
+        padding: 11px 12px;
+        color: var(--ink);
+        background: #f8fafb;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        cursor: pointer;
+        text-align: left;
+      }
+      .demo-chip:hover { border-color: #85bbb7; background: var(--teal-soft); }
+      .step {
+        min-width: 28px;
+        padding: 3px 6px;
+        color: #fff;
+        background: var(--teal);
+        border-radius: 999px;
+        font-size: 10px;
+        font-weight: 800;
+        text-align: center;
+      }
+      .demo-chip:nth-child(2) .step { color: var(--amber); background: var(--amber-soft); }
+      .demo-copy { min-width: 0; }
+      .demo-copy strong { display: block; margin-bottom: 2px; font-size: 11px; }
+      .demo-copy span { display: block; overflow-wrap: anywhere; color: #354853; font-size: 12px; }
+      .demo-empty {
+        grid-column: 1 / -1;
+        margin: 0;
+        padding: 10px 12px;
+        color: var(--muted);
+        background: #f8fafb;
+        border: 1px dashed var(--line);
+        border-radius: 12px;
+        font-size: 11px;
+      }
+
+      .messages {
+        min-width: 0;
+        min-height: 0;
+        padding: 22px;
+        overflow-y: auto;
+        overflow-x: hidden;
+        overscroll-behavior: contain;
+        background: rgba(255, 255, 255, 0.65);
+        border-inline: 1px solid var(--line);
+      }
+
+      .welcome {
+        min-width: 0;
+        max-width: 620px;
+        margin: 58px auto;
+        padding: 25px;
+        color: var(--muted);
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: 17px;
+        box-shadow: 0 10px 30px rgba(24, 55, 70, 0.05);
+        text-align: center;
+      }
+      .welcome strong { display: block; margin-bottom: 6px; color: var(--ink); font-size: 17px; }
+
+      .message { min-width: 0; display: flex; align-items: flex-start; gap: 10px; margin-bottom: 18px; }
+      .message.user { flex-direction: row-reverse; }
+      .avatar {
+        width: 32px;
+        height: 32px;
+        flex: 0 0 auto;
+        display: grid;
+        place-items: center;
+        color: #fff;
+        background: var(--teal);
+        border-radius: 11px;
+        font-size: 12px;
+        font-weight: 800;
+      }
+      .message.user .avatar { color: var(--navy); background: var(--blue-soft); }
+      .message.assistant .avatar {
+        box-sizing: border-box;
+        position: relative;
+        overflow: hidden;
+        color: var(--navy);
+        background: #fff;
+        border: 1px solid var(--line);
+        font-size: 9px;
+      }
+      .message.assistant .avatar img {
+        position: absolute;
+        inset: 0;
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        background: #fff;
+      }
+      .bubble {
+        width: min(760px, calc(100% - 46px));
+        min-width: 0;
+        padding: 14px 15px;
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: 4px 15px 15px 15px;
+        box-shadow: 0 7px 22px rgba(24, 55, 70, 0.05);
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+      }
+      .message.user .bubble {
+        width: auto;
+        max-width: 76%;
+        background: var(--navy);
+        border-color: var(--navy);
+        border-radius: 15px 4px 15px 15px;
+        color: #fff;
+      }
+      .message.error .bubble { color: var(--danger); background: #fff1f3; border-color: #efc9cf; }
+
+      .answer { min-width: 0; max-width: 100%; margin: 0; font-size: 14px; line-height: 1.75; word-break: break-word; }
+      .answer > :first-child { margin-top: 0; }
+      .answer > :last-child { margin-bottom: 0; }
+      .answer p { margin: 0.5em 0; }
+      .answer h1, .answer h2, .answer h3, .answer h4 {
+        margin: 0.9em 0 0.45em;
+        font-weight: 600;
+        line-height: 1.4;
+        color: inherit;
+      }
+      .answer h1 { font-size: 1.2em; }
+      .answer h2 { font-size: 1.12em; }
+      .answer h3 { font-size: 1.05em; }
+      .answer h4 { font-size: 1em; }
+      .answer ul, .answer ol { margin: 0.5em 0; padding-left: 1.6em; }
+      .answer li { margin: 0.25em 0; }
+      .answer strong { font-weight: 600; }
+      .answer a { overflow-wrap: anywhere; }
+      .answer code {
+        padding: 0.1em 0.35em;
+        border-radius: 4px;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+        font-size: 0.92em;
+        background: rgba(128, 128, 128, 0.14);
+      }
+      .answer pre {
+        max-width: 100%;
+        margin: 0.5em 0;
+        padding: 0.6em 0.9em;
+        border-radius: 6px;
+        overflow-x: auto;
+        overscroll-behavior-inline: contain;
+        background: rgba(128, 128, 128, 0.12);
+      }
+      .answer pre code {
+        padding: 0;
+        overflow-wrap: normal;
+        word-break: normal;
+        background: transparent;
+      }
+      .answer table {
+        display: block;
+        max-width: 100%;
+        overflow-x: auto;
+        overscroll-behavior-inline: contain;
+      }
+      .answer img { max-width: 100%; height: auto; }
+      .bubble details,
+      .citations {
+        min-width: 0;
+        max-width: 100%;
+      }
+      .process { margin: 0 0 8px; padding: 8px 10px; border-radius: 8px; background: rgba(128, 128, 128, 0.08); }
+      .process-row { display: flex; align-items: baseline; gap: 6px; font-size: 13px; line-height: 1.7; color: var(--muted); }
+      .process-marker { font-size: 11px; }
+      .process-done .process-marker { color: var(--teal); }
+      .process-done .process-text { color: inherit; }
+      .process-web { margin: 2px 0 2px 17px; font-size: 13px; line-height: 1.7; color: var(--muted); }
+      .process-web-list { display: grid; gap: 2px; margin: 0; padding: 0; list-style: none; }
+      .process-web-item { display: flex; align-items: baseline; gap: 6px; min-width: 0; }
+      .process-web-link {
+        overflow: hidden;
+        color: var(--teal);
+        font-size: 12px;
+        text-decoration: none;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .process-web-link:hover { text-decoration: underline; }
+      .process-web-source { flex-shrink: 0; font-size: 11px; }
+      .process-summary summary {
+        min-width: 44px;
+        min-height: 44px;
+        display: flex;
+        align-items: center;
+        font-size: 12px;
+        color: var(--muted);
+        cursor: pointer;
+      }
+      .process-finished { margin-bottom: 10px; }
+      .process-actions { margin-top: 4px; }
+      .process-stop {
+        min-width: 44px;
+        min-height: 44px;
+        padding: 3px 10px;
+        color: var(--danger);
+        background: #fff;
+        border: 1px solid #dfb8be;
+        border-radius: 7px;
+        cursor: pointer;
+        font-size: 11px;
+        font-weight: 700;
+      }
+      .process-stop:hover { color: #fff; background: var(--danger); }
+      .evidence-disclosure {
+        margin-top: 12px;
+        padding-top: 10px;
+        border-top: 1px solid var(--line);
+      }
+      .evidence-summary {
+        min-width: 44px;
+        min-height: 44px;
+        width: fit-content;
+        display: inline-flex;
+        align-items: center;
+        color: var(--teal);
+        cursor: pointer;
+        font-size: 11px;
+        font-weight: 700;
+      }
+      .evidence-disclosure .subsection { margin-top: 8px; padding-top: 0; border-top: 0; }
+      .response-meta { margin-top: 13px; color: var(--muted); font-size: 10px; }
+      .trace-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 7px;
+        margin-top: 14px;
+      }
+      .trace-card { padding: 9px; background: #f5f8f9; border-radius: 9px; }
+      .trace-card span { display: block; color: var(--muted); font-size: 9px; }
+      .trace-card strong { display: block; margin-top: 3px; overflow: hidden; font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
+
+      .subsection { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line); }
+      .subsection-title { margin: 0 0 7px; color: var(--muted); font-size: 10px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; }
+      .tokens { display: flex; flex-wrap: wrap; gap: 5px; }
+      .token { padding: 4px 7px; color: #36505b; background: var(--blue-soft); border-radius: 7px; font-size: 10px; }
+      .token.warning { color: var(--amber); background: var(--amber-soft); }
+
+      .citations { display: grid; gap: 6px; }
+      .citation {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        min-width: 0;
+        padding: 7px 9px;
+        color: var(--ink);
+        background: #f8fafb;
+        border-radius: 9px;
+        font-size: 11px;
+        text-decoration: none;
+      }
+      .citation-badge { padding: 2px 6px; color: var(--teal); background: var(--teal-soft); border-radius: 5px; font-size: 9px; }
+      .citation-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+      .web-evidence-list { display: grid; gap: 7px; }
+      .web-evidence-card {
+        padding: 10px;
+        background: #f8fafb;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+      }
+      .web-evidence-snippet { margin: 0; color: #354853; font-size: 11px; }
+      .web-evidence-link {
+        display: inline-block;
+        max-width: 100%;
+        margin-top: 6px;
+        overflow: hidden;
+        color: var(--teal);
+        font-size: 10px;
+        font-weight: 700;
+        text-decoration: none;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .web-evidence-link:hover { text-decoration: underline; }
+
+      .option-list { display: flex; flex-wrap: wrap; gap: 6px; }
+      .option-button {
+        min-width: 44px;
+        min-height: 44px;
+        padding: 6px 9px;
+        color: var(--navy);
+        background: #fff;
+        border: 1px solid #b8cbd3;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 10px;
+        text-align: left;
+      }
+      .option-button:hover { color: #fff; background: var(--navy); }
+
+      .composer {
+        --composer-padding-top: 15px;
+        --composer-padding-inline: 18px;
+        --composer-padding-bottom: 18px;
+        min-width: 0;
+        position: relative;
+        padding: var(--composer-padding-top) var(--composer-padding-inline) var(--composer-padding-bottom);
+        padding:
+          var(--composer-padding-top)
+          calc(var(--composer-padding-inline) + env(safe-area-inset-right, 0px))
+          calc(var(--composer-padding-bottom) + env(safe-area-inset-bottom, 0px))
+          calc(var(--composer-padding-inline) + env(safe-area-inset-left, 0px));
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: 0 0 19px 19px;
+        box-shadow: var(--shadow);
+      }
+      .back-to-latest {
+        min-width: 44px;
+        min-height: 44px;
+        position: absolute;
+        inset-inline-end: var(--composer-padding-inline);
+        bottom: calc(100% + 10px);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 8px 14px;
+        color: #fff;
+        background: var(--navy);
+        border: 0;
+        border-radius: 999px;
+        box-shadow: var(--shadow);
+        cursor: pointer;
+        font-size: 12px;
+        font-weight: 700;
+      }
+      .back-to-latest[hidden] { display: none; }
+      .composer form { min-width: 0; }
+      .input-row { min-width: 0; display: flex; align-items: flex-end; gap: 9px; }
+      .input-row textarea {
+        min-width: 0;
+        min-height: 44px;
+        flex: 1;
+        box-sizing: border-box;
+        resize: none;
+        overflow-y: hidden;
+        padding: 11px 13px;
+        color: var(--ink);
+        background: #f8fafb;
+        border: 1px solid var(--line);
+        border-radius: 11px;
+        line-height: 1.55;
+      }
+      .input-row textarea:focus { border-color: var(--teal); background: #fff; }
+      .submit {
+        min-width: 44px;
+        min-height: 48px;
+        padding: 0 19px;
+        color: #fff;
+        background: var(--teal);
+        border: 0;
+        border-radius: 11px;
+        cursor: pointer;
+        font-weight: 760;
+      }
+      .submit:hover { background: #0e756d; }
+      .submit:disabled { opacity: 0.55; cursor: wait; }
+      .composer-note { margin: 8px 1px 0; color: var(--muted); font-size: 10px; }
+
+      @media (max-width: 720px) {
+        .shell { width: 100%; }
+        .header {
+          --header-padding-block: 14px;
+          --header-padding-inline: 15px;
+          margin: 0;
+          border-radius: 0;
+          align-items: flex-start;
+        }
+        .shell[data-presentation-state="conversation"] .header,
+        .shell[data-presentation-state="demo-expanded"] .header {
+          --header-padding-block: 8px;
+        }
+        .shell[data-presentation-state="conversation"] .header p,
+        .shell[data-presentation-state="demo-expanded"] .header p { display: none; }
+        .brand-mark { display: none; }
+        .demo-strip { padding: 12px 15px; }
+        .demo-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        .demo-chip { padding: 9px 10px; }
+        .messages { padding: 15px; }
+        .trace-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        .composer {
+          --composer-padding-top: 12px;
+          --composer-padding-inline: 15px;
+          --composer-padding-bottom: 14px;
+          border-radius: 0;
+        }
+      }
+
+      @media (max-width: 430px) {
+        .demo-grid {
+          grid-template-columns: none;
+          grid-auto-flow: column;
+          grid-auto-columns: minmax(250px, 82vw);
+          max-width: 100%;
+          overflow-x: auto;
+          overflow-y: hidden;
+        }
+        .demo-chip {
+          width: 100%;
+          max-width: 100%;
+        }
+      }
+
+      :root.visual-viewport-short .header {
+        --header-padding-block: 8px;
+        margin-top: 0;
+      }
+      :root.visual-viewport-short .header p { display: none; }
+      :root.visual-viewport-short .brand-mark {
+        width: 34px;
+        height: 34px;
+        border-radius: 10px;
+      }
+      :root.visual-viewport-short .demo-strip { display: none; }
+      :root.visual-viewport-short .demo-toggle { display: none; }
+      :root.visual-viewport-short .messages { padding-block: 10px; }
+      :root.visual-viewport-short .welcome { margin-block: 16px; padding: 16px; }
+      :root.visual-viewport-short .composer {
+        --composer-padding-top: 8px;
+        --composer-padding-bottom: 8px;
+      }
+      :root.visual-viewport-short .input-row textarea { padding-block: 8px; }
+      :root.visual-viewport-short .composer-note { display: none; }
+
+      @media (max-height: 500px) {
+        .header {
+          --header-padding-block: 8px;
+          margin-top: 0;
+        }
+        .header p { display: none; }
+        .brand-mark { width: 34px; height: 34px; border-radius: 10px; }
+        .demo-strip { display: none; }
+        .shell[data-presentation-state] .demo-toggle { display: none; }
+        .demo-title { margin-bottom: 5px; }
+        .demo-grid { gap: 5px; }
+        .demo-chip { padding-block: 6px; }
+        .demo-chip .step, .demo-copy strong { display: none; }
+        .demo-copy span { font-size: 11px; line-height: 1.35; }
+        .messages { padding-block: 10px; }
+        .welcome { margin-block: 16px; padding: 16px; }
+        .composer {
+          --composer-padding-top: 8px;
+          --composer-padding-bottom: 8px;
+        }
+        .input-row textarea { padding-block: 8px; }
+        .composer-note { display: none; }
+      }
+
+      @media (orientation: landscape) and (max-height: 500px) {
+        .demo-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="shell" data-presentation-state="landing">
+      <header class="header">
+        <div class="brand">
+          <div class="brand-mark" aria-hidden="true">国先</div>
+          <div>
+            <h1>国先检索助手</h1>
+            <p>科技信息检索 · 支持连续追问 · 补充公开网页信息</p>
+          </div>
+        </div>
+        <button
+          class="demo-toggle"
+          id="demo-toggle"
+          type="button"
+          aria-controls="demo-strip"
+          aria-expanded="true"
+        >收起示例问题</button>
+      </header>
+
+      <section class="demo-strip" id="demo-strip" aria-labelledby="demo-title">
+        <p class="demo-title" id="demo-title">正在准备可核验的问题示例</p>
+        <div class="demo-grid" id="demo-grid" aria-live="polite" aria-busy="true"></div>
+      </section>
+
+      <main
+        class="messages"
+        id="messages"
+        aria-label="对话消息"
+        aria-live="polite"
+        tabindex="-1"
+        data-scroll-intent="following"
+      >
+        <div class="welcome" id="welcome">
+          <strong>欢迎使用国先检索助手</strong>
+          可查询企业、教授、论文、专利、技术与产业信息。
+        </div>
+      </main>
+
+      <footer class="composer">
+        <button
+          class="back-to-latest"
+          id="back-to-latest"
+          type="button"
+          aria-controls="messages"
+          hidden
+        >回到最新</button>
+        <form id="chat-form">
+          <div class="input-row">
+            <textarea id="chat-input" rows="1" maxlength="500" autocomplete="off" aria-label="检索问题" placeholder="请输入企业、教授或论文名称开始检索"></textarea>
+            <button class="submit" id="chat-submit" type="submit">发送</button>
+          </div>
+          <p class="composer-note">回答结合当前知识库与公开网页信息；重要事实可通过展示的来源核验。</p>
+        </form>
+      </footer>
+    </div>
+
+    <script>
+      function installViewportGeometry() {
+        const root = document.documentElement;
+        const viewport = window.visualViewport;
+        if (!viewport) return;
+        let framePending = false;
+        let lastHeight = null;
+        let lastOffset = null;
+
+        const updateGeometry = () => {
+          framePending = false;
+          const nextHeight = Math.round(Number(viewport.height));
+          // iOS 键盘弹出时 height 可能不变但 offsetTop > 0，需要同步补偿，否则 shell 被顶出可视区。
+          const nextOffset = Math.round(Number(viewport.offsetTop) || 0);
+          if (!Number.isFinite(nextHeight) || nextHeight <= 0) return;
+          if (nextHeight === lastHeight && nextOffset === lastOffset) return;
+          lastHeight = nextHeight;
+          lastOffset = nextOffset;
+          root.classList.toggle("visual-viewport-short", nextHeight <= 500);
+          root.style.setProperty("--app-height", `${nextHeight}px`);
+          root.style.setProperty("--vv-offset", `${nextOffset}px`);
+          maintainFollowingScroll();
+        };
+
+        const scheduleGeometryUpdate = () => {
+          if (framePending) return;
+          framePending = true;
+          window.requestAnimationFrame(updateGeometry);
+        };
+
+        window.addEventListener("resize", scheduleGeometryUpdate);
+        window.addEventListener("orientationchange", scheduleGeometryUpdate);
+        if (viewport) {
+          viewport.addEventListener("resize", scheduleGeometryUpdate);
+          viewport.addEventListener("scroll", scheduleGeometryUpdate);
+        }
+        scheduleGeometryUpdate();
+      }
+
+      installViewportGeometry();
+
+      const shell = document.querySelector(".shell");
+      const messages = document.getElementById("messages");
+      const form = document.getElementById("chat-form");
+      const input = document.getElementById("chat-input");
+      const submit = document.getElementById("chat-submit");
+      const backToLatest = document.getElementById("back-to-latest");
+      const demoStrip = document.getElementById("demo-strip");
+      const demoTitle = document.getElementById("demo-title");
+      const demoGrid = document.getElementById("demo-grid");
+      const demoToggle = document.getElementById("demo-toggle");
+      // 示例问题对匿名用户可用：静态写死，不依赖需要登录的数据浏览 API。
+      const STATIC_DEMO_QUESTIONS = Object.freeze([
+        { step: "企业", label: "了解产业概况", query: "深圳有哪些人工智能企业？" },
+        { step: "教授", label: "检索研究方向", query: "深圳有哪些研究集成电路的教授？" },
+        { step: "论文", label: "追踪学术成果", query: "深圳高校在人工智能领域有哪些代表性论文？" },
+        { step: "专利", label: "盘点技术布局", query: "深圳企业在新能源领域有哪些代表性专利？" },
+        { step: "企业", label: "核验企业动态", query: "介绍深圳的机器人产业，以及其中重点企业的最新动态" },
+      ]);
+      const presentationStateValues = Object.freeze([
+        "landing",
+        "conversation",
+        "demo-expanded",
+      ]);
+      let inputIsComposing = false;
+      let compositionJustEnded = false;
+      let compositionResetTimer = null;
+
+      function setPresentationState(nextState) {
+        if (!presentationStateValues.includes(nextState)) return false;
+        shell.dataset.presentationState = nextState;
+        const demoExpanded = nextState !== "conversation";
+        demoToggle.setAttribute("aria-expanded", String(demoExpanded));
+        demoToggle.textContent = demoExpanded ? "收起示例问题" : "展开示例问题";
+        maintainFollowingScroll();
+        return true;
+      }
+
+      function toggleDemoQuestions() {
+        const currentState = shell.dataset.presentationState;
+        if (currentState === "conversation") {
+          setPresentationState("demo-expanded");
+        } else if (currentState === "demo-expanded") {
+          setPresentationState("conversation");
+        }
+      }
+
+      function usesFinePointer() {
+        const hasFinePointer = window.matchMedia("(pointer: fine)").matches;
+        const hasAnyCoarsePointer = window.matchMedia("(any-pointer: coarse)").matches;
+        return hasFinePointer && !hasAnyCoarsePointer;
+      }
+
+      function shouldRestoreInputFocus() {
+        return usesFinePointer() && document.activeElement === input;
+      }
+
+      function restoreInputFocus(shouldRestore) {
+        if (shouldRestore && usesFinePointer()) input.focus({ preventScroll: true });
+      }
+
+      function resizeInputHeight() {
+        input.style.height = "auto";
+        const styles = window.getComputedStyle(input);
+        const lineHeight = Number.parseFloat(styles.lineHeight) || 0;
+        const verticalChrome = [
+          styles.paddingTop,
+          styles.paddingBottom,
+          styles.borderTopWidth,
+          styles.borderBottomWidth,
+        ].reduce((total, value) => total + (Number.parseFloat(value) || 0), 0);
+        const maxHeight = Math.ceil((lineHeight * 4) + verticalChrome);
+        const nextHeight = Math.min(input.scrollHeight, maxHeight);
+        input.style.maxHeight = `${maxHeight}px`;
+        input.style.height = `${nextHeight}px`;
+        input.style.overflowY = input.scrollHeight > maxHeight ? "auto" : "hidden";
+      }
+
+      function resetInputHeight() {
+        input.style.height = "auto";
+        input.style.overflowY = "hidden";
+      }
+
+      function submitInputQuery() {
+        const normalized = String(input.value || "").trim();
+        if (!normalized) return false;
+        const restoreFocusAfter = shouldRestoreInputFocus();
+        setPresentationState("conversation");
+        sendQuery(normalized, null, null, restoreFocusAfter);
+        return true;
+      }
+
+      function handleInputKeydown(event) {
+        if (
+          event.key !== "Enter"
+          || event.shiftKey
+          || event.isComposing
+          || inputIsComposing
+          || compositionJustEnded
+          || !usesFinePointer()
+        ) return;
+        event.preventDefault();
+        form.requestSubmit();
+      }
+
+      function handleCompositionStart() {
+        inputIsComposing = true;
+        compositionJustEnded = false;
+        if (compositionResetTimer !== null) {
+          clearTimeout(compositionResetTimer);
+          compositionResetTimer = null;
+        }
+      }
+
+      function handleCompositionEnd() {
+        inputIsComposing = false;
+        compositionJustEnded = true;
+        if (compositionResetTimer !== null) clearTimeout(compositionResetTimer);
+        compositionResetTimer = setTimeout(() => {
+          compositionJustEnded = false;
+          compositionResetTimer = null;
+        }, 0);
+      }
+
+      const unsafePublicTextPatterns = Object.freeze([
+        /(?<![A-Za-z0-9_])PROF-[0-9A-F]{12}(?![A-Za-z0-9_-])/g,
+        /(?<![A-Za-z0-9_])COMP-[0-9A-Fa-f]{12}(?![A-Za-z0-9_-])/g,
+        /(?<![A-Za-z0-9_])(?:company|professor|paper|patent)-c-[0-9a-f]{24}(?![A-Za-z0-9_-])/g,
+        /(?<![A-Za-z0-9_])(?:web-object|web-handle):[a-z0-9:._-]*/g,
+        /(?<![A-Za-z0-9_])source_nature=current_web(?![A-Za-z0-9_-])/g,
+      ]);
+      const unsafePublicTextPatternNamespaces = Object.freeze([
+        false, false, false, true, false,
+      ]);
+      const publicTextNamespaceChars = "abcdefghijklmnopqrstuvwxyz0123456789:._-";
+      const publicTextStreamTail = Math.max(
+        "professor-c-".length + 24,
+        "source_nature=current_web".length,
+      ) + 1;
+      const unsafePublicControlCharacters = /[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/g;
+
+      function firstUnsafePublicTextMatch(text, fromIndex = 0, leftBoundary = "") {
+        const boundaryLength = leftBoundary.length;
+        const searchText = leftBoundary + text;
+        let earliest = null;
+        unsafePublicTextPatterns.forEach((pattern, index) => {
+          pattern.lastIndex = fromIndex + boundaryLength;
+          const match = pattern.exec(searchText);
+          pattern.lastIndex = 0;
+          if (match && (earliest === null || match.index < earliest.index)) {
+            earliest = {
+              index: match.index - boundaryLength,
+              end: match.index + match[0].length - boundaryLength,
+              namespace: unsafePublicTextPatternNamespaces[index],
+            };
+          }
+        });
+        return earliest;
+      }
+
+      function sanitizePublicText(text, leftBoundary = "") {
+        let projected = text;
+        for (;;) {
+          let cursor = 0;
+          let sanitized = "";
+          for (;;) {
+            const match = firstUnsafePublicTextMatch(projected, cursor, leftBoundary);
+            if (!match) {
+              sanitized += projected.slice(cursor);
+              break;
+            }
+            sanitized += projected.slice(cursor, match.index);
+            cursor = match.end;
+          }
+          if (sanitized === projected) return sanitized;
+          projected = sanitized;
+        }
+      }
+
+      function createPublicTextStreamSanitizer() {
+        let tail = "";
+        let tailBoundary = "";
+        let droppingNamespace = false;
+        return {
+          feed(text) {
+            if (!text) return "";
+            let data = tail + text;
+            let leftBoundary = tailBoundary;
+            tail = "";
+            tailBoundary = "";
+            const output = [];
+            while (data) {
+              if (droppingNamespace) {
+                let dropCount = 0;
+                while (
+                  dropCount < data.length
+                  && publicTextNamespaceChars.includes(data[dropCount])
+                ) {
+                  dropCount++;
+                }
+                data = data.slice(dropCount);
+                if (!data) {
+                  tailBoundary = leftBoundary;
+                  break;
+                }
+                droppingNamespace = false;
+              }
+
+              const match = firstUnsafePublicTextMatch(data, 0, leftBoundary);
+              if (match !== null) {
+                const matchBoundary = match.index > 0
+                  ? data[match.index - 1]
+                  : leftBoundary;
+                output.push(data.slice(0, match.index));
+                if (match.namespace && match.end === data.length) {
+                  droppingNamespace = true;
+                  tailBoundary = matchBoundary;
+                  break;
+                }
+                if (match.end === data.length) {
+                  tail = data.slice(match.index);
+                  tailBoundary = matchBoundary;
+                  break;
+                }
+                leftBoundary = matchBoundary;
+                data = data.slice(match.end);
+                continue;
+              }
+
+              const releaseEnd = Math.max(0, data.length - publicTextStreamTail);
+              output.push(data.slice(0, releaseEnd));
+              tail = data.slice(releaseEnd);
+              tailBoundary = releaseEnd > 0
+                ? data[releaseEnd - 1]
+                : leftBoundary;
+              break;
+            }
+            return output.join("");
+          },
+          flush() {
+            droppingNamespace = false;
+            const pending = tail;
+            const pendingBoundary = tailBoundary;
+            tail = "";
+            tailBoundary = "";
+            return sanitizePublicText(pending, pendingBoundary);
+          },
+        };
+      }
+      let requestPending = false;
+      let queuedDemoQuery = null;
+      let activeContinuationOwner = null;
+
+      function create(tag, className, text) {
+        const element = document.createElement(tag);
+        if (className) element.className = className;
+        if (text !== undefined && text !== null) element.textContent = String(text);
+        return element;
+      }
+
+      // 轻量 Markdown 渲染（纯 DOM 构建，不引入 innerHTML，无 XSS 面）。
+      // 支持：标题（#~####）、加粗（**x**）、有序/无序列表、代码块（```）、段落。
+      function renderInline(parent, text) {
+        const parts = String(text).split(/\*\*(.+?)\*\*/g);
+        for (let i = 0; i < parts.length; i++) {
+          const part = parts[i];
+          if (!part) continue;
+          if (i % 2 === 1) {
+            const strong = document.createElement("strong");
+            strong.textContent = part;
+            parent.append(strong);
+          } else {
+            parent.append(document.createTextNode(part));
+          }
+        }
+      }
+
+      // 行渲染共享状态：列表与代码块是跨行的，全量渲染与流式增量渲染共用同一状态机。
+      function createMarkdownState() {
+        return { listTag: null, list: null, codeLines: null };
+      }
+
+      function flushMarkdownList(container, state) {
+        if (state.list) {
+          container.append(state.list);
+          state.list = null;
+          state.listTag = null;
+        }
+      }
+
+      // 渲染一行 Markdown（行级状态机），供 renderMarkdown 全量渲染与流式增量渲染共用。
+      function renderMarkdownLine(container, rawLine, state) {
+        const line = rawLine.trimEnd();
+        if (state.codeLines !== null) {
+          if (/^\s*```/.test(line)) {
+            const pre = document.createElement("pre");
+            const code = document.createElement("code");
+            code.textContent = state.codeLines.join("\n");
+            pre.append(code);
+            container.append(pre);
+            state.codeLines = null;
+          } else {
+            state.codeLines.push(line);
+          }
+          return;
+        }
+        if (/^\s*```/.test(line)) {
+          flushMarkdownList(container, state);
+          state.codeLines = [];
+          return;
+        }
+        const heading = line.match(/^(#{1,4})\s+(.*)$/);
+        if (heading) {
+          flushMarkdownList(container, state);
+          const h = document.createElement("h" + heading[1].length);
+          renderInline(h, heading[2]);
+          container.append(h);
+          return;
+        }
+        const unordered = line.match(/^\s*[-*]\s+(.*)$/);
+        const ordered = line.match(/^\s*\d+[.、]\s+(.*)$/);
+        if (unordered || ordered) {
+          const tag = ordered ? "ol" : "ul";
+          if (state.listTag !== tag) {
+            flushMarkdownList(container, state);
+            state.listTag = tag;
+            state.list = document.createElement(tag);
+          }
+          const li = document.createElement("li");
+          renderInline(li, (unordered || ordered)[1]);
+          state.list.append(li);
+          return;
+        }
+        if (!line.trim()) {
+          flushMarkdownList(container, state);
+          return;
+        }
+        flushMarkdownList(container, state);
+        const p = document.createElement("p");
+        renderInline(p, line);
+        container.append(p);
+      }
+
+      function finalizeMarkdown(container, state) {
+        flushMarkdownList(container, state);
+        if (state.codeLines !== null && state.codeLines.length) {
+          const pre = document.createElement("pre");
+          const code = document.createElement("code");
+          code.textContent = state.codeLines.join("\n");
+          pre.append(code);
+          container.append(pre);
+        }
+      }
+
+      function renderMarkdown(container, text) {
+        const state = createMarkdownState();
+        for (const rawLine of String(text).split("\n")) {
+          renderMarkdownLine(container, rawLine, state);
+        }
+        finalizeMarkdown(container, state);
+      }
+
+      // 行级缓冲的流式 Markdown 渲染器：完整行（以 \n 结尾且行内语法闭合）立即增量渲染，
+      // 只追加新 DOM 元素、不清空容器（无闪烁）。未闭合的代码块（``` 奇数个）整体留在
+      // buffer；行内 ** 未配对（奇数个）的末尾连续行整体留 buffer（跨行加粗可能在后续行闭合）。
+      // 流结束或整体重渲染前调用 flush() 把残留 buffer 按全量渲染语义收尾。
+      function countFences(text) {
+        let count = 0;
+        for (const line of text.split("\n")) {
+          if (/^\s*```/.test(line)) count++;
+        }
+        return count;
+      }
+
+      function hasUnpairedBold(line) {
+        let count = 0;
+        let index = line.indexOf("**");
+        while (index >= 0) {
+          count++;
+          index = line.indexOf("**", index + 2);
+        }
+        return count % 2 === 1;
+      }
+
+      // 计算可以安全释放的字节数（complete 必须以 \n 结尾）：从末尾向前扫描，
+      // 连续的“** 未配对”行整体保留，其余完整行可立即渲染。
+      function streamingReleaseEnd(complete) {
+        let releaseEnd = complete.length;
+        let lineEnd = complete.length - 1; // 不含结尾 \n
+        let lineStart = complete.lastIndexOf("\n", lineEnd - 1) + 1;
+        while (hasUnpairedBold(complete.slice(lineStart, lineEnd))) {
+          releaseEnd = lineStart;
+          if (lineStart === 0) break;
+          lineEnd = lineStart - 1; // 上一行末尾（去掉行间 \n）
+          lineStart = complete.lastIndexOf("\n", lineEnd - 1) + 1;
+        }
+        return releaseEnd;
+      }
+
+      function renderStreamingMarkdown(container) {
+        const state = createMarkdownState();
+        const sanitizer = createPublicTextStreamSanitizer();
+        let buffer = "";
+        function releaseReady() {
+          for (;;) {
+            if (countFences(buffer) % 2 === 1) return; // 未闭合 ``` → 整体留 buffer
+            const lastNewline = buffer.lastIndexOf("\n");
+            if (lastNewline < 0) return;
+            const complete = buffer.slice(0, lastNewline + 1);
+            const releaseEnd = streamingReleaseEnd(complete);
+            if (releaseEnd <= 0) return;
+            const lines = complete.slice(0, releaseEnd).split("\n");
+            lines.pop(); // released 以 \n 结尾，去掉末尾空串
+            for (const line of lines) renderMarkdownLine(container, line, state);
+            buffer = complete.slice(releaseEnd) + buffer.slice(complete.length);
+          }
+        }
+        return {
+          append(text) {
+            if (typeof text !== "string") return;
+            const withoutControls = text.replace(unsafePublicControlCharacters, "");
+            const publicText = sanitizer.feed(withoutControls);
+            if (!publicText) return;
+            buffer += publicText;
+            releaseReady();
+          },
+          flush() {
+            const publicText = sanitizer.flush();
+            if (publicText) {
+              buffer += publicText;
+              releaseReady();
+            }
+            if (!buffer) return;
+            for (const line of buffer.split("\n")) renderMarkdownLine(container, line, state);
+            buffer = "";
+            finalizeMarkdown(container, state);
+          },
+        };
+      }
+
+      function safePublicText(value) {
+        if (typeof value !== "string") return null;
+        const withoutControls = value.replace(unsafePublicControlCharacters, "");
+        const text = sanitizePublicText(withoutControls);
+        return text ? text : null;
+      }
+
+      function renderDemoQuestions(questions) {
+        demoGrid.setAttribute("aria-busy", "false");
+        if (!questions.length) {
+          demoTitle.textContent = "暂无可用问题示例";
+          demoGrid.replaceChildren(create("p", "demo-empty", "仍可在下方输入框中直接提问。"));
+          return;
+        }
+        const buttons = questions.map((question) => {
+          const button = create("button", "demo-chip");
+          button.type = "button";
+          button.dataset.query = question.query;
+          const copy = create("span", "demo-copy");
+          copy.append(
+            create("strong", "", question.label),
+            create("span", "", question.query),
+          );
+          button.append(create("span", "step", question.step), copy);
+          return button;
+        });
+        demoTitle.textContent = "你可以试试这些问题";
+        demoGrid.replaceChildren(...buttons);
+      }
+
+      function removeWelcome() {
+        document.getElementById("welcome")?.remove();
+      }
+
+      const scrollIntentValues = Object.freeze(["following", "detached"]);
+      let scrollIntent = "following";
+      let hasUnreadContent = false;
+      let followingScrollFramePending = false;
+      messages.dataset.scrollIntent = scrollIntent;
+
+      function messagesAtLatest() {
+        return messages.scrollHeight - messages.clientHeight - messages.scrollTop <= 2;
+      }
+
+      function setScrollIntent(nextIntent) {
+        if (!scrollIntentValues.includes(nextIntent)) return false;
+        scrollIntent = nextIntent;
+        messages.dataset.scrollIntent = nextIntent;
+        if (nextIntent === "following") {
+          hasUnreadContent = false;
+          if (backToLatest) backToLatest.hidden = true;
+        }
+        return true;
+      }
+
+      function scrollToLatest() {
+        messages.scrollTop = messages.scrollHeight;
+      }
+
+      function scheduleFollowingScroll() {
+        if (followingScrollFramePending) return;
+        followingScrollFramePending = true;
+        window.requestAnimationFrame(() => {
+          followingScrollFramePending = false;
+          if (scrollIntent !== "following") return;
+          scrollToLatest();
+        });
+      }
+
+      function notifyContentUpdate() {
+        if (scrollIntent === "detached") {
+          hasUnreadContent = true;
+          if (backToLatest) backToLatest.hidden = false;
+          return;
+        }
+        scheduleFollowingScroll();
+      }
+
+      function maintainFollowingScroll() {
+        if (scrollIntent === "following") scheduleFollowingScroll();
+      }
+
+      function startFollowingTurn() {
+        setScrollIntent("following");
+      }
+
+      function handleMessagesScroll() {
+        setScrollIntent(messagesAtLatest() ? "following" : "detached");
+      }
+
+      function returnToLatest() {
+        const shouldTransferFocus = document.activeElement === backToLatest;
+        setScrollIntent("following");
+        scrollToLatest();
+        if (shouldTransferFocus) messages.focus({ preventScroll: true });
+      }
+
+      messages.addEventListener("scroll", handleMessagesScroll, { passive: true });
+      backToLatest?.addEventListener("click", returnToLatest);
+
+      function messageShell(kind) {
+        const row = create("article", `message ${kind}`);
+        const avatar = create("div", "avatar");
+        if (kind === "assistant") {
+          avatar.textContent = "国先";
+          avatar.setAttribute("role", "img");
+          avatar.setAttribute("aria-label", "国先检索助手");
+          const image = create("img");
+          image.src = "static/assets/guoxian-logo.jpg";
+          image.alt = "";
+          image.width = 32;
+          image.height = 32;
+          image.addEventListener("error", () => image.remove(), { once: true });
+          avatar.append(image);
+        } else {
+          avatar.textContent = kind === "user" ? "我" : "!";
+        }
+        row.append(avatar);
+        const bubble = create("div", "bubble");
+        row.append(bubble);
+        return { row, bubble };
+      }
+
+      function renderUser(query) {
+        const view = messageShell("user");
+        view.bubble.textContent = query;
+        messages.append(view.row);
+      }
+
+      function renderError(message) {
+        const view = messageShell("error");
+        view.bubble.textContent = message;
+        messages.append(view.row);
+      }
+
+      function safeCitationUrl(value) {
+        if (!value) return null;
+        try {
+          const parsed = new URL(value, location.origin);
+          return ["http:", "https:"].includes(parsed.protocol) ? parsed.href : null;
+        } catch {
+          return null;
+        }
+      }
+
+      const limitationLabels = Object.freeze({
+        material_evidence_missing: "缺少支持证据",
+        material_evidence_conflicting: "证据存在冲突",
+        direct_product_capability_evidence_missing: "缺少直接产品能力证据",
+      });
+      const laneLabels = Object.freeze({
+        exact: "精确检索",
+        structured: "结构化筛选",
+        lexical: "关键词检索",
+        semantic: "语义检索",
+        relationship: "关系检索",
+        internal_reference: "内部参考",
+        web: "当前网页",
+      });
+      const enumerationLabels = Object.freeze({
+        exhaustive: "完整范围",
+        representative: "代表性结果",
+        open_world: "开放范围",
+      });
+      const citationTypeLabels = Object.freeze({
+        company: "企业",
+        professor: "教授",
+        paper: "论文",
+        patent: "专利",
+      });
+
+      function limitationText(value) {
+        if (!value || typeof value !== "object") return "已记录限制";
+        return limitationLabels[value.code] || "已记录限制";
+      }
+
+      function continuationText(option) {
+        return safePublicText(option?.label);
+      }
+
+      function enumerationText(coverage) {
+        if (!coverage || typeof coverage !== "object") return "不适用";
+        const mode = coverage.mode || coverage.coverage_mode;
+        return enumerationLabels[mode] || "范围已记录";
+      }
+
+      function traceCard(label, value, title) {
+        const card = create("div", "trace-card");
+        const strong = create("strong", "", value);
+        if (title) strong.title = title;
+        card.append(create("span", "", label), strong);
+        return card;
+      }
+
+      function subsection(title) {
+        const section = create("section", "subsection");
+        section.append(create("p", "subsection-title", title));
+        return section;
+      }
+
+      function renderTrace(container, trace) {
+        if (!trace || typeof trace !== "object") return;
+        const lanes = Array.isArray(trace.lanes) ? trace.lanes : [];
+        const evidence = Array.isArray(trace.evidence_ids) ? trace.evidence_ids : [];
+        const claims = Array.isArray(trace.claims) ? trace.claims : [];
+        const laneCopy = lanes.map((lane) => laneLabels[lane] || "其他检索");
+        const grid = create("div", "trace-grid");
+        grid.append(
+          traceCard("发布版本", trace.release_id ? "已绑定" : "—"),
+          traceCard("检索通道", laneCopy.length ? laneCopy.join(" · ") : "—"),
+          traceCard("证据 / 主张", `${evidence.length} / ${claims.length}`),
+          traceCard("枚举模式", enumerationText(trace.enumeration_coverage)),
+        );
+        container.append(grid);
+
+        const limitations = Array.isArray(trace.limitations) ? trace.limitations : [];
+        if (limitations.length) {
+          const section = subsection("限制与不确定性");
+          const tokens = create("div", "tokens");
+          for (const limitation of limitations) tokens.append(create("span", "token warning", limitationText(limitation)));
+          section.append(tokens);
+          container.append(section);
+        }
+      }
+
+      function safeCurrentWebUrl(value) {
+        if (!value) return null;
+        try {
+          const parsed = new URL(String(value));
+          if (parsed.protocol !== "https:" || parsed.username || parsed.password) return null;
+          const hostname = safePublicText(parsed.hostname);
+          return hostname ? { href: parsed.href, hostname } : null;
+        } catch {
+          return null;
+        }
+      }
+
+      function currentWebEvidenceRows(evidence) {
+        if (!Array.isArray(evidence)) return [];
+        const rows = [];
+        const seen = new Set();
+        for (const item of evidence) {
+          if (!item || item.source_nature !== "current_web") continue;
+          const source = safeCurrentWebUrl(item.source_locator);
+          const snippet = safePublicText(item.snippet);
+          if (!source || !snippet) continue;
+          const dedupeKey = `${source.href}\n${snippet}`;
+          if (seen.has(dedupeKey)) continue;
+          seen.add(dedupeKey);
+          rows.push({ href: source.href, hostname: source.hostname, snippet });
+          if (rows.length === 6) break;
+        }
+        return rows;
+      }
+
+      function renderCurrentWebEvidence(container, evidence) {
+        const rows = currentWebEvidenceRows(evidence);
+        if (!rows.length) return;
+        const section = subsection("当前网页证据");
+        const list = create("div", "web-evidence-list");
+        for (const row of rows) {
+          const card = create("article", "web-evidence-card");
+          const link = create("a", "web-evidence-link", `查看 HTTPS 来源 · ${row.hostname}`);
+          link.href = row.href;
+          link.target = "_blank";
+          link.rel = "noopener noreferrer";
+          card.append(create("p", "web-evidence-snippet", row.snippet), link);
+          list.append(card);
+        }
+        section.append(list);
+        container.append(section);
+      }
+
+      function renderCitations(container, citations) {
+        if (!Array.isArray(citations) || !citations.length) return;
+        const section = subsection("引用");
+        const list = create("div", "citations");
+        citations.forEach((citation, index) => {
+          const url = safeCitationUrl(citation.url);
+          const row = create(url ? "a" : "div", "citation");
+          if (url) {
+            row.href = url;
+            row.target = "_blank";
+            row.rel = "noopener noreferrer";
+          }
+          row.append(
+            create("span", "citation-badge", `${index + 1} · ${citationTypeLabels[citation.type] || "证据"}`),
+            create("span", "citation-label", safePublicText(citation.label) || "相关证据"),
+          );
+          list.append(row);
+        });
+        section.append(list);
+        container.append(section);
+      }
+
+      function setContinuationOwnerState(owner, state) {
+        if (!owner) return;
+        owner.state = state;
+        const disabled = state !== "active";
+        for (const button of owner.buttons) button.disabled = disabled;
+      }
+
+      function beginContinuationRequest(optionOwner) {
+        const previous = activeContinuationOwner;
+        const optionFollowUp = Boolean(
+          previous && optionOwner === previous && previous.state === "active"
+        );
+        if (previous) {
+          setContinuationOwnerState(
+            previous,
+            optionFollowUp ? "pending" : "suspended",
+          );
+        }
+        return { previous, optionFollowUp };
+      }
+
+      function settleContinuationOwners(requestOwner, nextOwner, outcome) {
+        const { previous, optionFollowUp } = requestOwner;
+        if (outcome.status === "succeeded") {
+          setContinuationOwnerState(previous, optionFollowUp ? "consumed" : "retired");
+          activeContinuationOwner = nextOwner;
+          setContinuationOwnerState(nextOwner, "active");
+          return;
+        }
+        if (outcome.status === "failed") {
+          setContinuationOwnerState(nextOwner, "retired");
+          if (outcome.reason === "invalid_option" && optionFollowUp) {
+            setContinuationOwnerState(previous, "retired");
+            activeContinuationOwner = null;
+            return;
+          }
+          if (
+            previous &&
+            activeContinuationOwner === previous &&
+            (previous.state === "pending" || previous.state === "suspended")
+          ) {
+            setContinuationOwnerState(previous, "active");
+          }
+          return;
+        }
+        setContinuationOwnerState(previous, "uncertain");
+        setContinuationOwnerState(nextOwner, "uncertain");
+        activeContinuationOwner = null;
+      }
+
+      function renderContinuation(container, clarification, originalQuery) {
+        const options = Array.isArray(clarification?.options) ? clarification.options : [];
+        const validOptions = [];
+        const seenOptionIds = new Set();
+        for (const option of options) {
+          const optionId = typeof option?.id === "string" ? option.id.trim() : "";
+          const label = (continuationText(option) || "").trim();
+          if (!optionId || !label || seenOptionIds.has(optionId)) continue;
+          seenOptionIds.add(optionId);
+          validOptions.push({ optionId, label });
+        }
+        if (!validOptions.length) return null;
+
+        const section = subsection("可继续探索");
+        const list = create("div", "option-list");
+        const owner = { buttons: [], state: "inactive" };
+        for (const { optionId, label } of validOptions) {
+          const button = create("button", "option-button", label);
+          button.type = "button";
+          button.disabled = true;
+          button.addEventListener("click", () => {
+            if (owner !== activeContinuationOwner || owner.state !== "active") return;
+            return sendQuery(originalQuery, optionId, `选择：${label}`, false, owner);
+          });
+          owner.buttons.push(button);
+          list.append(button);
+        }
+        section.append(list);
+        container.append(section);
+        return owner;
+      }
+
+      function renderAssistant(data, originalQuery, view = null, answerBox = null, preserveStreamed = false) {
+        const bubble = view ? view.bubble : messageShell("assistant").bubble;
+        const answer = safePublicText(data.answer_text) || "当前版本未生成可安全展示的回答。";
+        const box = answerBox || create("div", "answer");
+        // Phase 7.2: understanding disclosure — show what the system
+        // understood the query to be about, above the answer text.
+        const subject = safePublicText(data.understood_subject) || "";
+        if (subject && !preserveStreamed) {
+          const disclosure = create("div", "understood-subject");
+          disclosure.style.cssText = "font-size:12px;color:var(--text-muted,#888);margin-bottom:4px;padding:2px 8px;background:rgba(0,120,212,0.06);border-radius:4px;";
+          disclosure.textContent = `系统理解为：关于${subject}`;
+          box.append(disclosure);
+        }
+        // preserveStreamed：流式渲染结果已与最终答案一致，保留现有 DOM，
+        // 跳过 replaceChildren + 全量 renderMarkdown，避免长答案下的重复长任务。
+        if (answerBox && !preserveStreamed) box.replaceChildren(); // 流式容器：整体重渲染，消除缓冲差异
+        if (!preserveStreamed) {
+          if (subject) {
+            const d = create("div");
+            d.style.cssText = "font-size:12px;color:var(--text-muted,#888);margin-bottom:4px;";
+            d.textContent = `系统理解为：关于${subject}`;
+            box.append(d);
+          }
+          const md = create("div", "answer");
+          renderMarkdown(md, answer);
+          box.append(md);
+        }
+        if (!box.parentNode) bubble.append(box);
+        if (Array.isArray(data.citations) && data.citations.length) {
+          const evidenceDetails = create("details", "evidence-disclosure");
+          evidenceDetails.open = false;
+          evidenceDetails.addEventListener("toggle", maintainFollowingScroll);
+          evidenceDetails.append(create("summary", "evidence-summary", "查看依据"));
+          renderCitations(evidenceDetails, data.citations || []);
+          bubble.append(evidenceDetails);
+        }
+        if (!view) {
+          const row = bubble.closest(".message") || messageShell("assistant").row;
+          messages.append(row);
+        }
+      }
+
+      function renderProcess(bubble) {
+        const box = create("div", "process");
+        const rows = new Map();
+        function row(name) {
+          if (!rows.has(name)) {
+            const line = create("div", "process-row");
+            line.append(create("span", "process-marker", "●"));
+            line.append(create("span", "process-text", ""));
+            box.append(line);
+            rows.set(name, line);
+          }
+          return rows.get(name);
+        }
+        function set(name, text, done = false) {
+          const line = row(name);
+          line.querySelector(".process-marker").textContent = done ? "✓" : "●";
+          line.classList.toggle("process-done", done);
+          line.querySelector(".process-text").textContent = text;
+        }
+        let actionLine = null;
+        let webItemsRendered = false;
+        function webItems(items) {
+          // 网络检索结果一次性渲染：挂在检索统计行之后，finish 时随过程行
+          // 一起收进"查看检索过程" details；URL/标题都经过公共投影清洗，
+          // 赋值只走 textContent/setAttribute，不拼接 innerHTML。
+          if (webItemsRendered) return;
+          webItemsRendered = true;
+          const entries = [];
+          const seenUrls = new Set();
+          for (const item of Array.isArray(items) ? items : []) {
+            const url = safeCitationUrl(item?.url);
+            if (!url || seenUrls.has(url)) continue;
+            seenUrls.add(url);
+            entries.push({
+              url,
+              title: safePublicText(item?.title) || url,
+              source: safePublicText(item?.source),
+            });
+            if (entries.length >= 10) break;
+          }
+          if (!entries.length) return;
+          const block = create("div", "process-web");
+          const list = create("ul", "process-web-list");
+          for (const entry of entries) {
+            const li = create("li", "process-web-item");
+            const link = create("a", "process-web-link", entry.title);
+            link.setAttribute("href", entry.url);
+            link.setAttribute("target", "_blank");
+            link.setAttribute("rel", "noopener");
+            li.append(link);
+            if (entry.source) li.append(create("span", "process-web-source", entry.source));
+            list.append(li);
+          }
+          block.append(list);
+          box.append(block);
+        }
+        function finish(summary) {
+          if (actionLine) {
+            actionLine.remove();
+            actionLine = null;
+          }
+          box.classList.add("process-finished");
+          // 流式期间渲染的过程行不能丢弃：replaceChildren 前先收进容器，
+          // 随后挂进 details，展开"查看检索过程"即可回看 planning/retrieval/synthesis。
+          const rowsContainer = create("div", "process-rows");
+          rowsContainer.append(...box.children);
+          const details = create("details", "process-summary", "");
+          box.replaceChildren(details);
+          details.addEventListener("toggle", maintainFollowingScroll);
+          details.append(create("summary", "", summary), rowsContainer);
+        }
+        function addAction(label, onClick) {
+          if (!actionLine) {
+            actionLine = create("div", "process-actions");
+            box.append(actionLine);
+          }
+          const button = create("button", "process-stop", label);
+          button.type = "button";
+          button.addEventListener("click", onClick);
+          actionLine.append(button);
+          return button;
+        }
+        bubble.append(box);
+        return { set, finish, addAction, webItems };
+      }
+
+      function parseSseBlock(block, onEvent) {
+        let eventName = "message";
+        const dataLines = [];
+        for (const line of block.split(/\r\n|\n|\r/)) {
+          if (line.startsWith("event:")) {
+            eventName = line.slice(6).trim();
+          } else if (line.startsWith("data:")) {
+            const value = line.slice(5);
+            dataLines.push(value.startsWith(" ") ? value.slice(1) : value);
+          }
+        }
+        if (!dataLines.length) return;
+        let data;
+        try {
+          data = JSON.parse(dataLines.join("\n"));
+        } catch {
+          // A malformed event must not break the whole turn.
+          return;
+        }
+        onEvent(eventName, data);
+      }
+
+      async function readSseEvents(stream, onEvent, onReader = null) {
+        const reader = stream.getReader();
+        try {
+          if (onReader) onReader(reader);
+          const decoder = new TextDecoder();
+          const blockDelimiter = /\r\n\r\n|\n\n|\r\r/;
+          let buffer = "";
+          const drainCompleteBlocks = () => {
+            for (;;) {
+              const match = blockDelimiter.exec(buffer);
+              if (!match) return;
+              const block = buffer.slice(0, match.index);
+              buffer = buffer.slice(match.index + match[0].length);
+              parseSseBlock(block, onEvent);
+            }
+          };
+          for (;;) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            buffer += decoder.decode(value, { stream: true });
+            drainCompleteBlocks();
+          }
+          buffer += decoder.decode();
+          drainCompleteBlocks();
+          if (buffer.trim()) parseSseBlock(buffer, onEvent);
+        } catch (error) {
+          try {
+            await reader.cancel();
+          } catch {
+            // Preserve the original parser or callback failure.
+          }
+          throw error;
+        } finally {
+          reader.releaseLock();
+        }
+      }
+
+      function laneSummary(lanes) {
+        const parts = [];
+        const labels = { exact: "精确", lexical: "词法", vector: "本地", web: "网络", relationship: "关系", supplemental: "验证" };
+        for (const lane of lanes || []) {
+          const name = labels[lane.lane] || lane.lane;
+          if (lane.status === "succeeded") {
+            parts.push(`${name} ${lane.candidates} 条`);
+          } else {
+            parts.push(`${name} ${lane.status || "失败"}`);
+          }
+        }
+        return parts.length ? parts.join(" · ") : "检索完成";
+      }
+
+      async function sendQuery(
+        query,
+        optionId = null,
+        displayQuery = null,
+        restoreFocusAfter = false,
+        continuationOwner = null,
+      ) {
+        const normalized = String(query || "").trim();
+        if (!normalized) return { status: "rejected", reason: "empty" };
+        if (requestPending) return { status: "rejected", reason: "busy" };
+        const continuationRequest = beginContinuationRequest(continuationOwner);
+        startFollowingTurn();
+        requestPending = true;
+        removeWelcome();
+        renderUser(displayQuery || normalized);
+        input.value = "";
+        resetInputHeight();
+        submit.disabled = true;
+        submit.textContent = "检索中";
+        const body = { query: normalized };
+        const normalizedOptionId = typeof optionId === "string" ? optionId.trim() : "";
+        if (normalizedOptionId) body.entity_id_hint = normalizedOptionId;
+        const view = messageShell("assistant");
+        const process = renderProcess(view.bubble);
+        messages.append(view.row);
+        notifyContentUpdate();
+        let responseBody = null;
+        let responseReader = null;
+        let turnState = "streaming";
+        let terminalFailureReason = "sse_error";
+        let answeredBeforeDone = false;
+        let protocolConflict = false;
+        let userStopped = false;
+        let stopButtonAdded = false;
+        let streaming = null;
+        let answerBox = null;
+        let streamedAnswer = "";
+        let nextContinuationOwner = null;
+        let outcome = { status: "uncertain", reason: "eof" };
+        const finishInterrupted = () => {
+          if (streaming) streaming.flush();
+          process.finish("生成中断");
+          view.bubble.append(create("div", "response-meta", "生成中断，可重新提问"));
+          notifyContentUpdate();
+        };
+        const stopGeneration = () => {
+          if (userStopped || turnState !== "streaming") return;
+          userStopped = true;
+          if (streaming) streaming.flush(); // 把已收到但缓冲未渲染的部分也渲染出来
+          process.finish("已停止生成");
+          view.bubble.append(create("div", "response-meta", "已停止生成（已保留当前内容）"));
+          notifyContentUpdate();
+          // 流已由 getReader() 锁定，只能通过持锁 reader 中断读取。
+          if (responseReader && typeof responseReader.cancel === "function") {
+            responseReader.cancel().catch(() => {});
+          }
+        };
+        try {
+          const response = await fetch("api/chat/stream", {
+            method: "POST",
+            credentials: "same-origin",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body),
+          });
+          if (!response.ok || !response.body) {
+            let detail = `请求失败：HTTP ${response.status}`;
+            try {
+              const payload = await response.json();
+              if (payload && typeof payload.detail === "string") detail = payload.detail;
+            } catch {
+              // keep the status fallback
+            }
+            process.finish("查询失败");
+            renderError(detail);
+            notifyContentUpdate();
+            outcome = { status: "failed", reason: "http_error" };
+          } else {
+            responseBody = response.body;
+            await readSseEvents(responseBody, (eventName, data) => {
+              if (userStopped) return;
+              if (turnState === "done" || turnState === "error") {
+                protocolConflict = true;
+                return;
+              }
+              if (turnState === "answered") {
+                if (eventName === "done") turnState = "done";
+                else protocolConflict = true;
+                return;
+              }
+              if (eventName === "done") {
+                turnState = "done";
+                return;
+              }
+              if (eventName === "stage") {
+                if (data.name === "planning") {
+                  process.set("planning", "正在理解问题…");
+                  notifyContentUpdate();
+                } else if (data.name === "retrieval") {
+                  process.set("retrieval", "正在检索本地与网络数据…");
+                  notifyContentUpdate();
+                } else if (data.name === "synthesis") {
+                  process.set("synthesis", "正在生成回答…");
+                  if (!stopButtonAdded) {
+                    stopButtonAdded = true;
+                    process.addAction("停止生成", stopGeneration);
+                  }
+                  notifyContentUpdate();
+                }
+              } else if (eventName === "plan_done") {
+                const viewCount = Array.isArray(data.views) ? data.views.length : 0;
+                process.set("planning", `✓ 已识别意图（${viewCount} 个检索视角）`, true);
+                notifyContentUpdate();
+              } else if (eventName === "retrieval_done") {
+                process.set("retrieval", `✓ ${laneSummary(data.lanes)}`, true);
+                process.webItems(data.web_items);
+                notifyContentUpdate();
+              } else if (eventName === "answer_chunk") {
+                if (!streaming) {
+                  answerBox = create("div", "answer");
+                  view.bubble.append(answerBox);
+                  streaming = renderStreamingMarkdown(answerBox);
+                }
+                if (typeof data.text === "string") streamedAnswer += data.text;
+                streaming.append(data.text);
+                notifyContentUpdate();
+              } else if (eventName === "answer") {
+                turnState = "answered";
+                answeredBeforeDone = true;
+                process.set("synthesis", "✓ 回答已生成", true);
+                process.finish("查看检索过程");
+                // 流式内容与最终答案一致时保留已渲染 DOM（先 flush 补齐缓冲尾部），
+                // 跳过整体重渲染，避免长答案下重渲染长任务与按钮出现撞在同一宏任务。
+                const preserveStreamed = Boolean(
+                  streaming
+                  && answerBox
+                  && streamedAnswer !== ""
+                  && streamedAnswer === data.answer_text
+                  && safePublicText(data.answer_text),
+                );
+                if (preserveStreamed) streaming.flush();
+                renderAssistant(data, normalized, view, answerBox, preserveStreamed);
+                nextContinuationOwner = renderContinuation(
+                  view.bubble,
+                  data.clarification,
+                  normalized,
+                );
+                notifyContentUpdate();
+              } else if (eventName === "error") {
+                turnState = "error";
+                terminalFailureReason = data.detail === "canonical_v2_invalid_option"
+                  ? "invalid_option"
+                  : "sse_error";
+                if (streaming) streaming.flush();
+                process.finish("查询失败");
+                renderError(
+                  terminalFailureReason === "invalid_option"
+                    ? "该继续选项已失效，请重新提问。"
+                    : data.detail || "查询失败",
+                );
+                notifyContentUpdate();
+              }
+            }, (reader) => {
+              responseReader = reader;
+            });
+            if (userStopped) {
+              outcome = { status: "uncertain", reason: "stopped" };
+            } else if (protocolConflict) {
+              if (turnState === "done" && !answeredBeforeDone) finishInterrupted();
+              outcome = { status: "uncertain", reason: "protocol_conflict" };
+            } else if (turnState === "error") {
+              outcome = { status: "failed", reason: terminalFailureReason };
+            } else if (turnState === "done" && answeredBeforeDone) {
+              outcome = { status: "succeeded" };
+            } else if (turnState === "answered") {
+              outcome = { status: "uncertain", reason: "missing_done" };
+            } else {
+              finishInterrupted();
+              outcome = {
+                status: "uncertain",
+                reason: turnState === "done" ? "done_before_answer" : "eof",
+              };
+            }
+          }
+        } catch (error) {
+          if (userStopped) {
+            outcome = { status: "uncertain", reason: "stopped" };
+          } else if (protocolConflict) {
+            if (turnState === "done" && !answeredBeforeDone) finishInterrupted();
+            outcome = { status: "uncertain", reason: "protocol_conflict" };
+          } else if (turnState === "error") {
+            outcome = { status: "failed", reason: terminalFailureReason };
+          } else if (turnState === "done" && answeredBeforeDone) {
+            outcome = { status: "succeeded" };
+          } else if (turnState === "done") {
+            finishInterrupted();
+            outcome = { status: "uncertain", reason: "done_before_answer" };
+          } else {
+            outcome = { status: "uncertain", reason: "network_error" };
+            if (!answeredBeforeDone) {
+              process.finish("查询失败");
+              renderError(`连接失败：${error.message || error}`);
+              notifyContentUpdate();
+            }
+          }
+        } finally {
+          requestPending = false;
+          submit.disabled = false;
+          submit.textContent = "发送";
+          restoreInputFocus(restoreFocusAfter);
+          if (queuedDemoQuery) {
+            const nextQuery = queuedDemoQuery;
+            queuedDemoQuery = null;
+            queueMicrotask(() => sendQuery(nextQuery));
+          }
+        }
+        settleContinuationOwners(continuationRequest, nextContinuationOwner, outcome);
+        return outcome;
+      }
+
+      function runDemoQuery(query) {
+        const normalized = String(query || "").trim();
+        if (!normalized) return;
+        input.value = normalized;
+        resizeInputHeight();
+        setPresentationState("conversation");
+        if (requestPending) {
+          queuedDemoQuery = normalized;
+          return;
+        }
+        sendQuery(normalized);
+      }
+
+      function loadDemoQuestions() {
+        renderDemoQuestions(STATIC_DEMO_QUESTIONS);
+      }
+
+      form.addEventListener("submit", (event) => {
+        event.preventDefault();
+        submitInputQuery();
+      });
+      input.addEventListener("keydown", handleInputKeydown);
+      input.addEventListener("input", resizeInputHeight);
+      input.addEventListener("compositionstart", handleCompositionStart);
+      input.addEventListener("compositionend", handleCompositionEnd);
+      demoToggle.addEventListener("click", toggleDemoQuestions);
+
+      demoGrid.addEventListener("click", (event) => {
+        const chip = event.target.closest(".demo-chip");
+        if (chip && demoGrid.contains(chip)) runDemoQuery(chip.dataset.query);
+      });
+
+      resizeInputHeight();
+      loadDemoQuestions();
+    </script>
+  </body>
+</html>

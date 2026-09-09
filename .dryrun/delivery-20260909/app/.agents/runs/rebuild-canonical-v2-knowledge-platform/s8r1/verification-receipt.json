@@ -1,0 +1,153 @@
+{
+  "schema_version": "canonical-v2-s8r1-relationship-retrieval-receipt-v1",
+  "change_id": "rebuild-canonical-v2-knowledge-platform",
+  "slice_id": "s8r1-release-scoped-technology-relationship-traversal",
+  "status": "accepted",
+  "candidate_at": "2026-07-19T20:00:02Z",
+  "accepted_at": "2026-07-19T20:05:54Z",
+  "git_head": "f0e6224e1c675c6d6c58993676783b2fbe0cd8f6",
+  "git_branch": "canonical-v2-s2-baseline",
+  "formal_task_ledger_before": "56/80",
+  "formal_task_ledger_after": "56/80",
+  "implementation": {
+    "knowledge_read_sha256": "1ebc25ed772b5ac7f869c97781ac62c57cf7e5b8e72b46d0a93da69ff92f1def",
+    "knowledge_read_isolated_sha256": "c94f7f99d201cb30107c878ee41540cb3feefda8bad314f6b590edacdaf5c958",
+    "physical_owner_test_sha256": "a67ecf3cc7396a8a88b5f332f5ccf5a34b02887fd6693d534d64ec372778f2ef",
+    "slice_contract_candidate_sha256": "7371ee66b409f080254a141ec19c7fc156895476666e22cd6b9685575405c54e",
+    "implementation_plan_candidate_sha256": "e644a3a3ac97541c4e3a59fa4fcae95a9b05c838a28ddece2e63d19ce2ff8eb2",
+    "slice_contract_accepted_sha256": "863e62eba9bd125b05430cee20bc8caf9f258489fea35b7c132db59a6de14916",
+    "implementation_plan_accepted_sha256": "f6f3463cdc8d560f37212e1c690f6577ad85f45db2627ee3a50a802a7b99de27",
+    "tasks_sha256_unchanged": "5f61c097729e1107ff387a89c9f6f62b3783ef88debf1612b6156fb2056cdd7d",
+    "acceptance_sha256_unchanged": "742b29dc9805214b4b7059d5c801189209c26e35831f3f834ef01e4ac9f6df50"
+  },
+  "behavior": {
+    "request": "LaneRequest carries omission-preserving relationship_paths plus Technology-only relationship_reference_queries only on the relationship lane; every empty legacy payload and hash remains exact",
+    "authority": "the adapter exists only for an exact S7K relationship request/result pair plus the replayed complete index/candidate/internal-reference/catalog authority; authoritative zero is installed and legacy no-pair zero remains unsupported",
+    "relationship_states": "the exact registered Product-to-Technology relationship types remain discussion_or_mention, claimed_adoption, and demonstrated_use without promotion or capability inference",
+    "evidence_chain": "each Company-located result binds the exact current relationship, decision, selected retained reference, public SourceAssertion/source-record identity, route-owned Technology anchor, Product typed subobject, raw root Company identity, and verified_relationship_traversal decision",
+    "eligibility": "the Accepted S7 graph uses PolicyOutcome.admitted with visible path limitations; exact limitations are copied into trace and quality_flags, while path-specific excluded returns no candidate",
+    "temporal": "an earlier query is rejected, equal time has no freshness flag, and a coherent later query retains snapshot evidence plus relationship_snapshot_as_of:2026-07-13T17:00:00Z",
+    "postvalidation": "the release wrapper replays expected output in memory and rejects altered relationship evidence, fused identity/evidence/required flags, lane/candidate/auxiliary traces, duplicate auxiliary ownership, canonical or Web handle reuse, and Product-capability claims",
+    "effects": "relationship authority, execution, and postvalidation open no physical relationship store and perform no Postgres, Milvus, Web-provider, canonical, index, or active-pointer mutation"
+  },
+  "relationship_authority": {
+    "relationship_request_sha256": "730f64b436b754dcac79037586c193269982cc55ddb57a2292e16d53a58c10ef",
+    "relationship_result_sha256": "ae4f9f0a11177109d8c9c1ed04bc53ade2441d66061385a64ed4955ccb331696",
+    "projection_run_id": "technology-relationship-publication-run",
+    "projection_schema_version": "relationship-projection-result-v2",
+    "registry_version": "canonical-v2-internal-reference-relationship-registry-v1",
+    "registry_content_sha256": "bdf3045650a0ed7954cac4f64ac405a156f89ccef4f84d1570cdffaecfdd5ee7",
+    "current_relationship_ids": [
+      "relationship:technology:claimed_adoption",
+      "relationship:technology:demonstrated_use",
+      "relationship:technology:discussion_or_mention"
+    ],
+    "historical_scalar_comparison": "not claimed because the Accepted S7K receipt did not persist scalar pair hashes; S8R1 rederived the complete current pair and exercised exact replay"
+  },
+  "tdd": {
+    "legacy_baseline_before_production": "1 passed, 57 deselected",
+    "red_normal": "1 xfailed, 57 deselected",
+    "red_forced": "1 failed, 57 deselected only at _MissingIsolatedRelationshipLookupAdapter for the four absent production seams",
+    "green_focused": "1 passed, 57 deselected with warnings treated as errors",
+    "review_red_green": [
+      "non-Technology LaneRequest query: DID NOT RAISE then GREEN",
+      "query-only scope/as_of/enumeration drift: DID NOT RAISE then GREEN before Web",
+      "hostile fused identity/evidence/handle ownership: DID NOT RAISE then GREEN",
+      "stripped later snapshot quality flag: DID NOT RAISE then GREEN",
+      "relationship RetrievalTrace release/query drift: DID NOT RAISE then GREEN",
+      "conflicting duplicate auxiliary trace: DID NOT RAISE then GREEN",
+      "Pyright Optional/Literal narrowing: 4 errors then 0 errors"
+    ]
+  },
+  "verification": {
+    "legacy_baseline": "1 passed, 57 deselected",
+    "focused_green": "1 passed, 57 deselected",
+    "corrected_exact_predecessor_matrix": "13 passed",
+    "shared_physical_release_owner": "56 passed, 2 skipped",
+    "relationship_and_release_publication_owners": "15 passed",
+    "knowledge_read_and_query_planning_owners": "17 passed",
+    "canonical_v2_no_external": "345 passed, 141 skipped, 3 intentional hostile-model serializer warnings",
+    "relationship_postgres_owner": "not rerun: S8R1 is memory-only and the required disposable target variables are unset; Accepted S7K retains 19 passed against its removed disposable container",
+    "ruff_check": "passed for complete src/data_agents/canonical_v2 and tests/canonical_v2",
+    "ruff_format": "74 files already formatted",
+    "py_compile": "passed for both changed production files and the owner test",
+    "pyright": "0 errors, 0 warnings, 0 informations for complete Canonical V2 source/tests",
+    "strict_openspec": "passed",
+    "git_diff_check": "passed; separate trailing-whitespace scan covered the five untracked S8R1 files",
+    "uv_lock_check_offline": "resolved 194 packages without lock drift",
+    "scope_secret_cache": "only five owned source/contract files plus recorded generated cache outputs changed after S8R1 In Progress; high-confidence secret and S8R1 xfail scans passed"
+  },
+  "wheel": {
+    "build_semantics": "uv lock --check --offline followed by uv build --offline --wheel; this uv version does not support uv build --locked",
+    "path_before_owned_cleanup": "/var/tmp/canonical-v2-s8r1-wheel-C3gjh0/miroflow_agent-0.1.0-py3-none-any.whl",
+    "sha256": "e0734ab93b66d576f4413abf76e419c2c589577d0a4469cdd18376f8e72403b0",
+    "entry_count": 276,
+    "contains_knowledge_read": true,
+    "contains_knowledge_read_isolated": true,
+    "contains_tests_or_agents": false,
+    "packaged_production_hashes_match_source": true,
+    "owned_output_cleaned_after_receipt": true
+  },
+  "owned_generated_outputs": {
+    "wheel_directory": "/var/tmp/canonical-v2-s8r1-wheel-C3gjh0",
+    "cache_files": [
+      "apps/miroflow-agent/.ruff_cache/0.15.10/5428004810763614316",
+      "apps/miroflow-agent/.ruff_cache/0.15.10/7466570645398254889",
+      "apps/miroflow-agent/src/data_agents/canonical_v2/__pycache__/knowledge_read.cpython-312.pyc",
+      "apps/miroflow-agent/src/data_agents/canonical_v2/__pycache__/knowledge_read_isolated.cpython-312.pyc",
+      "apps/miroflow-agent/tests/canonical_v2/__pycache__/test_internal_reference_projection_contract.cpython-312-pytest-8.4.1.pyc",
+      "apps/miroflow-agent/tests/canonical_v2/__pycache__/test_internal_reference_projection_contract.cpython-312.pyc"
+    ],
+    "cleanup_complete": true
+  },
+  "frozen_targets": {
+    "original_milvus_sha256": "43ef203e0b101fcbed2a6c8fcde19a35d426199d3f02bc72525d0acf618867cc",
+    "original_pgtest_paused": true,
+    "original_pgtest_volume": "d81c6381b0c7c0a975ca0ff4a0054037e72b0d4cb80174f682abceb1127cd241",
+    "original_pgtest_host_port": "15432",
+    "recovery_lab_network": "none",
+    "recovery_lab_published_ports": false,
+    "recovery_lab_restart_policy": "no",
+    "active_pointer_readback": "not performed because no explicit isolated target DSN is configured; S8R1 executes no pointer mutation path and Accepted S7 pointer evidence remains unchanged"
+  },
+  "review": {
+    "contract_and_feasibility": {
+      "important_found_and_closed": 4,
+      "final_critical": 0,
+      "final_important": 0,
+      "final_minor": 0,
+      "final_yagni": 0,
+      "verdict": "ready"
+    },
+    "spec_compliance": {
+      "important_found_and_closed": 4,
+      "closed_important": [
+        "Technology-only LaneRequest validation",
+        "plan/query scope/as_of/enumeration identity before effects",
+        "exclusive hostile fused/evidence/handle ownership postvalidation",
+        "admitted-plus-limitations documentation aligned with Accepted S7"
+      ],
+      "final_critical": 0,
+      "final_important": 0,
+      "final_minor": 0,
+      "final_yagni": 0,
+      "verdict": "accept"
+    },
+    "code_quality": {
+      "important_found_and_closed": 3,
+      "closed_important": [
+        "required fused freshness and limitation flags",
+        "release-bound relationship RetrievalTrace identity",
+        "duplicate conflicting auxiliary trace rejection"
+      ],
+      "final_critical": 0,
+      "final_important": 0,
+      "final_minor": 0,
+      "final_yagni": 0,
+      "verdict": "accept"
+    }
+  },
+  "nonblocking_minor_yagni": [],
+  "next_required_action": "review the Specified S8R2 displayed Company-to-Patent traversal contract and mark it Ready only at zero open Critical/Important",
+  "forbidden_actions_performed": []
+}

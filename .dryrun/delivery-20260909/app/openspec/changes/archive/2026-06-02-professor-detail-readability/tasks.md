@@ -1,0 +1,5 @@
+- [x] 1. Add RED backend API test for `research_output.research_overview` extracted from raw profile text.
+- [x] 2. Add RED frontend test for grouped professor detail rendering.
+- [x] 3. Implement conservative research-overview extraction in the admin professor detail API.
+- [x] 4. Implement grouped fact rendering in `ProfessorWorkbench`.
+- [x] 5. Verify targeted backend/frontend tests, frontend build, OpenSpec validation, and live page rendering.

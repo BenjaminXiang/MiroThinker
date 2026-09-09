@@ -1,0 +1,104 @@
+{
+  "kind": "retrieval",
+  "runs": 3,
+  "rows": [
+    {
+      "qid": 1,
+      "query_type": "A_prof_profile",
+      "p50": 0.028673361986875534,
+      "p95": 0.07313974760472775,
+      "max": 0.07313974760472775,
+      "verdict": "PASS"
+    },
+    {
+      "qid": 4,
+      "query_type": "B_company_topic_search",
+      "p50": 1.5651398207992315,
+      "p95": 3.503026705235243,
+      "max": 3.503026705235243,
+      "verdict": "PASS"
+    },
+    {
+      "qid": 10,
+      "query_type": "G_ambiguous_not_found",
+      "p50": 0.03821808099746704,
+      "p95": 0.05925813317298889,
+      "max": 0.05925813317298889,
+      "verdict": "PASS"
+    },
+    {
+      "qid": 13,
+      "query_type": "B_company_topic_search",
+      "p50": 1.4555874541401863,
+      "p95": 1.4793880991637707,
+      "max": 1.4793880991637707,
+      "verdict": "PASS"
+    },
+    {
+      "qid": 16,
+      "query_type": "A_paper_profile",
+      "p50": 2.254490876570344,
+      "p95": 2.441462103277445,
+      "max": 2.441462103277445,
+      "verdict": "PASS"
+    },
+    {
+      "qid": 19,
+      "query_type": "B_semantic_topic_search",
+      "p50": 0.22488144040107727,
+      "p95": 0.6591046247631311,
+      "max": 0.6591046247631311,
+      "verdict": "PASS"
+    },
+    {
+      "qid": 21,
+      "query_type": "unknown",
+      "p50": 0.029231054708361626,
+      "p95": 0.054159726947546005,
+      "max": 0.054159726947546005,
+      "verdict": "PASS"
+    },
+    {
+      "qid": 24,
+      "query_type": "A_prof_profile",
+      "p50": 1.7610860001295805,
+      "p95": 1.8378018010407686,
+      "max": 1.8378018010407686,
+      "verdict": "PASS"
+    },
+    {
+      "qid": 26,
+      "query_type": "D_cross_domain_topic",
+      "p50": 3.519946452230215,
+      "p95": 5.708854438737035,
+      "max": 5.708854438737035,
+      "verdict": "PASS"
+    },
+    {
+      "qid": 34,
+      "query_type": "B_company_topic_search",
+      "p50": 1.5245530102401972,
+      "p95": 1.5609492231160402,
+      "max": 1.5609492231160402,
+      "verdict": "PASS"
+    },
+    {
+      "qid": 40,
+      "query_type": "A_patent_by_applicant",
+      "p50": 0.05271857604384422,
+      "p95": 0.08008704707026482,
+      "max": 0.08008704707026482,
+      "verdict": "PASS"
+    },
+    {
+      "qid": 41,
+      "query_type": "A_patent_profile",
+      "p50": 0.0647953562438488,
+      "p95": 0.08866588398814201,
+      "max": 0.08866588398814201,
+      "verdict": "PASS"
+    }
+  ],
+  "overall_p95": 5.708854438737035,
+  "slo_verdict": "PASS"
+}

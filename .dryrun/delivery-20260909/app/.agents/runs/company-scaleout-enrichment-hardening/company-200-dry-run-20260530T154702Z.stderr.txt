@@ -1,0 +1,44 @@
+Traceback (most recent call last):
+  File "/home/longxiang/MiroThinker/apps/miroflow-agent/scripts/run_company_upload_enrichment_batch.py", line 2168, in <module>
+    raise SystemExit(main())
+                     ^^^^^^
+  File "/home/longxiang/MiroThinker/apps/miroflow-agent/scripts/run_company_upload_enrichment_batch.py", line 2135, in main
+    report = process_batch(
+             ^^^^^^^^^^^^^^
+  File "/home/longxiang/MiroThinker/apps/miroflow-agent/scripts/run_company_upload_enrichment_batch.py", line 1253, in process_batch
+    ) in _run_stage_shards(
+         ^^^^^^^^^^^^^^^^^^
+  File "/home/longxiang/MiroThinker/apps/miroflow-agent/scripts/run_company_upload_enrichment_batch.py", line 1418, in _run_stage_shards
+    shard_company_ids, started_at, stage_report = future.result()
+                                                  ^^^^^^^^^^^^^^^
+  File "/home/longxiang/.local/share/uv/python/cpython-3.12.12-linux-x86_64-gnu/lib/python3.12/concurrent/futures/_base.py", line 449, in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "/home/longxiang/.local/share/uv/python/cpython-3.12.12-linux-x86_64-gnu/lib/python3.12/concurrent/futures/_base.py", line 401, in __get_result
+    raise self._exception
+  File "/home/longxiang/.local/share/uv/python/cpython-3.12.12-linux-x86_64-gnu/lib/python3.12/concurrent/futures/thread.py", line 59, in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/longxiang/MiroThinker/apps/miroflow-agent/scripts/run_company_upload_enrichment_batch.py", line 1440, in _run_stage_shard
+    stage_report, attempt_reports = _run_command_with_retries(
+                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/longxiang/MiroThinker/apps/miroflow-agent/scripts/run_company_upload_enrichment_batch.py", line 1468, in _run_command_with_retries
+    stage_report = _run_command_for_policy(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/longxiang/MiroThinker/apps/miroflow-agent/scripts/run_company_upload_enrichment_batch.py", line 1507, in _run_command_for_policy
+    return _run_command(
+           ^^^^^^^^^^^^^
+  File "/home/longxiang/MiroThinker/apps/miroflow-agent/scripts/run_company_upload_enrichment_batch.py", line 537, in _run_command
+    completed = subprocess.run(
+                ^^^^^^^^^^^^^^^
+  File "/home/longxiang/.local/share/uv/python/cpython-3.12.12-linux-x86_64-gnu/lib/python3.12/subprocess.py", line 550, in run
+    stdout, stderr = process.communicate(input, timeout=timeout)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/longxiang/.local/share/uv/python/cpython-3.12.12-linux-x86_64-gnu/lib/python3.12/subprocess.py", line 1209, in communicate
+    stdout, stderr = self._communicate(input, endtime, timeout)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/longxiang/.local/share/uv/python/cpython-3.12.12-linux-x86_64-gnu/lib/python3.12/subprocess.py", line 2116, in _communicate
+    self._check_timeout(endtime, orig_timeout, stdout, stderr)
+  File "/home/longxiang/.local/share/uv/python/cpython-3.12.12-linux-x86_64-gnu/lib/python3.12/subprocess.py", line 1253, in _check_timeout
+    raise TimeoutExpired(
+subprocess.TimeoutExpired: Command '['/home/longxiang/MiroThinker/apps/miroflow-agent/.venv/bin/python3', '/home/longxiang/MiroThinker/apps/miroflow-agent/scripts/run_company_generic_source_judgment.py', '--since', '2000-01-01', '--llm-search-hints', '--enrichment-batch-id', 'da6045f3-54d5-4d27-a2c4-c501df1fcf9c', '--dry-run', '--company-id', 'COMP-2640a0f609b5', '--company-id', 'COMP-30dc64905df7', '--company-id', 'COMP-408213b2821c', '--company-id', 'COMP-41af4551eb3a', '--company-id', 'COMP-467bb9e6ed99', '--company-id', 'COMP-46955be309fe', '--company-id', 'COMP-4b24964e000a', '--company-id', 'COMP-4bafaaf10732', '--company-id', 'COMP-510dcababd11', '--company-id', 'COMP-5584b3cf41d2', '--company-id', 'COMP-645c62ec87b2', '--company-id', 'COMP-65fcd5252a56', '--company-id', 'COMP-73d3aeb90744', '--company-id', 'COMP-774be67a23ea', '--company-id', 'COMP-8ce646b2a70e', '--company-id', 'COMP-8ebef706fbbe', '--company-id', 'COMP-8ecaa632bc62', '--company-id', 'COMP-96bcd8d187b3', '--company-id', 'COMP-9978397def98', '--company-id', 'COMP-9dbac97b9320', '--company-id', 'COMP-a90ec5fd4daa', '--company-id', 'COMP-b4ac8bc75a21', '--company-id', 'COMP-b5765e07b89a', '--company-id', 'COMP-d21816fc9df8', '--company-id', 'COMP-ec4f36d8b630']' timed out after 900.0 seconds

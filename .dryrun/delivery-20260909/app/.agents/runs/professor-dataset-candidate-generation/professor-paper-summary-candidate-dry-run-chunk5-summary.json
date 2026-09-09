@@ -1,0 +1,34 @@
+{
+  "mode": "candidate_dry_run",
+  "selection_hash": "73c6b53ae7fa9974870b2f7829ab0667a0867a2f3504e816b2e9ce468d3a17f4",
+  "closure_selection_hash": "63cdd06e86088c590435b53e4556bde7eaf880407ea466689420a24f0d301ffd",
+  "lanes": [
+    {
+      "lane": "professor_paper_summary_generation",
+      "input_count": 500,
+      "candidate_count": 397,
+      "provider_failure_count": 0,
+      "validation_failure_count": 0,
+      "skipped_count": 103,
+      "ready_auto_write": 304,
+      "review_before_write": 93,
+      "quality_flag_counts": [
+        {
+          "flag": "missing_source_page_provenance",
+          "count": 93
+        }
+      ],
+      "provider_failure_classes": [],
+      "rejection_reason_counts": [
+        {
+          "reason": "duplicate_verified_paper_links",
+          "count": 102
+        },
+        {
+          "reason": "invalid_paper_summary_candidate",
+          "count": 1
+        }
+      ]
+    }
+  ]
+}

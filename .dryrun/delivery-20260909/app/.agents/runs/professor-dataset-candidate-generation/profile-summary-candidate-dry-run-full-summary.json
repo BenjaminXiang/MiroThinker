@@ -1,0 +1,29 @@
+{
+  "mode": "candidate_dry_run",
+  "selection_hash": "1787ef5560c49ee3ae098823e2ed0641f5afeaf3519ba7757785448855bf525f",
+  "closure_selection_hash": "7d1c4422b8d9265007e44535654dc9ca538a43981c841c9d9114f2b5c85b6543",
+  "lanes": [
+    {
+      "lane": "profile_summary_repair",
+      "input_count": 346,
+      "candidate_count": 346,
+      "provider_failure_count": 0,
+      "validation_failure_count": 0,
+      "skipped_count": 0,
+      "ready_auto_write": 106,
+      "review_before_write": 240,
+      "quality_flag_counts": [
+        {
+          "flag": "missing_profile_summary_input_facts",
+          "count": 1
+        },
+        {
+          "flag": "profile_summary_length_out_of_range",
+          "count": 240
+        }
+      ],
+      "provider_failure_classes": [],
+      "rejection_reason_counts": []
+    }
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "_doc": "Precision ground-truth labels — per-case TRUE-positive entities (so false positives are scoreable). Addresses benchmark-completion-spec criterion 3 (Precision). eval_precision.py is currently v1 labeling-only (no labels); this file wires it to score. Add the true-positive set per case (the entities that SHOULD appear for this query). Entities NOT in this set that appear in candidates are FALSE POSITIVES.",
+  "_status": "SCAFFOLD — labels to be filled per case. Once filled, eval_precision.py scores: precision = true_positives / (true_positives + false_positives) per case.",
+  "_how_to_label": "For each case, run the query, list the candidate entities returned, and mark which are TRUE positives (genuinely on-topic) vs false positives. The true-positive set goes in `true_positives`. Tune until the per-case precision is acceptable; track it as a regression gate.",
+  "cases": [
+    {
+      "qid": "4",
+      "query": "中国有哪些成熟的酒店送餐机器人供应商",
+      "domain": "company",
+      "true_positives": ["普渡", "开普勒", "云迹", "九号", "擎朗"],
+      "_note": "FM1a: 开普勒/云迹/九号/擎朗 not ingested — ingest-gated (see benchmark-completion-spec criterion 5)."
+    },
+    {
+      "qid": "13",
+      "query": "我想找PCB打板， 有哪些推荐",
+      "domain": "company",
+      "true_positives": ["嘉立创", "一博", "深南电路"],
+      "_note": "嘉立创 not ingested (FM1a)."
+    },
+    {
+      "qid": "50",
+      "query": "有哪些做具身智能和灵巧手的教授",
+      "domain": "professor",
+      "true_positives": ["柯文德", "任尔夫", "王强", "刘桂良"],
+      "_note": "任尔夫 not ingested (FM1a). Post-professor-decouple, watch for false-positive professors (e.g. 幺永超-class loose matches) — the labeled set makes those scoreable."
+    },
+    {
+      "qid": "34",
+      "query": "目前深圳有哪些具身智能、灵巧手厂商，他们在数据层面分别是什么路线",
+      "domain": "company",
+      "true_positives": ["自变量"],
+      "_note": "List is incomplete (TO LABEL): add the other genuine embodied/dexterous-hand companies."
+    }
+  ],
+  "_next": "Complete the true_positives for all cases (especially qid50/34 breadth + the niche sensitivity cases). Then wire eval_precision.py to load this file + score precision = |returned ∩ true_positives| / |returned ∩ (true_positives ∪ false_positives)|."
+}

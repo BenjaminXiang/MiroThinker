@@ -1,0 +1,9 @@
+# conf/llm/deepseek-v4-lite.yaml
+defaults:
+  - default
+  - _self_
+
+provider: "openai"
+model_name: "deepseek-v4-lite"
+base_url: https://api.deepseek.com
+api_key: ${oc.env:DEEPSEEK_API_KEY,""}

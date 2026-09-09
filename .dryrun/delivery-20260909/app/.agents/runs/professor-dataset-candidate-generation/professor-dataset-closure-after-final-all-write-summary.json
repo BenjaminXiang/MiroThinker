@@ -1,0 +1,57 @@
+{
+  "selection_hash": "7339e685c3c35b65c835486d8e212a4f2572ee297333a98ac0ffe20b745fe306",
+  "lanes": [
+    {
+      "lane": "profile_summary_repair",
+      "dataset_input_count": 9,
+      "input_count": 9,
+      "eligible_count": 9,
+      "proposed_write_count": 9,
+      "skipped_count": 0,
+      "validation_failure_count": 0,
+      "affected_professor_ids_count": 9,
+      "affected_paper_ids_count": 0,
+      "skip_reason_counts": {}
+    },
+    {
+      "lane": "research_overview_backfill",
+      "dataset_input_count": 21,
+      "input_count": 21,
+      "eligible_count": 21,
+      "proposed_write_count": 21,
+      "skipped_count": 0,
+      "validation_failure_count": 0,
+      "affected_professor_ids_count": 21,
+      "affected_paper_ids_count": 0,
+      "skip_reason_counts": {}
+    },
+    {
+      "lane": "professor_paper_summary_generation",
+      "dataset_input_count": 267,
+      "input_count": 267,
+      "eligible_count": 136,
+      "proposed_write_count": 136,
+      "skipped_count": 131,
+      "validation_failure_count": 0,
+      "affected_professor_ids_count": 136,
+      "affected_paper_ids_count": 0,
+      "skip_reason_counts": {
+        "duplicate_verified_paper_links": 131
+      }
+    },
+    {
+      "lane": "duplicate_paper_merge",
+      "dataset_input_count": 5186,
+      "input_count": 295,
+      "eligible_count": 234,
+      "proposed_write_count": 234,
+      "skipped_count": 61,
+      "validation_failure_count": 0,
+      "affected_professor_ids_count": 107,
+      "affected_paper_ids_count": 468,
+      "skip_reason_counts": {
+        "ambiguous_fuzzy_match": 61
+      }
+    }
+  ]
+}

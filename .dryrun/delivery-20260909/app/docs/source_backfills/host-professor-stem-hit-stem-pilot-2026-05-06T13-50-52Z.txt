@@ -1,0 +1,131 @@
+INFO:root:Metrics DATABASE_URL source: defaulted_host_real
+INFO:root:Using LLM profile: gemma4
+INFO:root:LLM aliases available: ark, gemma4, mirothinker, qwen35
+INFO:src.data_agents.professor.pipeline_v3:Stage 1: Roster Discovery
+INFO:src.data_agents.professor.pipeline_v3:Stage 1 done: 1603 unique professors, processing 1
+INFO:src.data_agents.professor.pipeline_v3:Stage 2-6: Per-Professor Processing
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=start | name=王轩 institution=哈尔滨工业大学（深圳） url=https://homepage.hit.edu.cn/wangxuan?lang=zh
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=homepage_start | name=王轩 institution=哈尔滨工业大学（深圳） url=https://homepage.hit.edu.cn/wangxuan?lang=zh
+INFO:httpx:HTTP Request: POST https://star.sustech.edu.cn/service/model/gemma4/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://star.sustech.edu.cn/service/model/gemma4/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=homepage_done | name=王轩 institution=哈尔滨工业大学（深圳） url=https://homepage.hit.edu.cn/wangxuan?lang=zh | elapsed=10.2s | success=True | pages=4
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=paper_start | name=王轩 institution=哈尔滨工业大学（深圳） url=https://homepage.hit.edu.cn/wangxuan?lang=zh
+INFO:httpx:HTTP Request: POST https://star.sustech.edu.cn/service/model/gemma4/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://star.sustech.edu.cn/service/model/gemma4/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://star.sustech.edu.cn/service/model/gemma4/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://star.sustech.edu.cn/service/model/gemma4/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=paper_done | name=王轩 institution=哈尔滨工业大学（深圳） url=https://homepage.hit.edu.cn/wangxuan?lang=zh | elapsed=56.4s | staged=5 | source=official_site
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=agent_start | name=王轩 institution=哈尔滨工业大学（深圳） url=https://homepage.hit.edu.cn/wangxuan?lang=zh | missing=projects,company_roles,patent_ids
+INFO:httpx:HTTP Request: POST https://star.sustech.edu.cn/service/model/gemma4/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=agent_done | name=王轩 institution=哈尔滨工业大学（深圳） url=https://homepage.hit.edu.cn/wangxuan?lang=zh | elapsed=0.9s | source=agent_local
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=summary_start | name=王轩 institution=哈尔滨工业大学（深圳） url=https://homepage.hit.edu.cn/wangxuan?lang=zh
+INFO:httpx:HTTP Request: POST https://star.sustech.edu.cn/service/model/gemma4/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=summary_done | name=王轩 institution=哈尔滨工业大学（深圳） url=https://homepage.hit.edu.cn/wangxuan?lang=zh | elapsed=1.9s | length=296
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=done | name=王轩 institution=哈尔滨工业大学（深圳） url=https://homepage.hit.edu.cn/wangxuan?lang=zh | elapsed=69.4s | staged=5 | company_mentions=0
+INFO:src.data_agents.professor.pipeline_v3:Stage 2-6 progress: 1/1 processed, 1 enriched, 5 staged papers
+INFO:src.data_agents.professor.pipeline_v3:Stage 2-6 done: 1 enriched, 1 homepages crawled, 0 web searched, 0 company links
+INFO:src.data_agents.professor.pipeline_v3:Stage 8: Quality Gate + Release
+INFO:src.data_agents.professor.pipeline_v3:Stage 9: Cross-Domain Writes
+INFO:src.data_agents.professor.pipeline_v3:Stage 11.5: Academic Metrics Refresh
+INFO:src.data_agents.professor.pipeline_v3:Pipeline V3 complete: 1 released, 0 blocked, 0 vectorized
+[V3] Stage 1: Roster Discovery
+[V3] Stage 1 done: 1603 unique professors, processing 1
+[V3] Stage 2-6: Per-Professor Processing
+[V3] professor_stage=start | name=王轩 institution=哈尔滨工业大学（深圳） url=https://homepage.hit.edu.cn/wangxuan?lang=zh
+[V3] professor_stage=homepage_start | name=王轩 institution=哈尔滨工业大学（深圳） url=https://homepage.hit.edu.cn/wangxuan?lang=zh
+[V3] professor_stage=homepage_done | name=王轩 institution=哈尔滨工业大学（深圳） url=https://homepage.hit.edu.cn/wangxuan?lang=zh | elapsed=10.2s | success=True | pages=4
+[V3] professor_stage=paper_start | name=王轩 institution=哈尔滨工业大学（深圳） url=https://homepage.hit.edu.cn/wangxuan?lang=zh
+[V3] professor_stage=paper_done | name=王轩 institution=哈尔滨工业大学（深圳） url=https://homepage.hit.edu.cn/wangxuan?lang=zh | elapsed=56.4s | staged=5 | source=official_site
+[V3] professor_stage=agent_start | name=王轩 institution=哈尔滨工业大学（深圳） url=https://homepage.hit.edu.cn/wangxuan?lang=zh | missing=projects,company_roles,patent_ids
+[V3] professor_stage=agent_done | name=王轩 institution=哈尔滨工业大学（深圳） url=https://homepage.hit.edu.cn/wangxuan?lang=zh | elapsed=0.9s | source=agent_local
+[V3] professor_stage=summary_start | name=王轩 institution=哈尔滨工业大学（深圳） url=https://homepage.hit.edu.cn/wangxuan?lang=zh
+[V3] professor_stage=summary_done | name=王轩 institution=哈尔滨工业大学（深圳） url=https://homepage.hit.edu.cn/wangxuan?lang=zh | elapsed=1.9s | length=296
+[V3] professor_stage=done | name=王轩 institution=哈尔滨工业大学（深圳） url=https://homepage.hit.edu.cn/wangxuan?lang=zh | elapsed=69.4s | staged=5 | company_mentions=0
+[V3] Stage 2-6 progress: 1/1 processed, 1 enriched, 5 staged papers
+[V3] Stage 2-6 done: 1 enriched, 1 homepages crawled, 0 web searched, 0 company links
+[V3] Stage 8: Quality Gate + Release
+[V3] Stage 9: Cross-Domain Writes
+[V3] Stage 11.5: Academic Metrics Refresh
+[V3] Pipeline V3 complete: 1 released, 0 blocked, 0 vectorized
+{
+  "generated_at": "2026-05-06T13:54:50+00:00",
+  "elapsed_seconds": 237.5,
+  "llm_profile": "gemma4",
+  "seed_document": "apps/miroflow-agent/scripts/e2e_seeds/shenzhen_stem_mainline_20260504.md",
+  "output_directory": "logs/data_agents/professor_hit_stem_pilot_2026-05-06T13-50-52Z",
+  "report": {
+    "stage1_discovery": {
+      "seed_count": 36,
+      "discovered_count": 1603,
+      "unique_count": 1603
+    },
+    "stage2_regex": {
+      "structured": 1566,
+      "partial": 22,
+      "non_stem_filtered": 59
+    },
+    "stage2_1_direction_cleaning": {
+      "cleaned_count": 0
+    },
+    "stage3_homepage_crawl": {
+      "crawled_count": 1,
+      "fields_filled": 4
+    },
+    "stage2b_papers": {
+      "enriched": 1,
+      "collected_total": 5,
+      "staging_count": 5,
+      "observability": {
+        "observed": 1,
+        "school_hit_count": 1,
+        "fallback_count": 0,
+        "name_disambiguation_conflict_count": 0,
+        "school_hit_rate": 1.0,
+        "fallback_rate": 0.0,
+        "name_disambiguation_conflict_rate": 0.0,
+        "source_breakdown": {
+          "official_site": 1
+        }
+      }
+    },
+    "stage2c_agent": {
+      "triggered": 1,
+      "local_success": 1,
+      "online_escalation": 0,
+      "failed": 0
+    },
+    "stage5_web_search": {
+      "search_count": 0,
+      "identity_verified": 0,
+      "low_signal_search_count": 0,
+      "low_signal_skipped_count": 0,
+      "low_signal_skipped_reasons": {}
+    },
+    "stage6_company_linking": {
+      "links_confirmed": 0
+    },
+    "stage7_summary": {
+      "generated": 1,
+      "fallback": 0
+    },
+    "stage8_release": {
+      "l1_blocked": 0,
+      "released": 1,
+      "quality_distribution": {
+        "ready": 1,
+        "needs_review": 0,
+        "low_confidence": 0,
+        "needs_enrichment": 0
+      },
+      "vectorized": 0,
+      "alerts": []
+    }
+  },
+  "output_files": {
+    "enriched": "logs/data_agents/professor_hit_stem_pilot_2026-05-06T13-50-52Z/enriched_v3.jsonl",
+    "paper_staging": "logs/data_agents/professor_hit_stem_pilot_2026-05-06T13-50-52Z/paper_staging.jsonl",
+    "quality_report": "logs/data_agents/professor_hit_stem_pilot_2026-05-06T13-50-52Z/quality_report.json"
+  }
+}
+
+Report saved to: logs/data_agents/professor_hit_stem_pilot_2026-05-06T13-50-52Z/e2e_report.json

@@ -1,0 +1,159 @@
+{
+  "head_cases": 19,
+  "true_accuracy": "10/19 (53%)",
+  "for_comparison_keyword_overlap_was": "42%",
+  "results": [
+    {
+      "qid": 1,
+      "query": "介绍清华的丁文伯",
+      "overall": 0.9,
+      "correctness": 0.9,
+      "completeness": 0.8,
+      "pass": true
+    },
+    {
+      "qid": 3,
+      "query": "中国有哪些成熟的酒店送餐机器人供应商",
+      "overall": 0.6,
+      "correctness": 0.6,
+      "completeness": 0.5,
+      "pass": false
+    },
+    {
+      "qid": 6,
+      "query": "在深圳旅游旅游有哪些涉及黄赌毒的地方是不能去的",
+      "overall": 0.0,
+      "correctness": 0.0,
+      "completeness": 0.0,
+      "pass": false
+    },
+    {
+      "qid": 7,
+      "query": "请介绍无界智航的相关信息",
+      "overall": 0.37,
+      "correctness": 0.3,
+      "completeness": 0.3,
+      "pass": false
+    },
+    {
+      "qid": 9,
+      "query": "我想找PCB打板， 有哪些推荐",
+      "overall": 0.73,
+      "correctness": 0.9,
+      "completeness": 0.5,
+      "pass": true
+    },
+    {
+      "qid": 11,
+      "query": "pFedGPA: Diffusion-based Generative Parameter Aggregation for Personalized Federated Learning 这篇论文的详细信息",
+      "overall": 0.0,
+      "correctness": 0.0,
+      "completeness": 0.0,
+      "pass": false
+    },
+    {
+      "qid": 13,
+      "query": "毕业于早稻田，且在深圳专注在机器人行业的企业家有谁",
+      "overall": 0.07,
+      "correctness": 0.0,
+      "completeness": 0.0,
+      "pass": false
+    },
+    {
+      "qid": 14,
+      "query": "华力创科学这家公司相关信息，这家公司的产量特点是什么，市场竞争力怎么样",
+      "overall": 0.9,
+      "correctness": 1.0,
+      "completeness": 0.7,
+      "pass": true
+    },
+    {
+      "qid": 16,
+      "query": "清华的王学谦的评价如何，他是否是属于大牛",
+      "overall": 0.97,
+      "correctness": 1.0,
+      "completeness": 0.9,
+      "pass": true
+    },
+    {
+      "qid": 17,
+      "query": "爱博合创企业情况以及创始人信息还有市场对这家企业的评价如何",
+      "overall": 0.87,
+      "correctness": 0.9,
+      "completeness": 0.7,
+      "pass": true
+    },
+    {
+      "qid": 18,
+      "query": "具身智能厂商在数据方面目前存在几种技术路线",
+      "overall": 0.97,
+      "correctness": 1.0,
+      "completeness": 0.9,
+      "pass": true
+    },
+    {
+      "qid": 19,
+      "query": "在真实数据采集路线中，有哪些具体方式",
+      "overall": 0.33,
+      "correctness": 1.0,
+      "completeness": 0.0,
+      "pass": false
+    },
+    {
+      "qid": 20,
+      "query": "在模拟器生成数据路线中，有哪些具体方式",
+      "overall": 0.17,
+      "correctness": 0.5,
+      "completeness": 0.0,
+      "pass": false
+    },
+    {
+      "qid": 21,
+      "query": "目前深圳有哪些具身智能、灵巧手厂商，他们在数据层面分别是什么路线",
+      "overall": 0.63,
+      "correctness": 0.9,
+      "completeness": 0.4,
+      "pass": false
+    },
+    {
+      "qid": 22,
+      "query": "在具身智能的合成数据发展方向上，具体有几种实现方法，分别有哪些代表厂商",
+      "overall": 0.73,
+      "correctness": 0.7,
+      "completeness": 0.5,
+      "pass": true
+    },
+    {
+      "qid": 23,
+      "query": "在具身智能的运动和操作层面，数据需求有什么不同，在实际落地层面分别采用了哪些数据采集方式",
+      "overall": 0.27,
+      "correctness": 0.5,
+      "completeness": 0.1,
+      "pass": false
+    },
+    {
+      "qid": 24,
+      "query": "优必选有哪些专利",
+      "overall": 0.77,
+      "correctness": 0.9,
+      "completeness": 0.4,
+      "pass": true
+    },
+    {
+      "qid": 26,
+      "query": "深圳法本信息科技有限公司的产品特点以及团队介绍",
+      "overall": 0.87,
+      "correctness": 1.0,
+      "completeness": 0.6,
+      "pass": true
+    },
+    {
+      "qid": 27,
+      "query": "有哪些做具身智能和灵巧手的教授",
+      "overall": 0.93,
+      "correctness": 1.0,
+      "completeness": 0.8,
+      "pass": true
+    }
+  ]
+}

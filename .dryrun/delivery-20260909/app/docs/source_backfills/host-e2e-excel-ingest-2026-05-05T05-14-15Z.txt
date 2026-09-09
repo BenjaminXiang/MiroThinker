@@ -1,0 +1,260 @@
+# Host Excel Ingest Validation 2026-05-05T05-14-15Z
+root=/home/longxiang/MiroThinker
+agent_dir=/home/longxiang/MiroThinker/apps/miroflow-agent
+company_xlsx=/home/longxiang/MiroThinker/docs/专辑项目导出1768807339.xlsx
+patent_xlsx=/home/longxiang/MiroThinker/docs/2025-12-05 专利.xlsx
+log_file=/home/longxiang/MiroThinker/docs/source_backfills/host-e2e-excel-ingest-2026-05-05T05-14-15Z.txt
+
+## Environment
+company_xlsx_exists=True
+patent_xlsx_exists=True
+DATABASE_URL=postgresql://***@localhost:15432/miroflow_real
+DATABASE_URL_TEST=UNSET
+CHAT_MILVUS_URI=/home/longxiang/MiroThinker/apps/miroflow-agent/milvus.db
+MILVUS_URI=UNSET
+
+## Admin upload capability inventory
+frontend_company_patent_upload_button= True
+backend_accepts_company_patent_domain= True
+backend_executes_professor_pipeline= True
+backend_executes_company_pipeline= True
+backend_executes_patent_pipeline= True
+admin_upload_company_patent_status=CHECK_IMPLEMENTATION
+
+## Company xlsx parser dry-run
+
++ uv run python scripts/run_company_import_e2e.py --input /home/longxiang/MiroThinker/docs/专辑项目导出1768807339.xlsx --output - --preview-jsonl /tmp/mirothinker-excel-e2e.0XNTmm/company-preview.jsonl
+{
+  "generated_at": "2026-05-05T05:14:17+00:00",
+  "input": "/home/longxiang/MiroThinker/docs/专辑项目导出1768807339.xlsx",
+  "sheet_name": "sheet1",
+  "summary": {
+    "source_file": "/home/longxiang/MiroThinker/docs/专辑项目导出1768807339.xlsx",
+    "sheet_name": "sheet1",
+    "header_row_index": 2,
+    "rows_read": 1620,
+    "rows_empty_skipped": 0,
+    "rows_missing_company_name": 3,
+    "continuation_rows_merged": 592,
+    "orphan_continuation_rows": 0,
+    "company_rows_parsed": 1025,
+    "deduped_records": 1025,
+    "duplicate_groups": 0,
+    "duplicate_records_discarded": 0
+  },
+  "outputs": {
+    "preview_jsonl": "/tmp/mirothinker-excel-e2e.0XNTmm/company-preview.jsonl"
+  }
+}
+exit_code=0
+
+## Patent xlsx parser dry-run
+
++ uv run python scripts/run_patent_import_e2e.py --input /home/longxiang/MiroThinker/docs/2025-12-05 专利.xlsx --output -
+{
+  "generated_at": "2026-05-05T05:14:18+00:00",
+  "input": "/home/longxiang/MiroThinker/docs/2025-12-05 专利.xlsx",
+  "summary": {
+    "workbook_path": "/home/longxiang/MiroThinker/docs/2025-12-05 专利.xlsx",
+    "worksheet_title": "下载的著录项1",
+    "header_row_index": 1,
+    "rows_read": 1930,
+    "records_parsed": 1930,
+    "skipped_rows": 0,
+    "skip_reasons": {},
+    "read_only_max_row": 1,
+    "read_only_max_column": 1
+  },
+  "preview": [
+    {
+      "source_row": 2,
+      "sequence_number": "10001",
+      "title": "无人机的机臂锁紧组件、无人机机臂和无人机",
+      "applicants": [
+        "深圳市飞米机器人科技有限公司"
+      ],
+      "patent_number": "CN223200311U",
+      "publication_date": "2025-08-08",
+      "filing_date": "2024-08-08",
+      "patent_type": "实用新型"
+    },
+    {
+      "source_row": 3,
+      "sequence_number": "10002",
+      "title": "机器设备",
+      "applicants": [
+        "深圳市普渡科技有限公司",
+        "成都市普渡机器人有限公司"
+      ],
+      "patent_number": "CN223220386U",
+      "publication_date": "2025-08-15",
+      "filing_date": "2024-08-23",
+      "patent_type": "实用新型"
+    },
+    {
+      "source_row": 4,
+      "sequence_number": "10003",
+      "title": "叫料方法及相关设备",
+      "applicants": [
+        "深圳富联富桂精密工业有限公司",
+        "工业富联(杭州)数据科技有限公司"
+      ],
+      "patent_number": "CN116452096A",
+      "publication_date": "2023-07-18",
+      "filing_date": "2023-06-20",
+      "patent_type": "发明"
+    }
+  ]
+}
+exit_code=0
+
+## Company release artifact dry-run
+
++ uv run python scripts/run_company_release_e2e.py --input /home/longxiang/MiroThinker/docs/专辑项目导出1768807339.xlsx --company-output /tmp/mirothinker-excel-e2e.0XNTmm/company-records.jsonl --released-output /tmp/mirothinker-excel-e2e.0XNTmm/company-released.jsonl --report-output -
+{
+  "generated_at": "2026-05-05T05:14:20+00:00",
+  "input": "/home/longxiang/MiroThinker/docs/专辑项目导出1768807339.xlsx",
+  "inputs": [
+    "/home/longxiang/MiroThinker/docs/专辑项目导出1768807339.xlsx",
+    "/home/longxiang/MiroThinker/docs/source_backfills/company_workbook_critical_supplement.xlsx"
+  ],
+  "import_summaries": [
+    {
+      "source_file": "/home/longxiang/MiroThinker/docs/专辑项目导出1768807339.xlsx",
+      "sheet_name": "sheet1",
+      "header_row_index": 2,
+      "rows_read": 1620,
+      "rows_empty_skipped": 0,
+      "rows_missing_company_name": 3,
+      "continuation_rows_merged": 592,
+      "orphan_continuation_rows": 0,
+      "company_rows_parsed": 1025,
+      "deduped_records": 1025,
+      "duplicate_groups": 0,
+      "duplicate_records_discarded": 0
+    },
+    {
+      "source_file": "/home/longxiang/MiroThinker/docs/source_backfills/company_workbook_critical_supplement.xlsx",
+      "sheet_name": "sheet1",
+      "header_row_index": 2,
+      "rows_read": 13,
+      "rows_empty_skipped": 0,
+      "rows_missing_company_name": 0,
+      "continuation_rows_merged": 0,
+      "orphan_continuation_rows": 0,
+      "company_rows_parsed": 13,
+      "deduped_records": 13,
+      "duplicate_groups": 0,
+      "duplicate_records_discarded": 0
+    }
+  ],
+  "release_summary": {
+    "input_record_count": 1038,
+    "released_record_count": 1037
+  },
+  "outputs": {
+    "company_records_jsonl": "/tmp/mirothinker-excel-e2e.0XNTmm/company-records.jsonl",
+    "released_objects_jsonl": "/tmp/mirothinker-excel-e2e.0XNTmm/company-released.jsonl"
+  }
+}
+exit_code=0
+
+## Patent release/link artifact dry-run
+
++ uv run python scripts/run_patent_release_e2e.py --patent-input /home/longxiang/MiroThinker/docs/2025-12-05 专利.xlsx --company-input /home/longxiang/MiroThinker/docs/专辑项目导出1768807339.xlsx --skip-postgres --skip-llm --patent-output /tmp/mirothinker-excel-e2e.0XNTmm/patent-records.jsonl --released-output /tmp/mirothinker-excel-e2e.0XNTmm/patent-released.jsonl --report-output -
+{
+  "generated_at": "2026-05-05T05:14:39+00:00",
+  "patent_inputs": [
+    "/home/longxiang/MiroThinker/docs/2025-12-05 专利.xlsx",
+    "/home/longxiang/MiroThinker/docs/source_backfills/patent_exact_identifier_supplement.xlsx"
+  ],
+  "company_input": "/home/longxiang/MiroThinker/docs/专辑项目导出1768807339.xlsx",
+  "patent_import_summaries": [
+    {
+      "workbook_path": "/home/longxiang/MiroThinker/docs/2025-12-05 专利.xlsx",
+      "worksheet_title": "下载的著录项1",
+      "header_row_index": 1,
+      "rows_read": 1930,
+      "records_parsed": 1930,
+      "skipped_rows": 0,
+      "skip_reasons": {},
+      "read_only_max_row": 1,
+      "read_only_max_column": 1
+    },
+    {
+      "workbook_path": "/home/longxiang/MiroThinker/docs/source_backfills/patent_exact_identifier_supplement.xlsx",
+      "worksheet_title": "Sheet1",
+      "header_row_index": 1,
+      "rows_read": 1,
+      "records_parsed": 1,
+      "skipped_rows": 0,
+      "skip_reasons": {},
+      "read_only_max_row": 2,
+      "read_only_max_column": 8
+    }
+  ],
+  "patent_release_summary": {
+    "input_record_count": 1931,
+    "released_record_count": 1931
+  },
+  "postgres_write_summary": {
+    "status": "skipped",
+    "reason": "skip_postgres"
+  },
+  "outputs": {
+    "patent_records_jsonl": "/tmp/mirothinker-excel-e2e.0XNTmm/patent-records.jsonl",
+    "released_objects_jsonl": "/tmp/mirothinker-excel-e2e.0XNTmm/patent-released.jsonl"
+  }
+}
+exit_code=0
+
+## Current Postgres collection/link state
+
++ agent_python -
+database= miroflow_real
+company_count= 1024
+company_snapshot_count= 4100
+patent_count= 1931
+company_patent_link_count= 105
+professor_company_role_count= 0
+pipeline_run_count= 44
+source_page_count= 5600
+pipeline_issue_count= 5520
+recent_pipeline_run= ('import_xlsx', 'succeeded', 'admin-console', 10)
+recent_pipeline_run= ('backfill_real', 'succeeded', 'w13_14_paper_doi_verify', 7)
+recent_pipeline_run= ('news_refresh', 'succeeded', 'run_company_news_ingest', 6)
+recent_pipeline_run= ('backfill_real', 'partial', 'run_company_narrative_backfill', 3)
+recent_pipeline_run= ('backfill_real', 'running', 'run_professor_raw_text_re_scrape', 2)
+recent_pipeline_run= ('backfill_real', 'succeeded', 'run_professor_metrics_backfill', 2)
+recent_pipeline_run= ('import_xlsx', 'succeeded', 'run_patent_release_e2e', 2)
+recent_pipeline_run= ('news_refresh', 'succeeded', 'run_company_signal_extract', 2)
+recent_pipeline_run= ('backfill_real', 'partial', 'run_paper_summary_zh_backfill', 1)
+recent_pipeline_run= ('backfill_real', 'running', 'run_professor_metrics_backfill', 1)
+recent_pipeline_run= ('backfill_real', 'succeeded', 'run_company_narrative_backfill', 1)
+recent_pipeline_run= ('backfill_real', 'succeeded', 'run_paper_summary_zh_backfill', 1)
+recent_pipeline_run= ('backfill_real', 'succeeded', 'run_professor_raw_text_re_scrape', 1)
+recent_pipeline_run= ('backfill_real', 'succeeded', 'w13_d2_quality_promote', 1)
+recent_pipeline_run= ('import_xlsx', 'failed', 'admin-console', 1)
+recent_pipeline_run= ('import_xlsx', 'partial', 'run_patent_release_e2e', 1)
+admin_upload_source_page_count= 6
+company_snapshot_core_field_gap_count= 0
+patent_core_field_gap_count= 0
+exit_code=0
+
+## Current Milvus collection state
+
++ agent_python -
+/home/longxiang/MiroThinker/apps/miroflow-agent/.venv/lib/python3.12/site-packages/milvus_lite/__init__.py:15: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  from pkg_resources import DistributionNotFound, get_distribution
+Open /home/longxiang/MiroThinker/apps/miroflow-agent/milvus.db failed, the file has been opened by another program
+milvus_probe=SKIPPED_LOCKED
+uri= /home/longxiang/MiroThinker/apps/miroflow-agent/milvus.db
+reason=local Milvus-Lite file is already opened by another process
+error_type= ConnectionConfigException
+error= <ConnectionConfigException: (code=1, message=Open local milvus failed)>
+exit_code=0
+
+## Done
+log_file=/home/longxiang/MiroThinker/docs/source_backfills/host-e2e-excel-ingest-2026-05-05T05-14-15Z.txt
+failures=0
+result=PASS_WITH_GAPS_REVIEW_REQUIRED

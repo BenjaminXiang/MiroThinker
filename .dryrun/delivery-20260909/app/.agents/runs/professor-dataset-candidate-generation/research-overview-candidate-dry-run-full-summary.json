@@ -1,0 +1,48 @@
+{
+  "mode": "candidate_dry_run",
+  "selection_hash": "489128318ff475161de4203493c41fe09a6bbb37c6ca5d804359a4de5b71e00a",
+  "closure_selection_hash": "24590382c666c62775af635bbeedddecfc6f34e65e1ecf53801d5f31d348d7e3",
+  "lanes": [
+    {
+      "lane": "research_overview_backfill",
+      "input_count": 2510,
+      "candidate_count": 2488,
+      "provider_failure_count": 2,
+      "validation_failure_count": 0,
+      "skipped_count": 20,
+      "ready_auto_write": 2488,
+      "review_before_write": 0,
+      "generation_method_counts": [
+        {
+          "method": "llm_translation",
+          "count": 74
+        },
+        {
+          "method": "official_extract",
+          "count": 2414
+        }
+      ],
+      "quality_flag_counts": [],
+      "provider_failure_classes": [
+        {
+          "error_class": "APIConnectionError",
+          "count": 1
+        },
+        {
+          "error_class": "MalformedLLMJSON",
+          "count": 1
+        }
+      ],
+      "rejection_reason_counts": [
+        {
+          "reason": "invalid_research_overview_candidate",
+          "count": 3
+        },
+        {
+          "reason": "source_missing",
+          "count": 17
+        }
+      ]
+    }
+  ]
+}

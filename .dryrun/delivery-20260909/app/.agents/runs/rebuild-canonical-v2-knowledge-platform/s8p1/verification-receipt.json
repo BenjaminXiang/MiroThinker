@@ -1,0 +1,83 @@
+{
+  "schema_version": "canonical-v2-s8p1-release-bound-query-planner-receipt-v1",
+  "change_id": "rebuild-canonical-v2-knowledge-platform",
+  "slice_id": "s8p1-release-bound-query-planner-green",
+  "status": "accepted",
+  "accepted_at": "2026-07-16T08:02:11Z",
+  "git_head": "f0e6224e1c675c6d6c58993676783b2fbe0cd8f6",
+  "formal_task_ledger": "55/80",
+  "implementation": {
+    "knowledge_read_sha256": "f44080fe77e32458829ed31a52629e640bc4b8e310dda3fe6e69a8ceeca33981",
+    "knowledge_read_isolated_sha256": "60d0de623b3f24280528b7c161feafc1c79bf4884f0fd894f519b3efb0bb2d50",
+    "owner_test_sha256": "e2554c31313250c974c1231987218a442584f47332d402a679aea34ecbd82b68",
+    "query_owner_test_sha256": "64251d272987b9274857d9d4fc6a0c6a5139e58e6cc3c23c3442b88da902f963",
+    "slice_contract_sha256_before_acceptance_evidence": "90c4ec1a5572a230d7709cf76fb0fdc060f811ba7d54f873d17c87a84fcdbe84",
+    "implementation_plan_sha256_before_acceptance_evidence": "2d64b902e5d548db2c8f288eb1c9ca46030422528299d219b10d731e3a351e4a",
+    "tasks_sha256_unchanged": "5c71f296c81b7a8ef2f76dac09489a05529ae43ae31f8342e378dd4353f17328",
+    "acceptance_sha256_unchanged": "742b29dc9805214b4b7059d5c801189209c26e35831f3f834ef01e4ac9f6df50"
+  },
+  "tdd": {
+    "red_normal": "2 xfailed, 46 deselected; both direct missing-factory sentinels before physical fixture acquisition",
+    "red_forced": "2 failed, 46 deselected; exact _MissingIsolatedReleaseQueryPlannerFactory targets",
+    "pre_wrapper_removal_green": "2 passed, 46 deselected under --runxfail",
+    "green_focused": "2 passed, 46 deselected"
+  },
+  "verification": {
+    "shared_s6_s7_s8_owner": "46 passed, 2 skipped",
+    "query_planning_owner": "4 passed",
+    "knowledge_read_owner_matrix": "16 passed",
+    "canonical_v2_no_external": "334 passed, 141 skipped, 0 xfailed, 3 existing hostile-model serialization warnings",
+    "ruff_check": "passed for complete src/data_agents/canonical_v2 and tests/canonical_v2",
+    "ruff_format": "passed for all four changed production/test files",
+    "py_compile": "passed for knowledge_read.py and knowledge_read_isolated.py",
+    "pyright": "0 errors, 0 warnings, 0 informations for complete Canonical V2 source/tests",
+    "strict_openspec": "passed",
+    "git_diff_check": "passed",
+    "scope_secret_cache": "passed"
+  },
+  "wheel": {
+    "path": "/var/tmp/canonical-v2-s8p1-wheel-AVu3eNYd/miroflow_agent-0.1.0-py3-none-any.whl",
+    "sha256": "af2ecced0d1b48cb6cdad215ac89e20c3a092b2dad5b6ae071bb36d84329fda4",
+    "entry_count": 276,
+    "contains_knowledge_read": true,
+    "contains_knowledge_read_isolated": true,
+    "contains_tests_or_agents": false,
+    "packaged_production_hashes_match_source": true
+  },
+  "frozen_targets": {
+    "original_milvus_sha256": "43ef203e0b101fcbed2a6c8fcde19a35d426199d3f02bc72525d0acf618867cc",
+    "original_pgtest_paused": true,
+    "original_pgtest_volume": "d81c6381b0c7c0a975ca0ff4a0054037e72b0d4cb80174f682abceb1127cd241",
+    "recovery_lab_network": "none",
+    "recovery_lab_published_ports": false,
+    "recovery_lab_restart_policy": "no"
+  },
+  "review": {
+    "initial": {
+      "critical": 0,
+      "important": 7,
+      "closed_important": [
+        "published projections compare as exact unique projection-ID maps rather than incompatible valid tuple orders",
+        "bound plans reject institution-slot, lane-query, and internal-query release/catalog cross-wires plus public relabeling",
+        "multi-Company Person geography fails closed instead of creating a cross-Company Cartesian match",
+        "manifest hashes are recomputed and Technology definition uses the authoritative namespaced lineage path",
+        "legacy unbound plan JSON and content identity remain frozen",
+        "Person and Technology evidence, anchor lineage, ordering, and derived hashes are asserted exactly",
+        "catalog tests reject missing observed aliases and accept one real shared label across two observed institution IDs"
+      ]
+    },
+    "targeted_re_review": {
+      "critical": 0,
+      "important": 0,
+      "verdict": "accepted",
+      "focused_recheck": "2 passed, 46 deselected"
+    }
+  },
+  "nonblocking_minor_yagni": [
+    "The conservative multi-Company geography branch has no dedicated two-Company fixture; it cannot create a false positive and Task 8.2 remains open.",
+    "Exact-class, catalog-release, and rolled-back local variants partly rely on existing sibling validation coverage.",
+    "Split lookup and planning derivation only if later S8 work materially worsens module locality."
+  ],
+  "next_ready_slice": "s8p2-planning-taxonomy-and-assessment-intent",
+  "forbidden_actions_performed": []
+}

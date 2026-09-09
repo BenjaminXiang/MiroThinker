@@ -1,0 +1,38 @@
+{
+  "workers": 4,
+  "papers_total": 38,
+  "processed": 38,
+  "skipped": 0,
+  "fetch_attempted": 38,
+  "fetch_fetched": 9,
+  "fetch_persisted": 2,
+  "fetch_failed": 29,
+  "fetch_skipped": 7,
+  "timeouts": 2,
+  "content_type_rejections": 21,
+  "size_cap_rejections": 0,
+  "parse_failures": 1,
+  "duplicate_content": 0,
+  "fetched_no_usable_text": 7,
+  "summaries_written": 0,
+  "errors": 0,
+  "failure_reason_counts": {
+    "fetched_no_usable_text": 7,
+    "http_403": 3,
+    "http_418": 1,
+    "pdf_content_type_disallowed": 21,
+    "pdf_empty_text": 1,
+    "pdf_parse_error": 1,
+    "timeout": 2
+  },
+  "http_status_counts": {
+    "403": 3,
+    "418": 1
+  },
+  "durations": [
+    33.3,
+    37.22,
+    24.38,
+    53.06
+  ]
+}

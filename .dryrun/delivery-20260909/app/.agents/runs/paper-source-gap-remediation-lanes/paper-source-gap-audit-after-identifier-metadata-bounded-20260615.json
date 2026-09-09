@@ -1,0 +1,172 @@
+{
+  "artifact_type": "paper_source_gap_audit",
+  "database_url_label": "arg:database-url",
+  "generated_at": "2026-06-15T15:20:13+00:00",
+  "lane_counts": {
+    "existing_source_summary_fast_path": 699,
+    "identifier_metadata_enrichment": 4605,
+    "prof_page_only_title_parser_cleanup": 11603,
+    "professor_page_full_text_acquisition": 38,
+    "review_only_residual": 303
+  },
+  "lanes": {
+    "existing_source_summary_fast_path": {
+      "lane": "existing_source_summary_fast_path",
+      "sample_paper_ids": [
+        "PAPER-0031C6FD29D1",
+        "PAPER-00436F24D068",
+        "PAPER-008D84C3CE05",
+        "PAPER-00EE463A8424",
+        "PAPER-014B7782CE09",
+        "PAPER-017D1057E0A4",
+        "PAPER-019A8D426A4C",
+        "PAPER-019F2B44156D",
+        "PAPER-01C8A60DE59C",
+        "PAPER-038E8E225BBA",
+        "PAPER-03E2EF34F7A9",
+        "PAPER-0413E2F094F7",
+        "PAPER-04D14179A251",
+        "PAPER-05C655030DA4",
+        "PAPER-05CCC3FF6A12",
+        "PAPER-06F7ED185678",
+        "PAPER-070E1A6D2A52",
+        "PAPER-0744674BD867",
+        "PAPER-0772AE3EAAA7",
+        "PAPER-0773C761CC92"
+      ],
+      "selection_hash": "214f5577969562476fcdc5c2ac3434b308a79ffb6bb325d24a95e3f568057e57",
+      "skip_reason_counts": {},
+      "total": 699
+    },
+    "identifier_metadata_enrichment": {
+      "lane": "identifier_metadata_enrichment",
+      "sample_paper_ids": [
+        "PAPER-0007F8412B0D",
+        "PAPER-00099A5AC5EB",
+        "PAPER-001041D0B7A3",
+        "PAPER-003B5F0F7546",
+        "PAPER-004BB0D25FE7",
+        "PAPER-00508D3ECD9A",
+        "PAPER-006CCD322F4F",
+        "PAPER-006FB8486300",
+        "PAPER-00778CDC852D",
+        "PAPER-00A61B193855",
+        "PAPER-00C8C3257D2F",
+        "PAPER-00DFDD397072",
+        "PAPER-00EC4D8A6771",
+        "PAPER-011B4B3D037B",
+        "PAPER-01280ABAA5ED",
+        "PAPER-013CD95B670B",
+        "PAPER-01453E7053DD",
+        "PAPER-0153658C8916",
+        "PAPER-01683B29484A",
+        "PAPER-016F43D13044"
+      ],
+      "selection_hash": "84d2a56d61747cdf4ecbdedd3ee8d28bc15087414754d4e7dfcc4d1a3e4b90b7",
+      "skip_reason_counts": {
+        "missing_usable_source_text": 4605
+      },
+      "total": 4605
+    },
+    "prof_page_only_title_parser_cleanup": {
+      "lane": "prof_page_only_title_parser_cleanup",
+      "sample_paper_ids": [
+        "PAPER-000264B0414D",
+        "PAPER-0002989179A1",
+        "PAPER-000595FEEFF3",
+        "PAPER-0012FF35E636",
+        "PAPER-0017A754E36B",
+        "PAPER-001DCF1A8B53",
+        "PAPER-00208B5B242E",
+        "PAPER-0040B18C490B",
+        "PAPER-0043C4D05B45",
+        "PAPER-00479E9ED05E",
+        "PAPER-0049EC02132D",
+        "PAPER-004A88D8762A",
+        "PAPER-004D86DB34DB",
+        "PAPER-0050A2FEB598",
+        "PAPER-006439820D5A",
+        "PAPER-0065C9ADC3AD",
+        "PAPER-006E3B49615F",
+        "PAPER-00739CC76B17",
+        "PAPER-007BB4FA38D5",
+        "PAPER-007D4E3891C4"
+      ],
+      "selection_hash": "a1849208ddc4ee2c585c5dee8e649161542d0acc11b97d1860a3a6298a77282b",
+      "skip_reason_counts": {
+        "prof_page_only_missing_identifier_or_source": 11603
+      },
+      "total": 11603
+    },
+    "professor_page_full_text_acquisition": {
+      "lane": "professor_page_full_text_acquisition",
+      "sample_paper_ids": [
+        "PAPER-00F9A6887B76",
+        "PAPER-04A2C3D74FBE",
+        "PAPER-09D9D339B399",
+        "PAPER-0B45A449B895",
+        "PAPER-0D093E96B557",
+        "PAPER-0F552FBBBBF2",
+        "PAPER-0F6E037BBA7E",
+        "PAPER-11B584DD6AC1",
+        "PAPER-19260F26EB11",
+        "PAPER-1BCF0C543113",
+        "PAPER-20D65A27D11D",
+        "PAPER-23918377DC06",
+        "PAPER-24A23433979E",
+        "PAPER-35D4174EDADC",
+        "PAPER-402944CEA1AA",
+        "PAPER-411ACBA7DA23",
+        "PAPER-432B40F6D4C4",
+        "PAPER-4670A51F916C",
+        "PAPER-4E60EE39635A",
+        "PAPER-500C789E1D51"
+      ],
+      "selection_hash": "7f8ea682e3f4a56404612f7623f7d47dd41685818e71dc0b77edfa5abefa257c",
+      "skip_reason_counts": {
+        "pdf_available_but_no_usable_text": 38
+      },
+      "total": 38
+    },
+    "review_only_residual": {
+      "lane": "review_only_residual",
+      "sample_paper_ids": [
+        "PAPER-00850179616F",
+        "PAPER-00DDA4D6C27E",
+        "PAPER-015D7EDA7712",
+        "PAPER-021552F607CE",
+        "PAPER-02322D0E2BB3",
+        "PAPER-0298604BB0E8",
+        "PAPER-03338E818267",
+        "PAPER-037C12D4DFA0",
+        "PAPER-0449990CEA1F",
+        "PAPER-05CDE6295AB2",
+        "PAPER-07174B4483E5",
+        "PAPER-0726912A8CAE",
+        "PAPER-073972D49F61",
+        "PAPER-079B95D5DA03",
+        "PAPER-079E56C39AFD",
+        "PAPER-07AA3BFC277C",
+        "PAPER-082FC5770103",
+        "PAPER-0B30544445CC",
+        "PAPER-0B5E15E3E013",
+        "PAPER-0D6344ADF23E"
+      ],
+      "selection_hash": "474dae35750048e5d48cba0e68ddfe04d839840ec72d74f5c39018f231f43755",
+      "skip_reason_counts": {
+        "no_supported_source_action": 303
+      },
+      "total": 303
+    }
+  },
+  "read_only": true,
+  "source_buckets": {
+    "crossref": 2230,
+    "dblp": 41,
+    "manual": 287,
+    "openalex": 3030,
+    "prof_page_only": 11658,
+    "semantic_scholar": 2
+  },
+  "total_rows": 17248
+}

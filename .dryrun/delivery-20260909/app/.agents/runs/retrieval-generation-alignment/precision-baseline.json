@@ -1,0 +1,299 @@
+{
+  "rows": [
+    {
+      "qid": 1,
+      "query": "介绍清华的丁文伯",
+      "query_type": "A_prof_profile",
+      "candidate_names": [
+        "丁文伯 - 清华大学深圳国际研究生院"
+      ],
+      "unsourced_web": 0,
+      "required": [
+        "丁文伯"
+      ],
+      "false_positives": []
+    },
+    {
+      "qid": 4,
+      "query": "中国有哪些成熟的酒店送餐机器人供应商",
+      "query_type": "B_company_topic_search",
+      "candidate_names": [
+        "鹿大福机器人",
+        "深圳安赛步机器人",
+        "万德昌创新智能",
+        "深圳中科世界机器人",
+        "艾唯尔科技",
+        "锐曼智能技术",
+        "小村机器人智能科技",
+        "普波科技",
+        "博歌（深圳）自动化",
+        "普渡科技",
+        "鹿大福机器人",
+        "深圳安赛步机器人",
+        "万德昌创新智能",
+        "深圳中科世界机器人",
+        "艾唯尔科技",
+        "锐曼智能技术",
+        "小村机器人智能科技",
+        "普波科技",
+        "博歌（深圳）自动化",
+        "普渡科技",
+        "鹿大福机器人",
+        "深圳安赛步机器人",
+        "万德昌创新智能",
+        "深圳中科世界机器人",
+        "艾唯尔科技",
+        "锐曼智能技术",
+        "小村机器人智能科技",
+        "普波科技",
+        "博歌（深圳）自动化",
+        "普渡科技"
+      ],
+      "unsourced_web": 0,
+      "required": [
+        "普渡",
+        "开普勒",
+        "云迹",
+        "九号",
+        "擎朗"
+      ],
+      "false_positives": []
+    },
+    {
+      "qid": 10,
+      "query": "请介绍无界智航的相关信息",
+      "query_type": "G_ambiguous_not_found",
+      "candidate_names": [],
+      "unsourced_web": 0,
+      "required": [
+        "无界智航"
+      ],
+      "false_positives": []
+    },
+    {
+      "qid": 13,
+      "query": "我想找PCB打板， 有哪些推荐",
+      "query_type": "B_company_topic_search",
+      "candidate_names": [
+        "兴森快捷电路科技",
+        "芯拓科技",
+        "驭鹰者电子",
+        "深圳顺易捷科技",
+        "海洲天润科技",
+        "深华科电子",
+        "伟德创新电路科技",
+        "一博科技",
+        "百芯智能制造科技（深圳）",
+        "捷腾快捷电路",
+        "兴森快捷电路科技",
+        "芯拓科技",
+        "驭鹰者电子",
+        "深圳顺易捷科技",
+        "海洲天润科技",
+        "深华科电子",
+        "伟德创新电路科技",
+        "一博科技",
+        "百芯智能制造科技（深圳）",
+        "捷腾快捷电路",
+        "兴森快捷电路科技",
+        "芯拓科技",
+        "驭鹰者电子",
+        "深圳顺易捷科技",
+        "海洲天润科技",
+        "深华科电子",
+        "伟德创新电路科技",
+        "一博科技",
+        "百芯智能制造科技（深圳）",
+        "捷腾快捷电路"
+      ],
+      "unsourced_web": 0,
+      "required": [
+        "嘉立创",
+        "一博",
+        "深南电路"
+      ],
+      "false_positives": []
+    },
+    {
+      "qid": 16,
+      "query": "pFedGPA: Diffusion-based Generative Parameter Aggregation for Personalized Federated Learning",
+      "query_type": "A_paper_profile",
+      "candidate_names": [
+        "pFedGPA: Diffusion-based Generative Parameter Aggregation for Personalized Federated Learning"
+      ],
+      "unsourced_web": 0,
+      "required": [
+        "pFedGPA"
+      ],
+      "false_positives": []
+    },
+    {
+      "qid": 19,
+      "query": "毕业于早稻田，且在深圳专注在机器人行业的企业家有谁",
+      "query_type": "B_semantic_topic_search",
+      "candidate_names": [],
+      "unsourced_web": 0,
+      "required": [
+        "许晋诚",
+        "陈功"
+      ],
+      "false_positives": []
+    },
+    {
+      "qid": 21,
+      "query": "华力创科学这家公司相关信息，这家公司的产量特点是什么，市场竞争力怎么样",
+      "query_type": "unknown",
+      "candidate_names": [],
+      "unsourced_web": 0,
+      "required": [
+        "华力创"
+      ],
+      "false_positives": []
+    },
+    {
+      "qid": 24,
+      "query": "清华的王学谦的评价如何，他是否是属于大牛",
+      "query_type": "A_prof_profile",
+      "candidate_names": [
+        "王学谦 - 清华大学深圳国际研究生院"
+      ],
+      "unsourced_web": 0,
+      "required": [
+        "王学谦"
+      ],
+      "false_positives": []
+    },
+    {
+      "qid": 26,
+      "query": "爱博合创企业情况以及创始人信息还有市场对这家企业的评价如何",
+      "query_type": "D_cross_domain_topic",
+      "candidate_names": [
+        "郭秋泉 - 电子科技大学（深圳）高等研究院",
+        "高波 - 深圳信息职业技术大学",
+        "赵柏松 - 南方科技大学",
+        "祝赵波 - 深圳大学",
+        "郎曌博 - 南方科技大学",
+        "深圳爱博合创医疗机器人 - 先进制造",
+        "爱都科技 - 硬件",
+        "爱派云创科技 - 硬件",
+        "赋之科技（深圳） - 先进制造",
+        "深圳创怀医疗科技 - 医疗健康",
+        "2013 · Structure of Severe Fever with Thrombocytopenia Syndrome Virus Nucleocapsid Protein in Complex with Suramin Reveals Therapeutic Potential",
+        "2020 · Spatiotemporal and probability variations of surface PM2.5 over China between 2013 and 2019 and the associated changes in health risks: An integrative observation and model analysis",
+        "2025 · A Collaborative Network of Mamba and CNN for Lightweight Image Super-Resolution",
+        "2024 · An Improved Single-Event Effect Performance SiC MOSFET of Hole Extraction Pillar Combined With Multilayer P-Shield Structure",
+        "2016 · mdRNA-Seq analysis of marine microbial communities from the northern Red Sea",
+        "郭秋泉",
+        "高波",
+        "赵柏松",
+        "祝赵波",
+        "郎曌博",
+        "Structure of Severe Fever with Thrombocytopenia Syndrome Virus Nucleocapsid Protein in Complex with Suramin Reveals Therapeutic Potential",
+        "Spatiotemporal and probability variations of surface PM2.5 over China between 2013 and 2019 and the associated changes in health risks: An integrative observation and model analysis",
+        "A Collaborative Network of Mamba and CNN for Lightweight Image Super-Resolution",
+        "An Improved Single-Event Effect Performance SiC MOSFET of Hole Extraction Pillar Combined With Multilayer P-Shield Structure",
+        "mdRNA-Seq analysis of marine microbial communities from the northern Red Sea",
+        "深圳爱博合创医疗机器人",
+        "爱都科技",
+        "爱派云创科技",
+        "赋之科技（深圳）",
+        "深圳创怀医疗科技",
+        "爱挖网络科技",
+        "合强创华科技",
+        "深圳创龙智新科技",
+        "丛林合创科技",
+        "立创电子商务",
+        "郭秋泉",
+        "高波",
+        "赵柏松",
+        "祝赵波",
+        "郎曌博",
+        "Structure of Severe Fever with Thrombocytopenia Syndrome Virus Nucleocapsid Protein in Complex with Suramin Reveals Therapeutic Potential",
+        "Spatiotemporal and probability variations of surface PM2.5 over China between 2013 and 2019 and the associated changes in health risks: An integrative observation and model analysis",
+        "A Collaborative Network of Mamba and CNN for Lightweight Image Super-Resolution",
+        "An Improved Single-Event Effect Performance SiC MOSFET of Hole Extraction Pillar Combined With Multilayer P-Shield Structure",
+        "mdRNA-Seq analysis of marine microbial communities from the northern Red Sea",
+        "深圳爱博合创医疗机器人",
+        "爱都科技",
+        "爱派云创科技",
+        "赋之科技（深圳）",
+        "深圳创怀医疗科技",
+        "爱挖网络科技",
+        "合强创华科技",
+        "深圳创龙智新科技",
+        "丛林合创科技",
+        "立创电子商务"
+      ],
+      "unsourced_web": 0,
+      "required": [
+        "爱博合创"
+      ],
+      "false_positives": []
+    },
+    {
+      "qid": 34,
+      "query": "目前深圳有哪些具身智能、灵巧手厂商，他们在数据层面分别是什么路线",
+      "query_type": "B_company_topic_search",
+      "candidate_names": [
+        "合肥伯牙智能科技",
+        "深圳星际光年科技",
+        "浙江灵巧智能科技",
+        "灵心巧手（北京）科技",
+        "深圳伯牙智能动力",
+        "自变量机器人科技（深圳）",
+        "源升智能机器人（深圳）",
+        "深圳超维传感科技",
+        "上海傲意信息科技",
+        "戴盟（深圳）机器人科技",
+        "合肥伯牙智能科技",
+        "深圳星际光年科技",
+        "浙江灵巧智能科技",
+        "灵心巧手（北京）科技",
+        "深圳伯牙智能动力",
+        "自变量机器人科技（深圳）",
+        "源升智能机器人（深圳）",
+        "深圳超维传感科技",
+        "上海傲意信息科技",
+        "戴盟（深圳）机器人科技",
+        "合肥伯牙智能科技",
+        "深圳星际光年科技",
+        "浙江灵巧智能科技",
+        "灵心巧手（北京）科技",
+        "深圳伯牙智能动力",
+        "自变量机器人科技（深圳）",
+        "源升智能机器人（深圳）",
+        "深圳超维传感科技",
+        "上海傲意信息科技",
+        "戴盟（深圳）机器人科技"
+      ],
+      "unsourced_web": 0,
+      "required": [
+        "自变量"
+      ],
+      "false_positives": []
+    },
+    {
+      "qid": 40,
+      "query": "优必选有哪些专利",
+      "query_type": "A_patent_by_applicant",
+      "candidate_names": [],
+      "unsourced_web": 0,
+      "required": [
+        "优必选"
+      ],
+      "false_positives": []
+    },
+    {
+      "qid": 41,
+      "query": "专利 CN117873146A 的详细信息是什么",
+      "query_type": "A_patent_profile",
+      "candidate_names": [],
+      "unsourced_web": 0,
+      "required": [
+        "CN117873146A"
+      ],
+      "false_positives": []
+    }
+  ],
+  "total_unsourced_web": 0
+}

@@ -1,0 +1,1453 @@
+{
+  "generated_at": "2026-05-28T03:36:23+00:00",
+  "input": "/home/longxiang/MiroThinker/docs/专辑项目导出1768807339.xlsx",
+  "deterministic_status": "passed",
+  "import": {
+    "company_rows_parsed": 1025,
+    "with_website": 621,
+    "report": {
+      "sheet_name": "sheet1",
+      "rows_read": 1617,
+      "company_rows_parsed": 1025,
+      "deduped_records": 1025
+    }
+  },
+  "release": {
+    "released_record_count": 1025
+  },
+  "optional_field_coverage": {
+    "credit_code": 0,
+    "legal_representative": 1025,
+    "registered_capital": 1025,
+    "patent_count": 1025
+  },
+  "key_person_coverage": {
+    "total": 1297,
+    "with_description": 1296,
+    "with_education": 98,
+    "with_work_experience": 86
+  },
+  "fixture_checks": {
+    "iyiou_adapter": {
+      "status": "passed",
+      "records": 1,
+      "diagnostics": {
+        "adapter": "iyiou",
+        "site_filter": "data.iyiou.com",
+        "items_seen": 1,
+        "items_accepted": 1,
+        "items_rejected_offsite": 0,
+        "items_rejected_irrelevant_path": 0,
+        "items_rejected_name_mismatch": 0,
+        "query_terms": [
+          "深圳示例科技"
+        ],
+        "aliases": [],
+        "founder_terms": [],
+        "keyword_terms": [],
+        "records_by_query": {
+          "深圳示例科技": 1
+        }
+      }
+    },
+    "official_product_capture": {
+      "status": "passed",
+      "products": 1
+    }
+  },
+  "live_checks": {
+    "status": "passed",
+    "companies_checked": 20,
+    "sources": {
+      "iyiou": {
+        "records": 7,
+        "companies_with_records": 3,
+        "content_chars": 541
+      },
+      "pitchhub_36kr": {
+        "records": 16,
+        "companies_with_records": 9,
+        "content_chars": 29523
+      }
+    },
+    "companies_with_yiou_records": 3,
+    "iyiou_records": 7,
+    "companies_with_pitchhub_records": 9,
+    "pitchhub_records": 16,
+    "pitchhub_content_chars": 29523,
+    "samples": [
+      {
+        "company": "极智视觉科技（深圳）有限公司",
+        "records": 0,
+        "sources": {
+          "iyiou": {
+            "records": 0,
+            "content_chars": 0,
+            "diagnostics": {
+              "adapter": "iyiou",
+              "site_filter": "data.iyiou.com",
+              "items_seen": 0,
+              "items_accepted": 0,
+              "items_rejected_offsite": 0,
+              "items_rejected_irrelevant_path": 0,
+              "items_rejected_name_mismatch": 0,
+              "query_terms": [
+                "极智视觉科技（深圳）有限公司",
+                "极智视觉科技（深圳）"
+              ],
+              "aliases": [],
+              "founder_terms": [],
+              "keyword_terms": [],
+              "records_by_query": {
+                "极智视觉科技（深圳）有限公司": 0,
+                "极智视觉科技（深圳）": 0
+              }
+            },
+            "top_urls": []
+          },
+          "pitchhub_36kr": {
+            "records": 0,
+            "content_chars": 0,
+            "diagnostics": {
+              "adapter": "pitchhub_36kr",
+              "site_filter": "pitchhub.36kr.com",
+              "items_seen": 6,
+              "items_accepted": 0,
+              "items_rejected_offsite": 0,
+              "items_rejected_irrelevant_path": 1,
+              "items_rejected_name_mismatch": 5,
+              "query_terms": [
+                "极智视觉科技（深圳）有限公司",
+                "极智视觉科技（深圳）"
+              ],
+              "aliases": [],
+              "founder_terms": [],
+              "keyword_terms": [],
+              "records_by_query": {
+                "极智视觉科技（深圳）有限公司": 5,
+                "极智视觉科技（深圳）": 5
+              },
+              "detail_fetch_attempts": 0,
+              "detail_fetch_success": 0
+            },
+            "top_urls": []
+          }
+        }
+      },
+      {
+        "company": "深圳旭宏医疗科技有限公司",
+        "records": 3,
+        "sources": {
+          "iyiou": {
+            "records": 1,
+            "content_chars": 84,
+            "diagnostics": {
+              "adapter": "iyiou",
+              "site_filter": "data.iyiou.com",
+              "items_seen": 1,
+              "items_accepted": 1,
+              "items_rejected_offsite": 0,
+              "items_rejected_irrelevant_path": 0,
+              "items_rejected_name_mismatch": 0,
+              "query_terms": [
+                "深圳旭宏医疗科技有限公司",
+                "深圳旭宏医疗科技"
+              ],
+              "aliases": [],
+              "founder_terms": [
+                "王博洋",
+                "杨馥诚"
+              ],
+              "keyword_terms": [
+                "人工智能"
+              ],
+              "records_by_query": {
+                "深圳旭宏医疗科技有限公司": 1,
+                "深圳旭宏医疗科技": 1
+              }
+            },
+            "top_urls": [
+              "https://data.iyiou.com/company/details/d3b4498fbc8ce101bd078c08f94e2066/profile?source=iyiou.comdetail&from=more-data"
+            ]
+          },
+          "pitchhub_36kr": {
+            "records": 2,
+            "content_chars": 3537,
+            "diagnostics": {
+              "adapter": "pitchhub_36kr",
+              "site_filter": "pitchhub.36kr.com",
+              "items_seen": 5,
+              "items_accepted": 2,
+              "items_rejected_offsite": 0,
+              "items_rejected_irrelevant_path": 0,
+              "items_rejected_name_mismatch": 3,
+              "query_terms": [
+                "深圳旭宏医疗科技有限公司",
+                "深圳旭宏医疗科技"
+              ],
+              "aliases": [],
+              "founder_terms": [
+                "王博洋",
+                "杨馥诚"
+              ],
+              "keyword_terms": [
+                "人工智能"
+              ],
+              "records_by_query": {
+                "深圳旭宏医疗科技有限公司": 5,
+                "深圳旭宏医疗科技": 5
+              },
+              "detail_fetch_attempts": 2,
+              "detail_fetch_success": 2
+            },
+            "top_urls": [
+              "https://pitchhub.36kr.com/project/1678475362006017",
+              "https://pitchhub.36kr.com/organization/1678213442122752"
+            ]
+          }
+        }
+      },
+      {
+        "company": "深圳市智普锐斯电子科技有限公司",
+        "records": 0,
+        "sources": {
+          "iyiou": {
+            "records": 0,
+            "content_chars": 0,
+            "diagnostics": {
+              "adapter": "iyiou",
+              "site_filter": "data.iyiou.com",
+              "items_seen": 0,
+              "items_accepted": 0,
+              "items_rejected_offsite": 0,
+              "items_rejected_irrelevant_path": 0,
+              "items_rejected_name_mismatch": 0,
+              "query_terms": [
+                "深圳市智普锐斯电子科技有限公司",
+                "智普锐斯电子科技"
+              ],
+              "aliases": [],
+              "founder_terms": [],
+              "keyword_terms": [
+                "人工智能"
+              ],
+              "records_by_query": {
+                "深圳市智普锐斯电子科技有限公司": 0,
+                "智普锐斯电子科技": 0
+              }
+            },
+            "top_urls": []
+          },
+          "pitchhub_36kr": {
+            "records": 0,
+            "content_chars": 0,
+            "diagnostics": {
+              "adapter": "pitchhub_36kr",
+              "site_filter": "pitchhub.36kr.com",
+              "items_seen": 1,
+              "items_accepted": 0,
+              "items_rejected_offsite": 0,
+              "items_rejected_irrelevant_path": 0,
+              "items_rejected_name_mismatch": 1,
+              "query_terms": [
+                "深圳市智普锐斯电子科技有限公司",
+                "智普锐斯电子科技"
+              ],
+              "aliases": [],
+              "founder_terms": [],
+              "keyword_terms": [
+                "人工智能"
+              ],
+              "records_by_query": {
+                "深圳市智普锐斯电子科技有限公司": 1,
+                "智普锐斯电子科技": 1
+              },
+              "detail_fetch_attempts": 0,
+              "detail_fetch_success": 0
+            },
+            "top_urls": []
+          }
+        }
+      },
+      {
+        "company": "有术（深圳）科技有限公司",
+        "records": 0,
+        "sources": {
+          "iyiou": {
+            "records": 0,
+            "content_chars": 0,
+            "diagnostics": {
+              "adapter": "iyiou",
+              "site_filter": "data.iyiou.com",
+              "items_seen": 0,
+              "items_accepted": 0,
+              "items_rejected_offsite": 0,
+              "items_rejected_irrelevant_path": 0,
+              "items_rejected_name_mismatch": 0,
+              "query_terms": [
+                "有术（深圳）科技有限公司",
+                "有术（深圳）科技",
+                "方全面高效地筛选新产品推广的渠道方",
+                "方全面高效地筛选新产品推广的渠道方 夏元龙"
+              ],
+              "aliases": [
+                "方全面高效地筛选新产品推广的渠道方"
+              ],
+              "founder_terms": [
+                "夏元龙"
+              ],
+              "keyword_terms": [],
+              "records_by_query": {
+                "有术（深圳）科技有限公司": 0,
+                "有术（深圳）科技": 0,
+                "方全面高效地筛选新产品推广的渠道方": 0,
+                "方全面高效地筛选新产品推广的渠道方 夏元龙": 0
+              }
+            },
+            "top_urls": []
+          },
+          "pitchhub_36kr": {
+            "records": 0,
+            "content_chars": 0,
+            "diagnostics": {
+              "adapter": "pitchhub_36kr",
+              "site_filter": "pitchhub.36kr.com",
+              "items_seen": 7,
+              "items_accepted": 0,
+              "items_rejected_offsite": 0,
+              "items_rejected_irrelevant_path": 0,
+              "items_rejected_name_mismatch": 7,
+              "query_terms": [
+                "有术（深圳）科技有限公司",
+                "有术（深圳）科技",
+                "方全面高效地筛选新产品推广的渠道方",
+                "方全面高效地筛选新产品推广的渠道方 夏元龙"
+              ],
+              "aliases": [
+                "方全面高效地筛选新产品推广的渠道方"
+              ],
+              "founder_terms": [
+                "夏元龙"
+              ],
+              "keyword_terms": [],
+              "records_by_query": {
+                "有术（深圳）科技有限公司": 5,
+                "有术（深圳）科技": 5,
+                "方全面高效地筛选新产品推广的渠道方": 0,
+                "方全面高效地筛选新产品推广的渠道方 夏元龙": 0
+              },
+              "detail_fetch_attempts": 0,
+              "detail_fetch_success": 0
+            },
+            "top_urls": []
+          }
+        }
+      },
+      {
+        "company": "安创生态发展（深圳）有限公司",
+        "records": 0,
+        "sources": {
+          "iyiou": {
+            "records": 0,
+            "content_chars": 0,
+            "diagnostics": {
+              "adapter": "iyiou",
+              "site_filter": "data.iyiou.com",
+              "items_seen": 2,
+              "items_accepted": 0,
+              "items_rejected_offsite": 0,
+              "items_rejected_irrelevant_path": 1,
+              "items_rejected_name_mismatch": 1,
+              "query_terms": [
+                "安创生态发展（深圳）有限公司",
+                "安创生态发展（深圳）"
+              ],
+              "aliases": [],
+              "founder_terms": [],
+              "keyword_terms": [
+                "芯片"
+              ],
+              "records_by_query": {
+                "安创生态发展（深圳）有限公司": 2,
+                "安创生态发展（深圳）": 2
+              }
+            },
+            "top_urls": []
+          },
+          "pitchhub_36kr": {
+            "records": 0,
+            "content_chars": 0,
+            "diagnostics": {
+              "adapter": "pitchhub_36kr",
+              "site_filter": "pitchhub.36kr.com",
+              "items_seen": 7,
+              "items_accepted": 0,
+              "items_rejected_offsite": 0,
+              "items_rejected_irrelevant_path": 0,
+              "items_rejected_name_mismatch": 7,
+              "query_terms": [
+                "安创生态发展（深圳）有限公司",
+                "安创生态发展（深圳）"
+              ],
+              "aliases": [],
+              "founder_terms": [],
+              "keyword_terms": [
+                "芯片"
+              ],
+              "records_by_query": {
+                "安创生态发展（深圳）有限公司": 5,
+                "安创生态发展（深圳）": 5
+              },
+              "detail_fetch_attempts": 0,
+              "detail_fetch_success": 0
+            },
+            "top_urls": []
+          }
+        }
+      },
+      {
+        "company": "深圳市茄子咔咔科技有限公司",
+        "records": 2,
+        "sources": {
+          "iyiou": {
+            "records": 0,
+            "content_chars": 0,
+            "diagnostics": {
+              "adapter": "iyiou",
+              "site_filter": "data.iyiou.com",
+              "items_seen": 1,
+              "items_accepted": 0,
+              "items_rejected_offsite": 0,
+              "items_rejected_irrelevant_path": 0,
+              "items_rejected_name_mismatch": 1,
+              "query_terms": [
+                "深圳市茄子咔咔科技有限公司",
+                "茄子咔咔科技",
+                "茄子科技",
+                "茄子科技 王晓军"
+              ],
+              "aliases": [
+                "茄子科技"
+              ],
+              "founder_terms": [
+                "王晓军"
+              ],
+              "keyword_terms": [],
+              "records_by_query": {
+                "深圳市茄子咔咔科技有限公司": 0,
+                "茄子咔咔科技": 0,
+                "茄子科技": 1,
+                "茄子科技 王晓军": 0
+              }
+            },
+            "top_urls": []
+          },
+          "pitchhub_36kr": {
+            "records": 2,
+            "content_chars": 3965,
+            "diagnostics": {
+              "adapter": "pitchhub_36kr",
+              "site_filter": "pitchhub.36kr.com",
+              "items_seen": 5,
+              "items_accepted": 2,
+              "items_rejected_offsite": 0,
+              "items_rejected_irrelevant_path": 0,
+              "items_rejected_name_mismatch": 3,
+              "query_terms": [
+                "深圳市茄子咔咔科技有限公司",
+                "茄子咔咔科技",
+                "茄子科技",
+                "茄子科技 王晓军"
+              ],
+              "aliases": [
+                "茄子科技"
+              ],
+              "founder_terms": [
+                "王晓军"
+              ],
+              "keyword_terms": [],
+              "records_by_query": {
+                "深圳市茄子咔咔科技有限公司": 0,
+                "茄子咔咔科技": 0,
+                "茄子科技": 5,
+                "茄子科技 王晓军": 0
+              },
+              "detail_fetch_attempts": 2,
+              "detail_fetch_success": 2
+            },
+            "top_urls": [
+              "https://pitchhub.36kr.com/project/1679727827440385",
+              "https://pitchhub.36kr.com/project/2144716978472193"
+            ]
+          }
+        }
+      },
+      {
+        "company": "深圳市路可为科技有限公司",
+        "records": 0,
+        "sources": {
+          "iyiou": {
+            "records": 0,
+            "content_chars": 0,
+            "diagnostics": {
+              "adapter": "iyiou",
+              "site_filter": "data.iyiou.com",
+              "items_seen": 6,
+              "items_accepted": 0,
+              "items_rejected_offsite": 0,
+              "items_rejected_irrelevant_path": 0,
+              "items_rejected_name_mismatch": 6,
+              "query_terms": [
+                "深圳市路可为科技有限公司",
+                "路可为科技"
+              ],
+              "aliases": [],
+              "founder_terms": [
+                "彭志毅"
+              ],
+              "keyword_terms": [
+                "工业自动化",
+                "人工智能",
+                "芯片",
+                "传感器"
+              ],
+              "records_by_query": {
+                "深圳市路可为科技有限公司": 3,
+                "路可为科技": 3
+              }
+            },
+            "top_urls": []
+          },
+          "pitchhub_36kr": {
+            "records": 0,
+            "content_chars": 0,
+            "diagnostics": {
+              "adapter": "pitchhub_36kr",
+              "site_filter": "pitchhub.36kr.com",
+              "items_seen": 9,
+              "items_accepted": 0,
+              "items_rejected_offsite": 0,
+              "items_rejected_irrelevant_path": 0,
+              "items_rejected_name_mismatch": 9,
+              "query_terms": [
+                "深圳市路可为科技有限公司",
+                "路可为科技"
+              ],
+              "aliases": [],
+              "founder_terms": [
+                "彭志毅"
+              ],
+              "keyword_terms": [
+                "工业自动化",
+                "人工智能",
+                "芯片",
+                "传感器"
+              ],
+              "records_by_query": {
+                "深圳市路可为科技有限公司": 5,
+                "路可为科技": 5
+              },
+              "detail_fetch_attempts": 0,
+              "detail_fetch_success": 0
+            },
+            "top_urls": []
+          }
+        }
+      },
+      {
+        "company": "深圳星火半导体科技有限公司",
+        "records": 9,
+        "sources": {
+          "iyiou": {
+            "records": 5,
+            "content_chars": 371,
+            "diagnostics": {
+              "adapter": "iyiou",
+              "site_filter": "data.iyiou.com",
+              "items_seen": 5,
+              "items_accepted": 5,
+              "items_rejected_offsite": 0,
+              "items_rejected_irrelevant_path": 0,
+              "items_rejected_name_mismatch": 0,
+              "query_terms": [
+                "深圳星火半导体科技有限公司",
+                "深圳星火半导体科技",
+                "之一",
+                "之一 陈运松"
+              ],
+              "aliases": [
+                "之一"
+              ],
+              "founder_terms": [
+                "陈运松"
+              ],
+              "keyword_terms": [
+                "半导体"
+              ],
+              "records_by_query": {
+                "深圳星火半导体科技有限公司": 0,
+                "深圳星火半导体科技": 0,
+                "之一": 5,
+                "之一 陈运松": 0
+              }
+            },
+            "top_urls": [
+              "https://data.iyiou.com/intelligence/details/ee46e5757b0bec602652a8036e163ca9",
+              "https://data.iyiou.com/intelligence/details/f757a88657e7c9943ed6cae4de3d8981",
+              "https://data.iyiou.com/intelligence/details/b080f5fe77856f95d8a93755aaf3b2e4"
+            ]
+          },
+          "pitchhub_36kr": {
+            "records": 4,
+            "content_chars": 6710,
+            "diagnostics": {
+              "adapter": "pitchhub_36kr",
+              "site_filter": "pitchhub.36kr.com",
+              "items_seen": 8,
+              "items_accepted": 4,
+              "items_rejected_offsite": 0,
+              "items_rejected_irrelevant_path": 0,
+              "items_rejected_name_mismatch": 4,
+              "query_terms": [
+                "深圳星火半导体科技有限公司",
+                "深圳星火半导体科技",
+                "之一",
+                "之一 陈运松"
+              ],
+              "aliases": [
+                "之一"
+              ],
+              "founder_terms": [
+                "陈运松"
+              ],
+              "keyword_terms": [
+                "半导体"
+              ],
+              "records_by_query": {
+                "深圳星火半导体科技有限公司": 2,
+                "深圳星火半导体科技": 2,
+                "之一": 5,
+                "之一 陈运松": 1
+              },
+              "detail_fetch_attempts": 4,
+              "detail_fetch_success": 4
+            },
+            "top_urls": [
+              "https://pitchhub.36kr.com/project/2180566866332804",
+              "https://pitchhub.36kr.com/organization/1728263915929346",
+              "https://pitchhub.36kr.com/project/1954539793028481"
+            ]
+          }
+        }
+      },
+      {
+        "company": "康斐斯（深圳）科技有限公司",
+        "records": 0,
+        "sources": {
+          "iyiou": {
+            "records": 0,
+            "content_chars": 0,
+            "diagnostics": {
+              "adapter": "iyiou",
+              "site_filter": "data.iyiou.com",
+              "items_seen": 0,
+              "items_accepted": 0,
+              "items_rejected_offsite": 0,
+              "items_rejected_irrelevant_path": 0,
+              "items_rejected_name_mismatch": 0,
+              "query_terms": [
+                "康斐斯（深圳）科技有限公司",
+                "康斐斯（深圳）科技"
+              ],
+              "aliases": [],
+              "founder_terms": [
+                "林秋河"
+              ],
+              "keyword_terms": [],
+              "records_by_query": {
+                "康斐斯（深圳）科技有限公司": 0,
+                "康斐斯（深圳）科技": 0
+              }
+            },
+            "top_urls": []
+          },
+          "pitchhub_36kr": {
+            "records": 0,
+            "content_chars": 0,
+            "diagnostics": {
+              "adapter": "pitchhub_36kr",
+              "site_filter": "pitchhub.36kr.com",
+              "items_seen": 2,
+              "items_accepted": 0,
+              "items_rejected_offsite": 0,
+              "items_rejected_irrelevant_path": 0,
+              "items_rejected_name_mismatch": 2,
+              "query_terms": [
+                "康斐斯（深圳）科技有限公司",
+                "康斐斯（深圳）科技"
+              ],
+              "aliases": [],
+              "founder_terms": [
+                "林秋河"
+              ],
+              "keyword_terms": [],
+              "records_by_query": {
+                "康斐斯（深圳）科技有限公司": 2,
+                "康斐斯（深圳）科技": 2
+              },
+              "detail_fetch_attempts": 0,
+              "detail_fetch_success": 0
+            },
+            "top_urls": []
+          }
+        }
+      },
+      {
+        "company": "深圳市华云智能健康有限公司",
+        "records": 1,
+        "sources": {
+          "iyiou": {
+            "records": 0,
+            "content_chars": 0,
+            "diagnostics": {
+              "adapter": "iyiou",
+              "site_filter": "data.iyiou.com",
+              "items_seen": 4,
+              "items_accepted": 0,
+              "items_rejected_offsite": 0,
+              "items_rejected_irrelevant_path": 1,
+              "items_rejected_name_mismatch": 3,
+              "query_terms": [
+                "深圳市华云智能健康有限公司",
+                "华云智能健康"
+              ],
+              "aliases": [],
+              "founder_terms": [
+                "谢玉龙"
+              ],
+              "keyword_terms": [
+                "芯片"
+              ],
+              "records_by_query": {
+                "深圳市华云智能健康有限公司": 2,
+                "华云智能健康": 4
+              }
+            },
+            "top_urls": []
+          },
+          "pitchhub_36kr": {
+            "records": 1,
+            "content_chars": 1983,
+            "diagnostics": {
+              "adapter": "pitchhub_36kr",
+              "site_filter": "pitchhub.36kr.com",
+              "items_seen": 8,
+              "items_accepted": 1,
+              "items_rejected_offsite": 0,
+              "items_rejected_irrelevant_path": 0,
+              "items_rejected_name_mismatch": 7,
+              "query_terms": [
+                "深圳市华云智能健康有限公司",
+                "华云智能健康"
+              ],
+              "aliases": [],
+              "founder_terms": [
+                "谢玉龙"
+              ],
+              "keyword_terms": [
+                "芯片"
+              ],
+              "records_by_query": {
+                "深圳市华云智能健康有限公司": 5,
+                "华云智能健康": 5
+              },
+              "detail_fetch_attempts": 1,
+              "detail_fetch_success": 1
+            },
+            "top_urls": [
+              "https://pitchhub.36kr.com/project/2002421458018434"
+            ]
+          }
+        }
+      },
+      {
+        "company": "深圳市映刻科技有限公司",
+        "records": 1,
+        "sources": {
+          "iyiou": {
+            "records": 0,
+            "content_chars": 0,
+            "diagnostics": {
+              "adapter": "iyiou",
+              "site_filter": "data.iyiou.com",
+              "items_seen": 1,
+              "items_accepted": 0,
+              "items_rejected_offsite": 0,
+              "items_rejected_irrelevant_path": 0,
+              "items_rejected_name_mismatch": 1,
+              "query_terms": [
+                "深圳市映刻科技有限公司",
+                "映刻科技"
+              ],
+              "aliases": [],
+              "founder_terms": [
+                "林泽浩"
+              ],
+              "keyword_terms": [],
+              "records_by_query": {
+                "深圳市映刻科技有限公司": 0,
+                "映刻科技": 1
+              }
+            },
+            "top_urls": []
+          },
+          "pitchhub_36kr": {
+            "records": 1,
+            "content_chars": 2143,
+            "diagnostics": {
+              "adapter": "pitchhub_36kr",
+              "site_filter": "pitchhub.36kr.com",
+              "items_seen": 6,
+              "items_accepted": 1,
+              "items_rejected_offsite": 0,
+              "items_rejected_irrelevant_path": 0,
+              "items_rejected_name_mismatch": 5,
+              "query_terms": [
+                "深圳市映刻科技有限公司",
+                "映刻科技"
+              ],
+              "aliases": [],
+              "founder_terms": [
+                "林泽浩"
+              ],
+              "keyword_terms": [],
+              "records_by_query": {
+                "深圳市映刻科技有限公司": 3,
+                "映刻科技": 5
+              },
+              "detail_fetch_attempts": 1,
+              "detail_fetch_success": 1
+            },
+            "top_urls": [
+              "https://pitchhub.36kr.com/project/2146598772523526"
+            ]
+          }
+        }
+      },
+      {
+        "company": "深圳元戎启行科技有限公司",
+        "records": 2,
+        "sources": {
+          "iyiou": {
+            "records": 1,
+            "content_chars": 86,
+            "diagnostics": {
+              "adapter": "iyiou",
+              "site_filter": "data.iyiou.com",
+              "items_seen": 1,
+              "items_accepted": 1,
+              "items_rejected_offsite": 0,
+              "items_rejected_irrelevant_path": 0,
+              "items_rejected_name_mismatch": 0,
+              "query_terms": [
+                "深圳元戎启行科技有限公司",
+                "深圳元戎启行科技"
+              ],
+              "aliases": [],
+              "founder_terms": [
+                "周光",
+                "金雷"
+              ],
+              "keyword_terms": [
+                "人工智能"
+              ],
+              "records_by_query": {
+                "深圳元戎启行科技有限公司": 1,
+                "深圳元戎启行科技": 1
+              }
+            },
+            "top_urls": [
+              "https://data.iyiou.com/intelligence/details/723661dad38f7745f1a711721349f42e"
+            ]
+          },
+          "pitchhub_36kr": {
+            "records": 1,
+            "content_chars": 2962,
+            "diagnostics": {
+              "adapter": "pitchhub_36kr",
+              "site_filter": "pitchhub.36kr.com",
+              "items_seen": 1,
+              "items_accepted": 1,
+              "items_rejected_offsite": 0,
+              "items_rejected_irrelevant_path": 0,
+              "items_rejected_name_mismatch": 0,
+              "query_terms": [
+                "深圳元戎启行科技有限公司",
+                "深圳元戎启行科技"
+              ],
+              "aliases": [],
+              "founder_terms": [
+                "周光",
+                "金雷"
+              ],
+              "keyword_terms": [
+                "人工智能"
+              ],
+              "records_by_query": {
+                "深圳元戎启行科技有限公司": 1,
+                "深圳元戎启行科技": 1
+              },
+              "detail_fetch_attempts": 1,
+              "detail_fetch_success": 1
+            },
+            "top_urls": [
+              "https://pitchhub.36kr.com/project/1678293745611777"
+            ]
+          }
+        }
+      },
+      {
+        "company": "深圳威科未来科技有限公司",
+        "records": 0,
+        "sources": {
+          "iyiou": {
+            "records": 0,
+            "content_chars": 0,
+            "diagnostics": {
+              "adapter": "iyiou",
+              "site_filter": "data.iyiou.com",
+              "items_seen": 0,
+              "items_accepted": 0,
+              "items_rejected_offsite": 0,
+              "items_rejected_irrelevant_path": 0,
+              "items_rejected_name_mismatch": 0,
+              "query_terms": [
+                "深圳威科未来科技有限公司",
+                "深圳威科未来科技"
+              ],
+              "aliases": [],
+              "founder_terms": [
+                "黄冠"
+              ],
+              "keyword_terms": [
+                "机器人"
+              ],
+              "records_by_query": {
+                "深圳威科未来科技有限公司": 0,
+                "深圳威科未来科技": 0
+              }
+            },
+            "top_urls": []
+          },
+          "pitchhub_36kr": {
+            "records": 0,
+            "content_chars": 0,
+            "diagnostics": {
+              "adapter": "pitchhub_36kr",
+              "site_filter": "pitchhub.36kr.com",
+              "items_seen": 7,
+              "items_accepted": 0,
+              "items_rejected_offsite": 0,
+              "items_rejected_irrelevant_path": 0,
+              "items_rejected_name_mismatch": 7,
+              "query_terms": [
+                "深圳威科未来科技有限公司",
+                "深圳威科未来科技"
+              ],
+              "aliases": [],
+              "founder_terms": [
+                "黄冠"
+              ],
+              "keyword_terms": [
+                "机器人"
+              ],
+              "records_by_query": {
+                "深圳威科未来科技有限公司": 5,
+                "深圳威科未来科技": 5
+              },
+              "detail_fetch_attempts": 0,
+              "detail_fetch_success": 0
+            },
+            "top_urls": []
+          }
+        }
+      },
+      {
+        "company": "深圳市丹芽科技有限公司",
+        "records": 1,
+        "sources": {
+          "iyiou": {
+            "records": 0,
+            "content_chars": 0,
+            "diagnostics": {
+              "adapter": "iyiou",
+              "site_filter": "data.iyiou.com",
+              "items_seen": 0,
+              "items_accepted": 0,
+              "items_rejected_offsite": 0,
+              "items_rejected_irrelevant_path": 0,
+              "items_rejected_name_mismatch": 0,
+              "query_terms": [
+                "深圳市丹芽科技有限公司",
+                "丹芽科技",
+                "产品与全球消费者之间的一站式桥梁",
+                "产品与全球消费者之间的一站式桥梁 林镇清"
+              ],
+              "aliases": [
+                "产品与全球消费者之间的一站式桥梁"
+              ],
+              "founder_terms": [
+                "林镇清"
+              ],
+              "keyword_terms": [],
+              "records_by_query": {
+                "深圳市丹芽科技有限公司": 0,
+                "丹芽科技": 0,
+                "产品与全球消费者之间的一站式桥梁": 0,
+                "产品与全球消费者之间的一站式桥梁 林镇清": 0
+              }
+            },
+            "top_urls": []
+          },
+          "pitchhub_36kr": {
+            "records": 1,
+            "content_chars": 2008,
+            "diagnostics": {
+              "adapter": "pitchhub_36kr",
+              "site_filter": "pitchhub.36kr.com",
+              "items_seen": 7,
+              "items_accepted": 1,
+              "items_rejected_offsite": 0,
+              "items_rejected_irrelevant_path": 0,
+              "items_rejected_name_mismatch": 6,
+              "query_terms": [
+                "深圳市丹芽科技有限公司",
+                "丹芽科技",
+                "产品与全球消费者之间的一站式桥梁",
+                "产品与全球消费者之间的一站式桥梁 林镇清"
+              ],
+              "aliases": [
+                "产品与全球消费者之间的一站式桥梁"
+              ],
+              "founder_terms": [
+                "林镇清"
+              ],
+              "keyword_terms": [],
+              "records_by_query": {
+                "深圳市丹芽科技有限公司": 2,
+                "丹芽科技": 5,
+                "产品与全球消费者之间的一站式桥梁": 1,
+                "产品与全球消费者之间的一站式桥梁 林镇清": 0
+              },
+              "detail_fetch_attempts": 1,
+              "detail_fetch_success": 1
+            },
+            "top_urls": [
+              "https://pitchhub.36kr.com/project/1735562365652864"
+            ]
+          }
+        }
+      },
+      {
+        "company": "深圳景赛智能科技有限公司",
+        "records": 0,
+        "sources": {
+          "iyiou": {
+            "records": 0,
+            "content_chars": 0,
+            "diagnostics": {
+              "adapter": "iyiou",
+              "site_filter": "data.iyiou.com",
+              "items_seen": 5,
+              "items_accepted": 0,
+              "items_rejected_offsite": 0,
+              "items_rejected_irrelevant_path": 1,
+              "items_rejected_name_mismatch": 4,
+              "query_terms": [
+                "深圳景赛智能科技有限公司",
+                "深圳景赛智能科技"
+              ],
+              "aliases": [],
+              "founder_terms": [
+                "李锋"
+              ],
+              "keyword_terms": [],
+              "records_by_query": {
+                "深圳景赛智能科技有限公司": 4,
+                "深圳景赛智能科技": 4
+              }
+            },
+            "top_urls": []
+          },
+          "pitchhub_36kr": {
+            "records": 0,
+            "content_chars": 0,
+            "diagnostics": {
+              "adapter": "pitchhub_36kr",
+              "site_filter": "pitchhub.36kr.com",
+              "items_seen": 6,
+              "items_accepted": 0,
+              "items_rejected_offsite": 0,
+              "items_rejected_irrelevant_path": 0,
+              "items_rejected_name_mismatch": 6,
+              "query_terms": [
+                "深圳景赛智能科技有限公司",
+                "深圳景赛智能科技"
+              ],
+              "aliases": [],
+              "founder_terms": [
+                "李锋"
+              ],
+              "keyword_terms": [],
+              "records_by_query": {
+                "深圳景赛智能科技有限公司": 5,
+                "深圳景赛智能科技": 5
+              },
+              "detail_fetch_attempts": 0,
+              "detail_fetch_success": 0
+            },
+            "top_urls": []
+          }
+        }
+      },
+      {
+        "company": "深圳市润方科技有限公司",
+        "records": 3,
+        "sources": {
+          "iyiou": {
+            "records": 0,
+            "content_chars": 0,
+            "diagnostics": {
+              "adapter": "iyiou",
+              "site_filter": "data.iyiou.com",
+              "items_seen": 5,
+              "items_accepted": 0,
+              "items_rejected_offsite": 0,
+              "items_rejected_irrelevant_path": 0,
+              "items_rejected_name_mismatch": 5,
+              "query_terms": [
+                "深圳市润方科技有限公司",
+                "润方科技"
+              ],
+              "aliases": [],
+              "founder_terms": [
+                "李力克"
+              ],
+              "keyword_terms": [],
+              "records_by_query": {
+                "深圳市润方科技有限公司": 5,
+                "润方科技": 2
+              }
+            },
+            "top_urls": []
+          },
+          "pitchhub_36kr": {
+            "records": 3,
+            "content_chars": 4730,
+            "diagnostics": {
+              "adapter": "pitchhub_36kr",
+              "site_filter": "pitchhub.36kr.com",
+              "items_seen": 9,
+              "items_accepted": 3,
+              "items_rejected_offsite": 0,
+              "items_rejected_irrelevant_path": 0,
+              "items_rejected_name_mismatch": 6,
+              "query_terms": [
+                "深圳市润方科技有限公司",
+                "润方科技"
+              ],
+              "aliases": [],
+              "founder_terms": [
+                "李力克"
+              ],
+              "keyword_terms": [],
+              "records_by_query": {
+                "深圳市润方科技有限公司": 5,
+                "润方科技": 5
+              },
+              "detail_fetch_attempts": 3,
+              "detail_fetch_success": 3
+            },
+            "top_urls": [
+              "https://pitchhub.36kr.com/project/2144591505212678",
+              "https://pitchhub.36kr.com/project/2212111252468098",
+              "https://pitchhub.36kr.com/project/2012750810220293"
+            ]
+          }
+        }
+      },
+      {
+        "company": "深圳万珏科技有限公司",
+        "records": 0,
+        "sources": {
+          "iyiou": {
+            "records": 0,
+            "content_chars": 0,
+            "diagnostics": {
+              "adapter": "iyiou",
+              "site_filter": "data.iyiou.com",
+              "items_seen": 0,
+              "items_accepted": 0,
+              "items_rejected_offsite": 0,
+              "items_rejected_irrelevant_path": 0,
+              "items_rejected_name_mismatch": 0,
+              "query_terms": [
+                "深圳万珏科技有限公司",
+                "深圳万珏科技"
+              ],
+              "aliases": [],
+              "founder_terms": [
+                "黄强"
+              ],
+              "keyword_terms": [
+                "芯片"
+              ],
+              "records_by_query": {
+                "深圳万珏科技有限公司": 0,
+                "深圳万珏科技": 0
+              }
+            },
+            "top_urls": []
+          },
+          "pitchhub_36kr": {
+            "records": 0,
+            "content_chars": 0,
+            "diagnostics": {
+              "adapter": "pitchhub_36kr",
+              "site_filter": "pitchhub.36kr.com",
+              "items_seen": 5,
+              "items_accepted": 0,
+              "items_rejected_offsite": 0,
+              "items_rejected_irrelevant_path": 0,
+              "items_rejected_name_mismatch": 5,
+              "query_terms": [
+                "深圳万珏科技有限公司",
+                "深圳万珏科技"
+              ],
+              "aliases": [],
+              "founder_terms": [
+                "黄强"
+              ],
+              "keyword_terms": [
+                "芯片"
+              ],
+              "records_by_query": {
+                "深圳万珏科技有限公司": 5,
+                "深圳万珏科技": 5
+              },
+              "detail_fetch_attempts": 0,
+              "detail_fetch_success": 0
+            },
+            "top_urls": []
+          }
+        }
+      },
+      {
+        "company": "演化论人工智能（深圳）有限公司",
+        "records": 0,
+        "sources": {
+          "iyiou": {
+            "records": 0,
+            "content_chars": 0,
+            "diagnostics": {
+              "adapter": "iyiou",
+              "site_filter": "data.iyiou.com",
+              "items_seen": 1,
+              "items_accepted": 0,
+              "items_rejected_offsite": 0,
+              "items_rejected_irrelevant_path": 0,
+              "items_rejected_name_mismatch": 1,
+              "query_terms": [
+                "演化论人工智能（深圳）有限公司",
+                "演化论人工智能（深圳）"
+              ],
+              "aliases": [],
+              "founder_terms": [
+                "方明"
+              ],
+              "keyword_terms": [
+                "机器人",
+                "人工智能"
+              ],
+              "records_by_query": {
+                "演化论人工智能（深圳）有限公司": 1,
+                "演化论人工智能（深圳）": 1
+              }
+            },
+            "top_urls": []
+          },
+          "pitchhub_36kr": {
+            "records": 0,
+            "content_chars": 0,
+            "diagnostics": {
+              "adapter": "pitchhub_36kr",
+              "site_filter": "pitchhub.36kr.com",
+              "items_seen": 4,
+              "items_accepted": 0,
+              "items_rejected_offsite": 0,
+              "items_rejected_irrelevant_path": 0,
+              "items_rejected_name_mismatch": 4,
+              "query_terms": [
+                "演化论人工智能（深圳）有限公司",
+                "演化论人工智能（深圳）"
+              ],
+              "aliases": [],
+              "founder_terms": [
+                "方明"
+              ],
+              "keyword_terms": [
+                "机器人",
+                "人工智能"
+              ],
+              "records_by_query": {
+                "演化论人工智能（深圳）有限公司": 4,
+                "演化论人工智能（深圳）": 4
+              },
+              "detail_fetch_attempts": 0,
+              "detail_fetch_success": 0
+            },
+            "top_urls": []
+          }
+        }
+      },
+      {
+        "company": "盘古盈时科技（深圳）有限公司",
+        "records": 0,
+        "sources": {
+          "iyiou": {
+            "records": 0,
+            "content_chars": 0,
+            "diagnostics": {
+              "adapter": "iyiou",
+              "site_filter": "data.iyiou.com",
+              "items_seen": 0,
+              "items_accepted": 0,
+              "items_rejected_offsite": 0,
+              "items_rejected_irrelevant_path": 0,
+              "items_rejected_name_mismatch": 0,
+              "query_terms": [
+                "盘古盈时科技（深圳）有限公司",
+                "盘古盈时科技（深圳）"
+              ],
+              "aliases": [],
+              "founder_terms": [],
+              "keyword_terms": [
+                "人工智能"
+              ],
+              "records_by_query": {
+                "盘古盈时科技（深圳）有限公司": 0,
+                "盘古盈时科技（深圳）": 0
+              }
+            },
+            "top_urls": []
+          },
+          "pitchhub_36kr": {
+            "records": 0,
+            "content_chars": 0,
+            "diagnostics": {
+              "adapter": "pitchhub_36kr",
+              "site_filter": "pitchhub.36kr.com",
+              "items_seen": 3,
+              "items_accepted": 0,
+              "items_rejected_offsite": 0,
+              "items_rejected_irrelevant_path": 0,
+              "items_rejected_name_mismatch": 3,
+              "query_terms": [
+                "盘古盈时科技（深圳）有限公司",
+                "盘古盈时科技（深圳）"
+              ],
+              "aliases": [],
+              "founder_terms": [],
+              "keyword_terms": [
+                "人工智能"
+              ],
+              "records_by_query": {
+                "盘古盈时科技（深圳）有限公司": 3,
+                "盘古盈时科技（深圳）": 3
+              },
+              "detail_fetch_attempts": 0,
+              "detail_fetch_success": 0
+            },
+            "top_urls": []
+          }
+        }
+      },
+      {
+        "company": "深圳市嘉宝果科技有限公司",
+        "records": 1,
+        "sources": {
+          "iyiou": {
+            "records": 0,
+            "content_chars": 0,
+            "diagnostics": {
+              "adapter": "iyiou",
+              "site_filter": "data.iyiou.com",
+              "items_seen": 0,
+              "items_accepted": 0,
+              "items_rejected_offsite": 0,
+              "items_rejected_irrelevant_path": 0,
+              "items_rejected_name_mismatch": 0,
+              "query_terms": [
+                "深圳市嘉宝果科技有限公司",
+                "嘉宝果科技"
+              ],
+              "aliases": [],
+              "founder_terms": [
+                "林志光"
+              ],
+              "keyword_terms": [
+                "机器人",
+                "人工智能",
+                "芯片"
+              ],
+              "records_by_query": {
+                "深圳市嘉宝果科技有限公司": 0,
+                "嘉宝果科技": 0
+              }
+            },
+            "top_urls": []
+          },
+          "pitchhub_36kr": {
+            "records": 1,
+            "content_chars": 1485,
+            "diagnostics": {
+              "adapter": "pitchhub_36kr",
+              "site_filter": "pitchhub.36kr.com",
+              "items_seen": 8,
+              "items_accepted": 1,
+              "items_rejected_offsite": 0,
+              "items_rejected_irrelevant_path": 0,
+              "items_rejected_name_mismatch": 7,
+              "query_terms": [
+                "深圳市嘉宝果科技有限公司",
+                "嘉宝果科技"
+              ],
+              "aliases": [],
+              "founder_terms": [
+                "林志光"
+              ],
+              "keyword_terms": [
+                "机器人",
+                "人工智能",
+                "芯片"
+              ],
+              "records_by_query": {
+                "深圳市嘉宝果科技有限公司": 5,
+                "嘉宝果科技": 5
+              },
+              "detail_fetch_attempts": 1,
+              "detail_fetch_success": 1
+            },
+            "top_urls": [
+              "https://pitchhub.36kr.com/project/2182917593520519"
+            ]
+          }
+        }
+      }
+    ]
+  },
+  "smoke": {
+    "first_release_has_core_facts": true,
+    "first_release_has_optional_keys": true
+  }
+}

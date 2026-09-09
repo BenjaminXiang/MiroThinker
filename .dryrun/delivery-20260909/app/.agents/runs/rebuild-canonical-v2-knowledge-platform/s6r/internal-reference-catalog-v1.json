@@ -1,0 +1,385 @@
+{
+  "base_domain_catalog": {
+    "catalog_version": "canonical-v2-prd-catalog-2026-07-12",
+    "content_sha256": "8ad9e719579b834f51128788f49d091913c0c90e3b047aac9b2f83cc794441d7",
+    "file_sha256": "b227285fef5d49ad0b30871e5ccb0c1932443206fac99f5fa708ae586c5383c0",
+    "schema_version": "canonical-v2-domain-catalog-v1"
+  },
+  "catalog_version": "canonical-v2-person-technology-reference-2026-07-13",
+  "content_sha256": "ff347833ce4e86f06ead0282c566e691e983cc19d3a1c81a294d3bdb378a45a7",
+  "internal_reference_types": [
+    {
+      "citation_ids": [
+        "person.internal_role_neutral_boundary",
+        "release.internal_auxiliary_scope"
+      ],
+      "evidence_obligation": "accepted_four_domain_anchor_and_identity_decision",
+      "identity_entity_type": "person",
+      "projection_schema_version": "person-reference-projection-v1",
+      "projection_scope": "internal_auxiliary",
+      "reference_type": "person",
+      "release_obligation": "bind_exact_accepted_release_and_content_hash",
+      "required_projection_fields": [
+        "canonical_person_identity_id",
+        "display_name",
+        "aliases",
+        "reference_ids",
+        "supporting_assertion_ids",
+        "source_anchor_ids",
+        "identity_decision_id",
+        "as_of",
+        "release_id",
+        "content_sha256"
+      ],
+      "time_obligation": "projection_as_of_and_source_observation_time",
+      "unresolved_policy": "retain_reference_without_canonical_identity"
+    },
+    {
+      "citation_ids": [
+        "technology.internal_model",
+        "release.internal_auxiliary_scope"
+      ],
+      "evidence_obligation": "accepted_public_domain_or_typed_product_anchor",
+      "identity_entity_type": "technology_concept",
+      "projection_schema_version": "technology-concept-projection-v1",
+      "projection_scope": "internal_auxiliary",
+      "reference_type": "technology_concept",
+      "release_obligation": "bind_exact_accepted_release_and_content_hash",
+      "required_projection_fields": [
+        "canonical_technology_identity_id",
+        "preferred_name",
+        "aliases",
+        "definition",
+        "parent_concept_ids",
+        "supporting_assertion_ids",
+        "source_anchor_ids",
+        "observed_at",
+        "release_id",
+        "content_sha256"
+      ],
+      "time_obligation": "source_observed_at_and_optional_validity",
+      "unresolved_policy": "retain_term_or_alias_candidate_until_offline_acceptance"
+    },
+    {
+      "citation_ids": [
+        "technology.internal_model",
+        "release.internal_auxiliary_scope"
+      ],
+      "evidence_obligation": "accepted_public_domain_or_typed_product_anchor",
+      "identity_entity_type": "technology_route",
+      "projection_schema_version": "technology-route-projection-v1",
+      "projection_scope": "internal_auxiliary",
+      "reference_type": "technology_route",
+      "release_obligation": "bind_exact_accepted_release_and_content_hash",
+      "required_projection_fields": [
+        "canonical_technology_identity_id",
+        "preferred_name",
+        "aliases",
+        "definition",
+        "concept_ids",
+        "supporting_assertion_ids",
+        "source_anchor_ids",
+        "observed_at",
+        "release_id",
+        "content_sha256"
+      ],
+      "time_obligation": "source_observed_at_and_optional_validity",
+      "unresolved_policy": "retain_term_or_alias_candidate_until_offline_acceptance"
+    }
+  ],
+  "public_domain_types": [
+    "company",
+    "paper",
+    "patent",
+    "professor"
+  ],
+  "relationship_types": [
+    {
+      "citation_ids": [
+        "person.internal_role_neutral_boundary"
+      ],
+      "direction": "directed",
+      "does_not_entail_product_capability": false,
+      "eligible_paths": [
+        "relationship_traversal",
+        "structured_filter"
+      ],
+      "endpoint_binding": "resolved_internal_reference_registry",
+      "layer": "canonical",
+      "predecessor_version": "canonical-v2-relationship-v1",
+      "relationship_type_id": "company_has_team_member",
+      "required_evidence_kinds": [
+        "company_personnel_assertion"
+      ],
+      "resolved_person_reference_required": true,
+      "role_id": "team_role",
+      "semantic_state": "company_personnel_membership",
+      "source_entity_types": [
+        "company"
+      ],
+      "target_entity_types": [
+        "person"
+      ],
+      "time_semantics": "validity_interval",
+      "unresolved_reference_not_canonical_endpoint": true,
+      "version": "canonical-v2-relationship-v2",
+      "version_coexistence": "required"
+    },
+    {
+      "citation_ids": [
+        "person.internal_role_neutral_boundary"
+      ],
+      "direction": "directed",
+      "does_not_entail_product_capability": false,
+      "eligible_paths": [
+        "relationship_traversal",
+        "structured_filter"
+      ],
+      "endpoint_binding": "resolved_internal_reference_registry",
+      "layer": "canonical",
+      "predecessor_version": "canonical-v2-relationship-v1",
+      "relationship_type_id": "paper_has_author",
+      "required_evidence_kinds": [
+        "paper_author_assertion"
+      ],
+      "resolved_person_reference_required": true,
+      "role_id": "author",
+      "semantic_state": "authorship",
+      "source_entity_types": [
+        "paper"
+      ],
+      "target_entity_types": [
+        "person"
+      ],
+      "time_semantics": "none",
+      "unresolved_reference_not_canonical_endpoint": true,
+      "version": "canonical-v2-relationship-v2",
+      "version_coexistence": "required"
+    },
+    {
+      "citation_ids": [
+        "person.internal_role_neutral_boundary"
+      ],
+      "direction": "directed",
+      "does_not_entail_product_capability": false,
+      "eligible_paths": [
+        "patent_to_professor",
+        "professor_to_patent",
+        "relationship_traversal",
+        "structured_filter"
+      ],
+      "endpoint_binding": "resolved_internal_reference_registry",
+      "layer": "canonical",
+      "predecessor_version": "canonical-v2-relationship-v1",
+      "relationship_type_id": "patent_has_inventor",
+      "required_evidence_kinds": [
+        "patent_inventor_assertion"
+      ],
+      "resolved_person_reference_required": true,
+      "role_id": "inventor",
+      "semantic_state": "inventorship",
+      "source_entity_types": [
+        "patent"
+      ],
+      "target_entity_types": [
+        "person"
+      ],
+      "time_semantics": "none",
+      "unresolved_reference_not_canonical_endpoint": true,
+      "version": "canonical-v2-relationship-v2",
+      "version_coexistence": "required"
+    },
+    {
+      "citation_ids": [
+        "technology.relationship_states",
+        "product.capability_answer_boundary"
+      ],
+      "direction": "directed",
+      "does_not_entail_product_capability": true,
+      "eligible_paths": [
+        "exact_lookup",
+        "semantic_recall",
+        "relationship_traversal"
+      ],
+      "endpoint_binding": "public_or_typed_subobject_to_internal_reference_registry",
+      "layer": "canonical",
+      "predecessor_version": null,
+      "relationship_type_id": "entity_discusses_or_mentions_technology",
+      "required_evidence_kinds": [
+        "technology_discussion_assertion"
+      ],
+      "resolved_person_reference_required": false,
+      "role_id": "technology",
+      "semantic_state": "discussion_or_mention",
+      "source_entity_types": [
+        "company",
+        "paper",
+        "patent",
+        "product"
+      ],
+      "target_entity_types": [
+        "technology_concept",
+        "technology_route"
+      ],
+      "time_semantics": "observed_at",
+      "unresolved_reference_not_canonical_endpoint": true,
+      "version": "canonical-v2-relationship-v1",
+      "version_coexistence": "not_applicable"
+    },
+    {
+      "citation_ids": [
+        "technology.relationship_states",
+        "product.capability_answer_boundary"
+      ],
+      "direction": "directed",
+      "does_not_entail_product_capability": true,
+      "eligible_paths": [
+        "exact_lookup",
+        "semantic_recall",
+        "relationship_traversal"
+      ],
+      "endpoint_binding": "public_or_typed_subobject_to_internal_reference_registry",
+      "layer": "canonical",
+      "predecessor_version": null,
+      "relationship_type_id": "entity_claims_adoption_of_technology",
+      "required_evidence_kinds": [
+        "technology_adoption_claim_assertion"
+      ],
+      "resolved_person_reference_required": false,
+      "role_id": "technology",
+      "semantic_state": "claimed_adoption",
+      "source_entity_types": [
+        "company",
+        "paper",
+        "patent",
+        "product"
+      ],
+      "target_entity_types": [
+        "technology_concept",
+        "technology_route"
+      ],
+      "time_semantics": "validity_interval",
+      "unresolved_reference_not_canonical_endpoint": true,
+      "version": "canonical-v2-relationship-v1",
+      "version_coexistence": "not_applicable"
+    },
+    {
+      "citation_ids": [
+        "technology.relationship_states",
+        "product.capability_answer_boundary"
+      ],
+      "direction": "directed",
+      "does_not_entail_product_capability": true,
+      "eligible_paths": [
+        "exact_lookup",
+        "semantic_recall",
+        "relationship_traversal"
+      ],
+      "endpoint_binding": "public_or_typed_subobject_to_internal_reference_registry",
+      "layer": "canonical",
+      "predecessor_version": null,
+      "relationship_type_id": "entity_demonstrates_use_of_technology",
+      "required_evidence_kinds": [
+        "technology_demonstrated_use_assertion"
+      ],
+      "resolved_person_reference_required": false,
+      "role_id": "technology",
+      "semantic_state": "demonstrated_use",
+      "source_entity_types": [
+        "company",
+        "paper",
+        "patent",
+        "product"
+      ],
+      "target_entity_types": [
+        "technology_concept",
+        "technology_route"
+      ],
+      "time_semantics": "validity_interval",
+      "unresolved_reference_not_canonical_endpoint": true,
+      "version": "canonical-v2-relationship-v1",
+      "version_coexistence": "not_applicable"
+    }
+  ],
+  "schema_version": "canonical-v2-reference-catalog-v1",
+  "source_manifest": [
+    {
+      "citations": [
+        {
+          "citation_id": "person.internal_role_neutral_boundary",
+          "line_end": 27,
+          "line_start": 19,
+          "source_terms": [
+            "four public PRD domains",
+            "`PersonIdentity`",
+            "`PersonProjection`",
+            "unresolved source name"
+          ]
+        }
+      ],
+      "path": "docs/architecture-decisions/ADR-014-canonical-v2-internal-person-projection.md",
+      "sha256": "4af2c8142922667f3ca2889d9c977ca5540e3855c103dbcfea00a723e821cf75"
+    },
+    {
+      "citations": [
+        {
+          "citation_id": "technology.internal_model",
+          "line_end": 25,
+          "line_start": 22,
+          "source_terms": [
+            "`TechnologyConcept`",
+            "`TechnologyRoute`",
+            "source assertions",
+            "typed adoption/discussion evidence"
+          ]
+        },
+        {
+          "citation_id": "technology.relationship_states",
+          "line_end": 41,
+          "line_start": 40,
+          "source_terms": [
+            "discussion, claimed adoption, and",
+            "demonstrated use",
+            "Product capability"
+          ]
+        }
+      ],
+      "path": "docs/architecture-decisions/ADR-015-canonical-v2-internal-technology-model.md",
+      "sha256": "191c5bad118bc6e8f488dde1c9f97cb897824fc633959a5fbfa23c50e3d08545"
+    },
+    {
+      "citations": [
+        {
+          "citation_id": "product.capability_answer_boundary",
+          "line_end": 40,
+          "line_start": 20,
+          "source_terms": [
+            "`product_has_capability`",
+            "answer-scoped `ProductCapabilityClaim`",
+            "Technology relations must not be interpreted"
+          ]
+        }
+      ],
+      "path": "docs/architecture-decisions/ADR-016-product-capability-remains-answer-scoped.md",
+      "sha256": "5f89fab952fe1cbd15cde893d2d84b4936925d2e96ae0c3a55172ab0c7d3f078"
+    },
+    {
+      "citations": [
+        {
+          "citation_id": "release.internal_auxiliary_scope",
+          "line_end": 41,
+          "line_start": 40,
+          "source_terms": [
+            "scope discriminator",
+            "`public_domain`",
+            "`internal_auxiliary`",
+            "owning"
+          ]
+        }
+      ],
+      "path": "openspec/changes/rebuild-canonical-v2-knowledge-platform/specs/canonical-v2-release/spec.md",
+      "sha256": "36bc66c93d351248c87fae4443811bbce058bb32255a413dd9a9e2810c5ed946"
+    }
+  ],
+  "status": "frozen"
+}

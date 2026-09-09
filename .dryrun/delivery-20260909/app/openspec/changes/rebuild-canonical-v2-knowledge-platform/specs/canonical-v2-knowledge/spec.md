@@ -1,0 +1,215 @@
+## ADDED Requirements
+
+### Requirement: Canonical V2 keeps domain knowledge strongly typed
+
+The system SHALL expose typed canonical Professor, Company, Paper, and Patent objects and their
+PRD-required business sub-objects. Shared provenance and relationship machinery SHALL NOT replace
+typed domain fields needed for validation, filtering, display, or analysis.
+
+#### Scenario: Patent filtering uses typed facts
+- **WHEN** a query filters patents by patent type and publication year
+- **THEN** the filter is evaluated against typed Patent facts
+- **AND** it does not depend on extracting those values from an untyped summary or graph property
+
+### Requirement: Domain inclusion follows the authoritative PRD
+
+Each domain SHALL apply its own versioned inclusion policy. Professor inclusion SHALL follow the
+approved Shenzhen institution seed roster; Paper inclusion SHALL follow Professor-roster-anchored
+discovery; Patent inclusion SHALL accept the approved platform export scope without pre-filtering by
+topic or linkage; Company inclusion SHALL accept approved skeleton batches plus independently
+validated Shenzhen innovation companies.
+
+#### Scenario: National Web result stays outside local Company canonical
+- **WHEN** a current-Web query returns a relevant non-Shenzhen Company that is not in an approved
+  skeleton batch and does not satisfy the Company inclusion policy
+- **THEN** it may support the current answer as Web evidence
+- **AND** it is not automatically included as a canonical Company
+
+### Requirement: Source assertions are retained independently of canonical values
+
+Every source-provided field or relationship assertion SHALL remain linked to its landing evidence,
+source identity, observation time, and decision history. Selecting a canonical value SHALL NOT
+delete or overwrite competing assertions.
+
+#### Scenario: Official page and historical record disagree
+- **WHEN** an official page and a historical recovered row assert different current titles for one
+  Professor
+- **THEN** both assertions remain queryable for audit
+- **AND** the canonical decision identifies which assertion supports the current projection
+
+### Requirement: Canonical selection combines deterministic constraints and structured LLM judgment
+
+Canonical selection SHALL first enforce deterministic identity, source, time, and field-specific
+constraints. It MAY use a schema-validated LLM decision to compare surviving assertions. Each
+selection SHALL record supporting evidence, decision method/version, confidence, rationale, and any
+unresolved conflict.
+
+#### Scenario: Sources remain materially ambiguous
+- **WHEN** deterministic constraints and structured LLM judgment cannot reliably choose between two
+  material assertions
+- **THEN** the system preserves an unresolved conflict
+- **AND** it does not silently flatten the values into one unsupported fact
+
+### Requirement: Canonical identity resolution is reversible
+
+Strong identifiers and high-confidence composite evidence SHALL support automatic identity
+resolution. Ambiguous cases SHALL use structured LLM judgment and, for high-impact unresolved cases,
+review. Merge and split decisions SHALL preserve source identities, evidence, decision lineage, and
+reversal history.
+
+#### Scenario: Historical mistaken merge is split
+- **WHEN** accepted evidence proves that one historical identity represented two real-world objects
+- **THEN** the rebuilt release contains two canonical identities
+- **AND** source facts and relationships are reassigned through an auditable split decision
+
+### Requirement: Canonical identity is decided only by the offline data build
+
+The system SHALL execute normalization, identity candidate recall, deterministic matching,
+schema-validated LLM identity judgment, human review, merge/split decisions, and source-identity mapping through a
+versioned offline Canonical V2 build. Query and answer paths MAY resolve user wording, aliases,
+referents, and ambiguity against an accepted identity release, but SHALL be read-only with respect
+to canonical identities and identity decisions. Query-time Web or LLM output SHALL NOT create,
+merge, split, relink, or update canonical identities.
+
+#### Scenario: Query-time evidence suggests two Companies are the same
+- **WHEN** a query-time Web result or LLM plan suggests that two Companies may share an identity
+- **THEN** the current answer may disclose the ambiguity and create a traceable offline review gap
+- **AND** the query path does not mutate either canonical identity or their source-identity mappings
+
+### Requirement: Canonical relationships use a typed extensible catalog
+
+Each canonical relationship SHALL use a registered type defining source and target types, direction,
+role semantics, evidence obligations, allowed state, and applicable time semantics. The catalog
+SHALL cover PRD-required identity/lifecycle, organization/role, scholarly output, intellectual
+property, Company business/product/event, taxonomy/topic/geography, and evidence/lineage families.
+
+#### Scenario: Professor founded a Company
+- **WHEN** evidence supports that a Professor founded a Company
+- **THEN** the canonical relationship identifies the Professor, Company, founder role, evidence,
+  confidence/state, and applicable time information
+- **AND** it is distinguishable from employment, advice, investment, or generic cooperation
+
+### Requirement: Derived and session relations are not canonical facts
+
+The system SHALL represent similarity, ranking, trend, representative-result selection, and other
+reproducible computations as release-scoped derived relations. It SHALL represent referents,
+displayed result sets, active constraints, and conversation paths as session relations. Neither
+category SHALL be represented as a source-grounded canonical relationship.
+
+#### Scenario: Similar Paper recommendation changes after re-embedding
+- **WHEN** a new embedding release changes Paper similarity order
+- **THEN** the derived recommendation may change without changing canonical Paper facts or
+  source-grounded relationships
+
+### Requirement: Person identity is internal to the four public domains
+
+The system SHALL retain Professor, Company, Paper, and Patent as the only public PRD inclusion
+domains. When accepted offline evidence resolves Professor, Company-personnel, Paper-author, or
+Patent-inventor references to one role-neutral Person, the offline build SHALL materialize that
+internal Person identity and a release-scoped read projection shared by the resolved references.
+The projection SHALL retain its originating public-domain evidence, typed roles, source/time
+lineage, and resolution decision. An unresolved source name SHALL remain an evidence-bearing source
+reference and SHALL NOT be forced into a Person identity.
+
+#### Scenario: Non-Professor entrepreneur is found by education and Company role
+- **WHEN** accepted Company evidence identifies an entrepreneur, education, role, and geography
+- **THEN** the accepted release materializes an internal Person projection that supports the
+  person-oriented query through those typed facts
+- **AND** the person is not misclassified as a Professor or admitted through a fifth public domain
+
+#### Scenario: Same-name author references remain unresolved
+- **WHEN** two Paper-author references share a name but accepted evidence cannot resolve them to one
+  Person
+- **THEN** both references retain their own evidence and unresolved state
+- **AND** no shared Person identity or projection is fabricated
+
+### Requirement: Technology reference knowledge is internal and versioned
+
+The system SHALL represent accepted Technology concepts/routes through internal versioned identities,
+aliases, definitions, hierarchy, source assertions, and precise typed discussion/adoption relations.
+Professor, Company, Paper, and Patent SHALL remain the only public PRD inclusion domains. A
+release-scoped Industry Brief SHALL be derived answer/research output and SHALL NOT become a canonical
+fact solely because a model synthesized it.
+
+#### Scenario: Company mentions a technical route in marketing text
+- **WHEN** evidence mentions a route without proving adoption or demonstrated use
+- **THEN** the route mention remains distinguishable from claimed adoption or demonstrated use
+- **AND** the system does not flatten both into one generic capability relation
+
+### Requirement: Product capability remains answer-scoped in this change
+
+Canonical V2 SHALL retain Company capability and Company Product as separate canonical surfaces and
+SHALL NOT add a canonical Product-capability assertion/relationship in this change. The answer path
+MAY construct a product capability material claim only when retrieved evidence directly binds the
+named Product and capability. Company-level capability, another Product, a Technology route, or model
+plausibility SHALL NOT entail that claim.
+
+#### Scenario: Company is capable of robotics integration
+- **WHEN** the user asks whether one named delivery Product can autonomously press an elevator button
+- **AND** retrieved evidence supports only the Company's general integration capability
+- **THEN** the Product capability remains unsupported or qualified
+- **AND** no canonical Product-capability relation is created
+
+### Requirement: Inclusion and path eligibility are separate
+
+The system SHALL evaluate retrieval eligibility by named, versioned path. Exact lookup, verified
+relationship traversal, semantic recall, recommendation, and ranking SHALL NOT share one global
+`ready` interpretation. Eligibility results SHALL carry limitations and policy version.
+
+#### Scenario: Incomplete identified Paper is exactly requested
+- **WHEN** an included Paper has a stable identity and source-grounded title but lacks enrichment
+- **THEN** exact lookup may return the Paper with a visible limitation
+- **AND** semantic recommendation eligibility is evaluated independently
+
+### Requirement: Ordinary quality gaps are soft signals
+
+Missing enrichment, partial summaries, ordinary uncertainty, or stale non-material fields SHALL
+normally affect score, disclosure, review, or enrichment rather than exclude an object. Hard
+exclusion SHALL require a named invariant such as wrong identity, terminal merge/rejection, unsafe
+exposure, broken reference, or no usable source-grounded facts.
+
+#### Scenario: Professor profile summary is incomplete
+- **WHEN** an included Professor has verified identity and affiliation but an incomplete profile
+  summary
+- **THEN** the Professor remains available to an appropriate exact or structured path
+- **AND** the gap is disclosed or queued for enrichment rather than hidden by a global gate
+
+### Requirement: Canonical temporal semantics are proportional to product meaning
+
+Every assertion SHALL retain observation/fetch time and SHALL retain source publication/event time
+when present. Naturally changing facts SHALL support validity start/end when known. Static fields
+without time-dependent meaning SHALL NOT be required to implement full bitemporal history. Every
+validity value SHALL retain whether the source supplied a calendar date or a timezone-aware instant.
+Temporal precision SHALL participate in content identity, lineage equality, persistence, and restart
+reconstruction. A date-only value SHALL NOT be coerced to UTC midnight or treated as exactly equal
+to an instant. Cross-precision ordering or overlap SHALL use a named versioned policy and SHALL fail
+closed or remain indeterminate when that policy cannot establish the relation. Under
+`explicit-calendar-v1`, the caller SHALL provide an explicit Gregorian calendar/timezone context. A
+date SHALL be interpreted as a half-open civil-day interval only for that comparison; the retained
+value SHALL remain date-only. An instant inside the interval SHALL overlap the date but SHALL NOT be
+exactly equal to it. Missing context SHALL return `indeterminate`; ambient or system-default timezone
+selection is forbidden.
+
+#### Scenario: Professor changes institution
+- **WHEN** accepted evidence establishes a Professor's move from one institution to another
+- **THEN** the current projection shows the new affiliation
+- **AND** the prior affiliation and its validity/evidence remain available for history and audit
+
+#### Scenario: Affiliation source provides only a start date
+- **WHEN** an official source records an affiliation start as `2024-09-01` without a time or timezone
+- **THEN** the retained assertion and typed projection preserve calendar-date precision
+- **AND** neither layer rewrites it as `2024-09-01T00:00:00Z`
+- **AND** exact lineage equality binds both the precision and the date value
+
+#### Scenario: Date and instant are compared without calendar context
+- **WHEN** a validity check compares date-only `2024-09-01` with a timezone-aware instant
+- **AND** the caller supplies no named calendar/timezone context
+- **THEN** `explicit-calendar-v1` returns `indeterminate`
+- **AND** it does not read an ambient timezone or treat the values as equal
+
+#### Scenario: Explicit calendar context permits bounded comparison
+- **WHEN** the caller compares date-only `2024-09-01` with an instant under an explicit
+  `Asia/Shanghai` Gregorian context
+- **THEN** the date is treated as that civil day's half-open interval only for comparison
+- **AND** an instant inside the interval returns overlap rather than exact equality
+- **AND** the stored date remains unchanged

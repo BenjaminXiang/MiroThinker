@@ -1,0 +1,30 @@
+{
+  "workers": 8,
+  "papers_total": 4573,
+  "processed": 4573,
+  "skipped": 0,
+  "metadata_attempted": 4482,
+  "metadata_enriched": 5,
+  "metadata_pdf_url_upserts": 0,
+  "metadata_no_updates": 4477,
+  "provider_misses": 0,
+  "provider_errors": 452,
+  "provider_timeouts": 0,
+  "provider_rate_limits": 229,
+  "bad_doi": 92,
+  "identifier_contradictions": 0,
+  "issues": 0,
+  "summaries_written": 0,
+  "full_text_attempted": 0,
+  "errors": 0,
+  "durations": [
+    526.25,
+    533.09,
+    591.57,
+    512.02,
+    516.7,
+    565.02,
+    519.73,
+    571.5
+  ]
+}

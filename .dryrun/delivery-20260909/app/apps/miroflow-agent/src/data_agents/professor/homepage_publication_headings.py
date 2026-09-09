@@ -1,0 +1,47 @@
+from __future__ import annotations
+
+import re
+
+_PUBLICATIONS_HEADING_KEYWORDS = (
+    "selected publications",
+    "selected papers",
+    "representative papers",
+    "representative publications",
+    "publications",
+    "papers",
+    "journal articles",
+    "research output",
+    "学术著作",
+    "学术论文",
+    "科研论文",
+    "论文著作",
+    "发表论文",
+    "代表性论文",
+    "学术成果",
+    "科研成果",
+    "部分代表性成果",
+    "代表性成果",
+    "代表性研究论文",
+    "研究论文成果",
+    "研究成果",
+    "代表期刊论文",
+    "主要期刊论文",
+    "论文成果",
+    "部分论文",
+    "论文及专利",
+    "论文与专利",
+    "论文和专利",
+    "代表性文章",
+    "代表文章",
+    "代表论文",
+    "主要论文",
+    "论著",
+    "论文",
+)
+
+_PUBLICATIONS_HEADING_RE = re.compile(
+    r"^(?:"
+    + "|".join(re.escape(keyword) for keyword in _PUBLICATIONS_HEADING_KEYWORDS)
+    + r")[:：]?$",
+    re.IGNORECASE,
+)

@@ -1,0 +1,382 @@
+---
+status: legacy
+superseded_by: docs/Professor-Data-Agent-Requirements-Audit-2026-05-09.md
+superseded_on: 2026-05-10
+governance:
+  change_id: resolve-professor-canonical-baseline
+  note: |
+    This PRD is retained as historical reference. For canonical Professor-domain
+    requirements, see the Audit doc above. The Audit's §0 anticipates eventual
+    reabsorption back into a PRD; until that change ships, this file is legacy.
+---
+
+# 教授数据采集智能体 — 产品需求文档
+
+> ⚠️ **Legacy（2026-05-10 起）**：本文档对教授域采集需求的解释已被 [`Professor-Data-Agent-Requirements-Audit-2026-05-09.md`](./Professor-Data-Agent-Requirements-Audit-2026-05-09.md) 取代（用户 2026-05-10 声明 + OpenSpec change `resolve-professor-canonical-baseline`）。本文档作为历史参考保留，**不再用于解释当前教授域采集需求**。Audit 文档自身 §0 计划在未来某次变更中把 §1–§7 沉淀回 PRD 后撤掉 Audit。
+
+> 本文档定义教授域的特有需求。通用架构、MiroThinker 实现映射、质量维度、更新发布规则见 [共享技术规范](./Data-Agent-Shared-Spec.md)。术语定义见 [术语表](./index.md#术语表)。
+
+## 一、为什么需要一个教授数据采集智能体
+
+深圳高校教授信息天然分散在各学校官网、教师目录、个人主页、实验室主页和学术平台中。传统爬虫只适合处理“模板稳定、来源固定、规则明确”的页面，而教授数据恰恰不是这种场景。
+
+教授数据采集需要同时处理：
+
+- 多学校、多模板官网页面
+- 同名教授消歧
+- 官网与个人主页、Scholar、论文之间的交叉验证
+- 结构化字段提取
+- 用户向画像摘要生成
+
+因此，这个模块的本质不是“把网页抓下来”，而是：
+
+- 用 MiroThinker 风格的 agent loop 去**搜索、抓取、理解、消歧、归并**
+- 最终形成一个可检索、可关联、可追溯的教授知识库
+
+---
+
+## 二、核心目标
+
+### 2.1 一句话目标
+
+覆盖深圳高校教授，构建稳定的教授身份、履历、研究方向、代表成果和关联关系数据库，为教授检索、论文反哺、企业合作查询和专利关联提供基础。
+
+### 2.2 核心成功标准
+
+教授域必须支持：
+
+- 姓名 / 学校 / 院系 / 职称精确筛选
+- 研究方向语义检索
+- 教授画像回答
+- 教授 → 论文 / 企业 / 专利跳转
+- 基于论文的教授画像更新
+
+实现方式见 [共享技术规范 §3](./Data-Agent-Shared-Spec.md#三与当前-mirothinker-实现的映射)。
+
+---
+
+## 三、覆盖范围与来源层级
+
+### 3.1 覆盖范围
+
+覆盖目标为：
+
+- 深圳高校教授
+- 包括教授、副教授、助理教授、讲师、研究员等在编教师
+- 包括在深有实体研究机构的外地高校与科研机构
+
+### 3.2 主来源
+
+教授身份与隶属关系的主来源必须是：
+
+- 深圳各高校官网
+- 教师目录页
+- 教师主页 / 个人简介页
+
+这是教授身份、学校、院系、职称的主锚点。
+
+### 3.3 辅助来源
+
+辅助来源包括：
+
+- 个人主页
+- 实验室主页
+- Google Scholar
+- Semantic Scholar
+- DBLP
+- Web Search
+
+使用原则：
+
+- 官网决定“这个人是谁、属于哪所学校”
+- 辅助来源负责补充学术指标、成果、外部履历和最新公开信息
+- 辅助来源不能替代官网成为身份主锚点
+
+### 3.4 本期不做
+
+| 不做的事 | 理由 |
+| --- | --- |
+| 非深圳高校教授全量采集 | 当前范围聚焦深圳 |
+| 复杂合作网络图谱 | 可后续从论文/企业/专利关系继续演化 |
+| 主观评分排名系统 | 用可追溯事实与在线合成摘要支撑回答，不做固定打分 |
+
+---
+
+## 四、数据模型与对外契约
+
+### 4.1 最低发布字段
+
+发布层至少应包含：
+
+| 字段 | 必填 | 说明 |
+| --- | --- | --- |
+| `id` | 是 | 稳定主键，建议 `PROF-*` |
+| `name` | 是 | 教授姓名 |
+| `name_en` | 否 | 英文名 |
+| `institution` | 是 | 所属高校 / 机构 |
+| `department` | 否 | 院系 |
+| `title` | 否 | 职称 |
+| `email` | 否 | 邮箱 |
+| `homepage` | 否 | 主主页链接 |
+| `research_directions` | 否 | 精细研究方向 |
+| `education_structured` | 否 | 结构化教育经历 |
+| `work_experience` | 否 | 结构化工作经历 |
+| `h_index` | 否 | 学术指标 |
+| `citation_count` | 否 | 总引用数 |
+| `company_roles` | 否 | 企业关联 |
+| `patent_ids` | 否 | 专利关联 |
+| `awards` | 否 | 奖项荣誉 |
+| `academic_positions` | 否 | 学术兼职 |
+| `projects` | 否 | 项目信息 |
+| `profile_summary` | 是 | 教授画像摘要 |
+| `evidence` | 是 | 来源列表 |
+| `last_updated` | 是 | 最后更新时间 |
+
+代表论文不再作为 professor 主记录的原始字段发布。若需要展示教师代表论文，必须从已验证的 `professor_paper_link` 和 canonical `paper` 对象派生。
+
+### 4.2 `profile_summary`
+
+`profile_summary` 是教授域最重要的用户向字段，主要用于：
+
+- 语义检索
+- 教授介绍
+- 多轮对话中的上下文承接
+
+要求：
+
+- 200-300 字中文
+- 尽量使用具体研究术语
+- 同时覆盖身份、研究方向、代表性成果、重要背景信息
+- 不能只重复官网套话
+
+### 4.3 存储要求
+
+教授域独立 PostgreSQL 库 + Milvus collection。详见 [共享技术规范 §6](./Data-Agent-Shared-Spec.md#六物理存储与向量化建议)。
+
+---
+
+## 五、采集与清洗流程
+
+### 5.1 总体流程
+
+```text
+高校教师目录 / 教师主页
+  -> roster 发现
+  -> per-professor agent 采集
+  -> 清洗与标准化
+  -> 论文反哺
+  -> 生成 profile_summary
+  -> 向量化
+  -> 发布到 professor domain PostgreSQL + Milvus
+```
+
+### 5.2 roster 发现
+
+教授采集的入口是：
+
+- 各高校教师目录页
+- 各院系教师列表页
+
+该阶段的职责：
+
+1. 读取配置中的学校入口 URL
+2. 发现教师列表和主页链接
+3. 建立基础 roster
+4. 产出每位教授的初始任务上下文
+
+### 5.3 per-professor agent 采集
+
+对每位教授，优先执行以下顺序：
+
+1. 访问官网教师主页
+2. 提取身份、院系、职称、邮箱、主页等基础字段
+3. 识别页面中的外链
+4. 在需要时调用 Scholar / Semantic Scholar / Web Search
+5. 对同名结果做机构 + 研究方向 + 合作者等多信号交叉验证
+6. 汇总字段并输出结构化结果
+
+### 5.4 清洗与标准化
+
+建议分工：
+
+- LLM 负责：
+  - 非结构化网页理解
+  - 奖项、项目、履历抽取
+  - 摘要生成
+  - 消歧判断辅助
+- Python / 离线脚本负责：
+  - 机构名称标准化
+  - 职称标准化
+  - 邮箱格式校验
+  - 重复记录检测
+  - 时间字段规整
+
+### 5.5 幻觉防护原则
+
+关键字段必须有证据支撑，尤其是：
+
+- `institution`
+- `department`
+- `title`
+- `email`
+- `h_index`
+- `citation_count`
+- `company_roles`
+- `awards`
+
+没有足够证据时：
+
+- 可以留空
+- 可以记录为低置信
+- 不能编造
+
+---
+
+## 六、论文反哺不是可选优化，而是核心能力
+
+### 6.1 论文的角色
+
+论文域不是教授域的附属物，但论文对教授域来说是核心输入。
+
+原因是：
+
+- 高校官网简介更新慢
+- 教授真实的近期研究重点通常更先体现在 paper 上
+- 只看官网，容易停留在“人工智能”“计算机科学”这类粗粒度方向
+
+### 6.2 明确规则
+
+共享约束必须在教授域体现为：
+
+- 论文从深圳教授 roster 出发采集
+- 论文与教授建立显式关联
+- 论文信号必须参与教授 `research_directions`
+- 论文信号必须参与教授 `profile_summary`
+- 论文信号必须参与“最近研究重点”的判断
+
+### 6.3 研究方向精细化
+
+建议通过教授近 5 年关联论文的：
+
+- 标题
+- 摘要
+- 关键词
+- 时间分布
+
+来归纳 3-7 个精细研究方向标签。
+
+对无论文或论文不足的教授：
+
+- 保留官网原始方向
+- 或保持为空
+
+### 6.4 代表成果字段
+
+`top_papers` 应由论文域反向提供，而不是仅靠官网人工描述。
+
+最低应支持：
+
+- 标题
+- 年份
+- 引用数（如可得）
+- DOI / 论文链接（如可得）
+
+---
+
+## 七、企业与专利关联
+
+### 7.1 `company_roles`
+
+教授与企业的关联不再把 `企名片 API` 作为默认关联方式。
+
+新的优先级应为：
+
+1. 企业域已发布对象匹配
+2. 公开网页证据
+3. 辅助 Web Search
+
+`company_roles` 最低结构建议：
+
+```json
+[
+  {
+    "company_id": "COMP-123",
+    "role": "联合创始人",
+    "source_url": "https://example.com/public-evidence"
+  }
+]
+```
+
+### 7.2 `patent_ids`
+
+教授与专利的关联应优先从专利域反向建立。
+
+可用信号包括：
+
+- 发明人姓名
+- 所属单位
+- 企业关联
+- 公开证据
+
+---
+
+## 八、质量保证
+
+通用质量维度和验证流程见 [共享技术规范 §7](./Data-Agent-Shared-Spec.md#七数据质量与验证)。
+
+### 8.1 教授域特有校验
+
+1. `institution` 必须属于深圳高校范围
+2. 必须至少有一个官网来源
+3. `name` 与 `institution` 不得缺失
+4. `profile_summary` 不得缺失
+5. 结构化字段格式合法
+6. 关联论文与研究方向不能明显冲突
+
+### 8.2 重点验证对象
+
+- 同名教授
+- 新增教授
+- 低置信关联字段
+- 论文关联冲突的教授
+- 企业/专利关联丰富的教授
+
+---
+
+## 九、配置项
+
+```yaml
+professor:
+  institution_roster_path: "config/shenzhen_institutions.yaml"
+  professor_seed_urls_path: "config/professor_seed_urls.yaml"
+  crawling_max_concurrency: 3
+  crawling_delay_range: [1, 3]
+  scholar_enabled: true
+  semantic_scholar_enabled: true
+  paper_enrichment_enabled: true
+```
+
+---
+
+## 十、更新策略
+
+- roster 发现：月度全量更新
+- 已有教授：允许全量重采或按需重采
+- 论文反哺：在 paper 域更新后同步刷新受影响教授
+- 企业 / 专利关联：允许异步回填，不阻塞教授基础发布
+
+教授基础发布不必等待企业域和专利域全部完成，但高质量的关联字段应优先消费它们的最新发布层。
+
+---
+
+## 十一、验收标准
+
+| 指标 | 要求 | 测试集 | 样本量 | 评判标准 |
+| --- | --- | --- | --- | --- |
+| 教授覆盖率 | ≥ 目标高校官网公示教师总数的 95% | 各高校教师目录 | 全量 | 自动化比对 |
+| 必填字段完整率 | `name` + `institution` + `profile_summary` 100% | 全量发布数据 | 全量 | 自动化校验 |
+| 官方来源覆盖率 | 100% 教授至少有一个官网来源 | 全量发布数据 | 全量 | 自动化校验 |
+| 论文反哺有效性 | 论文更新后可见地刷新画像 | 有论文关联的教授子集 | ≥ 30 名 | 人工对比更新前后 |
+| 同名消歧准确率 | ≥ 95% | 同名教授标注集 | ≥ 50 名 | 人工判定 |
+| 论文关联准确率 | ≥ 90% | 教授-论文关联标注集 | ≥ 100 篇 | 人工判定 |
+| 检索效果 | Top-5 相关率 ≥ 85% | Agentic-RAG 测试集中教授类 query | ≥ 50 条 | 人工评估相关性 |

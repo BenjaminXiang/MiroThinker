@@ -1,0 +1,37 @@
+# Host chat suggested followups E2E 2026-05-07T06-43-55Z
+root=/home/longxiang/MiroThinker
+log_file=/home/longxiang/MiroThinker/docs/source_backfills/host-e2e-chat-suggested-followups-2026-05-07T06-43-55Z.txt
+DATABASE_URL= postgresql://***@localhost:15432/miroflow_real
+DATABASE_URL_TEST= UNSET
+CHAT_MILVUS_URI= /home/longxiang/MiroThinker/apps/miroflow-agent/milvus.db
+CHAT_USE_RETRIEVAL_SERVICE= on
+CHAT_LLM_SYNTHESIS= DEFAULT_ON
+base_url=http://127.0.0.1:36115
+started_uvicorn_pid=3072967
+INFO:     Started server process [3072974]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:36115 (Press CTRL+C to quit)
+INFO:     127.0.0.1:38566 - "GET /api/health HTTP/1.1" 200 OK
+health=OK
+INFO:     127.0.0.1:38568 - "POST /api/chat HTTP/1.1" 200 OK
+profile_http_status=200
+profile_query_type= A_prof_profile
+profile_answer_style= llm_synthesized
+profile_suggested_followups= ['看看他的论文', '他的专利有哪些', '他参与创立了哪些企业']
+INFO:     127.0.0.1:38578 - "POST /api/chat HTTP/1.1" 200 OK
+followup_http_status=200
+followup_query_type= D_prof_papers_followup
+followup_citations_count= 10
+followup_suggested_followups= []
+
+## Browser smoke
+INFO:     127.0.0.1:38582 - "GET /chat HTTP/1.1" 200 OK
+✓ 深圳科创检索 · v0
+  http://127.0.0.1:36115/chat
+INFO:     127.0.0.1:38582 - "GET /favicon.ico HTTP/1.1" 200 OK
+✗ Wait timed out after 30000ms
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [3072974]

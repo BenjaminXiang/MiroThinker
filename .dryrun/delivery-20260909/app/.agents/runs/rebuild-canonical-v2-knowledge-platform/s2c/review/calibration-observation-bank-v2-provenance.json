@@ -1,0 +1,670 @@
+{
+  "content_sha256": "3fea1e29ca388c0eab17d30844a034c1db3a7fd97d1faea0501acabb995f5f6b",
+  "projection_sha256s": {
+    "cal-v2-ce-001": "da271f1291597b9685cc386b973f518ab871940e0874a39679eb0230dee27549",
+    "cal-v2-ce-002": "e64462d2fd889deeba69ed3bf3d2878ad1e4530bed2447d44ebd09f7f046ad02",
+    "cal-v2-ce-003": "4ae7c8aab7ea89ee38b42cbd866894aeffff8d2096e60d6a18ce992ee75a0ddb",
+    "cal-v2-ce-004": "5126160ba3a2e6c2f01f49825684726d7530990a18d9589895cc026cb4e87ed7",
+    "cal-v2-ce-005": "f1d3376b0a9d62f20905be382784ab3826187e711169f956cb60a6b7f9fbb54c",
+    "cal-v2-ce-006": "471ab95d9c6678dac0cc877d8f991a89b05b895e44815a672e077aa147fe0901",
+    "cal-v2-ce-007": "bbfcc1951cb15ff89d6e008dd455a14bfdd568a5a3249e0fbfd5f2a0f6f3c1be",
+    "cal-v2-ce-008": "9fac7b94c2f165768f5d337581f298694b6b63e2027026b0b0ebb4fdbdc69547",
+    "cal-v2-ce-009": "ed10c164120883d9d0f00f05a31cc2946a237cd13560dcf632d28e936de9c89b",
+    "cal-v2-ce-010": "83c89669ea148c9ff5630ea2d2105a3b77febe2cbc5ff1a4d64a6a3c57a0f309",
+    "cal-v2-ce-011": "dbf0caf59c0bbbbfbe56b6e2ecab65110e2578b2e9b779d6a30577b6a717fb83",
+    "cal-v2-ce-012": "94f398dd78d1dea4e76eed62eab49f040551c252dbf0ef5f472f83da401ca47b",
+    "cal-v2-ce-013": "23bc6b2d675e01e22c59db3f00ec7e6351ff86e81b28d3cd8398356d77f6a693",
+    "cal-v2-ce-014": "51997fa7a6b2468370600ad88e70cf71c91becc22ff7a2bdf4066e319b4c7e4d",
+    "cal-v2-ce-015": "9986a5e9b2a3ec60ca023ce74809ea7a1fa37d8489d94d7acc1105883b7892b4",
+    "cal-v2-ce-016": "4785fbb8239199cedd654b6ad55475707a18f87aa4b4afe4c6ef5809db3d50de",
+    "cal-v2-ce-017": "5bf3ffa9162b16e2e0d2baa8a3c191d50884f6dfc60880b7aae405323b7a3d5f",
+    "cal-v2-ce-018": "b2ccc13bc75465cbfa64acb59136137404266a60ea117e9e3ee19df4fc954634",
+    "cal-v2-ce-019": "8bd2f9169b614c7bf2e03f4fd3d85c03c26fe4713e0647c1bd7de55024fbf908",
+    "cal-v2-ce-020": "e8125b7c8864d2f62999942f2a57965de1c97c2cc8665bc75c73b2d0e258d03c",
+    "cal-v2-ct-001": "2875e26a100a7e403086ccba52cf7ec2d34abcf88eaf467899fae527c99d7b2e",
+    "cal-v2-ct-002": "96e82f6230ae8aacc27c5aea379a761b9ef1f03cbdc2e07d7da4cfa9f96219a6",
+    "cal-v2-ct-003": "7623ce7a4d25c1d74b30e0f5ac58e5271fbe288987e9f65be42d80b85e1b7f21",
+    "cal-v2-ct-004": "8528701973d7e5714231b48a20dcc9e68dc6845cd482a30df9a05aa498be1986",
+    "cal-v2-ct-005": "14be601de623615d24dcb2f2be9e949d50b75c44e2e72642245652b7ae1d7f22",
+    "cal-v2-ct-006": "e776bb22426fe511ee2a9240d98688e27a0cfd8ae5a4ce80f7cd20894dc5ba6a",
+    "cal-v2-ct-007": "b9d291a557b86dd536019f2daaf9d1a2f0a1fd5d242f7fd551ca42fc6ab37b15",
+    "cal-v2-ct-008": "58463b5807675a8c6c999d1e51bb799a53e91419a86aeef8122e45fe8043adc8",
+    "cal-v2-ct-009": "fda0118e8b522c38a585830cfa88fa0df54182f03dfdebb6551943e64fb5e2e4",
+    "cal-v2-ct-010": "4f404ad86dec0df23c867a6f2f04fbc0c7afeb0cd4d9fdc34800a7186ad43e2c",
+    "cal-v2-ie-001": "182f3d54cf38b199307f086b56d4b6a6f861c12c6e77f032b6997b9d6e1827d6",
+    "cal-v2-ie-002": "ccb6000d315b9f55530000f202ee73c2b38592238be2637105b1790d4d77139b",
+    "cal-v2-ie-003": "a624eaf9fbf021dbb47d45bc568e2ee15133294416d37690a3f99090f1e720fe",
+    "cal-v2-ie-004": "ac9c3329d5bf572c6adf89bff4699e2d434c2753048f9b988d63411b2bc33d9c",
+    "cal-v2-ie-005": "ffc72a38317dba4e3dbfb74db942cd3ee6562a5b06d6a791fc57d487b964e875",
+    "cal-v2-ie-006": "bd9733084f3e4b4d49d719044155f190d3b967f18b6a9ce14aeff2c961649c83",
+    "cal-v2-ie-007": "8e908bf48ee758a92df8e37ed87b8bf49967a0276ed7d7114a79771e8ec93867",
+    "cal-v2-ie-008": "834002020d359ddaf782e38303e554f5b7eeaa6cf08e5be878255f5c6981c4f9",
+    "cal-v2-ie-009": "567abd295ee3986ade752e40adb9ad61f2c92df0fc2baa7e52ab6ad443a4e029",
+    "cal-v2-ie-010": "d22d1db8249b1ae196049706ce5d0681f967818a84c6dc362fd1637d31d3a1a7",
+    "cal-v2-is-001": "2b19be0e7d43034abd86a3b01617d9bf6b6565ba1f5b8ec39db8514706ac7ae7",
+    "cal-v2-is-002": "4ee34117ffe2418d579986c429ce412b4f4e451b5513a3b5520b63cea3ae6d76",
+    "cal-v2-is-003": "6e75d9a753b30aebb30ec8269e420383baec34e571e0ab1e999bd3ee19fa23af",
+    "cal-v2-is-004": "d75e4ae7d566265c3aaf4698455aef4e42cdbf409185acd3e274389813b4b96f",
+    "cal-v2-is-005": "ee1bf2b802ad4477af48e4229c3c70c973cf1a2eb342de71e391602f40bed73e",
+    "cal-v2-is-006": "4980cce62a4801f0e4930b703b8ba03dca2fe147e42919b5bacbe927b96c1546",
+    "cal-v2-is-007": "6dc19532dc1c5652d5893ee8e38ac4792935000c5087cd9b951c8d4b5217c6bb",
+    "cal-v2-is-008": "cf619c81ded131a256d84d66dfd2a3648a55190cadc2752553e7711dfa3fcb86",
+    "cal-v2-is-009": "8bef029acf64ff7101bf486b0f743315b480d3a56542f9c298578073cc97bf27",
+    "cal-v2-is-010": "cf299c2100f56c270886e66f9bdd1b2550934965a6b01b9c8c4b10d743aa7ab5",
+    "cal-v2-sw-001": "e5a12551424e46da802ff3c747b6bf52dd0726324e265ec49e45259731c61374",
+    "cal-v2-sw-002": "ebb16c29461313e64e589f653d1ad11f3bda99f05822d7d30ac42cef792014ca",
+    "cal-v2-sw-003": "302b86ff59be3f2a495dbdd349d7600b20da4ec179f14d27619151188e8c8a88",
+    "cal-v2-sw-004": "354806db0ed3bc38b2c118efa3f7fc47455869db5b0174cf7027df44ffe8ef49",
+    "cal-v2-sw-005": "a035ae62757fdb6ab8a241c366febda4bef781a039fb2db4ce77e9aa327db758",
+    "cal-v2-sw-006": "43c2871ac92f5ca3d3877230e255cba05c0323c4ea92cf6a9e36c4e2140c92ff",
+    "cal-v2-sw-007": "5928b0b01bbd9cc8adf437ad53dee19781461d26e9f6edeadc3d9cadeb8082e9",
+    "cal-v2-sw-008": "646f48e2e51c6d29ec3827c0242793f7de4e556cc6462c151fceeac7f634104b",
+    "cal-v2-sw-009": "e8e51a81dbc4008e1ac1383fd5f4a68aede2170a94804cde7504f0895f9a140b",
+    "cal-v2-sw-010": "b3450e85692348eb44327fa0922e3a380fd4b86037ea362b64b7427955360764"
+  },
+  "sample_ids": [
+    "cal-v2-ce-001",
+    "cal-v2-ce-002",
+    "cal-v2-ce-003",
+    "cal-v2-ce-004",
+    "cal-v2-ce-005",
+    "cal-v2-ce-006",
+    "cal-v2-ce-007",
+    "cal-v2-ce-008",
+    "cal-v2-ce-009",
+    "cal-v2-ce-010",
+    "cal-v2-ce-011",
+    "cal-v2-ce-012",
+    "cal-v2-ce-013",
+    "cal-v2-ce-014",
+    "cal-v2-ce-015",
+    "cal-v2-ce-016",
+    "cal-v2-ce-017",
+    "cal-v2-ce-018",
+    "cal-v2-ce-019",
+    "cal-v2-ce-020",
+    "cal-v2-ie-001",
+    "cal-v2-ie-002",
+    "cal-v2-ie-003",
+    "cal-v2-ie-004",
+    "cal-v2-ie-005",
+    "cal-v2-ie-006",
+    "cal-v2-ie-007",
+    "cal-v2-ie-008",
+    "cal-v2-ie-009",
+    "cal-v2-ie-010",
+    "cal-v2-ct-001",
+    "cal-v2-ct-002",
+    "cal-v2-ct-003",
+    "cal-v2-ct-004",
+    "cal-v2-ct-005",
+    "cal-v2-ct-006",
+    "cal-v2-ct-007",
+    "cal-v2-ct-008",
+    "cal-v2-ct-009",
+    "cal-v2-ct-010",
+    "cal-v2-sw-001",
+    "cal-v2-sw-002",
+    "cal-v2-sw-003",
+    "cal-v2-sw-004",
+    "cal-v2-sw-005",
+    "cal-v2-sw-006",
+    "cal-v2-sw-007",
+    "cal-v2-sw-008",
+    "cal-v2-sw-009",
+    "cal-v2-sw-010",
+    "cal-v2-is-001",
+    "cal-v2-is-002",
+    "cal-v2-is-003",
+    "cal-v2-is-004",
+    "cal-v2-is-005",
+    "cal-v2-is-006",
+    "cal-v2-is-007",
+    "cal-v2-is-008",
+    "cal-v2-is-009",
+    "cal-v2-is-010"
+  ],
+  "schema_version": "canonical-v2-calibration-provenance-v1",
+  "source_groups": [
+    {
+      "path": "apps/miroflow-agent/tests/canonical_v2/test_knowledge_answer_grounding_contract.py",
+      "samples": [
+        {
+          "sample_id": "cal-v2-ce-001",
+          "selectors": [
+            "binding:founder",
+            "binding:valid_founder"
+          ]
+        },
+        {
+          "sample_id": "cal-v2-ce-002",
+          "selectors": [
+            "binding:unrelated",
+            "binding:wrong_founder"
+          ]
+        },
+        {
+          "sample_id": "cal-v2-ce-003",
+          "selectors": [
+            "binding:wrong_subject",
+            "binding:wrong_subject_founder"
+          ]
+        },
+        {
+          "sample_id": "cal-v2-ce-004",
+          "selectors": [
+            "binding:wrong_predicate",
+            "binding:wrong_predicate_founder"
+          ]
+        },
+        {
+          "sample_id": "cal-v2-ce-005",
+          "selectors": [
+            "binding:wrong_value",
+            "binding:wrong_value_founder"
+          ]
+        },
+        {
+          "sample_id": "cal-v2-ce-006",
+          "selectors": [
+            "binding:conflict",
+            "binding:valid_conflict"
+          ]
+        },
+        {
+          "sample_id": "cal-v2-ce-007",
+          "selectors": [
+            "binding:silent_role",
+            "binding:conflict"
+          ]
+        },
+        {
+          "sample_id": "cal-v2-ce-008",
+          "selectors": [
+            "binding:deployment",
+            "binding:inference"
+          ]
+        },
+        {
+          "sample_id": "cal-v2-ce-009",
+          "selectors": [
+            "binding:fake_financing"
+          ]
+        }
+      ],
+      "source_sha256": "fbd1866b6acffdf558742a632c38d3faa0d8f8df39eb9b15e715ca0a4f6c0cfb",
+      "test_name": "test_material_claims_bind_exact_evidence_and_disclose_conflict_and_inference"
+    },
+    {
+      "path": "apps/miroflow-agent/tests/canonical_v2/test_knowledge_answer_grounding_contract.py",
+      "samples": [
+        {
+          "sample_id": "cal-v2-ce-010",
+          "selectors": [
+            "binding:part",
+            "binding:proposals"
+          ]
+        },
+        {
+          "sample_id": "cal-v2-ce-011",
+          "selectors": [
+            "binding:direct",
+            "binding:supported_claim"
+          ]
+        },
+        {
+          "sample_id": "cal-v2-ce-012",
+          "selectors": [
+            "binding:direct",
+            "binding:proposals"
+          ]
+        }
+      ],
+      "source_sha256": "fbd1866b6acffdf558742a632c38d3faa0d8f8df39eb9b15e715ca0a4f6c0cfb",
+      "test_name": "test_product_capability_requires_direct_named_product_binding_and_status"
+    },
+    {
+      "path": "apps/miroflow-agent/tests/canonical_v2/test_knowledge_answer_grounding_contract.py",
+      "samples": [
+        {
+          "sample_id": "cal-v2-ce-013",
+          "selectors": [
+            "binding:discussion",
+            "binding:proposals"
+          ]
+        },
+        {
+          "sample_id": "cal-v2-ce-014",
+          "selectors": [
+            "binding:demonstrated",
+            "binding:proposals"
+          ]
+        },
+        {
+          "sample_id": "cal-v2-ce-015",
+          "selectors": [
+            "binding:conflict",
+            "binding:proposals"
+          ]
+        },
+        {
+          "sample_id": "cal-v2-ce-016",
+          "selectors": [
+            "binding:claimed",
+            "binding:proposals"
+          ]
+        },
+        {
+          "sample_id": "cal-v2-ce-017",
+          "selectors": [
+            "binding:discussion",
+            "binding:proposals"
+          ]
+        },
+        {
+          "sample_id": "cal-v2-ce-018",
+          "selectors": [
+            "binding:hidden",
+            "binding:proposals"
+          ]
+        },
+        {
+          "sample_id": "cal-v2-ce-019",
+          "selectors": [
+            "binding:discussion",
+            "binding:proposals"
+          ]
+        }
+      ],
+      "source_sha256": "fbd1866b6acffdf558742a632c38d3faa0d8f8df39eb9b15e715ca0a4f6c0cfb",
+      "test_name": "test_industry_brief_preserves_scope_routes_semantics_and_representative_coverage"
+    },
+    {
+      "path": "apps/miroflow-agent/tests/canonical_v2/test_knowledge_answer_grounding_contract.py",
+      "samples": [
+        {
+          "sample_id": "cal-v2-ce-020",
+          "selectors": [
+            "binding:evidence",
+            "binding:grounded_claim"
+          ]
+        }
+      ],
+      "source_sha256": "fbd1866b6acffdf558742a632c38d3faa0d8f8df39eb9b15e715ca0a4f6c0cfb",
+      "test_name": "test_prose_failure_returns_the_same_deterministic_grounded_fallback"
+    },
+    {
+      "path": "apps/miroflow-agent/tests/canonical_v2/test_knowledge_read_retrieval_fusion_contract.py",
+      "samples": [
+        {
+          "sample_id": "cal-v2-ie-001",
+          "selectors": [
+            "binding:candidates",
+            "helper:_fusion_candidates:binding:local_alpha",
+            "helper:_fusion_candidates:binding:web_alpha"
+          ]
+        },
+        {
+          "sample_id": "cal-v2-ie-002",
+          "selectors": [
+            "binding:candidates",
+            "helper:_fusion_candidates:binding:same_name_other"
+          ]
+        },
+        {
+          "sample_id": "cal-v2-ie-003",
+          "selectors": [
+            "binding:hostile_merge",
+            "helper:_fusion_candidates:binding:same_name_other"
+          ]
+        },
+        {
+          "sample_id": "cal-v2-ie-004",
+          "selectors": [
+            "binding:constraint_receipt",
+            "helper:_fusion_candidates:binding:outside"
+          ]
+        }
+      ],
+      "source_sha256": "974bd767e78e04041ee1eba09982848b2532734e3f3f6fe2d341fd44c0c027ba",
+      "test_name": "test_identity_fusion_aggregates_before_constraints_and_validates_late_rerank"
+    },
+    {
+      "path": "apps/miroflow-agent/tests/canonical_v2/test_knowledge_read_retrieval_fusion_contract.py",
+      "samples": [
+        {
+          "sample_id": "cal-v2-ie-005",
+          "selectors": [
+            "binding:candidates_by_lane",
+            "binding:unresolved"
+          ]
+        }
+      ],
+      "source_sha256": "974bd767e78e04041ee1eba09982848b2532734e3f3f6fe2d341fd44c0c027ba",
+      "test_name": "test_independent_seven_lane_recall_overlaps_and_retains_full_candidate_trace"
+    },
+    {
+      "path": "apps/miroflow-agent/tests/canonical_v2/test_knowledge_read_retrieval_fusion_contract.py",
+      "samples": [
+        {
+          "sample_id": "cal-v2-ie-006",
+          "selectors": [
+            "binding:alpha_snapshot",
+            "binding:web_candidates"
+          ]
+        },
+        {
+          "sample_id": "cal-v2-ie-007",
+          "selectors": [
+            "binding:alpha_snapshot",
+            "binding:beta_snapshot",
+            "binding:web_candidates"
+          ]
+        },
+        {
+          "sample_id": "cal-v2-ie-008",
+          "selectors": [
+            "binding:accepted_identity_mapping",
+            "binding:resolved_handle"
+          ]
+        }
+      ],
+      "source_sha256": "974bd767e78e04041ee1eba09982848b2532734e3f3f6fe2d341fd44c0c027ba",
+      "test_name": "test_web_handles_bind_snapshot_collision_expiry_and_read_only_resolution"
+    },
+    {
+      "path": "apps/miroflow-agent/tests/canonical_v2/test_knowledge_read_atomic_green_contract.py",
+      "samples": [
+        {
+          "sample_id": "cal-v2-ie-009",
+          "selectors": [
+            "binding:selected_decision",
+            "helper:_ambiguity_decision:binding:selected_trace"
+          ]
+        }
+      ],
+      "source_sha256": "d8e753331a55938ff7f894ddb397fea6cedaa9a0d6f6d05d1649fd7fd1979699",
+      "test_name": "test_ambiguity_decision_handoff_blocks_or_preserves_selected_identity"
+    },
+    {
+      "path": "apps/miroflow-agent/tests/canonical_v2/test_knowledge_read_answer_successor_handoff.py",
+      "samples": [
+        {
+          "sample_id": "cal-v2-ie-010",
+          "selectors": [
+            "binding:crosswired_item",
+            "binding:result"
+          ]
+        }
+      ],
+      "source_sha256": "29191a15c875cf95f4d2c6c432a2c6136c3f4cd9571369ef00306a4767b79d01",
+      "test_name": "test_canonical_object_id_cannot_authorize_another_handle"
+    },
+    {
+      "path": "apps/miroflow-agent/tests/canonical_v2/test_knowledge_answer_multiturn_contract.py",
+      "samples": [
+        {
+          "sample_id": "cal-v2-ct-001",
+          "selectors": [
+            "binding:requests",
+            "binding:traversal"
+          ]
+        },
+        {
+          "sample_id": "cal-v2-ct-002",
+          "selectors": [
+            "binding:company_bindings",
+            "binding:traversal"
+          ]
+        },
+        {
+          "sample_id": "cal-v2-ct-003",
+          "selectors": [
+            "binding:partial_candidate",
+            "binding:paper_coverage"
+          ]
+        }
+      ],
+      "source_sha256": "c217a5ebfd2469020c69068728d274f1f76f361090f4f3ee99f8f851fcc5cd7f",
+      "test_name": "test_canonical_anchor_displayed_set_and_typed_traversal_stay_exact"
+    },
+    {
+      "path": "apps/miroflow-agent/tests/canonical_v2/test_knowledge_answer_multiturn_contract.py",
+      "samples": [
+        {
+          "sample_id": "cal-v2-ct-004",
+          "selectors": [
+            "binding:detail_request",
+            "binding:listed_handles"
+          ]
+        },
+        {
+          "sample_id": "cal-v2-ct-005",
+          "selectors": [
+            "binding:traversal_evidence",
+            "binding:traversal_request"
+          ]
+        },
+        {
+          "sample_id": "cal-v2-ct-006",
+          "selectors": [
+            "binding:direct_patent_item",
+            "binding:direct_request"
+          ]
+        }
+      ],
+      "source_sha256": "c217a5ebfd2469020c69068728d274f1f76f361090f4f3ee99f8f851fcc5cd7f",
+      "test_name": "test_unresolved_web_handle_corefers_but_never_traverses_as_canonical"
+    },
+    {
+      "path": "apps/miroflow-agent/tests/canonical_v2/test_knowledge_answer_multiturn_contract.py",
+      "samples": [
+        {
+          "sample_id": "cal-v2-ct-007",
+          "selectors": [
+            "binding:valid",
+            "binding:offer"
+          ]
+        },
+        {
+          "sample_id": "cal-v2-ct-008",
+          "selectors": [
+            "binding:invalid_operation",
+            "binding:serialized_offer"
+          ]
+        },
+        {
+          "sample_id": "cal-v2-ct-009",
+          "selectors": [
+            "binding:stray_relation",
+            "binding:serialized_offer"
+          ]
+        }
+      ],
+      "source_sha256": "c217a5ebfd2469020c69068728d274f1f76f361090f4f3ee99f8f851fcc5cd7f",
+      "test_name": "test_continuation_candidates_require_server_owned_executable_contract"
+    },
+    {
+      "path": "apps/miroflow-agent/tests/canonical_v2/test_knowledge_answer_multiturn_contract.py",
+      "samples": [
+        {
+          "sample_id": "cal-v2-ct-010",
+          "selectors": [
+            "binding:switch_request",
+            "binding:switched"
+          ]
+        }
+      ],
+      "source_sha256": "c217a5ebfd2469020c69068728d274f1f76f361090f4f3ee99f8f851fcc5cd7f",
+      "test_name": "test_continuation_triggers_bind_options_and_topic_switch_replaces_active_state"
+    },
+    {
+      "path": "apps/miroflow-agent/tests/canonical_v2/test_knowledge_answer_implementation_closure.py",
+      "samples": [
+        {
+          "sample_id": "cal-v2-sw-001",
+          "selectors": [
+            "binding:static_evidence",
+            "binding:static_request"
+          ]
+        },
+        {
+          "sample_id": "cal-v2-sw-002",
+          "selectors": [
+            "binding:official",
+            "binding:official_request"
+          ]
+        },
+        {
+          "sample_id": "cal-v2-sw-003",
+          "selectors": [
+            "binding:wrong_predicate",
+            "binding:official_request"
+          ]
+        },
+        {
+          "sample_id": "cal-v2-sw-004",
+          "selectors": [
+            "binding:unverified",
+            "binding:official_evidence"
+          ]
+        },
+        {
+          "sample_id": "cal-v2-sw-005",
+          "selectors": [
+            "binding:poisoned_contact",
+            "binding:poisoned_contact_value"
+          ]
+        }
+      ],
+      "source_sha256": "17a962e945850082512344f201b80713c22310d1ac4fae72ff7ee28c3df8eabf",
+      "test_name": "test_safety_guidance_is_server_owned_bounded_and_official_snapshot_grounded"
+    },
+    {
+      "path": "apps/miroflow-agent/tests/canonical_v2/test_knowledge_read_atomic_green_contract.py",
+      "samples": [
+        {
+          "sample_id": "cal-v2-sw-006",
+          "selectors": [
+            "binding:valid_snapshot",
+            "binding:result"
+          ]
+        },
+        {
+          "sample_id": "cal-v2-sw-007",
+          "selectors": [
+            "binding:oversize_snapshot",
+            "binding:oversize_bytes"
+          ]
+        },
+        {
+          "sample_id": "cal-v2-sw-008",
+          "selectors": [
+            "binding:tampered_snapshot",
+            "binding:tampered_bytes"
+          ]
+        },
+        {
+          "sample_id": "cal-v2-sw-009",
+          "selectors": [
+            "binding:missing_payload_snapshot",
+            "binding:web_inputs"
+          ]
+        },
+        {
+          "sample_id": "cal-v2-sw-010",
+          "selectors": [
+            "binding:direct_oversize_snapshot",
+            "binding:direct_oversize_item"
+          ]
+        }
+      ],
+      "source_sha256": "d8e753331a55938ff7f894ddb397fea6cedaa9a0d6f6d05d1649fd7fd1979699",
+      "test_name": "test_initial_web_snapshot_policy_recomputes_bytes_and_rejects_missing_oversize_or_tamper"
+    },
+    {
+      "path": "apps/miroflow-agent/tests/canonical_v2/test_knowledge_read_sufficiency_retry_contract.py",
+      "samples": [
+        {
+          "sample_id": "cal-v2-is-001",
+          "selectors": [
+            "binding:parts",
+            "binding:report"
+          ]
+        },
+        {
+          "sample_id": "cal-v2-is-002",
+          "selectors": [
+            "binding:parts",
+            "binding:report"
+          ]
+        },
+        {
+          "sample_id": "cal-v2-is-003",
+          "selectors": [
+            "binding:evidence",
+            "binding:forbidden_product_support"
+          ]
+        },
+        {
+          "sample_id": "cal-v2-is-004",
+          "selectors": [
+            "binding:evidence",
+            "binding:forbidden_product_support"
+          ]
+        },
+        {
+          "sample_id": "cal-v2-is-005",
+          "selectors": [
+            "binding:evidence",
+            "binding:forbidden_product_support"
+          ]
+        },
+        {
+          "sample_id": "cal-v2-is-006",
+          "selectors": [
+            "binding:evidence",
+            "binding:forbidden_product_support"
+          ]
+        },
+        {
+          "sample_id": "cal-v2-is-007",
+          "selectors": [
+            "binding:forbidden_product_support",
+            "binding:forbidden_product"
+          ]
+        },
+        {
+          "sample_id": "cal-v2-is-008",
+          "selectors": [
+            "binding:direct_product_evidence",
+            "binding:positive_product"
+          ]
+        }
+      ],
+      "source_sha256": "aa8f0a67ebf1ee7b6cd92d5584e9b0f2f7ff8d0916df0a35c3c609d1c83b8b56",
+      "test_name": "test_sufficiency_is_per_material_part_and_product_capability_is_direct"
+    },
+    {
+      "path": "apps/miroflow-agent/tests/canonical_v2/test_knowledge_answer_implementation_closure.py",
+      "samples": [
+        {
+          "sample_id": "cal-v2-is-009",
+          "selectors": [
+            "binding:conflicting",
+            "binding:conflict"
+          ]
+        },
+        {
+          "sample_id": "cal-v2-is-010",
+          "selectors": [
+            "binding:wrong_binding",
+            "binding:missing"
+          ]
+        }
+      ],
+      "source_sha256": "17a962e945850082512344f201b80713c22310d1ac4fae72ff7ee28c3df8eabf",
+      "test_name": "test_assessment_replays_evidence_relevance_and_degrades_visibly"
+    }
+  ]
+}

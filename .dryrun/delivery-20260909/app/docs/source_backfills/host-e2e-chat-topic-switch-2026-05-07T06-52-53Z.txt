@@ -1,0 +1,34 @@
+# Host Chat Topic Switch E2E 2026-05-07T06-52-53Z
+log_file=docs/source_backfills/host-e2e-chat-topic-switch-2026-05-07T06-52-53Z.txt
+base_url=http://127.0.0.1:52477
+server_pid=3084742
+health=OK
+## seed-professor
+query=介绍清华的丁文伯
+http_status=200
+raw= {"query":"介绍清华的丁文伯","query_type":"A_prof_profile","answer_text":"丁文伯是清华大学深圳国际研究生院的副教授、博士生导师 [2][3]。他的研究方向包括摩擦纳米发电机 (TENG) [4]、柔性可穿戴能量收集技术 [5]、自驱动机械传感系统 [6]、基于TENG的人机交互 (HMI) [7]、智能功能纺织品与纤维电子学 [8] 以及摩擦电微等离子体研究 [9]。目前他已收录论文19篇 [10]。","citations":[{"type":"professor","id":"PROF-5F14BBA866D9","label":"丁文伯 - 清华大学深圳国际研究生院","url":"/browse#professor/PROF-5F14BBA866D9"}],"evidence":[],"clarification":null,"structured_payload":{"professor_id":"PROF-5F14BBA866D9","canonical_name":"丁文伯","canonical_name_en":"Wenbo Ding","institution":"清华大学深圳国际研究生院","title":"副教授、博士生导师","discipline_family":"computer_science","research_topics":["摩擦纳米发电机 (TENG)","柔性可穿戴能量收集技术","自驱动机械传感系统","基于TENG的人机交互 (HMI)","智能功能纺织品与纤维电子学","摩擦电微等离子体研究","自驱动环境监测传感器","多模态高分辨率触觉传感器","机器人触觉感知","多模态触觉传感器","仿生传感","多模态高分辨率触觉传感器研发"],"verified_paper_count":19,"h_index":null,"citation_count":null,"paper_count":19},"answer_style":"llm_synthesized","citation_map":{"1":"PROF-5F14BBA866D9","2":"PROF-5F14BBA866D9","3":"PROF-5F14BBA866D9","4":"PROF-5F
+query_type= A_prof_profile
+answer_style= llm_synthesized
+citations_count= 1
+classifier_topic= None
+suggested_followups= ['看看他的论文', '他的专利有哪些', '他参与创立了哪些企业']
+## explicit-topic-switch
+query=对了，深圳哪些公司做激光雷达
+http_status=200
+raw= {"query":"对了，深圳哪些公司做激光雷达","query_type":"B_company_topic_search","answer_text":"共找到 6 个企业：\n\n  • 不止技术 — 生产制造\n  • 奇历士技术（深圳） — 硬件\n  • 深圳奥锐达科技 — 汽车交通\n  • 深圳灵动芯光科技 — 生产制造\n  • 益鸿智能科技 — 先进制造\n  • 览沃科技 — 先进制造","citations":[{"type":"company","id":"COMP-04d42897fcfb","label":"不止技术","url":"/browse#company/COMP-04d42897fcfb"},{"type":"company","id":"COMP-c0bfe2f78354","label":"奇历士技术（深圳）","url":"/browse#company/COMP-c0bfe2f78354"},{"type":"company","id":"COMP-b689340c78db","label":"深圳奥锐达科技","url":"/browse#company/COMP-b689340c78db"},{"type":"company","id":"COMP-fbdbcc0ff9dd","label":"深圳灵动芯光科技","url":"/browse#company/COMP-fbdbcc0ff9dd"},{"type":"company","id":"COMP-796db62f3142","label":"益鸿智能科技","url":"/browse#company/COMP-796db62f3142"},{"type":"company","id":"COMP-0fc8c548d8f8","label":"览沃科技","url":"/browse#company/COMP-0fc8c548d8f8"}],"evidence":[],"clarification":null,"structured_payload":{"classifier_topic":"激光雷达","classifier_target_domain":"company","classifier_reason":"semantic list dete
+query_type= B_company_topic_search
+answer_style= template
+citations_count= 6
+classifier_topic= 激光雷达
+suggested_followups= ['上述哪些在深圳', '换成同方向论文', '换成同方向专利']
+## pronoun-after-topic-switch
+query=他的论文
+http_status=200
+raw= {"query":"他的论文","query_type":"C_cross_domain_clarification","answer_text":"请先确认要查询哪一个实体，再追问它关联的论文。","citations":[],"evidence":[],"clarification":null,"structured_payload":{"target_domain":"paper"},"answer_style":"template","citation_map":{},"suggested_followups":[]}
+query_type= C_cross_domain_clarification
+answer_style= template
+citations_count= 0
+classifier_topic= None
+suggested_followups= []
+result=PASS
+result=PASS

@@ -1,0 +1,60 @@
+{
+  "schema_version": "canonical-v2-s7i-lookup-eligibility-lineage-receipt-v1",
+  "change_id": "rebuild-canonical-v2-knowledge-platform",
+  "slice_id": "s7i-lookup-eligibility-lineage-correction",
+  "status": "accepted",
+  "accepted_at": "2026-07-16T04:55:58Z",
+  "git_head": "f0e6224e1c675c6d6c58993676783b2fbe0cd8f6",
+  "formal_task_ledger": "55/80",
+  "implementation": {
+    "index_projection_sha256": "c5d0e75d72434d38d272429fab62b389a7056ac2800bd51c4957a9967645adad",
+    "owner_test_sha256": "862b4b6949c842ec60e7bbb379d5b4131e6f707f0a59fafb43207fc40ac767f6",
+    "slice_contract_sha256_before_acceptance_evidence": "7a8bf47ef3f13702775524e50379ac2e8b9f70005fd255e9254742389f6d356b",
+    "implementation_plan_sha256": "8c701a07be6c0fa84bb52e812725dc77928a6e1685fb27b76a6605060cbf336e"
+  },
+  "tdd": {
+    "red_command": "uv run pytest -n0 -q --tb=short tests/canonical_v2/test_internal_reference_projection_contract.py::test_lookup_projection_retains_exact_eligibility_lineage_and_manifest_binding",
+    "red_result": "1 failed at the intended missing eligibility_decision_id boundary; no unrelated error",
+    "green_result": "1 passed"
+  },
+  "verification": {
+    "shared_s7_owner": "42 passed, 2 skipped",
+    "s7_sibling_owners": "14 passed",
+    "canonical_v2_no_external": "330 passed, 141 skipped, 0 xfailed, 3 existing Pydantic model_construct warnings",
+    "ruff_check": "passed for complete src/data_agents/canonical_v2 and tests/canonical_v2",
+    "ruff_format": "passed for the two changed files",
+    "py_compile": "passed",
+    "pyright": "0 errors, 0 warnings, 0 informations",
+    "strict_openspec": "passed",
+    "git_diff_check": "passed",
+    "scope_secret_cache": "passed"
+  },
+  "wheel": {
+    "path": "/var/tmp/canonical-v2-s7i-wheel-20260716T0442Z/miroflow_agent-0.1.0-py3-none-any.whl",
+    "sha256": "decce2eddd2411a77a6c04a95017d466a954fbb274d22f7360207ddba1a00ee2",
+    "entry_count": 275,
+    "contains_index_projection": true,
+    "contains_tests_or_agents": false,
+    "packaged_production_hash_matches_source": true
+  },
+  "frozen_targets": {
+    "original_milvus_sha256": "43ef203e0b101fcbed2a6c8fcde19a35d426199d3f02bc72525d0acf618867cc",
+    "original_pgtest_paused": true,
+    "original_pgtest_volume": "d81c6381b0c7c0a975ca0ff4a0054037e72b0d4cb80174f682abceb1127cd241",
+    "recovery_lab_network": "none",
+    "recovery_lab_published_ports": false,
+    "recovery_lab_restart_policy": "no"
+  },
+  "review": {
+    "critical": 0,
+    "important": 0,
+    "minor": 0,
+    "yagni": 0,
+    "verdict": "accepted",
+    "independent_rechecks": [
+      "focused correction: 1 passed",
+      "complete shared S7 owner: 42 passed, 2 skipped"
+    ]
+  },
+  "forbidden_actions_performed": []
+}

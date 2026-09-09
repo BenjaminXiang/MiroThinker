@@ -1,0 +1,3655 @@
+{
+  "generated_at": "2026-05-31T07:10:57.989301+00:00",
+  "scope": {
+    "selected_company_count": 200,
+    "accepted_generic_web_rows_checked": 725
+  },
+  "current_guard_result": {
+    "valid_rows": 511,
+    "invalid_rows": 214,
+    "affected_company_count": 102,
+    "affected_companies": [
+      "COMP-00d053ec2a24",
+      "COMP-012840859217",
+      "COMP-01a9e815e4cb",
+      "COMP-022ba3545989",
+      "COMP-023097e9b55d",
+      "COMP-02a26304c3a6",
+      "COMP-0311817f7250",
+      "COMP-03215767f7fc",
+      "COMP-03ad82319140",
+      "COMP-061cfc150c10",
+      "COMP-065e3cb4dac8",
+      "COMP-0693e77e51df",
+      "COMP-0696d91754ed",
+      "COMP-071193141d1c",
+      "COMP-07f14ec62e5c",
+      "COMP-07f772839ee2",
+      "COMP-08f17f2130d7",
+      "COMP-09aa809ec89e",
+      "COMP-09b40e9b3e92",
+      "COMP-0a0ab1fba325",
+      "COMP-0c33016e8091",
+      "COMP-0dd6b7b967cd",
+      "COMP-0e7ea3a9e563",
+      "COMP-10047ff88d61",
+      "COMP-10f4fc3eb209",
+      "COMP-13d7272fd56f",
+      "COMP-14e479cbfe18",
+      "COMP-15ed9873c82f",
+      "COMP-15ef7c731ef6",
+      "COMP-16d41c37fc99",
+      "COMP-175c9e00c632",
+      "COMP-1764f9b80fc2",
+      "COMP-17bd8446bc25",
+      "COMP-17d68ddf7fd6",
+      "COMP-1998f9b7f2ea",
+      "COMP-1b1fea865e40",
+      "COMP-1b25069ef78c",
+      "COMP-1cd84b2ae529",
+      "COMP-219afcacba21",
+      "COMP-2378f6893692",
+      "COMP-23f148413043",
+      "COMP-2466866beb8a",
+      "COMP-2482684e2ff8",
+      "COMP-24b478f05889",
+      "COMP-2640a0f609b5",
+      "COMP-2919d3af3d1f",
+      "COMP-2d9a7505bdab",
+      "COMP-302ee093a2d1",
+      "COMP-30dc64905df7",
+      "COMP-329b5f2c4349",
+      "COMP-32b3c0a83596",
+      "COMP-32ce4065c330",
+      "COMP-33ae11f81f43",
+      "COMP-3595cb259124",
+      "COMP-40b2fff69ff7",
+      "COMP-467bb9e6ed99",
+      "COMP-46955be309fe",
+      "COMP-480f6ad273de",
+      "COMP-4b6e0f8c6fb5",
+      "COMP-4dd645d47e81",
+      "COMP-510dcababd11",
+      "COMP-54fd4dd036ff",
+      "COMP-5584b3cf41d2",
+      "COMP-5cfb1b0e4f54",
+      "COMP-5db7107aa938",
+      "COMP-67942b79a226",
+      "COMP-67bf09ce7cc8",
+      "COMP-6877a3f5af6c",
+      "COMP-692e71ea6c19",
+      "COMP-69f0f8ded8d1",
+      "COMP-6b7f7b9cb8b1",
+      "COMP-739e5c384cb9",
+      "COMP-79167faf0c77",
+      "COMP-807c94f9d2fd",
+      "COMP-8555975c44b2",
+      "COMP-894338aff924",
+      "COMP-8e8b8b78fa83",
+      "COMP-8ebef706fbbe",
+      "COMP-9465315a8a9e",
+      "COMP-96bcd8d187b3",
+      "COMP-980603a4e01f",
+      "COMP-9b0a43c74d5e",
+      "COMP-9d1ad0faac73",
+      "COMP-9dbac97b9320",
+      "COMP-a1cc8c4c739d",
+      "COMP-a30d0fbb9270",
+      "COMP-a90ec5fd4daa",
+      "COMP-aae89e3b7b16",
+      "COMP-ab7c03a0aec0",
+      "COMP-b27c7a9a2a35",
+      "COMP-b336a174cd1f",
+      "COMP-b5765e07b89a",
+      "COMP-b8e17afbc33a",
+      "COMP-d848f429bdfe",
+      "COMP-d90d20eca885",
+      "COMP-d9434174e97a",
+      "COMP-e269d05c673b",
+      "COMP-e372939bd625",
+      "COMP-e636e2b24af2",
+      "COMP-e7137f40e8e0",
+      "COMP-ec4f36d8b630",
+      "COMP-fa4cafdd3f74"
+    ],
+    "invalid_by_company": {
+      "COMP-00d053ec2a24": 6,
+      "COMP-012840859217": 1,
+      "COMP-01a9e815e4cb": 3,
+      "COMP-022ba3545989": 4,
+      "COMP-023097e9b55d": 1,
+      "COMP-02a26304c3a6": 1,
+      "COMP-0311817f7250": 1,
+      "COMP-03215767f7fc": 1,
+      "COMP-03ad82319140": 2,
+      "COMP-061cfc150c10": 2,
+      "COMP-065e3cb4dac8": 7,
+      "COMP-0693e77e51df": 3,
+      "COMP-0696d91754ed": 3,
+      "COMP-071193141d1c": 5,
+      "COMP-07f14ec62e5c": 1,
+      "COMP-07f772839ee2": 3,
+      "COMP-08f17f2130d7": 3,
+      "COMP-09aa809ec89e": 1,
+      "COMP-09b40e9b3e92": 2,
+      "COMP-0a0ab1fba325": 3,
+      "COMP-0c33016e8091": 3,
+      "COMP-0dd6b7b967cd": 3,
+      "COMP-0e7ea3a9e563": 1,
+      "COMP-10047ff88d61": 8,
+      "COMP-10f4fc3eb209": 2,
+      "COMP-13d7272fd56f": 2,
+      "COMP-14e479cbfe18": 2,
+      "COMP-15ed9873c82f": 3,
+      "COMP-15ef7c731ef6": 2,
+      "COMP-16d41c37fc99": 2,
+      "COMP-175c9e00c632": 4,
+      "COMP-1764f9b80fc2": 3,
+      "COMP-17bd8446bc25": 2,
+      "COMP-17d68ddf7fd6": 2,
+      "COMP-1998f9b7f2ea": 1,
+      "COMP-1b1fea865e40": 1,
+      "COMP-1b25069ef78c": 2,
+      "COMP-1cd84b2ae529": 1,
+      "COMP-219afcacba21": 3,
+      "COMP-2378f6893692": 2,
+      "COMP-23f148413043": 1,
+      "COMP-2466866beb8a": 3,
+      "COMP-2482684e2ff8": 1,
+      "COMP-24b478f05889": 1,
+      "COMP-2640a0f609b5": 3,
+      "COMP-2919d3af3d1f": 1,
+      "COMP-2d9a7505bdab": 1,
+      "COMP-302ee093a2d1": 1,
+      "COMP-30dc64905df7": 4,
+      "COMP-329b5f2c4349": 3,
+      "COMP-32b3c0a83596": 2,
+      "COMP-32ce4065c330": 1,
+      "COMP-33ae11f81f43": 1,
+      "COMP-3595cb259124": 1,
+      "COMP-40b2fff69ff7": 2,
+      "COMP-467bb9e6ed99": 3,
+      "COMP-46955be309fe": 1,
+      "COMP-480f6ad273de": 1,
+      "COMP-4b6e0f8c6fb5": 5,
+      "COMP-4dd645d47e81": 1,
+      "COMP-510dcababd11": 4,
+      "COMP-54fd4dd036ff": 1,
+      "COMP-5584b3cf41d2": 1,
+      "COMP-5cfb1b0e4f54": 3,
+      "COMP-5db7107aa938": 3,
+      "COMP-67942b79a226": 2,
+      "COMP-67bf09ce7cc8": 1,
+      "COMP-6877a3f5af6c": 2,
+      "COMP-692e71ea6c19": 2,
+      "COMP-69f0f8ded8d1": 2,
+      "COMP-6b7f7b9cb8b1": 3,
+      "COMP-739e5c384cb9": 1,
+      "COMP-79167faf0c77": 2,
+      "COMP-807c94f9d2fd": 1,
+      "COMP-8555975c44b2": 1,
+      "COMP-894338aff924": 4,
+      "COMP-8e8b8b78fa83": 1,
+      "COMP-8ebef706fbbe": 1,
+      "COMP-9465315a8a9e": 1,
+      "COMP-96bcd8d187b3": 1,
+      "COMP-980603a4e01f": 1,
+      "COMP-9b0a43c74d5e": 1,
+      "COMP-9d1ad0faac73": 1,
+      "COMP-9dbac97b9320": 1,
+      "COMP-a1cc8c4c739d": 2,
+      "COMP-a30d0fbb9270": 2,
+      "COMP-a90ec5fd4daa": 2,
+      "COMP-aae89e3b7b16": 1,
+      "COMP-ab7c03a0aec0": 1,
+      "COMP-b27c7a9a2a35": 2,
+      "COMP-b336a174cd1f": 1,
+      "COMP-b5765e07b89a": 1,
+      "COMP-b8e17afbc33a": 1,
+      "COMP-d848f429bdfe": 2,
+      "COMP-d90d20eca885": 4,
+      "COMP-d9434174e97a": 5,
+      "COMP-e269d05c673b": 2,
+      "COMP-e372939bd625": 2,
+      "COMP-e636e2b24af2": 1,
+      "COMP-e7137f40e8e0": 1,
+      "COMP-ec4f36d8b630": 3,
+      "COMP-fa4cafdd3f74": 1
+    },
+    "identity_term_count_distribution": {
+      "2": 725
+    }
+  },
+  "derived_impact_preview": {
+    "signal_events_primary_news": 0,
+    "signal_events_corroborating_news": 0,
+    "product_evidence_by_source_url": 415,
+    "scenarios_by_source_url": 70
+  },
+  "invalid_sources": [
+    {
+      "news_id": "3736c322-aab1-4485-a32f-643f7e97bf70",
+      "company_id": "COMP-17d68ddf7fd6",
+      "canonical_name": "一股科技",
+      "registered_name": "深圳市一股科技有限公司",
+      "trusted_identity_terms": [
+        "一股科技",
+        "深圳市一股科技有限公司"
+      ],
+      "title": "深圳市的一科技有限公司 - 企查查",
+      "source_url": "https://m.qcc.com/firm/f8aa260d5db1844bb616db913c92fbbf.html",
+      "source_domain": "m.qcc.com",
+      "summary_excerpt": "深圳市的一科技有限公司成立于2021-08-06，法定代表人为肖静，注册资本为100万元，统一社会信用代码为91440300MA5GXG899G，企业注册地址位于深圳市龙华区 ...",
+      "evidence_excerpt": "深圳市的一科技有限公司成立于2021-08-06，法定代表人为肖静，注册资本为100万元，统一社会信用代码为91440300MA5GXG899G，企业注册地址位于深圳市龙华区 ...",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "2570e1d1-e0a9-4177-94d9-2cad064c007c",
+      "company_id": "COMP-17d68ddf7fd6",
+      "canonical_name": "一股科技",
+      "registered_name": "深圳市一股科技有限公司",
+      "trusted_identity_terms": [
+        "一股科技",
+        "深圳市一股科技有限公司"
+      ],
+      "title": "股一科技（深圳）有限责任公司 - 企查查",
+      "source_url": "https://www.qcc.com/firm/65d38aca5e3ca1b2ac43166a903bc4ab.html",
+      "source_domain": "qcc.com",
+      "summary_excerpt": "股一科技（深圳）有限责任公司成立于2022-09-27，法定代表人为李桂民，注册资本为20万元，统一社会信用代码为91440300MA5HH9EB8L，企业注册地址位于深圳市 ...",
+      "evidence_excerpt": "股一科技（深圳）有限责任公司成立于2022-09-27，法定代表人为李桂民，注册资本为20万元，统一社会信用代码为91440300MA5HH9EB8L，企业注册地址位于深圳市",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "59846f6f-9a47-41b1-ad55-fbeb33f2f05f",
+      "company_id": "COMP-b5765e07b89a",
+      "canonical_name": "中农美蔬（深圳）科技",
+      "registered_name": "中农美蔬（深圳）科技有限公司",
+      "trusted_identity_terms": [
+        "中农美蔬（深圳）科技",
+        "中农美蔬（深圳）科技有限公司"
+      ],
+      "title": "深圳农业基因组所助力广东农业“美味”新品种",
+      "source_url": "https://xczxhxzjlj.sz.gov.cn/gkmlpt/content/12/12223/post_12223574.html",
+      "source_domain": "xczxhxzjlj.sz.gov.cn",
+      "summary_excerpt": "据统计，基因组所在河源、韶关、巴马等地累计推广1300多亩“美味番茄”，产生近5000万元的经济效益，孵化的企业中农美蔬第一轮融资700万元。在韶关市始 ...",
+      "evidence_excerpt": "孵化的企业中农美蔬第一轮融资700万元",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "0afa6276-a314-4414-9bb3-ce53cd02bb52",
+      "company_id": "COMP-ab7c03a0aec0",
+      "canonical_name": "中科德诺微电子（深圳）",
+      "registered_name": "中科德诺微电子（深圳）有限公司",
+      "trusted_identity_terms": [
+        "中科德诺微电子（深圳）",
+        "中科德诺微电子（深圳）有限公司"
+      ],
+      "title": "中科德诺-智慧城市运营商",
+      "source_url": "https://www.zkdntech.com/",
+      "source_domain": "zkdntech.com",
+      "summary_excerpt": "中科德诺-智慧城市运营商",
+      "evidence_excerpt": "Copyright © 2019 中科德诺（深圳）科技有限公司",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "316443d7-e1ff-4764-bbde-2cafaf02f413",
+      "company_id": "COMP-b8e17afbc33a",
+      "canonical_name": "中赢房产营销（深圳）",
+      "registered_name": "中赢房产营销（深圳）有限公司",
+      "trusted_identity_terms": [
+        "中赢房产营销（深圳）",
+        "中赢房产营销（深圳）有限公司"
+      ],
+      "title": "中赢房地产（深圳）有限公司_百度百科",
+      "source_url": "https://baike.baidu.com/item/%E4%B8%AD%E8%B5%A2%E6%88%BF%E5%9C%B0%E4%BA%A7%EF%BC%88%E6%B7%B1%E5%9C%B3%EF%BC%89%E6%9C%89%E9%99%90%E5%85%AC%E5%8F%B8/53895163",
+      "source_domain": "baike.baidu.com",
+      "summary_excerpt": "中赢房地产（深圳）有限公司成立于2016年9月9日，法定代表人为许艳，总部位于深圳市福田区沙头街道深南大道6027号大庆大厦709。公司经营范围涵盖房地产经纪、投资咨询 ...",
+      "evidence_excerpt": "中赢房地产（深圳）有限公司成立于2016年9月9日，法定代表人为许艳，总部位于深圳市福田区沙头街道深南大道6027号大庆大厦709。公司经营范围涵盖房地产经纪、投资咨询 ...",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "cb6874b6-6d41-4d10-89f8-9c21bdbba346",
+      "company_id": "COMP-33ae11f81f43",
+      "canonical_name": "中集物联科技",
+      "registered_name": "中集物联科技有限公司",
+      "trusted_identity_terms": [
+        "中集物联科技",
+        "中集物联科技有限公司"
+      ],
+      "title": "中集物联官网——中集集团智慧物联新兴产业",
+      "source_url": "https://www.cimciot.com/",
+      "source_domain": "cimciot.com",
+      "summary_excerpt": "中集物联是中集集团布局智慧物联领域的战略新兴产业，以中集集团的高端装备制造能力、自动化和物联网技术、金融资本等优势资源，为客户提供智能停车、智慧出行、智慧养殖 ...",
+      "evidence_excerpt": "中集物联是中集集团布局智慧物联领域的战略新兴产业，以中集集团的高端装备制造能力、自动化和物联网技术、金融资本等优势资源，为客户提供智能停车、智慧出行、智慧养殖 ...",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "8e0c5a7f-9050-4484-92d7-afb15902d85d",
+      "company_id": "COMP-13d7272fd56f",
+      "canonical_name": "云岸物联网设备",
+      "registered_name": "深圳市云岸物联网设备有限公司",
+      "trusted_identity_terms": [
+        "云岸物联网设备",
+        "深圳市云岸物联网设备有限公司"
+      ],
+      "title": "云岸科技专注智能营业厅整体方案建设服务",
+      "source_url": "http://www.njyunan.com.cn/31.html",
+      "source_domain": "njyunan.com.cn",
+      "summary_excerpt": "【喜讯】云岸顺利通过CMMI5级认证. 2020-07-13 ; 云岸科技荣获2020南京市电力物联网数字化工程研究中心认定. 2021-01-06 ; 云岸科技喜提1600平物联网研发基地. 2020-01-09.",
+      "evidence_excerpt": "云岸科技荣获2020南京市电力物联网数字化工程研究中心认定. 2021-01-06 ; 云岸科技喜提1600平物联网研发基地. 2020-01-09.",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "fd045764-57df-47a0-aeb9-61d4d4f9a1be",
+      "company_id": "COMP-13d7272fd56f",
+      "canonical_name": "云岸物联网设备",
+      "registered_name": "深圳市云岸物联网设备有限公司",
+      "trusted_identity_terms": [
+        "云岸物联网设备",
+        "深圳市云岸物联网设备有限公司"
+      ],
+      "title": "江苏云岸物联网科技有限公司",
+      "source_url": "http://www.jsyunanwl.com/",
+      "source_domain": "jsyunanwl.com",
+      "summary_excerpt": "江苏云岸物联网科技有限公司是一家以研发为中心集设计、生产、销售、售后为一体的综合解决方案及建设提供商。座落在古都南京，是江北新区研创园扶持的高科技企业。企业注册 ...",
+      "evidence_excerpt": "江苏云岸物联网科技有限公司是一家以研发为中心集设计、生产、销售、售后为一体的综合解决方案及建设提供商。座落在古都南京，是江北新区研创园扶持的高科技企业。",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "a530fa7d-5cfd-4379-a975-fb01b7142b2b",
+      "company_id": "COMP-807c94f9d2fd",
+      "canonical_name": "云联半导体",
+      "registered_name": "深圳市云联半导体有限公司",
+      "trusted_identity_terms": [
+        "云联半导体",
+        "深圳市云联半导体有限公司"
+      ],
+      "title": "yunlink(云联)",
+      "source_url": "https://www.xcc.com/brand-detail/14571",
+      "source_domain": "xcc.com",
+      "summary_excerpt": "合肥云联半导体有限公司成立于2020年6月，是一家专注于研发音视频的传输、发送、接收、编解码以及接口等音视频处理芯片和高性能低功耗无线物联网系统级芯片的设计公司。",
+      "evidence_excerpt": "合肥云联半导体有限公司成立于2020年6月，是一家专注于研发音视频的传输、发送、接收、编解码以及接口等音视频处理芯片和高性能低功耗无线物联网系统级芯片的设计公司。",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "7dc7cffc-bd53-4a51-9791-7937bdb9bf03",
+      "company_id": "COMP-9b0a43c74d5e",
+      "canonical_name": "云芯智汇（深圳）科技",
+      "registered_name": "云芯智汇（深圳）科技有限公司",
+      "trusted_identity_terms": [
+        "云芯智汇（深圳）科技",
+        "云芯智汇（深圳）科技有限公司"
+      ],
+      "title": "云芯智汇| 项目信息-36氪 - 创投平台",
+      "source_url": "https://pitchhub.36kr.com/project/2174166943710469",
+      "source_domain": "pitchhub.36kr.com",
+      "summary_excerpt": "云芯智汇 | 项目信息-36氪 首页 首页 融资快报 融资快报 融资事件 融资事件 项目库 项目库 机构库 机构库 项目集 项目集 定向对接 定向对接 融通创新 融通创新 公司/项目名/投资机构/赛道 返回36氪 登录 云芯智汇 未披露 湖南省 2018年12月 智能科技研发平台 寻求报道 我要联系 编辑维护 先进制造 1386 项目信息 行业资讯 1386 编辑维护 我要联系 项目简介 云芯智汇是一个智能科技研发平台，公司致力于智能机器人的研发，人工智能理论与算法软件开发等业务。 融资历史 融资轮次 融资时间 融",
+      "evidence_excerpt": "云芯智汇是一个智能科技研发平台，公司致力于智能机器人的研发，人工智能理论与算法软件开发等业务。",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "10a7b77e-2de9-4ff0-b124-5501a534819a",
+      "company_id": "COMP-175c9e00c632",
+      "canonical_name": "众安信科（深圳）",
+      "registered_name": "众安信科（深圳）股份有限公司",
+      "trusted_identity_terms": [
+        "众安信科（深圳）",
+        "众安信科（深圳）股份有限公司"
+      ],
+      "title": "众安信科荣膺2025深圳市「专精特新」企业称号",
+      "source_url": "https://www.xhby.net/content/s69bb5a12e4b0a737d394d408.html",
+      "source_domain": "xhby.net",
+      "summary_excerpt": "众安信科深入金融、零售、科技等行业一线，将复杂的业务逻辑转化为AI可理解的代码。目前，公司已服务超过300家行业领军企业，在垂直领域的专业度已成为公司的 ...",
+      "evidence_excerpt": "众安信科深入金融、零售、科技等行业一线，将复杂的业务逻辑转化为AI可理解的代码。目前，公司已服务超过300家行业领军企业，在垂直领域的专业度已成为公司的 ...",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "7c739b73-d707-42a7-b39e-7cbe225fc164",
+      "company_id": "COMP-175c9e00c632",
+      "canonical_name": "众安信科（深圳）",
+      "registered_name": "众安信科（深圳）股份有限公司",
+      "trusted_identity_terms": [
+        "众安信科（深圳）",
+        "众安信科（深圳）股份有限公司"
+      ],
+      "title": "深圳国际金融博览会启幕！众安信科亮相展示企业级AI解决方案 - 中华网",
+      "source_url": "https://hea.china.com/articles/20260527/202605271879448.html",
+      "source_domain": "hea.china.com",
+      "summary_excerpt": "作为受邀参展的企业级AI解决方案提供商，众安信科现场重点展示了面向银行、保险、证券等金融行业的企业级AI解决方案，为金融客户提供贯穿信贷、财富、保险等 ...",
+      "evidence_excerpt": "作为受邀参展的企业级AI解决方案提供商，众安信科现场重点展示了面向银行、保险、证券等金融行业的企业级AI解决方案",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "6a4ca7e9-2b61-4cb9-bbe4-8eb16b3e19c2",
+      "company_id": "COMP-175c9e00c632",
+      "canonical_name": "众安信科（深圳）",
+      "registered_name": "众安信科（深圳）股份有限公司",
+      "trusted_identity_terms": [
+        "众安信科（深圳）",
+        "众安信科（深圳）股份有限公司"
+      ],
+      "title": "众安信科，递交IPO招股书，拟赴香港上市，工银国际 - 新浪财经",
+      "source_url": "https://finance.sina.com.cn/stock/relnews/hk/2026-01-06/doc-inhfiznp1397039.shtml",
+      "source_domain": "finance.sina.com.cn",
+      "summary_excerpt": "众安信科，成立于2021年，作为企业级AI解决方案提供商，专注于提供智能营销及智能运管解决方案，为客户创造实质成果，公司以「解决方案+ 运营」的整合模式为 ...",
+      "evidence_excerpt": "众安信科，成立于2021年，作为企业级AI解决方案提供商，专注于提供智能营销及智能运管解决方案",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "413898f7-233f-4176-aa63-efbed817a38b",
+      "company_id": "COMP-175c9e00c632",
+      "canonical_name": "众安信科（深圳）",
+      "registered_name": "众安信科（深圳）股份有限公司",
+      "trusted_identity_terms": [
+        "众安信科（深圳）",
+        "众安信科（深圳）股份有限公司"
+      ],
+      "title": "众安信科董事长王敏：拥抱AI - 新浪财经",
+      "source_url": "https://www.xincai.com/article/neukxcp2379190",
+      "source_domain": "xincai.com",
+      "summary_excerpt": "谈及众安信科的使命，王敏强调，众安信科致力于解决AI在保险行业应用的“最后一公里”难题。与纯AI厂商不同，众安信科凭借技术与行业know-how，精炼业务逻辑， ...",
+      "evidence_excerpt": "谈及众安信科的使命，王敏强调，众安信科致力于解决AI在保险行业应用的“最后一公里”难题。",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "ae584090-3bdc-4120-8b82-2b00975a9001",
+      "company_id": "COMP-e372939bd625",
+      "canonical_name": "偲百创（深圳）科技",
+      "registered_name": "偲百创（深圳）科技有限公司",
+      "trusted_identity_terms": [
+        "偲百创（深圳）科技",
+        "偲百创（深圳）科技有限公司"
+      ],
+      "title": "偲百创| 项目信息 - 创投平台",
+      "source_url": "https://pitchhub.36kr.com/project/2111159058189447",
+      "source_domain": "pitchhub.36kr.com",
+      "summary_excerpt": "偲百创成立于2020年3月，通过搭建国际化团队，专注于技术研发、产品设计和强耦合供应链的器件生产制造，为行业提供5G射频前端滤波器和高性价比射频一站式解决方案，拥有 ...",
+      "evidence_excerpt": "偲百创成立于2020年3月，通过搭建国际化团队，专注于技术研发、产品设计和强耦合供应链的器件生产制造，为行业提供5G射频前端滤波器和高性价比射频一站式解决方案",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "08dc50de-4d08-4059-811f-24d93dffc771",
+      "company_id": "COMP-e372939bd625",
+      "canonical_name": "偲百创（深圳）科技",
+      "registered_name": "偲百创（深圳）科技有限公司",
+      "trusted_identity_terms": [
+        "偲百创（深圳）科技",
+        "偲百创（深圳）科技有限公司"
+      ],
+      "title": "“偲百创”获过亿元Pre-A轮融资_资讯 - 观潮新消费",
+      "source_url": "https://www.tidesight.com/news/1365460.html",
+      "source_domain": "tidesight.com",
+      "summary_excerpt": "近日国产射频前端声学滤波器公司「偲百创」宣布完成过亿元人民币Pre-A轮融资，由国投创业领投，青松基金跟投，芯湃资本担任独家财务顾问。",
+      "evidence_excerpt": "近日国产射频前端声学滤波器公司「偲百创」宣布完成过亿元人民币Pre-A轮融资，由国投创业领投，青松基金跟投，芯湃资本担任独家财务顾问。",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "b935877e-6669-467c-bfb1-8ee2a9f92ac2",
+      "company_id": "COMP-0e7ea3a9e563",
+      "canonical_name": "兰普半导体（深圳）",
+      "registered_name": "兰普半导体（深圳）有限公司",
+      "trusted_identity_terms": [
+        "兰普半导体（深圳）",
+        "兰普半导体（深圳）有限公司"
+      ],
+      "title": "Runpeng Semiconductor (Shenzhen) Co., Ltd",
+      "source_url": "https://baike.baidu.com/en/item/Runpeng%20Semiconductor%20(Shenzhen)%20Co.,%20Ltd/41690",
+      "source_domain": "baike.baidu.com",
+      "summary_excerpt": "Runpeng Semiconductor (Shenzhen) Co., Ltd. was established on June 22, 2022, with a registered capital of 15 billion yuan (increased from 2.4 billion yuan ...",
+      "evidence_excerpt": "Runpeng Semiconductor (Shenzhen) Co., Ltd. was established on June 22, 2022, with a registered capital of 15 billion yuan (increased from 2.4 billion yuan ...",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "7ddd80fa-0f9f-4bb9-b72e-2b95a9b6f8da",
+      "company_id": "COMP-32ce4065c330",
+      "canonical_name": "前海七剑科技（深圳）",
+      "registered_name": "前海七剑科技（深圳）有限公司",
+      "trusted_identity_terms": [
+        "前海七剑科技（深圳）",
+        "前海七剑科技（深圳）有限公司"
+      ],
+      "title": "宝能汽车集团成立软件公司“前海七剑科技”是什么来头？ - 新浪汽车",
+      "source_url": "https://auto.sina.cn/news/zz/2020-11-18/detail-iiznezxs2412507.d.html",
+      "source_domain": "auto.sina.cn",
+      "summary_excerpt": "新公司总部位于深圳，未来将在北京、上海、成都、南京、武汉等地设立研发分布。据了解，预计至今年年底，前海七剑将组建近千人的高端软件人才队伍，2025年则 ...",
+      "evidence_excerpt": "新公司总部位于深圳，未来将在北京、上海、成都、南京、武汉等地设立研发分布。据了解，预计至今年年底，前海七剑将组建近千人的高端软件人才队伍，2025年则 ...",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "58e30d50-1827-4c5c-b836-20ce5a5d17b8",
+      "company_id": "COMP-061cfc150c10",
+      "canonical_name": "北一半导体科技（广东）",
+      "registered_name": "北一半导体科技（广东）有限公司",
+      "trusted_identity_terms": [
+        "北一半导体科技（广东）",
+        "北一半导体科技（广东）有限公司"
+      ],
+      "title": "“北一”的“芯”贡献 - 省工业和信息化厅- 黑龙江省人民政府",
+      "source_url": "https://gxt.hlj.gov.cn/gxt/c106968/202208/c00_31272398.shtml",
+      "source_domain": "gxt.hlj.gov.cn",
+      "summary_excerpt": "北一半导体从落户到如今蓬勃发展，正是缘于返乡创业的公司董事长金明星。 初见金明星，外表朴实，有着东北人自带的语言喜感。说起返乡创业，他感触最多的两个 ...",
+      "evidence_excerpt": "北一半导体从落户到如今蓬勃发展，正是缘于返乡创业的公司董事长金明星。",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "66125b4d-5f08-439d-9f31-c09e2f54ee0a",
+      "company_id": "COMP-061cfc150c10",
+      "canonical_name": "北一半导体科技（广东）",
+      "registered_name": "北一半导体科技（广东）有限公司",
+      "trusted_identity_terms": [
+        "北一半导体科技（广东）",
+        "北一半导体科技（广东）有限公司"
+      ],
+      "title": "半导体功率器件研发企业「北一半导体」完成超1.5亿元B轮融资",
+      "source_url": "https://www.ab-sm.com/a/33404",
+      "source_domain": "ab-sm.com",
+      "summary_excerpt": "北一成立于2017年，是一家专注于半导体功率器件研发的高新技术企业，主打产品为IGBT模组及芯片等系列产品，并在SiC模组研究上取得积极进展。公司推出的IGBT模组产品目前已在头 ...",
+      "evidence_excerpt": "北一成立于2017年，是一家专注于半导体功率器件研发的高新技术企业，主打产品为IGBT模组及芯片等系列产品，并在SiC模组研究上取得积极进展。公司推出的IGBT模组产品目前已在头 ...",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "b0c30af8-8b45-4784-a2e5-ae2ffc1bd24e",
+      "company_id": "COMP-e636e2b24af2",
+      "canonical_name": "华为精密制造",
+      "registered_name": "华为精密制造有限公司",
+      "trusted_identity_terms": [
+        "华为精密制造",
+        "华为精密制造有限公司"
+      ],
+      "title": "华为成立精密制造公司！ - 2026全球半导体产业（重庆）博览会",
+      "source_url": "http://www.gsiecq.com/index.php?m=home&c=View&a=index&aid=1344&lang=cn%27",
+      "source_domain": "gsiecq.com",
+      "summary_excerpt": "12月28日，最新消息显示，华为成立精密制造有限公司，注册资本6亿元人民币，经营范围包含：光通信设备制造；光电子器件制造；电子元器件制造；半导体分立器件制造等。",
+      "evidence_excerpt": "华为成立精密制造有限公司，注册资本6亿元人民币，经营范围包含：光通信设备制造；光电子器件制造；电子元器件制造；半导体分立器件制造等。",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "e779dd06-ba07-41fb-88b7-e2b254bd2702",
+      "company_id": "COMP-d9434174e97a",
+      "canonical_name": "华仁智信技术",
+      "registered_name": "深圳市华仁智信技术有限公司",
+      "trusted_identity_terms": [
+        "华仁智信技术",
+        "深圳市华仁智信技术有限公司"
+      ],
+      "title": "智能化产业信用服务|华仁智信官网",
+      "source_url": "https://www.credithuaren.com/xinyongzixun/",
+      "source_domain": "credithuaren.com",
+      "summary_excerpt": "产品. 华仁智信是以企业合规经营为基础，结合大数据、人工智能为客户提供信用服务和产品解决方案的智能化产业信用服务商。 信用咨询 · 必可云 · 智能服务 ...",
+      "evidence_excerpt": "华仁智信是以企业合规经营为基础，结合大数据、人工智能为客户提供信用服务和产品解决方案的智能化产业信用服务商。",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "207693f3-be20-4f77-af1f-853c1f5e1f81",
+      "company_id": "COMP-d9434174e97a",
+      "canonical_name": "华仁智信技术",
+      "registered_name": "深圳市华仁智信技术有限公司",
+      "trusted_identity_terms": [
+        "华仁智信技术",
+        "深圳市华仁智信技术有限公司"
+      ],
+      "title": "新材料技术|行业|华仁智信官网",
+      "source_url": "https://www.credithuaren.com/xincailiao/",
+      "source_domain": "credithuaren.com",
+      "summary_excerpt": "新材料技术 ... 基于企业合规服务和碳核查服务，帮助企业建立并完善新材料行业相关标准体系，. 促进新材料技术产业发展和低碳模式的落地实践。",
+      "evidence_excerpt": "新材料技术 ... 基于企业合规服务和碳核查服务，帮助企业建立并完善新材料行业相关标准体系，. 促进新材料技术产业发展和低碳模式的落地实践。",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "abcdafd7-b7d2-4a88-961d-e769baace41b",
+      "company_id": "COMP-d9434174e97a",
+      "canonical_name": "华仁智信技术",
+      "registered_name": "深圳市华仁智信技术有限公司",
+      "trusted_identity_terms": [
+        "华仁智信技术",
+        "深圳市华仁智信技术有限公司"
+      ],
+      "title": "新一代信息技术|行业|华仁智信官网",
+      "source_url": "https://www.credithuaren.com/xinyidaixinxijishu1/",
+      "source_domain": "credithuaren.com",
+      "summary_excerpt": "华仁智信产业信用模型，加快新一代信息技术行业数据处理能力、保证行业数据安全、企业合规经营;SaaS软件提升软件服务、网络增值服务等信息服务能力。",
+      "evidence_excerpt": "华仁智信产业信用模型，加快新一代信息技术行业数据处理能力、保证行业数据安全、企业合规经营;SaaS软件提升软件服务、网络增值服务等信息服务能力。",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "a358d9ff-b202-40b6-9ba1-ffeb1fea95e0",
+      "company_id": "COMP-d9434174e97a",
+      "canonical_name": "华仁智信技术",
+      "registered_name": "深圳市华仁智信技术有限公司",
+      "trusted_identity_terms": [
+        "华仁智信技术",
+        "深圳市华仁智信技术有限公司"
+      ],
+      "title": "华仁智信智能化产业信用服务商",
+      "source_url": "https://www.credithuaren.com/",
+      "source_domain": "credithuaren.com",
+      "summary_excerpt": "华仁智信基于深刻与丰富的产业洞见，以绿色合规经营为基础，结合大数据、人工智能等技术，为企业提供职业>信用、AEO达标、企业合规、企业碳管理系统和基于四个企业关键 ...",
+      "evidence_excerpt": "华仁智信基于深刻与丰富的产业洞见，以绿色合规经营为基础，结合大数据、人工智能等技术，为企业提供职业>信用、AEO达标、企业合规、企业碳管理系统和基于四个企业关键 ...",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "bea873b1-0a94-4433-83ad-596463df8376",
+      "company_id": "COMP-d9434174e97a",
+      "canonical_name": "华仁智信技术",
+      "registered_name": "深圳市华仁智信技术有限公司",
+      "trusted_identity_terms": [
+        "华仁智信技术",
+        "深圳市华仁智信技术有限公司"
+      ],
+      "title": "关于华仁|华仁智信官网",
+      "source_url": "https://www.credithuaren.com/guanyuhuaren17/",
+      "source_domain": "credithuaren.com",
+      "summary_excerpt": "华仁智信基于深刻与丰富的产业洞见，以绿色合规经营为基础，结合大数据、人工智能等技术，为企业提供职业信用、AEO达标、企业合规、企业碳管理系统和基于四个企业关键 ...",
+      "evidence_excerpt": "华仁智信基于深刻与丰富的产业洞见，以绿色合规经营为基础，结合大数据、人工智能等技术，为企业提供职业信用、AEO达标、企业合规、企业碳管理系统和基于四个企业关键 ...",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "45451c65-2564-4777-99c1-3f4547e41c4d",
+      "company_id": "COMP-022ba3545989",
+      "canonical_name": "华强电气技术",
+      "registered_name": "深圳市华强电气技术有限公司",
+      "trusted_identity_terms": [
+        "华强电气技术",
+        "深圳市华强电气技术有限公司"
+      ],
+      "title": "华强电气| 项目信息 - 创投平台",
+      "source_url": "https://pitchhub.36kr.com/project/2073772499419395",
+      "source_domain": "pitchhub.36kr.com",
+      "summary_excerpt": "湖南华强电气股份有限公司主要从事新能源汽车空调、常规汽车变频空调、轨道交通空调和车用空调压缩机的研发、生产、销售及售后服务。公司主要产品分为三大系列：汽车 ...",
+      "evidence_excerpt": "湖南华强电气股份有限公司主要从事新能源汽车空调、常规汽车变频空调、轨道交通空调和车用空调压缩机的研发、生产、销售及售后服务。",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "e32e0da8-5613-461a-9753-34a971ea4afb",
+      "company_id": "COMP-022ba3545989",
+      "canonical_name": "华强电气技术",
+      "registered_name": "深圳市华强电气技术有限公司",
+      "trusted_identity_terms": [
+        "华强电气技术",
+        "深圳市华强电气技术有限公司"
+      ],
+      "title": "湖南华强电气有限公司_百度百科",
+      "source_url": "https://baike.baidu.com/item/%E6%B9%96%E5%8D%97%E5%8D%8E%E5%BC%BA%E7%94%B5%E6%B0%94%E6%9C%89%E9%99%90%E5%85%AC%E5%8F%B8/18198818",
+      "source_domain": "baike.baidu.com",
+      "summary_excerpt": "湖南华强电气股份有限公司（曾用名：湖南华强电气有限公司）是一家成立于2006年11月23日，位于长沙高新开发区麓谷基地麓松路669号，从事研发、生产、销售新能源客车空调、轨道 ...",
+      "evidence_excerpt": "湖南华强电气股份有限公司（曾用名：湖南华强电气有限公司）是一家成立于2006年11月23日，位于长沙高新开发区麓谷基地麓松路669号，从事研发、生产、销售新能源客车空调、轨道 ...",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "4971f728-dd96-4ca2-9027-83c64fcf7fa2",
+      "company_id": "COMP-022ba3545989",
+      "canonical_name": "华强电气技术",
+      "registered_name": "深圳市华强电气技术有限公司",
+      "trusted_identity_terms": [
+        "华强电气技术",
+        "深圳市华强电气技术有限公司"
+      ],
+      "title": "湖南华强电气股份有限公司-新能源客车空调及轨道交通空调系统专业 ...",
+      "source_url": "http://www.vaqoung.com/",
+      "source_domain": "vaqoung.com",
+      "summary_excerpt": "湖南华强电气股份有限公司创立于2006年，是国内首家新能源客车空调、电动大巴空调、地铁空调、磁悬浮列车空调、车用空调压缩机专业制造商、服务商。",
+      "evidence_excerpt": "湖南华强电气股份有限公司创立于2006年，是国内首家新能源客车空调、电动大巴空调、地铁空调、磁悬浮列车空调、车用空调压缩机专业制造商、服务商。",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "06e0243a-e56b-4a33-be83-f199c38dcc21",
+      "company_id": "COMP-022ba3545989",
+      "canonical_name": "华强电气技术",
+      "registered_name": "深圳市华强电气技术有限公司",
+      "trusted_identity_terms": [
+        "华强电气技术",
+        "深圳市华强电气技术有限公司"
+      ],
+      "title": "技术研革 - 湖南华强电气股份有限公司",
+      "source_url": "http://www.vaqoung.com/html/hxys/revolution/",
+      "source_domain": "vaqoung.com",
+      "summary_excerpt": "公司与谷轮公司达成战略合作协议，合作研发喷气增焓低温强热技术，解决了-25℃低温制热问题，并实现了系统应用。 公司成为湖南省十一五规划“电动汽车及其关键零部件重大专项” ...",
+      "evidence_excerpt": "公司与谷轮公司达成战略合作协议，合作研发喷气增焓低温强热技术，解决了-25℃低温制热问题，并实现了系统应用。 公司成为湖南省十一五规划“电动汽车及其关键零部件重大专项” ...",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "ccb21d39-75e8-4922-a05d-586324e50731",
+      "company_id": "COMP-0dd6b7b967cd",
+      "canonical_name": "南科佳安机器人科技",
+      "registered_name": "深圳市南科佳安机器人科技有限公司",
+      "trusted_identity_terms": [
+        "南科佳安机器人科技",
+        "深圳市南科佳安机器人科技有限公司"
+      ],
+      "title": "日照：南科佳安以核心技术领跑工业机器人领域 - 网易",
+      "source_url": "https://www.163.com/dy/article/KTPHP7OF0514R9KE.html",
+      "source_domain": "163.com",
+      "summary_excerpt": "其产品广泛应用于航天、3C等多个领域，服务众多头部客户，借力科技创新，助力日照东港工业从“制造”向“智造”加速转型，为区域产业高质量发展注入强劲动能。",
+      "evidence_excerpt": "其产品广泛应用于航天、3C等多个领域，服务众多头部客户，借力科技创新，助力日照东港工业从“制造”向“智造”加速转型，为区域产业高质量发展注入强劲动能。",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "69c76a9c-d6f7-4485-b3bb-9a256bf0a5d8",
+      "company_id": "COMP-0dd6b7b967cd",
+      "canonical_name": "南科佳安机器人科技",
+      "registered_name": "深圳市南科佳安机器人科技有限公司",
+      "trusted_identity_terms": [
+        "南科佳安机器人科技",
+        "深圳市南科佳安机器人科技有限公司"
+      ],
+      "title": "佳安智能机器人【官网】-工业具身;移动机器人;核心部件",
+      "source_url": "https://kaanh.cn/",
+      "source_domain": "kaanh.cn",
+      "summary_excerpt": "佳安智能是一家专注于机器人智能磨抛工作站及核心部件研发、生产、销售的高新技术企业。通过自研机器人力控系统、智能磨抛软件和持续积累的工艺数据库，已经解决含叶片 ...",
+      "evidence_excerpt": "佳安智能是一家专注于机器人智能磨抛工作站及核心部件研发、生产、销售的高新技术企业。",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "70ace74d-9f49-4ac2-9a3b-20175ae93db2",
+      "company_id": "COMP-0dd6b7b967cd",
+      "canonical_name": "南科佳安机器人科技",
+      "registered_name": "深圳市南科佳安机器人科技有限公司",
+      "trusted_identity_terms": [
+        "南科佳安机器人科技",
+        "深圳市南科佳安机器人科技有限公司"
+      ],
+      "title": "佳安智能完成A2轮融资，加速工业具身智能生态布局 - 新浪财经",
+      "source_url": "https://cj.sina.cn/articles/view/1999913061/7734406500101acbm?froms=ggmp&vt=4",
+      "source_domain": "cj.sina.cn",
+      "summary_excerpt": "据了解，佳安智能依托自研“控制-感知-执行-软件”四大核心技术，产品已成功落地磨抛工作站、复合机器人、类人形机器人三大商业化场景解决方案，构建一体化智能 ...",
+      "evidence_excerpt": "佳安智能依托自研“控制-感知-执行-软件”四大核心技术，产品已成功落地磨抛工作站、复合机器人、类人形机器人三大商业化场景解决方案",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "34e7e240-d5ed-4403-8bbb-88d2a8f0b539",
+      "company_id": "COMP-5584b3cf41d2",
+      "canonical_name": "善奇文化传播",
+      "registered_name": "深圳市善奇文化传播有限公司",
+      "trusted_identity_terms": [
+        "善奇文化传播",
+        "深圳市善奇文化传播有限公司"
+      ],
+      "title": "[PDF] 拟发放自主创业补贴（创业场租补贴）信息公示名单",
+      "source_url": "https://www.lg.gov.cn/attachment/1/1243/1243272/10415851.pdf",
+      "source_domain": "lg.gov.cn",
+      "summary_excerpt": "",
+      "evidence_excerpt": "创业单位名称. 场租补贴.",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "f11b2d4c-cb14-4283-972d-a060413cba04",
+      "company_id": "COMP-467bb9e6ed99",
+      "canonical_name": "嘉值科技",
+      "registered_name": "深圳市嘉值科技有限公司",
+      "trusted_identity_terms": [
+        "嘉值科技",
+        "深圳市嘉值科技有限公司"
+      ],
+      "title": "技术外包- 上海嘉值信息科技有限公司",
+      "source_url": "http://www.cloud-open.cn/",
+      "source_domain": "cloud-open.cn",
+      "summary_excerpt": "上海嘉值信息科技有限公司成立于2009年，是上海市高新技术企业，上海市创新行业龙头企业。11年的沉淀与积累，始终专注于为客户提供全生命周期的运维服务业务和解决方案， ...",
+      "evidence_excerpt": "上海嘉值信息科技有限公司成立于2009年，是上海市高新技术企业，上海市创新行业龙头企业。11年的沉淀与积累，始终专注于为客户提供全生命周期的运维服务业务和解决方案",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "e3d874a8-6ec0-413b-aa47-92cf66ab874c",
+      "company_id": "COMP-467bb9e6ed99",
+      "canonical_name": "嘉值科技",
+      "registered_name": "深圳市嘉值科技有限公司",
+      "trusted_identity_terms": [
+        "嘉值科技",
+        "深圳市嘉值科技有限公司"
+      ],
+      "title": "嘉值科技股份有限公司",
+      "source_url": "http://www.elitekcorp.com/",
+      "source_domain": "elitekcorp.com",
+      "summary_excerpt": "嘉值科技股份有限公司 Toggle navigation 認識嘉值 公司簡介 公司沿革 經營品牌 產品介紹 積層陶瓷電容 晶片電阻 電感 電解電容 無線元件 導線電阻 產品應用 消費電子 電腦周邊 電信通訊 工業電子 替代能源 車用電子 聯絡我們 繁體中文 简体中文 English 產品專區 產品應用 嘉值科技股份有限公司 Elitek Co.,Ltd 886 229121118 886 229120036 Ryan_huang@elitekcorp.com rachel@elitekcorp.com 版權所有© ",
+      "evidence_excerpt": "嘉值科技股份有限公司...產品介紹 積層陶瓷電容 晶片電阻 電感 電解電容 無線元件 導線電阻...產品應用 消費電子 電腦周邊 電信通訊 工業電子 替代能源 車用電子",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "387cd97b-0596-483c-a0c1-0dc5160ea254",
+      "company_id": "COMP-467bb9e6ed99",
+      "canonical_name": "嘉值科技",
+      "registered_name": "深圳市嘉值科技有限公司",
+      "trusted_identity_terms": [
+        "嘉值科技",
+        "深圳市嘉值科技有限公司"
+      ],
+      "title": "中国电信上海公司合作伙伴引入公示（2015年——2018年）",
+      "source_url": "http://www.shtel.com.cn/shgg/dwhz/yrgs/17459.html",
+      "source_domain": "shtel.com.cn",
+      "summary_excerpt": "上海嘉值信息科技有限公司. 2017年08月01日引入合作伙伴：. 上海海势信息技术有限 ... 深圳市傲天科技股份有限公司. 浙江微能科技有限公司. 2016年03月23日引入合作 ...",
+      "evidence_excerpt": "上海嘉值信息科技有限公司. 2017年08月01日引入合作伙伴：",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "68efef7d-f68a-4edf-9015-b44f5379a167",
+      "company_id": "COMP-09b40e9b3e92",
+      "canonical_name": "奇普乐芯片技术",
+      "registered_name": "深圳市奇普乐芯片技术有限公司",
+      "trusted_identity_terms": [
+        "奇普乐芯片技术",
+        "深圳市奇普乐芯片技术有限公司"
+      ],
+      "title": "奇普乐| 项目信息-36氪 - 创投平台",
+      "source_url": "https://pitchhub.36kr.com/project/1958597544449030",
+      "source_domain": "pitchhub.36kr.com",
+      "summary_excerpt": "奇普乐所掌握的Chiplet技术，可以帮助任何有芯片需求的企业和个人，来解决“造芯难”的问题。奇普乐™利用拥有自主知识产权的可编程硅基板，可以轻松将市面上几乎所有的主流 ...",
+      "evidence_excerpt": "奇普乐所掌握的Chiplet技术，可以帮助任何有芯片需求的企业和个人，来解决“造芯难”的问题。奇普乐™利用拥有自主知识产权的可编程硅基板，可以轻松将市面上几乎所有的主流 ...",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "faf2d47d-f939-446f-b8c6-b54935e14902",
+      "company_id": "COMP-09b40e9b3e92",
+      "canonical_name": "奇普乐芯片技术",
+      "registered_name": "深圳市奇普乐芯片技术有限公司",
+      "trusted_identity_terms": [
+        "奇普乐芯片技术",
+        "深圳市奇普乐芯片技术有限公司"
+      ],
+      "title": "SiP China 2023 深圳站| 奇普乐邀您一同探索Chiplet应用发展！ - 知乎",
+      "source_url": "https://zhuanlan.zhihu.com/p/650366419",
+      "source_domain": "zhuanlan.zhihu.com",
+      "summary_excerpt": "",
+      "evidence_excerpt": "奇普乐邀您一同探索Chiplet应用发展",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "8736d64b-565d-4bfa-b9d2-c309b4d290d6",
+      "company_id": "COMP-10047ff88d61",
+      "canonical_name": "奇朵智能设备",
+      "registered_name": "深圳市奇朵智能设备有限公司",
+      "trusted_identity_terms": [
+        "奇朵智能设备",
+        "深圳市奇朵智能设备有限公司"
+      ],
+      "title": "京东与儿童智能硬件新锐品牌奇朵智能KidoAI达成合作全链路 ... - 商业",
+      "source_url": "https://biz.ifeng.com/c/8rXiri2l8Gf",
+      "source_domain": "biz.ifeng.com",
+      "summary_excerpt": "奇朵智能KidoAI是一家以“IP+AI+硬件”为核心模式的儿童数字生活创新企业,致力于成为全球儿童AI时代的数字生活创领者。在人工智能浪潮推动下,其通过自主研发智能硬件产品,为 ...",
+      "evidence_excerpt": "奇朵智能KidoAI是一家以“IP+AI+硬件”为核心模式的儿童数字生活创新企业,致力于成为全球儿童AI时代的数字生活创领者。在人工智能浪潮推动下,其通过自主研发智能硬件产品,为 ...",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "36d44819-16db-4b33-bbc3-89bd29ca4976",
+      "company_id": "COMP-10047ff88d61",
+      "canonical_name": "奇朵智能设备",
+      "registered_name": "深圳市奇朵智能设备有限公司",
+      "trusted_identity_terms": [
+        "奇朵智能设备",
+        "深圳市奇朵智能设备有限公司"
+      ],
+      "title": "奇朵智能KidoAI 发布「十万个为什么」AI 儿童探索相机 - 多鲸资本",
+      "source_url": "http://www.djcapital.net/nd.jsp?id=1385&groupId=-1",
+      "source_domain": "djcapital.net",
+      "summary_excerpt": "奇朵智能（KidoAI）成立于2025年，是一家以“IP+AI+硬件”为核心模式的儿童数字生活创新企业，致力于成为全球儿童AI时代的数字生活创领者。公司通过自主研发的 ...",
+      "evidence_excerpt": "奇朵智能（KidoAI）成立于2025年，是一家以“IP+AI+硬件”为核心模式的儿童数字生活创新企业...",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "d5a4fc32-f87c-4a08-9a68-ca5a9425a8bb",
+      "company_id": "COMP-10047ff88d61",
+      "canonical_name": "奇朵智能设备",
+      "registered_name": "深圳市奇朵智能设备有限公司",
+      "trusted_identity_terms": [
+        "奇朵智能设备",
+        "深圳市奇朵智能设备有限公司"
+      ],
+      "title": "从拍学机的混战中，拆出一个认知相机新物种 - 知乎专栏",
+      "source_url": "https://zhuanlan.zhihu.com/p/2026052579272958419",
+      "source_domain": "zhuanlan.zhihu.com",
+      "summary_excerpt": "儿童AI 硬件新晋玩家奇朵（KidoAI）在去年完成数千万融资后，近期以全新品牌名「聪明口袋」亮相。 其首款联名《十万个为什么》的AI 科教拍学机上线即签约 ...",
+      "evidence_excerpt": "儿童AI 硬件新晋玩家奇朵（KidoAI）在去年完成数千万融资后，近期以全新品牌名「聪明口袋」亮相。 其首款联名《十万个为什么》的AI 科教拍学机上线即签约 ...",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "5a6d31a8-f15b-48f4-8a38-58b64808ccc9",
+      "company_id": "COMP-10047ff88d61",
+      "canonical_name": "奇朵智能设备",
+      "registered_name": "深圳市奇朵智能设备有限公司",
+      "trusted_identity_terms": [
+        "奇朵智能设备",
+        "深圳市奇朵智能设备有限公司"
+      ],
+      "title": "一款好的AI Native 硬件，硬件只是脚手架，真正壁垒一定是Agent",
+      "source_url": "https://zhuanlan.zhihu.com/p/2027384746913612912",
+      "source_domain": "zhuanlan.zhihu.com",
+      "summary_excerpt": "一款好的 AI Native 硬件，硬件只是脚手架，真正壁垒一定是 Agent - 知乎 关注 推荐 热榜 专栏 圈子 New 付费咨询 知学堂 ​ 直答 切换模式 登录/注册 一款好的 AI Native 硬件，硬件只是脚手架，真正壁垒一定是 Agent Founder Park ​ 已认证机构号 同样是做儿童 AI 硬件，奇朵的切入点有些不一样。 他们不做学习机，不做故事机，也不做陪伴玩具。他们做了一台让孩子拿着走出去、对着真实世界提问的相机。 背后的逻辑来自 皮亚杰 的建构主义，孩子的认知不是灌进去的，是在与",
+      "evidence_excerpt": "同样是做儿童AI 硬件，奇朵的切入点有些不一样。 他们不做学习机，不做故事机，也不做陪伴玩具。他们做了一台让孩子拿着走出去、对着真实世界提问的相机 ... 创始人黄勇在儿童硬件行业做了十多年 ... 奇朵团队主要有两个特点 ...",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "ee230109-fda5-4813-93fa-2687307d1b85",
+      "company_id": "COMP-10047ff88d61",
+      "canonical_name": "奇朵智能设备",
+      "registered_name": "深圳市奇朵智能设备有限公司",
+      "trusted_identity_terms": [
+        "奇朵智能设备",
+        "深圳市奇朵智能设备有限公司"
+      ],
+      "title": "教育硬件老兵再创业，推出“十万个为什么AI儿童探索相机” - 多知网",
+      "source_url": "http://www.duozhi.com/industry/insight/2025111517895.shtml",
+      "source_domain": "duozhi.com",
+      "summary_excerpt": "据介绍，奇朵KidoAI成立于2025年，是一家以“IP+AI+硬件”为核心模式的儿童数字生活创新企业，致力于成为全球儿童AI时代的数字生活创领者。 据团队透露，成立仅 ...",
+      "evidence_excerpt": "奇朵KidoAI成立于2025年，是一家以“IP+AI+硬件”为核心模式的儿童数字生活创新企业",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "c5b760ba-9eb5-4582-b99b-bff5a4e3ed8f",
+      "company_id": "COMP-10047ff88d61",
+      "canonical_name": "奇朵智能设备",
+      "registered_name": "深圳市奇朵智能设备有限公司",
+      "trusted_identity_terms": [
+        "奇朵智能设备",
+        "深圳市奇朵智能设备有限公司"
+      ],
+      "title": "教育硬件老兵再创业，推出“十万个为什么AI儿童探索相机”获数千万元 ...",
+      "source_url": "https://m.10100.com/article/42777506",
+      "source_domain": "m.10100.com",
+      "summary_excerpt": "奇朵智能探索的是一条 “IP+AI+硬件”三位一体的产品路径。在公司看来，他们不做内容的创造者，而是通过技术与硬件的融合，重塑经典内容的传递方式。 黄勇形象地比喻道 ...",
+      "evidence_excerpt": "奇朵智能探索的是一条 “IP+AI+硬件”三位一体的产品路径。",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "cbedb17c-6ce3-4238-96dc-759de1c37dc6",
+      "company_id": "COMP-10047ff88d61",
+      "canonical_name": "奇朵智能设备",
+      "registered_name": "深圳市奇朵智能设备有限公司",
+      "trusted_identity_terms": [
+        "奇朵智能设备",
+        "深圳市奇朵智能设备有限公司"
+      ],
+      "title": "顺为和启赋投了一家儿童硬件教育公司，要用AI重做经典图书IP - 36氪",
+      "source_url": "https://m.36kr.com/p/3552342510861440",
+      "source_domain": "m.36kr.com",
+      "summary_excerpt": "企业定位：「奇朵智能KidoAI」是一家以“IP+AI+硬件”为核心模式的儿童数字生活创新企业，通过自主研发的智能硬件产品，为儿童成长与家庭生活，提供集认知启蒙、 ...",
+      "evidence_excerpt": "企业定位：「奇朵智能KidoAI」是一家以“IP+AI+硬件”为核心模式的儿童数字生活创新企业，通过自主研发的智能硬件产品，为儿童成长与家庭生活，提供集认知启蒙、 ...",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "571ac7a0-d822-484f-aed5-6c6711af6d3b",
+      "company_id": "COMP-10047ff88d61",
+      "canonical_name": "奇朵智能设备",
+      "registered_name": "深圳市奇朵智能设备有限公司",
+      "trusted_identity_terms": [
+        "奇朵智能设备",
+        "深圳市奇朵智能设备有限公司"
+      ],
+      "title": "奇朵智能获微光创投、顺为资本天使轮投资 - 亿欧",
+      "source_url": "https://www.iyiou.com/data/202510231112346",
+      "source_domain": "iyiou.com",
+      "summary_excerpt": "奇朵智能成立于2025年7月28日，是一家专注于可穿戴智能设备制造的企业。公司致力于可穿戴智能设备产品的研发与市场拓展，产品涵盖健康监测、运动追踪等多个 ...",
+      "evidence_excerpt": "奇朵智能成立于2025年7月28日，是一家专注于可穿戴智能设备制造的企业。公司致力于可穿戴智能设备产品的研发与市场拓展，产品涵盖健康监测、运动追踪等多个 ...",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "a4cd0d7c-4c27-4c13-b072-3a7992f3cae4",
+      "company_id": "COMP-2919d3af3d1f",
+      "canonical_name": "安创生态发展（深圳）",
+      "registered_name": "安创生态发展（深圳）有限公司",
+      "trusted_identity_terms": [
+        "安创生态发展（深圳）",
+        "安创生态发展（深圳）有限公司"
+      ],
+      "title": "安创生态科技（深圳）有限公司 - 企查查",
+      "source_url": "https://m.qcc.com/firm/b5df162b4effc9b709afbd4dbf9880f4.html",
+      "source_domain": "m.qcc.com",
+      "summary_excerpt": "安创生态科技（深圳）有限公司成立于2019-03-25，法定代表人为金勇斌，注册资本为1898.1633万元，统一社会信用代码为91440300MA5FJ69G8A，企业注册地址位于深圳市前海深港 ...",
+      "evidence_excerpt": "安创生态科技（深圳）有限公司成立于2019-03-25，法定代表人为金勇斌，注册资本为1898.1633万元，统一社会信用代码为91440300MA5FJ69G8A，企业注册地址位于深圳市前海深港 ...",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "02063182-466c-4f66-82d9-cbfec4042cc6",
+      "company_id": "COMP-1998f9b7f2ea",
+      "canonical_name": "安杰信息科技",
+      "registered_name": "深圳市安杰信息科技有限公司",
+      "trusted_identity_terms": [
+        "安杰信息科技",
+        "深圳市安杰信息科技有限公司"
+      ],
+      "title": "安杰信_公司介绍_新三板_新浪财经",
+      "source_url": "http://stock.finance.sina.com.cn/thirdmarket/view/OTC_gsjs.php?symbol=834926",
+      "source_domain": "stock.finance.sina.com.cn",
+      "summary_excerpt": "四川安杰信科技股份有限公司. 公司简称, 安杰信. 成立日期, 安杰信. 主营业务, 信息系统集成服务。 注册资本(万), 1933.20. 公司地址, 四川省成都市高新区天府大道北段1700 ...",
+      "evidence_excerpt": "四川安杰信科技股份有限公司. 公司简称, 安杰信. 成立日期, 安杰信. 主营业务, 信息系统集成服务。 注册资本(万), 1933.20. 公司地址, 四川省成都市高新区天府大道北段1700 ...",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "f60825b4-fada-455f-aaac-04f4dd0ee735",
+      "company_id": "COMP-32b3c0a83596",
+      "canonical_name": "小质科技（深圳）",
+      "registered_name": "小质科技（深圳）有限公司",
+      "trusted_identity_terms": [
+        "小质科技（深圳）",
+        "小质科技（深圳）有限公司"
+      ],
+      "title": "深圳市小质信息科技有限公司 - 天眼查",
+      "source_url": "https://www.tianyancha.com/company/5159834735",
+      "source_domain": "tianyancha.com",
+      "summary_excerpt": "简介：深圳市小质信息科技有限公司，成立于2021年，位于广东省深圳市，是一家以从事软件和信息技术服务业为主的企业。企业注册资本1280万美元，实缴资本1180万美元。 更多.",
+      "evidence_excerpt": "深圳市小质信息科技有限公司，成立于2021年，位于广东省深圳市，是一家以从事软件和信息技术服务业为主的企业。企业注册资本1280万美元，实缴资本1180万美元。",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "ee0bcf0c-ba80-4658-8f15-f9c7d372152f",
+      "company_id": "COMP-32b3c0a83596",
+      "canonical_name": "小质科技（深圳）",
+      "registered_name": "小质科技（深圳）有限公司",
+      "trusted_identity_terms": [
+        "小质科技（深圳）",
+        "小质科技（深圳）有限公司"
+      ],
+      "title": "从Facebook 到阿里再到小质科技，王绍翾携ProtonBase 在全球 ...",
+      "source_url": "https://cloud.tencent.com/developer/article/2531259",
+      "source_domain": "cloud.tencent.com",
+      "summary_excerpt": "小质科技ProtonBase获1亿美金融资，打造多模数据库，实现实时HTAP、流批一体及湖仓一体，助力金融、车联网等场景实现秒级决策，引领AI时代数据管理变革。",
+      "evidence_excerpt": "小质科技ProtonBase获1亿美金融资，打造多模数据库，实现实时HTAP、流批一体及湖仓一体，助力金融、车联网等场景实现秒级决策，引领AI时代数据管理变革。",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "d728d6dc-a665-4ea9-b227-1003a50a920f",
+      "company_id": "COMP-0696d91754ed",
+      "canonical_name": "帕西尼感知科技（深圳）",
+      "registered_name": "帕西尼感知科技（深圳）有限公司",
+      "trusted_identity_terms": [
+        "帕西尼感知科技（深圳）",
+        "帕西尼感知科技（深圳）有限公司"
+      ],
+      "title": "帕西尼感知科技 - 领英",
+      "source_url": "https://cn.linkedin.com/company/paxini-tech",
+      "source_domain": "cn.linkedin.com",
+      "summary_excerpt": "关于我们. 公司致力于开发全场景应用触觉数字化与触感技术以及自适应机器人，为国内首家落地多维度多阵列触觉传感器公司。",
+      "evidence_excerpt": "公司致力于开发全场景应用触觉数字化与触感技术以及自适应机器人，为国内首家落地多维度多阵列触觉传感器公司。",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "ed44b705-a013-4259-8065-7bacfd84cbb1",
+      "company_id": "COMP-0696d91754ed",
+      "canonical_name": "帕西尼感知科技（深圳）",
+      "registered_name": "帕西尼感知科技（深圳）有限公司",
+      "trusted_identity_terms": [
+        "帕西尼感知科技（深圳）",
+        "帕西尼感知科技（深圳）有限公司"
+      ],
+      "title": "帕西尼感知科技：以“触觉”定义人形机器人未来 - 中国证券报",
+      "source_url": "https://www.cs.com.cn/5g/202503/t20250328_6482056.html",
+      "source_domain": "cs.com.cn",
+      "summary_excerpt": "聚焦触觉感知，帕西尼推出自研的ITPU（Intelligent Tactile Processing Unit）多维触觉传感技术。据了解，多维触觉灵巧手DexH13通过集成近千个ITPU多维触觉传 ...",
+      "evidence_excerpt": "聚焦触觉感知，帕西尼推出自研的ITPU（Intelligent Tactile Processing Unit）多维触觉传感技术。据了解，多维触觉灵巧手DexH13通过集成近千个ITPU多维触觉传 ...",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "d1668fa8-3a34-403e-b03e-6b5c51f35239",
+      "company_id": "COMP-0696d91754ed",
+      "canonical_name": "帕西尼感知科技（深圳）",
+      "registered_name": "帕西尼感知科技（深圳）有限公司",
+      "trusted_identity_terms": [
+        "帕西尼感知科技（深圳）",
+        "帕西尼感知科技（深圳）有限公司"
+      ],
+      "title": "PaXini 帕西尼- 官方网站| PaXini",
+      "source_url": "https://paxini.com/",
+      "source_domain": "paxini.com",
+      "summary_excerpt": "PaXini 帕西尼，构建智能世界的桥梁，引领全球智能感知革命。以6D 霍尔阵列式技术为核心打造的多维产品矩阵，包含第三代高精度多维触觉传感器PX-6AX-GEN3、消费级触觉 ...",
+      "evidence_excerpt": "PaXini 帕西尼，构建智能世界的桥梁，引领全球智能感知革命。以6D 霍尔阵列式技术为核心打造的多维产品矩阵，包含第三代高精度多维触觉传感器PX-6AX-GEN3、消费级触觉 ...",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "4baf670f-790c-4268-8641-3137f0a5232a",
+      "company_id": "COMP-9dbac97b9320",
+      "canonical_name": "广东博华超高清创新中心",
+      "registered_name": "广东博华超高清创新中心有限公司",
+      "trusted_identity_terms": [
+        "广东博华超高清创新中心",
+        "广东博华超高清创新中心有限公司"
+      ],
+      "title": "博华超高清率先推出基于国产硬件的智能超分系统",
+      "source_url": "https://web.pkusz.edu.cn/ldm/%E5%8D%9A%E5%8D%8E%E8%B6%85%E9%AB%98%E6%B8%85%E7%8E%87%E5%85%88%E6%8E%A8%E5%87%BA%E5%9F%BA%E4%BA%8E%E5%9B%BD%E4%BA%A7%E7%A1%AC%E4%BB%B6%E7%9A%84%E6%99%BA%E8%83%BD%E8%B6%85%E5%88%86%E7%B3%BB%E7%BB%9F/",
+      "source_domain": "web.pkusz.edu.cn",
+      "summary_excerpt": "博华与华为联手打造的基于国产硬件的AI超分平台，是博华超高清公共服务平台中重要的一部分，能够丰富4K/8K内容供给，也为全国“百城千屏”内容供给提供重要补充 ...",
+      "evidence_excerpt": "博华与华为联手打造的基于国产硬件的AI超分平台，是博华超高清公共服务平台中重要的一部分，能够丰富4K/8K内容供给，也为全国“百城千屏”内容供给提供重要补充 ...",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "88e1e215-4c14-4ad3-8852-51b0caf939c3",
+      "company_id": "COMP-03215767f7fc",
+      "canonical_name": "广东锐志教育科技",
+      "registered_name": "广东锐志教育科技有限公司",
+      "trusted_identity_terms": [
+        "广东锐志教育科技",
+        "广东锐志教育科技有限公司"
+      ],
+      "title": "广东锐志",
+      "source_url": "http://wisdom3d.com.cn/",
+      "source_domain": "wisdom3d.com.cn",
+      "summary_excerpt": "锐志教育根据自身的行业优势，从专业建设顶层规划、实训室建设、教学资源开发、师资队伍建设、增值服务等多个维度，为职业教育提供完整的3D打印教育解决方案。 Fab Lab微观 ...",
+      "evidence_excerpt": "锐志教育根据自身的行业优势，从专业建设顶层规划、实训室建设、教学资源开发、师资队伍建设、增值服务等多个维度，为职业教育提供完整的3D打印教育解决方案。",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "9b2b297f-9c29-4ba9-b88c-9a7311ee9a9c",
+      "company_id": "COMP-07f14ec62e5c",
+      "canonical_name": "微见智能封装技术（深圳）",
+      "registered_name": "微见智能封装技术（深圳）有限公司",
+      "trusted_identity_terms": [
+        "微见智能封装技术（深圳）",
+        "微见智能封装技术（深圳）有限公司"
+      ],
+      "title": "微见智能Q2 出货量狂飙！ - 讯石光通讯网",
+      "source_url": "http://www.iccsz.com/4g/news.Asp?ID=0ee6117bccb94458aad76ce475e92b0e",
+      "source_domain": "iccsz.com",
+      "summary_excerpt": "2025年第二季度，微见智能出货量强势上扬，达到历史新高度。作为一家专注于高精度复杂工艺芯片封装设备研发和生产的高科技企业，微见智能的这一成绩不仅彰显 ...",
+      "evidence_excerpt": "2025年第二季度，微见智能出货量强势上扬，达到历史新高度。作为一家专注于高精度复杂工艺芯片封装设备研发和生产的高科技企业，微见智能的这一成绩不仅彰显 ...",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "cfd77a3d-13f4-4e60-88b9-ed04a22d0c18",
+      "company_id": "COMP-1b1fea865e40",
+      "canonical_name": "思定睦教育科技",
+      "registered_name": "深圳市思定睦教育科技有限公司",
+      "trusted_identity_terms": [
+        "思定睦教育科技",
+        "深圳市思定睦教育科技有限公司"
+      ],
+      "title": "專為家庭與學齡前兒童打造   思睦教育Mind2Mood: 陪伴家長",
+      "source_url": "https://www.facebook.com/awesomehsinchu/posts/-ep06%E6%80%9D%E7%9D%A6%E6%95%99%E8%82%B2-mind2mood%E7%94%A8-ai-%E6%83%85%E7%B7%92%E6%95%99%E8%82%B2%E9%99%AA%E5%AD%A9%E5%AD%90%E6%8A%8A%E6%84%9F%E8%A6%BA%E8%AA%AA%E6%88%90%E8%A9%B1%E5%9C%A8%E6%95%99%E9%A4%8A%E7%9A%84%E6%97%A5%E5%B8%B8%E8%A3%A1%E6%83%85%E7%B7%92%E4%B8%8D%E6%98%AF%E5%95%8F%E9%A1%8C%E8%80%8C%E6%98%AF%E9%9C%80%E8%A6%81%E8%A2%AB%E7%90%86%E8%A7%A3%E7%9A%84%E8%A8%8A%E8%99%9F%E9%80%99%E6%AC%A1%E8%A6%81%E4%BB%8B%E7%B4%B9%E7%9A%84%E9%80%B2%E9%A7%90%E5%9C%98%E9%9A%8A-%E6%80%9D%E7%9D%A6%E6%95%99%E8%82%B2mind2/1154849423503308/",
+      "source_domain": "facebook.com",
+      "summary_excerpt": "這次要介紹的進駐團隊——✨ 思睦教育（Mind2Mood），是一個結合AI 科技與情緒教育 的一站式育兒平台，專為家庭與學齡前兒童打造 思睦教育Mind2Mood: 陪伴家長 ...",
+      "evidence_excerpt": "這次要介紹的進駐團隊——✨ 思睦教育（Mind2Mood），是一個結合AI 科技與情緒教育 的一站式育兒平台，專為家庭與學齡前兒童打造",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "c9aea0d0-cbcd-4e99-a67c-d538c6ae98aa",
+      "company_id": "COMP-40b2fff69ff7",
+      "canonical_name": "方晶科技",
+      "registered_name": "深圳市方晶科技有限公司",
+      "trusted_identity_terms": [
+        "方晶科技",
+        "深圳市方晶科技有限公司"
+      ],
+      "title": "Fangjing(方晶)",
+      "source_url": "https://www.xcc.com/brand-detail/12235",
+      "source_domain": "xcc.com",
+      "summary_excerpt": "Fangjing(方晶)_公司介绍_型号_代理商_联系方式_一键查询 物料选型 数据服务 新产品 查替代 丝印反查 查品牌 PCN/PDN 查方案 查代理 数据合作 应用方案 SaaS产品 SaaS产品 供应链波动监测预警 半导体产业链地图 智能BOM管家 解决方案 汽车电子 政府机构 数据API 商城 行业资讯 资讯 直播 论坛社区 论坛 学习 测评中心 活动中心 积分商城 精准 查一下 登录 / 注册 Fangjing(方晶) 物料 254 分类 4 代理商 0 详细信息 国家/地区 中国台湾 应用领域 -- ",
+      "evidence_excerpt": "方晶科技专注于电子元器件的设计、生产、测试、及营销业务，产品线主要包括：光电耦合器、闪光灯（Flash LED）、二极管系列、场效应管（MOSFET）、晶体管、ESD保护器件和集成电路等产品。",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "3e496e1f-1abe-4fe6-9843-148f95d6355a",
+      "company_id": "COMP-40b2fff69ff7",
+      "canonical_name": "方晶科技",
+      "registered_name": "深圳市方晶科技有限公司",
+      "trusted_identity_terms": [
+        "方晶科技",
+        "深圳市方晶科技有限公司"
+      ],
+      "title": "合肥方晶科技有限公司",
+      "source_url": "https://www.moneic.com/",
+      "source_domain": "moneic.com",
+      "summary_excerpt": "合肥方晶科技有限公司 首页 关于方晶 企业简介 企业文化 发展历程 管理团队 联系我们 新闻中心 企业动态 媒体关注 方晶人物 技术服务 代工特色 技术蓝图 产品应用 设计服务 制造服务 产品分类 MOSFET IGBT 专利 品质认证 授权专利 投资者关系 公司治理 股票信息 财务报告 公司公告 投资者服务 ESG 环境报告 劳工权益 慈善公益 可持续供应链 道德与合规 意见反馈 加入方晶 职位信息 职业发展 薪资福利 工作与生活 方晶工会 首页 关于方晶 企业简介 企业文化 发展历程 管理团队 联系我们 新闻中",
+      "evidence_excerpt": "合肥方晶科技有限公司...专注于功率半导体器件的代工生产...主营业务为MOSFET、IGBT等半导体芯片和功率器件的研发、设计及销售...",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "1181e5e1-f87d-4eaf-93ec-dc4591b61064",
+      "company_id": "COMP-219afcacba21",
+      "canonical_name": "无穹创新科技",
+      "registered_name": "深圳市无穹创新科技有限公司",
+      "trusted_identity_terms": [
+        "无穹创新科技",
+        "深圳市无穹创新科技有限公司"
+      ],
+      "title": "無穹創新科技有限公司",
+      "source_url": "https://www.hkstp.org/zh-hk/directory/electronics/skyland-innovation-company-limited",
+      "source_domain": "hkstp.org",
+      "summary_excerpt": "無穹創新自2020 年起持續建構空間感知、定位與路徑規劃的全端技術能力，已開發出包含3D 掃描儀、自主飛行無人機及移動檢測機器人等系列智能硬體。我們的系統透過即時建圖與 ...",
+      "evidence_excerpt": "無穹創新自2020 年起持續建構空間感知、定位與路徑規劃的全端技術能力，已開發出包含3D 掃描儀、自主飛行無人機及移動檢測機器人等系列智能硬體。",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "9ad1af4d-82ab-46a6-9e8e-7e2c0248f89a",
+      "company_id": "COMP-219afcacba21",
+      "canonical_name": "无穹创新科技",
+      "registered_name": "深圳市无穹创新科技有限公司",
+      "trusted_identity_terms": [
+        "无穹创新科技",
+        "深圳市无穹创新科技有限公司"
+      ],
+      "title": "无穹创新- 无穹创新",
+      "source_url": "https://www.skylandx.cn/",
+      "source_domain": "skylandx.cn",
+      "summary_excerpt": "空间智能，不只可见，更可知与可为用三维智能驱动真实世界开启探索小巧如手，洞见三维世界手持三维实景激光扫描仪680 克轻量机身，集成激光雷达与视觉系统，支持秒级彩色点 ...",
+      "evidence_excerpt": "手持三维实景激光扫描仪680 克轻量机身，集成激光雷达与视觉系统，支持秒级彩色点",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "92bb6fa9-3db7-42aa-abd2-2bd1f8ea8dfa",
+      "company_id": "COMP-219afcacba21",
+      "canonical_name": "无穹创新科技",
+      "registered_name": "深圳市无穹创新科技有限公司",
+      "trusted_identity_terms": [
+        "无穹创新科技",
+        "深圳市无穹创新科技有限公司"
+      ],
+      "title": "無穹創新科技有限公司",
+      "source_url": "https://www.hkstp.org/zh-cn/directory/electronics/skyland-innovation-company-limited",
+      "source_domain": "hkstp.org",
+      "summary_excerpt": "简介. 无穹创新自2020 年起持续建构空间感知、定位与路径规划的全端技术能力，已开发出包含3D 扫描仪、自主飞行无人机及移动检测机器人等系列智能硬体。我们的系统透过即时 ...",
+      "evidence_excerpt": "无穹创新自2020 年起持续建构空间感知、定位与路径规划的全端技术能力，已开发出包含3D 扫描仪、自主飞行无人机及移动检测机器人等系列智能硬体。",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "be28607b-eba9-492b-9e6d-1d9b650acb9d",
+      "company_id": "COMP-480f6ad273de",
+      "canonical_name": "无限聚合智能科技（深圳）",
+      "registered_name": "无限聚合智能科技（深圳）有限公司",
+      "trusted_identity_terms": [
+        "无限聚合智能科技（深圳）",
+        "无限聚合智能科技（深圳）有限公司"
+      ],
+      "title": "无限聚合获信芳资本A轮投资 - 亿欧",
+      "source_url": "https://www.iyiou.com/data/202507211103728",
+      "source_domain": "iyiou.com",
+      "summary_excerpt": "无限聚合成立于2021年1月15日，是一家专注于AI智能工业机器人产品及解决方案的创新型企业。公司以人工智能软件及视觉开发和机器人末端新材料应用为核心技术 ...",
+      "evidence_excerpt": "无限聚合成立于2021年1月15日，是一家专注于AI智能工业机器人产品及解决方案的创新型企业。",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "6ed0bb08-786c-4c9a-9656-0e86c435d7c6",
+      "company_id": "COMP-329b5f2c4349",
+      "canonical_name": "昂视智能（深圳）",
+      "registered_name": "昂视智能（深圳）有限公司",
+      "trusted_identity_terms": [
+        "昂视智能（深圳）",
+        "昂视智能（深圳）有限公司"
+      ],
+      "title": "昂视智能：软硬件全面进阶！机器之“眼”正花开绽放|检测 - 新浪新闻",
+      "source_url": "https://news.sina.cn/sx/2022-09-16/detail-imqmmtha7569501.d.html?vt=4",
+      "source_domain": "news.sina.cn",
+      "summary_excerpt": "作为机器视觉极具代表性的企业，昂视深耕机器视觉、光电感知等领域多年，依靠全自主研发能力在3D检测方面实现软硬件全面开花，包括机器视觉检测平台、3D相机 ...",
+      "evidence_excerpt": "作为机器视觉极具代表性的企业，昂视深耕机器视觉、光电感知等领域多年，依靠全自主研发能力在3D检测方面实现软硬件全面开花，包括机器视觉检测平台、3D相机 ...",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "2aa1017f-cf55-431a-ad7b-79cdd20351e2",
+      "company_id": "COMP-329b5f2c4349",
+      "canonical_name": "昂视智能（深圳）",
+      "registered_name": "昂视智能（深圳）有限公司",
+      "trusted_identity_terms": [
+        "昂视智能（深圳）",
+        "昂视智能（深圳）有限公司"
+      ],
+      "title": "公司介绍1昂视工业技术（深圳）有限公司",
+      "source_url": "http://www.twxw.com.cn/com/piqs/introduce/",
+      "source_domain": "twxw.com.cn",
+      "summary_excerpt": "昂视工业技术（深圳）有限公司（简称“昂视”）专注于研发、生产、销售机器视觉系统、3D激光测量、读码器、视觉传感器等自动化工业产品，是制造自动化领域领先提供商。",
+      "evidence_excerpt": "昂视工业技术（深圳）有限公司（简称“昂视”）专注于研发、生产、销售机器视觉系统、3D激光测量、读码器、视觉传感器等自动化工业产品，是制造自动化领域领先提供商。",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "75a5513d-4e80-4fd9-98a5-ee365b49c464",
+      "company_id": "COMP-329b5f2c4349",
+      "canonical_name": "昂视智能（深圳）",
+      "registered_name": "昂视智能（深圳）有限公司",
+      "trusted_identity_terms": [
+        "昂视智能（深圳）",
+        "昂视智能（深圳）有限公司"
+      ],
+      "title": "昂视智能推多款机器视觉新品，助力中国工业智能化升级",
+      "source_url": "https://www.eet-china.com/mp/a163809.html",
+      "source_domain": "eet-china.com",
+      "summary_excerpt": "总部位于深圳坪山的昂视智能，是少有的拥有海外研发中心的工业智能初创企业，拥有一系列上层应用、底层算法和智能硬件。 据昂视智能CEO那庆林介绍，昂视智能 ...",
+      "evidence_excerpt": "总部位于深圳坪山的昂视智能，是少有的拥有海外研发中心的工业智能初创企业，拥有一系列上层应用、底层算法和智能硬件。 据昂视智能CEO那庆林介绍，昂视智能 ...",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "9e8f5d78-682e-40a1-8859-ca7703a81f06",
+      "company_id": "COMP-6877a3f5af6c",
+      "canonical_name": "昇维旭技术",
+      "registered_name": "深圳市昇维旭技术有限公司",
+      "trusted_identity_terms": [
+        "昇维旭技术",
+        "深圳市昇维旭技术有限公司"
+      ],
+      "title": "Shenzhen Shengweixu Technology Co., Ltd.（Company）_Baiduwiki",
+      "source_url": "https://baike.baidu.com/en/item/Shenzhen%20Shengweixu%20Technology%20Co.,%20Ltd./38325",
+      "source_domain": "baike.baidu.com",
+      "summary_excerpt": "Shenzhen Shengweixu Technology Co., Ltd.（Company）_Baiduwiki English Company Profile Development History Company Business Organization and Management Corporate Culture and Social Responsibility Significant Events Key Information Shenzhen Shengweixu Technology C",
+      "evidence_excerpt": "Shenzhen Shengweixu Technology Co., Ltd. (abbreviated as SwaySure) was established on March 11, 2022. It is a high-tech enterprise controlled by the Shenzhen State-owned Assets Supervision and Administration Commission. The company has a registered capital of ",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "d78b0f50-43e5-4916-934b-08b0972aabbf",
+      "company_id": "COMP-6877a3f5af6c",
+      "canonical_name": "昇维旭技术",
+      "registered_name": "深圳市昇维旭技术有限公司",
+      "trusted_identity_terms": [
+        "昇维旭技术",
+        "深圳市昇维旭技术有限公司"
+      ],
+      "title": "深圳国资砸50 亿成立半导体存储芯片公司昇维旭，坂本幸雄加盟 - 知乎",
+      "source_url": "https://www.zhihu.com/question/538758911",
+      "source_domain": "zhihu.com",
+      "summary_excerpt": "感谢IT之家网友飞天 的线索投递！ IT之家 6 月21 日消息，昇维旭（SwaySure）是一家具有深圳国资背景的高新技术企业，成立于2022 年3 月，注册资本50 亿元， ...",
+      "evidence_excerpt": "昇维旭（SwaySure）是一家具有深圳国资背景的高新技术企业，成立于2022 年3 月，注册资本50 亿元",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "5ad14570-8041-4936-91b7-15b14787e414",
+      "company_id": "COMP-9465315a8a9e",
+      "canonical_name": "智萌科技",
+      "registered_name": "深圳市智萌科技有限公司",
+      "trusted_identity_terms": [
+        "智萌科技",
+        "深圳市智萌科技有限公司"
+      ],
+      "title": "深圳市智萌未来科技有限公司 - 企查查",
+      "source_url": "https://www.qcc.com/firm/8e4d67cc25bd3540d8d79485790cb0d7.html",
+      "source_domain": "qcc.com",
+      "summary_excerpt": "深圳市智萌未来科技有限公司成立于2021-07-07，法定代表人为陈熙，注册资本为30万元，统一社会信用代码为91440300MA5GW5HW90，企业注册地址位于深圳市宝安区燕罗街道洪桥头 ...",
+      "evidence_excerpt": "深圳市智萌未来科技有限公司成立于2021-07-07，法定代表人为陈熙，注册资本为30万元，统一社会信用代码为91440300MA5GW5HW90，企业注册地址位于深圳市宝安区燕罗街道洪桥头 ...",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "7efb9f43-387b-4af1-a304-81ded4da5eff",
+      "company_id": "COMP-5db7107aa938",
+      "canonical_name": "松果体机器人科技",
+      "registered_name": "深圳市松果体机器人科技有限公司",
+      "trusted_identity_terms": [
+        "松果体机器人科技",
+        "深圳市松果体机器人科技有限公司"
+      ],
+      "title": "松果体机器人| 项目信息 - 创投平台- 36氪",
+      "source_url": "https://pitchhub.36kr.com/project/1678507025282057",
+      "source_domain": "pitchhub.36kr.com",
+      "summary_excerpt": "松果体机器人以打造超高分辨率、可量产的机器触觉方案为目标，起步做触觉的感知检测，切入三个高价值领域，实现高精度的物理表面数字化，解决人工和视觉难以解决的问题。",
+      "evidence_excerpt": "松果体机器人以打造超高分辨率、可量产的机器触觉方案为目标，起步做触觉的感知检测，切入三个高价值领域，实现高精度的物理表面数字化，解决人工和视觉难以解决的问题。",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "a796e973-3aab-4a67-beac-2313a227bd2c",
+      "company_id": "COMP-5db7107aa938",
+      "canonical_name": "松果体机器人科技",
+      "registered_name": "深圳市松果体机器人科技有限公司",
+      "trusted_identity_terms": [
+        "松果体机器人科技",
+        "深圳市松果体机器人科技有限公司"
+      ],
+      "title": "松果体机器人：从感知到操控，挖掘机器触觉多层面的商业价值 - 创业邦",
+      "source_url": "https://m.cyzone.cn/article/615319.html",
+      "source_domain": "m.cyzone.cn",
+      "summary_excerpt": "松果体机器人成立于2020年7月，是一家致力于研发新一代的触觉交互系统的科技创新型企业。目前松果体机器人已经打造了多款拥有超高分辨率的、可量产的机器触觉产品，并切入了 ...",
+      "evidence_excerpt": "松果体机器人成立于2020年7月，是一家致力于研发新一代的触觉交互系统的科技创新型企业。目前松果体机器人已经打造了多款拥有超高分辨率的、可量产的机器触觉产品",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "676e2073-a436-4d1c-a255-970fac4f2070",
+      "company_id": "COMP-5db7107aa938",
+      "canonical_name": "松果体机器人科技",
+      "registered_name": "深圳市松果体机器人科技有限公司",
+      "trusted_identity_terms": [
+        "松果体机器人科技",
+        "深圳市松果体机器人科技有限公司"
+      ],
+      "title": "松果体机器人 - 企查查",
+      "source_url": "https://www.qcc.com/product/84620dd91f289f87764bb80ff631fa97.html",
+      "source_domain": "qcc.com",
+      "summary_excerpt": "公司介绍： 松果体机器人成立于2020年7月，是一家致力于研发新一代的触觉交互系统的科技创新型企业。 · 法定代表人： 苑维然 · 注册时间： 2020-07-09.",
+      "evidence_excerpt": "松果体机器人成立于2020年7月，是一家致力于研发新一代的触觉交互系统的科技创新型企业。 · 法定代表人： 苑维然 · 注册时间： 2020-07-09.",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "0a0f2135-418e-447f-8e86-ba31b51d8107",
+      "company_id": "COMP-2d9a7505bdab",
+      "canonical_name": "极智视觉科技（深圳）",
+      "registered_name": "极智视觉科技（深圳）有限公司",
+      "trusted_identity_terms": [
+        "极智视觉科技（深圳）",
+        "极智视觉科技（深圳）有限公司"
+      ],
+      "title": "极视角-开创AI视觉算法商城",
+      "source_url": "https://www.extremevision.com.cn/",
+      "source_domain": "extremevision.com.cn",
+      "summary_excerpt": "极视角科技是人工智能视觉算法与大模型解决方案提供商，开创AI 视觉算法商城。拥有高精度视觉语言大模型及1500 余种图像识别算法，覆盖100 + 行业，服务超3000 家政企 ...",
+      "evidence_excerpt": "极视角科技是人工智能视觉算法与大模型解决方案提供商，开创AI 视觉算法商城。拥有高精度视觉语言大模型及1500 余种图像识别算法，覆盖100 + 行业，服务超3000 家政企 ...",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "874cdfef-ec07-440f-97d8-82824de89cc4",
+      "company_id": "COMP-15ef7c731ef6",
+      "canonical_name": "每开创新科技",
+      "registered_name": "深圳市每开创新科技有限公司",
+      "trusted_identity_terms": [
+        "每开创新科技",
+        "深圳市每开创新科技有限公司"
+      ],
+      "title": "无电物联网云平台-每开云®平台 - Kaiconn",
+      "source_url": "https://www.kaiconn.com/cloud",
+      "source_domain": "kaiconn.com",
+      "summary_excerpt": "每开云®是以每开创新无电设备交互为基础，在设备端连接用户、 在管理端连接企业运营工作的一站式管理云平台。 background12. 手机和设备碰一碰. 在用户端，每开创新提供 ...",
+      "evidence_excerpt": "每开云®是以每开创新无电设备交互为基础，在设备端连接用户、 在管理端连接企业运营工作的一站式管理云平台。",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "1638cf01-c991-4815-9cc2-6a6ed7b18b27",
+      "company_id": "COMP-15ef7c731ef6",
+      "canonical_name": "每开创新科技",
+      "registered_name": "深圳市每开创新科技有限公司",
+      "trusted_identity_terms": [
+        "每开创新科技",
+        "深圳市每开创新科技有限公司"
+      ],
+      "title": "每开创新官网-工业级无源NFC智能锁具无电物联网云平台",
+      "source_url": "https://www.kaiconn.com/",
+      "source_domain": "kaiconn.com",
+      "summary_excerpt": "每开创新提供工业级无源NFC智能锁具(无电源开关,无源锁,柜锁,挂锁,箱锁,门锁,联网锁,无电锁,NFC手机壳,墨水屏手机壳,AI手机壳)、无源产品方案NFC技术,无线射频,无电 ...",
+      "evidence_excerpt": "每开创新提供工业级无源NFC智能锁具(无电源开关,无源锁,柜锁,挂锁,箱锁,门锁,联网锁,无电锁,NFC手机壳,墨水屏手机壳,AI手机壳)、无源产品方案NFC技术,无线射频,无电 ...",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "3f323fbe-fb17-4555-8231-cec4b57abcae",
+      "company_id": "COMP-03ad82319140",
+      "canonical_name": "水杉智算（深圳）技术",
+      "registered_name": "水杉智算（深圳）技术有限公司",
+      "trusted_identity_terms": [
+        "水杉智算（深圳）技术",
+        "水杉智算（深圳）技术有限公司"
+      ],
+      "title": "人工智能创新发展论坛暨AI场景应用供需对接会成功举办",
+      "source_url": "https://www.zs.gov.cn/zsjxj/gkmlpt/content/2/2518/post_2518850.html",
+      "source_domain": "zs.gov.cn",
+      "summary_excerpt": "活动现场完成了两项重磅企业合作签约——水杉智算（深圳）大模型技术有限公司与广东卓梅尼技术股份有限公司达成战略合作、北金合创（广东）科技有限公司 ...",
+      "evidence_excerpt": "水杉智算（深圳）大模型技术有限公司与广东卓梅尼技术股份有限公司达成战略合作",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "9ba484a1-877e-4953-a0de-f50d18fa8436",
+      "company_id": "COMP-03ad82319140",
+      "canonical_name": "水杉智算（深圳）技术",
+      "registered_name": "水杉智算（深圳）技术有限公司",
+      "trusted_identity_terms": [
+        "水杉智算（深圳）技术",
+        "水杉智算（深圳）技术有限公司"
+      ],
+      "title": "携手卓梅尼集团，共筑电梯AI 大模型时代-企业官网",
+      "source_url": "http://www.witcloudnet.com/newsinfo/8439520.html?templateId=73940",
+      "source_domain": "witcloudnet.com",
+      "summary_excerpt": "在随后的2025人工智能创新发展论坛暨AI场景应用（供需）对接会上，希道科技总经理冯子钜先生代表卓梅尼集团，与水杉智算（深圳）大模型技术有限公司正式签署战略框架合作协议。",
+      "evidence_excerpt": "水杉智算（深圳）大模型技术有限公司正式签署战略框架合作协议",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "cebb8c33-08b1-4722-8946-3879313bf9cb",
+      "company_id": "COMP-16d41c37fc99",
+      "canonical_name": "河森堡（深圳）科技",
+      "registered_name": "河森堡（深圳）科技有限公司",
+      "trusted_identity_terms": [
+        "河森堡（深圳）科技",
+        "河森堡（深圳）科技有限公司"
+      ],
+      "title": "AI智慧庭院方案解决商「河森堡机器人Heisenberg Robotics」获数百 ...",
+      "source_url": "https://startup.aliyun.com/info/1016099.html",
+      "source_domain": "startup.aliyun.com",
+      "summary_excerpt": "据悉，此轮融资将用于持续增加AI视觉算法等核心技术的研发，推出新一代模块化智能庭院机器人。 河森堡成立于2022年初，位于深圳，产品聚焦欧美庭院场景。河森 ...",
+      "evidence_excerpt": "河森堡成立于2022年初，位于深圳，产品聚焦欧美庭院场景。",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "709ecd97-e0d3-408d-812b-eb1af565925a",
+      "company_id": "COMP-16d41c37fc99",
+      "canonical_name": "河森堡（深圳）科技",
+      "registered_name": "河森堡（深圳）科技有限公司",
+      "trusted_identity_terms": [
+        "河森堡（深圳）科技",
+        "河森堡（深圳）科技有限公司"
+      ],
+      "title": "河森堡机器人 - 亿欧数据",
+      "source_url": "https://data.iyiou.com/company/details/177fcc0b6b85b215edb25c11efdb4083/profile?source=iyiou.trz",
+      "source_domain": "data.iyiou.com",
+      "summary_excerpt": "河森堡机器人是一家AI智慧庭院方案解决商，产品聚焦欧美庭院场景，为用户提供模块化智能割草机器人，采用纯视觉感知定位方案，除提供割草功能外，还通过可拆卸 ...",
+      "evidence_excerpt": "河森堡机器人是一家AI智慧庭院方案解决商，产品聚焦欧美庭院场景，为用户提供模块化智能割草机器人，采用纯视觉感知定位方案，除提供割草功能外，还通过可拆卸 ...",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "15dc1a12-b535-4903-b56e-9639cf3b8327",
+      "company_id": "COMP-4dd645d47e81",
+      "canonical_name": "泛德教育科技",
+      "registered_name": "深圳市泛德教育科技有限公司",
+      "trusted_identity_terms": [
+        "泛德教育科技",
+        "深圳市泛德教育科技有限公司"
+      ],
+      "title": "泛德（武汉）教育科技有限公司龙湖分公司_泛德教育-企业工商信息 ...",
+      "source_url": "https://m.tianyancha.com/company/3373868443",
+      "source_domain": "m.tianyancha.com",
+      "summary_excerpt": "",
+      "evidence_excerpt": "泛德(武汉) 教育科技有限公司龙湖分公司(曾用名：泛德(武汉) 教育科技有限公司武昌分公司) ，成立于2019年，位于湖北省武汉市，是一家以从事科技推广和应用服务 ...",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "60fd2e42-9fbb-4788-8c4e-3169e6c40d4f",
+      "company_id": "COMP-3595cb259124",
+      "canonical_name": "泰科智能机器人",
+      "registered_name": "深圳市泰科智能机器人有限公司",
+      "trusted_identity_terms": [
+        "泰科智能机器人",
+        "深圳市泰科智能机器人有限公司"
+      ],
+      "title": "泰科机器人: 人形机器人关节模组-线性关节-厂家定制",
+      "source_url": "https://techsoft-robots.com/",
+      "source_domain": "techsoft-robots.com",
+      "summary_excerpt": "泰科机器人——国家高新技术企业、专精特新企业，18年机器人核心零部件研发制造。高扭矩重量比关节模组、高精度双臂机器人、高性能协作机器人、高功率密度伺服驱动器， ...",
+      "evidence_excerpt": "泰科机器人——国家高新技术企业、专精特新企业，18年机器人核心零部件研发制造。高扭矩重量比关节模组、高精度双臂机器人、高性能协作机器人、高功率密度伺服驱动器",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "a835846a-225b-45df-b537-fd6ce81b3472",
+      "company_id": "COMP-0311817f7250",
+      "canonical_name": "洪量科技",
+      "registered_name": "深圳市洪量科技有限公司",
+      "trusted_identity_terms": [
+        "洪量科技",
+        "深圳市洪量科技有限公司"
+      ],
+      "title": "浙江洪量新材科技有限公司",
+      "source_url": "http://www.hugele.cn/",
+      "source_domain": "hugele.cn",
+      "summary_excerpt": "公司产品“高性能复合三维电极箔”采用纳米微粒涂布工艺替代传统电化学腐蚀工艺，突破传统工艺产品的比容提升极限。",
+      "evidence_excerpt": "公司产品“高性能复合三维电极箔”采用纳米微粒涂布工艺替代传统电化学腐蚀工艺，突破传统工艺产品的比容提升极限。",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "d2bc3a6f-0f39-4f73-a2fe-62399c8537df",
+      "company_id": "COMP-10f4fc3eb209",
+      "canonical_name": "派拓艺（深圳）科技",
+      "registered_name": "派拓艺（深圳）科技有限责任公司",
+      "trusted_identity_terms": [
+        "派拓艺（深圳）科技",
+        "派拓艺（深圳）科技有限责任公司"
+      ],
+      "title": "教程：派拓艺Petoi Bittle 组装（中文版）",
+      "source_url": "https://www.bilibili.com/video/BV1z54y1V7r4/",
+      "source_domain": "bilibili.com",
+      "summary_excerpt": "打开App，流畅又高清. 教程：派拓艺Petoi Bittle 组装（中文版）. PetoiCamp. 1. Bittle开箱_CHS; 2. Bittle组装部件_CHS; 3. Bittle躯干组装_CHS; 4. Bittle下载OpenCat程序_ ...",
+      "evidence_excerpt": "教程：派拓艺Petoi Bittle 组装（中文版）",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "f7e5ca94-55e0-4efe-b34f-f370288a5ca6",
+      "company_id": "COMP-10f4fc3eb209",
+      "canonical_name": "派拓艺（深圳）科技",
+      "registered_name": "派拓艺（深圳）科技有限责任公司",
+      "trusted_identity_terms": [
+        "派拓艺（深圳）科技",
+        "派拓艺（深圳）科技有限责任公司"
+      ],
+      "title": "petoi派拓艺-AGIC人工智能展展商",
+      "source_url": "https://www.agicexpo.com/sz/ExhibitorView-7052",
+      "source_domain": "agicexpo.com",
+      "summary_excerpt": "展商名称： petoi派拓艺. 展位号： 11C55. 产品/技术： petoi仿生多足机器猫/狗系列. 应用领域： 机器人. 展商邀请函. 观众报名 · 申请展位. 展会资讯更多 >>.",
+      "evidence_excerpt": "展商名称： petoi派拓艺. 产品/技术： petoi仿生多足机器猫/狗系列",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "c4523b2a-d011-4c07-b7ba-8521c4bbabce",
+      "company_id": "COMP-ec4f36d8b630",
+      "canonical_name": "海豚云软件科技",
+      "registered_name": "深圳市海豚云软件科技有限公司",
+      "trusted_identity_terms": [
+        "海豚云软件科技",
+        "深圳市海豚云软件科技有限公司"
+      ],
+      "title": "海外仓解决方案【海豚云】",
+      "source_url": "http://ouyunda.com/haiwaicang",
+      "source_domain": "ouyunda.com",
+      "summary_excerpt": "海豚云海外仓WMS系统为您解决一切痛点： · 1、仓储标准化，流程化，大大提高工作效率 · 2、全方位可视化库存管理：对于仓库收货、质检，上架、拣货、分拣、检测、打包发货，库内 ...",
+      "evidence_excerpt": "海豚云海外仓WMS系统为您解决一切痛点： · 1、仓储标准化，流程化，大大提高工作效率 · 2、全方位可视化库存管理：对于仓库收货、质检，上架、拣货、分拣、检测、打包发货，库内 ...",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "554b2274-1c36-4666-8e09-0052a86faaf5",
+      "company_id": "COMP-ec4f36d8b630",
+      "canonical_name": "海豚云软件科技",
+      "registered_name": "深圳市海豚云软件科技有限公司",
+      "trusted_identity_terms": [
+        "海豚云软件科技",
+        "深圳市海豚云软件科技有限公司"
+      ],
+      "title": "海豚云WMS【海豚云】",
+      "source_url": "https://www.haitunyun.com.cn/wms",
+      "source_domain": "haitunyun.com.cn",
+      "summary_excerpt": "",
+      "evidence_excerpt": "海豚云WMS，详细功能 · API开放平台 · 订单管理 · 入库管理 · 出库管理 · 多仓库管控 · 全方位可视化库存管理 · KPI与报表 · 服务项目.",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "d0e9b7ba-2f7d-4bd5-9ae1-110406fff56c",
+      "company_id": "COMP-ec4f36d8b630",
+      "canonical_name": "海豚云软件科技",
+      "registered_name": "深圳市海豚云软件科技有限公司",
+      "trusted_identity_terms": [
+        "海豚云软件科技",
+        "深圳市海豚云软件科技有限公司"
+      ],
+      "title": "海豚云-低代码开发平台| 企业数字化转型首选工具| 高效便捷的低代码 ...",
+      "source_url": "https://www.haitun.cloud/",
+      "source_domain": "haitun.cloud",
+      "summary_excerpt": "海豚云低代码开发平台助力企业数字化转型，提供高效便捷的低代码解决方案，实现快速应用开发和上线，提升业务效率，降低开发成本，是企业数字化转型的首选工具。",
+      "evidence_excerpt": "海豚云低代码开发平台助力企业数字化转型，提供高效便捷的低代码解决方案，实现快速应用开发和上线，提升业务效率，降低开发成本，是企业数字化转型的首选工具。",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "2249b63a-9e57-42b7-b66a-9d381350545f",
+      "company_id": "COMP-739e5c384cb9",
+      "canonical_name": "海豚科技创新",
+      "registered_name": "深圳市海豚科技创新有限公司",
+      "trusted_identity_terms": [
+        "海豚科技创新",
+        "深圳市海豚科技创新有限公司"
+      ],
+      "title": "海豚创新获投控东海投资 - 声波室内定位",
+      "source_url": "https://www.haitun-i.tech/article.html?id=21",
+      "source_domain": "haitun-i.tech",
+      "summary_excerpt": "本次投资海豚创新的基金的主要出资人为深投控以及深圳市天使投资引导基金。 投控东海目前管理运营基金16支，管理规模超70亿元，已投项目超130个，已经培育了两家 ...",
+      "evidence_excerpt": "本次投资海豚创新的基金的主要出资人为深投控以及深圳市天使投资引导基金。",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "0009a44a-d2cb-4b2b-8e60-1f3c82e63a57",
+      "company_id": "COMP-69f0f8ded8d1",
+      "canonical_name": "海雅达数字科技",
+      "registered_name": "深圳市海雅达数字科技有限公司",
+      "trusted_identity_terms": [
+        "海雅达数字科技",
+        "深圳市海雅达数字科技有限公司"
+      ],
+      "title": "联系海雅达 - 手持终端PDA",
+      "source_url": "https://www.hyatta.cn/contact",
+      "source_domain": "hyatta.cn",
+      "summary_excerpt": "服务热线：+86 0755-2525 1388 / 2525 1088 联系地址：深圳市宝安区西乡街道广深路287号汇智研发中心A座1405 营业时间：周一至周五,09:00——18:00.",
+      "evidence_excerpt": "服务热线：+86 0755-2525 1388 / 2525 1088 联系地址：深圳市宝安区西乡街道广深路287号汇智研发中心A座1405 营业时间：周一至周五,09:00——18:00.",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "b651c56b-cbd6-4168-9478-6cf19b95e056",
+      "company_id": "COMP-69f0f8ded8d1",
+      "canonical_name": "海雅达数字科技",
+      "registered_name": "深圳市海雅达数字科技有限公司",
+      "trusted_identity_terms": [
+        "海雅达数字科技",
+        "深圳市海雅达数字科技有限公司"
+      ],
+      "title": "Hyatta海雅达官网| 手持终端PDA，工业手持机，数据采集终端，移动 ...",
+      "source_url": "https://www.hyatta.cn/",
+      "source_domain": "hyatta.cn",
+      "summary_excerpt": "海雅达是一家IOT智能硬件及解决方案供应商， 专注于手持终端，数据采集器、工业PDA、工业平板、条码扫描器、RFID手持终端、条码打印机、全自动立体仓储系统等产品的 ...",
+      "evidence_excerpt": "海雅达是一家IOT智能硬件及解决方案供应商， 专注于手持终端，数据采集器、工业PDA、工业平板、条码扫描器、RFID手持终端、条码打印机、全自动立体仓储系统等产品的 ...",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "67ea6914-c95d-449d-8d6d-0523af095d1c",
+      "company_id": "COMP-17bd8446bc25",
+      "canonical_name": "淋达智能物联科技",
+      "registered_name": "深圳市淋达智能物联科技有限公司",
+      "trusted_identity_terms": [
+        "淋达智能物联科技",
+        "深圳市淋达智能物联科技有限公司"
+      ],
+      "title": "喷灌设备价格多少?淋达智能物联费用合理 - 中华网",
+      "source_url": "https://m.tech.china.com/redian/2026/0430/042026_1858917.html",
+      "source_domain": "m.tech.china.com",
+      "summary_excerpt": "答：淋达智能物联就是一家非常靠谱的喷灌设备厂。该公司成立于2019年，专注于智能灌溉设备、园林智能灌溉系统、数字农业水肥一体化产品的研发、生产、销售 ...",
+      "evidence_excerpt": "淋达智能物联就是一家非常靠谱的喷灌设备厂。该公司成立于2019年，专注于智能灌溉设备、园林智能灌溉系统、数字农业水肥一体化产品的研发、生产、销售",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "f8dfeb05-3505-43be-a827-adbdb87f409a",
+      "company_id": "COMP-17bd8446bc25",
+      "canonical_name": "淋达智能物联科技",
+      "registered_name": "深圳市淋达智能物联科技有限公司",
+      "trusted_identity_terms": [
+        "淋达智能物联科技",
+        "深圳市淋达智能物联科技有限公司"
+      ],
+      "title": "园林灌溉控制器选购，深圳淋达智能物联靠谱吗 - 中华网",
+      "source_url": "https://m.tech.china.com/redian/2026/0426/042026_1855620.html",
+      "source_domain": "m.tech.china.com",
+      "summary_excerpt": "从技术实力来看，淋达智能物联在智能浇灌技术领域拥有多项国内技术专利，覆盖了感知、控制、云平台等核心环节。这为其园林灌溉控制器实现精准灌溉、智能联动 ...",
+      "evidence_excerpt": "从技术实力来看，淋达智能物联在智能浇灌技术领域拥有多项国内技术专利，覆盖了感知、控制、云平台等核心环节。这为其园林灌溉控制器实现精准灌溉、智能联动 ...",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "d64bdfac-1f86-4f11-8d8d-5f807bd1887b",
+      "company_id": "COMP-aae89e3b7b16",
+      "canonical_name": "深圳北斗天芯科技",
+      "registered_name": "深圳北斗天芯科技有限公司",
+      "trusted_identity_terms": [
+        "深圳北斗天芯科技",
+        "深圳北斗天芯科技有限公司"
+      ],
+      "title": "简",
+      "source_url": "https://www.tenetchip.cn/",
+      "source_domain": "tenetchip.cn",
+      "summary_excerpt": "北斗天芯定位于成为低空经济领域内卫星抗干扰技术的领先供应商. 专注于卫星抗干扰技术及相关产品的高新技术企业。公司依托20年的北斗卫星（GNSS）体系建设经验以及新一代信息 ...",
+      "evidence_excerpt": "北斗天芯定位于成为低空经济领域内卫星抗干扰技术的领先供应商. 专注于卫星抗干扰技术及相关产品的高新技术企业。",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "70d75d86-60de-44cf-b9f5-f600beff06a6",
+      "company_id": "COMP-2466866beb8a",
+      "canonical_name": "深圳华云时空技术",
+      "registered_name": "深圳华云时空技术有限公司",
+      "trusted_identity_terms": [
+        "深圳华云时空技术",
+        "深圳华云时空技术有限公司"
+      ],
+      "title": "重磅登场|华云时空携手合作伙伴推出UWB空指遥控器整机方案",
+      "source_url": "http://www.szaeia.com/index.php?m=content&c=index&a=show&catid=9&id=42534",
+      "source_domain": "szaeia.com",
+      "summary_excerpt": "面对这一挑战，深圳华云时空科技有限公司凭借多年在UWB技术领域的深厚积累，今年4月发布UWB空指遥控器模组方案，赢得了产业链上下游合作伙伴的高度关注，并与 ...",
+      "evidence_excerpt": "深圳华云时空科技有限公司凭借多年在UWB技术领域的深厚积累，今年4月发布UWB空指遥控器模组方案",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "54f8d4fc-cd12-4c89-8837-18aedd839704",
+      "company_id": "COMP-2466866beb8a",
+      "canonical_name": "深圳华云时空技术",
+      "registered_name": "深圳华云时空技术有限公司",
+      "trusted_identity_terms": [
+        "深圳华云时空技术",
+        "深圳华云时空技术有限公司"
+      ],
+      "title": "UWB空指模组批量出货，破解行业交付难、效率低双突破 - 中华网",
+      "source_url": "https://digi.china.com/articles/20250507/202505071669423.html",
+      "source_domain": "digi.china.com",
+      "summary_excerpt": "华云时空展现了其高效且稳定的批量化生产实力，能够快速响应市场需求，实现大规模量产。 标准化流程+技术攻坚，破解行业“交付难”. 华云时空创新采用PCB镭雕二 ...",
+      "evidence_excerpt": "华云时空展现了其高效且稳定的批量化生产实力...华云时空创新采用PCB镭雕二...",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "755253df-ddab-472f-aa80-c7a79606920c",
+      "company_id": "COMP-2466866beb8a",
+      "canonical_name": "深圳华云时空技术",
+      "registered_name": "深圳华云时空技术有限公司",
+      "trusted_identity_terms": [
+        "深圳华云时空技术",
+        "深圳华云时空技术有限公司"
+      ],
+      "title": "操控智慧大屏就像挥舞魔法棒，华云时空UWB遥控器带你玩点不一样的",
+      "source_url": "https://mobile.iotworld.com.cn/View.aspx/News-994c8d76a5f3e02e",
+      "source_domain": "mobile.iotworld.com.cn",
+      "summary_excerpt": "华云时空UWB遥控器采用超宽带（UWB）技术，使它具备了“魔法棒”般的指向精准性，同时，该遥控器搭载了触控板，通过快速精准的实时定位，用户可以轻松完成点按、滑动、拖拽、圈选等 ...",
+      "evidence_excerpt": "华云时空UWB遥控器采用超宽带（UWB）技术，使它具备了“魔法棒”般的指向精准性，同时，该遥控器搭载了触控板，通过快速精准的实时定位，用户可以轻松完成点按、滑动、拖拽、圈选等 ...",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "79cb479a-37aa-41c9-ad55-80cffc0256d1",
+      "company_id": "COMP-b336a174cd1f",
+      "canonical_name": "深圳华数芯科技",
+      "registered_name": "深圳华数芯科技有限公司",
+      "trusted_identity_terms": [
+        "深圳华数芯科技",
+        "深圳华数芯科技有限公司"
+      ],
+      "title": "华数芯| 项目信息 - 创投平台",
+      "source_url": "https://pitchhub.36kr.com/project/2181057007209861",
+      "source_domain": "pitchhub.36kr.com",
+      "summary_excerpt": "华数芯是一家算力设备生产租赁服务商兼芯片应商，专注于多种加密算法芯片、算力芯片的设计与高性能FPGA芯片的领先应用，致力于FPGA芯片国产化的研究。",
+      "evidence_excerpt": "华数芯是一家算力设备生产租赁服务商兼芯片应商，专注于多种加密算法芯片、算力芯片的设计与高性能FPGA芯片的领先应用，致力于FPGA芯片国产化的研究。",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "b177be3f-5988-465d-b87f-58665bae19cf",
+      "company_id": "COMP-a30d0fbb9270",
+      "canonical_name": "深圳南墙法务服务",
+      "registered_name": "深圳南墙法务服务有限公司",
+      "trusted_identity_terms": [
+        "深圳南墙法务服务",
+        "深圳南墙法务服务有限公司"
+      ],
+      "title": "智能法务公司- 企业信息查询搜索- 天眼查",
+      "source_url": "https://m.tianyancha.com/brandsearch/b69b815495018",
+      "source_domain": "m.tianyancha.com",
+      "summary_excerpt": "... 服务互联网信息服务信息传输、软件和信息技术服务业. 产品介绍. 南墙法务是一家企业法务服务提供商，为企业提供法务支持，致力于加快社会信用体系建设，让社会普遍预付费 ...",
+      "evidence_excerpt": "南墙法务是一家企业法务服务提供商，为企业提供法务支持",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "9fb4b463-e636-4f1c-bfe9-0cae5e667188",
+      "company_id": "COMP-a30d0fbb9270",
+      "canonical_name": "深圳南墙法务服务",
+      "registered_name": "深圳南墙法务服务有限公司",
+      "trusted_identity_terms": [
+        "深圳南墙法务服务",
+        "深圳南墙法务服务有限公司"
+      ],
+      "title": "企业法务服务提供商「南墙法务」获得1000万元天使轮融资 - 环信IM",
+      "source_url": "https://www.easemob.com/news/8464",
+      "source_domain": "easemob.com",
+      "summary_excerpt": "南墙法务就是为了降低企业的坏账率，能够有效管控企业成本。降低了用户门槛，提升了服务消费方的体验，只需要客户签了合同，后续客户不付费由南墙法务兜底。",
+      "evidence_excerpt": "南墙法务就是为了降低企业的坏账率，能够有效管控企业成本。降低了用户门槛，提升了服务消费方的体验，只需要客户签了合同，后续客户不付费由南墙法务兜底。",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "8095d7a1-0442-4182-86b4-ff00ec956b1e",
+      "company_id": "COMP-510dcababd11",
+      "canonical_name": "深圳卡睿智行科技",
+      "registered_name": "深圳卡睿智行科技有限公司",
+      "trusted_identity_terms": [
+        "深圳卡睿智行科技",
+        "深圳卡睿智行科技有限公司"
+      ],
+      "title": "融资丨「卡睿智行Corage」完成数千万元天使轮融资 - 创业邦",
+      "source_url": "https://m.cyzone.cn/article/696196.html",
+      "source_domain": "m.cyzone.cn",
+      "summary_excerpt": "卡睿智行Corage成立于2021年12月16日，公司业务聚焦于商用车自动驾驶技术的研发和商业化落地。 创始 ...",
+      "evidence_excerpt": "卡睿智行Corage成立于2021年12月16日，公司业务聚焦于商用车自动驾驶技术的研发和商业化落地。 创始 ...",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "bbab4495-1ef0-4bc0-847d-4ae5082c2bca",
+      "company_id": "COMP-510dcababd11",
+      "canonical_name": "深圳卡睿智行科技",
+      "registered_name": "深圳卡睿智行科技有限公司",
+      "trusted_identity_terms": [
+        "深圳卡睿智行科技",
+        "深圳卡睿智行科技有限公司"
+      ],
+      "title": "商用车自动驾驶公司卡睿智行Corage获CVC战略投资 - 36氪出海",
+      "source_url": "https://letschuhai.com/autopilot-corage-cvc-fundraising",
+      "source_domain": "letschuhai.com",
+      "summary_excerpt": "Corage是目前全行业唯一专注货运专线这一第一大城际物流市场、并明确“与新能源同行”的L4自动驾驶企业，已在广东、重庆等多地开展货运专线的L4新能源商用车 ...",
+      "evidence_excerpt": "商用车自动驾驶公司卡睿智行Corage获CVC战略投资",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "4bd54d70-c85e-4eae-ace4-c56f2c448761",
+      "company_id": "COMP-510dcababd11",
+      "canonical_name": "深圳卡睿智行科技",
+      "registered_name": "深圳卡睿智行科技有限公司",
+      "trusted_identity_terms": [
+        "深圳卡睿智行科技",
+        "深圳卡睿智行科技有限公司"
+      ],
+      "title": "卡睿智行_百度百科",
+      "source_url": "https://baike.baidu.com/item/%E5%8D%A1%E7%9D%BF%E6%99%BA%E8%A1%8C/61938566",
+      "source_domain": "baike.baidu.com",
+      "summary_excerpt": "卡睿智行（Corage）是一家成立于2021年的中国商用车自动驾驶公司，总部位于深圳。公司专注于L4级商用车自动驾驶技术的研发与商业化落地，践行“与新能源同行”的技术路线， ...",
+      "evidence_excerpt": "卡睿智行（Corage）是一家成立于2021年的中国商用车自动驾驶公司，总部位于深圳。公司专注于L4级商用车自动驾驶技术的研发与商业化落地",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "8fe565e5-c6b0-40af-877a-a2c66d02058b",
+      "company_id": "COMP-510dcababd11",
+      "canonical_name": "深圳卡睿智行科技",
+      "registered_name": "深圳卡睿智行科技有限公司",
+      "trusted_identity_terms": [
+        "深圳卡睿智行科技",
+        "深圳卡睿智行科技有限公司"
+      ],
+      "title": "中国L4商用车自动驾驶卡睿智行获得战略投资 - 卡车之家",
+      "source_url": "https://www.360che.com/news/230308/179088.html",
+      "source_domain": "360che.com",
+      "summary_excerpt": "3月7日，中国领先的商用车自动驾驶公司卡睿智行Corage宣布获得住友商事旗下战略投资机构（CVC）Sumitomo Corporation Equity Asia Limited的战略投资， ...",
+      "evidence_excerpt": "3月7日，中国领先的商用车自动驾驶公司卡睿智行Corage宣布获得住友商事旗下战略投资机构（CVC）Sumitomo Corporation Equity Asia Limited的战略投资",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "814f2659-5299-4729-aaf5-5b0d34da15be",
+      "company_id": "COMP-a1cc8c4c739d",
+      "canonical_name": "深圳启明无障碍科技",
+      "registered_name": "深圳启明无障碍科技有限公司",
+      "trusted_identity_terms": [
+        "深圳启明无障碍科技",
+        "深圳启明无障碍科技有限公司"
+      ],
+      "title": "AI无碍：智能辅具开启残障人士无障碍生活@周江南",
+      "source_url": "http://side.cuhk.edu.cn/zh-hans/article/972",
+      "source_domain": "side.cuhk.edu.cn",
+      "summary_excerpt": "从2700万听障者到1.1亿老人，试图用科技填平“沟通鸿沟”。 启明在盲人辅助技术领域自主研发了读屏软件，使盲人能够操作智能手机，并通过创新的转盘快捷交互 ...",
+      "evidence_excerpt": "启明在盲人辅助技术领域自主研发了读屏软件，使盲人能够操作智能手机，并通过创新的转盘快捷交互",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "8f40de29-699e-4fd6-81e8-b464f155c3fb",
+      "company_id": "COMP-a1cc8c4c739d",
+      "canonical_name": "深圳启明无障碍科技",
+      "registered_name": "深圳启明无障碍科技有限公司",
+      "trusted_identity_terms": [
+        "深圳启明无障碍科技",
+        "深圳启明无障碍科技有限公司"
+      ],
+      "title": "启明盲人智能用户系统",
+      "source_url": "https://www.scei.org.cn/zdhd/kczgcxcyxmyly/2021/dsswq/lyxm1423/art/2022/art_40b34b3d2fb54aee85a83bac9c505a59.html",
+      "source_domain": "scei.org.cn",
+      "summary_excerpt": "项目简介：启明无障碍科技专注智能信息辅具研发，结合AI和独特交互方式致力于打造全球领先新一代智能信息辅具，启明助盲产品借助AI、AR、辅助功能技术和视频 ...",
+      "evidence_excerpt": "启明无障碍科技专注智能信息辅具研发，结合AI和独特交互方式致力于打造全球领先新一代智能信息辅具，启明助盲产品借助AI、AR、辅助功能技术和视频 ...",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "d73d04ee-fd4e-41e7-9b67-4c6d0102307d",
+      "company_id": "COMP-8e8b8b78fa83",
+      "canonical_name": "深圳奥维领芯科技",
+      "registered_name": "深圳奥维领芯科技有限公司",
+      "trusted_identity_terms": [
+        "深圳奥维领芯科技",
+        "深圳奥维领芯科技有限公司"
+      ],
+      "title": "深圳RISC-V企业奥维领芯完成Pre-A轮融资“资本+区位”将谱写出怎样 ...",
+      "source_url": "https://www.eet-china.com/mp/a457929.html",
+      "source_domain": "eet-china.com",
+      "summary_excerpt": "作为深圳的硬核科技企业，奥维领芯聚焦高性能RISC-V处理器芯片的设计与开发，创始团队系国内最早从事RISC-V产品研发的技术团队之一，掌握多项核心技术专利， ...",
+      "evidence_excerpt": "作为深圳的硬核科技企业，奥维领芯聚焦高性能RISC-V处理器芯片的设计与开发，创始团队系国内最早从事RISC-V产品研发的技术团队之一，掌握多项核心技术专利， ...",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "a999e4af-3b11-4e14-a0d3-db23ed393403",
+      "company_id": "COMP-8555975c44b2",
+      "canonical_name": "深圳小澈科技",
+      "registered_name": "深圳小澈科技有限公司",
+      "trusted_identity_terms": [
+        "深圳小澈科技",
+        "深圳小澈科技有限公司"
+      ],
+      "title": "小澈科技",
+      "source_url": "https://www.creekwearable.com/zh/cn-home/",
+      "source_domain": "creekwearable.com",
+      "summary_excerpt": "小澈科技 产品 智能手表 智能戒指 无屏手环 Fitbeing ODM服务 技术 动态 关于小澈 中文 EN 联系我们 专注于智能穿戴产品设计和研发 S1 Pro S6G R2G 敬请期待 R5G 敬请期待 Kriki AI 智能体 Kriki AI 以 “全场景数据融合+深度算法分析” 为核心，构建 “数据采集-多维度分析-健康洞察-个性化反馈” 全链路智能能力，贯穿运动、睡眠、日常健康管理全场景： AI 运动教练：基于 GPS 轨迹、多维运动数据 、实时心率等多维度数据评估运动表现，根据用户健康或运动表现目标生",
+      "evidence_excerpt": "小澈科技 产品 智能手表 智能戒指 无屏手环 Fitbeing ODM服务 技术 动态 关于小澈 ... 专注于智能穿戴产品设计和研发 ... 我们提供尖端的智能手表ODM服务 ... 10年沉淀的 智能穿戴深度研发能力",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "6bda8148-9ab4-4152-9a3a-ed00e949165f",
+      "company_id": "COMP-e7137f40e8e0",
+      "canonical_name": "深圳广合霖科技",
+      "registered_name": "深圳广合霖科技有限公司",
+      "trusted_identity_terms": [
+        "深圳广合霖科技",
+        "深圳广合霖科技有限公司"
+      ],
+      "title": "广合霖| 项目信息 - 创投平台",
+      "source_url": "https://pitchhub.36kr.com/project/2181056083119240",
+      "source_domain": "pitchhub.36kr.com",
+      "summary_excerpt": "广合霖是一个智能设备研发和生产平台，公司致力于提供物联网时代行业系统解决方案，如智慧消防系统、智慧安防系统，智慧养老系统，智慧养殖系统，紧急求助系统，疫情隔离系统 ...",
+      "evidence_excerpt": "广合霖是一个智能设备研发和生产平台，公司致力于提供物联网时代行业系统解决方案，如智慧消防系统、智慧安防系统，智慧养老系统，智慧养殖系统，紧急求助系统，疫情隔离系统 ...",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "a90f11b5-65cb-4cdf-87b9-5afdfdecc773",
+      "company_id": "COMP-30dc64905df7",
+      "canonical_name": "深圳得到运通科技",
+      "registered_name": "深圳得到运通科技有限公司",
+      "trusted_identity_terms": [
+        "深圳得到运通科技",
+        "深圳得到运通科技有限公司"
+      ],
+      "title": "融资丨「得到运通」完成数千万人民币B轮融资，梧桐树资本等机构投资",
+      "source_url": "https://m.cyzone.cn/article/701432",
+      "source_domain": "m.cyzone.cn",
+      "summary_excerpt": "得到运通成立于2020年年底，工程机械整车厂商，依托增程式、纯电、换电等新能源技术和无人驾驶技术，专注于矿山新能源化及智能化系统的技术研发、装备制造、系统集成和投资 ...",
+      "evidence_excerpt": "得到运通成立于2020年年底，工程机械整车厂商，依托增程式、纯电、换电等新能源技术和无人驾驶技术，专注于矿山新能源化及智能化系统的技术研发、装备制造、系统集成和投资 ...",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "0cd54570-6b30-4d25-af04-39fd5a2d646a",
+      "company_id": "COMP-30dc64905df7",
+      "canonical_name": "深圳得到运通科技",
+      "registered_name": "深圳得到运通科技有限公司",
+      "trusted_identity_terms": [
+        "深圳得到运通科技",
+        "深圳得到运通科技有限公司"
+      ],
+      "title": "得到运通竞品公司信息 - 天眼查",
+      "source_url": "https://www.tianyancha.com/brand/b7e20579142",
+      "source_domain": "tianyancha.com",
+      "summary_excerpt": "得到运通起步于2019年，总部位于中关村创业大厦。公司依托增程式新能源技术和无人驾驶技术，专注于矿山新能源化及智能化系统的技术研发、装备制造、系统 ...",
+      "evidence_excerpt": "得到运通起步于2019年，总部位于中关村创业大厦。公司依托增程式新能源技术和无人驾驶技术，专注于矿山新能源化及智能化系统的技术研发、装备制造、系统 ...",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "c59eeeaa-720e-48a4-9dee-993a8dca543d",
+      "company_id": "COMP-30dc64905df7",
+      "canonical_name": "深圳得到运通科技",
+      "registered_name": "深圳得到运通科技有限公司",
+      "trusted_identity_terms": [
+        "深圳得到运通科技",
+        "深圳得到运通科技有限公司"
+      ],
+      "title": "得到运通| 项目信息 - 创投平台- 36氪",
+      "source_url": "https://pitchhub.36kr.com/project/1963113013170176",
+      "source_domain": "pitchhub.36kr.com",
+      "summary_excerpt": "得到运通起步于2019年，总部位于中关村创业大厦。公司依托增程式新能源技术和无人驾驶技术，专注于矿山新能源化及智能化系统的技术研发、装备制造、系统集成和投资运营， ...",
+      "evidence_excerpt": "得到运通起步于2019年，总部位于中关村创业大厦。公司依托增程式新能源技术和无人驾驶技术，专注于矿山新能源化及智能化系统的技术研发、装备制造、系统集成和投资运营",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "899f7bc3-b3e7-4a11-8e13-7532ac8dcc38",
+      "company_id": "COMP-30dc64905df7",
+      "canonical_name": "深圳得到运通科技",
+      "registered_name": "深圳得到运通科技有限公司",
+      "trusted_identity_terms": [
+        "深圳得到运通科技",
+        "深圳得到运通科技有限公司"
+      ],
+      "title": "得到运通成为国内工程车领域造车“新势力” - 搜狐",
+      "source_url": "https://www.sohu.com/a/581599237_115931",
+      "source_domain": "sohu.com",
+      "summary_excerpt": "据了解，得到运通自主研发的矿卡搭载了基于AI智能芯片的超级A-EAS新能源动力系统，在A-EAS技术的指引下使得发动机实时自动调整控制策略，可以更好地兼顾矿山 ...",
+      "evidence_excerpt": "得到运通自主研发的矿卡搭载了基于AI智能芯片的超级A-EAS新能源动力系统",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "c5ea927f-b42b-4c86-a9ed-2d7810fff2b2",
+      "company_id": "COMP-67942b79a226",
+      "canonical_name": "深圳微创踪影医疗装备",
+      "registered_name": "深圳微创踪影医疗装备有限公司",
+      "trusted_identity_terms": [
+        "深圳微创踪影医疗装备",
+        "深圳微创踪影医疗装备有限公司"
+      ],
+      "title": "微创®集团旗下踪影公司首款DSA产品获国家药品监督管理局上市批准",
+      "source_url": "https://www.microport.com.cn/news/xinwendongtai/1775.html",
+      "source_domain": "microport.com.cn",
+      "summary_excerpt": "中国，深圳——2021年11月4日，微创医疗科学有限公司（00853.HK，以下简称\"微创®\"）旗下深圳微中踪影医疗装备有限公司（以下简称\"微创踪影\"）与西门子医疗合作 ...",
+      "evidence_excerpt": "微创医疗科学有限公司（00853.HK，以下简称“微创®”）旗下深圳微中踪影医疗装备有限公司（以下简称“微创踪影”）与西门子医疗合作 ...",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "a772e666-c1f2-4c33-8de2-3c938f2e6cb8",
+      "company_id": "COMP-67942b79a226",
+      "canonical_name": "深圳微创踪影医疗装备",
+      "registered_name": "深圳微创踪影医疗装备有限公司",
+      "trusted_identity_terms": [
+        "深圳微创踪影医疗装备",
+        "深圳微创踪影医疗装备有限公司"
+      ],
+      "title": "微创®踪影®血管内超声(IVUS)诊断设备及导管获批上市",
+      "source_url": "https://www.microport.com.cn/news/xinwendongtai/2142.html",
+      "source_domain": "microport.com.cn",
+      "summary_excerpt": "Decypher™（天问™）血管内超声诊断设备，以创新设计突破同类产品最快10mm/s的回撤速度限制，可达到40mm/s，从而实现目前业内最快3s内采集完成100mm血管长度的 ...",
+      "evidence_excerpt": "Decypher™（天问™）血管内超声诊断设备，以创新设计突破同类产品最快10mm/s的回撤速度限制，可达到40mm/s，从而实现目前业内最快3s内采集完成100mm血管长度的 ...",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "655cff68-948e-4b46-ad1b-939dc2e0664f",
+      "company_id": "COMP-023097e9b55d",
+      "canonical_name": "深圳忆芯信息技术",
+      "registered_name": "深圳忆芯信息技术有限公司",
+      "trusted_identity_terms": [
+        "深圳忆芯信息技术",
+        "深圳忆芯信息技术有限公司"
+      ],
+      "title": "“中国芯”一芯双冠丨忆芯科技AI SSD主控芯片STAR2000重构智能存储 ...",
+      "source_url": "https://zhuanlan.zhihu.com/p/1987900953286960685",
+      "source_domain": "zhuanlan.zhihu.com",
+      "summary_excerpt": "今年，忆芯科技PCIe 4.0 AI SSD 主控芯片STAR2000继获评“中国芯优秀技术创新产品”后，再次获得权威市场认可，标志着芯片在技术与商业化层面的双重突破。 国产 ...",
+      "evidence_excerpt": "今年，忆芯科技PCIe 4.0 AI SSD 主控芯片STAR2000继获评“中国芯优秀技术创新产品”后，再次获得权威市场认可，标志着芯片在技术与商业化层面的双重突破。",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "6b52ea3d-7789-40b3-81cc-280648709d3e",
+      "company_id": "COMP-2640a0f609b5",
+      "canonical_name": "深圳惟德精准医疗科技",
+      "registered_name": "深圳惟德精准医疗科技有限公司",
+      "trusted_identity_terms": [
+        "深圳惟德精准医疗科技",
+        "深圳惟德精准医疗科技有限公司"
+      ],
+      "title": "惟德精准完成超1.2亿元B轮融资，夯实软组织介入智能手术机器人 ...",
+      "source_url": "https://zhuanlan.zhihu.com/p/1988226623355515569",
+      "source_domain": "zhuanlan.zhihu.com",
+      "summary_excerpt": "公司产品可实现智能软组织介入手术，应用场景丰富多元，除CT和超声外，还可兼容CBCT、OBCT等跨平台影像数据，覆盖穿刺活检、引流，冷冻、微波、射频、激光、 ...",
+      "evidence_excerpt": "惟德精准完成超1.2亿元B轮融资，夯实软组织介入智能手术机器人 ... 公司产品可实现智能软组织介入手术，应用场景丰富多元，除CT和超声外，还可兼容CBCT、OBCT等跨平台影像数据，覆盖穿刺活检、引流，冷冻、微波、射频、激光、 ...",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "8ca5445a-94b3-4ffb-bdb6-b326b22e2b6c",
+      "company_id": "COMP-2640a0f609b5",
+      "canonical_name": "深圳惟德精准医疗科技",
+      "registered_name": "深圳惟德精准医疗科技有限公司",
+      "trusted_identity_terms": [
+        "深圳惟德精准医疗科技",
+        "深圳惟德精准医疗科技有限公司"
+      ],
+      "title": "惟德精准| 项目信息 - 创投平台- 36氪",
+      "source_url": "https://pitchhub.36kr.com/project/2011445906867465",
+      "source_domain": "pitchhub.36kr.com",
+      "summary_excerpt": "惟德精准是一家从事医疗手术机器人研发的科技公司，于2019年12月成立于广东深圳。包括创始人兼CEO谢卫国博士在内，公司的5位初创人员皆是曾任职于德国西门子、中国 ...",
+      "evidence_excerpt": "惟德精准是一家从事医疗手术机器人研发的科技公司，于2019年12月成立于广东深圳。包括创始人兼CEO谢卫国博士在内，公司的5位初创人员皆是曾任职于德国西门子、中国 ...",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "4f191f05-0347-46c5-acf2-a4f8047136e4",
+      "company_id": "COMP-2640a0f609b5",
+      "canonical_name": "深圳惟德精准医疗科技",
+      "registered_name": "深圳惟德精准医疗科技有限公司",
+      "trusted_identity_terms": [
+        "深圳惟德精准医疗科技",
+        "深圳惟德精准医疗科技有限公司"
+      ],
+      "title": "专访惟德精准谢卫国：AI重塑医学影像，助力国产手术机器人弯道超车",
+      "source_url": "https://www.cls.cn/detail/2195306",
+      "source_domain": "cls.cn",
+      "summary_excerpt": "惟德精准成立于2019年，公司主要产品为经皮介入类手术机器人，其第一款产品是成人肺和腹部实体器官的经皮介入手术机器人，于去年获批三类医疗器械，已经在国内 ...",
+      "evidence_excerpt": "惟德精准成立于2019年，公司主要产品为经皮介入类手术机器人，其第一款产品是成人肺和腹部实体器官的经皮介入手术机器人，于去年获批三类医疗器械，已经在国内 ...",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "108d3ef8-e6c9-476c-9dad-4431e9b16676",
+      "company_id": "COMP-24b478f05889",
+      "canonical_name": "深圳播聘人才",
+      "registered_name": "深圳播聘人才集团有限公司",
+      "trusted_identity_terms": [
+        "深圳播聘人才",
+        "深圳播聘人才集团有限公司"
+      ],
+      "title": "播聘",
+      "source_url": "https://www.abopin.com/",
+      "source_domain": "abopin.com",
+      "summary_excerpt": "播聘人才集团是中国人力资源行业领军企业、作为全球最早的人才市场数字化新基建的开拓者是全球5G技术人才市场的领军企业、中国著名品牌、深圳市人力资源行业协会常务理事 ...",
+      "evidence_excerpt": "播聘人才集团是中国人力资源行业领军企业、作为全球最早的人才市场数字化新基建的开拓者是全球5G技术人才市场的领军企业、中国著名品牌、深圳市人力资源行业协会常务理事 ...",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "a4574571-d226-41bb-9248-643f27b32d4b",
+      "company_id": "COMP-02a26304c3a6",
+      "canonical_name": "深圳新视智科技术",
+      "registered_name": "深圳新视智科技术有限公司",
+      "trusted_identity_terms": [
+        "深圳新视智科技术",
+        "深圳新视智科技术有限公司"
+      ],
+      "title": "新视智科| 高精密AOI视觉检测装备为显示行业赋能",
+      "source_url": "https://www.quanchu.com.cn/zh-cn/media-center/for-exhibitors/8-4/1.html",
+      "source_domain": "quanchu.com.cn",
+      "summary_excerpt": "新视智科是中兴新集团控股子公司，专注于AI工业机器视觉的研发并赋能智能制造，为企业客户提供领先的AI工业视觉智能化解决方案。新视智科以自主研发的基础平台为根基，以产业 ...",
+      "evidence_excerpt": "新视智科是中兴新集团控股子公司，专注于AI工业机器视觉的研发并赋能智能制造，为企业客户提供领先的AI工业视觉智能化解决方案。",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "7e292245-ff68-4caa-b075-27379660e813",
+      "company_id": "COMP-d848f429bdfe",
+      "canonical_name": "深圳智和家科技",
+      "registered_name": "深圳智和家科技有限公司",
+      "trusted_identity_terms": [
+        "深圳智和家科技",
+        "深圳智和家科技有限公司"
+      ],
+      "title": "智和家一站式全屋智能服务,好用又省心,一点都不贵！",
+      "source_url": "https://m.zhihejia.com/",
+      "source_domain": "m.zhihejia.com",
+      "summary_excerpt": "智和家产品品类齐全打造一站式全屋智能服务 · 智能音箱 · 智能网关 · 智能路由器 · 智能中控屏 · 智能传感器 · 智能开关 · 智能无线开关 · 智能窗帘.",
+      "evidence_excerpt": "智和家产品品类齐全打造一站式全屋智能服务 · 智能音箱 · 智能网关 · 智能路由器 · 智能中控屏 · 智能传感器 · 智能开关 · 智能无线开关 · 智能窗帘.",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "adc79534-d796-4a8e-97b9-5aff4fb38d72",
+      "company_id": "COMP-d848f429bdfe",
+      "canonical_name": "深圳智和家科技",
+      "registered_name": "深圳智和家科技有限公司",
+      "trusted_identity_terms": [
+        "深圳智和家科技",
+        "深圳智和家科技有限公司"
+      ],
+      "title": "智和家全屋智能家居的主页- 抖音",
+      "source_url": "https://www.douyin.com/user/MS4wLjABAAAAgAkrGr2KWcjTUFvSPWZVzknlm5UhEy-1k2Q84Ulnh1dDxq10rRGrFKSBw0N16ZwS",
+      "source_domain": "douyin.com",
+      "summary_excerpt": "智和家全屋智能家居：智和家全屋智能家居全国运营中心专注智能家居赛道10年主营产品米家生态系列米家plc 如想了解合作请私信智和家期待您的合作！ 回复不及时请见谅！",
+      "evidence_excerpt": "智和家全屋智能家居全国运营中心专注智能家居赛道10年主营产品米家生态系列米家plc",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "a6f9a0c4-51ca-440d-b7ff-9140572b8a74",
+      "company_id": "COMP-692e71ea6c19",
+      "canonical_name": "深圳望眼科技",
+      "registered_name": "深圳望眼科技有限公司",
+      "trusted_identity_terms": [
+        "深圳望眼科技",
+        "深圳望眼科技有限公司"
+      ],
+      "title": "另类数据在经济金融方面的应用：以夜光数据为例 - 未央网",
+      "source_url": "https://www.weiyangx.com/418431.html",
+      "source_domain": "weiyangx.com",
+      "summary_excerpt": "作为中国领先的卫星大数据分析服务商，望眼科技通过卫星影像、AI算法、大数据等先进技术提供更精准、更快速的时空大数据应用，为银行、基金、期货、保险等各类金融机构提供 ...",
+      "evidence_excerpt": "作为中国领先的卫星大数据分析服务商，望眼科技通过卫星影像、AI算法、大数据等先进技术提供更精准、更快速的时空大数据应用，为银行、基金、期货、保险等各类金融机构提供 ...",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "b97dc304-39ab-4fb0-9a15-e4eb64b26635",
+      "company_id": "COMP-692e71ea6c19",
+      "canonical_name": "深圳望眼科技",
+      "registered_name": "深圳望眼科技有限公司",
+      "trusted_identity_terms": [
+        "深圳望眼科技",
+        "深圳望眼科技有限公司"
+      ],
+      "title": "卫星大数据公司望眼科技入选“平安科技创新中心-中国拓展计划”",
+      "source_url": "https://finance.ifeng.com/c/7yN0QbKl0Bt",
+      "source_domain": "finance.ifeng.com",
+      "summary_excerpt": "作为一家致力于运用卫星遥感大数据服务金融领域的高科技公司，望眼科技能够利用深度学习、遥感技术、卷积神经网络等技术深度挖掘数据，为资管、券商、基金及 ...",
+      "evidence_excerpt": "作为一家致力于运用卫星遥感大数据服务金融领域的高科技公司，望眼科技能够利用深度学习、遥感技术、卷积神经网络等技术深度挖掘数据，为资管、券商、基金及 ...",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "8f5903c9-95b0-4232-80d3-1b94cf21adc3",
+      "company_id": "COMP-1cd84b2ae529",
+      "canonical_name": "深圳本原宇宙科技",
+      "registered_name": "深圳本原宇宙科技有限公司",
+      "trusted_identity_terms": [
+        "深圳本原宇宙科技",
+        "深圳本原宇宙科技有限公司"
+      ],
+      "title": "孟建民：本原元宇宙助力景城空间品质升级| 第五届镇长论坛_南方+",
+      "source_url": "https://static.nfnews.com/content/202511/28/c11949108.html?enterColumnId=1667",
+      "source_domain": "static.nfnews.com",
+      "summary_excerpt": "... 本原元宇宙就是为这个'大景区'装上'智慧大脑'与'体验灵魂'——通过数字技术打通虚实边界，实现治理智能化、体验沉浸化。”中国工程院院士、深圳市本原元宇宙 ...",
+      "evidence_excerpt": "本原元宇宙就是为这个'大景区'装上'智慧大脑'与'体验灵魂'——通过数字技术打通虚实边界，实现治理智能化、体验沉浸化。”中国工程院院士、深圳市本原元宇宙 ...",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "95c53bcd-8d5c-40d4-9cbe-06fc994dec21",
+      "company_id": "COMP-15ed9873c82f",
+      "canonical_name": "深圳柳叶刀机器人",
+      "registered_name": "深圳柳叶刀机器人有限公司",
+      "trusted_identity_terms": [
+        "深圳柳叶刀机器人",
+        "深圳柳叶刀机器人有限公司"
+      ],
+      "title": "柳叶刀国内首款髋关节置换手术机器人获批FDA上市",
+      "source_url": "https://www.sigma-stat.com/index.php?m=home&c=View&a=index&aid=3090",
+      "source_domain": "sigma-stat.com",
+      "summary_excerpt": "柳叶刀机器人RobPath THA为国内首款、全球第二款获得美国FDA注册认证的髋关节置换手术机器人，本次美国市场获批上市标志着柳叶刀机器人代表中国高端医疗 ...",
+      "evidence_excerpt": "柳叶刀机器人RobPath THA为国内首款、全球第二款获得美国FDA注册认证的髋关节置换手术机器人",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "c20d1ff4-449a-4dba-8f2f-41b41d9895c6",
+      "company_id": "COMP-15ed9873c82f",
+      "canonical_name": "深圳柳叶刀机器人",
+      "registered_name": "深圳柳叶刀机器人有限公司",
+      "trusted_identity_terms": [
+        "深圳柳叶刀机器人",
+        "深圳柳叶刀机器人有限公司"
+      ],
+      "title": "柳叶刀机器人-网站首页",
+      "source_url": "https://www.lancet-robotics.com/",
+      "source_domain": "lancet-robotics.com",
+      "summary_excerpt": "柳叶刀机器人成立于2018年，是一家深度布局关节置换、脊柱创伤、口腔种植以及血管介入四大黄金手术赛道的浙江省专精特新企业。目前，关节置换手术机器人、口腔种植手术 ...",
+      "evidence_excerpt": "柳叶刀机器人成立于2018年，是一家深度布局关节置换、脊柱创伤、口腔种植以及血管介入四大黄金手术赛道的浙江省专精特新企业。目前，关节置换手术机器人、口腔种植手术 ...",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "1a38d855-e70d-40aa-aa3f-3178958fd836",
+      "company_id": "COMP-15ed9873c82f",
+      "canonical_name": "深圳柳叶刀机器人",
+      "registered_name": "深圳柳叶刀机器人有限公司",
+      "trusted_identity_terms": [
+        "深圳柳叶刀机器人",
+        "深圳柳叶刀机器人有限公司"
+      ],
+      "title": "柳叶刀机器人完成数千万元A+轮融资 - ByDrug",
+      "source_url": "https://bydrug.pharmcube.com/news/detail/df8f33b3c48e7d898674ee575b214486",
+      "source_domain": "bydrug.pharmcube.com",
+      "summary_excerpt": "柳叶刀机器人专注于为医疗机构打造全方位的人工智能手术机器人全流程解决方案。经过多年的技术沉淀与市场拓展，柳叶刀机器人已成功构建了一套完备的手术 ...",
+      "evidence_excerpt": "柳叶刀机器人专注于为医疗机构打造全方位的人工智能手术机器人全流程解决方案。",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "1e6ed275-f4ed-43b7-ad8f-23f7ab2956ca",
+      "company_id": "COMP-01a9e815e4cb",
+      "canonical_name": "深圳璇玑动力科技",
+      "registered_name": "深圳璇玑动力科技有限公司",
+      "trusted_identity_terms": [
+        "深圳璇玑动力科技",
+        "深圳璇玑动力科技有限公司"
+      ],
+      "title": "ASTRALL",
+      "source_url": "https://www.astralldynamics.cn/",
+      "source_domain": "astralldynamics.cn",
+      "summary_excerpt": "",
+      "evidence_excerpt": "璇玑动力作为全球领先的具身智能平台型企业，以具身智能核心技术为锚点，聚焦智能机器人动力系统与操控技术的全栈自主创新与深度研发，覆盖智能机器人及核心零部件的全 ...",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "9a1ef63e-f284-4de3-b0a6-2736d607b984",
+      "company_id": "COMP-01a9e815e4cb",
+      "canonical_name": "深圳璇玑动力科技",
+      "registered_name": "深圳璇玑动力科技有限公司",
+      "trusted_identity_terms": [
+        "深圳璇玑动力科技",
+        "深圳璇玑动力科技有限公司"
+      ],
+      "title": "大疆系机器人公司「璇玑动力」半年内再获数亿融资",
+      "source_url": "https://zhuanlan.zhihu.com/p/2026323356207650322",
+      "source_domain": "zhuanlan.zhihu.com",
+      "summary_excerpt": "近日，专注于智能机器人本体平台及核心零部件自主研发的「璇玑动力」完成数亿元Pre-A轮融资，获上汽金控、东方精工、某龙头消费电子产业基金、建银国际（ ...",
+      "evidence_excerpt": "专注于智能机器人本体平台及核心零部件自主研发的「璇玑动力」完成数亿元Pre-A轮融资",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "bd909ebf-8f04-422a-9b64-a88b1d1a8989",
+      "company_id": "COMP-01a9e815e4cb",
+      "canonical_name": "深圳璇玑动力科技",
+      "registered_name": "深圳璇玑动力科技有限公司",
+      "trusted_identity_terms": [
+        "深圳璇玑动力科技",
+        "深圳璇玑动力科技有限公司"
+      ],
+      "title": "璇玑动力生态大会召开，Hypertron全系列亮相，60kg负重爬楼彰显硬 ...",
+      "source_url": "https://tech.cnr.cn/techph/20260525/t20260525_527635232.shtml",
+      "source_domain": "tech.cnr.cn",
+      "summary_excerpt": "2026年5月20日，以“开放协同？智启落地？共赢未来”为主题，璇玑动力（ASTRALL Dynamics）合作伙伴生态大会在深圳举办。大会集中发布多项战略举措，标志着璇玑 ...",
+      "evidence_excerpt": "璇玑动力（ASTRALL Dynamics）合作伙伴生态大会在深圳举办。大会集中发布多项战略举措...Hypertron全系列亮相，60kg负重爬楼",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "33539302-c6a7-43fc-b3d5-573bb26fd149",
+      "company_id": "COMP-065e3cb4dac8",
+      "canonical_name": "深圳百威雷科技",
+      "registered_name": "深圳百威雷科技有限公司",
+      "trusted_identity_terms": [
+        "深圳百威雷科技",
+        "深圳百威雷科技有限公司"
+      ],
+      "title": "確保關鍵人因作業行為 - PowerArena",
+      "source_url": "https://www.powerarena.com/zh-hant/",
+      "source_domain": "powerarena.com",
+      "summary_excerpt": "全球管理層. 一手掌握、運籌帷幄. 借助AI 視覺建模的清晰度、即時洞察和實時透明度，為您的全球生產管線提供前所未有的透明性。 · 工廠管理層. 洞察、升效、杜絕盲點 · 工業 ...",
+      "evidence_excerpt": "借助AI 視覺建模的清晰度、即時洞察和實時透明度，為您的全球生產管線提供前所未有的透明性。",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "8e8d4eaa-221b-4238-a3c9-e385a49a7c91",
+      "company_id": "COMP-065e3cb4dac8",
+      "canonical_name": "深圳百威雷科技",
+      "registered_name": "深圳百威雷科技有限公司",
+      "trusted_identity_terms": [
+        "深圳百威雷科技",
+        "深圳百威雷科技有限公司"
+      ],
+      "title": "百威雷科技有限公司｜PowerArena - METAMatch AI 雲市集",
+      "source_url": "https://www.metamatch.market/isv/detail/PowerArena",
+      "source_domain": "metamatch.market",
+      "summary_excerpt": "PowerArena 提供領先的AI 視覺平台。我們的旗艦產品，人因作業平台HOP（Human Operation Platform），為製造商提供先進的AI 解決方案，擅長提取勞力密集產線的數據並保護 ...",
+      "evidence_excerpt": "PowerArena 提供領先的AI 視覺平台。我們的旗艦產品，人因作業平台HOP（Human Operation Platform），為製造商提供先進的AI 解決方案，擅長提取勞力密集產線的數據並保護 ...",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "269e317e-fa58-4a7d-b4b2-24cb28d0cbd4",
+      "company_id": "COMP-065e3cb4dac8",
+      "canonical_name": "深圳百威雷科技",
+      "registered_name": "深圳百威雷科技有限公司",
+      "trusted_identity_terms": [
+        "深圳百威雷科技",
+        "深圳百威雷科技有限公司"
+      ],
+      "title": "确保关键人因作业行为 - PowerArena",
+      "source_url": "https://www.powerarena.com/zh-hans/",
+      "source_domain": "powerarena.com",
+      "summary_excerpt": "PowerArena HOP 人因作业平台，通过AI 计算机视觉技术，为制造装配线提供可靠且公正的数据洞察。 实现AI 优化人因装配线 ...",
+      "evidence_excerpt": "PowerArena HOP 人因作业平台，通过AI 计算机视觉技术，为制造装配线提供可靠且公正的数据洞察。",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "025bde60-fa4c-42cf-9977-6fe83f27ac1e",
+      "company_id": "COMP-065e3cb4dac8",
+      "canonical_name": "深圳百威雷科技",
+      "registered_name": "深圳百威雷科技有限公司",
+      "trusted_identity_terms": [
+        "深圳百威雷科技",
+        "深圳百威雷科技有限公司"
+      ],
+      "title": "獨家AI技術扮演後盾PowerArena百威雷搶進智慧製造龐大商機",
+      "source_url": "https://www.digitimes.com.tw/tech/dt/n/shwnws.asp?id=0000681213_66J3UF7K0SVCYD40G9VLM",
+      "source_domain": "digitimes.com.tw",
+      "summary_excerpt": "發跡於美國的百威雷科技（PowerArena），由於主打只需運用一般攝影機，搭配該公司自行研發的AI技術，便可從即時搜集的產線車間影像中，進行深度影像分析工作， ...",
+      "evidence_excerpt": "發跡於美國的百威雷科技（PowerArena），由於主打只需運用一般攝影機，搭配該公司自行研發的AI技術，便可從即時搜集的產線車間影像中，進行深度影像分析工作",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "64f7d4ca-fa1d-46a2-9785-6ff349c542eb",
+      "company_id": "COMP-065e3cb4dac8",
+      "canonical_name": "深圳百威雷科技",
+      "registered_name": "深圳百威雷科技有限公司",
+      "trusted_identity_terms": [
+        "深圳百威雷科技",
+        "深圳百威雷科技有限公司"
+      ],
+      "title": "百威雷科技有限公司- Future Tech Pavilion, FUTEX未來科技館",
+      "source_url": "https://www.futuretech.org.tw/futuretech/index.php?action=product_detail&prod_no=P0008700004825",
+      "source_domain": "futuretech.org.tw",
+      "summary_excerpt": "技術名稱, 百威雷科技有限公司. 產業應用性, PowerArena AI 是影像人因作業分析最早實踐及落地的軟體開發技術者並且為方案落地的領導廠商。現在已導入數家EMS 及成衣 ...",
+      "evidence_excerpt": "百威雷科技有限公司. 產業應用性, PowerArena AI 是影像人因作業分析最早實踐及落地的軟體開發技術者並且為方案落地的領導廠商。",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "0a3449ce-02df-406b-8c9b-b24d7d058781",
+      "company_id": "COMP-065e3cb4dac8",
+      "canonical_name": "深圳百威雷科技",
+      "registered_name": "深圳百威雷科技有限公司",
+      "trusted_identity_terms": [
+        "深圳百威雷科技",
+        "深圳百威雷科技有限公司"
+      ],
+      "title": "百威雷科技有限公司- 創業亮點 - 新創圓夢網",
+      "source_url": "https://startup.sme.gov.tw/home/modules/highlight/detail/?sId=587",
+      "source_domain": "startup.sme.gov.tw",
+      "summary_excerpt": "百威雷(PowerArena Inc.)由前Google 創始員工創立，從史丹佛創業孵化器（Stanford's StartX）開始了我們的旅程，現於台灣、美國、墨西哥、中國、香港等地 ...",
+      "evidence_excerpt": "百威雷(PowerArena Inc.)由前Google 創始員工創立，從史丹佛創業孵化器（Stanford's StartX）開始了我們的旅程",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "4ef9c807-6fd2-4b6f-b96e-0f36b2ed0517",
+      "company_id": "COMP-065e3cb4dac8",
+      "canonical_name": "深圳百威雷科技",
+      "registered_name": "深圳百威雷科技有限公司",
+      "trusted_identity_terms": [
+        "深圳百威雷科技",
+        "深圳百威雷科技有限公司"
+      ],
+      "title": "關於我們- PowerArena (TC)",
+      "source_url": "https://www.powerarena.com/zh-hant/about/",
+      "source_domain": "powerarena.com",
+      "summary_excerpt": "PowerArena HOP 人因作業平台被世界500 強企業使用，以實現成熟生產線上高達10% 的增長，同時提供強大的質量保障。我們的HOP AI 視覺和物聯網增強環境大大提升了質量控制、 ...",
+      "evidence_excerpt": "PowerArena HOP 人因作業平台被世界500 強企業使用，以實現成熟生產線上高達10% 的增長，同時提供強大的質量保障。",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "e5ff3573-ad6f-4586-816b-53828927f727",
+      "company_id": "COMP-071193141d1c",
+      "canonical_name": "深圳秩益科技",
+      "registered_name": "深圳秩益科技有限责任公司",
+      "trusted_identity_terms": [
+        "深圳秩益科技",
+        "深圳秩益科技有限责任公司"
+      ],
+      "title": "秩益科技CAE/CFD软件Dimaxer软件设计思路 - 知乎专栏",
+      "source_url": "https://zhuanlan.zhihu.com/p/682342049",
+      "source_domain": "zhuanlan.zhihu.com",
+      "summary_excerpt": "秩益科技CAE/CFD软件Dimaxer软件设计思路. 2 年前. 秩益科技. | 专业从事CAE软件研发，提供系统级工业仿真解决方案。 关注. 知乎平台上有人质疑Dimaxer软件是基于 ...",
+      "evidence_excerpt": "秩益科技CAE/CFD软件Dimaxer软件设计思路",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "2b3d0c19-9510-472b-bb36-8fb2daf1b0e6",
+      "company_id": "COMP-071193141d1c",
+      "canonical_name": "深圳秩益科技",
+      "registered_name": "深圳秩益科技有限责任公司",
+      "trusted_identity_terms": [
+        "深圳秩益科技",
+        "深圳秩益科技有限责任公司"
+      ],
+      "title": "秩益科技-国产CAE仿真软件-全异步计算模型,高解析度系统级工业 ...",
+      "source_url": "https://www.rankyee.com/",
+      "source_domain": "rankyee.com",
+      "summary_excerpt": "秩益科技专注工业仿真软件研发，致力于打造领先的国产CAE仿真软件平台，为企业提供高性能、高解析度系统级工业仿真解决方案。依托自主核心算法与先进架构，平台实现全异步 ...",
+      "evidence_excerpt": "秩益科技专注工业仿真软件研发，致力于打造领先的国产CAE仿真软件平台，为企业提供高性能、高解析度系统级工业仿真解决方案。",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "5d1467d0-34a4-4d9c-ae24-2f474a3baa09",
+      "company_id": "COMP-071193141d1c",
+      "canonical_name": "深圳秩益科技",
+      "registered_name": "深圳秩益科技有限责任公司",
+      "trusted_identity_terms": [
+        "深圳秩益科技",
+        "深圳秩益科技有限责任公司"
+      ],
+      "title": "秩益科技DIMAXER 全新升级全面赋能工业智能化转型 - China Daily",
+      "source_url": "https://ex.chinadaily.com.cn/exchange/partners/82/rss/channel/cn/columns/snl9a7/stories/WS676cf883a310b59111daaf37.html",
+      "source_domain": "ex.chinadaily.com.cn",
+      "summary_excerpt": "面向工业数字化研发需求，秩益科技自主开发的革命性高解析度工业仿真软件DIMAXER集成几何导入、网格生成、高可信度求解与后处理四个模块，可进行复杂系统级 ...",
+      "evidence_excerpt": "秩益科技自主开发的革命性高解析度工业仿真软件DIMAXER集成几何导入、网格生成、高可信度求解与后处理四个模块",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "ea77700b-c481-46a2-a803-4d68f5e9fa34",
+      "company_id": "COMP-071193141d1c",
+      "canonical_name": "深圳秩益科技",
+      "registered_name": "深圳秩益科技有限责任公司",
+      "trusted_identity_terms": [
+        "深圳秩益科技",
+        "深圳秩益科技有限责任公司"
+      ],
+      "title": "联系我们 - 秩益科技-国产CAE仿真软件",
+      "source_url": "https://www.rankyee.com/contact.html",
+      "source_domain": "rankyee.com",
+      "summary_excerpt": "公司地址 ; 苏州办公室. 江苏省苏州市淞北路333号苏州纳米科技国家大学科技园（二期）A2栋18楼 ; 深圳办公室. 广东省深圳市龙华区北站壹号（创想大厦）2栋2608-2609号 ; 北京 ...",
+      "evidence_excerpt": "苏州办公室. 江苏省苏州市淞北路333号苏州纳米科技国家大学科技园（二期）A2栋18楼 ; 深圳办公室. 广东省深圳市龙华区北站壹号（创想大厦）2栋2608-2609号 ; 北京 ...",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "37980c1e-88d4-4693-b068-78e13eed7596",
+      "company_id": "COMP-071193141d1c",
+      "canonical_name": "深圳秩益科技",
+      "registered_name": "深圳秩益科技有限责任公司",
+      "trusted_identity_terms": [
+        "深圳秩益科技",
+        "深圳秩益科技有限责任公司"
+      ],
+      "title": "秩益科技获得A+轮融资，沂景资本投资-腾讯新闻 - QQ News",
+      "source_url": "https://news.qq.com/rain/a/20260304A046RS00",
+      "source_domain": "news.qq.com",
+      "summary_excerpt": "秩益科技是一家拥有自主研发全新一代计算流体力学工业软件的供应商，致力于提供新一代计算流体力学（CFD）解决方案，集成网格生成、高可信度 ...",
+      "evidence_excerpt": "秩益科技是一家拥有自主研发全新一代计算流体力学工业软件的供应商...秩益科技获得A+轮融资，沂景资本投资",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "aea60fa9-ad2b-49c9-b16d-eebd61731acb",
+      "company_id": "COMP-1b25069ef78c",
+      "canonical_name": "深圳翊蓝科技",
+      "registered_name": "深圳翊蓝科技有限公司",
+      "trusted_identity_terms": [
+        "深圳翊蓝科技",
+        "深圳翊蓝科技有限公司"
+      ],
+      "title": "区领导会见翊蓝科技、翊芯科技客人 - 威海市人民政府",
+      "source_url": "https://www.weihai.gov.cn/art/2025/4/24/art_60618_5441525.html",
+      "source_domain": "weihai.gov.cn",
+      "summary_excerpt": "翊蓝科技是具有核心技术的智能无人机研发生产企业，翊芯科技专注于低轨卫星、发射芯片等解决方案，具有突出的核心技术和专家人才优势，与高区产业发展契合度 ...",
+      "evidence_excerpt": "翊蓝科技是具有核心技术的智能无人机研发生产企业",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "9f61b05d-6fe2-4eb8-9c78-2be984937e4c",
+      "company_id": "COMP-1b25069ef78c",
+      "canonical_name": "深圳翊蓝科技",
+      "registered_name": "深圳翊蓝科技有限公司",
+      "trusted_identity_terms": [
+        "深圳翊蓝科技",
+        "深圳翊蓝科技有限公司"
+      ],
+      "title": "翊蓝科技获得A+轮融资，智路资本、青岛地铁投资 - 腾讯新闻",
+      "source_url": "https://news.qq.com/rain/a/20251225A03TUS00",
+      "source_domain": "news.qq.com",
+      "summary_excerpt": "翊蓝科技是一家智能无人飞行器制造销售商，主要从事智能无人飞行器制造、智能无人飞行器销售、人工智能通用应用系统研发业务。翊蓝科技获得A+轮融资，智 ...",
+      "evidence_excerpt": "翊蓝科技是一家智能无人飞行器制造销售商，主要从事智能无人飞行器制造、智能无人飞行器销售、人工智能通用应用系统研发业务。翊蓝科技获得A+轮融资，智 ...",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "1a5e7924-064d-45ec-ab14-064f7e0e8d31",
+      "company_id": "COMP-8ebef706fbbe",
+      "canonical_name": "深圳联恒智控科技",
+      "registered_name": "深圳联恒智控科技有限公司",
+      "trusted_identity_terms": [
+        "深圳联恒智控科技",
+        "深圳联恒智控科技有限公司"
+      ],
+      "title": "联恒智控-企业官网",
+      "source_url": "https://linehope.com/",
+      "source_domain": "linehope.com",
+      "summary_excerpt": "联恒智控科技有限公司是顺为资本投资的面向行业用户提供物联网一体化解决方案公司。企业集建筑智能化系统的技术研发、设计和产品销售为一体，注重物联网系统的研究与 ...",
+      "evidence_excerpt": "联恒智控科技有限公司是顺为资本投资的面向行业用户提供物联网一体化解决方案公司。",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "2421a855-386e-4672-afb2-425e0a4faaed",
+      "company_id": "COMP-14e479cbfe18",
+      "canonical_name": "深圳艾斯克机器人科技",
+      "registered_name": "深圳艾斯克机器人科技有限公司",
+      "trusted_identity_terms": [
+        "深圳艾斯克机器人科技",
+        "深圳艾斯克机器人科技有限公司"
+      ],
+      "title": "深圳市艾斯克科技有限公司| Asco Technology Co.,Ltd",
+      "source_url": "http://www.szasco.com/",
+      "source_domain": "szasco.com",
+      "summary_excerpt": "深圳市艾斯克科技有限公司成立于2009年，经过十多年的持续发展，现已成为国内领先的线束加工整体解决方案提供商。公司专注于为汽车制造、电力设备、电子通讯、办公设备及 ...",
+      "evidence_excerpt": "深圳市艾斯克科技有限公司成立于2009年，经过十多年的持续发展，现已成为国内领先的线束加工整体解决方案提供商。公司专注于为汽车制造、电力设备、电子通讯、办公设备及 ...",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "d92c0279-131b-42fe-87bb-a55b10788914",
+      "company_id": "COMP-14e479cbfe18",
+      "canonical_name": "深圳艾斯克机器人科技",
+      "registered_name": "深圳艾斯克机器人科技有限公司",
+      "trusted_identity_terms": [
+        "深圳艾斯克机器人科技",
+        "深圳艾斯克机器人科技有限公司"
+      ],
+      "title": "艾斯克机器人——具身智能实践者",
+      "source_url": "https://ask-robotics.cn/",
+      "source_domain": "ask-robotics.cn",
+      "summary_excerpt": "艾斯克的产品覆盖了智能巡检、应急救援、地图测绘、科研教育等多个领域，凭借先进的技术和卓越的性能，致力于帮助各行业的智能升级。 艾斯克机器人高度重视科技创新和技术 ...",
+      "evidence_excerpt": "艾斯克的产品覆盖了智能巡检、应急救援、地图测绘、科研教育等多个领域",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "313dfd47-e197-4eba-9afc-e7e9c4ea34a5",
+      "company_id": "COMP-46955be309fe",
+      "canonical_name": "深圳艾米佳康科技",
+      "registered_name": "深圳艾米佳康科技有限公司",
+      "trusted_identity_terms": [
+        "深圳艾米佳康科技",
+        "深圳艾米佳康科技有限公司"
+      ],
+      "title": "康佳集团挂牌转让艾米佳康20%股权，底价230.6万元 - QQ News",
+      "source_url": "https://news.qq.com/rain/a/20240628A03X8M00",
+      "source_domain": "news.qq.com",
+      "summary_excerpt": "据查，艾米佳康成立于2021年，注册资本为2000万元，经营范围含配电开关控制设备制造；网络设备制造；五金产品制等。目前，该公司由深圳市艾米佳康终端技术有限 ...",
+      "evidence_excerpt": "据查，艾米佳康成立于2021年，注册资本为2000万元，经营范围含配电开关控制设备制造；网络设备制造；五金产品制等。目前，该公司由深圳市艾米佳康终端技术有限 ...",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "bf812b8e-423e-4c36-b6e1-5b66007543dc",
+      "company_id": "COMP-2482684e2ff8",
+      "canonical_name": "深圳芯通科科技",
+      "registered_name": "深圳芯通科科技有限公司",
+      "trusted_identity_terms": [
+        "深圳芯通科科技",
+        "深圳芯通科科技有限公司"
+      ],
+      "title": "赋能全球企业，芯片一站式解决方案生产商",
+      "source_url": "https://www.coretong.com/aboutus/",
+      "source_domain": "coretong.com",
+      "summary_excerpt": "深圳市芯通电子科技有限公司成立于2016年，位于中国硅谷的深圳科技园，是一家专注于功率器件研发、销售的fabless半导体公司。芯通的优势在于设计团队来自业界精英，有丰富 ...",
+      "evidence_excerpt": "深圳市芯通电子科技有限公司成立于2016年，位于中国硅谷的深圳科技园，是一家专注于功率器件研发、销售的fabless半导体公司。",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "26453ecd-6ddc-4516-9ba3-b8731310b0b5",
+      "company_id": "COMP-09aa809ec89e",
+      "canonical_name": "深圳蚁人智能网络",
+      "registered_name": "深圳蚁人智能网络有限公司",
+      "trusted_identity_terms": [
+        "深圳蚁人智能网络",
+        "深圳蚁人智能网络有限公司"
+      ],
+      "title": "深圳蚁人信息科技有限公司_百度百科",
+      "source_url": "https://baike.baidu.com/item/%E6%B7%B1%E5%9C%B3%E8%9A%81%E4%BA%BA%E4%BF%A1%E6%81%AF%E7%A7%91%E6%8A%80%E6%9C%89%E9%99%90%E5%85%AC%E5%8F%B8/20297755",
+      "source_domain": "baike.baidu.com",
+      "summary_excerpt": "深圳蚁人信息科技有限公司简称“蚁人”，是一家专注于互联网金融行业效果营销服务商，公司成立于2015年，聚集资深的互动广告、创意营销、网络技术开发等互联网营销技术专家， ...",
+      "evidence_excerpt": "深圳蚁人信息科技有限公司简称“蚁人”，是一家专注于互联网金融行业效果营销服务商，公司成立于2015年",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "f74351f8-4e3b-43e8-803e-43aa5b38c75b",
+      "company_id": "COMP-54fd4dd036ff",
+      "canonical_name": "深圳迈塔兰斯科技",
+      "registered_name": "深圳迈塔兰斯科技有限公司",
+      "trusted_identity_terms": [
+        "深圳迈塔兰斯科技",
+        "深圳迈塔兰斯科技有限公司"
+      ],
+      "title": "已投企业｜迈塔兰斯获超亿元A+轮融资，建成全球首条超透镜量产 ...",
+      "source_url": "http://www.nsseii.com/CaseStd_769.html",
+      "source_domain": "nsseii.com",
+      "summary_excerpt": "「迈塔兰斯」成立于2020年，主要从事超透镜设计及制造。产品主要包含：折超混合超透镜系统、MetaToF®发射及接收和MetaStruclight®结构光发射与接收、可见光 ...",
+      "evidence_excerpt": "「迈塔兰斯」成立于2020年，主要从事超透镜设计及制造。产品主要包含：折超混合超透镜系统、MetaToF®发射及接收和MetaStruclight®结构光发射与接收、可见光 ...",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "7c0bbe4b-bf3e-4e63-bd76-91f12e0ec88e",
+      "company_id": "COMP-0693e77e51df",
+      "canonical_name": "深圳迈巨微电子科技",
+      "registered_name": "深圳迈巨微电子科技有限责任公司",
+      "trusted_identity_terms": [
+        "深圳迈巨微电子科技",
+        "深圳迈巨微电子科技有限责任公司"
+      ],
+      "title": "Amagictech迈巨微电子 - 充电头网",
+      "source_url": "https://www.chongdiantou.com/brand/1747130229328.html",
+      "source_domain": "chongdiantou.com",
+      "summary_excerpt": "迈巨微电子（AmagicTech）成立于2019年，立足于锂电池管理芯片领域，围绕电池安全、电池计算两个核心技术能力，提供端到端锂电池管理系统（BMS）核心芯片及完整系统解决方案。",
+      "evidence_excerpt": "迈巨微电子（AmagicTech）成立于2019年，立足于锂电池管理芯片领域，围绕电池安全、电池计算两个核心技术能力，提供端到端锂电池管理系统（BMS）核心芯片及完整系统解决方案。",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "29e128b3-e217-4140-9ce9-1a9e95180aef",
+      "company_id": "COMP-0693e77e51df",
+      "canonical_name": "深圳迈巨微电子科技",
+      "registered_name": "深圳迈巨微电子科技有限责任公司",
+      "trusted_identity_terms": [
+        "深圳迈巨微电子科技",
+        "深圳迈巨微电子科技有限责任公司"
+      ],
+      "title": "联系我们_迈巨微电子",
+      "source_url": "https://www.amagictech.com/contact/",
+      "source_domain": "amagictech.com",
+      "summary_excerpt": "地址：深圳市龙华区民治街道红山社区红山六九七九二期7栋1006、1007室. fae@amagictech.com. sales@amagictech.com. 迈巨微电子- 杭州办公室.",
+      "evidence_excerpt": "迈巨微电子- 杭州办公室",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "8d78275a-9432-4b5a-a248-fd167ec04334",
+      "company_id": "COMP-0693e77e51df",
+      "canonical_name": "深圳迈巨微电子科技",
+      "registered_name": "深圳迈巨微电子科技有限责任公司",
+      "trusted_identity_terms": [
+        "深圳迈巨微电子科技",
+        "深圳迈巨微电子科技有限责任公司"
+      ],
+      "title": "迈巨微带来多款BMS/AFE 解决方案，助力全场景能源管理智能化",
+      "source_url": "https://www.chongdiantou.com/archives/1751252665233.html",
+      "source_domain": "chongdiantou.com",
+      "summary_excerpt": "迈巨微电子成立于2019年，立足于锂电池管理芯片领域，围绕电池安全与电池计算两大核心技术能力，提供端到端的锂电池管理系统核心芯片及完整系统解决方案。",
+      "evidence_excerpt": "迈巨微电子成立于2019年，立足于锂电池管理芯片领域，围绕电池安全与电池计算两大核心技术能力，提供端到端的锂电池管理系统核心芯片及完整系统解决方案。",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "fc56dc60-b6cb-4677-aac2-d3bd6ecf6ca8",
+      "company_id": "COMP-23f148413043",
+      "canonical_name": "深圳逸芯生命科学",
+      "registered_name": "深圳逸芯生命科学有限公司",
+      "trusted_identity_terms": [
+        "深圳逸芯生命科学",
+        "深圳逸芯生命科学有限公司"
+      ],
+      "title": "AI器官芯片公司“逸芯”完成数千万天使轮融资 - 阿里云创新中心",
+      "source_url": "http://startup.aliyun.com/city/lc/portal/finance-news/3510",
+      "source_domain": "startup.aliyun.com",
+      "summary_excerpt": "2023-09-26. 36氪获悉，近日，AI器官芯片公司广州逸芯生命科学有限公司宣布，完成由芯航资本领投的数千万天使轮融资。据介绍，逸芯打造了全球首个全流程的市场化、标准化和 ...",
+      "evidence_excerpt": "AI器官芯片公司广州逸芯生命科学有限公司宣布，完成由芯航资本领投的数千万天使轮融资",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "15552098-70fe-4299-8ff1-c27358e2df84",
+      "company_id": "COMP-07f772839ee2",
+      "canonical_name": "深圳锐视智芯科技",
+      "registered_name": "深圳锐视智芯科技有限公司",
+      "trusted_identity_terms": [
+        "深圳锐视智芯科技",
+        "深圳锐视智芯科技有限公司"
+      ],
+      "title": "锐思智芯宣布完成数亿元B+轮融资 - 证券时报",
+      "source_url": "https://stcn.com/article/detail/3684079.html",
+      "source_domain": "stcn.com",
+      "summary_excerpt": "近日，融合视觉传感器厂商锐思智芯宣布完成数亿元人民币B+轮融资。该轮融资由京国投、粤财基金、广汽资本、圆周基金、长江资本、中科蓝讯、中青恒辉、新亚 ...",
+      "evidence_excerpt": "融合视觉传感器厂商锐思智芯宣布完成数亿元人民币B+轮融资",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "c91c8034-93f9-4e82-8836-cc9eb3ac9d64",
+      "company_id": "COMP-07f772839ee2",
+      "canonical_name": "深圳锐视智芯科技",
+      "registered_name": "深圳锐视智芯科技有限公司",
+      "trusted_identity_terms": [
+        "深圳锐视智芯科技",
+        "深圳锐视智芯科技有限公司"
+      ],
+      "title": "锐思智芯| 项目信息 - 创投平台- 36氪",
+      "source_url": "https://pitchhub.36kr.com/project/1679798907196169",
+      "source_domain": "pitchhub.36kr.com",
+      "summary_excerpt": "锐思智芯是一家源于瑞士，拥有一支兼备算法、软件、硬件、芯片研发能力的团队，从事机器视觉芯片及模组技术研发的高新技术企业。公司的资深研发团队均是在世界知名高科技 ...",
+      "evidence_excerpt": "锐思智芯是一家源于瑞士，拥有一支兼备算法、软件、硬件、芯片研发能力的团队，从事机器视觉芯片及模组技术研发的高新技术企业。",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "0c59e065-5b7a-4a63-8d24-524f014bc6e5",
+      "company_id": "COMP-07f772839ee2",
+      "canonical_name": "深圳锐视智芯科技",
+      "registered_name": "深圳锐视智芯科技有限公司",
+      "trusted_identity_terms": [
+        "深圳锐视智芯科技",
+        "深圳锐视智芯科技有限公司"
+      ],
+      "title": "锐思智芯，这家公司怎么样？ - 知乎",
+      "source_url": "https://www.zhihu.com/question/527500121",
+      "source_domain": "zhihu.com",
+      "summary_excerpt": "锐思智芯是国内做事件相机，视觉传感器芯片的独角兽公司，已完成近亿元人民币Pre-A轮融资。 事件相机：事件相机是具有微秒反应时间的仿生传感器，可记录每像素 ...",
+      "evidence_excerpt": "锐思智芯是国内做事件相机，视觉传感器芯片的独角兽公司，已完成近亿元人民币Pre-A轮融资。",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "c0a7b874-f1cf-4565-9c3e-19e386b66dfc",
+      "company_id": "COMP-1764f9b80fc2",
+      "canonical_name": "深圳问止中医健康科技",
+      "registered_name": "深圳问止中医健康科技有限公司",
+      "trusted_identity_terms": [
+        "深圳问止中医健康科技",
+        "深圳问止中医健康科技有限公司"
+      ],
+      "title": "问止中医中医大脑中医人工智能",
+      "source_url": "https://techtcm.com/",
+      "source_domain": "techtcm.com",
+      "summary_excerpt": "",
+      "evidence_excerpt": "问止中医是. 中医人工智能数字医疗企业. 专注于中医重症及疑难病. 问止中医在中美两地历时十余年研发出. 中医人工智能辅助诊疗系统--中医大脑.",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "b549174d-34cf-44de-aad4-3b08662764fc",
+      "company_id": "COMP-1764f9b80fc2",
+      "canonical_name": "深圳问止中医健康科技",
+      "registered_name": "深圳问止中医健康科技有限公司",
+      "trusted_identity_terms": [
+        "深圳问止中医健康科技",
+        "深圳问止中医健康科技有限公司"
+      ],
+      "title": "问止中医_百度百科",
+      "source_url": "https://baike.baidu.com/item/%E9%97%AE%E6%AD%A2%E4%B8%AD%E5%8C%BB/53181609",
+      "source_domain": "baike.baidu.com",
+      "summary_excerpt": "问止中医是以“AI+中医”为核心理念，将传统中医理论与大数据、机器学习、知识图谱等现代技术结合，构建智能化中医诊疗体系，突破传统中医依赖经验判断的局限性。 问止中医 ...",
+      "evidence_excerpt": "问止中医是以“AI+中医”为核心理念，将传统中医理论与大数据、机器学习、知识图谱等现代技术结合，构建智能化中医诊疗体系",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "50dd269e-bc92-4b6a-8ee7-f2f56c9de95c",
+      "company_id": "COMP-1764f9b80fc2",
+      "canonical_name": "深圳问止中医健康科技",
+      "registered_name": "深圳问止中医健康科技有限公司",
+      "trusted_identity_terms": [
+        "深圳问止中医健康科技",
+        "深圳问止中医健康科技有限公司"
+      ],
+      "title": "“AI+中医诊疗”掀浪潮！问止中医冲刺IPO，同仁堂、固生堂等纷纷发力",
+      "source_url": "https://www.yyjjb.com.cn/02/19/20250219201808188_24044.shtml",
+      "source_domain": "yyjjb.com.cn",
+      "summary_excerpt": "问止中医成立于2018年6月，总部位于广东深圳，是一家人工智能赋能的中医医疗服务提供商，以线上互联网医院、线下中医诊所的医疗服务为其主营业务，同时也有 ...",
+      "evidence_excerpt": "问止中医成立于2018年6月，总部位于广东深圳，是一家人工智能赋能的中医医疗服务提供商，以线上互联网医院、线下中医诊所的医疗服务为其主营业务",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "c27f297f-b5d5-481b-a00a-249dceaecfdd",
+      "company_id": "COMP-012840859217",
+      "canonical_name": "深圳鼎讯智城科技",
+      "registered_name": "深圳鼎讯智城科技有限公司",
+      "trusted_identity_terms": [
+        "深圳鼎讯智城科技",
+        "深圳鼎讯智城科技有限公司"
+      ],
+      "title": "鼎讯智城 - 天眼查",
+      "source_url": "https://www.tianyancha.com/brand/b7fde660394",
+      "source_domain": "tianyancha.com",
+      "summary_excerpt": "鼎讯智城主要开展智慧城市和“数字政府”建设业务。秉承“扎根坪山，服务深圳，面向全国”的宗旨，公司将充分发挥腾讯和腾讯云、鼎铉、鼎链在各自领域的优势，致力建设成为智慧 ...",
+      "evidence_excerpt": "鼎讯智城主要开展智慧城市和“数字政府”建设业务。秉承“扎根坪山，服务深圳，面向全国”的宗旨，公司将充分发挥腾讯和腾讯云、鼎铉、鼎链在各自领域的优势，致力建设成为智慧 ...",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "c573e7da-d64f-4498-97db-6122511a4073",
+      "company_id": "COMP-894338aff924",
+      "canonical_name": "清宝科技",
+      "registered_name": "深圳市清宝科技有限公司",
+      "trusted_identity_terms": [
+        "清宝科技",
+        "深圳市清宝科技有限公司"
+      ],
+      "title": "清宝机器人完成数千万元Pre-A轮融资，汉理资本投资 - 雪球",
+      "source_url": "https://xueqiu.com/3666749272/329137752",
+      "source_domain": "xueqiu.com",
+      "summary_excerpt": "清宝机器人成立于2022年8月26日，是一家专注于仿生机器人研发的科技创新企业，主要致力于人形双足行走机器人的研发，其产品可应用于危险性场景和军事 ...",
+      "evidence_excerpt": "清宝机器人成立于2022年8月26日，是一家专注于仿生机器人研发的科技创新企业，主要致力于人形双足行走机器人的研发，其产品可应用于危险性场景和军事 ...",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "06ea3f17-3f9b-477e-a793-72e68771f1a0",
+      "company_id": "COMP-894338aff924",
+      "canonical_name": "清宝科技",
+      "registered_name": "深圳市清宝科技有限公司",
+      "trusted_identity_terms": [
+        "清宝科技",
+        "深圳市清宝科技有限公司"
+      ],
+      "title": "清宝引擎机器人- 专注于仿人机器人",
+      "source_url": "https://www.qingyun-robot.com/",
+      "source_domain": "qingyun-robot.com",
+      "summary_excerpt": "上海清宝引擎机器人有限公司成立于2022年8月28日，是一家集人工智能和仿人机器人产品的研发、平台软件开发、场景应用、销售和服务的全球性高科技创新公司。",
+      "evidence_excerpt": "上海清宝引擎机器人有限公司成立于2022年8月28日，是一家集人工智能和仿人机器人产品的研发、平台软件开发、场景应用、销售和服务的全球性高科技创新公司。",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "eaeebed3-30e8-44db-bac6-08d42a5995a4",
+      "company_id": "COMP-894338aff924",
+      "canonical_name": "清宝科技",
+      "registered_name": "深圳市清宝科技有限公司",
+      "trusted_identity_terms": [
+        "清宝科技",
+        "深圳市清宝科技有限公司"
+      ],
+      "title": "清宝引擎机器人完成Pre-A轮融资，汉理资本投资 - 亿欧",
+      "source_url": "https://www.iyiou.com/data/202503261093937",
+      "source_domain": "iyiou.com",
+      "summary_excerpt": "上海清宝引擎机器人有限公司（简称：清宝引擎机器人）近日完成Pre-A轮融资，由汉理资本投资。清宝引擎机器人是一家专注于仿生机器人研发的科技创新企业， ...",
+      "evidence_excerpt": "上海清宝引擎机器人有限公司（简称：清宝引擎机器人）近日完成Pre-A轮融资，由汉理资本投资。",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "ebe8cf52-b866-4f58-a4d5-28db33d280bb",
+      "company_id": "COMP-894338aff924",
+      "canonical_name": "清宝科技",
+      "registered_name": "深圳市清宝科技有限公司",
+      "trusted_identity_terms": [
+        "清宝科技",
+        "深圳市清宝科技有限公司"
+      ],
+      "title": "上海清宝引擎机器人有限公司 - 企查查",
+      "source_url": "https://www.qcc.com/firm/2355b3ad733281e4f7a04739310976be.html",
+      "source_domain": "qcc.com",
+      "summary_excerpt": "清宝机器人成立于2022年8月，位于上海市，致力于人形机器人本体设计制造与具身智能技术结合，主要产品为人形机器人，应用于文旅、教育、工业、汽车智能座舱等行业。",
+      "evidence_excerpt": "清宝机器人成立于2022年8月，位于上海市，致力于人形机器人本体设计制造与具身智能技术结合，主要产品为人形机器人，应用于文旅、教育、工业、汽车智能座舱等行业。",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "d62e4a55-8052-4bdf-880f-44fd9ff72eae",
+      "company_id": "COMP-6b7f7b9cb8b1",
+      "canonical_name": "湾影科技（深圳）",
+      "registered_name": "湾影科技（深圳）有限公司",
+      "trusted_identity_terms": [
+        "湾影科技（深圳）",
+        "湾影科技（深圳）有限公司"
+      ],
+      "title": "湾影科技通过深圳市“专精特新中小企业”认定-湾有引力（Bay Charm",
+      "source_url": "https://www.baycharm.co/newsinfo/10937538.html",
+      "source_domain": "baycharm.co",
+      "summary_excerpt": "Bay Charm Family 湾影科技 湾影科技于2023年12月入孵湾有引力，是深圳湾实验室科技成果转化并持股的第一家公司，深耕分子影像领域，掌握多项高精度分子影像 ...",
+      "evidence_excerpt": "湾影科技于2023年12月入孵湾有引力，是深圳湾实验室科技成果转化并持股的第一家公司，深耕分子影像领域，掌握多项高精度分子影像 ...",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "d555dda9-6109-4521-857d-df6ac0b087bf",
+      "company_id": "COMP-6b7f7b9cb8b1",
+      "canonical_name": "湾影科技（深圳）",
+      "registered_name": "湾影科技（深圳）有限公司",
+      "trusted_identity_terms": [
+        "湾影科技（深圳）",
+        "湾影科技（深圳）有限公司"
+      ],
+      "title": "创新创业深圳人｜湾影科技谢思维- 是科研成果转化的沃土 - 腾讯新闻",
+      "source_url": "https://news.qq.com/rain/a/20250322A05EU500",
+      "source_domain": "news.qq.com",
+      "summary_excerpt": "凭借扎实的技术实力，湾影科技已先后完成多轮融资，估值数亿元。 企业发展蒸蒸日上的背后，是谢思维带领创始团队经过无数个日夜辛苦拓展、攻关所取得的成果 ...",
+      "evidence_excerpt": "凭借扎实的技术实力，湾影科技已先后完成多轮融资，估值数亿元。",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "b9768b03-2287-4fdd-aca5-e728ecb8aae0",
+      "company_id": "COMP-6b7f7b9cb8b1",
+      "canonical_name": "湾影科技（深圳）",
+      "registered_name": "湾影科技（深圳）有限公司",
+      "trusted_identity_terms": [
+        "湾影科技（深圳）",
+        "湾影科技（深圳）有限公司"
+      ],
+      "title": "湾影科技 - 动脉网",
+      "source_url": "https://www.vbdata.cn/companyDetail/24e595fc6149064468e11e6c044701e0",
+      "source_domain": "vbdata.cn",
+      "summary_excerpt": "湾影创始团队来自深圳湾实验室、美国劳伦斯伯克利国家实验室及华中科技大学，研发是其基因。创始人师从PET 成像技术奠基人、美国两院院士Thomas F.Budinger 教授。",
+      "evidence_excerpt": "湾影创始团队来自深圳湾实验室、美国劳伦斯伯克利国家实验室及华中科技大学，研发是其基因。创始人师从PET 成像技术奠基人、美国两院院士Thomas F.Budinger 教授。",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "f001db62-1bcf-48ab-8ba9-6305e0edeb85",
+      "company_id": "COMP-302ee093a2d1",
+      "canonical_name": "湾测技术",
+      "registered_name": "深圳市湾测技术有限公司",
+      "trusted_identity_terms": [
+        "湾测技术",
+        "深圳市湾测技术有限公司"
+      ],
+      "title": "中国湾测传感世界：以研发及品质为核心的国产高端传感器品牌商",
+      "source_url": "https://www.wonsor.com/",
+      "source_domain": "wonsor.com",
+      "summary_excerpt": "湾测提供包含工业安全、精密测量和通用传感在内的全系列传感器产品及解决方案，深耕包含3C、半导体、新能源、汽车、传统制造业等在内的多个行业，已经成功为富士康、立讯 ...",
+      "evidence_excerpt": "湾测提供包含工业安全、精密测量和通用传感在内的全系列传感器产品及解决方案，深耕包含3C、半导体、新能源、汽车、传统制造业等在内的多个行业，已经成功为富士康、立讯 ...",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "59a00bb1-5928-4334-859c-ab62a7fd01ec",
+      "company_id": "COMP-0a0ab1fba325",
+      "canonical_name": "犀锐生物科技",
+      "registered_name": "深圳市犀锐生物科技有限公司",
+      "trusted_identity_terms": [
+        "犀锐生物科技",
+        "深圳市犀锐生物科技有限公司"
+      ],
+      "title": "犀锐生物",
+      "source_url": "https://www.xrlabonchip.com/",
+      "source_domain": "xrlabonchip.com",
+      "summary_excerpt": "犀锐生物是一家专注于微生理系统（器官芯片）和微流控芯片技术， 三维细胞培养、成像和机器学习分析的医工交叉类科技型企业。 公司已搭建起了符合规范的研发中心、产业化 ...",
+      "evidence_excerpt": "犀锐生物是一家专注于微生理系统（器官芯片）和微流控芯片技术， 三维细胞培养、成像和机器学习分析的医工交叉类科技型企业。 公司已搭建起了符合规范的研发中心、产业化 ...",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "dec0a5eb-5b02-4bdc-b662-f720aaa36ba3",
+      "company_id": "COMP-0a0ab1fba325",
+      "canonical_name": "犀锐生物科技",
+      "registered_name": "深圳市犀锐生物科技有限公司",
+      "trusted_identity_terms": [
+        "犀锐生物科技",
+        "深圳市犀锐生物科技有限公司"
+      ],
+      "title": "联系我们 - 犀锐生物",
+      "source_url": "https://www.xrlabonchip.com/cn/contactus",
+      "source_domain": "xrlabonchip.com",
+      "summary_excerpt": "犀锐生物是一家专注于微生理系统（器官芯片）和微流控芯片技术， 三维细胞培养、成像和机器学习分析的医工交叉类科技型企业。 公司已搭建起了符合规范的研发中心、产业化 ...",
+      "evidence_excerpt": "犀锐生物是一家专注于微生理系统（器官芯片）和微流控芯片技术， 三维细胞培养、成像和机器学习分析的医工交叉类科技型企业。 公司已搭建起了符合规范的研发中心、产业化 ...",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "6ceda44a-6a7f-400b-ade9-f35f001c62f4",
+      "company_id": "COMP-0a0ab1fba325",
+      "canonical_name": "犀锐生物科技",
+      "registered_name": "深圳市犀锐生物科技有限公司",
+      "trusted_identity_terms": [
+        "犀锐生物科技",
+        "深圳市犀锐生物科技有限公司"
+      ],
+      "title": "关于我们- 犀锐生物",
+      "source_url": "https://xrlabonchip.com/cn/introduce",
+      "source_domain": "xrlabonchip.com",
+      "summary_excerpt": "犀锐生物是一家专注于微生理系统（器官芯片）和微流控芯片技术， 三维细胞培养、成像和机器学习分析的医工交叉类科技型企业。 公司已搭建起了符合规范的研发中心、产业化 ...",
+      "evidence_excerpt": "犀锐生物是一家专注于微生理系统（器官芯片）和微流控芯片技术， 三维细胞培养、成像和机器学习分析的医工交叉类科技型企业。 公司已搭建起了符合规范的研发中心、产业化 ...",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "8252adc5-0429-4c47-b7ea-597e28c4a383",
+      "company_id": "COMP-980603a4e01f",
+      "canonical_name": "狂浪人工智能技术",
+      "registered_name": "深圳市狂浪人工智能技术有限公司",
+      "trusted_identity_terms": [
+        "狂浪人工智能技术",
+        "深圳市狂浪人工智能技术有限公司"
+      ],
+      "title": "狂浪人工智能| 项目信息-36氪 - 创投平台",
+      "source_url": "https://pitchhub.36kr.com/project/2181083534593152",
+      "source_domain": "pitchhub.36kr.com",
+      "summary_excerpt": "狂浪人工智能是一家智能交通安全出行平台，以人工智能技术为核心的高科技企业，公司通过人、车、路等交通原始数据积累，开发基于云端的人工智能交通安全出行系统，打造面向 ...",
+      "evidence_excerpt": "狂浪人工智能是一家智能交通安全出行平台，以人工智能技术为核心的高科技企业，公司通过人、车、路等交通原始数据积累，开发基于云端的人工智能交通安全出行系统，打造面向 ...",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "a4afbd84-4dec-4f35-9e60-8e46810be27f",
+      "company_id": "COMP-08f17f2130d7",
+      "canonical_name": "知有无界（深圳）智能科技",
+      "registered_name": "知有无界（深圳）智能科技有限公司",
+      "trusted_identity_terms": [
+        "知有无界（深圳）智能科技",
+        "知有无界（深圳）智能科技有限公司"
+      ],
+      "title": "知有无界获松禾资本天使轮投资 - 亿欧",
+      "source_url": "https://www.iyiou.com/data/202602041121475",
+      "source_domain": "iyiou.com",
+      "summary_excerpt": "知有无界成立于2025年8月4日，是一家专注于工业具身智能技术的创新企业。公司致力于打造以通用大模型为底座的特种机器人，主要应用于船舶喷涂、清洗、集装箱 ...",
+      "evidence_excerpt": "知有无界成立于2025年8月4日，是一家专注于工业具身智能技术的创新企业。公司致力于打造以通用大模型为底座的特种机器人，主要应用于船舶喷涂、清洗、集装箱 ...",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "cc431473-c804-40b7-a027-4940685ad7c7",
+      "company_id": "COMP-08f17f2130d7",
+      "canonical_name": "知有无界（深圳）智能科技",
+      "registered_name": "知有无界（深圳）智能科技有限公司",
+      "trusted_identity_terms": [
+        "知有无界（深圳）智能科技",
+        "知有无界（深圳）智能科技有限公司"
+      ],
+      "title": "知有无界完成近2000万元天使轮融资 - 腾讯新闻",
+      "source_url": "https://news.qq.com/rain/a/20260204A06FT800",
+      "source_domain": "news.qq.com",
+      "summary_excerpt": "知有无界成立于2025年，聚焦工业具身智能领域，致力于通过模型赋能硬件，打造自主柔性 、可泛化 的智能硬件产品。根据财联社创投通—执中数据，以2026年2月为 ...",
+      "evidence_excerpt": "知有无界成立于2025年，聚焦工业具身智能领域...知有无界完成近2000万元天使轮融资",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "fb222b1c-0155-4658-9d98-40e6a506b711",
+      "company_id": "COMP-08f17f2130d7",
+      "canonical_name": "知有无界（深圳）智能科技",
+      "registered_name": "知有无界（深圳）智能科技有限公司",
+      "trusted_identity_terms": [
+        "知有无界（深圳）智能科技",
+        "知有无界（深圳）智能科技有限公司"
+      ],
+      "title": "清华系航天及船舶机器人知有无界完成松禾资本、卓源亚洲天使轮融资",
+      "source_url": "https://finance.sina.cn/tech/2026-05-07/detail-inhwzrtp2859459.d.html?vt=4",
+      "source_domain": "finance.sina.cn",
+      "summary_excerpt": "知有无界诞生于清华大学深圳智能机器人实验室，2025年8月正式成立。公司创始人兼CEO郭冠求博士出生于1998年，博士就读于清华大学深圳国际研究生院电子信息 ...",
+      "evidence_excerpt": "知有无界诞生于清华大学深圳智能机器人实验室，2025年8月正式成立。公司创始人兼CEO郭冠求博士出生于1998年，博士就读于清华大学深圳国际研究生院电子信息 ...",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "2a2bde68-d7dc-49cd-90ae-ebd782d578eb",
+      "company_id": "COMP-4b6e0f8c6fb5",
+      "canonical_name": "稞米科技（深圳）",
+      "registered_name": "稞米科技（深圳）有限公司",
+      "trusted_identity_terms": [
+        "稞米科技（深圳）",
+        "稞米科技（深圳）有限公司"
+      ],
+      "title": "区空港委走访考察低空经济产业 - 广州市花都区人民政府",
+      "source_url": "https://www.huadu.gov.cn/zfxxgkml/gzshdqkgjjglwyh/content/post_9654081.html",
+      "source_domain": "huadu.gov.cn",
+      "summary_excerpt": "活动中先后考察了西工大智胜研究院、稞米科技、精科华盾、大漠大智等企业和研究单位，深入学习了低空经济领域的先进经验，探讨了花都区发展低空经济的思路， ...",
+      "evidence_excerpt": "活动中先后考察了西工大智胜研究院、稞米科技、精科华盾、大漠大智等企业和研究单位，深入学习了低空经济领域的先进经验，探讨了花都区发展低空经济的思路， ...",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "6ce2ea63-2b12-47e0-a91c-98d168777c67",
+      "company_id": "COMP-4b6e0f8c6fb5",
+      "canonical_name": "稞米科技（深圳）",
+      "registered_name": "稞米科技（深圳）有限公司",
+      "trusted_identity_terms": [
+        "稞米科技（深圳）",
+        "稞米科技（深圳）有限公司"
+      ],
+      "title": "民营企业家典型事迹-深圳市发展和改革委员会网站",
+      "source_url": "https://fgw.sz.gov.cn/ztzl/qtztzl/szscjmyjjfzzhfwpt/mqfc/myqyjdxsj/index_7.html",
+      "source_domain": "fgw.sz.gov.cn",
+      "summary_excerpt": "... 稞米科技创始人凌琪：打造低空通用航空装备制造标杆 2025-05-20 斯坦德机器人创始人、CEO王永锟：在深圳，看到智能制造的未来 2025-05-19 科安达总裁张帆：让“深圳智造 ...",
+      "evidence_excerpt": "稞米科技创始人凌琪：打造低空通用航空装备制造标杆",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "d0cdc9ea-b1ac-4acf-9160-31007e1a1845",
+      "company_id": "COMP-4b6e0f8c6fb5",
+      "canonical_name": "稞米科技（深圳）",
+      "registered_name": "稞米科技（深圳）有限公司",
+      "trusted_identity_terms": [
+        "稞米科技（深圳）",
+        "稞米科技（深圳）有限公司"
+      ],
+      "title": "深圳民营企业融资服务对接活动成功举办-要素支持",
+      "source_url": "https://fgw.sz.gov.cn/ztzl/qtztzl/szscjmyjjfzzhfwpt/xwdt/yszc/content/post_12339053.html",
+      "source_domain": "fgw.sz.gov.cn",
+      "summary_excerpt": "活动现场，稞米科技、搜旅智慧、典声伟业、数十方等4家企业携融资项目“登台”路演，华先医药、远信储能等10家企业依次介绍了企业经营状况及融资需求。",
+      "evidence_excerpt": "稞米科技、搜旅智慧、典声伟业、数十方等4家企业携融资项目“登台”路演",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "2e05f121-28ec-476d-bcb0-95731234c068",
+      "company_id": "COMP-4b6e0f8c6fb5",
+      "canonical_name": "稞米科技（深圳）",
+      "registered_name": "稞米科技（深圳）有限公司",
+      "trusted_identity_terms": [
+        "稞米科技（深圳）",
+        "稞米科技（深圳）有限公司"
+      ],
+      "title": "国内100家eVTOL企业的省市索引 - 低空经济资源网",
+      "source_url": "https://www.laernoc.com/newsinfo/1985947350773927936",
+      "source_domain": "laernoc.com",
+      "summary_excerpt": "国内100家eVTOL企业的省市索引-低空经济资源网 行业搜索引擎 首页 낀 首页 国内100家eVTOL企业的省市索引 国内100家eVTOL企业的省市索引 创建时间： 2025-11-12 08:00:00 浏览量：1803 以下省市均指的是名义上的总部所在地。 广东省（24家）：（广州）亿航智能、汇天飞行汽车、高域（广汽旗下）、飞行派、羽飞航空、震东智飞、晔生科技、蝠鲨未来、茹翼科技；（珠海）航空工业通飞、朋诚万利；（深圳）某独角兽、一汽旗翼（一汽旗下）、智航、天空飞车、英武智能、安特狗、青鸾、翱翔天际、稞米",
+      "evidence_excerpt": "（深圳）某独角兽、一汽旗翼（一汽旗下）、智航、天空飞车、英武智能、安特狗、青鸾、翱翔天际、稞米科技、新维度航空、希龙科技、燚顺航空",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "430d067c-3c5e-4ba4-b901-a99830abfb1a",
+      "company_id": "COMP-4b6e0f8c6fb5",
+      "canonical_name": "稞米科技（深圳）",
+      "registered_name": "稞米科技（深圳）有限公司",
+      "trusted_identity_terms": [
+        "稞米科技（深圳）",
+        "稞米科技（深圳）有限公司"
+      ],
+      "title": "【创新创业深圳人】稞米科技创始人凌琪：努力打造低空通用航空 ...",
+      "source_url": "https://www.sztv.com.cn/ysz/dsdb/dspd/gqxwlb/80378226.shtml",
+      "source_domain": "sztv.com.cn",
+      "summary_excerpt": "【创新创业深圳人】稞米科技创始人凌琪：努力打造低空通用航空装备制造标杆. 版权声明：节目版权由深圳广播电影电视集团所有，未经许可，严禁转载. 相关推荐.",
+      "evidence_excerpt": "【创新创业深圳人】稞米科技创始人凌琪：努力打造低空通用航空装备制造标杆.",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "c57dbac5-9f54-4aac-b6df-5a165b4f40cf",
+      "company_id": "COMP-67bf09ce7cc8",
+      "canonical_name": "纬尔科技",
+      "registered_name": "深圳市纬尔科技有限公司",
+      "trusted_identity_terms": [
+        "纬尔科技",
+        "深圳市纬尔科技有限公司"
+      ],
+      "title": "厦门纬尔科技有限公司-集研发、生产、销售、运营服务于一体的高 ...",
+      "source_url": "https://www.veioo.com/",
+      "source_domain": "veioo.com",
+      "summary_excerpt": "厦门纬尔科技有限公司是一家集研发、生产、销售、运营服务于一体的高科技车联网企业，位于厦门市湖里高新技术园金海湾财富中心1号。",
+      "evidence_excerpt": "厦门纬尔科技有限公司是一家集研发、生产、销售、运营服务于一体的高科技车联网企业",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "accc2984-eacf-47cf-830d-6331070340b8",
+      "company_id": "COMP-fa4cafdd3f74",
+      "canonical_name": "羲和未来科技",
+      "registered_name": "深圳市羲和未来科技有限公司",
+      "trusted_identity_terms": [
+        "羲和未来科技",
+        "深圳市羲和未来科技有限公司"
+      ],
+      "title": "Intertek为羲和未来微型光伏逆变器产品颁发ETL 证书",
+      "source_url": "https://www.intertek.com.cn/newslist/2015626426102845440.html",
+      "source_domain": "intertek.com.cn",
+      "summary_excerpt": "羲和未来（MANGO POWER）成立于2021年5月，专注于智慧能源终端产品研发，构建了全球领先的单级Cyclo拓扑双向变换器平台，成功实现目前行业最高效率的单级拓扑微 ...",
+      "evidence_excerpt": "羲和未来（MANGO POWER）成立于2021年5月，专注于智慧能源终端产品研发，构建了全球领先的单级Cyclo拓扑双向变换器平台",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "9ff702a4-ad1a-4d5e-aab3-f683e3b2bb6c",
+      "company_id": "COMP-a90ec5fd4daa",
+      "canonical_name": "茄子咔咔科技",
+      "registered_name": "深圳市茄子咔咔科技有限公司",
+      "trusted_identity_terms": [
+        "茄子咔咔科技",
+        "深圳市茄子咔咔科技有限公司"
+      ],
+      "title": "茄子咔咔的主页- 抖音",
+      "source_url": "https://www.douyin.com/user/MS4wLjABAAAAFjtnDY1M7YEZ0l6piIOtFbe8I-rd9-gwoHsbfKLnnAk",
+      "source_domain": "douyin.com",
+      "summary_excerpt": "茄子咔咔：简介茄子科技提供专业数字直播间搭建解决方案旗下沉浸式3D数字直播间已全面启动，欢迎大家咨询采购！ 茄子科技致力于MR沉浸式直播间研发和销售+商业服务+达人带 ...",
+      "evidence_excerpt": "茄子咔咔：简介茄子科技提供专业数字直播间搭建解决方案旗下沉浸式3D数字直播间已全面启动，欢迎大家咨询采购！ 茄子科技致力于MR沉浸式直播间研发和销售+商业服务+达人带 ...",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "e6ed05fd-fbf2-4bab-bc1a-340090955cae",
+      "company_id": "COMP-a90ec5fd4daa",
+      "canonical_name": "茄子咔咔科技",
+      "registered_name": "深圳市茄子咔咔科技有限公司",
+      "trusted_identity_terms": [
+        "茄子咔咔科技",
+        "深圳市茄子咔咔科技有限公司"
+      ],
+      "title": "关于我们-茄子科技｜SHAREit Group官网",
+      "source_url": "https://www.ushareit.com/cn/about/",
+      "source_domain": "ushareit.com",
+      "summary_excerpt": "茄子科技（海外SHAREit Group）作为穿越周期的新一代全球化互联网科技公司，持续践行全球化发展战略，主要从事移动互联网软件研发及全球移动广告解决方案等互联网业务。",
+      "evidence_excerpt": "茄子科技（海外SHAREit Group）作为穿越周期的新一代全球化互联网科技公司，持续践行全球化发展战略，主要从事移动互联网软件研发及全球移动广告解决方案等互联网业务。",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "edba1356-6f96-418e-8600-2b77e865d290",
+      "company_id": "COMP-e269d05c673b",
+      "canonical_name": "茵塞普科技（深圳）",
+      "registered_name": "茵塞普科技（深圳）有限公司",
+      "trusted_identity_terms": [
+        "茵塞普科技（深圳）",
+        "茵塞普科技（深圳）有限公司"
+      ],
+      "title": "社企会客厅| 茵塞普科技余广滔：为人类的可持续昆虫蛋白而奋斗",
+      "source_url": "https://www.casvi.org/h-nd-1734.html",
+      "source_domain": "casvi.org",
+      "summary_excerpt": "茵塞普INSPRO设施化昆虫蛋白生物转化系统：致力于解决全球有机固废资源化利用及蛋白质供应短缺难题，同时降低饲料行业的生产成本以及对进口鱼粉的依赖，保障 ...",
+      "evidence_excerpt": "茵塞普INSPRO设施化昆虫蛋白生物转化系统：致力于解决全球有机固废资源化利用及蛋白质供应短缺难题，同时降低饲料行业的生产成本以及对进口鱼粉的依赖，保障 ...",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "c0df0510-d1b0-4841-9c6c-465087b03741",
+      "company_id": "COMP-e269d05c673b",
+      "canonical_name": "茵塞普科技（深圳）",
+      "registered_name": "茵塞普科技（深圳）有限公司",
+      "trusted_identity_terms": [
+        "茵塞普科技（深圳）",
+        "茵塞普科技（深圳）有限公司"
+      ],
+      "title": "黑水虻“吃”出千亿市场——专访茵塞普科技创始人余广滔 - 证券时报",
+      "source_url": "https://www.stcn.com/article/detail/1850915.html",
+      "source_domain": "stcn.com",
+      "summary_excerpt": "在深圳前海梦工厂的一隅，一罐罐风干的黑水虻幼虫静立在茵塞普科技公司的展示区内，这些体长仅3厘米的“生态工程师”，正悄然撬动着环保与食品领域的千亿级市场 ...",
+      "evidence_excerpt": "在深圳前海梦工厂的一隅，一罐罐风干的黑水虻幼虫静立在茵塞普科技公司的展示区内，这些体长仅3厘米的“生态工程师”，正悄然撬动着环保与食品领域的千亿级市场 ...",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "8f031a7c-4f83-4fbd-98f2-bf3b639e0c3f",
+      "company_id": "COMP-d90d20eca885",
+      "canonical_name": "诺信安科技",
+      "registered_name": "深圳市诺信安科技有限公司",
+      "trusted_identity_terms": [
+        "诺信安科技",
+        "深圳市诺信安科技有限公司"
+      ],
+      "title": "沈阳诺信安科技有限公司 - 百度爱采购",
+      "source_url": "https://b2b.baidu.com/shop/72799293",
+      "source_domain": "b2b.baidu.com",
+      "summary_excerpt": "沈阳诺信安科技有限公司，位于辽宁省沈阳市和平区兰州北街28-4号(7-13)，主要经营分类安检门;手持金属探测器;金属探测安检门;访客机;安检门。已进行资质核查、真实性 ...",
+      "evidence_excerpt": "沈阳诺信安科技有限公司，位于辽宁省沈阳市和平区兰州北街28-4号(7-13)，主要经营分类安检门;手持金属探测器;金属探测安检门;访客机;安检门。",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "f603e5b7-e390-4f77-b351-4f11a2cfd03c",
+      "company_id": "COMP-d90d20eca885",
+      "canonical_name": "诺信安科技",
+      "registered_name": "深圳市诺信安科技有限公司",
+      "trusted_identity_terms": [
+        "诺信安科技",
+        "深圳市诺信安科技有限公司"
+      ],
+      "title": "联系我们 - 诺信安物联网",
+      "source_url": "http://nuoiot.com/channels/20.html",
+      "source_domain": "nuoiot.com",
+      "summary_excerpt": "联系我们. 公司：广东诺信安科技有限公司. 地址：广东省佛山市南海区桂城街道瀚天科技城B2区3号楼A306室. 电话：137 9820 9435. 邮箱：nxalink@126.com. 邮编：528000.",
+      "evidence_excerpt": "公司：广东诺信安科技有限公司",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "03b551ee-421d-4ef2-ab26-ab8cb3295272",
+      "company_id": "COMP-d90d20eca885",
+      "canonical_name": "诺信安科技",
+      "registered_name": "深圳市诺信安科技有限公司",
+      "trusted_identity_terms": [
+        "诺信安科技",
+        "深圳市诺信安科技有限公司"
+      ],
+      "title": "关于我们 - 沈阳诺信安科技有限公司官方网站",
+      "source_url": "https://synxa.cn/?about/",
+      "source_domain": "synxa.cn",
+      "summary_excerpt": "沈阳诺信安科技有限公司是一家集研发、生产、销售及服务于一体的技术科技型企业，专注于安检设备及执法专用设备的创新与应用。公司核心团队深耕行业十二年，秉持“不断 ...",
+      "evidence_excerpt": "沈阳诺信安科技有限公司是一家集研发、生产、销售及服务于一体的技术科技型企业，专注于安检设备及执法专用设备的创新与应用。公司核心团队深耕行业十二年",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "5cd54484-9b16-4082-85fb-3643d091f6fb",
+      "company_id": "COMP-d90d20eca885",
+      "canonical_name": "诺信安科技",
+      "registered_name": "深圳市诺信安科技有限公司",
+      "trusted_identity_terms": [
+        "诺信安科技",
+        "深圳市诺信安科技有限公司"
+      ],
+      "title": "诺信安物联网",
+      "source_url": "http://nuoiot.com/",
+      "source_domain": "nuoiot.com",
+      "summary_excerpt": "广东诺信安科技有限公司成立于2019年，专注提供全套物联网通讯解决方案，全方位为 ... Copyright © 2020 广东诺信安科技有限公司版权所有粤ICP备2020082207号-1.",
+      "evidence_excerpt": "广东诺信安科技有限公司成立于2019年，专注提供全套物联网通讯解决方案",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "2c53a079-2543-4520-b1e3-5bfe05ba2488",
+      "company_id": "COMP-5cfb1b0e4f54",
+      "canonical_name": "谦视智能科技",
+      "registered_name": "深圳市谦视智能科技有限责任公司",
+      "trusted_identity_terms": [
+        "谦视智能科技",
+        "深圳市谦视智能科技有限责任公司"
+      ],
+      "title": "谦视科技（SCIENSEE TECHNOLOGY）主要从事半导体领域Wafer ...",
+      "source_url": "https://www.sciensee.com/html/about/",
+      "source_domain": "sciensee.com",
+      "summary_excerpt": "谦视科技（SCIENSEE TECHNOLOGY）主要从事半导体领域Wafer量测设备，及各类精密制造检测领域设备的研发和制造工作。公司致力于实现高端视觉检测与量测设备的国产化，为相关 ...",
+      "evidence_excerpt": "谦视科技（SCIENSEE TECHNOLOGY）主要从事半导体领域Wafer量测设备，及各类精密制造检测领域设备的研发和制造工作。公司致力于实现高端视觉检测与量测设备的国产化",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "14414f21-d158-4e7a-80f9-192bcda10f21",
+      "company_id": "COMP-5cfb1b0e4f54",
+      "canonical_name": "谦视智能科技",
+      "registered_name": "深圳市谦视智能科技有限责任公司",
+      "trusted_identity_terms": [
+        "谦视智能科技",
+        "深圳市谦视智能科技有限责任公司"
+      ],
+      "title": "关于我们 - 谦视Chinvis 5G XR头戴计算机领导者",
+      "source_url": "https://chinvis.com.cn/page1000487",
+      "source_domain": "chinvis.com.cn",
+      "summary_excerpt": "谦视Chinvis2019年10月创立于深圳前海，核心团队来自浙大、北理工，具有中兴、康佳等国内知名企业背景，有十年以上从事移动通信智能硬件、操作系统、平台开发等技术和产品 ...",
+      "evidence_excerpt": "谦视Chinvis2019年10月创立于深圳前海，核心团队来自浙大、北理工，具有中兴、康佳等国内知名企业背景，有十年以上从事移动通信智能硬件、操作系统、平台开发等技术和产品 ...",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "855309fa-eca5-4908-84ea-ea2fce7cda59",
+      "company_id": "COMP-5cfb1b0e4f54",
+      "canonical_name": "谦视智能科技",
+      "registered_name": "深圳市谦视智能科技有限责任公司",
+      "trusted_identity_terms": [
+        "谦视智能科技",
+        "深圳市谦视智能科技有限责任公司"
+      ],
+      "title": "晶圆检测像拍“X光片”，谦视智能独特方案让瑕疵无处遁形",
+      "source_url": "https://qilinpark.nanjing.gov.cn/xwzx/gzdt/202507/t20250725_5615333.html",
+      "source_domain": "qilinpark.nanjing.gov.cn",
+      "summary_excerpt": "统计显示，目前，谦视智能已拥有知识产权40余项，产品覆盖近60家各类半导体客户，涵盖浙江、广东、上海、江苏、河北、四川、北京等近20个省份。 技术先发、 ...",
+      "evidence_excerpt": "谦视智能已拥有知识产权40余项，产品覆盖近60家各类半导体客户，涵盖浙江、广东、上海、江苏、河北、四川、北京等近20个省份。",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "62118b93-8475-47da-91b9-bd98bb893f6e",
+      "company_id": "COMP-9d1ad0faac73",
+      "canonical_name": "赢胜数据科技",
+      "registered_name": "深圳市赢胜数据科技有限公司",
+      "trusted_identity_terms": [
+        "赢胜数据科技",
+        "深圳市赢胜数据科技有限公司"
+      ],
+      "title": "赢胜数科| 赢胜数科",
+      "source_url": "http://www.yssdata.com.cn/",
+      "source_domain": "yssdata.com.cn",
+      "summary_excerpt": "赢胜数科 | 赢胜数科 Menu 首页 产品 解决方案 新闻中心 关于我们 加入我们 首页 产品 解决方案 新闻中心 关于我们 加入我们 企业数字化转型新选择 多种解决方案覆盖从数据标准、治理与资产管理到软件资产、营销获客、风险管理、金融生态等产品解决方案，覆盖行业客户数据全部生命周期、全服务流程。 产品 解决方案 我们的优势 专注高效 敏捷的金融科技产品设计、 开发和运营能力 技术精湛 雄厚技术储备 先进风控体系 经验丰富 多年开发经验 涉及多个行业 运维保障 日常巡检 节假日保障 从业务理解、系统开发到项目管理",
+      "evidence_excerpt": "赢胜数科 | 赢胜数科 Menu 首页 产品 解决方案 新闻中心 关于我们 加入我们 ... 企业数字化转型新选择 多种解决方案覆盖从数据标准、治理与资产管理到软件资产、营销获客、风险管理、金融生态等产品解决方案...",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "35e5d5e0-e9af-4eba-8d05-bd58bd18805c",
+      "company_id": "COMP-2378f6893692",
+      "canonical_name": "逆动科技（深圳）",
+      "registered_name": "逆动科技（深圳）有限公司",
+      "trusted_identity_terms": [
+        "逆动科技（深圳）",
+        "逆动科技（深圳）有限公司"
+      ],
+      "title": "高空喷涂机器人「逆动科技」获千万级投资，信天创投独家投资_投资界",
+      "source_url": "https://news.pedaily.cn/202211/504023.shtml",
+      "source_domain": "news.pedaily.cn",
+      "summary_excerpt": "逆动科技总部位于深圳，在深圳和长沙设有研发基地，以建筑高空喷涂机器人为特色，并关注装配式建筑、室内装修、主体结构施工等多个场景，为建筑行业提供安全可靠的机器人 ...",
+      "evidence_excerpt": "逆动科技总部位于深圳...以建筑高空喷涂机器人为特色...获千万级投资，信天创投独家投资",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "b6c50fbf-695d-44e6-906a-992f9efd5539",
+      "company_id": "COMP-2378f6893692",
+      "canonical_name": "逆动科技（深圳）",
+      "registered_name": "逆动科技（深圳）有限公司",
+      "trusted_identity_terms": [
+        "逆动科技（深圳）",
+        "逆动科技（深圳）有限公司"
+      ],
+      "title": "36氪首发| 高空喷涂机器人「逆动科技」获千万级投资",
+      "source_url": "https://m.36kr.com/p/2010071264159362",
+      "source_domain": "m.36kr.com",
+      "summary_excerpt": "逆动科技总部位于深圳，在深圳和长沙设有研发基地，以建筑高空喷涂机器人为特色，并关注装配式建筑、室内装修、主体结构施工等多个场景，为建筑行业提供安全 ...",
+      "evidence_excerpt": "逆动科技总部位于深圳...以建筑高空喷涂机器人为特色...获千万级投资",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "3f823215-36f2-4cda-a74d-f2ef83fce67f",
+      "company_id": "COMP-79167faf0c77",
+      "canonical_name": "逸步科技",
+      "registered_name": "深圳市逸步科技有限公司",
+      "trusted_identity_terms": [
+        "逸步科技",
+        "深圳市逸步科技有限公司"
+      ],
+      "title": "天津逸步科技申请计算机网络信息安全监护系统专利实现主动式防护",
+      "source_url": "https://www.guanrunjx.com/xinwendongtai/863.html",
+      "source_domain": "guanrunjx.com",
+      "summary_excerpt": "天眼查资料显示，天津逸步科技有限公司，成立于2018年，位于天津市，是一家以从事科技推广和应用服务业为主的企业。企业注册资本100万人民币。通过天眼查大 ...",
+      "evidence_excerpt": "天津逸步科技申请计算机网络信息安全监护系统专利实现主动式防护",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "14525e4b-b1d6-4db5-9f92-fe5a579b7260",
+      "company_id": "COMP-79167faf0c77",
+      "canonical_name": "逸步科技",
+      "registered_name": "深圳市逸步科技有限公司",
+      "trusted_identity_terms": [
+        "逸步科技",
+        "深圳市逸步科技有限公司"
+      ],
+      "title": "上海逸步网络科技有限公司 - 企查查",
+      "source_url": "https://m.qcc.com/firm/dd94b26f35ea769a0abc0625d012f252.html",
+      "source_domain": "m.qcc.com",
+      "summary_excerpt": "1、基本信息上海逸步网络科技有限公司是⼀家成⽴于2015年08月09日的有限责任公司，属于以从事科学研究和技术服务业为主的企业。位于上海市青浦区，目前处于注销状态。注册资本： ...",
+      "evidence_excerpt": "上海逸步网络科技有限公司是⼀家成⽴于2015年08月09日的有限责任公司...位于上海市青浦区，目前处于注销状态。注册资本： ...",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "ee1b273d-4ca7-46a5-8e6c-682d220983d4",
+      "company_id": "COMP-b27c7a9a2a35",
+      "canonical_name": "金一信息科技",
+      "registered_name": "深圳市金一信息科技有限公司",
+      "trusted_identity_terms": [
+        "金一信息科技",
+        "深圳市金一信息科技有限公司"
+      ],
+      "title": "公司介绍 - 金一信息",
+      "source_url": "http://www.szk1.cn/page141",
+      "source_domain": "szk1.cn",
+      "summary_excerpt": "",
+      "evidence_excerpt": "金一信息成立于2009年，为国家级高新技术企业，是中国领先的嵌入式解决方案提供商",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "54f8f85b-052e-4818-87af-6702d30f834b",
+      "company_id": "COMP-b27c7a9a2a35",
+      "canonical_name": "金一信息科技",
+      "registered_name": "深圳市金一信息科技有限公司",
+      "trusted_identity_terms": [
+        "金一信息科技",
+        "深圳市金一信息科技有限公司"
+      ],
+      "title": "金一科技有限公司_百度百科",
+      "source_url": "https://baike.baidu.com/item/%E9%87%91%E4%B8%80%E7%A7%91%E6%8A%80%E6%9C%89%E9%99%90%E5%85%AC%E5%8F%B8/19270386",
+      "source_domain": "baike.baidu.com",
+      "summary_excerpt": "金一科技有限公司是2014年8月26日成立于上海市嘉定区的有限责任公司，法定代表人为张旭，董事长为李清飞，注册资本5000万元人民币。公司由上海金珠投资有限公司控股（持 ...",
+      "evidence_excerpt": "金一科技有限公司是2014年8月26日成立于上海市嘉定区的有限责任公司，法定代表人为张旭，董事长为李清飞，注册资本5000万元人民币。",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "cba85e0c-f628-4993-b723-e2abe0de54f2",
+      "company_id": "COMP-96bcd8d187b3",
+      "canonical_name": "钧雷光电",
+      "registered_name": "钧雷光电有限公司",
+      "trusted_identity_terms": [
+        "钧雷光电",
+        "钧雷光电有限公司"
+      ],
+      "title": "深圳钧雷光电取得一种激光测量系统及其控制方法专利 - 新浪财经",
+      "source_url": "https://cj.sina.cn/articles/view/1704103183/65928d0f02007fa68?froms=ggmp",
+      "source_domain": "cj.sina.cn",
+      "summary_excerpt": "天眼查资料显示，深圳钧雷光电技术有限公司，成立于2019年，位于深圳市，是一家以从事仪器仪表制造业为主的企业。企业注册资本5296.2963万人民币，实缴资本4813 ...",
+      "evidence_excerpt": "深圳钧雷光电取得一种激光测量系统及其控制方法专利",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "30097ce7-66f2-451f-b927-fa0ea717a8b1",
+      "company_id": "COMP-0c33016e8091",
+      "canonical_name": "闪极科技（深圳）",
+      "registered_name": "闪极科技（深圳）有限公司",
+      "trusted_identity_terms": [
+        "闪极科技（深圳）",
+        "闪极科技（深圳）有限公司"
+      ],
+      "title": "SHARGE闪极科技",
+      "source_url": "https://www.shargetech.com/",
+      "source_domain": "shargetech.com",
+      "summary_excerpt": "SHARGE闪极科技，目前已经上线氮化镓充电器65W (2C1A)、氮化镓充电器90W (2C1A)、氮化镓充电器100W (3C1A)。",
+      "evidence_excerpt": "SHARGE闪极科技，目前已经上线氮化镓充电器65W (2C1A)、氮化镓充电器90W (2C1A)、氮化镓充电器100W (3C1A)。",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "23bc8f93-1478-486b-a457-e070c07f8cb4",
+      "company_id": "COMP-0c33016e8091",
+      "canonical_name": "闪极科技（深圳）",
+      "registered_name": "闪极科技（深圳）有限公司",
+      "trusted_identity_terms": [
+        "闪极科技（深圳）",
+        "闪极科技（深圳）有限公司"
+      ],
+      "title": "SHARGE | Sleek Design & Advanced Tech.",
+      "source_url": "https://sharge.com/?srsltid=AfmBOorn7v2IcXgybJBv-94m-DD_1oTpo9SZC4SUaScFHS2FhARDCnJd",
+      "source_domain": "sharge.com",
+      "summary_excerpt": "SHARGE is a leading innovator in premium power supply & data storage solutions, aiming to be a pioneer on the path to efficient life & work, ...",
+      "evidence_excerpt": "SHARGE is a leading innovator in premium power supply & data storage solutions, aiming to be a pioneer on the path to efficient life & work",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "ecc1c636-d5d7-4458-aaed-80c24a337c29",
+      "company_id": "COMP-0c33016e8091",
+      "canonical_name": "闪极科技（深圳）",
+      "registered_name": "闪极科技（深圳）有限公司",
+      "trusted_identity_terms": [
+        "闪极科技（深圳）",
+        "闪极科技（深圳）有限公司"
+      ],
+      "title": "SHARGE | Sleek Design & Advanced Tech.",
+      "source_url": "https://sharge.com/?srsltid=AfmBOooqwkQ7ZCyfvYKrGARdXdK0vpTaXlotAFeHOVpcfoG0XUhMO52y",
+      "source_domain": "sharge.com",
+      "summary_excerpt": "SHARGE is a leading innovator in premium power supply & data storage solutions, aiming to be a pioneer on the path to efficient life & work, ...",
+      "evidence_excerpt": "SHARGE is a leading innovator in premium power supply & data storage solutions",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "21ff2611-36be-4bbd-b12f-3ea5e8416fa6",
+      "company_id": "COMP-00d053ec2a24",
+      "canonical_name": "飞拓星驰科技",
+      "registered_name": "深圳市飞拓星驰科技有限公司",
+      "trusted_identity_terms": [
+        "飞拓星驰科技",
+        "深圳市飞拓星驰科技有限公司"
+      ],
+      "title": "世界第一「空间智能」引擎！苹果没做成的，95后博士拿下了",
+      "source_url": "https://www.pconline.com.cn/focus/2021/20215634.html",
+      "source_domain": "pconline.com.cn",
+      "summary_excerpt": "2024年，中国公司飞拓星驰（FitX）推出全球首个以人为中心的空间智能引擎，实现无需专用硬件，仅凭智能手机即可进行高精度3D体感交互。",
+      "evidence_excerpt": "2024年，中国公司飞拓星驰（FitX）推出全球首个以人为中心的空间智能引擎，实现无需专用硬件，仅凭智能手机即可进行高精度3D体感交互。",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "34d7b64b-6817-41ce-962b-04c02e4e31e3",
+      "company_id": "COMP-00d053ec2a24",
+      "canonical_name": "飞拓星驰科技",
+      "registered_name": "深圳市飞拓星驰科技有限公司",
+      "trusted_identity_terms": [
+        "飞拓星驰科技",
+        "深圳市飞拓星驰科技有限公司"
+      ],
+      "title": "世界第一「空间智能」引擎！苹果没做成的，95后博士拿下了- 知乎",
+      "source_url": "https://zhuanlan.zhihu.com/p/1974489882970834049",
+      "source_domain": "zhuanlan.zhihu.com",
+      "summary_excerpt": "在此背景下，一家名为「飞拓星驰」（下文简称「FitX」）的中国公司，给出了一个截然不同的答案。 他们主张无需任何专用硬件，仅凭一部人人都有的智能手机，就能 ...",
+      "evidence_excerpt": "一家名为「飞拓星驰」（下文简称「FitX」）的中国公司，给出了一个截然不同的答案。 他们主张无需任何专用硬件，仅凭一部人人都有的智能手机，就能 ...",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "544eea16-3fa4-4e4f-8bc9-71460d32c100",
+      "company_id": "COMP-00d053ec2a24",
+      "canonical_name": "飞拓星驰科技",
+      "registered_name": "深圳市飞拓星驰科技有限公司",
+      "trusted_identity_terms": [
+        "飞拓星驰科技",
+        "深圳市飞拓星驰科技有限公司"
+      ],
+      "title": "2025南山“创业之星”游戏产业专项赛| 超130个项目角逐 - 科兴服务",
+      "source_url": "https://kexingservice.com/mobile/News/Detail/7309",
+      "source_domain": "kexingservice.com",
+      "summary_excerpt": "飞拓星驰推出的《移动端体感游戏平台》，创新性地以手机替代传统主机设备，让家庭健身游戏告别高昂的主机与复杂外设。BC工作室的《诡秘推理》选用克苏 ...",
+      "evidence_excerpt": "飞拓星驰推出的《移动端体感游戏平台》，创新性地以手机替代传统主机设备，让家庭健身游戏告别高昂的主机与复杂外设。",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "a9e8095a-830e-4e3d-ac1a-9e4dd7182412",
+      "company_id": "COMP-00d053ec2a24",
+      "canonical_name": "飞拓星驰科技",
+      "registered_name": "深圳市飞拓星驰科技有限公司",
+      "trusted_identity_terms": [
+        "飞拓星驰科技",
+        "深圳市飞拓星驰科技有限公司"
+      ],
+      "title": "万亿城区，“小力出奇迹” - 21经济网 - 21财经",
+      "source_url": "https://www.21jingji.com/article/20260204/herald/b0849ce86b322cd682d3fb26f5ecc637.html",
+      "source_domain": "21jingji.com",
+      "summary_excerpt": "2025年2月，王佳泽在深圳南山创立“飞拓星驰”。公司以自研的全球首个以人为中心的空间智能引擎FitX AI为核心，用户只需下载APP，该引擎便能精准捕捉 ...",
+      "evidence_excerpt": "2025年2月，王佳泽在深圳南山创立“飞拓星驰”。公司以自研的全球首个以人为中心的空间智能引擎FitX AI为核心，用户只需下载APP，该引擎便能精准捕捉 ...",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "17fe8377-4809-436b-8138-ec74aa0bdeeb",
+      "company_id": "COMP-00d053ec2a24",
+      "canonical_name": "飞拓星驰科技",
+      "registered_name": "深圳市飞拓星驰科技有限公司",
+      "trusted_identity_terms": [
+        "飞拓星驰科技",
+        "深圳市飞拓星驰科技有限公司"
+      ],
+      "title": "95后博士创业获投资：一个小硬件+Agent平台，激活整个客厅|访谈",
+      "source_url": "https://m.sohu.com/a/1027232945_112831?scm=10001.325_13-325_13.0.0-0-0-0-0.5_1334",
+      "source_domain": "m.sohu.com",
+      "summary_excerpt": "最近，飞拓星驰(FitX AI)宣布完成数百万美金融资，由日初资本领投，光点资本跟投。这家公司的创始人、CEO是王佳泽(Jeremy)，一个出生于1996年的香港中文大学AI ...",
+      "evidence_excerpt": "最近，飞拓星驰(FitX AI)宣布完成数百万美金融资，由日初资本领投，光点资本跟投。这家公司的创始人、CEO是王佳泽(Jeremy)，一个出生于1996年的香港中文大学AI ...",
+      "rejection_reason": "identity_evidence_missing"
+    },
+    {
+      "news_id": "e4fb981e-90bb-4ffe-b05e-b81244d60060",
+      "company_id": "COMP-00d053ec2a24",
+      "canonical_name": "飞拓星驰科技",
+      "registered_name": "深圳市飞拓星驰科技有限公司",
+      "trusted_identity_terms": [
+        "飞拓星驰科技",
+        "深圳市飞拓星驰科技有限公司"
+      ],
+      "title": "这帮港中文的博士，要在50亿部手机里装一个“AI任天堂”-虎嗅网",
+      "source_url": "https://m.huxiu.com/aibrief/8744.html",
+      "source_domain": "m.huxiu.com",
+      "summary_excerpt": "深圳飞拓星驰团队推出全球首个空间智能引擎FitX AI，仅需手机摄像头即可实现133个3D关键点捕捉，破解体感游戏硬件门槛高与移动端精度不足的双重困境。",
+      "evidence_excerpt": "深圳飞拓星驰团队推出全球首个空间智能引擎FitX AI，仅需手机摄像头即可实现133个3D关键点捕捉，破解体感游戏硬件门槛高与移动端精度不足的双重困境。",
+      "rejection_reason": "identity_evidence_missing"
+    }
+  ]
+}

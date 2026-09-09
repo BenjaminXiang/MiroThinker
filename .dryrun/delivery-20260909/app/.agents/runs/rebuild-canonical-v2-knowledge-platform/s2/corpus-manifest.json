@@ -1,0 +1,94 @@
+{
+  "approval_state": "pending_user_acceptance",
+  "corpora": {
+    "challenge-v1": {
+      "cases": 12,
+      "domain_counts": {
+        "company": 10,
+        "paper": 1,
+        "patent": 3,
+        "professor": 3
+      },
+      "family_counts": {
+        "alias_spelling": 3,
+        "insufficient_evidence": 2,
+        "protected_constraints": 1,
+        "provider_failure": 2,
+        "referent_displayed_set": 2,
+        "relation_direction": 1,
+        "topic_switch": 1
+      },
+      "gold_authority_counts": {
+        "none": 11,
+        "user_confirmed_workbook": 1
+      },
+      "path": "challenge-v1.jsonl",
+      "query_type_counts": {
+        "A": 4,
+        "B": 2,
+        "C": 5,
+        "G": 1
+      },
+      "review_status_counts": {
+        "pending_user_review": 11,
+        "user_confirmed_reference_gold": 1
+      },
+      "role_counts": {
+        "reviewed_badcase": 1
+      },
+      "sha256": "ee46c677af668131fb8da568fabd6386659f3287d0bdb0fd740f7069497f6f9f"
+    },
+    "regression-v1": {
+      "cases": 40,
+      "domain_counts": {
+        "company": 20,
+        "cross_domain": 1,
+        "general_web": 7,
+        "none": 1,
+        "paper": 6,
+        "patent": 8,
+        "professor": 9
+      },
+      "family_counts": {
+        "a_g_interaction": 4,
+        "evidence_based_assessment": 4,
+        "exact_lookup": 5,
+        "general_information": 1,
+        "knowledge_synthesis": 6,
+        "multi_turn": 9,
+        "partial_answer": 1,
+        "provenance_conflict": 1,
+        "relationship_traversal": 3,
+        "semantic_search": 4,
+        "structured_filter": 1,
+        "universal_web": 1
+      },
+      "gold_authority_counts": {
+        "none": 15,
+        "user_confirmed_workbook": 25
+      },
+      "path": "regression-v1.jsonl",
+      "query_type_counts": {
+        "A": 8,
+        "B": 5,
+        "C": 13,
+        "D": 4,
+        "E": 7,
+        "F": 2,
+        "G": 1
+      },
+      "review_status_counts": {
+        "pending_user_review": 15,
+        "user_confirmed_reference_gold": 25
+      },
+      "role_counts": {
+        "reviewed_badcase": 1,
+        "workbook_seed": 25
+      },
+      "sha256": "f2656e8c2f0803452af18fa0d478eec1b1e1b94eaa97ef48d06d0828401297da"
+    }
+  },
+  "gold_policy": "The user-confirmed workbook answers and key points are case-specific reference ground truth with row provenance. They are not a general answer template or the sole acceptance source. PRD and controlled variations define observable behavior only and remain pending user review.",
+  "schema_version": "canonical-v2-s2-corpus-manifest-v1",
+  "workbook_sha256": "edd95009a8516c73831d889a0d221d85da0a9ffad9c9f7da244d12dfce280c5b"
+}

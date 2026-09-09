@@ -1,0 +1,47 @@
+[project]
+name = "mirothinker-dev"
+version = "0.1.0"
+description = "Root uv-managed development environment for the MiroThinker monorepo"
+readme = "README.md"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "miroflow-tools",
+    "miroflow-agent",
+    "admin-console",
+    "collect-trace",
+    "gradio-demo",
+    "flask>=2.3.3",
+    "werkzeug>=2.3.7",
+]
+
+[dependency-groups]
+dev = [
+    "inline-snapshot>=0.23.2",
+    "pyright>=1.1.403",
+    "pytest>=8.4.1",
+    "pytest-asyncio>=1.0.0",
+    "pytest-cov>=6.2.1",
+    "pytest-html>=4.1.1",
+    "pytest-mock>=3.10.0",
+    "pytest-timeout>=2.1.0",
+    "pytest-xdist>=3.7.0",
+    "ty>=0.0.1a14",
+]
+lobehub = [
+    "vllm>=0.11.0",
+]
+
+[tool.uv]
+package = false
+
+[tool.pyright]
+pythonVersion = "3.12"
+venv = ".venv"
+venvPath = "."
+
+[tool.uv.sources]
+admin-console = { path = "apps/admin-console", editable = true }
+collect-trace = { path = "apps/collect-trace", editable = true }
+gradio-demo = { path = "apps/gradio-demo", editable = true }
+miroflow-agent = { path = "apps/miroflow-agent", editable = true }
+miroflow-tools = { path = "libs/miroflow-tools", editable = true }

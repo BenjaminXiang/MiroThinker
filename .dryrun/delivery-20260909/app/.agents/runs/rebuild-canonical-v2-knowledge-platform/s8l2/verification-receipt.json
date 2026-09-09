@@ -1,0 +1,72 @@
+{
+  "schema_version": "canonical-v2-s8l2-release-scoped-displayed-set-structured-lookup-receipt-v1",
+  "change_id": "rebuild-canonical-v2-knowledge-platform",
+  "slice_id": "s8l2-release-scoped-displayed-set-structured-lookup-green",
+  "status": "accepted",
+  "accepted_at": "2026-07-16T06:17:22Z",
+  "git_head": "f0e6224e1c675c6d6c58993676783b2fbe0cd8f6",
+  "formal_task_ledger": "55/80",
+  "implementation": {
+    "knowledge_read_sha256": "6d0db88db45e986ef528f9166c43dd1207f7182541e0abc7116412e3c238993b",
+    "knowledge_read_isolated_sha256": "16a661691167f2f0799da03a4d0d91f38c1d4a2a2491183ce1b1b613266248c4",
+    "owner_test_sha256": "42665f4cc8f6dabce42c945302e7b0731c899a361440563799e0346f5cab982b",
+    "slice_contract_sha256_before_acceptance_evidence": "f239c6ae0fd13cf3702ee9af0e5bb525c99e1874148ca130ea8c32647b5c7e60",
+    "implementation_plan_sha256": "c51e079fb8e619551c6f913a363da9abadcf5b8f6ea47a9609a9375ec38a215d"
+  },
+  "tdd": {
+    "red_normal": "1 xfailed, 45 deselected; direct missing structured-adapter sentinel before physical fixture acquisition",
+    "red_forced": "1 failed, 45 deselected; exact _MissingIsolatedStructuredLookupAdapter",
+    "green_focused": "1 passed, 45 deselected",
+    "unchanged_s8l1_focused": "1 passed, 45 deselected"
+  },
+  "verification": {
+    "shared_s7_s8_owner": "44 passed, 2 skipped",
+    "knowledge_read_owner_matrix": "16 passed",
+    "canonical_v2_no_external": "332 passed, 141 skipped, 0 xfailed, 3 existing hostile-model serialization warnings",
+    "ruff_check": "passed for complete src/data_agents/canonical_v2 and tests/canonical_v2",
+    "ruff_format": "passed for the three changed production/test files",
+    "py_compile": "passed for knowledge_read.py and knowledge_read_isolated.py",
+    "pyright": "0 errors, 0 warnings, 0 informations for complete Canonical V2 source/tests",
+    "strict_openspec": "passed",
+    "git_diff_check": "passed",
+    "scope_secret_cache": "passed"
+  },
+  "wheel": {
+    "path": "/var/tmp/canonical-v2-s8l2-wheel-20260716T061359Z/miroflow_agent-0.1.0-py3-none-any.whl",
+    "sha256": "081046b91078e918f006e126f7eae01af358c7c3c5eebe87d554cc3c8064dcd9",
+    "entry_count": 276,
+    "contains_knowledge_read": true,
+    "contains_knowledge_read_isolated": true,
+    "contains_tests_or_agents": false,
+    "packaged_production_hashes_match_source": true
+  },
+  "frozen_targets": {
+    "original_milvus_sha256": "43ef203e0b101fcbed2a6c8fcde19a35d426199d3f02bc72525d0acf618867cc",
+    "original_pgtest_paused": true,
+    "original_pgtest_volume": "d81c6381b0c7c0a975ca0ff4a0054037e72b0d4cb80174f682abceb1127cd241",
+    "recovery_lab_network": "none",
+    "recovery_lab_published_ports": false,
+    "recovery_lab_restart_policy": "no"
+  },
+  "review": {
+    "initial": {
+      "critical": 0,
+      "important": 2,
+      "closed_important": [
+        "legacy exact raw/evidence/content identities and execution-lane-absent replay are regression-locked",
+        "model-valid cross-lane local projection output is rejected at the KnowledgeRead trust seam"
+      ]
+    },
+    "targeted_re_review": {
+      "critical": 0,
+      "important": 0,
+      "minor": 0,
+      "yagni": 0,
+      "format_gate_repair": "one scoped Ruff format failure reproduced, formatted, and rechecked",
+      "verdict": "accepted",
+      "focused_recheck": "1 passed, 45 deselected"
+    }
+  },
+  "nonblocking_minor_yagni": [],
+  "forbidden_actions_performed": []
+}

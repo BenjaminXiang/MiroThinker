@@ -1,0 +1,100 @@
+{
+  "workers": [
+    {
+      "run_id": "f0766d6b-1b0a-46f4-aba3-9255e3706139",
+      "papers_total": 22,
+      "papers_processed": 20,
+      "papers_skipped": 2,
+      "summaries_written": 19,
+      "summaries_rejected": 1,
+      "papers_with_errors": 0,
+      "duration_seconds": 97.73,
+      "dry_run": false
+    },
+    {
+      "run_id": "351cadca-3cf7-4215-9ca9-9df682f221ef",
+      "papers_total": 16,
+      "papers_processed": 14,
+      "papers_skipped": 2,
+      "summaries_written": 10,
+      "summaries_rejected": 4,
+      "papers_with_errors": 0,
+      "duration_seconds": 57.03,
+      "dry_run": false
+    },
+    {
+      "run_id": "92e9d687-e13b-4feb-9e24-e44f7aca661e",
+      "papers_total": 12,
+      "papers_processed": 7,
+      "papers_skipped": 5,
+      "summaries_written": 6,
+      "summaries_rejected": 1,
+      "papers_with_errors": 0,
+      "duration_seconds": 30.55,
+      "dry_run": false
+    },
+    {
+      "run_id": "bfafa0a3-cc0d-4330-b47e-3a16761493a6",
+      "papers_total": 13,
+      "papers_processed": 10,
+      "papers_skipped": 3,
+      "summaries_written": 10,
+      "summaries_rejected": 0,
+      "papers_with_errors": 0,
+      "duration_seconds": 44.08,
+      "dry_run": false
+    },
+    {
+      "run_id": "e4c96548-4c1d-49ab-8095-70ed77d27b74",
+      "papers_total": 15,
+      "papers_processed": 11,
+      "papers_skipped": 4,
+      "summaries_written": 11,
+      "summaries_rejected": 0,
+      "papers_with_errors": 0,
+      "duration_seconds": 51.05,
+      "dry_run": false
+    },
+    {
+      "run_id": "975a642b-9885-4301-a9cc-0e765e7c0ab2",
+      "papers_total": 21,
+      "papers_processed": 17,
+      "papers_skipped": 4,
+      "summaries_written": 17,
+      "summaries_rejected": 0,
+      "papers_with_errors": 0,
+      "duration_seconds": 79.87,
+      "dry_run": false
+    },
+    {
+      "run_id": "745b5604-66ea-4c1d-b250-d30dbb490604",
+      "papers_total": 15,
+      "papers_processed": 11,
+      "papers_skipped": 4,
+      "summaries_written": 10,
+      "summaries_rejected": 1,
+      "papers_with_errors": 0,
+      "duration_seconds": 51.36,
+      "dry_run": false
+    },
+    {
+      "run_id": "e37b4f6b-6228-42f5-b3de-276329c39c4e",
+      "papers_total": 23,
+      "papers_processed": 17,
+      "papers_skipped": 6,
+      "summaries_written": 16,
+      "summaries_rejected": 1,
+      "papers_with_errors": 0,
+      "duration_seconds": 82.84,
+      "dry_run": false
+    }
+  ],
+  "totals": {
+    "papers_total": 137,
+    "papers_processed": 107,
+    "papers_skipped": 30,
+    "summaries_written": 99,
+    "summaries_rejected": 8,
+    "papers_with_errors": 0
+  }
+}

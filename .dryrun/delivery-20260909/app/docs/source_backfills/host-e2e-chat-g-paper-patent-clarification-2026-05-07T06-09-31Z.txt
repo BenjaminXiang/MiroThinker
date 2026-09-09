@@ -1,0 +1,61 @@
+# Host chat G paper/patent clarification E2E 2026-05-07T06-09-31Z
+log_file=/home/longxiang/MiroThinker/docs/source_backfills/host-e2e-chat-g-paper-patent-clarification-2026-05-07T06-09-31Z.txt
+base_url=http://127.0.0.1:59857
+DATABASE_URL=postgresql://***@localhost:15432/miroflow_real
+CHAT_MILVUS_URI=/home/longxiang/MiroThinker/apps/miroflow-agent/milvus.db
+started_uvicorn_pid=3034614
+INFO:     Started server process [3034622]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:59857 (Press CTRL+C to quit)
+INFO:     127.0.0.1:54868 - "GET /api/health HTTP/1.1" 200 OK
+health=OK
+
+## G-paper-clarification
+query=Image Super-Resolution 是哪篇论文
+INFO:     127.0.0.1:54870 - "POST /api/chat HTTP/1.1" 200 OK
+http_status=200
+raw= {"query":"Image Super-Resolution 是哪篇论文","query_type":"G_ambiguous_clarification","answer_text":"找到 10 篇与 'Image Super-Resolution' 匹配的论文，请选择具体对象：\n\n  • Image Super-Resolution Using Deep Convolutional Networks — 2015 / IEEE Transactions on Pattern Analysis and Machine Intelligence\n  • Learning a Deep Convolutional Network for Image Super-Resolution — 2014 / Lecture notes in computer science\n  • Second-Order Attention Network for Single Image Super-Resolution — 2019 / 2019 IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)\n  • NTIRE 2017 Challenge on Single Image Super-Resolution: Methods and Results — 2017 / 2017 IEEE Conference on Computer Vision and Pattern Recognition Workshops (CVPRW)\n  • Deep Learning for Single Image Super-Resolution: A Brief Review — 2019 / IEEE Transactions on Multimedia\n  • Recovering Realistic Texture in Image Super-Resolution by Deep Spatial Feature Transform — 2018 / 2018 IEEE/CVF Conference on Computer Vision and Pattern Recognition\n  • Activating More Pixels in Image Super-Resolution Transformer — 2023 / 2023 IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)\n  • Single Image Super-Resolution via a Holistic
+query_type= G_ambiguous_clarification
+citations_count= 10
+clarification_options= 5
+answer_prefix= 找到 10 篇与 'Image Super-Resolution' 匹配的论文，请选择具体对象：    • Image Super-Resolution Using Deep Convolutional Networks — 2015 / IEEE Transactions on Pattern Analysis and Machine Intelligence   • Learning a Deep Convolutional Network for Image Super
+selected_hint= PAPER-8621BBC84190
+
+## G-paper-select
+query=Image Super-Resolution 是哪篇论文
+INFO:     127.0.0.1:54886 - "POST /api/chat HTTP/1.1" 200 OK
+http_status=200
+selected_hint=PAPER-8621BBC84190
+INFO:     127.0.0.1:54892 - "POST /api/chat HTTP/1.1" 200 OK
+http_status=200
+selected_raw= {"query":"Image Super-Resolution 是哪篇论文","query_type":"A_paper_profile","answer_text":"Image Super-Resolution Using Deep Convolutional Networks 是一篇 2015 年发表于 IEEE Transactions on Pattern Analysis and Machine Intelligence 的论文。","citations":[{"type":"paper","id":"PAPER-8621BBC84190","label":"Image Super-Resolution Using Deep Convolutional Networks","url":"/browse#paper/PAPER-8621BBC84190"}],"evidence":[],"clarification":null,"structured_payload":{"paper_id":"PAPER-8621BBC84190","title":"Image Super-Resolution Using Deep Convolutional Networks","year":2015,"venue":"IEEE Transactions on Pattern Analysis and Machine Intelligence","citation_count":9671},"answer_style":"template","citation_map":{}}
+query_type= A_paper_profile
+citations_count= 1
+answer_prefix= Image Super-Resolution Using Deep Convolutional Networks 是一篇 2015 年发表于 IEEE Transactions on Pattern Analysis and Machine Intelligence 的论文。
+
+## G-patent-clarification
+query=机器人控制是哪件专利
+INFO:     127.0.0.1:54900 - "POST /api/chat HTTP/1.1" 200 OK
+http_status=200
+raw= {"query":"机器人控制是哪件专利","query_type":"G_ambiguous_clarification","answer_text":"找到 2 件与 '机器人控制' 匹配的专利，请选择具体对象：\n\n  • CN119610203A — 一种小型化关节模组及机器人控制器\n  • CN119181125A — 一种说话行为检测方法、机器人控制设备和可读存储介质","citations":[{"type":"patent","id":"PAT-EF1E9FE17583","label":"CN119610203A","url":"/browse#patent/PAT-EF1E9FE17583"},{"type":"patent","id":"PAT-3896804B3BE8","label":"CN119181125A","url":"/browse#patent/PAT-3896804B3BE8"}],"evidence":[],"clarification":{"prompt":"找到 2 件与 机器人控制 匹配的专利，请选择具体对象。","options":[{"id":"PAT-EF1E9FE17583","domain":"patent","label":"CN119610203A","hint":"发明 / 运得动力(深圳)有限公司 / 一种小型化关节模组及机器人控制器"},{"id":"PAT-3896804B3BE8","domain":"patent","label":"CN119181125A","hint":"发明 / 深圳市优必选科技股份有限公司 / 一种说话行为检测方法、机器人控制设备和可读存储介质"}],"default_id":"PAT-EF1E9FE17583","omitted":0},"structured_payload":{"name":"机器人控制","target_domain":"patent","candidate_count":2,"classifier_reason":"ambiguous patent title deterministic rule","patents":[{"patent_id":"PAT-EF1E9FE17583","patent_number":"CN119610203A","title_clean":"一种小型化关节模组及机器人控制器","applicants_raw":"运得动力(深圳)有限公司","patent_type":"发明"},{"patent_id":"PAT-3896804B3BE8","patent_number":"CN119181125A","title_clean":"一种说话行为检测方法、机器人控制设备和可读存储介质","appli
+query_type= G_ambiguous_clarification
+citations_count= 2
+clarification_options= 2
+answer_prefix= 找到 2 件与 '机器人控制' 匹配的专利，请选择具体对象：    • CN119610203A — 一种小型化关节模组及机器人控制器   • CN119181125A — 一种说话行为检测方法、机器人控制设备和可读存储介质
+selected_hint= PAT-EF1E9FE17583
+
+## G-patent-select
+query=机器人控制是哪件专利
+INFO:     127.0.0.1:54908 - "POST /api/chat HTTP/1.1" 200 OK
+http_status=200
+selected_hint=PAT-EF1E9FE17583
+INFO:     127.0.0.1:54918 - "POST /api/chat HTTP/1.1" 200 OK
+http_status=200
+selected_raw= {"query":"机器人控制是哪件专利","query_type":"A_patent_profile","answer_text":"CN119610203A 是专利《一种小型化关节模组及机器人控制器》，申请人为 运得动力(深圳)有限公司。","citations":[{"type":"patent","id":"PAT-EF1E9FE17583","label":"CN119610203A","url":"/browse#patent/PAT-EF1E9FE17583"}],"evidence":[],"clarification":null,"structured_payload":{"patent_id":"PAT-EF1E9FE17583","patent_number":"CN119610203A","title_clean":"一种小型化关节模组及机器人控制器","applicants_raw":"运得动力(深圳)有限公司","patent_type":"发明"},"answer_style":"template","citation_map":{}}
+query_type= A_patent_profile
+citations_count= 1
+answer_prefix= CN119610203A 是专利《一种小型化关节模组及机器人控制器》，申请人为 运得动力(深圳)有限公司。
+
+log_file=/home/longxiang/MiroThinker/docs/source_backfills/host-e2e-chat-g-paper-patent-clarification-2026-05-07T06-09-31Z.txt
+result=PASS

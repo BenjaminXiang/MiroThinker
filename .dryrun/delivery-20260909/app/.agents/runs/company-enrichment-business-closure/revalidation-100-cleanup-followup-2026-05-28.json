@@ -1,0 +1,21 @@
+{
+  "batch_id": "382fb63b-1a81-4ff2-8841-95ab87c717b1",
+  "reason": "follow-up official product title guard replay using _looks_like_product_title",
+  "candidates_seen": 6,
+  "deleted_count": 2,
+  "product_evidence_cascade_expected": 2,
+  "deleted": [
+    {
+      "product_id": "PROD-7074e066e6a1",
+      "company_id": "COMP-8e3331e62f7a",
+      "canonical_name": "BioFord™",
+      "official_product_url": "http://www.oxtium.com/"
+    },
+    {
+      "product_id": "PROD-6b20e176edb5",
+      "company_id": "COMP-95791ebe18d4",
+      "canonical_name": "华力创产品",
+      "official_product_url": "http://www.haptron-scientific.com/"
+    }
+  ]
+}

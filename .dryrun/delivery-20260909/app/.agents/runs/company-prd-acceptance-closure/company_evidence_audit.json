@@ -1,0 +1,608 @@
+{
+  "sample_limit_per_type": 20,
+  "sampled_rows": 60,
+  "failure_count": 0,
+  "failures": [],
+  "samples": [
+    {
+      "company_id": "COMP-f27a1e59b02d",
+      "canonical_name": "恒鑫智慧停车",
+      "fact_type": "product",
+      "fact_id": "PROD-1e71d4df0b14",
+      "fact_name": "楼宇可视对讲",
+      "quality_status": "ready",
+      "source_url": "xlsx://company/COMP-f27a1e59b02d",
+      "has_evidence": true
+    },
+    {
+      "company_id": "COMP-f27a1e59b02d",
+      "canonical_name": "恒鑫智慧停车",
+      "fact_type": "product",
+      "fact_id": "PROD-33ec2285c7b7",
+      "fact_name": "停车场管理系统设备",
+      "quality_status": "ready",
+      "source_url": "xlsx://company/COMP-f27a1e59b02d",
+      "has_evidence": true
+    },
+    {
+      "company_id": "COMP-f27a1e59b02d",
+      "canonical_name": "恒鑫智慧停车",
+      "fact_type": "product",
+      "fact_id": "PROD-b6bad686383f",
+      "fact_name": "通道闸",
+      "quality_status": "ready",
+      "source_url": "xlsx://company/COMP-f27a1e59b02d",
+      "has_evidence": true
+    },
+    {
+      "company_id": "COMP-f27a1e59b02d",
+      "canonical_name": "恒鑫智慧停车",
+      "fact_type": "product",
+      "fact_id": "PROD-daadaf70f24c",
+      "fact_name": "道闸",
+      "quality_status": "ready",
+      "source_url": "xlsx://company/COMP-f27a1e59b02d",
+      "has_evidence": true
+    },
+    {
+      "company_id": "COMP-f27a1e59b02d",
+      "canonical_name": "恒鑫智慧停车",
+      "fact_type": "product",
+      "fact_id": "PROD-fc3bbf69e113",
+      "fact_name": "门禁",
+      "quality_status": "ready",
+      "source_url": "xlsx://company/COMP-f27a1e59b02d",
+      "has_evidence": true
+    },
+    {
+      "company_id": "COMP-f590afa6d884",
+      "canonical_name": "深圳聚合微电子科技",
+      "fact_type": "product",
+      "fact_id": "PROD-22c09d95331b",
+      "fact_name": "模拟开关",
+      "quality_status": "ready",
+      "source_url": "xlsx://company/COMP-f590afa6d884",
+      "has_evidence": true
+    },
+    {
+      "company_id": "COMP-f590afa6d884",
+      "canonical_name": "深圳聚合微电子科技",
+      "fact_type": "product",
+      "fact_id": "PROD-487e33956643",
+      "fact_name": "运算放大器全系列",
+      "quality_status": "ready",
+      "source_url": "xlsx://company/COMP-f590afa6d884",
+      "has_evidence": true
+    },
+    {
+      "company_id": "COMP-f590afa6d884",
+      "canonical_name": "深圳聚合微电子科技",
+      "fact_type": "product",
+      "fact_id": "PROD-528643c7660f",
+      "fact_name": "电压基准源",
+      "quality_status": "ready",
+      "source_url": "xlsx://company/COMP-f590afa6d884",
+      "has_evidence": true
+    },
+    {
+      "company_id": "COMP-f590afa6d884",
+      "canonical_name": "深圳聚合微电子科技",
+      "fact_type": "product",
+      "fact_id": "PROD-a373956317aa",
+      "fact_name": "比较器",
+      "quality_status": "ready",
+      "source_url": "xlsx://company/COMP-f590afa6d884",
+      "has_evidence": true
+    },
+    {
+      "company_id": "COMP-f590afa6d884",
+      "canonical_name": "深圳聚合微电子科技",
+      "fact_type": "product",
+      "fact_id": "PROD-e7924e64099f",
+      "fact_name": "电平转换芯片",
+      "quality_status": "ready",
+      "source_url": "xlsx://company/COMP-f590afa6d884",
+      "has_evidence": true
+    },
+    {
+      "company_id": "COMP-f684b3dece85",
+      "canonical_name": "雁云信息技术",
+      "fact_type": "product",
+      "fact_id": "PROD-244a0343a67a",
+      "fact_name": "短信服务",
+      "quality_status": "ready",
+      "source_url": "xlsx://company/COMP-f684b3dece85",
+      "has_evidence": true
+    },
+    {
+      "company_id": "COMP-f684b3dece85",
+      "canonical_name": "雁云信息技术",
+      "fact_type": "product",
+      "fact_id": "PROD-8c9b7ff77319",
+      "fact_name": "带宽服务",
+      "quality_status": "ready",
+      "source_url": "xlsx://company/COMP-f684b3dece85",
+      "has_evidence": true
+    },
+    {
+      "company_id": "COMP-f684b3dece85",
+      "canonical_name": "雁云信息技术",
+      "fact_type": "product",
+      "fact_id": "PROD-bdb5b03f749f",
+      "fact_name": "云计算服务",
+      "quality_status": "ready",
+      "source_url": "xlsx://company/COMP-f684b3dece85",
+      "has_evidence": true
+    },
+    {
+      "company_id": "COMP-f684b3dece85",
+      "canonical_name": "雁云信息技术",
+      "fact_type": "product",
+      "fact_id": "PROD-beb6246f6f7e",
+      "fact_name": "语音服务",
+      "quality_status": "ready",
+      "source_url": "xlsx://company/COMP-f684b3dece85",
+      "has_evidence": true
+    },
+    {
+      "company_id": "COMP-f684b3dece85",
+      "canonical_name": "雁云信息技术",
+      "fact_type": "product",
+      "fact_id": "PROD-fef4f7179f0c",
+      "fact_name": "呼叫中心",
+      "quality_status": "ready",
+      "source_url": "xlsx://company/COMP-f684b3dece85",
+      "has_evidence": true
+    },
+    {
+      "company_id": "COMP-f71b13a345dc",
+      "canonical_name": "深圳数智谷科技",
+      "fact_type": "product",
+      "fact_id": "PROD-002ebc42241e",
+      "fact_name": "人工智能基础软件",
+      "quality_status": "ready",
+      "source_url": "xlsx://company/COMP-f71b13a345dc",
+      "has_evidence": true
+    },
+    {
+      "company_id": "COMP-f71b13a345dc",
+      "canonical_name": "深圳数智谷科技",
+      "fact_type": "product",
+      "fact_id": "PROD-17f6b92ec218",
+      "fact_name": "人工智能通用应用系统",
+      "quality_status": "ready",
+      "source_url": "xlsx://company/COMP-f71b13a345dc",
+      "has_evidence": true
+    },
+    {
+      "company_id": "COMP-f71b13a345dc",
+      "canonical_name": "深圳数智谷科技",
+      "fact_type": "product",
+      "fact_id": "PROD-420635e1032f",
+      "fact_name": "人工智能应用软件",
+      "quality_status": "ready",
+      "source_url": "xlsx://company/COMP-f71b13a345dc",
+      "has_evidence": true
+    },
+    {
+      "company_id": "COMP-f71b13a345dc",
+      "canonical_name": "深圳数智谷科技",
+      "fact_type": "product",
+      "fact_id": "PROD-571e306891de",
+      "fact_name": "信息系统集成服务",
+      "quality_status": "ready",
+      "source_url": "xlsx://company/COMP-f71b13a345dc",
+      "has_evidence": true
+    },
+    {
+      "company_id": "COMP-f71b13a345dc",
+      "canonical_name": "深圳数智谷科技",
+      "fact_type": "product",
+      "fact_id": "PROD-8560bd95ae7f",
+      "fact_name": "互联网数据服务",
+      "quality_status": "ready",
+      "source_url": "xlsx://company/COMP-f71b13a345dc",
+      "has_evidence": true
+    },
+    {
+      "company_id": "COMP-a65972f7965c",
+      "canonical_name": "深圳万珏科技",
+      "fact_type": "scenario",
+      "fact_id": "SCEN-d0df3d25694d",
+      "fact_name": "不同领域电子产品研发",
+      "quality_status": "ready",
+      "source_url": "xlsx://company/COMP-a65972f7965c",
+      "has_evidence": true
+    },
+    {
+      "company_id": "COMP-aad01ad60dad",
+      "canonical_name": "深圳海规网络科技",
+      "fact_type": "scenario",
+      "fact_id": "SCEN-e3ed3e807902",
+      "fact_name": "司法辅助服务",
+      "quality_status": "ready",
+      "source_url": "xlsx://company/COMP-aad01ad60dad",
+      "has_evidence": true
+    },
+    {
+      "company_id": "COMP-b689340c78db",
+      "canonical_name": "深圳奥锐达科技",
+      "fact_type": "scenario",
+      "fact_id": "SCEN-db04f106bf67",
+      "fact_name": "车载视觉感知",
+      "quality_status": "ready",
+      "source_url": "xlsx://company/COMP-b689340c78db",
+      "has_evidence": true
+    },
+    {
+      "company_id": "COMP-b689340c78db",
+      "canonical_name": "深圳奥锐达科技",
+      "fact_type": "scenario",
+      "fact_id": "SCEN-ef3c6c05e4c3",
+      "fact_name": "自主移动终端感知",
+      "quality_status": "ready",
+      "source_url": "xlsx://company/COMP-b689340c78db",
+      "has_evidence": true
+    },
+    {
+      "company_id": "COMP-c033b76be3d4",
+      "canonical_name": "深圳众飞远迹科技",
+      "fact_type": "scenario",
+      "fact_id": "SCEN-b13069a71a68",
+      "fact_name": "低空经济",
+      "quality_status": "ready",
+      "source_url": "xlsx://company/COMP-c033b76be3d4",
+      "has_evidence": true
+    },
+    {
+      "company_id": "COMP-c033b76be3d4",
+      "canonical_name": "深圳众飞远迹科技",
+      "fact_type": "scenario",
+      "fact_id": "SCEN-d38b63087ead",
+      "fact_name": "低空飞行控制",
+      "quality_status": "ready",
+      "source_url": "xlsx://company/COMP-c033b76be3d4",
+      "has_evidence": true
+    },
+    {
+      "company_id": "COMP-c468c0e6f936",
+      "canonical_name": "芯友微电子科技",
+      "fact_type": "scenario",
+      "fact_id": "SCEN-67a85c3303de",
+      "fact_name": "面板级封装",
+      "quality_status": "ready",
+      "source_url": "xlsx://company/COMP-c468c0e6f936",
+      "has_evidence": true
+    },
+    {
+      "company_id": "COMP-c468c0e6f936",
+      "canonical_name": "芯友微电子科技",
+      "fact_type": "scenario",
+      "fact_id": "SCEN-72ee908756d6",
+      "fact_name": "先进封装",
+      "quality_status": "ready",
+      "source_url": "xlsx://company/COMP-c468c0e6f936",
+      "has_evidence": true
+    },
+    {
+      "company_id": "COMP-c468c0e6f936",
+      "canonical_name": "芯友微电子科技",
+      "fact_type": "scenario",
+      "fact_id": "SCEN-d81307176f40",
+      "fact_name": "多芯合封",
+      "quality_status": "ready",
+      "source_url": "xlsx://company/COMP-c468c0e6f936",
+      "has_evidence": true
+    },
+    {
+      "company_id": "COMP-d2fd5d03160d",
+      "canonical_name": "注能科技",
+      "fact_type": "scenario",
+      "fact_id": "SCEN-8b068d75cb67",
+      "fact_name": "陪伴与情感交互",
+      "quality_status": "ready",
+      "source_url": "xlsx://company/COMP-d2fd5d03160d",
+      "has_evidence": true
+    },
+    {
+      "company_id": "COMP-e38d7374abf4",
+      "canonical_name": "海芯机器人技术",
+      "fact_type": "scenario",
+      "fact_id": "SCEN-0bedffcc35a7",
+      "fact_name": "特殊作业场景",
+      "quality_status": "ready",
+      "source_url": "xlsx://company/COMP-e38d7374abf4",
+      "has_evidence": true
+    },
+    {
+      "company_id": "COMP-e38d7374abf4",
+      "canonical_name": "海芯机器人技术",
+      "fact_type": "scenario",
+      "fact_id": "SCEN-336170bb74cc",
+      "fact_name": "工业自动化",
+      "quality_status": "ready",
+      "source_url": "xlsx://company/COMP-e38d7374abf4",
+      "has_evidence": true
+    },
+    {
+      "company_id": "COMP-e38d7374abf4",
+      "canonical_name": "海芯机器人技术",
+      "fact_type": "scenario",
+      "fact_id": "SCEN-410863f3ccc4",
+      "fact_name": "工业设计",
+      "quality_status": "ready",
+      "source_url": "xlsx://company/COMP-e38d7374abf4",
+      "has_evidence": true
+    },
+    {
+      "company_id": "COMP-e38d7374abf4",
+      "canonical_name": "海芯机器人技术",
+      "fact_type": "scenario",
+      "fact_id": "SCEN-45c7741dd920",
+      "fact_name": "智能机器人应用",
+      "quality_status": "ready",
+      "source_url": "xlsx://company/COMP-e38d7374abf4",
+      "has_evidence": true
+    },
+    {
+      "company_id": "COMP-e38d7374abf4",
+      "canonical_name": "海芯机器人技术",
+      "fact_type": "scenario",
+      "fact_id": "SCEN-6794603f36f3",
+      "fact_name": "服务消费场景",
+      "quality_status": "ready",
+      "source_url": "xlsx://company/COMP-e38d7374abf4",
+      "has_evidence": true
+    },
+    {
+      "company_id": "COMP-e38d7374abf4",
+      "canonical_name": "海芯机器人技术",
+      "fact_type": "scenario",
+      "fact_id": "SCEN-74af1514c6a0",
+      "fact_name": "工业制造",
+      "quality_status": "ready",
+      "source_url": "xlsx://company/COMP-e38d7374abf4",
+      "has_evidence": true
+    },
+    {
+      "company_id": "COMP-e38d7374abf4",
+      "canonical_name": "海芯机器人技术",
+      "fact_type": "scenario",
+      "fact_id": "SCEN-80d88c349563",
+      "fact_name": "行业AI系统集成",
+      "quality_status": "ready",
+      "source_url": "xlsx://company/COMP-e38d7374abf4",
+      "has_evidence": true
+    },
+    {
+      "company_id": "COMP-e38d7374abf4",
+      "canonical_name": "海芯机器人技术",
+      "fact_type": "scenario",
+      "fact_id": "SCEN-bea6f1bf825a",
+      "fact_name": "工业控制与自动化系统",
+      "quality_status": "ready",
+      "source_url": "xlsx://company/COMP-e38d7374abf4",
+      "has_evidence": true
+    },
+    {
+      "company_id": "COMP-e38d7374abf4",
+      "canonical_name": "海芯机器人技术",
+      "fact_type": "scenario",
+      "fact_id": "SCEN-cf750168dc64",
+      "fact_name": "工业制造与自动化",
+      "quality_status": "ready",
+      "source_url": "xlsx://company/COMP-e38d7374abf4",
+      "has_evidence": true
+    },
+    {
+      "company_id": "COMP-e38d7374abf4",
+      "canonical_name": "海芯机器人技术",
+      "fact_type": "scenario",
+      "fact_id": "SCEN-dfb459f0a9e0",
+      "fact_name": "通用AI应用",
+      "quality_status": "ready",
+      "source_url": "xlsx://company/COMP-e38d7374abf4",
+      "has_evidence": true
+    },
+    {
+      "company_id": "COMP-04d42897fcfb",
+      "canonical_name": "不止技术",
+      "fact_type": "signal",
+      "fact_id": "b76ce746-e28a-4f0c-a837-3c9e5f68a4bb",
+      "fact_name": "不止技术完成A++轮融资，投资方为长睿投资，金额未透露。",
+      "quality_status": "active",
+      "source_url": "https://pitchhub.36kr.com/project/2191998837300617",
+      "has_evidence": true
+    },
+    {
+      "company_id": "COMP-071193141d1c",
+      "canonical_name": "深圳秩益科技",
+      "fact_type": "signal",
+      "fact_id": "3ed5e59b-c9f7-43b1-b3a0-8438955fca94",
+      "fact_name": "秩益科技完成B轮融资，投资方为沂景资本，金额未透露。",
+      "quality_status": "active",
+      "source_url": "https://pitchhub.36kr.com/project/2060904180267136",
+      "has_evidence": true
+    },
+    {
+      "company_id": "COMP-08f17f2130d7",
+      "canonical_name": "知有无界（深圳）智能科技",
+      "fact_type": "signal",
+      "fact_id": "2fc0c5b7-ead9-4152-a820-a0e25aeb102f",
+      "fact_name": "知有无界（深圳）智能科技有限公司 种子+轮 千万级人民币",
+      "quality_status": "active",
+      "source_url": "xlsx://company/COMP-08f17f2130d7/row/1599",
+      "has_evidence": true
+    },
+    {
+      "company_id": "COMP-2da180e8b5c3",
+      "canonical_name": "光舟半导体技术",
+      "fact_type": "signal",
+      "fact_id": "234154dd-9b2f-4eb8-aae2-b66c3f44b090",
+      "fact_name": "光舟半导体完成C轮融资，投资方包括坪山创投、无锡交通集团、中青恒辉",
+      "quality_status": "active",
+      "source_url": "https://pitchhub.36kr.com/project/1678296019858436",
+      "has_evidence": true
+    },
+    {
+      "company_id": "COMP-2dc4e8b77368",
+      "canonical_name": "智平方（深圳）科技",
+      "fact_type": "signal",
+      "fact_id": "18144aee-02b3-4d94-8eb0-6230c7ac217b",
+      "fact_name": "智平方科技完成B轮融资，投资方包括百度风投、中车资本、无锡交通集团等。",
+      "quality_status": "active",
+      "source_url": "https://pitchhub.36kr.com/project/2353549897566085",
+      "has_evidence": true
+    },
+    {
+      "company_id": "COMP-2dfa2c2d84d5",
+      "canonical_name": "杉木（深圳）生物科技",
+      "fact_type": "signal",
+      "fact_id": "ded82651-dc65-4dbf-bb28-fa7d128c0423",
+      "fact_name": "杉木生物完成A轮融资，金额近亿人民币，投资方包括石溪资本、Shokz韶音科技、博将资本、涌铧投资、上海天使会、知行一号基金、朗科投资。",
+      "quality_status": "active",
+      "source_url": "https://pitchhub.36kr.com/project/2133918302051977",
+      "has_evidence": true
+    },
+    {
+      "company_id": "COMP-302ee093a2d1",
+      "canonical_name": "湾测技术",
+      "fact_type": "signal",
+      "fact_id": "9555baf7-2ad6-4c46-87aa-e48a8a8b2493",
+      "fact_name": "深圳市湾测技术有限公司 A+轮 过亿人民币",
+      "quality_status": "active",
+      "source_url": "xlsx://company/COMP-302ee093a2d1/row/745",
+      "has_evidence": true
+    },
+    {
+      "company_id": "COMP-621cd6f5cb29",
+      "canonical_name": "深圳姜歌机器人",
+      "fact_type": "signal",
+      "fact_id": "efc830aa-15f1-4f6e-bc44-dde06da646d7",
+      "fact_name": "深圳姜歌机器人有限公司 B轮 未披露",
+      "quality_status": "active",
+      "source_url": "xlsx://company/COMP-621cd6f5cb29/row/955",
+      "has_evidence": true
+    },
+    {
+      "company_id": "COMP-6f9139bb19b6",
+      "canonical_name": "星尘智能（深圳）",
+      "fact_type": "signal",
+      "fact_id": "a1ff0587-1387-4f2b-9bb0-64dd12efb8a6",
+      "fact_name": "星尘智能完成A+++轮融资，投资方为梁溪科创母基金。",
+      "quality_status": "active",
+      "source_url": "https://pitchhub.36kr.com/project/3244445718718208",
+      "has_evidence": true
+    },
+    {
+      "company_id": "COMP-6ff6e35036a2",
+      "canonical_name": "深圳擎羽科技",
+      "fact_type": "signal",
+      "fact_id": "ad526d96-b1be-4da1-a4a9-d245d57ab32b",
+      "fact_name": "深圳擎羽科技有限公司 Pre-A轮 未披露",
+      "quality_status": "active",
+      "source_url": "xlsx://company/COMP-6ff6e35036a2/row/1539",
+      "has_evidence": true
+    },
+    {
+      "company_id": "COMP-853b26c2f4dc",
+      "canonical_name": "深圳墨影科技",
+      "fact_type": "signal",
+      "fact_id": "25cd8cb9-f11e-4487-807d-895a6453dc7c",
+      "fact_name": "墨影科技完成B+轮融资，投资方为亚商资本和华民投，金额未透露。",
+      "quality_status": "active",
+      "source_url": "https://pitchhub.36kr.com/project/1678362663793670",
+      "has_evidence": true
+    },
+    {
+      "company_id": "COMP-8d15ad3c2e1b",
+      "canonical_name": "镜象科技",
+      "fact_type": "signal",
+      "fact_id": "ca4ad5c9-2bee-4ce2-af10-31ca9e00029e",
+      "fact_name": "镜象科技完成A轮融资，金额为数千万人民币，投资方为凯普生物。",
+      "quality_status": "active",
+      "source_url": "https://pitchhub.36kr.com/project/1679800293511943",
+      "has_evidence": true
+    },
+    {
+      "company_id": "COMP-8ed85d2c2d59",
+      "canonical_name": "不停科技",
+      "fact_type": "signal",
+      "fact_id": "2ab6935a-e256-4cc7-b4fd-e169bcfe40fa",
+      "fact_name": "不停科技完成B+轮融资，金额未透露，投资方为零以创投。",
+      "quality_status": "active",
+      "source_url": "https://pitchhub.36kr.com/project/1678238218580999",
+      "has_evidence": true
+    },
+    {
+      "company_id": "COMP-8ed85d2c2d59",
+      "canonical_name": "不停科技",
+      "fact_type": "signal",
+      "fact_id": "d17b8eeb-b0b5-4865-a64e-97dddb3f77b4",
+      "fact_name": "不停科技完成B++轮融资，金额近5000万美元，投资方为长线资本和创世伙伴CCV。",
+      "quality_status": "active",
+      "source_url": "https://pitchhub.36kr.com/project/1678238218580999",
+      "has_evidence": true
+    },
+    {
+      "company_id": "COMP-9057d96ca81b",
+      "canonical_name": "思傲拓科技",
+      "fact_type": "signal",
+      "fact_id": "6f75d3df-8422-40a2-983c-137e24362c6d",
+      "fact_name": "深圳市思傲拓科技有限公司 B轮 未披露",
+      "quality_status": "active",
+      "source_url": "xlsx://company/COMP-9057d96ca81b/row/985",
+      "has_evidence": true
+    },
+    {
+      "company_id": "COMP-95f186ec3fbf",
+      "canonical_name": "光启之境科技",
+      "fact_type": "signal",
+      "fact_id": "c47e772e-f5ed-4c48-9ecb-de67a4865c94",
+      "fact_name": "深圳市光启之境科技有限公司 天使+ 未披露",
+      "quality_status": "active",
+      "source_url": "xlsx://company/COMP-95f186ec3fbf/row/1593",
+      "has_evidence": true
+    },
+    {
+      "company_id": "COMP-a9ea5d16f272",
+      "canonical_name": "至信微电子",
+      "fact_type": "signal",
+      "fact_id": "f59e6c3f-0389-4270-8a71-addc44d4be40",
+      "fact_name": "至信微电子完成B+轮融资，投资方为中国风投和天互资产，金额未透露。",
+      "quality_status": "active",
+      "source_url": "https://pitchhub.36kr.com/project/1818823030821001",
+      "has_evidence": true
+    },
+    {
+      "company_id": "COMP-c51be594095f",
+      "canonical_name": "欧冶半导体",
+      "fact_type": "signal",
+      "fact_id": "d08f6064-6a88-4563-bf43-acce545706a6",
+      "fact_name": "欧冶半导体完成数亿元人民币C轮融资，投资方包括国投招商、深投控、南山战新投、彬复资本。",
+      "quality_status": "active",
+      "source_url": "https://pitchhub.36kr.com/project/1818821934452864",
+      "has_evidence": true
+    },
+    {
+      "company_id": "COMP-d3c4b7a7dcb0",
+      "canonical_name": "深圳铱加科技",
+      "fact_type": "signal",
+      "fact_id": "1ba8f65b-30e3-4566-a8a2-4510fe11bbe8",
+      "fact_name": "深圳铱加科技有限公司 A轮 未披露",
+      "quality_status": "active",
+      "source_url": "xlsx://company/COMP-d3c4b7a7dcb0/row/1399",
+      "has_evidence": true
+    },
+    {
+      "company_id": "COMP-e269d05c673b",
+      "canonical_name": "茵塞普科技（深圳）",
+      "fact_type": "signal",
+      "fact_id": "2ff95638-8739-47ee-9a7f-e680e6aa2b59",
+      "fact_name": "茵塞普科技完成A++轮融资，投资方为北工投资，金额未透露。",
+      "quality_status": "active",
+      "source_url": "https://pitchhub.36kr.com/project/2206386127303045",
+      "has_evidence": true
+    }
+  ]
+}

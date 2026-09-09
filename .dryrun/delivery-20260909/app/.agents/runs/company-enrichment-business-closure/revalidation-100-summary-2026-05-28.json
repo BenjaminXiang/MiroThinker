@@ -1,0 +1,1109 @@
+{
+  "batch": {
+    "batch_id": "382fb63b-1a81-4ff2-8841-95ab87c717b1",
+    "status": "succeeded",
+    "current_stage": "succeeded",
+    "companies_total": 100,
+    "companies_selected": 100,
+    "companies_processed": 100,
+    "companies_succeeded": 100,
+    "companies_failed": 0,
+    "created_at": "2026-05-28 09:28:50.481024+00:00",
+    "started_at": "2026-05-28 09:29:01.357166+00:00",
+    "finished_at": "2026-05-28 10:24:42.834899+00:00"
+  },
+  "states_by_status_stage": [
+    {
+      "status": "succeeded",
+      "current_stage": "milvus_refresh",
+      "companies": 100,
+      "query_count": 1428,
+      "source_result_count": 3275,
+      "accepted_source_count": 185,
+      "rejected_source_count": 2058,
+      "event_count": 51,
+      "product_count": 210,
+      "scenario_count": 107,
+      "official_product_count": 22,
+      "milvus_refreshed": 100
+    }
+  ],
+  "audit_by_source": [
+    {
+      "source_adapter": "iyiou",
+      "companies": 100,
+      "rows": 711,
+      "result_count": 788,
+      "accepted_count": 82,
+      "rejected_offsite": 0,
+      "rejected_irrelevant_path": 7,
+      "rejected_name_mismatch": 444
+    },
+    {
+      "source_adapter": "pitchhub_36kr",
+      "companies": 100,
+      "rows": 717,
+      "result_count": 2487,
+      "accepted_count": 103,
+      "rejected_offsite": 0,
+      "rejected_irrelevant_path": 55,
+      "rejected_name_mismatch": 1552
+    }
+  ],
+  "miss_reasons": [
+    {
+      "source_adapter": "iyiou",
+      "miss_reason": "all_results_rejected",
+      "companies": 44,
+      "rows": 312
+    },
+    {
+      "source_adapter": "iyiou",
+      "miss_reason": "<none>",
+      "companies": 27,
+      "rows": 194
+    },
+    {
+      "source_adapter": "iyiou",
+      "miss_reason": "no_results",
+      "companies": 29,
+      "rows": 205
+    },
+    {
+      "source_adapter": "pitchhub_36kr",
+      "miss_reason": "all_results_rejected",
+      "companies": 54,
+      "rows": 369
+    },
+    {
+      "source_adapter": "pitchhub_36kr",
+      "miss_reason": "<none>",
+      "companies": 38,
+      "rows": 287
+    },
+    {
+      "source_adapter": "pitchhub_36kr",
+      "miss_reason": "no_results",
+      "companies": 8,
+      "rows": 61
+    }
+  ],
+  "new_rows": {
+    "source_products": 210,
+    "official_products": 22,
+    "scenarios": 107,
+    "events": 51
+  },
+  "official_products": {
+    "rows": [
+      {
+        "product_id": "PROD-3f3425f4e41e",
+        "company_id": "COMP-00d053ec2a24",
+        "company_name": "飞拓星驰科技",
+        "canonical_name": "预约即享 专属定制 好礼！OasisX即将全面上线各大平台。",
+        "short_description": "获取验证码 立即预约",
+        "official_product_url": "https://www.fitx.games/",
+        "created_at": "2026-05-28 09:36:40.897137+00:00",
+        "evidence_text": "预约即享 专属定制 好礼！OasisX即将全面上线各大平台。 获取验证码 立即预约"
+      },
+      {
+        "product_id": "PROD-69d11058ca0a",
+        "company_id": "COMP-1764f9b80fc2",
+        "company_name": "深圳问止中医健康科技",
+        "canonical_name": "TechTCM",
+        "short_description": "问止 · 外治图解 问止 · 针灸穴位 问止 · 家庭方剂 问止旗下 : 问止中医 | 大医小课 | 精一书院 问止中医 中医大脑对治疑难重症 友情链接: 中医之家 Copyright © 2018 - 2022 TechTCM 深圳问止中医健康科技有限公司 版权所有 粤ICP备2024242863号 >> 扫码预约 | 在线就诊 Copyright © 2018 - 2022 TechTCM 深圳问止中医健康科技有限公司 版权所有 粤。",
+        "official_product_url": "https://techtcm.com",
+        "created_at": "2026-05-28 09:36:58.033485+00:00",
+        "evidence_text": "问止 · 外治图解 问止 · 针灸穴位 问止 · 家庭方剂 问止旗下 : 问止中医 | 大医小课 | 精一书院 问止中医 中医大脑对治疑难重症 友情链接: 中医之家 Copyright © 2018 - 2022 TechTCM 深圳问止中医健康科技有限公司 版权所有 粤ICP备2024242863号 >> 扫码预约 | 在线就诊 Copyright © 2018 - 2022 TechTCM 深圳问止中医健康科技有限公司 版权所有 粤ICP备2024242863号"
+      },
+      {
+        "product_id": "PROD-051d9d3a3953",
+        "company_id": "COMP-64e864f702e8",
+        "company_name": "杭州精控集成半导体",
+        "canonical_name": "软件 APP 模板",
+        "short_description": "产品中心 光通信产品线 通用类产品 硅光控制产品 EML控制产品 相干控制产品 PON系列产品 BMS产品线",
+        "official_product_url": "https://www.pisemi.com/",
+        "created_at": "2026-05-28 09:47:28.076999+00:00",
+        "evidence_text": "软件 APP 模板 首页 / 关于精控 / 产品中心 光通信产品线 通用类产品 硅光控制产品 EML控制产品 相干控制产品 PON系列产品 BMS产品线 / 动态资讯 / 加入精控 / 联系我们 CN EN 芯技术驱动智慧科技 - 精控集成 引领中国模拟-混合信号半导体芯片设计 专注模拟 质量保证 - 精控集成 顺利通过ISO9001质量管理体系认证 全方位行业应用 驱动未来 - 通讯  工业控制  医疗  仪器仪表  汽车 逐梦未来 共同前行 - 我们期待您的加入 共创精控未来 APPLICATIONS 应用场景 通讯 新能源 工业 更多 通讯 趋势中的光通讯行业在向着更高速度的方向发展。 ‍ 在更高速数据传输的需求驱动下，我们的产品可以更好地贴合市场发展的需求。 专注 于‍ 提供 数据中心 、 PON OLT 及 5G 前传 等方向的采样及控制芯片 解决 EML 、 硅光 、 相干 等"
+      },
+      {
+        "product_id": "PROD-860cd87f67b5",
+        "company_id": "COMP-7e0087e94af9",
+        "company_name": "艾欧智能（深圳）",
+        "canonical_name": "Bringing robots everywhere, for everyone",
+        "short_description": "机器人与具身智能",
+        "official_product_url": "https://io-ai.tech/",
+        "created_at": "2026-05-28 09:58:17.049835+00:00",
+        "evidence_text": "机器人与具身智能 Bringing robots everywhere, for everyone 艾欧智能聚焦真实世界机器人与具身智能数据解决方案。基于自研软硬件一体化平台，我们提供可扩展、高质量、可定制的训练数据能力，支持 Physical AI 的高效研发与落地应用。 预约演示"
+      },
+      {
+        "product_id": "PROD-2c878a12441a",
+        "company_id": "COMP-7e0087e94af9",
+        "company_name": "艾欧智能（深圳）",
+        "canonical_name": "EmbodiFlow",
+        "short_description": "了解详情 数据标注管理平台 EmbodiFlow 面向具身智能的数据标注与管理平台，支持复杂多模态数据的采集、标注、可视化、质量保障与后处理，并可一键导出 LeRobot 等可训练格式，构建完整的数据闭环能力。",
+        "official_product_url": "https://io-ai.tech/",
+        "created_at": "2026-05-28 09:58:17.049835+00:00",
+        "evidence_text": "了解详情 数据标注管理平台 EmbodiFlow 面向具身智能的数据标注与管理平台，支持复杂多模态数据的采集、标注、可视化、质量保障与后处理，并可一键导出 LeRobot 等可训练格式，构建完整的数据闭环能力。"
+      },
+      {
+        "product_id": "PROD-a41de24e6833",
+        "company_id": "COMP-7e0087e94af9",
+        "company_name": "艾欧智能（深圳）",
+        "canonical_name": "LeRobot",
+        "short_description": "了解详情 数据标注管理平台 EmbodiFlow 面向具身智能的数据标注与管理平台，支持复杂多模态数据的采集、标注、可视化、质量保障与后处理，并可一键导出 LeRobot 等可训练格式，构建完整的数据闭环能力。",
+        "official_product_url": "https://io-ai.tech/",
+        "created_at": "2026-05-28 09:58:17.049835+00:00",
+        "evidence_text": "了解详情 数据标注管理平台 EmbodiFlow 面向具身智能的数据标注与管理平台，支持复杂多模态数据的采集、标注、可视化、质量保障与后处理，并可一键导出 LeRobot 等可训练格式，构建完整的数据闭环能力。"
+      },
+      {
+        "product_id": "PROD-01457c0aba1d",
+        "company_id": "COMP-7e0087e94af9",
+        "company_name": "艾欧智能（深圳）",
+        "canonical_name": "SenseXperience",
+        "short_description": "了解详情 真实世界人体数据 SenseXperience 采集高质量真实世界人体动作与多模态信号，涵盖第一视角单元、可定制 UMI、全身传感与动捕系统，并结合后处理算法，实现可扩展、高精度的人体数据生产。",
+        "official_product_url": "https://io-ai.tech/",
+        "created_at": "2026-05-28 09:58:17.049835+00:00",
+        "evidence_text": "了解详情 真实世界人体数据 SenseXperience 采集高质量真实世界人体动作与多模态信号，涵盖第一视角单元、可定制 UMI、全身传感与动捕系统，并结合后处理算法，实现可扩展、高精度的人体数据生产。"
+      },
+      {
+        "product_id": "PROD-08de2b5fc0fe",
+        "company_id": "COMP-7e0087e94af9",
+        "company_name": "艾欧智能（深圳）",
+        "canonical_name": "TeleXperience",
+        "short_description": "我们的产品 软硬件一体化解决方案 机器人遥操作平台 TeleXperience 面向多种机器人构型的通用遥操作平台，使人类操作员能够精准控制真实世界中的机器人。",
+        "official_product_url": "https://io-ai.tech/",
+        "created_at": "2026-05-28 09:58:17.049835+00:00",
+        "evidence_text": "我们的产品 软硬件一体化解决方案 机器人遥操作平台 TeleXperience 面向多种机器人构型的通用遥操作平台，使人类操作员能够精准控制真实世界中的机器人。"
+      },
+      {
+        "product_id": "PROD-6fd78b9c14e5",
+        "company_id": "COMP-86148f2ee6cf",
+        "company_name": "灵起科技（深圳）",
+        "canonical_name": "LivingAI",
+        "short_description": "Copyright © 2026 LivingAI All Rights Reserved.",
+        "official_product_url": "https://living.ai/",
+        "created_at": "2026-05-28 09:58:24.838003+00:00",
+        "evidence_text": "Copyright © 2026 LivingAI All Rights Reserved."
+      },
+      {
+        "product_id": "PROD-7074e066e6a1",
+        "company_id": "COMP-8e3331e62f7a",
+        "company_name": "深圳津渡生物医学科技",
+        "canonical_name": "BioFord™",
+        "short_description": "首页 BioFord™️ AI 计算服务 AI 大模型和算法开发服务 AI & 生信计算服务 关于津渡 联系我们 EN",
+        "official_product_url": "http://www.oxtium.com/",
+        "created_at": "2026-05-28 09:58:34.129706+00:00",
+        "evidence_text": "首页 BioFord™️ AI 计算服务 AI 大模型和算法开发服务 AI & 生信计算服务 关于津渡 联系我们 EN"
+      },
+      {
+        "product_id": "PROD-9d80d7f3bf9f",
+        "company_id": "COMP-8e3331e62f7a",
+        "company_name": "深圳津渡生物医学科技",
+        "canonical_name": "BioScience",
+        "short_description": "以 AI 科技探索生命之谜 Advancing Al for BioScience",
+        "official_product_url": "http://www.oxtium.com/",
+        "created_at": "2026-05-28 09:58:34.129706+00:00",
+        "evidence_text": "以 AI 科技探索生命之谜 Advancing Al for BioScience"
+      },
+      {
+        "product_id": "PROD-d5940c8a9906",
+        "company_id": "COMP-8e3331e62f7a",
+        "company_name": "深圳津渡生物医学科技",
+        "canonical_name": "产品与服务",
+        "short_description": "BioFord™️ 一站式生物科学研究平台 AI 大模型和算法开发服务 生信计算服务 AI 转化医学产品",
+        "official_product_url": "http://www.oxtium.com/",
+        "created_at": "2026-05-28 09:58:34.129706+00:00",
+        "evidence_text": "产品与服务 BioFord™️ 一站式生物科学研究平台 AI 大模型和算法开发服务 生信计算服务 AI 转化医学产品 商务合作 商务邮箱： business@oxtium.com 联系电话： 0755-86520102 公司地址： 深圳市南山区西丽街道清华信息港科研楼1107 关于我们 公司介绍 新闻动态 联系我们"
+      },
+      {
+        "product_id": "PROD-6b20e176edb5",
+        "company_id": "COMP-95791ebe18d4",
+        "company_name": "华力创科学（深圳）",
+        "canonical_name": "华力创产品",
+        "short_description": "产品中心 力及力矩传感器产品 智能末端执行器 视-触觉融合解决方案",
+        "official_product_url": "http://www.haptron-scientific.com/",
+        "created_at": "2026-05-28 09:58:49.840904+00:00",
+        "evidence_text": "华力创产品 产品中心 力及力矩传感器产品 智能末端执行器 视-触觉融合解决方案"
+      },
+      {
+        "product_id": "PROD-03fdf88644c1",
+        "company_id": "COMP-9986de45a425",
+        "company_name": "安室智能",
+        "canonical_name": "BestBuy",
+        "short_description": "迄今已开拓海外销售渠道伙伴逾100家，其中包括沃尔玛、BestBuy、Home Depot等大型商超。",
+        "official_product_url": "https://www.anshismart.com/",
+        "created_at": "2026-05-28 10:10:39.687292+00:00",
+        "evidence_text": "迄今已开拓海外销售渠道伙伴逾100家，其中包括沃尔玛、BestBuy、Home Depot等大型商超。"
+      },
+      {
+        "product_id": "PROD-b42dfdd07a1c",
+        "company_id": "COMP-c58ac55e0244",
+        "company_name": "深圳库犸动力科技",
+        "canonical_name": "LiDAR",
+        "short_description": "Previous Next Built Smarter, Live Simpler LUBA mini 2 AWD 1500 Master Every Lawn with 360 LiDAR Learn More > Ace Your Perfection Grass demands the ultimate standard.",
+        "official_product_url": "https://mammotion.com/",
+        "created_at": "2026-05-28 10:10:52.544735+00:00",
+        "evidence_text": "Previous Next Built Smarter, Live Simpler LUBA mini 2 AWD 1500 Master Every Lawn with 360 LiDAR Learn More > Ace Your Perfection Grass demands the ultimate standard."
+      },
+      {
+        "product_id": "PROD-15b12a9fb9d7",
+        "company_id": "COMP-c58ac55e0244",
+        "company_name": "深圳库犸动力科技",
+        "canonical_name": "NetRTK",
+        "short_description": "Learn More > Flagship Robot Lawn Mower LUBA 3 AWD World's First Tri-Fusion Positioning System Learn More > World’s First Vision-Powered AWD Robot Lawn Mower LUBA mini 2 AWD 1000 Tri-Camera Vision & NetRTK Fusion Navigati。",
+        "official_product_url": "https://mammotion.com/",
+        "created_at": "2026-05-28 10:10:52.544735+00:00",
+        "evidence_text": "Learn More > Flagship Robot Lawn Mower LUBA 3 AWD World's First Tri-Fusion Positioning System Learn More > World’s First Vision-Powered AWD Robot Lawn Mower LUBA mini 2 AWD 1000 Tri-Camera Vision & NetRTK Fusion Navigation Learn More > Built Smarter, Live Simpler YUKA mini 2 Series AI-Powered Installation-Free Robot Lawn Mower YUKA mini 2 800 > YUKA mini 2 1000 > Go to item 1 Go to"
+      },
+      {
+        "product_id": "PROD-d9600df72bb1",
+        "company_id": "COMP-d9434174e97a",
+        "company_name": "华仁智信技术",
+        "canonical_name": "必可AEO认证系统",
+        "short_description": "智能化的监测系统和标准化的流程，帮助企业发现认证盲区和降低试错成本，助力企业高效认证 查看详情 可持续供应链解决方案服务商 以企业合规经营为基础，结合大数据和人工智能，为客户提供信用服务和可持续供应链解决方案的服务商 查看详情 必可AEO认证独家保持器 必可AEO认证独家保持器，通过沉淀数据和记录，可以助力企业大幅提高复审成功率 查看详情",
+        "official_product_url": "https://www.credithuaren.com",
+        "created_at": "2026-05-28 10:24:26.054559+00:00",
+        "evidence_text": "必可AEO认证系统 智能化的监测系统和标准化的流程，帮助企业发现认证盲区和降低试错成本，助力企业高效认证 查看详情 可持续供应链解决方案服务商 以企业合规经营为基础，结合大数据和人工智能，为客户提供信用服务和可持续供应链解决方案的服务商 查看详情 必可AEO认证独家保持器 必可AEO认证独家保持器，通过沉淀数据和记录，可以助力企业大幅提高复审成功率 查看详情"
+      },
+      {
+        "product_id": "PROD-ff0db3d9fdf3",
+        "company_id": "COMP-e22096104010",
+        "company_name": "同昇光电",
+        "canonical_name": "PRODUCTS",
+        "short_description": "产品展示 反谐振空芯光纤-1310 1310nm反谐振空芯光纤，包层直径125um，可应用于通信领域。 反谐振空芯光纤-1550 1550nm波长反谐振空芯光纤，可应用于通信领域。 可见光空芯光纤-532 532nm波长可见光空芯光纴，可应用于通信领域。 空芯光纤跳线 FC 接头",
+        "official_product_url": "https://www.sublime-sz.com",
+        "created_at": "2026-05-28 10:24:29.780261+00:00",
+        "evidence_text": "PRODUCTS 产品展示 反谐振空芯光纤-1310 1310nm反谐振空芯光纤，包层直径125um，可应用于通信领域。 反谐振空芯光纤-1550 1550nm波长反谐振空芯光纤，可应用于通信领域。 可见光空芯光纤-532 532nm波长可见光空芯光纴，可应用于通信领域。 空芯光纤跳线 FC 接头",
+        "noise_reasons": [
+          "noise_name"
+        ]
+      },
+      {
+        "product_id": "PROD-07bb620471fb",
+        "company_id": "COMP-e7137f40e8e0",
+        "company_name": "深圳广合霖科技",
+        "canonical_name": "LoRa",
+        "short_description": "1 Protocol Full-Network Connectivity (supporting China Telecom, China Mobile, China Unicom and China Broadcasting Network) Alarm Receiving Methods: Four methods available: phone call, SMS, WeChat and platform notificatio。",
+        "official_product_url": "http://www.rainontrees.com",
+        "created_at": "2026-05-28 10:24:33.195249+00:00",
+        "evidence_text": "1 Protocol Full-Network Connectivity (supporting China Telecom, China Mobile, China Unicom and China Broadcasting Network) Alarm Receiving Methods: Four methods available: phone call, SMS, WeChat and platform notification SMART INDUSTRY Communication Method: NB-IoT communication, LoRa communication Alarm Receiving Methods: Four methods available: phone call, SMS, WeChat and platform notification W",
+        "noise_reasons": [
+          "noise_name"
+        ]
+      },
+      {
+        "product_id": "PROD-5173d88f570e",
+        "company_id": "COMP-e7137f40e8e0",
+        "company_name": "深圳广合霖科技",
+        "canonical_name": "WeChat",
+        "short_description": "Alarm Receiving Methods: Four methods are available, including phone call, SMS, WeChat and platform notification.",
+        "official_product_url": "http://www.rainontrees.com",
+        "created_at": "2026-05-28 10:24:33.195249+00:00",
+        "evidence_text": "Alarm Receiving Methods: Four methods are available, including phone call, SMS, WeChat and platform notification.",
+        "noise_reasons": [
+          "noise_name"
+        ]
+      },
+      {
+        "product_id": "PROD-9734f972ecc0",
+        "company_id": "COMP-e7137f40e8e0",
+        "company_name": "深圳广合霖科技",
+        "canonical_name": "WiFi",
+        "short_description": "1 and WiFi protocols are optional.",
+        "official_product_url": "http://www.rainontrees.com",
+        "created_at": "2026-05-28 10:24:33.195249+00:00",
+        "evidence_text": "1 and WiFi protocols are optional.",
+        "noise_reasons": [
+          "noise_name"
+        ]
+      },
+      {
+        "product_id": "PROD-bc2b0632b7a8",
+        "company_id": "COMP-e8a8688eaf11",
+        "company_name": "康佳芯盈半导体科技（深圳）",
+        "canonical_name": "OpenClaw",
+        "short_description": "当然，这里说的不是海鲜，而是一款突然爆火的AI工具 OpenClaw。",
+        "official_product_url": "https://www.kowin.com.cn",
+        "created_at": "2026-05-28 10:24:35.196998+00:00",
+        "evidence_text": "当然，这里说的不是海鲜，而是一款突然爆火的AI工具 OpenClaw。"
+      }
+    ],
+    "noise_candidates": [
+      {
+        "product_id": "PROD-ff0db3d9fdf3",
+        "company_id": "COMP-e22096104010",
+        "company_name": "同昇光电",
+        "canonical_name": "PRODUCTS",
+        "short_description": "产品展示 反谐振空芯光纤-1310 1310nm反谐振空芯光纤，包层直径125um，可应用于通信领域。 反谐振空芯光纤-1550 1550nm波长反谐振空芯光纤，可应用于通信领域。 可见光空芯光纤-532 532nm波长可见光空芯光纴，可应用于通信领域。 空芯光纤跳线 FC 接头",
+        "official_product_url": "https://www.sublime-sz.com",
+        "created_at": "2026-05-28 10:24:29.780261+00:00",
+        "evidence_text": "PRODUCTS 产品展示 反谐振空芯光纤-1310 1310nm反谐振空芯光纤，包层直径125um，可应用于通信领域。 反谐振空芯光纤-1550 1550nm波长反谐振空芯光纤，可应用于通信领域。 可见光空芯光纤-532 532nm波长可见光空芯光纴，可应用于通信领域。 空芯光纤跳线 FC 接头",
+        "noise_reasons": [
+          "noise_name"
+        ]
+      },
+      {
+        "product_id": "PROD-07bb620471fb",
+        "company_id": "COMP-e7137f40e8e0",
+        "company_name": "深圳广合霖科技",
+        "canonical_name": "LoRa",
+        "short_description": "1 Protocol Full-Network Connectivity (supporting China Telecom, China Mobile, China Unicom and China Broadcasting Network) Alarm Receiving Methods: Four methods available: phone call, SMS, WeChat and platform notificatio。",
+        "official_product_url": "http://www.rainontrees.com",
+        "created_at": "2026-05-28 10:24:33.195249+00:00",
+        "evidence_text": "1 Protocol Full-Network Connectivity (supporting China Telecom, China Mobile, China Unicom and China Broadcasting Network) Alarm Receiving Methods: Four methods available: phone call, SMS, WeChat and platform notification SMART INDUSTRY Communication Method: NB-IoT communication, LoRa communication Alarm Receiving Methods: Four methods available: phone call, SMS, WeChat and platform notification W",
+        "noise_reasons": [
+          "noise_name"
+        ]
+      },
+      {
+        "product_id": "PROD-5173d88f570e",
+        "company_id": "COMP-e7137f40e8e0",
+        "company_name": "深圳广合霖科技",
+        "canonical_name": "WeChat",
+        "short_description": "Alarm Receiving Methods: Four methods are available, including phone call, SMS, WeChat and platform notification.",
+        "official_product_url": "http://www.rainontrees.com",
+        "created_at": "2026-05-28 10:24:33.195249+00:00",
+        "evidence_text": "Alarm Receiving Methods: Four methods are available, including phone call, SMS, WeChat and platform notification.",
+        "noise_reasons": [
+          "noise_name"
+        ]
+      },
+      {
+        "product_id": "PROD-9734f972ecc0",
+        "company_id": "COMP-e7137f40e8e0",
+        "company_name": "深圳广合霖科技",
+        "canonical_name": "WiFi",
+        "short_description": "1 and WiFi protocols are optional.",
+        "official_product_url": "http://www.rainontrees.com",
+        "created_at": "2026-05-28 10:24:33.195249+00:00",
+        "evidence_text": "1 and WiFi protocols are optional.",
+        "noise_reasons": [
+          "noise_name"
+        ]
+      }
+    ]
+  },
+  "source_product_sample": [
+    {
+      "product_id": "PROD-713b8da10492",
+      "company_id": "COMP-3294d70e176d",
+      "company_name": "深圳闪移技术",
+      "canonical_name": "AI将是有史以来最深刻的平台",
+      "short_description": "而元宇宙退潮之后，Roblox迅速跌下神坛，OpenAI的命运又将随着AI大模型走向何方？ ![Image 3](blob:http://localhost/c7e156bed97322f5f33444825a63462a)2023-05-14 AI将是有史以来最深刻的平台转变之一。",
+      "official_product_url": "https://pitchhub.36kr.com/project/2144673671644425",
+      "created_at": "2026-05-28 09:36:12.709575+00:00"
+    },
+    {
+      "product_id": "PROD-c0e61ed1cef0",
+      "company_id": "COMP-3294d70e176d",
+      "company_name": "深圳闪移技术",
+      "canonical_name": "系列化停车机器人及核心设备",
+      "short_description": "项目简介 安徽博微联控科技有限公司是一家智能停车技术研发商，主要经营“系列化停车机器人及核心设备”、“系列化智能仓储式立体车库及解决方案”、 “智慧车库管理系统”、“智能充电装置和系统”、“基于物联网的机电设备远程诊断系统”、“结构、控制、物流等多学科工程仿真及优化平台”等系统技术及产品。",
+      "official_product_url": "https://pitchhub.36kr.com/project/2144851367707912",
+      "created_at": "2026-05-28 09:36:12.720271+00:00"
+    },
+    {
+      "product_id": "PROD-a63670575d05",
+      "company_id": "COMP-3294d70e176d",
+      "company_name": "深圳闪移技术",
+      "canonical_name": "基于物联网的机电设备远程诊断系统",
+      "short_description": "项目简介 安徽博微联控科技有限公司是一家智能停车技术研发商，主要经营“系列化停车机器人及核心设备”、“系列化智能仓储式立体车库及解决方案”、 “智慧车库管理系统”、“智能充电装置和系统”、“基于物联网的机电设备远程诊断系统”、“结构、控制、物流等多学科工程仿真及优化平台”等系统技术及产品。",
+      "official_product_url": "https://pitchhub.36kr.com/project/2144851367707912",
+      "created_at": "2026-05-28 09:36:12.720271+00:00"
+    },
+    {
+      "product_id": "PROD-3141c4e05e9a",
+      "company_id": "COMP-3294d70e176d",
+      "company_name": "深圳闪移技术",
+      "canonical_name": "系列化智能仓储式立体车库及解决方案",
+      "short_description": "项目简介 安徽博微联控科技有限公司是一家智能停车技术研发商，主要经营“系列化停车机器人及核心设备”、“系列化智能仓储式立体车库及解决方案”、 “智慧车库管理系统”、“智能充电装置和系统”、“基于物联网的机电设备远程诊断系统”、“结构、控制、物流等多学科工程仿真及优化平台”等系统技术及产品。",
+      "official_product_url": "https://pitchhub.36kr.com/project/2144851367707912",
+      "created_at": "2026-05-28 09:36:12.720271+00:00"
+    },
+    {
+      "product_id": "PROD-8d5ef8aadb4f",
+      "company_id": "COMP-3294d70e176d",
+      "company_name": "深圳闪移技术",
+      "canonical_name": "智能充电装置和系统",
+      "short_description": "项目简介 安徽博微联控科技有限公司是一家智能停车技术研发商，主要经营“系列化停车机器人及核心设备”、“系列化智能仓储式立体车库及解决方案”、 “智慧车库管理系统”、“智能充电装置和系统”、“基于物联网的机电设备远程诊断系统”、“结构、控制、物流等多学科工程仿真及优化平台”等系统技术及产品。",
+      "official_product_url": "https://pitchhub.36kr.com/project/2144851367707912",
+      "created_at": "2026-05-28 09:36:12.720271+00:00"
+    },
+    {
+      "product_id": "PROD-2e00630167a0",
+      "company_id": "COMP-3294d70e176d",
+      "company_name": "深圳闪移技术",
+      "canonical_name": "智慧车库管理系统",
+      "short_description": "项目简介 安徽博微联控科技有限公司是一家智能停车技术研发商，主要经营“系列化停车机器人及核心设备”、“系列化智能仓储式立体车库及解决方案”、 “智慧车库管理系统”、“智能充电装置和系统”、“基于物联网的机电设备远程诊断系统”、“结构、控制、物流等多学科工程仿真及优化平台”等系统技术及产品。",
+      "official_product_url": "https://pitchhub.36kr.com/project/2144851367707912",
+      "created_at": "2026-05-28 09:36:12.720271+00:00"
+    },
+    {
+      "product_id": "PROD-6d180a43446b",
+      "company_id": "COMP-3294d70e176d",
+      "company_name": "深圳闪移技术",
+      "canonical_name": "智能机器人立体停车整体解决方案",
+      "short_description": "基于重载举升型智能停车机器人、智能调度大数据环、超三维定位导航等专利技术的智能机器人立体停车整体解决方案。",
+      "official_product_url": "https://pitchhub.36kr.com/project/2012744819066375",
+      "created_at": "2026-05-28 09:36:15.780337+00:00"
+    },
+    {
+      "product_id": "PROD-d96a515d10be",
+      "company_id": "COMP-3294d70e176d",
+      "company_name": "深圳闪移技术",
+      "canonical_name": "松灵机器人",
+      "short_description": "解决方案服务商 [寻求报道](https://36kr.com/seek-report-new) 官方网址：https://www.agilex.ai/ 编辑维护 8.5万 ## 项目简介 松灵机器人是一家智能停车机器人研发商。公司研发的机器人种融合了传感器和嵌入式平台，拥有环境感知能力，可以自主的去到目的地，而不是局限于固定的路线， 并且拥有足够的智能去识别工作环境中的物体，提前做出避让，在复杂的环境中保证安全稳定的持续工作。该平台采。",
+      "official_product_url": "https://pitchhub.36kr.com/project/1678507092571136",
+      "created_at": "2026-05-28 09:36:15.790372+00:00"
+    },
+    {
+      "product_id": "PROD-821b3dba1f32",
+      "company_id": "COMP-3294d70e176d",
+      "company_name": "深圳闪移技术",
+      "canonical_name": "智象机器人",
+      "short_description": "项目简介 智象机器人是一家停车机器人研发商，通过机器人系统将随意停放的车辆安全高效送入停车位。 ## 融资历史 | 融资轮次 | 融资时间 | 融资金额 | 投资方 | | --- | --- | --- | --- | | 股权融资 | 2018-09 | 未透露 | 天使翼创投 | ## 工商信息 工商全称 武汉智象机器人有限公司 英文全称- 法定代表人 李远明 成立时间 2015-06-02 注册地址 武汉东湖新技术开发区高新大道。",
+      "official_product_url": "https://pitchhub.36kr.com/project/2002545744060296",
+      "created_at": "2026-05-28 09:36:15.794860+00:00"
+    },
+    {
+      "product_id": "PROD-6f263a1cbb8e",
+      "company_id": "COMP-2f487edaca9a",
+      "company_name": "酷选科技",
+      "canonical_name": "城市酷选",
+      "short_description": "一款生活类服务平台，涵盖衣、食、住、行、吃、喝、玩、乐、购，融合线上线下，消费者线下消费等额获得网购代金券。",
+      "official_product_url": "https://pitchhub.36kr.com/project/1678361711457289",
+      "created_at": "2026-05-28 09:36:22.394317+00:00"
+    },
+    {
+      "product_id": "PROD-cab5b35d4135",
+      "company_id": "COMP-1495c56536af",
+      "company_name": "深圳微控无线科技",
+      "canonical_name": "Lora模块及相关智能硬件",
+      "short_description": "Lora模块及相关智能硬件",
+      "official_product_url": "https://pitchhub.36kr.com/project/2012751699166729",
+      "created_at": "2026-05-28 09:36:26.523923+00:00"
+    },
+    {
+      "product_id": "PROD-4b731c975b27",
+      "company_id": "COMP-1495c56536af",
+      "company_name": "深圳微控无线科技",
+      "canonical_name": "GPRS/NBIOT DTU及相关智能硬件",
+      "short_description": "GPRS/NBIOT DTU及相关智能硬件",
+      "official_product_url": "https://pitchhub.36kr.com/project/2012751699166729",
+      "created_at": "2026-05-28 09:36:26.523923+00:00"
+    },
+    {
+      "product_id": "PROD-b642fea6521f",
+      "company_id": "COMP-1495c56536af",
+      "company_name": "深圳微控无线科技",
+      "canonical_name": "相关行业云平台/公共云平台/手机APP等",
+      "short_description": "相关行业云平台/公共云平台/手机APP等",
+      "official_product_url": "https://pitchhub.36kr.com/project/2012751699166729",
+      "created_at": "2026-05-28 09:36:26.523923+00:00"
+    },
+    {
+      "product_id": "PROD-0d99cd3a32d0",
+      "company_id": "COMP-1495c56536af",
+      "company_name": "深圳微控无线科技",
+      "canonical_name": "智能水表传感器/水计量模块/水资源管理终端",
+      "short_description": "智能水表传感器/水计量模块/水资源管理终端",
+      "official_product_url": "https://pitchhub.36kr.com/project/2012751699166729",
+      "created_at": "2026-05-28 09:36:26.523923+00:00"
+    },
+    {
+      "product_id": "PROD-246032992dfd",
+      "company_id": "COMP-1495c56536af",
+      "company_name": "深圳微控无线科技",
+      "canonical_name": "通用MCU芯片",
+      "short_description": "11ah)芯片、高性能电机控制器芯片、通用MCU芯片、高性能低成本WiFi-4芯片等产品。",
+      "official_product_url": "https://pitchhub.36kr.com/project/1975742001177857",
+      "created_at": "2026-05-28 09:36:26.536156+00:00"
+    },
+    {
+      "product_id": "PROD-fa5defa3c607",
+      "company_id": "COMP-1495c56536af",
+      "company_name": "深圳微控无线科技",
+      "canonical_name": "高性能低成本WiFi-4芯片等产品",
+      "short_description": "11ah)芯片、高性能电机控制器芯片、通用MCU芯片、高性能低成本WiFi-4芯片等产品。",
+      "official_product_url": "https://pitchhub.36kr.com/project/1975742001177857",
+      "created_at": "2026-05-28 09:36:26.536156+00:00"
+    },
+    {
+      "product_id": "PROD-0c6a21c497e2",
+      "company_id": "COMP-09b40e9b3e92",
+      "company_name": "奇普乐芯片技术",
+      "canonical_name": "器和射频等Chiplets组成一个不断增长的生态系统",
+      "short_description": "奇普乐™利用拥有自主知识产权的可编程硅基板，可以轻松将市面上几乎所有的主流半导体厂商研发生产的传感器、存储器、微处理器和射频等Chiplets组成一个不断增长的生态系统；",
+      "official_product_url": "https://pitchhub.36kr.com/project/1958597544449030",
+      "created_at": "2026-05-28 09:36:26.542745+00:00"
+    },
+    {
+      "product_id": "PROD-345ffaad466b",
+      "company_id": "COMP-02a26304c3a6",
+      "company_name": "深圳新视智科技术",
+      "canonical_name": "AI工业视觉智能化解决方案",
+      "short_description": "为企业客户提供领先的AI工业视觉智能化解决方案，专注于机器视觉、人工智能、大数据等新一代信息技术的研发并赋能智能制造。",
+      "official_product_url": "https://pitchhub.36kr.com/project/1713089670146562",
+      "created_at": "2026-05-28 09:36:30.603483+00:00"
+    },
+    {
+      "product_id": "PROD-26721775de76",
+      "company_id": "COMP-1764f9b80fc2",
+      "company_name": "深圳问止中医健康科技",
+      "canonical_name": "中医的AI辅助诊疗系统",
+      "short_description": "建设中医的智能诊断硬件、中医的AI辅助诊疗系统，同时面向中医爱好者开发易用的工具和产品。",
+      "official_product_url": "https://pitchhub.36kr.com/project/2180894755261572",
+      "created_at": "2026-05-28 09:36:30.614591+00:00"
+    },
+    {
+      "product_id": "PROD-eb8dbf110add",
+      "company_id": "COMP-33ba70a26b45",
+      "company_name": "好奇心探索科技",
+      "canonical_name": "智能机器人",
+      "short_description": "智能机器人技术及系统研发、生产及销售业务",
+      "official_product_url": "https://data.iyiou.com/company/details/39ea24e6e112aa43738434fe211bcb1d/profile?source=iyiou.trz",
+      "created_at": "2026-05-28 09:36:31.777652+00:00"
+    },
+    {
+      "product_id": "PROD-c9aa2b731346",
+      "company_id": "COMP-06dc6a30b7a8",
+      "company_name": "深圳夸夸菁领科技",
+      "canonical_name": "数智员工",
+      "short_description": "依托大模型并集成人类关键能力，以大模型为基础底座进行深度开发",
+      "official_product_url": "https://data.iyiou.com/company/details/23ecd6f663411f8298bc9752ade49544/profile?source=iyiou.trz",
+      "created_at": "2026-05-28 09:36:35.395117+00:00"
+    },
+    {
+      "product_id": "PROD-6a632dd52755",
+      "company_id": "COMP-1764f9b80fc2",
+      "company_name": "深圳问止中医健康科技",
+      "canonical_name": "AI中医大脑",
+      "short_description": "中医人工智能治疗相关技术研发成果",
+      "official_product_url": "https://data.iyiou.com/intelligence/details/2d641e289e09b941f43076ffa696f010",
+      "created_at": "2026-05-28 09:36:37.553663+00:00"
+    },
+    {
+      "product_id": "PROD-1334c0c974b5",
+      "company_id": "COMP-678e60011c81",
+      "company_name": "达米亚科技",
+      "canonical_name": "洋葱旅行",
+      "short_description": "移动端产品，主要为出境游用户提供海外目的地信息服务，可以被看作出境旅游版的大众点评网。",
+      "official_product_url": "https://pitchhub.36kr.com/project/2316916580633092",
+      "created_at": "2026-05-28 09:45:39.181864+00:00"
+    },
+    {
+      "product_id": "PROD-7d5162516a49",
+      "company_id": "COMP-660673448cc4",
+      "company_name": "勃望初芯半导体科技",
+      "canonical_name": "MEMS集成的生物医疗芯片模组",
+      "short_description": "拥有专业的IC设计和MEMS设计/加工能力，尤其擅长IC+MEMS集成的生物医疗芯片模组的设计、流片及封测，包括体外诊断芯片、神经电子芯片、医疗影像芯片等。",
+      "official_product_url": "https://pitchhub.36kr.com/project/2108645582605445",
+      "created_at": "2026-05-28 09:45:41.876995+00:00"
+    },
+    {
+      "product_id": "PROD-945f7df0d12c",
+      "company_id": "COMP-61d7b7253f94",
+      "company_name": "深圳瀚霖信息科技",
+      "canonical_name": "黑力士 / KINGKONG",
+      "short_description": "行业高端刀具",
+      "official_product_url": "https://pitchhub.36kr.com/project/2066612616577025",
+      "created_at": "2026-05-28 09:45:52.635202+00:00"
+    },
+    {
+      "product_id": "PROD-7becc51bdad3",
+      "company_id": "COMP-3cf42e547578",
+      "company_name": "深圳道道网络科技",
+      "canonical_name": "汽车减震器",
+      "short_description": "浙江中兴是一家汽车减震器研发商。",
+      "official_product_url": "https://pitchhub.36kr.com/project/2144441706743040",
+      "created_at": "2026-05-28 09:45:53.800237+00:00"
+    },
+    {
+      "product_id": "PROD-9233af29dd80",
+      "company_id": "COMP-3cf42e547578",
+      "company_name": "深圳道道网络科技",
+      "canonical_name": "道道去",
+      "short_description": "专注于汽车后用户的服务平台，为C端提供上门＋门店修车养车服务，为B端提供SAAS软件管理及服务。",
+      "official_product_url": "https://pitchhub.36kr.com/project/2179830345747587",
+      "created_at": "2026-05-28 09:46:00.950198+00:00"
+    },
+    {
+      "product_id": "PROD-4815ec8aedf8",
+      "company_id": "COMP-3cf42e547578",
+      "company_name": "深圳道道网络科技",
+      "canonical_name": "道道",
+      "short_description": "基于企业家大数据业务基础上的移动社交工具，通过数据的深度挖掘和精准算法，使企业家的社交需求能够更加精准、高效的匹配，实现企业家圈层的有效连接。",
+      "official_product_url": "https://pitchhub.36kr.com/project/1679783132189442",
+      "created_at": "2026-05-28 09:46:04.478047+00:00"
+    },
+    {
+      "product_id": "PROD-4c69b14e0591",
+      "company_id": "COMP-3cf42e547578",
+      "company_name": "深圳道道网络科技",
+      "canonical_name": "用于超级电容器电极的铁碳复合材料",
+      "short_description": "设计出用于超级电容器电极的铁碳复合材料的物理结构以及复合材料的制备方法、制备工艺。",
+      "official_product_url": "https://pitchhub.36kr.com/project/2192615690707335",
+      "created_at": "2026-05-28 09:46:18.705302+00:00"
+    },
+    {
+      "product_id": "PROD-266b1d93aeae",
+      "company_id": "COMP-3cf42e547578",
+      "company_name": "深圳道道网络科技",
+      "canonical_name": "专用集成电路",
+      "short_description": "专注于电子信息产品、专用集成电路和传感器的开发、生产。",
+      "official_product_url": "https://pitchhub.36kr.com/project/2012740875568642",
+      "created_at": "2026-05-28 09:46:21.988415+00:00"
+    },
+    {
+      "product_id": "PROD-44b1495d1d80",
+      "company_id": "COMP-3cf42e547578",
+      "company_name": "深圳道道网络科技",
+      "canonical_name": "电子信息产品",
+      "short_description": "专注于电子信息产品、专用集成电路和传感器的开发、生产。",
+      "official_product_url": "https://pitchhub.36kr.com/project/2012740875568642",
+      "created_at": "2026-05-28 09:46:21.988415+00:00"
+    },
+    {
+      "product_id": "PROD-cd89d86cc9dd",
+      "company_id": "COMP-3cf42e547578",
+      "company_name": "深圳道道网络科技",
+      "canonical_name": "压阻式陶瓷压力传感器",
+      "short_description": "与传统的基于扩散硅的压力传感器相比，具有精度高、温度漂移小、耐腐蚀、结构简单、成本低廉的特点，产品性能达到国际先进水平。",
+      "official_product_url": "https://pitchhub.36kr.com/project/2012740875568642",
+      "created_at": "2026-05-28 09:46:21.988415+00:00"
+    },
+    {
+      "product_id": "PROD-5d33c494ab53",
+      "company_id": "COMP-64e864f702e8",
+      "company_name": "杭州精控集成半导体",
+      "canonical_name": "高端精密控制产品",
+      "short_description": "用于光通讯、工业控制、新能源、医疗器械及人工智慧物联网的高端精密控制产品",
+      "official_product_url": "https://data.iyiou.com/company/details/7c1b5006b26294a8d3246d564693d506/profile?source=iyiou.trz",
+      "created_at": "2026-05-28 09:46:33.912444+00:00"
+    },
+    {
+      "product_id": "PROD-1c0920fcd169",
+      "company_id": "COMP-5e5e0e277d3d",
+      "company_name": "深圳灵图创新科技",
+      "canonical_name": "下一代影视游戏创作发布平台",
+      "short_description": "利用先进的多模态AI，实现一句话到多种数字媒体内容（图像、视频、VR/AR、3D场景）的一键式生成。",
+      "official_product_url": "https://pitchhub.36kr.com/project/1958592385438727",
+      "created_at": "2026-05-28 09:46:37.670719+00:00"
+    },
+    {
+      "product_id": "PROD-b939ffa09c67",
+      "company_id": "COMP-5e5e0e277d3d",
+      "company_name": "深圳灵图创新科技",
+      "canonical_name": "多模态AI",
+      "short_description": "能够实现从文字到多种数字媒体内容的生成。",
+      "official_product_url": "https://pitchhub.36kr.com/project/1958592385438727",
+      "created_at": "2026-05-28 09:46:37.670719+00:00"
+    },
+    {
+      "product_id": "PROD-59ac48687183",
+      "company_id": "COMP-54222ea4aa44",
+      "company_name": "深圳亘存科技",
+      "canonical_name": "专注于MRAM及相关产品",
+      "short_description": "亘存科技是一家MRAM及相关芯片设计研发商，专注于MRAM及相关产品设计开发，公司目前正在开发已成功流片的一款芯片，首次集成了超过200 Mb的MRAM ，改进了目前方案的集成度和整体功耗，同时降低了系统BOM成本，提升了可靠性，该款产品目前正在等待送样测试。",
+      "official_product_url": "https://pitchhub.36kr.com/project/1818821883449472",
+      "created_at": "2026-05-28 09:46:37.679611+00:00"
+    },
+    {
+      "product_id": "PROD-b540a883912c",
+      "company_id": "COMP-54222ea4aa44",
+      "company_name": "深圳亘存科技",
+      "canonical_name": "嵌入式磁存储器IP",
+      "short_description": "基于 MRAM 技术进行芯片设计开发和销售的创业公司提供的嵌入式磁存储器IP。",
+      "official_product_url": "https://pitchhub.36kr.com/project/1678270603916293",
+      "created_at": "2026-05-28 09:46:39.931514+00:00"
+    },
+    {
+      "product_id": "PROD-db0bb8280884",
+      "company_id": "COMP-510dcababd11",
+      "company_name": "深圳卡睿智行科技",
+      "canonical_name": "L4商用车自动驾驶技术",
+      "short_description": "拥有成熟的L4全栈式自动驾驶技术，专注商用车新能源化和自动驾驶化。",
+      "official_product_url": "https://pitchhub.36kr.com/project/1958599976719367",
+      "created_at": "2026-05-28 09:46:45.798941+00:00"
+    },
+    {
+      "product_id": "PROD-53ac9606af64",
+      "company_id": "COMP-4e8e879c4a40",
+      "company_name": "禾启智能科技",
+      "canonical_name": "VTOL类型无人机产品",
+      "short_description": "com/20220330/v2_01e18c4b8ef64b9ea6f40234fa015a30_img_png) 王坤殿 CEO 华中农业大学 |硕士 原大疆创新行业研发（VTOL类型无人机产品经理） [![Image 3](https://img.",
+      "official_product_url": "https://pitchhub.36kr.com/project/1777463644083591",
+      "created_at": "2026-05-28 09:46:45.809330+00:00"
+    },
+    {
+      "product_id": "PROD-34b082d6d631",
+      "company_id": "COMP-46240f3defcc",
+      "company_name": "交浦科技（深圳）",
+      "canonical_name": "脑疾病诊疗与康复设备",
+      "short_description": "有望解决脑卒中、自闭症等重大脑疾病诊疗与康复问题的设备。",
+      "official_product_url": "https://pitchhub.36kr.com/project/2057411331897219",
+      "created_at": "2026-05-28 09:46:51.304661+00:00"
+    },
+    {
+      "product_id": "PROD-2bd474784637",
+      "company_id": "COMP-46240f3defcc",
+      "company_name": "交浦科技（深圳）",
+      "canonical_name": "高性能人机交互产品",
+      "short_description": "以硬件为辅助，以软件为平台，以体验为核心的产品，旨在提升教学体验和科研能力。",
+      "official_product_url": "https://pitchhub.36kr.com/project/2057411331897219",
+      "created_at": "2026-05-28 09:46:51.304661+00:00"
+    },
+    {
+      "product_id": "PROD-0a8646a72693",
+      "company_id": "COMP-44ef55d9b0f6",
+      "company_name": "深圳纳百信息技术",
+      "canonical_name": "曾带团队获得MATE国际水下机器人",
+      "short_description": "com/20220708/v2_69664822e9f84422b30bbbef01672363_img_000) 严灼权 联合创始人兼首席技术官 严灼权，港科大物理学机械工程学士，曾带团队获得MATE国际水下机器人大赛冠军。",
+      "official_product_url": "https://pitchhub.36kr.com/project/1818822515019906",
+      "created_at": "2026-05-28 09:46:51.314764+00:00"
+    },
+    {
+      "product_id": "PROD-aa1a70f93d4c",
+      "company_id": "COMP-3cf42e547578",
+      "company_name": "深圳道道网络科技",
+      "canonical_name": "道道全”品牌的菜籽油系列",
+      "short_description": "具体包括压榨油、风味油、调和油",
+      "official_product_url": "https://data.iyiou.com/company/details/e120efd34dd2acaec32149bda44b582a/profile?from=more-data",
+      "created_at": "2026-05-28 09:46:53.120481+00:00"
+    },
+    {
+      "product_id": "PROD-0f4a2c37949f",
+      "company_id": "COMP-54222ea4aa44",
+      "company_name": "深圳亘存科技",
+      "canonical_name": "亘存科技”完成新一轮融资，产品将于四季度量产",
+      "short_description": "产品量产、市场开拓及新产品研发。据介绍，亘存科技是一家专注于围绕MRAM技术进行相关芯片产品设计开发和销售的Fabless企业，其产品已完成研发迭代和验证",
+      "official_product_url": "https://data.iyiou.com/intelligence/details/7159446a0f431bc45ad1985fbbc33aec?source=iyiou.dgs",
+      "created_at": "2026-05-28 09:47:00.124717+00:00"
+    },
+    {
+      "product_id": "PROD-d6904dde4604",
+      "company_id": "COMP-44ef55d9b0f6",
+      "company_name": "深圳纳百信息技术",
+      "canonical_name": "纳百机器人",
+      "short_description": "产品 ...",
+      "official_product_url": "https://data.iyiou.com/company/details/977cc14b3c62e37da65b8234672a62b9/profile?source=iyiou.trz",
+      "created_at": "2026-05-28 09:47:06.216708+00:00"
+    },
+    {
+      "product_id": "PROD-95879b21007b",
+      "company_id": "COMP-9472d5724f27",
+      "company_name": "深圳猎聘科技",
+      "canonical_name": "全院自助打印+云存储系统及指云端系统",
+      "short_description": "能够实现医疗信息全院自助打印、用户随时随地查看自己的检查报告的系统。",
+      "official_product_url": "https://pitchhub.36kr.com/project/2180903756860803",
+      "created_at": "2026-05-28 09:56:30.675680+00:00"
+    },
+    {
+      "product_id": "PROD-2e638f0def38",
+      "company_id": "COMP-9472d5724f27",
+      "company_name": "深圳猎聘科技",
+      "canonical_name": "超声输出打印系统",
+      "short_description": "专注于研发的超声输出打印系统。",
+      "official_product_url": "https://pitchhub.36kr.com/project/2180903756860803",
+      "created_at": "2026-05-28 09:56:30.675680+00:00"
+    },
+    {
+      "product_id": "PROD-fb8916e6ad2a",
+      "company_id": "COMP-9472d5724f27",
+      "company_name": "深圳猎聘科技",
+      "canonical_name": "医学影像输出打印系统",
+      "short_description": "专注于研发的医学影像输出打印系统。",
+      "official_product_url": "https://pitchhub.36kr.com/project/2180903756860803",
+      "created_at": "2026-05-28 09:56:30.675680+00:00"
+    },
+    {
+      "product_id": "PROD-a1a5ddae7781",
+      "company_id": "COMP-9472d5724f27",
+      "company_name": "深圳猎聘科技",
+      "canonical_name": "婚礼桥",
+      "short_description": "提供获客运营模式输出服务的平台。",
+      "official_product_url": "https://pitchhub.36kr.com/project/2181177659673730",
+      "created_at": "2026-05-28 09:56:33.075521+00:00"
+    },
+    {
+      "product_id": "PROD-2ddaf646d95d",
+      "company_id": "COMP-9472d5724f27",
+      "company_name": "深圳猎聘科技",
+      "canonical_name": "品牌连锁客栈管理服务",
+      "short_description": "向旗下客栈提供营销输出、人才输出、管理输出和品牌输出服务",
+      "official_product_url": "https://pitchhub.36kr.com/project/2180552795262338",
+      "created_at": "2026-05-28 09:56:38.532012+00:00"
+    },
+    {
+      "product_id": "PROD-22d97ea0993b",
+      "company_id": "COMP-9472d5724f27",
+      "company_name": "深圳猎聘科技",
+      "canonical_name": "亲的、拾叁月、臻于",
+      "short_description": "针对不同市场定位的客栈民宿品牌",
+      "official_product_url": "https://pitchhub.36kr.com/project/2180552795262338",
+      "created_at": "2026-05-28 09:56:38.532012+00:00"
+    },
+    {
+      "product_id": "PROD-17e841f7b148",
+      "company_id": "COMP-9472d5724f27",
+      "company_name": "深圳猎聘科技",
+      "canonical_name": "采购即服务",
+      "short_description": "![Image 2](blob:http://localhost/c7e156bed97322f5f33444825a63462a)2021-01-24 ## 行业资讯 凯联资本产业研究院企服投融资23Q1季报 ![Image 3](blob:http://localhost/c7e156bed97322f5f33444825a63462a)2023-05-08 以客户洞察为突破口，“采购即服务”的理念，正在向更高的维度升级。",
+      "official_product_url": "https://pitchhub.36kr.com/project/2066604396036097",
+      "created_at": "2026-05-28 09:56:38.544051+00:00"
+    },
+    {
+      "product_id": "PROD-fd694f1a4ed1",
+      "company_id": "COMP-9472d5724f27",
+      "company_name": "深圳猎聘科技",
+      "canonical_name": "我们希望通过计算巢构建一个开放的企业服务",
+      "short_description": "![Image 5](blob:http://localhost/c7e156bed97322f5f33444825a63462a)2023-03-01 “我们希望通过计算巢构建一个开放的企业服务应用生态,助力中国软件",
+      "official_product_url": "https://pitchhub.36kr.com/project/2066604396036097",
+      "created_at": "2026-05-28 09:56:38.544051+00:00"
+    },
+    {
+      "product_id": "PROD-bcfaada80082",
+      "company_id": "COMP-9472d5724f27",
+      "company_name": "深圳猎聘科技",
+      "canonical_name": "凌泰",
+      "short_description": "公司的主导产品是具有完全自主知识产权的泰来，凌泰等系列激光数码相片放大输出系统。",
+      "official_product_url": "https://pitchhub.36kr.com/project/2144565775549698",
+      "created_at": "2026-05-28 09:56:42.366884+00:00"
+    },
+    {
+      "product_id": "PROD-2974e643252e",
+      "company_id": "COMP-9472d5724f27",
+      "company_name": "深圳猎聘科技",
+      "canonical_name": "泰来",
+      "short_description": "世界上第一台实现全明室操作和输出长度超过100英寸的30英寸宽幅专业激光印相机",
+      "official_product_url": "https://pitchhub.36kr.com/project/2144565775549698",
+      "created_at": "2026-05-28 09:56:42.366884+00:00"
+    },
+    {
+      "product_id": "PROD-d9031008f39a",
+      "company_id": "COMP-9472d5724f27",
+      "company_name": "深圳猎聘科技",
+      "canonical_name": "臻宝通",
+      "short_description": "专注于运营黄金珠宝线上产品供应链互联网平台及供应链金融服务输出的B2B交易批发平台。",
+      "official_product_url": "https://pitchhub.36kr.com/project/1679715141915395",
+      "created_at": "2026-05-28 09:56:47.109194+00:00"
+    },
+    {
+      "product_id": "PROD-f989ad947bdf",
+      "company_id": "COMP-9472d5724f27",
+      "company_name": "深圳猎聘科技",
+      "canonical_name": "小型商用储能系统",
+      "short_description": "根据电量容量及输出功率级别分为三类中的一类。",
+      "official_product_url": "https://pitchhub.36kr.com/project/1744024460057480",
+      "created_at": "2026-05-28 09:56:55.742937+00:00"
+    },
+    {
+      "product_id": "PROD-0e76114d83b0",
+      "company_id": "COMP-9472d5724f27",
+      "company_name": "深圳猎聘科技",
+      "canonical_name": "家用储能系统",
+      "short_description": "根据电量容量及输出功率级别分为三类中的一类。",
+      "official_product_url": "https://pitchhub.36kr.com/project/1744024460057480",
+      "created_at": "2026-05-28 09:56:55.742937+00:00"
+    },
+    {
+      "product_id": "PROD-52ba19795bc6",
+      "company_id": "COMP-9472d5724f27",
+      "company_name": "深圳猎聘科技",
+      "canonical_name": "微型储能系统",
+      "short_description": "根据电量容量及输出功率级别分为三类中的一类。",
+      "official_product_url": "https://pitchhub.36kr.com/project/1744024460057480",
+      "created_at": "2026-05-28 09:56:55.742937+00:00"
+    },
+    {
+      "product_id": "PROD-66ccda663f17",
+      "company_id": "COMP-9472d5724f27",
+      "company_name": "深圳猎聘科技",
+      "canonical_name": "移动储能设备",
+      "short_description": "通过光伏充电或是低谷时市电补电，在日常缺电或市电高价时输出清洁电源，解决终端客户的日常紧急用电需求。",
+      "official_product_url": "https://pitchhub.36kr.com/project/1744024460057480",
+      "created_at": "2026-05-28 09:56:55.742937+00:00"
+    },
+    {
+      "product_id": "PROD-f527809cf345",
+      "company_id": "COMP-9472d5724f27",
+      "company_name": "深圳猎聘科技",
+      "canonical_name": "便携式储能",
+      "short_description": "德兰明海的三大产品线之一。",
+      "official_product_url": "https://pitchhub.36kr.com/project/1744024460057480",
+      "created_at": "2026-05-28 09:56:55.742937+00:00"
+    },
+    {
+      "product_id": "PROD-78a7e3aaf94d",
+      "company_id": "COMP-9472d5724f27",
+      "company_name": "深圳猎聘科技",
+      "canonical_name": "干细胞生物墨汁技术",
+      "short_description": "自主研发的干细胞生物墨汁技术",
+      "official_product_url": "https://pitchhub.36kr.com/project/2144686054196485",
+      "created_at": "2026-05-28 09:57:04.788299+00:00"
+    },
+    {
+      "product_id": "PROD-20e39f79fd60",
+      "company_id": "COMP-9472d5724f27",
+      "company_name": "深圳猎聘科技",
+      "canonical_name": "云计算平台",
+      "short_description": "利用独创的云计算平台，使人工制造个性化功能器官成为可能",
+      "official_product_url": "https://pitchhub.36kr.com/project/2144686054196485",
+      "created_at": "2026-05-28 09:57:04.788299+00:00"
+    },
+    {
+      "product_id": "PROD-9ec123d8173e",
+      "company_id": "COMP-9472d5724f27",
+      "company_name": "深圳猎聘科技",
+      "canonical_name": "3D生物打印机",
+      "short_description": "结合干细胞生物墨汁技术的3D生物打印设备",
+      "official_product_url": "https://pitchhub.36kr.com/project/2144686054196485",
+      "created_at": "2026-05-28 09:57:04.788299+00:00"
+    },
+    {
+      "product_id": "PROD-0d83a600045c",
+      "company_id": "COMP-9472d5724f27",
+      "company_name": "深圳猎聘科技",
+      "canonical_name": "课程",
+      "short_description": "输出课程，通过在线视频课程和教育游戏切入青少年教育市场",
+      "official_product_url": "https://pitchhub.36kr.com/project/1679685239952129",
+      "created_at": "2026-05-28 09:57:07.888575+00:00"
+    },
+    {
+      "product_id": "PROD-242755c238fa",
+      "company_id": "COMP-9472d5724f27",
+      "company_name": "深圳猎聘科技",
+      "canonical_name": "创客实验室",
+      "short_description": "为全国中小学建设创客实验室",
+      "official_product_url": "https://pitchhub.36kr.com/project/1679685239952129",
+      "created_at": "2026-05-28 09:57:07.888575+00:00"
+    },
+    {
+      "product_id": "PROD-635731304c44",
+      "company_id": "COMP-8da8dd57dba7",
+      "company_name": "深圳聚德寿科技",
+      "canonical_name": "努力实现MES系统",
+      "short_description": "项目简介 深圳聚德寿科技有限公司是一家专注传感器特别是汽车传感器、物联网传感器、人工智能传感器研发、生产与销售的企业，聚德寿科技全面推行稻盛和夫的管理思想，推行阿米巴经营，努力实现MES系统，努力实现智能制造系统。",
+      "official_product_url": "https://pitchhub.36kr.com/project/2144579758294275",
+      "created_at": "2026-05-28 09:57:07.899250+00:00"
+    },
+    {
+      "product_id": "PROD-ba7769cca687",
+      "company_id": "COMP-95791ebe18d4",
+      "company_name": "华力创科学（深圳）",
+      "canonical_name": "数字化车间",
+      "short_description": "数字化车间研发与生产",
+      "official_product_url": "https://pitchhub.36kr.com/project/2205329787695489",
+      "created_at": "2026-05-28 09:57:13.296938+00:00"
+    },
+    {
+      "product_id": "PROD-5c6dbb41374b",
+      "company_id": "COMP-95791ebe18d4",
+      "company_name": "华力创科学（深圳）",
+      "canonical_name": "自动化灌装机器人生产线",
+      "short_description": "专业从事自动化灌装机器人生产线研发与生产",
+      "official_product_url": "https://pitchhub.36kr.com/project/2205329787695489",
+      "created_at": "2026-05-28 09:57:13.296938+00:00"
+    },
+    {
+      "product_id": "PROD-2145a4b808cf",
+      "company_id": "COMP-95791ebe18d4",
+      "company_name": "华力创科学（深圳）",
+      "canonical_name": "智能仓储",
+      "short_description": "智能仓储研发与生产",
+      "official_product_url": "https://pitchhub.36kr.com/project/2205329787695489",
+      "created_at": "2026-05-28 09:57:13.296938+00:00"
+    },
+    {
+      "product_id": "PROD-b641460cddf5",
+      "company_id": "COMP-95791ebe18d4",
+      "company_name": "华力创科学（深圳）",
+      "canonical_name": "视触融合",
+      "short_description": "工业事业部提供的技术产品。",
+      "official_product_url": "https://pitchhub.36kr.com/project/2341971946865287",
+      "created_at": "2026-05-28 09:57:19.836576+00:00"
+    },
+    {
+      "product_id": "PROD-ac80645bcb78",
+      "company_id": "COMP-95791ebe18d4",
+      "company_name": "华力创科学（深圳）",
+      "canonical_name": "微创手术介入医疗器械",
+      "short_description": "具有多模式智能感知的新一代医疗器械。",
+      "official_product_url": "https://pitchhub.36kr.com/project/2341971946865287",
+      "created_at": "2026-05-28 09:57:19.836576+00:00"
+    },
+    {
+      "product_id": "PROD-b2d690da5d21",
+      "company_id": "COMP-95791ebe18d4",
+      "company_name": "华力创科学（深圳）",
+      "canonical_name": "光学力矩传感器及力控系统",
+      "short_description": "基于光学原理的高性能智能力觉传感器，属于工业事业部产品。",
+      "official_product_url": "https://pitchhub.36kr.com/project/2341971946865287",
+      "created_at": "2026-05-28 09:57:19.836576+00:00"
+    },
+    {
+      "product_id": "PROD-444d19f185d4",
+      "company_id": "COMP-95791ebe18d4",
+      "company_name": "华力创科学（深圳）",
+      "canonical_name": "智能控制器",
+      "short_description": "工业事业部提供的技术产品。",
+      "official_product_url": "https://pitchhub.36kr.com/project/2341971946865287",
+      "created_at": "2026-05-28 09:57:19.836576+00:00"
+    },
+    {
+      "product_id": "PROD-cc3700ad765f",
+      "company_id": "COMP-95791ebe18d4",
+      "company_name": "华力创科学（深圳）",
+      "canonical_name": "工业机器人",
+      "short_description": "工业事业部提供的产品。",
+      "official_product_url": "https://pitchhub.36kr.com/project/2341971946865287",
+      "created_at": "2026-05-28 09:57:19.836576+00:00"
+    },
+    {
+      "product_id": "PROD-8ab6abdbe605",
+      "company_id": "COMP-9035b11c201b",
+      "company_name": "智芯华玺信息技术",
+      "canonical_name": "计算机软硬件及外围设备",
+      "short_description": "计算机软硬件及外围设备制造",
+      "official_product_url": "https://data.iyiou.com/company/details/4f9e4c1bc665d6fe46ddac51a937755c/profile?source=iyiou.comdetail&from=more-data",
+      "created_at": "2026-05-28 09:57:26.455205+00:00"
+    },
+    {
+      "product_id": "PROD-02eccacaba2a",
+      "company_id": "COMP-9035b11c201b",
+      "company_name": "智芯华玺信息技术",
+      "canonical_name": "信息安全设备",
+      "short_description": "信息安全设备制造",
+      "official_product_url": "https://data.iyiou.com/company/details/4f9e4c1bc665d6fe46ddac51a937755c/profile?source=iyiou.comdetail&from=more-data",
+      "created_at": "2026-05-28 09:57:26.455205+00:00"
+    },
+    {
+      "product_id": "PROD-32b03b6a4e2a",
+      "company_id": "COMP-9035b11c201b",
+      "company_name": "智芯华玺信息技术",
+      "canonical_name": "软件",
+      "short_description": "软件销售",
+      "official_product_url": "https://data.iyiou.com/company/details/4f9e4c1bc665d6fe46ddac51a937755c/profile?source=iyiou.comdetail&from=more-data",
+      "created_at": "2026-05-28 09:57:26.455205+00:00"
+    },
+    {
+      "product_id": "PROD-3e9f704b0db4",
+      "company_id": "COMP-9035b11c201b",
+      "company_name": "智芯华玺信息技术",
+      "canonical_name": "电子产品",
+      "short_description": "电子产品销售",
+      "official_product_url": "https://data.iyiou.com/company/details/4f9e4c1bc665d6fe46ddac51a937755c/profile?source=iyiou.comdetail&from=more-data",
+      "created_at": "2026-05-28 09:57:26.455205+00:00"
+    },
+    {
+      "product_id": "PROD-98a3c2d35797",
+      "company_id": "COMP-86148f2ee6cf",
+      "company_name": "灵起科技（深圳）",
+      "canonical_name": "随身听",
+      "short_description": "语音新闻聚合推荐平台",
+      "official_product_url": "https://pitchhub.36kr.com/project/1679807928341249",
+      "created_at": "2026-05-28 09:57:31.956021+00:00"
+    }
+  ]
+}

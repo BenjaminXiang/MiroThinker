@@ -1,0 +1,249 @@
+{
+  "counts": {
+    "no_product": 97,
+    "no_scenario": 370,
+    "neither": 94
+  },
+  "sample": [
+    {
+      "company_id": "COMP-ad30bd150f20",
+      "canonical_name": "万勋科技（深圳）",
+      "business": "通用软体机器人研发商",
+      "description_prefix": "万勋科技是通用软体机器人全球领航者，致力于以机器人核心技术的颠覆式创新，助力人类远离艰险繁复作业、提高生产力和工作生活体验。公司在全球范围内首创了具备强大商业化能力的通用软体机器人技术——Pliabot®柔韧技术，以“柔韧肌肉+神经元智能”双螺旋驱动，实现了机器人本体和智能系统的全栈创新，具备“类人肌体·过人能力”的特性优势，同时结合技术平台化发展，彻底突破机器人大规模普及应用所面对的适应性和成本两大瓶颈，为各行各业打造安全、灵巧、轻盈、强韧、可负担的机器人产品与解决方案，加速机器人时代的到来。",
+      "has_product": false,
+      "has_scenario": false
+    },
+    {
+      "company_id": "COMP-89a631c5e09c",
+      "canonical_name": "三农振兴科技（深圳）",
+      "business": "农业服务商",
+      "description_prefix": "三农振兴科技（深圳）有限公司是一家农业服务商。旨在促进优质农产品上行，解决农村地区农业产业化发展配套服务滞后瓶颈。",
+      "has_product": false,
+      "has_scenario": false
+    },
+    {
+      "company_id": "COMP-961c9e70b678",
+      "canonical_name": "丛矽微电子科技",
+      "business": "电子系统研发商",
+      "description_prefix": "深圳市丛矽微电子科技有限公司是一家电子科技企业。主要从事电子科技、仪器设备、计算机科技领域内的技术服务。从事电子科技、仪器设备、计算机科技领域内的技术服务、技术开发、技术咨询、技术交流、技术转让、技术推广；集成电路设计；集成电路芯片设计及服务；专业设计服务；信息系统集成服务；计算机系统服务。",
+      "has_product": false,
+      "has_scenario": false
+    },
+    {
+      "company_id": "COMP-c57a488bc47a",
+      "canonical_name": "中兆存储技术（深圳）",
+      "business": "存储解决方案提供商",
+      "description_prefix": "中兆存储技术（深圳）有限公司专注为客户提供优质的存储产品，可为客户提供TF存储卡、U盘、eMMC嵌入式存储芯片、SSD固态硬盘等系列存储产品，并针对客户多元化的存储需求。",
+      "has_product": true,
+      "has_scenario": false
+    },
+    {
+      "company_id": "COMP-311c4fec5bda",
+      "canonical_name": "中星卡为科技集团",
+      "business": "机器人研发商",
+      "description_prefix": "深圳市中星卡为科技集团股份有限公司主要经营警用机器人、机器人、玩具机器人、家庭服务机器人、教育机器人、智能机器人、安防类智能机器人、工业机器人，护理机器人及相关领域的技术研发、技术咨询及销售；智能机器人产品的销售；机器人及其自动化设备研发、设计与销售。",
+      "has_product": true,
+      "has_scenario": false
+    },
+    {
+      "company_id": "COMP-69c84e5c11fc",
+      "canonical_name": "中科优辰（深圳）科技",
+      "business": "AI多维视频虚拟融合算法引擎研发商",
+      "description_prefix": "中科优辰（深圳）科技有限公司（中科优辰）是一家AI多维视频虚拟融合算法引擎研发商，公司连续两年国家高新技术企业认定，公司在美国创立的Hstar Technologies Corporation已获得美国中小企业科研基金及天使投资共计950万美元。\n2025年，公司获得香港纵合达成科技及实业公司的战略投资。\n目前团队规模达20余人，其中研发人员占比超过50%，包括多名具有海外背景的博士及工程师，形成了跨学科、高水平的研发梯队。",
+      "has_product": true,
+      "has_scenario": false
+    },
+    {
+      "company_id": "COMP-ab7c03a0aec0",
+      "canonical_name": "中科德诺微电子（深圳）",
+      "business": "芯片解决方案提供商",
+      "description_prefix": "中科德诺微电子(深圳)有限公司是一家以从事计算机、通信和其他电子设备制造业为主的企业。经营项目是：集成电路设计、电子专用材料销售、电子元器件批发、零售；集成电路芯片及产品销售等。",
+      "has_product": true,
+      "has_scenario": false
+    },
+    {
+      "company_id": "COMP-114a633d9572",
+      "canonical_name": "中科星原小象机器人（深圳）",
+      "business": "工业机器人研发商",
+      "description_prefix": "中科星原小象机器人（深圳）有限公司主要经营：智能机器人销售，工业机器人销售，智能机器人的研发，服务消费机器人销售，人工智能硬件销售，计算机软硬件及辅助设备零售，电气机械设备销售，机械设备销售。",
+      "has_product": false,
+      "has_scenario": false
+    },
+    {
+      "company_id": "COMP-b3873686de5b",
+      "canonical_name": "中科智高科技",
+      "business": "智能安防技术服务商",
+      "description_prefix": "深圳市中科智高科技有限公司是一家专注于人工智能、物联网、安防智能化方案设计及咨询于一体的解决方案提供商。公司初创于2009年，经历了数十年的安防技术沉淀积累。随着人工智能、物联网、云计算、大数据的突飞猛进，中科智高于2019年全新启航，开启智慧互联新纪元。",
+      "has_product": false,
+      "has_scenario": false
+    },
+    {
+      "company_id": "COMP-e69bf7309ee3",
+      "canonical_name": "中科未来世界科技（深圳）",
+      "business": "软件开发商",
+      "description_prefix": "中科未来世界科技（深圳）有限公司主要经营：软件开发；教育咨询服务；智能机器人销售；智能机器人的研发；电子产品销售；计算机软硬件及辅助设备批发；计算机软硬件及辅助设备零售；通讯设备销售；广告设计、代理；广告发布；广告制作。",
+      "has_product": true,
+      "has_scenario": false
+    },
+    {
+      "company_id": "COMP-eca0ba2e8889",
+      "canonical_name": "中科领创实业",
+      "business": "AIOT服务商",
+      "description_prefix": "中科领创是一家专注于AIOT的综合服务商，公司核心业务以电子元器件代理、软硬件方案整合为主的技术服务型企业，为客户提供云、管、边、端系列化综合服务。",
+      "has_product": true,
+      "has_scenario": false
+    },
+    {
+      "company_id": "COMP-079bc8710950",
+      "canonical_name": "中科飞腾芯片（深圳）",
+      "business": "信息集成技术提供商",
+      "description_prefix": "中科飞腾芯片（深圳）有限公司主要经营计算机软件、信息系统软件的开发、销售; 信息系统设计、集成、运行维护;信息技术咨询;经营电子商务；芯片集成电路相关的研发、生产、销售。",
+      "has_product": false,
+      "has_scenario": false
+    },
+    {
+      "company_id": "COMP-f2a8dd2bea1f",
+      "canonical_name": "中芯微实业",
+      "business": "电容触控芯片研发商",
+      "description_prefix": "深圳市中芯微实业有限公司成立于2019年，核心团队拥有十年以上通信及芯片领域设计、开发及服务经验，在当今快速发展的高科技时代，凭借深厚的行业经验和创新技术，已经成为国内电容触控芯片及MESH自组网通信解决方案领域的领导者，并致力于提供一流的产品和服务，不断推动相关行业的发展。\n中芯微实业专注于电容触控及物联网通信领域，在深圳、苏州、福州设有三个研发中心和技术服务团队。中芯微实业是国内外平板电容方案主要提供商的战略合作伙伴，现共有各类国内外授权专利及软件著作权50余件，拥有从核心架构到底层算法的完整知识产权，为产品的质量和技术领先性提供了坚实保障。公司可提供15.6至110全尺寸电容触控芯片、板卡和多样化的MESH自组网通信应用解决方案，满足市场对高性能产品的需求。",
+      "has_product": true,
+      "has_scenario": false
+    },
+    {
+      "company_id": "COMP-584715bccdd7",
+      "canonical_name": "丹芯半导体科技（深圳）",
+      "business": "半导体产品生产研发商",
+      "description_prefix": "丹芯半导体是一家半导体产品生产研发商，半导体器件专用设备销售；半导体照明器件销售；半导体分立器件销售；集成电路芯片及产品销售；集成电路芯片设计及服务等。",
+      "has_product": true,
+      "has_scenario": false
+    },
+    {
+      "company_id": "COMP-04966e323f64",
+      "canonical_name": "丹芽科技",
+      "business": "AI美甲机器人",
+      "description_prefix": "丹芽科技是Sunvalley集团旗下全资子公司。Sunvalley 成立于2007年，致力于构建中国优质品牌产品与全球消费者之间的一站式桥梁，旗下拥有 RAVPower、TaoTronics、HooToo、Uspicy、VAVA、Anjou”等国际知名品牌，目前已成为中国跨境电子商务零售行业的先行者和领先者。",
+      "has_product": true,
+      "has_scenario": false
+    },
+    {
+      "company_id": "COMP-8e8163f07c4a",
+      "canonical_name": "乐牧科技（深圳）",
+      "business": "牧场数字化软件研发商",
+      "description_prefix": "乐牧科技（深圳）有限公司成立于2020年，公司是一家技术驱动的牧场数字化科技公司。创始团队在物联网、人工智能与区块链领域有多年的开发经验，并在畜牧行业有丰富的资源与积累，我们看好未来畜牧行业数字化的发展。",
+      "has_product": true,
+      "has_scenario": false
+    },
+    {
+      "company_id": "COMP-2c453c0e8728",
+      "canonical_name": "九赞科技",
+      "business": "芯片产品研发商",
+      "description_prefix": "九赞科技凭借先进的指纹半导体传感器、指纹算法技术、指纹算法芯片产品，已在指纹IC设计、算法、行业/系统应用方面积累了丰富的经验，在相关领域拥有多项自主知识产权和专有技术。",
+      "has_product": true,
+      "has_scenario": false
+    },
+    {
+      "company_id": "COMP-e80b9483e4ad",
+      "canonical_name": "云伽智能技术",
+      "business": "智能产品研发商",
+      "description_prefix": "云伽智能是以汽车智能诊断、车联网及物联网智能硬件、云平台、解决方案为核心业务的国家高新技术企业，产品与服务涵盖汽车智能诊断、智慧出行、智慧空间、智慧物流、智慧零售等领域，旨在为客户提供智能产品及平台研发、生产、售后维修、回收再利用全流程价值服务。云伽智能先后推出OBD盒子、TBOX软硬件产品、智能车锁、智慧物流包装、 智慧门锁、在线职教、共享出行运营平台等一系列车联网、物联网智能硬件及平台，产品及 方案行销全球，并得到广泛应用。",
+      "has_product": true,
+      "has_scenario": false
+    },
+    {
+      "company_id": "COMP-73789de9baff",
+      "canonical_name": "云央科技",
+      "business": "系列信息化解决方案服务商",
+      "description_prefix": "深圳市云央科技有限公司，是一家年轻的研发性企业，意指为用户提供优质的产品、合理的产品价格，用互联网+为传统行业赋能。",
+      "has_product": false,
+      "has_scenario": false
+    },
+    {
+      "company_id": "COMP-fe9062eefe65",
+      "canonical_name": "云普芯片技术（深圳）",
+      "business": "IC芯片研发商",
+      "description_prefix": "深圳市云普芯片有限公司主要经营信息传输、软件和信息技术服务；从事IC芯片的设计与研发、技术推广、技术咨询、技术转让；电子产品及配件、计算机网络设备及配件、金属材料、电器设备的销售；安防监控产品的研发及销售。",
+      "has_product": true,
+      "has_scenario": false
+    },
+    {
+      "company_id": "COMP-6d435dcab66e",
+      "canonical_name": "亚洲星电子",
+      "business": "半导体供应商",
+      "description_prefix": "恒嘉威电子是一家半导体产品代理商，产品包括集成电路裸芯片、元器件，集半导体电路生产制造、芯片研发、商贸服务与软件开发为一体。",
+      "has_product": false,
+      "has_scenario": false
+    },
+    {
+      "company_id": "COMP-f79ead681eea",
+      "canonical_name": "京灿芯半导体",
+      "business": "半导体功率器件供应商",
+      "description_prefix": "深圳市京灿芯半导体有限公司主要从事半导体功率器件，集成电路芯片设计、制造及销售。在第三代半导体与先进封装的集成方面有深厚的技术积累。京灿芯半导体公司产品覆盖面广，涵盖消费级、工业级、特种行业和新能源汽车等领域。",
+      "has_product": true,
+      "has_scenario": false
+    },
+    {
+      "company_id": "COMP-cf8d992b60e9",
+      "canonical_name": "亿匀智行（深圳）科技",
+      "business": "计算机视觉服务商",
+      "description_prefix": "专注于在人工智能计算机视觉行业中使用基于AI的技术,人工智能的算法基于视频实现人体面部表情及动作识别技术服务",
+      "has_product": false,
+      "has_scenario": false
+    },
+    {
+      "company_id": "COMP-17baf83fccbb",
+      "canonical_name": "亿方人工智能系统（深圳）",
+      "business": "智能制造技术研发商",
+      "description_prefix": "亿方人工智能系统（深圳）有限公司为上市企业深圳市怡亚通供应链股份有限公司（股票代码002183）投资成立。依托于怡亚通强大的客户资源及供应商网络，专业的经营管理团队以及强大的科研力量，公司致力成为整合型人工智能企业，专业型机器视觉企业，智能制造生态链企业，为中国的智能制造的进步贡献力量。",
+      "has_product": true,
+      "has_scenario": false
+    },
+    {
+      "company_id": "COMP-2b9336100714",
+      "canonical_name": "亿火数媒（深圳）",
+      "business": "人工智能技术提供商",
+      "description_prefix": "亿火数媒（深圳）有限公司成立于2020-09-18，以人工智能技术为核心，以安全、移动、泛在和大数据为主要方向，致力于为行业用户提供业内领先的人工智能技术、产品和解决方案。能信安科技利用先进的深度穿插网络技术、深度强化学习技术、深度卷积神经网络技术和第二代宽度学习技术，为用户提供一系列AI技术与产品，包括：图像识别、人脸识别、智能视频分析、安全驾驶行为识别、手机用户行为识别、网络访问人机识别等。",
+      "has_product": true,
+      "has_scenario": false
+    },
+    {
+      "company_id": "COMP-7a36baca8fa0",
+      "canonical_name": "仁心健康（深圳）",
+      "business": "智慧医疗生态服务商",
+      "description_prefix": "仁心健康，立足“健康中国”战略，赋能全球智慧医疗生态致力于以领先的人工智能技术，尖端的海内外医疗资源及强大的金融背景全方位构筑智慧医疗多维度产业格局，目前拥有全球领先的医疗软硬件技术。拥有多名优秀软硬件开发工程师，核心技术储备包括桑斯医疗云，大数据、人工智能等，陆续开发“医院一智慧他的系统”、“社区医疗服务机构-智慧健原管理系统”，“医药人工智能-CDOSS+TOMS平台\"等产品，并全面扩展跨境配药，医疗器械，健康管理，智能穿戴设备及医疗保险等业务，形成以用户为中心，以健康为目标，以数据为纽带的产业闭环。",
+      "has_product": true,
+      "has_scenario": false
+    },
+    {
+      "company_id": "COMP-175c9e00c632",
+      "canonical_name": "众安信科（深圳）",
+      "business": "金融数字化服务商",
+      "description_prefix": "众安信科由众安科技通过投资重组后成立，是一家专注于科技金融领域的技术创新型企业，旨在通过业界领先的研发能力与服务实践，不断打造“以用户增长为核心”的产品理念，为银行、保险、证券等金融客户提供智能化、平台化的数字化转型解决方案。以核心科技推动金融业高质量发展，助力构建数字金融新格局。",
+      "has_product": true,
+      "has_scenario": false
+    },
+    {
+      "company_id": "COMP-b093fca8bffc",
+      "canonical_name": "优函数智能科技（深圳）",
+      "business": "为AI应用而生的API平台",
+      "description_prefix": "UniFuncs是一家为AI应用而生的API平台，U深研是基于 UniFuncs 最先进 Deep Research 模型的深度研究产品，它通过与我们 Web Search 和 Web Reader 能力深度集成，使之成为了目前市面上成本最低且高效的深度研究Agent。",
+      "has_product": true,
+      "has_scenario": false
+    },
+    {
+      "company_id": "COMP-04eea8fb18f9",
+      "canonical_name": "会硕科技",
+      "business": "视频会议产品研销商",
+      "description_prefix": "深圳市会硕科技有限公司专注于视频会议产品研发、生产、销售，并提供行业整体解决方案，主要产品：视频会议摄像机、高清网络会议摄像机、会议终端、全向麦克风、视频会议摄像头等远程会议设备。会硕科技将在未来的发展中，致力音频算法、图像算法、智能化平台软件研发的同时，积极融合科技领域的先进技术，创造便利不断提升客户服务能力，持续加大资金投入和研发力度，专注于视讯领域设备的研究与技术革新，打造成为全球视讯领域的知名品牌。",
+      "has_product": true,
+      "has_scenario": false
+    },
+    {
+      "company_id": "COMP-8f46286072e9",
+      "canonical_name": "佳世半导体（深圳）",
+      "business": "系统级封装技术研发商",
+      "description_prefix": "佳世半导体是一家系统级封装技术研发商，主要经营范围是系统级封装技术开发、设计、技术转让、技术服务；半导体技术软件、集成电路芯片、电子元配件、应用材料、电子元器件设计、开发、生产、销售、技术服务；经营进出口业务。",
+      "has_product": true,
+      "has_scenario": false
+    }
+  ]
+}

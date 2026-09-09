@@ -1,0 +1,119 @@
+{
+  "schema_version": "canonical-v2-s8r4-paper-professor-retrieval-receipt-v1",
+  "change_id": "rebuild-canonical-v2-knowledge-platform",
+  "slice_id": "s8r4-release-scoped-displayed-paper-professor-traversal",
+  "status": "accepted",
+  "ready_at": "2026-07-20T07:25:40Z",
+  "in_progress_at": "2026-07-20T07:40:49Z",
+  "candidate_at": "2026-07-20T08:53:38Z",
+  "accepted_at": "2026-07-20T08:53:38Z",
+  "git_head": "f0e6224e1c675c6d6c58993676783b2fbe0cd8f6",
+  "git_branch": "canonical-v2-s2-baseline",
+  "formal_task_ledger_before": "56/80",
+  "formal_task_ledger_after": "56/80",
+  "artifacts": {
+    "reviewed_specified_contract_sha256": "aaf3235ec2ec364df341fded1d66b9e05f2b268a08292d610d35213ac97d36e3",
+    "reviewed_specified_plan_sha256": "e848c5247040195c2bfa748fb55563b42dfae40fff2f82ecab0f002f70db3f84",
+    "ready_contract_sha256": "508c8dee26a945673d4b9c28983cc835cf99fa4848e1a18a068e379d996cad78",
+    "ready_plan_sha256": "d4cf58734edcd37d7ddb0e6b27b682ae0d7d063d2174e92e167dd66ca0748b47",
+    "accepted_contract_sha256": "45843656801d60200b513965a27e5e4b7b0182e8e54764b2963963a01b0a4441",
+    "accepted_plan_sha256": "be7e37a70294cd9e398d382d6b3e4f50103065c31f4d38307c20d520c90f10b0",
+    "dependency_audit_sha256": "07c90bea13f437e50e3efa8537112da64acfac3fd6839899f8144f48b157d84c",
+    "knowledge_read_sha256": "07c2686309f78fd058cabfe0352aba55b7740b46ebe48c53d6458a6c3dce9923",
+    "knowledge_read_isolated_sha256": "b8090b606d9aaa0ab6dd6e4f546346def073a9bbd109cbd69df268afc199e2c7",
+    "physical_owner_test_sha256": "ea4fc3ce021690fe1c33bccd7484abf5b888d30d7e65bbf3270b3bf7643b2463",
+    "tasks_sha256_unchanged": "5f61c097729e1107ff387a89c9f6f62b3783ef88debf1612b6156fb2056cdd7d",
+    "acceptance_sha256_unchanged": "742b29dc9805214b4b7059d5c801189209c26e35831f3f834ef01e4ac9f6df50"
+  },
+  "mapping": {
+    "planner_path": "professor_authored_paper/paper_to_professor/paper-to-professor",
+    "canonical_relationship": "professor_attributed_to_paper@canonical-v2-relationship-v1",
+    "canonical_orientation": "Professor-to-Paper",
+    "execution_orientation": "inverse Paper-to-Professor",
+    "source_witness": "one protected displayed Paper",
+    "returned_domain": "professor",
+    "enumeration": "representative open-world non-exhaustive with continuation"
+  },
+  "review": {
+    "ready_contract": {
+      "critical": 0,
+      "important": 0,
+      "minor": 0,
+      "yagni": 0,
+      "verdict": "ready"
+    },
+    "initial_candidate": {
+      "critical": 0,
+      "important": 2,
+      "minor": 0,
+      "yagni": 0,
+      "verdict": "repair",
+      "closed_findings": [
+        "internal forward replay consumed caller max before exact displayed-Paper filtering",
+        "a canonical Web candidate could cross-wire another Professor evidence object"
+      ]
+    },
+    "identity_boundary_repair": {
+      "critical": 0,
+      "important": 0,
+      "minor": 0,
+      "yagni": 0,
+      "verdict": "accept",
+      "note": "finite Web identity states preserve Accepted evidence-subject aliases while rejecting canonical, web-only, and unknown-kind crosswires"
+    },
+    "final_implementation": {
+      "critical": 0,
+      "important": 0,
+      "minor": 0,
+      "yagni": 0,
+      "verdict": "accept",
+      "note": "release-bound postvalidation binds the fused Canonical Professor while allowing the Accepted Web evidence-subject alias shape"
+    }
+  },
+  "verification": {
+    "red_normal": "61 deselected, 1 xfailed in 2.51 seconds at the exact missing S8R4 trace seam",
+    "red_forced": "1 failed, 61 deselected in 1.21 seconds only at the exact seam before fixture or effect acquisition",
+    "real_red": "unsupported inverse relationship request path after the trace seam and release fixture existed",
+    "inverse_cap_red_green": "old internal cap was 1 instead of authoritative count 2; final regression observes 2 and applies caller cap only after exact displayed-Paper filtering",
+    "web_crosswire_red_green": "canonical, web-only, and unknown identity-kind crosswires become invalid Web output; a web-candidate Canonical-subject crosswire fails release-bound postvalidation",
+    "accepted_alias_red": "1 failed, 61 deselected in 30.30 seconds because release postvalidation incorrectly rejected an Accepted web-candidate evidence-subject alias",
+    "focused_green_warnings_as_errors": "1 passed, 61 deselected in 38.63 seconds",
+    "accepted_web_identity_regressions": "4 passed in 0.35 seconds for snapshot, seven-lane, explicit fusion, and Web-handle owners",
+    "s8r1_literal_s8r1_through_s8r4_matrix": "5 passed, 57 deselected in 158.00 seconds",
+    "canonical_v2_no_external": "349 passed, 141 skipped, 3 intentional hostile-model serializer warnings in 192.94 seconds",
+    "ruff_check": "passed for complete src/data_agents/canonical_v2 and tests/canonical_v2",
+    "ruff_format": "74 files already formatted",
+    "py_compile": "passed for both changed production files and the physical owner test",
+    "pyright": "0 errors, 0 warnings, 0 informations for complete Canonical V2 source/tests",
+    "strict_openspec": "passed",
+    "git_diff_check": "passed",
+    "untracked_whitespace_and_eof_check": "passed for the S8R4-owned source, test, contract, plan, audit, and receipt",
+    "uv_lock_check_offline": "resolved 194 packages without lock drift",
+    "high_confidence_secret_assignment_scan": "no matches in the S8R4-owned file set",
+    "stale_s8r4_xfail_scan": "no S8R4 xfail decorator or RED reason remains"
+  },
+  "wheel": {
+    "path_before_owned_cleanup": "/var/tmp/canonical-v2-s8r4-wheel-s3ryre/miroflow_agent-0.1.0-py3-none-any.whl",
+    "sha256": "18b41f7500896017a5c882f472ff39db6642212f2bc23be65ddab75457d85dd3",
+    "entry_count": 276,
+    "contains_tests_or_agents": false,
+    "knowledge_read_source_and_entry_sha256": "07c2686309f78fd058cabfe0352aba55b7740b46ebe48c53d6458a6c3dce9923",
+    "knowledge_read_isolated_source_and_entry_sha256": "b8090b606d9aaa0ab6dd6e4f546346def073a9bbd109cbd69df268afc199e2c7",
+    "packaged_production_hashes_match_source": true,
+    "owned_output_cleanup_complete": true
+  },
+  "frozen_targets": {
+    "original_milvus_path": "/home/longxiang/MiroThinker/apps/miroflow-agent/milvus.db",
+    "original_milvus_sha256": "43ef203e0b101fcbed2a6c8fcde19a35d426199d3f02bc72525d0acf618867cc",
+    "original_pgtest_state": "paused true true",
+    "original_pgtest_volume": "d81c6381b0c7c0a975ca0ff4a0054037e72b0d4cb80174f682abceb1127cd241",
+    "original_pgtest_host_port": "15432",
+    "recovery_lab_network": "none",
+    "recovery_lab_published_ports": false,
+    "recovery_lab_restart_policy": "no",
+    "git_branch": "canonical-v2-s2-baseline",
+    "git_head": "f0e6224e1c675c6d6c58993676783b2fbe0cd8f6"
+  },
+  "next_required_action": "mark S8R5 Ready from its zero-Critical/Important review and implement the displayed Patent-to-Company applicant traversal without changing the formal ledger",
+  "forbidden_actions_performed": []
+}

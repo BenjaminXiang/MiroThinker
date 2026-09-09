@@ -1,0 +1,25 @@
+{
+  "mode": "candidate_dry_run",
+  "selection_hash": "10a3e6dff30c830ef42978acbfcbc3d2c13c972a05bdfda85a0e335f6c1f8035",
+  "closure_selection_hash": "8cd4acdf26cbc8fa0213d3c6a058c0c4e9700e10aef93098612ad1a9d2f113d0",
+  "dry_run_selection_hash": "8cd4acdf26cbc8fa0213d3c6a058c0c4e9700e10aef93098612ad1a9d2f113d0",
+  "lanes": [
+    {
+      "lane": "duplicate_paper_merge",
+      "input_count": 295,
+      "candidate_count": 234,
+      "provider_failure_count": 0,
+      "validation_failure_count": 0,
+      "skipped_count": 61,
+      "ready_auto_write": 0,
+      "review_before_write": 234,
+      "rejection_count": 61,
+      "rejection_reason_counts": [
+        {
+          "reason": "ambiguous_fuzzy_match",
+          "count": 61
+        }
+      ]
+    }
+  ]
+}

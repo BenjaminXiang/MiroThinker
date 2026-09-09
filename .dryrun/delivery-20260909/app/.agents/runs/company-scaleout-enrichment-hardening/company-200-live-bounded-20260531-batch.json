@@ -1,0 +1,19 @@
+{
+  "batch_id": "66e8bcda-2030-42eb-84fb-5edefff97a43",
+  "companies_total": 1024,
+  "companies_selected": 1024,
+  "latest_import_batch": {
+    "import_batch_id": "2c30b826-4aaa-48ca-8ce9-8bc5dc56c275",
+    "c": 1025
+  },
+  "baseline_counts": {
+    "company_product": 336,
+    "company_product_evidence": 1113,
+    "company_application_scenario": 227,
+    "company_signal_event": 617,
+    "company_news_item": 461,
+    "company_enrichment_search_audit": 4845,
+    "company_enrichment_batch": 9,
+    "company_enrichment_company_state": 4506
+  }
+}

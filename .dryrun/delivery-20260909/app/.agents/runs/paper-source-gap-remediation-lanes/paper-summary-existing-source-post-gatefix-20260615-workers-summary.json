@@ -1,0 +1,19 @@
+{
+  "workers": 4,
+  "papers_total": 80,
+  "processed": 56,
+  "skipped": 24,
+  "written": 21,
+  "rejected": 35,
+  "errors": 0,
+  "reason_counts": {
+    "boilerplate_judge": 29,
+    "translation_invalid_or_empty": 6
+  },
+  "durations": [
+    62.83,
+    77.59,
+    52.98,
+    80.16
+  ]
+}

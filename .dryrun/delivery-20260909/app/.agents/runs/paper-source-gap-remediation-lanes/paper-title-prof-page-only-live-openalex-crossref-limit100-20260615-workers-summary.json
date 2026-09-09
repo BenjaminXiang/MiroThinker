@@ -1,0 +1,113 @@
+{
+  "workers": 4,
+  "papers_total": 400,
+  "processed": 400,
+  "resolved": 2,
+  "unresolved": 398,
+  "errors": 0,
+  "paper_upserts": 2,
+  "in_place_updates": 0,
+  "link_migrations": 2,
+  "merge_aliases_written": 2,
+  "old_links_rejected": 2,
+  "page_only_papers_merged": 2,
+  "implausible_papers_rejected": 0,
+  "implausible_links_rejected": 0,
+  "issues": 0,
+  "enrichment_copies": 1,
+  "full_text_pdf_upserts": 0,
+  "unsafe_links_filtered": 9,
+  "bad_doi_identifiers": 43,
+  "durations": [
+    null,
+    null,
+    null,
+    null
+  ],
+  "sample_resolved": [
+    {
+      "old_paper_id": "PAPER-F2E1BE45A3F0",
+      "title": "BioLedger: A Token Incentive-Based Framework for the Secure Sharing of Genetic Data in Consortium Blockchain",
+      "match_source": "openalex",
+      "match_confidence": 1,
+      "doi": "10.1109/bibm66473.2025.11357073",
+      "openalex_id": "W7126115280",
+      "arxiv_id": null,
+      "pdf_url": null,
+      "year": 2025
+    },
+    {
+      "old_paper_id": "PAPER-37A9B9863771",
+      "title": "Exact enumeration approach to tunneling in disordered system",
+      "match_source": "openalex",
+      "match_confidence": 1,
+      "doi": null,
+      "openalex_id": "W7113405727",
+      "arxiv_id": null,
+      "pdf_url": null,
+      "year": 1990
+    }
+  ],
+  "sample_unresolved": [
+    {
+      "paper_id": "PAPER-139896DC8F51",
+      "title": "Introduction to Intelligent Robot System Design: Application Development with ROS",
+      "reason": "no_confident_resolution",
+      "confidence": null
+    },
+    {
+      "paper_id": "PAPER-06763AB76E44",
+      "title": "Communication Topology Design under Limited Bandwidth",
+      "reason": "no_confident_resolution",
+      "confidence": null
+    },
+    {
+      "paper_id": "PAPER-E5D8F5BCF40B",
+      "title": "Probabilistic Convergence of Kalman Filtering over Nonstationary Fading Channel",
+      "reason": "no_confident_resolution",
+      "confidence": null
+    },
+    {
+      "paper_id": "PAPER-62B56201AB06",
+      "title": "Deterministic Sensor Scheduling for Centralized State Estimation under Limited Communication Resources",
+      "reason": "no_confident_resolution",
+      "confidence": null
+    },
+    {
+      "paper_id": "PAPER-1D189A0E398B",
+      "title": "Sampled-data Consen-sus over Random Networks",
+      "reason": "no_confident_resolution",
+      "confidence": null
+    },
+    {
+      "paper_id": "PAPER-5BB42759AF9A",
+      "title": "Dis-tributed Algorithm for Economic Dispatch over Time-Varying Directed Networks with Delays",
+      "reason": "no_confident_resolution",
+      "confidence": null
+    },
+    {
+      "paper_id": "PAPER-70D1A79F45CD",
+      "title": "Lakshmanan, Wenjie Zhang, Xuemin Lin, Efficient Algorithms for Densest Subgraph Discovery on Large Directed Graphs",
+      "reason": "no_confident_resolution",
+      "confidence": null
+    },
+    {
+      "paper_id": "PAPER-897807B30675",
+      "title": "Cohesive Subgraph Search over Big Heterogeneous Information Networks [Book]",
+      "reason": "no_confident_resolution",
+      "confidence": null
+    },
+    {
+      "paper_id": "PAPER-651322C686E5",
+      "title": "Lakshmanan, Xiaolin Han, Xiaodong Li, Accelerating Directed Densest Subgraph Queries with Software and Hardware Approaches",
+      "reason": "no_confident_resolution",
+      "confidence": null
+    },
+    {
+      "paper_id": "PAPER-E6EF1197E0FF",
+      "title": "浅析当代艺术语境下的超级写实主义的现状问题",
+      "reason": "no_confident_resolution",
+      "confidence": null
+    }
+  ]
+}

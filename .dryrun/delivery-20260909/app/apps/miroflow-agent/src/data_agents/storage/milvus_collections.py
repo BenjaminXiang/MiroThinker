@@ -1,0 +1,569 @@
+from __future__ import annotations
+
+import os
+import re
+import warnings
+from math import sqrt
+
+PAPER_CHUNKS_COLLECTION = "paper_chunks"
+PROFESSOR_PROFILES_COLLECTION = "professor_profiles"
+PROFESSOR_IDENTITY_PROFILES_COLLECTION = "professor_identity_profiles"
+PROFESSOR_RESEARCH_PROFILES_COLLECTION = "professor_research_profiles"
+COMPANY_PROFILES_COLLECTION = "company_profiles"
+PATENT_PROFILES_COLLECTION = "patent_profiles"
+_VECTOR_DIM = 4096
+
+
+def _install_milvus_memory_compat() -> None:
+    with warnings.catch_warnings():
+        warnings.filterwarnings(
+            "ignore",
+            message="pkg_resources is deprecated as an API.*",
+            category=UserWarning,
+            module="milvus_lite",
+        )
+        import pymilvus
+
+    if getattr(pymilvus, "_mirothinker_memory_compat", False):
+        return
+
+    original_client = pymilvus.MilvusClient
+
+    class _IndexParams:
+        def __init__(self) -> None:
+            self.indexes: list[dict[str, object]] = []
+
+        def add_index(self, **kwargs) -> None:
+            self.indexes.append(kwargs)
+
+    class _InMemoryMilvusClient:
+        _stores: dict[str, dict[str, dict[str, object]]] = {}
+
+        def __init__(self, store_key: str) -> None:
+            self._collections = self._stores.setdefault(store_key, {})
+
+        def has_collection(self, collection_name: str) -> bool:
+            return collection_name in self._collections
+
+        def create_collection(
+            self, collection_name: str, schema=None, **kwargs
+        ) -> None:
+            self._collections.setdefault(
+                collection_name,
+                {"schema": schema, "kwargs": kwargs, "rows": [], "indexes": []},
+            )
+
+        def prepare_index_params(self) -> _IndexParams:
+            return _IndexParams()
+
+        def create_index(self, collection_name: str, index_params, **kwargs) -> None:
+            collection = self._collections.setdefault(
+                collection_name,
+                {"schema": None, "kwargs": {}, "rows": [], "indexes": []},
+            )
+            collection["indexes"] = list(getattr(index_params, "indexes", []))
+            collection["index_kwargs"] = kwargs
+
+        def drop_collection(self, collection_name: str, **kwargs) -> None:
+            self._collections.pop(collection_name, None)
+
+        def delete(
+            self, collection_name: str, filter: str | None = None, **kwargs
+        ) -> None:
+            collection = self._collections.get(collection_name)
+            if collection is None or not filter:
+                return
+            match = re.fullmatch(r"paper_id == '(.+)'", filter)
+            if match is None:
+                return
+            paper_id = match.group(1)
+            collection["rows"] = [
+                row for row in collection["rows"] if row.get("paper_id") != paper_id
+            ]
+
+        def insert(self, collection_name: str, data, **kwargs) -> None:
+            collection = self._collections.setdefault(
+                collection_name,
+                {"schema": None, "kwargs": {}, "rows": [], "indexes": []},
+            )
+            collection["rows"].extend(list(data))
+
+        def upsert(self, collection_name: str, data, **kwargs) -> None:
+            collection = self._collections.setdefault(
+                collection_name,
+                {"schema": None, "kwargs": {}, "rows": [], "indexes": []},
+            )
+            rows = collection["rows"]
+            existing_by_id = {
+                row.get("id") or row.get("chunk_id"): index
+                for index, row in enumerate(rows)
+            }
+            for item in data:
+                row_id = item.get("id") or item.get("chunk_id")
+                if row_id in existing_by_id:
+                    rows[existing_by_id[row_id]] = item
+                else:
+                    rows.append(item)
+
+        def search(
+            self,
+            collection_name: str,
+            data,
+            limit: int,
+            output_fields=None,
+            **kwargs,
+        ) -> list[list[dict[str, object]]]:
+            collection = self._collections.get(collection_name)
+            if collection is None or not data:
+                return [[]]
+            query_vector = list(data[0])
+            ranked_rows = sorted(
+                collection["rows"],
+                key=lambda row: _cosine_similarity(
+                    query_vector,
+                    list(
+                        row.get(str(kwargs.get("anns_field") or ""))
+                        or row.get("vector")
+                        or row.get("content_vector")
+                        or row.get("profile_vector")
+                        or row.get("direction_vector")
+                        or []
+                    ),
+                ),
+                reverse=True,
+            )
+            results: list[dict[str, object]] = []
+            for row in ranked_rows[:limit]:
+                entity = dict(row)
+                if output_fields:
+                    entity = {field: row.get(field) for field in output_fields}
+                results.append(
+                    {
+                        "id": row.get("id") or row.get("chunk_id"),
+                        "entity": entity,
+                    }
+                )
+            return [results]
+
+    class MilvusClientCompat:
+        def __init__(self, uri: str, *args, **kwargs) -> None:
+            use_real = os.environ.get("MILVUS_USE_REAL_CLIENT", "").strip().lower() in {
+                "1",
+                "true",
+                "yes",
+                "on",
+            }
+            if uri == ":memory:":
+                self._delegate = _InMemoryMilvusClient(f"memory:{id(self)}")
+            elif uri.endswith(".db") and not use_real:
+                self._delegate = _InMemoryMilvusClient(uri)
+            else:
+                # Relax gRPC keepalive: pymilvus defaults keepalive_time_ms=10000 +
+                # permit_without_calls=True, which PINGs idle channels every 10s and
+                # milvus-lite's embedded server rejects (GOAWAY too_many_pings ->
+                # per-search latency spikes). 10min interval + no idle-PING keeps the
+                # channel warm without tripping the server. Caller grpc_options win.
+                grpc_opts = {
+                    "grpc.keepalive_time_ms": 600000,
+                    "grpc.keepalive_timeout_ms": 20000,
+                    "grpc.keepalive_permit_without_calls": False,
+                }
+                grpc_opts.update(kwargs.get("grpc_options") or {})
+                forwarded = {k: v for k, v in kwargs.items() if k != "grpc_options"}
+                self._delegate = original_client(
+                    uri=uri, *args, grpc_options=grpc_opts, **forwarded
+                )
+
+        def __getattr__(self, name: str):
+            return getattr(self._delegate, name)
+
+    pymilvus.MilvusClient = MilvusClientCompat
+    pymilvus._mirothinker_memory_compat = True
+
+
+_install_milvus_memory_compat()
+
+
+def _cosine_similarity(left: list[float], right: list[float]) -> float:
+    if not left or not right or len(left) != len(right):
+        return 0.0
+    numerator = sum(a * b for a, b in zip(left, right, strict=False))
+    left_norm = sqrt(sum(value * value for value in left))
+    right_norm = sqrt(sum(value * value for value in right))
+    if left_norm == 0.0 or right_norm == 0.0:
+        return 0.0
+    return numerator / (left_norm * right_norm)
+
+
+def ensure_paper_chunks_collection(milvus_client) -> None:
+    if milvus_client.has_collection(PAPER_CHUNKS_COLLECTION):
+        return
+
+    with warnings.catch_warnings():
+        warnings.filterwarnings(
+            "ignore",
+            message="pkg_resources is deprecated as an API.*",
+            category=UserWarning,
+            module="milvus_lite",
+        )
+        from pymilvus import CollectionSchema, DataType, FieldSchema
+
+    fields = [
+        FieldSchema(
+            name="chunk_id",
+            dtype=DataType.VARCHAR,
+            is_primary=True,
+            max_length=128,
+        ),
+        FieldSchema(name="paper_id", dtype=DataType.VARCHAR, max_length=64),
+        FieldSchema(name="chunk_type", dtype=DataType.VARCHAR, max_length=32),
+        FieldSchema(name="segment_index", dtype=DataType.INT64),
+        FieldSchema(name="year", dtype=DataType.INT64),
+        FieldSchema(name="venue", dtype=DataType.VARCHAR, max_length=128),
+        FieldSchema(name="content_text", dtype=DataType.VARCHAR, max_length=2048),
+        FieldSchema(
+            name="content_vector", dtype=DataType.FLOAT_VECTOR, dim=_VECTOR_DIM
+        ),
+    ]
+    schema = CollectionSchema(
+        fields=fields, description="Paper chunks for semantic retrieval"
+    )
+    milvus_client.create_collection(
+        collection_name=PAPER_CHUNKS_COLLECTION,
+        schema=schema,
+    )
+
+    index_params = milvus_client.prepare_index_params()
+    index_params.add_index(
+        field_name="content_vector",
+        index_type="AUTOINDEX",
+        metric_type="COSINE",
+    )
+    milvus_client.create_index(
+        collection_name=PAPER_CHUNKS_COLLECTION,
+        index_params=index_params,
+    )
+
+
+def drop_paper_chunks_collection(milvus_client) -> None:
+    if not milvus_client.has_collection(PAPER_CHUNKS_COLLECTION):
+        return
+    milvus_client.drop_collection(collection_name=PAPER_CHUNKS_COLLECTION)
+
+
+def ensure_professor_profiles_collection(milvus_client) -> None:
+    if milvus_client.has_collection(PROFESSOR_PROFILES_COLLECTION):
+        return
+
+    with warnings.catch_warnings():
+        warnings.filterwarnings(
+            "ignore",
+            message="pkg_resources is deprecated as an API.*",
+            category=UserWarning,
+            module="milvus_lite",
+        )
+        from pymilvus import CollectionSchema, DataType, FieldSchema
+
+    fields = [
+        FieldSchema(
+            name="id",
+            dtype=DataType.VARCHAR,
+            is_primary=True,
+            max_length=64,
+        ),
+        FieldSchema(name="name", dtype=DataType.VARCHAR, max_length=128),
+        FieldSchema(name="institution", dtype=DataType.VARCHAR, max_length=256),
+        FieldSchema(name="department", dtype=DataType.VARCHAR, max_length=128),
+        FieldSchema(name="title", dtype=DataType.VARCHAR, max_length=64),
+        FieldSchema(name="profile_summary", dtype=DataType.VARCHAR, max_length=4096),
+        FieldSchema(
+            name="profile_vector",
+            dtype=DataType.FLOAT_VECTOR,
+            dim=_VECTOR_DIM,
+        ),
+        FieldSchema(name="h_index", dtype=DataType.INT32),
+        FieldSchema(name="citation_count", dtype=DataType.INT64),
+        FieldSchema(name="paper_count", dtype=DataType.INT32),
+    ]
+    schema = CollectionSchema(
+        fields=fields,
+        description="Professor profiles for semantic retrieval",
+    )
+    milvus_client.create_collection(
+        collection_name=PROFESSOR_PROFILES_COLLECTION,
+        schema=schema,
+    )
+
+    index_params = milvus_client.prepare_index_params()
+    index_params.add_index(
+        field_name="profile_vector",
+        index_type="AUTOINDEX",
+        metric_type="COSINE",
+    )
+    milvus_client.create_index(
+        collection_name=PROFESSOR_PROFILES_COLLECTION,
+        index_params=index_params,
+    )
+
+
+def drop_professor_profiles_collection(milvus_client) -> None:
+    if not milvus_client.has_collection(PROFESSOR_PROFILES_COLLECTION):
+        return
+    milvus_client.drop_collection(collection_name=PROFESSOR_PROFILES_COLLECTION)
+
+
+def ensure_professor_identity_profiles_collection(milvus_client) -> None:
+    if milvus_client.has_collection(PROFESSOR_IDENTITY_PROFILES_COLLECTION):
+        return
+
+    with warnings.catch_warnings():
+        warnings.filterwarnings(
+            "ignore",
+            message="pkg_resources is deprecated as an API.*",
+            category=UserWarning,
+            module="milvus_lite",
+        )
+        from pymilvus import CollectionSchema, DataType, FieldSchema
+
+    fields = [
+        FieldSchema(
+            name="id",
+            dtype=DataType.VARCHAR,
+            is_primary=True,
+            max_length=64,
+        ),
+        FieldSchema(name="name", dtype=DataType.VARCHAR, max_length=128),
+        FieldSchema(name="name_en", dtype=DataType.VARCHAR, max_length=128),
+        FieldSchema(name="institution", dtype=DataType.VARCHAR, max_length=256),
+        FieldSchema(name="department", dtype=DataType.VARCHAR, max_length=128),
+        FieldSchema(name="title", dtype=DataType.VARCHAR, max_length=64),
+        FieldSchema(name="profile_url", dtype=DataType.VARCHAR, max_length=512),
+        FieldSchema(name="identity_text", dtype=DataType.VARCHAR, max_length=4096),
+        FieldSchema(
+            name="identity_vector",
+            dtype=DataType.FLOAT_VECTOR,
+            dim=_VECTOR_DIM,
+        ),
+        FieldSchema(name="quality_status", dtype=DataType.VARCHAR, max_length=32),
+    ]
+    schema = CollectionSchema(
+        fields=fields,
+        description="Professor identity profiles for name and affiliation retrieval",
+    )
+    milvus_client.create_collection(
+        collection_name=PROFESSOR_IDENTITY_PROFILES_COLLECTION,
+        schema=schema,
+    )
+
+    index_params = milvus_client.prepare_index_params()
+    index_params.add_index(
+        field_name="identity_vector",
+        index_type="AUTOINDEX",
+        metric_type="COSINE",
+    )
+    milvus_client.create_index(
+        collection_name=PROFESSOR_IDENTITY_PROFILES_COLLECTION,
+        index_params=index_params,
+    )
+
+
+def drop_professor_identity_profiles_collection(milvus_client) -> None:
+    if not milvus_client.has_collection(PROFESSOR_IDENTITY_PROFILES_COLLECTION):
+        return
+    milvus_client.drop_collection(
+        collection_name=PROFESSOR_IDENTITY_PROFILES_COLLECTION
+    )
+
+
+def ensure_professor_research_profiles_collection(milvus_client) -> None:
+    if milvus_client.has_collection(PROFESSOR_RESEARCH_PROFILES_COLLECTION):
+        return
+
+    with warnings.catch_warnings():
+        warnings.filterwarnings(
+            "ignore",
+            message="pkg_resources is deprecated as an API.*",
+            category=UserWarning,
+            module="milvus_lite",
+        )
+        from pymilvus import CollectionSchema, DataType, FieldSchema
+
+    fields = [
+        FieldSchema(
+            name="id",
+            dtype=DataType.VARCHAR,
+            is_primary=True,
+            max_length=64,
+        ),
+        FieldSchema(name="research_text", dtype=DataType.VARCHAR, max_length=4096),
+        FieldSchema(
+            name="research_directions",
+            dtype=DataType.VARCHAR,
+            max_length=2048,
+        ),
+        FieldSchema(name="profile_summary", dtype=DataType.VARCHAR, max_length=4096),
+        FieldSchema(name="paper_summary", dtype=DataType.VARCHAR, max_length=4096),
+        FieldSchema(name="patent_summary", dtype=DataType.VARCHAR, max_length=4096),
+        FieldSchema(name="quality_status", dtype=DataType.VARCHAR, max_length=32),
+        FieldSchema(name="h_index", dtype=DataType.INT32),
+        FieldSchema(name="citation_count", dtype=DataType.INT64),
+        FieldSchema(name="paper_count", dtype=DataType.INT32),
+        FieldSchema(
+            name="research_vector",
+            dtype=DataType.FLOAT_VECTOR,
+            dim=_VECTOR_DIM,
+        ),
+    ]
+    schema = CollectionSchema(
+        fields=fields,
+        description="Professor research profiles for expert and topic retrieval",
+    )
+    milvus_client.create_collection(
+        collection_name=PROFESSOR_RESEARCH_PROFILES_COLLECTION,
+        schema=schema,
+    )
+
+    index_params = milvus_client.prepare_index_params()
+    index_params.add_index(
+        field_name="research_vector",
+        index_type="AUTOINDEX",
+        metric_type="COSINE",
+    )
+    milvus_client.create_index(
+        collection_name=PROFESSOR_RESEARCH_PROFILES_COLLECTION,
+        index_params=index_params,
+    )
+
+
+def drop_professor_research_profiles_collection(milvus_client) -> None:
+    if not milvus_client.has_collection(PROFESSOR_RESEARCH_PROFILES_COLLECTION):
+        return
+    milvus_client.drop_collection(
+        collection_name=PROFESSOR_RESEARCH_PROFILES_COLLECTION
+    )
+
+
+def ensure_company_profiles_collection(milvus_client) -> None:
+    if milvus_client.has_collection(COMPANY_PROFILES_COLLECTION):
+        return
+
+    with warnings.catch_warnings():
+        warnings.filterwarnings(
+            "ignore",
+            message="pkg_resources is deprecated as an API.*",
+            category=UserWarning,
+            module="milvus_lite",
+        )
+        from pymilvus import CollectionSchema, DataType, FieldSchema
+
+    fields = [
+        FieldSchema(
+            name="id",
+            dtype=DataType.VARCHAR,
+            is_primary=True,
+            max_length=64,
+        ),
+        FieldSchema(name="name", dtype=DataType.VARCHAR, max_length=256),
+        FieldSchema(name="industry", dtype=DataType.VARCHAR, max_length=128),
+        FieldSchema(name="hq_city", dtype=DataType.VARCHAR, max_length=64),
+        FieldSchema(name="description", dtype=DataType.VARCHAR, max_length=2048),
+        FieldSchema(name="profile_summary", dtype=DataType.VARCHAR, max_length=2048),
+        FieldSchema(
+            name="technology_route_summary",
+            dtype=DataType.VARCHAR,
+            max_length=2048,
+        ),
+        FieldSchema(
+            name="profile_vector",
+            dtype=DataType.FLOAT_VECTOR,
+            dim=_VECTOR_DIM,
+        ),
+    ]
+    schema = CollectionSchema(
+        fields=fields,
+        description="Company profiles for semantic retrieval",
+    )
+    milvus_client.create_collection(
+        collection_name=COMPANY_PROFILES_COLLECTION,
+        schema=schema,
+    )
+
+    index_params = milvus_client.prepare_index_params()
+    index_params.add_index(
+        field_name="profile_vector",
+        index_type="AUTOINDEX",
+        metric_type="COSINE",
+    )
+    milvus_client.create_index(
+        collection_name=COMPANY_PROFILES_COLLECTION,
+        index_params=index_params,
+    )
+
+
+def drop_company_profiles_collection(milvus_client) -> None:
+    if not milvus_client.has_collection(COMPANY_PROFILES_COLLECTION):
+        return
+    milvus_client.drop_collection(collection_name=COMPANY_PROFILES_COLLECTION)
+
+
+def ensure_patent_profiles_collection(milvus_client) -> None:
+    if milvus_client.has_collection(PATENT_PROFILES_COLLECTION):
+        return
+
+    with warnings.catch_warnings():
+        warnings.filterwarnings(
+            "ignore",
+            message="pkg_resources is deprecated as an API.*",
+            category=UserWarning,
+            module="milvus_lite",
+        )
+        from pymilvus import CollectionSchema, DataType, FieldSchema
+
+    fields = [
+        FieldSchema(
+            name="id",
+            dtype=DataType.VARCHAR,
+            is_primary=True,
+            max_length=64,
+        ),
+        FieldSchema(name="patent_number", dtype=DataType.VARCHAR, max_length=64),
+        FieldSchema(name="title", dtype=DataType.VARCHAR, max_length=512),
+        FieldSchema(name="abstract", dtype=DataType.VARCHAR, max_length=2048),
+        FieldSchema(
+            name="technology_effect",
+            dtype=DataType.VARCHAR,
+            max_length=1024,
+        ),
+        FieldSchema(name="patent_type", dtype=DataType.VARCHAR, max_length=32),
+        FieldSchema(name="ipc_codes", dtype=DataType.VARCHAR, max_length=512),
+        FieldSchema(
+            name="profile_vector",
+            dtype=DataType.FLOAT_VECTOR,
+            dim=_VECTOR_DIM,
+        ),
+    ]
+    schema = CollectionSchema(
+        fields=fields,
+        description="Patent profiles for semantic retrieval",
+    )
+    milvus_client.create_collection(
+        collection_name=PATENT_PROFILES_COLLECTION,
+        schema=schema,
+    )
+
+    index_params = milvus_client.prepare_index_params()
+    index_params.add_index(
+        field_name="profile_vector",
+        index_type="AUTOINDEX",
+        metric_type="COSINE",
+    )
+    milvus_client.create_index(
+        collection_name=PATENT_PROFILES_COLLECTION,
+        index_params=index_params,
+    )
+
+
+def drop_patent_profiles_collection(milvus_client) -> None:
+    if not milvus_client.has_collection(PATENT_PROFILES_COLLECTION):
+        return
+    milvus_client.drop_collection(collection_name=PATENT_PROFILES_COLLECTION)

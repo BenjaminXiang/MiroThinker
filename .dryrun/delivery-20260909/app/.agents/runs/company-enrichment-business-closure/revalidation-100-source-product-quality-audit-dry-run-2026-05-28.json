@@ -1,0 +1,4210 @@
+{
+  "batch_id": "382fb63b-1a81-4ff2-8841-95ab87c717b1",
+  "dry_run": true,
+  "apply_rejections": false,
+  "promote_ready": false,
+  "totals": {
+    "audited": 174
+  },
+  "decision_counts": {
+    "ready_candidate": 109,
+    "reject": 51,
+    "needs_review": 14
+  },
+  "risk_counts": {
+    "low": 109,
+    "high": 51,
+    "medium": 14
+  },
+  "reason_counts": {
+    "company_identity_failed": 44,
+    "invalid_product_name": 4,
+    "product_not_grounded_in_source": 3
+  },
+  "warning_counts": {
+    "weak_evidence_span": 22
+  },
+  "updated_counts": {
+    "rejected": 0,
+    "ready": 0
+  },
+  "items": [
+    {
+      "product_id": "PROD-345ffaad466b",
+      "company_id": "COMP-02a26304c3a6",
+      "company_name": "深圳新视智科技术",
+      "product_name": "AI工业视觉智能化解决方案",
+      "source_url": "https://pitchhub.36kr.com/project/1713089670146562",
+      "source_adapter": "pitchhub_36kr",
+      "quality_status": "needs_review",
+      "decision": "ready_candidate",
+      "recommended_status": "needs_review",
+      "risk_level": "low",
+      "reasons": [],
+      "warnings": [],
+      "company_identity_confirmed": true,
+      "identity_terms": [
+        "新视智科技术"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "9a717356-d819-4a68-9b18-fa8b279ad8d2"
+    },
+    {
+      "product_id": "PROD-c9aa2b731346",
+      "company_id": "COMP-06dc6a30b7a8",
+      "company_name": "深圳夸夸菁领科技",
+      "product_name": "数智员工",
+      "source_url": "https://data.iyiou.com/company/details/23ecd6f663411f8298bc9752ade49544/profile?source=iyiou.trz",
+      "source_adapter": "iyiou",
+      "quality_status": "needs_review",
+      "decision": "ready_candidate",
+      "recommended_status": "needs_review",
+      "risk_level": "low",
+      "reasons": [],
+      "warnings": [],
+      "company_identity_confirmed": true,
+      "identity_terms": [
+        "夸夸菁领科技",
+        "夸夸菁领"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "db8940ad-a426-4a4c-8d16-1920d10c836d"
+    },
+    {
+      "product_id": "PROD-0c6a21c497e2",
+      "company_id": "COMP-09b40e9b3e92",
+      "company_name": "奇普乐芯片技术",
+      "product_name": "器和射频等Chiplets组成一个不断增长的生态系统",
+      "source_url": "https://pitchhub.36kr.com/project/1958597544449030",
+      "source_adapter": "pitchhub_36kr",
+      "quality_status": "needs_review",
+      "decision": "ready_candidate",
+      "recommended_status": "needs_review",
+      "risk_level": "low",
+      "reasons": [],
+      "warnings": [],
+      "company_identity_confirmed": true,
+      "identity_terms": [
+        "奇普乐芯片技术"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "d4094065-e300-49ee-a470-0ec1a115ec7a"
+    },
+    {
+      "product_id": "PROD-4b731c975b27",
+      "company_id": "COMP-1495c56536af",
+      "company_name": "深圳微控无线科技",
+      "product_name": "GPRS/NBIOT DTU及相关智能硬件",
+      "source_url": "https://pitchhub.36kr.com/project/2012751699166729",
+      "source_adapter": "pitchhub_36kr",
+      "quality_status": "needs_review",
+      "decision": "ready_candidate",
+      "recommended_status": "needs_review",
+      "risk_level": "low",
+      "reasons": [],
+      "warnings": [],
+      "company_identity_confirmed": true,
+      "identity_terms": [
+        "微控无线科技",
+        "微控"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "61318622-3057-4c58-ad39-378cbde15e22"
+    },
+    {
+      "product_id": "PROD-cab5b35d4135",
+      "company_id": "COMP-1495c56536af",
+      "company_name": "深圳微控无线科技",
+      "product_name": "Lora模块及相关智能硬件",
+      "source_url": "https://pitchhub.36kr.com/project/2012751699166729",
+      "source_adapter": "pitchhub_36kr",
+      "quality_status": "needs_review",
+      "decision": "ready_candidate",
+      "recommended_status": "needs_review",
+      "risk_level": "low",
+      "reasons": [],
+      "warnings": [],
+      "company_identity_confirmed": true,
+      "identity_terms": [
+        "微控无线科技",
+        "微控"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "61318622-3057-4c58-ad39-378cbde15e22"
+    },
+    {
+      "product_id": "PROD-0d99cd3a32d0",
+      "company_id": "COMP-1495c56536af",
+      "company_name": "深圳微控无线科技",
+      "product_name": "智能水表传感器/水计量模块/水资源管理终端",
+      "source_url": "https://pitchhub.36kr.com/project/2012751699166729",
+      "source_adapter": "pitchhub_36kr",
+      "quality_status": "needs_review",
+      "decision": "ready_candidate",
+      "recommended_status": "needs_review",
+      "risk_level": "low",
+      "reasons": [],
+      "warnings": [],
+      "company_identity_confirmed": true,
+      "identity_terms": [
+        "微控无线科技",
+        "微控"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "61318622-3057-4c58-ad39-378cbde15e22"
+    },
+    {
+      "product_id": "PROD-b642fea6521f",
+      "company_id": "COMP-1495c56536af",
+      "company_name": "深圳微控无线科技",
+      "product_name": "相关行业云平台/公共云平台/手机APP等",
+      "source_url": "https://pitchhub.36kr.com/project/2012751699166729",
+      "source_adapter": "pitchhub_36kr",
+      "quality_status": "needs_review",
+      "decision": "ready_candidate",
+      "recommended_status": "needs_review",
+      "risk_level": "low",
+      "reasons": [],
+      "warnings": [],
+      "company_identity_confirmed": true,
+      "identity_terms": [
+        "微控无线科技",
+        "微控"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "61318622-3057-4c58-ad39-378cbde15e22"
+    },
+    {
+      "product_id": "PROD-246032992dfd",
+      "company_id": "COMP-1495c56536af",
+      "company_name": "深圳微控无线科技",
+      "product_name": "通用MCU芯片",
+      "source_url": "https://pitchhub.36kr.com/project/1975742001177857",
+      "source_adapter": "pitchhub_36kr",
+      "quality_status": "needs_review",
+      "decision": "ready_candidate",
+      "recommended_status": "needs_review",
+      "risk_level": "low",
+      "reasons": [],
+      "warnings": [],
+      "company_identity_confirmed": true,
+      "identity_terms": [
+        "微控无线科技",
+        "微控"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "15688d01-00ed-4587-b653-69827be725b1"
+    },
+    {
+      "product_id": "PROD-fa5defa3c607",
+      "company_id": "COMP-1495c56536af",
+      "company_name": "深圳微控无线科技",
+      "product_name": "高性能低成本WiFi-4芯片等产品",
+      "source_url": "https://pitchhub.36kr.com/project/1975742001177857",
+      "source_adapter": "pitchhub_36kr",
+      "quality_status": "needs_review",
+      "decision": "ready_candidate",
+      "recommended_status": "needs_review",
+      "risk_level": "low",
+      "reasons": [],
+      "warnings": [],
+      "company_identity_confirmed": true,
+      "identity_terms": [
+        "微控无线科技",
+        "微控"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "15688d01-00ed-4587-b653-69827be725b1"
+    },
+    {
+      "product_id": "PROD-6a632dd52755",
+      "company_id": "COMP-1764f9b80fc2",
+      "company_name": "深圳问止中医健康科技",
+      "product_name": "AI中医大脑",
+      "source_url": "https://data.iyiou.com/intelligence/details/2d641e289e09b941f43076ffa696f010",
+      "source_adapter": "iyiou",
+      "quality_status": "needs_review",
+      "decision": "reject",
+      "recommended_status": "rejected",
+      "risk_level": "high",
+      "reasons": [
+        "company_identity_failed"
+      ],
+      "warnings": [],
+      "company_identity_confirmed": false,
+      "identity_terms": [
+        "问止中医健康科技",
+        "问止中医健康"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "4d449f63-42cc-478b-a6d8-3cb74336cbea"
+    },
+    {
+      "product_id": "PROD-26721775de76",
+      "company_id": "COMP-1764f9b80fc2",
+      "company_name": "深圳问止中医健康科技",
+      "product_name": "中医的AI辅助诊疗系统",
+      "source_url": "https://pitchhub.36kr.com/project/2180894755261572",
+      "source_adapter": "pitchhub_36kr",
+      "quality_status": "needs_review",
+      "decision": "reject",
+      "recommended_status": "rejected",
+      "risk_level": "high",
+      "reasons": [
+        "company_identity_failed"
+      ],
+      "warnings": [],
+      "company_identity_confirmed": false,
+      "identity_terms": [
+        "问止中医健康科技",
+        "问止中医健康"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "846514c2-d34d-48ae-b0c1-53a4c798ca1f"
+    },
+    {
+      "product_id": "PROD-6f263a1cbb8e",
+      "company_id": "COMP-2f487edaca9a",
+      "company_name": "酷选科技",
+      "product_name": "城市酷选",
+      "source_url": "https://pitchhub.36kr.com/project/1678361711457289",
+      "source_adapter": "pitchhub_36kr",
+      "quality_status": "needs_review",
+      "decision": "reject",
+      "recommended_status": "rejected",
+      "risk_level": "high",
+      "reasons": [
+        "invalid_product_name"
+      ],
+      "warnings": [],
+      "company_identity_confirmed": true,
+      "identity_terms": [
+        "酷选科技",
+        "酷选"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "8430d4d8-ac4f-44e1-8de4-8fe50641c9f2"
+    },
+    {
+      "product_id": "PROD-eb8dbf110add",
+      "company_id": "COMP-33ba70a26b45",
+      "company_name": "好奇心探索科技",
+      "product_name": "智能机器人",
+      "source_url": "https://data.iyiou.com/company/details/39ea24e6e112aa43738434fe211bcb1d/profile?source=iyiou.trz",
+      "source_adapter": "iyiou",
+      "quality_status": "needs_review",
+      "decision": "ready_candidate",
+      "recommended_status": "needs_review",
+      "risk_level": "low",
+      "reasons": [],
+      "warnings": [],
+      "company_identity_confirmed": true,
+      "identity_terms": [
+        "好奇心探索科技",
+        "好奇心探索"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "ec2a389d-65a2-4f23-9abf-6aa71eeac459"
+    },
+    {
+      "product_id": "PROD-266b1d93aeae",
+      "company_id": "COMP-3cf42e547578",
+      "company_name": "深圳道道网络科技",
+      "product_name": "专用集成电路",
+      "source_url": "https://pitchhub.36kr.com/project/2012740875568642",
+      "source_adapter": "pitchhub_36kr",
+      "quality_status": "needs_review",
+      "decision": "reject",
+      "recommended_status": "rejected",
+      "risk_level": "high",
+      "reasons": [
+        "company_identity_failed"
+      ],
+      "warnings": [],
+      "company_identity_confirmed": false,
+      "identity_terms": [
+        "道道网络科技",
+        "道道网络"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "1b0fb465-92f5-4c7d-ab07-d1570bfafd67"
+    },
+    {
+      "product_id": "PROD-cd89d86cc9dd",
+      "company_id": "COMP-3cf42e547578",
+      "company_name": "深圳道道网络科技",
+      "product_name": "压阻式陶瓷压力传感器",
+      "source_url": "https://pitchhub.36kr.com/project/2012740875568642",
+      "source_adapter": "pitchhub_36kr",
+      "quality_status": "needs_review",
+      "decision": "reject",
+      "recommended_status": "rejected",
+      "risk_level": "high",
+      "reasons": [
+        "company_identity_failed"
+      ],
+      "warnings": [],
+      "company_identity_confirmed": false,
+      "identity_terms": [
+        "道道网络科技",
+        "道道网络"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "1b0fb465-92f5-4c7d-ab07-d1570bfafd67"
+    },
+    {
+      "product_id": "PROD-7becc51bdad3",
+      "company_id": "COMP-3cf42e547578",
+      "company_name": "深圳道道网络科技",
+      "product_name": "汽车减震器",
+      "source_url": "https://pitchhub.36kr.com/project/2144441706743040",
+      "source_adapter": "pitchhub_36kr",
+      "quality_status": "needs_review",
+      "decision": "reject",
+      "recommended_status": "rejected",
+      "risk_level": "high",
+      "reasons": [
+        "company_identity_failed"
+      ],
+      "warnings": [],
+      "company_identity_confirmed": false,
+      "identity_terms": [
+        "道道网络科技",
+        "道道网络"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "e155c393-2e9c-405b-811a-da8b099680db"
+    },
+    {
+      "product_id": "PROD-44b1495d1d80",
+      "company_id": "COMP-3cf42e547578",
+      "company_name": "深圳道道网络科技",
+      "product_name": "电子信息产品",
+      "source_url": "https://pitchhub.36kr.com/project/2012740875568642",
+      "source_adapter": "pitchhub_36kr",
+      "quality_status": "needs_review",
+      "decision": "reject",
+      "recommended_status": "rejected",
+      "risk_level": "high",
+      "reasons": [
+        "company_identity_failed"
+      ],
+      "warnings": [],
+      "company_identity_confirmed": false,
+      "identity_terms": [
+        "道道网络科技",
+        "道道网络"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "1b0fb465-92f5-4c7d-ab07-d1570bfafd67"
+    },
+    {
+      "product_id": "PROD-4815ec8aedf8",
+      "company_id": "COMP-3cf42e547578",
+      "company_name": "深圳道道网络科技",
+      "product_name": "道道",
+      "source_url": "https://pitchhub.36kr.com/project/1679783132189442",
+      "source_adapter": "pitchhub_36kr",
+      "quality_status": "needs_review",
+      "decision": "reject",
+      "recommended_status": "rejected",
+      "risk_level": "high",
+      "reasons": [
+        "company_identity_failed"
+      ],
+      "warnings": [],
+      "company_identity_confirmed": false,
+      "identity_terms": [
+        "道道网络科技",
+        "道道网络"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "a598742e-6862-4e09-8ade-87cd063f19ec"
+    },
+    {
+      "product_id": "PROD-aa1a70f93d4c",
+      "company_id": "COMP-3cf42e547578",
+      "company_name": "深圳道道网络科技",
+      "product_name": "道道全”品牌的菜籽油系列",
+      "source_url": "https://data.iyiou.com/company/details/e120efd34dd2acaec32149bda44b582a/profile?from=more-data",
+      "source_adapter": "iyiou",
+      "quality_status": "needs_review",
+      "decision": "reject",
+      "recommended_status": "rejected",
+      "risk_level": "high",
+      "reasons": [
+        "company_identity_failed"
+      ],
+      "warnings": [],
+      "company_identity_confirmed": false,
+      "identity_terms": [
+        "道道网络科技",
+        "道道网络"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "1bbe21ad-e22f-4881-a53d-4e8cbc722edd"
+    },
+    {
+      "product_id": "PROD-9233af29dd80",
+      "company_id": "COMP-3cf42e547578",
+      "company_name": "深圳道道网络科技",
+      "product_name": "道道去",
+      "source_url": "https://pitchhub.36kr.com/project/2179830345747587",
+      "source_adapter": "pitchhub_36kr",
+      "quality_status": "needs_review",
+      "decision": "reject",
+      "recommended_status": "rejected",
+      "risk_level": "high",
+      "reasons": [
+        "company_identity_failed"
+      ],
+      "warnings": [],
+      "company_identity_confirmed": false,
+      "identity_terms": [
+        "道道网络科技",
+        "道道网络"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "ab81c336-1b74-4c67-a41f-863cee37189c"
+    },
+    {
+      "product_id": "PROD-0a8646a72693",
+      "company_id": "COMP-44ef55d9b0f6",
+      "company_name": "深圳纳百信息技术",
+      "product_name": "曾带团队获得MATE国际水下机器人",
+      "source_url": "https://pitchhub.36kr.com/project/1818822515019906",
+      "source_adapter": "pitchhub_36kr",
+      "quality_status": "needs_review",
+      "decision": "ready_candidate",
+      "recommended_status": "needs_review",
+      "risk_level": "low",
+      "reasons": [],
+      "warnings": [],
+      "company_identity_confirmed": true,
+      "identity_terms": [
+        "纳百信息技术"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "582c2643-70d9-4686-8895-a62f634239fa"
+    },
+    {
+      "product_id": "PROD-d6904dde4604",
+      "company_id": "COMP-44ef55d9b0f6",
+      "company_name": "深圳纳百信息技术",
+      "product_name": "纳百机器人",
+      "source_url": "https://data.iyiou.com/company/details/977cc14b3c62e37da65b8234672a62b9/profile?source=iyiou.trz",
+      "source_adapter": "iyiou",
+      "quality_status": "needs_review",
+      "decision": "needs_review",
+      "recommended_status": "needs_review",
+      "risk_level": "medium",
+      "reasons": [],
+      "warnings": [
+        "weak_evidence_span"
+      ],
+      "company_identity_confirmed": true,
+      "identity_terms": [
+        "纳百信息技术"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": false,
+      "news_id": "a45f186c-9ae7-449e-803b-2e586255d8e1"
+    },
+    {
+      "product_id": "PROD-34b082d6d631",
+      "company_id": "COMP-46240f3defcc",
+      "company_name": "交浦科技（深圳）",
+      "product_name": "脑疾病诊疗与康复设备",
+      "source_url": "https://pitchhub.36kr.com/project/2057411331897219",
+      "source_adapter": "pitchhub_36kr",
+      "quality_status": "needs_review",
+      "decision": "ready_candidate",
+      "recommended_status": "needs_review",
+      "risk_level": "low",
+      "reasons": [],
+      "warnings": [],
+      "company_identity_confirmed": true,
+      "identity_terms": [
+        "交浦科技"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "17f5492f-9431-4697-ac25-58b1f512a0ce"
+    },
+    {
+      "product_id": "PROD-2bd474784637",
+      "company_id": "COMP-46240f3defcc",
+      "company_name": "交浦科技（深圳）",
+      "product_name": "高性能人机交互产品",
+      "source_url": "https://pitchhub.36kr.com/project/2057411331897219",
+      "source_adapter": "pitchhub_36kr",
+      "quality_status": "needs_review",
+      "decision": "ready_candidate",
+      "recommended_status": "needs_review",
+      "risk_level": "low",
+      "reasons": [],
+      "warnings": [],
+      "company_identity_confirmed": true,
+      "identity_terms": [
+        "交浦科技"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "17f5492f-9431-4697-ac25-58b1f512a0ce"
+    },
+    {
+      "product_id": "PROD-53ac9606af64",
+      "company_id": "COMP-4e8e879c4a40",
+      "company_name": "禾启智能科技",
+      "product_name": "VTOL类型无人机产品",
+      "source_url": "https://pitchhub.36kr.com/project/1777463644083591",
+      "source_adapter": "pitchhub_36kr",
+      "quality_status": "needs_review",
+      "decision": "ready_candidate",
+      "recommended_status": "needs_review",
+      "risk_level": "low",
+      "reasons": [],
+      "warnings": [],
+      "company_identity_confirmed": true,
+      "identity_terms": [
+        "禾启智能科技",
+        "禾启智能"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "69ae21e8-ef1f-43c0-93cd-60814e9d3979"
+    },
+    {
+      "product_id": "PROD-db0bb8280884",
+      "company_id": "COMP-510dcababd11",
+      "company_name": "深圳卡睿智行科技",
+      "product_name": "L4商用车自动驾驶技术",
+      "source_url": "https://pitchhub.36kr.com/project/1958599976719367",
+      "source_adapter": "pitchhub_36kr",
+      "quality_status": "needs_review",
+      "decision": "reject",
+      "recommended_status": "rejected",
+      "risk_level": "high",
+      "reasons": [
+        "product_not_grounded_in_source"
+      ],
+      "warnings": [
+        "weak_evidence_span"
+      ],
+      "company_identity_confirmed": true,
+      "identity_terms": [
+        "卡睿智行科技",
+        "卡睿智行"
+      ],
+      "product_name_valid": true,
+      "product_grounded": false,
+      "evidence_quality_ok": false,
+      "news_id": "2be5b3a7-ba34-41e4-b997-f2a164ce14e5"
+    },
+    {
+      "product_id": "PROD-59ac48687183",
+      "company_id": "COMP-54222ea4aa44",
+      "company_name": "深圳亘存科技",
+      "product_name": "专注于MRAM及相关产品",
+      "source_url": "https://pitchhub.36kr.com/project/1818821883449472",
+      "source_adapter": "pitchhub_36kr",
+      "quality_status": "needs_review",
+      "decision": "ready_candidate",
+      "recommended_status": "needs_review",
+      "risk_level": "low",
+      "reasons": [],
+      "warnings": [],
+      "company_identity_confirmed": true,
+      "identity_terms": [
+        "亘存科技"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "2c0ba265-d1a4-4a19-8b6a-54546f0b95cc"
+    },
+    {
+      "product_id": "PROD-0f4a2c37949f",
+      "company_id": "COMP-54222ea4aa44",
+      "company_name": "深圳亘存科技",
+      "product_name": "亘存科技”完成新一轮融资，产品将于四季度量产",
+      "source_url": "https://data.iyiou.com/intelligence/details/7159446a0f431bc45ad1985fbbc33aec?source=iyiou.dgs",
+      "source_adapter": "iyiou",
+      "quality_status": "needs_review",
+      "decision": "needs_review",
+      "recommended_status": "needs_review",
+      "risk_level": "medium",
+      "reasons": [],
+      "warnings": [
+        "weak_evidence_span"
+      ],
+      "company_identity_confirmed": true,
+      "identity_terms": [
+        "亘存科技"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": false,
+      "news_id": "b0382076-948c-459b-bd98-555d85b9d81d"
+    },
+    {
+      "product_id": "PROD-b540a883912c",
+      "company_id": "COMP-54222ea4aa44",
+      "company_name": "深圳亘存科技",
+      "product_name": "嵌入式磁存储器IP",
+      "source_url": "https://pitchhub.36kr.com/project/1678270603916293",
+      "source_adapter": "pitchhub_36kr",
+      "quality_status": "needs_review",
+      "decision": "ready_candidate",
+      "recommended_status": "needs_review",
+      "risk_level": "low",
+      "reasons": [],
+      "warnings": [],
+      "company_identity_confirmed": true,
+      "identity_terms": [
+        "亘存科技"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "1b3103ef-73d8-4662-9678-802eac4c496e"
+    },
+    {
+      "product_id": "PROD-1c0920fcd169",
+      "company_id": "COMP-5e5e0e277d3d",
+      "company_name": "深圳灵图创新科技",
+      "product_name": "下一代影视游戏创作发布平台",
+      "source_url": "https://pitchhub.36kr.com/project/1958592385438727",
+      "source_adapter": "pitchhub_36kr",
+      "quality_status": "needs_review",
+      "decision": "ready_candidate",
+      "recommended_status": "needs_review",
+      "risk_level": "low",
+      "reasons": [],
+      "warnings": [],
+      "company_identity_confirmed": true,
+      "identity_terms": [
+        "灵图创新科技",
+        "灵图创新"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "5305438a-e4c3-48cf-a910-747a8bb404b8"
+    },
+    {
+      "product_id": "PROD-b939ffa09c67",
+      "company_id": "COMP-5e5e0e277d3d",
+      "company_name": "深圳灵图创新科技",
+      "product_name": "多模态AI",
+      "source_url": "https://pitchhub.36kr.com/project/1958592385438727",
+      "source_adapter": "pitchhub_36kr",
+      "quality_status": "needs_review",
+      "decision": "ready_candidate",
+      "recommended_status": "needs_review",
+      "risk_level": "low",
+      "reasons": [],
+      "warnings": [],
+      "company_identity_confirmed": true,
+      "identity_terms": [
+        "灵图创新科技",
+        "灵图创新"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "5305438a-e4c3-48cf-a910-747a8bb404b8"
+    },
+    {
+      "product_id": "PROD-5d33c494ab53",
+      "company_id": "COMP-64e864f702e8",
+      "company_name": "杭州精控集成半导体",
+      "product_name": "高端精密控制产品",
+      "source_url": "https://data.iyiou.com/company/details/7c1b5006b26294a8d3246d564693d506/profile?source=iyiou.trz",
+      "source_adapter": "iyiou",
+      "quality_status": "needs_review",
+      "decision": "reject",
+      "recommended_status": "rejected",
+      "risk_level": "high",
+      "reasons": [
+        "company_identity_failed"
+      ],
+      "warnings": [],
+      "company_identity_confirmed": false,
+      "identity_terms": [
+        "杭州精控集成半导体"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "d4204e75-e430-48bf-89b8-21957699ddec"
+    },
+    {
+      "product_id": "PROD-7d5162516a49",
+      "company_id": "COMP-660673448cc4",
+      "company_name": "勃望初芯半导体科技",
+      "product_name": "MEMS集成的生物医疗芯片模组",
+      "source_url": "https://pitchhub.36kr.com/project/2108645582605445",
+      "source_adapter": "pitchhub_36kr",
+      "quality_status": "needs_review",
+      "decision": "ready_candidate",
+      "recommended_status": "needs_review",
+      "risk_level": "low",
+      "reasons": [],
+      "warnings": [],
+      "company_identity_confirmed": true,
+      "identity_terms": [
+        "勃望初芯半导体科技",
+        "勃望初芯半导体"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "168c0c12-3acc-41a4-9809-c3ab7c10b7d6"
+    },
+    {
+      "product_id": "PROD-1334c0c974b5",
+      "company_id": "COMP-678e60011c81",
+      "company_name": "达米亚科技",
+      "product_name": "洋葱旅行",
+      "source_url": "https://pitchhub.36kr.com/project/2316916580633092",
+      "source_adapter": "pitchhub_36kr",
+      "quality_status": "needs_review",
+      "decision": "ready_candidate",
+      "recommended_status": "needs_review",
+      "risk_level": "low",
+      "reasons": [],
+      "warnings": [],
+      "company_identity_confirmed": true,
+      "identity_terms": [
+        "达米亚科技",
+        "达米亚"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "98f7068e-6e89-4dc2-a428-a25aad0c1879"
+    },
+    {
+      "product_id": "PROD-fd385df4a40e",
+      "company_id": "COMP-7ca61a692b3b",
+      "company_name": "深圳无限数科技",
+      "product_name": "AI将是有史以来最深刻的平台",
+      "source_url": "https://pitchhub.36kr.com/project/1958636200743941",
+      "source_adapter": "pitchhub_36kr",
+      "quality_status": "needs_review",
+      "decision": "ready_candidate",
+      "recommended_status": "needs_review",
+      "risk_level": "low",
+      "reasons": [],
+      "warnings": [],
+      "company_identity_confirmed": true,
+      "identity_terms": [
+        "无限数科技",
+        "无限数"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "9dc867a6-9bcf-47f7-a025-f0f4a12301db"
+    },
+    {
+      "product_id": "PROD-98a3c2d35797",
+      "company_id": "COMP-86148f2ee6cf",
+      "company_name": "灵起科技（深圳）",
+      "product_name": "随身听",
+      "source_url": "https://pitchhub.36kr.com/project/1679807928341249",
+      "source_adapter": "pitchhub_36kr",
+      "quality_status": "needs_review",
+      "decision": "ready_candidate",
+      "recommended_status": "needs_review",
+      "risk_level": "low",
+      "reasons": [],
+      "warnings": [],
+      "company_identity_confirmed": true,
+      "identity_terms": [
+        "灵起科技",
+        "称进行经营活动"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "aadfab61-e2d0-4be7-94b0-61676eb0a793"
+    },
+    {
+      "product_id": "PROD-635731304c44",
+      "company_id": "COMP-8da8dd57dba7",
+      "company_name": "深圳聚德寿科技",
+      "product_name": "努力实现MES系统",
+      "source_url": "https://pitchhub.36kr.com/project/2144579758294275",
+      "source_adapter": "pitchhub_36kr",
+      "quality_status": "needs_review",
+      "decision": "ready_candidate",
+      "recommended_status": "needs_review",
+      "risk_level": "low",
+      "reasons": [],
+      "warnings": [],
+      "company_identity_confirmed": true,
+      "identity_terms": [
+        "聚德寿科技",
+        "聚德寿"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "2bc9b451-2176-4e18-8a89-ccc344c21d64"
+    },
+    {
+      "product_id": "PROD-40887821e580",
+      "company_id": "COMP-8e3331e62f7a",
+      "company_name": "深圳津渡生物医学科技",
+      "product_name": "AI生物科学研究平台",
+      "source_url": "https://data.iyiou.com/company/details/2f06f7ed6a8f533da1b292a5dedd9bdc/profile?source=iyiou.comdetail&from=more-data",
+      "source_adapter": "iyiou",
+      "quality_status": "needs_review",
+      "decision": "ready_candidate",
+      "recommended_status": "needs_review",
+      "risk_level": "low",
+      "reasons": [],
+      "warnings": [],
+      "company_identity_confirmed": true,
+      "identity_terms": [
+        "津渡生物医学科技",
+        "津渡生物医学"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "b2d9b634-4213-40a1-9711-d538e2e0e3df"
+    },
+    {
+      "product_id": "PROD-02eccacaba2a",
+      "company_id": "COMP-9035b11c201b",
+      "company_name": "智芯华玺信息技术",
+      "product_name": "信息安全设备",
+      "source_url": "https://data.iyiou.com/company/details/4f9e4c1bc665d6fe46ddac51a937755c/profile?source=iyiou.comdetail&from=more-data",
+      "source_adapter": "iyiou",
+      "quality_status": "needs_review",
+      "decision": "ready_candidate",
+      "recommended_status": "needs_review",
+      "risk_level": "low",
+      "reasons": [],
+      "warnings": [],
+      "company_identity_confirmed": true,
+      "identity_terms": [
+        "智芯华玺信息技术"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "4d16c88f-0a55-41bb-b75f-59cd9044b17d"
+    },
+    {
+      "product_id": "PROD-3e9f704b0db4",
+      "company_id": "COMP-9035b11c201b",
+      "company_name": "智芯华玺信息技术",
+      "product_name": "电子产品",
+      "source_url": "https://data.iyiou.com/company/details/4f9e4c1bc665d6fe46ddac51a937755c/profile?source=iyiou.comdetail&from=more-data",
+      "source_adapter": "iyiou",
+      "quality_status": "needs_review",
+      "decision": "ready_candidate",
+      "recommended_status": "needs_review",
+      "risk_level": "low",
+      "reasons": [],
+      "warnings": [],
+      "company_identity_confirmed": true,
+      "identity_terms": [
+        "智芯华玺信息技术"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "4d16c88f-0a55-41bb-b75f-59cd9044b17d"
+    },
+    {
+      "product_id": "PROD-8ab6abdbe605",
+      "company_id": "COMP-9035b11c201b",
+      "company_name": "智芯华玺信息技术",
+      "product_name": "计算机软硬件及外围设备",
+      "source_url": "https://data.iyiou.com/company/details/4f9e4c1bc665d6fe46ddac51a937755c/profile?source=iyiou.comdetail&from=more-data",
+      "source_adapter": "iyiou",
+      "quality_status": "needs_review",
+      "decision": "ready_candidate",
+      "recommended_status": "needs_review",
+      "risk_level": "low",
+      "reasons": [],
+      "warnings": [],
+      "company_identity_confirmed": true,
+      "identity_terms": [
+        "智芯华玺信息技术"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "4d16c88f-0a55-41bb-b75f-59cd9044b17d"
+    },
+    {
+      "product_id": "PROD-32b03b6a4e2a",
+      "company_id": "COMP-9035b11c201b",
+      "company_name": "智芯华玺信息技术",
+      "product_name": "软件",
+      "source_url": "https://data.iyiou.com/company/details/4f9e4c1bc665d6fe46ddac51a937755c/profile?source=iyiou.comdetail&from=more-data",
+      "source_adapter": "iyiou",
+      "quality_status": "needs_review",
+      "decision": "needs_review",
+      "recommended_status": "needs_review",
+      "risk_level": "medium",
+      "reasons": [],
+      "warnings": [
+        "weak_evidence_span"
+      ],
+      "company_identity_confirmed": true,
+      "identity_terms": [
+        "智芯华玺信息技术"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": false,
+      "news_id": "4d16c88f-0a55-41bb-b75f-59cd9044b17d"
+    },
+    {
+      "product_id": "PROD-9ec123d8173e",
+      "company_id": "COMP-9472d5724f27",
+      "company_name": "深圳猎聘科技",
+      "product_name": "3D生物打印机",
+      "source_url": "https://pitchhub.36kr.com/project/2144686054196485",
+      "source_adapter": "pitchhub_36kr",
+      "quality_status": "needs_review",
+      "decision": "ready_candidate",
+      "recommended_status": "needs_review",
+      "risk_level": "low",
+      "reasons": [],
+      "warnings": [],
+      "company_identity_confirmed": true,
+      "identity_terms": [
+        "猎聘科技",
+        "猎聘",
+        "输出"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "3e9642cb-93d3-477b-be18-dc40043ec54f"
+    },
+    {
+      "product_id": "PROD-aee582fad386",
+      "company_id": "COMP-9472d5724f27",
+      "company_name": "深圳猎聘科技",
+      "product_name": "LDO调节器",
+      "source_url": "https://data.iyiou.com/company/details/ca5f9a3afb0433c1f66deef70bbbdf8a/profile?source=iyiou.comdetail&from=more-data",
+      "source_adapter": "iyiou",
+      "quality_status": "needs_review",
+      "decision": "ready_candidate",
+      "recommended_status": "needs_review",
+      "risk_level": "low",
+      "reasons": [],
+      "warnings": [],
+      "company_identity_confirmed": true,
+      "identity_terms": [
+        "猎聘科技",
+        "猎聘",
+        "输出"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "bfc7e766-e327-4ff0-9c03-ade123f79e60"
+    },
+    {
+      "product_id": "PROD-13c198f6b842",
+      "company_id": "COMP-9472d5724f27",
+      "company_name": "深圳猎聘科技",
+      "product_name": "中远通",
+      "source_url": "https://data.iyiou.com/company/details/f41c58206dab46caac1424dea7531cfc/profile?source=iyiou.comdetail&from=more-data",
+      "source_adapter": "iyiou",
+      "quality_status": "needs_review",
+      "decision": "ready_candidate",
+      "recommended_status": "needs_review",
+      "risk_level": "low",
+      "reasons": [],
+      "warnings": [],
+      "company_identity_confirmed": true,
+      "identity_terms": [
+        "猎聘科技",
+        "猎聘",
+        "输出"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "e269225e-1b8e-4e0b-bb3b-6afa781f8cdf"
+    },
+    {
+      "product_id": "PROD-20e39f79fd60",
+      "company_id": "COMP-9472d5724f27",
+      "company_name": "深圳猎聘科技",
+      "product_name": "云计算平台",
+      "source_url": "https://pitchhub.36kr.com/project/2144686054196485",
+      "source_adapter": "pitchhub_36kr",
+      "quality_status": "needs_review",
+      "decision": "ready_candidate",
+      "recommended_status": "needs_review",
+      "risk_level": "low",
+      "reasons": [],
+      "warnings": [],
+      "company_identity_confirmed": true,
+      "identity_terms": [
+        "猎聘科技",
+        "猎聘",
+        "输出"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "3e9642cb-93d3-477b-be18-dc40043ec54f"
+    },
+    {
+      "product_id": "PROD-22d97ea0993b",
+      "company_id": "COMP-9472d5724f27",
+      "company_name": "深圳猎聘科技",
+      "product_name": "亲的、拾叁月、臻于",
+      "source_url": "https://pitchhub.36kr.com/project/2180552795262338",
+      "source_adapter": "pitchhub_36kr",
+      "quality_status": "needs_review",
+      "decision": "ready_candidate",
+      "recommended_status": "needs_review",
+      "risk_level": "low",
+      "reasons": [],
+      "warnings": [],
+      "company_identity_confirmed": true,
+      "identity_terms": [
+        "猎聘科技",
+        "猎聘",
+        "输出"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "a428c858-cd35-48d9-a203-5d4972ee18e1"
+    },
+    {
+      "product_id": "PROD-f527809cf345",
+      "company_id": "COMP-9472d5724f27",
+      "company_name": "深圳猎聘科技",
+      "product_name": "便携式储能",
+      "source_url": "https://pitchhub.36kr.com/project/1744024460057480",
+      "source_adapter": "pitchhub_36kr",
+      "quality_status": "needs_review",
+      "decision": "ready_candidate",
+      "recommended_status": "needs_review",
+      "risk_level": "low",
+      "reasons": [],
+      "warnings": [],
+      "company_identity_confirmed": true,
+      "identity_terms": [
+        "猎聘科技",
+        "猎聘",
+        "输出"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "4d29f64e-d667-40ed-a8b3-7384253fb034"
+    },
+    {
+      "product_id": "PROD-e89d373fe328",
+      "company_id": "COMP-9472d5724f27",
+      "company_name": "深圳猎聘科技",
+      "product_name": "全球首创双靶点多肽",
+      "source_url": "https://data.iyiou.com/intelligence/details/e0d4fcd78d7ccf3ea4918ceb9ed4ea45",
+      "source_adapter": "iyiou",
+      "quality_status": "needs_review",
+      "decision": "ready_candidate",
+      "recommended_status": "needs_review",
+      "risk_level": "low",
+      "reasons": [],
+      "warnings": [],
+      "company_identity_confirmed": true,
+      "identity_terms": [
+        "猎聘科技",
+        "猎聘",
+        "输出"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "91e4dff3-dc43-4d1a-b01b-302776f69105"
+    },
+    {
+      "product_id": "PROD-95879b21007b",
+      "company_id": "COMP-9472d5724f27",
+      "company_name": "深圳猎聘科技",
+      "product_name": "全院自助打印+云存储系统及指云端系统",
+      "source_url": "https://pitchhub.36kr.com/project/2180903756860803",
+      "source_adapter": "pitchhub_36kr",
+      "quality_status": "needs_review",
+      "decision": "ready_candidate",
+      "recommended_status": "needs_review",
+      "risk_level": "low",
+      "reasons": [],
+      "warnings": [],
+      "company_identity_confirmed": true,
+      "identity_terms": [
+        "猎聘科技",
+        "猎聘",
+        "输出"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "fc5794bc-974a-4575-bbde-b75b7cc8f1f2"
+    },
+    {
+      "product_id": "PROD-bcfaada80082",
+      "company_id": "COMP-9472d5724f27",
+      "company_name": "深圳猎聘科技",
+      "product_name": "凌泰",
+      "source_url": "https://pitchhub.36kr.com/project/2144565775549698",
+      "source_adapter": "pitchhub_36kr",
+      "quality_status": "needs_review",
+      "decision": "ready_candidate",
+      "recommended_status": "needs_review",
+      "risk_level": "low",
+      "reasons": [],
+      "warnings": [],
+      "company_identity_confirmed": true,
+      "identity_terms": [
+        "猎聘科技",
+        "猎聘",
+        "输出"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "723c919d-57fc-4ba7-9a61-3b5c7713cd22"
+    },
+    {
+      "product_id": "PROD-242755c238fa",
+      "company_id": "COMP-9472d5724f27",
+      "company_name": "深圳猎聘科技",
+      "product_name": "创客实验室",
+      "source_url": "https://pitchhub.36kr.com/project/1679685239952129",
+      "source_adapter": "pitchhub_36kr",
+      "quality_status": "needs_review",
+      "decision": "ready_candidate",
+      "recommended_status": "needs_review",
+      "risk_level": "low",
+      "reasons": [],
+      "warnings": [],
+      "company_identity_confirmed": true,
+      "identity_terms": [
+        "猎聘科技",
+        "猎聘",
+        "输出"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "3101b1da-d3a1-421d-a210-da4f933b24b7"
+    },
+    {
+      "product_id": "PROD-fb8916e6ad2a",
+      "company_id": "COMP-9472d5724f27",
+      "company_name": "深圳猎聘科技",
+      "product_name": "医学影像输出打印系统",
+      "source_url": "https://pitchhub.36kr.com/project/2180903756860803",
+      "source_adapter": "pitchhub_36kr",
+      "quality_status": "needs_review",
+      "decision": "ready_candidate",
+      "recommended_status": "needs_review",
+      "risk_level": "low",
+      "reasons": [],
+      "warnings": [],
+      "company_identity_confirmed": true,
+      "identity_terms": [
+        "猎聘科技",
+        "猎聘",
+        "输出"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "fc5794bc-974a-4575-bbde-b75b7cc8f1f2"
+    },
+    {
+      "product_id": "PROD-085ef91bdcbf",
+      "company_id": "COMP-9472d5724f27",
+      "company_name": "深圳猎聘科技",
+      "product_name": "单输出降压稳压器",
+      "source_url": "https://data.iyiou.com/company/details/ca5f9a3afb0433c1f66deef70bbbdf8a/profile?source=iyiou.comdetail&from=more-data",
+      "source_adapter": "iyiou",
+      "quality_status": "needs_review",
+      "decision": "ready_candidate",
+      "recommended_status": "needs_review",
+      "risk_level": "low",
+      "reasons": [],
+      "warnings": [],
+      "company_identity_confirmed": true,
+      "identity_terms": [
+        "猎聘科技",
+        "猎聘",
+        "输出"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "bfc7e766-e327-4ff0-9c03-ade123f79e60"
+    },
+    {
+      "product_id": "PROD-c684139aeb36",
+      "company_id": "COMP-9472d5724f27",
+      "company_name": "深圳猎聘科技",
+      "product_name": "双路输出稳压器",
+      "source_url": "https://data.iyiou.com/company/details/ca5f9a3afb0433c1f66deef70bbbdf8a/profile?source=iyiou.comdetail&from=more-data",
+      "source_adapter": "iyiou",
+      "quality_status": "needs_review",
+      "decision": "ready_candidate",
+      "recommended_status": "needs_review",
+      "risk_level": "low",
+      "reasons": [],
+      "warnings": [],
+      "company_identity_confirmed": true,
+      "identity_terms": [
+        "猎聘科技",
+        "猎聘",
+        "输出"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "bfc7e766-e327-4ff0-9c03-ade123f79e60"
+    },
+    {
+      "product_id": "PROD-2ddaf646d95d",
+      "company_id": "COMP-9472d5724f27",
+      "company_name": "深圳猎聘科技",
+      "product_name": "品牌连锁客栈管理服务",
+      "source_url": "https://pitchhub.36kr.com/project/2180552795262338",
+      "source_adapter": "pitchhub_36kr",
+      "quality_status": "needs_review",
+      "decision": "reject",
+      "recommended_status": "rejected",
+      "risk_level": "high",
+      "reasons": [
+        "product_not_grounded_in_source"
+      ],
+      "warnings": [
+        "weak_evidence_span"
+      ],
+      "company_identity_confirmed": true,
+      "identity_terms": [
+        "猎聘科技",
+        "猎聘",
+        "输出"
+      ],
+      "product_name_valid": true,
+      "product_grounded": false,
+      "evidence_quality_ok": false,
+      "news_id": "a428c858-cd35-48d9-a203-5d4972ee18e1"
+    },
+    {
+      "product_id": "PROD-a1a5ddae7781",
+      "company_id": "COMP-9472d5724f27",
+      "company_name": "深圳猎聘科技",
+      "product_name": "婚礼桥",
+      "source_url": "https://pitchhub.36kr.com/project/2181177659673730",
+      "source_adapter": "pitchhub_36kr",
+      "quality_status": "needs_review",
+      "decision": "ready_candidate",
+      "recommended_status": "needs_review",
+      "risk_level": "low",
+      "reasons": [],
+      "warnings": [],
+      "company_identity_confirmed": true,
+      "identity_terms": [
+        "猎聘科技",
+        "猎聘",
+        "输出"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "df9321eb-26ef-4086-96b3-e5ee1e59790e"
+    },
+    {
+      "product_id": "PROD-0e76114d83b0",
+      "company_id": "COMP-9472d5724f27",
+      "company_name": "深圳猎聘科技",
+      "product_name": "家用储能系统",
+      "source_url": "https://pitchhub.36kr.com/project/1744024460057480",
+      "source_adapter": "pitchhub_36kr",
+      "quality_status": "needs_review",
+      "decision": "ready_candidate",
+      "recommended_status": "needs_review",
+      "risk_level": "low",
+      "reasons": [],
+      "warnings": [],
+      "company_identity_confirmed": true,
+      "identity_terms": [
+        "猎聘科技",
+        "猎聘",
+        "输出"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "4d29f64e-d667-40ed-a8b3-7384253fb034"
+    },
+    {
+      "product_id": "PROD-f989ad947bdf",
+      "company_id": "COMP-9472d5724f27",
+      "company_name": "深圳猎聘科技",
+      "product_name": "小型商用储能系统",
+      "source_url": "https://pitchhub.36kr.com/project/1744024460057480",
+      "source_adapter": "pitchhub_36kr",
+      "quality_status": "needs_review",
+      "decision": "ready_candidate",
+      "recommended_status": "needs_review",
+      "risk_level": "low",
+      "reasons": [],
+      "warnings": [],
+      "company_identity_confirmed": true,
+      "identity_terms": [
+        "猎聘科技",
+        "猎聘",
+        "输出"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "4d29f64e-d667-40ed-a8b3-7384253fb034"
+    },
+    {
+      "product_id": "PROD-78a7e3aaf94d",
+      "company_id": "COMP-9472d5724f27",
+      "company_name": "深圳猎聘科技",
+      "product_name": "干细胞生物墨汁技术",
+      "source_url": "https://pitchhub.36kr.com/project/2144686054196485",
+      "source_adapter": "pitchhub_36kr",
+      "quality_status": "needs_review",
+      "decision": "ready_candidate",
+      "recommended_status": "needs_review",
+      "risk_level": "low",
+      "reasons": [],
+      "warnings": [],
+      "company_identity_confirmed": true,
+      "identity_terms": [
+        "猎聘科技",
+        "猎聘",
+        "输出"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "3e9642cb-93d3-477b-be18-dc40043ec54f"
+    },
+    {
+      "product_id": "PROD-52ba19795bc6",
+      "company_id": "COMP-9472d5724f27",
+      "company_name": "深圳猎聘科技",
+      "product_name": "微型储能系统",
+      "source_url": "https://pitchhub.36kr.com/project/1744024460057480",
+      "source_adapter": "pitchhub_36kr",
+      "quality_status": "needs_review",
+      "decision": "ready_candidate",
+      "recommended_status": "needs_review",
+      "risk_level": "low",
+      "reasons": [],
+      "warnings": [],
+      "company_identity_confirmed": true,
+      "identity_terms": [
+        "猎聘科技",
+        "猎聘",
+        "输出"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "4d29f64e-d667-40ed-a8b3-7384253fb034"
+    },
+    {
+      "product_id": "PROD-fd694f1a4ed1",
+      "company_id": "COMP-9472d5724f27",
+      "company_name": "深圳猎聘科技",
+      "product_name": "我们希望通过计算巢构建一个开放的企业服务",
+      "source_url": "https://pitchhub.36kr.com/project/2066604396036097",
+      "source_adapter": "pitchhub_36kr",
+      "quality_status": "needs_review",
+      "decision": "ready_candidate",
+      "recommended_status": "needs_review",
+      "risk_level": "low",
+      "reasons": [],
+      "warnings": [],
+      "company_identity_confirmed": true,
+      "identity_terms": [
+        "猎聘科技",
+        "猎聘",
+        "输出"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "8579e453-3847-4362-86f4-c3cac4088022"
+    },
+    {
+      "product_id": "PROD-2974e643252e",
+      "company_id": "COMP-9472d5724f27",
+      "company_name": "深圳猎聘科技",
+      "product_name": "泰来",
+      "source_url": "https://pitchhub.36kr.com/project/2144565775549698",
+      "source_adapter": "pitchhub_36kr",
+      "quality_status": "needs_review",
+      "decision": "ready_candidate",
+      "recommended_status": "needs_review",
+      "risk_level": "low",
+      "reasons": [],
+      "warnings": [],
+      "company_identity_confirmed": true,
+      "identity_terms": [
+        "猎聘科技",
+        "猎聘",
+        "输出"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "723c919d-57fc-4ba7-9a61-3b5c7713cd22"
+    },
+    {
+      "product_id": "PROD-a5c2b2dbac65",
+      "company_id": "COMP-9472d5724f27",
+      "company_name": "深圳猎聘科技",
+      "product_name": "湖南省远景经济发展研究院院长北冰：从“产品输出”到“价值共创” 广货",
+      "source_url": "https://data.iyiou.com/intelligence/details/8ceb4b5e3dd27333490d84e8a24a2017",
+      "source_adapter": "iyiou",
+      "quality_status": "needs_review",
+      "decision": "needs_review",
+      "recommended_status": "needs_review",
+      "risk_level": "medium",
+      "reasons": [],
+      "warnings": [
+        "weak_evidence_span"
+      ],
+      "company_identity_confirmed": true,
+      "identity_terms": [
+        "猎聘科技",
+        "猎聘",
+        "输出"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": false,
+      "news_id": "3dc5546f-fd0e-4abe-b7b5-179bfe9cdfe8"
+    },
+    {
+      "product_id": "PROD-8ee44822bdd3",
+      "company_id": "COMP-9472d5724f27",
+      "company_name": "深圳猎聘科技",
+      "product_name": "照明驱动器和控制器IC",
+      "source_url": "https://data.iyiou.com/company/details/ca5f9a3afb0433c1f66deef70bbbdf8a/profile?source=iyiou.comdetail&from=more-data",
+      "source_adapter": "iyiou",
+      "quality_status": "needs_review",
+      "decision": "ready_candidate",
+      "recommended_status": "needs_review",
+      "risk_level": "low",
+      "reasons": [],
+      "warnings": [],
+      "company_identity_confirmed": true,
+      "identity_terms": [
+        "猎聘科技",
+        "猎聘",
+        "输出"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "bfc7e766-e327-4ff0-9c03-ade123f79e60"
+    },
+    {
+      "product_id": "PROD-66ccda663f17",
+      "company_id": "COMP-9472d5724f27",
+      "company_name": "深圳猎聘科技",
+      "product_name": "移动储能设备",
+      "source_url": "https://pitchhub.36kr.com/project/1744024460057480",
+      "source_adapter": "pitchhub_36kr",
+      "quality_status": "needs_review",
+      "decision": "ready_candidate",
+      "recommended_status": "needs_review",
+      "risk_level": "low",
+      "reasons": [],
+      "warnings": [],
+      "company_identity_confirmed": true,
+      "identity_terms": [
+        "猎聘科技",
+        "猎聘",
+        "输出"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "4d29f64e-d667-40ed-a8b3-7384253fb034"
+    },
+    {
+      "product_id": "PROD-d9031008f39a",
+      "company_id": "COMP-9472d5724f27",
+      "company_name": "深圳猎聘科技",
+      "product_name": "臻宝通",
+      "source_url": "https://pitchhub.36kr.com/project/1679715141915395",
+      "source_adapter": "pitchhub_36kr",
+      "quality_status": "needs_review",
+      "decision": "ready_candidate",
+      "recommended_status": "needs_review",
+      "risk_level": "low",
+      "reasons": [],
+      "warnings": [],
+      "company_identity_confirmed": true,
+      "identity_terms": [
+        "猎聘科技",
+        "猎聘",
+        "输出"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "4d59f73c-bbd5-4797-ba34-0f1a393351db"
+    },
+    {
+      "product_id": "PROD-0d83a600045c",
+      "company_id": "COMP-9472d5724f27",
+      "company_name": "深圳猎聘科技",
+      "product_name": "课程",
+      "source_url": "https://pitchhub.36kr.com/project/1679685239952129",
+      "source_adapter": "pitchhub_36kr",
+      "quality_status": "needs_review",
+      "decision": "ready_candidate",
+      "recommended_status": "needs_review",
+      "risk_level": "low",
+      "reasons": [],
+      "warnings": [],
+      "company_identity_confirmed": true,
+      "identity_terms": [
+        "猎聘科技",
+        "猎聘",
+        "输出"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "3101b1da-d3a1-421d-a210-da4f933b24b7"
+    },
+    {
+      "product_id": "PROD-2e638f0def38",
+      "company_id": "COMP-9472d5724f27",
+      "company_name": "深圳猎聘科技",
+      "product_name": "超声输出打印系统",
+      "source_url": "https://pitchhub.36kr.com/project/2180903756860803",
+      "source_adapter": "pitchhub_36kr",
+      "quality_status": "needs_review",
+      "decision": "ready_candidate",
+      "recommended_status": "needs_review",
+      "risk_level": "low",
+      "reasons": [],
+      "warnings": [],
+      "company_identity_confirmed": true,
+      "identity_terms": [
+        "猎聘科技",
+        "猎聘",
+        "输出"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "fc5794bc-974a-4575-bbde-b75b7cc8f1f2"
+    },
+    {
+      "product_id": "PROD-17e841f7b148",
+      "company_id": "COMP-9472d5724f27",
+      "company_name": "深圳猎聘科技",
+      "product_name": "采购即服务",
+      "source_url": "https://pitchhub.36kr.com/project/2066604396036097",
+      "source_adapter": "pitchhub_36kr",
+      "quality_status": "needs_review",
+      "decision": "ready_candidate",
+      "recommended_status": "needs_review",
+      "risk_level": "low",
+      "reasons": [],
+      "warnings": [],
+      "company_identity_confirmed": true,
+      "identity_terms": [
+        "猎聘科技",
+        "猎聘",
+        "输出"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "8579e453-3847-4362-86f4-c3cac4088022"
+    },
+    {
+      "product_id": "PROD-0bb136206ea7",
+      "company_id": "COMP-95791ebe18d4",
+      "company_name": "华力创科学（深圳）",
+      "product_name": "SONATA介入超声导航机器人系统",
+      "source_url": "https://data.iyiou.com/company/details/9fa7e1b6f645457dfd321bca709d1345/profile?source=iyiou.trz",
+      "source_adapter": "iyiou",
+      "quality_status": "needs_review",
+      "decision": "ready_candidate",
+      "recommended_status": "needs_review",
+      "risk_level": "low",
+      "reasons": [],
+      "warnings": [],
+      "company_identity_confirmed": true,
+      "identity_terms": [
+        "华力创科学"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "f8b0910a-5783-48d4-8869-629357fd3666"
+    },
+    {
+      "product_id": "PROD-b2d690da5d21",
+      "company_id": "COMP-95791ebe18d4",
+      "company_name": "华力创科学（深圳）",
+      "product_name": "光学力矩传感器及力控系统",
+      "source_url": "https://pitchhub.36kr.com/project/2341971946865287",
+      "source_adapter": "pitchhub_36kr",
+      "quality_status": "needs_review",
+      "decision": "ready_candidate",
+      "recommended_status": "needs_review",
+      "risk_level": "low",
+      "reasons": [],
+      "warnings": [],
+      "company_identity_confirmed": true,
+      "identity_terms": [
+        "华力创科学"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "c3da1071-8360-4d74-a3f1-0507b4d3ddce"
+    },
+    {
+      "product_id": "PROD-cc3700ad765f",
+      "company_id": "COMP-95791ebe18d4",
+      "company_name": "华力创科学（深圳）",
+      "product_name": "工业机器人",
+      "source_url": "https://pitchhub.36kr.com/project/2341971946865287",
+      "source_adapter": "pitchhub_36kr",
+      "quality_status": "needs_review",
+      "decision": "ready_candidate",
+      "recommended_status": "needs_review",
+      "risk_level": "low",
+      "reasons": [],
+      "warnings": [],
+      "company_identity_confirmed": true,
+      "identity_terms": [
+        "华力创科学"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "c3da1071-8360-4d74-a3f1-0507b4d3ddce"
+    },
+    {
+      "product_id": "PROD-ac80645bcb78",
+      "company_id": "COMP-95791ebe18d4",
+      "company_name": "华力创科学（深圳）",
+      "product_name": "微创手术介入医疗器械",
+      "source_url": "https://pitchhub.36kr.com/project/2341971946865287",
+      "source_adapter": "pitchhub_36kr",
+      "quality_status": "needs_review",
+      "decision": "ready_candidate",
+      "recommended_status": "needs_review",
+      "risk_level": "low",
+      "reasons": [],
+      "warnings": [],
+      "company_identity_confirmed": true,
+      "identity_terms": [
+        "华力创科学"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "c3da1071-8360-4d74-a3f1-0507b4d3ddce"
+    },
+    {
+      "product_id": "PROD-444d19f185d4",
+      "company_id": "COMP-95791ebe18d4",
+      "company_name": "华力创科学（深圳）",
+      "product_name": "智能控制器",
+      "source_url": "https://pitchhub.36kr.com/project/2341971946865287",
+      "source_adapter": "pitchhub_36kr",
+      "quality_status": "needs_review",
+      "decision": "ready_candidate",
+      "recommended_status": "needs_review",
+      "risk_level": "low",
+      "reasons": [],
+      "warnings": [],
+      "company_identity_confirmed": true,
+      "identity_terms": [
+        "华力创科学"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "c3da1071-8360-4d74-a3f1-0507b4d3ddce"
+    },
+    {
+      "product_id": "PROD-b641460cddf5",
+      "company_id": "COMP-95791ebe18d4",
+      "company_name": "华力创科学（深圳）",
+      "product_name": "视触融合",
+      "source_url": "https://pitchhub.36kr.com/project/2341971946865287",
+      "source_adapter": "pitchhub_36kr",
+      "quality_status": "needs_review",
+      "decision": "ready_candidate",
+      "recommended_status": "needs_review",
+      "risk_level": "low",
+      "reasons": [],
+      "warnings": [],
+      "company_identity_confirmed": true,
+      "identity_terms": [
+        "华力创科学"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "c3da1071-8360-4d74-a3f1-0507b4d3ddce"
+    },
+    {
+      "product_id": "PROD-fc3565f564da",
+      "company_id": "COMP-ae484cae038b",
+      "company_name": "芯片测试技术",
+      "product_name": "AWG芯片",
+      "source_url": "https://data.iyiou.com/company/details/ef3540a68a0657368a92413b231206f6/profile?source=iyiou.trz",
+      "source_adapter": "iyiou",
+      "quality_status": "needs_review",
+      "decision": "reject",
+      "recommended_status": "rejected",
+      "risk_level": "high",
+      "reasons": [
+        "company_identity_failed"
+      ],
+      "warnings": [],
+      "company_identity_confirmed": false,
+      "identity_terms": [
+        "芯片测试技术"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "119ddfc3-36c3-4df0-9f12-cbff0ad29891"
+    },
+    {
+      "product_id": "PROD-dd699b1ee03f",
+      "company_id": "COMP-ae484cae038b",
+      "company_name": "芯片测试技术",
+      "product_name": "Card制作等相关配套服务",
+      "source_url": "https://pitchhub.36kr.com/project/1678309909705736",
+      "source_adapter": "pitchhub_36kr",
+      "quality_status": "needs_review",
+      "decision": "reject",
+      "recommended_status": "rejected",
+      "risk_level": "high",
+      "reasons": [
+        "company_identity_failed"
+      ],
+      "warnings": [],
+      "company_identity_confirmed": false,
+      "identity_terms": [
+        "芯片测试技术"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "0eb63f3f-1eb3-4172-a57e-bb499434c0d8"
+    },
+    {
+      "product_id": "PROD-91e7a162c3a0",
+      "company_id": "COMP-ae484cae038b",
+      "company_name": "芯片测试技术",
+      "product_name": "COC级别的老化和测试系统",
+      "source_url": "https://pitchhub.36kr.com/project/2001554476539780",
+      "source_adapter": "pitchhub_36kr",
+      "quality_status": "needs_review",
+      "decision": "reject",
+      "recommended_status": "rejected",
+      "risk_level": "high",
+      "reasons": [
+        "company_identity_failed"
+      ],
+      "warnings": [],
+      "company_identity_confirmed": false,
+      "identity_terms": [
+        "芯片测试技术"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "39e7fb0b-2e6f-4b6f-9781-b890e92ae9d7"
+    },
+    {
+      "product_id": "PROD-b5719b23b81e",
+      "company_id": "COMP-ae484cae038b",
+      "company_name": "芯片测试技术",
+      "product_name": "Micronix等设备",
+      "source_url": "https://pitchhub.36kr.com/project/2001554476539780",
+      "source_adapter": "pitchhub_36kr",
+      "quality_status": "needs_review",
+      "decision": "reject",
+      "recommended_status": "rejected",
+      "risk_level": "high",
+      "reasons": [
+        "company_identity_failed"
+      ],
+      "warnings": [],
+      "company_identity_confirmed": false,
+      "identity_terms": [
+        "芯片测试技术"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "39e7fb0b-2e6f-4b6f-9781-b890e92ae9d7"
+    },
+    {
+      "product_id": "PROD-f55caedfdc15",
+      "company_id": "COMP-ae484cae038b",
+      "company_name": "芯片测试技术",
+      "product_name": "TO抽屉式和烤箱式老化系统",
+      "source_url": "https://pitchhub.36kr.com/project/2001554476539780",
+      "source_adapter": "pitchhub_36kr",
+      "quality_status": "needs_review",
+      "decision": "reject",
+      "recommended_status": "rejected",
+      "risk_level": "high",
+      "reasons": [
+        "company_identity_failed"
+      ],
+      "warnings": [],
+      "company_identity_confirmed": false,
+      "identity_terms": [
+        "芯片测试技术"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "39e7fb0b-2e6f-4b6f-9781-b890e92ae9d7"
+    },
+    {
+      "product_id": "PROD-9bee3b0bb3a3",
+      "company_id": "COMP-ae484cae038b",
+      "company_name": "芯片测试技术",
+      "product_name": "TO自动化测试系统及DHO高温高湿系统",
+      "source_url": "https://pitchhub.36kr.com/project/2001554476539780",
+      "source_adapter": "pitchhub_36kr",
+      "quality_status": "needs_review",
+      "decision": "reject",
+      "recommended_status": "rejected",
+      "risk_level": "high",
+      "reasons": [
+        "company_identity_failed"
+      ],
+      "warnings": [],
+      "company_identity_confirmed": false,
+      "identity_terms": [
+        "芯片测试技术"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "39e7fb0b-2e6f-4b6f-9781-b890e92ae9d7"
+    },
+    {
+      "product_id": "PROD-db313462f178",
+      "company_id": "COMP-ae484cae038b",
+      "company_name": "芯片测试技术",
+      "product_name": "一站式集成电路制造服务（TMS",
+      "source_url": "https://pitchhub.36kr.com/project/1818825056129156",
+      "source_adapter": "pitchhub_36kr",
+      "quality_status": "needs_review",
+      "decision": "reject",
+      "recommended_status": "rejected",
+      "risk_level": "high",
+      "reasons": [
+        "company_identity_failed"
+      ],
+      "warnings": [],
+      "company_identity_confirmed": false,
+      "identity_terms": [
+        "芯片测试技术"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "a5fbdd7e-240c-4e67-9291-536bc34e83b9"
+    },
+    {
+      "product_id": "PROD-878c96d927f5",
+      "company_id": "COMP-ae484cae038b",
+      "company_name": "芯片测试技术",
+      "product_name": "全自动金线机",
+      "source_url": "https://data.iyiou.com/company/details/adf0c97c4777ce2e2e4eddf77eda6305/profile?source=iyiou.comdetail&from=more-data",
+      "source_adapter": "iyiou",
+      "quality_status": "needs_review",
+      "decision": "reject",
+      "recommended_status": "rejected",
+      "risk_level": "high",
+      "reasons": [
+        "company_identity_failed"
+      ],
+      "warnings": [],
+      "company_identity_confirmed": false,
+      "identity_terms": [
+        "芯片测试技术"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "5ba0f5be-41c8-41d7-a833-9ad043e8eeb5"
+    },
+    {
+      "product_id": "PROD-d98f787f065f",
+      "company_id": "COMP-ae484cae038b",
+      "company_name": "芯片测试技术",
+      "product_name": "军用计算机",
+      "source_url": "https://pitchhub.36kr.com/project/1679817063863048",
+      "source_adapter": "pitchhub_36kr",
+      "quality_status": "needs_review",
+      "decision": "reject",
+      "recommended_status": "rejected",
+      "risk_level": "high",
+      "reasons": [
+        "company_identity_failed"
+      ],
+      "warnings": [],
+      "company_identity_confirmed": false,
+      "identity_terms": [
+        "芯片测试技术"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "b65c06e2-a0b5-4a26-9664-0ff7082770e2"
+    },
+    {
+      "product_id": "PROD-a9a205916b49",
+      "company_id": "COMP-ae484cae038b",
+      "company_name": "芯片测试技术",
+      "product_name": "固态存储",
+      "source_url": "https://pitchhub.36kr.com/project/1679817063863048",
+      "source_adapter": "pitchhub_36kr",
+      "quality_status": "needs_review",
+      "decision": "reject",
+      "recommended_status": "rejected",
+      "risk_level": "high",
+      "reasons": [
+        "company_identity_failed"
+      ],
+      "warnings": [],
+      "company_identity_confirmed": false,
+      "identity_terms": [
+        "芯片测试技术"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "b65c06e2-a0b5-4a26-9664-0ff7082770e2"
+    },
+    {
+      "product_id": "PROD-e4b647e1872a",
+      "company_id": "COMP-ae484cae038b",
+      "company_name": "芯片测试技术",
+      "product_name": "固晶机",
+      "source_url": "https://data.iyiou.com/company/details/adf0c97c4777ce2e2e4eddf77eda6305/profile?source=iyiou.comdetail&from=more-data",
+      "source_adapter": "iyiou",
+      "quality_status": "needs_review",
+      "decision": "reject",
+      "recommended_status": "rejected",
+      "risk_level": "high",
+      "reasons": [
+        "company_identity_failed"
+      ],
+      "warnings": [
+        "weak_evidence_span"
+      ],
+      "company_identity_confirmed": false,
+      "identity_terms": [
+        "芯片测试技术"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": false,
+      "news_id": "5ba0f5be-41c8-41d7-a833-9ad043e8eeb5"
+    },
+    {
+      "product_id": "PROD-d0819fc0bd4a",
+      "company_id": "COMP-ae484cae038b",
+      "company_name": "芯片测试技术",
+      "product_name": "成品检测和IC编带等一站式服务",
+      "source_url": "https://pitchhub.36kr.com/project/1678309909705736",
+      "source_adapter": "pitchhub_36kr",
+      "quality_status": "needs_review",
+      "decision": "reject",
+      "recommended_status": "rejected",
+      "risk_level": "high",
+      "reasons": [
+        "company_identity_failed"
+      ],
+      "warnings": [],
+      "company_identity_confirmed": false,
+      "identity_terms": [
+        "芯片测试技术"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "0eb63f3f-1eb3-4172-a57e-bb499434c0d8"
+    },
+    {
+      "product_id": "PROD-775c4841267e",
+      "company_id": "COMP-ae484cae038b",
+      "company_name": "芯片测试技术",
+      "product_name": "我们希望通过计算巢构建一个开放的企业服务",
+      "source_url": "https://pitchhub.36kr.com/project/2205256884548226",
+      "source_adapter": "pitchhub_36kr",
+      "quality_status": "needs_review",
+      "decision": "reject",
+      "recommended_status": "rejected",
+      "risk_level": "high",
+      "reasons": [
+        "company_identity_failed"
+      ],
+      "warnings": [],
+      "company_identity_confirmed": false,
+      "identity_terms": [
+        "芯片测试技术"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "b9d2b5c3-a75c-4279-a52a-edfd90676a52"
+    },
+    {
+      "product_id": "PROD-3bd6e271ecf7",
+      "company_id": "COMP-ae484cae038b",
+      "company_name": "芯片测试技术",
+      "product_name": "植球机",
+      "source_url": "https://data.iyiou.com/company/details/adf0c97c4777ce2e2e4eddf77eda6305/profile?source=iyiou.comdetail&from=more-data",
+      "source_adapter": "iyiou",
+      "quality_status": "needs_review",
+      "decision": "reject",
+      "recommended_status": "rejected",
+      "risk_level": "high",
+      "reasons": [
+        "company_identity_failed"
+      ],
+      "warnings": [
+        "weak_evidence_span"
+      ],
+      "company_identity_confirmed": false,
+      "identity_terms": [
+        "芯片测试技术"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": false,
+      "news_id": "5ba0f5be-41c8-41d7-a833-9ad043e8eeb5"
+    },
+    {
+      "product_id": "PROD-c8c649d15335",
+      "company_id": "COMP-ae484cae038b",
+      "company_name": "芯片测试技术",
+      "product_name": "测试设备",
+      "source_url": "https://data.iyiou.com/company/details/d8b8d757781b10431477147aeb7051ee/profile?source=iyiou.comdetail&from=more-data",
+      "source_adapter": "iyiou",
+      "quality_status": "needs_review",
+      "decision": "reject",
+      "recommended_status": "rejected",
+      "risk_level": "high",
+      "reasons": [
+        "company_identity_failed"
+      ],
+      "warnings": [],
+      "company_identity_confirmed": false,
+      "identity_terms": [
+        "芯片测试技术"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "e2149c8b-aa82-4a7e-9107-eb1a095468ad"
+    },
+    {
+      "product_id": "PROD-652d3c3b1037",
+      "company_id": "COMP-ae484cae038b",
+      "company_name": "芯片测试技术",
+      "product_name": "深耕RF芯片",
+      "source_url": "https://pitchhub.36kr.com/project/2061938237995140",
+      "source_adapter": "pitchhub_36kr",
+      "quality_status": "needs_review",
+      "decision": "reject",
+      "recommended_status": "rejected",
+      "risk_level": "high",
+      "reasons": [
+        "company_identity_failed"
+      ],
+      "warnings": [],
+      "company_identity_confirmed": false,
+      "identity_terms": [
+        "芯片测试技术"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "762bd9bb-38fd-4774-b7a7-57981a0eedf3"
+    },
+    {
+      "product_id": "PROD-6055051da073",
+      "company_id": "COMP-ae484cae038b",
+      "company_name": "芯片测试技术",
+      "product_name": "瓷嘴",
+      "source_url": "https://data.iyiou.com/company/details/adf0c97c4777ce2e2e4eddf77eda6305/profile?source=iyiou.comdetail&from=more-data",
+      "source_adapter": "iyiou",
+      "quality_status": "needs_review",
+      "decision": "reject",
+      "recommended_status": "rejected",
+      "risk_level": "high",
+      "reasons": [
+        "company_identity_failed"
+      ],
+      "warnings": [
+        "weak_evidence_span"
+      ],
+      "company_identity_confirmed": false,
+      "identity_terms": [
+        "芯片测试技术"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": false,
+      "news_id": "5ba0f5be-41c8-41d7-a833-9ad043e8eeb5"
+    },
+    {
+      "product_id": "PROD-50edbde1e46f",
+      "company_id": "COMP-ae484cae038b",
+      "company_name": "芯片测试技术",
+      "product_name": "采购即服务",
+      "source_url": "https://pitchhub.36kr.com/project/2205256884548226",
+      "source_adapter": "pitchhub_36kr",
+      "quality_status": "needs_review",
+      "decision": "reject",
+      "recommended_status": "rejected",
+      "risk_level": "high",
+      "reasons": [
+        "company_identity_failed"
+      ],
+      "warnings": [],
+      "company_identity_confirmed": false,
+      "identity_terms": [
+        "芯片测试技术"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "b9d2b5c3-a75c-4279-a52a-edfd90676a52"
+    },
+    {
+      "product_id": "PROD-17a7856afe4a",
+      "company_id": "COMP-ae484cae038b",
+      "company_name": "芯片测试技术",
+      "product_name": "铝线机",
+      "source_url": "https://data.iyiou.com/company/details/adf0c97c4777ce2e2e4eddf77eda6305/profile?source=iyiou.comdetail&from=more-data",
+      "source_adapter": "iyiou",
+      "quality_status": "needs_review",
+      "decision": "reject",
+      "recommended_status": "rejected",
+      "risk_level": "high",
+      "reasons": [
+        "company_identity_failed"
+      ],
+      "warnings": [
+        "weak_evidence_span"
+      ],
+      "company_identity_confirmed": false,
+      "identity_terms": [
+        "芯片测试技术"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": false,
+      "news_id": "5ba0f5be-41c8-41d7-a833-9ad043e8eeb5"
+    },
+    {
+      "product_id": "PROD-be2b1690d78c",
+      "company_id": "COMP-ae484cae038b",
+      "company_name": "芯片测试技术",
+      "product_name": "闪存芯片测试仪",
+      "source_url": "https://pitchhub.36kr.com/project/1679817063863048",
+      "source_adapter": "pitchhub_36kr",
+      "quality_status": "needs_review",
+      "decision": "reject",
+      "recommended_status": "rejected",
+      "risk_level": "high",
+      "reasons": [
+        "company_identity_failed"
+      ],
+      "warnings": [],
+      "company_identity_confirmed": false,
+      "identity_terms": [
+        "芯片测试技术"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "b65c06e2-a0b5-4a26-9664-0ff7082770e2"
+    },
+    {
+      "product_id": "PROD-02f4bffbfb8c",
+      "company_id": "COMP-ae484cae038b",
+      "company_name": "芯片测试技术",
+      "product_name": "高端芯片测试封装技术",
+      "source_url": "https://pitchhub.36kr.com/project/1958497398443265",
+      "source_adapter": "pitchhub_36kr",
+      "quality_status": "needs_review",
+      "decision": "reject",
+      "recommended_status": "rejected",
+      "risk_level": "high",
+      "reasons": [
+        "company_identity_failed"
+      ],
+      "warnings": [],
+      "company_identity_confirmed": false,
+      "identity_terms": [
+        "芯片测试技术"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "dd0a96af-8d1f-49f8-82fe-8241118d2877"
+    },
+    {
+      "product_id": "PROD-208799e2e80a",
+      "company_id": "COMP-aeacf5cfe38d",
+      "company_name": "卓驭科技",
+      "product_name": "AD智驾的2025年：监管刹车、技术狂飙，“地大华魔”谁主沉浮？",
+      "source_url": "https://data.iyiou.com/intelligence/details/86b1341621c2ceb1c44b4740df9935d8",
+      "source_adapter": "iyiou",
+      "quality_status": "needs_review",
+      "decision": "needs_review",
+      "recommended_status": "needs_review",
+      "risk_level": "medium",
+      "reasons": [],
+      "warnings": [
+        "weak_evidence_span"
+      ],
+      "company_identity_confirmed": true,
+      "identity_terms": [
+        "卓驭科技",
+        "卓驭"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": false,
+      "news_id": "a68731d8-6d62-4bb4-8651-447f7a93851e"
+    },
+    {
+      "product_id": "PROD-692705ff9454",
+      "company_id": "COMP-aeacf5cfe38d",
+      "company_name": "卓驭科技",
+      "product_name": "Robotaxi",
+      "source_url": "https://data.iyiou.com/intelligence/details/bca338c24a8298eb782ab4db4a308e43",
+      "source_adapter": "iyiou",
+      "quality_status": "needs_review",
+      "decision": "ready_candidate",
+      "recommended_status": "needs_review",
+      "risk_level": "low",
+      "reasons": [],
+      "warnings": [],
+      "company_identity_confirmed": true,
+      "identity_terms": [
+        "卓驭科技",
+        "卓驭"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "7256e5bd-7b5c-4f15-8707-986dd9a54d7e"
+    },
+    {
+      "product_id": "PROD-bbccce2354f3",
+      "company_id": "COMP-aeacf5cfe38d",
+      "company_name": "卓驭科技",
+      "product_name": "物流车",
+      "source_url": "https://data.iyiou.com/intelligence/details/bca338c24a8298eb782ab4db4a308e43",
+      "source_adapter": "iyiou",
+      "quality_status": "needs_review",
+      "decision": "ready_candidate",
+      "recommended_status": "needs_review",
+      "risk_level": "low",
+      "reasons": [],
+      "warnings": [],
+      "company_identity_confirmed": true,
+      "identity_terms": [
+        "卓驭科技",
+        "卓驭"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "7256e5bd-7b5c-4f15-8707-986dd9a54d7e"
+    },
+    {
+      "product_id": "PROD-ca0fbf82a488",
+      "company_id": "COMP-aeacf5cfe38d",
+      "company_name": "卓驭科技",
+      "product_name": "首款重卡车型",
+      "source_url": "https://data.iyiou.com/intelligence/details/bca338c24a8298eb782ab4db4a308e43",
+      "source_adapter": "iyiou",
+      "quality_status": "needs_review",
+      "decision": "ready_candidate",
+      "recommended_status": "needs_review",
+      "risk_level": "low",
+      "reasons": [],
+      "warnings": [],
+      "company_identity_confirmed": true,
+      "identity_terms": [
+        "卓驭科技",
+        "卓驭"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "7256e5bd-7b5c-4f15-8707-986dd9a54d7e"
+    },
+    {
+      "product_id": "PROD-4324c8d3598f",
+      "company_id": "COMP-b6d55eb13a82",
+      "company_name": "枢途科技（深圳）",
+      "product_name": "SynaData",
+      "source_url": "https://data.iyiou.com/company/details/62b9bc91c8fbc4eb13a572bde6061022/profile?source=iyiou.trz",
+      "source_adapter": "iyiou",
+      "quality_status": "needs_review",
+      "decision": "ready_candidate",
+      "recommended_status": "needs_review",
+      "risk_level": "low",
+      "reasons": [],
+      "warnings": [],
+      "company_identity_confirmed": true,
+      "identity_terms": [
+        "枢途科技"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "3f00c82d-4539-4bdb-9454-c8321cd68c80"
+    },
+    {
+      "product_id": "PROD-e988292040b8",
+      "company_id": "COMP-b6d55eb13a82",
+      "company_name": "枢途科技（深圳）",
+      "product_name": "马斯克宣布放弃遥操！具身机器人要靠看视频学干活了？",
+      "source_url": "https://data.iyiou.com/intelligence/details/d6c1a31e4383ac7569eaac70359742d0",
+      "source_adapter": "iyiou",
+      "quality_status": "needs_review",
+      "decision": "needs_review",
+      "recommended_status": "needs_review",
+      "risk_level": "medium",
+      "reasons": [],
+      "warnings": [
+        "weak_evidence_span"
+      ],
+      "company_identity_confirmed": true,
+      "identity_terms": [
+        "枢途科技"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": false,
+      "news_id": "762ab027-699a-4150-a0cd-beb4e58b6306"
+    },
+    {
+      "product_id": "PROD-ae3e63859bc6",
+      "company_id": "COMP-b8bbffe61cbc",
+      "company_name": "深圳悦享智眠科技",
+      "product_name": "智能床垫",
+      "source_url": "https://data.iyiou.com/company/details/55e0a51cf29b8fb5c6f3616849fdeb43/profile?source=iyiou.airzkb",
+      "source_adapter": "iyiou",
+      "quality_status": "needs_review",
+      "decision": "ready_candidate",
+      "recommended_status": "needs_review",
+      "risk_level": "low",
+      "reasons": [],
+      "warnings": [],
+      "company_identity_confirmed": true,
+      "identity_terms": [
+        "悦享智眠科技",
+        "悦享智眠"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "6068eb05-b947-4470-949e-e9c969f03fdf"
+    },
+    {
+      "product_id": "PROD-356af6f8dd50",
+      "company_id": "COMP-c5435386c50b",
+      "company_name": "深圳云集智能信息",
+      "product_name": "采购即服务",
+      "source_url": "https://pitchhub.36kr.com/project/2205273776992897",
+      "source_adapter": "pitchhub_36kr",
+      "quality_status": "needs_review",
+      "decision": "ready_candidate",
+      "recommended_status": "needs_review",
+      "risk_level": "low",
+      "reasons": [],
+      "warnings": [],
+      "company_identity_confirmed": true,
+      "identity_terms": [
+        "云集智能信息"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "532c462a-0d99-4476-80f7-bc6fdfc31a3b"
+    },
+    {
+      "product_id": "PROD-d2ec0c7560a5",
+      "company_id": "COMP-cff54e822fc5",
+      "company_name": "深圳元戎启行科技",
+      "product_name": "DeepRoute IO",
+      "source_url": "https://pitchhub.36kr.com/project/1678293745611777",
+      "source_adapter": "pitchhub_36kr",
+      "quality_status": "needs_review",
+      "decision": "ready_candidate",
+      "recommended_status": "needs_review",
+      "risk_level": "low",
+      "reasons": [],
+      "warnings": [],
+      "company_identity_confirmed": true,
+      "identity_terms": [
+        "元戎启行科技",
+        "元戎启行"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "6364d59f-c587-4593-a403-b9877f033068"
+    },
+    {
+      "product_id": "PROD-ffd42cfa96dd",
+      "company_id": "COMP-cff54e822fc5",
+      "company_name": "深圳元戎启行科技",
+      "product_name": "L3级自动驾驶商业化落地再提速，元戎启行",
+      "source_url": "https://data.iyiou.com/intelligence/details/9f72a9c64e088915e50a1b0c02d8467b",
+      "source_adapter": "iyiou",
+      "quality_status": "needs_review",
+      "decision": "needs_review",
+      "recommended_status": "needs_review",
+      "risk_level": "medium",
+      "reasons": [],
+      "warnings": [
+        "weak_evidence_span"
+      ],
+      "company_identity_confirmed": true,
+      "identity_terms": [
+        "元戎启行科技",
+        "元戎启行"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": false,
+      "news_id": "383ed35d-6d2d-45ca-9889-e77f99ab4cb2"
+    },
+    {
+      "product_id": "PROD-451433a6d25e",
+      "company_id": "COMP-cff54e822fc5",
+      "company_name": "深圳元戎启行科技",
+      "product_name": "L4级自动驾驶全栈解决方案",
+      "source_url": "https://data.iyiou.com/company/details/832f2b3def0976191b3c6421e5cc21ca/profile?source=iyiou.comdetail&from=more-data",
+      "source_adapter": "iyiou",
+      "quality_status": "needs_review",
+      "decision": "ready_candidate",
+      "recommended_status": "needs_review",
+      "risk_level": "low",
+      "reasons": [],
+      "warnings": [],
+      "company_identity_confirmed": true,
+      "identity_terms": [
+        "元戎启行科技",
+        "元戎启行"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "1c75516c-53fd-4d01-b21d-8d47830e878a"
+    },
+    {
+      "product_id": "PROD-b980be680be4",
+      "company_id": "COMP-cff54e822fc5",
+      "company_name": "深圳元戎启行科技",
+      "product_name": "L4级自动驾驶轻卡",
+      "source_url": "https://pitchhub.36kr.com/project/2011470725940484",
+      "source_adapter": "pitchhub_36kr",
+      "quality_status": "needs_review",
+      "decision": "ready_candidate",
+      "recommended_status": "needs_review",
+      "risk_level": "low",
+      "reasons": [],
+      "warnings": [],
+      "company_identity_confirmed": true,
+      "identity_terms": [
+        "元戎启行科技",
+        "元戎启行"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "344d0f1c-5f63-48ed-8a30-c12f3c2359a7"
+    },
+    {
+      "product_id": "PROD-4ceabab546e2",
+      "company_id": "COMP-cff54e822fc5",
+      "company_name": "深圳元戎启行科技",
+      "product_name": "MEMS激光雷达",
+      "source_url": "https://pitchhub.36kr.com/project/1678228698477574",
+      "source_adapter": "pitchhub_36kr",
+      "quality_status": "needs_review",
+      "decision": "ready_candidate",
+      "recommended_status": "needs_review",
+      "risk_level": "low",
+      "reasons": [],
+      "warnings": [],
+      "company_identity_confirmed": true,
+      "identity_terms": [
+        "元戎启行科技",
+        "元戎启行"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "620dc733-f9d7-4b30-8f03-b06b6e31637a"
+    },
+    {
+      "product_id": "PROD-b558f2afb738",
+      "company_id": "COMP-cff54e822fc5",
+      "company_name": "深圳元戎启行科技",
+      "product_name": "VLA大模型赋能元戎启行市占率第二抢占新订单先机",
+      "source_url": "https://data.iyiou.com/intelligence/details/d906f945ce4d58cbe56f6e83d6a9dd96",
+      "source_adapter": "iyiou",
+      "quality_status": "needs_review",
+      "decision": "needs_review",
+      "recommended_status": "needs_review",
+      "risk_level": "medium",
+      "reasons": [],
+      "warnings": [
+        "weak_evidence_span"
+      ],
+      "company_identity_confirmed": true,
+      "identity_terms": [
+        "元戎启行科技",
+        "元戎启行"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": false,
+      "news_id": "9e2b24c3-581a-4ad9-94f4-76666ec00475"
+    },
+    {
+      "product_id": "PROD-c7b3e6424e5f",
+      "company_id": "COMP-cff54e822fc5",
+      "company_name": "深圳元戎启行科技",
+      "product_name": "全固态激光雷达",
+      "source_url": "https://pitchhub.36kr.com/project/1678228698477574",
+      "source_adapter": "pitchhub_36kr",
+      "quality_status": "needs_review",
+      "decision": "ready_candidate",
+      "recommended_status": "needs_review",
+      "risk_level": "low",
+      "reasons": [],
+      "warnings": [],
+      "company_identity_confirmed": true,
+      "identity_terms": [
+        "元戎启行科技",
+        "元戎启行"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "620dc733-f9d7-4b30-8f03-b06b6e31637a"
+    },
+    {
+      "product_id": "PROD-d0a73ab6a5a9",
+      "company_id": "COMP-cff54e822fc5",
+      "company_name": "深圳元戎启行科技",
+      "product_name": "全固态激光雷达产品",
+      "source_url": "https://pitchhub.36kr.com/project/2090039774359809",
+      "source_adapter": "pitchhub_36kr",
+      "quality_status": "needs_review",
+      "decision": "ready_candidate",
+      "recommended_status": "needs_review",
+      "risk_level": "low",
+      "reasons": [],
+      "warnings": [],
+      "company_identity_confirmed": true,
+      "identity_terms": [
+        "元戎启行科技",
+        "元戎启行"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "f1676893-a3e1-45ba-92c3-1a023b615c71"
+    },
+    {
+      "product_id": "PROD-fd556c846571",
+      "company_id": "COMP-cff54e822fc5",
+      "company_name": "深圳元戎启行科技",
+      "product_name": "双方共同研发的AI大模型技术将赋能新一代智能驾驶系统",
+      "source_url": "https://data.iyiou.com/intelligence/details/aba214e015292e282f58964dfbb83732",
+      "source_adapter": "iyiou",
+      "quality_status": "needs_review",
+      "decision": "ready_candidate",
+      "recommended_status": "needs_review",
+      "risk_level": "low",
+      "reasons": [],
+      "warnings": [],
+      "company_identity_confirmed": true,
+      "identity_terms": [
+        "元戎启行科技",
+        "元戎启行"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "86be9bac-d642-47b6-891f-314ca92dba1d"
+    },
+    {
+      "product_id": "PROD-a5392bdfb0dc",
+      "company_id": "COMP-cff54e822fc5",
+      "company_name": "深圳元戎启行科技",
+      "product_name": "周光：VLA模型将成智能驾驶体验颠覆性拐点",
+      "source_url": "https://data.iyiou.com/intelligence/details/09a6785a52adb2cf11db6bbf4a0897d1",
+      "source_adapter": "iyiou",
+      "quality_status": "needs_review",
+      "decision": "needs_review",
+      "recommended_status": "needs_review",
+      "risk_level": "medium",
+      "reasons": [],
+      "warnings": [
+        "weak_evidence_span"
+      ],
+      "company_identity_confirmed": true,
+      "identity_terms": [
+        "元戎启行科技",
+        "元戎启行"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": false,
+      "news_id": "d5e382e0-6fed-426c-90b6-6c4e22cd374a"
+    },
+    {
+      "product_id": "PROD-37f2b641667a",
+      "company_id": "COMP-cff54e822fc5",
+      "company_name": "深圳元戎启行科技",
+      "product_name": "城区NOA功能",
+      "source_url": "https://data.iyiou.com/intelligence/details/e4b2cafeaed53025400a491e9cbb5086",
+      "source_adapter": "iyiou",
+      "quality_status": "needs_review",
+      "decision": "ready_candidate",
+      "recommended_status": "needs_review",
+      "risk_level": "low",
+      "reasons": [],
+      "warnings": [],
+      "company_identity_confirmed": true,
+      "identity_terms": [
+        "元戎启行科技",
+        "元戎启行"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "c0402e76-e8c5-4a05-8ff9-2ee0596cde95"
+    },
+    {
+      "product_id": "PROD-25d010f01bf9",
+      "company_id": "COMP-cff54e822fc5",
+      "company_name": "深圳元戎启行科技",
+      "product_name": "基于端到端模型和VLM视觉语言模型的智驾技术架构",
+      "source_url": "https://data.iyiou.com/intelligence/details/4b9af1f78cc3170ac4b1824da397682c",
+      "source_adapter": "iyiou",
+      "quality_status": "needs_review",
+      "decision": "ready_candidate",
+      "recommended_status": "needs_review",
+      "risk_level": "low",
+      "reasons": [],
+      "warnings": [],
+      "company_identity_confirmed": true,
+      "identity_terms": [
+        "元戎启行科技",
+        "元戎启行"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "f949c445-9c73-4cb3-b255-d905ed6dee65"
+    },
+    {
+      "product_id": "PROD-5301852556e4",
+      "company_id": "COMP-cff54e822fc5",
+      "company_name": "深圳元戎启行科技",
+      "product_name": "已有20万辆量产乘用车搭载其城市NOA系统",
+      "source_url": "https://data.iyiou.com/intelligence/details/87c3869a0adeb2dbb244c26426fbb5d5",
+      "source_adapter": "iyiou",
+      "quality_status": "needs_review",
+      "decision": "ready_candidate",
+      "recommended_status": "needs_review",
+      "risk_level": "low",
+      "reasons": [],
+      "warnings": [],
+      "company_identity_confirmed": true,
+      "identity_terms": [
+        "元戎启行科技",
+        "元戎启行"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "3da85010-f096-44ca-a40e-a7a0ee259e5b"
+    },
+    {
+      "product_id": "PROD-4b62ed3ea9a3",
+      "company_id": "COMP-cff54e822fc5",
+      "company_name": "深圳元戎启行科技",
+      "product_name": "无图城区NOA",
+      "source_url": "https://data.iyiou.com/intelligence/details/24c7354eb63cadb807bf30c047fdcf5c",
+      "source_adapter": "iyiou",
+      "quality_status": "needs_review",
+      "decision": "ready_candidate",
+      "recommended_status": "needs_review",
+      "risk_level": "low",
+      "reasons": [],
+      "warnings": [],
+      "company_identity_confirmed": true,
+      "identity_terms": [
+        "元戎启行科技",
+        "元戎启行"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "271ca4ee-ecb7-49e2-8e9e-4faccfc0c21b"
+    },
+    {
+      "product_id": "PROD-4d5afb7b6eee",
+      "company_id": "COMP-cff54e822fc5",
+      "company_name": "深圳元戎启行科技",
+      "product_name": "综合性物流服务",
+      "source_url": "https://pitchhub.36kr.com/project/2011470725940484",
+      "source_adapter": "pitchhub_36kr",
+      "quality_status": "needs_review",
+      "decision": "ready_candidate",
+      "recommended_status": "needs_review",
+      "risk_level": "low",
+      "reasons": [],
+      "warnings": [],
+      "company_identity_confirmed": true,
+      "identity_terms": [
+        "元戎启行科技",
+        "元戎启行"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "344d0f1c-5f63-48ed-8a30-c12f3c2359a7"
+    },
+    {
+      "product_id": "PROD-e1c614c8de82",
+      "company_id": "COMP-cff54e822fc5",
+      "company_name": "深圳元戎启行科技",
+      "product_name": "补盲激光雷达",
+      "source_url": "https://pitchhub.36kr.com/project/1678228698477574",
+      "source_adapter": "pitchhub_36kr",
+      "quality_status": "needs_review",
+      "decision": "ready_candidate",
+      "recommended_status": "needs_review",
+      "risk_level": "low",
+      "reasons": [],
+      "warnings": [],
+      "company_identity_confirmed": true,
+      "identity_terms": [
+        "元戎启行科技",
+        "元戎启行"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "620dc733-f9d7-4b30-8f03-b06b6e31637a"
+    },
+    {
+      "product_id": "PROD-181aa6a889a5",
+      "company_id": "COMP-cff54e822fc5",
+      "company_name": "深圳元戎启行科技",
+      "product_name": "请来DeepSeek 核心成员阮翀，元戎启行要打的是另一场仗",
+      "source_url": "https://data.iyiou.com/intelligence/details/1eb6b3d15655aa4afd823caaa6b1b34c",
+      "source_adapter": "iyiou",
+      "quality_status": "needs_review",
+      "decision": "needs_review",
+      "recommended_status": "needs_review",
+      "risk_level": "medium",
+      "reasons": [],
+      "warnings": [
+        "weak_evidence_span"
+      ],
+      "company_identity_confirmed": true,
+      "identity_terms": [
+        "元戎启行科技",
+        "元戎启行"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": false,
+      "news_id": "bbadb3c4-a63c-470f-95a8-6cead09e726a"
+    },
+    {
+      "product_id": "PROD-4695f2116b47",
+      "company_id": "COMP-dcd14c10c29e",
+      "company_name": "足下科技",
+      "product_name": "操作系统",
+      "source_url": "https://pitchhub.36kr.com/project/2011452816835846",
+      "source_adapter": "pitchhub_36kr",
+      "quality_status": "needs_review",
+      "decision": "ready_candidate",
+      "recommended_status": "needs_review",
+      "risk_level": "low",
+      "reasons": [],
+      "warnings": [],
+      "company_identity_confirmed": true,
+      "identity_terms": [
+        "足下科技",
+        "足下"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "a34834ed-c39b-4ded-83dd-cc61e093e39e"
+    },
+    {
+      "product_id": "PROD-0aa5e3256cca",
+      "company_id": "COMP-e0f2fdd3f2bf",
+      "company_name": "图灵集市（深圳）科技",
+      "product_name": "AI新产业发展聚焦平台",
+      "source_url": "https://pitchhub.36kr.com/project/2144657366910208",
+      "source_adapter": "pitchhub_36kr",
+      "quality_status": "needs_review",
+      "decision": "ready_candidate",
+      "recommended_status": "needs_review",
+      "risk_level": "low",
+      "reasons": [],
+      "warnings": [],
+      "company_identity_confirmed": true,
+      "identity_terms": [
+        "图灵集市科技",
+        "图灵集市",
+        "提供"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "21aaa572-701c-4e79-96e7-724fb9a2fc32"
+    },
+    {
+      "product_id": "PROD-a85c520748e2",
+      "company_id": "COMP-e0f2fdd3f2bf",
+      "company_name": "图灵集市（深圳）科技",
+      "product_name": "AI股权投资机构集聚平台等五大平台",
+      "source_url": "https://pitchhub.36kr.com/project/2144657366910208",
+      "source_adapter": "pitchhub_36kr",
+      "quality_status": "needs_review",
+      "decision": "ready_candidate",
+      "recommended_status": "needs_review",
+      "risk_level": "low",
+      "reasons": [],
+      "warnings": [],
+      "company_identity_confirmed": true,
+      "identity_terms": [
+        "图灵集市科技",
+        "图灵集市",
+        "提供"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "21aaa572-701c-4e79-96e7-724fb9a2fc32"
+    },
+    {
+      "product_id": "PROD-182969df50b8",
+      "company_id": "COMP-e0f2fdd3f2bf",
+      "company_name": "图灵集市（深圳）科技",
+      "product_name": "Collov是美国一家室内设计服务",
+      "source_url": "https://pitchhub.36kr.com/project/2161643729235460",
+      "source_adapter": "pitchhub_36kr",
+      "quality_status": "needs_review",
+      "decision": "reject",
+      "recommended_status": "rejected",
+      "risk_level": "high",
+      "reasons": [
+        "invalid_product_name"
+      ],
+      "warnings": [],
+      "company_identity_confirmed": true,
+      "identity_terms": [
+        "图灵集市科技",
+        "图灵集市",
+        "提供"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "f24809e3-9a20-4009-88d5-8ee4fe0c34a1"
+    },
+    {
+      "product_id": "PROD-c02007463460",
+      "company_id": "COMP-e0f2fdd3f2bf",
+      "company_name": "图灵集市（深圳）科技",
+      "product_name": "Copell想搭建一个全球程序员技术分享交流平台",
+      "source_url": "https://pitchhub.36kr.com/project/2316583945177609",
+      "source_adapter": "pitchhub_36kr",
+      "quality_status": "needs_review",
+      "decision": "reject",
+      "recommended_status": "rejected",
+      "risk_level": "high",
+      "reasons": [
+        "company_identity_failed"
+      ],
+      "warnings": [],
+      "company_identity_confirmed": false,
+      "identity_terms": [
+        "图灵集市科技",
+        "图灵集市",
+        "提供"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "58c8185b-15ca-4e53-8ee4-3674dd91c1fa"
+    },
+    {
+      "product_id": "PROD-ff4a7113eac5",
+      "company_id": "COMP-e0f2fdd3f2bf",
+      "company_name": "图灵集市（深圳）科技",
+      "product_name": "Cyera",
+      "source_url": "https://data.iyiou.com/company/details/bb922b8ec4d70daf34078ad8a116d90b/profile?source=iyiou.trz",
+      "source_adapter": "iyiou",
+      "quality_status": "needs_review",
+      "decision": "needs_review",
+      "recommended_status": "needs_review",
+      "risk_level": "medium",
+      "reasons": [],
+      "warnings": [
+        "weak_evidence_span"
+      ],
+      "company_identity_confirmed": true,
+      "identity_terms": [
+        "图灵集市科技",
+        "图灵集市",
+        "提供"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": false,
+      "news_id": "d08e9f3c-a2a5-4dea-8ae0-8af153948812"
+    },
+    {
+      "product_id": "PROD-e69a13312bb3",
+      "company_id": "COMP-e0f2fdd3f2bf",
+      "company_name": "图灵集市（深圳）科技",
+      "product_name": "Decagon是美国一家生成式人工智能服务",
+      "source_url": "https://data.iyiou.com/company/details/41a25dfff1d3f2da076b6329724a0712/profile?source=iyiou.trz",
+      "source_adapter": "iyiou",
+      "quality_status": "needs_review",
+      "decision": "ready_candidate",
+      "recommended_status": "needs_review",
+      "risk_level": "low",
+      "reasons": [],
+      "warnings": [],
+      "company_identity_confirmed": true,
+      "identity_terms": [
+        "图灵集市科技",
+        "图灵集市",
+        "提供"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "5bd897d4-0432-49c2-8134-13c1fda0f623"
+    },
+    {
+      "product_id": "PROD-9c2f3bfdbdf0",
+      "company_id": "COMP-e0f2fdd3f2bf",
+      "company_name": "图灵集市（深圳）科技",
+      "product_name": "LiveRamp",
+      "source_url": "https://data.iyiou.com/company/details/4515a2b047ceb1c8137d9b8742fd4735/profile?source=iyiou.trz",
+      "source_adapter": "iyiou",
+      "quality_status": "needs_review",
+      "decision": "needs_review",
+      "recommended_status": "needs_review",
+      "risk_level": "medium",
+      "reasons": [],
+      "warnings": [
+        "weak_evidence_span"
+      ],
+      "company_identity_confirmed": true,
+      "identity_terms": [
+        "图灵集市科技",
+        "图灵集市",
+        "提供"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": false,
+      "news_id": "3a264476-c162-4cd3-90ac-95397c9db3c2"
+    },
+    {
+      "product_id": "PROD-b09219e8c6f5",
+      "company_id": "COMP-e0f2fdd3f2bf",
+      "company_name": "图灵集市（深圳）科技",
+      "product_name": "MagicBot X1",
+      "source_url": "https://data.iyiou.com/intelligence/details/95216277ac309fd1de7c6920fa78aca2",
+      "source_adapter": "iyiou",
+      "quality_status": "needs_review",
+      "decision": "reject",
+      "recommended_status": "rejected",
+      "risk_level": "high",
+      "reasons": [
+        "company_identity_failed"
+      ],
+      "warnings": [],
+      "company_identity_confirmed": false,
+      "identity_terms": [
+        "图灵集市科技",
+        "图灵集市",
+        "提供"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "f6618e4b-1303-4ed7-92ca-e2eff64fad8c"
+    },
+    {
+      "product_id": "PROD-2878fddbfdeb",
+      "company_id": "COMP-e0f2fdd3f2bf",
+      "company_name": "图灵集市（深圳）科技",
+      "product_name": "MagicHand H01",
+      "source_url": "https://data.iyiou.com/intelligence/details/95216277ac309fd1de7c6920fa78aca2",
+      "source_adapter": "iyiou",
+      "quality_status": "needs_review",
+      "decision": "reject",
+      "recommended_status": "rejected",
+      "risk_level": "high",
+      "reasons": [
+        "company_identity_failed"
+      ],
+      "warnings": [],
+      "company_identity_confirmed": false,
+      "identity_terms": [
+        "图灵集市科技",
+        "图灵集市",
+        "提供"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "f6618e4b-1303-4ed7-92ca-e2eff64fad8c"
+    },
+    {
+      "product_id": "PROD-c36f77d38039",
+      "company_id": "COMP-e0f2fdd3f2bf",
+      "company_name": "图灵集市（深圳）科技",
+      "product_name": "Magic-Mix",
+      "source_url": "https://data.iyiou.com/intelligence/details/95216277ac309fd1de7c6920fa78aca2",
+      "source_adapter": "iyiou",
+      "quality_status": "needs_review",
+      "decision": "reject",
+      "recommended_status": "rejected",
+      "risk_level": "high",
+      "reasons": [
+        "company_identity_failed"
+      ],
+      "warnings": [],
+      "company_identity_confirmed": false,
+      "identity_terms": [
+        "图灵集市科技",
+        "图灵集市",
+        "提供"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "f6618e4b-1303-4ed7-92ca-e2eff64fad8c"
+    },
+    {
+      "product_id": "PROD-34af048b2fe3",
+      "company_id": "COMP-e0f2fdd3f2bf",
+      "company_name": "图灵集市（深圳）科技",
+      "product_name": "PresenceXR",
+      "source_url": "https://pitchhub.36kr.com/project/2035034870045062",
+      "source_adapter": "pitchhub_36kr",
+      "quality_status": "needs_review",
+      "decision": "ready_candidate",
+      "recommended_status": "needs_review",
+      "risk_level": "low",
+      "reasons": [],
+      "warnings": [],
+      "company_identity_confirmed": true,
+      "identity_terms": [
+        "图灵集市科技",
+        "图灵集市",
+        "提供"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "c21f2055-d8bf-4812-a960-83e311bca25a"
+    },
+    {
+      "product_id": "PROD-b00cb12330b2",
+      "company_id": "COMP-e0f2fdd3f2bf",
+      "company_name": "图灵集市（深圳）科技",
+      "product_name": "SpringHill Entertainment",
+      "source_url": "https://data.iyiou.com/company/details/720fdd03abb180f008e4ba8eaca70f1f/profile?source=iyiou.trz",
+      "source_adapter": "iyiou",
+      "quality_status": "needs_review",
+      "decision": "ready_candidate",
+      "recommended_status": "needs_review",
+      "risk_level": "low",
+      "reasons": [],
+      "warnings": [],
+      "company_identity_confirmed": true,
+      "identity_terms": [
+        "图灵集市科技",
+        "图灵集市",
+        "提供"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "e155a86e-1965-410b-a6d8-5aa12140008e"
+    },
+    {
+      "product_id": "PROD-8481e5588084",
+      "company_id": "COMP-e0f2fdd3f2bf",
+      "company_name": "图灵集市（深圳）科技",
+      "product_name": "SRP大中台",
+      "source_url": "https://pitchhub.36kr.com/project/1678520578503683",
+      "source_adapter": "pitchhub_36kr",
+      "quality_status": "needs_review",
+      "decision": "ready_candidate",
+      "recommended_status": "needs_review",
+      "risk_level": "low",
+      "reasons": [],
+      "warnings": [],
+      "company_identity_confirmed": true,
+      "identity_terms": [
+        "图灵集市科技",
+        "图灵集市",
+        "提供"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "2e3c8fee-8fe7-465d-ae37-2e307dc071f6"
+    },
+    {
+      "product_id": "PROD-90d2b7c4c296",
+      "company_id": "COMP-e0f2fdd3f2bf",
+      "company_name": "图灵集市（深圳）科技",
+      "product_name": "ThreatLocker",
+      "source_url": "https://data.iyiou.com/company/details/f4eae4e788964dd4315dada7adf47691/profile?source=iyiou.trz",
+      "source_adapter": "iyiou",
+      "quality_status": "needs_review",
+      "decision": "ready_candidate",
+      "recommended_status": "needs_review",
+      "risk_level": "low",
+      "reasons": [],
+      "warnings": [],
+      "company_identity_confirmed": true,
+      "identity_terms": [
+        "图灵集市科技",
+        "图灵集市",
+        "提供"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "fcb3cda5-a552-4f21-8eda-e3c13006f920"
+    },
+    {
+      "product_id": "PROD-820733526e1e",
+      "company_id": "COMP-e0f2fdd3f2bf",
+      "company_name": "图灵集市（深圳）科技",
+      "product_name": "TierPoint",
+      "source_url": "https://data.iyiou.com/company/details/32c8e17f6b9cf6b9104436ea6ce3bffe/profile?source=iyiou.trz",
+      "source_adapter": "iyiou",
+      "quality_status": "needs_review",
+      "decision": "needs_review",
+      "recommended_status": "needs_review",
+      "risk_level": "medium",
+      "reasons": [],
+      "warnings": [
+        "weak_evidence_span"
+      ],
+      "company_identity_confirmed": true,
+      "identity_terms": [
+        "图灵集市科技",
+        "图灵集市",
+        "提供"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": false,
+      "news_id": "a50de67a-c216-4af7-b614-04051334eff0"
+    },
+    {
+      "product_id": "PROD-6f3270e4d26f",
+      "company_id": "COMP-e0f2fdd3f2bf",
+      "company_name": "图灵集市（深圳）科技",
+      "product_name": "Turing Market",
+      "source_url": "https://data.iyiou.com/company/details/d65c243cfe60f9c9f8e524cd0a30900d/profile?source=iyiou.airzkb",
+      "source_adapter": "iyiou",
+      "quality_status": "needs_review",
+      "decision": "reject",
+      "recommended_status": "rejected",
+      "risk_level": "high",
+      "reasons": [
+        "invalid_product_name"
+      ],
+      "warnings": [
+        "weak_evidence_span"
+      ],
+      "company_identity_confirmed": true,
+      "identity_terms": [
+        "图灵集市科技",
+        "图灵集市",
+        "提供"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": false,
+      "news_id": "e5c7ba0b-1c44-40c4-8519-47732e963992"
+    },
+    {
+      "product_id": "PROD-25838ead91d9",
+      "company_id": "COMP-e0f2fdd3f2bf",
+      "company_name": "图灵集市（深圳）科技",
+      "product_name": "一系列互联网技术方案",
+      "source_url": "https://pitchhub.36kr.com/project/1713076037970441",
+      "source_adapter": "pitchhub_36kr",
+      "quality_status": "needs_review",
+      "decision": "ready_candidate",
+      "recommended_status": "needs_review",
+      "risk_level": "low",
+      "reasons": [],
+      "warnings": [],
+      "company_identity_confirmed": true,
+      "identity_terms": [
+        "图灵集市科技",
+        "图灵集市",
+        "提供"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "bfb11c82-82f2-4863-a77e-4e9ab64dcfe0"
+    },
+    {
+      "product_id": "PROD-6907350e7529",
+      "company_id": "COMP-e0f2fdd3f2bf",
+      "company_name": "图灵集市（深圳）科技",
+      "product_name": "为互联网服务",
+      "source_url": "https://pitchhub.36kr.com/project/1713076037970441",
+      "source_adapter": "pitchhub_36kr",
+      "quality_status": "needs_review",
+      "decision": "ready_candidate",
+      "recommended_status": "needs_review",
+      "risk_level": "low",
+      "reasons": [],
+      "warnings": [],
+      "company_identity_confirmed": true,
+      "identity_terms": [
+        "图灵集市科技",
+        "图灵集市",
+        "提供"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "bfb11c82-82f2-4863-a77e-4e9ab64dcfe0"
+    },
+    {
+      "product_id": "PROD-afded217b95b",
+      "company_id": "COMP-e0f2fdd3f2bf",
+      "company_name": "图灵集市（深圳）科技",
+      "product_name": "云数据中心",
+      "source_url": "https://pitchhub.36kr.com/project/2144862882153732",
+      "source_adapter": "pitchhub_36kr",
+      "quality_status": "needs_review",
+      "decision": "ready_candidate",
+      "recommended_status": "needs_review",
+      "risk_level": "low",
+      "reasons": [],
+      "warnings": [],
+      "company_identity_confirmed": true,
+      "identity_terms": [
+        "图灵集市科技",
+        "图灵集市",
+        "提供"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "315cb2c6-1302-41fb-bd20-8197f9122a86"
+    },
+    {
+      "product_id": "PROD-2c7840e19de9",
+      "company_id": "COMP-e0f2fdd3f2bf",
+      "company_name": "图灵集市（深圳）科技",
+      "product_name": "人工智能光子处理器",
+      "source_url": "https://pitchhub.36kr.com/project/1678358749688837",
+      "source_adapter": "pitchhub_36kr",
+      "quality_status": "needs_review",
+      "decision": "reject",
+      "recommended_status": "rejected",
+      "risk_level": "high",
+      "reasons": [
+        "company_identity_failed"
+      ],
+      "warnings": [],
+      "company_identity_confirmed": false,
+      "identity_terms": [
+        "图灵集市科技",
+        "图灵集市",
+        "提供"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "62204038-b99c-45f2-bff5-831d15c89bcd"
+    },
+    {
+      "product_id": "PROD-fb2d10f0f93d",
+      "company_id": "COMP-e0f2fdd3f2bf",
+      "company_name": "图灵集市（深圳）科技",
+      "product_name": "停车场设备",
+      "source_url": "https://pitchhub.36kr.com/project/2205313851421056",
+      "source_adapter": "pitchhub_36kr",
+      "quality_status": "needs_review",
+      "decision": "ready_candidate",
+      "recommended_status": "needs_review",
+      "risk_level": "low",
+      "reasons": [],
+      "warnings": [],
+      "company_identity_confirmed": true,
+      "identity_terms": [
+        "图灵集市科技",
+        "图灵集市",
+        "提供"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "9fc4977f-79b1-4805-88ad-42de658aff8d"
+    },
+    {
+      "product_id": "PROD-6bdd71ca26e4",
+      "company_id": "COMP-e0f2fdd3f2bf",
+      "company_name": "图灵集市（深圳）科技",
+      "product_name": "光子计算机",
+      "source_url": "https://pitchhub.36kr.com/project/1678358749688837",
+      "source_adapter": "pitchhub_36kr",
+      "quality_status": "needs_review",
+      "decision": "reject",
+      "recommended_status": "rejected",
+      "risk_level": "high",
+      "reasons": [
+        "company_identity_failed"
+      ],
+      "warnings": [],
+      "company_identity_confirmed": false,
+      "identity_terms": [
+        "图灵集市科技",
+        "图灵集市",
+        "提供"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "62204038-b99c-45f2-bff5-831d15c89bcd"
+    },
+    {
+      "product_id": "PROD-5249ecbe94b2",
+      "company_id": "COMP-e0f2fdd3f2bf",
+      "company_name": "图灵集市（深圳）科技",
+      "product_name": "光量子芯片",
+      "source_url": "https://pitchhub.36kr.com/project/1678358749688837",
+      "source_adapter": "pitchhub_36kr",
+      "quality_status": "needs_review",
+      "decision": "reject",
+      "recommended_status": "rejected",
+      "risk_level": "high",
+      "reasons": [
+        "company_identity_failed"
+      ],
+      "warnings": [],
+      "company_identity_confirmed": false,
+      "identity_terms": [
+        "图灵集市科技",
+        "图灵集市",
+        "提供"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "62204038-b99c-45f2-bff5-831d15c89bcd"
+    },
+    {
+      "product_id": "PROD-b14d8b23f673",
+      "company_id": "COMP-e0f2fdd3f2bf",
+      "company_name": "图灵集市（深圳）科技",
+      "product_name": "光量子计算机",
+      "source_url": "https://pitchhub.36kr.com/project/1678358749688837",
+      "source_adapter": "pitchhub_36kr",
+      "quality_status": "needs_review",
+      "decision": "reject",
+      "recommended_status": "rejected",
+      "risk_level": "high",
+      "reasons": [
+        "company_identity_failed"
+      ],
+      "warnings": [],
+      "company_identity_confirmed": false,
+      "identity_terms": [
+        "图灵集市科技",
+        "图灵集市",
+        "提供"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "62204038-b99c-45f2-bff5-831d15c89bcd"
+    },
+    {
+      "product_id": "PROD-8693c16427fb",
+      "company_id": "COMP-e0f2fdd3f2bf",
+      "company_name": "图灵集市（深圳）科技",
+      "product_name": "全链路大数据平台",
+      "source_url": "https://data.iyiou.com/company/details/5a49fae5d0c3a768841d5ce4efaff073/profile?source=iyiou.trz",
+      "source_adapter": "iyiou",
+      "quality_status": "needs_review",
+      "decision": "ready_candidate",
+      "recommended_status": "needs_review",
+      "risk_level": "low",
+      "reasons": [],
+      "warnings": [],
+      "company_identity_confirmed": true,
+      "identity_terms": [
+        "图灵集市科技",
+        "图灵集市",
+        "提供"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "8fc05c8e-5644-4520-b0e9-1e1a98178664"
+    },
+    {
+      "product_id": "PROD-fe2079c82ccd",
+      "company_id": "COMP-e0f2fdd3f2bf",
+      "company_name": "图灵集市（深圳）科技",
+      "product_name": "医疗3D打印",
+      "source_url": "https://data.iyiou.com/company/details/51fa41c3a4f411f62e6c6b861426e542/profile?source=iyiou.trz",
+      "source_adapter": "iyiou",
+      "quality_status": "needs_review",
+      "decision": "reject",
+      "recommended_status": "rejected",
+      "risk_level": "high",
+      "reasons": [
+        "company_identity_failed"
+      ],
+      "warnings": [],
+      "company_identity_confirmed": false,
+      "identity_terms": [
+        "图灵集市科技",
+        "图灵集市",
+        "提供"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "6ea44b3d-dfee-4056-81cc-b36b544c3f3d"
+    },
+    {
+      "product_id": "PROD-d764dad75cff",
+      "company_id": "COMP-e0f2fdd3f2bf",
+      "company_name": "图灵集市（深圳）科技",
+      "product_name": "华数诗画文旅大模型",
+      "source_url": "https://data.iyiou.com/intelligence/details/a6552165e5dc734e4a0397af8e2cea7e",
+      "source_adapter": "iyiou",
+      "quality_status": "needs_review",
+      "decision": "ready_candidate",
+      "recommended_status": "needs_review",
+      "risk_level": "low",
+      "reasons": [],
+      "warnings": [],
+      "company_identity_confirmed": true,
+      "identity_terms": [
+        "图灵集市科技",
+        "图灵集市",
+        "提供"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "5745becf-d5e3-407b-8473-7472158dabbb"
+    },
+    {
+      "product_id": "PROD-5c56b9dfdea1",
+      "company_id": "COMP-e0f2fdd3f2bf",
+      "company_name": "图灵集市（深圳）科技",
+      "product_name": "同时引入AI算法驱动的电商平台来对应家装设计方案",
+      "source_url": "https://pitchhub.36kr.com/project/2161643729235460",
+      "source_adapter": "pitchhub_36kr",
+      "quality_status": "needs_review",
+      "decision": "reject",
+      "recommended_status": "rejected",
+      "risk_level": "high",
+      "reasons": [
+        "invalid_product_name"
+      ],
+      "warnings": [],
+      "company_identity_confirmed": true,
+      "identity_terms": [
+        "图灵集市科技",
+        "图灵集市",
+        "提供"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "f24809e3-9a20-4009-88d5-8ee4fe0c34a1"
+    },
+    {
+      "product_id": "PROD-cfd9f34cca1a",
+      "company_id": "COMP-e0f2fdd3f2bf",
+      "company_name": "图灵集市（深圳）科技",
+      "product_name": "图灵世界",
+      "source_url": "https://pitchhub.36kr.com/project/2288228195596678",
+      "source_adapter": "pitchhub_36kr",
+      "quality_status": "needs_review",
+      "decision": "reject",
+      "recommended_status": "rejected",
+      "risk_level": "high",
+      "reasons": [
+        "company_identity_failed"
+      ],
+      "warnings": [],
+      "company_identity_confirmed": false,
+      "identity_terms": [
+        "图灵集市科技",
+        "图灵集市",
+        "提供"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "b56ec607-9073-43a1-9979-deb9ff331e6e"
+    },
+    {
+      "product_id": "PROD-3955f3a0b1c1",
+      "company_id": "COMP-e0f2fdd3f2bf",
+      "company_name": "图灵集市（深圳）科技",
+      "product_name": "图灵机器人",
+      "source_url": "https://pitchhub.36kr.com/project/1818793031192710",
+      "source_adapter": "pitchhub_36kr",
+      "quality_status": "needs_review",
+      "decision": "ready_candidate",
+      "recommended_status": "needs_review",
+      "risk_level": "low",
+      "reasons": [],
+      "warnings": [],
+      "company_identity_confirmed": true,
+      "identity_terms": [
+        "图灵集市科技",
+        "图灵集市",
+        "提供"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "d4044d69-a165-47a4-80e5-b2316f84e9d5"
+    },
+    {
+      "product_id": "PROD-5a9ad970a098",
+      "company_id": "COMP-e0f2fdd3f2bf",
+      "company_name": "图灵集市（深圳）科技",
+      "product_name": "大数据高速计算平台",
+      "source_url": "https://pitchhub.36kr.com/project/2144862882153732",
+      "source_adapter": "pitchhub_36kr",
+      "quality_status": "needs_review",
+      "decision": "ready_candidate",
+      "recommended_status": "needs_review",
+      "risk_level": "low",
+      "reasons": [],
+      "warnings": [],
+      "company_identity_confirmed": true,
+      "identity_terms": [
+        "图灵集市科技",
+        "图灵集市",
+        "提供"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "315cb2c6-1302-41fb-bd20-8197f9122a86"
+    },
+    {
+      "product_id": "PROD-86b414387d26",
+      "company_id": "COMP-e0f2fdd3f2bf",
+      "company_name": "图灵集市（深圳）科技",
+      "product_name": "天元龙马VPN网关系统",
+      "source_url": "https://pitchhub.36kr.com/project/2205131183370627",
+      "source_adapter": "pitchhub_36kr",
+      "quality_status": "needs_review",
+      "decision": "ready_candidate",
+      "recommended_status": "needs_review",
+      "risk_level": "low",
+      "reasons": [],
+      "warnings": [],
+      "company_identity_confirmed": true,
+      "identity_terms": [
+        "图灵集市科技",
+        "图灵集市",
+        "提供"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "1eabc542-fea9-46bb-ad67-d071f4d7cca0"
+    },
+    {
+      "product_id": "PROD-9791952aa978",
+      "company_id": "COMP-e0f2fdd3f2bf",
+      "company_name": "图灵集市（深圳）科技",
+      "product_name": "奢侈品行业AI解决方案",
+      "source_url": "https://pitchhub.36kr.com/project/2144616112932103",
+      "source_adapter": "pitchhub_36kr",
+      "quality_status": "needs_review",
+      "decision": "ready_candidate",
+      "recommended_status": "needs_review",
+      "risk_level": "low",
+      "reasons": [],
+      "warnings": [],
+      "company_identity_confirmed": true,
+      "identity_terms": [
+        "图灵集市科技",
+        "图灵集市",
+        "提供"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "d97151db-aea4-47b0-aa1f-c4111ff243ea"
+    },
+    {
+      "product_id": "PROD-5b5b4684e7bb",
+      "company_id": "COMP-e0f2fdd3f2bf",
+      "company_name": "图灵集市（深圳）科技",
+      "product_name": "宝宝呵护母婴互联网医院",
+      "source_url": "https://pitchhub.36kr.com/project/1817554819778436",
+      "source_adapter": "pitchhub_36kr",
+      "quality_status": "needs_review",
+      "decision": "ready_candidate",
+      "recommended_status": "needs_review",
+      "risk_level": "low",
+      "reasons": [],
+      "warnings": [],
+      "company_identity_confirmed": true,
+      "identity_terms": [
+        "图灵集市科技",
+        "图灵集市",
+        "提供"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "884c4851-134a-49df-8416-2e61377f5c4d"
+    },
+    {
+      "product_id": "PROD-79561ea8c3bb",
+      "company_id": "COMP-e0f2fdd3f2bf",
+      "company_name": "图灵集市（深圳）科技",
+      "product_name": "工业级高性能碱水ALK电解槽",
+      "source_url": "https://pitchhub.36kr.com/project/1984116774108161",
+      "source_adapter": "pitchhub_36kr",
+      "quality_status": "needs_review",
+      "decision": "reject",
+      "recommended_status": "rejected",
+      "risk_level": "high",
+      "reasons": [
+        "company_identity_failed"
+      ],
+      "warnings": [],
+      "company_identity_confirmed": false,
+      "identity_terms": [
+        "图灵集市科技",
+        "图灵集市",
+        "提供"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "a0ce6a82-f18e-4fda-998b-8040cfac73ef"
+    },
+    {
+      "product_id": "PROD-694fef09ba74",
+      "company_id": "COMP-e0f2fdd3f2bf",
+      "company_name": "图灵集市（深圳）科技",
+      "product_name": "我们希望通过计算巢构建一个开放的企业服务",
+      "source_url": "https://pitchhub.36kr.com/project/2083123314010882",
+      "source_adapter": "pitchhub_36kr",
+      "quality_status": "needs_review",
+      "decision": "ready_candidate",
+      "recommended_status": "needs_review",
+      "risk_level": "low",
+      "reasons": [],
+      "warnings": [],
+      "company_identity_confirmed": true,
+      "identity_terms": [
+        "图灵集市科技",
+        "图灵集市",
+        "提供"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "12c98eda-e9f8-4700-b47e-d9d1242c7a91"
+    },
+    {
+      "product_id": "PROD-ebdfb02cf34d",
+      "company_id": "COMP-e0f2fdd3f2bf",
+      "company_name": "图灵集市（深圳）科技",
+      "product_name": "旗下已经构建有AI交叉领域重大科技创新平台",
+      "source_url": "https://pitchhub.36kr.com/project/2144657366910208",
+      "source_adapter": "pitchhub_36kr",
+      "quality_status": "needs_review",
+      "decision": "ready_candidate",
+      "recommended_status": "needs_review",
+      "risk_level": "low",
+      "reasons": [],
+      "warnings": [],
+      "company_identity_confirmed": true,
+      "identity_terms": [
+        "图灵集市科技",
+        "图灵集市",
+        "提供"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "21aaa572-701c-4e79-96e7-724fb9a2fc32"
+    },
+    {
+      "product_id": "PROD-1950c5f6122d",
+      "company_id": "COMP-e0f2fdd3f2bf",
+      "company_name": "图灵集市（深圳）科技",
+      "product_name": "智能算法决策行业解决方案",
+      "source_url": "https://pitchhub.36kr.com/project/2144862882153732",
+      "source_adapter": "pitchhub_36kr",
+      "quality_status": "needs_review",
+      "decision": "reject",
+      "recommended_status": "rejected",
+      "risk_level": "high",
+      "reasons": [
+        "product_not_grounded_in_source"
+      ],
+      "warnings": [
+        "weak_evidence_span"
+      ],
+      "company_identity_confirmed": true,
+      "identity_terms": [
+        "图灵集市科技",
+        "图灵集市",
+        "提供"
+      ],
+      "product_name_valid": true,
+      "product_grounded": false,
+      "evidence_quality_ok": false,
+      "news_id": "315cb2c6-1302-41fb-bd20-8197f9122a86"
+    },
+    {
+      "product_id": "PROD-df1320a20957",
+      "company_id": "COMP-e0f2fdd3f2bf",
+      "company_name": "图灵集市（深圳）科技",
+      "product_name": "氢能动力装置",
+      "source_url": "https://data.iyiou.com/intelligence/details/23678eef94fb2c2b66fc97a130105d4a",
+      "source_adapter": "iyiou",
+      "quality_status": "needs_review",
+      "decision": "ready_candidate",
+      "recommended_status": "needs_review",
+      "risk_level": "low",
+      "reasons": [],
+      "warnings": [],
+      "company_identity_confirmed": true,
+      "identity_terms": [
+        "图灵集市科技",
+        "图灵集市",
+        "提供"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "6439866b-ebbc-4152-b334-25c2020f1250"
+    },
+    {
+      "product_id": "PROD-0a66162d8255",
+      "company_id": "COMP-e0f2fdd3f2bf",
+      "company_name": "图灵集市（深圳）科技",
+      "product_name": "海水制氢电解槽",
+      "source_url": "https://pitchhub.36kr.com/project/1984116774108161",
+      "source_adapter": "pitchhub_36kr",
+      "quality_status": "needs_review",
+      "decision": "reject",
+      "recommended_status": "rejected",
+      "risk_level": "high",
+      "reasons": [
+        "company_identity_failed"
+      ],
+      "warnings": [],
+      "company_identity_confirmed": false,
+      "identity_terms": [
+        "图灵集市科技",
+        "图灵集市",
+        "提供"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "a0ce6a82-f18e-4fda-998b-8040cfac73ef"
+    },
+    {
+      "product_id": "PROD-06ec212f1968",
+      "company_id": "COMP-e0f2fdd3f2bf",
+      "company_name": "图灵集市（深圳）科技",
+      "product_name": "的服务",
+      "source_url": "https://pitchhub.36kr.com/project/1713076037970441",
+      "source_adapter": "pitchhub_36kr",
+      "quality_status": "needs_review",
+      "decision": "ready_candidate",
+      "recommended_status": "needs_review",
+      "risk_level": "low",
+      "reasons": [],
+      "warnings": [],
+      "company_identity_confirmed": true,
+      "identity_terms": [
+        "图灵集市科技",
+        "图灵集市",
+        "提供"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "bfb11c82-82f2-4863-a77e-4e9ab64dcfe0"
+    },
+    {
+      "product_id": "PROD-b83e15b9ceb2",
+      "company_id": "COMP-e0f2fdd3f2bf",
+      "company_name": "图灵集市（深圳）科技",
+      "product_name": "系列数据恢复产品",
+      "source_url": "https://pitchhub.36kr.com/project/2180597057572225",
+      "source_adapter": "pitchhub_36kr",
+      "quality_status": "needs_review",
+      "decision": "ready_candidate",
+      "recommended_status": "needs_review",
+      "risk_level": "low",
+      "reasons": [],
+      "warnings": [],
+      "company_identity_confirmed": true,
+      "identity_terms": [
+        "图灵集市科技",
+        "图灵集市",
+        "提供"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "b470595d-fe14-43e2-8481-2d12e3d55a2e"
+    },
+    {
+      "product_id": "PROD-2902d079acbd",
+      "company_id": "COMP-e0f2fdd3f2bf",
+      "company_name": "图灵集市（深圳）科技",
+      "product_name": "艾珈",
+      "source_url": "https://data.iyiou.com/intelligence/details/a6552165e5dc734e4a0397af8e2cea7e",
+      "source_adapter": "iyiou",
+      "quality_status": "needs_review",
+      "decision": "ready_candidate",
+      "recommended_status": "needs_review",
+      "risk_level": "low",
+      "reasons": [],
+      "warnings": [],
+      "company_identity_confirmed": true,
+      "identity_terms": [
+        "图灵集市科技",
+        "图灵集市",
+        "提供"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "5745becf-d5e3-407b-8473-7472158dabbb"
+    },
+    {
+      "product_id": "PROD-fc1b9fc19b80",
+      "company_id": "COMP-e0f2fdd3f2bf",
+      "company_name": "图灵集市（深圳）科技",
+      "product_name": "跨境电商全景解决方案",
+      "source_url": "https://data.iyiou.com/company/details/36c72a53d22ad1f53bb357c6cafebc04/profile?source=iyiou.trz",
+      "source_adapter": "iyiou",
+      "quality_status": "needs_review",
+      "decision": "ready_candidate",
+      "recommended_status": "needs_review",
+      "risk_level": "low",
+      "reasons": [],
+      "warnings": [],
+      "company_identity_confirmed": true,
+      "identity_terms": [
+        "图灵集市科技",
+        "图灵集市",
+        "提供"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "609dcd42-614d-4d7c-b081-29dc380ff179"
+    },
+    {
+      "product_id": "PROD-73269397818b",
+      "company_id": "COMP-e0f2fdd3f2bf",
+      "company_name": "图灵集市（深圳）科技",
+      "product_name": "软件外包服务",
+      "source_url": "https://pitchhub.36kr.com/project/2205284657951368",
+      "source_adapter": "pitchhub_36kr",
+      "quality_status": "needs_review",
+      "decision": "needs_review",
+      "recommended_status": "needs_review",
+      "risk_level": "medium",
+      "reasons": [],
+      "warnings": [
+        "weak_evidence_span"
+      ],
+      "company_identity_confirmed": true,
+      "identity_terms": [
+        "图灵集市科技",
+        "图灵集市",
+        "提供"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": false,
+      "news_id": "9e7116bb-af60-4ab3-8149-dcce393ba354"
+    },
+    {
+      "product_id": "PROD-aace629ac928",
+      "company_id": "COMP-e0f2fdd3f2bf",
+      "company_name": "图灵集市（深圳）科技",
+      "product_name": "采购即服务",
+      "source_url": "https://pitchhub.36kr.com/project/2083123314010882",
+      "source_adapter": "pitchhub_36kr",
+      "quality_status": "needs_review",
+      "decision": "ready_candidate",
+      "recommended_status": "needs_review",
+      "risk_level": "low",
+      "reasons": [],
+      "warnings": [],
+      "company_identity_confirmed": true,
+      "identity_terms": [
+        "图灵集市科技",
+        "图灵集市",
+        "提供"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "12c98eda-e9f8-4700-b47e-d9d1242c7a91"
+    },
+    {
+      "product_id": "PROD-1f4e13782295",
+      "company_id": "COMP-e0f2fdd3f2bf",
+      "company_name": "图灵集市（深圳）科技",
+      "product_name": "量子云",
+      "source_url": "https://pitchhub.36kr.com/project/1678358749688837",
+      "source_adapter": "pitchhub_36kr",
+      "quality_status": "needs_review",
+      "decision": "reject",
+      "recommended_status": "rejected",
+      "risk_level": "high",
+      "reasons": [
+        "company_identity_failed"
+      ],
+      "warnings": [],
+      "company_identity_confirmed": false,
+      "identity_terms": [
+        "图灵集市科技",
+        "图灵集市",
+        "提供"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "62204038-b99c-45f2-bff5-831d15c89bcd"
+    },
+    {
+      "product_id": "PROD-5158d4be1d3f",
+      "company_id": "COMP-e8a8688eaf11",
+      "company_name": "康佳芯盈半导体科技（深圳）",
+      "product_name": "MOS管IC等全系列产品",
+      "source_url": "https://pitchhub.36kr.com/project/2012750527383300",
+      "source_adapter": "pitchhub_36kr",
+      "quality_status": "needs_review",
+      "decision": "ready_candidate",
+      "recommended_status": "needs_review",
+      "risk_level": "low",
+      "reasons": [],
+      "warnings": [],
+      "company_identity_confirmed": true,
+      "identity_terms": [
+        "康佳芯盈半导体科技"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "ddd02e58-42b3-4c25-959c-0b9b84a58a18"
+    },
+    {
+      "product_id": "PROD-9d8af52a56a0",
+      "company_id": "COMP-efaddbd90d59",
+      "company_name": "深圳小墨智能科技",
+      "product_name": "人机交互效果强的线下AI交互虚拟机器人",
+      "source_url": "https://pitchhub.36kr.com/project/1932971529228168",
+      "source_adapter": "pitchhub_36kr",
+      "quality_status": "needs_review",
+      "decision": "ready_candidate",
+      "recommended_status": "needs_review",
+      "risk_level": "low",
+      "reasons": [],
+      "warnings": [],
+      "company_identity_confirmed": true,
+      "identity_terms": [
+        "小墨智能科技",
+        "小墨智能"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "fc7baa6f-dc89-41e0-a5fe-dc42241d02f1"
+    },
+    {
+      "product_id": "PROD-de157c727fb4",
+      "company_id": "COMP-f7d7ffbb7fd0",
+      "company_name": "深圳昔音科技",
+      "product_name": "HEARIN",
+      "source_url": "https://pitchhub.36kr.com/project/2022077738298120",
+      "source_adapter": "pitchhub_36kr",
+      "quality_status": "needs_review",
+      "decision": "ready_candidate",
+      "recommended_status": "needs_review",
+      "risk_level": "low",
+      "reasons": [],
+      "warnings": [],
+      "company_identity_confirmed": true,
+      "identity_terms": [
+        "昔音科技",
+        "昔音"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "2a957718-245e-4676-8d4b-95f32fe09a5c"
+    },
+    {
+      "product_id": "PROD-b656bb457dec",
+      "company_id": "COMP-fa271e8e5a4b",
+      "company_name": "遇见森林科技",
+      "product_name": "45AI app",
+      "source_url": "https://pitchhub.36kr.com/project/1976162706991617",
+      "source_adapter": "pitchhub_36kr",
+      "quality_status": "needs_review",
+      "decision": "ready_candidate",
+      "recommended_status": "needs_review",
+      "risk_level": "low",
+      "reasons": [],
+      "warnings": [],
+      "company_identity_confirmed": true,
+      "identity_terms": [
+        "遇见森林科技"
+      ],
+      "product_name_valid": true,
+      "product_grounded": true,
+      "evidence_quality_ok": true,
+      "news_id": "e82f7174-9f71-405a-8f01-08ca2a1eb783"
+    }
+  ]
+}

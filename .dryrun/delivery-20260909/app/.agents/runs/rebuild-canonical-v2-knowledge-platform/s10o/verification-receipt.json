@@ -1,0 +1,145 @@
+{
+  "schema_version": "canonical-v2-s10o-durable-knowledge-gap-operations-receipt-v1",
+  "change_id": "rebuild-canonical-v2-knowledge-platform",
+  "slice_id": "s10o-durable-knowledge-gap-operations-closure",
+  "status": "accepted",
+  "ready_at": "2026-07-20T12:12:15Z",
+  "red_at": "2026-07-20T12:26:00Z",
+  "candidate_at": "2026-07-20T13:20:32Z",
+  "accepted_at": "2026-07-20T13:25:40Z",
+  "git_head": "f0e6224e1c675c6d6c58993676783b2fbe0cd8f6",
+  "git_branch": "canonical-v2-s2-baseline",
+  "formal_task_ledger_before": "62/80",
+  "formal_task_ledger_after": "65/80",
+  "formal_tasks_changed": [
+    "10.3",
+    "10.4",
+    "10.5"
+  ],
+  "artifacts": {
+    "reviewed_specified_audit_sha256": "0955f4077db5ce848ae556fc94743bde7d72aca01df79f11a5f11bdf7eac67ab",
+    "reviewed_specified_plan_sha256": "ba2d4330ac3d8fbf693c2878a462c0f9b3ae93dadbe8dae8cd20d9a20ba8334a",
+    "reviewed_specified_contract_sha256": "2ee9787e4905957dc0d73c8d775ae0fe2ec76609ef45dc2894a6412f7a9593cf",
+    "candidate_dependency_audit_sha256": "dcebff139882cbcd2f1219957af4e6eb3b07bc7aa38e539e6ffdfd32d8b7a4dc",
+    "candidate_plan_sha256": "da0a4f18cfdeec8b855bf6584cd681474adb78b57c3596775be2dbad8c1f472a",
+    "candidate_contract_sha256": "2f2eb72135d4f93e466bb92e6e45102a670499a6f55f077fbe8fe6cbc164306b",
+    "accepted_dependency_audit_sha256": "dcebff139882cbcd2f1219957af4e6eb3b07bc7aa38e539e6ffdfd32d8b7a4dc",
+    "accepted_plan_sha256": "5e0bde2d1f36ff684833889e2dbf079c77451c2497e8cf47a37a9349f276e086",
+    "accepted_contract_sha256": "ba7b5d6e4978796da58c30ea21ae0529c90d0bfc226137fe438b8e52a9b09931",
+    "migration_sha256": "34eb39047f0454a55c427d9b0af268eb80a91c1afb80658d433aff2ad560c021",
+    "knowledge_gap_feedback_sha256_unchanged": "c611acd75e3d8c9e10fdcadad6908fb1ef752eb1e4db86f30fb182dceb4d7115",
+    "knowledge_gap_postgres_sha256": "567c1343f45036100add5f4b12a0bceaf4b006693169eed6d04a8399d18961aa",
+    "postgres_owner_sha256": "f1be7841c59f56b93c46e6f73adad19e15084584b2e195750d91cc77e7dbbe5c",
+    "online_owner_sha256": "d34dd7763a2af5542ea965252649789bd7fad63c2fd7618ca58ac7968957750a",
+    "admin_v2_dependencies_sha256": "367f75f6876bc0ae7cff92b085ca3ecab9869d7509720689e256f99fedd9b08d",
+    "admin_api_sha256": "4cab2eb6308a129409c477691a03438ac96c0926e792341e7833f91533b32c2e",
+    "admin_owner_sha256": "5201e4783b82e79f8de8de9fa8f7254d4bda3434a536de381058bbd78c64d462",
+    "admin_main_sha256": "b10a7aa6cc7cc0c73b576d2268360e6107238f390c9e0fe75f247a736b91a8e0",
+    "admin_browse_sha256": "517751a218dfd146330b17b4a2ac8ec3906e9814b5de2fb2583556194e76fa96",
+    "s10a_owner_sha256_unchanged": "661cd849f0634024005aa73ddda3eb8601132921291b93f31b419ff8e3461a29",
+    "s10b_owner_sha256_unchanged": "27b1382444cb31e284b7f9be81a677af52445a233f3c38b4f068aa35483e0f11",
+    "s10c_d_owner_sha256_unchanged": "03dece88753f30a0242b6724a5504c3ed4b1df8117ba4b8c10a5f8cb2063be89",
+    "s8c_receipt_sha256": "9e912de80fad1d82c6b6e27d71f04b458a0c78799c104ff6ca0e659e0f43ebca",
+    "s9i_receipt_sha256": "658c12f519a55d3e5ca02eea7b2a5deba36d47954fe04d9233934a434e0ac366",
+    "tasks_sha256_unchanged": "2a1174f0c4f00bc22006ea147c8fbcc05c4a4954f26b5927d299400c67faf520",
+    "acceptance_sha256_unchanged": "60f30728eb0b26fefac323ab1435133bc10346eb22403a5bef38313e43c5c5a9",
+    "tasks_sha256_after_acceptance": "87eb7c1e6d9e5b80e535cb94398f42798cdf4f3c83fb818011d0948519e32e54",
+    "acceptance_sha256_after_acceptance": "1943943ee6fbc50b33357db1cceb987af93eba129042e6e4d6edfb68c9d5261f"
+  },
+  "tdd": {
+    "ready_baseline": "8 passed across the unchanged Accepted S10A-S10D owners",
+    "initial_red": "7 agent groups failed only at the absent durable module sentinel; 1 admin group failed only at the absent V2 router sentinel",
+    "review_counterexample_red": "5 failed and 2 passed in the real PostgreSQL/online matrix plus 1 failing admin group",
+    "review_counterexample_repairs": [
+      "I1 exact later-clock restart replay returns the durable equal gap",
+      "I2 base and transition searchable, lineage, hash, and timestamp columns revalidate against typed payloads",
+      "I3 migration, hostile lifecycle, filter, ordering, pagination, and exact provenance owners are mutation-sensitive",
+      "I4 the online Read-to-Answer-to-gap path and separate offline link-to-resolve rehearsal change only ops rows",
+      "I5 cached configuration, persistence, and integrity failures are sanitized and fresh-process import quarantine stays GET-only",
+      "I6 accepted manifest v2, canonical source-batch hash, and exact object/relationship section counts are required"
+    ],
+    "final_real_postgres_and_online": "7 passed in 11.59 seconds with warnings denied",
+    "final_admin_owner": "1 passed; fresh subprocess import quarantine included",
+    "test_function_count": 8,
+    "xfail_added": false,
+    "explicit_postgres_owner_skips_without_target": 7
+  },
+  "review": {
+    "ready_contract": {
+      "critical": 0,
+      "important": 0,
+      "verdict": "ready"
+    },
+    "initial_implementation": {
+      "critical": 0,
+      "important": 6,
+      "verdict": "repair"
+    },
+    "final_frozen_targeted_review": {
+      "critical": 0,
+      "important": 0,
+      "verdict": "candidate",
+      "storage_owner_sha256": "f1be7841c59f56b93c46e6f73adad19e15084584b2e195750d91cc77e7dbbe5c",
+      "note": "The reviewer confirmed I1-I6 closed on the exact frozen hashes; Minor/YAGNI remain nonblocking and no new review scope was added."
+    }
+  },
+  "verification": {
+    "real_postgres_target": "network-none/no-port container canonical-v2-s6c-pg-20260712; marker-verified disposable base canonical_v2_s6c_base; fresh marker-owned sibling per owner",
+    "real_postgres_and_online_matrix": "7 passed in 11.59 seconds with warnings denied",
+    "accepted_s10_matrix": "8 passed in 5.70 seconds",
+    "admin_owner": "1 passed in the final focused execution",
+    "admin_comparison_matrix": "7 passed, 13 skipped because no legacy admin DATABASE_URL was configured, with 4 pre-existing FastAPI on_event deprecation warnings",
+    "canonical_v2_no_external": "357 passed, 148 skipped, 3 pre-existing hostile-model Pydantic serializer warnings in 208.94 seconds",
+    "complete_canonical_v2_ruff": "passed",
+    "complete_canonical_v2_pyright": "0 errors, 0 warnings, 0 informations",
+    "targeted_admin_ruff_pyright_py_compile": "passed",
+    "admin_inline_javascript": "validated 1 inline script",
+    "strict_openspec": "passed",
+    "git_diff_check": "passed",
+    "migration_head": "C2_0011 (canonical_v2) (head)",
+    "uv_lock_check_offline": "resolved 194 packages without lock drift",
+    "static_writer_boundary": "only INSERT INTO ops.knowledge_gap and ops.gap_remediation_transition; no canonical, publication, index, provider, or Milvus writer import",
+    "owned_generated_cache_cleanup": "exact S10O Python cache files and the exact wheel directory were removed",
+    "disposable_database_cleanup": "no canonical_v2_s6c_base_s10o_* or canonical_v2_s6c_base_s10ow_* sibling remains"
+  },
+  "wheel": {
+    "sha256": "d3aa9c3488ecd5344fc368c05e96db5b2c0f21f05db2b35d3ce5dd433385a260",
+    "contains_tests_or_agents": false,
+    "knowledge_gap_feedback_source_and_entry_sha256": "c611acd75e3d8c9e10fdcadad6908fb1ef752eb1e4db86f30fb182dceb4d7115",
+    "knowledge_gap_postgres_source_and_entry_sha256": "567c1343f45036100add5f4b12a0bceaf4b006693169eed6d04a8399d18961aa",
+    "packaged_production_hashes_match_source": true,
+    "owned_output_cleanup_complete": true
+  },
+  "frozen_targets": {
+    "original_milvus_path": "/home/longxiang/MiroThinker/apps/miroflow-agent/milvus.db",
+    "original_milvus_sha256": "43ef203e0b101fcbed2a6c8fcde19a35d426199d3f02bc72525d0acf618867cc",
+    "original_pgtest_state": "paused=true running=true",
+    "original_pgtest_volume": "d81c6381b0c7c0a975ca0ff4a0054037e72b0d4cb80174f682abceb1127cd241",
+    "original_pgtest_host_port": "15432",
+    "s10o_postgres_container": "canonical-v2-s6c-pg-20260712",
+    "s10o_postgres_network": "none",
+    "s10o_postgres_published_ports": [],
+    "git_branch": "canonical-v2-s2-baseline",
+    "git_head": "f0e6224e1c675c6d6c58993676783b2fbe0cd8f6"
+  },
+  "scope": {
+    "migration": "apps/miroflow-agent/canonical_v2_alembic/versions/C2_0011_persist_knowledge_gap_operations.py",
+    "durable_adapter": "apps/miroflow-agent/src/data_agents/canonical_v2/knowledge_gap_postgres.py",
+    "agent_owners": [
+      "apps/miroflow-agent/tests/canonical_v2/test_knowledge_gap_postgres.py",
+      "apps/miroflow-agent/tests/canonical_v2/test_knowledge_gap_online_write_boundary.py"
+    ],
+    "admin_files": [
+      "apps/admin-console/backend/canonical_v2_deps.py",
+      "apps/admin-console/backend/api/canonical_v2_operations.py",
+      "apps/admin-console/backend/main.py",
+      "apps/admin-console/backend/static/browse.html",
+      "apps/admin-console/tests/test_canonical_v2_operations_api.py"
+    ],
+    "generic_admin_deps_changed": false,
+    "original_source_or_active_pointer_writes": false,
+    "formal_ledger_changed_at_candidate": false
+  },
+  "next_required_action": "Mark S11A Ready from the Accepted S10O receipt and implement the release-bound Canonical V2 chat adapter; Tasks 8.8, 9.8, S11, and S12 remain open.",
+  "forbidden_actions_performed": []
+}

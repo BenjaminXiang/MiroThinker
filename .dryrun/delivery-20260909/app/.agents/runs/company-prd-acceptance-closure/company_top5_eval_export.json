@@ -1,0 +1,7 @@
+{
+  "query_count": 50,
+  "row_count": 250,
+  "queries_with_results": 50,
+  "output_csv": "/home/longxiang/MiroThinker/.agents/runs/company-prd-acceptance-closure/company_top5_eval_unlabeled.csv",
+  "allow_fallback_reranker": false
+}

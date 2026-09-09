@@ -1,0 +1,126 @@
+{
+  "generated": "2026-06-16",
+  "db": "miroflow_real",
+  "per_school": [
+    {
+      "institution": "南方科技大学",
+      "profs": 988,
+      "profile_summary_ge200": 70,
+      "research_overview": 86,
+      "research_directions": 42,
+      "education": 0,
+      "academic_position": 0,
+      "work_experience": 0,
+      "award": 0,
+      "contact": 98
+    },
+    {
+      "institution": "深圳大学",
+      "profs": 790,
+      "profile_summary_ge200": 41,
+      "research_overview": 41,
+      "research_directions": 46,
+      "education": 19,
+      "academic_position": 27,
+      "work_experience": 22,
+      "award": 18,
+      "contact": 93
+    },
+    {
+      "institution": "香港中文大学（深圳）",
+      "profs": 293,
+      "profile_summary_ge200": 45,
+      "research_overview": 88,
+      "research_directions": 40,
+      "education": 0,
+      "academic_position": 0,
+      "work_experience": 0,
+      "award": 0,
+      "contact": 95
+    },
+    {
+      "institution": "深圳技术大学",
+      "profs": 289,
+      "profile_summary_ge200": 67,
+      "research_overview": 74,
+      "research_directions": 72,
+      "education": 18,
+      "academic_position": 13,
+      "work_experience": 19,
+      "award": 15,
+      "contact": 89
+    },
+    {
+      "institution": "中山大学（深圳）",
+      "profs": 262,
+      "profile_summary_ge200": 83,
+      "research_overview": 94,
+      "research_directions": 99,
+      "education": 0,
+      "academic_position": 0,
+      "work_experience": 0,
+      "award": 0,
+      "contact": 99
+    },
+    {
+      "institution": "清华大学深圳国际研究生院",
+      "profs": 255,
+      "profile_summary_ge200": 83,
+      "research_overview": 99,
+      "research_directions": 69,
+      "education": 87,
+      "academic_position": 73,
+      "work_experience": 86,
+      "award": 78,
+      "contact": 98
+    },
+    {
+      "institution": "深圳理工大学",
+      "profs": 193,
+      "profile_summary_ge200": 75,
+      "research_overview": 91,
+      "research_directions": 52,
+      "education": 0,
+      "academic_position": 0,
+      "work_experience": 0,
+      "award": 0,
+      "contact": 91
+    },
+    {
+      "institution": "电子科技大学（深圳）高等研究院",
+      "profs": 166,
+      "profile_summary_ge200": 86,
+      "research_overview": 100,
+      "research_directions": 77,
+      "education": 0,
+      "academic_position": 0,
+      "work_experience": 0,
+      "award": 0,
+      "contact": 100
+    },
+    {
+      "institution": "哈尔滨工业大学（深圳）",
+      "profs": 136,
+      "profile_summary_ge200": 0,
+      "research_overview": 0,
+      "research_directions": 0,
+      "education": 0,
+      "academic_position": 0,
+      "work_experience": 0,
+      "award": 0,
+      "contact": 4
+    },
+    {
+      "institution": "深圳信息职业技术大学",
+      "profs": 14,
+      "profile_summary_ge200": 29,
+      "research_overview": 29,
+      "research_directions": 86,
+      "education": 100,
+      "academic_position": 36,
+      "work_experience": 86,
+      "award": 43,
+      "contact": 0
+    }
+  ]
+}

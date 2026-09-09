@@ -1,0 +1,18 @@
+{
+  "generated_at": "2026-06-15T01:10:41.978327+00:00",
+  "database_url": "postgresql://miroflow:***@localhost:15432/miroflow_real",
+  "input_prof_page_only_missing_summary_rows": 33825,
+  "fresh_cache_rows": 13571,
+  "cache_hit_source_backed_paper_ids": 6726,
+  "low_confidence_cache_hits_excluded": 0,
+  "invalid_cache_payloads_excluded": 0,
+  "source_less_cache_hits_excluded": 1,
+  "match_source_counts": {
+    "arxiv": 1,
+    "crossref": 1042,
+    "dblp": 40,
+    "openalex": 5642,
+    "semantic_scholar": 1
+  },
+  "paper_id_file": "/home/longxiang/MiroThinker/.agents/runs/professor-dataset-candidate-generation/paper-title-cache-hit-missing-summary-20260615-paper-ids.txt"
+}

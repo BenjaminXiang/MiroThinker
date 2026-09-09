@@ -1,0 +1,97 @@
+INFO:root:Metrics DATABASE_URL source: defaulted_host_real
+INFO:root:Using LLM profile: gemma4
+INFO:root:LLM aliases available: ark, gemma4, mirothinker, qwen35
+INFO:src.data_agents.professor.pipeline_v3:Stage 1: Roster Discovery
+INFO:src.data_agents.professor.pipeline_v3:Stage 1 done: 1603 unique professors, processing 0
+INFO:src.data_agents.professor.pipeline_v3:Stage 2-6: Per-Professor Processing
+INFO:src.data_agents.professor.pipeline_v3:Stage 2-6 done: 0 enriched, 0 homepages crawled, 0 web searched, 0 company links
+INFO:src.data_agents.professor.pipeline_v3:Stage 8: Quality Gate + Release
+INFO:src.data_agents.professor.pipeline_v3:Stage 9: Cross-Domain Writes
+INFO:src.data_agents.professor.pipeline_v3:Pipeline V3 complete: 0 released, 0 blocked, 0 vectorized
+[V3] Stage 1: Roster Discovery
+[V3] Stage 1 done: 1603 unique professors, processing 0
+[V3] Stage 2-6: Per-Professor Processing
+[V3] Stage 2-6 done: 0 enriched, 0 homepages crawled, 0 web searched, 0 company links
+[V3] Stage 8: Quality Gate + Release
+[V3] Stage 9: Cross-Domain Writes
+[V3] Pipeline V3 complete: 0 released, 0 blocked, 0 vectorized
+{
+  "generated_at": "2026-05-06T13:36:19+00:00",
+  "elapsed_seconds": 74.5,
+  "llm_profile": "gemma4",
+  "seed_document": "apps/miroflow-agent/scripts/e2e_seeds/shenzhen_stem_mainline_20260504.md",
+  "output_directory": "logs/data_agents/professor_hit_pilot_2026-05-06T13-35-04Z",
+  "report": {
+    "stage1_discovery": {
+      "seed_count": 36,
+      "discovered_count": 1603,
+      "unique_count": 1603
+    },
+    "stage2_regex": {
+      "structured": 2,
+      "partial": 1,
+      "non_stem_filtered": 0
+    },
+    "stage2_1_direction_cleaning": {
+      "cleaned_count": 0
+    },
+    "stage3_homepage_crawl": {
+      "crawled_count": 0,
+      "fields_filled": 0
+    },
+    "stage2b_papers": {
+      "enriched": 0,
+      "collected_total": 0,
+      "staging_count": 0,
+      "observability": {
+        "observed": 0,
+        "school_hit_count": 0,
+        "fallback_count": 0,
+        "name_disambiguation_conflict_count": 0,
+        "school_hit_rate": 0.0,
+        "fallback_rate": 0.0,
+        "name_disambiguation_conflict_rate": 0.0,
+        "source_breakdown": {}
+      }
+    },
+    "stage2c_agent": {
+      "triggered": 0,
+      "local_success": 0,
+      "online_escalation": 0,
+      "failed": 0
+    },
+    "stage5_web_search": {
+      "search_count": 0,
+      "identity_verified": 0,
+      "low_signal_search_count": 0,
+      "low_signal_skipped_count": 0,
+      "low_signal_skipped_reasons": {}
+    },
+    "stage6_company_linking": {
+      "links_confirmed": 0
+    },
+    "stage7_summary": {
+      "generated": 0,
+      "fallback": 0
+    },
+    "stage8_release": {
+      "l1_blocked": 0,
+      "released": 0,
+      "quality_distribution": {
+        "ready": 0,
+        "needs_review": 0,
+        "low_confidence": 0,
+        "needs_enrichment": 0
+      },
+      "vectorized": 0,
+      "alerts": []
+    }
+  },
+  "output_files": {
+    "enriched": "logs/data_agents/professor_hit_pilot_2026-05-06T13-35-04Z/enriched_v3.jsonl",
+    "paper_staging": "logs/data_agents/professor_hit_pilot_2026-05-06T13-35-04Z/paper_staging.jsonl",
+    "quality_report": "logs/data_agents/professor_hit_pilot_2026-05-06T13-35-04Z/quality_report.json"
+  }
+}
+
+Report saved to: logs/data_agents/professor_hit_pilot_2026-05-06T13-35-04Z/e2e_report.json

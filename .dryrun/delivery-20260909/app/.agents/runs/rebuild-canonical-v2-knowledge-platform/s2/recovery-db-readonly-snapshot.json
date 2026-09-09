@@ -1,0 +1,109 @@
+{
+  "captured_at": "2026-07-11T07:11:30Z",
+  "container": {
+    "name": "pgtest-recovery-lab-01",
+    "network_mode": "none",
+    "published_ports": {},
+    "status": "running"
+  },
+  "databases": [
+    {
+      "bytes": 138017815,
+      "name": "miroflow_recovery_candidate",
+      "public_core_counts": {
+        "company": 0,
+        "company_application_scenario": 0,
+        "company_patent_link": 0,
+        "company_product": 0,
+        "company_team_member": 0,
+        "paper": 0,
+        "paper_full_text": 0,
+        "paper_merge_alias": 0,
+        "patent": 0,
+        "pipeline_run": 1,
+        "professor": 0,
+        "professor_affiliation": 0,
+        "professor_company_role": 0,
+        "professor_fact": 0,
+        "professor_paper_link": 0,
+        "professor_patent_link": 0,
+        "source_row_lineage": 0
+      },
+      "public_tables": 42,
+      "revision": "V042",
+      "salvage_tables": 4,
+      "server_data_directory": "/var/lib/postgresql/data",
+      "transaction_read_only": true
+    },
+    {
+      "bytes": 136125463,
+      "name": "miroflow_recovery_candidate_verify",
+      "public_core_counts": {
+        "company": 0,
+        "company_application_scenario": 0,
+        "company_patent_link": 0,
+        "company_product": 0,
+        "company_team_member": 0,
+        "paper": 0,
+        "paper_full_text": 0,
+        "paper_merge_alias": 0,
+        "patent": 0,
+        "pipeline_run": 1,
+        "professor": 0,
+        "professor_affiliation": 0,
+        "professor_company_role": 0,
+        "professor_fact": 0,
+        "professor_paper_link": 0,
+        "professor_patent_link": 0,
+        "source_row_lineage": 0
+      },
+      "public_tables": 42,
+      "revision": "V042",
+      "salvage_tables": 4,
+      "server_data_directory": "/var/lib/postgresql/data",
+      "transaction_read_only": true
+    }
+  ],
+  "query_contract": {
+    "connection": "docker exec through the network-none recovery lab Unix socket",
+    "environment": "PGOPTIONS=-c default_transaction_read_only=on",
+    "proof_columns": [
+      "current_database()",
+      "current_setting('transaction_read_only')",
+      "current_setting('data_directory')"
+    ],
+    "write_statements": 0
+  },
+  "salvage": {
+    "field_errors": {
+      "paper.abstract_clean": 13621,
+      "paper.authors_display": 33,
+      "paper.summary_zh": 7080,
+      "paper.title_clean": 2,
+      "paper.venue": 37,
+      "total": 20773
+    },
+    "paper": {
+      "distinct_ids": 99437,
+      "rows": 99437
+    },
+    "professor_paper_link": {
+      "distinct_ids": 101158,
+      "distinct_paper_ids": 97285,
+      "distinct_professor_ids": 2826,
+      "rows": 101158
+    },
+    "recovery_metadata": {
+      "incident_commit_time_utc": "2026-07-10T17:53:40.280969Z",
+      "incident_commit_xid": "538624",
+      "paper_baseline_rows": 103425,
+      "paper_downgrade_tuple_only_rows": 3522,
+      "paper_salvaged_rows": 99437,
+      "professor_paper_link_baseline_rows": 107496,
+      "professor_paper_link_downgrade_tuple_only_rows": 120,
+      "professor_paper_link_salvaged_rows": 101158,
+      "source_forensic_checkpoint": "20260711T022932Z-pgtest-forensic-freeze",
+      "source_manifest_sha256": "bce14dce8fe2da4d053ac9cd930e1532f4abb436c5d03fff07aa69fd180e9e91"
+    }
+  }
+}

@@ -1,0 +1,101 @@
+{
+  "schema_version": "canonical-v2-s7h-isolated-release-rehearsal-receipt-v1",
+  "change_id": "rebuild-canonical-v2-knowledge-platform",
+  "slice_id": "s7h-isolated-release-rehearsal-green",
+  "status": "accepted",
+  "accepted_at": "2026-07-14T12:46:02Z",
+  "git_head": "f0e6224e1c675c6d6c58993676783b2fbe0cd8f6",
+  "implementation": {
+    "index_projection_isolated_sha256": "50c4d0382ed7a3eed6307b18b00ec8c2a4892d3e0bfa71ee73d2addebfa96a44",
+    "release_publication_isolated_sha256": "1b028616aa3e2008728c4c04b9c9973547a2af3e281c1685ea48e2d57479aa20",
+    "owner_test_sha256": "0e17d41e4a727204dd05d9fd187f479b0e8421212652ca93682752699189b9d1"
+  },
+  "isolated_database": {
+    "target_kind": "disposable",
+    "database_identity": "canonical_v2_s7h2_20260714t1235z",
+    "database_marker_present": true,
+    "network_mode": "none",
+    "published_ports": false,
+    "storage": "container-tmpfs",
+    "migration_revision": "C2_0010",
+    "prior_release_id": "accepted-s7g-r0",
+    "candidate_release_id": "candidate-s7g-r1",
+    "final_release_id": "accepted-s7g-r0",
+    "final_canonical_release_id": "accepted-s7g-r0",
+    "final_published_projection_release_id": "accepted-s7g-r0",
+    "final_index_release_id": "accepted-s7g-r0",
+    "final_previous_release_id": "candidate-s7g-r1",
+    "release_row_count": 2,
+    "build_manifest_row_count": 2,
+    "landing_counts": {
+      "evidence_artifact": 0,
+      "source_record": 0,
+      "source_error": 0
+    },
+    "evidence_sha256": "f1d775f0dd24aad07500b48330a653f16f57d29c2c8a25978c2f1df263b08e18",
+    "cleaned": true
+  },
+  "isolated_indexes": {
+    "happy_path_prior_lookup_sha256": "4fc503d3e43596a81b824ee6b33e2ad5ee5a3c8cf87dcc3208b3d70230d58b6c",
+    "happy_path_prior_milvus_sha256": "dac0c9790f481b56be5bcaa787bb29354259a90955b681debd7db65db4b6b179",
+    "happy_path_candidate_lookup_sha256": "407759a6403be3b89aceebd84b75945207f52dfb7c8d8a25d1a6105c553127d3",
+    "happy_path_candidate_milvus_sha256": "fefb19dfec8eec3e7614ae4bba817bcfcebc7992939fcae158046102b01d1a01",
+    "extra_point_prior_lookup_sha256": "45357ca03d6237d3890863e91b026086efaff378a9bf1da3b40bd305f2e873cf",
+    "extra_point_prior_milvus_sha256": "749066dad034a1e1c96a1718bf1734ada0d8ff6743f90d2e9941c521f8c28e73",
+    "extra_point_candidate_lookup_sha256": "f43b02ba6fb67ee6c97b07c4d9daec1b365e7ae6d05358c6556ecfe1bffd7287",
+    "extra_point_candidate_milvus_sha256": "d8c20f5f59569f88f822088245f3ae36bc8bc986bfd28a5e52ade8aa67ffdfcf",
+    "cleaned": true
+  },
+  "verification": {
+    "real_isolated_rehearsal": "3 passed, 40 deselected in 20.45s",
+    "active_release_pointer_invariant": "1 passed, 26 deselected in 6.45s",
+    "metadata_crosswire_regression": "2 passed, 41 deselected in 14.39s",
+    "release_publication_owner": "6 passed in 6.65s",
+    "index_and_release_owner_no_external": "47 passed, 2 skipped in 25.34s",
+    "knowledge_build_and_release": "9 passed in 6.73s",
+    "shared_contracts": "16 passed in 5.84s",
+    "canonical_v2_no_external": "291 passed, 141 skipped, 2 xfailed in 17.84s",
+    "remaining_xfails": [
+      "KnowledgeRead",
+      "KnowledgeAnswer"
+    ],
+    "ruff": "passed",
+    "format": "passed",
+    "pyright": "0 errors, 0 warnings, 0 informations",
+    "strict_openspec": "passed",
+    "git_diff_check": "passed",
+    "wheel": {
+      "path": "/var/tmp/canonical-v2-s7h-final-wheel-20260714t1245z/miroflow_agent-0.1.0-py3-none-any.whl",
+      "entry_count": 272,
+      "sha256": "aa9471c025dd129fe181e0fbb82823f57f93abb2420794e7736dcf0c4276136a",
+      "contains_index_isolated": true,
+      "contains_release_isolated": true,
+      "agents_entry_count": 0
+    }
+  },
+  "frozen_targets": {
+    "original_milvus_sha256": "43ef203e0b101fcbed2a6c8fcde19a35d426199d3f02bc72525d0acf618867cc",
+    "original_pgtest_paused": true,
+    "original_pgtest_volume": "d81c6381b0c7c0a975ca0ff4a0054037e72b0d4cb80174f682abceb1127cd241",
+    "retained_s7e_unchanged": true
+  },
+  "reviews": [
+    {
+      "review": "code-correctness",
+      "critical": 0,
+      "important": 0,
+      "closed_important": "build_metadata release identity was added to the complete physical audit"
+    },
+    {
+      "review": "target-safety-and-scope",
+      "critical": 0,
+      "important": 0
+    }
+  ],
+  "nonblocking_minor_yagni": [
+    "Keep the accepted fixed release IDs and large owner fixture until a separate cleanup slice.",
+    "Do not duplicate S7F physical missing/stale/cross-release classifications in Task 7.7.",
+    "Milvus Lite query iteration emits benign client-side timestamp fallback warnings."
+  ],
+  "forbidden_actions_performed": []
+}

@@ -1,0 +1,1230 @@
+{
+  "browser": "chromium",
+  "defect_codes": [],
+  "finished_at": "2026-08-04T22:54:20.111707+00:00",
+  "mode": "self-test",
+  "query": null,
+  "result": {
+    "defect_codes": [],
+    "fixtures": [
+      {
+        "actionable_controls": {
+          "controls": {
+            "#chat-input": {
+              "actionable": true,
+              "seen": true,
+              "visible": true
+            },
+            "#chat-submit": {
+              "actionable": true,
+              "seen": true,
+              "visible": true
+            },
+            "#demo-toggle": {
+              "actionable": true,
+              "seen": true,
+              "visible": true
+            }
+          },
+          "defect_codes": [],
+          "required_controls": [
+            "#chat-input",
+            "#chat-submit",
+            "#demo-toggle"
+          ],
+          "status": "passed"
+        },
+        "detached_scroll": {
+          "checks": {
+            "all_samples_within_tolerance": true,
+            "valid_sample_shape": true
+          },
+          "defect_codes": [],
+          "max_anchor_delta": 0,
+          "max_anchor_delta_index": 0,
+          "max_scroll_delta": 0,
+          "max_scroll_delta_index": 0,
+          "sample_count": 4,
+          "status": "passed",
+          "terminal_anchor_delta": 0,
+          "terminal_scroll_delta": 0
+        },
+        "dom_marker_probe": {
+          "checks": {
+            "initial_marker_detected": true,
+            "raw_markers_absent_from_report": true,
+            "removed_marker_detected": true
+          },
+          "latch_report": {
+            "checks": {
+              "no_dom_mutation_markers": false,
+              "valid_latch_shape": true
+            },
+            "latches": [
+              {
+                "marker_kind": "professor_internal_id",
+                "mutation_index": 0,
+                "sha256": "32b00f572bf7d7c4cd57cc997daa1a8e4a45c8923cb568ceb886ea6d4c168ac6"
+              },
+              {
+                "marker_kind": "company_internal_id",
+                "mutation_index": 1,
+                "sha256": "7d1ba3f652b6e7917ee25dbfb24ef5872fd8ccd892cb9f963b79d832d3de7b30"
+              },
+              {
+                "marker_kind": "professor_internal_id",
+                "mutation_index": 1,
+                "sha256": "92353b1f20402eea626207393f632705fb5d72f298cd2d546d019a2c577eed50"
+              }
+            ],
+            "status": "failed"
+          },
+          "status": "passed"
+        },
+        "expected_defect_codes": [],
+        "fixture": "valid",
+        "geometry": {
+          "composer": {
+            "bottom": 844,
+            "height": 60,
+            "left": 0,
+            "right": 390,
+            "top": 784,
+            "width": 390
+          },
+          "document": {
+            "client_height": 844,
+            "client_width": 390,
+            "scroll_height": 844,
+            "scroll_width": 390,
+            "scroll_x": 0,
+            "scroll_y": 0
+          },
+          "header": {
+            "bottom": 56,
+            "height": 56,
+            "left": 0,
+            "right": 390,
+            "top": 0,
+            "width": 390
+          },
+          "messages": {
+            "bottom": 784,
+            "height": 728,
+            "left": 0,
+            "right": 390,
+            "top": 56,
+            "width": 390
+          },
+          "presentation_state": "conversation",
+          "shell": {
+            "bottom": 844,
+            "height": 844,
+            "left": 0,
+            "right": 390,
+            "top": 0,
+            "width": 390
+          },
+          "targets": [
+            {
+              "height": 44,
+              "index": 0,
+              "selector": "#chat-input",
+              "width": 322
+            },
+            {
+              "height": 44,
+              "index": 0,
+              "selector": "#chat-submit",
+              "width": 44
+            },
+            {
+              "height": 44,
+              "index": 0,
+              "selector": "#demo-toggle",
+              "width": 44
+            },
+            {
+              "height": 44,
+              "index": 0,
+              "selector": ".demo-chip",
+              "width": 72
+            }
+          ],
+          "viewport": {
+            "css_app_height": 844,
+            "height": 844,
+            "visual": {
+              "height": 844,
+              "offset_left": 0,
+              "offset_top": 0,
+              "width": 390
+            },
+            "visual_viewport_short": false,
+            "width": 390
+          }
+        },
+        "observed_defect_codes": [],
+        "rotation_continuity": {
+          "checks": {
+            "conversation_state_preserved": true,
+            "detached_intent_preserved": true,
+            "final_shell_restored": true,
+            "geometry_valid": true,
+            "input_focus_preserved": true,
+            "input_value_preserved": true,
+            "phase_sequence": true,
+            "sentinel_preserved": true
+          },
+          "defect_codes": [],
+          "phases": [
+            {
+              "geometry_status": "passed",
+              "input_focused": true,
+              "input_value_fingerprint": {
+                "length": 13,
+                "sha256": "7479bf36340836969011df9b73ed84772a63f1529217562a4fe8ee95c33768a7"
+              },
+              "phase_index": 0,
+              "presentation_state": "conversation",
+              "scroll_intent": "detached",
+              "sentinel_present": true,
+              "shell": {
+                "height": 844,
+                "width": 390
+              },
+              "viewport": {
+                "height": 844,
+                "width": 390
+              }
+            },
+            {
+              "geometry_status": "passed",
+              "input_focused": true,
+              "input_value_fingerprint": {
+                "length": 13,
+                "sha256": "7479bf36340836969011df9b73ed84772a63f1529217562a4fe8ee95c33768a7"
+              },
+              "phase_index": 1,
+              "presentation_state": "conversation",
+              "scroll_intent": "detached",
+              "sentinel_present": true,
+              "shell": {
+                "height": 500,
+                "width": 390
+              },
+              "viewport": {
+                "height": 500,
+                "width": 390
+              }
+            },
+            {
+              "geometry_status": "passed",
+              "input_focused": true,
+              "input_value_fingerprint": {
+                "length": 13,
+                "sha256": "7479bf36340836969011df9b73ed84772a63f1529217562a4fe8ee95c33768a7"
+              },
+              "phase_index": 2,
+              "presentation_state": "conversation",
+              "scroll_intent": "detached",
+              "sentinel_present": true,
+              "shell": {
+                "height": 844,
+                "width": 390
+              },
+              "viewport": {
+                "height": 844,
+                "width": 390
+              }
+            },
+            {
+              "geometry_status": "passed",
+              "input_focused": true,
+              "input_value_fingerprint": {
+                "length": 13,
+                "sha256": "7479bf36340836969011df9b73ed84772a63f1529217562a4fe8ee95c33768a7"
+              },
+              "phase_index": 3,
+              "presentation_state": "conversation",
+              "scroll_intent": "detached",
+              "sentinel_present": true,
+              "shell": {
+                "height": 390,
+                "width": 812
+              },
+              "viewport": {
+                "height": 390,
+                "width": 844
+              }
+            },
+            {
+              "geometry_status": "passed",
+              "input_focused": true,
+              "input_value_fingerprint": {
+                "length": 13,
+                "sha256": "7479bf36340836969011df9b73ed84772a63f1529217562a4fe8ee95c33768a7"
+              },
+              "phase_index": 4,
+              "presentation_state": "conversation",
+              "scroll_intent": "detached",
+              "sentinel_present": true,
+              "shell": {
+                "height": 844,
+                "width": 390
+              },
+              "viewport": {
+                "height": 844,
+                "width": 390
+              }
+            }
+          ],
+          "status": "passed"
+        },
+        "status": "passed",
+        "target_summary": {
+          "#chat-input": {
+            "ever_below_44": false,
+            "min_height": 44,
+            "min_width": 322,
+            "sample_count": 1,
+            "seen": true
+          },
+          "#chat-submit": {
+            "ever_below_44": false,
+            "min_height": 44,
+            "min_width": 44,
+            "sample_count": 1,
+            "seen": true
+          },
+          "#demo-toggle": {
+            "ever_below_44": false,
+            "min_height": 44,
+            "min_width": 44,
+            "sample_count": 1,
+            "seen": true
+          },
+          ".back-to-latest": {
+            "ever_below_44": false,
+            "min_height": null,
+            "min_width": null,
+            "sample_count": 0,
+            "seen": false
+          },
+          ".demo-chip": {
+            "ever_below_44": false,
+            "min_height": 44,
+            "min_width": 72,
+            "sample_count": 1,
+            "seen": true
+          },
+          ".evidence-summary": {
+            "ever_below_44": false,
+            "min_height": null,
+            "min_width": null,
+            "sample_count": 0,
+            "seen": false
+          },
+          ".option-button": {
+            "ever_below_44": false,
+            "min_height": null,
+            "min_width": null,
+            "sample_count": 0,
+            "seen": false
+          },
+          ".process-stop": {
+            "ever_below_44": false,
+            "min_height": null,
+            "min_width": null,
+            "sample_count": 0,
+            "seen": false
+          },
+          ".process-summary summary": {
+            "ever_below_44": false,
+            "min_height": null,
+            "min_width": null,
+            "sample_count": 0,
+            "seen": false
+          }
+        }
+      },
+      {
+        "actionable_controls": {
+          "controls": {
+            "#chat-input": {
+              "actionable": true,
+              "seen": true,
+              "visible": true
+            },
+            "#chat-submit": {
+              "actionable": true,
+              "seen": true,
+              "visible": true
+            },
+            "#demo-toggle": {
+              "actionable": true,
+              "seen": true,
+              "visible": true
+            }
+          },
+          "defect_codes": [],
+          "required_controls": [
+            "#chat-input",
+            "#chat-submit",
+            "#demo-toggle"
+          ],
+          "status": "passed"
+        },
+        "detached_scroll": null,
+        "dom_marker_probe": null,
+        "expected_defect_codes": [
+          "DOCUMENT_OVERFLOW"
+        ],
+        "fixture": "document-overflow",
+        "geometry": {
+          "composer": {
+            "bottom": 568,
+            "height": 60,
+            "left": 0,
+            "right": 320,
+            "top": 508,
+            "width": 320
+          },
+          "document": {
+            "client_height": 568,
+            "client_width": 320,
+            "scroll_height": 568,
+            "scroll_width": 344,
+            "scroll_x": 0,
+            "scroll_y": 0
+          },
+          "header": {
+            "bottom": 56,
+            "height": 56,
+            "left": 0,
+            "right": 320,
+            "top": 0,
+            "width": 320
+          },
+          "messages": {
+            "bottom": 508,
+            "height": 452,
+            "left": 0,
+            "right": 320,
+            "top": 56,
+            "width": 320
+          },
+          "presentation_state": "conversation",
+          "shell": {
+            "bottom": 568,
+            "height": 568,
+            "left": 0,
+            "right": 320,
+            "top": 0,
+            "width": 320
+          },
+          "targets": [
+            {
+              "height": 44,
+              "index": 0,
+              "selector": "#chat-input",
+              "width": 252
+            },
+            {
+              "height": 44,
+              "index": 0,
+              "selector": "#chat-submit",
+              "width": 44
+            },
+            {
+              "height": 44,
+              "index": 0,
+              "selector": "#demo-toggle",
+              "width": 44
+            },
+            {
+              "height": 44,
+              "index": 0,
+              "selector": ".demo-chip",
+              "width": 72
+            }
+          ],
+          "viewport": {
+            "css_app_height": 568,
+            "height": 568,
+            "visual": {
+              "height": 568,
+              "offset_left": 0,
+              "offset_top": 0,
+              "width": 320
+            },
+            "visual_viewport_short": false,
+            "width": 320
+          }
+        },
+        "observed_defect_codes": [
+          "DOCUMENT_OVERFLOW"
+        ],
+        "rotation_continuity": null,
+        "status": "passed",
+        "target_summary": {
+          "#chat-input": {
+            "ever_below_44": false,
+            "min_height": 44,
+            "min_width": 252,
+            "sample_count": 1,
+            "seen": true
+          },
+          "#chat-submit": {
+            "ever_below_44": false,
+            "min_height": 44,
+            "min_width": 44,
+            "sample_count": 1,
+            "seen": true
+          },
+          "#demo-toggle": {
+            "ever_below_44": false,
+            "min_height": 44,
+            "min_width": 44,
+            "sample_count": 1,
+            "seen": true
+          },
+          ".back-to-latest": {
+            "ever_below_44": false,
+            "min_height": null,
+            "min_width": null,
+            "sample_count": 0,
+            "seen": false
+          },
+          ".demo-chip": {
+            "ever_below_44": false,
+            "min_height": 44,
+            "min_width": 72,
+            "sample_count": 1,
+            "seen": true
+          },
+          ".evidence-summary": {
+            "ever_below_44": false,
+            "min_height": null,
+            "min_width": null,
+            "sample_count": 0,
+            "seen": false
+          },
+          ".option-button": {
+            "ever_below_44": false,
+            "min_height": null,
+            "min_width": null,
+            "sample_count": 0,
+            "seen": false
+          },
+          ".process-stop": {
+            "ever_below_44": false,
+            "min_height": null,
+            "min_width": null,
+            "sample_count": 0,
+            "seen": false
+          },
+          ".process-summary summary": {
+            "ever_below_44": false,
+            "min_height": null,
+            "min_width": null,
+            "sample_count": 0,
+            "seen": false
+          }
+        }
+      },
+      {
+        "actionable_controls": {
+          "controls": {
+            "#chat-input": {
+              "actionable": true,
+              "seen": true,
+              "visible": true
+            },
+            "#chat-submit": {
+              "actionable": true,
+              "seen": true,
+              "visible": true
+            },
+            "#demo-toggle": {
+              "actionable": true,
+              "seen": true,
+              "visible": true
+            }
+          },
+          "defect_codes": [],
+          "required_controls": [
+            "#chat-input",
+            "#chat-submit",
+            "#demo-toggle"
+          ],
+          "status": "passed"
+        },
+        "detached_scroll": null,
+        "dom_marker_probe": null,
+        "expected_defect_codes": [
+          "TARGET_LT_44"
+        ],
+        "fixture": "small-target",
+        "geometry": {
+          "composer": {
+            "bottom": 568,
+            "height": 60,
+            "left": 0,
+            "right": 320,
+            "top": 508,
+            "width": 320
+          },
+          "document": {
+            "client_height": 568,
+            "client_width": 320,
+            "scroll_height": 568,
+            "scroll_width": 320,
+            "scroll_x": 0,
+            "scroll_y": 0
+          },
+          "header": {
+            "bottom": 56,
+            "height": 56,
+            "left": 0,
+            "right": 320,
+            "top": 0,
+            "width": 320
+          },
+          "messages": {
+            "bottom": 508,
+            "height": 452,
+            "left": 0,
+            "right": 320,
+            "top": 56,
+            "width": 320
+          },
+          "presentation_state": "conversation",
+          "shell": {
+            "bottom": 568,
+            "height": 568,
+            "left": 0,
+            "right": 320,
+            "top": 0,
+            "width": 320
+          },
+          "targets": [
+            {
+              "height": 44,
+              "index": 0,
+              "selector": "#chat-input",
+              "width": 252
+            },
+            {
+              "height": 44,
+              "index": 0,
+              "selector": "#chat-submit",
+              "width": 44
+            },
+            {
+              "height": 44,
+              "index": 0,
+              "selector": "#demo-toggle",
+              "width": 44
+            },
+            {
+              "height": 30,
+              "index": 0,
+              "selector": ".demo-chip",
+              "width": 30
+            }
+          ],
+          "viewport": {
+            "css_app_height": 568,
+            "height": 568,
+            "visual": {
+              "height": 568,
+              "offset_left": 0,
+              "offset_top": 0,
+              "width": 320
+            },
+            "visual_viewport_short": false,
+            "width": 320
+          }
+        },
+        "observed_defect_codes": [
+          "TARGET_LT_44"
+        ],
+        "rotation_continuity": null,
+        "status": "passed",
+        "target_summary": {
+          "#chat-input": {
+            "ever_below_44": false,
+            "min_height": 44,
+            "min_width": 252,
+            "sample_count": 1,
+            "seen": true
+          },
+          "#chat-submit": {
+            "ever_below_44": false,
+            "min_height": 44,
+            "min_width": 44,
+            "sample_count": 1,
+            "seen": true
+          },
+          "#demo-toggle": {
+            "ever_below_44": false,
+            "min_height": 44,
+            "min_width": 44,
+            "sample_count": 1,
+            "seen": true
+          },
+          ".back-to-latest": {
+            "ever_below_44": false,
+            "min_height": null,
+            "min_width": null,
+            "sample_count": 0,
+            "seen": false
+          },
+          ".demo-chip": {
+            "ever_below_44": true,
+            "min_height": 30,
+            "min_width": 30,
+            "sample_count": 1,
+            "seen": true
+          },
+          ".evidence-summary": {
+            "ever_below_44": false,
+            "min_height": null,
+            "min_width": null,
+            "sample_count": 0,
+            "seen": false
+          },
+          ".option-button": {
+            "ever_below_44": false,
+            "min_height": null,
+            "min_width": null,
+            "sample_count": 0,
+            "seen": false
+          },
+          ".process-stop": {
+            "ever_below_44": false,
+            "min_height": null,
+            "min_width": null,
+            "sample_count": 0,
+            "seen": false
+          },
+          ".process-summary summary": {
+            "ever_below_44": false,
+            "min_height": null,
+            "min_width": null,
+            "sample_count": 0,
+            "seen": false
+          }
+        }
+      },
+      {
+        "actionable_controls": {
+          "controls": {
+            "#chat-input": {
+              "actionable": true,
+              "seen": true,
+              "visible": true
+            },
+            "#chat-submit": {
+              "actionable": true,
+              "seen": true,
+              "visible": true
+            },
+            "#demo-toggle": {
+              "actionable": true,
+              "seen": true,
+              "visible": true
+            }
+          },
+          "defect_codes": [],
+          "required_controls": [
+            "#chat-input",
+            "#chat-submit",
+            "#demo-toggle"
+          ],
+          "status": "passed"
+        },
+        "detached_scroll": {
+          "checks": {
+            "all_samples_within_tolerance": false,
+            "valid_sample_shape": true
+          },
+          "defect_codes": [
+            "DETACHED_SCROLL_DRIFT"
+          ],
+          "max_anchor_delta": 24,
+          "max_anchor_delta_index": 0,
+          "max_scroll_delta": 24,
+          "max_scroll_delta_index": 0,
+          "sample_count": 4,
+          "status": "failed",
+          "terminal_anchor_delta": 0,
+          "terminal_scroll_delta": 0
+        },
+        "dom_marker_probe": null,
+        "expected_defect_codes": [
+          "DETACHED_SCROLL_DRIFT"
+        ],
+        "fixture": "detached-scroll-drift",
+        "geometry": {
+          "composer": {
+            "bottom": 568,
+            "height": 60,
+            "left": 0,
+            "right": 320,
+            "top": 508,
+            "width": 320
+          },
+          "document": {
+            "client_height": 568,
+            "client_width": 320,
+            "scroll_height": 568,
+            "scroll_width": 320,
+            "scroll_x": 0,
+            "scroll_y": 0
+          },
+          "header": {
+            "bottom": 56,
+            "height": 56,
+            "left": 0,
+            "right": 320,
+            "top": 0,
+            "width": 320
+          },
+          "messages": {
+            "bottom": 508,
+            "height": 452,
+            "left": 0,
+            "right": 320,
+            "top": 56,
+            "width": 320
+          },
+          "presentation_state": "conversation",
+          "shell": {
+            "bottom": 568,
+            "height": 568,
+            "left": 0,
+            "right": 320,
+            "top": 0,
+            "width": 320
+          },
+          "targets": [
+            {
+              "height": 44,
+              "index": 0,
+              "selector": "#chat-input",
+              "width": 252
+            },
+            {
+              "height": 44,
+              "index": 0,
+              "selector": "#chat-submit",
+              "width": 44
+            },
+            {
+              "height": 44,
+              "index": 0,
+              "selector": "#demo-toggle",
+              "width": 44
+            },
+            {
+              "height": 44,
+              "index": 0,
+              "selector": ".demo-chip",
+              "width": 72
+            }
+          ],
+          "viewport": {
+            "css_app_height": 568,
+            "height": 568,
+            "visual": {
+              "height": 568,
+              "offset_left": 0,
+              "offset_top": 0,
+              "width": 320
+            },
+            "visual_viewport_short": false,
+            "width": 320
+          }
+        },
+        "observed_defect_codes": [
+          "DETACHED_SCROLL_DRIFT"
+        ],
+        "rotation_continuity": null,
+        "status": "passed",
+        "target_summary": {
+          "#chat-input": {
+            "ever_below_44": false,
+            "min_height": 44,
+            "min_width": 252,
+            "sample_count": 1,
+            "seen": true
+          },
+          "#chat-submit": {
+            "ever_below_44": false,
+            "min_height": 44,
+            "min_width": 44,
+            "sample_count": 1,
+            "seen": true
+          },
+          "#demo-toggle": {
+            "ever_below_44": false,
+            "min_height": 44,
+            "min_width": 44,
+            "sample_count": 1,
+            "seen": true
+          },
+          ".back-to-latest": {
+            "ever_below_44": false,
+            "min_height": null,
+            "min_width": null,
+            "sample_count": 0,
+            "seen": false
+          },
+          ".demo-chip": {
+            "ever_below_44": false,
+            "min_height": 44,
+            "min_width": 72,
+            "sample_count": 1,
+            "seen": true
+          },
+          ".evidence-summary": {
+            "ever_below_44": false,
+            "min_height": null,
+            "min_width": null,
+            "sample_count": 0,
+            "seen": false
+          },
+          ".option-button": {
+            "ever_below_44": false,
+            "min_height": null,
+            "min_width": null,
+            "sample_count": 0,
+            "seen": false
+          },
+          ".process-stop": {
+            "ever_below_44": false,
+            "min_height": null,
+            "min_width": null,
+            "sample_count": 0,
+            "seen": false
+          },
+          ".process-summary summary": {
+            "ever_below_44": false,
+            "min_height": null,
+            "min_width": null,
+            "sample_count": 0,
+            "seen": false
+          }
+        }
+      },
+      {
+        "actionable_controls": {
+          "controls": {
+            "#chat-input": {
+              "actionable": true,
+              "seen": true,
+              "visible": true
+            },
+            "#chat-submit": {
+              "actionable": true,
+              "seen": true,
+              "visible": true
+            },
+            "#demo-toggle": {
+              "actionable": true,
+              "seen": true,
+              "visible": true
+            }
+          },
+          "defect_codes": [],
+          "required_controls": [
+            "#chat-input",
+            "#chat-submit",
+            "#demo-toggle"
+          ],
+          "status": "passed"
+        },
+        "detached_scroll": null,
+        "dom_marker_probe": null,
+        "expected_defect_codes": [
+          "ROTATION_STALE_GEOMETRY"
+        ],
+        "fixture": "rotation-stale-geometry",
+        "geometry": {
+          "composer": {
+            "bottom": 844,
+            "height": 60,
+            "left": 0,
+            "right": 390,
+            "top": 784,
+            "width": 390
+          },
+          "document": {
+            "client_height": 844,
+            "client_width": 390,
+            "scroll_height": 844,
+            "scroll_width": 390,
+            "scroll_x": 0,
+            "scroll_y": 0
+          },
+          "header": {
+            "bottom": 56,
+            "height": 56,
+            "left": 0,
+            "right": 390,
+            "top": 0,
+            "width": 390
+          },
+          "messages": {
+            "bottom": 784,
+            "height": 728,
+            "left": 0,
+            "right": 390,
+            "top": 56,
+            "width": 390
+          },
+          "presentation_state": "conversation",
+          "shell": {
+            "bottom": 844,
+            "height": 844,
+            "left": 0,
+            "right": 390,
+            "top": 0,
+            "width": 390
+          },
+          "targets": [
+            {
+              "height": 44,
+              "index": 0,
+              "selector": "#chat-input",
+              "width": 322
+            },
+            {
+              "height": 44,
+              "index": 0,
+              "selector": "#chat-submit",
+              "width": 44
+            },
+            {
+              "height": 44,
+              "index": 0,
+              "selector": "#demo-toggle",
+              "width": 44
+            },
+            {
+              "height": 44,
+              "index": 0,
+              "selector": ".demo-chip",
+              "width": 72
+            }
+          ],
+          "viewport": {
+            "css_app_height": 844,
+            "height": 844,
+            "visual": {
+              "height": 844,
+              "offset_left": 0,
+              "offset_top": 0,
+              "width": 390
+            },
+            "visual_viewport_short": false,
+            "width": 390
+          }
+        },
+        "observed_defect_codes": [
+          "ROTATION_STALE_GEOMETRY"
+        ],
+        "rotation_continuity": {
+          "checks": {
+            "conversation_state_preserved": true,
+            "detached_intent_preserved": true,
+            "final_shell_restored": true,
+            "geometry_valid": false,
+            "input_focus_preserved": true,
+            "input_value_preserved": true,
+            "phase_sequence": true,
+            "sentinel_preserved": true
+          },
+          "defect_codes": [
+            "ROTATION_STALE_GEOMETRY"
+          ],
+          "phases": [
+            {
+              "geometry_status": "passed",
+              "input_focused": true,
+              "input_value_fingerprint": {
+                "length": 13,
+                "sha256": "7479bf36340836969011df9b73ed84772a63f1529217562a4fe8ee95c33768a7"
+              },
+              "phase_index": 0,
+              "presentation_state": "conversation",
+              "scroll_intent": "detached",
+              "sentinel_present": true,
+              "shell": {
+                "height": 844,
+                "width": 390
+              },
+              "viewport": {
+                "height": 844,
+                "width": 390
+              }
+            },
+            {
+              "geometry_status": "failed",
+              "input_focused": true,
+              "input_value_fingerprint": {
+                "length": 13,
+                "sha256": "7479bf36340836969011df9b73ed84772a63f1529217562a4fe8ee95c33768a7"
+              },
+              "phase_index": 1,
+              "presentation_state": "conversation",
+              "scroll_intent": "detached",
+              "sentinel_present": true,
+              "shell": {
+                "height": 844,
+                "width": 390
+              },
+              "viewport": {
+                "height": 500,
+                "width": 390
+              }
+            },
+            {
+              "geometry_status": "passed",
+              "input_focused": true,
+              "input_value_fingerprint": {
+                "length": 13,
+                "sha256": "7479bf36340836969011df9b73ed84772a63f1529217562a4fe8ee95c33768a7"
+              },
+              "phase_index": 2,
+              "presentation_state": "conversation",
+              "scroll_intent": "detached",
+              "sentinel_present": true,
+              "shell": {
+                "height": 844,
+                "width": 390
+              },
+              "viewport": {
+                "height": 844,
+                "width": 390
+              }
+            },
+            {
+              "geometry_status": "failed",
+              "input_focused": true,
+              "input_value_fingerprint": {
+                "length": 13,
+                "sha256": "7479bf36340836969011df9b73ed84772a63f1529217562a4fe8ee95c33768a7"
+              },
+              "phase_index": 3,
+              "presentation_state": "conversation",
+              "scroll_intent": "detached",
+              "sentinel_present": true,
+              "shell": {
+                "height": 844,
+                "width": 812
+              },
+              "viewport": {
+                "height": 390,
+                "width": 844
+              }
+            },
+            {
+              "geometry_status": "passed",
+              "input_focused": true,
+              "input_value_fingerprint": {
+                "length": 13,
+                "sha256": "7479bf36340836969011df9b73ed84772a63f1529217562a4fe8ee95c33768a7"
+              },
+              "phase_index": 4,
+              "presentation_state": "conversation",
+              "scroll_intent": "detached",
+              "sentinel_present": true,
+              "shell": {
+                "height": 844,
+                "width": 390
+              },
+              "viewport": {
+                "height": 844,
+                "width": 390
+              }
+            }
+          ],
+          "status": "failed"
+        },
+        "status": "passed",
+        "target_summary": {
+          "#chat-input": {
+            "ever_below_44": false,
+            "min_height": 44,
+            "min_width": 322,
+            "sample_count": 1,
+            "seen": true
+          },
+          "#chat-submit": {
+            "ever_below_44": false,
+            "min_height": 44,
+            "min_width": 44,
+            "sample_count": 1,
+            "seen": true
+          },
+          "#demo-toggle": {
+            "ever_below_44": false,
+            "min_height": 44,
+            "min_width": 44,
+            "sample_count": 1,
+            "seen": true
+          },
+          ".back-to-latest": {
+            "ever_below_44": false,
+            "min_height": null,
+            "min_width": null,
+            "sample_count": 0,
+            "seen": false
+          },
+          ".demo-chip": {
+            "ever_below_44": false,
+            "min_height": 44,
+            "min_width": 72,
+            "sample_count": 1,
+            "seen": true
+          },
+          ".evidence-summary": {
+            "ever_below_44": false,
+            "min_height": null,
+            "min_width": null,
+            "sample_count": 0,
+            "seen": false
+          },
+          ".option-button": {
+            "ever_below_44": false,
+            "min_height": null,
+            "min_width": null,
+            "sample_count": 0,
+            "seen": false
+          },
+          ".process-stop": {
+            "ever_below_44": false,
+            "min_height": null,
+            "min_width": null,
+            "sample_count": 0,
+            "seen": false
+          },
+          ".process-summary summary": {
+            "ever_below_44": false,
+            "min_height": null,
+            "min_width": null,
+            "sample_count": 0,
+            "seen": false
+          }
+        }
+      }
+    ],
+    "status": "passed"
+  },
+  "schema_version": 1,
+  "started_at": "2026-08-04T22:54:17.716691+00:00",
+  "status": "passed"
+}

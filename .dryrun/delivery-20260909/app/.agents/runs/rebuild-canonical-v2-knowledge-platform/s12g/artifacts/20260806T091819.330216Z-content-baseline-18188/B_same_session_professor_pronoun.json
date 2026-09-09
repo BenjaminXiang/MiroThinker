@@ -1,0 +1,915 @@
+{
+  "label": "B_same_session_professor_pronoun",
+  "query": "他的研究方向是什么",
+  "url": "http://127.0.0.1:18188/api/chat/stream",
+  "started_at": "2026-08-06T09:18:29.076505+00:00",
+  "status": 200,
+  "headers": {
+    "date": "Thu, 06 Aug 2026 09:18:28 GMT",
+    "server": "uvicorn",
+    "cache-control": "no-cache",
+    "connection": "close",
+    "x-accel-buffering": "no",
+    "content-type": "text/event-stream; charset=utf-8",
+    "transfer-encoding": "chunked"
+  },
+  "cookies_after": [
+    {
+      "name": "miroflow_chat_session",
+      "value": "session:chat:bNMVzEcXRgpS5qnhqrqujTnlCOrkeTyx",
+      "domain": "127.0.0.1",
+      "path": "/"
+    }
+  ],
+  "elapsed_s": 10.852854,
+  "first_event_s": 0.012638,
+  "first_answer_chunk_s": 10.575719,
+  "error": null,
+  "event_count": 94,
+  "event_names": [
+    "stage",
+    "plan_done",
+    "stage",
+    "retrieval_done",
+    "stage",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer_chunk",
+    "answer",
+    "done"
+  ],
+  "plan_done": [
+    {
+      "lanes": [
+        "exact",
+        "structured",
+        "lexical",
+        "vector",
+        "web"
+      ],
+      "domains": [
+        "professor"
+      ],
+      "views": [
+        "丁文伯 研究方向",
+        "他的研究方向",
+        "他的研究领域",
+        "他的学术背景"
+      ]
+    }
+  ],
+  "retrieval_done": [
+    {
+      "lanes": [
+        {
+          "lane": "exact",
+          "status": "succeeded",
+          "candidates": 0
+        },
+        {
+          "lane": "structured",
+          "status": "succeeded",
+          "candidates": 1
+        },
+        {
+          "lane": "lexical",
+          "status": "succeeded",
+          "candidates": 0
+        },
+        {
+          "lane": "vector",
+          "status": "succeeded",
+          "candidates": 2
+        },
+        {
+          "lane": "web",
+          "status": "succeeded",
+          "candidates": 16
+        }
+      ]
+    }
+  ],
+  "streamed_text": "丁文伯的研究方向主要涵盖摩擦电纳米发电机与智能感知系统，具体包括：\n\n1. 摩擦电自供电传感器设计\n2. 基于摩擦电效应的触觉感知\n3. 柔性可穿戴智能手套\n4. 多模态人机交互界面\n5. 通信高效的联邦学习算法\n6. 基于自适应量化的分布式学习",
+  "answer": {
+    "query": "他的研究方向是什么",
+    "query_type": "canonical_v2:A:answer",
+    "answer_text": "丁文伯的研究方向主要涵盖摩擦电纳米发电机与智能感知系统，具体包括：\n\n1. 摩擦电自供电传感器设计\n2. 基于摩擦电效应的触觉感知\n3. 柔性可穿戴智能手套\n4. 多模态人机交互界面\n5. 通信高效的联邦学习算法\n6. 基于自适应量化的分布式学习",
+    "citations": [
+      {
+        "type": "professor",
+        "id": "official-source-372658271812c93c",
+        "label": "丁文伯",
+        "url": "http://www.sigs.tsinghua.edu.cn/dwb/main.htm"
+      }
+    ],
+    "evidence": [],
+    "clarification": null,
+    "structured_payload": {},
+    "answer_style": "llm_synthesized",
+    "citation_map": {
+      "1": "official-source-372658271812c93c"
+    },
+    "suggested_followups": []
+  },
+  "events": [
+    {
+      "event": "stage",
+      "at_s": 0.012638,
+      "data": {
+        "name": "planning"
+      }
+    },
+    {
+      "event": "plan_done",
+      "at_s": 0.252469,
+      "data": {
+        "lanes": [
+          "exact",
+          "structured",
+          "lexical",
+          "vector",
+          "web"
+        ],
+        "domains": [
+          "professor"
+        ],
+        "views": [
+          "丁文伯 研究方向",
+          "他的研究方向",
+          "他的研究领域",
+          "他的学术背景"
+        ]
+      }
+    },
+    {
+      "event": "stage",
+      "at_s": 0.258507,
+      "data": {
+        "name": "retrieval"
+      }
+    },
+    {
+      "event": "retrieval_done",
+      "at_s": 10.141343,
+      "data": {
+        "lanes": [
+          {
+            "lane": "exact",
+            "status": "succeeded",
+            "candidates": 0
+          },
+          {
+            "lane": "structured",
+            "status": "succeeded",
+            "candidates": 1
+          },
+          {
+            "lane": "lexical",
+            "status": "succeeded",
+            "candidates": 0
+          },
+          {
+            "lane": "vector",
+            "status": "succeeded",
+            "candidates": 2
+          },
+          {
+            "lane": "web",
+            "status": "succeeded",
+            "candidates": 16
+          }
+        ]
+      }
+    },
+    {
+      "event": "stage",
+      "at_s": 10.144263,
+      "data": {
+        "name": "synthesis"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 10.575719,
+      "data": {
+        "text": "丁"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 10.57587,
+      "data": {
+        "text": "文"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 10.576032,
+      "data": {
+        "text": "伯"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 10.576234,
+      "data": {
+        "text": "的"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 10.58692,
+      "data": {
+        "text": "研"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 10.58716,
+      "data": {
+        "text": "究"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 10.587378,
+      "data": {
+        "text": "方"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 10.5979,
+      "data": {
+        "text": "向"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 10.598093,
+      "data": {
+        "text": "主"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 10.59829,
+      "data": {
+        "text": "要"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 10.598488,
+      "data": {
+        "text": "涵"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 10.598693,
+      "data": {
+        "text": "盖"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 10.60835,
+      "data": {
+        "text": "摩"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 10.608563,
+      "data": {
+        "text": "擦"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 10.608769,
+      "data": {
+        "text": "电"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 10.619367,
+      "data": {
+        "text": "纳"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 10.619642,
+      "data": {
+        "text": "米"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 10.619788,
+      "data": {
+        "text": "发"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 10.630227,
+      "data": {
+        "text": "电"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 10.630411,
+      "data": {
+        "text": "机"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 10.630605,
+      "data": {
+        "text": "与"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 10.641078,
+      "data": {
+        "text": "智"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 10.641269,
+      "data": {
+        "text": "能"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 10.641456,
+      "data": {
+        "text": "感"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 10.651914,
+      "data": {
+        "text": "知"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 10.652105,
+      "data": {
+        "text": "系"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 10.652285,
+      "data": {
+        "text": "统"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 10.652461,
+      "data": {
+        "text": "，"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 10.662892,
+      "data": {
+        "text": "具"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 10.663071,
+      "data": {
+        "text": "体"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 10.663251,
+      "data": {
+        "text": "包"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 10.673672,
+      "data": {
+        "text": "括"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 10.673852,
+      "data": {
+        "text": "："
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 10.674039,
+      "data": {
+        "text": "\n"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 10.684461,
+      "data": {
+        "text": "\n"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 10.684643,
+      "data": {
+        "text": "1"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 10.684834,
+      "data": {
+        "text": "."
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 10.685019,
+      "data": {
+        "text": " "
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 10.685204,
+      "data": {
+        "text": "摩"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 10.695635,
+      "data": {
+        "text": "擦"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 10.695819,
+      "data": {
+        "text": "电"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 10.706366,
+      "data": {
+        "text": "自"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 10.706554,
+      "data": {
+        "text": "供"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 10.706739,
+      "data": {
+        "text": "电"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 10.71735,
+      "data": {
+        "text": "传"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 10.717522,
+      "data": {
+        "text": "感"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 10.717618,
+      "data": {
+        "text": "器"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 10.728027,
+      "data": {
+        "text": "设"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 10.72818,
+      "data": {
+        "text": "计"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 10.728357,
+      "data": {
+        "text": "\n"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 10.738785,
+      "data": {
+        "text": "2"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 10.73896,
+      "data": {
+        "text": "."
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 10.739139,
+      "data": {
+        "text": " "
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 10.739322,
+      "data": {
+        "text": "基"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 10.749768,
+      "data": {
+        "text": "于"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 10.749954,
+      "data": {
+        "text": "摩"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 10.760449,
+      "data": {
+        "text": "擦"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 10.76063,
+      "data": {
+        "text": "电"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 10.760836,
+      "data": {
+        "text": "效"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 10.761038,
+      "data": {
+        "text": "应"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 10.77153,
+      "data": {
+        "text": "的"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 10.771688,
+      "data": {
+        "text": "触"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 10.771866,
+      "data": {
+        "text": "觉"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 10.772041,
+      "data": {
+        "text": "感"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 10.772218,
+      "data": {
+        "text": "知"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 10.782659,
+      "data": {
+        "text": "\n"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 10.782839,
+      "data": {
+        "text": "3"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 10.783018,
+      "data": {
+        "text": "."
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 10.783196,
+      "data": {
+        "text": " "
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 10.814271,
+      "data": {
+        "text": "柔"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 10.814421,
+      "data": {
+        "text": "性"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 10.814616,
+      "data": {
+        "text": "可"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 10.8148,
+      "data": {
+        "text": "穿"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 10.814982,
+      "data": {
+        "text": "戴"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 10.815165,
+      "data": {
+        "text": "智"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 10.815364,
+      "data": {
+        "text": "能"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 10.815538,
+      "data": {
+        "text": "手"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 10.815731,
+      "data": {
+        "text": "套"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 10.816642,
+      "data": {
+        "text": "\n"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 10.827111,
+      "data": {
+        "text": "4"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 10.827307,
+      "data": {
+        "text": "."
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 10.827494,
+      "data": {
+        "text": " "
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 10.82768,
+      "data": {
+        "text": "多"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 10.827864,
+      "data": {
+        "text": "模"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 10.840804,
+      "data": {
+        "text": "态"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 10.84099,
+      "data": {
+        "text": "人"
+      }
+    },
+    {
+      "event": "answer_chunk",
+      "at_s": 10.8515,
+      "data": {
+        "text": "机交互界面\n5. 通信高效的联邦学习算法\n6. 基于自适应量化的分布式学习"
+      }
+    },
+    {
+      "event": "answer",
+      "at_s": 10.851867,
+      "data": {
+        "query": "他的研究方向是什么",
+        "query_type": "canonical_v2:A:answer",
+        "answer_text": "丁文伯的研究方向主要涵盖摩擦电纳米发电机与智能感知系统，具体包括：\n\n1. 摩擦电自供电传感器设计\n2. 基于摩擦电效应的触觉感知\n3. 柔性可穿戴智能手套\n4. 多模态人机交互界面\n5. 通信高效的联邦学习算法\n6. 基于自适应量化的分布式学习",
+        "citations": [
+          {
+            "type": "professor",
+            "id": "official-source-372658271812c93c",
+            "label": "丁文伯",
+            "url": "http://www.sigs.tsinghua.edu.cn/dwb/main.htm"
+          }
+        ],
+        "evidence": [],
+        "clarification": null,
+        "structured_payload": {},
+        "answer_style": "llm_synthesized",
+        "citation_map": {
+          "1": "official-source-372658271812c93c"
+        },
+        "suggested_followups": []
+      }
+    },
+    {
+      "event": "done",
+      "at_s": 10.852052,
+      "data": {}
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "checkpoint_manifest_sha256": "ab091aac1cfbf2ba1699f521b9a5629d4d9b02dfb236e0600a4f711219c966b1",
+  "checkpoint_root": "/md1/mirothinker-backups/canonical-v2-s4-landing-20260711T215953Z-cef42a1",
+  "directory_mode": "0550",
+  "file_mode": "0440",
+  "frozen_at": "2026-07-11T22:02:04.728682+00:00",
+  "restore_verification_sha256": "caf789ae87dc4c0429e068dcc3421c8d1346bec02296f6d056d816a3416f0acc",
+  "tree_sha256": "4ae5f2ce64e4d46101a164a3c8d0a14395b6d34015338cd9fadfa09096b05012",
+  "writable_paths": []
+}

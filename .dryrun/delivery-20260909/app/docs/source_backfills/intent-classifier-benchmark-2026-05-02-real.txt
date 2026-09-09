@@ -1,0 +1,92 @@
+============================= test session starts ==============================
+platform linux -- Python 3.12.12, pytest-9.0.3, pluggy-1.6.0 -- /home/longxiang/MiroThinker/apps/admin-console/.venv/bin/python3
+cachedir: .pytest_cache
+rootdir: /home/longxiang/MiroThinker/apps/admin-console
+configfile: pyproject.toml
+plugins: anyio-4.13.0, hydra-core-1.3.2
+collecting ... collected 2 items / 1 deselected / 1 selected
+
+tests/test_classifier_benchmark.py::test_classifier_benchmark FAILED     [100%]
+
+=================================== FAILURES ===================================
+__________________________ test_classifier_benchmark ___________________________
+tests/test_classifier_benchmark.py:111: in test_classifier_benchmark
+    assert overall >= PASS_OVERALL, f"overall {overall:.3f} < {PASS_OVERALL}"
+E   AssertionError: overall 0.690 < 0.9
+E   assert 0.69 >= 0.9
+----------------------------- Captured stdout call -----------------------------
+
+Classifier benchmark mismatches:
+  MISS [A->C] Q012: 南科大朱丽教授的代表论文
+    reason: 用户在已知特定教授（朱丽）的基础上，要求查询其关联的论文实体，属于跨域跳转。
+  MISS [A->B] Q015: 深大李娜教授的团队方向
+    reason: 用户在询问特定教授的研究领域，属于语义模糊检索教授的研究方向/领域。
+  MISS [A->C] Q024: 深圳大学郑磊教授有哪些专利
+    reason: 用户在已知特定教授（郑磊）的基础上，追问其所属领域的关联实体（专利），属于跨域跳转。
+  MISS [A->C] Q026: 优必选有哪些专利
+    reason: 用户基于已知的公司实体（优必选）追问其关联的专利信息，属于跨域跳转。
+  MISS [A->E] Q027: 大疆创新的技术实力怎么样
+    reason: 用户在询问特定公司的技术实力评价，属于对科创知识/企业能力的综合性问答，而非查询具体的专利号、人员或进行跨域跳转。
+  MISS [A->D] Q028: 腾讯云在深圳的科创业务介绍
+    reason: 用户在查询特定企业（腾讯云）在特定地区（深圳）的业务概览，属于跨领域的聚合/概览类查询。
+  MISS [A->E] Q031: 奥比中光科技集团的核心技术
+    reason: 用户在询问特定公司的核心技术原理或内容，属于科创知识问答范畴，而非查询具体的实体信息或进行跨域跳转。
+  MISS [A->C] Q032: 华大基因有哪些科研成果
+    reason: 用户基于已知的公司实体（华大基因），追问其相关的科研成果（论文/专利等），属于跨域跳转查询。
+  MISS [A->D] Q033: 迈瑞医疗的专利布局
+    reason: 用户在查询特定公司（迈瑞医疗）在某一领域（专利）的整体概览，属于跨域聚合查询。
+  MISS [A->B] Q034: 云天励飞公司的技术方向
+    reason: 用户在询问特定公司的技术领域，属于语义模糊检索/了解特定实体的研究方向，符合B类特征（针对特定实体的属性/领域查询）
+  MISS [A->B] Q045: 一种基于视觉的移动机器人导航系统专利介绍
+    reason: 用户在描述一个技术领域并要求介绍相关专利，属于语义模糊的领域检索，而非针对特定专利号或特定教授的精确查询。
+  MISS [A->C] Q046: 论文 Learning Dexterous Manipulation with Simulated Data 的作者是谁
+    reason: 用户基于特定论文（已有上下文实体）追问其作者，属于跨域跳转查询。
+  MISS [A->E] Q047: 介绍论文 RT-2: Vision-Language-Action Models Transfer Web Knowledge to Robotic Control
+    reason: 用户在询问特定论文的内容/原理，属于科创知识问答范畴
+  MISS [A->E] Q049: Diffusion Policy: Visuomotor Policy Learning via Action Diffusion 的研究内容
+    reason: 用户在询问特定论文的研究内容，属于科创知识问答范畴，需要对论文的核心原理和方法进行综合解释。
+  MISS [A->D] Q050: 论文 Segment Anything 的深圳作者有哪些
+    reason: 用户想要查询特定论文（Segment Anything）在特定地域（深圳）相关的教授、企业或研究人员的聚合信息。
+  MISS [B->D] Q051: 深圳有哪些做具身智能的灵巧手厂商
+    reason: 用户在查询特定领域（具身智能灵巧手）下的企业概览，属于跨域聚合查询。
+  MISS [B->D] Q052: 中国成熟的酒店送餐机器人供应商
+    reason: 用户在寻找特定领域（酒店送餐机器人）的供应商概览，属于跨领域（企业/产品）的聚合查询。
+  MISS [B->D] Q054: 深圳有哪些研究芯片设计的教授
+    reason: 用户想要查询深圳地区在芯片设计领域的教授及相关信息，属于跨领域的概览式查询。
+  MISS [B->D] Q056: 研究力控的深圳高校教授有哪些
+    reason: 用户在查询特定领域（力控）在特定地域（深圳）的科研力量，包含教授和高校，属于跨领域的聚合查询。
+  MISS [B->D] Q057: 深圳有哪些做协作机器人的企业
+    reason: 用户在询问特定领域（协作机器人）在特定地区（深圳）的产业概览，属于跨域聚合查询。
+  MISS [B->D] Q058: 哪些公司在做手术机器人
+    reason: 用户在询问特定领域（手术机器人）内的企业概览，属于跨域聚合或行业概览类查询。
+  MISS [B->D] Q059: 有没有做工业视觉检测的深圳企业
+    reason: 用户在寻找特定领域（工业视觉检测）在特定地域（深圳）的多个实体（企业），属于跨领域的概览式查询。
+  MISS [B->UNKNOWN] Q060: 近两年具身智能方向的论文有哪些
+  MISS [B->D] Q061: 查一下深圳高校在自动驾驶感知方向的论文
+    reason: 用户想要查询特定领域（自动驾驶感知）在特定地域（深圳高校）的科研成果，属于跨领域的概览式检索需求。
+  MISS [B->D] Q063: 深圳做合成数据平台的企业
+    reason: 用户在查询特定领域（合成数据平台）在特定地域（深圳）的产业概览，包含企业及相关生态，属于跨域聚合查询。
+  MISS [B->D] Q066: 深圳哪些公司做激光雷达
+    reason: 用户在询问特定领域（激光雷达）在特定地区（深圳）的产业概览，包含企业及相关生态，属于跨域聚合查询。
+  MISS [B->D] Q068: 做脑机接口的深圳团队有哪些
+    reason: 用户在询问深圳地区特定技术领域（脑机接口）的科研团队和企业概览，属于跨领域的聚合查询。
+  MISS [B->D] Q070: 我想找研究低空经济无人机的企业
+    reason: 用户想要寻找特定领域（低空经济无人机）的企业，属于跨领域/多实体的概览式检索需求。
+  MISS [C->D] Q072: 这些专利的发明人有哪些是深圳高校教授
+    reason: 用户想要同时检索专利、发明人（教授）以及地域（深圳）的聚合信息，属于跨领域的概览查询。
+  MISS [E->D] Q091: 在具身智能的合成数据发展方向上，有几种实现方法，代表厂商有哪些
+    reason: 用户同时询问了技术实现方法（知识问答）和代表厂商（实体检索），属于跨领域的综合概览查询。
+  MISS [G->A] Q099: 介绍无界智航的相关信息
+    reason: 用户明确查询特定公司“无界智航”的相关信息，属于精确查询公司。
+
+  Overall: 0.690 (gate 0.9)
+  A: 0.700 (gate 0.7)
+  B: 0.350 (gate 0.7)
+  C: 0.933 (gate 0.7)
+  D: 1.000 (gate 0.7)
+  E: 0.800 (gate 0.7)
+  F: 1.000 (gate 0.7)
+  G: 0.500 (gate 0.7)
+=========================== short test summary info ============================
+FAILED tests/test_classifier_benchmark.py::test_classifier_benchmark - Assert...
+======================= 1 failed, 1 deselected in 53.43s =======================

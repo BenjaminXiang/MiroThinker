@@ -1,0 +1,415 @@
+INFO:root:Using LLM profile: gemma4
+INFO:root:LLM aliases available: ark, gemma4, mirothinker, qwen35
+INFO:src.data_agents.professor.pipeline_v3:Stage 1: Roster Discovery
+INFO:src.data_agents.professor.pipeline_v3:Stage 1 done: 1603 unique professors, processing 12
+INFO:src.data_agents.professor.pipeline_v3:Stage 2-6: Per-Professor Processing
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=start | name=尤政院士 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/yzys/main.htm
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=homepage_start | name=尤政院士 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/yzys/main.htm
+INFO:httpx:HTTP Request: POST https://star.sustech.edu.cn/service/model/gemma4/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://star.sustech.edu.cn/service/model/gemma4/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=homepage_done | name=尤政院士 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/yzys/main.htm | elapsed=1.8s | success=True | pages=1
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=paper_start | name=尤政院士 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/yzys/main.htm
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=paper_done | name=尤政院士 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/yzys/main.htm | elapsed=0.0s | staged=0
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=agent_start | name=尤政院士 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/yzys/main.htm | missing=education_structured,work_experience,awards,academic_positions,projects,company_roles,patent_ids,department
+INFO:httpx:HTTP Request: POST https://star.sustech.edu.cn/service/model/gemma4/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=agent_done | name=尤政院士 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/yzys/main.htm | elapsed=0.6s | source=agent_local
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=summary_start | name=尤政院士 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/yzys/main.htm
+INFO:httpx:HTTP Request: POST https://star.sustech.edu.cn/service/model/gemma4/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://star.sustech.edu.cn/service/model/gemma4/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=summary_done | name=尤政院士 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/yzys/main.htm | elapsed=2.1s | length=217
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=done | name=尤政院士 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/yzys/main.htm | elapsed=4.6s | staged=0 | company_mentions=0
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=start | name=冯平法 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/fpf/main.htm
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=homepage_start | name=冯平法 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/fpf/main.htm
+INFO:httpx:HTTP Request: POST https://star.sustech.edu.cn/service/model/gemma4/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://star.sustech.edu.cn/service/model/gemma4/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=homepage_done | name=冯平法 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/fpf/main.htm | elapsed=7.0s | success=True | pages=1
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=paper_start | name=冯平法 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/fpf/main.htm
+INFO:httpx:HTTP Request: POST https://star.sustech.edu.cn/service/model/gemma4/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://star.sustech.edu.cn/service/model/gemma4/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=paper_done | name=冯平法 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/fpf/main.htm | elapsed=2.2s | staged=5 | source=official_site
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=agent_start | name=冯平法 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/fpf/main.htm | missing=projects,company_roles,patent_ids
+INFO:httpx:HTTP Request: POST https://star.sustech.edu.cn/service/model/gemma4/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=agent_done | name=冯平法 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/fpf/main.htm | elapsed=0.9s | source=agent_local
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=summary_start | name=冯平法 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/fpf/main.htm
+INFO:httpx:HTTP Request: POST https://star.sustech.edu.cn/service/model/gemma4/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=summary_done | name=冯平法 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/fpf/main.htm | elapsed=1.6s | length=300
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=done | name=冯平法 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/fpf/main.htm | elapsed=11.6s | staged=5 | company_mentions=0
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=start | name=陈道毅 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/cdy/main.htm
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=homepage_start | name=陈道毅 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/cdy/main.htm
+INFO:httpx:HTTP Request: POST https://star.sustech.edu.cn/service/model/gemma4/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://star.sustech.edu.cn/service/model/gemma4/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=homepage_done | name=陈道毅 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/cdy/main.htm | elapsed=7.8s | success=True | pages=1
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=paper_start | name=陈道毅 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/cdy/main.htm
+INFO:httpx:HTTP Request: POST https://star.sustech.edu.cn/service/model/gemma4/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=paper_done | name=陈道毅 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/cdy/main.htm | elapsed=0.7s | staged=4 | source=official_site
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=agent_start | name=陈道毅 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/cdy/main.htm | missing=awards,projects,company_roles,patent_ids
+INFO:httpx:HTTP Request: POST https://star.sustech.edu.cn/service/model/gemma4/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=agent_done | name=陈道毅 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/cdy/main.htm | elapsed=0.5s | source=agent_local
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=summary_start | name=陈道毅 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/cdy/main.htm
+INFO:httpx:HTTP Request: POST https://star.sustech.edu.cn/service/model/gemma4/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=summary_done | name=陈道毅 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/cdy/main.htm | elapsed=1.4s | length=272
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=done | name=陈道毅 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/cdy/main.htm | elapsed=10.4s | staged=4 | company_mentions=0
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=start | name=李宝华 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/lbh/main.htm
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=homepage_start | name=李宝华 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/lbh/main.htm
+INFO:httpx:HTTP Request: POST https://star.sustech.edu.cn/service/model/gemma4/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://star.sustech.edu.cn/service/model/gemma4/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=homepage_done | name=李宝华 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/lbh/main.htm | elapsed=6.9s | success=True | pages=1
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=paper_start | name=李宝华 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/lbh/main.htm
+INFO:httpx:HTTP Request: POST https://star.sustech.edu.cn/service/model/gemma4/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://star.sustech.edu.cn/service/model/gemma4/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=paper_done | name=李宝华 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/lbh/main.htm | elapsed=2.6s | staged=5 | source=official_site
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=agent_start | name=李宝华 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/lbh/main.htm | missing=projects,company_roles,patent_ids,department
+INFO:httpx:HTTP Request: POST https://star.sustech.edu.cn/service/model/gemma4/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=agent_done | name=李宝华 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/lbh/main.htm | elapsed=0.5s | source=agent_local
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=summary_start | name=李宝华 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/lbh/main.htm
+INFO:httpx:HTTP Request: POST https://star.sustech.edu.cn/service/model/gemma4/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=summary_done | name=李宝华 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/lbh/main.htm | elapsed=1.7s | length=300
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=done | name=李宝华 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/lbh/main.htm | elapsed=11.8s | staged=5 | company_mentions=0
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=start | name=康飞宇 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/kfy/main.htm
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=homepage_start | name=康飞宇 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/kfy/main.htm
+INFO:httpx:HTTP Request: POST https://star.sustech.edu.cn/service/model/gemma4/v1/chat/completions "HTTP/1.1 200 OK"
+WARNING:src.data_agents.professor.homepage_publications:Detected publications section on http://www.sigs.tsinghua.edu.cn/kfy/main.htm but extracted only 2 items
+INFO:httpx:HTTP Request: POST https://star.sustech.edu.cn/service/model/gemma4/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=homepage_done | name=康飞宇 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/kfy/main.htm | elapsed=9.5s | success=True | pages=1
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=paper_start | name=康飞宇 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/kfy/main.htm
+INFO:httpx:HTTP Request: POST https://star.sustech.edu.cn/service/model/gemma4/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=paper_done | name=康飞宇 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/kfy/main.htm | elapsed=1.2s | staged=2 | source=openalex
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=agent_start | name=康飞宇 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/kfy/main.htm | missing=projects,company_roles,patent_ids,department
+INFO:httpx:HTTP Request: POST https://star.sustech.edu.cn/service/model/gemma4/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=agent_done | name=康飞宇 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/kfy/main.htm | elapsed=0.6s | source=agent_local
+[V3] Stage 1: Roster Discovery
+[V3] Stage 1 done: 1603 unique professors, processing 12
+[V3] Stage 2-6: Per-Professor Processing
+[V3] professor_stage=start | name=尤政院士 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/yzys/main.htm
+[V3] professor_stage=homepage_start | name=尤政院士 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/yzys/main.htm
+[V3] professor_stage=homepage_done | name=尤政院士 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/yzys/main.htm | elapsed=1.8s | success=True | pages=1
+[V3] professor_stage=paper_start | name=尤政院士 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/yzys/main.htm
+[V3] professor_stage=paper_done | name=尤政院士 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/yzys/main.htm | elapsed=0.0s | staged=0
+[V3] professor_stage=agent_start | name=尤政院士 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/yzys/main.htm | missing=education_structured,work_experience,awards,academic_positions,projects,company_roles,patent_ids,department
+[V3] professor_stage=agent_done | name=尤政院士 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/yzys/main.htm | elapsed=0.6s | source=agent_local
+[V3] professor_stage=summary_start | name=尤政院士 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/yzys/main.htm
+[V3] professor_stage=summary_done | name=尤政院士 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/yzys/main.htm | elapsed=2.1s | length=217
+[V3] professor_stage=done | name=尤政院士 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/yzys/main.htm | elapsed=4.6s | staged=0 | company_mentions=0
+[V3] professor_stage=start | name=冯平法 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/fpf/main.htm
+[V3] professor_stage=homepage_start | name=冯平法 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/fpf/main.htm
+[V3] professor_stage=homepage_done | name=冯平法 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/fpf/main.htm | elapsed=7.0s | success=True | pages=1
+[V3] professor_stage=paper_start | name=冯平法 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/fpf/main.htm
+[V3] professor_stage=paper_done | name=冯平法 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/fpf/main.htm | elapsed=2.2s | staged=5 | source=official_site
+[V3] professor_stage=agent_start | name=冯平法 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/fpf/main.htm | missing=projects,company_roles,patent_ids
+[V3] professor_stage=agent_done | name=冯平法 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/fpf/main.htm | elapsed=0.9s | source=agent_local
+[V3] professor_stage=summary_start | name=冯平法 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/fpf/main.htm
+[V3] professor_stage=summary_done | name=冯平法 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/fpf/main.htm | elapsed=1.6s | length=300
+[V3] professor_stage=done | name=冯平法 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/fpf/main.htm | elapsed=11.6s | staged=5 | company_mentions=0
+[V3] professor_stage=start | name=陈道毅 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/cdy/main.htm
+[V3] professor_stage=homepage_start | name=陈道毅 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/cdy/main.htm
+[V3] professor_stage=homepage_done | name=陈道毅 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/cdy/main.htm | elapsed=7.8s | success=True | pages=1
+[V3] professor_stage=paper_start | name=陈道毅 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/cdy/main.htm
+[V3] professor_stage=paper_done | name=陈道毅 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/cdy/main.htm | elapsed=0.7s | staged=4 | source=official_site
+[V3] professor_stage=agent_start | name=陈道毅 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/cdy/main.htm | missing=awards,projects,company_roles,patent_ids
+[V3] professor_stage=agent_done | name=陈道毅 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/cdy/main.htm | elapsed=0.5s | source=agent_local
+[V3] professor_stage=summary_start | name=陈道毅 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/cdy/main.htm
+[V3] professor_stage=summary_done | name=陈道毅 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/cdy/main.htm | elapsed=1.4s | length=272
+[V3] professor_stage=done | name=陈道毅 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/cdy/main.htm | elapsed=10.4s | staged=4 | company_mentions=0
+[V3] professor_stage=start | name=李宝华 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/lbh/main.htm
+[V3] professor_stage=homepage_start | name=李宝华 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/lbh/main.htm
+[V3] professor_stage=homepage_done | name=李宝华 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/lbh/main.htm | elapsed=6.9s | success=True | pages=1
+[V3] professor_stage=paper_start | name=李宝华 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/lbh/main.htm
+[V3] professor_stage=paper_done | name=李宝华 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/lbh/main.htm | elapsed=2.6s | staged=5 | source=official_site
+[V3] professor_stage=agent_start | name=李宝华 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/lbh/main.htm | missing=projects,company_roles,patent_ids,department
+[V3] professor_stage=agent_done | name=李宝华 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/lbh/main.htm | elapsed=0.5s | source=agent_local
+[V3] professor_stage=summary_start | name=李宝华 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/lbh/main.htm
+[V3] professor_stage=summary_done | name=李宝华 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/lbh/main.htm | elapsed=1.7s | length=300
+[V3] professor_stage=done | name=李宝华 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/lbh/main.htm | elapsed=11.8s | staged=5 | company_mentions=0
+[V3] professor_stage=start | name=康飞宇 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/kfy/main.htm
+[V3] professor_stage=homepage_start | name=康飞宇 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/kfy/main.htm
+[V3] professor_stage=homepage_done | name=康飞宇 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/kfy/main.htm | elapsed=9.5s | success=True | pages=1
+[V3] professor_stage=paper_start | name=康飞宇 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/kfy/main.htm
+[V3] professor_stage=paper_done | name=康飞宇 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/kfy/main.htm | elapsed=1.2s | staged=2 | source=openalex
+[V3] professor_stage=agent_start | name=康飞宇 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/kfy/main.htm | missing=projects,company_roles,patent_ids,department
+[V3] professor_stage=agent_done | name=康飞宇 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/kfy/main.htm | elapsed=0.6s | source=agent_localINFO:src.data_agents.professor.pipeline_v3:professor_stage=summary_start | name=康飞宇 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/kfy/main.htm
+INFO:httpx:HTTP Request: POST https://star.sustech.edu.cn/service/model/gemma4/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=summary_done | name=康飞宇 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/kfy/main.htm | elapsed=2.0s | length=287
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=done | name=康飞宇 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/kfy/main.htm | elapsed=13.2s | staged=2 | company_mentions=0
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=start | name=金欣 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/jx/main.htm
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=homepage_start | name=金欣 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/jx/main.htm
+INFO:httpx:HTTP Request: POST https://star.sustech.edu.cn/service/model/gemma4/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://star.sustech.edu.cn/service/model/gemma4/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=homepage_done | name=金欣 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/jx/main.htm | elapsed=8.1s | success=True | pages=1
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=paper_start | name=金欣 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/jx/main.htm
+INFO:httpx:HTTP Request: POST https://star.sustech.edu.cn/service/model/gemma4/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://star.sustech.edu.cn/service/model/gemma4/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=paper_done | name=金欣 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/jx/main.htm | elapsed=2.6s | staged=3 | source=official_site
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=agent_start | name=金欣 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/jx/main.htm | missing=projects,company_roles,patent_ids,department
+INFO:httpx:HTTP Request: POST https://star.sustech.edu.cn/service/model/gemma4/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=agent_done | name=金欣 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/jx/main.htm | elapsed=0.9s | source=agent_local
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=summary_start | name=金欣 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/jx/main.htm
+INFO:httpx:HTTP Request: POST https://star.sustech.edu.cn/service/model/gemma4/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=summary_done | name=金欣 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/jx/main.htm | elapsed=1.8s | length=274
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=done | name=金欣 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/jx/main.htm | elapsed=13.3s | staged=3 | company_mentions=0
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=start | name=张雅鸥 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/zyo/main.htm
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=homepage_start | name=张雅鸥 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/zyo/main.htm
+INFO:httpx:HTTP Request: POST https://star.sustech.edu.cn/service/model/gemma4/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://star.sustech.edu.cn/service/model/gemma4/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=homepage_done | name=张雅鸥 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/zyo/main.htm | elapsed=42.5s | success=True | pages=1
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=paper_start | name=张雅鸥 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/zyo/main.htm
+INFO:httpx:HTTP Request: POST https://star.sustech.edu.cn/service/model/gemma4/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=paper_done | name=张雅鸥 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/zyo/main.htm | elapsed=0.9s | staged=5 | source=official_site
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=agent_start | name=张雅鸥 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/zyo/main.htm | missing=projects,company_roles,patent_ids
+INFO:httpx:HTTP Request: POST https://star.sustech.edu.cn/service/model/gemma4/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=agent_done | name=张雅鸥 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/zyo/main.htm | elapsed=0.5s | source=agent_local
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=summary_start | name=张雅鸥 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/zyo/main.htm
+INFO:httpx:HTTP Request: POST https://star.sustech.edu.cn/service/model/gemma4/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=summary_done | name=张雅鸥 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/zyo/main.htm | elapsed=1.9s | length=295
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=done | name=张雅鸥 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/zyo/main.htm | elapsed=45.7s | staged=5 | company_mentions=0
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=start | name=王蒲生 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/wps/main.htm
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=homepage_start | name=王蒲生 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/wps/main.htm
+INFO:httpx:HTTP Request: POST https://star.sustech.edu.cn/service/model/gemma4/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://star.sustech.edu.cn/service/model/gemma4/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=homepage_done | name=王蒲生 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/wps/main.htm | elapsed=7.7s | success=True | pages=1
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=paper_start | name=王蒲生 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/wps/main.htm
+INFO:httpx:HTTP Request: POST https://star.sustech.edu.cn/service/model/gemma4/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=paper_done | name=王蒲生 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/wps/main.htm | elapsed=0.8s | staged=0
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=agent_start | name=王蒲生 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/wps/main.htm | missing=projects,company_roles,patent_ids
+INFO:httpx:HTTP Request: POST https://star.sustech.edu.cn/service/model/gemma4/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=agent_done | name=王蒲生 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/wps/main.htm | elapsed=0.3s | source=agent_local
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=summary_start | name=王蒲生 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/wps/main.htm
+INFO:httpx:HTTP Request: POST https://star.sustech.edu.cn/service/model/gemma4/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=summary_done | name=王蒲生 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/wps/main.htm | elapsed=1.2s | length=242
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=done | name=王蒲生 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/wps/main.htm | elapsed=10.0s | staged=0 | company_mentions=0
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=start | name=王黎明 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/wlm/main.htm
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=homepage_start | name=王黎明 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/wlm/main.htm
+INFO:httpx:HTTP Request: POST https://star.sustech.edu.cn/service/model/gemma4/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://star.sustech.edu.cn/service/model/gemma4/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=homepage_done | name=王黎明 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/wlm/main.htm | elapsed=9.2s | success=True | pages=1
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=paper_start | name=王黎明 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/wlm/main.htm
+INFO:httpx:HTTP Request: POST https://star.sustech.edu.cn/service/model/gemma4/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://star.sustech.edu.cn/service/model/gemma4/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://star.sustech.edu.cn/service/model/gemma4/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=paper_done | name=王黎明 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/wlm/main.htm | elapsed=14.8s | staged=5 | source=official_site
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=agent_start | name=王黎明 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/wlm/main.htm | missing=awards,projects,company_roles,patent_ids,department
+INFO:httpx:HTTP Request: POST https://star.sustech.edu.cn/service/model/gemma4/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=agent_done | name=王黎明 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/wlm/main.htm | elapsed=0.8s | source=agent_local
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=summary_start | name=王黎明 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/wlm/main.htm
+INFO:httpx:HTTP Request: POST https://star.sustech.edu.cn/service/model/gemma4/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=summary_done | name=王黎明 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/wlm/main.htm | elapsed=2.0s | length=256
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=done | name=王黎明 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/wlm/main.htm | elapsed=26.9s | staged=5 | company_mentions=0
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=start | name=何永红 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/hyh/main.htm
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=homepage_start | name=何永红 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/hyh/main.htm
+INFO:httpx:HTTP Request: POST https://star.sustech.edu.cn/service/model/gemma4/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://star.sustech.edu.cn/service/model/gemma4/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=homepage_done | name=何永红 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/hyh/main.htm | elapsed=5.6s | success=True | pages=1
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=paper_start | name=何永红 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/hyh/main.htm
+INFO:httpx:HTTP Request: POST https://star.sustech.edu.cn/service/model/gemma4/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://star.sustech.edu.cn/service/model/gemma4/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://star.sustech.edu.cn/service/model/gemma4/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=paper_done | name=何永红 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/hyh/main.htm | elapsed=5.5s | staged=5 | source=official_site
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=agent_start | name=何永红 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/hyh/main.htm | missing=awards,projects,company_roles,patent_ids
+
+[V3] professor_stage=summary_start | name=康飞宇 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/kfy/main.htm
+[V3] professor_stage=summary_done | name=康飞宇 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/kfy/main.htm | elapsed=2.0s | length=287
+[V3] professor_stage=done | name=康飞宇 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/kfy/main.htm | elapsed=13.2s | staged=2 | company_mentions=0
+[V3] professor_stage=start | name=金欣 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/jx/main.htm
+[V3] professor_stage=homepage_start | name=金欣 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/jx/main.htm
+[V3] professor_stage=homepage_done | name=金欣 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/jx/main.htm | elapsed=8.1s | success=True | pages=1
+[V3] professor_stage=paper_start | name=金欣 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/jx/main.htm
+[V3] professor_stage=paper_done | name=金欣 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/jx/main.htm | elapsed=2.6s | staged=3 | source=official_site
+[V3] professor_stage=agent_start | name=金欣 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/jx/main.htm | missing=projects,company_roles,patent_ids,department
+[V3] professor_stage=agent_done | name=金欣 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/jx/main.htm | elapsed=0.9s | source=agent_local
+[V3] professor_stage=summary_start | name=金欣 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/jx/main.htm
+[V3] professor_stage=summary_done | name=金欣 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/jx/main.htm | elapsed=1.8s | length=274
+[V3] professor_stage=done | name=金欣 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/jx/main.htm | elapsed=13.3s | staged=3 | company_mentions=0
+[V3] professor_stage=start | name=张雅鸥 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/zyo/main.htm
+[V3] professor_stage=homepage_start | name=张雅鸥 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/zyo/main.htm
+[V3] professor_stage=homepage_done | name=张雅鸥 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/zyo/main.htm | elapsed=42.5s | success=True | pages=1
+[V3] professor_stage=paper_start | name=张雅鸥 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/zyo/main.htm
+[V3] professor_stage=paper_done | name=张雅鸥 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/zyo/main.htm | elapsed=0.9s | staged=5 | source=official_site
+[V3] professor_stage=agent_start | name=张雅鸥 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/zyo/main.htm | missing=projects,company_roles,patent_ids
+[V3] professor_stage=agent_done | name=张雅鸥 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/zyo/main.htm | elapsed=0.5s | source=agent_local
+[V3] professor_stage=summary_start | name=张雅鸥 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/zyo/main.htm
+[V3] professor_stage=summary_done | name=张雅鸥 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/zyo/main.htm | elapsed=1.9s | length=295
+[V3] professor_stage=done | name=张雅鸥 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/zyo/main.htm | elapsed=45.7s | staged=5 | company_mentions=0
+[V3] professor_stage=start | name=王蒲生 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/wps/main.htm
+[V3] professor_stage=homepage_start | name=王蒲生 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/wps/main.htm
+[V3] professor_stage=homepage_done | name=王蒲生 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/wps/main.htm | elapsed=7.7s | success=True | pages=1
+[V3] professor_stage=paper_start | name=王蒲生 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/wps/main.htm
+[V3] professor_stage=paper_done | name=王蒲生 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/wps/main.htm | elapsed=0.8s | staged=0
+[V3] professor_stage=agent_start | name=王蒲生 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/wps/main.htm | missing=projects,company_roles,patent_ids
+[V3] professor_stage=agent_done | name=王蒲生 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/wps/main.htm | elapsed=0.3s | source=agent_local
+[V3] professor_stage=summary_start | name=王蒲生 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/wps/main.htm
+[V3] professor_stage=summary_done | name=王蒲生 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/wps/main.htm | elapsed=1.2s | length=242
+[V3] professor_stage=done | name=王蒲生 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/wps/main.htm | elapsed=10.0s | staged=0 | company_mentions=0
+[V3] professor_stage=start | name=王黎明 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/wlm/main.htm
+[V3] professor_stage=homepage_start | name=王黎明 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/wlm/main.htm
+[V3] professor_stage=homepage_done | name=王黎明 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/wlm/main.htm | elapsed=9.2s | success=True | pages=1
+[V3] professor_stage=paper_start | name=王黎明 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/wlm/main.htm
+[V3] professor_stage=paper_done | name=王黎明 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/wlm/main.htm | elapsed=14.8s | staged=5 | source=official_site
+[V3] professor_stage=agent_start | name=王黎明 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/wlm/main.htm | missing=awards,projects,company_roles,patent_ids,department
+[V3] professor_stage=agent_done | name=王黎明 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/wlm/main.htm | elapsed=0.8s | source=agent_local
+[V3] professor_stage=summary_start | name=王黎明 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/wlm/main.htm
+[V3] professor_stage=summary_done | name=王黎明 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/wlm/main.htm | elapsed=2.0s | length=256
+[V3] professor_stage=done | name=王黎明 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/wlm/main.htm | elapsed=26.9s | staged=5 | company_mentions=0
+[V3] professor_stage=start | name=何永红 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/hyh/main.htm
+[V3] professor_stage=homepage_start | name=何永红 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/hyh/main.htm
+[V3] professor_stage=homepage_done | name=何永红 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/hyh/main.htm | elapsed=5.6s | success=True | pages=1
+[V3] professor_stage=paper_start | name=何永红 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/hyh/main.htm
+[V3] professor_stage=paper_done | name=何永红 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/hyh/main.htm | elapsed=5.5s | staged=5 | source=official_site
+[V3] professor_stage=agent_start | name=何永红 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/hyh/main.htm | missing=awards,projects,company_roles,patent_idsINFO:httpx:HTTP Request: POST https://star.sustech.edu.cn/service/model/gemma4/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=agent_done | name=何永红 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/hyh/main.htm | elapsed=0.6s | source=agent_local
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=summary_start | name=何永红 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/hyh/main.htm
+INFO:httpx:HTTP Request: POST https://star.sustech.edu.cn/service/model/gemma4/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=summary_done | name=何永红 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/hyh/main.htm | elapsed=1.6s | length=233
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=done | name=何永红 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/hyh/main.htm | elapsed=13.3s | staged=5 | company_mentions=0
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=start | name=王晓浩 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/wxh/main.htm
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=homepage_start | name=王晓浩 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/wxh/main.htm
+INFO:httpx:HTTP Request: POST https://star.sustech.edu.cn/service/model/gemma4/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://star.sustech.edu.cn/service/model/gemma4/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=homepage_done | name=王晓浩 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/wxh/main.htm | elapsed=13.6s | success=True | pages=1
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=paper_start | name=王晓浩 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/wxh/main.htm
+INFO:httpx:HTTP Request: POST https://star.sustech.edu.cn/service/model/gemma4/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://star.sustech.edu.cn/service/model/gemma4/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=paper_done | name=王晓浩 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/wxh/main.htm | elapsed=2.0s | staged=4 | source=official_site
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=agent_start | name=王晓浩 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/wxh/main.htm | missing=projects,company_roles,patent_ids
+INFO:httpx:HTTP Request: POST https://star.sustech.edu.cn/service/model/gemma4/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=agent_done | name=王晓浩 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/wxh/main.htm | elapsed=0.5s | source=agent_local
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=summary_start | name=王晓浩 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/wxh/main.htm
+INFO:httpx:HTTP Request: POST https://star.sustech.edu.cn/service/model/gemma4/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=summary_done | name=王晓浩 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/wxh/main.htm | elapsed=1.6s | length=203
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=done | name=王晓浩 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/wxh/main.htm | elapsed=17.7s | staged=4 | company_mentions=0
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=start | name=缪立新 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/mlx/main.htm
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=homepage_start | name=缪立新 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/mlx/main.htm
+INFO:httpx:HTTP Request: POST https://star.sustech.edu.cn/service/model/gemma4/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://star.sustech.edu.cn/service/model/gemma4/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=homepage_done | name=缪立新 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/mlx/main.htm | elapsed=5.0s | success=True | pages=1
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=paper_start | name=缪立新 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/mlx/main.htm
+INFO:httpx:HTTP Request: POST https://star.sustech.edu.cn/service/model/gemma4/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=paper_done | name=缪立新 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/mlx/main.htm | elapsed=0.9s | staged=0
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=agent_start | name=缪立新 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/mlx/main.htm | missing=awards,projects,company_roles,patent_ids
+INFO:httpx:HTTP Request: POST https://star.sustech.edu.cn/service/model/gemma4/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=agent_done | name=缪立新 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/mlx/main.htm | elapsed=0.5s | source=agent_local
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=summary_start | name=缪立新 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/mlx/main.htm
+INFO:httpx:HTTP Request: POST https://star.sustech.edu.cn/service/model/gemma4/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://star.sustech.edu.cn/service/model/gemma4/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=summary_done | name=缪立新 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/mlx/main.htm | elapsed=1.9s | length=221
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=done | name=缪立新 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/mlx/main.htm | elapsed=8.2s | staged=0 | company_mentions=0
+INFO:src.data_agents.professor.pipeline_v3:professor_stage=filtered_non_stem | name=王蒲生 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/wps/main.htm | department=清华大学深圳国际研究生院人文社会科学部
+INFO:src.data_agents.professor.pipeline_v3:Stage 2-6 progress: 12/12 processed, 11 enriched, 38 staged papers
+INFO:src.data_agents.professor.pipeline_v3:Stage 2-6 done: 11 enriched, 12 homepages crawled, 0 web searched, 0 company links
+INFO:src.data_agents.professor.pipeline_v3:Stage 8: Quality Gate + Release
+INFO:src.data_agents.professor.pipeline_v3:Stage 9: Cross-Domain Writes
+INFO:src.data_agents.professor.pipeline_v3:Stage 11.5: Academic Metrics Refresh
+WARNING:src.data_agents.professor.pipeline_v3:Academic metrics refresh skipped: DATABASE_URL is required. Example: postgresql+psycopg://user:pass@localhost:5432/miroflow
+INFO:src.data_agents.professor.pipeline_v3:Pipeline V3 complete: 11 released, 0 blocked, 0 vectorized
+
+[V3] professor_stage=agent_done | name=何永红 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/hyh/main.htm | elapsed=0.6s | source=agent_local
+[V3] professor_stage=summary_start | name=何永红 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/hyh/main.htm
+[V3] professor_stage=summary_done | name=何永红 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/hyh/main.htm | elapsed=1.6s | length=233
+[V3] professor_stage=done | name=何永红 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/hyh/main.htm | elapsed=13.3s | staged=5 | company_mentions=0
+[V3] professor_stage=start | name=王晓浩 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/wxh/main.htm
+[V3] professor_stage=homepage_start | name=王晓浩 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/wxh/main.htm
+[V3] professor_stage=homepage_done | name=王晓浩 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/wxh/main.htm | elapsed=13.6s | success=True | pages=1
+[V3] professor_stage=paper_start | name=王晓浩 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/wxh/main.htm
+[V3] professor_stage=paper_done | name=王晓浩 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/wxh/main.htm | elapsed=2.0s | staged=4 | source=official_site
+[V3] professor_stage=agent_start | name=王晓浩 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/wxh/main.htm | missing=projects,company_roles,patent_ids
+[V3] professor_stage=agent_done | name=王晓浩 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/wxh/main.htm | elapsed=0.5s | source=agent_local
+[V3] professor_stage=summary_start | name=王晓浩 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/wxh/main.htm
+[V3] professor_stage=summary_done | name=王晓浩 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/wxh/main.htm | elapsed=1.6s | length=203
+[V3] professor_stage=done | name=王晓浩 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/wxh/main.htm | elapsed=17.7s | staged=4 | company_mentions=0
+[V3] professor_stage=start | name=缪立新 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/mlx/main.htm
+[V3] professor_stage=homepage_start | name=缪立新 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/mlx/main.htm
+[V3] professor_stage=homepage_done | name=缪立新 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/mlx/main.htm | elapsed=5.0s | success=True | pages=1
+[V3] professor_stage=paper_start | name=缪立新 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/mlx/main.htm
+[V3] professor_stage=paper_done | name=缪立新 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/mlx/main.htm | elapsed=0.9s | staged=0
+[V3] professor_stage=agent_start | name=缪立新 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/mlx/main.htm | missing=awards,projects,company_roles,patent_ids
+[V3] professor_stage=agent_done | name=缪立新 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/mlx/main.htm | elapsed=0.5s | source=agent_local
+[V3] professor_stage=summary_start | name=缪立新 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/mlx/main.htm
+[V3] professor_stage=summary_done | name=缪立新 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/mlx/main.htm | elapsed=1.9s | length=221
+[V3] professor_stage=done | name=缪立新 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/mlx/main.htm | elapsed=8.2s | staged=0 | company_mentions=0
+[V3] professor_stage=filtered_non_stem | name=王蒲生 institution=清华大学深圳国际研究生院 url=http://www.sigs.tsinghua.edu.cn/wps/main.htm | department=清华大学深圳国际研究生院人文社会科学部
+[V3] Stage 2-6 progress: 12/12 processed, 11 enriched, 38 staged papers
+[V3] Stage 2-6 done: 11 enriched, 12 homepages crawled, 0 web searched, 0 company links
+[V3] Stage 8: Quality Gate + Release
+[V3] Stage 9: Cross-Domain Writes
+[V3] Stage 11.5: Academic Metrics Refresh
+[V3] Pipeline V3 complete: 11 released, 0 blocked, 0 vectorized
+{
+  "generated_at": "2026-05-04T13:42:24+00:00",
+  "elapsed_seconds": 262.9,
+  "llm_profile": "gemma4",
+  "seed_document": "scripts/e2e_seeds/shenzhen_stem_mainline_20260504.md",
+  "output_directory": "/home/longxiang/MiroThinker/apps/miroflow-agent/logs/data_agents/professor_stem_wide_harvest_2026-05-04T13-38-01Z",
+  "report": {
+    "stage1_discovery": {
+      "seed_count": 36,
+      "discovered_count": 1603,
+      "unique_count": 1603
+    },
+    "stage2_regex": {
+      "structured": 11,
+      "partial": 1,
+      "non_stem_filtered": 1
+    },
+    "stage2_1_direction_cleaning": {
+      "cleaned_count": 0
+    },
+    "stage3_homepage_crawl": {
+      "crawled_count": 12,
+      "fields_filled": 12
+    },
+    "stage2b_papers": {
+      "enriched": 11,
+      "collected_total": 38,
+      "staging_count": 38,
+      "observability": {
+        "observed": 12,
+        "school_hit_count": 8,
+        "fallback_count": 0,
+        "name_disambiguation_conflict_count": 1,
+        "school_hit_rate": 0.6666666666666666,
+        "fallback_rate": 0.0,
+        "name_disambiguation_conflict_rate": 0.08333333333333333,
+        "source_breakdown": {
+          "official_site": 8,
+          "openalex": 1
+        }
+      }
+    },
+    "stage2c_agent": {
+      "triggered": 12,
+      "local_success": 12,
+      "online_escalation": 0,
+      "failed": 0
+    },
+    "stage5_web_search": {
+      "search_count": 0,
+      "identity_verified": 0
+    },
+    "stage6_company_linking": {
+      "links_confirmed": 0
+    },
+    "stage7_summary": {
+      "generated": 12,
+      "fallback": 0
+    },
+    "stage8_release": {
+      "l1_blocked": 0,
+      "released": 11,
+      "quality_distribution": {
+        "ready": 8,
+        "needs_review": 0,
+        "low_confidence": 0,
+        "needs_enrichment": 3
+      },
+      "vectorized": 0,
+      "alerts": [
+        "metrics_refresh_skipped:DATABASE_URL is required. Example: postgresql+psycopg://user:pass@localhost:5432/miroflow"
+      ]
+    }
+  },
+  "output_files": {
+    "enriched": "/home/longxiang/MiroThinker/apps/miroflow-agent/logs/data_agents/professor_stem_wide_harvest_2026-05-04T13-38-01Z/enriched_v3.jsonl",
+    "paper_staging": "/home/longxiang/MiroThinker/apps/miroflow-agent/logs/data_agents/professor_stem_wide_harvest_2026-05-04T13-38-01Z/paper_staging.jsonl",
+    "quality_report": "/home/longxiang/MiroThinker/apps/miroflow-agent/logs/data_agents/professor_stem_wide_harvest_2026-05-04T13-38-01Z/quality_report.json"
+  }
+}
+
+Report saved to: /home/longxiang/MiroThinker/apps/miroflow-agent/logs/data_agents/professor_stem_wide_harvest_2026-05-04T13-38-01Z/e2e_report.json

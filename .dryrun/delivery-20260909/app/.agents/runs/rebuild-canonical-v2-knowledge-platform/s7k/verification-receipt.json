@@ -1,0 +1,97 @@
+{
+  "schema_version": "canonical-v2-s7k-relationship-publication-authority-receipt-v1",
+  "change_id": "rebuild-canonical-v2-knowledge-platform",
+  "slice_id": "s7k-release-scoped-relationship-publication-authority-correction",
+  "status": "accepted",
+  "candidate_at": "2026-07-19T17:04:18Z",
+  "accepted_at": "2026-07-19T17:05:53Z",
+  "git_head": "f0e6224e1c675c6d6c58993676783b2fbe0cd8f6",
+  "git_branch": "canonical-v2-s2-baseline",
+  "formal_task_ledger_before": "56/80",
+  "formal_task_ledger_after": "56/80",
+  "implementation": {
+    "release_publication_isolated_sha256": "05067451a35016e5221755fd1440e0efb675df19b983c57d4bce7e30abf23a0d",
+    "physical_owner_test_sha256": "183a0e1d98acb61e0dcbf37bb3b65e1fa7a60cc92f2707c08d8e9f9713e2f47b",
+    "slice_contract_candidate_sha256": "f481f600dd71721326bc9e2a8c7805cdcdd590437d3cdea0a5443b424aad596f",
+    "implementation_plan_candidate_sha256": "6117723fc49d08245d8a480d214f166fdb27e0d79b928816eb1a371e44168c93",
+    "slice_contract_accepted_sha256": "9130998966a6a1bb4d4750f5bc799475dadbd747e371271b11034aaee280862b",
+    "implementation_plan_accepted_sha256": "7fa796d367aabaa70dda54a25e6fac974ba421cdfa899486d1c29f7761c9d7b9",
+    "tasks_sha256_unchanged": "5f61c097729e1107ff387a89c9f6f62b3783ef88debf1612b6156fb2056cdd7d",
+    "acceptance_sha256_unchanged": "742b29dc9805214b4b7059d5c801189209c26e35831f3f834ef01e4ac9f6df50"
+  },
+  "behavior": {
+    "authority": "IsolatedReleaseBundle carries an optional both-or-neither RelationshipProjectionRequest/Result pair; a present pair is the only relationship publication authority",
+    "legacy_zero": "an absent pair remains compatible only with a zero-count relationships section and cannot authorize an S8 relationship consumer; an authoritative zero release retains a present exact pair",
+    "exact_replay": "the installed combined-registry relationship projector must replay the complete result exactly, and the request must carry its internal-reference request/result graph",
+    "projection_graph": "the internal graph is recomposed through CandidateProjectionRequest and its seven projection manifests must equal the release manifest inventory by unique projection ID",
+    "relationship_manifest": "section ID, release, projection-schema version, accepted current-relationship count, and complete result hash bind the authority",
+    "publication_preflight": "the factory rejects non-exact bundle types, reconstructs fresh typed bundles, recomputes complete manifest hashes, and uses only the fresh copies before every backup, target, index, or PostgreSQL seam"
+  },
+  "tdd": {
+    "red_normal": "1 xfailed",
+    "red_forced": "1 failed only at _MissingS7KRelationshipPublicationAuthority before fixture or external-target acquisition",
+    "green_focused": "1 passed with warnings treated as errors",
+    "review_red": "legacy-zero section_id drift and incomplete factory-level hostile/effect coverage",
+    "review_green": "section role is common to both branches and every named hostile case proves all external effect counters remain zero"
+  },
+  "verification": {
+    "focused": "1 passed with warnings treated as errors",
+    "focused_predecessors": "7 passed",
+    "shared_physical_release_owner": "55 passed, 2 skipped",
+    "release_publication_interface_owner": "6 passed",
+    "relationship_postgres_owner": "19 passed against one newly created disposable PostgreSQL container; all sibling databases and the container were removed",
+    "canonical_v2_no_external": "344 passed, 141 skipped, 3 intentional hostile-model serializer warnings",
+    "ruff_check": "passed for complete src/data_agents/canonical_v2 and tests/canonical_v2",
+    "ruff_format": "74 files already formatted",
+    "py_compile": "passed for the changed production and owner-test files",
+    "pyright": "0 errors, 0 warnings, 0 informations for complete Canonical V2 source/tests",
+    "strict_openspec": "passed",
+    "git_diff_check": "passed",
+    "scope_secret_cache": "scope and high-confidence secret checks passed; the exact owned wheel directory and two generated cache files were removed after the candidate receipt"
+  },
+  "wheel": {
+    "path_before_owned_cleanup": "/var/tmp/canonical-v2-s7k-wheel-20260719/miroflow_agent-0.1.0-py3-none-any.whl",
+    "sha256": "26d77d03edf4b5a9294b3e850c353198aa30a90dc6cd40c910cfd019486099c0",
+    "entry_count": 276,
+    "contains_release_publication_isolated": true,
+    "contains_tests_or_agents": false,
+    "packaged_production_hash_matches_source": true,
+    "owned_output_cleaned_after_receipt": true
+  },
+  "frozen_targets": {
+    "original_milvus_sha256": "43ef203e0b101fcbed2a6c8fcde19a35d426199d3f02bc72525d0acf618867cc",
+    "original_pgtest_paused": true,
+    "original_pgtest_volume": "d81c6381b0c7c0a975ca0ff4a0054037e72b0d4cb80174f682abceb1127cd241",
+    "recovery_lab_network": "none",
+    "recovery_lab_published_ports": false,
+    "recovery_lab_restart_policy": "no",
+    "owned_s7k_postgres_container_removed": true
+  },
+  "review": {
+    "contract_review": {
+      "critical": 0,
+      "important_found_and_closed": 6,
+      "final_critical": 0,
+      "final_important": 0,
+      "final_minor": 0,
+      "final_yagni": 0,
+      "verdict": "ready"
+    },
+    "implementation_review": {
+      "critical": 0,
+      "important_found_and_closed": 2,
+      "closed_important": [
+        "legacy-zero relationship sections also require section_id relationships",
+        "every required hostile case reaches the publication factory all-effects-zero harness, including relationship-section release drift"
+      ],
+      "final_critical": 0,
+      "final_important": 0,
+      "final_minor": 0,
+      "final_yagni": 0,
+      "verdict": "accept"
+    }
+  },
+  "nonblocking_minor_yagni": [],
+  "next_ready_slice": "S8R1 release-scoped relationship retrieval adapter",
+  "forbidden_actions_performed": []
+}

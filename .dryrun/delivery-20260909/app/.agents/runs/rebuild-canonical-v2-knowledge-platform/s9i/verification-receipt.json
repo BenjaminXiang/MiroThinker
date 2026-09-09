@@ -1,0 +1,133 @@
+{
+  "schema_version": "canonical-v2-s9i-grounded-assessment-session-receipt-v1",
+  "change_id": "rebuild-canonical-v2-knowledge-platform",
+  "slice_id": "s9i-grounded-assessment-session-implementation-closure",
+  "status": "accepted",
+  "ready_at": "2026-07-20T11:07:04Z",
+  "candidate_at": "2026-07-20T11:58:44Z",
+  "accepted_at": "2026-07-20T12:03:04Z",
+  "git_head": "f0e6224e1c675c6d6c58993676783b2fbe0cd8f6",
+  "git_branch": "canonical-v2-s2-baseline",
+  "formal_task_ledger_before": "59/80",
+  "formal_task_ledger_after": "62/80",
+  "formal_tasks_changed": [
+    "9.2",
+    "9.4",
+    "9.6"
+  ],
+  "task_excluded": "9.8",
+  "artifacts": {
+    "reviewed_specified_audit_sha256": "16b3e4b5fddd24964d1eb962fc7780368ae06de1b50b916cc55fe66674ad20cd",
+    "reviewed_specified_plan_sha256": "fd515998e2f1d1470fcbeef6659a249f25e94f3cdd0355cf565f1155dba7b320",
+    "reviewed_specified_contract_sha256": "4db71e71725f744aa2cef2e5e94c6adc2ea82f4d9de18859afe3ff5c5d831b4a",
+    "candidate_dependency_audit_sha256": "28435d5cd9a2f5a621915f84ab027ddf60fa2df654aafa0597e63cb1eeb74fdf",
+    "candidate_plan_sha256": "cf81d1cd73105304b42f511cd1b1056bf4d1d73685840a2faf20ed6ff29d2771",
+    "candidate_contract_sha256": "7a3cf309049767eeb3d93a583c490a3eaf7668d5eef6e9e53d6c4d0cc0cad16d",
+    "accepted_dependency_audit_sha256": "28435d5cd9a2f5a621915f84ab027ddf60fa2df654aafa0597e63cb1eeb74fdf",
+    "accepted_plan_sha256": "3cb96a6d9b08bbf59f1c824dd682034826c8ed03d22ef0805bb60a93f3169253",
+    "accepted_contract_sha256": "4464272b83f2f8edcabfa5d125a7b8e8e680c0aa07b6bcd3503ec259ec2e3461",
+    "knowledge_answer_sha256": "8dec205620854910eadc3301b8a63da03d937bb53dd622c5280a0651f7e400de",
+    "implementation_closure_owner_sha256": "74534d5103588d8c75961c80f66aaf556c3d8d9fa3de1f429fdfea79bc80636c",
+    "atomic_owner_sha256": "aa7418dd8b7d42c61eb76731e445a68a980daaa2ad47048fd389ca356800785e",
+    "interface_owner_sha256": "6d5921ab81114ddb09d699702d4a9b467f423a967a04140345039751a67356fc",
+    "assessment_owner_sha256": "39e5149f328e9963a9fab70d1611f8cd86f57ff7e74a578875fc92f87358a05c",
+    "grounding_owner_sha256": "fbd1866b6acffdf558742a632c38d3faa0d8f8df39eb9b15e715ca0a4f6c0cfb",
+    "multiturn_owner_sha256": "768a9ff2d3bbe7c86a868b76df247f55ec7f14786692a417c9d23a343a12d9b1",
+    "tasks_sha256_unchanged": "f5cbe8f9f86c3d36e5e51b59b1d211f4c9ab3c6a8a639b1902b5daabbf6b4e41",
+    "acceptance_sha256_unchanged": "3771804d81276d4853567ce2bdcf3b00a8e9d2a58dfb75bc67ffa9584e554ccd",
+    "tasks_sha256_after_acceptance": "2a1174f0c4f00bc22006ea147c8fbcc05c4a4954f26b5927d299400c67faf520",
+    "acceptance_sha256_after_acceptance": "60f30728eb0b26fefac323ab1435133bc10346eb22403a5bef38313e43c5c5a9"
+  },
+  "tdd": {
+    "ready_baseline": "14 passed with 3 intentional hostile-model serializer warnings across the five predecessor answer owners",
+    "initial_red_collection": "exactly 6 test functions collected",
+    "initial_red": "6 failed in 2.04 seconds, each at its intended missing S9I implementation seam",
+    "initial_focused_red": "2 failed, 4 deselected in 0.40 seconds for claim filtering and answer selector trace",
+    "review_counterexample_red": "5 failed, 1 passed in 3.53 seconds after adding the four Important and one Minor direct counterexamples inside the same six owner functions",
+    "final_exact_owner": "6 passed in 3.41 seconds with warnings denied",
+    "test_function_count": 6,
+    "test_function_count_preserved_without_parametrization": true,
+    "xfail_or_skip_added": false
+  },
+  "review": {
+    "ready_contract": {
+      "critical": 0,
+      "important": 0,
+      "minor": 0,
+      "yagni": 0,
+      "verdict": "ready"
+    },
+    "initial_implementation": {
+      "critical": 0,
+      "important": 4,
+      "minor": 1,
+      "yagni": 0,
+      "verdict": "repair",
+      "findings": [
+        "structured inference and arbitrary selector outcomes were not fully fail-closed",
+        "referent membership could rely on empty or forged selector-authored subject handles",
+        "empty decision and assessment-dimension identity fields were admitted",
+        "whitelisted safety predicates could render an arbitrarily long poisoned value"
+      ]
+    },
+    "final_frozen_hash": {
+      "critical": 0,
+      "important": 0,
+      "minor": 0,
+      "yagni": 0,
+      "verdict": "candidate",
+      "production_sha256": "8dec205620854910eadc3301b8a63da03d937bb53dd622c5280a0651f7e400de",
+      "owner_sha256": "74534d5103588d8c75961c80f66aaf556c3d8d9fa3de1f429fdfea79bc80636c",
+      "note": "All four Important findings and the one Minor are closed; direct counterexamples, exact owner, focused Ruff, diff-check, and assertion-integrity checks pass read-only."
+    }
+  },
+  "verification": {
+    "answer_owner_matrix": "20 passed with 3 intentional hostile-Pydantic warnings in 9.86 seconds",
+    "independent_answer_owner_matrix": "20 passed with the same 3 intentional warnings in 3.51 seconds",
+    "relevant_read_predecessor_matrix": "11 passed in 7.10 seconds",
+    "canonical_v2_no_external": "357 passed, 141 skipped, 3 intentional hostile-model serializer warnings in 206.67 seconds",
+    "ruff_check": "passed for complete src/data_agents/canonical_v2 and tests/canonical_v2",
+    "ruff_format": "75 files already formatted",
+    "py_compile": "passed for knowledge_answer.py and the changed answer owners",
+    "pyright": "0 errors, 0 warnings, 0 informations for complete Canonical V2 source and tests",
+    "strict_openspec": "passed",
+    "git_diff_check": "passed",
+    "uv_lock_check_offline": "resolved 194 packages without lock drift",
+    "owned_file_hygiene": "zero high-confidence credential assignments, conflict markers, missing EOF newlines, production/test xfail markers, or retained S9I wheel temp directories"
+  },
+  "wheel": {
+    "sha256": "1f343aa65654caa5c5bee6cf471b4c4534bdb39c9de6001f30abe08a4d1a1628",
+    "entry_count": 276,
+    "contains_tests_or_agents": false,
+    "knowledge_answer_entry_count": 1,
+    "knowledge_answer_source_and_entry_sha256": "8dec205620854910eadc3301b8a63da03d937bb53dd622c5280a0651f7e400de",
+    "packaged_production_hash_matches_source": true,
+    "owned_output_cleanup_complete": true
+  },
+  "frozen_targets": {
+    "original_milvus_path": "/home/longxiang/MiroThinker/apps/miroflow-agent/milvus.db",
+    "original_milvus_sha256": "43ef203e0b101fcbed2a6c8fcde19a35d426199d3f02bc72525d0acf618867cc",
+    "original_pgtest_state": "paused=true running=true restart=no",
+    "original_pgtest_volume": "d81c6381b0c7c0a975ca0ff4a0054037e72b0d4cb80174f682abceb1127cd241",
+    "original_pgtest_host_port": "15432",
+    "recovery_lab_state": "running=true network=none ports={} restart=no",
+    "git_branch": "canonical-v2-s2-baseline",
+    "git_head": "f0e6224e1c675c6d6c58993676783b2fbe0cd8f6"
+  },
+  "scope": {
+    "production_files": [
+      "apps/miroflow-agent/src/data_agents/canonical_v2/knowledge_answer.py"
+    ],
+    "new_owner": "apps/miroflow-agent/tests/canonical_v2/test_knowledge_answer_implementation_closure.py",
+    "mechanically_updated_existing_owners": [
+      "apps/miroflow-agent/tests/canonical_v2/test_knowledge_answer_atomic_green_contract.py",
+      "apps/miroflow-agent/tests/canonical_v2/test_knowledge_answer_assessment_contract.py",
+      "apps/miroflow-agent/tests/canonical_v2/test_knowledge_answer_grounding_contract.py",
+      "apps/miroflow-agent/tests/canonical_v2/test_knowledge_answer_multiturn_contract.py"
+    ],
+    "original_recovery_candidate_or_provider_writes": false,
+    "http_durable_session_or_public_contract_expansion": false
+  },
+  "next_required_action": "Mark S10O Ready from the Accepted S8C/S9I receipts and implement Tasks 10.3, 10.4, and 10.5; Task 9.8 and aggregate S9 remain open.",
+  "forbidden_actions_performed": []
+}

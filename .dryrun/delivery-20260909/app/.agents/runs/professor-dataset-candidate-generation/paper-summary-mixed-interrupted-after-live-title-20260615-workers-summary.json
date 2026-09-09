@@ -1,0 +1,133 @@
+{
+  "artifact_type": "paper_summary_mixed_doi_full_text_interrupted_workers_summary",
+  "generated_at": "2026-06-15T09:17:09Z",
+  "database_url_label": "miroflow_real",
+  "status": "partial_interrupted",
+  "reason": "mixed DOI/full-text summary workers were terminated after the existing-abstract fast lane showed the full-text acquisition bottleneck",
+  "totals": {
+    "written": 5261,
+    "skipped_no_abstract": 3135,
+    "rejected_boilerplate": 99,
+    "rejected": 67
+  },
+  "reports": [
+    {
+      "label": "legacy_worker0",
+      "run_id": "95a51d9a-dde6-4d16-9c73-b64b3d5ea83c",
+      "checkpoint_counts": {
+        "written": 1294,
+        "skipped_no_abstract": 503,
+        "rejected_boilerplate": 21,
+        "rejected": 14
+      }
+    },
+    {
+      "label": "legacy_worker1",
+      "run_id": "f64971c9-1d77-4e35-99bf-f8ed32e2c382",
+      "checkpoint_counts": {
+        "written": 1296,
+        "skipped_no_abstract": 535,
+        "rejected_boilerplate": 8,
+        "rejected": 18
+      }
+    },
+    {
+      "label": "legacy_worker2",
+      "run_id": "55946454-d586-4b31-8187-4d7f9ed7bccc",
+      "checkpoint_counts": {
+        "written": 1346,
+        "skipped_no_abstract": 529,
+        "rejected_boilerplate": 26,
+        "rejected": 10
+      }
+    },
+    {
+      "label": "legacy_worker3",
+      "run_id": "db9fcba2-95c8-42b7-a70d-2e12285fbf4d",
+      "checkpoint_counts": {
+        "written": 1290,
+        "skipped_no_abstract": 492,
+        "rejected_boilerplate": 22,
+        "rejected": 10
+      }
+    },
+    {
+      "label": "rerun_worker0",
+      "run_id": "ab8c46ae-54b6-4263-a5a2-687c95f9bfab",
+      "checkpoint_counts": {
+        "skipped_no_abstract": 150,
+        "written": 5,
+        "rejected_boilerplate": 3,
+        "rejected": 2
+      }
+    },
+    {
+      "label": "rerun_worker1",
+      "run_id": "04c0ac8b-3c59-4377-a5c0-12e53d36b52b",
+      "checkpoint_counts": {
+        "skipped_no_abstract": 146,
+        "rejected": 3,
+        "rejected_boilerplate": 2
+      }
+    },
+    {
+      "label": "rerun_worker2",
+      "run_id": "56c037c5-de35-4855-adc5-87f1985fe469",
+      "checkpoint_counts": {
+        "skipped_no_abstract": 144,
+        "rejected_boilerplate": 3,
+        "written": 3
+      }
+    },
+    {
+      "label": "rerun_worker3",
+      "run_id": "54a1c72b-9df4-418c-9c04-05945f74eee5",
+      "checkpoint_counts": {
+        "skipped_no_abstract": 92,
+        "rejected_boilerplate": 3,
+        "rejected": 1,
+        "written": 1
+      }
+    },
+    {
+      "label": "rerun_worker4",
+      "run_id": "a175243b-1efa-4d05-bcaa-d99abac0f0d0",
+      "checkpoint_counts": {
+        "skipped_no_abstract": 116,
+        "written": 7,
+        "rejected": 3,
+        "rejected_boilerplate": 3
+      }
+    },
+    {
+      "label": "rerun_worker5",
+      "run_id": "4f99b678-dd12-4a8a-97a0-abddfbfa2b0e",
+      "checkpoint_counts": {
+        "skipped_no_abstract": 137,
+        "written": 8,
+        "rejected": 3,
+        "rejected_boilerplate": 1
+      }
+    },
+    {
+      "label": "rerun_worker6",
+      "run_id": "cd5bf187-2832-40d6-a331-886daf9b50b8",
+      "checkpoint_counts": {
+        "skipped_no_abstract": 156,
+        "rejected_boilerplate": 3,
+        "written": 6,
+        "rejected": 1
+      }
+    },
+    {
+      "label": "rerun_worker7",
+      "run_id": "cb503ef1-8bee-4306-8b7b-6115864d9251",
+      "checkpoint_counts": {
+        "skipped_no_abstract": 135,
+        "rejected_boilerplate": 4,
+        "rejected": 2,
+        "written": 5
+      }
+    }
+  ]
+}

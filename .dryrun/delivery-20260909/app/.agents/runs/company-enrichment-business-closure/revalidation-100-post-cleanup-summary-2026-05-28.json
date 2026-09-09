@@ -1,0 +1,100 @@
+{
+  "batch": {
+    "batch_id": "382fb63b-1a81-4ff2-8841-95ab87c717b1",
+    "upload_task_id": null,
+    "import_batch_id": null,
+    "status": "succeeded",
+    "current_stage": "succeeded",
+    "companies_total": 100,
+    "companies_selected": 100,
+    "companies_processed": 100,
+    "companies_succeeded": 100,
+    "companies_failed": 0,
+    "run_scope": {
+      "domain": "company",
+      "source": "manual-100-company-revalidation",
+      "selection": "deterministic md5(company_id + seed), identity_status != inactive",
+      "excluded_batches": [
+        "142120fe-bc2c-486b-9955-573e06160cce",
+        "8b717ebe-a4c7-40a2-ac84-cf229d4454da"
+      ],
+      "official_product_max_pages": 1
+    },
+    "triggered_by": "codex-revalidation",
+    "last_error": null,
+    "created_at": "2026-05-28 09:28:50.481024+00:00",
+    "started_at": "2026-05-28 09:29:01.357166+00:00",
+    "finished_at": "2026-05-28 10:24:42.834899+00:00",
+    "updated_at": "2026-05-28 10:24:42.834899+00:00"
+  },
+  "company_states": {
+    "total": 100,
+    "succeeded": 100,
+    "failed": 0
+  },
+  "search_audit": [
+    {
+      "source_adapter": "iyiou",
+      "rows": 711,
+      "result_count": 788,
+      "accepted_count": 82,
+      "rejected_name_mismatch": 444
+    },
+    {
+      "source_adapter": "pitchhub_36kr",
+      "rows": 717,
+      "result_count": 2487,
+      "accepted_count": 103,
+      "rejected_name_mismatch": 1552
+    }
+  ],
+  "post_cleanup_counts": {
+    "news_items_after_start": 150,
+    "source_products_after_start": 174,
+    "official_products_after_start": 5,
+    "scenarios_after_start": 90,
+    "events_after_start": 42
+  },
+  "remaining_official_products": [
+    {
+      "company_id": "COMP-7e0087e94af9",
+      "company_name": "艾欧智能（深圳）",
+      "canonical_name": "EmbodiFlow",
+      "official_product_url": "https://io-ai.tech/",
+      "short_description": "了解详情 数据标注管理平台 EmbodiFlow 面向具身智能的数据标注与管理平台，支持复杂多模态数据的采集、标注、可视化、质量保障与后处理，并可一键导出 LeRobot 等可训练格式，构建完整的数据闭环能力。"
+    },
+    {
+      "company_id": "COMP-7e0087e94af9",
+      "company_name": "艾欧智能（深圳）",
+      "canonical_name": "SenseXperience",
+      "official_product_url": "https://io-ai.tech/",
+      "short_description": "了解详情 真实世界人体数据 SenseXperience 采集高质量真实世界人体动作与多模态信号，涵盖第一视角单元、可定制 UMI、全身传感与动捕系统，并结合后处理算法，实现可扩展、高精度的人体数据生产。"
+    },
+    {
+      "company_id": "COMP-7e0087e94af9",
+      "company_name": "艾欧智能（深圳）",
+      "canonical_name": "TeleXperience",
+      "official_product_url": "https://io-ai.tech/",
+      "short_description": "我们的产品 软硬件一体化解决方案 机器人遥操作平台 TeleXperience 面向多种机器人构型的通用遥操作平台，使人类操作员能够精准控制真实世界中的机器人。"
+    },
+    {
+      "company_id": "COMP-8e3331e62f7a",
+      "company_name": "深圳津渡生物医学科技",
+      "canonical_name": "BioFord™",
+      "official_product_url": "http://www.oxtium.com/",
+      "short_description": "首页 BioFord™️ AI 计算服务 AI 大模型和算法开发服务 AI & 生信计算服务 关于津渡 联系我们 EN"
+    },
+    {
+      "company_id": "COMP-d9434174e97a",
+      "company_name": "华仁智信技术",
+      "canonical_name": "必可AEO认证系统",
+      "official_product_url": "https://www.credithuaren.com",
+      "short_description": "智能化的监测系统和标准化的流程，帮助企业发现认证盲区和降低试错成本，助力企业高效认证 查看详情 可持续供应链解决方案服务商 以企业合规经营为基础，结合大数据和人工智能，为客户提供信用服务和可持续供应链解决方案的服务商 查看详情 必可AEO认证独家保持器 必可AEO认证独家保持器，通过沉淀数据和记录，可以助力企业大幅提高复审成功率 查看详情"
+    }
+  ],
+  "cleanup_audits": [
+    ".agents/runs/company-enrichment-business-closure/revalidation-100-cleanup-2026-05-28.json",
+    ".agents/runs/company-enrichment-business-closure/revalidation-100-cleanup-followup-2026-05-28.json",
+    ".agents/runs/company-enrichment-business-closure/revalidation-100-cleanup-restore-2026-05-28.json"
+  ]
+}

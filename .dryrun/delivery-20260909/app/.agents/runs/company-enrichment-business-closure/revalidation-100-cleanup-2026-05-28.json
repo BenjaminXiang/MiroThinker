@@ -1,0 +1,872 @@
+{
+  "batch_id": "382fb63b-1a81-4ff2-8841-95ab87c717b1",
+  "batch_started_at": "2026-05-28 09:29:01.357166+00:00",
+  "batch_finished_at": "2026-05-28 10:24:42.834899+00:00",
+  "source_acceptance_replay": {
+    "source_rows_seen": 179,
+    "source_rows_kept": 150,
+    "source_rows_rejected_by_fixed_identity_guard": 29,
+    "rejected_by_adapter": {
+      "iyiou": 12,
+      "pitchhub_36kr": 17
+    },
+    "sample": [
+      {
+        "news_id": "5299d2ea-ec2d-40b7-a890-0a281f492cd0",
+        "company_id": "COMP-3294d70e176d",
+        "source_adapter": "pitchhub_36kr",
+        "source_url": "https://pitchhub.36kr.com/project/1678507092571136",
+        "title": "松灵机器人| 项目信息-36氪 - 创投平台",
+        "safe_match_terms": [
+          "闪移技术"
+        ]
+      },
+      {
+        "news_id": "22949561-af64-4466-9bc7-163742e14b91",
+        "company_id": "COMP-3294d70e176d",
+        "source_adapter": "pitchhub_36kr",
+        "source_url": "https://pitchhub.36kr.com/project/2002545744060296",
+        "title": "智象机器人| 项目信息-36氪 - 创投平台",
+        "safe_match_terms": [
+          "闪移技术"
+        ]
+      },
+      {
+        "news_id": "8cb40c94-d483-4994-b46b-5bbf6555cb6f",
+        "company_id": "COMP-3294d70e176d",
+        "source_adapter": "pitchhub_36kr",
+        "source_url": "https://pitchhub.36kr.com/project/2012744819066375",
+        "title": "达泊智能| 项目信息 - 创投平台",
+        "safe_match_terms": [
+          "闪移技术"
+        ]
+      },
+      {
+        "news_id": "f566cecb-a5ef-48b0-84fe-3f7506aecbe8",
+        "company_id": "COMP-3294d70e176d",
+        "source_adapter": "pitchhub_36kr",
+        "source_url": "https://pitchhub.36kr.com/project/2144673671644425",
+        "title": "芯球科技| 项目信息 - 创投平台",
+        "safe_match_terms": [
+          "闪移技术"
+        ]
+      },
+      {
+        "news_id": "df512db6-e7a0-403b-b790-900f307fdd4a",
+        "company_id": "COMP-3294d70e176d",
+        "source_adapter": "pitchhub_36kr",
+        "source_url": "https://pitchhub.36kr.com/project/2144851367707912",
+        "title": "博微联控| 项目信息 - 创投平台",
+        "safe_match_terms": [
+          "闪移技术"
+        ]
+      },
+      {
+        "news_id": "4cf8fda3-5cfd-47dd-a257-54936cc068be",
+        "company_id": "COMP-3cf42e547578",
+        "source_adapter": "pitchhub_36kr",
+        "source_url": "https://pitchhub.36kr.com/project/2192615690707335",
+        "title": "六环合金线| 项目信息-36氪 - 创投平台",
+        "safe_match_terms": [
+          "道道网络科技",
+          "道道网络",
+          "道道"
+        ]
+      },
+      {
+        "news_id": "d12e9392-388d-4012-9c02-e7e556bd1b89",
+        "company_id": "COMP-61d7b7253f94",
+        "source_adapter": "iyiou",
+        "source_url": "https://data.iyiou.com/intelligence/details/24abf8fdbe2e66e5f300104499e6674a",
+        "title": "瞄准世界科技前沿，勇于挑战尖端课题_亿欧数据",
+        "safe_match_terms": [
+          "瀚霖信息科技",
+          "瀚霖信息",
+          "营销的流量闭环"
+        ]
+      },
+      {
+        "news_id": "3615d37c-6b63-4c2a-bbfe-11893cbb52d1",
+        "company_id": "COMP-61d7b7253f94",
+        "source_adapter": "pitchhub_36kr",
+        "source_url": "https://pitchhub.36kr.com/project/2066612616577025",
+        "title": "黑力士| 项目信息 - 创投平台- 36氪",
+        "safe_match_terms": [
+          "瀚霖信息科技",
+          "瀚霖信息",
+          "营销的流量闭环"
+        ]
+      },
+      {
+        "news_id": "20117084-1ed6-43ae-a918-6b38d01d6ff3",
+        "company_id": "COMP-84ddd28cf17a",
+        "source_adapter": "iyiou",
+        "source_url": "https://data.iyiou.com/company/details/b1d942257243d913642f8c5664a04d89/profile?source=iyiou.trz",
+        "title": "深圳留形科技有限公司 - 亿欧数据",
+        "safe_match_terms": [
+          "留形三维控股"
+        ]
+      },
+      {
+        "news_id": "84dd1044-81f1-42ff-930f-64b574e42e0b",
+        "company_id": "COMP-86148f2ee6cf",
+        "source_adapter": "iyiou",
+        "source_url": "https://data.iyiou.com/company/details/583d72b830bd262c3878b66d13140e91/profile?source=iyiou.trz",
+        "title": "EMO ENERGY_null_亿欧数据",
+        "safe_match_terms": [
+          "灵起科技",
+          "称进行经营活动"
+        ]
+      },
+      {
+        "news_id": "074183a6-8b68-4633-b080-f20281a7a13f",
+        "company_id": "COMP-86148f2ee6cf",
+        "source_adapter": "pitchhub_36kr",
+        "source_url": "https://pitchhub.36kr.com/project/1817550000490374",
+        "title": "空气堡AIRBURG | 项目信息-36氪 - 创投平台",
+        "safe_match_terms": [
+          "灵起科技",
+          "称进行经营活动"
+        ]
+      },
+      {
+        "news_id": "ffc0254c-7111-42cd-836b-d2d54601ba27",
+        "company_id": "COMP-8e3331e62f7a",
+        "source_adapter": "iyiou",
+        "source_url": "https://data.iyiou.com/intelligence/details/57367b4c997b269af08819ffd2794445",
+        "title": "成立才三年的AI生命科学企业，融资近亿元!_亿欧数据",
+        "safe_match_terms": [
+          "津渡生物医学科技",
+          "津渡生物医学",
+          "津渡生物"
+        ]
+      },
+      {
+        "news_id": "c6beee73-2a87-41d2-bbce-b79cd777d418",
+        "company_id": "COMP-95791ebe18d4",
+        "source_adapter": "pitchhub_36kr",
+        "source_url": "https://pitchhub.36kr.com/project/2205329787695489",
+        "title": "知和智能| 项目信息-36氪 - 创投平台",
+        "safe_match_terms": [
+          "华力创科学"
+        ]
+      },
+      {
+        "news_id": "9af10514-20b8-4024-af5f-93cbaebc09ff",
+        "company_id": "COMP-b8bbffe61cbc",
+        "source_adapter": "iyiou",
+        "source_url": "https://data.iyiou.com/company/details/6bcd235887323aa399c2b899654e0ea3/profile?source=iyiou.comdetail&from=more-data",
+        "title": "Moka_北京希瑞亚斯科技有限公司 - 亿欧数据",
+        "safe_match_terms": [
+          "悦享智眠科技",
+          "悦享智眠"
+        ]
+      },
+      {
+        "news_id": "3663f643-61c4-4b9b-ac85-8d661e9ae473",
+        "company_id": "COMP-b8bbffe61cbc",
+        "source_adapter": "iyiou",
+        "source_url": "https://data.iyiou.com/intelligence/details/3fb7f6fc92159d5c3f9c02a4c87e3329",
+        "title": "Stareep希瑞亮相2026 CES现场：AI重构睡眠体验，破解行业伪智能 ...",
+        "safe_match_terms": [
+          "悦享智眠科技",
+          "悦享智眠"
+        ]
+      },
+      {
+        "news_id": "68fa586c-64b0-4a53-96f8-2fa636366152",
+        "company_id": "COMP-b8bbffe61cbc",
+        "source_adapter": "pitchhub_36kr",
+        "source_url": "https://pitchhub.36kr.com/project/1678413210924039",
+        "title": "希瑞生命| 项目信息-36氪 - 创投平台",
+        "safe_match_terms": [
+          "悦享智眠科技",
+          "悦享智眠"
+        ]
+      },
+      {
+        "news_id": "7ef2b1f4-3819-46e1-969e-7920df34d12e",
+        "company_id": "COMP-b8bbffe61cbc",
+        "source_adapter": "pitchhub_36kr",
+        "source_url": "https://pitchhub.36kr.com/project/1713131345996036",
+        "title": "Moka HR SaaS | 项目信息-36氪 - 创投平台",
+        "safe_match_terms": [
+          "悦享智眠科技",
+          "悦享智眠"
+        ]
+      },
+      {
+        "news_id": "5f90f864-ef56-4dcb-916b-531c91afe524",
+        "company_id": "COMP-b8bbffe61cbc",
+        "source_adapter": "pitchhub_36kr",
+        "source_url": "https://pitchhub.36kr.com/project/2060875358959753",
+        "title": "希瑞Shirey | 项目信息-36氪 - 创投平台",
+        "safe_match_terms": [
+          "悦享智眠科技",
+          "悦享智眠"
+        ]
+      },
+      {
+        "news_id": "26245b98-70fb-4032-a615-5ba2ac3e64d8",
+        "company_id": "COMP-b8bbffe61cbc",
+        "source_adapter": "pitchhub_36kr",
+        "source_url": "https://pitchhub.36kr.com/project/2174025185115398",
+        "title": "希瑞格机器人| 项目信息-36氪 - 创投平台",
+        "safe_match_terms": [
+          "悦享智眠科技",
+          "悦享智眠"
+        ]
+      },
+      {
+        "news_id": "2eb50432-dd05-49e0-a9f0-6af4e62b6233",
+        "company_id": "COMP-b8bbffe61cbc",
+        "source_adapter": "pitchhub_36kr",
+        "source_url": "https://pitchhub.36kr.com/project/2174025189408257",
+        "title": "希瑞芯科| 项目信息-36氪 - 创投平台",
+        "safe_match_terms": [
+          "悦享智眠科技",
+          "悦享智眠"
+        ]
+      }
+    ]
+  },
+  "official_product_noise_replay": {
+    "official_rows_seen": 22,
+    "official_rows_rejected_by_fixed_noise_guard": 16,
+    "rejected_names": [
+      "预约即享 专属定制 好礼！OasisX即将全面上线各大平台。",
+      "TechTCM",
+      "软件 APP 模板",
+      "Bringing robots everywhere, for everyone",
+      "LeRobot",
+      "LivingAI",
+      "BioScience",
+      "产品与服务",
+      "BestBuy",
+      "LiDAR",
+      "NetRTK",
+      "PRODUCTS",
+      "LoRa",
+      "WeChat",
+      "WiFi",
+      "OpenClaw"
+    ],
+    "sample": [
+      {
+        "product_id": "PROD-3f3425f4e41e",
+        "company_id": "COMP-00d053ec2a24",
+        "canonical_name": "预约即享 专属定制 好礼！OasisX即将全面上线各大平台。",
+        "short_description": "获取验证码 立即预约",
+        "official_product_url": "https://www.fitx.games/"
+      },
+      {
+        "product_id": "PROD-69d11058ca0a",
+        "company_id": "COMP-1764f9b80fc2",
+        "canonical_name": "TechTCM",
+        "short_description": "问止 · 外治图解 问止 · 针灸穴位 问止 · 家庭方剂 问止旗下 : 问止中医 | 大医小课 | 精一书院 问止中医 中医大脑对治疑难重症 友情链接: 中医之家 Copyright © 2018 - 2022 TechTCM 深圳问止中医健康科技有限公司 版权所有 粤ICP备2024242863号 >> 扫码预约 | 在线就诊 Copyright © 2018 - 2022 TechTCM 深圳问止中医健康科技有限公司 版权所有 粤。",
+        "official_product_url": "https://techtcm.com"
+      },
+      {
+        "product_id": "PROD-051d9d3a3953",
+        "company_id": "COMP-64e864f702e8",
+        "canonical_name": "软件 APP 模板",
+        "short_description": "产品中心 光通信产品线 通用类产品 硅光控制产品 EML控制产品 相干控制产品 PON系列产品 BMS产品线",
+        "official_product_url": "https://www.pisemi.com/"
+      },
+      {
+        "product_id": "PROD-860cd87f67b5",
+        "company_id": "COMP-7e0087e94af9",
+        "canonical_name": "Bringing robots everywhere, for everyone",
+        "short_description": "机器人与具身智能",
+        "official_product_url": "https://io-ai.tech/"
+      },
+      {
+        "product_id": "PROD-a41de24e6833",
+        "company_id": "COMP-7e0087e94af9",
+        "canonical_name": "LeRobot",
+        "short_description": "了解详情 数据标注管理平台 EmbodiFlow 面向具身智能的数据标注与管理平台，支持复杂多模态数据的采集、标注、可视化、质量保障与后处理，并可一键导出 LeRobot 等可训练格式，构建完整的数据闭环能力。",
+        "official_product_url": "https://io-ai.tech/"
+      },
+      {
+        "product_id": "PROD-6fd78b9c14e5",
+        "company_id": "COMP-86148f2ee6cf",
+        "canonical_name": "LivingAI",
+        "short_description": "Copyright © 2026 LivingAI All Rights Reserved.",
+        "official_product_url": "https://living.ai/"
+      },
+      {
+        "product_id": "PROD-9d80d7f3bf9f",
+        "company_id": "COMP-8e3331e62f7a",
+        "canonical_name": "BioScience",
+        "short_description": "以 AI 科技探索生命之谜 Advancing Al for BioScience",
+        "official_product_url": "http://www.oxtium.com/"
+      },
+      {
+        "product_id": "PROD-d5940c8a9906",
+        "company_id": "COMP-8e3331e62f7a",
+        "canonical_name": "产品与服务",
+        "short_description": "BioFord™️ 一站式生物科学研究平台 AI 大模型和算法开发服务 生信计算服务 AI 转化医学产品",
+        "official_product_url": "http://www.oxtium.com/"
+      },
+      {
+        "product_id": "PROD-03fdf88644c1",
+        "company_id": "COMP-9986de45a425",
+        "canonical_name": "BestBuy",
+        "short_description": "迄今已开拓海外销售渠道伙伴逾100家，其中包括沃尔玛、BestBuy、Home Depot等大型商超。",
+        "official_product_url": "https://www.anshismart.com/"
+      },
+      {
+        "product_id": "PROD-b42dfdd07a1c",
+        "company_id": "COMP-c58ac55e0244",
+        "canonical_name": "LiDAR",
+        "short_description": "Previous Next Built Smarter, Live Simpler LUBA mini 2 AWD 1500 Master Every Lawn with 360 LiDAR Learn More > Ace Your Perfection Grass demands the ultimate standard.",
+        "official_product_url": "https://mammotion.com/"
+      },
+      {
+        "product_id": "PROD-15b12a9fb9d7",
+        "company_id": "COMP-c58ac55e0244",
+        "canonical_name": "NetRTK",
+        "short_description": "Learn More > Flagship Robot Lawn Mower LUBA 3 AWD World's First Tri-Fusion Positioning System Learn More > World’s First Vision-Powered AWD Robot Lawn Mower LUBA mini 2 AWD 1000 Tri-Camera Vision & NetRTK Fusion Navigati。",
+        "official_product_url": "https://mammotion.com/"
+      },
+      {
+        "product_id": "PROD-ff0db3d9fdf3",
+        "company_id": "COMP-e22096104010",
+        "canonical_name": "PRODUCTS",
+        "short_description": "产品展示 反谐振空芯光纤-1310 1310nm反谐振空芯光纤，包层直径125um，可应用于通信领域。 反谐振空芯光纤-1550 1550nm波长反谐振空芯光纤，可应用于通信领域。 可见光空芯光纤-532 532nm波长可见光空芯光纴，可应用于通信领域。 空芯光纤跳线 FC 接头",
+        "official_product_url": "https://www.sublime-sz.com"
+      },
+      {
+        "product_id": "PROD-07bb620471fb",
+        "company_id": "COMP-e7137f40e8e0",
+        "canonical_name": "LoRa",
+        "short_description": "1 Protocol Full-Network Connectivity (supporting China Telecom, China Mobile, China Unicom and China Broadcasting Network) Alarm Receiving Methods: Four methods available: phone call, SMS, WeChat and platform notificatio。",
+        "official_product_url": "http://www.rainontrees.com"
+      },
+      {
+        "product_id": "PROD-5173d88f570e",
+        "company_id": "COMP-e7137f40e8e0",
+        "canonical_name": "WeChat",
+        "short_description": "Alarm Receiving Methods: Four methods are available, including phone call, SMS, WeChat and platform notification.",
+        "official_product_url": "http://www.rainontrees.com"
+      },
+      {
+        "product_id": "PROD-9734f972ecc0",
+        "company_id": "COMP-e7137f40e8e0",
+        "canonical_name": "WiFi",
+        "short_description": "1 and WiFi protocols are optional.",
+        "official_product_url": "http://www.rainontrees.com"
+      },
+      {
+        "product_id": "PROD-bc2b0632b7a8",
+        "company_id": "COMP-e8a8688eaf11",
+        "canonical_name": "OpenClaw",
+        "short_description": "当然，这里说的不是海鲜，而是一款突然爆火的AI工具 OpenClaw。",
+        "official_product_url": "https://www.kowin.com.cn"
+      }
+    ]
+  },
+  "deleted_counts": {
+    "company_news_item": 29,
+    "company_signal_event": 9,
+    "company_application_scenario": 17,
+    "company_application_scenario_evidence_cascade_expected": 17,
+    "company_product": 52,
+    "company_product_evidence_cascade_expected": 90
+  },
+  "deleted_samples": {
+    "news_items": [
+      {
+        "news_id": "22949561-af64-4466-9bc7-163742e14b91",
+        "company_id": "COMP-3294d70e176d",
+        "source_adapter": "pitchhub_36kr",
+        "source_url": "https://pitchhub.36kr.com/project/2002545744060296",
+        "title": "智象机器人| 项目信息-36氪 - 创投平台"
+      },
+      {
+        "news_id": "8cb40c94-d483-4994-b46b-5bbf6555cb6f",
+        "company_id": "COMP-3294d70e176d",
+        "source_adapter": "pitchhub_36kr",
+        "source_url": "https://pitchhub.36kr.com/project/2012744819066375",
+        "title": "达泊智能| 项目信息 - 创投平台"
+      },
+      {
+        "news_id": "5299d2ea-ec2d-40b7-a890-0a281f492cd0",
+        "company_id": "COMP-3294d70e176d",
+        "source_adapter": "pitchhub_36kr",
+        "source_url": "https://pitchhub.36kr.com/project/1678507092571136",
+        "title": "松灵机器人| 项目信息-36氪 - 创投平台"
+      },
+      {
+        "news_id": "df512db6-e7a0-403b-b790-900f307fdd4a",
+        "company_id": "COMP-3294d70e176d",
+        "source_adapter": "pitchhub_36kr",
+        "source_url": "https://pitchhub.36kr.com/project/2144851367707912",
+        "title": "博微联控| 项目信息 - 创投平台"
+      },
+      {
+        "news_id": "f566cecb-a5ef-48b0-84fe-3f7506aecbe8",
+        "company_id": "COMP-3294d70e176d",
+        "source_adapter": "pitchhub_36kr",
+        "source_url": "https://pitchhub.36kr.com/project/2144673671644425",
+        "title": "芯球科技| 项目信息 - 创投平台"
+      },
+      {
+        "news_id": "d12e9392-388d-4012-9c02-e7e556bd1b89",
+        "company_id": "COMP-61d7b7253f94",
+        "source_adapter": "iyiou",
+        "source_url": "https://data.iyiou.com/intelligence/details/24abf8fdbe2e66e5f300104499e6674a",
+        "title": "瞄准世界科技前沿，勇于挑战尖端课题_亿欧数据"
+      },
+      {
+        "news_id": "4cf8fda3-5cfd-47dd-a257-54936cc068be",
+        "company_id": "COMP-3cf42e547578",
+        "source_adapter": "pitchhub_36kr",
+        "source_url": "https://pitchhub.36kr.com/project/2192615690707335",
+        "title": "六环合金线| 项目信息-36氪 - 创投平台"
+      },
+      {
+        "news_id": "3615d37c-6b63-4c2a-bbfe-11893cbb52d1",
+        "company_id": "COMP-61d7b7253f94",
+        "source_adapter": "pitchhub_36kr",
+        "source_url": "https://pitchhub.36kr.com/project/2066612616577025",
+        "title": "黑力士| 项目信息 - 创投平台- 36氪"
+      },
+      {
+        "news_id": "20117084-1ed6-43ae-a918-6b38d01d6ff3",
+        "company_id": "COMP-84ddd28cf17a",
+        "source_adapter": "iyiou",
+        "source_url": "https://data.iyiou.com/company/details/b1d942257243d913642f8c5664a04d89/profile?source=iyiou.trz",
+        "title": "深圳留形科技有限公司 - 亿欧数据"
+      },
+      {
+        "news_id": "84dd1044-81f1-42ff-930f-64b574e42e0b",
+        "company_id": "COMP-86148f2ee6cf",
+        "source_adapter": "iyiou",
+        "source_url": "https://data.iyiou.com/company/details/583d72b830bd262c3878b66d13140e91/profile?source=iyiou.trz",
+        "title": "EMO ENERGY_null_亿欧数据"
+      },
+      {
+        "news_id": "ffc0254c-7111-42cd-836b-d2d54601ba27",
+        "company_id": "COMP-8e3331e62f7a",
+        "source_adapter": "iyiou",
+        "source_url": "https://data.iyiou.com/intelligence/details/57367b4c997b269af08819ffd2794445",
+        "title": "成立才三年的AI生命科学企业，融资近亿元!_亿欧数据"
+      },
+      {
+        "news_id": "074183a6-8b68-4633-b080-f20281a7a13f",
+        "company_id": "COMP-86148f2ee6cf",
+        "source_adapter": "pitchhub_36kr",
+        "source_url": "https://pitchhub.36kr.com/project/1817550000490374",
+        "title": "空气堡AIRBURG | 项目信息-36氪 - 创投平台"
+      },
+      {
+        "news_id": "c6beee73-2a87-41d2-bbce-b79cd777d418",
+        "company_id": "COMP-95791ebe18d4",
+        "source_adapter": "pitchhub_36kr",
+        "source_url": "https://pitchhub.36kr.com/project/2205329787695489",
+        "title": "知和智能| 项目信息-36氪 - 创投平台"
+      },
+      {
+        "news_id": "3663f643-61c4-4b9b-ac85-8d661e9ae473",
+        "company_id": "COMP-b8bbffe61cbc",
+        "source_adapter": "iyiou",
+        "source_url": "https://data.iyiou.com/intelligence/details/3fb7f6fc92159d5c3f9c02a4c87e3329",
+        "title": "Stareep希瑞亮相2026 CES现场：AI重构睡眠体验，破解行业伪智能 ..."
+      },
+      {
+        "news_id": "9af10514-20b8-4024-af5f-93cbaebc09ff",
+        "company_id": "COMP-b8bbffe61cbc",
+        "source_adapter": "iyiou",
+        "source_url": "https://data.iyiou.com/company/details/6bcd235887323aa399c2b899654e0ea3/profile?source=iyiou.comdetail&from=more-data",
+        "title": "Moka_北京希瑞亚斯科技有限公司 - 亿欧数据"
+      },
+      {
+        "news_id": "f374e8c8-4a05-4c93-881a-8e84293b6fd5",
+        "company_id": "COMP-c58ac55e0244",
+        "source_adapter": "iyiou",
+        "source_url": "https://data.iyiou.com/intelligence/details/78e7be1cf603d53afd1a00dbf7abcf19",
+        "title": "亚洲机器人军团，统治拉斯维加斯_亿欧数据"
+      },
+      {
+        "news_id": "5f90f864-ef56-4dcb-916b-531c91afe524",
+        "company_id": "COMP-b8bbffe61cbc",
+        "source_adapter": "pitchhub_36kr",
+        "source_url": "https://pitchhub.36kr.com/project/2060875358959753",
+        "title": "希瑞Shirey | 项目信息-36氪 - 创投平台"
+      },
+      {
+        "news_id": "7ef2b1f4-3819-46e1-969e-7920df34d12e",
+        "company_id": "COMP-b8bbffe61cbc",
+        "source_adapter": "pitchhub_36kr",
+        "source_url": "https://pitchhub.36kr.com/project/1713131345996036",
+        "title": "Moka HR SaaS | 项目信息-36氪 - 创投平台"
+      },
+      {
+        "news_id": "2eb50432-dd05-49e0-a9f0-6af4e62b6233",
+        "company_id": "COMP-b8bbffe61cbc",
+        "source_adapter": "pitchhub_36kr",
+        "source_url": "https://pitchhub.36kr.com/project/2174025189408257",
+        "title": "希瑞芯科| 项目信息-36氪 - 创投平台"
+      },
+      {
+        "news_id": "26245b98-70fb-4032-a615-5ba2ac3e64d8",
+        "company_id": "COMP-b8bbffe61cbc",
+        "source_adapter": "pitchhub_36kr",
+        "source_url": "https://pitchhub.36kr.com/project/2174025185115398",
+        "title": "希瑞格机器人| 项目信息-36氪 - 创投平台"
+      }
+    ],
+    "signal_events": [
+      {
+        "event_id": "b25a8829-1a01-4b15-a9de-5f2a097a20b4",
+        "company_id": "COMP-3294d70e176d",
+        "event_type": "funding",
+        "event_summary": "智象机器人完成天使轮股权融资，投资方为天使翼创投",
+        "primary_news_id": "22949561-af64-4466-9bc7-163742e14b91"
+      },
+      {
+        "event_id": "471407b2-68dd-44af-bffd-39fa9492f579",
+        "company_id": "COMP-3294d70e176d",
+        "event_type": "funding",
+        "event_summary": "松灵机器人完成股权融资，投资方包括红杉中国、祥峰投资。",
+        "primary_news_id": "5299d2ea-ec2d-40b7-a890-0a281f492cd0"
+      },
+      {
+        "event_id": "1a8bc194-5ea3-47a5-9c8f-1427651f9246",
+        "company_id": "COMP-3294d70e176d",
+        "event_type": "funding",
+        "event_summary": "松灵机器人完成A轮融资，金额为1亿人民币，投资方包括祥峰投资、五源资本、红杉中国、HKX创新基金。",
+        "primary_news_id": "5299d2ea-ec2d-40b7-a890-0a281f492cd0"
+      },
+      {
+        "event_id": "8a084018-7608-47fc-8ac7-b8a9d1a4b908",
+        "company_id": "COMP-3294d70e176d",
+        "event_type": "funding",
+        "event_summary": "松灵机器人完成天使轮融资，金额为数百万人民币，投资方包括联想之星、XBOTPARK基金。",
+        "primary_news_id": "5299d2ea-ec2d-40b7-a890-0a281f492cd0"
+      },
+      {
+        "event_id": "eff2f3e3-4494-4aed-804f-5afb2aad3119",
+        "company_id": "COMP-86148f2ee6cf",
+        "event_type": "funding",
+        "event_summary": "北京爱空气科技有限公司完成天使轮融资，金额达千万级美元。",
+        "primary_news_id": "074183a6-8b68-4633-b080-f20281a7a13f"
+      },
+      {
+        "event_id": "95513feb-26bb-46a4-9c83-e2f06a203a51",
+        "company_id": "COMP-dcd14c10c29e",
+        "event_type": "funding",
+        "event_summary": "阶跃星辰完成B+轮融资，金额超50亿人民币，投资方包括上海国投、腾讯投资、启明创投等。",
+        "primary_news_id": "6f4c7127-7cce-4313-82c4-1c57eb723023"
+      },
+      {
+        "event_id": "7561d228-7314-4db5-a0f1-1abf4f19f19d",
+        "company_id": "COMP-dcd14c10c29e",
+        "event_type": "funding",
+        "event_summary": "阶跃星辰完成B轮融资，金额为数亿美元，投资方包括上海国投、腾讯投资、五源资本、启明创投。",
+        "primary_news_id": "6f4c7127-7cce-4313-82c4-1c57eb723023"
+      },
+      {
+        "event_id": "f910d990-f440-4576-b4d3-87c53bc1aeb0",
+        "company_id": "COMP-dcd14c10c29e",
+        "event_type": "funding",
+        "event_summary": "阶跃星辰完成A轮融资，投资方包括五源资本、顺为资本、联想创投。",
+        "primary_news_id": "6f4c7127-7cce-4313-82c4-1c57eb723023"
+      },
+      {
+        "event_id": "90a1ab3f-acad-41f6-81c0-3e87a77782fd",
+        "company_id": "COMP-dcd14c10c29e",
+        "event_type": "funding",
+        "event_summary": "阶跃星辰完成天使轮融资，投资方包括红杉中国、启明创投、IDG资本。",
+        "primary_news_id": "6f4c7127-7cce-4313-82c4-1c57eb723023"
+      }
+    ],
+    "scenarios": [
+      {
+        "scenario_id": "SCEN-66e03252dff8",
+        "company_id": "COMP-3294d70e176d",
+        "scenario_name": "停车场管理与停车服务",
+        "source_url": "https://pitchhub.36kr.com/project/2012744819066375"
+      },
+      {
+        "scenario_id": "SCEN-165fee80b617",
+        "company_id": "COMP-61d7b7253f94",
+        "scenario_name": "木工行业应用",
+        "source_url": "https://pitchhub.36kr.com/project/2066612616577025"
+      },
+      {
+        "scenario_id": "SCEN-6938e3915326",
+        "company_id": "COMP-61d7b7253f94",
+        "scenario_name": "印刷行业应用",
+        "source_url": "https://pitchhub.36kr.com/project/2066612616577025"
+      },
+      {
+        "scenario_id": "SCEN-bfaa50a93c14",
+        "company_id": "COMP-61d7b7253f94",
+        "scenario_name": "塑料回收行业应用",
+        "source_url": "https://pitchhub.36kr.com/project/2066612616577025"
+      },
+      {
+        "scenario_id": "SCEN-4b72421bd550",
+        "company_id": "COMP-61d7b7253f94",
+        "scenario_name": "金属行业应用",
+        "source_url": "https://pitchhub.36kr.com/project/2066612616577025"
+      },
+      {
+        "scenario_id": "SCEN-67cf33e4988d",
+        "company_id": "COMP-61d7b7253f94",
+        "scenario_name": "食品行业应用",
+        "source_url": "https://pitchhub.36kr.com/project/2066612616577025"
+      },
+      {
+        "scenario_id": "SCEN-22bf93355f1b",
+        "company_id": "COMP-3cf42e547578",
+        "scenario_name": "通信传输",
+        "source_url": "https://pitchhub.36kr.com/project/2192615690707335"
+      },
+      {
+        "scenario_id": "SCEN-3df626eeeb7a",
+        "company_id": "COMP-3cf42e547578",
+        "scenario_name": "电容器制造",
+        "source_url": "https://pitchhub.36kr.com/project/2192615690707335"
+      },
+      {
+        "scenario_id": "SCEN-fcf4b54d8188",
+        "company_id": "COMP-3cf42e547578",
+        "scenario_name": "超级电容器电极应用",
+        "source_url": "https://pitchhub.36kr.com/project/2192615690707335"
+      },
+      {
+        "scenario_id": "SCEN-4d038f9b3dea",
+        "company_id": "COMP-86148f2ee6cf",
+        "scenario_name": "电动汽车制造",
+        "source_url": "https://data.iyiou.com/company/details/583d72b830bd262c3878b66d13140e91/profile?source=iyiou.trz"
+      },
+      {
+        "scenario_id": "SCEN-a2bd9b28035d",
+        "company_id": "COMP-b8bbffe61cbc",
+        "scenario_name": "免疫治疗和干细胞治疗的临床实验",
+        "source_url": "https://pitchhub.36kr.com/project/1678413210924039"
+      },
+      {
+        "scenario_id": "SCEN-20e2ee527f4a",
+        "company_id": "COMP-b8bbffe61cbc",
+        "scenario_name": "再生医学研究",
+        "source_url": "https://pitchhub.36kr.com/project/1678413210924039"
+      },
+      {
+        "scenario_id": "SCEN-5bf6e521555b",
+        "company_id": "COMP-b8bbffe61cbc",
+        "scenario_name": "健康管理及疗养和抗衰老研究",
+        "source_url": "https://pitchhub.36kr.com/project/1678413210924039"
+      },
+      {
+        "scenario_id": "SCEN-4b6ffaa82a0f",
+        "company_id": "COMP-b8bbffe61cbc",
+        "scenario_name": "区域性疾病研究",
+        "source_url": "https://pitchhub.36kr.com/project/1678413210924039"
+      },
+      {
+        "scenario_id": "SCEN-e1ded031ca57",
+        "company_id": "COMP-b8bbffe61cbc",
+        "scenario_name": "司法鉴定",
+        "source_url": "https://pitchhub.36kr.com/project/1678413210924039"
+      },
+      {
+        "scenario_id": "SCEN-9eefdc179934",
+        "company_id": "COMP-c58ac55e0244",
+        "scenario_name": "家庭清洁",
+        "source_url": "https://data.iyiou.com/intelligence/details/78e7be1cf603d53afd1a00dbf7abcf19"
+      },
+      {
+        "scenario_id": "SCEN-44613cfe1ebf",
+        "company_id": "COMP-dcd14c10c29e",
+        "scenario_name": "电子设备电源管理",
+        "source_url": "https://pitchhub.36kr.com/project/2012737654736641"
+      }
+    ],
+    "products": [
+      {
+        "product_id": "PROD-713b8da10492",
+        "company_id": "COMP-3294d70e176d",
+        "canonical_name": "AI将是有史以来最深刻的平台",
+        "official_product_url": "https://pitchhub.36kr.com/project/2144673671644425"
+      },
+      {
+        "product_id": "PROD-c0e61ed1cef0",
+        "company_id": "COMP-3294d70e176d",
+        "canonical_name": "系列化停车机器人及核心设备",
+        "official_product_url": "https://pitchhub.36kr.com/project/2144851367707912"
+      },
+      {
+        "product_id": "PROD-3141c4e05e9a",
+        "company_id": "COMP-3294d70e176d",
+        "canonical_name": "系列化智能仓储式立体车库及解决方案",
+        "official_product_url": "https://pitchhub.36kr.com/project/2144851367707912"
+      },
+      {
+        "product_id": "PROD-2e00630167a0",
+        "company_id": "COMP-3294d70e176d",
+        "canonical_name": "智慧车库管理系统",
+        "official_product_url": "https://pitchhub.36kr.com/project/2144851367707912"
+      },
+      {
+        "product_id": "PROD-8d5ef8aadb4f",
+        "company_id": "COMP-3294d70e176d",
+        "canonical_name": "智能充电装置和系统",
+        "official_product_url": "https://pitchhub.36kr.com/project/2144851367707912"
+      },
+      {
+        "product_id": "PROD-a63670575d05",
+        "company_id": "COMP-3294d70e176d",
+        "canonical_name": "基于物联网的机电设备远程诊断系统",
+        "official_product_url": "https://pitchhub.36kr.com/project/2144851367707912"
+      },
+      {
+        "product_id": "PROD-6d180a43446b",
+        "company_id": "COMP-3294d70e176d",
+        "canonical_name": "智能机器人立体停车整体解决方案",
+        "official_product_url": "https://pitchhub.36kr.com/project/2012744819066375"
+      },
+      {
+        "product_id": "PROD-d96a515d10be",
+        "company_id": "COMP-3294d70e176d",
+        "canonical_name": "松灵机器人",
+        "official_product_url": "https://pitchhub.36kr.com/project/1678507092571136"
+      },
+      {
+        "product_id": "PROD-821b3dba1f32",
+        "company_id": "COMP-3294d70e176d",
+        "canonical_name": "智象机器人",
+        "official_product_url": "https://pitchhub.36kr.com/project/2002545744060296"
+      },
+      {
+        "product_id": "PROD-3f3425f4e41e",
+        "company_id": "COMP-00d053ec2a24",
+        "canonical_name": "预约即享 专属定制 好礼！OasisX即将全面上线各大平台。",
+        "official_product_url": "https://www.fitx.games/"
+      },
+      {
+        "product_id": "PROD-69d11058ca0a",
+        "company_id": "COMP-1764f9b80fc2",
+        "canonical_name": "TechTCM",
+        "official_product_url": "https://techtcm.com"
+      },
+      {
+        "product_id": "PROD-945f7df0d12c",
+        "company_id": "COMP-61d7b7253f94",
+        "canonical_name": "黑力士 / KINGKONG",
+        "official_product_url": "https://pitchhub.36kr.com/project/2066612616577025"
+      },
+      {
+        "product_id": "PROD-4c69b14e0591",
+        "company_id": "COMP-3cf42e547578",
+        "canonical_name": "用于超级电容器电极的铁碳复合材料",
+        "official_product_url": "https://pitchhub.36kr.com/project/2192615690707335"
+      },
+      {
+        "product_id": "PROD-051d9d3a3953",
+        "company_id": "COMP-64e864f702e8",
+        "canonical_name": "软件 APP 模板",
+        "official_product_url": "https://www.pisemi.com/"
+      },
+      {
+        "product_id": "PROD-5c6dbb41374b",
+        "company_id": "COMP-95791ebe18d4",
+        "canonical_name": "自动化灌装机器人生产线",
+        "official_product_url": "https://pitchhub.36kr.com/project/2205329787695489"
+      },
+      {
+        "product_id": "PROD-2145a4b808cf",
+        "company_id": "COMP-95791ebe18d4",
+        "canonical_name": "智能仓储",
+        "official_product_url": "https://pitchhub.36kr.com/project/2205329787695489"
+      },
+      {
+        "product_id": "PROD-ba7769cca687",
+        "company_id": "COMP-95791ebe18d4",
+        "canonical_name": "数字化车间",
+        "official_product_url": "https://pitchhub.36kr.com/project/2205329787695489"
+      },
+      {
+        "product_id": "PROD-773b0f15df79",
+        "company_id": "COMP-86148f2ee6cf",
+        "canonical_name": "空气堡AIRBURG",
+        "official_product_url": "https://pitchhub.36kr.com/project/1817550000490374"
+      },
+      {
+        "product_id": "PROD-b7a51e46eb8b",
+        "company_id": "COMP-8e3331e62f7a",
+        "canonical_name": "成立才三年的AI生命科学企业，融资近亿元!",
+        "official_product_url": "https://data.iyiou.com/intelligence/details/57367b4c997b269af08819ffd2794445"
+      },
+      {
+        "product_id": "PROD-c777b68d1fb0",
+        "company_id": "COMP-86148f2ee6cf",
+        "canonical_name": "清洁能源电池",
+        "official_product_url": "https://data.iyiou.com/company/details/583d72b830bd262c3878b66d13140e91/profile?source=iyiou.trz"
+      },
+      {
+        "product_id": "PROD-860cd87f67b5",
+        "company_id": "COMP-7e0087e94af9",
+        "canonical_name": "Bringing robots everywhere, for everyone",
+        "official_product_url": "https://io-ai.tech/"
+      },
+      {
+        "product_id": "PROD-a41de24e6833",
+        "company_id": "COMP-7e0087e94af9",
+        "canonical_name": "LeRobot",
+        "official_product_url": "https://io-ai.tech/"
+      },
+      {
+        "product_id": "PROD-6fd78b9c14e5",
+        "company_id": "COMP-86148f2ee6cf",
+        "canonical_name": "LivingAI",
+        "official_product_url": "https://living.ai/"
+      },
+      {
+        "product_id": "PROD-9d80d7f3bf9f",
+        "company_id": "COMP-8e3331e62f7a",
+        "canonical_name": "BioScience",
+        "official_product_url": "http://www.oxtium.com/"
+      },
+      {
+        "product_id": "PROD-d5940c8a9906",
+        "company_id": "COMP-8e3331e62f7a",
+        "canonical_name": "产品与服务",
+        "official_product_url": "http://www.oxtium.com/"
+      },
+      {
+        "product_id": "PROD-484964a9e3fa",
+        "company_id": "COMP-b8bbffe61cbc",
+        "canonical_name": "Moka旗下的Moka智能化招聘管理系统",
+        "official_product_url": "https://pitchhub.36kr.com/project/1713131345996036"
+      },
+      {
+        "product_id": "PROD-c51046253802",
+        "company_id": "COMP-b8bbffe61cbc",
+        "canonical_name": "Moka智能化招聘管理系统",
+        "official_product_url": "https://pitchhub.36kr.com/project/1713131345996036"
+      },
+      {
+        "product_id": "PROD-a0076753b1b1",
+        "company_id": "COMP-b8bbffe61cbc",
+        "canonical_name": "干细胞保存服务",
+        "official_product_url": "https://pitchhub.36kr.com/project/1678413210924039"
+      },
+      {
+        "product_id": "PROD-50d8da8cc027",
+        "company_id": "COMP-b8bbffe61cbc",
+        "canonical_name": "希瑞Shirey",
+        "official_product_url": "https://pitchhub.36kr.com/project/2060875358959753"
+      },
+      {
+        "product_id": "PROD-ffb8e65ce871",
+        "company_id": "COMP-b8bbffe61cbc",
+        "canonical_name": "自动化控制系统",
+        "official_product_url": "https://pitchhub.36kr.com/project/2174025189408257"
+      }
+    ]
+  }
+}

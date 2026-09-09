@@ -1,0 +1,27 @@
+# W13-D2 promote_quality real DB run 2026-05-02
+
+## Dry-run preview
+domain=professor scanned=787 ready=774 needs_review=13 issues=1
+domain=company   scanned=1024 ready=1013 needs_review=11 issues=11
+domain=paper     scanned=7297 ready=0 needs_review=7297 issues=4026
+
+## Live run (UPDATE + INSERT pipeline_issue)
+{"dry_run": false, "totals": {"scanned": 9108, "ready": 1787, "needs_review": 7321,
+ "updated": 1787, "pipeline_issues": 4038, "pipeline_issues_inserted": 4038, "failed": 0}}
+
+## quality_status 落地 verification
+professor: ('needs_review', 13), ('ready', 774)
+company:   ('needs_review', 11), ('ready', 1013)
+paper:     ('needs_review', 7297)  -- V020 全 unverified；要 OpenAlex DOI 验证后才能 confirm
+patent:    ('ready', 1931)         -- W13-3 writer 已设
+
+## W12-7 reassess dry-run (post-promote)
+{"profs_total": 774, "profs_reassessed": 774, "profs_demoted": 0, "pipeline_issues_inserted": 0}
+
+## 解读
+- professor 774/787 = 98.4% high (满足 confirmed + summary >=150)；13 medium 含 1 issue
+- company   1013/1024 = 98.9% high；11 medium (3 partial + 8 no_narrative)
+- paper     0/7297    = 0% high  (V020 default unverified；需要 W12 Phase B DOI verify)
+- patent    1931/1931 = 100% ready（W13-3 writer rule 计算）
+
+reassess 0 demoted = W11-7 raw_text reinforcement 后 summary 全部 >=150 chars，符合 spec design。

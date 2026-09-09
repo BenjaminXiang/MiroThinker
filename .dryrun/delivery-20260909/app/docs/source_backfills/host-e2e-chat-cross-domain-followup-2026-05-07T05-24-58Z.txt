@@ -1,0 +1,23 @@
+# Host chat cross-domain follow-up E2E 2026-05-07T05-24-58Z
+log_file=/home/longxiang/MiroThinker/docs/source_backfills/host-e2e-chat-cross-domain-followup-2026-05-07T05-24-58Z.txt
+base_url=http://127.0.0.1:52023
+DATABASE_URL=postgresql://***@localhost:15432/miroflow_real
+CHAT_MILVUS_URI=/home/longxiang/MiroThinker/apps/miroflow-agent/milvus.db
+started_uvicorn_pid=3000020
+INFO:     Started server process [3000028]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:52023 (Press CTRL+C to quit)
+INFO:     127.0.0.1:32872 - "GET /api/health HTTP/1.1" 200 OK
+health=OK
+
+## A-paper
+query=论文 Image Super-Resolution Using Deep Convolutional Networks
+INFO:     127.0.0.1:32884 - "POST /api/chat HTTP/1.1" 200 OK
+http_status=200
+raw= {"query":"论文 Image Super-Resolution Using Deep Convolutional Networks","query_type":"unknown","answer_text":"我还没判断清楚要查哪类科创信息。请补充要查询的主体、方向或范围，例如：介绍某位教授、查某家企业、找某方向的论文/专利，或问“深圳做具身智能的教授和企业有哪些”。当前支持教授、企业、论文、专利四类数据。","citations":[],"evidence":[],"clarification":null,"structured_payload":{},"answer_style":"template","citation_map":{}}
+query_type= unknown
+citations_count= 0
+answer_prefix= 我还没判断清楚要查哪类科创信息。请补充要查询的主体、方向或范围，例如：介绍某位教授、查某家企业、找某方向的论文/专利，或问“深圳做具身智能的教授和企业有哪些”。当前支持教授、企业、论文、专利四类数据。
+query_type_mismatch expected=A_paper_profile actual=unknown
+result=FAIL

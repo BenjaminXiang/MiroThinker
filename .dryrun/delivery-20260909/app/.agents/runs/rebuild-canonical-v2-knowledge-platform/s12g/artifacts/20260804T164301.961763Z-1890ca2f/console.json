@@ -1,0 +1,26 @@
+[
+  {
+    "length": 95,
+    "page": "self-test",
+    "sha256": "268b8cc89bb73e8b9e58f7ea4eb8cbfc95f4460b2c6b362e174b554ab5a22ae8",
+    "type": "pageerror"
+  },
+  {
+    "length": 95,
+    "page": "self-test",
+    "sha256": "268b8cc89bb73e8b9e58f7ea4eb8cbfc95f4460b2c6b362e174b554ab5a22ae8",
+    "type": "pageerror"
+  },
+  {
+    "length": 95,
+    "page": "self-test",
+    "sha256": "268b8cc89bb73e8b9e58f7ea4eb8cbfc95f4460b2c6b362e174b554ab5a22ae8",
+    "type": "pageerror"
+  },
+  {
+    "length": 88,
+    "page": "self-test",
+    "sha256": "7ee10f7af8cc47f8dab4f9fa3a5742a123a4d87faf6fc40a8fe92c7bdfe206e6",
+    "type": "pageerror"
+  }
+]

@@ -1,0 +1,236 @@
+# Host Agentic RAG E2E 2026-06-01T08-39-05Z
+root=/home/longxiang/MiroThinker
+admin_dir=/home/longxiang/MiroThinker/apps/admin-console
+log_file=/home/longxiang/MiroThinker/docs/source_backfills/host-e2e-agentic-rag-validation-c129a405-bc6a-4d7f-a3bc-9059af7f4e85-2026-06-01T08-39-05Z.txt
+
+
+## Environment
+DATABASE_URL_DEFAULTED=false
+CHAT_MILVUS_URI_DEFAULTED=true
+DEFAULT_MILVUS_URI_EXISTS=true
+DATABASE_URL=postgresql://***@localhost:15432/miroflow_real
+DATABASE_URL_TEST=UNSET
+CHAT_MILVUS_URI=SET=/home/longxiang/MiroThinker/apps/miroflow-agent/milvus.db
+MILVUS_URI=UNSET
+MILVUS_USE_REAL_CLIENT=SET=1
+CHAT_USE_RETRIEVAL_SERVICE=SET=on
+SERPER_API_KEY_present=True
+API_KEY_present=False
+LOCAL_LLM_API_KEY_present=True
+http_proxy_present=False
+https_proxy_present=False
+HTTP_PROXY_present=False
+HTTPS_PROXY_present=False
+all_proxy_present=False
+ALL_PROXY_present=False
+
+## LLM profile and connectivity
+
++ admin_python -
+warning: `pydantic-extra-types==2.11.2` is yanked (reason: "multiple feature mistakenly merged before release. no known security risks.")
+profile= deepseekv4pro
+base_url_scheme= https
+base_url_host= api.deepseek.com
+base_url_port= 443
+base_url_path= 
+model= deepseek-v4-pro
+api_key_present= True
+tcp_probe=OK
+openai_probe=OK
+openai_text= I'm here and ready to help!
+exit_code=0
+
+## Postgres probe
+
++ admin_python -
+database= miroflow_real
+professor_count= 2106
+company_count= 1028
+paper_count= 46
+patent_count= 0
+ding_company_role_count= 0
+postgres_probe=OK
+exit_code=0
+
+## Milvus probe
+
++ admin_python -
+/home/longxiang/MiroThinker/apps/admin-console/.venv/lib/python3.12/site-packages/milvus_lite/__init__.py:15: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  from pkg_resources import DistributionNotFound, get_distribution
+milvus_probe=OK
+uri= /home/longxiang/MiroThinker/apps/miroflow-agent/milvus.db
+collections= company_profiles,paper_chunks,professor_profiles
+professor_profiles_stats= {'row_count': 3}
+company_profiles_stats= {'row_count': 1024}
+paper_chunks_stats= {'row_count': 78}
+exit_code=0
+
+## Classifier 100-case benchmark
+
++ timeout 240s uv run pytest tests/test_classifier_benchmark.py -m requires_classifier_llm -v --tb=short
+============================= test session starts ==============================
+platform linux -- Python 3.12.12, pytest-9.0.3, pluggy-1.6.0 -- /home/longxiang/MiroThinker/apps/admin-console/.venv/bin/python3
+cachedir: .pytest_cache
+rootdir: /home/longxiang/MiroThinker/apps/admin-console
+configfile: pyproject.toml
+plugins: anyio-4.13.0, hydra-core-1.3.2
+collecting ... collected 3 items / 2 deselected / 1 selected
+
+tests/test_classifier_benchmark.py::test_classifier_benchmark PASSED     [100%]
+
+=============================== warnings summary ===============================
+backend/main.py:50
+  /home/longxiang/MiroThinker/apps/admin-console/backend/main.py:50: DeprecationWarning: 
+          on_event is deprecated, use lifespan event handlers instead.
+  
+          Read more about it in the
+          [FastAPI docs for Lifespan Events](https://fastapi.tiangolo.com/advanced/events/).
+          
+    @app.on_event("startup")
+
+.venv/lib/python3.12/site-packages/fastapi/applications.py:4656
+.venv/lib/python3.12/site-packages/fastapi/applications.py:4656
+  /home/longxiang/MiroThinker/apps/admin-console/.venv/lib/python3.12/site-packages/fastapi/applications.py:4656: DeprecationWarning: 
+          on_event is deprecated, use lifespan event handlers instead.
+  
+          Read more about it in the
+          [FastAPI docs for Lifespan Events](https://fastapi.tiangolo.com/advanced/events/).
+          
+    return self.router.on_event(event_type)  # ty: ignore[deprecated]
+
+backend/main.py:55
+  /home/longxiang/MiroThinker/apps/admin-console/backend/main.py:55: DeprecationWarning: 
+          on_event is deprecated, use lifespan event handlers instead.
+  
+          Read more about it in the
+          [FastAPI docs for Lifespan Events](https://fastapi.tiangolo.com/advanced/events/).
+          
+    @app.on_event("shutdown")
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+================= 1 passed, 2 deselected, 4 warnings in 0.05s ==================
+exit_code=0
+
+## HTTP chat E2E
+selected_free_port=57303
+started_uvicorn_pid=2999286
+INFO:     Started server process [3000719]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:57303 (Press CTRL+C to quit)
+INFO:     127.0.0.1:41108 - "GET /api/health HTTP/1.1" 200 OK
+health=OK
+health_body={"status":"ok"}
+
+### B-company
+query=深圳哪些公司做激光雷达
+expected_query_type=B_company_topic_search
+min_citations=1
+zero_citation_answer_pattern=ANY
+INFO:     127.0.0.1:41720 - "POST /api/chat HTTP/1.1" 200 OK
+http_status=200
+raw= {"query":"深圳哪些公司做激光雷达","query_type":"B_company_topic_search","answer_text":"共找到 25 个企业（显示前 10 个）：\n\n  • 不止技术 — DTOF激光雷达：不止技术DTOF激光雷达广泛应用于无人驾驶、商用服务机器人、物流AGV车、大屏互动、安防、测绘、港口、\n  • 中集物联科技 — 智能停车：基于5G及物联网技术的智能停车解决方案\n  • 华赛睿飞智能科技 — 室内微型无人机：室内微型无人机践行者，专注于微型无人机的研发、生产、销售及服务。\n  • 奇历士技术（深圳） — 低功耗高精度SAR ADC芯片：低功耗高精度SAR ADC芯片，精度大于16位，采样率1MSPS以上，正在测试阶段。\n  • 安智光电科技 — 物联网\n  • 小楠智能制造 — 仓储机器人：用于仓储服务的智能机器人\n  • 广东鹏行智能 — 四足仿生机器人：鹏行智能研发的四足仿生机器人，融合动力总成、运动控制、自动驾驶、人机交互、机器智能等技术，面向消费级家庭\n  • 探博智能机器人 — 先进制造\n  • 无穹创新科技 — 灵镜MetaCam：一款高度集成、轻量化的手持三维实景重建扫描设备，采用自主研发的三维实时重建算法，可直接获取真彩点云模\n  • 模拟微电子（深圳） — 电子元器件：公司批发的电子元器件产品。\n  ... (另有 15 个未列出)","citations":[{"type":"company","id":"COMP-04d42897fcfb","label":"不止技术","url":"/browse#company/COMP-04d42897fcfb"},{"type":"company","id":"COMP-33ae11f81f43","label":"中集物联科技","url":"/browse#company/COMP-33ae11f81f43"},{"type":"company","id":"COMP-e63d01b5cd61","label":"华赛睿飞智能科技","url":"/browse#company/COMP-e63d01b5cd61"},{"type":"company","id":"COMP-c0bfe2f78354","label":"奇历
+query_type= B_company_topic_search
+answer_style= template
+citations_count= 10
+evidence_count= 0
+answer_prefix= 共找到 25 个企业（显示前 10 个）：    • 不止技术 — DTOF激光雷达：不止技术DTOF激光雷达广泛应用于无人驾驶、商用服务机器人、物流AGV车、大屏互动、安防、测绘、港口、   • 中集物联科技 — 智能停车：基于5G及物联网技术的智能停车解决方案   • 华赛睿飞智能科技 — 室内微型无人机：室内微型无人机践行者，专注于微型无人机的研发、生产、销售及服务。   • 奇历士技术（深圳） — 低功耗高精度SAR ADC芯片：低功耗高精度SAR ADC芯片，精度大于16位，采样率1MSPS以上，正在测试阶段。   • 安智光电科技 — 物联网   • 小楠智能制造 — 仓储机器人：
+
+### B-paper
+query=近两年具身智能方向的论文有哪些
+expected_query_type=B_paper_topic_search
+min_citations=1
+zero_citation_answer_pattern=ANY
+/home/longxiang/MiroThinker/apps/admin-console/.venv/lib/python3.12/site-packages/milvus_lite/__init__.py:15: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  from pkg_resources import DistributionNotFound, get_distribution
+INFO:     127.0.0.1:41722 - "POST /api/chat HTTP/1.1" 200 OK
+http_status=200
+raw= {"query":"近两年具身智能方向的论文有哪些","query_type":"B_paper_topic_search","answer_text":"共找到 20 个论文（显示前 10 个）：\n\n论文域质量门尚未完全完成，以下为检索候选，需结合来源复核。\n\n  • X.-J. He, H — X.-J. He, H\n  • Valencia, L. A. & Cui, B — Valencia, L. A. & Cui, B\n  • Wei‐Jing Wu, Ze Wang, Yik‐Ling Winnie Hung, Hei‐Tung Wong, T‐W Dominic Chan* — Wei‐Jing Wu, Ze Wang, Yik‐Ling Winnie Hung, Hei‐Tung Wong, T\n  • PAPER-D55998F9F9AE — Hierarchical Graph Learning for Protein–Protein Interaction\n  • Rhythmicity and waves in the cortex of single cells — Rhythmicity and waves in the cortex of single cells\n  • T.-W. Dominic Chan, Sereina Riniker*, Renato Zenobi* — T.-W. Dominic Chan, Sereina Riniker*, Renato Zenobi*\n  • The Arabidopsis H3K27me3 demethylase JUMONJI 13 is a temperature and photoperiod dependent flowering repressor — The Arabidopsis H3K27me3 demethylase JUMONJI 13 is a tempera\n  • EBS is a bivalent histone reader that regulates floral phase transition in Arabidopsis — EBS is a bivalent histone reader that regulates f
+query_type= B_paper_topic_search
+answer_style= template
+citations_count= 10
+evidence_count= 0
+answer_prefix= 共找到 20 个论文（显示前 10 个）：  论文域质量门尚未完全完成，以下为检索候选，需结合来源复核。    • X.-J. He, H — X.-J. He, H   • Valencia, L. A. & Cui, B — Valencia, L. A. & Cui, B   • Wei‐Jing Wu, Ze Wang, Yik‐Ling Winnie Hung, Hei‐Tung Wong, T‐W Dominic Chan* — Wei‐Jing Wu, Ze Wang, Yik‐Ling Winnie Hung, Hei‐Tung Wong, T   • PAPER-D55998
+
+### B-patent
+query=哪些专利和柔性触觉传感有关
+expected_query_type=B_patent_topic_search
+min_citations=1
+zero_citation_answer_pattern=ANY
+E20260601 08:39:20.645144 3133419 milvus_proxy.cpp:222] [SERVER][Search][grpcpp_sync_ser][]Can not find patent_profiles's schema
+2026-06-01 08:39:20,647 [ERROR][_log_rpc_error]: RPC error: [search], <MilvusException: (code=100, message=Can not find patent_profiles's schema: collection not found)>, <elapsed:2.0ms>
+Traceback:
+Traceback (most recent call last):
+  File "/home/longxiang/MiroThinker/apps/admin-console/.venv/lib/python3.12/site-packages/pymilvus/decorators.py", line 404, in handler
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/longxiang/MiroThinker/apps/admin-console/.venv/lib/python3.12/site-packages/pymilvus/decorators.py", line 451, in handler
+    return func(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/longxiang/MiroThinker/apps/admin-console/.venv/lib/python3.12/site-packages/pymilvus/decorators.py", line 342, in handler
+    raise e from e
+  File "/home/longxiang/MiroThinker/apps/admin-console/.venv/lib/python3.12/site-packages/pymilvus/decorators.py", line 305, in handler
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/longxiang/MiroThinker/apps/admin-console/.venv/lib/python3.12/site-packages/pymilvus/client/grpc_handler.py", line 1253, in search
+    return self._execute_search(
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/longxiang/MiroThinker/apps/admin-console/.venv/lib/python3.12/site-packages/pymilvus/client/grpc_handler.py", line 1156, in _execute_search
+    raise e from e
+  File "/home/longxiang/MiroThinker/apps/admin-console/.venv/lib/python3.12/site-packages/pymilvus/client/grpc_handler.py", line 1145, in _execute_search
+    check_status(response.status)
+  File "/home/longxiang/MiroThinker/apps/admin-console/.venv/lib/python3.12/site-packages/pymilvus/client/utils.py", line 76, in check_status
+    raise MilvusException(status.code, status.reason, status.error_code)
+pymilvus.exceptions.MilvusException: <MilvusException: (code=100, message=Can not find patent_profiles's schema: collection not found)>
+ (decorators.py:358)
+Milvus search failed for domain patent collection patent_profiles: <MilvusException: (code=100, message=Can not find patent_profiles's schema: collection not found)>
+INFO:     127.0.0.1:41738 - "POST /api/chat HTTP/1.1" 200 OK
+http_status=200
+raw= {"query":"哪些专利和柔性触觉传感有关","query_type":"B_patent_topic_search","answer_text":"未找到与 '专利和柔性触觉传感有关' 相关的专利。","citations":[],"evidence":[],"clarification":null,"structured_payload":{"classifier_topic":"专利和柔性触觉传感有关","classifier_target_domain":"patent","classifier_reason":"semantic list deterministic rule","match_count":0,"matched_objects":[]},"answer_style":"template","citation_map":{},"suggested_followups":["上述哪些申请人是企业","换成同方向论文","换成同方向企业"]}
+query_type= B_patent_topic_search
+answer_style= template
+citations_count= 0
+evidence_count= 0
+answer_prefix= 未找到与 '专利和柔性触觉传感有关' 相关的专利。
+chat_payload=FAIL insufficient_citations expected_min=1 actual=0
+failure[1]=chat_payload:B-patent
+
+### A-professor
+query=介绍清华的丁文伯
+expected_query_type=A_prof_profile
+min_citations=1
+zero_citation_answer_pattern=ANY
+INFO:     127.0.0.1:41746 - "POST /api/chat HTTP/1.1" 200 OK
+http_status=200
+raw= {"query":"介绍清华的丁文伯","query_type":"A_prof_profile","answer_text":"丁文伯是清华大学深圳国际研究生院的副教授和博士生导师[1][2][3]。他的研究方向包括信号处理、机器人、人机界面以及机器学习[4][5][6][7]。","citations":[{"type":"professor","id":"PROF-EB3DFC72A1BD","label":"丁文伯 - 清华大学深圳国际研究生院","url":"/browse#professor/PROF-EB3DFC72A1BD"}],"evidence":[],"clarification":null,"structured_payload":{"professor_id":"PROF-EB3DFC72A1BD","canonical_name":"丁文伯","canonical_name_en":null,"institution":"清华大学深圳国际研究生院","title":"副教授，博士生导师","discipline_family":"computer_science","research_topics":["Signal Processing","Robotics","Human-machine interface","Machine Learning"],"verified_paper_count":0,"h_index":null,"citation_count":null,"paper_count":null},"answer_style":"llm_synthesized","citation_map":{"1":"PROF-EB3DFC72A1BD","2":"PROF-EB3DFC72A1BD","3":"PROF-EB3DFC72A1BD","4":"PROF-EB3DFC72A1BD","5":"PROF-EB3DFC72A1BD","6":"PROF-EB3DFC72A1BD","7":"PROF-EB3DFC72A1BD","8":"PROF-EB3DFC72A1BD"},"suggested_followups":["看看他的论文","他的专利有哪些","他参与创立了哪些企业"]}
+query_type= A_prof_profile
+answer_style= llm_synthesized
+citations_count= 1
+evidence_count= 0
+answer_prefix= 丁文伯是清华大学深圳国际研究生院的副教授和博士生导师[1][2][3]。他的研究方向包括信号处理、机器人、人机界面以及机器学习[4][5][6][7]。
+
+### C-followup-company
+query=他参与创立了哪些企业
+expected_query_type=C_cross_domain_related
+min_citations=0
+zero_citation_answer_pattern=暂未收录|未找到|证据不足|没有.*证据
+INFO:     127.0.0.1:41748 - "POST /api/chat HTTP/1.1" 200 OK
+http_status=200
+raw= {"query":"他参与创立了哪些企业","query_type":"C_cross_domain_related","answer_text":"暂未收录丁文伯关联的企业数据。","citations":[],"evidence":[],"clarification":null,"structured_payload":{"source_domain":"professor","source_id":"PROF-EB3DFC72A1BD","source_label":"丁文伯","target_domain":"company","retrieval_evidence":[]},"answer_style":"template","citation_map":{},"suggested_followups":[]}
+query_type= C_cross_domain_related
+answer_style= template
+citations_count= 0
+evidence_count= 0
+answer_prefix= 暂未收录丁文伯关联的企业数据。
+
+## Done
+log_file=/home/longxiang/MiroThinker/docs/source_backfills/host-e2e-agentic-rag-validation-c129a405-bc6a-4d7f-a3bc-9059af7f4e85-2026-06-01T08-39-05Z.txt
+failures=1
+result=FAIL
+I0601 08:41:30.662612 3129381 chttp2_transport.cc:1369] unix:/tmp/tmpfyzlcvcw_milvus.db.sock: Got goaway [11] err=UNAVAILABLE:GOAWAY received; Error code: 11; Debug Text: too_many_pings {grpc_status:14, http2_error:11}
+E0601 08:41:30.662676 3129381 chttp2_transport.cc:1401] unix:/tmp/tmpfyzlcvcw_milvus.db.sock: Received a GOAWAY with error code ENHANCE_YOUR_CALM and debug data equal to "too_many_pings". Current keepalive time (before throttling): 10000ms
+INFO:     127.0.0.1:56926 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45288 - "GET /api/pipeline/runs/fa151958-e6e1-42c3-a948-f058f130a119 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45294 - "GET /api/pipeline/runs?page=1&page_size=20 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45300 - "GET /api/dashboard HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49690 - "GET /api/pipeline/runs/fa151958-e6e1-42c3-a948-f058f130a119 HTTP/1.1" 200 OK

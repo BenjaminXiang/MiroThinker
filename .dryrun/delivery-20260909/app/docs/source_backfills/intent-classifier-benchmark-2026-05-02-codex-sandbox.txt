@@ -1,0 +1,131 @@
+============================= test session starts ==============================
+platform linux -- Python 3.12.12, pytest-9.0.3, pluggy-1.6.0 -- /home/longxiang/MiroThinker/apps/admin-console/.venv/bin/python3
+cachedir: .pytest_cache
+rootdir: /home/longxiang/MiroThinker/apps/admin-console
+configfile: pyproject.toml
+plugins: anyio-4.13.0, hydra-core-1.3.2
+collecting ... collected 2 items / 1 deselected / 1 selected
+
+tests/test_classifier_benchmark.py::test_classifier_benchmark FAILED     [100%]
+
+=================================== FAILURES ===================================
+__________________________ test_classifier_benchmark ___________________________
+tests/test_classifier_benchmark.py:111: in test_classifier_benchmark
+    assert overall >= PASS_OVERALL, f"overall {overall:.3f} < {PASS_OVERALL}"
+E   AssertionError: overall 0.000 < 0.9
+E   assert 0.0 >= 0.9
+----------------------------- Captured stdout call -----------------------------
+
+Classifier benchmark mismatches:
+  MISS [A->UNKNOWN] Q001: 介绍清华的丁文伯
+  MISS [A->UNKNOWN] Q002: 清华大学深圳国际研究生院丁文伯教授的研究方向
+  MISS [A->UNKNOWN] Q003: 北京大学深圳研究生院李晓明教授简介
+  MISS [A->UNKNOWN] Q004: 南方科技大学张巍教授是谁
+  MISS [A->UNKNOWN] Q005: 深圳大学王海峰教授有哪些论文
+  MISS [A->UNKNOWN] Q006: 哈工大深圳刘洋教授的实验室
+  MISS [A->UNKNOWN] Q007: 香港中文大学深圳陈伟教授介绍
+  MISS [A->UNKNOWN] Q008: 中山大学深圳校区周强教授的成果
+  MISS [A->UNKNOWN] Q009: 深圳理工大学赵敏教授研究什么
+  MISS [A->UNKNOWN] Q010: 中国科学院深圳先进技术研究院杨帆研究员介绍
+  MISS [A->UNKNOWN] Q011: 深圳技术大学黄磊教授简介
+  MISS [A->UNKNOWN] Q012: 南科大朱丽教授的代表论文
+  MISS [A->UNKNOWN] Q013: 北大深研院陈俊教授个人主页信息
+  MISS [A->UNKNOWN] Q014: 清华深圳刘鹏教授最近发了什么论文
+  MISS [A->UNKNOWN] Q015: 深大李娜教授的团队方向
+  MISS [A->UNKNOWN] Q016: 哈工大深圳孙涛教授专利情况
+  MISS [A->UNKNOWN] Q017: 港中大深圳吴佳教授是谁
+  MISS [A->UNKNOWN] Q018: 中山大学深圳张凯教授介绍
+  MISS [A->UNKNOWN] Q019: 深圳理工大学韩梅教授研究领域
+  MISS [A->UNKNOWN] Q020: 先进院王磊研究员有哪些成果
+  MISS [A->UNKNOWN] Q021: 南方科技大学郭宇教授简介
+  MISS [A->UNKNOWN] Q022: 北京大学深圳研究生院唐杰教授研究什么
+  MISS [A->UNKNOWN] Q023: 清华深圳周明教授的论文列表
+  MISS [A->UNKNOWN] Q024: 深圳大学郑磊教授有哪些专利
+  MISS [A->UNKNOWN] Q025: 哈尔滨工业大学深圳校区马超教授介绍
+  MISS [A->UNKNOWN] Q026: 优必选有哪些专利
+  MISS [A->UNKNOWN] Q027: 大疆创新的技术实力怎么样
+  MISS [A->UNKNOWN] Q028: 腾讯云在深圳的科创业务介绍
+  MISS [A->UNKNOWN] Q029: 比亚迪半导体公司画像
+  MISS [A->UNKNOWN] Q030: 深圳市越疆科技有限公司有哪些机器人产品
+  MISS [A->UNKNOWN] Q031: 奥比中光科技集团的核心技术
+  MISS [A->UNKNOWN] Q032: 华大基因有哪些科研成果
+  MISS [A->UNKNOWN] Q033: 迈瑞医疗的专利布局
+  MISS [A->UNKNOWN] Q034: 云天励飞公司的技术方向
+  MISS [A->UNKNOWN] Q035: 速腾聚创相关信息
+  MISS [A->UNKNOWN] Q036: 专利 CN117873146A 的详细信息是什么
+  MISS [A->UNKNOWN] Q037: CN114001234A 专利讲的是什么
+  MISS [A->UNKNOWN] Q038: 查询专利 CN115678901B 的申请人
+  MISS [A->UNKNOWN] Q039: 一种机器人灵巧手控制方法这件专利的详情
+  MISS [A->UNKNOWN] Q040: 专利号 CN109876543A 有哪些发明人
+  MISS [A->UNKNOWN] Q041: CN116543210A 的法律状态和技术领域
+  MISS [A->UNKNOWN] Q042: 深圳优必选申请的 CN117000111A 专利详情
+  MISS [A->UNKNOWN] Q043: 外观设计专利 CN306123456S 是什么产品
+  MISS [A->UNKNOWN] Q044: CN112233445B 专利摘要
+  MISS [A->UNKNOWN] Q045: 一种基于视觉的移动机器人导航系统专利介绍
+  MISS [A->UNKNOWN] Q046: 论文 Learning Dexterous Manipulation with Simulated Data 的作者是谁
+  MISS [A->UNKNOWN] Q047: 介绍论文 RT-2: Vision-Language-Action Models Transfer Web Knowledge to Robotic Control
+  MISS [A->UNKNOWN] Q048: 王海峰教授最近发了什么论文
+  MISS [A->UNKNOWN] Q049: Diffusion Policy: Visuomotor Policy Learning via Action Diffusion 的研究内容
+  MISS [A->UNKNOWN] Q050: 论文 Segment Anything 的深圳作者有哪些
+  MISS [B->UNKNOWN] Q051: 深圳有哪些做具身智能的灵巧手厂商
+  MISS [B->UNKNOWN] Q052: 中国成熟的酒店送餐机器人供应商
+  MISS [B->UNKNOWN] Q053: 我想找 PCB 打板，有哪些推荐
+  MISS [B->UNKNOWN] Q054: 深圳有哪些研究芯片设计的教授
+  MISS [B->UNKNOWN] Q055: 做机器人的专家有哪些
+  MISS [B->UNKNOWN] Q056: 研究力控的深圳高校教授有哪些
+  MISS [B->UNKNOWN] Q057: 深圳有哪些做协作机器人的企业
+  MISS [B->UNKNOWN] Q058: 哪些公司在做手术机器人
+  MISS [B->UNKNOWN] Q059: 有没有做工业视觉检测的深圳企业
+  MISS [B->UNKNOWN] Q060: 近两年具身智能方向的论文有哪些
+  MISS [B->UNKNOWN] Q061: 查一下深圳高校在自动驾驶感知方向的论文
+  MISS [B->UNKNOWN] Q062: 有哪些教授做大模型蒸馏
+  MISS [B->UNKNOWN] Q063: 深圳做合成数据平台的企业
+  MISS [B->UNKNOWN] Q064: 找几篇关于机器人抓取的论文
+  MISS [B->UNKNOWN] Q065: 有没有研究多模态大模型的南科大教授
+  MISS [B->UNKNOWN] Q066: 深圳哪些公司做激光雷达
+  MISS [B->UNKNOWN] Q067: 机器人运动规划方向的代表论文
+  MISS [B->UNKNOWN] Q068: 做脑机接口的深圳团队有哪些
+  MISS [B->UNKNOWN] Q069: 哪些专利和柔性触觉传感有关
+  MISS [B->UNKNOWN] Q070: 我想找研究低空经济无人机的企业
+  MISS [C->UNKNOWN] Q071: 他参与创立了哪些企业
+  MISS [C->UNKNOWN] Q072: 这些专利的发明人有哪些是深圳高校教授
+  MISS [C->UNKNOWN] Q073: 他的论文里哪些和具身智能有关
+  MISS [C->UNKNOWN] Q074: 这家公司有哪些核心专利
+  MISS [C->UNKNOWN] Q075: 这些论文对应的作者有哪些企业合作
+  MISS [C->UNKNOWN] Q076: 这个教授参与了哪些企业项目
+  MISS [C->UNKNOWN] Q077: 上面提到的企业有哪些论文合作
+  MISS [C->UNKNOWN] Q078: 这几项专利背后的发明人还发表过哪些论文
+  MISS [C->UNKNOWN] Q079: 她所在团队孵化过哪些公司
+  MISS [C->UNKNOWN] Q080: 这篇论文有没有相关专利
+  MISS [C->UNKNOWN] Q081: 这些企业和哪些深圳高校教授有合作
+  MISS [C->UNKNOWN] Q082: 该专利对应的申请公司技术实力怎么样
+  MISS [C->UNKNOWN] Q083: 上述教授的学生创业公司有哪些
+  MISS [C->UNKNOWN] Q084: 这家公司创始人有哪些论文
+  MISS [C->UNKNOWN] Q085: 这些论文关联的专利布局如何
+  MISS [D->UNKNOWN] Q086: 深圳做具身智能的教授和企业有哪些
+  MISS [D->UNKNOWN] Q087: 协作机器人领域近两年的论文趋势和专利布局
+  MISS [D->UNKNOWN] Q088: 深圳的 AI 生态里有哪些高校团队、企业和专利
+  MISS [D->UNKNOWN] Q089: 低空经济方向深圳有哪些教授、公司和代表专利
+  MISS [D->UNKNOWN] Q090: 深圳机器人产业的教授、企业、论文和专利全景
+  MISS [E->UNKNOWN] Q091: 在具身智能的合成数据发展方向上，有几种实现方法，代表厂商有哪些
+  MISS [E->UNKNOWN] Q092: 在具身智能的运动和操作层面，数据需求有什么不同
+  MISS [E->UNKNOWN] Q093: 模拟器生成数据路线中有哪些具体方式
+  MISS [E->UNKNOWN] Q094: 大模型蒸馏的基本原理是什么
+  MISS [E->UNKNOWN] Q095: 机器人强化学习为什么需要仿真到现实迁移
+  MISS [F->UNKNOWN] Q096: 帮我写一首诗
+  MISS [F->UNKNOWN] Q097: 今天天气怎么样
+  MISS [F->UNKNOWN] Q098: 把这段英文翻译成中文
+  MISS [G->UNKNOWN] Q099: 介绍无界智航的相关信息
+  MISS [G->UNKNOWN] Q100: 介绍王伟
+
+  Overall: 0.000 (gate 0.9)
+  A: 0.000 (gate 0.7)
+  B: 0.000 (gate 0.7)
+  C: 0.000 (gate 0.7)
+  D: 0.000 (gate 0.7)
+  E: 0.000 (gate 0.7)
+  F: 0.000 (gate 0.7)
+  G: 0.000 (gate 0.7)
+=========================== short test summary info ============================
+FAILED tests/test_classifier_benchmark.py::test_classifier_benchmark - Assert...
+================= 1 failed, 1 deselected in 134.56s (0:02:14) ==================

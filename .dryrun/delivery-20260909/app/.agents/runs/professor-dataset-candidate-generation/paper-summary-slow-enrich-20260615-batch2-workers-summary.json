@@ -1,0 +1,45 @@
+{
+  "artifact_type": "paper_summary_slow_enrich_batch_workers_summary",
+  "generated_at": "2026-06-15T11:45:00Z",
+  "database_url_label": "miroflow_real",
+  "batch": "batch2",
+  "worker_count": 4,
+  "worker_reports": [
+    "../../.agents/runs/professor-dataset-candidate-generation/paper-summary-slow-enrich-20260615-batch2-worker0-summary.json",
+    "../../.agents/runs/professor-dataset-candidate-generation/paper-summary-slow-enrich-20260615-batch2-worker1-summary.json",
+    "../../.agents/runs/professor-dataset-candidate-generation/paper-summary-slow-enrich-20260615-batch2-worker2-summary.json",
+    "../../.agents/runs/professor-dataset-candidate-generation/paper-summary-slow-enrich-20260615-batch2-worker3-summary.json"
+  ],
+  "totals": {
+    "papers_total": 3200,
+    "papers_processed": 1483,
+    "papers_skipped": 1717,
+    "summaries_written": 1436,
+    "summaries_rejected": 47,
+    "metadata_enrichment_attempted": 3160,
+    "metadata_enrichment_skipped_bad_doi": 40,
+    "metadata_enriched": 2105,
+    "full_text_enrichment_attempted": 517,
+    "full_text_enriched": 152,
+    "abstract_clean_backfilled_from_full_text": 62,
+    "identifier_contradictions": 0,
+    "pipeline_issues_inserted": 0,
+    "papers_with_errors": 0
+  },
+  "run_ids": [
+    "a7247ba7-327b-4c95-87d7-610f2e3eb61d",
+    "01c9fabd-262b-4313-a2a4-5f4569caaf75",
+    "f519a8a8-a3ed-4785-a914-5f319f080dce",
+    "ec23cd7b-0b6e-4a40-b111-68fea92eff6c"
+  ],
+  "durations_seconds": [
+    6019.93,
+    5933.41,
+    6140.88,
+    6266.23
+  ],
+  "notes": [
+    "Batch2 processed a larger identifier/no-abstract slice and recovered many abstracts via metadata enrichment.",
+    "Remaining slow-lane rows include both attempted source failures and unattempted tail rows; batch3 will cover the unattempted tail."
+  ]
+}

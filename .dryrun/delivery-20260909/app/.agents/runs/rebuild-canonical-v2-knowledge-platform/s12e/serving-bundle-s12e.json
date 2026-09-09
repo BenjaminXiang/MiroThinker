@@ -1,0 +1,21 @@
+{
+ "schema_version": "canonical-v2-serving-bundle-v1",
+ "bundle_id": "serving-bundle:candidate-s12e-20260801-v1",
+ "release_id": "candidate-s12e-20260801-v1",
+ "database_name": "miroflow_candidate_s12e_20260801_v1",
+ "database_target_kind": "disposable",
+ "index_target_id": "index:candidate-s12e-20260801-v1",
+ "index_root": "/var/tmp/mirothinker-canonical-v2-s12e/index",
+ "envelope_path": "/home/longxiang/MiroThinker/.worktrees/canonical-v2-s11-consolidation/.agents/runs/rebuild-canonical-v2-knowledge-platform/s12a/complete-candidate-build-envelope.json",
+ "embedding_model_id": "Qwen/Qwen3-Embedding-8B",
+ "planner_model_id": "canonical-v2-deterministic-planner-v1",
+ "answer_model_id": "canonical-v2-deterministic-answer-v1",
+ "web_provider": "bocha-serper-v1",
+ "bocha_api_key_env": "BOCHA_API_KEY",
+ "serper_api_key_env": "SERPER_API_KEY",
+ "max_candidates": 8,
+ "max_web_results": 8,
+ "web_timeout_ms": 10000,
+ "web_snapshot_max_bytes": 16384,
+ "content_sha256": "5a63b566601f329ff1180c7c0e3a0285e23286d2f78d72e03eefa5b9606f0731"
+}

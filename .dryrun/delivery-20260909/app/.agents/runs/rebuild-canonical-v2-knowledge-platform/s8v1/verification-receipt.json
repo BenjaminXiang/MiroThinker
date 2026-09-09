@@ -1,0 +1,94 @@
+{
+  "schema_version": "canonical-v2-s8v1-release-scoped-vector-retrieval-receipt-v1",
+  "change_id": "rebuild-canonical-v2-knowledge-platform",
+  "slice_id": "s8v1-release-scoped-vector-retrieval-green",
+  "status": "accepted",
+  "accepted_at": "2026-07-19T10:16:54Z",
+  "git_head": "f0e6224e1c675c6d6c58993676783b2fbe0cd8f6",
+  "git_branch": "canonical-v2-s2-baseline",
+  "formal_task_ledger_before": "56/80",
+  "formal_task_ledger_after": "56/80",
+  "implementation": {
+    "knowledge_read_sha256": "3eeb7a6da72c3e0741ff59fc93369b9c53caccc05dbf0236a2f13239d517633b",
+    "knowledge_read_isolated_sha256": "c3f99583d01d1189d52347607d960d221f8c88b0cd767bb07f5a3e5fb744eae9",
+    "physical_owner_test_sha256": "f70d484e41dcee66ed35746f03cd74d3ddce9ef27e90f3a6c094a18f1d0a3fdd",
+    "slice_contract_sha256_before_acceptance_evidence": "fc547be2363b0eb55e8c5b764e6604b183f8113f314d69e8333cdedc36dd39e9",
+    "implementation_plan_sha256_before_acceptance_evidence": "4322ed51241f0f6f71f25838aa39f1761a78efb37fc30cd2e608a76d8dd9f278",
+    "tasks_sha256_unchanged": "5f61c097729e1107ff387a89c9f6f62b3783ef88debf1612b6156fb2056cdd7d",
+    "acceptance_sha256_unchanged": "742b29dc9805214b4b7059d5c801189209c26e35831f3f834ef01e4ac9f6df50"
+  },
+  "behavior": {
+    "vector_recall": "one explicit release-model embedding port audits the complete marked physical snapshot and performs bounded deterministic cosine recall over its exact accepted public points",
+    "lineage": "LocalVectorTrace binds target, release, point, S7J eligibility, publication, exact lane query, query embedding, score, candidate, evidence, and content identity under the existing local_projection_trace key",
+    "authority_seam": "release-bound KnowledgeRead revalidates returned vector evidence against bundle, publication, and recomputed embedding/cosine authority without reopening the physical target",
+    "composition": "S8E1 owns vector only when the optional embedding port is installed; absent vector support and Professor-without-view plans fail before delegate effects",
+    "scope": "O(release points) isolated deterministic scoring only; no ANN, threshold, calibration, provider, latency, or production backend claim"
+  },
+  "tdd": {
+    "red_normal": "1 xfailed",
+    "red_forced": "1 failed; exact _MissingIsolatedVectorRecallAdapter sentinel before physical fixture acquisition",
+    "green_focused": "1 passed",
+    "review_hardening": "receipt target identity RED, full trace identity formulas, context-free trust matrix, release-authority opaque-hash/score matrix, independent audit/query embedding matrices, model/dimension drift, and receipt inventory axes"
+  },
+  "verification": {
+    "s8v1_focused": "1 passed",
+    "s7j_s8_predecessor_matrix": "8 passed",
+    "shared_physical_release_owner": "51 passed, 2 skipped",
+    "knowledge_read_owner_matrix": "17 passed",
+    "canonical_v2_no_external": "340 passed, 141 skipped, 0 xfailed, 3 intentional hostile-model serializer warnings",
+    "ruff_check": "passed for complete src/data_agents/canonical_v2 and tests/canonical_v2",
+    "ruff_format": "74 files already formatted",
+    "py_compile": "passed for both changed production files and the physical owner test",
+    "pyright": "0 errors, 0 warnings, 0 informations for complete Canonical V2 source/tests",
+    "strict_openspec": "passed",
+    "git_diff_check": "passed",
+    "scope_secret_cache": "passed after removing only S8V1-owned generated cache files"
+  },
+  "wheel": {
+    "path_before_owned_cleanup": "/var/tmp/canonical-v2-s8v1-wheel-ERDUXg/miroflow_agent-0.1.0-py3-none-any.whl",
+    "sha256": "285c3b5c7391334a09d534389ca97e707f8498d54836c48841f3db835772eb21",
+    "entry_count": 276,
+    "contains_knowledge_read": true,
+    "contains_knowledge_read_isolated": true,
+    "contains_tests_or_agents": false,
+    "packaged_production_hashes_match_source": true,
+    "owned_output_cleaned_after_receipt": true
+  },
+  "frozen_targets": {
+    "original_milvus_sha256": "43ef203e0b101fcbed2a6c8fcde19a35d426199d3f02bc72525d0acf618867cc",
+    "original_pgtest_paused": true,
+    "original_pgtest_volume": "d81c6381b0c7c0a975ca0ff4a0054037e72b0d4cb80174f682abceb1127cd241",
+    "recovery_lab_network": "none",
+    "recovery_lab_published_ports": false,
+    "recovery_lab_restart_policy": "no",
+    "accepted_isolated_target_marker_sha256": "7be5b531d5f6dc04fe035c85f4dd103133905c9ac11ec6f38b06cbc09d5048f",
+    "accepted_isolated_target_milvus_sha256": "ad78d9905b88497ab1f4f42fc5e5c760b2beb7c0fd08f56c41c79bb79d37bf8",
+    "accepted_isolated_target_lookup_sha256": "561f658a5bb3880b841255f636f61cfa35e247175520089b451149d884a3809"
+  },
+  "review": {
+    "contract_review": {
+      "final_critical": 0,
+      "final_important": 0,
+      "final_minor": 0,
+      "final_yagni": 0,
+      "verdict": "ready"
+    },
+    "implementation_review": {
+      "critical": 0,
+      "important_found_and_closed": 1,
+      "closed_important": [
+        "release-bound bundle/publication/embedding authority now rejects self-consistent opaque query-embedding, source-projection, and score mutations"
+      ],
+      "final_critical": 0,
+      "final_important": 0,
+      "final_minor": 1,
+      "final_yagni": 0,
+      "verdict": "accept"
+    }
+  },
+  "nonblocking_minor_yagni": [
+    "some pre-effect and snapshot negatives use broad pytest.raises(Exception) with exact message and no-effect/no-candidate assertions"
+  ],
+  "next_ready_slice": "S8V2 Professor typed vector-view selection",
+  "forbidden_actions_performed": []
+}

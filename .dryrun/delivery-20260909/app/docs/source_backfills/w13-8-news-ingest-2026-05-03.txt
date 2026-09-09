@@ -1,0 +1,30 @@
+# W13-8 Serper-based news ingest dogfood 2026-05-03
+
+## token
+SERPER_API_KEY: 已配置（user 提供）
+
+## 三阶段
+1. dry-run --priority=all --limit 5: 5 公司 → 18 news fetched (验通)
+2. wet-run --priority=all --limit 50: 12 公司 (24% 命中) → 35 news 入库
+3. wet-run --priority=all --limit 200: 95 公司 (47.5% 命中) → 447 新 news 入库（累计 482）
+4. signal_extract（两次）: 68 + 14 = 82 events 增量（累计 ~647）
+
+## DB 终态（截止 2026-05-03 01:07）
+- company_news_item: 482 行 / 95 distinct companies
+- company_signal_event: ~647 行（事件类型主要 funding / product_launch / policy / partnership）
+
+## 真实样本
+- 「雷鸟创新完成新一轮超10亿元融资（移动 + 联通领投）」
+- 「华懋科技拟收购富创优越 9.93%股权」
+- 「元戎启行 + 德赛西威 海外 Robotaxi」
+- 「智平方具身大模型半导体/机场/新零售商业闭环」
+- 「MemoraX AI 获千万美元融资」
+- ...
+
+## 已知问题
+- Q-12 ✅ SQL 强制 credit_code 已修
+- Q-13 LLM attribution 偶错（外公司名被归到 source company）— follow-up
+
+## 后续
+- 剩 824 公司未跑（需另耗 824 Serper credits；命中率推 47.5% × 824 = 391 公司，~1900 news）
+- W13-8 systemd timer (top200 weekly / others monthly) 留独立 spec

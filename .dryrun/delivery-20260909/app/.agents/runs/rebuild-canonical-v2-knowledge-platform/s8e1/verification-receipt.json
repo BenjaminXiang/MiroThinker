@@ -1,0 +1,93 @@
+{
+  "schema_version": "canonical-v2-s8e1-release-bound-knowledge-read-receipt-v1",
+  "change_id": "rebuild-canonical-v2-knowledge-platform",
+  "slice_id": "s8e1-release-bound-knowledge-read-composition",
+  "status": "accepted",
+  "accepted_at": "2026-07-19T08:08:07Z",
+  "git_head": "f0e6224e1c675c6d6c58993676783b2fbe0cd8f6",
+  "git_branch": "canonical-v2-s2-baseline",
+  "formal_task_ledger_before": "56/80",
+  "formal_task_ledger_after": "56/80",
+  "implementation": {
+    "knowledge_read_sha256_unchanged": "b599e117e27af94883f316d2ea2af0bd8b3942d4e09e1157c9c36ecc3d01f691",
+    "knowledge_read_isolated_sha256": "3a24af6fd7d57d5cda84f1ad6ced248390134df371390420538cc025399ccced",
+    "physical_owner_test_sha256": "abba0a63e6e7bdd68131168b367b9d913af8c22a4ef24ae9224e4bbe0ecc6cfb",
+    "slice_contract_sha256_before_acceptance_evidence": "425caf10c2de86176a063c0dd485093dbcef32ae123d801f2414a6b66a770bef",
+    "implementation_plan_sha256_before_acceptance_evidence": "0fddecec846c09bd7c2b6acf927d28d343f4e4eed32a2339a1df621d603a9ea7",
+    "tasks_sha256_unchanged": "5f61c097729e1107ff387a89c9f6f62b3783ef88debf1612b6156fb2056cdd7d",
+    "acceptance_sha256_unchanged": "742b29dc9805214b4b7059d5c801189209c26e35831f3f834ef01e4ac9f6df50"
+  },
+  "behavior": {
+    "composition_root": "one package-internal release-bound KnowledgeRead factory hides physical exact/structured adapters and exposes only bounded Web/snapshot ports",
+    "execution_binding": "exact plan validation plus release, publication state/hash/evidence, manifest hash, and index-result hash checks before effects",
+    "lane_boundary": "exact, structured, and Web only; every other lane is a configuration failure before delegate execution",
+    "web_policy": "Universal mode with positive provider-call, timeout, and result bounds and no domain allowlist",
+    "snapshot_policy": "accepted content-addressed payloads are retained; oversize and missing payloads are rejected without losing supported local evidence",
+    "caller_boundary": "no caller-owned local lane mapping"
+  },
+  "tdd": {
+    "red_normal": "1 xfailed, 49 deselected",
+    "red_forced": "1 failed, 49 deselected; exact _MissingIsolatedReleaseKnowledgeReadFactory sentinel",
+    "green_focused": "1 passed, 49 deselected",
+    "review_hardening": "binding-axis mutation, reader/Web spies, invalid Universal-Web matrix, and accepted/oversize/missing snapshot receipts"
+  },
+  "verification": {
+    "s8e1_focused": "1 passed, 49 deselected",
+    "s8l1_s8l2_s8p1_s8p2_s8e1_focused": "6 passed, 44 deselected",
+    "shared_physical_release_owner": "48 passed, 2 skipped",
+    "knowledge_read_owner_matrix": "17 passed",
+    "canonical_v2_no_external": "337 passed, 141 skipped, 0 xfailed, 3 intentional hostile-model serializer warnings",
+    "ruff_check": "passed for complete src/data_agents/canonical_v2 and tests/canonical_v2",
+    "ruff_format": "passed for both changed production/test files",
+    "py_compile": "passed for both changed production/test files",
+    "pyright": "0 errors, 0 warnings, 0 informations for complete Canonical V2 source/tests",
+    "strict_openspec": "passed",
+    "git_diff_check": "passed",
+    "scope_secret_cache": "passed"
+  },
+  "wheel": {
+    "path_before_owned_cleanup": "/var/tmp/canonical-v2-s8e1-wheel-t8bbPSkU/miroflow_agent-0.1.0-py3-none-any.whl",
+    "sha256": "1af7bd59638156cb404603e7383a7fb9062e3b9a5fc3c4587be7959a95b2f6b2",
+    "entry_count": 276,
+    "contains_knowledge_read_isolated": true,
+    "contains_tests_or_agents": false,
+    "packaged_production_hash_matches_source": true,
+    "owned_output_cleaned_after_receipt": true
+  },
+  "frozen_targets": {
+    "original_milvus_sha256": "43ef203e0b101fcbed2a6c8fcde19a35d426199d3f02bc72525d0acf618867cc",
+    "original_pgtest_paused": true,
+    "original_pgtest_volume": "d81c6381b0c7c0a975ca0ff4a0054037e72b0d4cb80174f682abceb1127cd241",
+    "recovery_lab_network": "none",
+    "recovery_lab_published_ports": false,
+    "recovery_lab_restart_policy": "no"
+  },
+  "review": {
+    "initial_contract_review": {
+      "critical": 0,
+      "important": 4,
+      "closed_important": [
+        "every execution-relevant binding axis has an independent mutation",
+        "negative paths prove zero physical-reader and Web calls",
+        "bounded Universal-Web policy has an explicit rejection matrix",
+        "WebSnapshotPolicy forwarding is observed for accepted, oversize, and missing payloads"
+      ]
+    },
+    "focused_re_review": {
+      "critical": 0,
+      "important": 1,
+      "closed_important": [
+        "Web snapshot rejection preserves exact and structured local evidence and the Canonical handle"
+      ]
+    },
+    "final_review": {
+      "critical": 0,
+      "important": 0,
+      "minor": 0,
+      "yagni": 0,
+      "verdict": "accept"
+    }
+  },
+  "next_ready_slice": "S8L3 release-scoped lexical lookup green",
+  "forbidden_actions_performed": []
+}

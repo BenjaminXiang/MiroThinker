@@ -1,0 +1,68 @@
+# Host Pipeline Issues UI/API E2E 2026-05-05T16-58-21Z
+
+root=/home/longxiang/MiroThinker
+base_url=http://127.0.0.1:18088
+admin_server_pid=727149
+database=miroflow_real
+issue_id=98df6d4a-73f7-4a80-b253-9fd0051d82f5
+task_id=de7681a1-a2af-4a22-bcc6-9a9c7a7bf31a
+domain=company
+issue_type=missing_company_name
+
+## Unit / build checks
+
+command=cd apps/admin-console && UV_CACHE_DIR=/tmp/mirothinker-uv-cache-status uv run pytest tests/test_pipeline_issues_api.py tests/test_upload_pipeline_trigger.py tests/test_pipeline_runs_api.py -q
+result=PASS
+summary=23 passed in 0.25s
+
+command=cd apps/admin-console && UV_CACHE_DIR=/tmp/mirothinker-uv-cache-status uv run ruff check backend/api/pipeline_issues.py tests/test_pipeline_issues_api.py
+result=PASS
+summary=All checks passed
+
+command=cd apps/admin-console/frontend && npm run build
+result=PASS
+summary=tsc -b and vite build succeeded; Vite reported the existing >500kB chunk warning.
+
+## API smoke
+
+GET /api/health
+result=PASS
+body={"status":"ok"}
+
+PATCH /api/pipeline-issues/98df6d4a-73f7-4a80-b253-9fd0051d82f5 resolved=true
+result=PASS
+response.resolved=true
+response.resolved_at=2026-05-05T16:58:21.974279Z
+response.resolution_round=admin-console-smoke
+
+PATCH /api/pipeline-issues/98df6d4a-73f7-4a80-b253-9fd0051d82f5 resolved=false
+result=PASS
+response.resolved=false
+response.resolved_at=null
+response.resolution_round=admin-console-smoke
+
+GET /api/pipeline-issues?reported_by=admin_upload_dry_run&task_id=de7681a1-a2af-4a22-bcc6-9a9c7a7bf31a&domain=company&issue_type=missing_company_name&page_size=5
+result=PASS
+response.total=1
+response.items[0].source_rows=[1620,1621,1622]
+response.items[0].resolved=false
+
+## Browser smoke
+
+agent_browser_open=/pipeline-issues?reported_by=admin_upload_dry_run&task_id=de7681a1-a2af-4a22-bcc6-9a9c7a7bf31a&domain=company&issue_type=missing_company_name
+result=PASS
+observed=质量问题 page showed the row, task_id, source_rows, status 待处理, and actions 任务/关闭.
+
+browser_action=close issue via Popconfirm
+result=PASS
+observed=row status changed to 已处理 and action changed to 重开.
+
+browser_action=reopen issue via Popconfirm
+result=PASS
+observed=row status changed back to 待处理 and action changed to 关闭.
+
+## Final state
+
+result=PASS
+issue_final_resolved=false
+note=The real source-data gap remains open for review; validation did not hide or auto-resolve the missing company_name rows.

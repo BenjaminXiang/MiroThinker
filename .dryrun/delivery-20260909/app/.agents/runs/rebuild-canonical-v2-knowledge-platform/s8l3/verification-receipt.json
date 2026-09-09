@@ -1,0 +1,94 @@
+{
+  "schema_version": "canonical-v2-s8l3-release-scoped-lexical-lookup-receipt-v1",
+  "change_id": "rebuild-canonical-v2-knowledge-platform",
+  "slice_id": "s8l3-release-scoped-lexical-lookup-green",
+  "status": "accepted",
+  "accepted_at": "2026-07-19T08:35:45Z",
+  "git_head": "f0e6224e1c675c6d6c58993676783b2fbe0cd8f6",
+  "git_branch": "canonical-v2-s2-baseline",
+  "formal_task_ledger_before": "56/80",
+  "formal_task_ledger_after": "56/80",
+  "implementation": {
+    "knowledge_read_sha256": "5a61f50499b9378afbe8132abab575ea87f88b0fbdf62edf9270b47fdca85804",
+    "knowledge_read_isolated_sha256": "579423056f7c273aafc9485784d00652df5623494ee782b45121c2e42c28f4fc",
+    "physical_owner_test_sha256": "9c30956f47f6b7058d5c94d0d5c21197c8bf80be278eb5f0f9d65824712cb042",
+    "slice_contract_sha256_before_acceptance_evidence": "946d6288adcc679b04f1056bc5d481bb5a9d9d93d99ff1f9b4053cde1ef5e28d",
+    "implementation_plan_sha256_before_acceptance_evidence": "8eaaa3a2dd0390ffa74fdd3da4610a5d70fd46a85d552bda5d75373b4dd8f268",
+    "tasks_sha256_unchanged": "5f61c097729e1107ff387a89c9f6f62b3783ef88debf1612b6156fb2056cdd7d",
+    "acceptance_sha256_unchanged": "742b29dc9805214b4b7059d5c801189209c26e35831f3f834ef01e4ac9f6df50"
+  },
+  "behavior": {
+    "composition_root": "the Accepted S8E1 factory now owns exact, structured, and lexical physical adapters while callers still provide no local lane map",
+    "lexical_semantics": "one normalized non-empty phrase must be a substring of one typed public projection scalar; no ranking, stemming, synonym, stopword, or threshold framework",
+    "normalization": "strip only one exact trailing [lane=lexical] marker and one matched curly or ASCII double-quote pair, then reuse NFKC, casefold, and whitespace collapse",
+    "boundaries": "release, publication, request lane/release/public domains, physical snapshot, typed projection, eligibility, exclusions, and candidate bounds fail closed",
+    "lineage": "lexical evidence uses a distinct execution-lane-bound raw candidate and evidence identity while accepted exact and structured identities remain stable"
+  },
+  "tdd": {
+    "red_normal": "1 xfailed, 50 deselected",
+    "red_forced": "1 failed, 50 deselected; exact _MissingIsolatedLexicalLookupAdapter sentinel before fixture acquisition",
+    "green_focused": "1 passed, 50 deselected",
+    "review_hardening": "proper no-protected-slot substring probe plus positive NFKC/casefold/whitespace and negative finite-quote/exact-marker matrices"
+  },
+  "verification": {
+    "s8l3_focused": "1 passed",
+    "s8l1_s8l2_s8p1_s8p2_s8e1_focused": "6 passed",
+    "shared_physical_release_owner": "49 passed, 2 skipped",
+    "knowledge_read_owner_matrix": "17 passed",
+    "canonical_v2_no_external": "338 passed, 141 skipped, 0 xfailed, 3 intentional hostile-model serializer warnings",
+    "ruff_check": "passed for complete src/data_agents/canonical_v2 and tests/canonical_v2",
+    "ruff_format": "74 files already formatted after the review-driven test matrix",
+    "py_compile": "passed for both changed production files and the physical owner test",
+    "pyright": "0 errors, 0 warnings, 0 informations for complete Canonical V2 source/tests",
+    "strict_openspec": "passed",
+    "git_diff_check": "passed",
+    "scope_secret_cache": "passed"
+  },
+  "wheel": {
+    "path_before_owned_cleanup": "/var/tmp/canonical-v2-s8l3-wheel-7KQ9cB/miroflow_agent-0.1.0-py3-none-any.whl",
+    "sha256": "b354036a989ee706786fc9c1ca0dbf688616cec06c536038190a98bc325cde1f",
+    "entry_count": 276,
+    "contains_knowledge_read": true,
+    "contains_knowledge_read_isolated": true,
+    "contains_tests_or_agents": false,
+    "packaged_production_hashes_match_source": true,
+    "owned_output_cleaned_after_receipt": true
+  },
+  "frozen_targets": {
+    "original_milvus_sha256": "43ef203e0b101fcbed2a6c8fcde19a35d426199d3f02bc72525d0acf618867cc",
+    "original_pgtest_paused": true,
+    "original_pgtest_volume": "d81c6381b0c7c0a975ca0ff4a0054037e72b0d4cb80174f682abceb1127cd241",
+    "recovery_lab_network": "none",
+    "recovery_lab_published_ports": false,
+    "recovery_lab_restart_policy": "no"
+  },
+  "review": {
+    "contract_review": {
+      "critical": 0,
+      "important_found_and_closed": 3,
+      "closed_important": [
+        "the direct lexical probe is a proper non-equal substring with no exact-name protected slot",
+        "cross-release and non-public-domain requests fail before physical read",
+        "finite quote pairs and inherited normalization are exact contract terms"
+      ],
+      "final_verdict": "ready"
+    },
+    "implementation_review": {
+      "critical": 0,
+      "important_found_and_closed": 1,
+      "closed_important": [
+        "machine-enforced NFKC, casefold, whitespace, finite-quote, and exact trailing-marker matrix"
+      ],
+      "final_critical": 0,
+      "final_important": 0,
+      "final_minor": 1,
+      "final_yagni": 0,
+      "verdict": "accept"
+    }
+  },
+  "nonblocking_minor_yagni": [
+    "deterministic sorting is implemented through the accepted shared ordering but this Slice has no dedicated multi-hit lexical ordering probe"
+  ],
+  "next_ready_slice": "S8V1 release-scoped vector retrieval",
+  "forbidden_actions_performed": []
+}
