@@ -1,0 +1,55 @@
+SMOKE t1 errors: 0
+
+SMOKE t2 errors: 0
+SMOKE t2 release_mismatch count: 0
+"answer_text":"深圳顺易捷科技有限公司是一家专注印制PCB/线路板快速打样的高新技术企业，以单面、双面和多层板为主，位于深圳坪地，主打样板及中小批量生产。与它业务相近的深圳PCB打样/快板企业，公开信息中较有代表性的有以下几家：\n\n- 深圳嘉立创科技集团股份有限公司：电子及机械产业一站式基础设施服务提供商，提供PCB打样和批量生产，每天PCB打样出货超过20000款，最快12小时出货，在珠海、惠州、韶关及江西吉安、江苏淮安等地建有智能
+=== smokes done 00:20:25, starting replay ===
+[G1_framing#1] T1: 介绍一下 国际先进技术应用推进中心（深圳）
+    -> None (69.0s) PASS
+[G1_framing#1] T2: 有没有更详细的信息
+    -> canonical_v2:G:clarification_only (0.7s) PASS
+[G1_framing#1] T3: 它有哪些布局和进展
+    -> canonical_v2:G:clarification_only (0.7s) FAIL ['subject not in first sentence: 国际先进技术应用推进中心']
+[G2_bare_name#1] T1: 国际先进技术应用推进中心（深圳）
+    -> canonical_v2:A:answer (71.0s) PASS
+[G2_bare_name#1] T2: 这个中心的企业培育情况怎么样
+    -> None (12.4s) FAIL ['SSE error event present', "missing answer/done events: {'stage': 3, 'plan_done': 1, 'retrieval_done': 1, 'answer_chunk': 452, 'error': 1}", "none of required-any present: ('国先中心', '国际先进技术应用推进中心')"]
+[G2_bare_name#2] T1: 国际先进技术应用推进中心（深圳）
+    -> canonical_v2:A:answer (70.9s) PASS
+[G2_bare_name#2] T2: 这个中心的企业培育情况怎么样
+    -> canonical_v2:A:answer (14.6s) PASS
+[G2_bare_name#3] T1: 国际先进技术应用推进中心（深圳）
+    -> canonical_v2:A:answer (70.5s) PASS
+[G2_bare_name#3] T2: 这个中心的企业培育情况怎么样
+    -> canonical_v2:A:answer (12.7s) PASS
+[G3_person_pronoun#1] T1: 介绍一下 国际先进技术应用推进中心（深圳）
+    -> canonical_v2:A:answer (69.8s) PASS
+[G3_person_pronoun#1] T2: 他有哪些论文
+    -> canonical_v2:A:answer (16.6s) FAIL ['neither clarification nor person-scoped answer (type=canonical_v2:A:answer)']
+[G4_patents#1] T1: 优必选科技怎么样
+    -> canonical_v2:A:answer (71.5s) PASS
+[G4_patents#1] T2: 该公司的专利有哪些
+    -> canonical_v2:A:answer (20.0s) PASS
+[G5_expansion#1] T1: 优必选科技怎么样
+    -> canonical_v2:A:answer (70.9s) PASS
+[G5_expansion#1] T2: 还有哪些类似的公司
+    -> canonical_v2:A:answer (43.7s) PASS
+[G6_anaphoric_opener#1] T1: 这个中心是做什么的
+    -> canonical_v2:G:clarification_only (1.2s) PASS
+[G7_enumeration#1] T1: 深圳有哪些做具身智能的公司
+    -> canonical_v2:A:answer (43.3s) FAIL ['required substring missing: 优必选']
+[G7_enumeration#2] T1: 深圳有哪些做具身智能的公司
+    -> canonical_v2:A:answer (20.3s) PASS
+[G7_enumeration#3] T1: 深圳有哪些做具身智能的公司
+    -> canonical_v2:A:answer (31.3s) PASS
+
+============================================================
+RESULT: 6 FAILURE(S)
+  G1_framing: FAIL
+  G2_bare_name: FAIL
+  G3_person_pronoun: FAIL
+  G4_patents: PASS
+  G5_expansion: PASS
+  G6_anaphoric_opener: PASS
+  G7_enumeration: FAIL
+REPLAY EXIT=1

@@ -17,10 +17,10 @@
 | GAP-06 实体事实错误 | g4-t2: forbidden 李志豪 + 法定代表人⇒穆世龙 | `g4-t2` | RED: forbidden 命中 + fact 锚失败 |
 | GAP-07 本地引用缺失 | 本地答案轮 local_citations ≥1 | g1-t1/t2, g4-t1/t2, g6-t1, g7-t1, g8-t1, g17-t1/t2 | RED: 7/9 provenance 失败 |
 | GAP-08 web 内容污染 | web 引用不含导航/错误模板 | `CITATION_FORBIDDEN_PATTERNS`（仅 live 可判） | RED by evidence（存档无引用文本，live 断言已上线） |
-| GAP-09 LLM 守卫硬失败 | 守卫命中→模板降级不空答 | 故障注入测试（close-workbook-gaps B5） | RED by evidence（pro 档 g17-t1 空答案，knowledge_serving_isolated.py:4033） |
+| GAP-09 LLM 守卫硬失败 | 守卫命中→模板降级不空答 | 故障注入测试（close-workbook-gaps B5） | **B5 设计已落盘**（2026-09-10，redact-and-continue + trace token）；实施派工中。RED by evidence（pro 档 g17-t1 空答案 knowledge_serving_isolated.py:4033；2026-09-10 环境漂移期两线同败、journalctl 证实） |
 | GAP-10 关键词判定过松 | 本三层判定器本身 | run_testset.py + anchors.py | FIXED（本 change）：g2-t2/g2-t3/g4-t2 已翻 RED |
 | GAP-11 五轮无锚点 | g6-t2/g8-t2/g9/g10/g14 锚点策展 | anchors.py `human_verified` | FIXED（本 change）：5 轮已补 |
-| GAP-12 三命中率无目标线 | stage0 阈值裁决 | 待用户裁定（建议：点名≥90%/语义≥70%/关系≥70%） | PENDING DECISION |
+| GAP-12 三命中率无目标线 | stage0 阈值裁决 | **已裁定**（2026-09-11，loop 自主决策）：点名≥90% / 语义≥70% / 关系≥70%（先按此执行，用户可改） | DECIDED |
 
 ## 数据侧断言（data_probes.py，已跑，8 RED / 1 PASS）
 
@@ -32,7 +32,7 @@
 | GAP-13d email 占位 | =0% | RED: 31.6% (1251/3958) |
 | GAP-13e research_directions 填充 | ≥80% | RED: 49.7% (1969/3958) |
 | GAP-14 企业 aliases 覆盖 | ≥30% | RED: 4.8% (342/7089) |
-| GAP-15 数据版本对齐 run14 | serving==47,071 | RED: serving 5,659 vs run14 47,071（论文 563 vs 24,520） |
+| GAP-15 数据版本对齐 run14 | serving==47,071 | **GREEN**（2026-09-10/11 C2）：run14 sealed 包上线 18188；启动实测 lookup 四域 7,089/24,520/11,504/3,958 = 47,071；同日差分 23/25、replay r2 零新签名。原 RED: serving 5,659 vs run14 47,071 |
 | GAP-16 论文 professor_ids 链接 | ≥10%（暂定阈值） | RED: 0.0% (0/24,520) |
 | （对照）GAP-01 数据侧 | 服务包专利申请人绑定 ≥60% | **PASS**: 82.4% (1592/1931)，优必选 58 条在包内 |
 

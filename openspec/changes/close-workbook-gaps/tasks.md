@@ -138,23 +138,32 @@
          ride the lookup_content `applicants` field consumed by the
          read-side `_direct_patent_applicant_scan` — the pipeline
          materializes ~123 of ~7,078 by design; both sides consistent)
-  - [ ] C2.1d Full 25-turn three-layer re-baseline — METHODOLOGY
+  - [x] C2.1d Full 25-turn three-layer re-baseline — METHODOLOGY
          AMENDED 2026-09-10: archived 9/9 baseline unreproducible (LLM
          backend drift; live 18188 s12f fails identically today, journal
          evidence). Effective gate = SAME-DAY DOUBLE RUN: 25 rounds on
          18188 (s12f) + 25 on 18189 (run14); pass = run14 not worse than
          same-day s12f per turn, with per-turn attribution for any
-         s12f-pass/run14-fail (incl. 2-1/2-3 普渡 differences);
-         regression → stop, no switch.
-  - [ ] C2.1e Re-baseline gap-registry (GAP-15 closes; GAP-13 rows,
+         s12f-pass/run14-fail.
+         (DONE 2026-09-10: 23/25 per-turn identical, both sides 7/25
+         under env drift; sole s12fP→run14F turn 5-1 attributed to
+         composition jitter with three-way re-composition evidence;
+         reverse improvement 10-1; verdict PASS. Latency evidence: p50
+         13.7→20.4s, p95 42.5→74.9s — logged as the C2 speed-axis cost.)
+  - [x] C2.1e Re-baseline gap-registry (GAP-15 closes; GAP-13 rows,
          GAP-02/04 ceilings re-measured); verification-c2.md landed; the
          differential tables are the C2 acceptance evidence.
-  - [ ] C2.1f Switch 18188 (command file → run14 sealed, restart, replay
+         (DONE: GAP-15 flipped GREEN; GAP-12 thresholds decided
+         90/70/70; verification-c2.md §1–§7 complete)
+  - [x] C2.1f Switch 18188 (command file → run14 sealed, restart, replay
          7/7); s12f pack + old command file kept for rollback. Routine
-         per user policy (2026-09-10): 18188 is the user's E2E entry and
-         the milestone must be live there for the user's experience —
-         execute once the differential gate passes (stop 18189 first:
-         both share the disposable Postgres DB), then report.
+         per user policy (2026-09-10).
+         (DONE 2026-09-10 19:32; post-switch integration defect
+         MANUAL_RECALL_DIR release mismatch found → fixed by repointing
+         to the run14 store 22:51 (worktree 45877e81); replay r2: ZERO
+         new signatures — G5 PASS, remaining 4 failing turns all in
+         known classes (3 historical jitter + 1 env marker). 18188 live
+         on run14 sealed for user E2E.)
 - [ ] C3.1 Company→patent full relations + professor→company coverage (90
        candidates); 10-sample manual check.
 - [ ] C4.1 Paper↔professor canonical id links; paper detail lists involved

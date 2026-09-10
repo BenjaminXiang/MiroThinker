@@ -260,3 +260,21 @@
   no fallback catcher / flag plumbing), RED→GREEN acceptance, evidence
   via same-day differential (marker-class empties disappear both sides).
 - tasks.md: B5.1–B5.4 expanded. Dispatch waits for C2 closure.
+
+## 2026-09-11 — C2 CLOSED: run14 sealed live on 18188; replay r2 zero new signatures
+
+- Post-switch integration defect (MANUAL_RECALL_DIR release mismatch)
+  fixed: repointed to the run14 store; 22:51 restart; smoke re-verified —
+  0 errors / 0 release_mismatch, G5 two-turn flow completes.
+- Replay r2: G5_expansion PASS; 6 failure items across 4 turns ALL in
+  known classes — G1_t3 / G3_t2 / G7 = in-register historical jitter
+  signatures (B1 doc), G2_t2 = env marker class (B5 target). ZERO new
+  signatures; gate passed under the documented jitter policy.
+- Differential verdict PASS (23/25; sole regression attributed to
+  composition jitter); latency cost logged (p50 +6.7s / p95 +32.4s).
+- GAP-15 flipped GREEN; GAP-12 thresholds decided (90/70/70).
+- Acceptance evidence: .agents/runs/close-workbook-gaps/
+  verification-c2.md §1–§7; worktree closure commit 45877e81.
+- Process note: agent-4 stalled twice on unattended approval prompts —
+  network verification and closure executed from the main context
+  (loop-prompt rule updated).

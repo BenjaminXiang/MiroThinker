@@ -1,0 +1,12 @@
+event: stage
+data: {"name":"planning"}
+
+event: plan_done
+data: {"lanes":["exact","structured","lexical","vector","web"],"domains":["company"],"views":["还有哪些类似的公司","类似公司 推荐","同行业 竞争对手 公司","相似业务 企业 列表"]}
+
+event: stage
+data: {"name":"retrieval"}
+
+event: error
+data: {"detail":"canonical_v2_release_mismatch"}
+
