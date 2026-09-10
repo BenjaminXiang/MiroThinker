@@ -893,20 +893,110 @@ def test_prose_wire_decoder_redacts_both_markers_in_one_prose() -> None:
     "content",
     (
         "尾部<|canonical_v2_ans",
-        "普通<文本 <<|canonical_v2_answer_vX|> 尾部",
+        "普通<文本 <<|canonical_v3_answer_v1|> 尾部",
     ),
     ids=("strict-prefix", "near-miss"),
 )
 def test_prose_wire_decoder_partial_marker_at_finish_flushes_without_redaction(
     content: str,
 ) -> None:
-    # Partial candidates and near-misses are not redactions: the finish-time
-    # flush keeps publishing them verbatim (unchanged from before B5).
+    # Partial candidates and non-family near-misses are not redactions: the
+    # finish-time flush keeps publishing them verbatim (unchanged from before
+    # B5). The B5.5 family rule owns the canonical_v2 namespace only; a
+    # canonical_v3 look-alike is not ours and stays untouched.
     decoder = serving_module._ProseWireDecoder()
     published = decoder.feed(content) + decoder.finish()
 
     assert published == content
     assert decoder.redactions == ()
+
+
+# B5.5 — protocol-marker family: variants observed echoing into production
+# answers, byte-exact from the evidence.
+# run14 archive g5-t2 answer tail AND replay-b5-post-deploy G1_framing_r1_t1
+# SSE answer event (post-B5 deploy): hex 3c 7c ... 5f 65 6e 64 7c 3e.
+_PROSE_ANSWER_END_VARIANT = "<|canonical_v2_answer_end|>"
+# run14 archive g2-t2 answer tail; U+FF5C FULLWIDTH VERTICAL LINE (ef bd 9c):
+# </｜｜DSML｜｜ parameter>
+_DSML_FULLWIDTH_VARIANT = "</｜｜DSML｜｜ parameter>"
+
+
+@pytest.mark.parametrize("chunk_width", (1, 5), ids=("charwise", "wide"))
+@pytest.mark.parametrize(
+    ("variant", "prefix", "suffix"),
+    (
+        (_PROSE_ANSWER_END_VARIANT, "公开前文", "公开后文"),
+        (_PROSE_ANSWER_END_VARIANT, "公开前文\n", ""),
+        (_DSML_FULLWIDTH_VARIANT, "公开前文", "公开后文"),
+        (_DSML_FULLWIDTH_VARIANT, "公开前文\n", ""),
+    ),
+    ids=(
+        "answer-end-middle",
+        "answer-end-eof",
+        "dsml-fullwidth-middle",
+        "dsml-fullwidth-eof",
+    ),
+)
+def test_prose_wire_decoder_redacts_observed_marker_family_variants(
+    variant: str,
+    prefix: str,
+    suffix: str,
+    chunk_width: int,
+) -> None:
+    # Both variants are pure provider echo (zero protocol ownership anywhere
+    # in the repo): the family rule redacts them with B5 semantics and the
+    # surrounding prose survives byte-intact.
+    text = f"{prefix}{variant}{suffix}"
+    decoder = serving_module._ProseWireDecoder()
+    published = [
+        decoder.feed(text[index : index + chunk_width])
+        for index in range(0, len(text), chunk_width)
+    ]
+    published.append(decoder.finish())
+
+    assert "".join(published) == prefix + suffix
+    assert decoder.redactions == (variant,)
+
+
+@pytest.mark.parametrize(
+    "content",
+    (
+        # Ordinary '<' in prose must pass through byte-intact.
+        "价格 < 1000 元且 > 500 元",
+        "标签 <div> 示意",
+        "a<b>c",
+        # Foreign marker namespaces are not ours.
+        "<|other_system_marker|>",
+        "<|canonical_v3_answer_v1|>",
+        # Family shape without the closing '>' at EOF flushes verbatim.
+        "尾部<|canonical_v2_answer_end|",
+        "尾部</｜｜DSML｜｜ parameter",
+        # Bare DSML acronym without the bar wrapping is not the family.
+        "代号 <DSML> 文本",
+    ),
+    ids=(
+        "math-comparison",
+        "html-ish",
+        "tight-angle",
+        "foreign-marker",
+        "canonical-v3-namespace",
+        "answer-end-unterminated",
+        "dsml-unterminated",
+        "dsml-no-bars",
+    ),
+)
+def test_prose_wire_decoder_marker_family_never_redacts_ordinary_prose(
+    content: str,
+) -> None:
+    for chunk_width in (1, len(content)):
+        decoder = serving_module._ProseWireDecoder()
+        published = [
+            decoder.feed(content[index : index + chunk_width])
+            for index in range(0, len(content), chunk_width)
+        ]
+        published.append(decoder.finish())
+        assert "".join(published) == content
+        assert decoder.redactions == ()
 
 
 @pytest.mark.parametrize("chunk_width", (1, 32), ids=("charwise", "whole"))
@@ -927,8 +1017,15 @@ def test_prose_wire_decoder_leading_selection_marker_still_requires_framing(
 
 @pytest.mark.parametrize(
     "marker",
-    (_PROSE_SELECTION_MARKER, _PROSE_ANSWER_MARKER),
-    ids=("selection-marker", "answer-marker"),
+    (
+        _PROSE_SELECTION_MARKER,
+        _PROSE_ANSWER_MARKER,
+        # B5.5: the production-observed family variants redact in the framed
+        # (production) shape too — the leak arrived inside a framed answer.
+        _PROSE_ANSWER_END_VARIANT,
+        _DSML_FULLWIDTH_VARIANT,
+    ),
+    ids=("selection-marker", "answer-marker", "answer-end-variant", "dsml-variant"),
 )
 @pytest.mark.parametrize(
     ("position", "prefix", "suffix"),
@@ -979,6 +1076,10 @@ def test_openai_prose_renderer_redacts_private_marker_in_framed_answer(
         (_PROSE_ANSWER_MARKER, "", "公开后文"),
         (_PROSE_ANSWER_MARKER, "公开前文", "公开后文"),
         (_PROSE_ANSWER_MARKER, "公开前文", ""),
+        # B5.5: the production-observed echo variants (byte-exact, see the
+        # decoder-level family test constants) take the same redact path.
+        (_PROSE_ANSWER_END_VARIANT, "公开前文", ""),
+        (_DSML_FULLWIDTH_VARIANT, "公开前文", ""),
     ),
     ids=(
         "selection-middle",
@@ -986,6 +1087,8 @@ def test_openai_prose_renderer_redacts_private_marker_in_framed_answer(
         "answer-start",
         "answer-middle",
         "answer-end",
+        "answer-end-variant-eof",
+        "dsml-fullwidth-variant-eof",
     ),
 )
 def test_openai_prose_renderer_redacts_private_marker_in_plain_answer(
@@ -1073,8 +1176,8 @@ def test_openai_prose_renderer_clean_wire_sets_no_degradation(mode: str) -> None
         (" \n纯文本降级回答 \t", "纯文本降级回答", True),
         ("{纯文本降级回答", "{纯文本降级回答", True),
         (
-            "普通<文本 <<|canonical_v2_answer_vX|> 尾部<|canonical_v2_ans",
-            "普通<文本 <<|canonical_v2_answer_vX|> 尾部<|canonical_v2_ans",
+            "普通<文本 <<|canonical_v3_answer_v1|> 尾部<|canonical_v2_ans",
+            "普通<文本 <<|canonical_v3_answer_v1|> 尾部<|canonical_v2_ans",
             False,
         ),
     ),

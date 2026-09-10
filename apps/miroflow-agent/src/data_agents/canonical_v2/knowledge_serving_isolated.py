@@ -4237,7 +4237,24 @@ def _semantic_text(item: EvidenceItem, display_name: str) -> str:
 
 _PROSE_SELECTION_MARKER = "<|canonical_v2_selection_v1|>"
 _PROSE_ANSWER_MARKER = "<|canonical_v2_answer_v1|>"
-_PROSE_PRIVATE_MARKERS = (_PROSE_SELECTION_MARKER, _PROSE_ANSWER_MARKER)
+# Protocol-marker FAMILY echoed by the provider into prose (GAP-09, B5.5).
+# Membership is decided by shape, never by an enumerating string list:
+#   1. the canonical_v2 namespace in half-width bars — the two wire markers
+#      plus LLM-invented variants (observed post-B5-deploy in production:
+#      <|canonical_v2_answer_end|>, run14 archive g5-t2 and
+#      replay-b5-post-deploy G1_framing_r1_t1 SSE answer event);
+#   2. mangled DeepSeek DSML fragments with half- or full-width bars
+#      (observed: </｜｜DSML｜｜ parameter>, run14 archive g2-t2 tail;
+#      U+FF5C FULLWIDTH VERTICAL LINE).
+# Both families are pure provider echo: neither string family appears
+# anywhere in the repo's protocol code, so nothing legitimate is consumed.
+_PROSE_PRIVATE_MARKER_PATTERNS = (
+    re.compile(r"<\|canonical_v2[A-Za-z0-9_]{0,48}\|>"),
+    re.compile(r"</?[|｜]{1,4}DSML[|｜]{1,4}[^>\n]{0,64}>"),
+)
+# Bound on the held partial candidate; every family member above is <= 80
+# chars, so 96 never splits a real member across the cap.
+_PROSE_MARKER_CANDIDATE_LIMIT = 96
 _PROSE_SELECTION_KEYS = frozenset(
     {"selected_claim_indexes", "selected_entity_indexes"}
 )
@@ -4308,22 +4325,28 @@ class _ProseWireDecoder:
                     safe_parts.append(char)
                 continue
 
-            candidate = self._marker_candidate + char
-            if any(marker.startswith(candidate) for marker in _PROSE_PRIVATE_MARKERS):
-                if candidate in _PROSE_PRIVATE_MARKERS:
-                    # A full marker inside prose is provider echo noise
-                    # (GAP-09): redact it and keep streaming the answer
-                    # instead of aborting the turn into an empty answer.
-                    self._redactions.append(candidate)
-                    self._marker_candidate = ""
-                else:
-                    self._marker_candidate = candidate
+            if char == "<":
+                # A new '<' abandons the held candidate (byte-preserving).
+                safe_parts.append(self._marker_candidate)
+                self._marker_candidate = char
                 continue
-
-            safe_parts.append(self._marker_candidate)
-            self._marker_candidate = "<" if char == "<" else ""
-            if char != "<":
+            candidate = self._marker_candidate + char
+            if char == ">" and any(
+                pattern.fullmatch(candidate)
+                for pattern in _PROSE_PRIVATE_MARKER_PATTERNS
+            ):
+                # A protocol-marker family member inside prose is provider
+                # echo noise (GAP-09, B5.5): redact it and keep streaming the
+                # answer instead of aborting the turn into an empty answer.
+                self._redactions.append(candidate)
+                self._marker_candidate = ""
+                continue
+            if char in (">", "\n") or len(candidate) > _PROSE_MARKER_CANDIDATE_LIMIT:
+                safe_parts.append(self._marker_candidate)
+                self._marker_candidate = ""
                 safe_parts.append(char)
+                continue
+            self._marker_candidate = candidate
 
         if finish and self._marker_candidate:
             safe_parts.append(self._marker_candidate)
