@@ -285,12 +285,63 @@ path — no assembly-contract repair, no new serving code:
    `canonical-v2-backend.service`, re-run the 7-session replay gate (7/7 or
    documented jitter), keep the s12f pack + old command file for rollback.
 
-**Rejected alternatives.** ① Repairing the assembly contract so run14
-passes `_validate_result_graph` — the R1 swamp, unchanged. ② Building a
-new minimal serve entry — the pack-mode fast path already IS the thin-load
-entry; new code would duplicate it. ③ In-place data surgery on s12f —
-run14 is the reconciled superset; piecemeal backfill re-creates the
-reconciliation problem C2 solves once.
+**Setback 2026-09-10 (first scratch boot) and the reseal step.** C2.1a
+landed (run14 bundle + 18189 command, worktree `9cfdabe`), but the first
+scratch boot failed closed at `serving_pack_loader.py:672` ("serving pack
+index result does not reproduce its recorded hash"). Root cause (agent
+evidence in `.agents/runs/close-workbook-gaps/c2-scratch-boot-failure.md`,
+independently re-verified in main context against the live-index
+`build_receipt`): the run14 pack is **half-sealed** — its index files are
+the 2026-09-08 run14 materialization (receipt built_at 2026-09-08T11:07:10Z,
+51,029 pts / 47,071 docs) but the manifest still carries the p4
+(2026-08-26) index-side bindings: `index_result_content_sha256`
+(`738219cf…`), `index_policy_snapshot`, `index_rebuild_decisions`, and
+suspected-stale `index_projection_request_sha256` /
+`build_manifest.published_projections`. The data line never ran the
+envelope pipeline for run14 (no run14 envelope exists anywhere), and the
+repo's only sealer (`s12c/build_serving_pack.py`) seals **from an
+envelope**, so there is no honest way to mint these bindings except
+recomputing them from the artifacts. The loader is correct; the pack is
+the defect.
+
+**Repair (inserted as task C2.1r, before the A/B boot):** build a
+deterministic **resealer** — `s12g/reseal_serving_pack.py`, sibling of the
+envelope sealer — that seals a pack from its own artifacts:
+`--source-pack` (half-sealed run14 pack, read-only) + `--index-root`
+(live run14 index, read-only) → fresh `--pack-dir`
+(`/var/tmp/mirothinker-data-v2/serving-pack-run14-resealed/`). It copies
+the five pack files, then recomputes **every loader-bound manifest field
+from the artifacts**: per-file hashes; marker hash/root/forbidden paths
+(from the marker); `embedding_model_id` (from the live-index receipt,
+asserted uniform across projections); catalog/relationship/candidate/
+internal-result hashes (from the pack's own JSON payloads);
+`relationship_request_sha256` and `index_projection_request_sha256` (by
+rebuilding the requests exactly as the loader does); `index_result_
+content_sha256` (by reconstructing the `IndexProjectionResult` from the
+live snapshot + carried policy fields, exactly as the loader does);
+`build_manifest.published_projections` ← the run14 candidate result's
+projections, then re-binding `build_manifest.manifest_sha256` and
+`release_verification`. Pure provenance fields are carried, not invented:
+`index_policy_snapshot` / `index_rebuild_decisions` (assert their
+embedding model matches the receipt) stay as the p4 pipeline record, and
+the reseal records itself via `generator_run_id = c2-reseal-20260910-v1`
++ fresh `generated_at`. The resealer then **dogfoods the new pack through
+`open_serving_pack_authority`** and refuses to ship unless the full
+authority opens clean — the same proof the envelope sealer gives.
+Rejected alternatives: ① in-place hash patch of the half-sealed pack —
+destroys the evidence artifact and repeats the Sep-9 partial-surgery
+mistake one field at a time; ② running the full envelope build for
+run14 — the R1 swamp, unchanged; ③ loosening the loader — the fail-closed
+contract is the thing protecting us, never weakened. After the reseal,
+C2.1b–f run against the resealed pack (the 18189 command's
+`--serving-pack` path is updated; nothing else changes).
+
+**Rejected alternatives (overall approach).** ① Repairing the assembly
+contract so run14 passes `_validate_result_graph` — the R1 swamp,
+unchanged. ② Building a new minimal serve entry — the pack-mode fast path
+already IS the thin-load entry; new code would duplicate it. ③ In-place
+data surgery on s12f — run14 is the reconciled superset; piecemeal
+backfill re-creates the reconciliation problem C2 solves once.
 
 **RED → GREEN.** RED: GAP-15 assertion (serving doc count == 47,071) fails
 today (5,659). GREEN: serving boots run14, reconciliation report lands,

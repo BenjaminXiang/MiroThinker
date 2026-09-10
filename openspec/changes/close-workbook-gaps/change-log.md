@@ -93,3 +93,28 @@
   hash) — exact six-arg command delta + one minted bundle file recorded
   in design.md §C2 step 2.
 - tasks.md: C2.1 expanded into C2.1a–f; sequencing note added at top.
+
+## 2026-09-10 — C2.1a landed; first scratch boot failed closed (half-sealed pack); reseal step inserted
+
+- C2.1a done (worktree `9cfdabe`): run14 RecordedServingBundle minted and
+  externally re-validated; `serve-18189-command.sh` cloned with a
+  token-level assert that the diff is exactly the designed six args + port
+  + two scratch env overrides.
+- C2.1b first boot on 18189: RSS peaked ~14G, exited after ~2min at
+  `serving_pack_loader.py:672` — "serving pack index result does not
+  reproduce its recorded hash". Root cause (agent evidence doc
+  `c2-scratch-boot-failure.md`, re-verified in main context): the run14
+  pack is half-sealed — index files are the 2026-09-08 run14
+  materialization (live-index receipt built_at 2026-09-08T11:07:10Z,
+  51,029 pts / 47,071 docs) while the manifest keeps the p4 (2026-08-26)
+  index-side bindings (`index_result_content_sha256 738219cf…`, policy
+  snapshot, rebuild decisions). No run14 build envelope exists; the only
+  sealer seals from an envelope. Loader is correct; pack is the defect.
+- design.md §C2 amended: setback subsection + new task C2.1r —
+  deterministic `reseal_serving_pack.py` recomputes every loader-bound
+  manifest field from the artifacts into a fresh pack dir
+  (`serving-pack-run14-resealed`), dogfoods through
+  `open_serving_pack_authority`; provenance fields carried, reseal records
+  itself via `generator_run_id c2-reseal-20260910-v1`. Rejected: in-place
+  hash patch, full envelope build, loader loosening.
+- tasks.md: C2.1a marked done, C2.1r inserted before C2.1b.
