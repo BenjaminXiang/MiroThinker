@@ -201,6 +201,119 @@ per the interim jitter policy.
 
 ## B2–B6, C1–C5 — design stubs (filled at slice start)
 
+> Sequencing change (user decision 2026-09-10, evidence in human log entry 4):
+> **C2 runs first**, then B3+B2 as one combined "enumeration & narrowing"
+> slice on the run14 pack. Rationale: the GAP-02/04 acceptance assertions are
+> data-capped on s12f (g2 GT-6: 3/6 in pack, geography fields 0/1,737; g5
+> GT-11: 3/11) and only become reachable on run14 (GT-6: 6/6 with Shenzhen
+> addresses, GT-11: 8/11, geography filled 91.9%, all five g2-t1 GT companies
+> present). B4/B5 stay code-only and queue after the combined slice.
+
+## C2 — run14 thin-load online (full design, 2026-09-10)
+
+**Facts (measured 2026-09-10).** The data line already built a run14 serving
+pack at `/var/tmp/mirothinker-data-v2/serving-pack-run14/` with exactly the
+live pack's file contract (compare `/var/tmp/mirothinker-canonical-v2-s12f/
+serving-pack/`): `.canonical-v2-isolated-index-target.json`,
+`institution_catalog.json`, `lookup.sqlite3` (635M; 47,071 docs / 7,089
+companies), `manifest.json` (8.7M), `milvus.db` (1.1G), `relationships.json`
+(2.9G vs live 321M). The serving line's boot already has a frozen-validation
+fast path: `--serve --serve-existing --serving-pack <dir>` in
+`complete_candidate_runner.py:1151-1172` skips the envelope build and
+`_validate_result_graph`, loading only the pack authority
+(`serving_pack_loader.open_serving_pack_authority`, keyed by
+`candidate_release_id` + `index_marker_sha256`).
+
+**Chosen approach.** Boot the run14 pack through the existing pack-mode fast
+path — no assembly-contract repair, no new serving code:
+
+1. **Pack authority probe** (done 2026-09-10, main-context verification):
+   run14 `manifest.json` → `release_id = candidate-v2-20260819-r1`,
+   `index_marker_sha256 = 8848197caaa665fa093f054aa6c7c241b90376f311ec62e
+   089ddb479a6e97c8b`, `index_root = /var/tmp/mirothinker-data-v2/index-v1`
+   (live index the snapshot opens; its marker file sha256 matches the
+   manifest value byte-for-byte), `index_forbidden_milvus_paths` identical
+   to the s12f command's `--accepted-original-milvus-path`, embedding model
+   identical (`Qwen/Qwen3-Embedding-8B`). All five pack file hashes
+   pre-verified against `manifest.files` (ALL-OK). Thin-mode facts: the
+   runner's pack path never reads the envelope and never connects to
+   Postgres (`database_url` is only consumed by `create_builder`;
+   `gap_operations` is ephemeral), so `--database-url`/`--expected-database`
+   are agreement strings only. `load_recorded_serving_inputs`
+   (`knowledge_serving_isolated.py:5916`) still runs in thin mode and binds
+   the serving bundle to release_id / database_name / index_root /
+   envelope_path / content hash.
+2. **run14 serve command**: clone the s12g command contract. Exact delta —
+   six args plus one new file: ① `--serving-pack /var/tmp/mirothinker-
+   data-v2/serving-pack-run14`; ② `--candidate-release-id
+   candidate-v2-20260819-r1`; ③ `--index-marker-sha256 8848197c…`;
+   ④ `--index-root /var/tmp/mirothinker-data-v2/index-v1`;
+   ⑤ `--expected-database` / `--database-url` → a fresh disposable name
+   (`miroflow_candidate_v2_20260819_r1`, never connected); ⑥
+   `--recorded-serving-bundle{,-sha256}` → a new minted
+   `RecordedServingBundle` json (schema `canonical-v2-serving-bundle-v1`;
+   policy knobs `max_candidates`/`max_web_results`/`web_timeout_ms`/
+   `web_snapshot_max_bytes` carried from the s12f bundle; `envelope_path`
+   equal to the unchanged CLI `--envelope-output`; `content_sha256` =
+   canonical sha256 of the dump minus the field, per the model validator).
+   Everything else stays byte-identical (forbidden-milvus triple, recorded
+   decision/embedding bundles, envelope-output, run-id, source batches,
+   parser/policy versions). New command file next to the s12g one; the
+   live 18188 command file is NOT touched until the A/B gate passes.
+   Scratch runs additionally override `CANONICAL_V2_ACCESS_LOG_DB` /
+   `CANONICAL_V2_CORRECTIONS_DB` to scratch paths so A/B traffic never
+   pollutes the production stores.
+3. **A/B boot on a scratch port** (localhost only): boot run14 on a scratch
+   port with the same worktree code; measure boot wall-time and RSS — the
+   2.9G `relationships.json` is 9× the live one and the in-memory
+   relationship authority replay is the main resource risk (measurement
+   gate: boot succeeds and stays responsive; if RSS/replay is prohibitive,
+   stop and report before any switch).
+4. **Reconciliation report**: per-domain document counts vs s12f
+   (5,659 → 47,071; papers 563 → 24,520), relationship counts, and spot
+   checks — 优必选 patent bindings (58 → 459 expected), g2 GT-6 presence
+   with addresses, 普渡 positive control (17 relationship-table candidates
+   may differ on run14; the B1 direct scan supersedes it as long as
+   bindings exist).
+5. **Full re-baseline**: three-layer runner, all 25 turns against the
+   scratch port. Hard gate: every turn that passed on s12f (9 PASS + g17-t1
+   GREEN) still passes on run14 — a regression stops the switch. Record
+   the new honest baseline; update gap-registry statuses that the data
+   change closes (GAP-15 closes: serving == 47,071) or re-measures
+   (GAP-13 rows, GAP-02/04 ceilings).
+6. **Switch 18188**: point the command file at run14, restart
+   `canonical-v2-backend.service`, re-run the 7-session replay gate (7/7 or
+   documented jitter), keep the s12f pack + old command file for rollback.
+
+**Rejected alternatives.** ① Repairing the assembly contract so run14
+passes `_validate_result_graph` — the R1 swamp, unchanged. ② Building a
+new minimal serve entry — the pack-mode fast path already IS the thin-load
+entry; new code would duplicate it. ③ In-place data surgery on s12f —
+run14 is the reconciled superset; piecemeal backfill re-creates the
+reconciliation problem C2 solves once.
+
+**RED → GREEN.** RED: GAP-15 assertion (serving doc count == 47,071) fails
+today (5,659). GREEN: serving boots run14, reconciliation report lands,
+25-turn re-baseline shows no regression on previously-green turns, replay
+7/7 after the switch, gap-registry re-baselined.
+
+## B2+B3 — combined "enumeration & narrowing" slice (stub, starts after C2)
+
+- B3 mechanism: enumeration completeness self-check against the retrieval
+  set before rendering; shortfall triggers one supplemental probe, then
+  honest wording. On run14 the local GT entities exist (g2-t1 five, g2-t2
+  six, g5-t2 eight), so recall-side completeness is reachable.
+- B2 mechanism: displayed-set manifest must not drop non-canonical
+  displayed members (`canonical_v2_chat.py:2035` captures only
+  `handle.kind == "canonical"` — g5-t2 narrowed 5 displayed to "上述两家");
+  narrowing verdicts need a per-member path (local geography claim →
+  name heuristic → web verdict for unbound members); answers carry a
+  coverage statement （共 N 家，确认 M，排除 K，未决 J).
+- Acceptance: g2-t1 five GT entities present; g2-t2 ≥5/6; g5-t2 ≥9/12 key
+  points; replay 7/7.
+
+## B4–B6, C1, C3–C5 — design stubs (filled at slice start)
+
 - **B2**: narrowing = previous displayed-id set ∩ filter; the displayed-id
   manifest already exists from the Layer D work.
 - **B3**: enumeration completeness self-check against the retrieval set

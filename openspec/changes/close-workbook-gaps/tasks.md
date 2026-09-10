@@ -1,5 +1,10 @@
 # Tasks: close-workbook-gaps
 
+> Sequencing (user decision 2026-09-10, design.md §sequencing): **C2 first**,
+> then B2.1+B3.1 as one combined "enumeration & narrowing" slice on the
+> run14 pack, then B4/B5. Rationale: GAP-02/04 acceptance assertions are
+> data-capped on the s12f pack (human log entry 4).
+
 ## Stage B — core gap fixes
 
 - [x] B1.1 Port `_company_to_patent_relationship_candidates` G3-simple scan
@@ -53,7 +58,28 @@
        placeholders; company placeholders; alias closure; key_personnel
        education).
 - [ ] C2.1 run14 thin-load online (47,071 docs) + reconciliation report;
-       workbook score not regressed.
+       workbook score not regressed. Sub-steps (design.md §C2, contract
+       verified line-by-line 2026-09-10):
+  - [ ] C2.1a Mint run14 `RecordedServingBundle` json (release_id
+         `candidate-v2-20260819-r1`, index_root `/var/tmp/mirothinker-
+         data-v2/index-v1`, disposable db name, policy knobs carried from
+         s12f bundle) + clone the s12g command file with the six-arg delta.
+  - [ ] C2.1b A/B boot on scratch port (localhost only, scratch
+         access-log/corrections paths); measure boot wall-time and RSS —
+         2.9G relationships replay is the resource gate; prohibitive →
+         stop and report.
+  - [ ] C2.1c Reconciliation report: per-domain counts vs s12f
+         (5,659 → 47,071; papers 563 → 24,520), 优必选 bindings
+         (58 → 459 expected), g2 GT-6 presence with addresses, 普渡
+         control re-anchored to direct-scan bindings.
+  - [ ] C2.1d Full 25-turn three-layer re-baseline on the scratch port.
+         Hard gate: the 9 PASS turns + g17-t1 from s12f all still pass;
+         regression → stop, no switch.
+  - [ ] C2.1e Re-baseline gap-registry (GAP-15 closes; GAP-13 rows,
+         GAP-02/04 ceilings re-measured); verification-c2.md landed.
+  - [ ] C2.1f Switch 18188 (command file → run14, systemctl restart,
+         replay 7/7); s12f pack + old command file kept for rollback.
+         Production action — requires the user's go on the A/B evidence.
 - [ ] C3.1 Company→patent full relations + professor→company coverage (90
        candidates); 10-sample manual check.
 - [ ] C4.1 Paper↔professor canonical id links; paper detail lists involved

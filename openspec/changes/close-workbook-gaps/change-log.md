@@ -65,3 +65,31 @@
 - design.md §B1 revision 2 adds the Gate C fix (claim-binding witness
   branch mirroring the selector's value-endpoint semantics) with rejected
   alternatives and the round-3 test matrix; task B1.6 added.
+
+## 2026-09-10 — Sequencing change: C2 first; C2 design landed + contract verified
+
+- User decision (evidence: human log entry 4): GAP-02/04 acceptance
+  assertions are data-capped on the s12f pack (g2 GT-6 3/6 in pack,
+  geography 0/1,737; g5 GT-11 3/11) and only reachable on run14 (GT-6 6/6
+  with Shenzhen addresses, GT-11 8/11, geography 91.9%). New order:
+  **C2 → combined B2.1+B3.1 "enumeration & narrowing" slice → B4/B5**.
+- design.md §C2 written in full: boot the run14 serving pack
+  (`/var/tmp/mirothinker-data-v2/serving-pack-run14/`, 47,071 docs /
+  7,089 companies / relationships.json 2.9G) through the existing
+  pack-mode fast path (`--serve --serve-existing --serving-pack`),
+  scratch-port A/B with boot-time/RSS measurement gate, reconciliation
+  report, 25-turn re-baseline hard gate (s12f's 9 PASS + g17-t1 must not
+  regress), then the 18188 switch (production action, user go required).
+- Boot contract verified line-by-line in main context before dispatch:
+  `open_serving_pack_authority` binds release_id + index_marker_sha256 +
+  forbidden milvus path + per-file hashes + deep request/result hash
+  reproduction; run14 manifest values extracted
+  (`candidate-v2-20260819-r1`, marker `8848197c…`, index_root
+  `/var/tmp/mirothinker-data-v2/index-v1` — live marker hash matches);
+  all five pack file hashes pre-verified ALL-OK; thin mode never reads
+  the envelope and never connects to Postgres (disposable db name is an
+  agreement string); `load_recorded_serving_inputs` still binds the
+  serving bundle (release/database/index_root/envelope_path/content
+  hash) — exact six-arg command delta + one minted bundle file recorded
+  in design.md §C2 step 2.
+- tasks.md: C2.1 expanded into C2.1a–f; sequencing note added at top.
