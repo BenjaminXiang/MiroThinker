@@ -5019,6 +5019,233 @@ def test_s12g_real_http_stream_correction_supersedes_drifted_draft() -> None:
     assert session_id in adapter._sessions
 
 
+def test_b5_real_http_stream_redacts_marker_echo_and_completes(tmp_path: Path) -> None:
+    """GAP-09/B5: a private protocol marker echoed inside the streamed prose is
+    redacted, the turn completes with answer+done (no error event), and the
+    turn-trace journal carries the prose-private-marker-redacted token."""
+    seam = _load_s11a_seam()
+    answer_module = import_module("src.data_agents.canonical_v2.knowledge_answer")
+    read_module = import_module("src.data_agents.canonical_v2.knowledge_read")
+    serving_module = import_module(
+        "src.data_agents.canonical_v2.knowledge_serving_isolated"
+    )
+    trace_module = import_module("backend.services.canonical_v2_turn_trace")
+    getter = seam.deps_module.get_canonical_v2_chat_adapter
+    session_id = "session:b5:http-stream-marker-redaction"
+    company_id = "company:b5:http-stream-marker-redaction"
+    evidence_id = "evidence:b5:http-stream-marker-redaction"
+    marker = "<|canonical_v2_answer_v1|>"
+    echoed_answer = (
+        "Robotics Co 由已接受的本地公司档案证据支持，" + marker + "结论不变。"
+    )
+    expected_answer = "Robotics Co 由已接受的本地公司档案证据支持，结论不变。"
+
+    def wire(answer: str) -> str:
+        return (
+            "<|canonical_v2_selection_v1|>\n"
+            '{"selected_claim_indexes":[1],"selected_entity_indexes":[1]}\n'
+            "<|canonical_v2_answer_v1|>\n" + answer
+        )
+
+    class _Completions:
+        def __init__(self) -> None:
+            self.stream_create_calls = 0
+            self.sync_create_calls = 0
+
+        def create(self, **kwargs: object) -> object:
+            if kwargs.get("stream"):
+                self.stream_create_calls += 1
+                content = wire(echoed_answer)
+
+                def completion() -> object:
+                    # 7-char chunks split the echoed marker across reads.
+                    for index in range(0, len(content), 7):
+                        yield SimpleNamespace(
+                            choices=(
+                                SimpleNamespace(
+                                    delta=SimpleNamespace(
+                                        content=content[index : index + 7]
+                                    ),
+                                    finish_reason=None,
+                                ),
+                            )
+                        )
+                    yield SimpleNamespace(
+                        choices=(
+                            SimpleNamespace(
+                                delta=SimpleNamespace(content=None),
+                                finish_reason="stop",
+                            ),
+                        )
+                    )
+
+                return completion()
+            self.sync_create_calls += 1
+            return SimpleNamespace(
+                choices=(
+                    SimpleNamespace(
+                        message=SimpleNamespace(content=wire(expected_answer)),
+                        finish_reason="stop",
+                    ),
+                )
+            )
+
+    completions = _Completions()
+    renderer = serving_module._OpenAIProseRenderer(
+        client=SimpleNamespace(chat=SimpleNamespace(completions=completions)),
+        model="recorded-chat-model",
+        extra_body={"thinking": {"type": "disabled"}},
+    )
+    evidence = read_module.EvidenceItem(
+        evidence_id=evidence_id,
+        object_id=company_id,
+        domain="company",
+        lane="exact",
+        source_nature="local",
+        source_authority="canonical_release",
+        source_locator="canonical-v2-isolated:b5-http-marker-redaction",
+        snippet="The accepted Company name is Robotics Co.",
+        score=1.0,
+        observed_at=NOW,
+        claim_binding=read_module.EvidenceClaimBinding(
+            subject_id=company_id,
+            predicate="preferred_name",
+            value="Robotics Co",
+            status="accepted",
+        ),
+    )
+    handle = read_module.CanonicalEntityHandle(
+        canonical_id=company_id,
+        domain="company",
+        display_name="Robotics Co",
+        evidence_ids=(evidence_id,),
+    )
+    evidence_set = read_module.EvidenceSet(
+        release_id=RELEASE_ID,
+        original_query=SIMPLE_QUERY,
+        protected_slots=(),
+        items=(evidence,),
+        traces=(),
+        limitations=(),
+        entity_handles=(handle,),
+    )
+
+    class _Planner:
+        def plan(self, request: Any) -> Any:
+            return read_module.RetrievalPlan(
+                plan_version="retrieval-plan-v1",
+                original_query=request.original_query,
+                behavior_class="A",
+                release_id=RELEASE_ID,
+                domains=("company",),
+                protected_slots=(),
+                lanes=("exact",),
+                max_candidates=1,
+                web_required=False,
+            )
+
+    class _Read:
+        def execute(self, plan: Any) -> Any:
+            assert plan.original_query == SIMPLE_QUERY
+            return evidence_set
+
+    def answer_selector(turn: Any) -> Any:
+        claim = answer_module.MaterialClaimProposal(
+            claim_id="claim:b5:http-stream-marker-redaction",
+            text="Robotics Co 由已接受的本地公司档案证据支持。",
+            subject_id=company_id,
+            predicate="preferred_name",
+            value="Robotics Co",
+            subject_handle_ids=(company_id,),
+            evidence_ids=(evidence_id,),
+            outcome="supported",
+            confirmed=True,
+            status="accepted",
+        )
+        return answer_module.AnswerSelectionProposal(
+            selection_input_sha256=turn.content_sha256,
+            schema_version="answer-selection-v1",
+            decision_id=f"answer-selection:{turn.turn_id}:b5-marker-redaction",
+            model_id="recorded-answer-selector",
+            prompt_version="answer-selector-prompt-v1",
+            decision_run_id=f"answer-selector-run:{turn.turn_id}:b5-marker",
+            answer_text="NON_AUTHORITATIVE_RAW_DRAFT",
+            claims=(claim,),
+            displayed_handle_ids=(company_id,),
+        )
+
+    def answer_factory() -> Any:
+        return answer_module.create_ephemeral_knowledge_answer(
+            answer_selector=answer_selector,
+            prose_renderer=renderer,
+        )
+
+    adapter = seam.adapter_type(
+        release_id=RELEASE_ID,
+        planner=_Planner(),
+        knowledge_read=_Read(),
+        answer_factory=answer_factory,
+        answer_session_fork=lambda _: answer_factory(),
+    )
+    adapter.attach_turn_trace(trace_module.TurnTraceJournalStore(root_dir=tmp_path))
+    prior = seam.app.dependency_overrides.get(getter)
+    seam.app.dependency_overrides[getter] = lambda: adapter
+    try:
+        response = TestClient(seam.app, raise_server_exceptions=False).post(
+            "/api/chat/stream",
+            json={"query": SIMPLE_QUERY, "entity_id_hint": None},
+            headers={"cookie": f"miroflow_chat_session={session_id}"},
+        )
+    finally:
+        if prior is None:
+            seam.app.dependency_overrides.pop(getter, None)
+        else:
+            seam.app.dependency_overrides[getter] = prior
+
+    events: list[tuple[str, dict[str, Any]]] = []
+    for block in response.text.split("\n\n"):
+        lines = block.split("\n")
+        name = next(
+            (
+                line.removeprefix("event: ")
+                for line in lines
+                if line.startswith("event: ")
+            ),
+            "message",
+        )
+        data = "\n".join(
+            line.removeprefix("data: ") for line in lines if line.startswith("data: ")
+        )
+        if data:
+            events.append((name, json.loads(data)))
+
+    names = [name for name, _ in events]
+    streamed_text = "".join(
+        data["text"] for name, data in events if name == "answer_chunk"
+    )
+    assert response.status_code == 200
+    assert marker not in response.text
+    assert "<|canonical_v2_selection_v1|>" not in response.text
+    assert streamed_text == expected_answer
+    answer_payload = next(data for name, data in events if name == "answer")
+    assert answer_payload["answer_text"] == expected_answer
+    assert names[-2:] == ["answer", "done"]
+    assert "error" not in names
+    # The streamed draft names the anchor, so no correction retry fires.
+    assert completions.stream_create_calls == 1
+    assert completions.sync_create_calls == 0
+    assert session_id in adapter._sessions
+
+    journal: list[dict[str, Any]] = []
+    for file in sorted(tmp_path.glob("*.jsonl")):
+        journal.extend(
+            json.loads(line) for line in file.read_text(encoding="utf-8").splitlines()
+        )
+    assert len(journal) == 1
+    assert journal[0]["degradation"] == "prose-private-marker-redacted"
+    assert journal[0]["status"] == "ok"
+
+
 def test_s12g_real_http_stream_blocks_traversed_path_value() -> None:
     seam = _load_s11a_seam()
     answer_module = import_module("src.data_agents.canonical_v2.knowledge_answer")

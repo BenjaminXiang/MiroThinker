@@ -14,6 +14,7 @@ from src.data_agents.canonical_v2 import (
     knowledge_read_isolated as isolated_read_module,
 )
 from src.data_agents.canonical_v2 import knowledge_serving_isolated as serving_module
+from src.data_agents.canonical_v2 import turn_trace_context as trace_context
 from src.data_agents.canonical_v2.knowledge_answer import (
     ProseSynthesisResult,
     TurnRequest,
@@ -830,6 +831,100 @@ def test_openai_prose_renderer_treats_selection_marker_strict_prefix_at_eof_as_p
     assert len(completions.calls) == 2
 
 
+class _RecordingTraceReporter:
+    def __init__(self) -> None:
+        self.degradations: list[str] = []
+
+    def set_degradation(self, token: str) -> None:
+        self.degradations.append(token)
+
+
+@pytest.mark.parametrize("chunk_width", (1, 5), ids=("charwise", "wide"))
+@pytest.mark.parametrize(
+    ("marker", "prefix", "suffix"),
+    (
+        (_PROSE_SELECTION_MARKER, "公开前文", "公开后文"),
+        (_PROSE_SELECTION_MARKER, "公开前文", ""),
+        (_PROSE_ANSWER_MARKER, "", "公开后文"),
+        (_PROSE_ANSWER_MARKER, "公开前文", "公开后文"),
+        (_PROSE_ANSWER_MARKER, "公开前文", ""),
+    ),
+    ids=(
+        "selection-middle",
+        "selection-end",
+        "answer-start",
+        "answer-middle",
+        "answer-end",
+    ),
+)
+def test_prose_wire_decoder_redacts_private_marker_and_records(
+    marker: str,
+    prefix: str,
+    suffix: str,
+    chunk_width: int,
+) -> None:
+    # A full private marker echoed inside prose is provider noise (GAP-09):
+    # the marker is dropped, the surrounding text survives byte-intact, and
+    # the redaction is recorded. The selection-marker-at-prose-start case is
+    # NOT here: a leading selection marker is indistinguishable from framing
+    # and stays on the classification path (locked by a separate test).
+    text = f"{prefix}{marker}{suffix}"
+    decoder = serving_module._ProseWireDecoder()
+    published = [
+        decoder.feed(text[index : index + chunk_width])
+        for index in range(0, len(text), chunk_width)
+    ]
+    published.append(decoder.finish())
+
+    assert "".join(published) == prefix + suffix
+    assert decoder.redactions == (marker,)
+
+
+def test_prose_wire_decoder_redacts_both_markers_in_one_prose() -> None:
+    text = f"前文{_PROSE_SELECTION_MARKER}中段{_PROSE_ANSWER_MARKER}后文"
+    decoder = serving_module._ProseWireDecoder()
+    published = decoder.feed(text) + decoder.finish()
+
+    assert published == "前文中段后文"
+    assert decoder.redactions == (_PROSE_SELECTION_MARKER, _PROSE_ANSWER_MARKER)
+
+
+@pytest.mark.parametrize(
+    "content",
+    (
+        "尾部<|canonical_v2_ans",
+        "普通<文本 <<|canonical_v2_answer_vX|> 尾部",
+    ),
+    ids=("strict-prefix", "near-miss"),
+)
+def test_prose_wire_decoder_partial_marker_at_finish_flushes_without_redaction(
+    content: str,
+) -> None:
+    # Partial candidates and near-misses are not redactions: the finish-time
+    # flush keeps publishing them verbatim (unchanged from before B5).
+    decoder = serving_module._ProseWireDecoder()
+    published = decoder.feed(content) + decoder.finish()
+
+    assert published == content
+    assert decoder.redactions == ()
+
+
+@pytest.mark.parametrize("chunk_width", (1, 32), ids=("charwise", "whole"))
+def test_prose_wire_decoder_leading_selection_marker_still_requires_framing(
+    chunk_width: int,
+) -> None:
+    # Classification boundary lock: a selection marker at the very start of
+    # the wire is framing, not prose echo — without the answer marker the
+    # response stays malformed and still raises.
+    text = f"{_PROSE_SELECTION_MARKER}\n公开后文"
+    decoder = serving_module._ProseWireDecoder()
+    for index in range(0, len(text), chunk_width):
+        decoder.feed(text[index : index + chunk_width])
+    with pytest.raises(ValueError, match="missing the answer marker"):
+        decoder.finish()
+    assert decoder.redactions == ()
+
+
 @pytest.mark.parametrize(
     "marker",
     (_PROSE_SELECTION_MARKER, _PROSE_ANSWER_MARKER),
@@ -843,31 +938,133 @@ def test_openai_prose_renderer_treats_selection_marker_strict_prefix_at_eof_as_p
         ("end", "公开前文", ""),
     ),
 )
-@pytest.mark.parametrize("wire_mode", ("plain", "framed"))
-def test_openai_prose_renderer_rejects_private_marker_in_answer_before_publish(
+def test_openai_prose_renderer_redacts_private_marker_in_framed_answer(
     marker: str,
     position: str,
     prefix: str,
     suffix: str,
-    wire_mode: str,
 ) -> None:
+    # Framed wire (the production shape): a marker echoed inside the answer
+    # region is redacted and the answer continues; the selection header was
+    # consumed by the classification path upstream and stays intact.
     del position
     answer = f"{prefix}{marker}{suffix}"
-    content = _prose_wire(answer) if wire_mode == "framed" else answer
+    completions = _RecordedProseCompletions(_prose_wire(answer), chunk_width=1)
+    renderer = _prose_renderer(completions)
+    result, _, _ = _prose_result()
+    published: list[str] = []
+
+    sync_rendered = renderer(result)
+    streamed = renderer.stream(result, on_chunk=published.append)
+
+    expected_text = prefix + suffix
+    expected = ProseSynthesisResult(
+        answer_text=expected_text,
+        selected_claim_ids=(),
+        selected_handle_ids=(),
+    )
+    assert sync_rendered == expected
+    assert streamed == expected
+    assert "".join(published) == expected_text
+    assert _PROSE_SELECTION_MARKER not in "".join(published)
+    assert _PROSE_ANSWER_MARKER not in "".join(published)
+    assert len(completions.calls) == 2
+
+
+@pytest.mark.parametrize(
+    ("marker", "prefix", "suffix"),
+    (
+        (_PROSE_SELECTION_MARKER, "公开前文", "公开后文"),
+        (_PROSE_SELECTION_MARKER, "公开前文", ""),
+        (_PROSE_ANSWER_MARKER, "", "公开后文"),
+        (_PROSE_ANSWER_MARKER, "公开前文", "公开后文"),
+        (_PROSE_ANSWER_MARKER, "公开前文", ""),
+    ),
+    ids=(
+        "selection-middle",
+        "selection-end",
+        "answer-start",
+        "answer-middle",
+        "answer-end",
+    ),
+)
+def test_openai_prose_renderer_redacts_private_marker_in_plain_answer(
+    marker: str,
+    prefix: str,
+    suffix: str,
+) -> None:
+    answer = f"{prefix}{marker}{suffix}"
+    completions = _RecordedProseCompletions(answer, chunk_width=1)
+    renderer = _prose_renderer(completions)
+    result, _, _ = _prose_result()
+    published: list[str] = []
+
+    sync_rendered = renderer(result)
+    streamed = renderer.stream(result, on_chunk=published.append)
+
+    assert sync_rendered == prefix + suffix
+    assert streamed == prefix + suffix
+    assert "".join(published) == prefix + suffix
+    assert len(completions.calls) == 2
+
+
+def test_openai_prose_renderer_leading_selection_marker_still_raises() -> None:
+    # Plain wire opening with the selection marker is classified as a framed
+    # response; without the answer marker it remains invalid output, not a
+    # redaction case (the framing contract is unchanged by B5).
+    content = f"{_PROSE_SELECTION_MARKER}\n公开后文"
     completions = _RecordedProseCompletions(content, chunk_width=1)
     renderer = _prose_renderer(completions)
     result, _, _ = _prose_result()
     published: list[str] = []
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="missing the answer marker"):
         renderer(result)
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="missing the answer marker"):
         renderer.stream(result, on_chunk=published.append)
 
-    assert "".join(published) == prefix
-    assert _PROSE_SELECTION_MARKER not in "".join(published)
-    assert _PROSE_ANSWER_MARKER not in "".join(published)
+    assert "".join(published) == ""
     assert len(completions.calls) == 2
+
+
+@pytest.mark.parametrize("mode", ("sync", "stream"))
+def test_openai_prose_renderer_marker_redaction_sets_trace_degradation(
+    mode: str,
+) -> None:
+    answer = f"公开前文{_PROSE_ANSWER_MARKER}公开后文"
+    completions = _RecordedProseCompletions(_prose_wire(answer), chunk_width=1)
+    renderer = _prose_renderer(completions)
+    result, _, _ = _prose_result()
+    reporter = _RecordingTraceReporter()
+    token = trace_context.set_turn_trace_reporter(reporter)
+    published: list[str] = []
+    try:
+        if mode == "stream":
+            renderer.stream(result, on_chunk=published.append)
+        else:
+            renderer(result)
+    finally:
+        trace_context.reset_turn_trace_reporter(token)
+
+    assert reporter.degradations == ["prose-private-marker-redacted"]
+
+
+@pytest.mark.parametrize("mode", ("sync", "stream"))
+def test_openai_prose_renderer_clean_wire_sets_no_degradation(mode: str) -> None:
+    completions = _RecordedProseCompletions(_prose_wire("安全回答"), chunk_width=1)
+    renderer = _prose_renderer(completions)
+    result, _, _ = _prose_result()
+    reporter = _RecordingTraceReporter()
+    token = trace_context.set_turn_trace_reporter(reporter)
+    try:
+        if mode == "stream":
+            renderer.stream(result, on_chunk=lambda _: None)
+        else:
+            renderer(result)
+    finally:
+        trace_context.reset_turn_trace_reporter(token)
+
+    assert reporter.degradations == []
 
 
 @pytest.mark.parametrize(

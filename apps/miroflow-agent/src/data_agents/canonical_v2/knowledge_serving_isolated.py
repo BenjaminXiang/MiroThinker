@@ -4288,10 +4288,15 @@ class _ProseWireDecoder:
         self._header_search_from = 0
         self._selection: tuple[tuple[int, ...], tuple[int, ...]] | None = None
         self._marker_candidate = ""
+        self._redactions: list[str] = []
 
     @property
     def selection(self) -> tuple[tuple[int, ...], tuple[int, ...]] | None:
         return self._selection
+
+    @property
+    def redactions(self) -> tuple[str, ...]:
+        return tuple(self._redactions)
 
     def _filter_private_markers(self, text: str, *, finish: bool = False) -> str:
         safe_parts: list[str] = []
@@ -4305,10 +4310,14 @@ class _ProseWireDecoder:
 
             candidate = self._marker_candidate + char
             if any(marker.startswith(candidate) for marker in _PROSE_PRIVATE_MARKERS):
-                self._marker_candidate = candidate
                 if candidate in _PROSE_PRIVATE_MARKERS:
+                    # A full marker inside prose is provider echo noise
+                    # (GAP-09): redact it and keep streaming the answer
+                    # instead of aborting the turn into an empty answer.
+                    self._redactions.append(candidate)
                     self._marker_candidate = ""
-                    raise ValueError("LLM prose response contains a private marker")
+                else:
+                    self._marker_candidate = candidate
                 continue
 
             safe_parts.append(self._marker_candidate)
@@ -4447,6 +4456,14 @@ class _ProseWireDecoder:
         if self._state == "header":
             raise ValueError("LLM prose response is missing the answer marker")
         return self._filter_private_markers("", finish=True)
+
+
+def _report_prose_marker_redactions(decoder: _ProseWireDecoder) -> None:
+    if not decoder.redactions:
+        return
+    reporter = current_turn_trace()
+    if reporter is not None:
+        reporter.set_degradation("prose-private-marker-redacted")
 
 
 class _ProseTextNormalizer:
@@ -5239,6 +5256,7 @@ class _OpenAIProseRenderer:
         )
         normalizer.feed(decoder.feed(content))
         normalizer.feed(decoder.finish())
+        _report_prose_marker_redactions(decoder)
         return self._finalize_response(
             answer_text=normalizer.finish(),
             selection=decoder.selection,
@@ -5423,6 +5441,7 @@ class _OpenAIProseRenderer:
                 handle_ids=handle_ids,
             )
         normalizer.feed(final_chunk)
+        _report_prose_marker_redactions(decoder)
         finalized = self._finalize_response(
             answer_text=normalizer.finish(),
             selection=decoder.selection,

@@ -112,6 +112,19 @@ class TestTurnTraceRecord:
         with pytest.raises(ValueError):
             collector.set_degradation("made-up-token")
 
+    def test_prose_private_marker_redacted_token_accepted(self) -> None:
+        # B5: marker echo in LLM prose is redacted, the answer continues, and
+        # the turn trace carries this token (GAP-09 class).
+        collector = _make_collector()
+        collector.set_degradation("prose-private-marker-redacted")
+        trace = collector.finalize(
+            status="ok",
+            answer_subject=None,
+            citation_count=0,
+            ts_end=_fixed_start(),
+        )
+        assert trace.degradation == "prose-private-marker-redacted"
+
     def test_finalize_twice_raises(self) -> None:
         collector = _make_collector()
         collector.finalize(
