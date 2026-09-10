@@ -311,3 +311,13 @@
 - Deploy: 18188 restart issued 2026-09-11 (B5 code live after boot);
   replay r3 + smokes running; B3B2-D0 diagnostic dispatched in parallel
   (offline instrumentation; network steps reserved to main context).
+
+## 2026-09-11 — B5 ACCEPTED: marker-class empty answers cleared live (GAP-09 → GREEN)
+
+- Deploy: 18188 restarted with B5 code (9e1e79d4); ready; smokes
+  (丁文伯 / 具身智能枚举): 0 error events, done received on both.
+- Replay r3 (replay-b5-post-deploy): failures 6→2 — G1_t3 cleared,
+  G2_t2 marker-class SSE error CLEARED (the B5 target class); remaining
+  G3_t2 + G7 both in-register historical jitter signatures (G7 is the
+  B3/D0 target). Zero new signatures.
+- GAP-09 → GREEN (mechanism: redact-and-continue per approved design).

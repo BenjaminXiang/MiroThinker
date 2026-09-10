@@ -17,7 +17,7 @@
 | GAP-06 实体事实错误 | g4-t2: forbidden 李志豪 + 法定代表人⇒穆世龙 | `g4-t2` | RED: forbidden 命中 + fact 锚失败 |
 | GAP-07 本地引用缺失 | 本地答案轮 local_citations ≥1 | g1-t1/t2, g4-t1/t2, g6-t1, g7-t1, g8-t1, g17-t1/t2 | RED: 7/9 provenance 失败 |
 | GAP-08 web 内容污染 | web 引用不含导航/错误模板 | `CITATION_FORBIDDEN_PATTERNS`（仅 live 可判） | RED by evidence（存档无引用文本，live 断言已上线） |
-| GAP-09 LLM 守卫硬失败 | 守卫命中→模板降级不空答 | 故障注入测试（close-workbook-gaps B5） | **B5 设计已落盘**（2026-09-10，redact-and-continue + trace token）；实施派工中。RED by evidence（pro 档 g17-t1 空答案 knowledge_serving_isolated.py:4033；2026-09-10 环境漂移期两线同败、journalctl 证实） |
+| GAP-09 LLM 守卫硬失败 | 守卫命中→降级不空答（机制经设计裁定为 redact-and-continue） | 故障注入测试（close-workbook-gaps B5） | **GREEN**（2026-09-11 B5，worktree `9e1e79d4`）：守卫命中改为剔除标记继续输出 + trace token；31 项新测 RED 28→GREEN 31（含真实 HTTP 流集成测试）；部署后 replay marker 类签名清零（G1_t3/G2_t2 转通过），冒烟 0 错。原 RED: pro 档 g17-t1 空答案 + 2026-09-10 环境漂移期两线同败 |
 | GAP-10 关键词判定过松 | 本三层判定器本身 | run_testset.py + anchors.py | FIXED（本 change）：g2-t2/g2-t3/g4-t2 已翻 RED |
 | GAP-11 五轮无锚点 | g6-t2/g8-t2/g9/g10/g14 锚点策展 | anchors.py `human_verified` | FIXED（本 change）：5 轮已补 |
 | GAP-12 三命中率无目标线 | stage0 阈值裁决 | **已裁定**（2026-09-11，loop 自主决策）：点名≥90% / 语义≥70% / 关系≥70%（先按此执行，用户可改） | DECIDED |

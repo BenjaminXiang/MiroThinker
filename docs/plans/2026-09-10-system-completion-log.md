@@ -551,3 +551,35 @@
 ### 下一步
 
 - 派工 B5（空答止血）→ B3+B2（枚举与收窄）→ B4 → C1/C3/C4...
+
+## 2026-09-11 · 条目 15：B5 完成（GAP-09 翻绿）——空答止血生效，replay marker 类清零
+
+### 做了什么
+
+1. B5 实施落地（worktree `9e1e79d4`）：守卫命中从"抛错中止"改为"剔除标记、
+   继续输出"，两个消费点上报降级 token `prose-private-marker-redacted`；
+   连带的 admin-console 未知 token 抛错问题一并修复。
+2. 部署 18188（新代码上线）→ replay r3 + 冒烟。
+
+### 发现
+
+- **replay 失败 6→2**：切换期暴露的 G1_t3 与 G2_t2（marker 类 SSE 中断）**全部
+  转通过**；剩余 2 个（G3_t2 指代澄清、G7 枚举缺优必选）均为历史在册抖动签名
+  ——其中 G7 正是 B3/B2 的诊断目标。
+- 冒烟（丁文伯 / 具身智能枚举）0 错、done 到达——live 行为正常。
+
+### 怎么验证
+
+- 31 项新/改写测试 RED 28→GREEN 31（含真实 HTTP 流集成测试：注入 marker →
+  answer+done、全文无 marker、journal 带降级 token）；
+- 回归与基线逐数一致（hermetic 22 / B1 96 / serving 265 / admin 147）；
+- replay r3 签名对照 + 冒烟（证据：`replay-b5-post-deploy/`、`b5-deploy-verify.log`）。
+
+### 影响哪些问题
+
+- **GAP-09 关闭**（空答类失败在生产上消除）；replay 抖动面缩小。
+- 缺口板：GAP-01 / GAP-09 / GAP-15 已绿；下一步 GAP-02/04（B3+B2，D0 诊断在跑）。
+
+### 下一步
+
+- D0 结果出来 → 锁 B2-a/b/c + B3-a 修复面 → 派工实施。

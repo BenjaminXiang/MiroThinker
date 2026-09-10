@@ -85,9 +85,14 @@
        worktree commit.
        (green, baseline-identical: hermetic 22 + fast_boot 14; B1 96/26;
        serving 265; admin 147; 31 new/rewritten tests RED 28→GREEN 31)
-- [ ] B5.4 Evidence: same-day differential / replay re-run — marker-class
+- [x] B5.4 Evidence: same-day differential / replay re-run — marker-class
        empty answers disappear on both sides; C2.1f replay signatures
        re-classified (marker-class rows clear).
+       (DONE 2026-09-11: replay r3 post-deploy — failures 6→2; G1_t3 and
+       the G2_t2 marker-class SSE error CLEARED; remaining G3_t2 + G7 are
+       in-register historical jitter signatures (G7 = B3/D0 target).
+       Smokes (丁文伯 / 具身智能枚举): 0 error events, done received.
+       B5 accepted; GAP-09 → GREEN.)
 - [ ] B6.1 Education × region × industry combined person retrieval;
        g7-t1 ≥2 gold entities. (depends C1)
 
