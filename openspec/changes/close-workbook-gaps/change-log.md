@@ -148,3 +148,25 @@
   resealer stays committed as tooling. Sealed relationships.json will be
   larger than 2.9G (eligibility sections) — A/B boot measurement gate
   applies as designed.
+
+## 2026-09-10 — Third blocker: envelope/serving contract delta; C2.1p ports supplementary_field_values
+
+- Official sealer failed closed at envelope validation on exactly one
+  pydantic error: `index_projection_request.supplementary_field_values` —
+  the data line's 2026-09-07 multi-value enrichment field (`a226bd8`),
+  which widens run14's vector/lexical search surfaces at build time.
+  Structural: sealer hashes the full request but writes 6 scalars; loader
+  reconstructs from scalars — all three sites must learn the field.
+- Option (a) chosen (agent analysis, main-context verification of the
+  three edit sites): verbatim port — model field + sealer conditional
+  scalars passthrough + loader conditional reconstruction with
+  `exclude_unset=True`. The exclude_unset semantics keep s12f's
+  canonical dump byte-identical (rollback path boots with the same new
+  code) while run14 includes the field and reproduces the envelope hash.
+  No serving query-code change: the enrichment is baked into the index
+  content; serving needs contract-level understanding only.
+- Rejected: (b) strip the field (provenance lie), (c) re-run run14 with
+  serving-contract code (heaviest, discards the enrichment).
+- tasks.md: C2.1p inserted before C2.1r; C2.1d hard gate corrected to
+  the latest baseline (21 PASS + g17-t1 = 22 turns must not regress;
+  agent evidence: results-after-s18.json).

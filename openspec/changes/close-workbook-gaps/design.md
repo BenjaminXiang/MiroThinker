@@ -343,6 +343,43 @@ changes). Note the sealed relationships.json will be larger than 2.9G
 (it gains the eligibility sections) — the A/B boot measurement gate
 applies as designed.
 
+**Third blocker and the contract port (task C2.1p, inserted before the
+seal).** The official sealer's envelope validation failed closed on
+exactly one pydantic error: the run14 envelope's
+`index_projection_request.supplementary_field_values` — a field the data
+line added 2026-09-07 (`a226bd8`, multi-value enrichment: non-selected
+assertion values per canonical identity, baked into embedded/lookup
+content to widen the vector and lexical search surfaces — one of the
+run14 improvements C2 exists to bring online). The serving line has zero
+knowledge of it, and the gap is structural: sealer hashes the full
+request dump but writes only 6 named scalars; the loader reconstructs
+the request from scalars — so all THREE sites must learn the field or
+hash reproduction fails at boot. **Chosen fix (option a): port the field
+to the serving line, verbatim**, three small edits —
+① model (`index_projection.py`, after `prior_accepted_snapshot`):
+`supplementary_field_values: dict[str, dict[str, list[str]]] = {}`
+verbatim from data-rebuild `index_projection.py:277`; ② sealer
+(`s12c/build_serving_pack.py`): conditional passthrough into
+`index_projection_scalars` (only when the envelope dump carries the
+field); ③ loader (`serving_pack_loader.py` request reconstruction):
+pass the field only when present in scalars, and dump the request hash
+with `exclude_unset=True`. The ③ semantics are the rollback-compat
+lock: for s12f scalars (no field) the reconstructed dump is
+byte-identical to the pre-port canonical form (s12f pack keeps booting
+with the same new code — rollback path intact); for run14 scalars the
+field is included and reproduces the envelope hash. All other
+reconstruction fields are passed explicitly, so `exclude_unset` changes
+nothing else. Rejected: (b) strip the field from the envelope — the
+request would declare no supplementary values while the index contains
+them (provenance lie); (c) re-run the whole run14 pipeline with
+serving-contract code — heaviest, and throws away the multi-value
+enrichment. No serving query-code change is needed: the enrichment is
+baked into run14's index content at build time; serving only needs
+contract-level understanding (parse + hash-bind). Tests: a contract
+test pinning both sides (s12f-style scalars without the field →
+canonical dump unchanged; run14-style with the field → passthrough and
+hash reproduction), the B1 focused suite, and the hermetic pack tests.
+
 **Rejected alternatives (overall approach).** ① Repairing the assembly
 contract so run14 passes `_validate_result_graph` — the R1 swamp,
 unchanged. ② Building a new minimal serve entry — the pack-mode fast path

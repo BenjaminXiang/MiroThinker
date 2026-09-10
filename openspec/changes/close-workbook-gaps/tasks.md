@@ -67,6 +67,13 @@
          (worktree `9cfdabe`: `s12g/serving-bundle-run14.json` +
          `s12g/serve-18189-command.sh`; token-level diff asserted to be
          exactly the designed six args + port + 2 scratch env vars)
+  - [ ] C2.1p Port `supplementary_field_values` to the serving line
+         (inserted 2026-09-10 — third blocker; design.md §C2): verbatim
+         model field (data-rebuild `index_projection.py:277`) + sealer
+         conditional scalars passthrough + loader conditional
+         reconstruction with `exclude_unset=True` (s12f rollback-compat
+         lock). Contract test pins both sides; B1 focused suite +
+         hermetic pack tests green.
   - [ ] C2.1r Seal the run14 pack with the OFFICIAL envelope sealer
          (revised 2026-09-10: run14's genuine envelope found in
          data-rebuild s12a — 8.1G, Sep 8, same build run; design.md §C2):
@@ -88,8 +95,9 @@
          (58 → 459 expected), g2 GT-6 presence with addresses, 普渡
          control re-anchored to direct-scan bindings.
   - [ ] C2.1d Full 25-turn three-layer re-baseline on the scratch port.
-         Hard gate: the 9 PASS turns + g17-t1 from s12f all still pass;
-         regression → stop, no switch.
+         Hard gate: every turn green on the latest s12f baseline
+         (results-after-s18.json: 21 PASS + g17-t1 GREEN via B1 = 22
+         turns) still passes; regression → stop, no switch.
   - [ ] C2.1e Re-baseline gap-registry (GAP-15 closes; GAP-13 rows,
          GAP-02/04 ceilings re-measured); verification-c2.md landed.
   - [ ] C2.1f Switch 18188 (command file → run14, systemctl restart,
