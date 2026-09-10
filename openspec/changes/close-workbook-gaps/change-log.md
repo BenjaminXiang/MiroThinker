@@ -199,3 +199,29 @@
   普渡/优地/云迹 null — B3+B2 narrowing must keep the name-heuristic/
   web fallback path for null-address members).
 - tasks.md: C2.1p done, C2.1q inserted.
+
+## 2026-09-10 — Blocker ④: read-side enrichment strip block; C2.1s inserted; drift inventory classified
+
+- After C2.1q, the sealed pack passed `open_serving_pack_authority` IN
+  FULL on the first boot attempt (authority chain proven live; supplies
+  the dogfood phase the seal log did not echo). Boot then failed in the
+  knowledge-read composition: 903 public lookup docs carry a baked
+  `_supplementary` key (company 899/7,089, professor 4/3,958) that
+  serving's strict projection validation rejects. This is the READ half
+  of the multi-value enrichment; C2.1q's "one file = zero drift"
+  assumption was incomplete.
+- Option A chosen: port the data line's 14-line strip block
+  (`knowledge_read_isolated.py:7954-7967` — strip `_supplementary`/
+  `_quality_tier` from a copy, then validate; lineage/round-trip checks
+  unchanged) verbatim + pin test; then restart the boot. Rejected:
+  relax the model extra (weakens validation, fails round-trip), rebuild
+  run14 without the key (discards the enrichment).
+- Full two-line drift inventory of `knowledge_read_isolated.py` (16
+  hunks/338 lines) classified in `c2-boot-blocked-supplementary.md`;
+  only the strip block is ported. Named follow-ups: ① vector-trace
+  tolerance hunks — query-time fail-closed risk, C2.1d trips it → STOP
+  and fix as its own verified port; ② exact-phrase/identifier-fallback/
+  G6-containment hunks — genuine retrieval improvements, dedicated
+  convergence slice after B3+B2 (must not be smuggled into a boot-fix).
+- tasks.md: C2.1q/C2.1r marked done; C2.1s inserted; C2.1f reframed per
+  user policy (18188 switch routine + milestone live for user E2E).

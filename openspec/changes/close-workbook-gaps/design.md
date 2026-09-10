@@ -411,6 +411,41 @@ sealer lacks C2.1p's scalars passthrough, the pack would still fail the
 serving loader; (c) any validator bypass — forbidden. Same regression
 gate as C2.1p, then the seal re-runs.
 
+**Read-side half of the enrichment (task C2.1s, inserted 2026-09-10 —
+blocker ④).** After C2.1q, the official sealed pack passed
+`open_serving_pack_authority` IN FULL on the first boot attempt — the
+authority chain (manifest, marker, per-file hashes, request/result
+reproductions) is now proven in a live boot context (this also supplies
+the dogfood phase the seal log did not echo). The boot then failed in
+the knowledge-read composition: `_validated_public_projection` strictly
+validates each lookup document's embedded projection and 903 public
+docs carry a baked `_supplementary` key (`dict[str, list[str]]`; company
+899/7,089, professor 4/3,958, paper/patent 0) — the READ half of the
+multi-value enrichment. The data line's same function opens with a
+14-line strip block (`knowledge_read_isolated.py:7954-7967`: copy the
+document, drop `_supplementary`/`_quality_tier`, then validate — comment:
+"for wider lexical search; strip before validation (extra=forbid)";
+lineage and round-trip checks still run on the stripped copy, validation
+is not weakened). C2.1q's "one file = zero drift" assumption was
+therefore incomplete: the enrichment spans build (C2.1p/q) AND read
+(C2.1s). Chosen: port the 14 lines verbatim + a pin test (constructed
+lookup document carrying `_supplementary` → RED before, GREEN after).
+Rejected: (B) relaxing model extra — weakens validation and fails the
+round-trip check; (C) rebuilding run14 without `_supplementary` —
+discards the enrichment, disproportionate. Companion finding: the FULL
+two-line drift inventory of `knowledge_read_isolated.py` (16 hunks/338
+lines) is now classified in `.agents/runs/close-workbook-gaps/
+c2-boot-blocked-supplementary.md`; only the strip block is ported in
+C2.1s. Two named follow-ups, NOT silently ported: ① hunks 9–11 (vector
+trace tolerance: data line `rel_tol=1e-6`+warn+return vs serving
+`1e-12`+raise) — a query-time fail-closed risk; if the C2.1d baseline
+trips it, STOP and report, fix as its own verified port; ② hunks 13–16
+(exact-phrase `[lane=exact]` strip, identifier fallback, G6 long-title
+containment — genuine retrieval-behavior improvements) — a dedicated
+two-line convergence slice queued after B3+B2, with its own behavior
+evidence (the 22-turn gate baseline was measured on current serving
+code; behavior ports must not be smuggled into a boot-fix slice).
+
 **Rejected alternatives (overall approach).** ① Repairing the assembly
 contract so run14 passes `_validate_result_graph` — the R1 swamp,
 unchanged. ② Building a new minimal serve entry — the pack-mode fast path

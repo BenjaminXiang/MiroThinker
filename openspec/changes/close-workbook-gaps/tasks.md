@@ -77,14 +77,16 @@
          (worktree `3734f30`: 2 pin tests; hermetic 21 + B1 focused 96/26
          + fast_boot 14 identical to pre-port baseline; reconstruction
          trees verified 10/10, 6/6, 13/13, 13/13 explicit)
-  - [ ] C2.1q Port the remaining 4 build-path hunks (47 lines) of
+  - [x] C2.1q Port the remaining 4 build-path hunks (47 lines) of
          `index_projection.py` verbatim — two-line file reaches
          byte-identical zero drift (inserted 2026-09-10 — the sealer's
          envelope validator embeds a full deterministic index replay and
          demands build-level parity; envelope is self-consistent, serving
          build path is the divergent side). Same regression gate, then
          re-run the official seal.
-  - [ ] C2.1r Seal the run14 pack with the OFFICIAL envelope sealer
+         (worktree `174f141`; seal re-run then COMPLETED 14:34 — sealed
+         pack verified in main context)
+  - [x] C2.1r Seal the run14 pack with the OFFICIAL envelope sealer
          (revised 2026-09-10: run14's genuine envelope found in
          data-rebuild s12a — 8.1G, Sep 8, same build run; design.md §C2):
          serving-worktree `s12c/build_serving_pack.py --envelope <run14
@@ -96,9 +98,20 @@
          18189 command at the sealed pack. (First-iteration resealer
          `9a99ca2` stays committed as tooling — superseded, not the C2
          path; transcode rejected: genuine artifacts exist.)
+         (DONE 14:34: sealed pack `serving-pack-run14-sealed`, manifest
+         verified: release candidate-v2-20260819-r1, marker 8848197c…,
+         relationships 3.36G with eligibility sections)
+  - [ ] C2.1s Port the 14-line `_supplementary`/`_quality_tier` strip
+         block verbatim into serving `_validated_public_projection`
+         (inserted 2026-09-10 — blocker ④: the read-side half of the
+         multi-value enrichment; 903 public lookup docs carry the baked
+         key; data line `knowledge_read_isolated.py:7954-7967`). Pin test
+         (constructed doc with `_supplementary` → RED before, GREEN
+         after); same regression gate; then restart C2.1b.
   - [ ] C2.1b A/B boot on scratch port (localhost only, scratch
          access-log/corrections paths); measure boot wall-time and RSS —
-         2.9G relationships replay is the resource gate; prohibitive →
+         3.36G relationships + audited lookup view is the resource gate
+         (blocker ④ attempt peaked 28G before failing); prohibitive →
          stop and report.
   - [ ] C2.1c Reconciliation report: per-domain counts vs s12f
          (5,659 → 47,071; papers 563 → 24,520), 优必选 bindings
@@ -110,9 +123,11 @@
          turns) still passes; regression → stop, no switch.
   - [ ] C2.1e Re-baseline gap-registry (GAP-15 closes; GAP-13 rows,
          GAP-02/04 ceilings re-measured); verification-c2.md landed.
-  - [ ] C2.1f Switch 18188 (command file → run14, systemctl restart,
-         replay 7/7); s12f pack + old command file kept for rollback.
-         Production action — requires the user's go on the A/B evidence.
+  - [ ] C2.1f Switch 18188 (command file → run14 sealed, restart, replay
+         7/7); s12f pack + old command file kept for rollback. Routine
+         per user policy (2026-09-10): 18188 is the user's E2E entry and
+         the milestone must be live there for the user's experience —
+         execute once C2.1d passes, then report.
 - [ ] C3.1 Company→patent full relations + professor→company coverage (90
        candidates); 10-sample manual check.
 - [ ] C4.1 Paper↔professor canonical id links; paper detail lists involved
