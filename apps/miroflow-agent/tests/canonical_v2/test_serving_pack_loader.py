@@ -44,6 +44,7 @@ from src.data_agents.canonical_v2 import (
 from src.data_agents.canonical_v2.contracts import ReleaseVerification
 from src.data_agents.canonical_v2.index_projection import (
     IndexProjectionMaterializationReceipt,
+    IndexProjectionRequest,
 )
 from src.data_agents.canonical_v2.index_projection_isolated import (
     RecordedEmbeddingAdapter,
@@ -486,6 +487,61 @@ def test_generator_round_trip_reloads_exact_authority(
         authority.release_bundle.relationship_projection_request.model_dump(mode="json")
     )
     assert observed == authority.manifest.relationship_request_sha256
+
+
+def _reconstructed_index_request_kwargs() -> dict[str, Any]:
+    """Small stand-in payload mirroring the boot-time reconstruction fields."""
+
+    return {
+        "candidate_projection_request": {"release_id": RELEASE_ID},
+        "candidate_projection_result": {"release_id": RELEASE_ID},
+        "public_path_eligibility_requests": ({"request": "raw"},),
+        "public_path_eligibility_results": (),
+        "index_projection_version": "canonical-v2-index-projection-v1",
+        "vector_schema_version": "canonical-v2-vector-schema-v1",
+        "embedding_model": "embedding-test",
+        "internal_auxiliary_policy_version": "internal-evidence-anchor-v1",
+        "build_mode": "full",
+        "prior_accepted_snapshot": None,
+    }
+
+
+def test_index_request_reconstruction_without_supplementary_matches_pre_port() -> None:
+    """s12f-generation scalars: the dump stays byte-identical to the pre-port
+    canonical form (no ``supplementary_field_values`` key), and explicitly
+    passed defaults survive ``exclude_unset`` (C2.1p rollback-compat lock)."""
+
+    request = IndexProjectionRequest.model_construct(
+        **_reconstructed_index_request_kwargs()
+    )
+    dump_unset = request.model_dump(mode="json", exclude_unset=True)
+    assert "supplementary_field_values" not in dump_unset
+    assert dump_unset == {
+        key: value
+        for key, value in request.model_dump(mode="json").items()
+        if key != "supplementary_field_values"
+    }
+    assert "prior_accepted_snapshot" in dump_unset
+    assert dump_unset["prior_accepted_snapshot"] is None
+
+
+def test_index_request_reconstruction_with_supplementary_reproduces_hash() -> None:
+    """run14-generation scalars: the field passes through and the
+    ``exclude_unset`` dump hashes identically to the sealer-side plain dump
+    (C2.1p envelope-hash reproduction)."""
+
+    supplementary = {
+        "company-c-test": {"title": ["客座教授"], "industry": ["机器人"]},
+    }
+    request = IndexProjectionRequest.model_construct(
+        **_reconstructed_index_request_kwargs(),
+        supplementary_field_values=supplementary,
+    )
+    dump_unset = request.model_dump(mode="json", exclude_unset=True)
+    assert dump_unset["supplementary_field_values"] == supplementary
+    assert pack_loader._canonical_sha256(dump_unset) == pack_loader._canonical_sha256(
+        request.model_dump(mode="json")
+    )
 
 
 def test_missing_pack_directory_refuses(tmp_path: Path) -> None:

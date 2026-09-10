@@ -310,6 +310,12 @@ def build_serving_pack_from_authority(
             "prior_accepted_snapshot": index_request_dump["prior_accepted_snapshot"],
         },
     }
+    # Contract port C2.1p: pass the multi-value enrichment field through only
+    # when the envelope carries it, so both envelope generations seal cleanly.
+    if "supplementary_field_values" in index_request_dump:
+        relationships_document["index_projection_scalars"][
+            "supplementary_field_values"
+        ] = index_request_dump["supplementary_field_values"]
     file_sizes[pack_loader.PACK_RELATIONSHIPS_FILENAME] = _write_json(
         destination / pack_loader.PACK_RELATIONSHIPS_FILENAME,
         relationships_document,

@@ -271,6 +271,10 @@ class IndexProjectionRequest(ContractModel):
     internal_auxiliary_policy_version: NonEmptyStr
     build_mode: Literal["full", "incremental"]
     prior_accepted_snapshot: IndexProjectionPolicySnapshot | None = None
+    # Multi-value enrichment: non-selected assertion values per canonical
+    # identity, included in embedded_content and lookup_content to widen
+    # the vector and lexical search surfaces.
+    supplementary_field_values: dict[str, dict[str, list[str]]] = {}
 
     @model_validator(mode="after")
     def validate_envelope(self) -> IndexProjectionRequest:

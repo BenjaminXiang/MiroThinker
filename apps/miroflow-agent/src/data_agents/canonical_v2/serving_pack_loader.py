@@ -795,9 +795,24 @@ def open_serving_pack_authority(
             index_scalars.get("build_mode"), owner="index build mode"
         ),
         prior_accepted_snapshot=index_scalars.get("prior_accepted_snapshot"),
+        **(
+            {
+                "supplementary_field_values": index_scalars[
+                    "supplementary_field_values"
+                ]
+            }
+            if "supplementary_field_values" in index_scalars
+            else {}
+        ),
     )
+    # exclude_unset is the rollback-compat lock: packs sealed before the
+    # C2.1p contract port carry no such scalar, so the field stays unset and
+    # the dump is byte-identical to the pre-port canonical form; packs sealed
+    # from a multi-value envelope carry it and reproduce the envelope hash.
+    # Every other field above is passed explicitly, so exclude_unset changes
+    # nothing else.
     observed_index_request_sha256 = _canonical_sha256(
-        index_request.model_dump(mode="json")
+        index_request.model_dump(mode="json", exclude_unset=True)
     )
     if observed_index_request_sha256 != manifest.index_projection_request_sha256:
         raise ServingPackIntegrityError(
