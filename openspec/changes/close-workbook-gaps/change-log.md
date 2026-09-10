@@ -225,3 +225,24 @@
   convergence slice after B3+B2 (must not be smuggled into a boot-fix).
 - tasks.md: C2.1q/C2.1r marked done; C2.1s inserted; C2.1f reframed per
   user policy (18188 switch routine + milestone live for user E2E).
+
+## 2026-09-10 — C2.1s/b/c done; C2.1d gate amended to same-day double-run (LLM env drift)
+
+- C2.1s landed (43fa1340): strip block ported verbatim, function head
+  diff vs data line = zero; pin test (RED→GREEN, lineage-tamper negative)
+  + hermetic pack 22 + B1 96/26 + fast_boot 14.
+- C2.1b on the sealed pack: wall 696s (≤900), RSS peak 28.7G (≤32G;
+  16.9G at ready), responsive (优必选 query: full SSE, 17 grouped
+  patents). C2.1c closed: relationships 10,897 / patent_has_applicant
+  123 materialized (49 companies) — 450/128 ride lookup applicants +
+  read-side direct scan by design ("~123 of ~7,078", numbers match).
+- C2.1d aborted turn 6: empty_answer = `_filter_private_markers` raising
+  on echoed protocol markers; SAME failure on live 18188 (s12f,
+  untouched) today — LLM backend (deepseekv4flash) drifted post-9/9;
+  archived baseline unreproducible. Gate amended: same-day double run
+  (18188 s12f vs 18189 run14, 25×2; run14 not worse per turn; 2-1/2-3
+  普渡 differences attributed by the differential).
+- Queue note: the guard hard-fail → empty answer is GAP-09 live; B5
+  priority recommendation (before B3+B2) recorded, pending user nod.
+- tasks.md: C2.1s/b/c marked done; C2.1d rewritten; C2.1f wording keeps
+  differential gate.

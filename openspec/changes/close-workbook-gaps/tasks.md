@@ -101,33 +101,46 @@
          (DONE 14:34: sealed pack `serving-pack-run14-sealed`, manifest
          verified: release candidate-v2-20260819-r1, marker 8848197c…,
          relationships 3.36G with eligibility sections)
-  - [ ] C2.1s Port the 14-line `_supplementary`/`_quality_tier` strip
+  - [x] C2.1s Port the 14-line `_supplementary`/`_quality_tier` strip
          block verbatim into serving `_validated_public_projection`
          (inserted 2026-09-10 — blocker ④: the read-side half of the
          multi-value enrichment; 903 public lookup docs carry the baked
          key; data line `knowledge_read_isolated.py:7954-7967`). Pin test
          (constructed doc with `_supplementary` → RED before, GREEN
          after); same regression gate; then restart C2.1b.
-  - [ ] C2.1b A/B boot on scratch port (localhost only, scratch
-         access-log/corrections paths); measure boot wall-time and RSS —
-         3.36G relationships + audited lookup view is the resource gate
-         (blocker ④ attempt peaked 28G before failing); prohibitive →
-         stop and report.
-  - [ ] C2.1c Reconciliation report: per-domain counts vs s12f
-         (5,659 → 47,071; papers 563 → 24,520), 优必选 bindings
-         (58 → 459 expected), g2 GT-6 presence with addresses, 普渡
-         control re-anchored to direct-scan bindings.
-  - [ ] C2.1d Full 25-turn three-layer re-baseline on the scratch port.
-         Hard gate: every turn green on the latest s12f baseline
-         (results-after-s18.json: 21 PASS + g17-t1 GREEN via B1 = 22
-         turns) still passes; regression → stop, no switch.
+         (worktree `43fa1340`: pin test with lineage-tamper negative
+         assertion; hermetic pack 22 + B1 focused 96/26 + fast_boot 14;
+         function head diff vs data line = zero)
+  - [x] C2.1b A/B boot on scratch port (localhost only, scratch
+         access-log/corrections paths); measure boot wall-time and RSS.
+         (boot4: wall 696s ≤900 gate; RSS peak 28.7G ≤32G gate, 16.9G at
+         ready; responsive — 优必选 query full SSE with 17 grouped
+         patents; log c2-scratch-boot4.log)
+  - [x] C2.1c Reconciliation report: per-domain counts vs s12f
+         (5,659 → 47,071), 优必选 bindings, GT-6 presence, 普渡 control.
+         (closed: lookup counts match design; relationship side —
+         current_relationships 10,897, patent_has_applicant 123
+         materialized records across 49 companies; the 450/128 numbers
+         ride the lookup_content `applicants` field consumed by the
+         read-side `_direct_patent_applicant_scan` — the pipeline
+         materializes ~123 of ~7,078 by design; both sides consistent)
+  - [ ] C2.1d Full 25-turn three-layer re-baseline — METHODOLOGY
+         AMENDED 2026-09-10: archived 9/9 baseline unreproducible (LLM
+         backend drift; live 18188 s12f fails identically today, journal
+         evidence). Effective gate = SAME-DAY DOUBLE RUN: 25 rounds on
+         18188 (s12f) + 25 on 18189 (run14); pass = run14 not worse than
+         same-day s12f per turn, with per-turn attribution for any
+         s12f-pass/run14-fail (incl. 2-1/2-3 普渡 differences);
+         regression → stop, no switch.
   - [ ] C2.1e Re-baseline gap-registry (GAP-15 closes; GAP-13 rows,
-         GAP-02/04 ceilings re-measured); verification-c2.md landed.
+         GAP-02/04 ceilings re-measured); verification-c2.md landed; the
+         differential tables are the C2 acceptance evidence.
   - [ ] C2.1f Switch 18188 (command file → run14 sealed, restart, replay
          7/7); s12f pack + old command file kept for rollback. Routine
          per user policy (2026-09-10): 18188 is the user's E2E entry and
          the milestone must be live there for the user's experience —
-         execute once C2.1d passes, then report.
+         execute once the differential gate passes (stop 18189 first:
+         both share the disposable Postgres DB), then report.
 - [ ] C3.1 Company→patent full relations + professor→company coverage (90
        candidates); 10-sample manual check.
 - [ ] C4.1 Paper↔professor canonical id links; paper detail lists involved

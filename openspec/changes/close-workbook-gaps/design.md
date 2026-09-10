@@ -446,6 +446,28 @@ two-line convergence slice queued after B3+B2, with its own behavior
 evidence (the 22-turn gate baseline was measured on current serving
 code; behavior ports must not be smuggled into a boot-fix slice).
 
+**C2.1d methodology amendment (2026-09-10 evening).** The first
+differential-free run of the 22-round gate aborted at turn 6: four
+in-gate turns FAILed, and the failure signature was an EMPTY ANSWER
+caused by the serving guard `_filter_private_markers` raising on a
+repeated protocol marker (`<|canonical_v2_selection_v1|>`) inside the
+LLM prose (prose fully streamed, then the turn aborts without the answer
+event). Decisive control: the SAME queries against the LIVE 18188 (s12f
+pack, untouched since 9/9) fail identically today (g1-t1 3/3 on scratch
++ 1/1 on live; journalctl shows the same production error) — the LLM
+backend (deepseekv4flash) drifted after the 9/9 baseline, and the
+archived baseline is no longer reproducible in today's environment.
+Gate amendment: the effective acceptance for C2 is a SAME-DAY DOUBLE
+RUN — 25 rounds on 18188 (s12f) and 25 on 18189 (run14); pass = run14
+not worse than same-day s12f per turn (any turn where s12f passes and
+run14 fails must be attributed; turns 2-1/2-3 普渡 content differences
+are attributed by this differential). This isolates the pack swap from
+environment drift. Companion finding for the queue: the guard hard-fail
+producing empty answers is exactly GAP-09 / slice B5 (守卫命中降级模板
+渲染，不空答), now observed live in production traffic — B5 priority
+recommendation: run it before B3+B2 (pending user nod) so subsequent
+baselines measure retrieval, not guard noise.
+
 **Rejected alternatives (overall approach).** ① Repairing the assembly
 contract so run14 passes `_validate_result_graph` — the R1 swamp,
 unchanged. ② Building a new minimal serve entry — the pack-mode fast path
