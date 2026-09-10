@@ -278,3 +278,19 @@
 - Process note: agent-4 stalled twice on unattended approval prompts —
   network verification and closure executed from the main context
   (loop-prompt rule updated).
+
+## 2026-09-11 — B3+B2 full design landed (enumeration & narrowing) before dispatch
+
+- Line-verified mechanism map (explore report): 3 independent enumeration
+  detections; `required_member_ids` never set (required-member branch
+  dead); `_commit_prose_scope` narrows the carried displayed set to
+  LLM-selected entities; two canonical-only filters drop non-canonical
+  members; web narrowing probes capped at ≤6 + prefix; coverage counts
+  semantically wrong (retrieved ≠ displayed).
+- Design: D0 diagnostic gate first (per-entity drop-stage table); fixes
+  B2-a faithful manifest / B2-b full-set per-member verdicts / B2-c
+  coverage statement + count semantics / B3-a completeness self-check +
+  required_member_ids wiring; hook = chat layer (chat:1836-1868)
+  preferred over read layer. Acceptance fixtures listed verbatim.
+- tasks.md: B3B2-D0 + B2.1a-c + B3.1a-b expanded. Dispatch after B5
+  completes (one writer).

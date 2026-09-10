@@ -480,20 +480,88 @@ today (5,659). GREEN: serving boots run14, reconciliation report lands,
 25-turn re-baseline shows no regression on previously-green turns, replay
 7/7 after the switch, gap-registry re-baselined.
 
-## B2+B3 — combined "enumeration & narrowing" slice (stub, starts after C2)
+## B2+B3 — combined "enumeration & narrowing" full design (2026-09-11, starts after B5)
 
-- B3 mechanism: enumeration completeness self-check against the retrieval
-  set before rendering; shortfall triggers one supplemental probe, then
-  honest wording. On run14 the local GT entities exist (g2-t1 five, g2-t2
-  six, g5-t2 eight), so recall-side completeness is reachable.
-- B2 mechanism: displayed-set manifest must not drop non-canonical
-  displayed members (`canonical_v2_chat.py:2035` captures only
-  `handle.kind == "canonical"` — g5-t2 narrowed 5 displayed to "上述两家");
-  narrowing verdicts need a per-member path (local geography claim →
-  name heuristic → web verdict for unbound members); answers carry a
-  coverage statement （共 N 家，确认 M，排除 K，未决 J).
-- Acceptance: g2-t1 five GT entities present; g2-t2 ≥5/6; g5-t2 ≥9/12 key
-  points; replay 7/7.
+**Live evidence (run14 line, 2026-09-10 differential).** g2-t1 misses
+开普勒/九号; g2-t2 answers "上述十家企业…总部都在深圳" while only 3/6 GT
+pool entities appear; g5-t2 answers "上述四家企业均为深圳企业" (2/12 key
+points). All three fixtures have their GT entities IN the pack (C2
+reconciliation: g2 GT-6 present with addresses 3/6; g5 GT-11 8 in pack) —
+so the live losses are pipeline-side, not data-side.
+
+**Mechanism map (line-verified 2026-09-11, `.agents` explore report).**
+- Enumeration is detected THREE times independently (planning
+  `serving:616`+markers `serving:2766-2778`; chat `_enumeration_context`
+  `chat:561-571`; answer selector `serving:5700-5718`) with no unified
+  classifier. `_ENUMERATION_CANDIDATE_WINDOW=48` expands the planner
+  window; live bundle max_candidates=8/max_web=8.
+- **`required_member_ids` is NEVER set by the chat layer** →
+  `read:4285-4295` required-member outcomes are dead code → representative
+  mode only; per-member completeness outcomes never produced.
+- Answer entities come from the LLM's selection over `displayed_entities`
+  (`serving:4954-4966`, prompt `serving:5131-5138`) and
+  `_commit_prose_scope` (`answer:2488-2559`) then **narrows the carried
+  displayed set to the LLM-selected entities** — next turn sees the
+  truncated set.
+- Two canonical-only filters drop non-canonical displayed members:
+  `_displayed_ids` (`chat:2047`) and `_next_referent_history` (`chat:714`).
+- Narrowing per-member evaluation exists but is partial: deterministic
+  geography constraints (`read:6440-6553`, incl. name heuristic
+  `:6535-6546`) apply to local candidates; web probes
+  (`serving:2919-2968`) run only for ≤6 members with
+  `company:`/`company-`/`web-handle:` prefixes, probing `"{name} 总部"`
+  (`serving:3965`) and binding geography unconditionally on hit
+  (`serving:3846-3852`). Final per-member verdicts de-facto reste with the
+  prose LLM (prompt rule `serving:5102-5103`).
+- Coverage statements exist (deterministic `answer:1272-1290`; prose
+  payload `serving:4999-5030`, prompt `serving:5144-5146`) but the
+  representative-mode counts are semantically wrong: `displayed_ids/count`
+  = retrieved = available (`read:6925-6933`), NOT what the answer actually
+  showed.
+
+**D0 diagnostic gate (RED artifact — no fix lands before it).** Replay
+g2-t1 / g2-t2 / g5-t2 on the live run14 line and build a per-entity
+drop-stage table: ① not retrieved (window/lane); ② retrieved but not in
+displayed set (selection); ③ in displayed set but absent from answer
+(prose selection); ④ in answer but substring-mismatch (naming/alias).
+Method: endpoint queries (main context runs network) + turn artifacts;
+target queries read from `run_testset.py`'s query table.
+
+**Chosen fixes (final shape locked by D0; intent by stage).**
+- **B2-a faithful carried manifest**: the committed session carries ALL
+  displayed members as (kind, id, name) — canonical-only filtering stays
+  ONLY where identity binding requires canonical ids (relationship
+  binding, plan display set). Fixes the two filter sites.
+- **B2-b per-member narrowing for the full carried set**: extend the
+  existing probe path so every carried member gets a verdict (canonical
+  local claim → name heuristic → web probe); if budget caps the probes,
+  the answer must state the uncapped remainder honestly instead of
+  claiming "均为深圳企业".
+- **B2-c coverage statement** for narrowing: 共 N 家 / 确认 M / 排除 K /
+  未决 J, rendered from actual per-member outcomes; fix the
+  representative-mode count semantics so displayed counts reflect the
+  displayed set, not the retrieved set.
+- **B3-a enumeration completeness self-check before rendering**:
+  reconcile the retrieved candidate set (claims/handles) against the
+  answer's selected entities; on shortfall of strong local candidates,
+  trigger ONE supplemental probe (existing `SupplementalBudget`) and/or
+  set `required_member_ids` from the retrieved strong set so
+  `read:4285-4295` per-member outcomes finally run; then honest wording.
+  Hook: chat-layer `chat:1836-1868` (holds coverage + handles + displayed
+  set + planner/reader) preferred over read-layer `read:8147-8172`
+  (cannot see which key entities are missing without a pass-through).
+
+**Acceptance.** g2-t1 entities 5/5 (普渡/开普勒/云迹/九号/擎朗) +
+key_points ≥0.8; g2-t2 pool ≥5/6 (安赛步/小村/中科世界/艾唯尔/锐曼/普渡);
+g5-t2 ≥9/12 key_points; replay zero new signatures; same-day differential
+non-regression; latency not worse than the C2 baseline (p50/p95 within
+noise).
+
+**Rejected.** ① Blanket window/lane enlargement — cost without precision.
+② Prompt-only fixes — no retrieval reconciliation, incompleteness
+persists. ③ Read-layer-only hook — cannot see the missing-key-entity
+signal without new pass-through plumbing (larger blast radius than the
+chat hook).
 
 ## B5 — guard-hit graceful degradation: redact-and-continue (full design, 2026-09-10)
 
