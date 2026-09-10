@@ -495,6 +495,58 @@ today (5,659). GREEN: serving boots run14, reconciliation report lands,
 - Acceptance: g2-t1 five GT entities present; g2-t2 ≥5/6; g5-t2 ≥9/12 key
   points; replay 7/7.
 
+## B5 — guard-hit graceful degradation: redact-and-continue (full design, 2026-09-10)
+
+**Problem (live, production).** The drifted LLM backend (deepseekv4flash)
+sometimes echoes the prose protocol markers
+(`<|canonical_v2_selection_v1|>` / `<|canonical_v2_answer_v1|>`) inside the
+answer prose. `_ProseWireDecoder._filter_private_markers`
+(`knowledge_serving_isolated.py:4296`) treats any full marker match in the
+prose region as fatal: it raises `ValueError("LLM prose response contains a
+private marker")` (:4311). In the STREAM path (`stream()`, :5387) that raise
+happens after chunks were already published → the SSE turn aborts without
+the answer/done events → user-visible EMPTY ANSWER (prose partially or fully
+streamed, then error). Production evidence 2026-09-10: reproducible on the
+untouched s12f line (journalctl + replay 9-failure set), environment-class,
+and exactly the GAP-09 defect class (workbook baseline §9.2: 守卫命中降级，
+不空答).
+
+**Design.** A marker in the prose region is echo noise, not a safety leak —
+the marker text must never reach the user, and redaction guarantees that as
+strongly as aborting, without destroying the answer:
+
+1. `_ProseWireDecoder._filter_private_markers`: on a complete marker match,
+   drop the buffered candidate characters instead of raising, and record a
+   redaction (count + which marker). The partial-candidate behavior at
+   `finish` stays as-is.
+2. Callers (`_parse_response` sync path :5236; `stream()` :5387): after
+   decode, when any redaction happened, call
+   `current_turn_trace().set_degradation("prose-private-marker-redacted")`
+   (same `TurnTraceReporter` mechanism as `web-lane-unavailable` at :1249).
+   The answer continues normally — no template fallback for this class; the
+   deterministic fallback stays reserved for genuine synthesis failures.
+3. Selection integrity: verify at implementation start (line-level) that the
+   raise site is reachable only from prose-publishing states and that a
+   legitimate selection header never routes through
+   `_filter_private_markers` — redaction must be provably incapable of
+   corrupting a valid header. Also verify: (a) no caller catches this
+   ValueError for a fallback branch; (b) whether the flag should ride
+   `ProseSynthesisResult` or only the trace reporter.
+
+**Acceptance (RED→GREEN).** ① decoder unit: prose containing a full marker →
+RED today (raises); GREEN: marker removed, surrounding text byte-intact,
+redaction recorded; ② stream-path integration: injected-marker completion →
+stream completes with the done event, no error event, trace carries the
+degradation token; ③ regression: hermetic pack + B1 focused suites + fast_boot
+unchanged; ④ evidence: same-day differential / replay re-run — marker-class
+empty answers disappear from BOTH sides (fail open into complete answers).
+
+**Rejected.** ① Keep aborting — it is the live GAP-09 defect (user-visible
+empty answers). ② Template-fallback for this class — discards fully streamed
+good prose; template rendering stays as the last-resort path for genuine
+synthesis failure. ③ Prompt-side marker suppression alone — provider drift is
+outside our control; the guard must be robust regardless.
+
 ## B4–B6, C1, C3–C5 — design stubs (filled at slice start)
 
 - **B2**: narrowing = previous displayed-id set ∩ filter; the displayed-id
@@ -504,8 +556,7 @@ today (5,659). GREEN: serving boots run14, reconciliation report lands,
   wording (not fabricated completeness).
 - **B4**: citation floor enforced at render; web boilerplate filtered by a
   template blocklist at citation-assembly time.
-- **B5**: guard-hit path returns the template-rendered answer with a
-  degradation token in the turn trace.
+- **B5**: full design above (redact-and-continue + trace token, 2026-09-10).
 - **B6**: combine structured education/region/industry constraints; blocked
   on C1 field quality for `key_personnel.education_structured`.
 - **C1**: field-quality contract thresholds — professor profile_summary

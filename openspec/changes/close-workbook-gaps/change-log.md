@@ -246,3 +246,17 @@
   priority recommendation (before B3+B2) recorded, pending user nod.
 - tasks.md: C2.1s/b/c marked done; C2.1d rewritten; C2.1f wording keeps
   differential gate.
+
+## 2026-09-10 — B5 full design landed (redact-and-continue) ahead of dispatch
+
+- Live defect recap: drifted LLM echoes prose protocol markers; the
+  decoder raises mid-stream → SSE abort → empty answer (production,
+  both lines; GAP-09 class).
+- Design (design.md §B5): marker-in-prose is echo noise → redact the
+  marker, continue the answer, trace token
+  `prose-private-marker-redacted` via the existing TurnTraceReporter;
+  template fallback stays reserved for genuine synthesis failure.
+  Implementation-start verifications listed (raise-site reachability /
+  no fallback catcher / flag plumbing), RED→GREEN acceptance, evidence
+  via same-day differential (marker-class empties disappear both sides).
+- tasks.md: B5.1–B5.4 expanded. Dispatch waits for C2 closure.
