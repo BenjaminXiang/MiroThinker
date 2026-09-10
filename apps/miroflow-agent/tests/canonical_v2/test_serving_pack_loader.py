@@ -43,6 +43,7 @@ from src.data_agents.canonical_v2 import (
 )
 from src.data_agents.canonical_v2.contracts import ReleaseVerification
 from src.data_agents.canonical_v2.index_projection import (
+    IndexProjectionIntegrityError,
     IndexProjectionMaterializationReceipt,
     IndexProjectionRequest,
 )
@@ -542,6 +543,46 @@ def test_index_request_reconstruction_with_supplementary_reproduces_hash() -> No
     assert pack_loader._canonical_sha256(dump_unset) == pack_loader._canonical_sha256(
         request.model_dump(mode="json")
     )
+
+
+def test_public_projection_strips_enrichment_keys(
+    serving_fixture: _PackFixture,
+) -> None:
+    """run14-generation packs bake ``_supplementary``/``_quality_tier`` into
+    ``lookup_content`` for wider lexical search; the read path strips both
+    from a copy before typed validation, so lineage and round-trip checks
+    still bind the projection exactly (C2.1s boot unblock)."""
+
+    document = next(
+        doc
+        for doc in serving_fixture.bundle.index_result.lookup_documents
+        if doc.domain == "company"
+    )
+    enriched_content = json.dumps(
+        {
+            **json.loads(document.lookup_content),
+            "_supplementary": {"technology_route_summary": ["extra search text"]},
+            "_quality_tier": "silver",
+        },
+        ensure_ascii=False,
+    )
+    enriched = document.model_copy(
+        update={
+            "lookup_content": enriched_content,
+            "lookup_content_sha256": hashlib.sha256(
+                enriched_content.encode("utf-8")
+            ).hexdigest(),
+        }
+    )
+    projection = isolated_read._validated_public_projection(enriched)
+    assert json.loads(projection.model_dump_json()) == json.loads(
+        document.lookup_content
+    )
+    tampered = enriched.model_copy(
+        update={"source_projection_content_sha256": "0" * 64}
+    )
+    with pytest.raises(IndexProjectionIntegrityError):
+        isolated_read._validated_public_projection(tampered)
 
 
 def test_missing_pack_directory_refuses(tmp_path: Path) -> None:

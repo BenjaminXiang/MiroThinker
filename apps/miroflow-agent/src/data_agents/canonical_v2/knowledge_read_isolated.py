@@ -8068,6 +8068,20 @@ def _read_bound_documents(
 def _validated_public_projection(
     document: LookupProjectionDocument,
 ) -> PublicProjection:
+    # Multi-value enrichment adds _supplementary/_quality_tier to
+    # lookup_content for wider lexical search; strip before Pydantic
+    # validation (the projection models have extra="forbid").
+    content = document.lookup_content
+    if isinstance(content, str) and ("_supplementary" in content or "_quality_tier" in content):
+        try:
+            parsed = json.loads(content)
+            parsed.pop("_supplementary", None)
+            parsed.pop("_quality_tier", None)
+            document = document.model_copy(
+                update={"lookup_content": json.dumps(parsed, ensure_ascii=False, sort_keys=True, separators=(",", ":"))}
+            )
+        except (json.JSONDecodeError, ValueError):
+            pass
     if document.domain == "company":
         projection: PublicProjection = CompanyProjection.model_validate_json(
             document.lookup_content
