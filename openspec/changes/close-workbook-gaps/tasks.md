@@ -67,13 +67,23 @@
          (worktree `9cfdabe`: `s12g/serving-bundle-run14.json` +
          `s12g/serve-18189-command.sh`; token-level diff asserted to be
          exactly the designed six args + port + 2 scratch env vars)
-  - [ ] C2.1p Port `supplementary_field_values` to the serving line
+  - [x] C2.1p Port `supplementary_field_values` to the serving line
          (inserted 2026-09-10 — third blocker; design.md §C2): verbatim
          model field (data-rebuild `index_projection.py:277`) + sealer
          conditional scalars passthrough + loader conditional
          reconstruction with `exclude_unset=True` (s12f rollback-compat
          lock). Contract test pins both sides; B1 focused suite +
          hermetic pack tests green.
+         (worktree `3734f30`: 2 pin tests; hermetic 21 + B1 focused 96/26
+         + fast_boot 14 identical to pre-port baseline; reconstruction
+         trees verified 10/10, 6/6, 13/13, 13/13 explicit)
+  - [ ] C2.1q Port the remaining 4 build-path hunks (47 lines) of
+         `index_projection.py` verbatim — two-line file reaches
+         byte-identical zero drift (inserted 2026-09-10 — the sealer's
+         envelope validator embeds a full deterministic index replay and
+         demands build-level parity; envelope is self-consistent, serving
+         build path is the divergent side). Same regression gate, then
+         re-run the official seal.
   - [ ] C2.1r Seal the run14 pack with the OFFICIAL envelope sealer
          (revised 2026-09-10: run14's genuine envelope found in
          data-rebuild s12a — 8.1G, Sep 8, same build run; design.md §C2):

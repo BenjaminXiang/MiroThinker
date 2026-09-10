@@ -380,6 +380,37 @@ test pinning both sides (s12f-style scalars without the field →
 canonical dump unchanged; run14-style with the field → passthrough and
 hash reproduction), the B1 focused suite, and the hermetic pack tests.
 
+**Sealer replay-level convergence (task C2.1q, inserted 2026-09-10).**
+C2.1p landed clean (worktree `3734f30`: 2 pin tests, hermetic pack 21,
+B1 focused 96/26, fast_boot 14 — all identical to the pre-port baseline;
+reconstruction trees verified 10/10, 6/6, 13/13, 13/13 explicit so
+`exclude_unset` is provably inert for s12f). The re-run seal passed the
+field validation but refused deeper:
+`consumer handoff index request is cross-wired from its release bundle`
+— the envelope validator (`knowledge_build_isolated.py:1824-1835`)
+embeds a full deterministic index replay
+(`create_ephemeral_index_projection_builder().build(request)`) and
+demands field-equal reproduction of `release_bundle.index_result`. The
+serving line's build path lacks the data line's 47 lines of enrichment
+consumption (4 hunks in the same `index_projection.py`: `build()` call
+sites, `_public_embedded_content` supplementary/team_description/
+`_quality_tier`, `_vector_points`/`_lookup_documents` merge) — the code
+that shaped run14's index content. The envelope is self-consistent (the
+data line's validator is verbatim-identical, no bypass; separately, the
+data line carries a private `SERVING_PACK_SKIP_HASH_VERIFY=1` hash
+backdoor the serving line correctly lacks — that backdoor is how the
+half-sealed pack ever booted). So: C2.1p's "contract-level suffices"
+holds for the pack loader (thin serve never replays), but the OFFICIAL
+sealer requires build-level parity. **Chosen fix (option a): port the
+remaining 4 hunks verbatim — two-line `index_projection.py` reaches
+byte-identical zero drift** (dependencies verified self-contained:
+`domain_projection_models.py` has no two-line diff; side benefit:
+`knowledge_read_isolated.py:818/1866` full-validation replays become
+bit-consistent too). Rejected: (b) seal with data-line code — their
+sealer lacks C2.1p's scalars passthrough, the pack would still fail the
+serving loader; (c) any validator bypass — forbidden. Same regression
+gate as C2.1p, then the seal re-runs.
+
 **Rejected alternatives (overall approach).** ① Repairing the assembly
 contract so run14 passes `_validate_result_graph` — the R1 swamp,
 unchanged. ② Building a new minimal serve entry — the pack-mode fast path

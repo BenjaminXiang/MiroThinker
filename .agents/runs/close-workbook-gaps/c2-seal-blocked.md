@@ -73,3 +73,59 @@ consumer_handoff.index_projection_request.supplementary_field_values
 - C2.1b–e 阻塞待 (a) 或等效决策。C2.1c 已备好的对照基线：s12f lookup 四域
   company 1,737 / paper 563 / patent 1,931 / professor 1,428 = 5,659；run14 侧
   7,089 / 24,520 / 11,504 / 3,958 = 47,071；25 轮门 = after-s18 基线 21 PASS + g17-t1。
+
+---
+
+## 追加：第二次封印拒绝（C2.1p 移植后，2026-09-10）— replay 级 build-path 代差
+
+**C2.1p 已落地并验证（worktree `3734f30`）**：模型字段移植 + 封印器条件透传 +
+loader exclude_unset 锁；2 条新引脚测试 + hermetic pack 21 + B1 聚焦 96/26 + fast_boot/
+embedded_content 14 全绿。移植后重跑官方封印（同一命令，日志续写 c2-seal.log），
+**字段校验已通过**，但信封校验在更深处第二次 fail-closed：
+
+```
+serving pack build failed: ValidationError: 1 validation error for CompleteCandidateBuildEnvelope
+consumer_handoff
+  Value error, consumer handoff index request is cross-wired from its release bundle
+```
+
+### 根因定位
+
+失败校验器：`knowledge_build_isolated.py:1824-1835`（`CompleteCandidateConsumerHandoff.
+validate_artifact_graph`）——用 `create_ephemeral_index_projection_builder().build(
+index_projection_request)` **确定性重放**索引投影并与 `release_bundle.index_result`
+逐字段相等比对。重放本身成功（未报 "cannot be replayed exactly"），但结果不符：
+serving 线的 build path（`_public_embedded_content` / `_vector_points` /
+`_lookup_documents` / `build()` 调用点）**缺少数据线的 enrichment 消费**——
+正是 C2.1p diff 时发现、经设计确认"服务于薄加载永不执行、契约移植不需要"而
+刻意未移植的那 47 行（`supplementary_by_canonical` 合流、`team_description` 入
+embedded_content、PaperProjection `_quality_tier`）。run14 的索引内容就是带这些
+enrichment 构建的，serving 线重放自然复现不了。
+
+**信封本身自洽**：数据线有**逐字相同的校验器**（data-rebuild
+`knowledge_build_isolated.py:1970-1979`，无环境旁路），信封是数据线代码写出来的
+（写出时过了该校验）；不一致的是 serving 线的 build path，不是信封。
+
+### 结论与选项（归主上下文决定，本切片未执行）
+
+C2.1p 的"契约级理解（parse+hash-bind）就够"对 **pack loader** 成立（薄加载不重放），
+但**官方封印器的信封校验内嵌了完整 build 重放**——封印路径要求的是 **build 级对等**。
+选项：
+
+- **(a)（建议）把剩余 build-path hunk 也逐字移植**（同一文件 `index_projection.py`，
+  4 个 hunk 共 47 行：`build()` 两个调用点、`_public_embedded_content` 的
+  supplementary/team_description/_quality_tier、`_vector_points`、`_lookup_documents`
+  的 supp 合流）。移植后两线该文件**逐字节一致**（最干净的零漂移终态）；
+  依赖已核实自含（`domain_projection_models.py` 两线无差异，`team_description`
+  字段两侧都在）。附带收益：`knowledge_read_isolated.py:818/1866` 的全量校验重放
+  也变为位级一致。需要回归：同一套聚焦套件 + hermetic pack + fast_boot。
+- (b) 用数据线代码跑封印——但数据线 s12c 封印器没有 C2.1p 的 scalars 透传，
+  封出的包 serving loader 复现不了 request 哈希（启动仍会 fail-closed）；
+  跨工作区协调两线封印器版本，不洁净。不推荐。
+- (c) 给封印器/校验器加旁路——fail-closed 契约是保护我们的东西，永不削弱。禁止。
+
+### 现场状态（追加）
+
+- C2.1p commit：worktree `3734f30`；第二次封印日志续写在 c2-seal.log 尾部。
+- 无半成品目录（封印器在校验阶段拒绝，未建目录）；信封/索引/生产未动。
+- C2.1b–e 阻塞待 (a) 或等效决策。

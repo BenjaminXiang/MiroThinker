@@ -170,3 +170,32 @@
 - tasks.md: C2.1p inserted before C2.1r; C2.1d hard gate corrected to
   the latest baseline (21 PASS + g17-t1 = 22 turns must not regress;
   agent evidence: results-after-s18.json).
+
+## 2026-09-10 — C2.1p landed (3734f30); second seal refusal: replay-level build-path delta; C2.1q approved
+
+- C2.1p verified: 2 pin tests + hermetic pack 21 + B1 focused 96/26 +
+  fast_boot 14, all identical to the pre-port baseline; reconstruction
+  trees verified fully explicit (exclude_unset provably inert for s12f).
+- Re-run seal passed field validation, then refused deeper: "consumer
+  handoff index request is cross-wired from its release bundle" — the
+  envelope validator (`knowledge_build_isolated.py:1824-1835`) embeds a
+  full deterministic index replay; the serving build path lacks the data
+  line's 47 enrichment-consumption lines (4 hunks, same
+  `index_projection.py`). Envelope self-consistent (data-line validator
+  verbatim, no bypass). Discovery: the data line carries a private
+  `SERVING_PACK_SKIP_HASH_VERIFY=1` backdoor (18 lines) — that is how the
+  half-sealed pack ever booted; the serving line correctly lacks it.
+- Option (a) approved: port the remaining 4 hunks verbatim → two-line
+  `index_projection.py` byte-identical (zero-drift end state;
+  `domain_projection_models.py` confirmed no-diff; side benefit:
+  `knowledge_read_isolated.py:818/1866` replays become bit-consistent).
+  Rejected: (b) data-line sealing (their sealer lacks C2.1p scalars
+  passthrough), (c) validator bypass (forbidden).
+- C2.1c lookup-side reconciliation landed (agent, pre-computed):
+  5,659→47,071 per domain; 优必选 450 id bindings (s12f 58; entity
+  re-normalized `company-c-b2aac54891e3fce8c98612d8`; by-name sightings
+  459 = 450 + 9 unbound); total bindings 7,650 as designed; 普渡 128;
+  GT-6 all in pack, addresses filled 3/6 （越疆/优必选/速腾聚创 yes;
+  普渡/优地/云迹 null — B3+B2 narrowing must keep the name-heuristic/
+  web fallback path for null-address members).
+- tasks.md: C2.1p done, C2.1q inserted.
