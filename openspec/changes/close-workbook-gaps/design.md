@@ -304,37 +304,44 @@ envelope**, so there is no honest way to mint these bindings except
 recomputing them from the artifacts. The loader is correct; the pack is
 the defect.
 
-**Repair (inserted as task C2.1r, before the A/B boot):** build a
-deterministic **resealer** — `s12g/reseal_serving_pack.py`, sibling of the
-envelope sealer — that seals a pack from its own artifacts:
-`--source-pack` (half-sealed run14 pack, read-only) + `--index-root`
-(live run14 index, read-only) → fresh `--pack-dir`
-(`/var/tmp/mirothinker-data-v2/serving-pack-run14-resealed/`). It copies
-the five pack files, then recomputes **every loader-bound manifest field
-from the artifacts**: per-file hashes; marker hash/root/forbidden paths
-(from the marker); `embedding_model_id` (from the live-index receipt,
-asserted uniform across projections); catalog/relationship/candidate/
-internal-result hashes (from the pack's own JSON payloads);
-`relationship_request_sha256` and `index_projection_request_sha256` (by
-rebuilding the requests exactly as the loader does); `index_result_
-content_sha256` (by reconstructing the `IndexProjectionResult` from the
-live snapshot + carried policy fields, exactly as the loader does);
-`build_manifest.published_projections` ← the run14 candidate result's
-projections, then re-binding `build_manifest.manifest_sha256` and
-`release_verification`. Pure provenance fields are carried, not invented:
-`index_policy_snapshot` / `index_rebuild_decisions` (assert their
-embedding model matches the receipt) stay as the p4 pipeline record, and
-the reseal records itself via `generator_run_id = c2-reseal-20260910-v1`
-+ fresh `generated_at`. The resealer then **dogfoods the new pack through
-`open_serving_pack_authority`** and refuses to ship unless the full
-authority opens clean — the same proof the envelope sealer gives.
-Rejected alternatives: ① in-place hash patch of the half-sealed pack —
-destroys the evidence artifact and repeats the Sep-9 partial-surgery
-mistake one field at a time; ② running the full envelope build for
-run14 — the R1 swamp, unchanged; ③ loosening the loader — the fail-closed
-contract is the thing protecting us, never weakened. After the reseal,
-C2.1b–f run against the resealed pack (the 18189 command's
-`--serving-pack` path is updated; nothing else changes).
+**Repair (revised 2026-09-10, second iteration): seal with the OFFICIAL
+envelope sealer.** The resealer was built (worktree `9a99ca2`,
+`s12g/reseal_serving_pack.py`) and its first run exposed a deeper layer:
+run14's `relationships.json` candidate section is an OLD-generation
+container (single `projections` array + `inclusion_decisions`, 20 pydantic
+errors vs the current typed-split contract), and four loader-required
+sections are missing entirely (`candidate_projection_request_scalars`,
+`index_projection_scalars`, `public_path_eligibility_requests/results` —
+the latter data-level, one per entity: 32,941 pairs in the p4 pack).
+Element-level transcode was verified mechanical (0/47,071 parse failures,
+uniform release/as_of/version, sorted, no dups) — **but then the genuine
+run14 build envelope was found**: `.worktrees/data-rebuild/.agents/runs/
+rebuild-canonical-v2-knowledge-platform/s12a/complete-candidate-build-
+envelope.json` (8.1G, mtime 2026-09-08 20:00 — one hour after the run14
+index materialized; release `candidate-v2-20260819-r1`, run
+`p4-build-20260819-v1`, receipt with all hash bindings, top-level
+consumer_handoff). The data line DID run the full current-contract
+pipeline for run14; the half-sealed pack was a hand-assembly that
+bypassed the envelope sealer. So C2.1r is: run the official
+`s12c/build_serving_pack.py` (serving-worktree copy, so loader semantics
+== production) with `--envelope` (read-only, the run14 envelope above)
+`--index-root /var/tmp/mirothinker-data-v2/index-v1`
+`--pack-dir /var/tmp/mirothinker-data-v2/serving-pack-run14-sealed`
+(fresh) `--expected-release-id candidate-v2-20260819-r1`
+`--generator-run-id c2-seal-20260910-v1`. The sealer recomputes every
+binding from envelope + index, dogfoods the pack through the real loader,
+and refuses to ship unless the reconstructed authority equals the
+envelope in every compared field — the strongest provenance available.
+**Rejected**: ① the resealer/transcode path — synthesizing contract
+sections (typed splits, 47,071 eligibility pairs) when the genuine
+artifacts exist is inventing data; the resealer stays committed as
+tooling but is not the C2 path. ② In-place hash patch of the half-sealed
+pack — destroys evidence, repeats the Sep-9 partial surgery. ③ Loosening
+the loader — never. After sealing, C2.1b–f run against the sealed pack
+(the 18189 command's `--serving-pack` path is updated; nothing else
+changes). Note the sealed relationships.json will be larger than 2.9G
+(it gains the eligibility sections) — the A/B boot measurement gate
+applies as designed.
 
 **Rejected alternatives (overall approach).** ① Repairing the assembly
 contract so run14 passes `_validate_result_graph` — the R1 swamp,

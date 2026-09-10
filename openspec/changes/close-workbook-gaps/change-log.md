@@ -118,3 +118,33 @@
   itself via `generator_run_id c2-reseal-20260910-v1`. Rejected: in-place
   hash patch, full envelope build, loader loosening.
 - tasks.md: C2.1a marked done, C2.1r inserted before C2.1b.
+
+## 2026-09-10 — C2.1r revised: genuine run14 envelope found; seal with the official envelope sealer
+
+- First resealer iteration (worktree `9a99ca2`) exposed layer 2: run14
+  relationships.json candidate section is an old-generation container (20
+  pydantic errors vs the current typed-split contract) and four
+  loader-required sections are missing (request scalars ×2, eligibility
+  requests/results — data-level, one per entity). Evidence doc
+  `.agents/runs/close-workbook-gaps/c2-reseal-blocked.md`.
+- Main-context verification: all 47,071 candidate elements parse clean
+  into the current PublicDomainProjection union (uniform release/as_of/
+  version, sorted, no dups) — transcode would have been mechanical; p4
+  pack carries 32,941 per-entity eligibility pairs, so synthesizing the
+  missing sections meant computing pipeline artifacts.
+- Decisive discovery: the data line DID run the full pipeline for run14 —
+  genuine envelope at data-rebuild
+  `.agents/runs/rebuild-canonical-v2-knowledge-platform/s12a/complete-
+  candidate-build-envelope.json` (8.1G, mtime 2026-09-08 20:00, one hour
+  after the run14 index materialized; release `candidate-v2-20260819-r1`,
+  run `p4-build-20260819-v1`, receipt with all hash bindings). The
+  half-sealed pack was a hand-assembly that bypassed the envelope sealer.
+- C2.1r revised: seal with the official `s12c/build_serving_pack.py`
+  (serving-worktree copy) into fresh
+  `/var/tmp/mirothinker-data-v2/serving-pack-run14-sealed/`
+  (generator `c2-seal-20260910-v1`); sealer dogfoods through the real
+  loader and proves envelope-equality. Resealer/transcode path rejected
+  (synthesizing sections when genuine artifacts exist = inventing data);
+  resealer stays committed as tooling. Sealed relationships.json will be
+  larger than 2.9G (eligibility sections) — A/B boot measurement gate
+  applies as designed.

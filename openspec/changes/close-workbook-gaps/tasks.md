@@ -67,13 +67,18 @@
          (worktree `9cfdabe`: `s12g/serving-bundle-run14.json` +
          `s12g/serve-18189-command.sh`; token-level diff asserted to be
          exactly the designed six args + port + 2 scratch env vars)
-  - [ ] C2.1r Reseal the run14 pack (inserted 2026-09-10 after the first
-         boot failed closed — half-sealed pack, design.md §C2 setback):
-         deterministic `reseal_serving_pack.py` recomputes every
-         loader-bound manifest field from the artifacts into a FRESH pack
-         dir (`serving-pack-run14-resealed`), dogfoods through
-         `open_serving_pack_authority`; source pack and index root stay
-         read-only; then point the 18189 command at the resealed pack.
+  - [ ] C2.1r Seal the run14 pack with the OFFICIAL envelope sealer
+         (revised 2026-09-10: run14's genuine envelope found in
+         data-rebuild s12a — 8.1G, Sep 8, same build run; design.md §C2):
+         serving-worktree `s12c/build_serving_pack.py --envelope <run14
+         envelope, read-only> --index-root /var/tmp/mirothinker-data-v2/
+         index-v1 --pack-dir /var/tmp/mirothinker-data-v2/serving-pack-
+         run14-sealed --expected-release-id candidate-v2-20260819-r1
+         --generator-run-id c2-seal-20260910-v1`; sealer dogfoods through
+         the real loader and proves envelope-equality; then point the
+         18189 command at the sealed pack. (First-iteration resealer
+         `9a99ca2` stays committed as tooling — superseded, not the C2
+         path; transcode rejected: genuine artifacts exist.)
   - [ ] C2.1b A/B boot on scratch port (localhost only, scratch
          access-log/corrections paths); measure boot wall-time and RSS —
          2.9G relationships replay is the resource gate; prohibitive →
