@@ -63,19 +63,28 @@
 - [ ] B4.1 Local-citation floor at render; local answers carry ≥1 local
        citation.
 - [ ] B4.2 Web-citation boilerplate filter (navigation/error templates).
-- [ ] B5.1 `_ProseWireDecoder._filter_private_markers` redact-and-continue:
+- [x] B5.1 `_ProseWireDecoder._filter_private_markers` redact-and-continue:
        on complete marker match drop the buffered candidate + record
        redaction instead of raising (design.md §B5; live GAP-09 defect —
        stream-path raise → empty answer). Unit tests RED→GREEN (marker
        removed, surrounding text byte-intact, redaction recorded).
-- [ ] B5.2 Callers wire the degradation token: `_parse_response` +
+       (worktree `9e1e79d4`: `_redactions` list + property; finish
+       behavior unchanged; raise-site reachability verified — legit
+       selection header never routes through the filter)
+- [x] B5.2 Callers wire the degradation token: `_parse_response` +
        `stream()` call `current_turn_trace().set_degradation(
        "prose-private-marker-redacted")` when redaction happened; stream
        integration test (injected marker → done event, no error event,
        token present). Verify at start: raise-site reachability, no
        fallback catcher, flag plumbing (ProseSynthesisResult vs trace).
-- [ ] B5.3 Regression: hermetic pack + B1 focused + fast_boot unchanged;
+       (done: helper `_report_prose_marker_redactions`; token added to
+       admin-console `DegradationToken` Literal + `_VALID_DEGRADATION_
+       TOKENS` (canonical_v2_turn_trace.py); SSE real-HTTP integration
+       test RED→GREEN; flag stays on trace reporter only)
+- [x] B5.3 Regression: hermetic pack + B1 focused + fast_boot unchanged;
        worktree commit.
+       (green, baseline-identical: hermetic 22 + fast_boot 14; B1 96/26;
+       serving 265; admin 147; 31 new/rewritten tests RED 28→GREEN 31)
 - [ ] B5.4 Evidence: same-day differential / replay re-run — marker-class
        empty answers disappear on both sides; C2.1f replay signatures
        re-classified (marker-class rows clear).

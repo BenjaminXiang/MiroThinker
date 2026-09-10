@@ -294,3 +294,20 @@
   preferred over read layer. Acceptance fixtures listed verbatim.
 - tasks.md: B3B2-D0 + B2.1a-c + B3.1a-b expanded. Dispatch after B5
   completes (one writer).
+
+## 2026-09-11 — B5.1–B5.3 landed (worktree 9e1e79d4); deploy + B5.4 evidence in flight
+
+- Decoder redact-and-continue implemented; token
+  `prose-private-marker-redacted` wired at both consumption points; the
+  admin-console DegradationToken Literal + valid-token set extended
+  (companion finding: unknown tokens raise there).
+- Evidence layering: 31 new/rewritten tests RED 28→GREEN 31 (decoder
+  unit matrix incl. cross-chunk splitting; SSE real-HTTP integration
+  test proving answer+done and journal token); old raise-assertion test
+  deliberately split into redact-continue tests + a framing boundary
+  lock (documented in-test). Pre-existing failures (test_read_turn_trace
+  3 failed at HEAD; ruff) confirmed not slice-introduced via stash
+  comparison.
+- Deploy: 18188 restart issued 2026-09-11 (B5 code live after boot);
+  replay r3 + smokes running; B3B2-D0 diagnostic dispatched in parallel
+  (offline instrumentation; network steps reserved to main context).

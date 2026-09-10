@@ -108,3 +108,29 @@
 - Out of scope: assembly-contract repair; simple_serve fixes (prototype,
   retired line); professor→company and paper→professor (C3/C4).
 - Rollback note: revert the B1 commit and restart 18188; data untouched.
+
+## B5 — guard-hit graceful degradation (slice contract, 2026-09-11)
+
+- RED artifact (offline): decoder/renderer tests in
+  `tests/canonical_v2/test_knowledge_serving_isolated.py` — prose carrying a
+  full `<|canonical_v2_selection_v1|>` / `<|canonical_v2_answer_v1|>` marker
+  raises `ValueError` today (decoder unit + both renderer modes + the
+  rewritten marker-in-answer test); SSE integration test in admin-console
+  `test_canonical_v2_chat_http_adapter.py` ends in an `error` event with no
+  `done` today. Live-production RED already archived (design.md §B5:
+  journalctl + replay failure set, both lines, 2026-09-10).
+- GREEN criteria: marker redacted, surrounding prose byte-intact, redaction
+  recorded on the decoder; both decode sites set the
+  `prose-private-marker-redacted` degradation token via
+  `current_turn_trace()`; SSE turn completes with answer+done, no error
+  event, journal carries the token; token added to the admin-console
+  allowlist (Literal + `_VALID_DEGRADATION_TOKENS`).
+- Regression gate: hermetic pack (`test_serving_pack_loader.py` 22 passed),
+  B1 focused (`-k "relationship or patent"` 96 passed / 26 skipped),
+  fast_boot + index_projection_embedded (14 passed), full
+  `test_knowledge_serving_isolated.py`, turn-trace suites — all unchanged
+  vs the C2.1s baseline.
+- Live evidence (B5.4, main context): same-day differential / replay
+  re-run — marker-class empty answers disappear on both sides.
+- Out of scope: template fallback for this class (rejected — stays reserved
+  for genuine synthesis failure); prompt-side marker suppression.
