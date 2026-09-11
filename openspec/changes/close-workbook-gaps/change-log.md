@@ -640,3 +640,25 @@
   filtered display set.
 - Deploy: systemd restart 20:58; next: N≥5 g2 sampling (gate: t2 ≥5/6 in
   ≥4/5 samples), replay gate, then AQ-S3 (probes + protocol-JSON leak).
+
+## 2026-09-11 — AQ-S2b sampling: g2 GREEN 5/5 samples (3/3 turns each)
+
+- N=5 sampling (`results-aq-s2b-g2-s*.json`): **every sample passes all
+  three g2 turns** — t1 entities 5/5 + key points ≥8/10; t2 pool ≥5/6;
+  t3 stance clean. Baseline for comparison: r3/r4 0/5, c1-diff 1/5,
+  S1+S2 sampling t2 2/5.
+- Mechanism verified in the transcripts: t1's deterministic coverage
+  sentence names the displayed-but-unmentioned locals (incl. 开普勒/九号
+  — the thin-record members), which the F2 commit-union inherits; t2 then
+  filters them with 注册地 wording from the C-1 address claims (e.g.
+  "除云迹外其余23家均注册于深圳…") and passes the pool check.
+- Recorded refinements (not blockers): (a) the mention-detection forms
+  miss short brand forms — described members like 普渡/擎朗 are re-listed
+  in the coverage sentence (city prefix kept, only legal suffix stripped);
+  candidate fix: also match the city-prefix-stripped stem; (b) the
+  coverage sentence can reach ~24 names + "等（共 N 家）" — a long tail;
+  acceptable for 穷尽 but watch UX feedback; (c) narrowing turns re-list
+  the pre-filter pool in the sentence (filter-agnostic wording keeps it
+  honest; the prose itself carries the narrowing).
+- Next: g5 sampling (3) + replay gate for the same deploy; g5-t2 still
+  waits on A-2 / web for the out-of-pack names.
