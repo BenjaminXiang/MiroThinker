@@ -1,0 +1,312 @@
+[
+ {
+  "id": "gen-drone",
+  "domain": "company",
+  "turns": [
+   {
+    "turn": 1,
+    "query": "深圳有哪些做无人机整机的公司",
+    "elapsed": 43.4,
+    "error": null,
+    "query_type": "canonical_v2:A:answer",
+    "answer_style": "llm_synthesized",
+    "answer_text": "深圳的无人机整机企业数量较多，覆盖消费航拍、农业植保、应急救援、工业巡检、教育编程等多个方向。以下为其中较有代表性的一批：\n\n**消费与航拍方向**\n- 深圳市大疆创新科技有限公司：代表机型包括 DJI Mavic 4 Pro、DJI FlyCart 100、Matrice 350 RTK 等，覆盖航拍影像、农业植保、物流运载、公共安全应急、测绘巡检等场景。\n- 深圳零度智能飞行器有限公司：XPLORER 系列，主打日常航拍、旅行记录与户外跟拍。\n- 深圳市欧拉空间科技有限公司：π 系列无人机，面向个人娱乐航拍、户外跟拍与轻量测绘巡检。\n- 深圳飞豹航天航空科技有限公司：FLYPRO PX400、XEagle，面向运动人群的自动跟拍与第一视角分享。\n- 深圳市爱将士创新科技有限公司：iDrones 1，用于影视航拍、测绘、应急救援巡检等。\n\n**农业植保方向**\n- 深圳天鹰兄弟无人机创新有限公司：田鹰系列、TY 系列等，用于大面积农田植保、林业病虫害防治及复杂地形作业。\n- 深圳市翔农创新科技有限公司：翔农 610/616、天翔 R10/R16 等，覆盖粮食作物、经济作物与果蔬植保飞防。\n- 深圳常锋信息技术有限公司：CF-X1、C1-A、天马-1、D410，用于农林植保与应急物资投送。\n- 深圳弧光航空科技有限公司：Ar-17，面向农业植保、测绘、安防与救援。\n\n**应急救援与公共安全方向**\n- 深圳市智璟科技有限公司：Z50、RT100、C85、T60、TD01 等，主打水上救援、消防灭火、警用追踪与夜间搜救。\n- 深圳市轻准科技有限公司：QZU-001 察打一体无人机及消防、侦察、倾斜摄影机型，面向反恐处突与高层灭火。\n- 哈瓦国际航空技术（深圳）有限公司：MEGA 系列、战斧 H-16 等，用于反恐处突、边防巡逻、应急救援与工业巡检。\n- 深圳一电航空技术有限公司：MACH 系列、G15/G25 等，覆盖军用、警用、商用、民用领域。\n- 深圳缔飞国际航空科技集团有限责任公司：奇美拉 DF-238 型共轴双桨无人直升机，用于森林碳汇监测、电力巡线、应急物资投送等。\n\n**工业与行业应用方向**\n- 深圳联合飞机科技有限公司：TD550D，面向应急消防、物流运投与城市巡检。\n- 优鹰智能科技（深圳）有限公司：V9 系列长航时无人机、JK01 整机等，用于油气管线巡查、海上缉私、森林防火与航测。\n- 深圳九星智能航空科技有限公司：F350、F550、F650、F8，覆盖电网巡线、国土勘查、农业植保与商业航拍。\n- 深圳市明德新材技术有限公司：HI/HW 系列，用于公安、消防、电力巡线与植保喷洒。\n- 深圳市艾特航空科技股份有限公司：AT-1290、ATUH-20、AT-100 等，覆盖植保、森林防火、勘探测绘与反恐安防。\n- 深圳市大谷科技有限公司：捕食者，用于无线电监测、无线图传与航拍遥感。\n- 深圳市瑞文航空科技有限公司：模块化旋翼类无人机，专注旋翼类无人机的研发与生产。\n\n**教育与竞速方向**\n- 深圳市创客火科技有限公司：LiteBee 系列、Armor 系列，面向 STEAM 课堂、青少年编程教育与无人机竞赛。\n- 深圳市高端无人机有限公司：M23K、X249、66BL、X129R、G80 等，用于 STEM 教育、航模兴趣班与 FPV 竞速。\n- 深圳新创天下网络科技有限公司：GEP-LX5 穿越机及 FPV 机架，面向竞速赛事与 FPV 飞行体验。\n- 深圳高启科技有限公司：Falcon 210、Uluru、Aegean、Falcon 250，用于航拍、竞速与教育演示。\n\n以上为深圳无人机整机领域的代表性企业，实际从业公司数量更多，覆盖的细分赛道也仍在扩展。如果您想聚焦某一方向（如农业植保、应急救援或教育编程）的整机厂商，我可以再进一步梳理。\n此外，本次检索还召回以下相关本地企业：深圳微孚智能信息科技有限公司、深圳市华芯机器人技术有限责任公司、深圳市速爵科技有限公司、深圳市普绘创新科技有限公司、深圳市轩宇智能科技有限公司、深圳前海汉来飞机发动机技术有限公司、深圳市大德众和科技有限公司。",
+    "citations_total": 24,
+    "events": {
+     "stage": 3,
+     "plan_done": 1,
+     "retrieval_done": 1,
+     "answer_chunk": 1521,
+     "answer": 1,
+     "done": 1
+    },
+    "raw_len": 67390
+   },
+   {
+    "turn": 2,
+    "query": "上述企业里有哪些成立于十年以上",
+    "elapsed": 13.6,
+    "error": null,
+    "query_type": "canonical_v2:A:answer",
+    "answer_style": "llm_synthesized",
+    "answer_text": "在列出的这些企业中，能够确认成立于十年以上（即2016年9月之前成立）的有以下几家：\n\n- 深圳九星智能航空科技有限公司：公开信息显示其成立于2014年7月14日，距今已超过十年。\n- 深圳联合飞机科技有限公司：公开资料显示其创立时间为2014年，同样满足十年以上的条件。\n- 深圳市创客火科技有限公司：多个来源均显示其成立于2013年，距今已超过十年。\n\n其余企业目前没有可确认的成立时间信息，因此无法判断是否满足“成立十年以上”这一条件。如果您希望进一步了解其中某家企业的具体情况，我可以再帮您深入检索。\n</answer>\n此外，本次检索还召回以下相关本地企业：深圳市智璟科技有限公司、深圳市大疆创新科技有限公司、深圳零度智能飞行器有限公司、深圳微孚智能信息科技有限公司、深圳市华芯机器人技术有限责任公司、深圳市速爵科技有限公司、深圳市普绘创新科技有限公司、深圳新创天下网络科技有限公司、哈瓦国际航空技术（深圳）有限公司、深圳弧光航空科技有限公司、深圳缔飞国际航空科技集团有限责任公司、深圳市欧拉空间科技有限公司、深圳天鹰兄弟无人机创新有限公司、深圳市明德新材技术有限公司、深圳市高端无人机有限公司、深圳市轩宇智能科技有限公司、深圳市翔农创新科技有限公司、深圳市艾特航空科技股份有限公司、深圳市大谷科技有限公司、深圳常锋信息技术有限公司、深圳前海汉来飞机发动机技术有限公司、深圳高启科技有限公司、深圳市瑞文航空科技有限公司、深圳飞豹航天航空科技有限公司 等（共 29 家）。",
+    "citations_total": 0,
+    "events": {
+     "stage": 3,
+     "plan_done": 1,
+     "retrieval_done": 1,
+     "answer_chunk": 252,
+     "answer": 1,
+     "done": 1
+    },
+    "raw_len": 13826
+   },
+   {
+    "turn": 3,
+    "query": "它们的产品主要用在哪些行业",
+    "elapsed": 17.1,
+    "error": null,
+    "query_type": "canonical_v2:A:answer",
+    "answer_style": "llm_synthesized",
+    "answer_text": "这批深圳无人机及相关科技企业的产品应用行业覆盖面很广，从消费娱乐到工业作业、公共安全、农业植保都有分布。按主体梳理如下：\n\n**大疆创新**：产品用于航拍与影像创作、农业植保、物流运载、公共安全与应急、测绘与巡检，公开信息还提到其无人机解决方案在公共安全、能源、农业、建筑、基础设施等领域广泛应用。\n\n**联合飞机**：面向应急消防（高楼灭火、森林灭火、通信中继）、物流运投（高海拔、海岛物资运输）和城市巡检。\n\n**九星智能航空**：覆盖个人民用、电网巡线、国土勘查、地理测绘、环保监测、科考作业、矿业巡查、农业植保、军事侦察、武警反恐、海防缉私、交通执法、商业航拍，主打产品为警用消防器材。\n\n**创客火科技**：聚焦中小学及培训机构的STEAM课堂、青少年编程教育、无人机竞赛、编队表演、高校与职校实验室、科普展馆等教育与科普场景。\n\n**智璟科技**：用于海上及内河落水救援、城市内涝抢险、消防灭火、高空基建吊运、高原物流配送、警用追踪、反恐侦察、抗洪救灾、水域巡逻、夜间搜救、医疗物资投送等应急救援与公共安全领域。\n\n**零度智能飞行器**：面向日常航拍、户外运动跟拍、婚礼及活动摄影、房地产与景区宣传、个人娱乐飞行。\n\n**微孚智能**：用于潜水帆船等海洋运动的水下拍摄、水坝桥梁检测、水产养殖观测、青少年游泳教学与水上娱乐、STEAM教育及机器人编程培训。\n\n**华芯机器人**：产品可能应用于工业自动化生产线、智能仓储物流、精密制造加工、电子设备组装、危险环境作业，以及商业服务、医疗辅助、教育科研等服务机器人场景。\n\n**速爵科技**：气体检测产品用于石油、化工、冶金、电力、城市燃气、消防救援、塑料工业、船舶、制药、危化品处理、市政建设、矿业、电信、建筑等需要监测易燃易爆及有毒有害气体的场所。\n\n**新创天下**：面向竞速穿越赛事、户外FPV飞行体验、航拍训练、无人机教学与俱乐部活动。\n\n**哈瓦国际航空**：用于公共安全（反恐处突、边防巡逻、交通监控）、应急救援（地震洪水搜救、救生圈抛投）、工业巡检（电力/石油管线、地理测绘、农林植保）、影视4K航拍与三维建模、消防火情侦察与排爆等。\n\n**弧光航空**：用于农业植保、测绘、安防、救援。\n\n**缔飞国际航空**：用于森林保护碳汇监测、农业植保喷洒、电力巡线、应急救援物资投送、边境巡逻及环保监测。\n\n**欧拉空间**：面向个人娱乐航拍、户外旅行跟拍、社交短视频创作、轻量级测绘巡检、青少年STEAM教育、小型活动空中直播。\n\n**天鹰兄弟**：用于水稻小麦玉米棉花等大面积农田植保、林业及高杆作物病虫害防治、草原播种施肥、丘陵山地农业作业，以及应急救援、边防巡逻、公安反恐、航测航拍、养殖渔业投饵。\n\n**明德新材**：用于公安、武警、消防、电力巡线、植保喷洒、环保监测、地理勘测等。\n\n**高端无人机**：面向青少年STEM教育及编程培训、中小学航模兴趣班、户外休闲航拍、FPV竞速穿越赛事、亲子DIY课堂。\n\n**轩宇智能**：用于海事领域摩托艇、舷外机、船用发电机的故障诊断维修，汽车后市场4S店与修理厂的故障检测、保养归零、钥匙匹配、ECU刷写，教学科研机构的CAN总线教学与新能源实训，以及野外救援、道路救援。\n\n**翔农创新**：用于水稻小麦玉米等粮食作物、棉花油菜等经济作物、柑橘苹果等果蔬及烟叶的植保飞防，也可用于农田测绘与长势监测。\n\n**艾特航空**：用于农业植保、森林防火、环保监测、勘探测绘、电力巡线、紧急救援、反恐安防、科研飞行平台、航空摄影、航拍娱乐、航模运动培训、青少年航空科普教育。\n\n**大谷科技**：用于无线电监测、无线高清图像传输、航拍与遥感作业、科研院校无人机教学及开源飞控开发。\n\n**常锋信息**：用于农林植保、应急物资投送、农田精准植保、林业防疫、畜牧草场施肥。\n\n**前海汉来**：产品用于导弹阵地、舰艇等武器装备，数据中心/指挥中心/传输中心等信息化设备密集区域，以及石油石化、工业企业、通讯设施等易燃易爆场所的防雷与动力系统配套。\n\n**高启科技**：用于航拍、竞速飞行、旅游跟拍、农业巡检、教育演示。\n\n**瑞文航空**：产品主要应用于旋翼类无人机的研发与生产领域。\n\n**飞豹航天航空**：面向跑步、骑行、滑板、攀岩等运动人群的自动跟拍与第一视角分享，也可用于户外旅行、赛事记录及大众娱乐航拍。\n\n以上为这批企业中有代表性、信息较完整的主体，覆盖了消费航拍、农业植保、应急救援、公共安全、电力巡检、测绘、教育科普、工业检测等主要行业方向。您更关心哪一类行业或哪家企业的具体产品线？我可以再深入梳理。\n此外，本次检索还召回以下相关本地企业：深圳九星智能航空科技有限公司、深圳市大疆创新科技有限公司、深圳联合飞机科技有限公司、深圳市创客火科技有限公司、深圳市智璟科技有限公司、深圳零度智能飞行器有限公司、深圳微孚智能信息科技有限公司、深圳市华芯机器人技术有限责任公司、深圳市速爵科技有限公司、深圳市普绘创新科技有限公司、深圳新创天下网络科技有限公司、哈瓦国际航空技术（深圳）有限公司、深圳弧光航空科技有限公司、深圳缔飞国际航空科技集团有限责任公司、深圳市欧拉空间科技有限公司、深圳天鹰兄弟无人机创新有限公司、深圳市明德新材技术有限公司、深圳市高端无人机有限公司、深圳市轩宇智能科技有限公司、深圳市翔农创新科技有限公司、深圳市艾特航空科技股份有限公司、深圳市大谷科技有限公司、深圳常锋信息技术有限公司、深圳前海汉来飞机发动机技术有限公司 等（共 27 家）。",
+    "citations_total": 23,
+    "events": {
+     "stage": 3,
+     "plan_done": 1,
+     "retrieval_done": 1,
+     "answer_chunk": 1887,
+     "answer": 1,
+     "done": 1
+    },
+    "raw_len": 84231
+   }
+  ]
+ },
+ {
+  "id": "gen-storage",
+  "domain": "company",
+  "turns": [
+   {
+    "turn": 1,
+    "query": "深圳有哪些做储能电池的公司",
+    "elapsed": 29.9,
+    "error": null,
+    "query_type": "canonical_v2:A:answer",
+    "answer_style": "llm_synthesized",
+    "answer_text": "深圳的储能电池企业数量众多，公开信息显示全市从事储能相关经营业务的企业近7000家，覆盖电化学储能、机械储能等多个方向。以下按业务类型列出部分有代表性的公司。\n\n**头部与综合型厂商**\n- 深圳市比亚迪锂电池有限公司：锂电池生产制造商，产品覆盖电动汽车、储能电站、消费电子、轨道交通等领域，储能方面涉及户用储能等场景。\n- 深圳比亚迪储能有限公司：比亚迪旗下储能领域子公司，2019年成立，2024年5月更名为比亚迪储能有限公司。\n- 深圳市雄韬电源科技股份有限公司：产品涵盖314Ah/580Ah/600+Ah储能电芯、固态电池、氢燃料发动机等，应用于发电侧/电网侧/工商业及户用储能、数据中心UPS备电、通信基站备电等。\n- 深圳市德赛电池科技股份有限公司：电源管理系统及锂电池制造商，锂离子储能电池覆盖民用储能、站点能源、数据中心UPS、大型及工商业储能等领域。\n\n**便携储能与户用储能**\n- 深圳市华宝新能源股份有限公司：便携储能电源解决方案提供商，产品覆盖便携储能、家庭储能及光伏产品，应用于户外旅行、应急备灾、居家生活等场景。\n- 深圳市正浩创新：研发生产全屋储能系统，凭借DELTA和RIVER两大核心系列，从便携储能延伸至固定储能场景。\n- 深圳市海雷新能源股份有限公司：产品线包括户用储能、工商业储能、智能换电、高速电摩电池、驻车启动电池等。\n- 深圳市飞碟动力科技有限公司：产品涵盖高压直流磷酸铁锂电池、户用光储系统、工商业峰谷套利与备用电源、集装箱式储能电站等。\n- 深圳市伏特能源股份有限公司：锂离子电池模组制造企业，涉及户外移动电源、通信基站后备电源、家庭储能、工商业储能、储能集装箱等领域。\n- 深圳市普兰德储能技术有限公司：主打家庭及小型工商业储能系统，可与屋顶光伏配套，实现削峰填谷、应急备电。\n\n**工商业储能与储能系统集成**\n- 深圳市未蓝新能源科技有限公司：集电池储能相关产品研发、生产、销售和服务为一体的高新技术企业，定位深圳工商业储能生产厂家。\n- 深圳莱顿能源科技有限公司（LYDEN莱顿）：专注储能系统产品研发、制造、销售与服务，聚焦“源网荷储柴充”全场景储能解决方案，总部位于深圳光明区。\n- 深圳市远信储能技术股份有限公司：2019年创立，专注新型电力系统与综合能源方案开发，以及储能产品研发和推广应用。\n- 深圳三晖能源科技有限公司：产品包括液冷电池模块、铁锂高压堆叠式系列、液冷集装箱储能系统、分布式户外柜、机架式储能电池等，应用于削峰填谷、电网调频调峰、新能源配储、通信基站、家庭/工商业光伏储能等场景。\n- 深圳市佰特瑞储能系统有限公司：产品涵盖Solar系列，应用于太阳能离网/并网储能系统、通信基站备用电源、UPS、家庭及工商业分布式储能、风光互补储能电站等。\n- 深圳市鹏诚新能源科技有限公司：锂离子电池模组和电池管理系统研发商，产品应用于家庭储能、工商业储能等领域，同时是AGV锂电池供应商。\n\n**液流电池与新型电池**\n- 深圳市中和储能科技有限公司：2021年成立，液流电池关键材料与设备研发制造商，产品包括125KW、250KW全钒液流电池储能系统，面向大规模新能源配储、电网侧共享储能电站等长时储能场景。\n- 深圳珈钠能源科技有限公司：产品包括NFM系列正极材料，应用于太阳能/风能储能、智能电网、备用电源等。\n- 深圳市创明新能源股份有限公司：产品包括32140、46120系列及钠离子大圆柱电池，应用于便携式/户用储能、家庭阳台电站、光伏微网等。\n\n**电池材料与回收**\n- 深圳市杰成镍钴新能源科技有限公司：锂电池相关废旧材料循环再利用企业，产品应用于家用储能、低速电动车等场景。\n\n**其他相关企业**\n- 深圳蓝锂科技有限公司：产品包括BMS系列，应用于储能电站、通信基站、家庭储能、移动应急储能等。\n- 深圳储能中心有限公司：主营USB锂电充电电池、锂电便携式储能电源。\n- 深圳市海芝通电子股份有限公司：锂离子电池产品生产商，产品应用于储能电源、储能电池等领域。\n- 深圳市海盈科技有限公司：产品应用于5G工业储能、储能电站、UPS及通讯后备电源等。\n- 必力储能（深圳）有限公司：2014年成立，经营范围包括先进储能技术开发与应用、储能电池材料等。\n\n以上为深圳储能电池领域的部分代表性企业。由于该领域企业数量庞大，公开信息显示全市相关企业近7000家，上述清单未能穷尽全部。如果您对某一细分方向（如液流电池、便携储能、工商业储能系统集成等）感兴趣，可以进一步聚焦了解。\n此外，本次检索还召回以下相关本地企业：深圳市智安新能源科技有限公司、深圳聚吉星科技有限公司、深圳市索阳新能源科技有限公司、深圳邦凯新能源股份有限公司、深圳市瑞能实业股份有限公司、深圳吉阳智能科技有限公司、深圳市奕天博创科技有限公司、深圳市万微半导体有限公司、深圳市舜源自动化科技有限公司、深圳市天威赛利机电设备有限公司、深圳市安德普电源科技有限公司、深圳市格瑞普电池有限公司、深圳市科敏传感器有限公司、深圳市赛德电源技术有限公司、深圳市卓誉自动化科技有限公司。",
+    "citations_total": 17,
+    "events": {
+     "stage": 3,
+     "plan_done": 1,
+     "retrieval_done": 1,
+     "answer_chunk": 1852,
+     "answer": 1,
+     "done": 1
+    },
+    "raw_len": 81190
+   },
+   {
+    "turn": 2,
+    "query": "上述企业里规模较大的有哪几家",
+    "elapsed": 12.8,
+    "error": null,
+    "query_type": "canonical_v2:A:answer",
+    "answer_style": "llm_synthesized",
+    "answer_text": "从公开信息能确认规模相对较大的有三家：深圳市德赛电池科技股份有限公司、深圳市比亚迪锂电池有限公司、深圳市华宝新能源股份有限公司。\n\n深圳市德赛电池科技股份有限公司是深圳证券交易所主板上市公司（股票代码000049），长期专注锂电池电源管理系统（BMS）及封装集成（PACK）业务，在锂电池电源管理系统及封装集成细分市场处于领先地位，产品覆盖智能手机、笔记本电脑、储能、数据中心UPS、医疗器械、无人机等众多终端领域。\n\n深圳市比亚迪锂电池有限公司成立于1998年6月，是比亚迪股份有限公司的全资子公司，深耕电池领域近三十年，具备全产业链自主研发能力，产品应用于电动汽车、储能电站、消费电子、轨道交通等多个领域。\n\n深圳市华宝新能源股份有限公司成立于2011年7月25日，曾在新三板挂牌（华宝股份 870907），后于创业板上市（华宝新能 301327），立足深圳，涉足便携储能和移动式家庭储能领域，旗下拥有Jackery电小二、Geneverse等品牌。\n\n深圳市格瑞普电池有限公司公开信息中主要体现为专业动力电池生产服务商，未见上市或集团背景等规模方面的直接信息，暂不列入。\n以上为其中有代表性的几家，如需某家更具体的经营数据，可以再深入检索。",
+    "citations_total": 0,
+    "events": {
+     "stage": 3,
+     "plan_done": 1,
+     "retrieval_done": 1,
+     "answer_chunk": 499,
+     "answer": 1,
+     "done": 1
+    },
+    "raw_len": 23171
+   }
+  ]
+ },
+ {
+  "id": "gen-lidar",
+  "domain": "company",
+  "turns": [
+   {
+    "turn": 1,
+    "query": "深圳有哪些做激光雷达的公司",
+    "elapsed": 45.0,
+    "error": null,
+    "query_type": "canonical_v2:A:answer",
+    "answer_style": "llm_synthesized",
+    "answer_text": "深圳的激光雷达产业覆盖了从整机、核心芯片到上游光源器件的完整链条，以下是有代表性的企业。\n\n整机与系统层面，深圳市速腾聚创科技有限公司是头部厂商，产品线包括RS-LiDAR-16/32、RS-Ruby Plus、RS-Helios、RS-M3、RS-EMX、RS-Airy等，面向自动驾驶、机器人导航、智慧交通和工业测量。深圳市镭神智能系统有限公司提供LS系列1550nm光纤车规激光雷达、CH128系列905nm车规混合固态雷达、C32/C16机械式雷达以及补盲雷达，应用延伸到车路协同、轨道交通和低空防撞。深圳市览沃科技有限公司（Livox）由大疆内部孵化，主打Mid-70、Mid-360、Horiz等低成本高性能产品，已销往26个国家和地区，并在小鹏P5、AutoX、希迪智驾、高仙机器人等方案中落地。深圳玩智商科技有限公司（YDLIDAR）的X2、X4、G4、G6、GS2、TG30等系列主要面向服务机器人、扫地机器人和ROS教学。深圳力策科技有限公司的LT-I1/I2/I3、LTME-02A、LT-X系列覆盖服务机器人、AGV/AMR、低速物流车及ADAS感知。深圳市砝石激光雷达有限公司的S10、S20、FSD-10、M16、M4及蜂眼系列TOF激光雷达用于工业机器人、AGV、无人机和三维测绘。深圳市机智人科技有限公司提供WS-15/25系列单线导航与避障雷达以及WS-20/30PCD-ET3全固态面阵3D LiDAR。深圳路加机器人科技有限公司的DTOF-06/26/50/27系列、三角测量激光雷达、固态线性激光雷达主要用于扫地机器人、AGV和服务机器人。深圳市易恬技术有限公司有CYCLOPS单点ToF激光雷达和CR-E旋转ToF激光雷达。深圳市迈测科技股份有限公司的R2、R3属于2D激光扫描雷达，同时生产手持测距仪和工业测距传感器。深圳市志奋领科技有限公司提供MINI型激光雷达及3D线激光传感器等。海伯森技术（深圳）有限公司的HPS-3D系列面阵固态激光雷达面向工业机器人和精密检测。深圳煜炜光学科技有限公司的KS2900、KS2800、KS2100系列激光雷达及三维扫描仪聚焦测绘地理信息、电力林业和交通勘测。深圳市戴升智能科技有限公司的产品线中包含激光雷达，用于智慧公路和智慧隧道场景。\n\n核心芯片与光源器件层面，深圳瑞波光电子有限公司研发高端半导体激光芯片（EEL/VCSEL），其中905nm EEL产品专为激光雷达和激光测距优化。深圳瑞识智能科技有限公司提供VRay系列VCSEL光源、TRay系列TOF光源、车规级VCSEL芯片及激光发射模块，用于车载激光雷达、机器人导航和扫地机雷达。深圳博升光电科技有限公司的940nm激光雷达VCSEL、940nm iToF/dToF VCSEL面向辅助/自动驾驶激光雷达和3D视觉。深圳前海创壹科技发展有限公司提供1.5μm光纤激光雷达光源模组、905nm半导体激光雷达光源模组及接收模组。深圳市大族锐波传感科技有限公司的产品线中包含车载激光雷达，同时生产1550nm和1064nm激光器。深圳源国光子通信有限公司的dTOF激光产品应用于激光雷达和智能驾驶领域。\n\n以上为深圳激光雷达领域有代表性的企业，覆盖整机、芯片与器件等环节，并非全部相关公司的完整名单。如果您关注某一细分方向（如车规级、机器人导航或上游芯片），可以进一步聚焦。\n此外，本次检索还召回以下相关本地企业：深圳新亮智能技术有限公司、深圳雅果智能科技有限公司、深圳市卓驭科技有限公司、优鹰智能科技（深圳）有限公司、深圳市无穹创新科技有限公司、橙子运力（深圳）科技有限公司、深圳市光峰小明科技有限公司、深圳市杰士安电子科技有限公司、深圳慎始科技有限公司、深圳隆庆智能激光科技有限公司、深圳牧野微电子技术有限公司、深圳承泰科技股份有限公司。",
+    "citations_total": 20,
+    "events": {
+     "stage": 3,
+     "plan_done": 1,
+     "retrieval_done": 1,
+     "answer_chunk": 1311,
+     "answer": 1,
+     "done": 1
+    },
+    "raw_len": 58229
+   },
+   {
+    "turn": 2,
+    "query": "上述企业里谁的产品用于自动驾驶",
+    "elapsed": 14.5,
+    "error": null,
+    "query_type": "canonical_v2:A:answer",
+    "answer_style": "llm_synthesized",
+    "answer_text": "上述企业中，产品明确用于自动驾驶（含ADAS、无人驾驶、低速无人车等）的主要有以下这些：\n\n**速腾聚创（深圳市速腾聚创科技有限公司）** 是最典型的一家，其激光雷达产品线（RS-LiDAR-16/32、RS-Ruby Plus、RS-Helios、RS-Bpearl、RS-M3、RS-EMX、RS-Airy、RS-E1R等）直接面向自动驾驶与ADAS，覆盖乘用车、商用车、RoboTaxi、RoboTruck、RoboBus以及无人物流车、无人清洁车等场景，公司本身也被定位为自动驾驶激光雷达环境感知解决方案提供商。\n\n**镭神智能（深圳市镭神智能系统有限公司）** 的车规级激光雷达（LS系列1550nm光纤激光雷达、CH128系列905nm混合固态激光雷达等）用于自动驾驶乘用车/卡车/无人矿卡，并提供多传感器融合环境感知系统。\n\n**力策科技（深圳力策科技有限公司）** 的LT系列激光雷达用于智能汽车公共道路自动驾驶与ADAS环境感知，以及低速物流车导航避障。\n\n**新亮智能（深圳新亮智能技术有限公司）** 的产品用于低速无人驾驶配送车、环卫车、园区巡逻车，以及ADAS前后向碰撞预警与盲区监测。\n\n**牧野微电子（深圳牧野微电子技术有限公司）** 的毫米波雷达（MY-77G-4D等）用于乘用车AEB、ACC、变道辅助、盲区监测，以及C-V2X车路协同感知，提升自动驾驶安全冗余。\n\n**承泰科技（深圳承泰科技股份有限公司）** 的毫米波雷达用于乘用车/商用车L0-L2+智能驾驶，以及封闭/半封闭场景L3+低速自动驾驶感知。\n\n**砝石激光雷达（深圳市砝石激光雷达有限公司）** 的TOF激光雷达用于无人驾驶与ADAS。\n\n**卓驭科技（深圳市卓驭科技有限公司）** 是智能驾驶供应商，提供高阶智能驾驶解决方案，已量产搭载于宝骏云海、大众途观L Pro、一汽红旗天工系列、奇瑞iCAR等车型。\n\n**橙子运力（橙子运力（深圳）科技有限公司）** 是自动驾驶解决方案提供商，聚焦港口无人运输、园区物流、无人快递配送等限定场景。\n\n**览沃科技（深圳市览沃科技有限公司）** 的激光雷达应用于自动驾驶，Mid-70用于低速自动驾驶，Horiz搭载于小鹏P5乘用车，并在AutoX L4乘用车、希迪智驾L4商用车等方案中落地。\n\n**前海创壹（深圳前海创壹科技发展有限公司）** 的光纤激光雷达光源模组、905nm半导体激光雷达光源模组等用于车载激光雷达与自动驾驶。\n\n**瑞识智能（深圳瑞识智能科技有限公司）** 的车规级VCSEL芯片及激光发射模块用于辅助驾驶/车载激光雷达。\n\n**博升光电（深圳博升光电科技有限公司）** 的940nm激光雷达VCSEL用于辅助/自动驾驶激光雷达。\n\n**大族锐波（深圳市大族锐波传感科技有限公司）** 的车载激光雷达产品用于新能源汽车等领域的智能传感。\n\n**易恬技术（深圳市易恬技术有限公司）** 的ToF激光雷达用于物流无人驾驶。\n\n**源国光子通信（深圳源国光子通信有限公司）** 的dTOF激光等产品应用于激光雷达、智能驾驶。\n\n此外，**机智人科技（深圳市机智人科技有限公司）** 的激光雷达用于汽车电子领域的高精度三维环境感知；**海伯森技术（深圳）有限公司）** 的传感器用于智能交通与车辆控制。这两家与自动驾驶的关联相对间接，是否计入取决于对“用于自动驾驶”的界定宽严。\n\n以上为有直接依据的代表性企业，并非穷尽全部结果。您更关心哪家企业的具体产品线或落地车型，我可以再深入梳理。\n此外，本次检索还召回以下相关本地企业：深圳市光峰小明科技有限公司、深圳市杰士安电子科技有限公司、深圳慎始科技有限公司、深圳玩智商科技有限公司、深圳隆庆智能激光科技有限公司、深圳瑞波光电子有限公司、深圳市戴升智能科技有限公司、深圳雅果智能科技有限公司、深圳路加机器人科技有限公司、优鹰智能科技（深圳）有限公司、深圳市无穹创新科技有限公司、深圳煜炜光学科技有限公司、深圳市迈测科技股份有限公司、深圳市志奋领科技有限公司。",
+    "citations_total": 17,
+    "events": {
+     "stage": 3,
+     "plan_done": 1,
+     "retrieval_done": 1,
+     "answer_chunk": 1417,
+     "answer": 1,
+     "done": 1
+    },
+    "raw_len": 64020
+   }
+  ]
+ },
+ {
+  "id": "gen-medical",
+  "domain": "company",
+  "turns": [
+   {
+    "turn": 1,
+    "query": "深圳有哪些做医疗器械的公司",
+    "elapsed": 36.7,
+    "error": null,
+    "query_type": "canonical_v2:A:answer",
+    "answer_style": "llm_synthesized",
+    "answer_text": "深圳的医疗器械企业数量众多，覆盖影像设备、心血管介入、体外诊断、手术机器人、家用监测等多个细分方向。以下按业务类型列出部分有代表性的公司。\n\n**影像与诊断设备**\n- 深圳市贝斯达医疗股份有限公司：产品线覆盖永磁型与超导型磁共振、CT、DR、数字胃肠机、彩超等，面向三级医院到基层卫生院的多层次影像需求。\n- 深圳帧观德芯科技有限公司：主打X射线成像，产品包括口腔数字化X射线成像系统、数字化乳腺X射线成像系统及3D扫描建模系统，应用于乳腺癌筛查、口腔拍片等场景。\n- 深圳市凯沃尔电子有限公司：心电图机及AI心电平台厂商，产品用于门急诊、体检中心、胸痛中心、远程心电会诊及家庭心脏健康管理。\n- 深圳市君安康医疗科技有限公司：提供自助取片机及体检自助服务设备，用于医院放射科和体检中心。\n\n**心血管介入与微创耗材**\n- 深圳安特医疗股份有限公司：产品涵盖医学影像、心血管及外周微创手术、麻醉重症监护、口腔医疗四大领域，是高压注射器造影剂针筒和压力传感器的国内领军企业。\n- 深圳市顺美医疗股份有限公司：专注血管介入类及麻醉类耗材，包括中心静脉导管、血液透析导管、导管鞘、有创压力监测传感器等第三类医疗器械。\n- 优尼麦迪克器械（深圳）有限公司：中高端耗材厂商，产品为一次性高压造影注射器及附件、压力连接管、有创血压传感器三大系列。\n- 深圳市中科微光医疗器械技术有限公司：冠状动脉腔内影像诊断与PCI手术导航设备厂商，产品包括Cornaris®P60、Cornaris®P80及静脉定位设备V600。\n\n**手术机器人与智能器械**\n- 深圳市鑫君特智能医疗器械有限公司：脊柱外科手术机器人厂商，产品ORTHBOT®已在全国十余省市三甲医院用于椎弓根螺钉固定术、PKP/PVP等术式。\n- 深圳市阿瑟医疗机器人有限公司：产品包括阿瑟放疗机器人和腹腔镜手术机器人，应用于放疗科室和微创外科手术室。\n- 深圳市奥昇医疗科技有限责任公司：聚焦医用超声诊断与治疗手术机器人，产品涵盖脉冲超声空化消融机器人、泌尿专科超声等。\n- 深圳市迈康信医用机器人有限公司：智能医疗器械研发生产商，产品用于医疗机构患者转运、养老院及家庭护理中的洗澡、坐便、移位。\n\n**体外诊断与生物技术**\n- 深圳市金准生物医学工程有限公司：体外诊断试剂及仪器生产商，拥有量子点免疫层析、量子点荧光玻片、量子点蛋白芯片等平台，产品覆盖传染病、心血管疾病、肾损伤、脑卒中等领域。\n- 深圳市博德致远生物技术有限公司：基于一体化注塑芯片技术，聚焦全集成体外诊断与分子诊断产品。\n- 深圳硅基仿生科技股份有限公司：核心产品为硅基动感GS1持续葡萄糖监测系统，用于院内院外糖尿病数字化管理。\n- 深圳市立心科学有限公司：骨科修复材料厂商，产品包括GAIABONE®可再生人工骨及可塑形吸收性骨修复材料。\n- 深圳市中科先见医疗科技有限公司：践行“芯片级医疗”理念，聚焦视网膜感光细胞凋亡导致的盲人视觉重建。\n- 深圳拜尔洛克生物技术有限公司：辅助生殖自动化设备提供商，技术方向为卵细胞/胚胎玻璃化冷冻。\n\n**监护、麻醉与基础耗材**\n- 深圳市天可医疗科技有限公司：一次性医疗器械企业，产品覆盖麻醉/重症监护、介入、泌尿、护理等类别，中心静脉导管、血液透析导管等产品在行业内具有较强影响力。\n- 深圳市永康达电子科技有限公司：研发生产脉搏血氧探头、心电导联线、体温探头、有创血压传感器、血压袖带等监护配套产品。\n- 深圳安维森实业有限公司：专业从事医疗血氧计和动脉血氧饱和度传感器。\n- 深圳市美好创亿医疗科技股份有限公司：主营医疗器械精密组件及产品，包括家用呼吸机组件、人工植入耳蜗组件和肺功能仪。\n- 诺尔医疗（深圳）有限公司：产品涉及深部脑电电极及脑电信号采集，用于难治性癫痫术前致痫灶定位与脑网络评估。\n\n**家用与健康监测**\n- 深圳乐普智能医疗器械有限公司：产品包括血压计、血糖仪、血氧仪、胎心仪、雾化器、制氧机等，面向家庭日常健康监测和慢病随访。\n- 深圳市易事达医疗电子有限公司：家用医疗电子产品厂商，涵盖电子血压计、血糖分析仪、家用雾化器、红外体温计、便携式制氧机等。\n- 深圳市迈泰生物医疗有限公司：产品包括三高检测血压计、医用红外温度计等，应用于家庭监测、药房零售和基层初筛。\n- 深圳市乐心平江科技有限公司：以心血管疾病监测为切入点，提供软硬件结合的医疗科技产品与人工智能分析平台。\n\n以上为深圳医疗器械领域的部分代表性企业，实际企业数量远不止于此。如果您对某个细分方向（如手术机器人、体外诊断、家用监测）想进一步了解，我可以再深入梳理。\n此外，本次检索还召回以下相关本地企业：新红医（深圳）护士护理集团有限公司、深圳市犀锐生物科技有限公司、深圳易美医学科技有限公司、深圳幸福康迪功能医学科技有限公司、深圳市润隆医疗科技有限公司。",
+    "citations_total": 25,
+    "events": {
+     "stage": 3,
+     "plan_done": 1,
+     "retrieval_done": 1,
+     "answer_chunk": 1894,
+     "answer": 1,
+     "done": 1
+    },
+    "raw_len": 82728
+   }
+  ]
+ },
+ {
+  "id": "gen-professor",
+  "domain": "professor",
+  "turns": [
+   {
+    "turn": 1,
+    "query": "深圳有哪些研究机器人的教授",
+    "elapsed": 59.8,
+    "error": null,
+    "query_type": "canonical_v2:A:answer",
+    "answer_style": "llm_synthesized",
+    "answer_text": "深圳在机器人领域有较集中的高校与研究机构布局，相关教授通常分布在哈尔滨工业大学（深圳）、南方科技大学、深圳大学、中国科学院深圳先进技术研究院、香港中文大学（深圳）等单位的机械、自动化、计算机与人工智能院系中，研究方向多集中在机器人控制、人机交互、医疗与康复机器人、工业机器人、多足与仿生机器人等。\n\n不过，当前本地库与网络检索覆盖暂不完整，暂未建立“深圳—机器人方向教授”这一关联的完整名单，因此无法逐一列出具体人名及其所属单位。若您关注某一细分方向（如医疗机器人、工业机器人或人形机器人），可以进一步说明，我再尝试做更聚焦的检索。",
+    "citations_total": 0,
+    "events": {
+     "stage": 3,
+     "plan_done": 1,
+     "retrieval_done": 1,
+     "answer_chunk": 265,
+     "answer": 1,
+     "done": 1
+    },
+    "raw_len": 11780
+   },
+   {
+    "turn": 2,
+    "query": "他有哪些论文",
+    "elapsed": 0.6,
+    "error": null,
+    "query_type": "canonical_v2:G:clarification_only",
+    "answer_style": "template",
+    "answer_text": "您的问题里使用了“他/她/它/这家”等指代词，但我暂时无法确定具体指代对象，为了准确回答，请补充您想了解的对象（例如教授姓名、公司名、论文标题或专利号），我会立即为您查询。如果您只是想了解某一类信息的大致情况，也可以直接描述需求，我会先给出概要说明。",
+    "citations_total": 0,
+    "events": {
+     "answer": 1,
+     "done": 1
+    },
+    "raw_len": 571
+   }
+  ]
+ },
+ {
+  "id": "gen-paper",
+  "domain": "paper",
+  "turns": [
+   {
+    "turn": 1,
+    "query": "有哪些关于钙钛矿太阳能电池的论文",
+    "elapsed": 21.7,
+    "error": null,
+    "query_type": "canonical_v2:A:answer",
+    "answer_style": "llm_synthesized",
+    "answer_text": "围绕钙钛矿太阳能电池，这里整理了一批相关论文，按研究主题大致归类如下。\n\n**电子传输层与界面材料**\n- 《Sulfur Position in Pyrene-Based PTTIs Plays a Key Role To Determine the Performance of Perovskite Solar Cells When PTTIs Were Employed as Electron Transport Layers》，Wangqiao Chen 等，ACS Applied Energy Materials，2019 年。\n- 《Electron‐Transport Materials in Perovskite Solar Cells》，Jiarong Lian 等，Small Methods，2018 年，系统梳理了介观、正置与反置平面结构中电子传输材料的要求与进展。\n- 《Room-Temperature Sputtered SnO2 as Robust Electron Transport Layer for Air-Stable and Efficient Perovskite Solar Cells on Rigid and Flexible Substrates》，Matthew Kam 等，Scientific Reports，2019 年。\n- 《π-Conjugated zwitterion for dual-interfacial modification in high-performance perovskite solar cells》，Zhao Hu 等，Chemical Engineering Journal，2021 年。\n- 《Self‐Assembled Molecules Toward Interface‐Optimized Perovskite Solar Cells: from One to Two》，Tanghao Liu 等，Advanced Materials，2025 年。\n- 《Mitigating Solvent Erosion to Enhance Self-Assembled Monolayer Coverage and Perovskite Solar Cell Performance》，Dexu Zheng 等，ACS Applied Materials & Interfaces，2026 年。\n- 《Buried Interface Regulation with a Supramolecular Assembled Template Enables High‐Performance Perovskite Solar Cells for Minimizing the V OC Deficit》，Zhenrong Wang 等，Advanced Materials，2025 年。\n- 《Gaining Insight into the Effect of Organic Interface Layer on Suppressing Ion Migration Induced Interfacial Degradation in Perovskite Solar Cells》，Jiaoyi Ning 等，Advanced Functional Materials，2020 年。\n\n**空穴传输材料**\n- 《Dopant‐Free Organic Hole‐Transporting Material for Efficient and Stable Inverted All‐Inorganic and Hybrid Perovskite Solar Cells》，Kui Jiang 等，Advanced Materials，2020 年。\n- 《Graphene oxide as an efficient hole-transporting material for high-performance perovskite solar cells with enhanced stability》，Qing-Dan Yang 等，Journal of Materials Chemistry A，2017 年。\n- 《Lead-chelating hole-transport layers for efficient and stable perovskite minimodules》，Chengbin Fei 等，Science，2023 年。\n\n**单晶与结晶生长调控**\n- 《Efficient and Highly Stable Lateral Perovskite Single‐Crystal Solar Cells through Crystal Engineering and Weak Ion Migration》，Dalin Li 等，Advanced Functional Materials，2024 年。\n- 《Mitigating the Efficiency Deficit in Single-Crystal Perovskite Solar Cells by Precise Control of the Growth Processes》，Tongpeng Zhao 等，ACS Nano，2025 年。\n- 《Nucleation and crystal growth control for scalable solution-processed organic–inorganic hybrid perovskite solar cells》，Hanlin Hu 等，Journal of Materials Chemistry A，2019 年，综述了可规模化溶液沉积中的成核与晶体生长机制。\n- 《Identifying the Optimum Morphology in High‐Performance Perovskite Solar Cells》，Guijun Li 等，Advanced Energy Materials，2015 年，探讨了最优形貌与双层结构，效率可达 15.2%。\n- 《Stabilizing black-phase formamidinium perovskite formation at room temperature and high humidity》，Wei Hui 等，Science，2021 年。\n\n**稳定性、钝化与缺陷调控**\n- 《Moisture‐Resilient Perovskite Solar Cells for Enhanced Stability》，Randi Azmi 等，Advanced Materials，2023 年。\n- 《Shallow and Deep Trap State Passivation for Low-Temperature Processed Perovskite Solar Cells》，Randi Azmi 等，ACS Energy Letters，2020 年。\n- 《Modulating non-radiative recombination related to shallow traps in halide perovskites》，Dengyang Guo 等，Applied Physics Reviews，2026 年。\n- 《Amine Salts Vapor Healing Perfected Perovskite Layers for NiOx Based p‐i‐n Solar Cells》，Yu Li 等，Advanced Functional Materials，2022 年。\n- 《In Situ Growth of 2D Perovskite Capping Layer for Stable and Efficient Perovskite Solar Cells》，Peng Chen 等，Advanced Functional Materials，2018 年。\n- 《Ionic Liquid Additives for Efficient and Durable Two-Step Perovskite Photovoltaic Devices》，Fei Wang 等，Crystals，2023 年。\n\n**电极、组件与制备工艺**\n- 《Blade printing of low-melting-point alloys as back electrodes for high-efficiency and stable inverted perovskite solar cells》，Bo Jiang 等，Energy & Environmental Science，2025 年，采用 In–Sn–Bi 电极实现 22.48% 效率。\n- 《Bottom Contact Engineering for Ambient Fabrication of >25% Durable Perovskite Solar Cells》，Ligang Yuan 等，Advanced Materials，2024 年。\n- 《Tuning an Electrode Work Function Using Organometallic Complexes in Inverted Perovskite Solar Cells》，Jiantao Wang 等，Journal of the American Chemical Society，2021 年。\n- 《Printing photovoltaics by electrospray》，Xinyan Zhao、Weiwei Deng，Opto-Electronic Advances，2020 年。\n\n**器件物理、光学与建模**\n- 《Comparing the Calculated Fermi Level Splitting with the Open-Circuit Voltage in Various Perovskite Cells》，Dengyang Guo 等，ACS Energy Letters，2019 年。\n- 《Three-dimensional opto-electro-thermal coupled modeling and thermal optimization of perovskite solar cells using aluminum nitride interface layers》，Mingze Li 等，Journal of Physics D Applied Physics，2026 年。\n- 《Stable and Colorful Perovskite Solar Cells Using a Nonperiodic SiO2/TiO2 Multi-Nanolayer Filter》，Gang Yeol Yoo 等，ACS Nano，2019 年。\n\n**材料与器件拓展**\n- 《Selenium-containing two-dimensional conjugated fused-ring electron acceptors for enhanced crystal packing, charge transport, and photovoltaic performance》，Shi‐Sheng Wan 等，Journal of Materials Chemistry A，2021 年。\n- 《Structural and optical properties of 2D Ruddlesden‐Popper perovskite (BA) 2 (FA) n−1PbnI 3n+1 compounds for photovoltaic applications》，Chunfeng Lan 等，Journal of the American Ceramic Society，2019 年。\n- 《Automatic light-adjusting electrochromic device powered by perovskite solar cell》，Huan Ling 等，Nature Communications，2021 年。\n\n以上共 32 篇，覆盖了电子/空穴传输、界面工程、单晶生长、稳定性与钝化、电极与组件工艺、器件物理建模以及材料拓展等方向。如果你更关注某一细分方向（比如电子传输层或单晶器件），我可以再帮你聚焦梳理。",
+    "citations_total": 32,
+    "events": {
+     "stage": 3,
+     "plan_done": 1,
+     "retrieval_done": 1,
+     "answer_chunk": 4224,
+     "answer": 1,
+     "done": 1
+    },
+    "raw_len": 184830
+   }
+  ]
+ },
+ {
+  "id": "gen-patent",
+  "domain": "patent",
+  "turns": [
+   {
+    "turn": 1,
+    "query": "深圳的机器人专利主要有哪些申请人",
+    "elapsed": 15.9,
+    "error": null,
+    "query_type": "canonical_v2:A:answer",
+    "answer_style": "llm_synthesized",
+    "answer_text": "关于深圳机器人专利的主要申请人，本地库暂未建立按城市维度归集的专利申请人关联，网络检索覆盖也暂不完整，因此无法给出具体的申请人名单。\n\n从行业一般情况看，深圳机器人相关专利的申请人通常集中在几类主体：一是本地整机与零部件企业，如工业机器人、服务机器人、无人机及核心零部件厂商；二是高校与科研机构，如深圳本地高校及中科院在深院所；三是新兴创业公司与跨界布局的科技企业。这些主体往往围绕运动控制、减速器、伺服系统、感知与导航等方向集中申请专利。\n\n如果您能指明关注的是工业机器人、服务机器人还是无人机等细分方向，我可以再尝试从已覆盖的信息中进一步梳理。",
+    "citations_total": 0,
+    "events": {
+     "stage": 3,
+     "plan_done": 1,
+     "retrieval_done": 1,
+     "answer_chunk": 272,
+     "answer": 1,
+     "done": 1
+    },
+    "raw_len": 12078
+   }
+  ]
+ },
+ {
+  "id": "gen-cross",
+  "domain": "mixed",
+  "turns": [
+   {
+    "turn": 1,
+    "query": "大疆创新主要做什么",
+    "elapsed": 73.7,
+    "error": null,
+    "query_type": "canonical_v2:A:answer",
+    "answer_style": "llm_synthesized",
+    "answer_text": "大疆创新（深圳市大疆创新科技有限公司，英文简称 DJI）是一家以民用无人机为核心、同时覆盖航拍影像与手持影像设备的科技公司，2006 年成立。\n\n它的业务大致可以分为几块：\n\n**消费级航拍无人机**是它最广为人知的产品线，包括 Mavic 系列、Air 系列、Mini 系列、FPV 系列等，主打飞行性能、图传技术和影像功能。官网在售的代表机型有 Mavic 4 Pro、Air 3S 等。\n\n**手持影像与摄影设备**是另一条重要产品线，涵盖口袋云台相机（如 Osmo Pocket 系列）、运动相机（Osmo Action 系列）、稳定器（如 RS 5）以及定焦镜头等配件，面向旅行 Vlog、电影级拍摄等场景。\n\n**行业应用与解决方案**方面，大疆把无人机能力延伸到农业植保（大田喷洒、果树飞防、农田监测，如 T50 农业无人机）、物流运载（高原、水域、电力抢修等复杂环境物资投送，如 FlyCart 100）、公共安全与应急（消防灭火、搜救巡查、燃气泄漏检测）、测绘与巡检（电力线路、油气管道、城市三维建模）等领域，相关平台机型包括 Matrice 350 RTK、Matrice 40 等。\n\n此外，公司业务还涉及机器人教育等前沿创新方向。从工商登记的经营范围看，其覆盖航空电子设备、自动控制设备、无人驾驶航空器、无线电数据传输系统、电子元器件及计算机软件的技术开发与生产。\n\n整体而言，大疆是一家以无人机和影像系统为技术底座、横跨消费与行业市场的硬件与解决方案公司。",
+    "citations_total": 0,
+    "events": {
+     "stage": 3,
+     "plan_done": 1,
+     "retrieval_done": 1,
+     "answer_chunk": 617,
+     "answer": 1,
+     "done": 1
+    },
+    "raw_len": 27204
+   },
+   {
+    "turn": 2,
+    "query": "它有哪些专利",
+    "elapsed": 13.9,
+    "error": null,
+    "query_type": "canonical_v2:A:answer",
+    "answer_style": "llm_synthesized",
+    "answer_text": "深圳市大疆创新科技有限公司的专利布局覆盖无人机整机、云台增稳、图传通信、视觉感知与飞控算法等方向，专利数量庞大且以发明和实用新型为主。不过，本地库目前尚未建立该公司逐件专利的关联清单，无法给出具体专利号或逐项名称；如需精确到某一技术分支的专利明细，可以进一步说明关注方向。",
+    "citations_total": 0,
+    "events": {
+     "stage": 3,
+     "plan_done": 1,
+     "retrieval_done": 1,
+     "answer_chunk": 136,
+     "answer": 1,
+     "done": 1
+    },
+    "raw_len": 6311
+   }
+  ]
+ }
+]

@@ -34,11 +34,13 @@ CATEGORY_TERMS = {
 
 
 def pack_name_text(cur: sqlite3.Cursor, name: str) -> str | None:
+    # lookup_content is a JSON *string* inside document_json (quotes escaped),
+    # so match on the bare name then confirm by exact name equality.
     rows = cur.execute(
         "select document_json from lookup_document "
         "where projection_id='lookup:exact-lookup:company' and document_json like ? "
-        "limit 5",
-        (f'%"{name}"%',),
+        "limit 10",
+        (f"%{name}%",),
     ).fetchall()
     for (content,) in rows:
         d = json.loads(content)
@@ -51,7 +53,10 @@ def pack_name_text(cur: sqlite3.Cursor, name: str) -> str | None:
         if isinstance(inner, dict) and inner.get("name") == name:
             parts = [
                 json.dumps(inner.get(k), ensure_ascii=False)
-                for k in ("profile_summary", "technology_route_summary", "product_description", "industry")
+                for k in (
+                    "profile_summary", "technology_route_summary", "product_description",
+                    "industry", "industry_tags", "tech_tags",
+                )
             ]
             return " ".join(p for p in parts if p)
     return None
@@ -84,19 +89,24 @@ def main() -> int:
                     named_offcategory.append(n)
                 else:
                     named_ok.append(n)
-            enum_like = any(k in t["query"] for k in ("哪些", "推荐", "厂商", "供应商"))
+            enum_like = any(k in t["query"] for k in ("哪些", "推荐", "厂商", "供应商", "谁", "多少"))
+            # P3: company-domain enumeration turns must carry the sentence;
+            # other turns are informational (NOTE when present).
+            if sess["domain"] == "company" and enum_like:
+                form = "OK" if m else "FORM-MISSING"
+            else:
+                form = "OK" if not m else "NOTE-COVERED"
             report.append({
                 "session": sid, "turn": t["turn"], "query": t["query"],
                 "query_type": t.get("query_type"), "elapsed": t.get("elapsed"),
                 "has_coverage": bool(m), "coverage_n": len(names),
                 "pack_found": len(named_ok), "not_in_pack": named_missing,
                 "off_category": named_offcategory,
-                "enum_like": enum_like,
-                "form_ok": (bool(m) == (enum_like and sess["domain"] in ("company", "mixed"))),
+                "enum_like": enum_like, "form": form,
             })
     for r in report:
-        flag = "OK " if r["form_ok"] else "FORM"
-        print(f"{flag} {r['session']}#{r['turn']} cover={r['coverage_n']:2d} "
+        flag = r["form"]
+        print(f"{flag:14s} {r['session']}#{r['turn']} cover={r['coverage_n']:2d} "
               f"pack={r['pack_found']:2d} off={len(r['off_category'])} "
               f"miss={len(r['not_in_pack'])} {r['elapsed']}s :: {r['query'][:22]}")
         if r["off_category"]:
