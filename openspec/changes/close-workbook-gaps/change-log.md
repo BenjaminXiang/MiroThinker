@@ -611,3 +611,32 @@
   out-of-pack trio) on top of S2b. One sample hit an LLM-backend httpx
   error (`turn raised before completion`, status=error) — environment
   class, not a regression.
+
+## 2026-09-11 — AQ-S2b delivered (90159d0a) and deployed 20:58
+
+- `knowledge_answer.py`: `_ENUMERATION_QUERY_MARKERS` (11-word mirror of
+  the serving family, pinned by a serving-suite test) +
+  `_ENUMERATION_MEMBER_COVERAGE_LIMIT=24` +
+  `_enumeration_member_coverage_sentence()`; the sentence is merged into
+  `committed_text` BEFORE the F2 commit (so the committed set inherits the
+  named members — the g2-t2 stabiliser), while the existing gap sentence
+  stays post-commit. Deterministic fallback path deliberately appends
+  nothing.
+- Sentence shape (byte-pinned in tests): 「此外，本次检索还召回以下相关本地
+  企业：A、B、C。」 — displayed order, ≤24, `等（共 N 家）` suffix when
+  exceeded, no capability claims, displayed locals only (truncated members
+  stay count-only). Wording is about the local knowledge base (not the
+  turn's region filter) — filter-agnostic by design.
+- Tests: +8 (RED pinned: no-sentence assertions, commit-union == all
+  members, AttributeError shape; negatives lock non-enumeration
+  byte-identity); multiturn file 25 passed + 1 pre-existing failure
+  (main-context A/B on the 5900bd98 source reproduces it — NOT this
+  slice); four-file + scrub 346 passed.
+- Known nuance (recorded): on a narrowing turn that is itself an
+  enumeration (contains 哪些), the sentence re-lists the pre-filter pool
+  (the session pool stays the full t1 set); the narrowing shows in the
+  prose wording only. Live sampling will show whether this helps or
+  confuses t2; candidate refinement if needed: scope the sentence to the
+  filtered display set.
+- Deploy: systemd restart 20:58; next: N≥5 g2 sampling (gate: t2 ≥5/6 in
+  ≥4/5 samples), replay gate, then AQ-S3 (probes + protocol-JSON leak).
