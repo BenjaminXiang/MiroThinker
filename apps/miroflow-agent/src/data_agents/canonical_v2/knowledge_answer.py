@@ -1609,6 +1609,30 @@ def _handle_id(handle: EntityHandle) -> str:
     return handle.canonical_id if handle.kind == "canonical" else handle.handle_id
 
 
+_PROSE_MENTION_COMPANY_LEGAL_SUFFIXES = (
+    "有限责任公司",
+    "股份有限公司",
+    "有限公司",
+    "公司",
+)
+
+
+def _prose_mention_name_forms(display_name: str) -> tuple[str, ...]:
+    # Name forms that count as the final answer naming a displayed entity
+    # (F2, close-workbook-gaps B3): the full display name plus its company
+    # legal-suffix-stripped stem — prose writes 深南电路 where the handle
+    # carries 深南电路股份有限公司. Forms shorter than two characters never
+    # match; single-character stems would union on stray text.
+    forms = [display_name]
+    for suffix in _PROSE_MENTION_COMPANY_LEGAL_SUFFIXES:
+        if display_name.endswith(suffix):
+            stem = display_name[: -len(suffix)]
+            if stem != display_name:
+                forms.append(stem)
+            break
+    return tuple(form.casefold() for form in forms if len(form) >= 2)
+
+
 def _physical_traversal_authorized(
     item: EvidenceItem,
     *,
@@ -2458,6 +2482,9 @@ class _EphemeralKnowledgeAnswer(KnowledgeAnswer):
             request=request,
             context=context,
             selected_handle_ids=synthesis.selected_handle_ids,
+            # The pre-append prose text: deterministic gap sentences added by
+            # _append_required_sentences below never widen the commit union.
+            answer_text=synthesis.answer_text,
             traversal=result.traversal_receipt,
         )
         return result.model_copy(
@@ -2491,6 +2518,7 @@ class _EphemeralKnowledgeAnswer(KnowledgeAnswer):
         request: TurnRequest,
         context: ContextReceipt | None,
         selected_handle_ids: tuple[str, ...],
+        answer_text: str,
         traversal: TraversalReceipt | None,
     ) -> tuple[ContextReceipt | None, TraversalReceipt | None]:
         if context is None:
@@ -2501,8 +2529,31 @@ class _EphemeralKnowledgeAnswer(KnowledgeAnswer):
             # instead of narrowing the session's displayed universe to nothing.
             return context, traversal
         state = self._sessions[request.session_id]
-        selected_handles = tuple(state.handles[value] for value in selected_handle_ids)
         prior_set = context.displayed_result_set
+        if prior_set is not None and answer_text:
+            # F2 (close-workbook-gaps B3): the committed scope is the union of
+            # the selector-chosen handles and the displayed entities the final
+            # answer still names — run14 g5-t1 named 深南电路 in the answer
+            # tail while committing only 嘉立创, and the named member must not
+            # leave the session universe. Selected handles first, then
+            # mentioned-but-unselected members in displayed order, so the
+            # result-set hash below stays deterministic.
+            folded_answer = answer_text.casefold()
+            selected_handle_ids = (
+                *selected_handle_ids,
+                *(
+                    handle_id
+                    for handle, handle_id in zip(
+                        prior_set.handles, prior_set.handle_ids, strict=True
+                    )
+                    if handle_id not in selected_handle_ids
+                    and any(
+                        form in folded_answer
+                        for form in _prose_mention_name_forms(handle.display_name)
+                    )
+                ),
+            )
+        selected_handles = tuple(state.handles[value] for value in selected_handle_ids)
         result_set_id = "result-set:sha256:" + _canonical_sha256(
             {
                 "session_id": request.session_id,
@@ -2527,7 +2578,9 @@ class _EphemeralKnowledgeAnswer(KnowledgeAnswer):
             # A single confirmed entity takes over the anchor; a multi-entity
             # answer only narrows the displayed set, so a list turn (papers,
             # suppliers) cannot silently re-anchor later person follow-ups to
-            # its first member.
+            # its first member. "Single" is measured on the union above: one
+            # selected handle that names further displayed members in the
+            # answer is a multi-entity answer, not a confirmation.
             state.active_anchor = selected_handles[0] if selected_handles else None
         resolved = ResolvedReferent(
             kind="current_turn",

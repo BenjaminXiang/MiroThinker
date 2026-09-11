@@ -2242,6 +2242,337 @@ def test_first_turn_attributed_fallback_keeps_session_for_prose_scope() -> None:
     )
 
 
+_F2_PCB_COMPANY_IDS = (
+    "company:f2-jlc",
+    "company:f2-syj",
+    "company:f2-scc",
+    "company:f2-yb",
+)
+_F2_PCB_COMPANY_NAMES = (
+    "深圳市嘉立创科技发展有限公司",
+    "深圳市顺易捷信息科技有限公司",
+    "深南电路股份有限公司",
+    "深圳市一博科技股份有限公司",
+)
+
+
+def _f2_pcb_request(
+    module: Any,
+    read_module: Any,
+    *,
+    session_id: str,
+    turn_id: str,
+) -> Any:
+    items = tuple(
+        _item(
+            read_module,
+            evidence_id=f"evidence:{company_id}",
+            object_id=company_id,
+            domain="company",
+            subject_id=company_id,
+            predicate="preferred_name",
+            value=name,
+            snippet=f"{name} 是一家深圳 PCB 供应商。",
+        )
+        for company_id, name in zip(
+            _F2_PCB_COMPANY_IDS, _F2_PCB_COMPANY_NAMES, strict=True
+        )
+    )
+    handles = tuple(
+        _canonical_handle(
+            read_module,
+            canonical_id=company_id,
+            domain="company",
+            display_name=name,
+            evidence_ids=(f"evidence:{company_id}",),
+        )
+        for company_id, name in zip(
+            _F2_PCB_COMPANY_IDS, _F2_PCB_COMPANY_NAMES, strict=True
+        )
+    )
+    return _request(
+        module,
+        session_id=session_id,
+        turn_id=turn_id,
+        query="深圳 PCB 打样供应商有哪些",
+        evidence_set=_evidence_set(
+            read_module,
+            query="深圳 PCB 打样供应商有哪些",
+            items=items,
+            handles=handles,
+        ),
+    )
+
+
+def _f2_selector(module: Any) -> Any:
+    def selector(inner: Any) -> Any:
+        return _proposal(
+            module,
+            inner,
+            displayed_handle_ids=_F2_PCB_COMPANY_IDS,
+            claims=(
+                (
+                    "claim:f2-jlc",
+                    "嘉立创提供 PCB 打样服务。",
+                    ("company:f2-jlc",),
+                    ("evidence:company:f2-jlc",),
+                ),
+                (
+                    "claim:f2-scc",
+                    "深南电路批量产能稳定。",
+                    ("company:f2-scc",),
+                    ("evidence:company:f2-scc",),
+                ),
+            ),
+        )
+
+    return selector
+
+
+def test_prose_commit_unions_displayed_entities_named_in_answer() -> None:
+    """F2 (close-workbook-gaps B3): the prose commit scope is the union of
+    the selector-chosen handles and the displayed entities the final answer
+    still names. run14 g5-t1 displayed four PCB suppliers, the selector
+    committed only 嘉立创, and the answer tail still named 深南电路 — a
+    displayed member the answer names stays in the session universe."""
+    module = _answer_module()
+    read_module = _read_module()
+    request = _f2_pcb_request(
+        module, read_module, session_id="session:f2:union", turn_id="turn:f2:union:1"
+    )
+
+    def prose(result: Any) -> Any:
+        return module.ProseSynthesisResult(
+            answer_text="小批量打样推荐嘉立创；批量阶段深南电路也值得评估。",
+            selected_claim_ids=("claim:f2-jlc",),
+            selected_handle_ids=("company:f2-jlc",),
+        )
+
+    answer = module.create_ephemeral_knowledge_answer(
+        answer_selector=_f2_selector(module),
+        prose_renderer=prose,
+    )
+    result = answer.answer(request)
+    assert result.render_mode == "prose_renderer"
+    displayed = result.context_receipt.displayed_result_set
+    assert displayed is not None
+    # Selector first, then mentioned-but-unselected members in displayed
+    # order: the 深南电路 suffix-stripped stem matches its display name;
+    # 顺易捷/一博 are never named and leave the session universe.
+    assert displayed.handle_ids == ("company:f2-jlc", "company:f2-scc")
+    assert result.context_receipt.resolved_referent.handle_ids == (
+        "company:f2-jlc",
+        "company:f2-scc",
+    )
+
+
+def test_prose_commit_union_drives_anchor_takeover() -> None:
+    """A single selected handle takes over the anchor only when the union
+    stays single; naming a second displayed member keeps a multi-entity
+    answer from silently re-anchoring later follow-ups."""
+    module = _answer_module()
+    read_module = _read_module()
+
+    def prose_single(result: Any) -> Any:
+        return module.ProseSynthesisResult(
+            answer_text="批量产能上深南电路更稳。",
+            selected_claim_ids=("claim:f2-scc",),
+            selected_handle_ids=("company:f2-scc",),
+        )
+
+    single_answer = module.create_ephemeral_knowledge_answer(
+        answer_selector=_f2_selector(module),
+        prose_renderer=prose_single,
+    )
+    single_result = single_answer.answer(
+        _f2_pcb_request(
+            module,
+            read_module,
+            session_id="session:f2:anchor-single",
+            turn_id="turn:f2:anchor-single:1",
+        )
+    )
+    # The union stays a single confirmed entity: the anchor follows it.
+    single_anchor = single_result.context_receipt.active_anchor
+    assert single_anchor is not None
+    assert single_anchor.canonical_id == "company:f2-scc"
+
+    def prose_multi(result: Any) -> Any:
+        return module.ProseSynthesisResult(
+            answer_text="批量产能上深南电路更稳；深圳市顺易捷信息科技有限公司也可备选。",
+            selected_claim_ids=("claim:f2-scc",),
+            selected_handle_ids=("company:f2-scc",),
+        )
+
+    multi_answer = module.create_ephemeral_knowledge_answer(
+        answer_selector=_f2_selector(module),
+        prose_renderer=prose_multi,
+    )
+    multi_result = multi_answer.answer(
+        _f2_pcb_request(
+            module,
+            read_module,
+            session_id="session:f2:anchor-multi",
+            turn_id="turn:f2:anchor-multi:1",
+        )
+    )
+    multi_displayed = multi_result.context_receipt.displayed_result_set
+    assert multi_displayed is not None
+    assert multi_displayed.handle_ids == ("company:f2-scc", "company:f2-syj")
+    # Two entities in scope: no single-entity confirmation, so the anchor
+    # stays with the turn's first displayed member instead of switching.
+    multi_anchor = multi_result.context_receipt.active_anchor
+    assert multi_anchor is not None
+    assert multi_anchor.canonical_id == "company:f2-jlc"
+
+
+def test_prose_commit_ignores_names_outside_the_displayed_set() -> None:
+    """Mentions of entities that were never displayed never join the
+    committed scope — the union scans displayed handles only."""
+    module = _answer_module()
+    read_module = _read_module()
+
+    def prose(result: Any) -> Any:
+        return module.ProseSynthesisResult(
+            answer_text="小批量推荐嘉立创；华为技术有限公司的供应链更强。",
+            selected_claim_ids=("claim:f2-jlc",),
+            selected_handle_ids=("company:f2-jlc",),
+        )
+
+    answer = module.create_ephemeral_knowledge_answer(
+        answer_selector=_f2_selector(module),
+        prose_renderer=prose,
+    )
+    result = answer.answer(
+        _f2_pcb_request(
+            module,
+            read_module,
+            session_id="session:f2:negative",
+            turn_id="turn:f2:negative:1",
+        )
+    )
+    displayed = result.context_receipt.displayed_result_set
+    assert displayed is not None
+    assert displayed.handle_ids == ("company:f2-jlc",)
+
+
+def test_prose_commit_mention_matching_skips_sub_two_char_forms() -> None:
+    """A suffix-stripped name shorter than two characters never matches —
+    single-character stems would union on stray text."""
+    module = _answer_module()
+    read_module = _read_module()
+    short_item = _item(
+        read_module,
+        evidence_id="evidence:company:f2-jia",
+        object_id="company:f2-jia",
+        domain="company",
+        subject_id="company:f2-jia",
+        predicate="preferred_name",
+        value="甲公司",
+        snippet="甲公司是一家深圳 PCB 供应商。",
+    )
+    short_handle = _canonical_handle(
+        read_module,
+        canonical_id="company:f2-jia",
+        domain="company",
+        display_name="甲公司",
+        evidence_ids=("evidence:company:f2-jia",),
+    )
+    jlc_item = _item(
+        read_module,
+        evidence_id="evidence:company:f2-jlc",
+        object_id="company:f2-jlc",
+        domain="company",
+        subject_id="company:f2-jlc",
+        predicate="preferred_name",
+        value="深圳市嘉立创科技发展有限公司",
+        snippet="深圳市嘉立创科技发展有限公司是一家深圳 PCB 供应商。",
+    )
+    jlc_handle = _canonical_handle(
+        read_module,
+        canonical_id="company:f2-jlc",
+        domain="company",
+        display_name="深圳市嘉立创科技发展有限公司",
+        evidence_ids=("evidence:company:f2-jlc",),
+    )
+    request = _request(
+        module,
+        session_id="session:f2:short-form",
+        turn_id="turn:f2:short-form:1",
+        query="深圳 PCB 打样供应商有哪些",
+        evidence_set=_evidence_set(
+            read_module,
+            query="深圳 PCB 打样供应商有哪些",
+            items=(short_item, jlc_item),
+            handles=(short_handle, jlc_handle),
+        ),
+    )
+
+    def selector(inner: Any) -> Any:
+        return _proposal(
+            module,
+            inner,
+            displayed_handle_ids=("company:f2-jia", "company:f2-jlc"),
+            claims=(
+                (
+                    "claim:f2-jlc",
+                    "嘉立创提供 PCB 打样服务。",
+                    ("company:f2-jlc",),
+                    ("evidence:company:f2-jlc",),
+                ),
+            ),
+        )
+
+    def prose(result: Any) -> Any:
+        # “甲” appears in the answer but neither the full name 甲公司 nor a
+        # two-plus-character stem does, so the short-stem handle stays out.
+        return module.ProseSynthesisResult(
+            answer_text="甲方预算有限，打样走嘉立创。",
+            selected_claim_ids=("claim:f2-jlc",),
+            selected_handle_ids=("company:f2-jlc",),
+        )
+
+    answer = module.create_ephemeral_knowledge_answer(
+        answer_selector=selector,
+        prose_renderer=prose,
+    )
+    result = answer.answer(request)
+    displayed = result.context_receipt.displayed_result_set
+    assert displayed is not None
+    assert displayed.handle_ids == ("company:f2-jlc",)
+
+
+def test_prose_commit_empty_selection_keeps_displayed_set() -> None:
+    """An empty prose selection is an index-mapping failure, never a
+    deliberate rejection: the turn's displayed set survives whole even
+    when the answer names one of its members."""
+    module = _answer_module()
+    read_module = _read_module()
+
+    def prose(result: Any) -> Any:
+        return module.ProseSynthesisResult(
+            answer_text="深南电路的公开打样信息较为有限。",
+            selected_claim_ids=(),
+            selected_handle_ids=(),
+        )
+
+    answer = module.create_ephemeral_knowledge_answer(
+        answer_selector=_f2_selector(module),
+        prose_renderer=prose,
+    )
+    result = answer.answer(
+        _f2_pcb_request(
+            module,
+            read_module,
+            session_id="session:f2:empty-selection",
+            turn_id="turn:f2:empty-selection:1",
+        )
+    )
+    displayed = result.context_receipt.displayed_result_set
+    assert displayed is not None
+    assert displayed.handle_ids == _F2_PCB_COMPANY_IDS
+
+
 def test_attributed_items_failing_grounding_keep_the_degrade() -> None:
     """Attributed fallback candidates must clear the same grounding guardrails
     as selector claims. Here the web item's snippet leaks its own evidence id
