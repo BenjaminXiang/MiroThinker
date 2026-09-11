@@ -1,0 +1,5746 @@
+{
+  "scenarios": [
+    {
+      "id": "g2-t1",
+      "query": "中国有哪些成熟的酒店送餐机器人供应商",
+      "plan": {
+        "lanes": [
+          "exact",
+          "structured",
+          "lexical",
+          "vector",
+          "web"
+        ],
+        "max_candidates": 48,
+        "web_max_results": 48,
+        "query_views": [
+          "中国有哪些成熟的酒店送餐机器人供应商",
+          "酒店服务机器人厂商",
+          "酒店配送机器人品牌",
+          "酒店送餐机器人供应商"
+        ],
+        "enumeration_policy": null
+      },
+      "stage1_lanes": {
+        "structured": {
+          "candidates": 0,
+          "items": 0,
+          "candidate_raw_scores": [],
+          "candidate_lanes_of_evidence": []
+        },
+        "exact": {
+          "candidates": 0,
+          "items": 0,
+          "candidate_raw_scores": [],
+          "candidate_lanes_of_evidence": []
+        },
+        "web": {
+          "candidates": 48,
+          "items": 0,
+          "candidate_raw_scores": [
+            1.0,
+            0.95,
+            0.9,
+            0.85,
+            0.8,
+            0.75,
+            0.7,
+            0.6499999999999999,
+            0.6,
+            0.55,
+            0.5,
+            0.44999999999999996,
+            0.3999999999999999,
+            0.35,
+            0.29999999999999993,
+            0.25,
+            0.19999999999999996,
+            0.1499999999999999,
+            0.09999999999999998,
+            0.04999999999999993,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "candidate_lanes_of_evidence": [
+            [
+              "web"
+            ],
+            [
+              "web"
+            ],
+            [
+              "web"
+            ],
+            [
+              "web"
+            ],
+            [
+              "web"
+            ],
+            [
+              "web"
+            ],
+            [
+              "web"
+            ],
+            [
+              "web"
+            ],
+            [
+              "web"
+            ],
+            [
+              "web"
+            ],
+            [
+              "web"
+            ],
+            [
+              "web"
+            ],
+            [
+              "web"
+            ],
+            [
+              "web"
+            ],
+            [
+              "web"
+            ],
+            [
+              "web"
+            ],
+            [
+              "web"
+            ],
+            [
+              "web"
+            ],
+            [
+              "web"
+            ],
+            [
+              "web"
+            ],
+            [
+              "web"
+            ],
+            [
+              "web"
+            ],
+            [
+              "web"
+            ],
+            [
+              "web"
+            ],
+            [
+              "web"
+            ],
+            [
+              "web"
+            ],
+            [
+              "web"
+            ],
+            [
+              "web"
+            ],
+            [
+              "web"
+            ],
+            [
+              "web"
+            ],
+            [
+              "web"
+            ],
+            [
+              "web"
+            ],
+            [
+              "web"
+            ],
+            [
+              "web"
+            ],
+            [
+              "web"
+            ],
+            [
+              "web"
+            ],
+            [
+              "web"
+            ],
+            [
+              "web"
+            ],
+            [
+              "web"
+            ],
+            [
+              "web"
+            ],
+            [
+              "web"
+            ],
+            [
+              "web"
+            ],
+            [
+              "web"
+            ],
+            [
+              "web"
+            ],
+            [
+              "web"
+            ],
+            [
+              "web"
+            ],
+            [
+              "web"
+            ],
+            [
+              "web"
+            ]
+          ]
+        },
+        "lexical": {
+          "candidates": 48,
+          "items": 0,
+          "candidate_names": [
+            "云迹科技股份有限公司",
+            "深圳市普渡科技有限公司",
+            "上海开普勒机器人有限公司",
+            "上海擎朗智能科技有限公司",
+            "银河通用",
+            "跨维（深圳）智能数字科技有限公司",
+            "深圳市迈步机器人科技有限公司",
+            "九号机器人",
+            "深圳中科世界机器人有限公司",
+            "深圳市中舟智能科技有限公司",
+            "深圳市智贝尔机器人设备科技有限公司",
+            "深圳市艾唯尔科技有限公司",
+            "深圳市小村机器人智能科技有限公司",
+            "坎德拉（深圳）科技创新有限公司",
+            "深圳市全民通信息技术有限公司",
+            "云趣在线（深圳）科技有限公司",
+            "深圳市艾特智能科技有限公司",
+            "深圳中智卫安机器人技术有限公司",
+            "深圳晓润控股有限公司",
+            "深圳全智能机器人科技有限公司",
+            "深圳市普森斯科技有限公司",
+            "深圳市繁兴科技股份有限公司",
+            "睿博天米科技（深圳）有限公司",
+            "深圳市吉影科技有限公司",
+            "中铧机器人（深圳）有限公司",
+            "深圳市锐曼智能技术有限公司",
+            "深圳乐动机器人股份有限公司",
+            "深圳市笨笨机器人有限公司",
+            "深圳市石头智能机器人技术有限公司",
+            "深圳来创智能科技有限公司",
+            "深圳市宇辰智能科技有限公司",
+            "深圳恒需机器人科技有限公司",
+            "深圳市大象机器人科技有限公司",
+            "深圳科卫机器人科技有限公司",
+            "深圳市御膳智能科技有限公司",
+            "深圳以内创新科技有限公司",
+            "深圳普得技术有限公司",
+            "华腾智达（深圳）智能科技有限公司",
+            "合肥零次方机器人有限公司",
+            "深圳市三宝创新智能有限公司",
+            "深圳市未来天使机器人有限公司",
+            "爱乐福（深圳）科技有限公司",
+            "深圳银星智能集团股份有限公司",
+            "深圳市元鼎智能创新有限公司",
+            "深圳灵喵机器人技术有限公司",
+            "深圳市恒博智能安防机器人有限公司",
+            "敬科（深圳）机器人科技有限公司",
+            "深圳市源来智能设备有限公司"
+          ],
+          "candidate_raw_scores": [
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0
+          ],
+          "candidate_lanes_of_evidence": [
+            [
+              "lexical"
+            ],
+            [
+              "lexical"
+            ],
+            [
+              "lexical"
+            ],
+            [
+              "lexical"
+            ],
+            [
+              "lexical"
+            ],
+            [
+              "lexical"
+            ],
+            [
+              "lexical"
+            ],
+            [
+              "lexical"
+            ],
+            [
+              "lexical"
+            ],
+            [
+              "lexical"
+            ],
+            [
+              "lexical"
+            ],
+            [
+              "lexical"
+            ],
+            [
+              "lexical"
+            ],
+            [
+              "lexical"
+            ],
+            [
+              "lexical"
+            ],
+            [
+              "lexical"
+            ],
+            [
+              "lexical"
+            ],
+            [
+              "lexical"
+            ],
+            [
+              "lexical"
+            ],
+            [
+              "lexical"
+            ],
+            [
+              "lexical"
+            ],
+            [
+              "lexical"
+            ],
+            [
+              "lexical"
+            ],
+            [
+              "lexical"
+            ],
+            [
+              "lexical"
+            ],
+            [
+              "lexical"
+            ],
+            [
+              "lexical"
+            ],
+            [
+              "lexical"
+            ],
+            [
+              "lexical"
+            ],
+            [
+              "lexical"
+            ],
+            [
+              "lexical"
+            ],
+            [
+              "lexical"
+            ],
+            [
+              "lexical"
+            ],
+            [
+              "lexical"
+            ],
+            [
+              "lexical"
+            ],
+            [
+              "lexical"
+            ],
+            [
+              "lexical"
+            ],
+            [
+              "lexical"
+            ],
+            [
+              "lexical"
+            ],
+            [
+              "lexical"
+            ],
+            [
+              "lexical"
+            ],
+            [
+              "lexical"
+            ],
+            [
+              "lexical"
+            ],
+            [
+              "lexical"
+            ],
+            [
+              "lexical"
+            ],
+            [
+              "lexical"
+            ],
+            [
+              "lexical"
+            ],
+            [
+              "lexical"
+            ]
+          ]
+        },
+        "vector": {
+          "candidates": 48,
+          "items": 0,
+          "candidate_raw_scores": [
+            0.04733222129535993,
+            0.04427165096627889,
+            0.04390288532197265,
+            0.04385453493241558,
+            0.04346655423210715,
+            0.04014008421735641,
+            0.03954511529569601,
+            0.039019066200193055,
+            0.03882577873570164,
+            0.038354580963440146,
+            0.03811121975931112,
+            0.0376468864058182,
+            0.03720547376009911,
+            0.03698432452768446,
+            0.036716047011538036,
+            0.03655495404352609,
+            0.03623035993069533,
+            0.03599161470408733,
+            0.03561920418868464,
+            0.0354720711969647,
+            0.035268378218362394,
+            0.03507415984360311,
+            0.034852809899993724,
+            0.03485098672321826,
+            0.03473754415564095,
+            0.034595524565113674,
+            0.03454143589041099,
+            0.034362369931166106,
+            0.03434564091021025,
+            0.03421353535512795,
+            0.03417417988241068,
+            0.03417256770128633,
+            0.033972782649201956,
+            0.033778786748676015,
+            0.0337451949904811,
+            0.033545885314007,
+            0.033485807413078376,
+            0.03341707539337953,
+            0.033260448218564394,
+            0.033064960002494884,
+            0.03301409791950028,
+            0.032856465008064016,
+            0.032842904519992645,
+            0.03276182998943268,
+            0.032581515276891064,
+            0.03249822286338634,
+            0.03243624725127526,
+            0.03234078673051395
+          ],
+          "candidate_lanes_of_evidence": [
+            [
+              "vector"
+            ],
+            [
+              "vector"
+            ],
+            [
+              "vector"
+            ],
+            [
+              "vector"
+            ],
+            [
+              "vector"
+            ],
+            [
+              "vector"
+            ],
+            [
+              "vector"
+            ],
+            [
+              "vector"
+            ],
+            [
+              "vector"
+            ],
+            [
+              "vector"
+            ],
+            [
+              "vector"
+            ],
+            [
+              "vector"
+            ],
+            [
+              "vector"
+            ],
+            [
+              "vector"
+            ],
+            [
+              "vector"
+            ],
+            [
+              "vector"
+            ],
+            [
+              "vector"
+            ],
+            [
+              "vector"
+            ],
+            [
+              "vector"
+            ],
+            [
+              "vector"
+            ],
+            [
+              "vector"
+            ],
+            [
+              "vector"
+            ],
+            [
+              "vector"
+            ],
+            [
+              "vector"
+            ],
+            [
+              "vector"
+            ],
+            [
+              "vector"
+            ],
+            [
+              "vector"
+            ],
+            [
+              "vector"
+            ],
+            [
+              "vector"
+            ],
+            [
+              "vector"
+            ],
+            [
+              "vector"
+            ],
+            [
+              "vector"
+            ],
+            [
+              "vector"
+            ],
+            [
+              "vector"
+            ],
+            [
+              "vector"
+            ],
+            [
+              "vector"
+            ],
+            [
+              "vector"
+            ],
+            [
+              "vector"
+            ],
+            [
+              "vector"
+            ],
+            [
+              "vector"
+            ],
+            [
+              "vector"
+            ],
+            [
+              "vector"
+            ],
+            [
+              "vector"
+            ],
+            [
+              "vector"
+            ],
+            [
+              "vector"
+            ],
+            [
+              "vector"
+            ],
+            [
+              "vector"
+            ],
+            [
+              "vector"
+            ]
+          ]
+        }
+      },
+      "stage2_direct": {
+        "direct_item_count": 0,
+        "direct_result_count": 0
+      },
+      "stage3_window": {
+        "candidate_limit": 48,
+        "ordered_count": 144,
+        "ordered_names": [
+          "深圳市全民通信息技术有限公司",
+          "2026年酒店送餐机器人选购指南:猎户星空与行业主流品牌评测 - 智造出海 - 博客园企业号",
+          "云趣在线（深圳）科技有限公司",
+          "普渡机器人携手亚朵集团，以机器人技术引领酒店服务新纪元",
+          "深圳市艾特智能科技有限公司",
+          "关于 送餐机器人 结果1",
+          "深圳中智卫安机器人技术有限公司",
+          "遍地都是的酒店机器人，已经“退烧”了- 21经济网 - 21财经",
+          "深圳晓润控股有限公司",
+          "「送餐传菜机器人」送餐传菜机器人公司黄页 - 顺企网",
+          "银河通用",
+          "烧钱8亿换“第一股”，酒店机器人是“伪刚需”吗？ - 观察者网",
+          "深圳全智能机器人科技有限公司",
+          "酒店机器人正在中国普及_机器人网",
+          "深圳市普森斯科技有限公司",
+          "酒店智能机器人有哪些品牌？酒店配送机器人哪家最好？ - 中华网",
+          "深圳市繁兴科技股份有限公司",
+          "2026年深度解析:支持OEM的酒店送餐机器人厂商与场景化解决方案 - 智造出海 - 博客园企业号",
+          "睿博天米科技（深圳）有限公司",
+          "从餐饮、酒店配送机器人，看国产服务机器人如何出海？ - 亿欧",
+          "深圳市吉影科技有限公司",
+          "酒店服务机器人头部品牌有哪些?酒店机器人品牌推荐?_中华网",
+          "中铧机器人（深圳）有限公司",
+          "美国酒店服务型机器人正冲击员工就业领域-广州国际酒店及餐饮产业博览会",
+          "深圳市锐曼智能技术有限公司",
+          "酒店服务机器人-洛必德",
+          "深圳乐动机器人股份有限公司",
+          "酒店服务机器人 - 上海贺风工业产品设计有限公司",
+          "深圳中科世界机器人有限公司",
+          "酒店机器人公司排行榜",
+          "深圳市笨笨机器人有限公司",
+          "大火的酒店机器人，背后都是谁在砸钱？ - 环球旅讯",
+          "深圳市石头智能机器人技术有限公司",
+          "#酒店服务机器人# - 标签聚合 - 创业邦",
+          "云迹科技股份有限公司",
+          "酒店机器人 - 百度百科",
+          "深圳来创智能科技有限公司",
+          "酒店服务机器人行业国内市场消费数据分析与未来前景预测报告",
+          "深圳市宇辰智能科技有限公司",
+          "酒店机器人图片- 京东",
+          "深圳恒需机器人科技有限公司",
+          "【送餐机器人价格】送餐机器人图片- 供应商网",
+          "深圳市大象机器人科技有限公司",
+          "酒店餐厅送餐机器人-智能制造网",
+          "深圳科卫机器人科技有限公司",
+          "专注智慧配送，九号机器人亮相上海国际酒店及商业空间博览会 - 新华网",
+          "深圳市御膳智能科技有限公司",
+          "酒店机器人正在中国普及",
+          "深圳以内创新科技有限公司",
+          "关于KEENON-KEENON机器人",
+          "深圳市艾唯尔科技有限公司",
+          "要上市的酒店机器人，吃力不讨好？ - 澎湃新闻",
+          "深圳市普渡科技有限公司",
+          "中国酒店机器人公司排名（名录） - 职友集",
+          "深圳普得技术有限公司",
+          "中国送餐/传菜机器人公司|厂家",
+          "华腾智达（深圳）智能科技有限公司",
+          "中国制造商餐厅机器人服务员服务/自主送货机器人/机器人送菜",
+          "深圳市中舟智能科技有限公司",
+          "擎朗智能官网-具身AI服务机器人_送餐机器人_酒店机器人_清洁机器人",
+          "深圳市小村机器人智能科技有限公司",
+          "2025年酒店服务机器人前景 - 2025-2031年全球与中国酒店服务机器人发展现状及市场前景 - 产业调研网",
+          "坎德拉（深圳）科技创新有限公司",
+          "3年亏了8亿，酒店送餐机器人其实是在送钱 - 36氪",
+          "深圳市智贝尔机器人设备科技有限公司",
+          "送餐机器人厂家 酒店端菜机器人 迎宾接待机器人 视频-搜了网",
+          "合肥零次方机器人有限公司",
+          "基于机器人的酒店送餐方法、装置、设备和存储介质 - 道客巴巴",
+          "深圳市三宝创新智能有限公司",
+          "China Hotel送餐机器人们，“1年绕地球507圈”",
+          "深圳市未来天使机器人有限公司",
+          "遍地都是的酒店机器人，已经“退烧”了 - 36氪",
+          "爱乐福（深圳）科技有限公司",
+          "酒店送餐机器人代理-壹柒陆捌智能科技(广州)有限公司",
+          "深圳银星智能集团股份有限公司",
+          "送餐机器人服务员全自动配传送物品上菜酒店餐厅饭店商场KTV-阿里巴巴",
+          "跨维（深圳）智能数字科技有限公司",
+          "高端制造产业出海——机器人篇（下） 一、多元应用场景落地",
+          "深圳市元鼎智能创新有限公司",
+          "酒店服务机器人厂家-苏州穿山甲机器人股份有限公司",
+          "深圳灵喵机器人技术有限公司",
+          "酒店递送机器人深度技术解析与解决方案选型指南",
+          "深圳市恒博智能安防机器人有限公司",
+          "「酒店送物机器人」酒店送物机器人公司黄页 - 顺企网",
+          "敬科（深圳）机器人科技有限公司",
+          "2025-2030年中国酒店送货机器人行业项目调研及市场前景预测评估报告-中国报告大厅",
+          "深圳市迈步机器人科技有限公司",
+          "旅店送餐机器人制造商_机械及行业设备-壹柒陆捌智能科技(广州)有限公司",
+          "深圳市源来智能设备有限公司",
+          "自主配送服务机器人酒店迎宾配送智能配送机器人",
+          "上海开普勒机器人有限公司",
+          "酒店餐厅自动配送机器人 送餐机器人现货供应-阿里巴巴",
+          "九号机器人",
+          "酒店酒馆机器人无人送餐传菜上菜端菜智能服务员餐厅配送机器人",
+          "上海擎朗智能科技有限公司",
+          "企业样本篇丨“智造”10万台服务机器人，“小巨人”擎朗有大梦想 - 新华网",
+          "未来维度（深圳）科技有限公司",
+          "深圳壹品创想广告有限公司",
+          "未来地图（深圳）智能科技有限公司",
+          "深圳市行疆智科技有限公司",
+          "矩阵纵横设计股份有限公司",
+          "易控物联（深圳）信息技术有限公司",
+          "深圳市希德威科技发展有限公司",
+          "深圳市迪威迅股份有限公司",
+          "前海晶赢（深圳）科技有限公司",
+          "深圳未来大数据服务有限公司",
+          "深圳三思纵横科技股份有限公司",
+          "深圳市享往科技有限公司",
+          "深圳晶报传媒有限公司",
+          "深圳市行疆技术有限公司",
+          "迪特格设计集团有限公司",
+          "深圳市灵巧驱控技术有限公司",
+          "四维华信科技（深圳）有限公司",
+          "深圳市铭迹创新科技有限公司",
+          "共生无界科技（深圳）有限公司",
+          "乾位智通（深圳）技术有限公司",
+          "深圳市领航碳纤维科技有限公司",
+          "深圳维晶高新材料科技有限公司",
+          "和诚工业发展（深圳）有限公司",
+          "深圳市里德云科技有限公司",
+          "深圳市超维联控科技有限公司",
+          "深圳市海德智慧科技有限公司",
+          "深圳闻储创新科技有限公司",
+          "深圳市麦天下信息科技有限公司",
+          "深圳前海极简信息咨询服务有限公司",
+          "深圳市睿毅行通科技有限公司",
+          "深圳市克得磁材技术有限公司",
+          "深圳微控无线科技有限公司",
+          "广东博华超高清创新中心有限公司",
+          "深圳市翎风科技有限公司",
+          "深圳市诚鑫创汽车配件有限公司",
+          "深圳市顺为互联科技有限公司",
+          "铭欣创达（深圳）传媒有限公司",
+          "熙家智能系统（深圳）有限公司",
+          "深圳灵图创新科技有限公司",
+          "丰图科技（深圳）有限公司",
+          "深圳市物联传媒有限公司",
+          "雅可比智能动力（深圳）有限公司",
+          "深圳市信德远致科技有限公司",
+          "睿可创新智能科技（深圳）有限公司",
+          "深圳市昇伟线程科技有限公司",
+          "深圳市亿威汽车科技有限公司",
+          "深圳市甲天行科技有限公司",
+          "深圳域唯科技有限公司"
+        ],
+        "eligible": [
+          {
+            "result_id": "fused-result:company-c-46be538b64accf560e186de3",
+            "display_name": "云迹科技股份有限公司",
+            "raw_score": 1.0,
+            "canonical_id": "company-c-46be538b64accf560e186de3",
+            "lanes": [
+              "lexical"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-72b2ec528908ac199ee1dbc7",
+            "display_name": "深圳市普渡科技有限公司",
+            "raw_score": 1.0,
+            "canonical_id": "company-c-72b2ec528908ac199ee1dbc7",
+            "lanes": [
+              "lexical"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-eb40cc90a933f36555686875",
+            "display_name": "上海开普勒机器人有限公司",
+            "raw_score": 1.0,
+            "canonical_id": "company-c-eb40cc90a933f36555686875",
+            "lanes": [
+              "lexical"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-ff45b82218426752f15699b1",
+            "display_name": "上海擎朗智能科技有限公司",
+            "raw_score": 1.0,
+            "canonical_id": "company-c-ff45b82218426752f15699b1",
+            "lanes": [
+              "lexical"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-12bb60608a1c9e5205a55caf",
+            "display_name": "银河通用",
+            "raw_score": 1.0,
+            "canonical_id": "company-c-12bb60608a1c9e5205a55caf",
+            "lanes": [
+              "lexical"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-b0e5064d07880caef50007df",
+            "display_name": "跨维（深圳）智能数字科技有限公司",
+            "raw_score": 1.0,
+            "canonical_id": "company-c-b0e5064d07880caef50007df",
+            "lanes": [
+              "lexical"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-cf17488d5dc1cb249f29c26a",
+            "display_name": "深圳市迈步机器人科技有限公司",
+            "raw_score": 1.0,
+            "canonical_id": "company-c-cf17488d5dc1cb249f29c26a",
+            "lanes": [
+              "lexical"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-fd3242c863d6bb6b3fa59213",
+            "display_name": "九号机器人",
+            "raw_score": 1.0,
+            "canonical_id": "company-c-fd3242c863d6bb6b3fa59213",
+            "lanes": [
+              "lexical"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-38aaee00c3d56f0a20436d9c",
+            "display_name": "深圳中科世界机器人有限公司",
+            "raw_score": 1.0,
+            "canonical_id": "company-c-38aaee00c3d56f0a20436d9c",
+            "lanes": [
+              "lexical"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-7b1fb07b5602d900c20c193b",
+            "display_name": "深圳市中舟智能科技有限公司",
+            "raw_score": 1.0,
+            "canonical_id": "company-c-7b1fb07b5602d900c20c193b",
+            "lanes": [
+              "lexical"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-9f7a09bae9457b8c5e712d2b",
+            "display_name": "深圳市智贝尔机器人设备科技有限公司",
+            "raw_score": 1.0,
+            "canonical_id": "company-c-9f7a09bae9457b8c5e712d2b",
+            "lanes": [
+              "lexical"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-729df3c1dcf6949944d681b8",
+            "display_name": "深圳市艾唯尔科技有限公司",
+            "raw_score": 1.0,
+            "canonical_id": "company-c-729df3c1dcf6949944d681b8",
+            "lanes": [
+              "lexical"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-7e73e92d00b34e0c9c5cc188",
+            "display_name": "深圳市小村机器人智能科技有限公司",
+            "raw_score": 1.0,
+            "canonical_id": "company-c-7e73e92d00b34e0c9c5cc188",
+            "lanes": [
+              "lexical"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-9a778c233e7e20a66bb77b35",
+            "display_name": "坎德拉（深圳）科技创新有限公司",
+            "raw_score": 1.0,
+            "canonical_id": "company-c-9a778c233e7e20a66bb77b35",
+            "lanes": [
+              "lexical"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-0614ef33bfe1f92ebbb8fd3f",
+            "display_name": "深圳市全民通信息技术有限公司",
+            "raw_score": 1.0,
+            "canonical_id": "company-c-0614ef33bfe1f92ebbb8fd3f",
+            "lanes": [
+              "lexical"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-08e0d42d015bdd12a8b45d60",
+            "display_name": "云趣在线（深圳）科技有限公司",
+            "raw_score": 1.0,
+            "canonical_id": "company-c-08e0d42d015bdd12a8b45d60",
+            "lanes": [
+              "lexical"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-0b83a85518102b275856fbdc",
+            "display_name": "深圳市艾特智能科技有限公司",
+            "raw_score": 1.0,
+            "canonical_id": "company-c-0b83a85518102b275856fbdc",
+            "lanes": [
+              "lexical"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-10e74e0166647f4352b883fd",
+            "display_name": "深圳中智卫安机器人技术有限公司",
+            "raw_score": 1.0,
+            "canonical_id": "company-c-10e74e0166647f4352b883fd",
+            "lanes": [
+              "lexical"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-116032c9291d3548dcb37fad",
+            "display_name": "深圳晓润控股有限公司",
+            "raw_score": 1.0,
+            "canonical_id": "company-c-116032c9291d3548dcb37fad",
+            "lanes": [
+              "lexical"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-1301e7e62132e35f06f4bf2c",
+            "display_name": "深圳全智能机器人科技有限公司",
+            "raw_score": 1.0,
+            "canonical_id": "company-c-1301e7e62132e35f06f4bf2c",
+            "lanes": [
+              "lexical"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-1937e885a28e0271df440050",
+            "display_name": "深圳市普森斯科技有限公司",
+            "raw_score": 1.0,
+            "canonical_id": "company-c-1937e885a28e0271df440050",
+            "lanes": [
+              "lexical"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-1f87dac98e5754a924961a59",
+            "display_name": "深圳市繁兴科技股份有限公司",
+            "raw_score": 1.0,
+            "canonical_id": "company-c-1f87dac98e5754a924961a59",
+            "lanes": [
+              "lexical"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-243b3d6ea5fbcdfbb802e114",
+            "display_name": "睿博天米科技（深圳）有限公司",
+            "raw_score": 1.0,
+            "canonical_id": "company-c-243b3d6ea5fbcdfbb802e114",
+            "lanes": [
+              "lexical"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-25181f614df073ad888fd87b",
+            "display_name": "深圳市吉影科技有限公司",
+            "raw_score": 1.0,
+            "canonical_id": "company-c-25181f614df073ad888fd87b",
+            "lanes": [
+              "lexical"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-2e9661bbf7003338fcab3105",
+            "display_name": "中铧机器人（深圳）有限公司",
+            "raw_score": 1.0,
+            "canonical_id": "company-c-2e9661bbf7003338fcab3105",
+            "lanes": [
+              "lexical"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-30d1da20c9d086b995e476ec",
+            "display_name": "深圳市锐曼智能技术有限公司",
+            "raw_score": 1.0,
+            "canonical_id": "company-c-30d1da20c9d086b995e476ec",
+            "lanes": [
+              "lexical"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-330adc82bbd5ff6d790c87e9",
+            "display_name": "深圳乐动机器人股份有限公司",
+            "raw_score": 1.0,
+            "canonical_id": "company-c-330adc82bbd5ff6d790c87e9",
+            "lanes": [
+              "lexical"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-43082b154d9637a79aa770dc",
+            "display_name": "深圳市笨笨机器人有限公司",
+            "raw_score": 1.0,
+            "canonical_id": "company-c-43082b154d9637a79aa770dc",
+            "lanes": [
+              "lexical"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-4455f9bea2db512928221323",
+            "display_name": "深圳市石头智能机器人技术有限公司",
+            "raw_score": 1.0,
+            "canonical_id": "company-c-4455f9bea2db512928221323",
+            "lanes": [
+              "lexical"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-50d55edbf807e56e075fbe18",
+            "display_name": "深圳来创智能科技有限公司",
+            "raw_score": 1.0,
+            "canonical_id": "company-c-50d55edbf807e56e075fbe18",
+            "lanes": [
+              "lexical"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-52321dec821b842765effcec",
+            "display_name": "深圳市宇辰智能科技有限公司",
+            "raw_score": 1.0,
+            "canonical_id": "company-c-52321dec821b842765effcec",
+            "lanes": [
+              "lexical"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-5471a6b5813d0036d900387a",
+            "display_name": "深圳恒需机器人科技有限公司",
+            "raw_score": 1.0,
+            "canonical_id": "company-c-5471a6b5813d0036d900387a",
+            "lanes": [
+              "lexical"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-5723f6875c847545125c5636",
+            "display_name": "深圳市大象机器人科技有限公司",
+            "raw_score": 1.0,
+            "canonical_id": "company-c-5723f6875c847545125c5636",
+            "lanes": [
+              "lexical"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-6600d34e99744e3f9640c05e",
+            "display_name": "深圳科卫机器人科技有限公司",
+            "raw_score": 1.0,
+            "canonical_id": "company-c-6600d34e99744e3f9640c05e",
+            "lanes": [
+              "lexical"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-675a1a3557d441076f3dcdbb",
+            "display_name": "深圳市御膳智能科技有限公司",
+            "raw_score": 1.0,
+            "canonical_id": "company-c-675a1a3557d441076f3dcdbb",
+            "lanes": [
+              "lexical"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-6f5b2756377c7823ed3003b6",
+            "display_name": "深圳以内创新科技有限公司",
+            "raw_score": 1.0,
+            "canonical_id": "company-c-6f5b2756377c7823ed3003b6",
+            "lanes": [
+              "lexical"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-73a7cb548f931998a188a7a7",
+            "display_name": "深圳普得技术有限公司",
+            "raw_score": 1.0,
+            "canonical_id": "company-c-73a7cb548f931998a188a7a7",
+            "lanes": [
+              "lexical"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-7a45896fdd382e682b34dd25",
+            "display_name": "华腾智达（深圳）智能科技有限公司",
+            "raw_score": 1.0,
+            "canonical_id": "company-c-7a45896fdd382e682b34dd25",
+            "lanes": [
+              "lexical"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-9fd7ed378e77a7a006ff73b4",
+            "display_name": "合肥零次方机器人有限公司",
+            "raw_score": 1.0,
+            "canonical_id": "company-c-9fd7ed378e77a7a006ff73b4",
+            "lanes": [
+              "lexical"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-a289a606c38b842c928519fb",
+            "display_name": "深圳市三宝创新智能有限公司",
+            "raw_score": 1.0,
+            "canonical_id": "company-c-a289a606c38b842c928519fb",
+            "lanes": [
+              "lexical"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-a56708d54bc094a3cf6b4fe8",
+            "display_name": "深圳市未来天使机器人有限公司",
+            "raw_score": 1.0,
+            "canonical_id": "company-c-a56708d54bc094a3cf6b4fe8",
+            "lanes": [
+              "lexical"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-a8916a638d39696b82a4e84c",
+            "display_name": "爱乐福（深圳）科技有限公司",
+            "raw_score": 1.0,
+            "canonical_id": "company-c-a8916a638d39696b82a4e84c",
+            "lanes": [
+              "lexical"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-ad7a7f8380f1336d9db2878c",
+            "display_name": "深圳银星智能集团股份有限公司",
+            "raw_score": 1.0,
+            "canonical_id": "company-c-ad7a7f8380f1336d9db2878c",
+            "lanes": [
+              "lexical"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-b12b4daaf45164d6d77d8d8b",
+            "display_name": "深圳市元鼎智能创新有限公司",
+            "raw_score": 1.0,
+            "canonical_id": "company-c-b12b4daaf45164d6d77d8d8b",
+            "lanes": [
+              "lexical"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-bc7e26ab50c64b9638e94f5e",
+            "display_name": "深圳灵喵机器人技术有限公司",
+            "raw_score": 1.0,
+            "canonical_id": "company-c-bc7e26ab50c64b9638e94f5e",
+            "lanes": [
+              "lexical"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-c13f42b06068014e518bed9c",
+            "display_name": "深圳市恒博智能安防机器人有限公司",
+            "raw_score": 1.0,
+            "canonical_id": "company-c-c13f42b06068014e518bed9c",
+            "lanes": [
+              "lexical"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-c7df9b1497b7b84acc9b91fc",
+            "display_name": "敬科（深圳）机器人科技有限公司",
+            "raw_score": 1.0,
+            "canonical_id": "company-c-c7df9b1497b7b84acc9b91fc",
+            "lanes": [
+              "lexical"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-d813cbcd7760a597384ccbe2",
+            "display_name": "深圳市源来智能设备有限公司",
+            "raw_score": 1.0,
+            "canonical_id": "company-c-d813cbcd7760a597384ccbe2",
+            "lanes": [
+              "lexical"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-2ffc617ad4aba93aeae2de68",
+            "display_name": "未来维度（深圳）科技有限公司",
+            "raw_score": 0.04733222129535993,
+            "canonical_id": "company-c-2ffc617ad4aba93aeae2de68",
+            "lanes": [
+              "vector"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-13c4beee1c0b6931dfcac725",
+            "display_name": "深圳壹品创想广告有限公司",
+            "raw_score": 0.04427165096627889,
+            "canonical_id": "company-c-13c4beee1c0b6931dfcac725",
+            "lanes": [
+              "vector"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-8701191533fbaf8b0366f4db",
+            "display_name": "未来地图（深圳）智能科技有限公司",
+            "raw_score": 0.04390288532197265,
+            "canonical_id": "company-c-8701191533fbaf8b0366f4db",
+            "lanes": [
+              "vector"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-550fd831fce0af9330742f53",
+            "display_name": "深圳市行疆智科技有限公司",
+            "raw_score": 0.04385453493241558,
+            "canonical_id": "company-c-550fd831fce0af9330742f53",
+            "lanes": [
+              "vector"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-ed40c69e403a112c063dd35e",
+            "display_name": "矩阵纵横设计股份有限公司",
+            "raw_score": 0.04346655423210715,
+            "canonical_id": "company-c-ed40c69e403a112c063dd35e",
+            "lanes": [
+              "vector"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-b4d061419ae21235ee65a12e",
+            "display_name": "易控物联（深圳）信息技术有限公司",
+            "raw_score": 0.04014008421735641,
+            "canonical_id": "company-c-b4d061419ae21235ee65a12e",
+            "lanes": [
+              "vector"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-23563a72f7527e8bf69b6296",
+            "display_name": "深圳市希德威科技发展有限公司",
+            "raw_score": 0.03954511529569601,
+            "canonical_id": "company-c-23563a72f7527e8bf69b6296",
+            "lanes": [
+              "vector"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-6eb7bfdb10b1954dd7d4996e",
+            "display_name": "深圳市迪威迅股份有限公司",
+            "raw_score": 0.039019066200193055,
+            "canonical_id": "company-c-6eb7bfdb10b1954dd7d4996e",
+            "lanes": [
+              "vector"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-6ee32c00972568cd642f07f3",
+            "display_name": "前海晶赢（深圳）科技有限公司",
+            "raw_score": 0.03882577873570164,
+            "canonical_id": "company-c-6ee32c00972568cd642f07f3",
+            "lanes": [
+              "vector"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-1ae4a3b8387d9c2297467b48",
+            "display_name": "深圳未来大数据服务有限公司",
+            "raw_score": 0.038354580963440146,
+            "canonical_id": "company-c-1ae4a3b8387d9c2297467b48",
+            "lanes": [
+              "vector"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-392e81265c3522a64baa3305",
+            "display_name": "深圳三思纵横科技股份有限公司",
+            "raw_score": 0.03811121975931112,
+            "canonical_id": "company-c-392e81265c3522a64baa3305",
+            "lanes": [
+              "vector"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-f486d5b17568a191a5aee2c2",
+            "display_name": "深圳市享往科技有限公司",
+            "raw_score": 0.0376468864058182,
+            "canonical_id": "company-c-f486d5b17568a191a5aee2c2",
+            "lanes": [
+              "vector"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-5c6097160102c991a1b37632",
+            "display_name": "深圳晶报传媒有限公司",
+            "raw_score": 0.03720547376009911,
+            "canonical_id": "company-c-5c6097160102c991a1b37632",
+            "lanes": [
+              "vector"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-457f50532d39a46113e33e9d",
+            "display_name": "深圳市行疆技术有限公司",
+            "raw_score": 0.03698432452768446,
+            "canonical_id": "company-c-457f50532d39a46113e33e9d",
+            "lanes": [
+              "vector"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-05c5abc846442f73f9297df2",
+            "display_name": "迪特格设计集团有限公司",
+            "raw_score": 0.036716047011538036,
+            "canonical_id": "company-c-05c5abc846442f73f9297df2",
+            "lanes": [
+              "vector"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-bf3390d3498350be5de6cd87",
+            "display_name": "深圳市灵巧驱控技术有限公司",
+            "raw_score": 0.03655495404352609,
+            "canonical_id": "company-c-bf3390d3498350be5de6cd87",
+            "lanes": [
+              "vector"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-57e2e38e8db4ffa05510f7dc",
+            "display_name": "四维华信科技（深圳）有限公司",
+            "raw_score": 0.03623035993069533,
+            "canonical_id": "company-c-57e2e38e8db4ffa05510f7dc",
+            "lanes": [
+              "vector"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-610aa1c1bd153922145781d6",
+            "display_name": "深圳市铭迹创新科技有限公司",
+            "raw_score": 0.03599161470408733,
+            "canonical_id": "company-c-610aa1c1bd153922145781d6",
+            "lanes": [
+              "vector"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-aa524be12219cd4e1eb2ee63",
+            "display_name": "共生无界科技（深圳）有限公司",
+            "raw_score": 0.03561920418868464,
+            "canonical_id": "company-c-aa524be12219cd4e1eb2ee63",
+            "lanes": [
+              "vector"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-37a0db236cf5f9a3c149037b",
+            "display_name": "乾位智通（深圳）技术有限公司",
+            "raw_score": 0.0354720711969647,
+            "canonical_id": "company-c-37a0db236cf5f9a3c149037b",
+            "lanes": [
+              "vector"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-fc47e4369c47e8a1d3cacc34",
+            "display_name": "深圳市领航碳纤维科技有限公司",
+            "raw_score": 0.035268378218362394,
+            "canonical_id": "company-c-fc47e4369c47e8a1d3cacc34",
+            "lanes": [
+              "vector"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-101d0c26e694692c7242e096",
+            "display_name": "深圳维晶高新材料科技有限公司",
+            "raw_score": 0.03507415984360311,
+            "canonical_id": "company-c-101d0c26e694692c7242e096",
+            "lanes": [
+              "vector"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-411e8567cbcc98bbc61d5d6b",
+            "display_name": "和诚工业发展（深圳）有限公司",
+            "raw_score": 0.034852809899993724,
+            "canonical_id": "company-c-411e8567cbcc98bbc61d5d6b",
+            "lanes": [
+              "vector"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-c441ae7fb2de0e9f90b809c7",
+            "display_name": "深圳市里德云科技有限公司",
+            "raw_score": 0.03485098672321826,
+            "canonical_id": "company-c-c441ae7fb2de0e9f90b809c7",
+            "lanes": [
+              "vector"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-1a179ad20bf6caa4fbd08111",
+            "display_name": "深圳市超维联控科技有限公司",
+            "raw_score": 0.03473754415564095,
+            "canonical_id": "company-c-1a179ad20bf6caa4fbd08111",
+            "lanes": [
+              "vector"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-4750c2d483ead549ddf534f2",
+            "display_name": "深圳市海德智慧科技有限公司",
+            "raw_score": 0.034595524565113674,
+            "canonical_id": "company-c-4750c2d483ead549ddf534f2",
+            "lanes": [
+              "vector"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-31fc24f01ef4da67c67e1451",
+            "display_name": "深圳闻储创新科技有限公司",
+            "raw_score": 0.03454143589041099,
+            "canonical_id": "company-c-31fc24f01ef4da67c67e1451",
+            "lanes": [
+              "vector"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-9f16d9660c813714bf1abc4e",
+            "display_name": "深圳市麦天下信息科技有限公司",
+            "raw_score": 0.034362369931166106,
+            "canonical_id": "company-c-9f16d9660c813714bf1abc4e",
+            "lanes": [
+              "vector"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-ebee626786f8a62cf0eab245",
+            "display_name": "深圳前海极简信息咨询服务有限公司",
+            "raw_score": 0.03434564091021025,
+            "canonical_id": "company-c-ebee626786f8a62cf0eab245",
+            "lanes": [
+              "vector"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-f9ca81708614933b09017b0e",
+            "display_name": "深圳市睿毅行通科技有限公司",
+            "raw_score": 0.03421353535512795,
+            "canonical_id": "company-c-f9ca81708614933b09017b0e",
+            "lanes": [
+              "vector"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-90dc26fe504c9970b5c96f5e",
+            "display_name": "深圳市克得磁材技术有限公司",
+            "raw_score": 0.03417417988241068,
+            "canonical_id": "company-c-90dc26fe504c9970b5c96f5e",
+            "lanes": [
+              "vector"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-2bf9c445f234ea6c6986e44b",
+            "display_name": "深圳微控无线科技有限公司",
+            "raw_score": 0.03417256770128633,
+            "canonical_id": "company-c-2bf9c445f234ea6c6986e44b",
+            "lanes": [
+              "vector"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-6b4d60e28882eb5e590152fa",
+            "display_name": "广东博华超高清创新中心有限公司",
+            "raw_score": 0.033972782649201956,
+            "canonical_id": "company-c-6b4d60e28882eb5e590152fa",
+            "lanes": [
+              "vector"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-62b88bea3ae6f26bcfe85a63",
+            "display_name": "深圳市翎风科技有限公司",
+            "raw_score": 0.033778786748676015,
+            "canonical_id": "company-c-62b88bea3ae6f26bcfe85a63",
+            "lanes": [
+              "vector"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-1956867f06aa418a521becd9",
+            "display_name": "深圳市诚鑫创汽车配件有限公司",
+            "raw_score": 0.0337451949904811,
+            "canonical_id": "company-c-1956867f06aa418a521becd9",
+            "lanes": [
+              "vector"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-b83054a403265b069fedda3f",
+            "display_name": "深圳市顺为互联科技有限公司",
+            "raw_score": 0.033545885314007,
+            "canonical_id": "company-c-b83054a403265b069fedda3f",
+            "lanes": [
+              "vector"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-aaae805b204b0d9ea669779a",
+            "display_name": "铭欣创达（深圳）传媒有限公司",
+            "raw_score": 0.033485807413078376,
+            "canonical_id": "company-c-aaae805b204b0d9ea669779a",
+            "lanes": [
+              "vector"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-6a844b4126506a56bea4f0a8",
+            "display_name": "熙家智能系统（深圳）有限公司",
+            "raw_score": 0.03341707539337953,
+            "canonical_id": "company-c-6a844b4126506a56bea4f0a8",
+            "lanes": [
+              "vector"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-ecab27ec7d543ff69ed7fc3d",
+            "display_name": "深圳灵图创新科技有限公司",
+            "raw_score": 0.033260448218564394,
+            "canonical_id": "company-c-ecab27ec7d543ff69ed7fc3d",
+            "lanes": [
+              "vector"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-71a8ff7665f5c12ec989b76c",
+            "display_name": "丰图科技（深圳）有限公司",
+            "raw_score": 0.033064960002494884,
+            "canonical_id": "company-c-71a8ff7665f5c12ec989b76c",
+            "lanes": [
+              "vector"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-cbfd817c3f4b3cf679e1ec5e",
+            "display_name": "深圳市物联传媒有限公司",
+            "raw_score": 0.03301409791950028,
+            "canonical_id": "company-c-cbfd817c3f4b3cf679e1ec5e",
+            "lanes": [
+              "vector"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-7f534b944f63e4d9bc1073bb",
+            "display_name": "雅可比智能动力（深圳）有限公司",
+            "raw_score": 0.032856465008064016,
+            "canonical_id": "company-c-7f534b944f63e4d9bc1073bb",
+            "lanes": [
+              "vector"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-06f8f5869862f9eb840a60dc",
+            "display_name": "深圳市信德远致科技有限公司",
+            "raw_score": 0.032842904519992645,
+            "canonical_id": "company-c-06f8f5869862f9eb840a60dc",
+            "lanes": [
+              "vector"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-9e6145f2c21836e896e756fd",
+            "display_name": "睿可创新智能科技（深圳）有限公司",
+            "raw_score": 0.03276182998943268,
+            "canonical_id": "company-c-9e6145f2c21836e896e756fd",
+            "lanes": [
+              "vector"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-24c039bbd0c91b34964edcab",
+            "display_name": "深圳市昇伟线程科技有限公司",
+            "raw_score": 0.032581515276891064,
+            "canonical_id": "company-c-24c039bbd0c91b34964edcab",
+            "lanes": [
+              "vector"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-18bb71299575503b56b91174",
+            "display_name": "深圳市亿威汽车科技有限公司",
+            "raw_score": 0.03249822286338634,
+            "canonical_id": "company-c-18bb71299575503b56b91174",
+            "lanes": [
+              "vector"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-b39614a68db0ba538af3c107",
+            "display_name": "深圳市甲天行科技有限公司",
+            "raw_score": 0.03243624725127526,
+            "canonical_id": "company-c-b39614a68db0ba538af3c107",
+            "lanes": [
+              "vector"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-2d7f4df8f5ac4714240891b2",
+            "display_name": "深圳域唯科技有限公司",
+            "raw_score": 0.03234078673051395,
+            "canonical_id": "company-c-2d7f4df8f5ac4714240891b2",
+            "lanes": [
+              "vector"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:3d093eae91dcb46de9ad65a8469cf4602a305bf6eebcf792ed2df901659988ca",
+            "display_name": "2026年酒店送餐机器人选购指南:猎户星空与行业主流品牌评测 - 智造出海 - 博客园企业号",
+            "raw_score": 1.0,
+            "canonical_id": null,
+            "lanes": [
+              "web"
+            ],
+            "natures": [
+              "current_web"
+            ]
+          },
+          {
+            "result_id": "fused-result:4ed5ce06b8142c60ec8a681ed84bc2857de2d7a266e0f5abff167c4b386b0b6f",
+            "display_name": "普渡机器人携手亚朵集团，以机器人技术引领酒店服务新纪元",
+            "raw_score": 0.95,
+            "canonical_id": null,
+            "lanes": [
+              "web"
+            ],
+            "natures": [
+              "current_web"
+            ]
+          },
+          {
+            "result_id": "fused-result:b835df70ca821b4f20497ea78c176152fc58bbfa2335d495aca9fb94fcf33696",
+            "display_name": "关于 送餐机器人 结果1",
+            "raw_score": 0.9,
+            "canonical_id": null,
+            "lanes": [
+              "web"
+            ],
+            "natures": [
+              "current_web"
+            ]
+          },
+          {
+            "result_id": "fused-result:7105ba885c64ff617c705b89d868db4323b15182a0ed3c3565099d3e2c5e7a0f",
+            "display_name": "遍地都是的酒店机器人，已经“退烧”了- 21经济网 - 21财经",
+            "raw_score": 0.85,
+            "canonical_id": null,
+            "lanes": [
+              "web"
+            ],
+            "natures": [
+              "current_web"
+            ]
+          },
+          {
+            "result_id": "fused-result:252102a9a8c657495d7a6e4db5f665ac1689d0a6a4316a3d354216c5faed9668",
+            "display_name": "「送餐传菜机器人」送餐传菜机器人公司黄页 - 顺企网",
+            "raw_score": 0.8,
+            "canonical_id": null,
+            "lanes": [
+              "web"
+            ],
+            "natures": [
+              "current_web"
+            ]
+          },
+          {
+            "result_id": "fused-result:1945ac99975997857b2b0ff923bffa9c9b0a955ab00eb21fbce5cd10193913c7",
+            "display_name": "烧钱8亿换“第一股”，酒店机器人是“伪刚需”吗？ - 观察者网",
+            "raw_score": 0.75,
+            "canonical_id": null,
+            "lanes": [
+              "web"
+            ],
+            "natures": [
+              "current_web"
+            ]
+          },
+          {
+            "result_id": "fused-result:2e33a85a694bb0d7361a521dfd3834d61f66876c5c0a4858602e517982fe297d",
+            "display_name": "酒店机器人正在中国普及_机器人网",
+            "raw_score": 0.7,
+            "canonical_id": null,
+            "lanes": [
+              "web"
+            ],
+            "natures": [
+              "current_web"
+            ]
+          },
+          {
+            "result_id": "fused-result:530abaa3b8041e903253ba61dce114932c7c06522574239cc68d7d1be09afc3d",
+            "display_name": "酒店智能机器人有哪些品牌？酒店配送机器人哪家最好？ - 中华网",
+            "raw_score": 0.6499999999999999,
+            "canonical_id": null,
+            "lanes": [
+              "web"
+            ],
+            "natures": [
+              "current_web"
+            ]
+          },
+          {
+            "result_id": "fused-result:b55fc70eff8396f75dff214c4d9b2ae5f3d41084516139ae48dca9003e6a5d13",
+            "display_name": "2026年深度解析:支持OEM的酒店送餐机器人厂商与场景化解决方案 - 智造出海 - 博客园企业号",
+            "raw_score": 0.6,
+            "canonical_id": null,
+            "lanes": [
+              "web"
+            ],
+            "natures": [
+              "current_web"
+            ]
+          },
+          {
+            "result_id": "fused-result:614b1ae402a34f738e05b46b257f91edf647c43c318bde0aeadc60c457a9aa08",
+            "display_name": "从餐饮、酒店配送机器人，看国产服务机器人如何出海？ - 亿欧",
+            "raw_score": 0.55,
+            "canonical_id": null,
+            "lanes": [
+              "web"
+            ],
+            "natures": [
+              "current_web"
+            ]
+          },
+          {
+            "result_id": "fused-result:d603776a89d0267754f36c249a23b84e0147efc090b11d102a4adaf9258de620",
+            "display_name": "酒店服务机器人头部品牌有哪些?酒店机器人品牌推荐?_中华网",
+            "raw_score": 0.5,
+            "canonical_id": null,
+            "lanes": [
+              "web"
+            ],
+            "natures": [
+              "current_web"
+            ]
+          },
+          {
+            "result_id": "fused-result:fd77a11ec2f20602877471e2054b60111a49ec9d964dd70582933d1a9abe1703",
+            "display_name": "美国酒店服务型机器人正冲击员工就业领域-广州国际酒店及餐饮产业博览会",
+            "raw_score": 0.44999999999999996,
+            "canonical_id": null,
+            "lanes": [
+              "web"
+            ],
+            "natures": [
+              "current_web"
+            ]
+          },
+          {
+            "result_id": "fused-result:d32a87d4bd62739dcba621dbbb8b3d30500b249b85b8a72415b74ba1ae0c03a8",
+            "display_name": "酒店服务机器人-洛必德",
+            "raw_score": 0.3999999999999999,
+            "canonical_id": null,
+            "lanes": [
+              "web"
+            ],
+            "natures": [
+              "current_web"
+            ]
+          },
+          {
+            "result_id": "fused-result:64cc12319336ff4dc2a18631753d3143de68a7872140e206ef2b6e48e5cbaa28",
+            "display_name": "酒店服务机器人 - 上海贺风工业产品设计有限公司",
+            "raw_score": 0.35,
+            "canonical_id": null,
+            "lanes": [
+              "web"
+            ],
+            "natures": [
+              "current_web"
+            ]
+          },
+          {
+            "result_id": "fused-result:5d93eadd50e916abda5835f5c129fca4e4e13cb7b748ea4c067d17d1df89c497",
+            "display_name": "酒店机器人公司排行榜",
+            "raw_score": 0.29999999999999993,
+            "canonical_id": null,
+            "lanes": [
+              "web"
+            ],
+            "natures": [
+              "current_web"
+            ]
+          },
+          {
+            "result_id": "fused-result:fa5bda398e6ee5585dafdb003a21d00a79483990880b8b4f04bea357ed02e93d",
+            "display_name": "大火的酒店机器人，背后都是谁在砸钱？ - 环球旅讯",
+            "raw_score": 0.25,
+            "canonical_id": null,
+            "lanes": [
+              "web"
+            ],
+            "natures": [
+              "current_web"
+            ]
+          },
+          {
+            "result_id": "fused-result:7b52d3543c5ab5c8072a71052675a688420f3d1cd3c923c28bdf3b2d90910d5b",
+            "display_name": "#酒店服务机器人# - 标签聚合 - 创业邦",
+            "raw_score": 0.19999999999999996,
+            "canonical_id": null,
+            "lanes": [
+              "web"
+            ],
+            "natures": [
+              "current_web"
+            ]
+          },
+          {
+            "result_id": "fused-result:49a014c92253ff06db1dbb12175358be8e64ee337941b27b1191fdd73cd13d59",
+            "display_name": "酒店机器人 - 百度百科",
+            "raw_score": 0.1499999999999999,
+            "canonical_id": null,
+            "lanes": [
+              "web"
+            ],
+            "natures": [
+              "current_web"
+            ]
+          },
+          {
+            "result_id": "fused-result:730ba2d0f314434f4f738097d0ba1792f1c5186e71094a2ab91532b9fbf0d656",
+            "display_name": "酒店服务机器人行业国内市场消费数据分析与未来前景预测报告",
+            "raw_score": 0.09999999999999998,
+            "canonical_id": null,
+            "lanes": [
+              "web"
+            ],
+            "natures": [
+              "current_web"
+            ]
+          },
+          {
+            "result_id": "fused-result:90afbbb2a267b4e4623811a11436974c97710f0d63ec45cfed004d802520a2fa",
+            "display_name": "酒店机器人图片- 京东",
+            "raw_score": 0.04999999999999993,
+            "canonical_id": null,
+            "lanes": [
+              "web"
+            ],
+            "natures": [
+              "current_web"
+            ]
+          },
+          {
+            "result_id": "fused-result:5f905639dafe164c982376f915ad7aa3a08350420b490f602f1276789568d08a",
+            "display_name": "2025年酒店服务机器人前景 - 2025-2031年全球与中国酒店服务机器人发展现状及市场前景 - 产业调研网",
+            "raw_score": 0.0,
+            "canonical_id": null,
+            "lanes": [
+              "web"
+            ],
+            "natures": [
+              "current_web"
+            ]
+          },
+          {
+            "result_id": "fused-result:81076e9847678193c18ad0d020ddab675633bcd2cc33ea0eacaa5085eb24d827",
+            "display_name": "遍地都是的酒店机器人，已经“退烧”了 - 36氪",
+            "raw_score": 0.0,
+            "canonical_id": null,
+            "lanes": [
+              "web"
+            ],
+            "natures": [
+              "current_web"
+            ]
+          },
+          {
+            "result_id": "fused-result:b43dbe363f0a1d698e935aee0505c76e2bdf31504b96b58e1be359381222d3cb",
+            "display_name": "「酒店送物机器人」酒店送物机器人公司黄页 - 顺企网",
+            "raw_score": 0.0,
+            "canonical_id": null,
+            "lanes": [
+              "web"
+            ],
+            "natures": [
+              "current_web"
+            ]
+          },
+          {
+            "result_id": "fused-result:45d48767102cf2ba1c13debc706af0f9ca5d58f0b97afa81a43a5110ef99e147",
+            "display_name": "中国制造商餐厅机器人服务员服务/自主送货机器人/机器人送菜",
+            "raw_score": 0.0,
+            "canonical_id": null,
+            "lanes": [
+              "web"
+            ],
+            "natures": [
+              "current_web"
+            ]
+          },
+          {
+            "result_id": "fused-result:5969edd3137e7a993a6fee6acb50cd96a804e217b668b2aa85437d4cb2684b14",
+            "display_name": "擎朗智能官网-具身AI服务机器人_送餐机器人_酒店机器人_清洁机器人",
+            "raw_score": 0.0,
+            "canonical_id": null,
+            "lanes": [
+              "web"
+            ],
+            "natures": [
+              "current_web"
+            ]
+          },
+          {
+            "result_id": "fused-result:6470c68a0d5c9f3a5df8cf9e7041bd66f66c75f62fcf1a19951ad7e4ca80c7b9",
+            "display_name": "3年亏了8亿，酒店送餐机器人其实是在送钱 - 36氪",
+            "raw_score": 0.0,
+            "canonical_id": null,
+            "lanes": [
+              "web"
+            ],
+            "natures": [
+              "current_web"
+            ]
+          },
+          {
+            "result_id": "fused-result:2433dab11c1bcd01f70082f9288de296a79feb31294b7100c0f7f5946de610d3",
+            "display_name": "酒店机器人正在中国普及",
+            "raw_score": 0.0,
+            "canonical_id": null,
+            "lanes": [
+              "web"
+            ],
+            "natures": [
+              "current_web"
+            ]
+          },
+          {
+            "result_id": "fused-result:386537697f7056c458c50d9581454c0572e5c0deed8d891a9cda2a11be984040",
+            "display_name": "要上市的酒店机器人，吃力不讨好？ - 澎湃新闻",
+            "raw_score": 0.0,
+            "canonical_id": null,
+            "lanes": [
+              "web"
+            ],
+            "natures": [
+              "current_web"
+            ]
+          },
+          {
+            "result_id": "fused-result:0d3f4e95441aa97863bc0fbc12bbbfa42586274a438ce686153c020fde23061a",
+            "display_name": "酒店餐厅送餐机器人-智能制造网",
+            "raw_score": 0.0,
+            "canonical_id": null,
+            "lanes": [
+              "web"
+            ],
+            "natures": [
+              "current_web"
+            ]
+          },
+          {
+            "result_id": "fused-result:f546d345417e0d99744e9966b9ceec1a98c5ba5dee8f4a137c581a572f3dadd4",
+            "display_name": "自主配送服务机器人酒店迎宾配送智能配送机器人",
+            "raw_score": 0.0,
+            "canonical_id": null,
+            "lanes": [
+              "web"
+            ],
+            "natures": [
+              "current_web"
+            ]
+          },
+          {
+            "result_id": "fused-result:749d2898b9687ad5ecec976eabc8fedc67c04287bfa6ed8e9db13a5b7bb7fde7",
+            "display_name": "China Hotel送餐机器人们，“1年绕地球507圈”",
+            "raw_score": 0.0,
+            "canonical_id": null,
+            "lanes": [
+              "web"
+            ],
+            "natures": [
+              "current_web"
+            ]
+          },
+          {
+            "result_id": "fused-result:b821326056feb6c17ab21e83c5dc4ea2743a10c849bd6814b378a84cc6221c0b",
+            "display_name": "2025-2030年中国酒店送货机器人行业项目调研及市场前景预测评估报告-中国报告大厅",
+            "raw_score": 0.0,
+            "canonical_id": null,
+            "lanes": [
+              "web"
+            ],
+            "natures": [
+              "current_web"
+            ]
+          },
+          {
+            "result_id": "fused-result:3ef0e982f09d07d9d64c4d19ac8598ded7f258b057f71965efd433a2b48814fe",
+            "display_name": "中国送餐/传菜机器人公司|厂家",
+            "raw_score": 0.0,
+            "canonical_id": null,
+            "lanes": [
+              "web"
+            ],
+            "natures": [
+              "current_web"
+            ]
+          },
+          {
+            "result_id": "fused-result:febadfedf4940a2e5e6a63543f980528c44344e5377c04d396daad973818faff",
+            "display_name": "企业样本篇丨“智造”10万台服务机器人，“小巨人”擎朗有大梦想 - 新华网",
+            "raw_score": 0.0,
+            "canonical_id": null,
+            "lanes": [
+              "web"
+            ],
+            "natures": [
+              "current_web"
+            ]
+          },
+          {
+            "result_id": "fused-result:dde69c68c94f17acf0d6a3e34b8b1a925b0ee162f1168d2a8de265f9cf165f99",
+            "display_name": "旅店送餐机器人制造商_机械及行业设备-壹柒陆捌智能科技(广州)有限公司",
+            "raw_score": 0.0,
+            "canonical_id": null,
+            "lanes": [
+              "web"
+            ],
+            "natures": [
+              "current_web"
+            ]
+          },
+          {
+            "result_id": "fused-result:f7371d4bf18c626852e89645305c26f7f9ab0d9abbaa0d76b3c0781f20faf7eb",
+            "display_name": "酒店餐厅自动配送机器人 送餐机器人现货供应-阿里巴巴",
+            "raw_score": 0.0,
+            "canonical_id": null,
+            "lanes": [
+              "web"
+            ],
+            "natures": [
+              "current_web"
+            ]
+          },
+          {
+            "result_id": "fused-result:8df53905d491be71fb60b2f6c6618ae6f5fc02661d9a2ccc6c1df51dc27b1bed",
+            "display_name": "酒店送餐机器人代理-壹柒陆捌智能科技(广州)有限公司",
+            "raw_score": 0.0,
+            "canonical_id": null,
+            "lanes": [
+              "web"
+            ],
+            "natures": [
+              "current_web"
+            ]
+          },
+          {
+            "result_id": "fused-result:abafa3898d73ba508f55d4df50634117ebb69bc8ec86ddabed714273bee837e0",
+            "display_name": "酒店递送机器人深度技术解析与解决方案选型指南",
+            "raw_score": 0.0,
+            "canonical_id": null,
+            "lanes": [
+              "web"
+            ],
+            "natures": [
+              "current_web"
+            ]
+          },
+          {
+            "result_id": "fused-result:91a02168af169b284f61fa80fdc9902465a98dffadb2a1081c9d1e2e6856fd97",
+            "display_name": "送餐机器人服务员全自动配传送物品上菜酒店餐厅饭店商场KTV-阿里巴巴",
+            "raw_score": 0.0,
+            "canonical_id": null,
+            "lanes": [
+              "web"
+            ],
+            "natures": [
+              "current_web"
+            ]
+          },
+          {
+            "result_id": "fused-result:a3150ff0e567874a2482bf63de239b4f02d1be6c6ad8d2b3c00eea2df622018e",
+            "display_name": "高端制造产业出海——机器人篇（下） 一、多元应用场景落地",
+            "raw_score": 0.0,
+            "canonical_id": null,
+            "lanes": [
+              "web"
+            ],
+            "natures": [
+              "current_web"
+            ]
+          },
+          {
+            "result_id": "fused-result:fb5d164a5756569791a46e86a4b34fd3336eec38cb88af40a07d0bcc832f28a4",
+            "display_name": "酒店酒馆机器人无人送餐传菜上菜端菜智能服务员餐厅配送机器人",
+            "raw_score": 0.0,
+            "canonical_id": null,
+            "lanes": [
+              "web"
+            ],
+            "natures": [
+              "current_web"
+            ]
+          },
+          {
+            "result_id": "fused-result:16dfc5d14689b3c8a980e4e3f12e29bc5d5e76edffa6e06a52b185952420d357",
+            "display_name": "专注智慧配送，九号机器人亮相上海国际酒店及商业空间博览会 - 新华网",
+            "raw_score": 0.0,
+            "canonical_id": null,
+            "lanes": [
+              "web"
+            ],
+            "natures": [
+              "current_web"
+            ]
+          },
+          {
+            "result_id": "fused-result:0b047fe23cfa7f2793e583dc829c90a11d597c4558c2ecd0e87a1e44183d31fe",
+            "display_name": "【送餐机器人价格】送餐机器人图片- 供应商网",
+            "raw_score": 0.0,
+            "canonical_id": null,
+            "lanes": [
+              "web"
+            ],
+            "natures": [
+              "current_web"
+            ]
+          },
+          {
+            "result_id": "fused-result:30cb287fd8969413b61efedbeea3de2d7efaf1ab19a3a3985ad0c51bb2098e23",
+            "display_name": "关于KEENON-KEENON机器人",
+            "raw_score": 0.0,
+            "canonical_id": null,
+            "lanes": [
+              "web"
+            ],
+            "natures": [
+              "current_web"
+            ]
+          },
+          {
+            "result_id": "fused-result:7117adc3acd55fb1c2501de0da4628f04a87d1d5f49d972173f617f385a88598",
+            "display_name": "基于机器人的酒店送餐方法、装置、设备和存储介质 - 道客巴巴",
+            "raw_score": 0.0,
+            "canonical_id": null,
+            "lanes": [
+              "web"
+            ],
+            "natures": [
+              "current_web"
+            ]
+          },
+          {
+            "result_id": "fused-result:6a054139c25804b6db5215c2305fcc3618954779c40006651b738a59d125308b",
+            "display_name": "送餐机器人厂家 酒店端菜机器人 迎宾接待机器人 视频-搜了网",
+            "raw_score": 0.0,
+            "canonical_id": null,
+            "lanes": [
+              "web"
+            ],
+            "natures": [
+              "current_web"
+            ]
+          },
+          {
+            "result_id": "fused-result:3d995850129c387e870250d0e3503b9abcb7daf6aeeb5938f7adecd49ca0dc5b",
+            "display_name": "中国酒店机器人公司排名（名录） - 职友集",
+            "raw_score": 0.0,
+            "canonical_id": null,
+            "lanes": [
+              "web"
+            ],
+            "natures": [
+              "current_web"
+            ]
+          },
+          {
+            "result_id": "fused-result:a6f570fd0a86a64f58be816fdea587c32fe2cbe1b0b60dafbe96b265eb063d87",
+            "display_name": "酒店服务机器人厂家-苏州穿山甲机器人股份有限公司",
+            "raw_score": 0.0,
+            "canonical_id": null,
+            "lanes": [
+              "web"
+            ],
+            "natures": [
+              "current_web"
+            ]
+          }
+        ],
+        "handle_count": 48,
+        "handle_names": [
+          "深圳市全民通信息技术有限公司",
+          "2026年酒店送餐机器人选购指南:猎户星空与行业主流品牌评测 - 智造出海 - 博客园企业号",
+          "云趣在线（深圳）科技有限公司",
+          "普渡机器人携手亚朵集团，以机器人技术引领酒店服务新纪元",
+          "深圳市艾特智能科技有限公司",
+          "关于 送餐机器人 结果1",
+          "深圳中智卫安机器人技术有限公司",
+          "遍地都是的酒店机器人，已经“退烧”了- 21经济网 - 21财经",
+          "深圳晓润控股有限公司",
+          "「送餐传菜机器人」送餐传菜机器人公司黄页 - 顺企网",
+          "银河通用",
+          "烧钱8亿换“第一股”，酒店机器人是“伪刚需”吗？ - 观察者网",
+          "深圳全智能机器人科技有限公司",
+          "酒店机器人正在中国普及_机器人网",
+          "深圳市普森斯科技有限公司",
+          "酒店智能机器人有哪些品牌？酒店配送机器人哪家最好？ - 中华网",
+          "深圳市繁兴科技股份有限公司",
+          "2026年深度解析:支持OEM的酒店送餐机器人厂商与场景化解决方案 - 智造出海 - 博客园企业号",
+          "睿博天米科技（深圳）有限公司",
+          "从餐饮、酒店配送机器人，看国产服务机器人如何出海？ - 亿欧",
+          "深圳市吉影科技有限公司",
+          "酒店服务机器人头部品牌有哪些?酒店机器人品牌推荐?_中华网",
+          "中铧机器人（深圳）有限公司",
+          "美国酒店服务型机器人正冲击员工就业领域-广州国际酒店及餐饮产业博览会",
+          "深圳市锐曼智能技术有限公司",
+          "酒店服务机器人-洛必德",
+          "深圳乐动机器人股份有限公司",
+          "酒店服务机器人 - 上海贺风工业产品设计有限公司",
+          "深圳中科世界机器人有限公司",
+          "酒店机器人公司排行榜",
+          "深圳市笨笨机器人有限公司",
+          "大火的酒店机器人，背后都是谁在砸钱？ - 环球旅讯",
+          "深圳市石头智能机器人技术有限公司",
+          "#酒店服务机器人# - 标签聚合 - 创业邦",
+          "云迹科技股份有限公司",
+          "酒店机器人 - 百度百科",
+          "深圳来创智能科技有限公司",
+          "酒店服务机器人行业国内市场消费数据分析与未来前景预测报告",
+          "深圳市宇辰智能科技有限公司",
+          "酒店机器人图片- 京东",
+          "深圳恒需机器人科技有限公司",
+          "【送餐机器人价格】送餐机器人图片- 供应商网",
+          "深圳市大象机器人科技有限公司",
+          "酒店餐厅送餐机器人-智能制造网",
+          "深圳科卫机器人科技有限公司",
+          "专注智慧配送，九号机器人亮相上海国际酒店及商业空间博览会 - 新华网",
+          "深圳市御膳智能科技有限公司",
+          "酒店机器人正在中国普及"
+        ],
+        "dispositions": {
+          "selected": 48,
+          "not_selected": 96
+        },
+        "evidence_item_count": 48
+      },
+      "stage4_selector": {
+        "claim_count": 40,
+        "displayed_handle_count": 40,
+        "displayed_names": [
+          "深圳市全民通信息技术有限公司",
+          "2026年酒店送餐机器人选购指南:猎户星空与行业主流品牌评测 - 智造出海 - 博客园企业号",
+          "云趣在线（深圳）科技有限公司",
+          "普渡机器人携手亚朵集团，以机器人技术引领酒店服务新纪元",
+          "深圳市艾特智能科技有限公司",
+          "关于 送餐机器人 结果1",
+          "深圳中智卫安机器人技术有限公司",
+          "遍地都是的酒店机器人，已经“退烧”了- 21经济网 - 21财经",
+          "深圳晓润控股有限公司",
+          "「送餐传菜机器人」送餐传菜机器人公司黄页 - 顺企网",
+          "银河通用",
+          "烧钱8亿换“第一股”，酒店机器人是“伪刚需”吗？ - 观察者网",
+          "深圳全智能机器人科技有限公司",
+          "酒店机器人正在中国普及_机器人网",
+          "深圳市普森斯科技有限公司",
+          "酒店智能机器人有哪些品牌？酒店配送机器人哪家最好？ - 中华网",
+          "深圳市繁兴科技股份有限公司",
+          "2026年深度解析:支持OEM的酒店送餐机器人厂商与场景化解决方案 - 智造出海 - 博客园企业号",
+          "睿博天米科技（深圳）有限公司",
+          "从餐饮、酒店配送机器人，看国产服务机器人如何出海？ - 亿欧",
+          "深圳市吉影科技有限公司",
+          "酒店服务机器人头部品牌有哪些?酒店机器人品牌推荐?_中华网",
+          "中铧机器人（深圳）有限公司",
+          "美国酒店服务型机器人正冲击员工就业领域-广州国际酒店及餐饮产业博览会",
+          "深圳市锐曼智能技术有限公司",
+          "酒店服务机器人-洛必德",
+          "深圳乐动机器人股份有限公司",
+          "酒店服务机器人 - 上海贺风工业产品设计有限公司",
+          "深圳中科世界机器人有限公司",
+          "酒店机器人公司排行榜",
+          "深圳市笨笨机器人有限公司",
+          "大火的酒店机器人，背后都是谁在砸钱？ - 环球旅讯",
+          "#酒店服务机器人# - 标签聚合 - 创业邦",
+          "酒店机器人 - 百度百科",
+          "酒店服务机器人行业国内市场消费数据分析与未来前景预测报告",
+          "酒店机器人图片- 京东",
+          "【送餐机器人价格】送餐机器人图片- 供应商网",
+          "酒店餐厅送餐机器人-智能制造网",
+          "专注智慧配送，九号机器人亮相上海国际酒店及商业空间博览会 - 新华网",
+          "酒店机器人正在中国普及"
+        ],
+        "claim_texts": [
+          "深圳市全民通信息技术有限公司；简介：IPTV智能机顶盒（P60）-Z86、魔百盒（M301H）、融合网关-Hr2-2、LAN上行融合网关-智能型（D801L-S）；技术路线：家庭客厅4K影视点播、运营商IPTV/OTT业务、智慧家庭网关、小区光纤宽带、校园网、酒店客房娱乐系统、政企宽带接入。。",
+          "2026年酒店送餐机器人选购指南:猎户星空与行业主流品牌评测 - 智造出海 - 博客园企业号：随着自主驾驶技术的成熟与服务标准化的推进,酒店送餐机器人已从早期的“营销噱头”转变为缓解人力短缺、实现降本增效的基础设施。当前行业发展态势积极,智能化服务已成为提升住客满意度与酒店运营效率的关键驱动力；来源：https://www.cnblogs.com/robot-ai-lab/p/19552855",
+          "云趣在线（深圳）科技有限公司；简介：0；技术路线：写字楼、园区、学校、社区、工地、车站的人行通道闸机与门禁考勤；政府、银行、酒店的人证合一核验；各类需要刷脸通行或访客管理的室内外出入口。。",
+          "普渡机器人携手亚朵集团，以机器人技术引领酒店服务新纪元：“闪电匣”作为普渡针对楼宇场景打造的高灵活度配送机器人，具备自主导航、精准避障、智能乘梯、语音交互等全栈技术能力，能够高效完成从酒店前台至客房的全程无人化配送。；来源：https://www.pudutech.com/zh-CN/case-studies/atour-pudu-flashbot",
+          "深圳市艾特智能科技有限公司；简介：室内智能终端、小乐语音主机、智能魔镜、单元门口机、别墅门口机、无极系列智能开关（一键/二键/三键）、鎏金系列智能面板（语音面板、灯光面板1/2/3键、情景面板、调光面板、智能插座）、麒麟智能云锁、不二全自动云锁、金刚智能云锁、iCool空调智慧管家、空气盒子、盯盯网关云台摄像机、无线红外转发器、ZigBee智能网关、多；技术路线：• 智慧家庭：大户型、别墅、公寓的照明、窗帘、空调、影音等全屋自动化；个人DIY场景如“回家模式”联动灯光、空调、音乐。 • 智慧社区：地产楼盘预装，单元门口机+室内终端实现可视对讲、人脸识别开门、社区公告、访客呼梯。 • 智慧酒店：客房集中控制灯光、空调、窗帘，提升入住体验并节能管理。 • 适老/康养：跌倒探测器与报。",
+          "关于 送餐机器人 结果1：送 餐 机器人  智能 送 餐 机器人  亿煤 送 餐 机器人\n餐厅地面预先设置好引环形引导线,在传菜口工作人员把做好的菜放在机器人托盘上,并设置目标餐桌。 \n亿煤机械装备制造有限公司 \n白金第 13；来源：http://tjzebao.wjw.cn/gongying/search/SCJQR.html",
+          "深圳中智卫安机器人技术有限公司；简介：PPR100、VOCA、智能测温门岗机器人、智能访客机器人、消毒喷雾机器人、送餐机器人、迎宾巡更机器人、配送机器人；技术路线：高端社区、园区、厂区、场馆、商业综合体、广场、交通枢纽、会展中心、酒店、博物馆、医院、隔离酒店、商场、社区等公共场所的迎宾、导航、咨询、测温、访客接待、消毒、送餐及安保巡逻。。",
+          "遍地都是的酒店机器人，已经“退烧”了- 21经济网 - 21财经：第一派是酒管集团和地产集团投资的企业，如优地科技、远鲸科技、汤恩智能。这些企业背后是如家、华住、东呈酒店集团，以及碧桂园等地产集团。其中远鲸科技 ...；来源：https://www.21jingji.com/article/20231012/herald/9f567f2798ffeb4a531be212fb80f585.html",
+          "深圳晓润控股有限公司；简介：C2、K2、D7、U1、U3、U5、U6、V3、V6系列集成水槽/集成洗碗机；技术路线：家庭整体厨房、精装修公寓、酒店后厨及小型餐饮单位的一站式净洗中心。",
+          "「送餐传菜机器人」送餐传菜机器人公司黄页 - 顺企网：酒店餐厅送菜传菜营销引领广告宣传互动迎宾智能送餐配送机器人 配送 送餐 智能机器人 猎户星空 智能问答 报价:未提供 询价 17705854572 绍兴市哲研智能科技有限公司 浙江-绍兴 智优语揽客营；来源：https://b2b.11467.com/search/-900199104f2083dc673a56684eba.htm",
+          "银河通用；简介：银河通用是一家聚焦机器人的企业。细分方向覆盖具身基础模型。当前业务定位为基于大规模仿真动作数据预训练具身模型。开发基于大规模仿真动作数据预训练的具身智能模型。；技术路线：银河通用的技术路线围绕机器人展开。当前重点落在具身基础模型。业务场景集中在基于大规模仿真动作数据预训练具身模型。开发基于大规模仿真动作数据预训练的具身智能模型。。",
+          "烧钱8亿换“第一股”，酒店机器人是“伪刚需”吗？ - 观察者网：其中，云迹科技超80%收入来自酒店机器人业务，2023年这一比例甚至高达95.1%。以2023年收入计，云迹科技在全球和中国酒店场景的市场占有率分别为9%、12.2% ...；来源：https://www.guancha.cn/qiche/2025_05_16_776099.shtml",
+          "深圳全智能机器人科技有限公司；简介：产品型号：JRT-102A1X-01、SRT301；技术路线：医院、学校、商场、酒店、餐饮、展会、集中隔离点、广场、食品加工厂、实验室、家庭、商业迎宾、促销推广、智能模特展示、摄影、教育、养老监护、智能家居等人员密集或对空气质量要求高的场所。",
+          "酒店机器人正在中国普及_机器人网：在成都一家酒店,笔者看到机器人自己乘电梯把东西送到客房。询问后得知,外卖送餐员把食物放到前台后,酒店的这款机器人就会载着外卖乘电梯到达指定客房外,自动打电话通知客人来取。 中国的外卖便宜又快速,但在安；来源：https://www.robot-china.com/news/201906/25/57614.html",
+          "深圳市普森斯科技有限公司；简介：：Proscenic M9、F20、P13、Ultenic Pooleco 10、COCOSMART680系、Pro-JOJO、猎鹰系列、LDS系列、F系列；技术路线：：家庭住宅（地板、地毯、瓷砖、宠物家庭）、别墅泳池（自动清洁池底与池壁）、海外公寓及酒店客房（欧洲、日本、北美等60余国线上渠道畅销）、办公室及小型商用空间日常地面维护。。",
+          "酒店智能机器人有哪些品牌？酒店配送机器人哪家最好？ - 中华网：如果您正在考察酒店智能机器人品牌或寻找配送机器人供应商，萝趣科技无疑是目前市场上最成熟、落地案例最丰富的选择之一。 联系地址：深圳市光明区 ...；来源：https://mtz.china.com/touzi/2026/0414/227248.html",
+          "深圳市繁兴科技股份有限公司；简介：：BSF1-15G1、BSF1-20G1、BSF1-30G1、BSF1-40G1、BSF1-60G1、BSF1-80G1、BSF1-100G1、BSF1-120G1、BSF1-150G1、BSF1-200G1、BSF1-250G1、BSF1-300G1、BSF1-400G1、BSF1-500G1、BSF1-600G1；技术路线：：连锁餐饮中央厨房、团膳企业、高校及企事业单位食堂、高端社区智慧厨房、车载舰载移动厨房、展会及赛事临时供餐、新零售无人餐厅、酒店后厨自动化升级、航空铁路配餐中心、医院营养配餐系统。。",
+          "2026年深度解析:支持OEM的酒店送餐机器人厂商与场景化解决方案 - 智造出海 - 博客园企业号：随着酒店行业数字化转型的深入,智能送餐机器人已从单纯的“噱头”转变为提升运营效率的标准配置。特别是在2026年的市场环境下,酒店方不再满足于采购标准化的硬件设备,而是对机器人的场景适应性、品牌融合度以；来源：https://www.cnblogs.com/robot-ai-lab/p/19532852",
+          "睿博天米科技（深圳）有限公司；简介：temi（官网未标注具体型号，统一以“temi”指代）；技术路线：家庭陪护与智能家居中控；写字楼、展厅、零售门店的迎宾导览与信息查询；医院、养老机构的远程问诊、药品配送与巡房提醒；酒店无接触送物及入住指引；政企会议远程视频与移动会议记录。。",
+          "从餐饮、酒店配送机器人，看国产服务机器人如何出海？ - 亿欧：在国内市场，据IDC报告显示，2023年，擎朗智能、普渡机器人以及穿山甲机器人是餐饮配送机器人市场份额排名前三的厂商。云迹科技、优地科技与擎朗智能是 ...；来源：https://www.iyiou.com/analysis/202412011084227",
+          "深圳市吉影科技有限公司；简介：Poseidon I（P1）、Titan（T1）、S1、S2、S3、S4；技术路线：消费级潜水拍摄、水上运动娱乐；行业级水下勘探、应急救援、科考采样；S1/S2/S3 已在国内外星级酒店、度假村、游艇俱乐部及欧美卖场批量应用，S4 适配桨板、皮划艇等水上装备动力助推。。",
+          "酒店服务机器人头部品牌有哪些?酒店机器人品牌推荐?_中华网：深圳市萝趣物联网科技有限公司是行业领军企业,同时也是全球最大的研发、生产与运营商。公司专注酒店场景,主营产品包括酒店客房售货机、酒店智能机器人、酒店售货柜等,目前业务已覆盖全球15个国家,入驻超16万；来源：https://mtz.china.com/touzi/2026/0507/232046.html",
+          "中铧机器人（深圳）有限公司；简介：产品型号：商用清洁机器人（未标注具体型号）、商用配送机器人（未标注具体型号）；技术路线：商用清洁机器人：写字楼、商场、酒店等大面积公共区域的日常地面清洁；商用配送机器人：医院、写字楼、酒店等场景的物品配送与送递服务。。",
+          "美国酒店服务型机器人正冲击员工就业领域-广州国际酒店及餐饮产业博览会：地址:广州市天河区天河路351号广东外经贸大厦3011室 电话:020-38329613 联系人:刘先生 手机/微信:13570235112 邮件: [email protected] 网站: www；来源：https://www.hotelexpochina.com/news/902541558.html",
+          "深圳市锐曼智能技术有限公司；简介：大力士2.0无人驾驶叉车、德利哥2.0送餐机器人、熊二送餐机器人、飞船背负式搬运机器人、蜗牛洁士商用清洁机器人、晓曼智能玩伴机器人、雾化消毒机器人；技术路线：托盘货物搬运、工厂物流、KTV/酒店/餐厅配送、政务大厅、医疗健康机构、展厅与商场、汽车4S店、电信营业厅、智慧办公、智慧城市、家庭娱乐。",
+          "酒店服务机器人-洛必德：洛必德科技是专注于开发智能服务机器人的科技公司，致力于为酒店量身打造更智能化的服务机器人。洛必德智能机器人赋予更美好的生活！；来源：https://www.irobint.com/luoqi.html",
+          "深圳乐动机器人股份有限公司；简介：STL-06P、STL-26、LD14P、LD07、SSL-20L、SSL-20N、Pion（第一代智能割草机器人）、第二代智能割草机器人；技术路线：：家庭服务机器人（扫地/割草机）、商用服务机器人（酒店、导购）、物流仓储AGV、工业巡检机器人、ROS教育无人机、室外智能割草（别墅、高尔夫球场、市政绿地）等50多个国家与地区。。",
+          "酒店服务机器人 - 上海贺风工业产品设计有限公司：hotel servis robot - Client - Develop time - Story 这是代替了酒店服务人员部份工作的,可以自行移动的服务机器人。它带有GPS导航系统以及自动传感装置,；来源：https://www.gahoodesign.com/newsg/show-172.html",
+          "深圳中科世界机器人有限公司；简介：武媚娘迎宾机器人,送餐机器人,高智能扫地机,雾霾歼击机,多用途无人飞机；技术路线：迎宾机器人适用于酒店、宾馆、公司、银行、婚庆活动迎宾；送餐机器人用于餐厅服务；扫地机用于家庭地面清洁；雾霾歼击机用于车载、卧室、大厅及办公场所空气净化；多用途无人飞机适用于城管、公安、交警、电视台、婚纱摄影、旅游等航拍需求。。",
+          "酒店机器人公司排行榜：全部\n回答:\n酒店机器人公司排行榜:\n1、北京运迹科技有限公司。\n2、上海景吾智能科枝有限公司。公司\n3、上海擎郎智能科技有限公司。\n4、北京远鲸科技有限公司。\n5、苏州一米机器人有限公司。\n6、纳恩；来源：https://m.iask.sina.com.cn/b/newreK4qXnbRX1.html",
+          "深圳市笨笨机器人有限公司；简介：大型服务机器人研发商；技术路线：小笨智能搬运服务解决方案已在3C电子、汽车零配件、鞋服衣帽等千行百业广泛应用。智能服务机器人已为银行、展厅、酒店、博物馆、党建、政务大厅等场景提供解决方案，客户包括海尔集团、蒙牛集团、中国人寿等大型企业。此外，还在工业制造、医疗护理、家庭服务等多元化场景有创新应用。。",
+          "大火的酒店机器人，背后都是谁在砸钱？ - 环球旅讯：目前，酒店场景里应用最多、同时也备受投资人关注的服务机器人品种为送物机器人，包括云迹科技、优地科技、远鲸科技以及景吾智能等多家机器人企业的主营 ...；来源：https://traveldaily.cn/article/159992/",
+          "#酒店服务机器人# - 标签聚合 - 创业邦：云迹科技为酒店客户提供的智能服务机器人,在协助酒店业数字化升级服务,面对反复不定的疫情提供安心、安全、无接触的酒店服务需求方面,获得中外酒店集团客户的广泛认可,客户覆盖超5000家。；来源：https://www.cyzone.cn/label/%E9%85%92%E5%BA%97%E6%9C%8D%E5%8A%A1%E6%9C%BA%E5%99%A8%E4%BA%BA/",
+          "酒店机器人 - 百度百科：酒店机器人是指应用于酒店服务中的自动化设备，主要通过人工智能技术提供各种服务，分为配送机器人和清洁机器人。2015年，云迹科技的第一台酒店机器人问世并投入商业化 ...；来源：https://baike.baidu.com/item/%E9%85%92%E5%BA%97%E6%9C%BA%E5%99%A8%E4%BA%BA/65636181",
+          "酒店服务机器人行业国内市场消费数据分析与未来前景预测报告：酒店服务机器人市场调研报告以2025为时间节点,分别对过去与未来五年内市场发展趋势进行了分析与预测。2024年,全球酒店服务机器人市场总规模达到 亿元(人民币),中国酒店服务机器人市场规模达到 亿元,；来源：https://m.gelonghui.com/p/1580736",
+          "酒店机器人图片- 京东：擎朗酒店机器人自主乘电梯写字间工厂医院W3智能配送机器人送物机器人W3lite · 擎朗（Keenon）W3Plus-酒店配送机器人-精英版乘梯送物送外卖 · 九号飞碟D2酒店送物机器人自主 ...；来源：https://www.jd.com/chanpin/108743.html",
+          "【送餐机器人价格】送餐机器人图片- 供应商网：供应商网(https://m.gys.cn)免费提供送餐机器人价格、送餐机器人图片、送餐机器人批发，欢迎来电咨询，送餐机器人厂家尽在供应商网！；来源：https://m.gys.cn/search/h9nm.shtml",
+          "酒店餐厅送餐机器人-智能制造网：参考价 面议 具体成交价以合同协议为准 公司名称 扬州市超凡机器人科技有限公司 品牌 型号 PIO--SC 所在地 扬州市 厂商性质 代理商 2017/9/11 17:50:15 访问次数 1003；来源：https://www.gkzhan.com/chanpin/7960217.html",
+          "专注智慧配送，九号机器人亮相上海国际酒店及商业空间博览会 - 新华网：作为全球创新短交通和服务机器人领域企业，九号公司旗下机器人品牌——九号机器人，携专为酒店、餐厅等场景建设打造的九号飞碟送物机器人、九号方糖送物 ...；来源：http://www.news.cn/tech/20240326/d66ae81b3e0c4e9aaadd697e99089c94/c.html",
+          "酒店机器人正在中国普及：资料图:沈阳一家餐厅内,一台名为“亮亮”的机器人服务员为顾客端上菜品。(新华社)\n  中评社香港6月24日电/在成都一家酒店,笔者看到机器人自己乘电梯把东西送到客房。询问后得知,外卖送餐员把食物放到前；来源：https://www.crntt.com/crn-webapp/doc/docDetailCreate.jsp?coluid=245&docid=105463647"
+        ]
+      },
+      "stage5_payload": {
+        "answer_error": null,
+        "displayed_names": [
+          "深圳市全民通信息技术有限公司",
+          "2026年酒店送餐机器人选购指南:猎户星空与行业主流品牌评测 - 智造出海 - 博客园企业号",
+          "云趣在线（深圳）科技有限公司",
+          "普渡机器人携手亚朵集团，以机器人技术引领酒店服务新纪元",
+          "深圳市艾特智能科技有限公司",
+          "关于 送餐机器人 结果1",
+          "深圳中智卫安机器人技术有限公司",
+          "遍地都是的酒店机器人，已经“退烧”了- 21经济网 - 21财经",
+          "深圳晓润控股有限公司",
+          "「送餐传菜机器人」送餐传菜机器人公司黄页 - 顺企网",
+          "银河通用",
+          "烧钱8亿换“第一股”，酒店机器人是“伪刚需”吗？ - 观察者网",
+          "深圳全智能机器人科技有限公司",
+          "酒店机器人正在中国普及_机器人网",
+          "深圳市普森斯科技有限公司",
+          "酒店智能机器人有哪些品牌？酒店配送机器人哪家最好？ - 中华网",
+          "深圳市繁兴科技股份有限公司",
+          "2026年深度解析:支持OEM的酒店送餐机器人厂商与场景化解决方案 - 智造出海 - 博客园企业号",
+          "睿博天米科技（深圳）有限公司",
+          "从餐饮、酒店配送机器人，看国产服务机器人如何出海？ - 亿欧",
+          "深圳市吉影科技有限公司",
+          "酒店服务机器人头部品牌有哪些?酒店机器人品牌推荐?_中华网",
+          "中铧机器人（深圳）有限公司",
+          "美国酒店服务型机器人正冲击员工就业领域-广州国际酒店及餐饮产业博览会",
+          "深圳市锐曼智能技术有限公司",
+          "酒店服务机器人-洛必德",
+          "深圳乐动机器人股份有限公司",
+          "酒店服务机器人 - 上海贺风工业产品设计有限公司",
+          "深圳中科世界机器人有限公司",
+          "酒店机器人公司排行榜",
+          "深圳市笨笨机器人有限公司",
+          "大火的酒店机器人，背后都是谁在砸钱？ - 环球旅讯",
+          "#酒店服务机器人# - 标签聚合 - 创业邦",
+          "酒店机器人 - 百度百科",
+          "酒店服务机器人行业国内市场消费数据分析与未来前景预测报告",
+          "酒店机器人图片- 京东",
+          "【送餐机器人价格】送餐机器人图片- 供应商网",
+          "酒店餐厅送餐机器人-智能制造网",
+          "专注智慧配送，九号机器人亮相上海国际酒店及商业空间博览会 - 新华网",
+          "酒店机器人正在中国普及"
+        ],
+        "claim_count": 40
+      },
+      "stage6_production_answer": {
+        "answer_text": "国内面向酒店场景的送餐/配送机器人供应商已形成一定规模，以下几家在产品与场景上都有明确对应，可视为较成熟的代表：\n\n深圳中智卫安机器人技术有限公司的产品线中直接包含送餐机器人和配送机器人，应用场景覆盖酒店、隔离酒店、商场、医院等公共场所，提供迎宾、导航、送餐及安保巡逻等服务。\n\n睿博天米科技（深圳）有限公司的 temi 机器人明确用于酒店无接触送物及入住指引，同时兼顾医院药品配送、写字楼与门店迎宾导览等场景。\n\n中铧机器人（深圳）有限公司拥有商用配送机器人产品，面向医院、写字楼、酒店等场景提供物品配送与送递服务，另有商用清洁机器人覆盖酒店公共区域清洁。\n\n深圳市锐曼智能技术有限公司的送餐机器人产品线包括德利哥2.0和熊二，配送场景明确覆盖酒店、KTV、餐厅。\n\n深圳中科世界机器人有限公司的送餐机器人用于餐厅服务，其迎宾机器人则适用于酒店、宾馆等场所。\n\n深圳市笨笨机器人有限公司的智能服务机器人已为酒店、银行、展厅、博物馆等场景提供解决方案，客户包括海尔集团、蒙牛集团、中国人寿等大型企业。\n\n以上为在酒店送餐/配送场景有明确产品对应的代表性供应商。若您关注某一家的具体型号、载重能力或部署案例，可以进一步说明，我再帮您细化。",
+        "answered_window_names": [
+          "深圳中科世界机器人有限公司",
+          "深圳中智卫安机器人技术有限公司",
+          "睿博天米科技（深圳）有限公司",
+          "中铧机器人（深圳）有限公司",
+          "深圳市锐曼智能技术有限公司",
+          "深圳市笨笨机器人有限公司"
+        ]
+      },
+      "gt_table": [
+        {
+          "alias": "云迹",
+          "s1_lexical_rank": 1,
+          "s1_vector_rank": null,
+          "s3_eligible_rank": 1,
+          "s3_ordered_rank": 35,
+          "s3_within_candidate_limit": true,
+          "s3_handle": 35,
+          "s4_selector_claim": 12,
+          "s4_displayed": null,
+          "s5_payload_displayed": null,
+          "s5_payload_claim": 12,
+          "s6_in_production_answer": false
+        },
+        {
+          "alias": "普渡",
+          "s1_lexical_rank": 2,
+          "s1_vector_rank": null,
+          "s3_eligible_rank": 2,
+          "s3_ordered_rank": 4,
+          "s3_within_candidate_limit": true,
+          "s3_handle": 4,
+          "s4_selector_claim": 4,
+          "s4_displayed": 4,
+          "s5_payload_displayed": 4,
+          "s5_payload_claim": 4,
+          "s6_in_production_answer": false
+        },
+        {
+          "alias": "开普勒",
+          "s1_lexical_rank": 3,
+          "s1_vector_rank": null,
+          "s3_eligible_rank": 3,
+          "s3_ordered_rank": 91,
+          "s3_within_candidate_limit": false,
+          "s3_handle": null,
+          "s4_selector_claim": null,
+          "s4_displayed": null,
+          "s5_payload_displayed": null,
+          "s5_payload_claim": null,
+          "s6_in_production_answer": false
+        },
+        {
+          "alias": "擎朗",
+          "s1_lexical_rank": 4,
+          "s1_vector_rank": null,
+          "s3_eligible_rank": 4,
+          "s3_ordered_rank": 60,
+          "s3_within_candidate_limit": false,
+          "s3_handle": null,
+          "s4_selector_claim": 20,
+          "s4_displayed": null,
+          "s5_payload_displayed": null,
+          "s5_payload_claim": 20,
+          "s6_in_production_answer": false
+        },
+        {
+          "alias": "九号",
+          "s1_lexical_rank": 8,
+          "s1_vector_rank": null,
+          "s3_eligible_rank": 8,
+          "s3_ordered_rank": 46,
+          "s3_within_candidate_limit": true,
+          "s3_handle": 46,
+          "s4_selector_claim": 36,
+          "s4_displayed": 39,
+          "s5_payload_displayed": 39,
+          "s5_payload_claim": 36,
+          "s6_in_production_answer": false
+        },
+        {
+          "alias": "艾唯尔",
+          "s1_lexical_rank": 12,
+          "s1_vector_rank": null,
+          "s3_eligible_rank": 12,
+          "s3_ordered_rank": 51,
+          "s3_within_candidate_limit": false,
+          "s3_handle": null,
+          "s4_selector_claim": null,
+          "s4_displayed": null,
+          "s5_payload_displayed": null,
+          "s5_payload_claim": null,
+          "s6_in_production_answer": false
+        }
+      ]
+    },
+    {
+      "id": "g5-t1",
+      "query": "我想找PCB打板， 有哪些推荐",
+      "plan": {
+        "lanes": [
+          "exact",
+          "structured",
+          "lexical",
+          "vector",
+          "web"
+        ],
+        "max_candidates": 48,
+        "web_max_results": 48,
+        "query_views": [
+          "我想找PCB打板， 有哪些推荐",
+          "PCB打板 推荐 厂商",
+          "PCB打板 平台 对比",
+          "PCB打样 小批量 厂家"
+        ],
+        "enumeration_policy": null
+      },
+      "stage1_lanes": {
+        "structured": {
+          "candidates": 0,
+          "items": 0,
+          "candidate_raw_scores": [],
+          "candidate_lanes_of_evidence": []
+        },
+        "exact": {
+          "candidates": 0,
+          "items": 0,
+          "candidate_raw_scores": [],
+          "candidate_lanes_of_evidence": []
+        },
+        "web": {
+          "candidates": 48,
+          "items": 0,
+          "candidate_raw_scores": [
+            1.0,
+            0.95,
+            0.9,
+            0.85,
+            0.8,
+            0.75,
+            0.7,
+            0.6499999999999999,
+            0.6,
+            0.55,
+            0.5,
+            0.44999999999999996,
+            0.3999999999999999,
+            0.35,
+            0.29999999999999993,
+            0.25,
+            0.19999999999999996,
+            0.1499999999999999,
+            0.09999999999999998,
+            0.04999999999999993,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "candidate_lanes_of_evidence": [
+            [
+              "web"
+            ],
+            [
+              "web"
+            ],
+            [
+              "web"
+            ],
+            [
+              "web"
+            ],
+            [
+              "web"
+            ],
+            [
+              "web"
+            ],
+            [
+              "web"
+            ],
+            [
+              "web"
+            ],
+            [
+              "web"
+            ],
+            [
+              "web"
+            ],
+            [
+              "web"
+            ],
+            [
+              "web"
+            ],
+            [
+              "web"
+            ],
+            [
+              "web"
+            ],
+            [
+              "web"
+            ],
+            [
+              "web"
+            ],
+            [
+              "web"
+            ],
+            [
+              "web"
+            ],
+            [
+              "web"
+            ],
+            [
+              "web"
+            ],
+            [
+              "web"
+            ],
+            [
+              "web"
+            ],
+            [
+              "web"
+            ],
+            [
+              "web"
+            ],
+            [
+              "web"
+            ],
+            [
+              "web"
+            ],
+            [
+              "web"
+            ],
+            [
+              "web"
+            ],
+            [
+              "web"
+            ],
+            [
+              "web"
+            ],
+            [
+              "web"
+            ],
+            [
+              "web"
+            ],
+            [
+              "web"
+            ],
+            [
+              "web"
+            ],
+            [
+              "web"
+            ],
+            [
+              "web"
+            ],
+            [
+              "web"
+            ],
+            [
+              "web"
+            ],
+            [
+              "web"
+            ],
+            [
+              "web"
+            ],
+            [
+              "web"
+            ],
+            [
+              "web"
+            ],
+            [
+              "web"
+            ],
+            [
+              "web"
+            ],
+            [
+              "web"
+            ],
+            [
+              "web"
+            ],
+            [
+              "web"
+            ],
+            [
+              "web"
+            ]
+          ]
+        },
+        "lexical": {
+          "candidates": 48,
+          "items": 0,
+          "candidate_names": [
+            "深圳天创无限科技有限公司",
+            "深圳市升达康科技有限公司",
+            "深圳市亿科迈科技有限公司",
+            "深圳市声雄电子有限公司",
+            "深圳市驭鹰者电子有限公司",
+            "百芯智能制造科技（深圳）有限公司",
+            "深圳市深华科电子有限公司",
+            "深圳赛维创新技术集团有限公司",
+            "深圳顺易捷科技有限公司",
+            "深圳市赛尔博特软件有限公司",
+            "深圳市迈威科技有限公司",
+            "深圳市科易博软件有限公司",
+            "深圳市壹科物联网技术有限公司",
+            "深圳优卫乐得科技有限公司",
+            "深圳正指向科技有限公司",
+            "深圳市天吉机电有限公司",
+            "深圳市动力飞扬智能装备有限公司",
+            "深圳市华仁智信技术有限公司",
+            "深圳市比昂芯科技有限公司",
+            "诡谷子人工智能科技（深圳）有限公司",
+            "深圳市优克雷技术有限公司",
+            "深圳智赛精密装备有限公司",
+            "深圳市高素科技有限公司",
+            "深圳市中科领创实业有限公司",
+            "深圳市赛晟科技有限公司",
+            "深圳市芯拓科技有限公司",
+            "深圳鼎界科技有限公司",
+            "深圳市盛矽电子科技有限公司",
+            "众志科技（深圳）有限公司",
+            "深圳市兆赫技术有限公司",
+            "深圳市玉成创新科技有限公司",
+            "深圳市中禾旭精密机械有限公司",
+            "深圳市雄思科技有限公司",
+            "深圳砺芯半导体有限责任公司",
+            "深圳市软博智能科技有限公司",
+            "深圳市舟海贸易有限公司",
+            "深圳市震远电子科技有限公司",
+            "深圳市智芯云创科技有限公司",
+            "深圳橙子自动化有限公司",
+            "锐视数字科技（深圳）有限公司",
+            "深南电路股份有限公司",
+            "深圳市雷赛自动化系统有限公司",
+            "深圳思路名扬通讯技术股份有限公司",
+            "深圳市洁驰科技有限公司",
+            "深圳国芯微半导体有限公司",
+            "深圳市腾进达信息技术有限公司",
+            "深圳市大族视觉技术有限公司",
+            "深圳市米克力美科技有限公司"
+          ],
+          "candidate_raw_scores": [
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0
+          ],
+          "candidate_lanes_of_evidence": [
+            [
+              "lexical"
+            ],
+            [
+              "lexical"
+            ],
+            [
+              "lexical"
+            ],
+            [
+              "lexical"
+            ],
+            [
+              "lexical"
+            ],
+            [
+              "lexical"
+            ],
+            [
+              "lexical"
+            ],
+            [
+              "lexical"
+            ],
+            [
+              "lexical"
+            ],
+            [
+              "lexical"
+            ],
+            [
+              "lexical"
+            ],
+            [
+              "lexical"
+            ],
+            [
+              "lexical"
+            ],
+            [
+              "lexical"
+            ],
+            [
+              "lexical"
+            ],
+            [
+              "lexical"
+            ],
+            [
+              "lexical"
+            ],
+            [
+              "lexical"
+            ],
+            [
+              "lexical"
+            ],
+            [
+              "lexical"
+            ],
+            [
+              "lexical"
+            ],
+            [
+              "lexical"
+            ],
+            [
+              "lexical"
+            ],
+            [
+              "lexical"
+            ],
+            [
+              "lexical"
+            ],
+            [
+              "lexical"
+            ],
+            [
+              "lexical"
+            ],
+            [
+              "lexical"
+            ],
+            [
+              "lexical"
+            ],
+            [
+              "lexical"
+            ],
+            [
+              "lexical"
+            ],
+            [
+              "lexical"
+            ],
+            [
+              "lexical"
+            ],
+            [
+              "lexical"
+            ],
+            [
+              "lexical"
+            ],
+            [
+              "lexical"
+            ],
+            [
+              "lexical"
+            ],
+            [
+              "lexical"
+            ],
+            [
+              "lexical"
+            ],
+            [
+              "lexical"
+            ],
+            [
+              "lexical"
+            ],
+            [
+              "lexical"
+            ],
+            [
+              "lexical"
+            ],
+            [
+              "lexical"
+            ],
+            [
+              "lexical"
+            ],
+            [
+              "lexical"
+            ],
+            [
+              "lexical"
+            ],
+            [
+              "lexical"
+            ]
+          ]
+        },
+        "vector": {
+          "candidates": 48,
+          "items": 0,
+          "candidate_raw_scores": [
+            0.0473260231067554,
+            0.044793527699073035,
+            0.04436825259827582,
+            0.04412843321596487,
+            0.04335797303506786,
+            0.0429892868625657,
+            0.042870961034594604,
+            0.04261127534841461,
+            0.04254093993357367,
+            0.042044901062110035,
+            0.04194806482316098,
+            0.04176861584648762,
+            0.041766620789551984,
+            0.04165200427407672,
+            0.04134911242167056,
+            0.04131589741710393,
+            0.0413060683011984,
+            0.04127493701140669,
+            0.04119080117128983,
+            0.04114342110858021,
+            0.04100457502378192,
+            0.04075050995539246,
+            0.040633180853343005,
+            0.040543724086977206,
+            0.040412321504314765,
+            0.040405202137556925,
+            0.04036145334696363,
+            0.04035898130494328,
+            0.04015041527626409,
+            0.0400520634692611,
+            0.039984647829529416,
+            0.03991203913060419,
+            0.03990356569245973,
+            0.03987565544044963,
+            0.03986262330740626,
+            0.03986155400018319,
+            0.039848823254852665,
+            0.039834654873302774,
+            0.039833341838316105,
+            0.03980889376211831,
+            0.0397489759945417,
+            0.0397360707240607,
+            0.039595269204664885,
+            0.03942773719348969,
+            0.03938550021858917,
+            0.03934604250093242,
+            0.039127056045404215,
+            0.03908747644877853
+          ],
+          "candidate_lanes_of_evidence": [
+            [
+              "vector"
+            ],
+            [
+              "vector"
+            ],
+            [
+              "vector"
+            ],
+            [
+              "vector"
+            ],
+            [
+              "vector"
+            ],
+            [
+              "vector"
+            ],
+            [
+              "vector"
+            ],
+            [
+              "vector"
+            ],
+            [
+              "vector"
+            ],
+            [
+              "vector"
+            ],
+            [
+              "vector"
+            ],
+            [
+              "vector"
+            ],
+            [
+              "vector"
+            ],
+            [
+              "vector"
+            ],
+            [
+              "vector"
+            ],
+            [
+              "vector"
+            ],
+            [
+              "vector"
+            ],
+            [
+              "vector"
+            ],
+            [
+              "vector"
+            ],
+            [
+              "vector"
+            ],
+            [
+              "vector"
+            ],
+            [
+              "vector"
+            ],
+            [
+              "vector"
+            ],
+            [
+              "vector"
+            ],
+            [
+              "vector"
+            ],
+            [
+              "vector"
+            ],
+            [
+              "vector"
+            ],
+            [
+              "vector"
+            ],
+            [
+              "vector"
+            ],
+            [
+              "vector"
+            ],
+            [
+              "vector"
+            ],
+            [
+              "vector"
+            ],
+            [
+              "vector"
+            ],
+            [
+              "vector"
+            ],
+            [
+              "vector"
+            ],
+            [
+              "vector"
+            ],
+            [
+              "vector"
+            ],
+            [
+              "vector"
+            ],
+            [
+              "vector"
+            ],
+            [
+              "vector"
+            ],
+            [
+              "vector"
+            ],
+            [
+              "vector"
+            ],
+            [
+              "vector"
+            ],
+            [
+              "vector"
+            ],
+            [
+              "vector"
+            ],
+            [
+              "vector"
+            ],
+            [
+              "vector"
+            ],
+            [
+              "vector"
+            ]
+          ]
+        }
+      },
+      "stage2_direct": {
+        "direct_item_count": 0,
+        "direct_result_count": 0
+      },
+      "stage3_window": {
+        "candidate_limit": 48,
+        "ordered_count": 144,
+        "ordered_names": [
+          "深圳市壹科物联网技术有限公司",
+          "【pcb打板】_pcb打板品牌/图片/价格_pcb打板批发_阿里巴巴",
+          "深圳天创无限科技有限公司",
+          "pcb打板2026年9月-月销口碑最新推荐-Taobao",
+          "深圳橙子自动化有限公司",
+          "打板_打板价格_优质打板批发/采购商机 - 搜好货网",
+          "锐视数字科技（深圳）有限公司",
+          "嘉立创下单助手_PCB免费打样_快捷PCB打样厂_多层电路板_JLC",
+          "深南电路股份有限公司",
+          "打板都上猎板网,性价比高,质量好!-客户晒单-猎板精密多层PCB智慧工厂",
+          "深圳市升达康科技有限公司",
+          "硬件工程师必备：PCB 打板厂家推荐 - 电子工程专辑",
+          "深圳市雷赛自动化系统有限公司",
+          "PCB打板哪家好?-汽车之家",
+          "深圳思路名扬通讯技术股份有限公司",
+          "硬件工程师常用的PCB 打板厂家推荐 - 腾讯云",
+          "深圳市洁驰科技有限公司",
+          "PCB打板哪家好?-太平洋汽车",
+          "深圳国芯微半导体有限公司",
+          "2025年PCB线路板打样企业推荐，嘉立创综合实力更强劲 - 新浪财经",
+          "深圳市腾进达信息技术有限公司",
+          "PCB打样-PCBA加工-PCBA配单-深圳捷多邦科技有限公司",
+          "深圳市大族视觉技术有限公司",
+          "国内较好的pcb生产厂家有哪几个?_太平洋汽车",
+          "深圳市米克力美科技有限公司",
+          "PCB打样服务哪家好？看看用户的口碑推荐 - 知乎专栏",
+          "深圳市亿科迈科技有限公司",
+          "国内较好的pcb生产厂家有哪几个?",
+          "深圳市声雄电子有限公司",
+          "PCB打样-PCBA加工-PCBA配单-深圳聚多邦精密电路有限公司",
+          "深圳优卫乐得科技有限公司",
+          "嘉纳电子有限公司",
+          "深圳正指向科技有限公司",
+          "键盘板打样选猎板,独家黑芯板材,透明油墨,做出来的板子质感太好了!-客户晒单-猎板精密多层PCB智慧工厂",
+          "深圳市天吉机电有限公司",
+          "免费的PCB打样平台汇总，每月免费打8块板！【建议收藏】 原创",
+          "深圳市动力飞扬智能装备有限公司",
+          "【pcb快速打板】_pcb快速打板品牌/图片/价格_pcb快速打板批发_阿里巴巴",
+          "深圳市华仁智信技术有限公司",
+          "pcb打样厂家哪家好 - 知乎专栏",
+          "深圳市比昂芯科技有限公司",
+          "PCB 对比| 嘉立创EDA专业版用户指南",
+          "深圳市驭鹰者电子有限公司",
+          "FPC与PCB的区别在哪里?_fpc, module, rpcb, hdi, mini led, slp分别是什么-CSDN博客",
+          "诡谷子人工智能科技（深圳）有限公司",
+          "PCB 廠商名單 - HackMD",
+          "百芯智能制造科技（深圳）有限公司",
+          "免费打样的时代,这些精致的PCB制作过程仍然如此养眼 - 今日头条",
+          "深圳市优克雷技术有限公司",
+          "pcb打样快板厂推荐 - 电子发烧友网",
+          "深圳市深华科电子有限公司",
+          "https://smt.szlcsc.com/",
+          "深圳智赛精密装备有限公司",
+          "PCB打样 电路板 pcb工厂直销店 快速单双面板打板-资源走廊",
+          "深圳市高素科技有限公司",
+          "PCB制板和打样的区别?",
+          "深圳市中科领创实业有限公司",
+          "线路板打样,行业领先佼佼者,惠州小微科技。",
+          "深圳市赛晟科技有限公司",
+          "捷配_PCB打样_SMT贴片_大小批量快速交付-捷配PCB&PCBA智造 ...",
+          "深圳市芯拓科技有限公司",
+          "pcb板材对比优缺点 - 电子发烧友网",
+          "深圳鼎界科技有限公司",
+          "免费的PCB打样平台汇总，每月免费打8块板！【建议收藏】_pcb免费 ...",
+          "深圳赛维创新技术集团有限公司",
+          "电路板打板哪家好？揭秘嘉立创的五大核心优势 - 腾讯云",
+          "深圳顺易捷科技有限公司",
+          "求助 - 电子技术交流论坛 - 21ic电子技术开发论坛",
+          "深圳市盛矽电子科技有限公司",
+          "PCB打标设备市场竞争格局分析 - 经管之家",
+          "众志科技（深圳）有限公司",
+          "PCB打样十大厂商排名？| 捷创电子",
+          "深圳市兆赫技术有限公司",
+          "深圳PCB打样_PCBA加工_PCBA小批量一站式服务——小铭打样",
+          "深圳市赛尔博特软件有限公司",
+          "PCB打板省钱小妙招,强烈建议收藏! - PCB设计 - 电子工程网",
+          "深圳市玉成创新科技有限公司",
+          "不同PCB表面处理工艺成本对比：选择适合的方案 - 捷配",
+          "深圳市中禾旭精密机械有限公司",
+          "嘉立创layout_嘉立创设计服务_Layout设计_Layout外包_pcb设计_嘉 ...",
+          "深圳市迈威科技有限公司",
+          "PCB打板省钱小妙招，强烈建议收藏！ - 其他PCB设计及方法",
+          "深圳市科易博软件有限公司",
+          "哪家免费pcb打样平台更有优势 - 知乎专栏",
+          "深圳市雄思科技有限公司",
+          "国内五大pcb打样厂家排名情况",
+          "深圳砺芯半导体有限责任公司",
+          "PCB打板的相关参数 - 道客巴巴",
+          "深圳市软博智能科技有限公司",
+          "PCB打样,小批量_深圳一智快捷科技有限公司",
+          "深圳市舟海贸易有限公司",
+          "PCB打板打样电路板定 做线路板制作订定 制抄板厂家批量加急设计-阿里巴巴",
+          "深圳市震远电子科技有限公司",
+          "PCB打板-CSDN博客",
+          "深圳市智芯云创科技有限公司",
+          "【pcb板专业打样厂家】_优质pcb板专业打样厂家_pcb板专业打样厂家批发/直销 - 阿里巴巴",
+          "深圳市微智体技术有限公司",
+          "深圳市路漫索电子有限公司",
+          "深圳市忆志科技有限公司",
+          "深圳市智联腾众科技有限公司",
+          "统域机器人（深圳）有限公司",
+          "中油智能（深圳）有限公司",
+          "深圳市航盛电子股份有限公司",
+          "深圳漫威电气有限公司",
+          "深圳市立泽科技有限公司",
+          "深圳市华睿智兴信息科技有限公司",
+          "深圳万润科技股份有限公司",
+          "深圳市龙瑞朗视科技发展有限公司",
+          "深圳市原雷科技有限公司",
+          "深圳森泰裕优科技发展有限公司",
+          "深圳市图域科技有限公司",
+          "深圳创世泰克科技有限公司",
+          "深圳市雷博泰克科技有限公司",
+          "深圳市鼎善信息科技有限公司",
+          "深圳市雷鸟网络科技有限公司",
+          "深圳市欣佳盟科技有限公司",
+          "乐森机器人（深圳）有限公司",
+          "深圳市天下云科技有限公司",
+          "深圳市特道信息技术有限公司",
+          "深圳市大唐盛世智能科技有限公司",
+          "智道网联科技（深圳）有限公司",
+          "深圳市科思科技股份有限公司",
+          "深圳市戴升智能科技有限公司",
+          "深圳市赫格电气有限公司",
+          "深圳市星盘科技有限公司",
+          "深圳市行进微电子有限公司",
+          "深圳市筑泰防务智能科技有限公司",
+          "迪特格设计集团有限公司",
+          "深圳市图郅创新科技有限公司",
+          "深圳市色大师人工智能技术有限公司",
+          "深圳赛意法微电子有限公司",
+          "深圳匠韵智能有限公司",
+          "子歌教育机器人（深圳）有限公司",
+          "深圳市立洋光电子股份有限公司",
+          "深圳市国昱科技有限公司",
+          "深圳市丁责电子有限公司",
+          "帝尔博格（深圳）智能科技有限公司",
+          "深圳市鼎盛方圆科技发展有限公司",
+          "深圳市博坦智能有限公司",
+          "深圳市得米网络有限公司",
+          "赛柏坦（深圳）科技有限公司",
+          "深圳了然视觉科技有限公司",
+          "深圳市深展电子有限公司",
+          "光沦科技（深圳）有限公司"
+        ],
+        "eligible": [
+          {
+            "result_id": "fused-result:company-c-02252b9ce34058d58e7a1a9d",
+            "display_name": "深圳天创无限科技有限公司",
+            "raw_score": 1.0,
+            "canonical_id": "company-c-02252b9ce34058d58e7a1a9d",
+            "lanes": [
+              "lexical"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-10e57271380531ec3cb9b8c0",
+            "display_name": "深圳市升达康科技有限公司",
+            "raw_score": 1.0,
+            "canonical_id": "company-c-10e57271380531ec3cb9b8c0",
+            "lanes": [
+              "lexical"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-22a42fa6b8a8f101ffa3bb25",
+            "display_name": "深圳市亿科迈科技有限公司",
+            "raw_score": 1.0,
+            "canonical_id": "company-c-22a42fa6b8a8f101ffa3bb25",
+            "lanes": [
+              "lexical"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-30dd7558ba9a46511e77a711",
+            "display_name": "深圳市声雄电子有限公司",
+            "raw_score": 1.0,
+            "canonical_id": "company-c-30dd7558ba9a46511e77a711",
+            "lanes": [
+              "lexical"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-689772b89aab41bbd9e19350",
+            "display_name": "深圳市驭鹰者电子有限公司",
+            "raw_score": 1.0,
+            "canonical_id": "company-c-689772b89aab41bbd9e19350",
+            "lanes": [
+              "lexical"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-826cf9e0de6f78a189fc1cb4",
+            "display_name": "百芯智能制造科技（深圳）有限公司",
+            "raw_score": 1.0,
+            "canonical_id": "company-c-826cf9e0de6f78a189fc1cb4",
+            "lanes": [
+              "lexical"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-86e620686ecf4ce9db876d01",
+            "display_name": "深圳市深华科电子有限公司",
+            "raw_score": 1.0,
+            "canonical_id": "company-c-86e620686ecf4ce9db876d01",
+            "lanes": [
+              "lexical"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-9e7a0bec8c96079e1af8c153",
+            "display_name": "深圳赛维创新技术集团有限公司",
+            "raw_score": 1.0,
+            "canonical_id": "company-c-9e7a0bec8c96079e1af8c153",
+            "lanes": [
+              "lexical"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-9fa75ed1f5ebb759f184785f",
+            "display_name": "深圳顺易捷科技有限公司",
+            "raw_score": 1.0,
+            "canonical_id": "company-c-9fa75ed1f5ebb759f184785f",
+            "lanes": [
+              "lexical"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-a98d7fa3a07ef6977ebce044",
+            "display_name": "深圳市赛尔博特软件有限公司",
+            "raw_score": 1.0,
+            "canonical_id": "company-c-a98d7fa3a07ef6977ebce044",
+            "lanes": [
+              "lexical"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-b8dfec9fcf1256f472cb553c",
+            "display_name": "深圳市迈威科技有限公司",
+            "raw_score": 1.0,
+            "canonical_id": "company-c-b8dfec9fcf1256f472cb553c",
+            "lanes": [
+              "lexical"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-c718e78355cf2b4fd785647a",
+            "display_name": "深圳市科易博软件有限公司",
+            "raw_score": 1.0,
+            "canonical_id": "company-c-c718e78355cf2b4fd785647a",
+            "lanes": [
+              "lexical"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-017abf0cde7fb360c20b91c9",
+            "display_name": "深圳市壹科物联网技术有限公司",
+            "raw_score": 1.0,
+            "canonical_id": "company-c-017abf0cde7fb360c20b91c9",
+            "lanes": [
+              "lexical"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-39e10dfa777415100ddb9c66",
+            "display_name": "深圳优卫乐得科技有限公司",
+            "raw_score": 1.0,
+            "canonical_id": "company-c-39e10dfa777415100ddb9c66",
+            "lanes": [
+              "lexical"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-3a2cd364d238142c5304d410",
+            "display_name": "深圳正指向科技有限公司",
+            "raw_score": 1.0,
+            "canonical_id": "company-c-3a2cd364d238142c5304d410",
+            "lanes": [
+              "lexical"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-4b084fae6abeec21f4f619b5",
+            "display_name": "深圳市天吉机电有限公司",
+            "raw_score": 1.0,
+            "canonical_id": "company-c-4b084fae6abeec21f4f619b5",
+            "lanes": [
+              "lexical"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-5e4963a54d01b234aab8025e",
+            "display_name": "深圳市动力飞扬智能装备有限公司",
+            "raw_score": 1.0,
+            "canonical_id": "company-c-5e4963a54d01b234aab8025e",
+            "lanes": [
+              "lexical"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-5ec122d8180b6abba81171fb",
+            "display_name": "深圳市华仁智信技术有限公司",
+            "raw_score": 1.0,
+            "canonical_id": "company-c-5ec122d8180b6abba81171fb",
+            "lanes": [
+              "lexical"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-60f0f8a302fe1969642d2418",
+            "display_name": "深圳市比昂芯科技有限公司",
+            "raw_score": 1.0,
+            "canonical_id": "company-c-60f0f8a302fe1969642d2418",
+            "lanes": [
+              "lexical"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-710dfdbd349582000300b8c4",
+            "display_name": "诡谷子人工智能科技（深圳）有限公司",
+            "raw_score": 1.0,
+            "canonical_id": "company-c-710dfdbd349582000300b8c4",
+            "lanes": [
+              "lexical"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-84faee6911e4fe34e5232518",
+            "display_name": "深圳市优克雷技术有限公司",
+            "raw_score": 1.0,
+            "canonical_id": "company-c-84faee6911e4fe34e5232518",
+            "lanes": [
+              "lexical"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-877827059543f86e22bc9c90",
+            "display_name": "深圳智赛精密装备有限公司",
+            "raw_score": 1.0,
+            "canonical_id": "company-c-877827059543f86e22bc9c90",
+            "lanes": [
+              "lexical"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-8a73107321ed8412f308d14b",
+            "display_name": "深圳市高素科技有限公司",
+            "raw_score": 1.0,
+            "canonical_id": "company-c-8a73107321ed8412f308d14b",
+            "lanes": [
+              "lexical"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-907492318fee90a4684c10df",
+            "display_name": "深圳市中科领创实业有限公司",
+            "raw_score": 1.0,
+            "canonical_id": "company-c-907492318fee90a4684c10df",
+            "lanes": [
+              "lexical"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-92dccf619bc5c9370fb36cae",
+            "display_name": "深圳市赛晟科技有限公司",
+            "raw_score": 1.0,
+            "canonical_id": "company-c-92dccf619bc5c9370fb36cae",
+            "lanes": [
+              "lexical"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-94d4086e1a0103efd4f188fb",
+            "display_name": "深圳市芯拓科技有限公司",
+            "raw_score": 1.0,
+            "canonical_id": "company-c-94d4086e1a0103efd4f188fb",
+            "lanes": [
+              "lexical"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-961e56fe46fcdf995de75102",
+            "display_name": "深圳鼎界科技有限公司",
+            "raw_score": 1.0,
+            "canonical_id": "company-c-961e56fe46fcdf995de75102",
+            "lanes": [
+              "lexical"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-a37e1427d172fa69250c8606",
+            "display_name": "深圳市盛矽电子科技有限公司",
+            "raw_score": 1.0,
+            "canonical_id": "company-c-a37e1427d172fa69250c8606",
+            "lanes": [
+              "lexical"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-a63126c0454c69e5a346f53e",
+            "display_name": "众志科技（深圳）有限公司",
+            "raw_score": 1.0,
+            "canonical_id": "company-c-a63126c0454c69e5a346f53e",
+            "lanes": [
+              "lexical"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-a7d002b5f67a2ede0cc4be87",
+            "display_name": "深圳市兆赫技术有限公司",
+            "raw_score": 1.0,
+            "canonical_id": "company-c-a7d002b5f67a2ede0cc4be87",
+            "lanes": [
+              "lexical"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-a9952a1968867eee39ebaa57",
+            "display_name": "深圳市玉成创新科技有限公司",
+            "raw_score": 1.0,
+            "canonical_id": "company-c-a9952a1968867eee39ebaa57",
+            "lanes": [
+              "lexical"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-b143e118b46a73f3509dff64",
+            "display_name": "深圳市中禾旭精密机械有限公司",
+            "raw_score": 1.0,
+            "canonical_id": "company-c-b143e118b46a73f3509dff64",
+            "lanes": [
+              "lexical"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-cb195fb532176aa5acef115a",
+            "display_name": "深圳市雄思科技有限公司",
+            "raw_score": 1.0,
+            "canonical_id": "company-c-cb195fb532176aa5acef115a",
+            "lanes": [
+              "lexical"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-d02a7f01b3980a66c1600124",
+            "display_name": "深圳砺芯半导体有限责任公司",
+            "raw_score": 1.0,
+            "canonical_id": "company-c-d02a7f01b3980a66c1600124",
+            "lanes": [
+              "lexical"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-db97d275bf0ddf1e043b5b75",
+            "display_name": "深圳市软博智能科技有限公司",
+            "raw_score": 1.0,
+            "canonical_id": "company-c-db97d275bf0ddf1e043b5b75",
+            "lanes": [
+              "lexical"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-e35b7d711d309ed103db4478",
+            "display_name": "深圳市舟海贸易有限公司",
+            "raw_score": 1.0,
+            "canonical_id": "company-c-e35b7d711d309ed103db4478",
+            "lanes": [
+              "lexical"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-f552415a22ce3516ae204f60",
+            "display_name": "深圳市震远电子科技有限公司",
+            "raw_score": 1.0,
+            "canonical_id": "company-c-f552415a22ce3516ae204f60",
+            "lanes": [
+              "lexical"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-f8c965faaf7a0e4a7223f38b",
+            "display_name": "深圳市智芯云创科技有限公司",
+            "raw_score": 1.0,
+            "canonical_id": "company-c-f8c965faaf7a0e4a7223f38b",
+            "lanes": [
+              "lexical"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-02643b3e7c4c1ced4c027010",
+            "display_name": "深圳橙子自动化有限公司",
+            "raw_score": 1.0,
+            "canonical_id": "company-c-02643b3e7c4c1ced4c027010",
+            "lanes": [
+              "lexical"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-09bc1ff93ae0d40db4b46e6d",
+            "display_name": "锐视数字科技（深圳）有限公司",
+            "raw_score": 1.0,
+            "canonical_id": "company-c-09bc1ff93ae0d40db4b46e6d",
+            "lanes": [
+              "lexical"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-0c087bba8369e127acde08a2",
+            "display_name": "深南电路股份有限公司",
+            "raw_score": 1.0,
+            "canonical_id": "company-c-0c087bba8369e127acde08a2",
+            "lanes": [
+              "lexical"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-1208be37778bd85783ebb340",
+            "display_name": "深圳市雷赛自动化系统有限公司",
+            "raw_score": 1.0,
+            "canonical_id": "company-c-1208be37778bd85783ebb340",
+            "lanes": [
+              "lexical"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-12bbb8d2fd76f3be84d33e2b",
+            "display_name": "深圳思路名扬通讯技术股份有限公司",
+            "raw_score": 1.0,
+            "canonical_id": "company-c-12bbb8d2fd76f3be84d33e2b",
+            "lanes": [
+              "lexical"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-133563db38357dc31c8f69af",
+            "display_name": "深圳市洁驰科技有限公司",
+            "raw_score": 1.0,
+            "canonical_id": "company-c-133563db38357dc31c8f69af",
+            "lanes": [
+              "lexical"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-1b1fb756f87e2345c0c83ecf",
+            "display_name": "深圳国芯微半导体有限公司",
+            "raw_score": 1.0,
+            "canonical_id": "company-c-1b1fb756f87e2345c0c83ecf",
+            "lanes": [
+              "lexical"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-1f3c70f3faa9489eac17c39a",
+            "display_name": "深圳市腾进达信息技术有限公司",
+            "raw_score": 1.0,
+            "canonical_id": "company-c-1f3c70f3faa9489eac17c39a",
+            "lanes": [
+              "lexical"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-1fa8ed358bb1ef3b9f95bcd6",
+            "display_name": "深圳市大族视觉技术有限公司",
+            "raw_score": 1.0,
+            "canonical_id": "company-c-1fa8ed358bb1ef3b9f95bcd6",
+            "lanes": [
+              "lexical"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-2029e8704fe6b3e389008d44",
+            "display_name": "深圳市米克力美科技有限公司",
+            "raw_score": 1.0,
+            "canonical_id": "company-c-2029e8704fe6b3e389008d44",
+            "lanes": [
+              "lexical"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-12276706a90434aa4207f89e",
+            "display_name": "深圳市微智体技术有限公司",
+            "raw_score": 0.0473260231067554,
+            "canonical_id": "company-c-12276706a90434aa4207f89e",
+            "lanes": [
+              "vector"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-eecec945c113e561e4b2a887",
+            "display_name": "深圳市路漫索电子有限公司",
+            "raw_score": 0.044793527699073035,
+            "canonical_id": "company-c-eecec945c113e561e4b2a887",
+            "lanes": [
+              "vector"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-88887fb9a4237b362c32be1c",
+            "display_name": "深圳市忆志科技有限公司",
+            "raw_score": 0.04436825259827582,
+            "canonical_id": "company-c-88887fb9a4237b362c32be1c",
+            "lanes": [
+              "vector"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-31e4f199be7572daefe21bf4",
+            "display_name": "深圳市智联腾众科技有限公司",
+            "raw_score": 0.04412843321596487,
+            "canonical_id": "company-c-31e4f199be7572daefe21bf4",
+            "lanes": [
+              "vector"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-2bb2b4c8ce23f74b4819a1f7",
+            "display_name": "统域机器人（深圳）有限公司",
+            "raw_score": 0.04335797303506786,
+            "canonical_id": "company-c-2bb2b4c8ce23f74b4819a1f7",
+            "lanes": [
+              "vector"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-794ea14b7271f55577799dbd",
+            "display_name": "中油智能（深圳）有限公司",
+            "raw_score": 0.0429892868625657,
+            "canonical_id": "company-c-794ea14b7271f55577799dbd",
+            "lanes": [
+              "vector"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-1d1c9e9979c096ba409e340c",
+            "display_name": "深圳市航盛电子股份有限公司",
+            "raw_score": 0.042870961034594604,
+            "canonical_id": "company-c-1d1c9e9979c096ba409e340c",
+            "lanes": [
+              "vector"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-dfe6dc7f79d7337c9d1b5891",
+            "display_name": "深圳漫威电气有限公司",
+            "raw_score": 0.04261127534841461,
+            "canonical_id": "company-c-dfe6dc7f79d7337c9d1b5891",
+            "lanes": [
+              "vector"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-6a399bdc3add96ef9998a15a",
+            "display_name": "深圳市立泽科技有限公司",
+            "raw_score": 0.04254093993357367,
+            "canonical_id": "company-c-6a399bdc3add96ef9998a15a",
+            "lanes": [
+              "vector"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-63a1e36a7e924b31da84217a",
+            "display_name": "深圳市华睿智兴信息科技有限公司",
+            "raw_score": 0.042044901062110035,
+            "canonical_id": "company-c-63a1e36a7e924b31da84217a",
+            "lanes": [
+              "vector"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-9aecd4f1340d6f1bafb0d69e",
+            "display_name": "深圳万润科技股份有限公司",
+            "raw_score": 0.04194806482316098,
+            "canonical_id": "company-c-9aecd4f1340d6f1bafb0d69e",
+            "lanes": [
+              "vector"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-d40fff9bab7c6cbaa843dc9f",
+            "display_name": "深圳市龙瑞朗视科技发展有限公司",
+            "raw_score": 0.04176861584648762,
+            "canonical_id": "company-c-d40fff9bab7c6cbaa843dc9f",
+            "lanes": [
+              "vector"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-ee362583bcc6426e4a7dc8fd",
+            "display_name": "深圳市原雷科技有限公司",
+            "raw_score": 0.041766620789551984,
+            "canonical_id": "company-c-ee362583bcc6426e4a7dc8fd",
+            "lanes": [
+              "vector"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-266ef6fe37ba52df150576af",
+            "display_name": "深圳森泰裕优科技发展有限公司",
+            "raw_score": 0.04165200427407672,
+            "canonical_id": "company-c-266ef6fe37ba52df150576af",
+            "lanes": [
+              "vector"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-8294ef1712dccac0485f7536",
+            "display_name": "深圳市图域科技有限公司",
+            "raw_score": 0.04134911242167056,
+            "canonical_id": "company-c-8294ef1712dccac0485f7536",
+            "lanes": [
+              "vector"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-590d5cdc23b3045b5cf8ede9",
+            "display_name": "深圳创世泰克科技有限公司",
+            "raw_score": 0.04131589741710393,
+            "canonical_id": "company-c-590d5cdc23b3045b5cf8ede9",
+            "lanes": [
+              "vector"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-cc387a5a87a1364400371a75",
+            "display_name": "深圳市雷博泰克科技有限公司",
+            "raw_score": 0.0413060683011984,
+            "canonical_id": "company-c-cc387a5a87a1364400371a75",
+            "lanes": [
+              "vector"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-1e49d99adfb642171f62d86c",
+            "display_name": "深圳市鼎善信息科技有限公司",
+            "raw_score": 0.04127493701140669,
+            "canonical_id": "company-c-1e49d99adfb642171f62d86c",
+            "lanes": [
+              "vector"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-072bc8681169ae2040f38651",
+            "display_name": "深圳市雷鸟网络科技有限公司",
+            "raw_score": 0.04119080117128983,
+            "canonical_id": "company-c-072bc8681169ae2040f38651",
+            "lanes": [
+              "vector"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-2c1567163c8adcc022a2ae14",
+            "display_name": "深圳市欣佳盟科技有限公司",
+            "raw_score": 0.04114342110858021,
+            "canonical_id": "company-c-2c1567163c8adcc022a2ae14",
+            "lanes": [
+              "vector"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-cc611a7bca64b215c242ebb7",
+            "display_name": "乐森机器人（深圳）有限公司",
+            "raw_score": 0.04100457502378192,
+            "canonical_id": "company-c-cc611a7bca64b215c242ebb7",
+            "lanes": [
+              "vector"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-e7fa0d7bb7156d20a6edc638",
+            "display_name": "深圳市天下云科技有限公司",
+            "raw_score": 0.04075050995539246,
+            "canonical_id": "company-c-e7fa0d7bb7156d20a6edc638",
+            "lanes": [
+              "vector"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-f059a97cf404a13c97bdd835",
+            "display_name": "深圳市特道信息技术有限公司",
+            "raw_score": 0.040633180853343005,
+            "canonical_id": "company-c-f059a97cf404a13c97bdd835",
+            "lanes": [
+              "vector"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-47def09a7fafa9f0efbfde2f",
+            "display_name": "深圳市大唐盛世智能科技有限公司",
+            "raw_score": 0.040543724086977206,
+            "canonical_id": "company-c-47def09a7fafa9f0efbfde2f",
+            "lanes": [
+              "vector"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-a967ce4886d16c7fc61fbcbe",
+            "display_name": "智道网联科技（深圳）有限公司",
+            "raw_score": 0.040412321504314765,
+            "canonical_id": "company-c-a967ce4886d16c7fc61fbcbe",
+            "lanes": [
+              "vector"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-cd51eacb9d3cf8d595f2357e",
+            "display_name": "深圳市科思科技股份有限公司",
+            "raw_score": 0.040405202137556925,
+            "canonical_id": "company-c-cd51eacb9d3cf8d595f2357e",
+            "lanes": [
+              "vector"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-377f7e1b4e42a8e02917a074",
+            "display_name": "深圳市戴升智能科技有限公司",
+            "raw_score": 0.04036145334696363,
+            "canonical_id": "company-c-377f7e1b4e42a8e02917a074",
+            "lanes": [
+              "vector"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-65e46e039df56e3acaabed3a",
+            "display_name": "深圳市赫格电气有限公司",
+            "raw_score": 0.04035898130494328,
+            "canonical_id": "company-c-65e46e039df56e3acaabed3a",
+            "lanes": [
+              "vector"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-c131aff3ae6a60fd63c75956",
+            "display_name": "深圳市星盘科技有限公司",
+            "raw_score": 0.04015041527626409,
+            "canonical_id": "company-c-c131aff3ae6a60fd63c75956",
+            "lanes": [
+              "vector"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-2bacb052bca41a171aaf0b5d",
+            "display_name": "深圳市行进微电子有限公司",
+            "raw_score": 0.0400520634692611,
+            "canonical_id": "company-c-2bacb052bca41a171aaf0b5d",
+            "lanes": [
+              "vector"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-5a8dbe98d84931187a43e12a",
+            "display_name": "深圳市筑泰防务智能科技有限公司",
+            "raw_score": 0.039984647829529416,
+            "canonical_id": "company-c-5a8dbe98d84931187a43e12a",
+            "lanes": [
+              "vector"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-05c5abc846442f73f9297df2",
+            "display_name": "迪特格设计集团有限公司",
+            "raw_score": 0.03991203913060419,
+            "canonical_id": "company-c-05c5abc846442f73f9297df2",
+            "lanes": [
+              "vector"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-0f974e1df0433f93a96aa858",
+            "display_name": "深圳市图郅创新科技有限公司",
+            "raw_score": 0.03990356569245973,
+            "canonical_id": "company-c-0f974e1df0433f93a96aa858",
+            "lanes": [
+              "vector"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-0e3f4828b8e218839a64c739",
+            "display_name": "深圳市色大师人工智能技术有限公司",
+            "raw_score": 0.03987565544044963,
+            "canonical_id": "company-c-0e3f4828b8e218839a64c739",
+            "lanes": [
+              "vector"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-7a0ff3c3620b6ae57e7be546",
+            "display_name": "深圳赛意法微电子有限公司",
+            "raw_score": 0.03986262330740626,
+            "canonical_id": "company-c-7a0ff3c3620b6ae57e7be546",
+            "lanes": [
+              "vector"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-10f469c9b0400c377f7d86a7",
+            "display_name": "深圳匠韵智能有限公司",
+            "raw_score": 0.03986155400018319,
+            "canonical_id": "company-c-10f469c9b0400c377f7d86a7",
+            "lanes": [
+              "vector"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-13e7b29ef2855fb40169853a",
+            "display_name": "子歌教育机器人（深圳）有限公司",
+            "raw_score": 0.039848823254852665,
+            "canonical_id": "company-c-13e7b29ef2855fb40169853a",
+            "lanes": [
+              "vector"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-65f7d9f98c79a6aec5309bd5",
+            "display_name": "深圳市立洋光电子股份有限公司",
+            "raw_score": 0.039834654873302774,
+            "canonical_id": "company-c-65f7d9f98c79a6aec5309bd5",
+            "lanes": [
+              "vector"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-10c57b1d8681086885315496",
+            "display_name": "深圳市国昱科技有限公司",
+            "raw_score": 0.039833341838316105,
+            "canonical_id": "company-c-10c57b1d8681086885315496",
+            "lanes": [
+              "vector"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-6cdbeb12a97aeaff1c7c9363",
+            "display_name": "深圳市丁责电子有限公司",
+            "raw_score": 0.03980889376211831,
+            "canonical_id": "company-c-6cdbeb12a97aeaff1c7c9363",
+            "lanes": [
+              "vector"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-fbcf8f9a575ab34b9a934109",
+            "display_name": "帝尔博格（深圳）智能科技有限公司",
+            "raw_score": 0.0397489759945417,
+            "canonical_id": "company-c-fbcf8f9a575ab34b9a934109",
+            "lanes": [
+              "vector"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-d70f85bfb6508d51ce9f7bb5",
+            "display_name": "深圳市鼎盛方圆科技发展有限公司",
+            "raw_score": 0.0397360707240607,
+            "canonical_id": "company-c-d70f85bfb6508d51ce9f7bb5",
+            "lanes": [
+              "vector"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-be38744c05e4ce5573cc4000",
+            "display_name": "深圳市博坦智能有限公司",
+            "raw_score": 0.039595269204664885,
+            "canonical_id": "company-c-be38744c05e4ce5573cc4000",
+            "lanes": [
+              "vector"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-fd48a171607ae4b153719b37",
+            "display_name": "深圳市得米网络有限公司",
+            "raw_score": 0.03942773719348969,
+            "canonical_id": "company-c-fd48a171607ae4b153719b37",
+            "lanes": [
+              "vector"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-a1137ae3f0239401268a03ca",
+            "display_name": "赛柏坦（深圳）科技有限公司",
+            "raw_score": 0.03938550021858917,
+            "canonical_id": "company-c-a1137ae3f0239401268a03ca",
+            "lanes": [
+              "vector"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-97efa658dc1eabc996a1fae1",
+            "display_name": "深圳了然视觉科技有限公司",
+            "raw_score": 0.03934604250093242,
+            "canonical_id": "company-c-97efa658dc1eabc996a1fae1",
+            "lanes": [
+              "vector"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-65051e80cdb70ae19fb8baf3",
+            "display_name": "深圳市深展电子有限公司",
+            "raw_score": 0.039127056045404215,
+            "canonical_id": "company-c-65051e80cdb70ae19fb8baf3",
+            "lanes": [
+              "vector"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:company-c-f05bd25772a4ea6c8cf6c15f",
+            "display_name": "光沦科技（深圳）有限公司",
+            "raw_score": 0.03908747644877853,
+            "canonical_id": "company-c-f05bd25772a4ea6c8cf6c15f",
+            "lanes": [
+              "vector"
+            ],
+            "natures": [
+              "local"
+            ]
+          },
+          {
+            "result_id": "fused-result:54e1944722833d03e74514ca1aaf65b3583c6e4db65cdce5c69e03a87e2b8646",
+            "display_name": "【pcb打板】_pcb打板品牌/图片/价格_pcb打板批发_阿里巴巴",
+            "raw_score": 1.0,
+            "canonical_id": null,
+            "lanes": [
+              "web"
+            ],
+            "natures": [
+              "current_web"
+            ]
+          },
+          {
+            "result_id": "fused-result:e54fb37ca26e6607192d1d55983cde20a08a1e8241943ecb34914807d17f514b",
+            "display_name": "pcb打板2026年9月-月销口碑最新推荐-Taobao",
+            "raw_score": 0.95,
+            "canonical_id": null,
+            "lanes": [
+              "web"
+            ],
+            "natures": [
+              "current_web"
+            ]
+          },
+          {
+            "result_id": "fused-result:564c008dc0f8a97ccfa4150a77ce4ab6274e8bb3295cc6a597308bc48ea067da",
+            "display_name": "打板_打板价格_优质打板批发/采购商机 - 搜好货网",
+            "raw_score": 0.9,
+            "canonical_id": null,
+            "lanes": [
+              "web"
+            ],
+            "natures": [
+              "current_web"
+            ]
+          },
+          {
+            "result_id": "fused-result:771b0500ede5be2ed256de39c35caca6f0744de954a17593c496c6bb150cf4e2",
+            "display_name": "嘉立创下单助手_PCB免费打样_快捷PCB打样厂_多层电路板_JLC",
+            "raw_score": 0.85,
+            "canonical_id": null,
+            "lanes": [
+              "web"
+            ],
+            "natures": [
+              "current_web"
+            ]
+          },
+          {
+            "result_id": "fused-result:91dfdba3a55a25426a6cb5ba493d4c5838c33ba69dd3e4baf6a2ef844c663d9e",
+            "display_name": "打板都上猎板网,性价比高,质量好!-客户晒单-猎板精密多层PCB智慧工厂",
+            "raw_score": 0.8,
+            "canonical_id": null,
+            "lanes": [
+              "web"
+            ],
+            "natures": [
+              "current_web"
+            ]
+          },
+          {
+            "result_id": "fused-result:3ae5a25dbf496b5c9385e02397cd0d7a5b600166a1f4d031779b98d5754f7737",
+            "display_name": "硬件工程师必备：PCB 打板厂家推荐 - 电子工程专辑",
+            "raw_score": 0.75,
+            "canonical_id": null,
+            "lanes": [
+              "web"
+            ],
+            "natures": [
+              "current_web"
+            ]
+          },
+          {
+            "result_id": "fused-result:9e7ce90424a3f1c4dbeadc8411cfda89dd6e64f22dab430b38f7f7276ae407fe",
+            "display_name": "PCB打板哪家好?-汽车之家",
+            "raw_score": 0.7,
+            "canonical_id": null,
+            "lanes": [
+              "web"
+            ],
+            "natures": [
+              "current_web"
+            ]
+          },
+          {
+            "result_id": "fused-result:e5594b8835cf5a363994a3bc20ebfbc60c1b6feef972da69163efefcfaf63501",
+            "display_name": "硬件工程师常用的PCB 打板厂家推荐 - 腾讯云",
+            "raw_score": 0.6499999999999999,
+            "canonical_id": null,
+            "lanes": [
+              "web"
+            ],
+            "natures": [
+              "current_web"
+            ]
+          },
+          {
+            "result_id": "fused-result:92666be3808d3c5903a4d8a84efe2ea1fd35de746e979b80ff6de65974a42fec",
+            "display_name": "PCB打板哪家好?-太平洋汽车",
+            "raw_score": 0.6,
+            "canonical_id": null,
+            "lanes": [
+              "web"
+            ],
+            "natures": [
+              "current_web"
+            ]
+          },
+          {
+            "result_id": "fused-result:56fbb40f5dbdbcb984ec4359835d6dc6164232ccd76f1c903df36f9db1d327b0",
+            "display_name": "2025年PCB线路板打样企业推荐，嘉立创综合实力更强劲 - 新浪财经",
+            "raw_score": 0.55,
+            "canonical_id": null,
+            "lanes": [
+              "web"
+            ],
+            "natures": [
+              "current_web"
+            ]
+          },
+          {
+            "result_id": "fused-result:5a0844434f1cb142ad17f9342979c18347486c9a129baecc13fd5fcc5e0d103c",
+            "display_name": "PCB打样-PCBA加工-PCBA配单-深圳捷多邦科技有限公司",
+            "raw_score": 0.5,
+            "canonical_id": null,
+            "lanes": [
+              "web"
+            ],
+            "natures": [
+              "current_web"
+            ]
+          },
+          {
+            "result_id": "fused-result:338d4b7cf5907e60d40b50281027896c809c29e7b320cddc1c025830bf2598d7",
+            "display_name": "国内较好的pcb生产厂家有哪几个?_太平洋汽车",
+            "raw_score": 0.44999999999999996,
+            "canonical_id": null,
+            "lanes": [
+              "web"
+            ],
+            "natures": [
+              "current_web"
+            ]
+          },
+          {
+            "result_id": "fused-result:7028e44c247b3011c528b0802e744d91ca17d072b9e155baead4aa0225355fe0",
+            "display_name": "PCB打样服务哪家好？看看用户的口碑推荐 - 知乎专栏",
+            "raw_score": 0.3999999999999999,
+            "canonical_id": null,
+            "lanes": [
+              "web"
+            ],
+            "natures": [
+              "current_web"
+            ]
+          },
+          {
+            "result_id": "fused-result:569a091fba6a7605d0b8e1afe2364e13f5e57832b787cb7481bf14f775f2d385",
+            "display_name": "国内较好的pcb生产厂家有哪几个?",
+            "raw_score": 0.35,
+            "canonical_id": null,
+            "lanes": [
+              "web"
+            ],
+            "natures": [
+              "current_web"
+            ]
+          },
+          {
+            "result_id": "fused-result:fcaa769d2969803a86e44821296d7cb8ace03ad4201fb714d9638b75ef6bfea3",
+            "display_name": "PCB打样-PCBA加工-PCBA配单-深圳聚多邦精密电路有限公司",
+            "raw_score": 0.29999999999999993,
+            "canonical_id": null,
+            "lanes": [
+              "web"
+            ],
+            "natures": [
+              "current_web"
+            ]
+          },
+          {
+            "result_id": "fused-result:f31d0b83b7e2561b16a755f639447f39c0dda94cb18a1934717a2191abc2dacf",
+            "display_name": "嘉纳电子有限公司",
+            "raw_score": 0.25,
+            "canonical_id": null,
+            "lanes": [
+              "web"
+            ],
+            "natures": [
+              "current_web"
+            ]
+          },
+          {
+            "result_id": "fused-result:08f0f25bd1495d27c5db85795b7e26e8ed322548d5ae2e126edabdb9aa8ce007",
+            "display_name": "键盘板打样选猎板,独家黑芯板材,透明油墨,做出来的板子质感太好了!-客户晒单-猎板精密多层PCB智慧工厂",
+            "raw_score": 0.19999999999999996,
+            "canonical_id": null,
+            "lanes": [
+              "web"
+            ],
+            "natures": [
+              "current_web"
+            ]
+          },
+          {
+            "result_id": "fused-result:b2f9a1a73ddf7766b52107a5f2a153efa2146a3f9b5697a35a0ca5ea7c7dcbb2",
+            "display_name": "免费的PCB打样平台汇总，每月免费打8块板！【建议收藏】 原创",
+            "raw_score": 0.1499999999999999,
+            "canonical_id": null,
+            "lanes": [
+              "web"
+            ],
+            "natures": [
+              "current_web"
+            ]
+          },
+          {
+            "result_id": "fused-result:594ce0146a52edfe6222bbc010a6d6cbb6b36ceba0bd44960c018c1e90bd827e",
+            "display_name": "【pcb快速打板】_pcb快速打板品牌/图片/价格_pcb快速打板批发_阿里巴巴",
+            "raw_score": 0.09999999999999998,
+            "canonical_id": null,
+            "lanes": [
+              "web"
+            ],
+            "natures": [
+              "current_web"
+            ]
+          },
+          {
+            "result_id": "fused-result:c3341e0811d5c2a9350bb11ac5a8c870851b71e5ddad9300bd23b98d6776a060",
+            "display_name": "pcb打样厂家哪家好 - 知乎专栏",
+            "raw_score": 0.04999999999999993,
+            "canonical_id": null,
+            "lanes": [
+              "web"
+            ],
+            "natures": [
+              "current_web"
+            ]
+          },
+          {
+            "result_id": "fused-result:ce1e1c8cb4ae1d5da870aaee60a003fad7a7b69cc68a05c21d20ec7037ea20f7",
+            "display_name": "PCB打板-CSDN博客",
+            "raw_score": 0.0,
+            "canonical_id": null,
+            "lanes": [
+              "web"
+            ],
+            "natures": [
+              "current_web"
+            ]
+          },
+          {
+            "result_id": "fused-result:244411d32355409bef0d7642ee9f0fc0f3ea65cc49f18e1f79b69645d5eb69e3",
+            "display_name": "PCB 廠商名單 - HackMD",
+            "raw_score": 0.0,
+            "canonical_id": null,
+            "lanes": [
+              "web"
+            ],
+            "natures": [
+              "current_web"
+            ]
+          },
+          {
+            "result_id": "fused-result:cc126860c1a4136486e6ef7bc6ae3f4b770a978c4c20d5c287f981cb1ecf4e68",
+            "display_name": "PCB打板打样电路板定 做线路板制作订定 制抄板厂家批量加急设计-阿里巴巴",
+            "raw_score": 0.0,
+            "canonical_id": null,
+            "lanes": [
+              "web"
+            ],
+            "natures": [
+              "current_web"
+            ]
+          },
+          {
+            "result_id": "fused-result:ae159e2bb2e2aade782a4a9eb00ed62c24e29d779b7fffbe4828f46ff88409e4",
+            "display_name": "PCB打板省钱小妙招，强烈建议收藏！ - 其他PCB设计及方法",
+            "raw_score": 0.0,
+            "canonical_id": null,
+            "lanes": [
+              "web"
+            ],
+            "natures": [
+              "current_web"
+            ]
+          },
+          {
+            "result_id": "fused-result:7bde2b5b42a4893001224c355759120ad9021d9e333e13f2aaabade8ee3b2b82",
+            "display_name": "求助 - 电子技术交流论坛 - 21ic电子技术开发论坛",
+            "raw_score": 0.0,
+            "canonical_id": null,
+            "lanes": [
+              "web"
+            ],
+            "natures": [
+              "current_web"
+            ]
+          },
+          {
+            "result_id": "fused-result:9218ce60c494b3597bf3dc295e9f0cdd464fb92cb20d14c4d4234d8d78c9076d",
+            "display_name": "PCB打板省钱小妙招,强烈建议收藏! - PCB设计 - 电子工程网",
+            "raw_score": 0.0,
+            "canonical_id": null,
+            "lanes": [
+              "web"
+            ],
+            "natures": [
+              "current_web"
+            ]
+          },
+          {
+            "result_id": "fused-result:52c6217583c04da20824e29b51ed7e2d45179b1aa8579a5a2323bfe051e7e0b2",
+            "display_name": "PCB打样 电路板 pcb工厂直销店 快速单双面板打板-资源走廊",
+            "raw_score": 0.0,
+            "canonical_id": null,
+            "lanes": [
+              "web"
+            ],
+            "natures": [
+              "current_web"
+            ]
+          },
+          {
+            "result_id": "fused-result:ca2638f44c5634c0880b2bf4a423561cc86856ff67503ecf1f456af37322dc8e",
+            "display_name": "PCB打板的相关参数 - 道客巴巴",
+            "raw_score": 0.0,
+            "canonical_id": null,
+            "lanes": [
+              "web"
+            ],
+            "natures": [
+              "current_web"
+            ]
+          },
+          {
+            "result_id": "fused-result:21ff01df508124ed7ea13e504162c85933324c9da815820e6700165b904808d0",
+            "display_name": "FPC与PCB的区别在哪里?_fpc, module, rpcb, hdi, mini led, slp分别是什么-CSDN博客",
+            "raw_score": 0.0,
+            "canonical_id": null,
+            "lanes": [
+              "web"
+            ],
+            "natures": [
+              "current_web"
+            ]
+          },
+          {
+            "result_id": "fused-result:b602570c979ba5d18271baaa97272a4b2f3e887df4fbeb9d4b6105609fdcfce8",
+            "display_name": "哪家免费pcb打样平台更有优势 - 知乎专栏",
+            "raw_score": 0.0,
+            "canonical_id": null,
+            "lanes": [
+              "web"
+            ],
+            "natures": [
+              "current_web"
+            ]
+          },
+          {
+            "result_id": "fused-result:582497a1b1126025e597828be7acbb6965d7451b0ad3bf12f47419c417c196f7",
+            "display_name": "线路板打样,行业领先佼佼者,惠州小微科技。",
+            "raw_score": 0.0,
+            "canonical_id": null,
+            "lanes": [
+              "web"
+            ],
+            "natures": [
+              "current_web"
+            ]
+          },
+          {
+            "result_id": "fused-result:9bbd3eb505371c219ce47f15dbb975723b88f832737c902383560a8e4ff40ec8",
+            "display_name": "嘉立创layout_嘉立创设计服务_Layout设计_Layout外包_pcb设计_嘉 ...",
+            "raw_score": 0.0,
+            "canonical_id": null,
+            "lanes": [
+              "web"
+            ],
+            "natures": [
+              "current_web"
+            ]
+          },
+          {
+            "result_id": "fused-result:3a0ca5533c5aee616790fb87813de30d882e30c1c0a698d0106bb99a3bb18bd0",
+            "display_name": "pcb打样快板厂推荐 - 电子发烧友网",
+            "raw_score": 0.0,
+            "canonical_id": null,
+            "lanes": [
+              "web"
+            ],
+            "natures": [
+              "current_web"
+            ]
+          },
+          {
+            "result_id": "fused-result:7991327326ebee3fb911a053fbd0e7662ca1b96a072d8152c17900ee2a4c78fb",
+            "display_name": "电路板打板哪家好？揭秘嘉立创的五大核心优势 - 腾讯云",
+            "raw_score": 0.0,
+            "canonical_id": null,
+            "lanes": [
+              "web"
+            ],
+            "natures": [
+              "current_web"
+            ]
+          },
+          {
+            "result_id": "fused-result:7f2626e2e618c774d9e715b5449f04b4e8b6a85a2dc665b5cdc75d42ad4e040c",
+            "display_name": "PCB打标设备市场竞争格局分析 - 经管之家",
+            "raw_score": 0.0,
+            "canonical_id": null,
+            "lanes": [
+              "web"
+            ],
+            "natures": [
+              "current_web"
+            ]
+          },
+          {
+            "result_id": "fused-result:6b3bf48525adbc1cb9da564e18ae91b7b711b66a02789365d3ce5ef89129e9e4",
+            "display_name": "免费的PCB打样平台汇总，每月免费打8块板！【建议收藏】_pcb免费 ...",
+            "raw_score": 0.0,
+            "canonical_id": null,
+            "lanes": [
+              "web"
+            ],
+            "natures": [
+              "current_web"
+            ]
+          },
+          {
+            "result_id": "fused-result:54e9f12381a11f324d8ae7655f303752c331d9e46e7624a156f493d6709853ca",
+            "display_name": "PCB制板和打样的区别?",
+            "raw_score": 0.0,
+            "canonical_id": null,
+            "lanes": [
+              "web"
+            ],
+            "natures": [
+              "current_web"
+            ]
+          },
+          {
+            "result_id": "fused-result:994490830a764cc6f362f438bba586774caab6cf841a49dfa5ad358c0779afa7",
+            "display_name": "不同PCB表面处理工艺成本对比：选择适合的方案 - 捷配",
+            "raw_score": 0.0,
+            "canonical_id": null,
+            "lanes": [
+              "web"
+            ],
+            "natures": [
+              "current_web"
+            ]
+          },
+          {
+            "result_id": "fused-result:2c46a77deb75b4e3debc0809b5426fe8cf14c4e9e4204d0ed771d4a4cff3d21d",
+            "display_name": "免费打样的时代,这些精致的PCB制作过程仍然如此养眼 - 今日头条",
+            "raw_score": 0.0,
+            "canonical_id": null,
+            "lanes": [
+              "web"
+            ],
+            "natures": [
+              "current_web"
+            ]
+          },
+          {
+            "result_id": "fused-result:4ff75911fd8be21852e5a0c706845da7346a7fb54cb9032a48c734ba08dbbd89",
+            "display_name": "https://smt.szlcsc.com/",
+            "raw_score": 0.0,
+            "canonical_id": null,
+            "lanes": [
+              "web"
+            ],
+            "natures": [
+              "current_web"
+            ]
+          },
+          {
+            "result_id": "fused-result:6a80e8d17aa635dbe25ee176449c75592215891e1702afd8f98a45ad1c3e0002",
+            "display_name": "pcb板材对比优缺点 - 电子发烧友网",
+            "raw_score": 0.0,
+            "canonical_id": null,
+            "lanes": [
+              "web"
+            ],
+            "natures": [
+              "current_web"
+            ]
+          },
+          {
+            "result_id": "fused-result:105cf19c56efa786915449908e3e13a80073140604e06595cf6ade99091b3a7a",
+            "display_name": "PCB 对比| 嘉立创EDA专业版用户指南",
+            "raw_score": 0.0,
+            "canonical_id": null,
+            "lanes": [
+              "web"
+            ],
+            "natures": [
+              "current_web"
+            ]
+          },
+          {
+            "result_id": "fused-result:82d74878b88cce4910060f28eb64dd448dafad710ff9047a787f1b033a1ca832",
+            "display_name": "PCB打样十大厂商排名？| 捷创电子",
+            "raw_score": 0.0,
+            "canonical_id": null,
+            "lanes": [
+              "web"
+            ],
+            "natures": [
+              "current_web"
+            ]
+          },
+          {
+            "result_id": "fused-result:d3b366ea1718176cf6b470fd6277ebe2dea7d6818fda640682bb7a97e081564c",
+            "display_name": "【pcb板专业打样厂家】_优质pcb板专业打样厂家_pcb板专业打样厂家批发/直销 - 阿里巴巴",
+            "raw_score": 0.0,
+            "canonical_id": null,
+            "lanes": [
+              "web"
+            ],
+            "natures": [
+              "current_web"
+            ]
+          },
+          {
+            "result_id": "fused-result:bed5d597083d268144fcc95ce2e271c8b7eb6b1ad64aeb0371e8c168bc45a9b3",
+            "display_name": "国内五大pcb打样厂家排名情况",
+            "raw_score": 0.0,
+            "canonical_id": null,
+            "lanes": [
+              "web"
+            ],
+            "natures": [
+              "current_web"
+            ]
+          },
+          {
+            "result_id": "fused-result:8f21517eed53c1999f2fb871c551403eee6390701629b3735bb94c032ce8b5cd",
+            "display_name": "深圳PCB打样_PCBA加工_PCBA小批量一站式服务——小铭打样",
+            "raw_score": 0.0,
+            "canonical_id": null,
+            "lanes": [
+              "web"
+            ],
+            "natures": [
+              "current_web"
+            ]
+          },
+          {
+            "result_id": "fused-result:6035a520bef250b48b57fc84efae898ac0370c497fb2d663517eced8e61de739",
+            "display_name": "捷配_PCB打样_SMT贴片_大小批量快速交付-捷配PCB&PCBA智造 ...",
+            "raw_score": 0.0,
+            "canonical_id": null,
+            "lanes": [
+              "web"
+            ],
+            "natures": [
+              "current_web"
+            ]
+          },
+          {
+            "result_id": "fused-result:cb66c6206810980a485a21eabff9aee170875a0a7db74b70807b36a517996a37",
+            "display_name": "PCB打样,小批量_深圳一智快捷科技有限公司",
+            "raw_score": 0.0,
+            "canonical_id": null,
+            "lanes": [
+              "web"
+            ],
+            "natures": [
+              "current_web"
+            ]
+          }
+        ],
+        "handle_count": 48,
+        "handle_names": [
+          "深圳市壹科物联网技术有限公司",
+          "【pcb打板】_pcb打板品牌/图片/价格_pcb打板批发_阿里巴巴",
+          "深圳天创无限科技有限公司",
+          "pcb打板2026年9月-月销口碑最新推荐-Taobao",
+          "深圳橙子自动化有限公司",
+          "打板_打板价格_优质打板批发/采购商机 - 搜好货网",
+          "锐视数字科技（深圳）有限公司",
+          "嘉立创下单助手_PCB免费打样_快捷PCB打样厂_多层电路板_JLC",
+          "深南电路股份有限公司",
+          "打板都上猎板网,性价比高,质量好!-客户晒单-猎板精密多层PCB智慧工厂",
+          "深圳市升达康科技有限公司",
+          "硬件工程师必备：PCB 打板厂家推荐 - 电子工程专辑",
+          "深圳市雷赛自动化系统有限公司",
+          "PCB打板哪家好?-汽车之家",
+          "深圳思路名扬通讯技术股份有限公司",
+          "硬件工程师常用的PCB 打板厂家推荐 - 腾讯云",
+          "深圳市洁驰科技有限公司",
+          "PCB打板哪家好?-太平洋汽车",
+          "深圳国芯微半导体有限公司",
+          "2025年PCB线路板打样企业推荐，嘉立创综合实力更强劲 - 新浪财经",
+          "深圳市腾进达信息技术有限公司",
+          "PCB打样-PCBA加工-PCBA配单-深圳捷多邦科技有限公司",
+          "深圳市大族视觉技术有限公司",
+          "国内较好的pcb生产厂家有哪几个?_太平洋汽车",
+          "深圳市米克力美科技有限公司",
+          "PCB打样服务哪家好？看看用户的口碑推荐 - 知乎专栏",
+          "深圳市亿科迈科技有限公司",
+          "国内较好的pcb生产厂家有哪几个?",
+          "深圳市声雄电子有限公司",
+          "PCB打样-PCBA加工-PCBA配单-深圳聚多邦精密电路有限公司",
+          "深圳优卫乐得科技有限公司",
+          "嘉纳电子有限公司",
+          "深圳正指向科技有限公司",
+          "键盘板打样选猎板,独家黑芯板材,透明油墨,做出来的板子质感太好了!-客户晒单-猎板精密多层PCB智慧工厂",
+          "深圳市天吉机电有限公司",
+          "免费的PCB打样平台汇总，每月免费打8块板！【建议收藏】 原创",
+          "深圳市动力飞扬智能装备有限公司",
+          "【pcb快速打板】_pcb快速打板品牌/图片/价格_pcb快速打板批发_阿里巴巴",
+          "深圳市华仁智信技术有限公司",
+          "pcb打样厂家哪家好 - 知乎专栏",
+          "深圳市比昂芯科技有限公司",
+          "PCB 对比| 嘉立创EDA专业版用户指南",
+          "深圳市驭鹰者电子有限公司",
+          "FPC与PCB的区别在哪里?_fpc, module, rpcb, hdi, mini led, slp分别是什么-CSDN博客",
+          "诡谷子人工智能科技（深圳）有限公司",
+          "PCB 廠商名單 - HackMD",
+          "百芯智能制造科技（深圳）有限公司",
+          "免费打样的时代,这些精致的PCB制作过程仍然如此养眼 - 今日头条"
+        ],
+        "dispositions": {
+          "selected": 48,
+          "not_selected": 96
+        },
+        "evidence_item_count": 48
+      },
+      "stage4_selector": {
+        "claim_count": 40,
+        "displayed_handle_count": 40,
+        "displayed_names": [
+          "深圳市壹科物联网技术有限公司",
+          "【pcb打板】_pcb打板品牌/图片/价格_pcb打板批发_阿里巴巴",
+          "深圳天创无限科技有限公司",
+          "pcb打板2026年9月-月销口碑最新推荐-Taobao",
+          "深圳橙子自动化有限公司",
+          "打板_打板价格_优质打板批发/采购商机 - 搜好货网",
+          "锐视数字科技（深圳）有限公司",
+          "嘉立创下单助手_PCB免费打样_快捷PCB打样厂_多层电路板_JLC",
+          "深南电路股份有限公司",
+          "打板都上猎板网,性价比高,质量好!-客户晒单-猎板精密多层PCB智慧工厂",
+          "深圳市升达康科技有限公司",
+          "硬件工程师必备：PCB 打板厂家推荐 - 电子工程专辑",
+          "深圳市雷赛自动化系统有限公司",
+          "PCB打板哪家好?-汽车之家",
+          "深圳思路名扬通讯技术股份有限公司",
+          "硬件工程师常用的PCB 打板厂家推荐 - 腾讯云",
+          "深圳市洁驰科技有限公司",
+          "PCB打板哪家好?-太平洋汽车",
+          "深圳国芯微半导体有限公司",
+          "2025年PCB线路板打样企业推荐，嘉立创综合实力更强劲 - 新浪财经",
+          "深圳市腾进达信息技术有限公司",
+          "PCB打样-PCBA加工-PCBA配单-深圳捷多邦科技有限公司",
+          "深圳市大族视觉技术有限公司",
+          "国内较好的pcb生产厂家有哪几个?_太平洋汽车",
+          "深圳市米克力美科技有限公司",
+          "PCB打样服务哪家好？看看用户的口碑推荐 - 知乎专栏",
+          "深圳市亿科迈科技有限公司",
+          "国内较好的pcb生产厂家有哪几个?",
+          "深圳市声雄电子有限公司",
+          "PCB打样-PCBA加工-PCBA配单-深圳聚多邦精密电路有限公司",
+          "深圳优卫乐得科技有限公司",
+          "嘉纳电子有限公司",
+          "键盘板打样选猎板,独家黑芯板材,透明油墨,做出来的板子质感太好了!-客户晒单-猎板精密多层PCB智慧工厂",
+          "免费的PCB打样平台汇总，每月免费打8块板！【建议收藏】 原创",
+          "【pcb快速打板】_pcb快速打板品牌/图片/价格_pcb快速打板批发_阿里巴巴",
+          "pcb打样厂家哪家好 - 知乎专栏",
+          "PCB 对比| 嘉立创EDA专业版用户指南",
+          "FPC与PCB的区别在哪里?_fpc, module, rpcb, hdi, mini led, slp分别是什么-CSDN博客",
+          "PCB 廠商名單 - HackMD",
+          "免费打样的时代,这些精致的PCB制作过程仍然如此养眼 - 今日头条"
+        ],
+        "claim_texts": [
+          "深圳市壹科物联网技术有限公司；简介：YC_RFDMX-24G,YC_MINIZIG_P,YC_MDZIG_PCB,YC_ZIGWPF,yico未找到未找到未找到未找到1等；技术路线：产品主要应用于大型演唱会、舞台灯光、酒吧KTV、景观楼宇亮化等工程项目中的灯光控制和信号传输。。",
+          "【pcb打板】_pcb打板品牌/图片/价格_pcb打板批发_阿里巴巴：共 283 条 pcb打板 信息 ¥ 8.86 成交 67 笔 线路板十层HDI批量pcb加急出货紫色油墨0.2MMBGA快速抄板电路打板 深圳市骏杰鑫电子有限公司 8年 ¥ 0.95 成交 69 笔；来源：https://s.1688.com/kq/-706362B4F2B0E5.html",
+          "深圳天创无限科技有限公司；简介：未找到；技术路线：未找到。",
+          "pcb打板2026年9月-月销口碑最新推荐-Taobao：1 · 50 · 欣荣PCB打样 ; 2 · 10 · 金博涛电子 ; 3 · 1 · 金博涛电子 ; 4 · 40 · 深圳星辰非凡科技 ; 5 · 10 · 深圳跃跃电子.；来源：https://www.taobao.com/list/product/top-rated/pcb%E6%89%93%E6%9D%BF.htm",
+          "深圳橙子自动化有限公司；简介：\"######PET贴膜设备、KA100高速环形线体、AirTrack高速高精度气浮平台、HD-Pro模块化硬件平台、单工位/双工位/多工位视觉螺丝机、SAW-Z系列螺柱焊接自动化平台、六关节涂胶机器人、X-RAY检测设备\",\"；技术路线：\"######手机、平板、可穿戴设备等3C电子整厂智能制造；FPC及PCBA的精密贴装、检测、贴膜、锁螺丝、点胶、焊接；汽车、航空、造船、五金、电梯、配电箱等行业的螺柱焊、涂胶、X-Ray内部缺陷检测；半导体封装、铝铸件、模压塑料的高精度量测与失效分析。。",
+          "打板_打板价格_优质打板批发/采购商机 - 搜好货网：共找到413条“ 打板 ” 商机信息 综合排序 价格排序 注册有礼 立即获取最新销售线索 曝光高客户随时找上门 一对一服务顾问解答疑问 立即询价 立即查看>>> 为您推荐打板精选好货 搜好货 全国 立；来源：http://www.912688.com/chanpin/6253677F.html",
+          "锐视数字科技（深圳）有限公司；简介：锐视数字科技（深圳）有限公司是一家聚焦医疗健康的企业。细分方向覆盖医疗影像。当前业务定位为基于AI影像处理低成本数字化CT系统研发商。锐视智慧致力于使最新的计算机视觉和AI影像处理技术在数字化医疗影像、肿瘤放射治疗领域的落地应用。项目利用国际领先的三维重建、AI影像增强技术和深度学习算法，研发出新型低成本数字化X射线断；技术路线：高速印刷品表面缺陷检测、锂电池极片对齐度测量、晶圆外观AOI、玻璃盖板划痕检测、汽车零部件三维形貌测量、PCB焊点自动光学检测、医药包装字符识别、纺织布匹色差分拣、电子元器件Pin脚共面性检测、食品包装异物检测。。",
+          "嘉立创下单助手_PCB免费打样_快捷PCB打样厂_多层电路板_JLC：嘉立创PCB，全球PCB打样及中小批量首选！我们提供高可靠、短交期的优质服务，拥有遍布多地1800亩的数字化生产基地，覆盖全球180+国家/地区和超470万+客户信赖。；来源：https://www.jlc.com/",
+          "深南电路股份有限公司；简介：深南电路股份有限公司是一家聚焦电子制造的企业。细分方向覆盖PCB。当前业务定位为印制电路板、封装基板与电子装联。从事印制电路板、封装基板及电子装联等业务。；技术路线：公司产品广泛应用于通信、数据中心、工控医疗、汽车电子等领域，与全球领先的通信设备制造商及医疗设备等厂商建立了长期稳定的战略合作关系。产品主要应用于搭载CPU、GPU等逻辑芯片的FC-BGA封装基板，以及下一代通信、数据中心及汽车电子相关领域。。",
+          "打板都上猎板网,性价比高,质量好!-客户晒单-猎板精密多层PCB智慧工厂：李* 质量上乘,做工精准,快递给力,参数匹配,性价比高 24H 尺寸:10.7cm x 4.2cm 数量:10 PCS 层数:2层 PCB计价 尺寸: x cm 数量: 选择数量PCS 5 PCS 1；来源：https://www.pcbhunt.com/caseshow/602303125792915456.html",
+          "深圳市升达康科技有限公司；简介：内层激光刻码机（SDC-ILC系列）、XRAY读码机（SDC-XRC系列）、外层机械钻码机（SDC-OMD系列）、绿油激光打码机（SDC-GLM系列）、X-OUT激光标识机（SDC-XLI系列）、PCB自动识别分类分堆机（SDC-SCS系列）、类载板/IC载板收放板机（SDC-RM/SDC-MM系列）；技术路线：广泛应用于IC载板、类载板、PCB/FPC制造企业的内层开料后、外层压合后、绿油后、电测后及包装前工序，完成激光打码、读码、钻码、X-OUT标识、自动分堆、AGV物流及立体仓库管理等智能工厂场景。",
+          "硬件工程师必备：PCB 打板厂家推荐 - 电子工程专辑：1. 嘉立创. 嘉立创科技集团股份有限公司成立于2005 年，是一家专注于印制电路板（PCB）设计与生产的高新技术企业。 · 2. 华秋pcb · 3. 捷配极速PCB 超级工厂.；来源：https://www.eet-china.com/mp/a384590.html",
+          "深圳市雷赛自动化系统有限公司；简介：DM系列数字式步进驱动器、CL42D数字式闭环步进驱动器、L7L系列直驱伺服驱动器、ACM/L6/L7/L8系列交流伺服驱动器、LD3M/iSV2/LD5系列低压伺服系统、HSM系列混合伺服系统、iDM/iCL/iST系列一体式电机、SCnU/MC300/MC500/PMC600系列运动控制PLC、DMC5000/DM；技术路线：3C电子、半导体封装、PCBA贴片、光伏、锂电、激光加工、雕刻机、打标机、切割机、绘图仪、医疗设备、数控机床、工业机器人（打磨、焊接、SCARA、冲床上下料）、智能检测与装配装备、智能物流AGV与分拣设备等。。",
+          "PCB打板哪家好?-汽车之家：1、在选择PCB打板厂家时,可以考虑以下十家:Mektec旗胜、臻鼎、深圳市捷科电路有限公司、深圳市电智欧电路有限公司、昆山诺唯仕电子有限公司、台州市乐利电子科技有限公司、佳闯电子(上海)有限公司、鹏；来源：https://www.autohome.com.cn/ask/5611965.html",
+          "深圳思路名扬通讯技术股份有限公司；简介：：MSM8974、MSM8926、MSM8916、MSM8909、MDM9X07、高通骁龙820、高通骁龙8953、高通骁龙800/600/400/200系列；技术路线：面向全球运营商（NTT DoCoMo、KDDI、EE、中国移动、中国联通、中国电信等）和品牌客户（飞利浦、海尔、长虹、TuringPhone等）提供4G LTE智能手机整机及PCBA；为无人机、智能穿戴、车载终端等行业客户定制高通单芯片LTE通信模块；产品已广泛应用于消费级移动终端、工业级手持终端、海外高端旗舰机、无人。",
+          "硬件工程师常用的PCB 打板厂家推荐 - 腾讯云：硬件开发选合适PCB 打板厂家很关键，如嘉立创、华秋pcb 等。各厂家优势不同，有的技术先进，有的服务全面，有的响应快速。工程师选时要综合考量多因素 ...；来源：https://cloud.tencent.com/developer/news/2226613",
+          "深圳市洁驰科技有限公司；简介：印刷电路提供商；技术路线：该公司产品主要应用于印制电路（PCB）行业清洁生产领域，包括单双面板、内层板、HDI、BGA、Flip Chip等电路板湿法制程设备的环保处理和资源循环利用场景。。",
+          "PCB打板哪家好?-太平洋汽车：1、PCB打板好的厂家有:深圳市捷科电路有限公司、深圳市电智欧电路有限公司、昆山诺唯仕电子有限公司、台州市乐利电子科技有限公司、佳闯电子(上海)有限公司。中国pcb线路板排名的前三是:鹏鼎控股、东山精；来源：https://www.pcauto.com.cn/wd/3611978.html",
+          "深圳国芯微半导体有限公司；简介：深圳国芯微半导体有限公司是一家聚焦先进制造的企业。细分方向覆盖芯片。当前业务定位为PLC-IOT芯片研发公司。国芯微半导体专注于PLC-IOT芯片产品研发及应用，成立于2021年，前身为国投高科技术研究中心半导体产品线；母公司国投高科专注于新一代信息技术产业投资与研发技术孵化，目前在PLC-IOT技术领域物联网通信芯片；技术路线：笔记本、显示器GOA TFT-LCD面板的栅极驱动电路，适用于窄边框PCBA设计。。",
+          "2025年PCB线路板打样企业推荐，嘉立创综合实力更强劲 - 新浪财经：在选择PCB线路板打样厂家时，交期、技术实力和服务质量很关键。国内有不少优质厂家，嘉立创、鹏鼎控股、景旺电子、深南电路、东山精密表现突出。；来源：https://finance.sina.com.cn/roll/2025-05-08/doc-inevvhaz2777911.shtml",
+          "深圳市腾进达信息技术有限公司；简介：TS20A、LefunOS、Lefun Health App、Lefun Big Data Platform；技术路线：面向全球180+国家与地区的个人消费者，覆盖儿童、老人、特殊人群等日常健康监测、运动管理；为品牌厂商、运营商、行业客户提供智能手表整机设计、PCBA主板定制、整机交付及大数据运营服务，构建从芯片、模组到终端、云平台的完整智能穿戴生态。",
+          "PCB打样-PCBA加工-PCBA配单-深圳捷多邦科技有限公司：深圳捷多邦PCB网是一家专业从事线路板打样,PCB板快速打样,PCBA加工,PCB生产和销售的高新技术企业.自主研发了PCB在线下单ERP系统,可实现在线一条龙服务,PCB计价方便快捷,PCB价格公正；来源：https://www.jdbpcb.com/",
+          "深圳市大族视觉技术有限公司；简介：HV6.0视觉软件平台、HVC-SLB1000B高精度结构光3D相机、HV系列视觉控制器、HV系列工业相机、远心镜头、AOI光源；技术路线：HV6.0：3C电子元器件定位与装配、IC芯片字符识别与缺陷检测、锂电池尺寸测量、光伏串EL检测、机器人上下料引导。 HVC-SLB1000B：仓储拆码垛、大件无序上下料、车身框架定位、铸造毛坯尺寸量测、重型工件抓取引导。 HV控制器/相机/镜头/光源：手机中框AI检测、半导体Die bonding定位、医药包装读码与。",
+          "国内较好的pcb生产厂家有哪几个?_太平洋汽车：1、PCB打板好的厂家有:深圳市捷科电路有限公司、深圳市电智欧电路有限公司、昆山诺唯仕电子有限公司、台州市乐利电子科技有限公司、佳闯电子(上海)有限公司。2、PCB打板好的厂家有:深圳市捷科电路有限公；来源：https://www.pcauto.com.cn/jxwd/4013/40135220.html",
+          "深圳市米克力美科技有限公司；简介：：DZ-80、I-SO Hera3000、TG-500、MC-200；技术路线：：电子制造车间内PCB及键盘鼠标等物料的自动搬运；汽车装配线中大型零部件的同步输送与工装夹具对接；物流仓库完成货物入库、出库及库内移库；五金、食品、制药、冶金等行业24×7无人化柔性搬运。。",
+          "PCB打样服务哪家好？看看用户的口碑推荐 - 知乎专栏：ZXHPCB（江苏中信华电子科技有限公司）是国内领先的批量印制电路板（PCB）制造商。经过20多年发展，已成为集研发、生产、销售于一体的集团化高科技企业，在电路板制造 ...；来源：https://zhuanlan.zhihu.com/p/1961473819031078596",
+          "深圳市亿科迈科技有限公司；简介：PCB抄板生产及芯片解密服务商；技术路线：通信设备、电脑周边、医疗器械、检测与控制系统。",
+          "国内较好的pcb生产厂家有哪几个?：1、PCB打板好的厂家有:深圳市捷科电路有限公司、深圳市电智欧电路有限公司、昆山诺唯仕电子有限公司、台州市乐利电子科技有限公司、佳闯电子(上海)有限公司。\n2、PCB打板好的厂家有:深圳市捷科电路有限；来源：https://m.pcauto.com.cn/x/4013/40135220.html",
+          "深圳市声雄电子有限公司；简介：CTC-i88、CTC-S37、CTC-X899、CTC-Q1、CTC-S1；技术路线：个人移动音乐与通话、运动健身无线听音、日常通勤及办公免提通话。",
+          "PCB打样-PCBA加工-PCBA配单-深圳聚多邦精密电路有限公司：深圳聚多邦PCB网是一家专业从事线路板打样,PCB板快速打样,PCBA加工,PCB生产和销售的高新技术企业.自主研发了PCB在线下单ERP系统,可实现在线一条龙服务,PCB计价方便快捷 ...；来源：https://www.jdbpcb.com/?from=frommobile",
+          "深圳优卫乐得科技有限公司；简介：：PCB曝光光源、多品种印刷光源、UV干燥固化光源、柔版印刷光源、间隙轮转机光源、光源智能控制系统；技术路线：PCB曝光固化、多品种印刷、手机盖板精密曝光固化、家具水漆固化、制鞋机胶水固化、UV干燥固化。",
+          "嘉纳电子有限公司：扫码立即咨询 联系站长: 邮箱:contact@huluic.com 深圳市嘉纳电子有限公司(http://www.vpcb.cn)专业生产、经营的PCB线路板(pcb打样,printed circu；来源：https://huluic.cn/shop/34618054",
+          "键盘板打样选猎板,独家黑芯板材,透明油墨,做出来的板子质感太好了!-客户晒单-猎板精密多层PCB智慧工厂：史* 质量上乘,做工精准,快递给力,参数匹配,性价比高 48H 尺寸:9.46cm x 28.45cm 数量:5 PCS 层数:2层 PCB计价 尺寸: x cm 数量: 选择数量PCS 5 PCS；来源：https://www.pcbhunt.com/caseshow/344296673842724864.html",
+          "免费的PCB打样平台汇总，每月免费打8块板！【建议收藏】 原创：四个月后的7月1日，正值百年建党之际，嘉立创发文称，PCB打样价格由5元调为免费，单层铝基板，双层板，四层板打样全免费，且阻焊剂颜色任意可选，不收任何 ...；来源：https://blog.csdn.net/weixin_48033504/article/details/119936255",
+          "【pcb快速打板】_pcb快速打板品牌/图片/价格_pcb快速打板批发_阿里巴巴：共 106 条 pcb快速打板 信息 ¥ 8.86 成交 67 笔 线路板十层HDI批量pcb加急出货紫色油墨0.2MMBGA快速抄板电路打板 深圳市骏杰鑫电子有限公司 8年 ¥ 0.90 成交 0；来源：https://s.1688.com/kq/-706362BFECCBD9B4F2B0E5.html",
+          "pcb打样厂家哪家好 - 知乎专栏：在结合上下文后，对于PCB打样厂家的选择，以下是一些值得推荐的选项及其特点：. 一、嘉立创集团（JLC）. 推荐理由：嘉立创集团在PCB打样领域具有深厚 ...；来源：https://zhuanlan.zhihu.com/p/29925195407",
+          "PCB 对比| 嘉立创EDA专业版用户指南：嘉立创EDA提供了PCB 对比工具，用于快速分析不同PCB 之间的差异，能够帮助用户高效识别和定位设计变更。 操作入口：. 顶部菜单栏- 工具- PCB 对比.；来源：https://prodocs.easyeda.com/cn/pcb/tools-pcb-comparison/",
+          "FPC与PCB的区别在哪里?_fpc, module, rpcb, hdi, mini led, slp分别是什么-CSDN博客：故PCB板通称为硬板。基材、铜箔、覆盖膜、油墨、屏蔽膜、补强(FR4、SUS钢片、PI)等。高强度、软板可挠性的优点,缺点是制作难度高,价格贵。_fpc, module, rpcb, hdi, ...；来源：https://blog.csdn.net/2409_88907530/article/details/144028655",
+          "PCB 廠商名單 - HackMD：中國廠商 · seeed pcb · FAST PRINT PCB 極速製板工廠 · pcbgogo · 捷多邦 · 捷配pcb · 凱路通pcb · 欣榮電子 · King Dream PCB Technology Can 2024-03-14 變成球賽網站了 ...；来源：https://hackmd.io/@openlabtaipei/rygQ7dcQBI",
+          "免费打样的时代,这些精致的PCB制作过程仍然如此养眼 - 今日头条：不感兴趣 举报 扫码下载今日头条 扫码下载今日头条APP 看最新、最热资讯内容 推荐视频 01:17 01:17 01:17 正在获取更多内容 评论 20 请先 登录 后发表评论~ 评论 eexpss；来源：https://www.toutiao.com/article/6954127021379158542/"
+        ]
+      },
+      "stage5_payload": {
+        "answer_error": null,
+        "displayed_names": [
+          "深圳市壹科物联网技术有限公司",
+          "【pcb打板】_pcb打板品牌/图片/价格_pcb打板批发_阿里巴巴",
+          "深圳天创无限科技有限公司",
+          "pcb打板2026年9月-月销口碑最新推荐-Taobao",
+          "深圳橙子自动化有限公司",
+          "打板_打板价格_优质打板批发/采购商机 - 搜好货网",
+          "锐视数字科技（深圳）有限公司",
+          "嘉立创下单助手_PCB免费打样_快捷PCB打样厂_多层电路板_JLC",
+          "深南电路股份有限公司",
+          "打板都上猎板网,性价比高,质量好!-客户晒单-猎板精密多层PCB智慧工厂",
+          "深圳市升达康科技有限公司",
+          "硬件工程师必备：PCB 打板厂家推荐 - 电子工程专辑",
+          "深圳市雷赛自动化系统有限公司",
+          "PCB打板哪家好?-汽车之家",
+          "深圳思路名扬通讯技术股份有限公司",
+          "硬件工程师常用的PCB 打板厂家推荐 - 腾讯云",
+          "深圳市洁驰科技有限公司",
+          "PCB打板哪家好?-太平洋汽车",
+          "深圳国芯微半导体有限公司",
+          "2025年PCB线路板打样企业推荐，嘉立创综合实力更强劲 - 新浪财经",
+          "深圳市腾进达信息技术有限公司",
+          "PCB打样-PCBA加工-PCBA配单-深圳捷多邦科技有限公司",
+          "深圳市大族视觉技术有限公司",
+          "国内较好的pcb生产厂家有哪几个?_太平洋汽车",
+          "深圳市米克力美科技有限公司",
+          "PCB打样服务哪家好？看看用户的口碑推荐 - 知乎专栏",
+          "深圳市亿科迈科技有限公司",
+          "国内较好的pcb生产厂家有哪几个?",
+          "深圳市声雄电子有限公司",
+          "PCB打样-PCBA加工-PCBA配单-深圳聚多邦精密电路有限公司",
+          "深圳优卫乐得科技有限公司",
+          "嘉纳电子有限公司",
+          "键盘板打样选猎板,独家黑芯板材,透明油墨,做出来的板子质感太好了!-客户晒单-猎板精密多层PCB智慧工厂",
+          "免费的PCB打样平台汇总，每月免费打8块板！【建议收藏】 原创",
+          "【pcb快速打板】_pcb快速打板品牌/图片/价格_pcb快速打板批发_阿里巴巴",
+          "pcb打样厂家哪家好 - 知乎专栏",
+          "PCB 对比| 嘉立创EDA专业版用户指南",
+          "FPC与PCB的区别在哪里?_fpc, module, rpcb, hdi, mini led, slp分别是什么-CSDN博客",
+          "PCB 廠商名單 - HackMD",
+          "免费打样的时代,这些精致的PCB制作过程仍然如此养眼 - 今日头条"
+        ],
+        "claim_count": 40
+      },
+      "stage6_production_answer": {
+        "answer_text": "PCB打板通常指印制电路板的打样与批量制造，按这个需求，以下几家深圳企业的主营业务与PCB制造或打板服务直接相关，可作为优先考虑对象：\n\n- 深南电路股份有限公司：业务定位为印制电路板、封装基板与电子装联，产品广泛应用于通信、数据中心、工控医疗、汽车电子等领域，是PCB制造领域的头部企业，适合对品质和批量能力要求较高的打板需求。\n- 深圳市亿科迈科技有限公司：定位为PCB抄板生产及芯片解密服务商，服务覆盖通信设备、电脑周边、医疗器械、检测与控制系统，适合需要抄板加打板配套的场景。\n- 深圳市洁驰科技有限公司：印刷电路提供商，产品主要应用于印制电路板行业的清洁生产领域，覆盖单双面板、内层板、HDI、BGA、Flip Chip等电路板湿法制程设备，偏向PCB生产环节的配套。\n\n此外，以下几家虽不直接提供PCB打板，但在PCB制造链条上有明确关联，可视需求一并参考：\n\n- 深圳市升达康科技有限公司：提供内层激光刻码机、XRAY读码机、外层机械钻码机、绿油激光打码机、PCB自动识别分类分堆机等设备，服务于IC载板、类载板、PCB/FPC制造企业的智能工厂场景。\n- 深圳优卫乐得科技有限公司：产品包括PCB曝光光源及光源智能控制系统，应用于PCB曝光固化环节。\n- 深圳市米克力美科技有限公司：其自动化搬运设备可用于电子制造车间内PCB及键盘鼠标等物料的自动搬运。\n\n以上为与PCB打板相关的代表性企业。如果您更关注打样速度、批量规模还是特殊工艺（如HDI、软板），可以进一步说明，我再帮您细化筛选。",
+        "answered_window_names": [
+          "深圳市升达康科技有限公司",
+          "深圳市亿科迈科技有限公司",
+          "深圳优卫乐得科技有限公司",
+          "深南电路股份有限公司",
+          "深圳市洁驰科技有限公司",
+          "深圳市米克力美科技有限公司"
+        ]
+      },
+      "gt_table": [
+        {
+          "alias": "嘉立创",
+          "s1_lexical_rank": null,
+          "s1_vector_rank": null,
+          "s3_eligible_rank": 100,
+          "s3_ordered_rank": 8,
+          "s3_within_candidate_limit": true,
+          "s3_handle": 8,
+          "s4_selector_claim": 8,
+          "s4_displayed": 8,
+          "s5_payload_displayed": 8,
+          "s5_payload_claim": 8,
+          "s6_in_production_answer": false
+        },
+        {
+          "alias": "深南电路",
+          "s1_lexical_rank": 41,
+          "s1_vector_rank": null,
+          "s3_eligible_rank": 41,
+          "s3_ordered_rank": 9,
+          "s3_within_candidate_limit": true,
+          "s3_handle": 9,
+          "s4_selector_claim": 9,
+          "s4_displayed": 9,
+          "s5_payload_displayed": 9,
+          "s5_payload_claim": 9,
+          "s6_in_production_answer": true
+        },
+        {
+          "alias": "一博",
+          "s1_lexical_rank": null,
+          "s1_vector_rank": null,
+          "s3_eligible_rank": null,
+          "s3_ordered_rank": null,
+          "s3_within_candidate_limit": false,
+          "s3_handle": null,
+          "s4_selector_claim": null,
+          "s4_displayed": null,
+          "s5_payload_displayed": null,
+          "s5_payload_claim": null,
+          "s6_in_production_answer": false
+        },
+        {
+          "alias": "顺易捷",
+          "s1_lexical_rank": 9,
+          "s1_vector_rank": null,
+          "s3_eligible_rank": 9,
+          "s3_ordered_rank": 67,
+          "s3_within_candidate_limit": false,
+          "s3_handle": null,
+          "s4_selector_claim": null,
+          "s4_displayed": null,
+          "s5_payload_displayed": null,
+          "s5_payload_claim": null,
+          "s6_in_production_answer": false
+        },
+        {
+          "alias": "兴森",
+          "s1_lexical_rank": null,
+          "s1_vector_rank": null,
+          "s3_eligible_rank": null,
+          "s3_ordered_rank": null,
+          "s3_within_candidate_limit": false,
+          "s3_handle": null,
+          "s4_selector_claim": null,
+          "s4_displayed": null,
+          "s5_payload_displayed": null,
+          "s5_payload_claim": null,
+          "s6_in_production_answer": false
+        },
+        {
+          "alias": "则成",
+          "s1_lexical_rank": null,
+          "s1_vector_rank": null,
+          "s3_eligible_rank": null,
+          "s3_ordered_rank": null,
+          "s3_within_candidate_limit": false,
+          "s3_handle": null,
+          "s4_selector_claim": null,
+          "s4_displayed": null,
+          "s5_payload_displayed": null,
+          "s5_payload_claim": null,
+          "s6_in_production_answer": false
+        },
+        {
+          "alias": "上达",
+          "s1_lexical_rank": null,
+          "s1_vector_rank": null,
+          "s3_eligible_rank": null,
+          "s3_ordered_rank": null,
+          "s3_within_candidate_limit": false,
+          "s3_handle": null,
+          "s4_selector_claim": null,
+          "s4_displayed": null,
+          "s5_payload_displayed": null,
+          "s5_payload_claim": null,
+          "s6_in_production_answer": false
+        },
+        {
+          "alias": "精诚达",
+          "s1_lexical_rank": null,
+          "s1_vector_rank": null,
+          "s3_eligible_rank": null,
+          "s3_ordered_rank": null,
+          "s3_within_candidate_limit": false,
+          "s3_handle": null,
+          "s4_selector_claim": null,
+          "s4_displayed": null,
+          "s5_payload_displayed": null,
+          "s5_payload_claim": null,
+          "s6_in_production_answer": false
+        }
+      ]
+    }
+  ]
+}
