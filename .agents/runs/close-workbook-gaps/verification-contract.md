@@ -134,3 +134,38 @@
   re-run — marker-class empty answers disappear on both sides.
 - Out of scope: template fallback for this class (rejected — stays reserved
   for genuine synthesis failure); prompt-side marker suppression.
+
+## C1 batch 0 — placeholder scrub + anchoring declaration (slice contract, 2026-09-11)
+
+- RED artifact (offline): fixtures per matcher family against
+  `_validated_public_projection` scrub —
+  (a) English sentence prefix, (b) Chinese whole-value (incl. single `无`),
+  (c) glued `未找到` run inside a longer value (erasure keeps the real
+  terms; e.g. `VE1未找到未找到B,VE3未找到AS等系列GPS/北斗定位器`),
+  (d) structural `^-+$`; negative controls: the long `未知词识别` paper
+  summary must survive, short legit values must survive, and value-level
+  hits on `name`-class fields must NOT be scrubbed value-only (record-level
+  rejection is build-side). Fixtures RED today (projection keeps the
+  placeholders and they enter `content_terms` /
+  `_projection_category_term_buckets`).
+- RED artifact (declaration): loading an unknown-schema
+  `anchoring-declaration-v1.json` must fail closed; F1 scoring must consume
+  multipliers/tiers from the file (equivalence test = same outcomes as the
+  current hardcoded constants on seeded values).
+- RED artifact (packaging gate): dry-run on the run14 index emits
+  `placeholder-scan-report.json` with counts matching the read-only census
+  (professor 12,872 / company 3,099 / glued 189 / whole-value 1,817) while
+  writing zero bytes to index or pack and leaving hashes untouched.
+- GREEN criteria: all above pass; focus suites
+  (`test_knowledge_read_isolated.py`, `test_knowledge_serving_isolated.py`
+  F1 assertions) unchanged; scrub applied AFTER validation (lineage
+  assertions at :8144-8151 stay green).
+- Live evidence (main context, post-deploy): differential on the GT
+  queries — lexical/category recall unchanged; replay gate zero new
+  signatures; 18188 restart only after the F4 acceptance window closes.
+- Out of scope: packaging-side actual cleaning (new packs), vector-corpus
+  scrub, record-level rejection, threshold recalibration (batch 2+);
+  answer-side confidence wording (answer-quality slice); `ChatCitation`
+  contract untouched.
+- Rollback note: revert the batch-0 commit(s) and restart 18188; the
+  sealed pack and index are read-only for this slice.

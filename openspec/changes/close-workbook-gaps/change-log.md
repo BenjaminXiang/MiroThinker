@@ -776,3 +776,19 @@
   requires ≥1 web-sourced name in the answer, or a re-baseline of the
   anchor — pending: S2c lands (expected 8/12), then the web-route vs
   re-baseline decision goes to the user with this table.
+
+## 2026-09-11 — AQ-S2c delivered (b9c4bd07) and deployed with S5
+
+- Coverage sentence sources the RECALLED set (`request.evidence_set.
+  entity_handles`, read window 64, recall-rank order; no new contract —
+  the read layer already builds them at `knowledge_read.py:8059-8112`),
+  cap 24→32; claim windows unchanged (32/32).
+- `_commit_prose_scope` extended on enumeration turns: the answer-named
+  scan pool now covers recalled canonical handles (displayed first, then
+  recall-order additions) — closes the dual hole where a mentioned-but-
+  not-claimed recall member could never join the committed universe.
+- Tests: +3 new, 8 S2b tests updated to the amended semantics; multiturn
+  32+1 (pre-existing off_anchor); four-door + scrub 352 (same as S5);
+  six-file 70+3 pre-existing. Deployed 23:01 via systemd (S5+S2c).
+- Verification batch next: g5 ×3 (expect 8/12), g2 ×2 (regression),
+  generalization probe r2 (P2 must not degrade), replay gate.
