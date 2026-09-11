@@ -2522,8 +2522,14 @@ def _matched_bound_entity(
 
 
 def _serving_reranker(request: RerankRequest) -> RerankProposal:
-    def candidate_key(candidate: Any) -> tuple[float, str]:
-        return (-candidate.raw_score, candidate.result_id)
+    # Equal scores must not be tie-broken by result_id: canonical ids embed
+    # random hex and every local lane candidate carries raw_score=1.0, so an
+    # id tie-break degenerates bucket order into random string order (evidence:
+    # .agents/runs/close-workbook-gaps/d0-probe/f1b-downstream-trace.md).
+    # Python's sort is stable, so with a score-only key equal-score candidates
+    # keep input order (= fusion first-seen order = lane order = F1 ranking).
+    def candidate_key(candidate: Any) -> float:
+        return -candidate.raw_score
 
     # List-style questions are recall-driven: the vector lane is the primary
     # local witness (exact/lexical lanes rarely fire for theme questions), so

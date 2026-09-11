@@ -5564,6 +5564,76 @@ def test_serving_reranker_keeps_enumeration_vector_canonical_in_window(
     assert any(result_id.startswith("fused-result:web-") for result_id in retained)
 
 
+def test_serving_reranker_equal_scores_keep_input_order(tmp_path: Path) -> None:
+    """F4 (close-workbook-gaps B3B2-F4): equal scores must keep input order.
+
+    Every local lane candidate carries raw_score=1.0, and canonical ids embed
+    random hex, so the pre-F4 key (-raw_score, result_id) degenerated bucket
+    order to random string order and the lane ranking died at the 48-cut
+    (d0-probe/f1b-downstream-trace.md). With the score-only key, Python's
+    stable sort preserves input order (= fusion first-seen = lane order = F1
+    ranking). The ids below run strictly anti-sorted against the input order,
+    so the pre-F4 key would reverse the bucket and fail this test.
+    """
+    path, bundle = _write_bundle(tmp_path)
+    inputs = load_recorded_serving_inputs(
+        prose_renderer=_timeout_prose_renderer,
+        path=path,
+        expected_content_sha256=bundle.content_sha256,
+        expected_release_id=RELEASE_ID,
+        expected_database="miroflow_candidate_s12b_test",
+        expected_index_root=(tmp_path / "index").resolve(),
+        expected_envelope_path=(tmp_path / "envelope.json").resolve(),
+        embedding_adapter=_Embedding(),
+        clock=lambda: NOW,
+    )
+
+    def fused(token: str) -> FusedCandidate:
+        evidence = EvidenceItem(
+            evidence_id=f"evidence:stable-order:{token}",
+            object_id=f"company:stable-order:{token}",
+            domain="company",
+            lane="lexical",
+            source_nature="local",
+            source_locator=f"canonical-v2-isolated:{token}",
+            snippet=token,
+            score=1.0,
+        )
+        return FusedCandidate(
+            result_id=f"fused-result:company-c-{token}",
+            canonical_id=f"company:stable-order:{token}",
+            display_name=token,
+            domain="company",
+            raw_candidate_ids=(f"raw-candidate:{token}",),
+            evidence_ids=(evidence.evidence_id,),
+            evidence=(evidence,),
+            quality_flags=(),
+            raw_score=1.0,
+            identity_kind="canonical",
+            resolution_state="resolved",
+            origin_lane="lexical",
+            origin_attempt=1,
+            adapter_versions=("test",),
+            provider_versions=(),
+        )
+
+    # Lane ranking is ff00 > ee00 > ... > aa00; id string order is the exact
+    # reverse, so an id tie-break would flip the output.
+    tokens = ("ff00", "ee00", "dd00", "cc00", "bb00", "aa00")
+    assert inputs.reranker is not None
+    result = inputs.reranker(
+        RerankRequest(
+            release_id=RELEASE_ID,
+            original_query="上述企业的产品哪些可以使用机械手操作楼宇设备",
+            eligible_candidates=tuple(fused(token) for token in tokens),
+        )
+    )
+
+    assert result.ordered_result_ids == tuple(
+        f"fused-result:company-c-{token}" for token in tokens
+    )
+
+
 def _stub_professor(identity_id: str, display_name: str) -> Any:
     return SimpleNamespace(
         canonical_identity_id=identity_id,
