@@ -910,3 +910,33 @@ worktree; S0 needs a live LLM backend (main context runs it).
   cap tests; no-line-when-all-mentioned; non-enumeration untouched
   (byte-identical); the line must feed the commit-union; live N≥5 g2
   sampling must show t2 ≥5/6 in ≥4/5 samples (vs 2/5 today).
+
+## Generalization validation (standing workstream — user directive 2026-09-11)
+
+- **Directive**: the workbook test set is representative, not the target;
+  every mechanism must generalise beyond its 25 turns.
+- **Overfit audit (main context, 2026-09-11)**: recent commits contain GT
+  names in comments and test fixtures only — no production branch keys on
+  a GT name. But parameter values (enumeration windows 32/32/64, coverage
+  cap 24) were acceptance-informed; treat them as tunable defaults, not
+  constants of nature, and validate them on out-of-test queries.
+- **Probe set**: `.agents/runs/close-workbook-gaps/generalization-probes/`
+  — `probe_generalization.py` (reuses the harness SSE protocol) +
+  `check_generalization.py` (property checks against the sealed pack).
+  Current coverage: other company categories (无人机/储能/激光雷达/医疗
+  器械), other narrowing filters (成立年限/规模/场景), other domains
+  (professor/paper/patent), cross-domain anchor (大疆→专利). The set is
+  extensible: add queries + their category terms to the checker map.
+- **Property checks (GT-free)**:
+  P1 no fabrication — every name in the coverage sentence resolves to a
+  pack entity; P2 precision — each such entity's pack text contains the
+  query's category terms (off-category names are reported); P3 shape —
+  company-domain enumeration turns carry the coverage sentence, other
+  turns do not; P4 latency recorded per turn.
+- **Gate**: a landing that passes the workbook anchors but fails these
+  properties (e.g. off-category disclosure, fabricated names, wrong
+  shape) is NOT accepted. Run the probe set alongside the test set after
+  each behaviour-affecting landing; record to the change-log.
+- **Vocabulary/recall knobs are data, not code**: category families live
+  in the anchoring declaration (mechanism per A-2); a new category is a
+  data addition, and the generalization probe is how we check it.
