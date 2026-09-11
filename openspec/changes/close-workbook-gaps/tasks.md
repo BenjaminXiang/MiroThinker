@@ -73,8 +73,22 @@
        B2-b per-member verdict probes / B2-c coverage statement /
        F-bind web-name binding / probe-path visibility.
 - [ ] B4.1 Local-citation floor at render; local answers carry ≥1 local
-       citation.
+       citation. Design locked (design.md §B4, adjudications 1–3):
+       (a) D0-style per-segment card-loss probe first — 9 anchored turns,
+       answer-layer citations vs adapter cards vs emitted SSE cards;
+       (b) then Hook A — relax `canonical_v2_chat.py:2272` to any local
+       evidence (`source_nature ∉ {current_web, supplemental_web}`) on a
+       `_PUBLIC_DOMAINS` handle → URL-less `local-source-` card;
+       (c) harness local-count by id prefix (`local-source-` /
+       `official-source-`) instead of `type != "web"`.
 - [ ] B4.2 Web-citation boilerplate filter (navigation/error templates).
+       Adjudicated surface (design.md §B4 adj. 1): assertion runs over ALL
+       citation url/label/locator fields + answer text; production filter
+       extends `_DETERMINISTIC_RAW_DUMP_MARKERS` (+ 404/JS/navigation
+       templates) and closes the `_enrich_with_page_text` fetch-side gap.
+       No `ChatCitation` contract change. Acceptance: fired on constructed
+       dirty fixture, silent on archived clean corpus, no 404-as-number
+       false positives.
 - [x] B5.1 `_ProseWireDecoder._filter_private_markers` redact-and-continue:
        on complete marker match drop the buffered candidate + record
        redaction instead of raising (design.md §B5; live GAP-09 defect —

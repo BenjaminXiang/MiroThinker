@@ -689,8 +689,8 @@ outside our control; the guard must be robust regardless.
 - **B3**: enumeration completeness self-check against the retrieval set
   before rendering; shortfall triggers one supplemental probe, then honest
   wording (not fabricated completeness).
-- **B4**: citation floor enforced at render; web boilerplate filtered by a
-  template blocklist at citation-assembly time.
+- **B4**: full design below (citation floor + web-pollution filter,
+  2026-09-11 scope pass + adjudications).
 - **B5**: full design above (redact-and-continue + trace token, 2026-09-10).
 - **B6**: combine structured education/region/industry constraints; blocked
   on C1 field quality for `key_personnel.education_structured`.
@@ -705,3 +705,63 @@ outside our control; the guard must be robust regardless.
   through the same direct-scan pattern as B1.
 - **C5**: delete the taxonomy dead path (curated vocabulary + dedicated
   fields) after a serving-wide reference sweep shows zero reads.
+
+## B4 — citation floor + web-pollution filter (full design, 2026-09-11)
+
+Scope source: `.agents/runs/close-workbook-gaps/b4-scoping.md` (read-only
+pass over the serving worktree). Targets: GAP-07 (locally answered turns
+carry no citations), GAP-08 (web boilerplate reaches user-visible output).
+
+### Adjudications (main context, 2026-09-11 — binding for this slice)
+
+1. **GAP-08 acceptance surface = user-visible surfaces, not the card
+   contract.** Do NOT extend `ChatCitation` with title/snippet; do NOT add
+   a web-type card. Instead:
+   - Harness: `web_boilerplate` check runs over **all** citation
+     `url`/`label`/`locator` fields (not only `type=="web"` texts), plus a
+     new answer-text assertion using the production raw-dump marker set.
+   - Production: extend `_DETERMINISTIC_RAW_DUMP_MARKERS`
+     (`answer:1314-1336`, consumed at `serving:5902-5907` / `answer:1363`)
+     with the 404/JS/navigation templates, and close the fetch-side gap
+     (`page_fetch.py` `_DROP_TAGS` misses div-form wrappers;
+     `serving:1413-1455` `_enrich_with_page_text` replaces snippet with raw
+     page text unfiltered).
+   - Rationale: filter where pollution can actually be blocked (fetch →
+     snippet → claim); assert what the user sees (answer text + citation
+     targets). Keeps the thin card contract.
+2. **Local-card boundary (Hook A).** Emit a URL-less card for **any**
+   evidence whose `source_nature ∉ {current_web, supplemental_web}` bound
+   to a `_PUBLIC_DOMAINS` handle, regardless of lane — replacing the
+   `lane != "relationship"` gate (`canonical_v2_chat.py:2272`). Evidence
+   with an official URL keeps the `official-source-` card. Harness counts
+   `local` explicitly by id prefix (`local-source-` / `official-source-`)
+   instead of `type != "web"`; `official-source-` counts as local because
+   its host set is derived from non-web evidence by construction
+   (`chat:2245-2266`).
+3. **First step = D0-style per-segment card-loss probe** (9 anchored turns):
+   per turn, record answer-layer `turn_result.citations` count vs adapter
+   card count vs emitted SSE cards, to distinguish "answer layer produced
+   no citations" from "adapter dropped them". Only then land Hook A;
+   re-run g1-t1 / g17-t2 (no post-B5 coverage).
+
+### Non-goals
+
+- No claim/evidence re-plumbing (that is the frozen proof chain; user
+  directive: serving-time proof chains are retired).
+- No fabrication fallback: a turn with no local basis keeps the honest
+  degradation path (answer:1305-1307) and emits no local card.
+- The B1 local-source branch drift (`chat:2272-2285` exists only in the
+  serving worktree) is NOT hand-ported here — it converges via S3
+  (ADR-023 two-line contract home).
+
+### Acceptance
+
+- g17-t2 GREEN (URL-less local card on an exact-lane local turn); g1-t1 /
+  g17-t2 re-run post-B5.
+- g1-t2 / g4-t1 / g4-t2 / g6-t1 / g7-t1 citation layer: local card present
+  on locally-grounded turns (content layers tracked separately in their
+  own slices).
+- GAP-08: harness `web_boilerplate` fires on a constructed dirty fixture
+  (RED before the filter extension) and stays silent on the archived clean
+  corpus (no false positives on 404-as-number / slug cases).
+- Replay gate zero new signatures.
