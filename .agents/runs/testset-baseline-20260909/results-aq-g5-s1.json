@@ -1,0 +1,89 @@
+[
+ {
+  "group": 5,
+  "turns": [
+   {
+    "turn": 1,
+    "query": "我想找PCB打板， 有哪些推荐",
+    "key_point": "嘉立创；一博科技；深南电路 需要在回答中",
+    "error": null,
+    "elapsed": 29.0,
+    "query_type": "canonical_v2:A:answer",
+    "answer_style": "llm_synthesized",
+    "answer_text": "PCB打板（打样）的推荐厂商，公开信息中反复被提及的主要有嘉立创、猎板、捷多邦、华秋、顺易捷、聚多邦、嘉纳电子、中信华、捷配等，下面按被推荐频次和特点分别说明。\n\n**嘉立创（JLC）**：在多个硬件工程师社区和行业媒体的推荐中排在前列，主打PCB免费打样，支持1-6层板、FPC软板、铜基板/铝基板、高频板，SMT贴片50元起，钢网最快24小时生产、6小时交货。有资料提到其曾将PCB打样价格由5元调为免费，单层铝基板、双层板、四层板打样全免费，阻焊颜色任选。此外还提供Layout设计外包服务。\n\n**猎板（pcbhunt）**：定位精密多层PCB智慧工厂，客户晒单中评价“性价比高、质量好”，支持24小时/48小时加急，可做双面板、多层板，有独家黑芯板材、透明油墨等特色工艺。\n\n**捷多邦**：深圳捷多邦科技，专业从事线路板打样、PCB快速打样、PCBA加工，自主研发了PCB在线下单ERP系统，可在线一条龙服务、快速计价。\n\n**华秋PCB**：在免费打样平台对比中被重点推荐，层数支持广泛，同时提供华秋DFM工具，可一键分析PCB/SMT价格和成本预警。\n\n**顺易捷**：深圳顺易捷科技，专注印制PCB/线路板快速打样，以单面、双面和多层板为主，有“顺易捷ERP系统”支持网上计价下单，并提供24小时品质热线。\n\n**聚多邦**：深圳聚多邦精密电路，业务与捷多邦类似，从事线路板打样、PCB快速打样、PCBA加工，同样有在线下单ERP系统。\n\n**嘉纳电子**：深圳嘉纳电子，专业生产、经营PCB线路板，涵盖pcb打样业务。\n\n**中信华（ZXHPCB）**：江苏中信华电子科技，国内领先的批量PCB制造商，有20多年发展历史，集研发、生产、销售于一体。\n\n**捷配**：极速PCB超级工厂，在硬件工程师常用厂家推荐中被提及。\n\n此外，深圳本地还有深圳市芯拓科技，提供PCB设计打板、钢网制作、SMT贴片一条龙服务；惠州小微科技也宣称专注PCB研发制造20年。\n\n以上为公开信息中较有代表性的PCB打板厂商，实际选择时建议结合层数需求、交期、是否需SMT配套以及报价综合比较。您更关心哪一类（如免费打样、多层板加急、还是含SMT贴片的一站式服务）？我可以再帮您细化。",
+    "citations_total": 2,
+    "citations_local": 2,
+    "citations_web": 0,
+    "events": {
+     "stage": 3,
+     "plan_done": 1,
+     "retrieval_done": 1,
+     "answer_chunk": 892,
+     "answer": 1,
+     "done": 1
+    },
+    "scored": {
+     "pass": false,
+     "layers": {
+      "entity": {
+       "pass": false,
+       "fails": [
+        "missing:一博",
+        "missing:深南电路"
+       ]
+      }
+     },
+     "note": "关键点三家必须在答案中(推荐清单不设更宽完整性集)",
+     "human_verified": false
+    }
+   },
+   {
+    "turn": 2,
+    "query": "上述企业有哪些是深圳的企业",
+    "key_point": "上下文识别",
+    "error": null,
+    "elapsed": 8.8,
+    "query_type": "canonical_v2:A:answer",
+    "answer_style": "llm_synthesized",
+    "answer_text": "上述三家企业均为深圳企业。\n\n深圳顺易捷科技有限公司注册地位于深圳市龙岗区坪地街道年丰社区友谊北路11号，是一家专注印制PCB/线路板快速打样、以单面、双面和多层板为主的高新技术企业，成立于2010年7月。\n\n深圳市芯拓科技有限公司注册地位于深圳市宝安区新安街道宝民社区25区大悦城铂悦苑2栋1202，是一家聚焦嵌入式物联网方案的企业，提供产品设计、PCB设计打板、钢网制作、SMT贴片一条龙服务。\n\n深圳天创无限科技有限公司从名称及注册主体来看同样归属深圳。\n\n以上为本次涉及的三家深圳企业，如需进一步了解其中某家的业务细节，可以继续说明。",
+    "citations_total": 2,
+    "citations_local": 2,
+    "citations_web": 0,
+    "events": {
+     "stage": 3,
+     "plan_done": 1,
+     "retrieval_done": 1,
+     "answer_chunk": 259,
+     "answer": 1,
+     "done": 1
+    },
+    "scored": {
+     "pass": false,
+     "layers": {
+      "entity": {
+       "pass": false,
+       "fails": [
+        "missing:嘉立创",
+        "missing:深南电路",
+        "missing:一博"
+       ]
+      },
+      "completeness": {
+       "pass": false,
+       "hits": 1,
+       "total": 12,
+       "ratio": 0.75,
+       "fails": [
+        "coverage:1/12<0.75"
+       ]
+      }
+     },
+     "note": "上下文收窄: GT=11家深圳+鼎纪(广州)例外",
+     "human_verified": false
+    }
+   }
+  ],
+  "passed": 0,
+  "total": 2
+ }
+]

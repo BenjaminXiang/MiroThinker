@@ -1,0 +1,78 @@
+[
+ {
+  "group": 5,
+  "turns": [
+   {
+    "turn": 1,
+    "query": "我想找PCB打板， 有哪些推荐",
+    "key_point": "嘉立创；一博科技；深南电路 需要在回答中",
+    "error": null,
+    "elapsed": 59.6,
+    "query_type": null,
+    "answer_style": null,
+    "answer_text": "",
+    "citations_total": 0,
+    "citations_local": 0,
+    "citations_web": 0,
+    "events": {
+     "stage": 3,
+     "plan_done": 1,
+     "retrieval_done": 1,
+     "answer_chunk": 1088,
+     "error": 1
+    },
+    "scored": {
+     "pass": false,
+     "layers": {},
+     "note": "关键点三家必须在答案中(推荐清单不设更宽完整性集)",
+     "fails": [
+      "empty_answer"
+     ]
+    }
+   },
+   {
+    "turn": 2,
+    "query": "上述企业有哪些是深圳的企业",
+    "key_point": "上下文识别",
+    "error": null,
+    "elapsed": 1.1,
+    "query_type": "canonical_v2:G:clarification_only",
+    "answer_style": "template",
+    "answer_text": "您的问题里使用了“他/她/它/这家”等指代词，但我暂时无法确定具体指代对象，为了准确回答，请补充您想了解的对象（例如教授姓名、公司名、论文标题或专利号），我会立即为您查询。如果您只是想了解某一类信息的大致情况，也可以直接描述需求，我会先给出概要说明。",
+    "citations_total": 0,
+    "citations_local": 0,
+    "citations_web": 0,
+    "events": {
+     "answer": 1,
+     "done": 1
+    },
+    "scored": {
+     "pass": false,
+     "layers": {
+      "entity": {
+       "pass": false,
+       "fails": [
+        "missing:嘉立创",
+        "missing:深南电路",
+        "missing:一博"
+       ]
+      },
+      "completeness": {
+       "pass": false,
+       "hits": 0,
+       "total": 12,
+       "ratio": 0.75,
+       "fails": [
+        "coverage:0/12<0.75"
+       ]
+      }
+     },
+     "note": "上下文收窄: GT=11家深圳+鼎纪(广州)例外",
+     "human_verified": false
+    }
+   }
+  ],
+  "passed": 0,
+  "total": 2
+ }
+]

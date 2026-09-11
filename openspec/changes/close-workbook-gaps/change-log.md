@@ -603,3 +603,11 @@
   turns inherit the richer pool.
 - Next: AQ-S2b + AQ-S3 (member probes + protocol-JSON leak) implementation;
   g5 sampling and replay gate after.
+- g5 sampling (N=3, same deploy): t1 2/3 samples cover 嘉立创+深南电路,
+  一博 missing in 3/3 (F1 recall gap, A-2 pending); t2 stuck at 1/12 —
+  its pool derives from t1's committed set and the key-point list needs
+  the out-of-recall names (一博/兴森/上达/精诚达 + out-of-pack 华秋/中信华/
+  领智). Confirms g5-t2 as the hardest item: needs A-2 (+ web for the
+  out-of-pack trio) on top of S2b. One sample hit an LLM-backend httpx
+  error (`turn raised before completion`, status=error) — environment
+  class, not a regression.
