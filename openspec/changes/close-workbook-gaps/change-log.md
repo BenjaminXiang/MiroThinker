@@ -536,3 +536,24 @@
   ceiling proof. AQ-S1 (C-1) + AQ-S2 (A-1) dispatched to the s11 writer;
   S0 refined: the causal-chain experiment runs as live N≥5 sampling on
   g2 after S1+S2 deploy (instead of an offline injected-payload harness).
+
+## 2026-09-11 — C1 batch 0 ACCEPTED live (differential + replay); 18188 deploy path corrected to systemd
+
+- Live differential (C1 deployed, `results-c1-diff.json`): the GT
+  enumeration turns keep their retrieval lanes exactly (g2-t1 lexical
+  48 / vector 48, g5-t1 lexical 48 / vector 48 — same as r3/r4); answer
+  outcomes stay inside the known variance (1/5 with g2-t3 stance PASS).
+- Replay gate post-C1 (`replay-c1-post-deploy/`): identical verdict to
+  post-F4 — G3-T2 person-scope + G7 优必选 = known jitter only, zero new
+  signatures.
+- Ops correction (important): 18188 is served by the systemd user unit
+  `canonical-v2-backend` (`Restart=on-failure`; ExecStart →
+  `deploy/start-canonical-v2.sh` → the pinned s12g serve command). Manual
+  `nohup` restarts create competing instances (one manual attempt failed
+  on the milvus file lock while the unit's instance took over the port).
+  Deploys now go through `systemctl --user restart canonical-v2-backend`
+  only; the loop prompt records this. The C1 deploy itself was made
+  through the unit.
+- AQ-S1/S2 implementation in flight in the s11 tree (tests + window probe
+  artifacts appearing); deploy follows on completion, then the N≥5 g2
+  sampling for the causal-chain check.
