@@ -403,3 +403,21 @@
   recalls, uploads, session/binding references break each cycle (the
   earlier manual-recall release_mismatch is a symptom of this class).
   The ADR (two-line contract home) now has its core input.
+
+## 2026-09-11 — G3 delivered: category anchoring reality (tech_tags is the single point)
+
+- Category corpus thin (914 turns / 76 distinct queries; category
+  questions 361 → 190 clean → only 15 distinct; one query ×115).
+  9 traffic words + 21 in-pack words = top 30; `g3_verify.py` 27/27.
+- Anchoring: industry/industry_tags are coarse (2/30 hit); **tech_tags
+  is the ONLY structured anchor for fine categories** (26/30 hit but
+  ≈1 tag/company: 机器人 414/7089=5.8%, 具身智能 11 companies); patent
+  ipc_codes / paper keywords = 0. Structured coverage spans 85.9%
+  (人工智能) → 14.5% (具身智能) → 7.7% (PCB) → 0% (送餐机器人/视触觉).
+- Gaps by traffic: 具身智能 summary-only; 酒店送餐机器人 / PCB打板
+  ZERO hits in 47,071 docs (combination-granularity / action-word
+  classes) — contract needs an unanchored branch (web supplement +
+  honest wording), no summary fallback pretense. 17 high-volume
+  text-only words listed (储能 3.0%, 机械臂 6.7%, 半导体 17.0%…).
+- G-stream COMPLETE (G1/G2/G3). Next: consolidate into C1-contract v1 +
+  two-line ADR draft for user review.

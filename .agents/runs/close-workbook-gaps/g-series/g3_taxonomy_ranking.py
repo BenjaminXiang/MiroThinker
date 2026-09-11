@@ -35,11 +35,23 @@ BIZ_SUFFIX = re.compile(
 )
 GENERIC = {
     "产品", "企业", "公司", "系统", "设备", "服务", "技术", "方案", "解决方案", "平台",
-    "研发", "生产", "制造", "解决方案提供商", "整体解决方案", "供应商", "研发商", "厂商",
+    "研发", "生产", "制造", "整体解决方案", "供应商", "研发商", "厂商",
     "系列", "工程", "项目", "中心", "基地", "应用", "领域", "行业", "市场", "品牌",
     "专业", "综合", "智能", "数字", "信息", "数据", "网络", "软件", "硬件", "材料",
     "器件", "部件", "组件", "配件", "工具", "装备", "仪器", "仪表", "装置", "设施",
 }
+
+# a phrase tail that ends in a business-activity word is not a category noun
+ACTIVITY_TAIL = (
+    "研发", "生产", "销售", "设计", "开发", "服务", "制造", "加工", "集成", "代理",
+    "分销", "运营", "咨询", "贸易", "公司", "企业", "方案", "系统", "技术",
+)
+
+
+def is_category_noun(t):
+    if t in GENERIC:
+        return False
+    return not t.endswith(ACTIVITY_TAIL)
 
 
 def main():
@@ -90,7 +102,7 @@ def main():
         return items[:top]
 
     tail_rows = []
-    for t, c in ranked(tail_companies, filt=lambda t: t not in GENERIC):
+    for t, c in ranked(tail_companies, filt=is_category_noun):
         tail_rows.append({
             "term": t,
             "companies_hit_tail": c,
@@ -99,6 +111,8 @@ def main():
             "phrase_examples": sorted(tail_phrases.get(t, ()))[:5],
         })
 
+    tail_all = [{"term": t, "companies_hit_tail": c} for t, c in ranked(tail_companies, top=600)]
+
     payload = {
         "pack": PACK,
         "company_docs": n,
@@ -106,6 +120,7 @@ def main():
                             for t, c in industry_terms.most_common()],
         "category_phrases": [{"phrase": p, "companies": c} for p, c in ranked(phrase_companies, top=80)],
         "tail_terms": tail_rows,
+        "tail_terms_all": tail_all,
     }
     with open(OUT, "w", encoding="utf-8") as fh:
         json.dump(payload, fh, ensure_ascii=False, indent=1)

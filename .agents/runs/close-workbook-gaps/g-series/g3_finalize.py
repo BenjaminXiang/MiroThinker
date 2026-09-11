@@ -63,9 +63,8 @@ GENERIC = {
 SHORTHAND = {
     "智能", "具身", "机器", "器人", "工智能", "人工智", "身智能", "身智", "具身智",
     "打板", "送餐", "餐机", "送餐机", "酒店", "餐机器人", "送餐机器", "灵巧", "巧手",
-    "触觉", "视触", "传感", "人形", "水下", "机器臂", "电子元器件" if False else "子元器件",
-    "品研发", "发公司", "能家居", "居产品", "能硬件", "示屏", "戴设备", "能产品",
-    "能机器人", "发企业", "能门锁", "化解决方案", "统解决方案", "体解决方案",
+    "触觉", "视触", "传感", "人形", "水下", "机器臂", "决方案", "方案", "设计商",
+    "件产品", "控产品", "联网", "及产品", "软硬件",
 }
 
 
@@ -81,15 +80,23 @@ def main():
 
     by_term = {t["term"]: t for t in terms_doc["terms"]}
     tax_reach = {r["term"]: r for r in tax["tail_terms"]}
+    tax_reach_all = {r["term"]: r["companies_hit_tail"] for r in tax.get("tail_terms_all", [])}
+    for r in tax["tail_terms"]:
+        tax_reach_all.setdefault(r["term"], r["companies_hit_tail"])
+    probe_terms = scan_terms.get("probe_terms", [])
+    industry_labels = [r["term"] for r in tax["industry_labels"] if r["term"] != "-"]
 
     def traffic(t):
         r = by_term.get(t)
         return max(r["cat_turns"], r["full_turns"]) if r else 0
 
+    def strength(t):
+        return max(traffic(t), tax_reach_all.get(t, 0))
+
     def blank(t):
         return {"term": t, "cat_turns": 0, "cat_whole_run_turns": 0, "full_turns": 0,
                 "full_whole_run_turns": 0, "cat_distinct_queries": 0, "cat_sessions": 0,
-                "cat_examples": [], "full_examples": []}
+                "full_distinct_queries": 0, "cat_examples": [], "full_examples": []}
 
     terms_all = [t for t in scan_terms["terms"]]
     admitted, why = [], {}
@@ -114,17 +121,17 @@ def main():
             why[t] = reasons
 
     admitted_set = set(admitted)
+    partners = admitted_set | GENERIC | SHORTHAND
     suppressed = {}
     for s in admitted:
-        rec_s = by_term.get(s) or blank(s)
         a = anchor["terms"].get(s, {})
         if a.get("in_lexicon"):
-            continue
-        standalone = rec_s["cat_whole_run_turns"] > 0 or rec_s["full_whole_run_turns"] >= 3
-        for t in admitted_set:
+            continue  # exact taxonomy entries are protected head nouns
+        s_strength = strength(s)
+        for t in partners:
             if t == s or len(t) <= len(s) or s not in t:
                 continue
-            if traffic(t) >= traffic(s) or (not standalone and traffic(t) >= 0.5 * traffic(s)):
+            if strength(t) >= 0.9 * s_strength:
                 suppressed[s] = t
                 break
     kept = [t for t in admitted if t not in suppressed]
@@ -191,6 +198,12 @@ def main():
     for i, r in enumerate(vocabulary, 1):
         r["rank"] = i
 
+    probe_rows = [row(t, "probe") for t in probe_terms if t not in kept]
+    for r in probe_rows:
+        r["admitted"] = False
+    probe_kept = [row(t, "probe_in_vocabulary") for t in probe_terms if t in kept]
+    industry_rows = [row(t, "industry_label") for t in industry_labels]
+
     gap_rows = [r for r in vocabulary if r["tier"] in ("T", "N")]
     gap_rows.sort(key=lambda r: (-r["cat_turns"], -r["full_turns"], r["term"]))
 
@@ -239,6 +252,8 @@ def main():
         "vocabulary": vocabulary,
         "verification_table": vocabulary[:15],
         "gap_list": gap_rows,
+        "probe_table": probe_rows + probe_kept,
+        "industry_label_table": industry_rows,
         "rejected": rejected[:120],
     }
     with open(OUT, "w", encoding="utf-8") as fh:

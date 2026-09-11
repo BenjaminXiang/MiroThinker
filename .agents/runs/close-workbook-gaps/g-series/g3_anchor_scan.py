@@ -188,7 +188,7 @@ def main():
                     if t:
                         taxonomy_values.append(t)
                         lexicon.add(BIZ_SUFFIX.sub("", t).strip())
-            disp = texts.get("name") or texts.get("title") or ""
+            disp = (texts.get("name") or texts.get("title") or "").split("\n")[0].strip()
             for term in terms:
                 s_hit = t_hit = False
                 for f, (cls, _) in fields.items():

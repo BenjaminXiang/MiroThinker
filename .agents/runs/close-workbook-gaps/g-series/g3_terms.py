@@ -108,8 +108,8 @@ def valid_candidate(s):
     return True
 
 
-def extract(queries):
-    """queries: list of (query, turns). Returns candidate stats."""
+def extract(queries, q_sessions=None):
+    """queries: list of (query, turns) sorted by turns desc. Returns candidate stats."""
     turns = Counter()
     whole_run = Counter()
     nq = Counter()
@@ -136,9 +136,11 @@ def extract(queries):
                 nq[s] += 1
                 if s in runs:
                     whole_run[s] += n
+                if q_sessions is not None:
+                    sess[s] |= q_sessions.get(q, set())
                 if len(ex[s]) < 3:
                     ex[s].append(q)
-    return turns, whole_run, nq, ex
+    return turns, whole_run, nq, ex, sess
 
 
 def main():
@@ -170,8 +172,12 @@ def main():
     full_turns = Counter((q or "").strip() for q, in cur.fetchall())
     con.close()
 
-    c_turns, c_run, c_nq, c_ex = extract(list(cat_turns.items()))
-    f_turns, f_run, f_nq, f_ex = extract(list(full_turns.items()))
+    c_turns, c_run, c_nq, c_ex, c_sess = extract(
+        sorted(cat_turns.items(), key=lambda kv: -kv[1]), cat_sess
+    )
+    f_turns, f_run, f_nq, f_ex, f_sess = extract(
+        sorted(full_turns.items(), key=lambda kv: -kv[1])
+    )
 
     terms = sorted(set(c_turns) | set(f_turns))
     payload = {
@@ -206,11 +212,12 @@ def main():
                 "cat_turns": c_turns.get(t, 0),
                 "cat_whole_run_turns": c_run.get(t, 0),
                 "cat_distinct_queries": c_nq.get(t, 0),
-                "cat_sessions": len(cat_sess[t]) if t in c_turns else 0,
+                "cat_sessions": len(c_sess.get(t, ())),
                 "cat_examples": c_ex.get(t, []),
                 "full_turns": f_turns.get(t, 0),
                 "full_whole_run_turns": f_run.get(t, 0),
                 "full_distinct_queries": f_nq.get(t, 0),
+                "full_sessions": len(f_sess.get(t, ())),
                 "full_examples": f_ex.get(t, []),
             }
             for t in sorted(terms, key=lambda t: (-c_turns.get(t, 0), -f_turns.get(t, 0), -len(t), t))

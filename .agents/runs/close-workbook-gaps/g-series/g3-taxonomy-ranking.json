@@ -532,19 +532,6 @@
  ],
  "tail_terms": [
   {
-   "term": "决方案",
-   "companies_hit_tail": 450,
-   "share": 0.0635,
-   "phrase_count": 410,
-   "phrase_examples": [
-    "3D桌面打印技术整体解决方案",
-    "3D视觉检测与测量解决方案",
-    "AGV自动搬运解决方案",
-    "AIoT产品与解决方案",
-    "AI交通调度整体解决方案"
-   ]
-  },
-  {
    "term": "机器人",
    "companies_hit_tail": 221,
    "share": 0.0312,
@@ -597,32 +584,6 @@
    ]
   },
   {
-   "term": "品研发",
-   "companies_hit_tail": 69,
-   "share": 0.0097,
-   "phrase_count": 58,
-   "phrase_examples": [
-    "LCD显示产品研发",
-    "LED封装产品研发",
-    "LED封装器件及LED照明产品研发",
-    "Vision+ AI +IoT的端计算产品研发",
-    "专用计算机产品研发"
-   ]
-  },
-  {
-   "term": "产品研发",
-   "companies_hit_tail": 68,
-   "share": 0.0096,
-   "phrase_count": 57,
-   "phrase_examples": [
-    "LCD显示产品研发",
-    "LED封装产品研发",
-    "LED封装器件及LED照明产品研发",
-    "Vision+ AI +IoT的端计算产品研发",
-    "专用计算机产品研发"
-   ]
-  },
-  {
    "term": "感器",
    "companies_hit_tail": 67,
    "share": 0.0095,
@@ -649,32 +610,6 @@
    ]
   },
   {
-   "term": "设计",
-   "companies_hit_tail": 64,
-   "share": 0.009,
-   "phrase_count": 54,
-   "phrase_examples": [
-    "ASIC集成电路设计",
-    "FPGA和嵌入式系统设计",
-    "Flash MCU IC设计",
-    "GPS 追踪器设计",
-    "IC电源管理芯片设计"
-   ]
-  },
-  {
-   "term": "发公司",
-   "companies_hit_tail": 53,
-   "share": 0.0075,
-   "phrase_count": 53,
-   "phrase_examples": [
-    "4G自动导航充电机器人研发公司",
-    "AI人工智能高科技研发公司",
-    "AI智能门店技术研发公司",
-    "FRID产品研发公司",
-    "人体安全产品研发公司"
-   ]
-  },
-  {
    "term": "电子元器件",
    "companies_hit_tail": 48,
    "share": 0.0068,
@@ -698,45 +633,6 @@
     "NXP电子元器件",
     "传感器电子元器件",
     "功率半导体电子元器件"
-   ]
-  },
-  {
-   "term": "研发公司",
-   "companies_hit_tail": 45,
-   "share": 0.0063,
-   "phrase_count": 45,
-   "phrase_examples": [
-    "4G自动导航充电机器人研发公司",
-    "AI人工智能高科技研发公司",
-    "AI智能门店技术研发公司",
-    "FRID产品研发公司",
-    "人体安全产品研发公司"
-   ]
-  },
-  {
-   "term": "开发",
-   "companies_hit_tail": 45,
-   "share": 0.0063,
-   "phrase_count": 41,
-   "phrase_examples": [
-    "ERP\\MES管理系统开发",
-    "OA、CRM开发",
-    "PCB行业的管理软件开发",
-    "R内容制作及游戏开发",
-    "VR眼镜与游戏设备开发"
-   ]
-  },
-  {
-   "term": "体解决方案",
-   "companies_hit_tail": 44,
-   "share": 0.0062,
-   "phrase_count": 41,
-   "phrase_examples": [
-    "3D桌面打印技术整体解决方案",
-    "AI交通调度整体解决方案",
-    "MES系统与工厂管理整体解决方案",
-    "PCB行业智能工厂整体解决方案",
-    "VR虚拟现实及AI人工智能整体解决方案"
    ]
   },
   {
@@ -909,32 +805,6 @@
    ]
   },
   {
-   "term": "研发企业",
-   "companies_hit_tail": 33,
-   "share": 0.0047,
-   "phrase_count": 31,
-   "phrase_examples": [
-    "AI智能营销系统研发企业",
-    "三维视觉研发企业",
-    "中控智能设备研发企业",
-    "仿真机器人研发企业",
-    "可穿戴设备传感半导体研发企业"
-   ]
-  },
-  {
-   "term": "发企业",
-   "companies_hit_tail": 33,
-   "share": 0.0047,
-   "phrase_count": 31,
-   "phrase_examples": [
-    "AI智能营销系统研发企业",
-    "三维视觉研发企业",
-    "中控智能设备研发企业",
-    "仿真机器人研发企业",
-    "可穿戴设备传感半导体研发企业"
-   ]
-  },
-  {
    "term": "居产品",
    "companies_hit_tail": 33,
    "share": 0.0047,
@@ -945,19 +815,6 @@
     "智能家居产品",
     "智能家电及智能家居产品",
     "物联网及无线智能家居产品"
-   ]
-  },
-  {
-   "term": "销售",
-   "companies_hit_tail": 33,
-   "share": 0.0047,
-   "phrase_count": 33,
-   "phrase_examples": [
-    "LED产品的设计，开发，生产及销售",
-    "LED半导体应用开发、生产、销售",
-    "LED封装器件的研发、生产与销售",
-    "LED工业照明产品的研发，生产及销售",
-    "主动安防产品的研发、生产及销售"
    ]
   },
   {
@@ -1078,58 +935,6 @@
    ]
   },
   {
-   "term": "联网技术",
-   "companies_hit_tail": 29,
-   "share": 0.0041,
-   "phrase_count": 7,
-   "phrase_examples": [
-    "云端控制工业互联网技术",
-    "互联网技术",
-    "传感器设备和物联网技术",
-    "智能控制及物联网技术",
-    "物联网技术"
-   ]
-  },
-  {
-   "term": "网技术",
-   "companies_hit_tail": 29,
-   "share": 0.0041,
-   "phrase_count": 7,
-   "phrase_examples": [
-    "云端控制工业互联网技术",
-    "互联网技术",
-    "传感器设备和物联网技术",
-    "智能控制及物联网技术",
-    "物联网技术"
-   ]
-  },
-  {
-   "term": "系统解决方案",
-   "companies_hit_tail": 26,
-   "share": 0.0037,
-   "phrase_count": 26,
-   "phrase_examples": [
-    "RFID产品及系统解决方案",
-    "RFID技术、产品和系统解决方案",
-    "人工智能系统解决方案",
-    "仓储物流自动化立体库系统解决方案",
-    "全套生命数字化设备和系统解决方案"
-   ]
-  },
-  {
-   "term": "统解决方案",
-   "companies_hit_tail": 26,
-   "share": 0.0037,
-   "phrase_count": 26,
-   "phrase_examples": [
-    "RFID产品及系统解决方案",
-    "RFID技术、产品和系统解决方案",
-    "人工智能系统解决方案",
-    "仓储物流自动化立体库系统解决方案",
-    "全套生命数字化设备和系统解决方案"
-   ]
-  },
-  {
    "term": "智能门锁",
    "companies_hit_tail": 26,
    "share": 0.0037,
@@ -1152,71 +957,6 @@
    ]
   },
   {
-   "term": "化解决方案",
-   "companies_hit_tail": 25,
-   "share": 0.0035,
-   "phrase_count": 23,
-   "phrase_examples": [
-    "LED一体化解决方案",
-    "企业信息化解决方案",
-    "健身AI产品和智能化解决方案",
-    "元器件产销及自动化解决方案",
-    "全栈式内部物流自动化解决方案"
-   ]
-  },
-  {
-   "term": "机器人研发",
-   "companies_hit_tail": 25,
-   "share": 0.0035,
-   "phrase_count": 19,
-   "phrase_examples": [
-    "个性也机器人研发",
-    "人形机器人研发",
-    "儿童乐教机器人研发",
-    "儿童智能机器人研发",
-    "动力外骨骼机器人研发"
-   ]
-  },
-  {
-   "term": "器人研发",
-   "companies_hit_tail": 25,
-   "share": 0.0035,
-   "phrase_count": 19,
-   "phrase_examples": [
-    "个性也机器人研发",
-    "人形机器人研发",
-    "儿童乐教机器人研发",
-    "儿童智能机器人研发",
-    "动力外骨骼机器人研发"
-   ]
-  },
-  {
-   "term": "管理系统",
-   "companies_hit_tail": 25,
-   "share": 0.0035,
-   "phrase_count": 24,
-   "phrase_examples": [
-    "ERP企业云管理系统",
-    "云计算的O2O门店销售管理系统",
-    "人工智能会员管理系统",
-    "人工智能及大数据领域智慧管理系统",
-    "企业ERP管理系统"
-   ]
-  },
-  {
-   "term": "人研发",
-   "companies_hit_tail": 25,
-   "share": 0.0035,
-   "phrase_count": 19,
-   "phrase_examples": [
-    "个性也机器人研发",
-    "人形机器人研发",
-    "儿童乐教机器人研发",
-    "儿童智能机器人研发",
-    "动力外骨骼机器人研发"
-   ]
-  },
-  {
    "term": "化设备",
    "companies_hit_tail": 25,
    "share": 0.0035,
@@ -1227,57 +967,6 @@
     "工业自动化设备",
     "智能空气净化设备",
     "智能自动化设备"
-   ]
-  },
-  {
-   "term": "理系统",
-   "companies_hit_tail": 25,
-   "share": 0.0035,
-   "phrase_count": 24,
-   "phrase_examples": [
-    "ERP企业云管理系统",
-    "云计算的O2O门店销售管理系统",
-    "人工智能会员管理系统",
-    "人工智能及大数据领域智慧管理系统",
-    "企业ERP管理系统"
-   ]
-  },
-  {
-   "term": "物联网技术",
-   "companies_hit_tail": 24,
-   "share": 0.0034,
-   "phrase_count": 4,
-   "phrase_examples": [
-    "传感器设备和物联网技术",
-    "智能控制及物联网技术",
-    "物联网技术",
-    "生活物联网技术"
-   ]
-  },
-  {
-   "term": "件研发",
-   "companies_hit_tail": 24,
-   "share": 0.0034,
-   "phrase_count": 22,
-   "phrase_examples": [
-    "IC及电子元器件研发",
-    "人工智能软硬件研发",
-    "光学材料、光器件研发",
-    "光源硬件研发",
-    "半导体光通信核心器件研发"
-   ]
-  },
-  {
-   "term": "网解决方案",
-   "companies_hit_tail": 23,
-   "share": 0.0032,
-   "phrase_count": 14,
-   "phrase_examples": [
-    "一站式工业物联网解决方案",
-    "军事物联网解决方案",
-    "基于智能硬件的大数据物联网解决方案",
-    "工业物联网解决方案",
-    "无线传感器及物联网解决方案"
    ]
   },
   {
@@ -1319,19 +1008,6 @@
    ]
   },
   {
-   "term": "联网解决方案",
-   "companies_hit_tail": 22,
-   "share": 0.0031,
-   "phrase_count": 13,
-   "phrase_examples": [
-    "一站式工业物联网解决方案",
-    "军事物联网解决方案",
-    "基于智能硬件的大数据物联网解决方案",
-    "工业物联网解决方案",
-    "无线传感器及物联网解决方案"
-   ]
-  },
-  {
    "term": "工业机器人",
    "companies_hit_tail": 22,
    "share": 0.0031,
@@ -1353,45 +1029,6 @@
     "安防产品",
     "导航定位和安防产品",
     "弱电智能化系统安防产品"
-   ]
-  },
-  {
-   "term": "生产企业",
-   "companies_hit_tail": 22,
-   "share": 0.0031,
-   "phrase_count": 22,
-   "phrase_examples": [
-    "FPCA产品生产企业",
-    "IC芯片设计生产企业",
-    "LED显示屏生产企业",
-    "医疗影像设备生产企业",
-    "半导体气体传感器生产企业"
-   ]
-  },
-  {
-   "term": "产企业",
-   "companies_hit_tail": 22,
-   "share": 0.0031,
-   "phrase_count": 22,
-   "phrase_examples": [
-    "FPCA产品生产企业",
-    "IC芯片设计生产企业",
-    "LED显示屏生产企业",
-    "医疗影像设备生产企业",
-    "半导体气体传感器生产企业"
-   ]
-  },
-  {
-   "term": "备研发",
-   "companies_hit_tail": 22,
-   "share": 0.0031,
-   "phrase_count": 22,
-   "phrase_examples": [
-    "专业从事水下机器人及滨海旅游装备研发",
-    "临床生物实验室设备研发",
-    "先进电力电子设备研发",
-    "医疗可穿戴设备研发",
-    "医疗设备研发"
    ]
   },
   {
@@ -1470,19 +1107,6 @@
    ]
   },
   {
-   "term": "产品生产",
-   "companies_hit_tail": 21,
-   "share": 0.003,
-   "phrase_count": 20,
-   "phrase_examples": [
-    "3C智能产品生产",
-    "PCB产品生产",
-    "医疗测量产品生产",
-    "掩膜产品生产",
-    "智能产品生产"
-   ]
-  },
-  {
    "term": "件产品",
    "companies_hit_tail": 21,
    "share": 0.003,
@@ -1496,19 +1120,6 @@
    ]
   },
   {
-   "term": "品生产",
-   "companies_hit_tail": 21,
-   "share": 0.003,
-   "phrase_count": 20,
-   "phrase_examples": [
-    "3C智能产品生产",
-    "PCB产品生产",
-    "医疗测量产品生产",
-    "掩膜产品生产",
-    "智能产品生产"
-   ]
-  },
-  {
    "term": "电商",
    "companies_hit_tail": 21,
    "share": 0.003,
@@ -1519,19 +1130,6 @@
     "传感器电商",
     "元器件电商",
     "半导体品牌大型电商"
-   ]
-  },
-  {
-   "term": "及解决方案",
-   "companies_hit_tail": 20,
-   "share": 0.0028,
-   "phrase_count": 20,
-   "phrase_examples": [
-    "云应用交付及解决方案",
-    "人工智能及解决方案",
-    "协作机器人系统及解决方案",
-    "存储芯片及解决方案",
-    "安防软件开发及解决方案"
    ]
   },
   {
@@ -1558,19 +1156,6 @@
     "产品综合设计机构",
     "光学镜头研发生产综合服务机构",
     "区块链领域咨询培训机构"
-   ]
-  },
-  {
-   "term": "设备研发",
-   "companies_hit_tail": 19,
-   "share": 0.0027,
-   "phrase_count": 19,
-   "phrase_examples": [
-    "临床生物实验室设备研发",
-    "先进电力电子设备研发",
-    "医疗可穿戴设备研发",
-    "医疗设备研发",
-    "慢性病管理智能医疗设备研发"
    ]
   },
   {
@@ -1610,58 +1195,6 @@
     "动力电池智能化数字工厂解决",
     "助力车智能驱动系统解决",
     "北斗高精度AI解决"
-   ]
-  },
-  {
-   "term": "技术服务",
-   "companies_hit_tail": 18,
-   "share": 0.0025,
-   "phrase_count": 16,
-   "phrase_examples": [
-    "GPS 技术服务",
-    "互联网技术服务",
-    "传感器及智能控制系统技术服务",
-    "信息技术服务",
-    "储能技术服务"
-   ]
-  },
-  {
-   "term": "控制系统",
-   "companies_hit_tail": 18,
-   "share": 0.0025,
-   "phrase_count": 17,
-   "phrase_examples": [
-    "LED显示屏控制系统",
-    "agv控制系统",
-    "中央空调智能控制系统",
-    "交通信号控制系统",
-    "工业机器人及控制系统"
-   ]
-  },
-  {
-   "term": "制系统",
-   "companies_hit_tail": 18,
-   "share": 0.0025,
-   "phrase_count": 17,
-   "phrase_examples": [
-    "LED显示屏控制系统",
-    "agv控制系统",
-    "中央空调智能控制系统",
-    "交通信号控制系统",
-    "工业机器人及控制系统"
-   ]
-  },
-  {
-   "term": "术服务",
-   "companies_hit_tail": 18,
-   "share": 0.0025,
-   "phrase_count": 16,
-   "phrase_examples": [
-    "GPS 技术服务",
-    "互联网技术服务",
-    "传感器及智能控制系统技术服务",
-    "信息技术服务",
-    "储能技术服务"
    ]
   },
   {
@@ -1743,19 +1276,6 @@
    ]
   },
   {
-   "term": "觉技术",
-   "companies_hit_tail": 16,
-   "share": 0.0023,
-   "phrase_count": 13,
-   "phrase_examples": [
-    "AI机器人视觉技术",
-    "人工智能和计算机视觉技术",
-    "健身机器视觉技术",
-    "图像视觉技术",
-    "家庭机器视觉技术"
-   ]
-  },
-  {
    "term": "软硬件",
    "companies_hit_tail": 16,
    "share": 0.0023,
@@ -1782,19 +1302,6 @@
    ]
   },
   {
-   "term": "技术解决方案",
-   "companies_hit_tail": 15,
-   "share": 0.0021,
-   "phrase_count": 14,
-   "phrase_examples": [
-    "AI运动传感器及行业数字化技术解决方案",
-    "传感器及相关技术解决方案",
-    "信息与通讯技术解决方案",
-    "卫星通信与网络技术解决方案",
-    "工业视觉技术解决方案"
-   ]
-  },
-  {
    "term": "智能穿戴设备",
    "companies_hit_tail": 15,
    "share": 0.0021,
@@ -1805,19 +1312,6 @@
     "医用智能穿戴设备",
     "宠物智能穿戴设备",
     "智能穿戴设备"
-   ]
-  },
-  {
-   "term": "术解决方案",
-   "companies_hit_tail": 15,
-   "share": 0.0021,
-   "phrase_count": 14,
-   "phrase_examples": [
-    "AI运动传感器及行业数字化技术解决方案",
-    "传感器及相关技术解决方案",
-    "信息与通讯技术解决方案",
-    "卫星通信与网络技术解决方案",
-    "工业视觉技术解决方案"
    ]
   },
   {
@@ -1834,32 +1328,6 @@
    ]
   },
   {
-   "term": "制造企业",
-   "companies_hit_tail": 15,
-   "share": 0.0021,
-   "phrase_count": 15,
-   "phrase_examples": [
-    "LED显示屏设计制造企业",
-    "智能产品研发制造企业",
-    "智能指纹锁及闸门制造企业",
-    "机器人减速电机研发制造企业",
-    "模具设计及金属零件制造企业"
-   ]
-  },
-  {
-   "term": "器研发",
-   "companies_hit_tail": 15,
-   "share": 0.0021,
-   "phrase_count": 12,
-   "phrase_examples": [
-    "传感器研发",
-    "半导体激光器研发",
-    "固定式读写器研发",
-    "智能化传感器研发",
-    "智能影音电器研发"
-   ]
-  },
-  {
    "term": "控制器",
    "companies_hit_tail": 15,
    "share": 0.0021,
@@ -1873,19 +1341,6 @@
    ]
   },
   {
-   "term": "造企业",
-   "companies_hit_tail": 15,
-   "share": 0.0021,
-   "phrase_count": 15,
-   "phrase_examples": [
-    "LED显示屏设计制造企业",
-    "智能产品研发制造企业",
-    "智能指纹锁及闸门制造企业",
-    "机器人减速电机研发制造企业",
-    "模具设计及金属零件制造企业"
-   ]
-  },
-  {
    "term": "制器",
    "companies_hit_tail": 15,
    "share": 0.0021,
@@ -1896,19 +1351,6 @@
     "家用温度控制器",
     "家电控制器",
     "控制器"
-   ]
-  },
-  {
-   "term": "件解决方案",
-   "companies_hit_tail": 14,
-   "share": 0.002,
-   "phrase_count": 13,
-   "phrase_examples": [
-    "人工智能软硬件解决方案",
-    "区块链芯片定制及智能硬件解决方案",
-    "图像技术软硬件解决方案",
-    "基于嵌入式平台的软件和硬件解决方案",
-    "智能家居硬件解决方案"
    ]
   },
   {
@@ -1935,45 +1377,6 @@
     "体温测试软硬件产品",
     "北斗智能硬件产品",
     "家庭硬件产品"
-   ]
-  },
-  {
-   "term": "视觉技术",
-   "companies_hit_tail": 14,
-   "share": 0.002,
-   "phrase_count": 11,
-   "phrase_examples": [
-    "AI机器人视觉技术",
-    "人工智能和计算机视觉技术",
-    "健身机器视觉技术",
-    "图像视觉技术",
-    "家庭机器视觉技术"
-   ]
-  },
-  {
-   "term": "务公司",
-   "companies_hit_tail": 14,
-   "share": 0.002,
-   "phrase_count": 14,
-   "phrase_examples": [
-    "AR技术应用研究服务公司",
-    "充电柱服务公司",
-    "印刷线路板贴片服务公司",
-    "智能安全领域服务公司",
-    "智能家居服务公司"
-   ]
-  },
-  {
-   "term": "机研发",
-   "companies_hit_tail": 14,
-   "share": 0.002,
-   "phrase_count": 10,
-   "phrase_examples": [
-    "农用无人机研发",
-    "工业级无人机研发",
-    "无人机研发",
-    "测绘无人机研发",
-    "电机研发"
    ]
   },
   {
@@ -2013,32 +1416,6 @@
    ]
   },
   {
-   "term": "综合解决方案",
-   "companies_hit_tail": 13,
-   "share": 0.0018,
-   "phrase_count": 13,
-   "phrase_examples": [
-    "人工智能技术综合解决方案",
-    "大数据综合解决方案",
-    "安防监控与商显综合解决方案",
-    "定位业务综合解决方案",
-    "无线通讯及GNSS定位天线综合解决方案"
-   ]
-  },
-  {
-   "term": "合解决方案",
-   "companies_hit_tail": 13,
-   "share": 0.0018,
-   "phrase_count": 13,
-   "phrase_examples": [
-    "人工智能技术综合解决方案",
-    "大数据综合解决方案",
-    "安防监控与商显综合解决方案",
-    "定位业务综合解决方案",
-    "无线通讯及GNSS定位天线综合解决方案"
-   ]
-  },
-  {
    "term": "教育机器人",
    "companies_hit_tail": 13,
    "share": 0.0018,
@@ -2062,17 +1439,3024 @@
    ]
   },
   {
-   "term": "服务公司",
+   "term": "检测设备",
    "companies_hit_tail": 13,
    "share": 0.0018,
    "phrase_count": 13,
    "phrase_examples": [
-    "AR技术应用研究服务公司",
-    "充电柱服务公司",
-    "印刷线路板贴片服务公司",
-    "智能安全领域服务公司",
-    "智能家居服务公司"
+    "Micro LED 晶圆级巨量检测设备",
+    "体外诊断床旁即时检测设备",
+    "光机电一体智能检测设备",
+    "印后装订及视觉检测设备",
+    "封装检测设备"
    ]
+  },
+  {
+   "term": "电子元件",
+   "companies_hit_tail": 13,
+   "share": 0.0018,
+   "phrase_count": 2,
+   "phrase_examples": [
+    "电子元件",
+    "触控电子元件"
+   ]
+  },
+  {
+   "term": "育机器人",
+   "companies_hit_tail": 13,
+   "share": 0.0018,
+   "phrase_count": 5,
+   "phrase_examples": [
+    "AI教育机器人",
+    "仿生教育机器人",
+    "儿童教育机器人",
+    "教育机器人",
+    "智能教育机器人"
+   ]
+  },
+  {
+   "term": "子元件",
+   "companies_hit_tail": 13,
+   "share": 0.0018,
+   "phrase_count": 2,
+   "phrase_examples": [
+    "电子元件",
+    "触控电子元件"
+   ]
+  },
+  {
+   "term": "电子",
+   "companies_hit_tail": 13,
+   "share": 0.0018,
+   "phrase_count": 13,
+   "phrase_examples": [
+    "五金电子",
+    "家居及安防智能电子",
+    "导航电子",
+    "工业智能系统及汽车电子",
+    "指纹防盗智能电子"
+   ]
+  },
+  {
+   "term": "电路",
+   "companies_hit_tail": 13,
+   "share": 0.0018,
+   "phrase_count": 7,
+   "phrase_examples": [
+    "印刷电路",
+    "数模混合集成电路",
+    "模拟及数模混合集成电路",
+    "特种集成电路",
+    "集成电路"
+   ]
+  },
+  {
+   "term": "营销",
+   "companies_hit_tail": 13,
+   "share": 0.0018,
+   "phrase_count": 11,
+   "phrase_examples": [
+    "互联网营销",
+    "可穿戴数码产品营销",
+    "场景体验式营销",
+    "大模型智能广告营销",
+    "广告营销"
+   ]
+  },
+  {
+   "term": "服务机器人",
+   "companies_hit_tail": 12,
+   "share": 0.0017,
+   "phrase_count": 9,
+   "phrase_examples": [
+    "商业服务机器人",
+    "大型服务机器人",
+    "定制化家庭服务机器人",
+    "家庭服务机器人",
+    "智能教育机器人和商用服务机器人"
+   ]
+  },
+  {
+   "term": "务机器人",
+   "companies_hit_tail": 12,
+   "share": 0.0017,
+   "phrase_count": 9,
+   "phrase_examples": [
+    "商业服务机器人",
+    "大型服务机器人",
+    "定制化家庭服务机器人",
+    "家庭服务机器人",
+    "智能教育机器人和商用服务机器人"
+   ]
+  },
+  {
+   "term": "集成电路",
+   "companies_hit_tail": 12,
+   "share": 0.0017,
+   "phrase_count": 6,
+   "phrase_examples": [
+    "数模混合集成电路",
+    "模拟及数模混合集成电路",
+    "特种集成电路",
+    "集成电路",
+    "高性能数模混合集成电路"
+   ]
+  },
+  {
+   "term": "APP",
+   "companies_hit_tail": 12,
+   "share": 0.0017,
+   "phrase_count": 12,
+   "phrase_examples": [
+    "专注于汽车安全驾驶和汽车增值服务的APP",
+    "健康手机APP",
+    "儿童数学辅导APP",
+    "定位APP",
+    "定位导航APP"
+   ]
+  },
+  {
+   "term": "及产品",
+   "companies_hit_tail": 12,
+   "share": 0.0017,
+   "phrase_count": 12,
+   "phrase_examples": [
+    "GPS定位技术及产品",
+    "LED行业技术及产品",
+    "OBD车联网方案及产品",
+    "iBeacon技术及产品",
+    "人工智能技术及产品"
+   ]
+  },
+  {
+   "term": "成电路",
+   "companies_hit_tail": 12,
+   "share": 0.0017,
+   "phrase_count": 6,
+   "phrase_examples": [
+    "数模混合集成电路",
+    "模拟及数模混合集成电路",
+    "特种集成电路",
+    "集成电路",
+    "高性能数模混合集成电路"
+   ]
+  },
+  {
+   "term": "控产品",
+   "companies_hit_tail": 12,
+   "share": 0.0017,
+   "phrase_count": 8,
+   "phrase_examples": [
+    "主控产品",
+    "安防监控产品",
+    "智能安防监控产品",
+    "电子工控产品",
+    "网络高清视频监控产品"
+   ]
+  },
+  {
+   "term": "智能锁",
+   "companies_hit_tail": 12,
+   "share": 0.0017,
+   "phrase_count": 2,
+   "phrase_examples": [
+    "智能锁",
+    "物联网智能锁"
+   ]
+  },
+  {
+   "term": "PP",
+   "companies_hit_tail": 12,
+   "share": 0.0017,
+   "phrase_count": 12,
+   "phrase_examples": [
+    "专注于汽车安全驾驶和汽车增值服务的APP",
+    "健康手机APP",
+    "儿童数学辅导APP",
+    "定位APP",
+    "定位导航APP"
+   ]
+  },
+  {
+   "term": "业务",
+   "companies_hit_tail": 12,
+   "share": 0.0017,
+   "phrase_count": 12,
+   "phrase_examples": [
+    "FPD光电玻璃切割业务",
+    "LED应用业务及下游户外广告业务",
+    "云计算业务",
+    "商业不动产运营投资业务",
+    "实验室检验检测业务"
+   ]
+  },
+  {
+   "term": "能锁",
+   "companies_hit_tail": 12,
+   "share": 0.0017,
+   "phrase_count": 2,
+   "phrase_examples": [
+    "智能锁",
+    "物联网智能锁"
+   ]
+  },
+  {
+   "term": "分析",
+   "companies_hit_tail": 11,
+   "share": 0.0016,
+   "phrase_count": 11,
+   "phrase_examples": [
+    "人工智能技术内容分析",
+    "儿童基因检测分析",
+    "商业智能分析",
+    "大数据加速处理及分析",
+    "心脑疾病影像及数据分析"
+   ]
+  },
+  {
+   "term": "视觉",
+   "companies_hit_tail": 11,
+   "share": 0.0016,
+   "phrase_count": 7,
+   "phrase_examples": [
+    "工业视觉",
+    "数字创意视觉",
+    "智能机器视觉",
+    "机器人与机器视觉",
+    "机器视觉"
+   ]
+  },
+  {
+   "term": "销商",
+   "companies_hit_tail": 11,
+   "share": 0.0016,
+   "phrase_count": 11,
+   "phrase_examples": [
+    "5G新零售产业营销商",
+    "LED显示屏研销商",
+    "产品供销商",
+    "工业自动化产品及机器人研销商",
+    "开关设备营销商"
+   ]
+  },
+  {
+   "term": "集成电路芯片",
+   "companies_hit_tail": 10,
+   "share": 0.0014,
+   "phrase_count": 4,
+   "phrase_examples": [
+    "半导体集成电路芯片",
+    "数模混合集成电路芯片",
+    "集成电路芯片",
+    "高性能模拟集成电路和射频集成电路芯片"
+   ]
+  },
+  {
+   "term": "成电路芯片",
+   "companies_hit_tail": 10,
+   "share": 0.0014,
+   "phrase_count": 4,
+   "phrase_examples": [
+    "半导体集成电路芯片",
+    "数模混合集成电路芯片",
+    "集成电路芯片",
+    "高性能模拟集成电路和射频集成电路芯片"
+   ]
+  },
+  {
+   "term": "显示产品",
+   "companies_hit_tail": 10,
+   "share": 0.0014,
+   "phrase_count": 8,
+   "phrase_examples": [
+    "LED异型显示产品",
+    "LED显示产品",
+    "光电及显示产品",
+    "光电显示产品",
+    "显示产品"
+   ]
+  },
+  {
+   "term": "电路芯片",
+   "companies_hit_tail": 10,
+   "share": 0.0014,
+   "phrase_count": 4,
+   "phrase_examples": [
+    "半导体集成电路芯片",
+    "数模混合集成电路芯片",
+    "集成电路芯片",
+    "高性能模拟集成电路和射频集成电路芯片"
+   ]
+  },
+  {
+   "term": "相关产品",
+   "companies_hit_tail": 10,
+   "share": 0.0014,
+   "phrase_count": 10,
+   "phrase_examples": [
+    "商业人工智能技术及相关产品",
+    "宏基因组高通量测序病原检测相关产品",
+    "服务器CPU及相关产品",
+    "液晶显示器及相关产品",
+    "灵巧手及机器人相关产品"
+   ]
+  },
+  {
+   "term": "关产品",
+   "companies_hit_tail": 10,
+   "share": 0.0014,
+   "phrase_count": 10,
+   "phrase_examples": [
+    "商业人工智能技术及相关产品",
+    "宏基因组高通量测序病原检测相关产品",
+    "服务器CPU及相关产品",
+    "液晶显示器及相关产品",
+    "灵巧手及机器人相关产品"
+   ]
+  },
+  {
+   "term": "示产品",
+   "companies_hit_tail": 10,
+   "share": 0.0014,
+   "phrase_count": 8,
+   "phrase_examples": [
+    "LED异型显示产品",
+    "LED显示产品",
+    "光电及显示产品",
+    "光电显示产品",
+    "显示产品"
+   ]
+  },
+  {
+   "term": "触摸屏",
+   "companies_hit_tail": 10,
+   "share": 0.0014,
+   "phrase_count": 5,
+   "phrase_examples": [
+    "LED背光源模组及电容式触摸屏",
+    "液晶显示屏和触摸屏",
+    "电子触摸屏",
+    "电容式触摸屏",
+    "触摸屏"
+   ]
+  },
+  {
+   "term": "路芯片",
+   "companies_hit_tail": 10,
+   "share": 0.0014,
+   "phrase_count": 4,
+   "phrase_examples": [
+    "半导体集成电路芯片",
+    "数模混合集成电路芯片",
+    "集成电路芯片",
+    "高性能模拟集成电路和射频集成电路芯片"
+   ]
+  },
+  {
+   "term": "摸屏",
+   "companies_hit_tail": 10,
+   "share": 0.0014,
+   "phrase_count": 5,
+   "phrase_examples": [
+    "LED背光源模组及电容式触摸屏",
+    "液晶显示屏和触摸屏",
+    "电子触摸屏",
+    "电容式触摸屏",
+    "触摸屏"
+   ]
+  },
+  {
+   "term": "物流",
+   "companies_hit_tail": 10,
+   "share": 0.0014,
+   "phrase_count": 5,
+   "phrase_examples": [
+    "国际物流",
+    "智慧物流",
+    "物流",
+    "综合性物流",
+    "跨境物流"
+   ]
+  },
+  {
+   "term": "电机",
+   "companies_hit_tail": 10,
+   "share": 0.0014,
+   "phrase_count": 8,
+   "phrase_examples": [
+    "智能窗帘电机",
+    "机器人AGV轮毂伺服电机",
+    "永磁无刷电机",
+    "电机",
+    "直驱电机"
+   ]
+  },
+  {
+   "term": "陪伴机器人",
+   "companies_hit_tail": 9,
+   "share": 0.0013,
+   "phrase_count": 8,
+   "phrase_examples": [
+    "专注于儿童教育的智能陪伴机器人",
+    "儿童智能陪伴机器人",
+    "儿童陪伴机器人",
+    "家庭陪伴机器人",
+    "幼儿陪伴机器人"
+   ]
+  },
+  {
+   "term": "伴机器人",
+   "companies_hit_tail": 9,
+   "share": 0.0013,
+   "phrase_count": 8,
+   "phrase_examples": [
+    "专注于儿童教育的智能陪伴机器人",
+    "儿童智能陪伴机器人",
+    "儿童陪伴机器人",
+    "家庭陪伴机器人",
+    "幼儿陪伴机器人"
+   ]
+  },
+  {
+   "term": "控制芯片",
+   "companies_hit_tail": 9,
+   "share": 0.0013,
+   "phrase_count": 8,
+   "phrase_examples": [
+    "TFT液晶屏控制芯片",
+    "固态存储控制芯片",
+    "存储控制芯片",
+    "控制芯片",
+    "数据存储控制芯片"
+   ]
+  },
+  {
+   "term": "数码产品",
+   "companies_hit_tail": 9,
+   "share": 0.0013,
+   "phrase_count": 5,
+   "phrase_examples": [
+    "TCL旗下数码产品",
+    "数码产品",
+    "智能数码产品",
+    "生物识别数码产品",
+    "高端数码产品"
+   ]
+  },
+  {
+   "term": "监控产品",
+   "companies_hit_tail": 9,
+   "share": 0.0013,
+   "phrase_count": 5,
+   "phrase_examples": [
+    "安防监控产品",
+    "智能安防监控产品",
+    "网络高清视频监控产品",
+    "车辆工程安全设备及安防监控产品",
+    "音视频监控产品"
+   ]
+  },
+  {
+   "term": "系列产品",
+   "companies_hit_tail": 9,
+   "share": 0.0013,
+   "phrase_count": 9,
+   "phrase_examples": [
+    "AI人工智能全系列产品",
+    "LED显示屏系列产品",
+    "人工智能与物连网系列产品",
+    "传感器系列产品",
+    "卫星及安全系列产品"
+   ]
+  },
+  {
+   "term": "级无人机",
+   "companies_hit_tail": 9,
+   "share": 0.0013,
+   "phrase_count": 2,
+   "phrase_examples": [
+    "工业级无人机",
+    "消费级无人机"
+   ]
+  },
+  {
+   "term": "列产品",
+   "companies_hit_tail": 9,
+   "share": 0.0013,
+   "phrase_count": 9,
+   "phrase_examples": [
+    "AI人工智能全系列产品",
+    "LED显示屏系列产品",
+    "人工智能与物连网系列产品",
+    "传感器系列产品",
+    "卫星及安全系列产品"
+   ]
+  },
+  {
+   "term": "制芯片",
+   "companies_hit_tail": 9,
+   "share": 0.0013,
+   "phrase_count": 8,
+   "phrase_examples": [
+    "TFT液晶屏控制芯片",
+    "固态存储控制芯片",
+    "存储控制芯片",
+    "控制芯片",
+    "数据存储控制芯片"
+   ]
+  },
+  {
+   "term": "应用商",
+   "companies_hit_tail": 9,
+   "share": 0.0013,
+   "phrase_count": 9,
+   "phrase_examples": [
+    "人工智能技术研究与应用商",
+    "创新生物材料研发应用商",
+    "太赫兹研发与应用商",
+    "工业物联网技术研发与应用商",
+    "新材料开发及应用商"
+   ]
+  },
+  {
+   "term": "物联网",
+   "companies_hit_tail": 9,
+   "share": 0.0013,
+   "phrase_count": 7,
+   "phrase_examples": [
+    "AI物联网",
+    "低功耗广域物联网",
+    "工业物联网",
+    "无线物联网",
+    "智能服务机器人及物联网"
+   ]
+  },
+  {
+   "term": "码产品",
+   "companies_hit_tail": 9,
+   "share": 0.0013,
+   "phrase_count": 5,
+   "phrase_examples": [
+    "TCL旗下数码产品",
+    "数码产品",
+    "智能数码产品",
+    "生物识别数码产品",
+    "高端数码产品"
+   ]
+  },
+  {
+   "term": "安全",
+   "companies_hit_tail": 9,
+   "share": 0.0013,
+   "phrase_count": 7,
+   "phrase_examples": [
+    "信息安全",
+    "信息通讯安全",
+    "数据处理和信息安全",
+    "智能家居安全",
+    "物联网安全"
+   ]
+  },
+  {
+   "term": "建设",
+   "companies_hit_tail": 9,
+   "share": 0.0013,
+   "phrase_count": 6,
+   "phrase_examples": [
+    "大数据平台建设",
+    "智慧交通建设",
+    "智慧城市建设",
+    "智慧家庭生态建设",
+    "电站系统集成建设"
+   ]
+  },
+  {
+   "term": "用商",
+   "companies_hit_tail": 9,
+   "share": 0.0013,
+   "phrase_count": 9,
+   "phrase_examples": [
+    "人工智能技术研究与应用商",
+    "创新生物材料研发应用商",
+    "太赫兹研发与应用商",
+    "工业物联网技术研发与应用商",
+    "新材料开发及应用商"
+   ]
+  },
+  {
+   "term": "药物",
+   "companies_hit_tail": 9,
+   "share": 0.0013,
+   "phrase_count": 9,
+   "phrase_examples": [
+    "mRNA药物",
+    "人工智能药物",
+    "小RNA核酸药物",
+    "抗体偶联药物",
+    "新型核酸药物"
+   ]
+  }
+ ],
+ "tail_terms_all": [
+  {
+   "term": "方案",
+   "companies_hit_tail": 520
+  },
+  {
+   "term": "产品",
+   "companies_hit_tail": 500
+  },
+  {
+   "term": "解决方案",
+   "companies_hit_tail": 450
+  },
+  {
+   "term": "决方案",
+   "companies_hit_tail": 450
+  },
+  {
+   "term": "服务",
+   "companies_hit_tail": 270
+  },
+  {
+   "term": "研发",
+   "companies_hit_tail": 266
+  },
+  {
+   "term": "设备",
+   "companies_hit_tail": 264
+  },
+  {
+   "term": "技术",
+   "companies_hit_tail": 241
+  },
+  {
+   "term": "系统",
+   "companies_hit_tail": 241
+  },
+  {
+   "term": "机器人",
+   "companies_hit_tail": 221
+  },
+  {
+   "term": "器人",
+   "companies_hit_tail": 221
+  },
+  {
+   "term": "企业",
+   "companies_hit_tail": 150
+  },
+  {
+   "term": "公司",
+   "companies_hit_tail": 146
+  },
+  {
+   "term": "器件",
+   "companies_hit_tail": 117
+  },
+  {
+   "term": "芯片",
+   "companies_hit_tail": 111
+  },
+  {
+   "term": "硬件",
+   "companies_hit_tail": 83
+  },
+  {
+   "term": "元器件",
+   "companies_hit_tail": 81
+  },
+  {
+   "term": "生产",
+   "companies_hit_tail": 80
+  },
+  {
+   "term": "品研发",
+   "companies_hit_tail": 69
+  },
+  {
+   "term": "产品研发",
+   "companies_hit_tail": 68
+  },
+  {
+   "term": "感器",
+   "companies_hit_tail": 67
+  },
+  {
+   "term": "传感器",
+   "companies_hit_tail": 66
+  },
+  {
+   "term": "设计",
+   "companies_hit_tail": 64
+  },
+  {
+   "term": "发公司",
+   "companies_hit_tail": 53
+  },
+  {
+   "term": "软件",
+   "companies_hit_tail": 53
+  },
+  {
+   "term": "应用",
+   "companies_hit_tail": 51
+  },
+  {
+   "term": "电子元器件",
+   "companies_hit_tail": 48
+  },
+  {
+   "term": "子元器件",
+   "companies_hit_tail": 48
+  },
+  {
+   "term": "研发公司",
+   "companies_hit_tail": 45
+  },
+  {
+   "term": "开发",
+   "companies_hit_tail": 45
+  },
+  {
+   "term": "体解决方案",
+   "companies_hit_tail": 44
+  },
+  {
+   "term": "家居",
+   "companies_hit_tail": 43
+  },
+  {
+   "term": "整体解决方案",
+   "companies_hit_tail": 42
+  },
+  {
+   "term": "智能家居",
+   "companies_hit_tail": 42
+  },
+  {
+   "term": "能家居",
+   "companies_hit_tail": 42
+  },
+  {
+   "term": "电池",
+   "companies_hit_tail": 42
+  },
+  {
+   "term": "子产品",
+   "companies_hit_tail": 41
+  },
+  {
+   "term": "电子产品",
+   "companies_hit_tail": 40
+  },
+  {
+   "term": "显示屏",
+   "companies_hit_tail": 39
+  },
+  {
+   "term": "示屏",
+   "companies_hit_tail": 39
+  },
+  {
+   "term": "无人机",
+   "companies_hit_tail": 38
+  },
+  {
+   "term": "人机",
+   "companies_hit_tail": 38
+  },
+  {
+   "term": "智能硬件",
+   "companies_hit_tail": 35
+  },
+  {
+   "term": "能硬件",
+   "companies_hit_tail": 35
+  },
+  {
+   "term": "品牌",
+   "companies_hit_tail": 35
+  },
+  {
+   "term": "综合",
+   "companies_hit_tail": 34
+  },
+  {
+   "term": "家居产品",
+   "companies_hit_tail": 33
+  },
+  {
+   "term": "研发企业",
+   "companies_hit_tail": 33
+  },
+  {
+   "term": "发企业",
+   "companies_hit_tail": 33
+  },
+  {
+   "term": "居产品",
+   "companies_hit_tail": 33
+  },
+  {
+   "term": "材料",
+   "companies_hit_tail": 33
+  },
+  {
+   "term": "销售",
+   "companies_hit_tail": 33
+  },
+  {
+   "term": "智能家居产品",
+   "companies_hit_tail": 32
+  },
+  {
+   "term": "能家居产品",
+   "companies_hit_tail": 32
+  },
+  {
+   "term": "能产品",
+   "companies_hit_tail": 32
+  },
+  {
+   "term": "智能机器人",
+   "companies_hit_tail": 31
+  },
+  {
+   "term": "能机器人",
+   "companies_hit_tail": 31
+  },
+  {
+   "term": "门锁",
+   "companies_hit_tail": 31
+  },
+  {
+   "term": "穿戴设备",
+   "companies_hit_tail": 30
+  },
+  {
+   "term": "戴设备",
+   "companies_hit_tail": 30
+  },
+  {
+   "term": "智能产品",
+   "companies_hit_tail": 29
+  },
+  {
+   "term": "联网技术",
+   "companies_hit_tail": 29
+  },
+  {
+   "term": "网技术",
+   "companies_hit_tail": 29
+  },
+  {
+   "term": "系统解决方案",
+   "companies_hit_tail": 26
+  },
+  {
+   "term": "统解决方案",
+   "companies_hit_tail": 26
+  },
+  {
+   "term": "智能门锁",
+   "companies_hit_tail": 26
+  },
+  {
+   "term": "能门锁",
+   "companies_hit_tail": 26
+  },
+  {
+   "term": "化解决方案",
+   "companies_hit_tail": 25
+  },
+  {
+   "term": "机器人研发",
+   "companies_hit_tail": 25
+  },
+  {
+   "term": "器人研发",
+   "companies_hit_tail": 25
+  },
+  {
+   "term": "管理系统",
+   "companies_hit_tail": 25
+  },
+  {
+   "term": "人研发",
+   "companies_hit_tail": 25
+  },
+  {
+   "term": "化设备",
+   "companies_hit_tail": 25
+  },
+  {
+   "term": "理系统",
+   "companies_hit_tail": 25
+  },
+  {
+   "term": "物联网技术",
+   "companies_hit_tail": 24
+  },
+  {
+   "term": "件研发",
+   "companies_hit_tail": 24
+  },
+  {
+   "term": "平台",
+   "companies_hit_tail": 24
+  },
+  {
+   "term": "网解决方案",
+   "companies_hit_tail": 23
+  },
+  {
+   "term": "自动化设备",
+   "companies_hit_tail": 23
+  },
+  {
+   "term": "业机器人",
+   "companies_hit_tail": 23
+  },
+  {
+   "term": "动化设备",
+   "companies_hit_tail": 23
+  },
+  {
+   "term": "装备",
+   "companies_hit_tail": 23
+  },
+  {
+   "term": "联网解决方案",
+   "companies_hit_tail": 22
+  },
+  {
+   "term": "工业机器人",
+   "companies_hit_tail": 22
+  },
+  {
+   "term": "安防产品",
+   "companies_hit_tail": 22
+  },
+  {
+   "term": "生产企业",
+   "companies_hit_tail": 22
+  },
+  {
+   "term": "产企业",
+   "companies_hit_tail": 22
+  },
+  {
+   "term": "备研发",
+   "companies_hit_tail": 22
+  },
+  {
+   "term": "设计商",
+   "companies_hit_tail": 22
+  },
+  {
+   "term": "防产品",
+   "companies_hit_tail": 22
+  },
+  {
+   "term": "计商",
+   "companies_hit_tail": 22
+  },
+  {
+   "term": "LED显示屏",
+   "companies_hit_tail": 21
+  },
+  {
+   "term": "ED显示屏",
+   "companies_hit_tail": 21
+  },
+  {
+   "term": "D显示屏",
+   "companies_hit_tail": 21
+  },
+  {
+   "term": "产品生产",
+   "companies_hit_tail": 21
+  },
+  {
+   "term": "件产品",
+   "companies_hit_tail": 21
+  },
+  {
+   "term": "品生产",
+   "companies_hit_tail": 21
+  },
+  {
+   "term": "电商",
+   "companies_hit_tail": 21
+  },
+  {
+   "term": "及解决方案",
+   "companies_hit_tail": 20
+  },
+  {
+   "term": "元件",
+   "companies_hit_tail": 20
+  },
+  {
+   "term": "机构",
+   "companies_hit_tail": 20
+  },
+  {
+   "term": "设备研发",
+   "companies_hit_tail": 19
+  },
+  {
+   "term": "模组",
+   "companies_hit_tail": 19
+  },
+  {
+   "term": "管理",
+   "companies_hit_tail": 19
+  },
+  {
+   "term": "解决",
+   "companies_hit_tail": 19
+  },
+  {
+   "term": "技术服务",
+   "companies_hit_tail": 18
+  },
+  {
+   "term": "控制系统",
+   "companies_hit_tail": 18
+  },
+  {
+   "term": "制系统",
+   "companies_hit_tail": 18
+  },
+  {
+   "term": "术服务",
+   "companies_hit_tail": 18
+  },
+  {
+   "term": "科技",
+   "companies_hit_tail": 18
+  },
+  {
+   "term": "智能设备",
+   "companies_hit_tail": 17
+  },
+  {
+   "term": "能设备",
+   "companies_hit_tail": 17
+  },
+  {
+   "term": "教育",
+   "companies_hit_tail": 17
+  },
+  {
+   "term": "配件",
+   "companies_hit_tail": 17
+  },
+  {
+   "term": "穿戴产品",
+   "companies_hit_tail": 16
+  },
+  {
+   "term": "戴产品",
+   "companies_hit_tail": 16
+  },
+  {
+   "term": "觉技术",
+   "companies_hit_tail": 16
+  },
+  {
+   "term": "软硬件",
+   "companies_hit_tail": 16
+  },
+  {
+   "term": "联网",
+   "companies_hit_tail": 16
+  },
+  {
+   "term": "部件",
+   "companies_hit_tail": 16
+  },
+  {
+   "term": "技术解决方案",
+   "companies_hit_tail": 15
+  },
+  {
+   "term": "智能穿戴设备",
+   "companies_hit_tail": 15
+  },
+  {
+   "term": "术解决方案",
+   "companies_hit_tail": 15
+  },
+  {
+   "term": "能穿戴设备",
+   "companies_hit_tail": 15
+  },
+  {
+   "term": "制造企业",
+   "companies_hit_tail": 15
+  },
+  {
+   "term": "器研发",
+   "companies_hit_tail": 15
+  },
+  {
+   "term": "控制器",
+   "companies_hit_tail": 15
+  },
+  {
+   "term": "造企业",
+   "companies_hit_tail": 15
+  },
+  {
+   "term": "制器",
+   "companies_hit_tail": 15
+  },
+  {
+   "term": "件解决方案",
+   "companies_hit_tail": 14
+  },
+  {
+   "term": "可穿戴设备",
+   "companies_hit_tail": 14
+  },
+  {
+   "term": "硬件产品",
+   "companies_hit_tail": 14
+  },
+  {
+   "term": "视觉技术",
+   "companies_hit_tail": 14
+  },
+  {
+   "term": "务公司",
+   "companies_hit_tail": 14
+  },
+  {
+   "term": "机研发",
+   "companies_hit_tail": 14
+  },
+  {
+   "term": "测设备",
+   "companies_hit_tail": 14
+  },
+  {
+   "term": "制造",
+   "companies_hit_tail": 14
+  },
+  {
+   "term": "终端",
+   "companies_hit_tail": 14
+  },
+  {
+   "term": "智能穿戴产品",
+   "companies_hit_tail": 13
+  },
+  {
+   "term": "综合解决方案",
+   "companies_hit_tail": 13
+  },
+  {
+   "term": "合解决方案",
+   "companies_hit_tail": 13
+  },
+  {
+   "term": "教育机器人",
+   "companies_hit_tail": 13
+  },
+  {
+   "term": "能穿戴产品",
+   "companies_hit_tail": 13
+  },
+  {
+   "term": "服务公司",
+   "companies_hit_tail": 13
+  },
+  {
+   "term": "检测设备",
+   "companies_hit_tail": 13
+  },
+  {
+   "term": "电子元件",
+   "companies_hit_tail": 13
+  },
+  {
+   "term": "系统研发",
+   "companies_hit_tail": 13
+  },
+  {
+   "term": "育机器人",
+   "companies_hit_tail": 13
+  },
+  {
+   "term": "芯片设计",
+   "companies_hit_tail": 13
+  },
+  {
+   "term": "子元件",
+   "companies_hit_tail": 13
+  },
+  {
+   "term": "片设计",
+   "companies_hit_tail": 13
+  },
+  {
+   "term": "统研发",
+   "companies_hit_tail": 13
+  },
+  {
+   "term": "代理",
+   "companies_hit_tail": 13
+  },
+  {
+   "term": "工具",
+   "companies_hit_tail": 13
+  },
+  {
+   "term": "数据",
+   "companies_hit_tail": 13
+  },
+  {
+   "term": "电子",
+   "companies_hit_tail": 13
+  },
+  {
+   "term": "电路",
+   "companies_hit_tail": 13
+  },
+  {
+   "term": "营销",
+   "companies_hit_tail": 13
+  },
+  {
+   "term": "运营",
+   "companies_hit_tail": 13
+  },
+  {
+   "term": "硬件解决方案",
+   "companies_hit_tail": 12
+  },
+  {
+   "term": "集成电路设计",
+   "companies_hit_tail": 12
+  },
+  {
+   "term": "人解决方案",
+   "companies_hit_tail": 12
+  },
+  {
+   "term": "成电路设计",
+   "companies_hit_tail": 12
+  },
+  {
+   "term": "服务机器人",
+   "companies_hit_tail": 12
+  },
+  {
+   "term": "能解决方案",
+   "companies_hit_tail": 12
+  },
+  {
+   "term": "务机器人",
+   "companies_hit_tail": 12
+  },
+  {
+   "term": "技术开发",
+   "companies_hit_tail": 12
+  },
+  {
+   "term": "电路设计",
+   "companies_hit_tail": 12
+  },
+  {
+   "term": "硬件研发",
+   "companies_hit_tail": 12
+  },
+  {
+   "term": "集成电路",
+   "companies_hit_tail": 12
+  },
+  {
+   "term": "APP",
+   "companies_hit_tail": 12
+  },
+  {
+   "term": "云服务",
+   "companies_hit_tail": 12
+  },
+  {
+   "term": "件开发",
+   "companies_hit_tail": 12
+  },
+  {
+   "term": "及产品",
+   "companies_hit_tail": 12
+  },
+  {
+   "term": "及销售",
+   "companies_hit_tail": 12
+  },
+  {
+   "term": "成电路",
+   "companies_hit_tail": 12
+  },
+  {
+   "term": "控产品",
+   "companies_hit_tail": 12
+  },
+  {
+   "term": "智能锁",
+   "companies_hit_tail": 12
+  },
+  {
+   "term": "术开发",
+   "companies_hit_tail": 12
+  },
+  {
+   "term": "路设计",
+   "companies_hit_tail": 12
+  },
+  {
+   "term": "PP",
+   "companies_hit_tail": 12
+  },
+  {
+   "term": "专业",
+   "companies_hit_tail": 12
+  },
+  {
+   "term": "业务",
+   "companies_hit_tail": 12
+  },
+  {
+   "term": "能锁",
+   "companies_hit_tail": 12
+  },
+  {
+   "term": "器人解决方案",
+   "companies_hit_tail": 11
+  },
+  {
+   "term": "智能解决方案",
+   "companies_hit_tail": 11
+  },
+  {
+   "term": "业解决方案",
+   "companies_hit_tail": 11
+  },
+  {
+   "term": "信息技术",
+   "companies_hit_tail": 11
+  },
+  {
+   "term": "研发生产",
+   "companies_hit_tail": 11
+  },
+  {
+   "term": "识别技术",
+   "companies_hit_tail": 11
+  },
+  {
+   "term": "别技术",
+   "companies_hit_tail": 11
+  },
+  {
+   "term": "发生产",
+   "companies_hit_tail": 11
+  },
+  {
+   "term": "息技术",
+   "companies_hit_tail": 11
+  },
+  {
+   "term": "分析",
+   "companies_hit_tail": 11
+  },
+  {
+   "term": "组件",
+   "companies_hit_tail": 11
+  },
+  {
+   "term": "行业",
+   "companies_hit_tail": 11
+  },
+  {
+   "term": "视觉",
+   "companies_hit_tail": 11
+  },
+  {
+   "term": "销商",
+   "companies_hit_tail": 11
+  },
+  {
+   "term": "集成电路芯片",
+   "companies_hit_tail": 10
+  },
+  {
+   "term": "成电路芯片",
+   "companies_hit_tail": 10
+  },
+  {
+   "term": "显示产品",
+   "companies_hit_tail": 10
+  },
+  {
+   "term": "电路芯片",
+   "companies_hit_tail": 10
+  },
+  {
+   "term": "相关产品",
+   "companies_hit_tail": 10
+  },
+  {
+   "term": "综合服务",
+   "companies_hit_tail": 10
+  },
+  {
+   "term": "关产品",
+   "companies_hit_tail": 10
+  },
+  {
+   "term": "合服务",
+   "companies_hit_tail": 10
+  },
+  {
+   "term": "示产品",
+   "companies_hit_tail": 10
+  },
+  {
+   "term": "触摸屏",
+   "companies_hit_tail": 10
+  },
+  {
+   "term": "路芯片",
+   "companies_hit_tail": 10
+  },
+  {
+   "term": "销企业",
+   "companies_hit_tail": 10
+  },
+  {
+   "term": "摸屏",
+   "companies_hit_tail": 10
+  },
+  {
+   "term": "物流",
+   "companies_hit_tail": 10
+  },
+  {
+   "term": "电机",
+   "companies_hit_tail": 10
+  },
+  {
+   "term": "集成",
+   "companies_hit_tail": 10
+  },
+  {
+   "term": "产品解决方案",
+   "companies_hit_tail": 9
+  },
+  {
+   "term": "应用解决方案",
+   "companies_hit_tail": 9
+  },
+  {
+   "term": "技术研发公司",
+   "companies_hit_tail": 9
+  },
+  {
+   "term": "智能家居系统",
+   "companies_hit_tail": 9
+  },
+  {
+   "term": "品解决方案",
+   "companies_hit_tail": 9
+  },
+  {
+   "term": "术研发公司",
+   "companies_hit_tail": 9
+  },
+  {
+   "term": "生产及销售",
+   "companies_hit_tail": 9
+  },
+  {
+   "term": "用解决方案",
+   "companies_hit_tail": 9
+  },
+  {
+   "term": "能家居系统",
+   "companies_hit_tail": 9
+  },
+  {
+   "term": "陪伴机器人",
+   "companies_hit_tail": 9
+  },
+  {
+   "term": "产及销售",
+   "companies_hit_tail": 9
+  },
+  {
+   "term": "产销企业",
+   "companies_hit_tail": 9
+  },
+  {
+   "term": "伴机器人",
+   "companies_hit_tail": 9
+  },
+  {
+   "term": "家居系统",
+   "companies_hit_tail": 9
+  },
+  {
+   "term": "控制芯片",
+   "companies_hit_tail": 9
+  },
+  {
+   "term": "数码产品",
+   "companies_hit_tail": 9
+  },
+  {
+   "term": "智能技术",
+   "companies_hit_tail": 9
+  },
+  {
+   "term": "监控产品",
+   "companies_hit_tail": 9
+  },
+  {
+   "term": "系列产品",
+   "companies_hit_tail": 9
+  },
+  {
+   "term": "级无人机",
+   "companies_hit_tail": 9
+  },
+  {
+   "term": "列产品",
+   "companies_hit_tail": 9
+  },
+  {
+   "term": "制芯片",
+   "companies_hit_tail": 9
+  },
+  {
+   "term": "和服务",
+   "companies_hit_tail": 9
+  },
+  {
+   "term": "居系统",
+   "companies_hit_tail": 9
+  },
+  {
+   "term": "应用商",
+   "companies_hit_tail": 9
+  },
+  {
+   "term": "物联网",
+   "companies_hit_tail": 9
+  },
+  {
+   "term": "理服务",
+   "companies_hit_tail": 9
+  },
+  {
+   "term": "码产品",
+   "companies_hit_tail": 9
+  },
+  {
+   "term": "能技术",
+   "companies_hit_tail": 9
+  },
+  {
+   "term": "安全",
+   "companies_hit_tail": 9
+  },
+  {
+   "term": "建设",
+   "companies_hit_tail": 9
+  },
+  {
+   "term": "用商",
+   "companies_hit_tail": 9
+  },
+  {
+   "term": "药物",
+   "companies_hit_tail": 9
+  },
+  {
+   "term": "领域",
+   "companies_hit_tail": 9
+  },
+  {
+   "term": "动化解决方案",
+   "companies_hit_tail": 8
+  },
+  {
+   "term": "品及解决方案",
+   "companies_hit_tail": 8
+  },
+  {
+   "term": "家居解决方案",
+   "companies_hit_tail": 8
+  },
+  {
+   "term": "行业解决方案",
+   "companies_hit_tail": 8
+  },
+  {
+   "term": "与解决方案",
+   "companies_hit_tail": 8
+  },
+  {
+   "term": "传感器研发",
+   "companies_hit_tail": 8
+  },
+  {
+   "term": "居解决方案",
+   "companies_hit_tail": 8
+  },
+  {
+   "term": "无人机研发",
+   "companies_hit_tail": 8
+  },
+  {
+   "term": "人机研发",
+   "companies_hit_tail": 8
+  },
+  {
+   "term": "器件研发",
+   "companies_hit_tail": 8
+  },
+  {
+   "term": "安防设备",
+   "companies_hit_tail": 8
+  },
+  {
+   "term": "开发公司",
+   "companies_hit_tail": 8
+  },
+  {
+   "term": "感器研发",
+   "companies_hit_tail": 8
+  },
+  {
+   "term": "数据服务",
+   "companies_hit_tail": 8
+  },
+  {
+   "term": "机械设备",
+   "companies_hit_tail": 8
+  },
+  {
+   "term": "科技公司",
+   "companies_hit_tail": 8
+  },
+  {
+   "term": "系统产品",
+   "companies_hit_tail": 8
+  },
+  {
+   "term": "终端产品",
+   "companies_hit_tail": 8
+  },
+  {
+   "term": "联网产品",
+   "companies_hit_tail": 8
+  },
+  {
+   "term": "设计公司",
+   "companies_hit_tail": 8
+  },
+  {
+   "term": "软件开发",
+   "companies_hit_tail": 8
+  },
+  {
+   "term": "T服务",
+   "companies_hit_tail": 8
+  },
+  {
+   "term": "件生产",
+   "companies_hit_tail": 8
+  },
+  {
+   "term": "化产品",
+   "companies_hit_tail": 8
+  },
+  {
+   "term": "半导体",
+   "companies_hit_tail": 8
+  },
+  {
+   "term": "器产品",
+   "companies_hit_tail": 8
+  },
+  {
+   "term": "技公司",
+   "companies_hit_tail": 8
+  },
+  {
+   "term": "据服务",
+   "companies_hit_tail": 8
+  },
+  {
+   "term": "控设备",
+   "companies_hit_tail": 8
+  },
+  {
+   "term": "摄像机",
+   "companies_hit_tail": 8
+  },
+  {
+   "term": "械设备",
+   "companies_hit_tail": 8
+  },
+  {
+   "term": "片研发",
+   "companies_hit_tail": 8
+  },
+  {
+   "term": "端产品",
+   "companies_hit_tail": 8
+  },
+  {
+   "term": "统产品",
+   "companies_hit_tail": 8
+  },
+  {
+   "term": "网产品",
+   "companies_hit_tail": 8
+  },
+  {
+   "term": "计公司",
+   "companies_hit_tail": 8
+  },
+  {
+   "term": "防设备",
+   "companies_hit_tail": 8
+  },
+  {
+   "term": "零部件",
+   "companies_hit_tail": 8
+  },
+  {
+   "term": "仪器",
+   "companies_hit_tail": 8
+  },
+  {
+   "term": "像机",
+   "companies_hit_tail": 8
+  },
+  {
+   "term": "医疗",
+   "companies_hit_tail": 8
+  },
+  {
+   "term": "发及",
+   "companies_hit_tail": 8
+  },
+  {
+   "term": "器械",
+   "companies_hit_tail": 8
+  },
+  {
+   "term": "处理",
+   "companies_hit_tail": 8
+  },
+  {
+   "term": "导体",
+   "companies_hit_tail": 8
+  },
+  {
+   "term": "模块",
+   "companies_hit_tail": 8
+  },
+  {
+   "term": "设施",
+   "companies_hit_tail": 8
+  },
+  {
+   "term": "识别",
+   "companies_hit_tail": 8
+  },
+  {
+   "term": "门禁",
+   "companies_hit_tail": 8
+  },
+  {
+   "term": "安防监控产品",
+   "companies_hit_tail": 7
+  },
+  {
+   "term": "机器视觉技术",
+   "companies_hit_tail": 7
+  },
+  {
+   "term": "研发产销企业",
+   "companies_hit_tail": 7
+  },
+  {
+   "term": "研发生产企业",
+   "companies_hit_tail": 7
+  },
+  {
+   "term": "人形机器人",
+   "companies_hit_tail": 7
+  },
+  {
+   "term": "发产销企业",
+   "companies_hit_tail": 7
+  },
+  {
+   "term": "发生产企业",
+   "companies_hit_tail": 7
+  },
+  {
+   "term": "和解决方案",
+   "companies_hit_tail": 7
+  },
+  {
+   "term": "器视觉技术",
+   "companies_hit_tail": 7
+  },
+  {
+   "term": "防监控产品",
+   "companies_hit_tail": 7
+  },
+  {
+   "term": "IT服务",
+   "companies_hit_tail": 7
+  },
+  {
+   "term": "产销公司",
+   "companies_hit_tail": 7
+  },
+  {
+   "term": "基础设施",
+   "companies_hit_tail": 7
+  },
+  {
+   "term": "安防系统",
+   "companies_hit_tail": 7
+  },
+  {
+   "term": "定位产品",
+   "companies_hit_tail": 7
+  },
+  {
+   "term": "定位系统",
+   "companies_hit_tail": 7
+  },
+  {
+   "term": "形机器人",
+   "companies_hit_tail": 7
+  },
+  {
+   "term": "技术产品",
+   "companies_hit_tail": 7
+  },
+  {
+   "term": "整体方案",
+   "companies_hit_tail": 7
+  },
+  {
+   "term": "方案服务",
+   "companies_hit_tail": 7
+  },
+  {
+   "term": "智能门禁",
+   "companies_hit_tail": 7
+  },
+  {
+   "term": "机器视觉",
+   "companies_hit_tail": 7
+  },
+  {
+   "term": "管理服务",
+   "companies_hit_tail": 7
+  },
+  {
+   "term": "芯片产品",
+   "companies_hit_tail": 7
+  },
+  {
+   "term": "销售企业",
+   "companies_hit_tail": 7
+  },
+  {
+   "term": "驾驶技术",
+   "companies_hit_tail": 7
+  },
+  {
+   "term": "D产品",
+   "companies_hit_tail": 7
+  },
+  {
+   "term": "云计算",
+   "companies_hit_tail": 7
+  },
+  {
+   "term": "位产品",
+   "companies_hit_tail": 7
+  },
+  {
+   "term": "位系统",
+   "companies_hit_tail": 7
+  },
+  {
+   "term": "体方案",
+   "companies_hit_tail": 7
+  },
+  {
+   "term": "信息化",
+   "companies_hit_tail": 7
+  },
+  {
+   "term": "售企业",
+   "companies_hit_tail": 7
+  },
+  {
+   "term": "器视觉",
+   "companies_hit_tail": 7
+  },
+  {
+   "term": "显示器",
+   "companies_hit_tail": 7
+  },
+  {
+   "term": "智能化",
+   "companies_hit_tail": 7
+  },
+  {
+   "term": "术产品",
+   "companies_hit_tail": 7
+  },
+  {
+   "term": "案服务",
+   "companies_hit_tail": 7
+  },
+  {
+   "term": "测产品",
+   "companies_hit_tail": 7
+  },
+  {
+   "term": "片产品",
+   "companies_hit_tail": 7
+  },
+  {
+   "term": "理软件",
+   "companies_hit_tail": 7
+  },
+  {
+   "term": "用产品",
+   "companies_hit_tail": 7
+  },
+  {
+   "term": "疗器械",
+   "companies_hit_tail": 7
+  },
+  {
+   "term": "研发及",
+   "companies_hit_tail": 7
+  },
+  {
+   "term": "础设施",
+   "companies_hit_tail": 7
+  },
+  {
+   "term": "类产品",
+   "companies_hit_tail": 7
+  },
+  {
+   "term": "经营商",
+   "companies_hit_tail": 7
+  },
+  {
+   "term": "能系统",
+   "companies_hit_tail": 7
+  },
+  {
+   "term": "能门禁",
+   "companies_hit_tail": 7
+  },
+  {
+   "term": "销公司",
+   "companies_hit_tail": 7
+  },
+  {
+   "term": "锂电池",
+   "companies_hit_tail": 7
+  },
+  {
+   "term": "防系统",
+   "companies_hit_tail": 7
+  },
+  {
+   "term": "驶技术",
+   "companies_hit_tail": 7
+  },
+  {
+   "term": "位器",
+   "companies_hit_tail": 7
+  },
+  {
+   "term": "制商",
+   "companies_hit_tail": 7
+  },
+  {
+   "term": "安防",
+   "companies_hit_tail": 7
+  },
+  {
+   "term": "家电",
+   "companies_hit_tail": 7
+  },
+  {
+   "term": "息化",
+   "companies_hit_tail": 7
+  },
+  {
+   "term": "插座",
+   "companies_hit_tail": 7
+  },
+  {
+   "term": "智能",
+   "companies_hit_tail": 7
+  },
+  {
+   "term": "电器",
+   "companies_hit_tail": 7
+  },
+  {
+   "term": "眼镜",
+   "companies_hit_tail": 7
+  },
+  {
+   "term": "研究",
+   "companies_hit_tail": 7
+  },
+  {
+   "term": "示器",
+   "companies_hit_tail": 7
+  },
+  {
+   "term": "算法",
+   "companies_hit_tail": 7
+  },
+  {
+   "term": "能化",
+   "companies_hit_tail": 7
+  },
+  {
+   "term": "营商",
+   "companies_hit_tail": 7
+  },
+  {
+   "term": "计算",
+   "companies_hit_tail": 7
+  },
+  {
+   "term": "、生产及销售",
+   "companies_hit_tail": 6
+  },
+  {
+   "term": "产品研发公司",
+   "companies_hit_tail": 6
+  },
+  {
+   "term": "家居产品研发",
+   "companies_hit_tail": 6
+  },
+  {
+   "term": "智能家居硬件",
+   "companies_hit_tail": 6
+  },
+  {
+   "term": "智能电子产品",
+   "companies_hit_tail": 6
+  },
+  {
+   "term": "消费级无人机",
+   "companies_hit_tail": 6
+  },
+  {
+   "term": "能可穿戴设备",
+   "companies_hit_tail": 6
+  },
+  {
+   "term": "集成电路产品",
+   "companies_hit_tail": 6
+  },
+  {
+   "term": "互联网公司",
+   "companies_hit_tail": 6
+  },
+  {
+   "term": "半导体器件",
+   "companies_hit_tail": 6
+  },
+  {
+   "term": "品研发公司",
+   "companies_hit_tail": 6
+  },
+  {
+   "term": "居产品研发",
+   "companies_hit_tail": 6
+  },
+  {
+   "term": "成电路产品",
+   "companies_hit_tail": 6
+  },
+  {
+   "term": "技术及产品",
+   "companies_hit_tail": 6
+  },
+  {
+   "term": "机器人技术",
+   "companies_hit_tail": 6
+  },
+  {
+   "term": "机器人生产",
+   "companies_hit_tail": 6
+  },
+  {
+   "term": "源解决方案",
+   "companies_hit_tail": 6
+  },
+  {
+   "term": "烹饪机器人",
+   "companies_hit_tail": 6
+  },
+  {
+   "term": "物联网产品",
+   "companies_hit_tail": 6
+  },
+  {
+   "term": "能家居硬件",
+   "companies_hit_tail": 6
+  },
+  {
+   "term": "能电子产品",
+   "companies_hit_tail": 6
+  },
+  {
+   "term": "芯片设计商",
+   "companies_hit_tail": 6
+  },
+  {
+   "term": "费级无人机",
+   "companies_hit_tail": 6
+  },
+  {
+   "term": "体元器件",
+   "companies_hit_tail": 6
+  },
+  {
+   "term": "健康服务",
+   "companies_hit_tail": 6
+  },
+  {
+   "term": "医疗器械",
+   "companies_hit_tail": 6
+  },
+  {
+   "term": "医疗设备",
+   "companies_hit_tail": 6
+  },
+  {
+   "term": "器人技术",
+   "companies_hit_tail": 6
+  },
+  {
+   "term": "器人生产",
+   "companies_hit_tail": 6
+  },
+  {
+   "term": "家居硬件",
+   "companies_hit_tail": 6
+  },
+  {
+   "term": "导体器件",
+   "companies_hit_tail": 6
+  },
+  {
+   "term": "显示设备",
+   "companies_hit_tail": 6
+  },
+  {
+   "term": "术及产品",
+   "companies_hit_tail": 6
+  },
+  {
+   "term": "洁机器人",
+   "companies_hit_tail": 6
+  },
+  {
+   "term": "照明产品",
+   "companies_hit_tail": 6
+  },
+  {
+   "term": "片设计商",
+   "companies_hit_tail": 6
+  },
+  {
+   "term": "电路产品",
+   "companies_hit_tail": 6
+  },
+  {
+   "term": "管理软件",
+   "companies_hit_tail": 6
+  },
+  {
+   "term": "联网公司",
+   "companies_hit_tail": 6
+  },
+  {
+   "term": "联网服务",
+   "companies_hit_tail": 6
+  },
+  {
+   "term": "芯片研发",
+   "companies_hit_tail": 6
+  },
+  {
+   "term": "设计企业",
+   "companies_hit_tail": 6
+  },
+  {
+   "term": "识别产品",
+   "companies_hit_tail": 6
+  },
+  {
+   "term": "通信产品",
+   "companies_hit_tail": 6
+  },
+  {
+   "term": "饪机器人",
+   "companies_hit_tail": 6
+  },
+  {
+   "term": "人技术",
+   "companies_hit_tail": 6
+  },
+  {
+   "term": "人生产",
+   "companies_hit_tail": 6
+  },
+  {
+   "term": "人系统",
+   "companies_hit_tail": 6
+  },
+  {
+   "term": "体器件",
+   "companies_hit_tail": 6
+  },
+  {
+   "term": "信产品",
+   "companies_hit_tail": 6
+  },
+  {
+   "term": "别产品",
+   "companies_hit_tail": 6
+  },
+  {
+   "term": "及服务",
+   "companies_hit_tail": 6
+  },
+  {
+   "term": "及系统",
+   "companies_hit_tail": 6
+  },
+  {
+   "term": "及软件",
+   "companies_hit_tail": 6
+  },
+  {
+   "term": "型企业",
+   "companies_hit_tail": 6
+  },
+  {
+   "term": "大数据",
+   "companies_hit_tail": 6
+  },
+  {
+   "term": "居硬件",
+   "companies_hit_tail": 6
+  },
+  {
+   "term": "康服务",
+   "companies_hit_tail": 6
+  },
+  {
+   "term": "摄像头",
+   "companies_hit_tail": 6
+  },
+  {
+   "term": "明产品",
+   "companies_hit_tail": 6
+  },
+  {
+   "term": "电设备",
+   "companies_hit_tail": 6
+  },
+  {
+   "term": "疗技术",
+   "companies_hit_tail": 6
+  },
+  {
+   "term": "疗设备",
+   "companies_hit_tail": 6
+  },
+  {
+   "term": "研制商",
+   "companies_hit_tail": 6
+  },
+  {
+   "term": "研销商",
+   "companies_hit_tail": 6
+  },
+  {
+   "term": "示设备",
+   "companies_hit_tail": 6
+  },
+  {
+   "term": "网公司",
+   "companies_hit_tail": 6
+  },
+  {
+   "term": "网服务",
+   "companies_hit_tail": 6
+  },
+  {
+   "term": "自动化",
+   "companies_hit_tail": 6
+  },
+  {
+   "term": "觉产品",
+   "companies_hit_tail": 6
+  },
+  {
+   "term": "计企业",
+   "companies_hit_tail": 6
+  },
+  {
+   "term": "路产品",
+   "companies_hit_tail": 6
+  },
+  {
+   "term": "锁研发",
+   "companies_hit_tail": 6
+  },
+  {
+   "term": "零配件",
+   "companies_hit_tail": 6
+  },
+  {
+   "term": "产业",
+   "companies_hit_tail": 6
+  },
+  {
+   "term": "产商",
+   "companies_hit_tail": 6
+  },
+  {
+   "term": "信息",
+   "companies_hit_tail": 6
+  },
+  {
+   "term": "像头",
+   "companies_hit_tail": 6
+  },
+  {
+   "term": "充电",
+   "companies_hit_tail": 6
+  },
+  {
+   "term": "动化",
+   "companies_hit_tail": 6
+  },
+  {
+   "term": "咨询",
+   "companies_hit_tail": 6
+  },
+  {
+   "term": "广告",
+   "companies_hit_tail": 6
+  },
+  {
+   "term": "手表",
+   "companies_hit_tail": 6
+  },
+  {
+   "term": "照明",
+   "companies_hit_tail": 6
+  },
+  {
+   "term": "耳机",
+   "companies_hit_tail": 6
+  },
+  {
+   "term": "通讯",
+   "companies_hit_tail": 6
+  },
+  {
+   "term": "雷达",
+   "companies_hit_tail": 6
+  },
+  {
+   "term": "面板",
+   "companies_hit_tail": 6
+  },
+  {
+   "term": "人工智能产品",
+   "companies_hit_tail": 5
+  },
+  {
+   "term": "人工智能技术",
+   "companies_hit_tail": 5
+  },
+  {
+   "term": "体化解决方案",
+   "companies_hit_tail": 5
+  },
+  {
+   "term": "品与解决方案",
+   "companies_hit_tail": 5
+  },
+  {
+   "term": "器人研发企业",
+   "companies_hit_tail": 5
+  },
+  {
+   "term": "器人研发公司",
+   "companies_hit_tail": 5
+  },
+  {
+   "term": "存储控制芯片",
+   "companies_hit_tail": 5
+  },
+  {
+   "term": "庭服务机器人",
+   "companies_hit_tail": 5
+  },
+  {
+   "term": "智能安防产品",
+   "companies_hit_tail": 5
+  },
+  {
+   "term": "生物识别技术",
+   "companies_hit_tail": 5
+  },
+  {
+   "term": "电子产品研发",
+   "companies_hit_tail": 5
+  },
+  {
+   "term": "研发产销公司",
+   "companies_hit_tail": 5
+  },
+  {
+   "term": "管理解决方案",
+   "companies_hit_tail": 5
+  },
+  {
+   "term": "能化解决方案",
+   "companies_hit_tail": 5
+  },
+  {
+   "term": "能机器人研发",
+   "companies_hit_tail": 5
+  },
+  {
+   "term": "芯片研发企业",
+   "companies_hit_tail": 5
+  },
+  {
+   "term": "视觉解决方案",
+   "companies_hit_tail": 5
+  },
+  {
+   "term": "LED产品",
+   "companies_hit_tail": 5
+  },
+  {
+   "term": "云计算服务",
+   "companies_hit_tail": 5
+  },
+  {
+   "term": "产品和服务",
+   "companies_hit_tail": 5
+  },
+  {
+   "term": "人研发企业",
+   "companies_hit_tail": 5
+  },
+  {
+   "term": "人研发公司",
+   "companies_hit_tail": 5
+  },
+  {
+   "term": "储控制芯片",
+   "companies_hit_tail": 5
+  },
+  {
+   "term": "及相关产品",
+   "companies_hit_tail": 5
+  },
+  {
+   "term": "发产销公司",
+   "companies_hit_tail": 5
+  },
+  {
+   "term": "子产品研发",
+   "companies_hit_tail": 5
+  },
+  {
+   "term": "工智能产品",
+   "companies_hit_tail": 5
+  },
+  {
+   "term": "工智能技术",
+   "companies_hit_tail": 5
+  },
+  {
+   "term": "扫地机器人",
+   "companies_hit_tail": 5
+  },
+  {
+   "term": "机器人系统",
+   "companies_hit_tail": 5
+  },
+  {
+   "term": "清洁机器人",
+   "companies_hit_tail": 5
+  },
+  {
+   "term": "温度传感器",
+   "companies_hit_tail": 5
+  },
+  {
+   "term": "片研发企业",
+   "companies_hit_tail": 5
+  },
+  {
+   "term": "物联网服务",
+   "companies_hit_tail": 5
+  },
+  {
+   "term": "物识别技术",
+   "companies_hit_tail": 5
+  },
+  {
+   "term": "理解决方案",
+   "companies_hit_tail": 5
+  },
+  {
+   "term": "研发设计商",
+   "companies_hit_tail": 5
+  },
+  {
+   "term": "能安防产品",
+   "companies_hit_tail": 5
+  },
+  {
+   "term": "觉解决方案",
+   "companies_hit_tail": 5
+  },
+  {
+   "term": "ED产品",
+   "companies_hit_tail": 5
+  },
+  {
+   "term": "信息安全",
+   "companies_hit_tail": 5
+  },
+  {
+   "term": "健康管理",
+   "companies_hit_tail": 5
+  },
+  {
+   "term": "动力系统",
+   "companies_hit_tail": 5
+  },
+  {
+   "term": "发设计商",
+   "companies_hit_tail": 5
+  },
+  {
+   "term": "品和服务",
+   "companies_hit_tail": 5
+  },
+  {
+   "term": "器人系统",
+   "companies_hit_tail": 5
+  },
+  {
+   "term": "地机器人",
+   "companies_hit_tail": 5
+  },
+  {
+   "term": "导航系统",
+   "companies_hit_tail": 5
+  },
+  {
+   "term": "射频芯片",
+   "companies_hit_tail": 5
+  },
+  {
+   "term": "应用产品",
+   "companies_hit_tail": 5
+  },
+  {
+   "term": "度传感器",
+   "companies_hit_tail": 5
+  },
+  {
+   "term": "技术企业",
+   "companies_hit_tail": 5
+  },
+  {
+   "term": "技术方案",
+   "companies_hit_tail": 5
+  },
+  {
+   "term": "技术研发",
+   "companies_hit_tail": 5
+  },
+  {
+   "term": "控制产品",
+   "companies_hit_tail": 5
+  },
+  {
+   "term": "操作系统",
+   "companies_hit_tail": 5
+  },
+  {
+   "term": "智慧物流",
+   "companies_hit_tail": 5
+  },
+  {
+   "term": "智能制造",
+   "companies_hit_tail": 5
+  },
+  {
+   "term": "智能家电",
+   "companies_hit_tail": 5
+  },
+  {
+   "term": "智能系统",
+   "companies_hit_tail": 5
+  },
+  {
+   "term": "服务企业",
+   "companies_hit_tail": 5
+  },
+  {
+   "term": "服务系统",
+   "companies_hit_tail": 5
+  },
+  {
+   "term": "检测服务",
+   "companies_hit_tail": 5
+  },
+  {
+   "term": "测试设备",
+   "companies_hit_tail": 5
+  },
+  {
+   "term": "生产公司",
+   "companies_hit_tail": 5
+  },
+  {
+   "term": "生态系统",
+   "companies_hit_tail": 5
+  },
+  {
+   "term": "电子器件",
+   "companies_hit_tail": 5
+  },
+  {
+   "term": "电子设备",
+   "companies_hit_tail": 5
+  },
+  {
+   "term": "电机研发",
+   "companies_hit_tail": 5
+  },
+  {
+   "term": "监控设备",
+   "companies_hit_tail": 5
+  },
+  {
+   "term": "硬件服务",
+   "companies_hit_tail": 5
+  },
+  {
+   "term": "管理机构",
+   "companies_hit_tail": 5
+  },
+  {
+   "term": "系统集成",
+   "companies_hit_tail": 5
+  },
+  {
+   "term": "视觉产品",
+   "companies_hit_tail": 5
+  },
+  {
+   "term": "觉传感器",
+   "companies_hit_tail": 5
+  },
+  {
+   "term": "计算服务",
+   "companies_hit_tail": 5
+  },
+  {
+   "term": "设备生产",
+   "companies_hit_tail": 5
+  },
+  {
+   "term": "销售公司",
+   "companies_hit_tail": 5
+  },
+  {
+   "term": "业技术",
+   "companies_hit_tail": 5
+  },
+  {
+   "term": "产公司",
+   "companies_hit_tail": 5
+  },
+  {
+   "term": "件代理",
+   "companies_hit_tail": 5
+  },
+  {
+   "term": "件服务",
+   "companies_hit_tail": 5
+  },
+  {
+   "term": "件电商",
+   "companies_hit_tail": 5
+  },
+  {
+   "term": "作系统",
+   "companies_hit_tail": 5
+  },
+  {
+   "term": "制产品",
+   "companies_hit_tail": 5
+  },
+  {
+   "term": "力系统",
+   "companies_hit_tail": 5
+  },
+  {
+   "term": "务企业",
+   "companies_hit_tail": 5
+  },
+  {
+   "term": "务系统",
+   "companies_hit_tail": 5
+  },
+  {
+   "term": "化系统",
+   "companies_hit_tail": 5
+  },
+  {
+   "term": "及设备",
+   "companies_hit_tail": 5
+  },
+  {
+   "term": "发设计",
+   "companies_hit_tail": 5
+  },
+  {
+   "term": "售公司",
+   "companies_hit_tail": 5
+  },
+  {
+   "term": "备生产",
+   "companies_hit_tail": 5
+  },
+  {
+   "term": "子器件",
+   "companies_hit_tail": 5
+  },
+  {
+   "term": "子设备",
+   "companies_hit_tail": 5
+  },
+  {
+   "term": "定位器",
+   "companies_hit_tail": 5
+  },
+  {
+   "term": "康管理",
+   "companies_hit_tail": 5
+  },
+  {
+   "term": "态系统",
+   "companies_hit_tail": 5
+  },
+  {
+   "term": "息安全",
+   "companies_hit_tail": 5
+  },
+  {
+   "term": "慧物流",
+   "companies_hit_tail": 5
+  },
+  {
+   "term": "术企业",
+   "companies_hit_tail": 5
+  },
+  {
+   "term": "术方案",
+   "companies_hit_tail": 5
+  },
+  {
+   "term": "术研发",
+   "companies_hit_tail": 5
+  },
+  {
+   "term": "机系统",
+   "companies_hit_tail": 5
+  },
+  {
+   "term": "测服务",
+   "companies_hit_tail": 5
+  },
+  {
+   "term": "测系统",
+   "companies_hit_tail": 5
+  },
+  {
+   "term": "理机构",
+   "companies_hit_tail": 5
+  },
+  {
+   "term": "研产商",
+   "companies_hit_tail": 5
+  },
+  {
+   "term": "研究商",
+   "companies_hit_tail": 5
+  },
+  {
+   "term": "算服务",
+   "companies_hit_tail": 5
+  },
+  {
+   "term": "统集成",
+   "companies_hit_tail": 5
+  },
+  {
+   "term": "能制造",
+   "companies_hit_tail": 5
+  },
+  {
+   "term": "能家电",
+   "companies_hit_tail": 5
+  },
+  {
+   "term": "航系统",
+   "companies_hit_tail": 5
+  },
+  {
+   "term": "试设备",
+   "companies_hit_tail": 5
+  },
+  {
+   "term": "频芯片",
+   "companies_hit_tail": 5
+  },
+  {
+   "term": "频设备",
+   "companies_hit_tail": 5
+  },
+  {
+   "term": "IC",
+   "companies_hit_tail": 5
+  },
+  {
+   "term": "IT",
+   "companies_hit_tail": 5
+  },
+  {
+   "term": "交易",
+   "companies_hit_tail": 5
+  },
+  {
+   "term": "农业",
+   "companies_hit_tail": 5
+  },
+  {
+   "term": "制品",
+   "companies_hit_tail": 5
+  },
+  {
+   "term": "器材",
+   "companies_hit_tail": 5
+  },
+  {
+   "term": "场景",
+   "companies_hit_tail": 5
+  },
+  {
+   "term": "投资",
+   "companies_hit_tail": 5
+  },
+  {
+   "term": "汽车",
+   "companies_hit_tail": 5
+  },
+  {
+   "term": "社区",
+   "companies_hit_tail": 5
+  },
+  {
+   "term": "究商",
+   "companies_hit_tail": 5
+  },
+  {
+   "term": "能源",
+   "companies_hit_tail": 5
+  },
+  {
+   "term": "诊断",
+   "companies_hit_tail": 5
+  },
+  {
+   "term": "D全彩显示屏",
+   "companies_hit_tail": 4
+  },
+  {
+   "term": "业机器人研发",
+   "companies_hit_tail": 4
+  },
+  {
+   "term": "业自动化设备",
+   "companies_hit_tail": 4
+  },
+  {
+   "term": "交通解决方案",
+   "companies_hit_tail": 4
+  },
+  {
+   "term": "制造解决方案",
+   "companies_hit_tail": 4
+  },
+  {
+   "term": "医疗设备研发",
+   "companies_hit_tail": 4
+  },
+  {
+   "term": "城市解决方案",
+   "companies_hit_tail": 4
+  },
+  {
+   "term": "基因检测服务",
+   "companies_hit_tail": 4
+  },
+  {
+   "term": "安防产品研发",
+   "companies_hit_tail": 4
+  },
+  {
+   "term": "安防解决方案",
+   "companies_hit_tail": 4
+  },
+  {
+   "term": "定位产品研发",
+   "companies_hit_tail": 4
+  },
+  {
+   "term": "息化解决方案",
+   "companies_hit_tail": 4
+  },
+  {
+   "term": "控制解决方案",
+   "companies_hit_tail": 4
+  },
+  {
+   "term": "无人驾驶技术",
+   "companies_hit_tail": 4
+  },
+  {
+   "term": "智慧城市建设",
+   "companies_hit_tail": 4
+  },
+  {
+   "term": "智能产品研发",
+   "companies_hit_tail": 4
+  },
+  {
+   "term": "智能硬件产品",
+   "companies_hit_tail": 4
   }
  ]
 }
