@@ -1,0 +1,224 @@
+[
+ {
+  "group": 2,
+  "turns": [
+   {
+    "turn": 1,
+    "query": "中国有哪些成熟的酒店送餐机器人供应商",
+    "key_point": "深圳市普渡科技股份有限公司；上海开普勒机器人有限公司；云迹科技；九号机器人；擎朗智能 需要在回答结果中",
+    "error": null,
+    "elapsed": 27.4,
+    "query_type": "canonical_v2:A:answer",
+    "answer_style": "llm_synthesized",
+    "answer_text": "国内酒店送餐（送物）机器人领域已经形成较为成熟的供应商格局，头部厂商集中在少数几家，产品普遍具备自主导航、自主乘梯、客房配送等能力。\n\n云迹科技是这一赛道最具代表性的企业之一。公开信息显示，其业务定位为酒店与楼宇场景的机器人智能体，面向酒店、楼宇提供配送服务；早在2015年就推出了第一台酒店机器人并投入商业化，此后为数百家乃至数千家酒店提供服务，客户覆盖多家国内外酒店集团，并曾推进上市进程。\n\n普渡科技同样覆盖酒店场景，其“闪电匣”是针对楼宇场景打造的配送机器人，具备自主导航、精准避障、智能乘梯、语音交互等能力，可完成从酒店前台到客房的全程无人化配送，并已与亚朵集团等酒店品牌合作落地。\n\n擎朗智能则聚焦商用服务场景的智慧无人配送，为餐饮、酒店、医疗等场景提供解决方案。据IDC报告，2023年国内餐饮配送机器人市场份额排名前三的厂商为擎朗智能、普渡机器人和穿山甲机器人；在酒店送物机器人方向，云迹科技、优地科技、远鲸科技、景吾智能等也是被较多提及的供应商。\n\n此外，京东等电商渠道在售的酒店送物机器人还包括擎朗W3系列、九号飞碟D2等型号，可作为选型参考。整体来看，这一市场已从早期的概念验证走向规模化落地，供应商以商用服务机器人厂商为主，产品成熟度较高。如果您更关心某一家的具体产品线或落地案例，可以进一步说明。",
+    "citations_total": 1,
+    "citations_local": 1,
+    "citations_web": 0,
+    "events": {
+     "stage": 3,
+     "plan_done": 1,
+     "retrieval_done": 1,
+     "answer_chunk": 553,
+     "answer": 1,
+     "done": 1
+    },
+    "scored": {
+     "pass": false,
+     "layers": {
+      "entity": {
+       "pass": false,
+       "fails": [
+        "missing:开普勒"
+       ]
+      },
+      "completeness": {
+       "pass": false,
+       "hits": 4,
+       "total": 10,
+       "ratio": 0.8,
+       "fails": [
+        "coverage:4/10<0.8"
+       ]
+      }
+     },
+     "note": "GAP-02: 关键点五家必须全部出现; 完整性覆盖 GT 深圳六家",
+     "human_verified": false
+    }
+   },
+   {
+    "turn": 2,
+    "query": "上述企业里总部在深圳的企业有哪些",
+    "key_point": "上下文识别",
+    "error": null,
+    "elapsed": 15.3,
+    "query_type": "canonical_v2:A:answer",
+    "answer_style": "llm_synthesized",
+    "answer_text": "上述两家企业中，总部位于深圳的是深圳市普渡科技有限公司（普渡机器人）。公开信息显示，普渡科技成立于2016年，总部位于广东深圳，是一家集研发、设计、生产及销售于一体的国家级高新技术企业，主营商用服务机器人；其官网也将深圳列为全球总部所在地，并在深圳、成都、香港设有研发中心。\n\n另一家云迹科技股份有限公司，目前公开信息未披露其总部所在城市，因此无法确认是否位于深圳。",
+    "citations_total": 1,
+    "citations_local": 1,
+    "citations_web": 0,
+    "events": {
+     "stage": 3,
+     "plan_done": 1,
+     "retrieval_done": 1,
+     "answer_chunk": 182,
+     "answer": 1,
+     "done": 1
+    },
+    "scored": {
+     "pass": false,
+     "layers": {
+      "entity": {
+       "pass": false,
+       "fails": [
+        "pool:1<5"
+       ]
+      },
+      "completeness": {
+       "pass": false,
+       "hits": 1,
+       "total": 6,
+       "ratio": 0.8,
+       "fails": [
+        "coverage:1/6<0.8"
+       ]
+      }
+     },
+     "note": "GAP-04: 收窄完整性, GT=6家, >=80%",
+     "human_verified": false
+    }
+   },
+   {
+    "turn": 3,
+    "query": "酒店电梯需要送餐机器人能够使用机械臂自主按电梯，上述企业的产品有哪些可以实现",
+    "key_point": "普渡科技股份有限公司需要答出来",
+    "error": null,
+    "elapsed": 9.9,
+    "query_type": "canonical_v2:A:answer",
+    "answer_style": "llm_synthesized",
+    "answer_text": "就目前可确认的信息来看，深圳市普渡科技有限公司旗下有一款产品明确具备“机械臂+自主操作”的能力，即闪电匣Arm（FlashBot Arm）。\n\n这款产品由普渡创新实验室Pudu X-Lab打造，采用“专用配送+人形操作”的创新结构，融合多项前沿具身智能技术，定位为类人形具身智能服务机器人，属于高端配送机器人序列，面向楼宇、酒店、迎宾、送餐等场景。其“人形操作”结构意味着它具备用机械臂执行物理操作的能力，这与“用机械臂按电梯”这类需求在能力方向上是一致的。\n\n需要说明的是，公开信息中尚未见到将“机械臂按电梯”这一具体动作与闪电匣Arm直接绑定的明确表述，因此只能确认到该产品具备机械臂操作能力这一层，具体能否完成按电梯动作，公开资料暂未披露。普渡其他产品线（如智能送餐机器人、楼宇机器人、酒店服务机器人等）主要覆盖配送与迎宾功能，未见机械臂操作的相关说明。\n\n如果您更关心闪电匣Arm在酒店电梯场景下的具体落地细节，我可以再深入检索。",
+    "citations_total": 1,
+    "citations_local": 1,
+    "citations_web": 0,
+    "events": {
+     "stage": 3,
+     "plan_done": 1,
+     "retrieval_done": 1,
+     "answer_chunk": 414,
+     "answer": 1,
+     "done": 1
+    },
+    "scored": {
+     "pass": true,
+     "layers": {
+      "entity": {
+       "pass": true,
+       "fails": []
+      },
+      "stance": {
+       "pass": true,
+       "fails": []
+      },
+      "completeness": {
+       "pass": true,
+       "hits": 3,
+       "total": 3,
+       "ratio": 1.0,
+       "fails": []
+      }
+     },
+     "note": "GAP-05: 立场须与 GT 一致(普渡能自主按电梯,核心能力)",
+     "human_verified": false
+    }
+   }
+  ],
+  "passed": 1,
+  "total": 3
+ },
+ {
+  "group": 5,
+  "turns": [
+   {
+    "turn": 1,
+    "query": "我想找PCB打板， 有哪些推荐",
+    "key_point": "嘉立创；一博科技；深南电路 需要在回答中",
+    "error": null,
+    "elapsed": 28.3,
+    "query_type": "canonical_v2:A:answer",
+    "answer_style": "llm_synthesized",
+    "answer_text": "PCB打板（打样）的推荐厂商，公开信息中提及较多的有以下几家，按被推荐频次和业务匹配度排列：\n\n**嘉立创（JLC）**：被多个来源列为PCB打板首选。官网介绍其提供1-6层PCB免费打样，涵盖FR-4、FPC软板、铜基板、铝基板、高频板，并配套SMT贴片服务（50元起贴），钢网最快24小时生产、6小时交货。有资料提到其曾将单层铝基板、双层板、四层板打样调整为免费，阻焊颜色任选。综合实力在多个推荐榜单中排名靠前。\n\n**深圳捷多邦科技有限公司**：专业从事线路板打样、PCB快速打样、PCBA加工与生产销售，自主研发了PCB在线下单ERP系统，支持在线一条龙服务和快速计价。\n\n**深圳聚多邦精密电路有限公司**：业务与捷多邦类似，同样提供线路板打样、PCB快速打样、PCBA加工，也自研了在线下单ERP系统。\n\n**深圳顺易捷科技有限公司**：专注印制PCB/线路板快速打样，以单面、双面和多层板为主，拥有\"顺易捷ERP系统\"支持网上计价下单，并提供24小时品质热线。\n\n**嘉纳电子有限公司**：专业生产、经营PCB线路板，涵盖PCB打样业务。\n\n此外，公开推荐中还提到华秋PCB、捷配极速PCB超级工厂、鹏鼎控股、景旺电子、深南电路、东山精密等厂商，其中鹏鼎控股、深南电路等属于国内PCB行业龙头，更偏向大批量制造。\n\n如果您的需求是PCB抄板、改板或芯片解密类服务，深圳市亿科迈科技有限公司（PCB抄板生产及芯片解密服务商）和深圳市深华科电子有限公司（从事双面、多层PCB抄板、改板、BOM清单制作、反推原理图、SMT加工等）也可作为参考。深圳市驭鹰者电子有限公司则是一家PCB打样及电路板生产商，产品覆盖多层板、高频板、金属基板、HDI等，兼顾中大批量生产。\n\n您更关心小批量快速打样，还是批量生产的价格与交期？我可以据此帮您进一步筛选。",
+    "citations_total": 5,
+    "citations_local": 5,
+    "citations_web": 0,
+    "events": {
+     "stage": 3,
+     "plan_done": 1,
+     "retrieval_done": 1,
+     "answer_chunk": 741,
+     "answer": 1,
+     "done": 1
+    },
+    "scored": {
+     "pass": false,
+     "layers": {
+      "entity": {
+       "pass": false,
+       "fails": [
+        "missing:一博"
+       ]
+      }
+     },
+     "note": "关键点三家必须在答案中(推荐清单不设更宽完整性集)",
+     "human_verified": false
+    }
+   },
+   {
+    "turn": 2,
+    "query": "上述企业有哪些是深圳的企业",
+    "key_point": "上下文识别",
+    "error": null,
+    "elapsed": 9.1,
+    "query_type": "canonical_v2:A:answer",
+    "answer_style": "llm_synthesized",
+    "answer_text": "上述六家企业均位于深圳，具体如下：\n\n- 深圳市驭鹰者电子有限公司：注册地址位于深圳市前海深港合作区，是一家专注封装基板与特殊线路板研发生产的厂商，产品涵盖多层板、高频板、金属基板、软硬结合板、HDI等。\n- 百芯智能制造科技（深圳）有限公司：提供PCBA制造仿真验证SaaS平台（百芯EMA）及PCBA生产加工服务，面向智能硬件、工业控制、物联网、汽车电子等领域。\n- 深圳顺易捷科技有限公司：成立于2010年，注册地位于深圳市龙岗区坪地街道，专注印制PCB/线路板快速打样，以单面、双面和多层板为主。\n- 深圳市亿科迈科技有限公司：PCB抄板生产及芯片解密服务商，业务覆盖通信设备、电脑周边、医疗器械、检测与控制系统。\n- 深圳市深华科电子有限公司：PCB设计制造服务公司，从事双面、多层PCB抄板、改板、BOM清单制作、SMT加工、芯片解密及样机制作等。\n- 深圳天创无限科技有限公司：公司名称本身即冠以“深圳”，属深圳企业。\n\n以上六家均确认为深圳企业。",
+    "citations_total": 7,
+    "citations_local": 7,
+    "citations_web": 0,
+    "events": {
+     "stage": 3,
+     "plan_done": 1,
+     "retrieval_done": 1,
+     "answer_chunk": 420,
+     "answer": 1,
+     "done": 1
+    },
+    "scored": {
+     "pass": false,
+     "layers": {
+      "entity": {
+       "pass": false,
+       "fails": [
+        "missing:嘉立创",
+        "missing:深南电路",
+        "missing:一博"
+       ]
+      },
+      "completeness": {
+       "pass": false,
+       "hits": 1,
+       "total": 12,
+       "ratio": 0.75,
+       "fails": [
+        "coverage:1/12<0.75"
+       ]
+      }
+     },
+     "note": "上下文收窄: GT=11家深圳+鼎纪(广州)例外",
+     "human_verified": false
+    }
+   }
+  ],
+  "passed": 0,
+  "total": 2
+ }
+]
