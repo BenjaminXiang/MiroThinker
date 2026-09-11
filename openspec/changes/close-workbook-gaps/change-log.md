@@ -438,3 +438,28 @@
   fusion/lane order). Predicted: g2 six GTs into payload; g5 顺易捷
   revives. Out of scope: g5 out-of-window six (F1 recall gap), local-16
   semantics (separate decision). Evidence: d0-probe/f1b-downstream-trace.md.
+
+## 2026-09-11 — B4 scoped (read-only); three adjudications required before dispatch
+
+- Scope report: `.agents/runs/close-workbook-gaps/b4-scoping.md` (from
+  explore agent-11 read-only pass over the serving worktree).
+- Minimal citation-floor hook = Hook A: relax `canonical_v2_chat.py:2272`
+  `lane != "relationship"` to "any local evidence (source_nature ∉
+  {current_web, supplemental_web}) with public-domain handle" → URL-less
+  `local-source-` card. Closes g17-t2. No retrieval/prompt changes;
+  retained-membership check still bounds it (no fabricated citations).
+- GAP-08 web-pollution assertion is near-noop TODAY: `CITATION_FORBIDDEN_PATTERNS`
+  (`anchors.py:205-217`) is consumed only by the test harness; the card
+  contract has no title/snippet and the canonical path never emits a
+  `type=="web"` card; all archived runs have citations_web==0. Needs an
+  adjudication (extend ChatCitation contract vs re-point assertion at
+  answer text / evidence payload) before B4 code lands.
+- Latent drift found: the B1 `local-source-` card branch exists only in
+  the worktree (`chat:2272-2285`, 24-line diff); main-repo HEAD lacks it.
+  Recorded into the S3 contract-convergence scope; do not hand-port
+  ad hoc.
+- Harness local-judgement to change to `local-source-` prefix (currently
+  counts every non-web card as local, including official-source).
+- First step after adjudication: D0-style 9-round per-segment card-loss
+  probe (answer-layer vs adapter-layer loss) before Hook A lands.
+  g1-t1 / g17-t2 need a post-B5 re-run for coverage.
