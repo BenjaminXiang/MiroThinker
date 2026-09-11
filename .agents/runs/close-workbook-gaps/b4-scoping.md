@@ -61,3 +61,18 @@
 - 已 PASS：g17-t1（16 本地卡）。只差引用层：g17-t2（精确道本地证据无 URL 不发卡 → Hook A 可闭）。
 - 双红（内容+引用）：g1-t2、g4-t1、g4-t2、g6-t1、g7-t1。部分：g8-t1（有 1 卡，差 completeness）。
 - 需复跑补测：g1-t1、g17-t2（B5 后无覆盖）。
+
+## 7. 实施注记（主上下文，2026-09-11 晚）——探针的数据获取方式
+
+- 已核事实：turn-trace 的 `citation_count` = **adapter 之后**的用户可见卡数
+  （`canonical_v2_chat.py:1493` `len(response.citations)`）；存档 SSE 的
+  `evidence` 数组恒空（19 个 SSE 全查过）→ 现有工件无法区分
+  "answer 层没有 citations" vs "adapter 丢卡"。
+- 探针方案（最小）：在 trace 写入处**加两个诊断计数**（answer 层
+  `TurnResult.citations` 总数 + 其中本地证据数），随既有 trace schema 落盘
+  （诊断面，非用户可见）；然后跑 9 锚定轮（组 1/4/6/7/8/17），逐轮对照
+  answer 层计数 vs 归档卡数。判据：
+  - answer 层有本地 citations 且卡为 0 → adapter 丢卡（Hook A 可闭）；
+  - answer 层本身 0 本地 citations → Hook A 无效，需 answer 层切片。
+- 探针跑完再落 Hook A（`chat:2272` 判定放宽），随后按 acceptance 复跑
+  9 锚定轮（含 g1-t1 / g17-t2 补测）。
