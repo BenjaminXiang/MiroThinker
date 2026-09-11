@@ -91,7 +91,7 @@ Top 30 组合：**9（流量镜头）+ 21（包内词表镜头）**。完整的�
 | paper | 24,520 | title 24,520、abstract 11,795（48.1%）、summary_text(+summary_zh) 24,391、**keywords/fields_of_study 0** |
 | professor | 3,958 | profile_summary 3,956、department/institution 2,770、research_directions 1,969（49.7%） |
 
-词表形状：`industry` 41 个值、`industry_tags` 39 个值（与 industry 同一套粗标签）、`tech_tags` 4,945 个不同短语，**5484 家有 tech_tags 的公司里几乎每家只有 1 条**（标签数直方图：0 条 1604 家、1 条 5 家、2 条 5480 家）。
+词表形状：`industry` 41 个值、`industry_tags` 39 个值（与 industry 同一套粗标签）、`tech_tags` 4,945 个不同短语，**有 tech_tags 的公司每家恰好 1 条**（复测直方图，2026-09-11 勘误：0 条 1,604 家、1 条 5,485 家、无 2 条案例；原句"1 条 5 家、2 条 5480 家"系转录错置，勘误后 1,604+5,485=7,089 自洽）。
 
 > 直接后果：`industry` / `industry_tags` 是**粗行业标签**（硬件/生产制造/人工智能/先进制造…），不是类目词集合；类目词的唯一结构化锚点是 `tech_tags` 的单条字符串。专利 `ipc_codes`、论文 `keywords`/`fields_of_study` 两个字段在全库为空，**论文/专利类类目词没有可用的结构化锚点**。
 

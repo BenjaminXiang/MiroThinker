@@ -21,6 +21,7 @@ explain. Short, dated, and referenced back from the code it governs.
 | [ADR-020](./ADR-020-local-safety-questions-use-safety-guidance.md) | Local safety questions use narrow safety guidance | accepted | Canonical V2 S2C/S8/S9 |
 | [ADR-021](./ADR-021-confidence-gated-entity-ambiguity.md) | Entity ambiguity uses confidence-gated answer or clarification | accepted | Canonical V2 S2C/S8/S9 |
 | [ADR-022](./ADR-022-llm-selected-assessment-dimensions.md) | Assessments use per-turn LLM-selected dimensions | accepted | Canonical V2 S2C/S8/S9 |
+| [ADR-023](./ADR-023-stable-identity-and-two-line-contract-home.md) | Stable identity (stable_uid) + a single contract home for the two build/serving lines | proposed | close-workbook-gaps / C 系列 |
 
 ## Conventions
 
