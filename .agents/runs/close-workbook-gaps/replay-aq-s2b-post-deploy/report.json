@@ -1,0 +1,222 @@
+{
+  "base_url": "http://127.0.0.1:18188",
+  "generated_at": "2026-09-11T21:46:19",
+  "sessions": {
+    "G1_framing": {
+      "turns": [
+        {
+          "query": "介绍一下 国际先进技术应用推进中心（深圳）",
+          "repeat": 1,
+          "sse": "G1_framing_r1_t1.sse",
+          "seconds": 80.9,
+          "query_type": "canonical_v2:A:answer",
+          "answer_head": "国际先进技术应用推进中心（深圳）通常简称“国先中心（深圳）”，是在国家发展改革委和深圳市政府支持指导下设立、由深圳市科技创新局作为业务主管部门、依托粤港澳大湾区数字经济研究院建设的世界级先进技术应用推广平台，注册地在深圳。\n\n它的定位是先进",
+          "failures": []
+        },
+        {
+          "query": "有没有更详细的信息",
+          "repeat": 1,
+          "sse": "G1_framing_r1_t2.sse",
+          "seconds": 13.6,
+          "query_type": "canonical_v2:A:answer",
+          "answer_head": "深圳国际先进技术应用推进中心（也称国先中心（深圳））是在国家发展改革委和深圳市政府支持指导下设立的，业务主管部门为深圳市科技创新局，依托粤港澳大湾区数字经济研究院建设，定位为世界级先进技术应用推广平台。\n\n它的重点聚焦领域包括人工智能、具身",
+          "failures": []
+        },
+        {
+          "query": "它有哪些布局和进展",
+          "repeat": 1,
+          "sse": "G1_framing_r1_t3.sse",
+          "seconds": 7.6,
+          "query_type": "canonical_v2:A:answer",
+          "answer_head": "深圳国际先进技术应用推进中心（又称国先中心（深圳））是在国家发展改革委、深圳市政府支持指导下设立，由深圳市科技创新局作为业务主管部门，依托粤港澳大湾区数字经济研究院建设的世界级先进技术应用推广平台。\n\n在布局上，该中心聚焦人工智能、具身智能",
+          "failures": []
+        }
+      ],
+      "pass": true
+    },
+    "G2_bare_name": {
+      "turns": [
+        {
+          "query": "国际先进技术应用推进中心（深圳）",
+          "repeat": 1,
+          "sse": "G2_bare_name_r1_t1.sse",
+          "seconds": 71.8,
+          "query_type": "canonical_v2:A:answer",
+          "answer_head": "国际先进技术应用推进中心（深圳）位于深圳，通常简称“国先中心（深圳）”。它是在国家发展改革委和深圳市政府支持指导下设立、由深圳市科技创新局作为业务主管部门、依托粤港澳大湾区数字经济研究院建设的世界级先进技术应用推广平台，注册地即深圳。\n\n该",
+          "failures": []
+        },
+        {
+          "query": "这个中心的企业培育情况怎么样",
+          "repeat": 1,
+          "sse": "G2_bare_name_r1_t2.sse",
+          "seconds": 12.8,
+          "query_type": "canonical_v2:A:answer",
+          "answer_head": "深圳国际先进技术应用推进中心（又称国先中心（深圳））在企业培育方面，主要走的是“为技术对接场景、为企业对接”的平台化路径，而不是传统的孵化器或投资机构模式。\n\n具体来看，它依托粤港澳大湾区数字经济研究院建设，聚焦人工智能、具身智能、低空经济",
+          "failures": []
+        },
+        {
+          "query": "国际先进技术应用推进中心（深圳）",
+          "repeat": 2,
+          "sse": "G2_bare_name_r2_t1.sse",
+          "seconds": 72.1,
+          "query_type": "canonical_v2:A:answer",
+          "answer_head": "国际先进技术应用推进中心（深圳）简称“国先中心（深圳）”，是在国家发展改革委、深圳市政府支持指导下设立，由深圳市科技创新局作为业务主管部门、依托粤港澳大湾区数字经济研究院建设的世界级先进技术应用推广平台，注册地即深圳。\n\n该中心聚焦人工智能",
+          "failures": []
+        },
+        {
+          "query": "这个中心的企业培育情况怎么样",
+          "repeat": 2,
+          "sse": "G2_bare_name_r2_t2.sse",
+          "seconds": 12.5,
+          "query_type": "canonical_v2:A:answer",
+          "answer_head": "深圳国际先进技术应用推进中心（又称国先中心（深圳））在企业培育方面，核心做法是搭建平台、对接资源，而不是直接做孵化器式的培育。它由国家发展改革委、深圳市政府支持指导设立，深圳市科技创新局作为业务主管部门，依托粤港澳大湾区数字经济研究院建设，",
+          "failures": []
+        },
+        {
+          "query": "国际先进技术应用推进中心（深圳）",
+          "repeat": 3,
+          "sse": "G2_bare_name_r3_t1.sse",
+          "seconds": 71.9,
+          "query_type": "canonical_v2:A:answer",
+          "answer_head": "国际先进技术应用推进中心（深圳）位于深圳，通常简称“国先中心（深圳）”。它是在国家发展改革委、深圳市政府支持指导下设立，由深圳市科技创新局作为业务主管部门，依托粤港澳大湾区数字经济研究院建设的世界级先进技术应用推广平台，注册地即深圳。\n\n该",
+          "failures": []
+        },
+        {
+          "query": "这个中心的企业培育情况怎么样",
+          "repeat": 3,
+          "sse": "G2_bare_name_r3_t2.sse",
+          "seconds": 13.0,
+          "query_type": "canonical_v2:A:answer",
+          "answer_head": "深圳国际先进技术应用推进中心（又称国先中心（深圳））在企业培育方面，核心做法是搭建技术供需对接和场景匹配机制，而非直接以“孵化器”或“投资机构”的角色运作。\n\n具体来看，该中心依托粤港澳大湾区数字经济研究院建设，由国家发展改革委、深圳市政府",
+          "failures": []
+        }
+      ],
+      "pass": true
+    },
+    "G3_person_pronoun": {
+      "turns": [
+        {
+          "query": "介绍一下 国际先进技术应用推进中心（深圳）",
+          "repeat": 1,
+          "sse": "G3_person_pronoun_r1_t1.sse",
+          "seconds": 70.7,
+          "query_type": "canonical_v2:A:answer",
+          "answer_head": "国际先进技术应用推进中心（深圳）通常简称“国先中心（深圳）”，是在国家发展改革委和深圳市政府支持指导下设立、由深圳市科技创新局作为业务主管部门、依托粤港澳大湾区数字经济研究院建设的世界级先进技术应用推广平台，注册地在深圳。\n\n它的定位是聚焦",
+          "failures": []
+        },
+        {
+          "query": "他有哪些论文",
+          "repeat": 1,
+          "sse": "G3_person_pronoun_r1_t2.sse",
+          "seconds": 16.8,
+          "query_type": "canonical_v2:A:answer",
+          "answer_head": "你问的这篇论文是《Ultra-high sensitivity Fabry–Perot interferometer gas refractive index fiber sensor based on photonic crystal f",
+          "failures": [
+            "neither clarification nor person-scoped answer (type=canonical_v2:A:answer)"
+          ]
+        }
+      ],
+      "pass": false
+    },
+    "G4_patents": {
+      "turns": [
+        {
+          "query": "优必选科技怎么样",
+          "repeat": 1,
+          "sse": "G4_patents_r1_t1.sse",
+          "seconds": 72.9,
+          "query_type": "canonical_v2:A:answer",
+          "answer_head": "优必选科技（全称深圳市优必选科技股份有限公司，港交所代码9880）是一家总部位于深圳南山区的机器人企业，主打人工智能与人形机器人方向，在行业内属于头部玩家。\n\n公司成立于2012年，定位为集人工智能和人形机器人研发、制造、销售于一体的高科技",
+          "failures": []
+        },
+        {
+          "query": "该公司的专利有哪些",
+          "repeat": 1,
+          "sse": "G4_patents_r1_t2.sse",
+          "seconds": 13.2,
+          "query_type": "canonical_v2:A:answer",
+          "answer_head": "关于深圳市优必选科技股份有限公司的专利，目前本地库暂未建立可逐条列出的专利清单关联，因此无法给出具体的专利名称或专利号。这属于数据覆盖范围的缺口，不代表该公司没有相关专利。\n\n从公开信息看，优必选是人形机器人与智能服务机器人领域的代表性企业",
+          "failures": []
+        }
+      ],
+      "pass": true
+    },
+    "G5_expansion": {
+      "turns": [
+        {
+          "query": "优必选科技怎么样",
+          "repeat": 1,
+          "sse": "G5_expansion_r1_t1.sse",
+          "seconds": 82.6,
+          "query_type": "canonical_v2:A:answer",
+          "answer_head": "优必选科技（UBTECH Robotics Inc.，港交所：9880）是一家总部位于深圳南山区的机器人制造商，成立于2012年，专注于人工智能与人形机器人的研发、制造和销售，定位为智能服务机器人领域的领先企业，使命是“让智能机器人走进千家",
+          "failures": []
+        },
+        {
+          "query": "还有哪些类似的公司",
+          "repeat": 1,
+          "sse": "G5_expansion_r1_t2.sse",
+          "seconds": 48.4,
+          "query_type": "canonical_v2:A:answer",
+          "answer_head": "优必选是一家总部位于深圳、以人形机器人和智能服务机器人为核心的机器人企业，产品覆盖工业制造、商用服务与教育科研等场景。与它同处深圳、业务方向相近的公司，可以从以下几个方向来看。\n\n人形与足式机器人方向，深圳市宇数科技有限公司的产品线包括A1",
+          "failures": []
+        }
+      ],
+      "pass": true
+    },
+    "G6_anaphoric_opener": {
+      "turns": [
+        {
+          "query": "这个中心是做什么的",
+          "repeat": 1,
+          "sse": "G6_anaphoric_opener_r1_t1.sse",
+          "seconds": 0.9,
+          "query_type": "canonical_v2:G:clarification_only",
+          "answer_head": "您的问题里使用了“他/她/它/这家”等指代词，但我暂时无法确定具体指代对象，为了准确回答，请补充您想了解的对象（例如教授姓名、公司名、论文标题或专利号），我会立即为您查询。如果您只是想了解某一类信息的大致情况，也可以直接描述需求，我会先给出",
+          "failures": []
+        }
+      ],
+      "pass": true
+    },
+    "G7_enumeration": {
+      "turns": [
+        {
+          "query": "深圳有哪些做具身智能的公司",
+          "repeat": 1,
+          "sse": "G7_enumeration_r1_t1.sse",
+          "seconds": 72.1,
+          "query_type": null,
+          "answer_head": "",
+          "failures": [
+            "SSE error event present",
+            "missing answer/done events: {'stage': 3, 'plan_done': 1, 'retrieval_done': 1, 'error': 1}",
+            "required substring missing: 优必选"
+          ]
+        },
+        {
+          "query": "深圳有哪些做具身智能的公司",
+          "repeat": 2,
+          "sse": "G7_enumeration_r2_t1.sse",
+          "seconds": 46.5,
+          "query_type": "canonical_v2:A:answer",
+          "answer_head": "深圳在具身智能方向的创业公司数量不少，覆盖了整机、核心零部件、数据与模型、场景应用等多个环节。以下是一批有明确公开信息、注册地或业务定位落在深圳的代表性企业：\n\n**整机与通用具身智能**\n- 自变量机器人科技（深圳）有限公司：聚焦“通用具",
+          "failures": [
+            "required substring missing: 优必选"
+          ]
+        },
+        {
+          "query": "深圳有哪些做具身智能的公司",
+          "repeat": 3,
+          "sse": "G7_enumeration_r3_t1.sse",
+          "seconds": 30.6,
+          "query_type": "canonical_v2:A:answer",
+          "answer_head": "深圳的具身智能公司数量相当可观，公开信息显示深市具身智能产业链上市公司已超过100家（102家），本地库中可确认的具身智能相关企业也有数十家。以下按业务方向列出其中有代表性的部分：\n\n**整机与通用具身智能**\n- 智平方（深圳）科技有限公",
+          "failures": []
+        }
+      ],
+      "pass": false
+    }
+  },
+  "all_pass": false,
+  "total_failures": 5
+}

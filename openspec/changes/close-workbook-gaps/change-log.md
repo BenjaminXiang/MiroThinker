@@ -687,3 +687,12 @@
   (华秋/中信华/领智) via web. Decision order: run AQ-S5 first, measure
   the 8 in-pack GT ranks; if the ceiling still < 9/12, escalate to the
   user with the window-widening vs re-baseline options (design §4-4).
+
+- S2b replay gate (`replay-aq-s2b-post-deploy/`, re-run after a background
+  timeout killed the first attempt): G1/G2/G4/G5/G6 PASS; G3-T2 known
+  jitter; G7 = known 优必选 jitter ×2 + ONE environment-class SSE error
+  (httpx exception in the journal, `turn raised before completion`) —
+  zero new code signatures. Watch item: both env errors tonight landed on
+  the largest-payload turns (32/32 windows + coverage sentence); if they
+  cluster there, the window widening carries a backend-timeout cost that
+  the TTFT measurement must capture.
