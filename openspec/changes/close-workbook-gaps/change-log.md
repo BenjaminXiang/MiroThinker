@@ -792,3 +792,29 @@
   six-file 70+3 pre-existing. Deployed 23:01 via systemd (S5+S2c).
 - Verification batch next: g5 ×3 (expect 8/12), g2 ×2 (regression),
   generalization probe r2 (P2 must not degrade), replay gate.
+
+## 2026-09-11 — S2c live result: g5-t2 still 6/12 — the fused read window carries only ~32 locals (1:1 interleave)
+
+- S2c deployed (S5+S2c, 23:01). Live g5 ×3: t2 coverage stays 6/12 in all
+  runs; 嘉立创/深南电路 still absent; g5-t1 1/3 PASS; **g2 regression
+  clean 3/3 ×2**.
+- Root cause of the gap between the S5 lane table and live behaviour:
+  the S5 probe measured the CATEGORY-LANE window (64) — but the read
+  path applies `ordered[:plan.max_candidates]` to the FUSED interleaved
+  list (1:1 local:web), so window 64 yields only ~32 locals (verified:
+  the t1 coverage sentence lists 27 recalled locals; 嘉立创/深南电路 sit
+  at fused local ranks 37/56 → outside). The S5 "read 窗 8/8" was a
+  lane-level number; the live local disclosure window is 32.
+- Options for the last mile (to the user, per the design's escalation
+  rule — evidence complete):
+  (a) candidate window 64→128 (+ coverage cap 32→~64): expected 8/12
+      (the verified local ceiling — 华秋/中信华/领智/广州 are NOT in the
+      pack); cost = longer disclosure sentence (~50 names) + read-layer
+      work, claims unchanged;
+  (b) web route: surface web-known PCB names (华秋 etc.) — the only path
+      to 9/12; needs honest web attribution;
+  (c) re-baseline the g5-t2 anchor to the local ceiling (8/12);
+  (d) data enrichment (add the missing companies to the pack) — C1
+      batch 2+ / rebuild cycle.
+- Decision goes to the user with this table; no further window tuning
+  without it.
