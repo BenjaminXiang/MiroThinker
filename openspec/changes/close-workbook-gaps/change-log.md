@@ -321,3 +321,18 @@
   G3_t2 + G7 both in-register historical jitter signatures (G7 is the
   B3/D0 target). Zero new signatures.
 - GAP-09 → GREEN (mechanism: redact-and-continue per approved design).
+
+## 2026-09-11 — B5.5 landed via auto-snapshot (04e15966); commit-discipline hardened
+
+- B5.5 (marker-family redaction: `canonical_v2` namespace regex + DSML
+  half/full-width variants, 96-char candidate cap, byte-preserving
+  flush) implemented and suite-green; its clean commit never ran — an
+  approval stall on `git commit -m "$(cat <<EOF …)"` (command
+  substitution) hung the task to its 2h timeout; the 03:07 auto-snapshot
+  swept the changes into `04e15966`. Main-context review of the diff:
+  approach accepted.
+- Hard rule dispatched to subagents: git messages via `-F file` (Write
+  tool) only; single simple bash commands; no `$(…)`, no heredocs, no
+  network from subagents (3rd approval-stall of this class today).
+- D0.5 (selection-admission rules / subject-gate per-item drops /
+  structured-lane facts) resumed after the re-verify.
