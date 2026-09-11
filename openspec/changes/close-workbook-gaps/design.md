@@ -842,3 +842,46 @@ five-batch sequence, not the full C1 program.
   report with counts matching the read-only census (professor 12,872 /
   company 3,099 / 189 glued / 1,817 whole-value), writes no bytes into
   index or pack, and does not alter any manifest hash.
+
+## Answer-quality slice — enumeration coverage, narrowing attribution, stance (full design, 2026-09-11)
+
+Scope source: `.agents/runs/close-workbook-gaps/answer-quality-design.md`
+(plan agent-13 design) + `answer-quality-evidence-addendum.md` (main-context
+evidence). Trigger: B3B2 acceptance r3/r4 stable red with the remaining
+losses attributed to the answer-content class (change-log 2026-09-11 F4
+entry).
+
+### Locked decisions (main context, 2026-09-11 — see design §4)
+
+1. Enumeration claim windows widen: local 32 / web 32 / cut 64
+   (non-enumeration unchanged); `web_claim_limit` decoupled from the
+   cut constant; TTFT measured and recorded.
+2. Coverage sentence stays count-only (naming truncated members would
+   assert recall hits as facts).
+3. `registered_address` may support region filtering, but the answer must
+   word it as 注册地在深圳 (not 总部).
+4. g5-t2 ≥9/12 target stands for now; if the ceiling provably stays 8/12
+   after A-1 + A-2, escalate to the user with evidence.
+5. Member probes: ≤6 web probes per enumeration/narrow/relation turn
+   (web-as-completion mandate); latency measured.
+
+### Order
+
+S0 payload A/B causal-chain experiment (design §5; N≥5 per arm) →
+S1 C-1 address claims (gated) → S2 A-1 windows → S3 B-probe + probe
+visibility → S4 D-1 capability binding → S5 A-2 declaration vocabulary
+(after C1 batch 0 lands) → S6 double-run acceptance + replay gate.
+
+A-2 and the C1 batch-0 files are single-writer-serialized in the s11
+worktree; S0 needs a live LLM backend (main context runs it).
+
+### Acceptance
+
+- g2-t1 entity 5/5 + key points ≥8/10; g2-t2 pool ≥5/6; g2-t3 stance
+  clean; g5-t1 3/3; g5-t2 ≥9/12 (double-run stable).
+- Each sub-slice: its own RED→GREEN (unit/replay) + four-file 328 +
+  hermetic + B1 focused + admin 16 + replay gate zero new signatures;
+  prompt-touching parts add differential evidence.
+- Protocol-JSON leak (selection JSON in answer text, r2/r3) fixed with
+  its own RED fixture under S3's visibility work or a dedicated small
+  fix — decision at implementation time.

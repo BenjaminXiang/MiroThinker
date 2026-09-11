@@ -256,6 +256,38 @@
        professors.
 - [ ] C5.1 Delete taxonomy dead path after zero-reference sweep.
 
+## Answer-quality slice (2026-09-11, design locked in design.md; runs after C1 batch 0)
+
+- [ ] AQ-S0 Payload A/B causal-chain experiment: fixed after-F4 payload,
+       ± "注册地址：深圳市…" injection, N≥5 samples per arm on the live
+       LLM backend; pass = pool naming rate ~1/6 → ≥5/6. Fail → fall back
+       to the deterministic completeness backstop
+       (`required_member_ids` + answer-side self-check, the per-member
+       branch at `knowledge_read.py:4285-4295` is dead code) and re-plan.
+- [ ] AQ-S1 C-1 address claims: `_semantic_text` company branch gains
+       注册地址/注册地 lines behind a narrow/geography-turn switch
+       (`serving:5901` call site); off-switch output byte-identical.
+- [ ] AQ-S2 A-1 enumeration windows: local 32 / web 32 / cut 48→64 for
+       enumeration-class queries; `web_claim_limit` decoupled; selector
+       unit RED (#17–32 locals -> claims), plan unit (max_candidates 64);
+       offline pack probe (嘉立创/则成 enter the window); TTFT recorded.
+- [ ] AQ-S3 B-probe member category probes + probe visibility fixes
+       (subject-consistency gate, lane counters, claims inclusion;
+       `chat:1813-1836` integration point); RED = enumeration turn sends
+       no probe today.
+- [ ] AQ-S3b Protocol-JSON leak fixture (selection JSON in answer text;
+       r2/r3 occurrences) fixed with the wire decoder or visibility fix.
+- [ ] AQ-S4 D-1 capability-evidence binding for the relation frame
+       (`serving:2943-2947`); RED replay on the sealed pack shows
+       "普渡+机械臂+按电梯" absent from claims today; D-2 manual sidecar
+       (single PuDu record) only if S4 evidence says the window eats it.
+- [ ] AQ-S5 A-2 declaration vocabulary extension (PCB synonym family) with
+       F1 matcher consumer; offline table must show the 8 in-pack GT
+       entering the window; anti-false-positive matrix.
+- [ ] AQ-S6 Acceptance double-run + replay gate + differential for
+       prompt touches; targets: g2-t1 5/5 + ≥8/10; g2-t2 ≥5/6; g2-t3
+       stance clean; g5-t1 3/3; g5-t2 ≥9/12.
+
 ## Spec deltas
 
 - [x] S-delta B1: `canonical-v2-chat` — company→patent local traversal
