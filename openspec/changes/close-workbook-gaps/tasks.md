@@ -44,27 +44,35 @@
        `d05-findings.md`): per-entity drop-stage tables + production-
        function gate replay + lane construction facts; fix shape locked
        in design.md §B2+B3 "D0.5 locked phase-1 fix set".
-- [ ] B3B2-F3 Gate backfill fix (small): `kept<floor` keeps ALL
+- [x] B3B2-F3 Gate backfill fix (small): `kept<floor` keeps ALL
        full-name hits (T2/T3); only T4/T5 truncated to floor. Verify =
        re-run the D0.5 gate replay (g5-t2 3→12 expected; g2-t2
-       unchanged at 7).
-- [ ] B3B2-F2 Commit union: `_commit_prose_scope` commits selected ∪
+       unchanged at 7). (landed `7a65fb4a`, deployed)
+- [x] B3B2-F2 Commit union: `_commit_prose_scope` commits selected ∪
        (displayed names appearing in the answer text) — kills the
-       深南电路-style eviction (`answer:2488-2559`).
-- [ ] B3B2-F1 Category recall: deterministic category-term recall over
+       深南电路-style eviction (`answer:2488-2559`). (landed `0ec4b1a6`,
+       deployed)
+- [x] B3B2-F1 Category recall: deterministic category-term recall over
        `content_terms` (all scalar fields already in the lexicon,
        `knowledge_read_isolated.py:8147`); term extraction (stopword/
        city strip, ≥2 chars), bounded, enumeration window; offline
        GT-recall count over the sealed pack. Retrieval-critical —
        micro-design in implementation; STOP+report if it needs contract
        changes beyond matcher/planner level.
-- [ ] B3B2-F4 Rerank stable-order fix (diagnostic f1b-downstream-trace.md):
+       (landed `aa67829f`; lane-level verified live: lexical 0→48)
+- [x] B3B2-F4 Rerank stable-order fix (diagnostic f1b-downstream-trace.md):
        drop the `result_id` tie-break in the serving rerank bucket sort so
        equal-score candidates keep lane order (F1 ranking) —
        `knowledge_serving_isolated.py:2525-2526`. Verify: replay probe
        stage-table shows GT survival to payload; acceptance re-run
        (g2 5/5 → g2-t2 ≥5/6 → g5-t2 ≥9/12); replay gate zero new
        signatures; four-file regression unchanged.
+       (landed `42ad58a2`: candidate_key → score-only; new anti-sorted
+       equal-score test; replay after-table — g2 six GTs all reach
+       payload at ordered 1/3/5/7/15/23; g5 顺易捷 revived 67→17;
+       known exchange: 深南电路 back to true rank 81 (hex luck removed);
+       rerank cluster 4/4, four-file suite 328 passed; deployed to 18188
+       2026-09-11 18:0x for the acceptance re-run)
 - [ ] B3B2-ACC Acceptance (main context, multi-run): g2-t1 5/5;
        g2-t2 ≥5/6; g5-t2 ≥9/12 (data ceiling: 8 in-pack + Guangzhou
        exception); replay zero new signatures; differential

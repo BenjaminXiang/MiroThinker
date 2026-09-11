@@ -694,7 +694,10 @@ outside our control; the guard must be robust regardless.
 - **B5**: full design above (redact-and-continue + trace token, 2026-09-10).
 - **B6**: combine structured education/region/industry constraints; blocked
   on C1 field quality for `key_personnel.education_structured`.
-- **C1**: field-quality contract thresholds — professor profile_summary
+- **C1**: batch-0 full design below (placeholder scrub + anchoring
+  declaration, 2026-09-11 scoping pass + locked decisions). Remaining
+  batches (thresholds enforcement, rebuild-time cleaning) stay stubbed
+  here: field-quality contract thresholds — professor profile_summary
   boilerplate <10%, paper_summary placeholder 0%, title placeholder <5%,
   email placeholder 0%, aliases coverage ≥30% for companies with known
   aliases.
@@ -765,3 +768,77 @@ carry no citations), GAP-08 (web boilerplate reaches user-visible output).
   (RED before the filter extension) and stays silent on the archived clean
   corpus (no false positives on 404-as-number / slug cases).
 - Replay gate zero new signatures.
+
+## C1 — batch 0: placeholder scrub + anchoring declaration (full design, 2026-09-11)
+
+Scope source: `.agents/runs/close-workbook-gaps/c1-batch0-scoping.md`
+(read-only pass by explore agent-12; line numbers are s11-worktree rev).
+Contract: `.agents/runs/close-workbook-gaps/c1-gate-contract-v1-proposal.md`
+(13+14 adjudications in §7/§10). Batch 0 = the low-cost first batch of the
+five-batch sequence, not the full C1 program.
+
+### Locked decisions (main context, 2026-09-11)
+
+1. **Both sides, read side first.** The read-side scrub takes effect on the
+   EXISTING sealed pack with no rebuild (`content_terms` is read-derived,
+   not hashed); the packaging-side gate only protects new packs. Land the
+   read-side scrub for immediate relief; land the packaging gate as the
+   birth-clean mechanism (warn-not-block on first release, fail-closed
+   after calibration).
+2. **Read-side hook = projection-level scrub after validation.** Scrub the
+   validated projection (s11:8110-8157) and feed both `_projection_terms`
+   (:8191) and `_projection_category_term_buckets` (:8195 — placeholder
+   values in `industry.name`/`industry_tags`/`tech_tags` currently enter
+   the top F1 weight bucket). Do NOT scrub before validation — the lineage
+   assertions at :8144-8151 fail closed. Do NOT widen
+   `_normalized_scalar_values` alone (it would leak into vector/manual
+   exclusion semantics).
+3. **Matcher = the 4 families from the scoping report** — (a) English
+   sentence prefixes, (b) Chinese whole-value/prefix + single `^无$`,
+   (c) token-level erasure of glued `未找到` runs (189 in run14, all
+   retain content after erasure; whole-value drop would lose real terms),
+   (d) structural `^-+$` / `none` / `n/a`. Keep the 140-char cap: the only
+   `^未知` hit in run14 is legitimate long prose; substring widening or
+   dropping the cap immediately false-kills it. Value-level hits become
+   empty/null; hits on `name`/`title`/`patent_number` route to the
+   record-level R1/R2 rejection (build side), not the scrubber.
+4. **Packaging gate hangs in the s11 copy** of
+   `s12c/build_serving_pack.py` — the P4 runbook pins
+   `$S11_RUNS/s12c/build_serving_pack.py` as the only builder
+   (`build_p4_serving_pack.sh:11`); the data-rebuild copy is not executed.
+   Insert between `index_snapshot_verify` (:243) and the copy loop (:257),
+   reading the source index; refusal leaves no bytes. Output is a
+   side-car `placeholder-scan-report.json`; **never rewrite
+   lookup.sqlite3** (that would break manifest hashes / release binding).
+5. **Anchoring declaration skeleton** =
+   `canonical_v2/catalogs/anchoring-declaration-v1.json` (schema pattern
+   precedent: `domain_catalog.py:34/:130`, unknown schema fails closed),
+   seeded from `g-series/g3-vocabulary.json` + the current hardcoded F1
+   constants, with `generated_from.pack_sha256` recorded. Batch 0 wires
+   consumer (a) only: F1 scoring loads multipliers/tiers from the file —
+   behavior-preserving for the seeded values; unanchored-branch wording
+   (consumer b) belongs to the answer-quality slice.
+
+### Blind spots to document at batch 0 (read-side limits)
+
+- Raw `lookup_content` / `lookup_content_sha256` / read-raw paths
+  (`:2686/:2701` internal reference, admin views) keep showing
+  placeholders; the vector corpus (milvus.db, professor research views
+  `paper_summary/patent_summary`, `index_projection.py:758-771`) keeps
+  its placeholders.
+- Packaging-side cleaning, vector-corpus cleaning, record-level rejection
+  and full-pack threshold recalibration require a full rebuild (batch 2+).
+
+### Acceptance
+
+- Read-side scrub: constructed fixtures per family (incl. the glued-run and
+  the long-`未知`-prose negative control) RED→GREEN; focus suites
+  (`test_knowledge_read_isolated.py`, `test_knowledge_serving_isolated.py`
+  F1 assertions) + 7-session replay zero new signatures; live lexical /
+  category recall unchanged on the GT queries (differential).
+- Declaration: unknown schema fails closed; F1 scoring consumes the file
+  with byte-identical outcomes on the seeded constants (equivalence test).
+- Gate (packaging): dry-run against the run14 index produces the side-car
+  report with counts matching the read-only census (professor 12,872 /
+  company 3,099 / 189 glued / 1,817 whole-value), writes no bytes into
+  index or pack, and does not alter any manifest hash.
