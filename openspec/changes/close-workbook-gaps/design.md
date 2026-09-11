@@ -940,3 +940,29 @@ worktree; S0 needs a live LLM backend (main context runs it).
 - **Vocabulary/recall knobs are data, not code**: category families live
   in the anchoring declaration (mechanism per A-2); a new category is a
   data addition, and the generalization probe is how we check it.
+
+### AQ-S2b amendment (2026-09-11, after the A-2 rank table): disclosure extends to the RECALLED set
+
+- Data: after A-2 (PCB paraphrase expansion) the 8 in-pack PCB GTs rank
+  3/2/14/18/20/25/37/56 (顺易捷/精诚达/上达/兴森/一博/则成/深南电路/嘉立创) —
+  6/8 inside the 32-local claim window, 8/8 inside the read window (64).
+  嘉立创/深南电路 are structurally past the claim budget (thin profiles;
+  more vocabulary would over-broaden).
+- Amendment to the earlier adjudication ("truncated members stay
+  count-only"): split the two ideas —
+  **recalled-but-not-claimed members** (inside the read window) MAY be
+  disclosed by name in the enumeration coverage sentence (cap 32 names,
+  recall-rank order); members beyond the read window (not retrieved) stay
+  count-only. Rationale: the sentence already discloses "recalled related
+  local enterprises"; extending it to the full retrieved set is the same
+  honesty class, costs no LLM payload (claims stay 32), and feeds the
+  F2 commit-union so narrowing turns inherit the full pool.
+- Description budget unchanged (32 local / 32 web claims) — the LLM still
+  sees what it can describe; the disclosure layer carries breadth.
+- Verification: sentence composition tests (claimed-first order? recall
+  rank; cap 32; no fabrication — every name must resolve in-pack);
+  commit-union propagation test; live g5 probe + g5-t2 measurement; the
+  generalization probe re-run (P2 precision must not degrade).
+- Fallback if the measurement says description (not disclosure) is the
+  binding constraint: widen the claim window to 64 (payload +~6K chars,
+  TTFT measured) — recorded as the costlier option.
