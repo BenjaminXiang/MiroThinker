@@ -58,6 +58,13 @@
        GT-recall count over the sealed pack. Retrieval-critical —
        micro-design in implementation; STOP+report if it needs contract
        changes beyond matcher/planner level.
+- [ ] B3B2-F4 Rerank stable-order fix (diagnostic f1b-downstream-trace.md):
+       drop the `result_id` tie-break in the serving rerank bucket sort so
+       equal-score candidates keep lane order (F1 ranking) —
+       `knowledge_serving_isolated.py:2525-2526`. Verify: replay probe
+       stage-table shows GT survival to payload; acceptance re-run
+       (g2 5/5 → g2-t2 ≥5/6 → g5-t2 ≥9/12); replay gate zero new
+       signatures; four-file regression unchanged.
 - [ ] B3B2-ACC Acceptance (main context, multi-run): g2-t1 5/5;
        g2-t2 ≥5/6; g5-t2 ≥9/12 (data ceiling: 8 in-pack + Guangzhou
        exception); replay zero new signatures; differential
@@ -103,21 +110,31 @@
 
 ## Stage C — data groundwork
 
-- [ ] G1 Retrieval-critical field contract draft: 4-domain field
+- [x] G1 Retrieval-critical field contract draft: 4-domain field
        coverage inventory (measured) + per-field thresholds + category-
-       anchoring input + gate-at-import sketch. (parallel subagent,
-       read-only; artifact `g-series/g1-field-contract-draft.md`)
-- [ ] G2 Identity governance audit: fragmentation counts + cross-
+       anchoring input + gate-at-import sketch. (DONE:
+       `g-series/g1-field-contract-draft.md` — placeholder pollution in
+       content_terms quantified (professor 100% / company 30.3% docs);
+       stable structured anchors only company.tech_tags/industry,
+       patent.title, professor.research_directions)
+- [x] G2 Identity governance audit: fragmentation counts + cross-
        identity conflict inventory + cross-release id stability +
        merge-rules proposal (input to the two-line contract ADR).
-       (parallel subagent; artifact `g-series/g2-identity-audit.md`)
-- [ ] G3 Category lexicon & field anchoring: from 353 real category
+       (DONE: `g-series/g2-identity-audit.md` — four-domain id churn
+       100% across releases, 33% pure loss; 42% merge traps; stable_uid
+       protocol proposal)
+- [x] G3 Category lexicon & field anchoring: from real category
        queries; anchoring rules + offline verification table + gap list
-       (feeds G1/C1). (parallel subagent; `g-series/g3-category-
-       anchoring.md`)
+       (feeds G1/C1). (DONE: `g-series/g3-category-anchoring.md` —
+       tech_tags is the only fine-category structured anchor (26/30
+       words hit but ~1 tag/company); structured coverage spans 85.9%
+       (人工智能) → 14.5% (具身智能) → 7.7% (PCB) → 0% (送餐机器人);
+       zero-signal classes (酒店送餐机器人/PCB打板) need an unanchored
+       branch)
 - [ ] C1.1 Ingestion quality gate implementation (G-series contracts →
        gate-at-import: field thresholds + anchoring + identity merge;
-       folded into the C6 update pipeline). (depends G1-G3)
+       folded into the C6 update pipeline). (depends G1-G3; next:
+       consolidation into C1-contract v1 + ADR draft for user review)
 - [ ] C2.1 run14 thin-load online (47,071 docs) + reconciliation report;
        workbook score not regressed. Sub-steps (design.md §C2, contract
        verified line-by-line 2026-09-10):

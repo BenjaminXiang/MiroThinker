@@ -597,6 +597,27 @@ B2-b per-member verdict probes, B2-c coverage statement + count
 semantics, F-bind web-name binding, probe-path visibility/qualification.
 Revisit if multi-run acceptance shows residual shortfall.
 
+**F1-B downstream diagnostic and fix F4 (2026-09-11).** Live acceptance
+(post-F1) showed the lane works (lexical in=48) but every F1 winner dies
+before the payload: the serving reranker bucket-sorts by
+`(-raw_score, result_id)` while all local candidates carry
+`raw_score=1.0` (`knowledge_read_isolated.py:8741`), degenerating to
+random-hex `canonical_id` string order
+(`knowledge_serving_isolated.py:2525-2526`); the 48-candidate cut
+(`knowledge_read.py:8059`) then keeps the hex-order lucky ones and
+discards the lane ranking (verified by production-function replay:
+predicted == actual; 24/48 front locals in strict hex order). The prose
+LLM never saw 普渡/开普勒/擎朗/九号/艾唯尔 — it chose normally over a
+wrong set. **F4 (chosen):** drop the `result_id` tie-break from the
+rerank bucket sort — Python's stable sort then preserves input order
+(= fusion first-seen = lane order = F1 ranking); contract shape and
+recorded-replay equality are untouched. Rejected: ① carry fusedScore
+into raw_score (replay-contract cascade; architecture item),
+② window re-tuning (does not restore ordering). F4 does NOT cover g5's
+out-of-window six (F1 recall gap, its own item) nor the selector
+local-16 semantics (separate decision). Evidence:
+`d0-probe/f1b-downstream-trace.md` (+ replay probe).
+
 **Acceptance (multi-run; single replay insufficient — carried sets vary
 day to day):** g2-t1 entities 5/5; g2-t2 pool ≥5/6; g5-t2 ≥9/12
 key_points (data ceiling noted: 8 in-pack + the Guangzhou exception —

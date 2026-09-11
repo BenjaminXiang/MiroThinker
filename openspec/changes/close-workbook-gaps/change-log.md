@@ -421,3 +421,20 @@
   text-only words listed (储能 3.0%, 机械臂 6.7%, 半导体 17.0%…).
 - G-stream COMPLETE (G1/G2/G3). Next: consolidate into C1-contract v1 +
   two-line ADR draft for user review.
+
+## 2026-09-11 — F1-B diagnostic: reranker hex-id tie-break destroys lane ranking; fix F4 approved
+
+- Live acceptance (post-F1) failed 0/5 although the lane fired (lexical
+  in=48). Production-function replay diagnostic (agent-4): all local
+  candidates carry raw_score=1.0 (`knowledge_read_isolated.py:8741`), so
+  the rerank bucket sort `(-raw_score, result_id)`
+  (`knowledge_serving_isolated.py:2525-2526`) degenerates to random-hex
+  canonical-id string order; the 48-cut then keeps hex-lucky candidates.
+  g2's 普渡/开普勒/擎朗/九号/艾唯尔 all die at the 48-cut; 云迹 survives
+  as local #18 and dies at the local-16 selector window; g5 only
+  深南电路 (hex-lucky) reaches the answer. The prose LLM never saw the
+  GTs. The hypothesized direct_object_ids cut was NOT triggered.
+- Fix F4 approved: drop the `result_id` tie-break (stable sort preserves
+  fusion/lane order). Predicted: g2 six GTs into payload; g5 顺易捷
+  revives. Out of scope: g5 out-of-window six (F1 recall gap), local-16
+  semantics (separate decision). Evidence: d0-probe/f1b-downstream-trace.md.
