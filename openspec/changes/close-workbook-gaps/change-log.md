@@ -751,3 +751,13 @@
   outside the 32-local claim window (thin profiles; more vocabulary would
   over-broaden). Decision taken: disclosure-extension (AQ-S2c) rather
   than the costlier claim-window 64 — design.md §AQ-S2b amendment.
+
+- Compound-term leakage mechanism (for the queued F1 refinement): a 4-char
+  query run (激光雷达) decomposes into overlapping bigrams (激光/光雷/雷达,
+  weight 1); each bigram survives the corpus-coverage filter when it
+  appears in ≥2 companies (雷达 certainly does), and an entry matching ONLY
+  the tail bigram reaches min-score via a field multiplier (product/tag
+  tier ×2). Candidate rule: bigrams from the same source run must not
+  qualify alone — require ≥2 bigrams of one run, or the contiguous run
+  substring. Measure impact on the GT queries (esp. 储能电池/医疗器
+  械-type compounds) before landing.
