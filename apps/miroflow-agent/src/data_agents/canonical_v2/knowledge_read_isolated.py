@@ -6899,6 +6899,19 @@ class _PublicLookupEntry:
     display_terms: frozenset[str]
     identifier_terms: frozenset[str]
     content_terms: frozenset[str]
+    # Closed primary industry label (a controlled vocabulary — the sealed
+    # run14 pack carries just 8 companies with industry=机器人); the
+    # strongest deterministic category-membership signal.
+    industry_label_terms: frozenset[str]
+    # Curated but free-text tags (industry_tags / tech_tags, e.g.
+    # "室内外配送机器人研发商"); a strong signal, though hundreds of
+    # companies carry a given category word here.
+    tag_category_terms: frozenset[str]
+    # Short identity / product-line fields (name, normalized_name,
+    # product_description); weaker than the curated fields but still far
+    # stronger than the same hit inside the long template summaries that
+    # content_terms also carries.
+    product_category_terms: frozenset[str]
 
 
 @dataclass(frozen=True)
@@ -6926,6 +6939,9 @@ def _public_lookup_entries(
         display_name, display_terms, identifier_terms, content_terms = (
             _projection_terms(projection)
         )
+        industry_label_terms, tag_category_terms, product_category_terms = (
+            _projection_category_term_buckets(projection)
+        )
         entries.append(
             _PublicLookupEntry(
                 document=document,
@@ -6933,6 +6949,9 @@ def _public_lookup_entries(
                 display_terms=display_terms,
                 identifier_terms=identifier_terms,
                 content_terms=content_terms,
+                industry_label_terms=industry_label_terms,
+                tag_category_terms=tag_category_terms,
+                product_category_terms=product_category_terms,
             )
         )
     return tuple(entries)
@@ -7164,6 +7183,29 @@ def create_isolated_lexical_lookup_adapter(
                     identifier_terms=entry.identifier_terms,
                     lane="lexical",
                     adapter_version=_LEXICAL_ADAPTER_VERSION,
+                )
+            )
+        if not candidates:
+            # F1 (close-workbook-gaps B1): a list-style category query is
+            # never a substring of one field value, so the whole-phrase pass
+            # returns empty by construction; fall back to term-level recall.
+            # Score order from _category_recall_entries is preserved.
+            return RetrievalLaneResult(
+                candidates=tuple(
+                    _candidate_from_document(
+                        request=validated_request,
+                        bundle=validated_bundle,
+                        publication=validated_publication,
+                        document=entry.document,
+                        display_name=entry.display_name,
+                        identifier_terms=entry.identifier_terms,
+                        lane="lexical",
+                        adapter_version=_LEXICAL_ADAPTER_VERSION,
+                    )
+                    for entry in _category_recall_entries(
+                        request=validated_request,
+                        entries=entries,
+                    )
                 )
             )
 
@@ -8150,6 +8192,35 @@ def _projection_terms(
     )
 
 
+def _projection_category_term_buckets(
+    projection: PublicProjection,
+) -> tuple[frozenset[str], frozenset[str], frozenset[str]]:
+    # Field-tier buckets for category recall (F1). Returns (industry label,
+    # tags, product): the closed primary industry label vs curated free-text
+    # tags (industry_tags / tech_tags) vs short identity / product-line
+    # fields (name / normalized_name / product_description). Company-only
+    # for now; other domains score on the flat content terms alone.
+    if not isinstance(projection, CompanyProjection):
+        return frozenset(), frozenset(), frozenset()
+    industry_label_values: list[str | None] = [
+        projection.industry.name if projection.industry is not None else None
+    ]
+    tag_values: list[str | None] = [
+        *(tag.name for tag in projection.industry_tags),
+        *(tag.name for tag in projection.tech_tags),
+    ]
+    product_values: list[str | None] = [
+        projection.name,
+        projection.normalized_name,
+        projection.product_description,
+    ]
+    return (
+        frozenset(_normalized_values(tuple(industry_label_values))),
+        frozenset(_normalized_values(tuple(tag_values))),
+        frozenset(_normalized_values(tuple(product_values))),
+    )
+
+
 def _normalized_values(values: tuple[str | None, ...]) -> tuple[str, ...]:
     return tuple(
         normalized
@@ -8271,6 +8342,237 @@ def _matches_lexical_request(
             )
         )
     )
+
+
+# Category-recall fallback for the lexical lane (F1, close-workbook-gaps B1):
+# a list-style query ("中国有哪些成熟的酒店送餐机器人供应商") is never a
+# substring of any single field value, so the whole-phrase pass above returns
+# empty by construction. When it does, extract content words from the query
+# and match them against the documents' content terms instead. The trigger
+# markers mirror serving's _ENUMERATION_QUERY_MARKERS
+# (knowledge_serving_isolated.py) — the read layer cannot import serving, so
+# keep the two tuples aligned.
+_CATEGORY_RECALL_TRIGGER_MARKERS = (
+    "哪些",
+    "谁",
+    "多少",
+    "几个",
+    "几种",
+    "列出",
+    "所有",
+    "分别",
+    "推荐",
+    "厂商",
+    "供应商",
+)
+# Stop phrases stripped before term extraction, longest first: enumeration
+# scaffolding, generic organization nouns, particles, and geography. The
+# serving pack is city-scoped, so city words carry no discrimination.
+_CATEGORY_RECALL_STOP_PHRASES = (
+    "有哪些",
+    "有什么",
+    "有没有",
+    "哪些是",
+    "哪家",
+    "哪些",
+    "推荐",
+    "列举",
+    "列出",
+    "所有",
+    "分别",
+    "成熟",
+    "知名",
+    "供应商",
+    "服务商",
+    "公司",
+    "企业",
+    "厂商",
+    "厂家",
+    "深圳",
+    "中国",
+    "北京",
+    "上海",
+    "广州",
+    "全国",
+    "做",
+    "的",
+    "了",
+)
+# A weight-1 bigram must hit at least this many public documents to count as
+# a category word — singleton bigram hits are entity-name fragments owned by
+# the exact lane. Weight-2 terms are self-delimiting words (PCB, 机器人), so
+# even a singleton hit is a real category signal (e.g. the one document whose
+# summary says 打板).
+_CATEGORY_RECALL_MIN_BIGRAM_COVERAGE = 2
+# A document must reach this score to be recalled: one stray bigram (机器 in
+# 机器视觉 for a 机器人 query) never suffices.
+_CATEGORY_RECALL_MIN_SCORE = 2
+# Field-tier multipliers applied to a matched term's weight, measured on the
+# sealed run14 pack:
+# - the long template summaries mention category words across hundreds of
+#   companies (机器 appears in 1467/7089 summaries) — base weight x1;
+# - name / normalized_name / product_description: short identity /
+#   product-line fields — x2;
+# - industry_tags / tech_tags: curated but free-text tags (e.g.
+#   "室内外配送机器人研发商"); hundreds of companies carry a given category
+#   word in a tag, so a tag hit alone cannot separate members from the
+#   summary tie mass — x4;
+# - industry: the closed primary label (8 companies with industry=机器人 in
+#   the whole pack). A label member must outrank any tag/summary
+#   combination: the strongest non-label profile measured on the pack
+#   scores 13 (two tag terms at x4 plus product/summary extras), and two
+#   bigram label hits at x8 score 16 — x8 clears it with margin.
+# A term hitting several tiers counts once, at the highest tier.
+_CATEGORY_INDUSTRY_LABEL_MULTIPLIER = 8
+_CATEGORY_TAG_FIELD_MULTIPLIER = 4
+_CATEGORY_PRODUCT_FIELD_MULTIPLIER = 2
+_CATEGORY_CJK_RUN = re.compile(r"[一-鿿]+")
+_CATEGORY_LATIN_RUN = re.compile(r"[a-z0-9]+")
+
+
+def _category_query_terms(query_text: str) -> tuple[tuple[str, int], ...]:
+    # Term extraction is deterministic (no segmenter dependency): latin/digit
+    # runs >= 2 chars are self-delimiting words (weight 2); CJK runs of 2-3
+    # chars stay whole (weight 2); longer CJK runs decompose into overlapping
+    # bigrams (weight 1) — 机器人 in a free-text field then scores 2 via
+    # 机器+器人 while a lone 机器 mention scores 1 and stays out.
+    phrase = _lexical_query_phrase(query_text)
+    if not phrase:
+        return ()
+    if not any(marker in phrase for marker in _CATEGORY_RECALL_TRIGGER_MARKERS):
+        return ()
+    residue = phrase
+    for stop in _CATEGORY_RECALL_STOP_PHRASES:
+        residue = residue.replace(stop, " ")
+    terms: dict[str, int] = {}
+    for chunk in residue.split():
+        for run in _CATEGORY_CJK_RUN.findall(chunk):
+            if len(run) < 2:
+                continue
+            if len(run) <= 3:
+                terms[run] = max(terms.get(run, 0), 2)
+            else:
+                for index in range(len(run) - 1):
+                    bigram = run[index : index + 2]
+                    terms[bigram] = max(terms.get(bigram, 0), 1)
+        for run in _CATEGORY_LATIN_RUN.findall(chunk):
+            if len(run) >= 2:
+                terms[run] = max(terms.get(run, 0), 2)
+    return tuple(sorted(terms.items()))
+
+
+def _category_recall_entries(
+    *,
+    request: LaneRequest,
+    entries: tuple[_PublicLookupEntry, ...],
+) -> list[_PublicLookupEntry]:
+    # Substring matching against content terms: category field values are
+    # free text (tech_tags "室内外配送机器人研发商"), so token equality would
+    # miss them. Scored, deterministically ordered, and truncated to the
+    # request window (48 on the enumeration branch).
+    terms = _category_query_terms(request.query_text)
+    if not terms:
+        return []
+    constraints = request.structured_constraints
+    eligible: list[_PublicLookupEntry] = []
+    for entry in entries:
+        document = entry.document
+        if document.domain is None or document.domain not in request.domains:
+            continue
+        if (
+            constraints.displayed_entity_ids
+            and document.canonical_object_id not in constraints.displayed_entity_ids
+        ):
+            continue
+        if _has_excluded_term(constraints.excluded_terms, entry.content_terms):
+            continue
+        eligible.append(entry)
+    matched_by_entry: list[frozenset[str]] = []
+    industry_by_entry: list[frozenset[str]] = []
+    tags_by_entry: list[frozenset[str]] = []
+    product_by_entry: list[frozenset[str]] = []
+    coverage: dict[str, int] = {}
+    for entry in eligible:
+        matched = frozenset(
+            term
+            for term, _weight in terms
+            if any(term in content_term for content_term in entry.content_terms)
+        )
+        matched_by_entry.append(matched)
+        industry_by_entry.append(
+            frozenset(
+                term
+                for term in matched
+                if any(
+                    term in field_value for field_value in entry.industry_label_terms
+                )
+            )
+        )
+        tags_by_entry.append(
+            frozenset(
+                term
+                for term in matched
+                if any(term in field_value for field_value in entry.tag_category_terms)
+            )
+        )
+        product_by_entry.append(
+            frozenset(
+                term
+                for term in matched
+                if any(
+                    term in field_value for field_value in entry.product_category_terms
+                )
+            )
+        )
+        for term in matched:
+            coverage[term] = coverage.get(term, 0) + 1
+    surviving = {
+        term: weight
+        for term, weight in terms
+        if coverage.get(term, 0)
+        >= (_CATEGORY_RECALL_MIN_BIGRAM_COVERAGE if weight < 2 else 1)
+    }
+    if not surviving:
+        return []
+    scored: list[tuple[int, _PublicLookupEntry]] = []
+    for entry, matched, industry, tags, product in zip(
+        eligible,
+        matched_by_entry,
+        industry_by_entry,
+        tags_by_entry,
+        product_by_entry,
+        strict=True,
+    ):
+        # Field-tiered scoring: the same term weighs most in the closed
+        # industry label, less in the curated tags, less again in the short
+        # identity / product-line fields, and at base weight in the long
+        # template summaries (see the multiplier constants for the measured
+        # rationale).
+        score = sum(
+            surviving[term]
+            * (
+                _CATEGORY_INDUSTRY_LABEL_MULTIPLIER
+                if term in industry
+                else _CATEGORY_TAG_FIELD_MULTIPLIER
+                if term in tags
+                else _CATEGORY_PRODUCT_FIELD_MULTIPLIER
+                if term in product
+                else 1
+            )
+            for term in matched
+            if term in surviving
+        )
+        if score >= _CATEGORY_RECALL_MIN_SCORE:
+            scored.append((score, entry))
+    scored.sort(
+        key=lambda pair: (
+            -pair[0],
+            pair[1].document.domain or "",
+            pair[1].document.canonical_object_id,
+            pair[1].document.document_id,
+        )
+    )
+    return [entry for _score, entry in scored[: request.max_candidates]]
 
 
 _COMPANY_LEGAL_SUFFIXES = (

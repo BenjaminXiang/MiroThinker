@@ -1,0 +1,645 @@
+{
+  "pack": "/var/tmp/mirothinker-data-v2/serving-pack-run14-sealed/lookup.sqlite3",
+  "release_id": "candidate-v2-20260819-r1",
+  "documents_total": 47071,
+  "public_entries": 47071,
+  "company_entries": 7089,
+  "entry_build_seconds": 37.08,
+  "queries": [
+    {
+      "id": "g2-t1",
+      "query": "中国有哪些成熟的酒店送餐机器人供应商",
+      "terms": [
+        {
+          "term": "器人",
+          "weight": 1
+        },
+        {
+          "term": "店送",
+          "weight": 1
+        },
+        {
+          "term": "机器",
+          "weight": 1
+        },
+        {
+          "term": "送餐",
+          "weight": 1
+        },
+        {
+          "term": "酒店",
+          "weight": 1
+        },
+        {
+          "term": "餐机",
+          "weight": 1
+        }
+      ],
+      "term_coverage": {
+        "器人": 1311,
+        "店送": 0,
+        "机器": 1467,
+        "送餐": 20,
+        "酒店": 464,
+        "餐机": 8
+      },
+      "before_primary_hits": 0,
+      "after_fallback_hits": 48,
+      "scored_pool_size": 1390,
+      "fallback_elapsed_ms": 762.6,
+      "fallback_elapsed_ms_warm": 208.8,
+      "recalled_names": [
+        "云迹科技股份有限公司",
+        "深圳市普渡科技有限公司",
+        "上海开普勒机器人有限公司",
+        "上海擎朗智能科技有限公司",
+        "银河通用",
+        "跨维（深圳）智能数字科技有限公司",
+        "深圳市迈步机器人科技有限公司",
+        "九号机器人",
+        "深圳中科世界机器人有限公司",
+        "深圳市中舟智能科技有限公司",
+        "深圳市智贝尔机器人设备科技有限公司",
+        "深圳市艾唯尔科技有限公司",
+        "深圳市小村机器人智能科技有限公司",
+        "坎德拉（深圳）科技创新有限公司",
+        "深圳市全民通信息技术有限公司",
+        "云趣在线（深圳）科技有限公司",
+        "深圳市艾特智能科技有限公司",
+        "深圳中智卫安机器人技术有限公司",
+        "深圳晓润控股有限公司",
+        "深圳全智能机器人科技有限公司",
+        "深圳市普森斯科技有限公司",
+        "深圳市繁兴科技股份有限公司",
+        "睿博天米科技（深圳）有限公司",
+        "深圳市吉影科技有限公司",
+        "中铧机器人（深圳）有限公司",
+        "深圳市锐曼智能技术有限公司",
+        "深圳乐动机器人股份有限公司",
+        "深圳市笨笨机器人有限公司",
+        "深圳市石头智能机器人技术有限公司",
+        "深圳来创智能科技有限公司",
+        "深圳市宇辰智能科技有限公司",
+        "深圳恒需机器人科技有限公司",
+        "深圳市大象机器人科技有限公司",
+        "深圳科卫机器人科技有限公司",
+        "深圳市御膳智能科技有限公司",
+        "深圳以内创新科技有限公司",
+        "深圳普得技术有限公司",
+        "华腾智达（深圳）智能科技有限公司",
+        "合肥零次方机器人有限公司",
+        "深圳市三宝创新智能有限公司",
+        "深圳市未来天使机器人有限公司",
+        "爱乐福（深圳）科技有限公司",
+        "深圳银星智能集团股份有限公司",
+        "深圳市元鼎智能创新有限公司",
+        "深圳灵喵机器人技术有限公司",
+        "深圳市恒博智能安防机器人有限公司",
+        "敬科（深圳）机器人科技有限公司",
+        "深圳市源来智能设备有限公司"
+      ],
+      "gt": [
+        {
+          "alias": "普渡",
+          "identities_in_pack": 3,
+          "recalled": 1,
+          "hits": [
+            {
+              "display_name": "深圳市普渡科技有限公司",
+              "document_id": "lookup-document:sha256:1cf14e8efa3ea07f4a0c9fe2a01ca64b639986cd8fd3e56e69d94436bab74ef8",
+              "rank": 2,
+              "pool_rank": 2
+            },
+            {
+              "display_name": "深圳市普渡科技股份有限公司",
+              "document_id": "lookup-document:sha256:66066a6ffaf2402f181c691f8365e1de041428eade82e553f8c74943afd2a115",
+              "rank": null,
+              "pool_rank": 54
+            },
+            {
+              "display_name": "成都市普渡机器人有限公司",
+              "document_id": "lookup-document:sha256:313a93a61a3425ff52072e86e38d9f908f9074488f2f06fd73fca2a835157a8a",
+              "rank": null,
+              "pool_rank": 438
+            }
+          ]
+        },
+        {
+          "alias": "开普勒",
+          "identities_in_pack": 1,
+          "recalled": 1,
+          "hits": [
+            {
+              "display_name": "上海开普勒机器人有限公司",
+              "document_id": "lookup-document:sha256:9b0ee09c921e7cec404f619f531a0c49c45405372c1a94f875c2c3125d8e2d1f",
+              "rank": 3,
+              "pool_rank": 3
+            }
+          ]
+        },
+        {
+          "alias": "云迹",
+          "identities_in_pack": 1,
+          "recalled": 1,
+          "hits": [
+            {
+              "display_name": "云迹科技股份有限公司",
+              "document_id": "lookup-document:sha256:a459fff7531d31a7c6135e0ed9517321a86a3640e141633a8417a5ef432f5f01",
+              "rank": 1,
+              "pool_rank": 1
+            }
+          ]
+        },
+        {
+          "alias": "九号",
+          "identities_in_pack": 1,
+          "recalled": 1,
+          "hits": [
+            {
+              "display_name": "九号机器人",
+              "document_id": "lookup-document:sha256:c70357d7f959eee7d80da2012634d0ea35bb83ace81a66e59bc56158e658871e",
+              "rank": 8,
+              "pool_rank": 8
+            }
+          ]
+        },
+        {
+          "alias": "擎朗",
+          "identities_in_pack": 1,
+          "recalled": 1,
+          "hits": [
+            {
+              "display_name": "上海擎朗智能科技有限公司",
+              "document_id": "lookup-document:sha256:be9e425736cc9f3761626846abe845a5022f5928706c8d00ffad2fab81ea609b",
+              "rank": 4,
+              "pool_rank": 4
+            }
+          ]
+        },
+        {
+          "alias": "艾唯尔",
+          "identities_in_pack": 1,
+          "recalled": 1,
+          "hits": [
+            {
+              "display_name": "深圳市艾唯尔科技有限公司",
+              "document_id": "lookup-document:sha256:84dc6b8f7f8bf0ffab340e6422b037e96f2e6f816942f461c90950af7fabbc36",
+              "rank": 12,
+              "pool_rank": 12
+            }
+          ]
+        },
+        {
+          "alias": "安赛步",
+          "identities_in_pack": 1,
+          "recalled": 0,
+          "hits": [
+            {
+              "display_name": "深圳安赛步机器人有限公司",
+              "document_id": "lookup-document:sha256:8bb95d450fa4608b447ab7c8211aa078577609ba3891f0670259172013c2b268",
+              "rank": null,
+              "pool_rank": 436
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "g5-t1",
+      "query": "我想找PCB打板， 有哪些推荐",
+      "terms": [
+        {
+          "term": "pcb",
+          "weight": 2
+        },
+        {
+          "term": "我想找",
+          "weight": 2
+        },
+        {
+          "term": "打板",
+          "weight": 2
+        }
+      ],
+      "term_coverage": {
+        "pcb": 150,
+        "我想找": 0,
+        "打板": 1
+      },
+      "before_primary_hits": 0,
+      "after_fallback_hits": 48,
+      "scored_pool_size": 150,
+      "fallback_elapsed_ms": 184.7,
+      "fallback_elapsed_ms_warm": 179.1,
+      "recalled_names": [
+        "深圳天创无限科技有限公司",
+        "深圳市升达康科技有限公司",
+        "深圳市亿科迈科技有限公司",
+        "深圳市声雄电子有限公司",
+        "深圳市驭鹰者电子有限公司",
+        "百芯智能制造科技（深圳）有限公司",
+        "深圳市深华科电子有限公司",
+        "深圳赛维创新技术集团有限公司",
+        "深圳顺易捷科技有限公司",
+        "深圳市赛尔博特软件有限公司",
+        "深圳市迈威科技有限公司",
+        "深圳市科易博软件有限公司",
+        "深圳市壹科物联网技术有限公司",
+        "深圳优卫乐得科技有限公司",
+        "深圳正指向科技有限公司",
+        "深圳市天吉机电有限公司",
+        "深圳市动力飞扬智能装备有限公司",
+        "深圳市华仁智信技术有限公司",
+        "深圳市比昂芯科技有限公司",
+        "诡谷子人工智能科技（深圳）有限公司",
+        "深圳市优克雷技术有限公司",
+        "深圳智赛精密装备有限公司",
+        "深圳市高素科技有限公司",
+        "深圳市中科领创实业有限公司",
+        "深圳市赛晟科技有限公司",
+        "深圳市芯拓科技有限公司",
+        "深圳鼎界科技有限公司",
+        "深圳市盛矽电子科技有限公司",
+        "众志科技（深圳）有限公司",
+        "深圳市兆赫技术有限公司",
+        "深圳市玉成创新科技有限公司",
+        "深圳市中禾旭精密机械有限公司",
+        "深圳市雄思科技有限公司",
+        "深圳砺芯半导体有限责任公司",
+        "深圳市软博智能科技有限公司",
+        "深圳市舟海贸易有限公司",
+        "深圳市震远电子科技有限公司",
+        "深圳市智芯云创科技有限公司",
+        "深圳橙子自动化有限公司",
+        "锐视数字科技（深圳）有限公司",
+        "深南电路股份有限公司",
+        "深圳市雷赛自动化系统有限公司",
+        "深圳思路名扬通讯技术股份有限公司",
+        "深圳市洁驰科技有限公司",
+        "深圳国芯微半导体有限公司",
+        "深圳市腾进达信息技术有限公司",
+        "深圳市大族视觉技术有限公司",
+        "深圳市米克力美科技有限公司"
+      ],
+      "gt": [
+        {
+          "alias": "嘉立创",
+          "identities_in_pack": 1,
+          "recalled": 0,
+          "hits": [
+            {
+              "display_name": "深圳嘉立创科技集团股份有限公司",
+              "document_id": "lookup-document:sha256:294ec60ebf54ed1c1ffbf2b4f259065326b1ba7f6b38d7afa326874dd6fa86ee",
+              "rank": null,
+              "pool_rank": 54
+            }
+          ]
+        },
+        {
+          "alias": "深南电路",
+          "identities_in_pack": 1,
+          "recalled": 1,
+          "hits": [
+            {
+              "display_name": "深南电路股份有限公司",
+              "document_id": "lookup-document:sha256:a509a32aaeb9f3d407060c04503376e08093225d12b9ced9d25461f30901882b",
+              "rank": 41,
+              "pool_rank": 41
+            }
+          ]
+        },
+        {
+          "alias": "一博",
+          "identities_in_pack": 1,
+          "recalled": 0,
+          "hits": [
+            {
+              "display_name": "深圳市一博科技股份有限公司",
+              "document_id": "lookup-document:sha256:3b593c20f1b6d35be6c6ad5ddaa7229cdc7c3b2b58ad3a7d3a2634e61bc1c410",
+              "rank": null,
+              "pool_rank": 98
+            }
+          ]
+        },
+        {
+          "alias": "顺易捷",
+          "identities_in_pack": 1,
+          "recalled": 1,
+          "hits": [
+            {
+              "display_name": "深圳顺易捷科技有限公司",
+              "document_id": "lookup-document:sha256:2b337b99d56338beae4c5ac6bf88d770740ed461cf9eefc473bd7522fa10805f",
+              "rank": 9,
+              "pool_rank": 9
+            }
+          ]
+        },
+        {
+          "alias": "兴森",
+          "identities_in_pack": 1,
+          "recalled": 0,
+          "hits": [
+            {
+              "display_name": "深圳市兴森快捷电路科技股份有限公司",
+              "document_id": "lookup-document:sha256:3892f483407ee8715e667ea58dbd0d6e0c57cb64a959debd63cb36c644f7ddb1",
+              "rank": null,
+              "pool_rank": 70
+            }
+          ]
+        },
+        {
+          "alias": "则成",
+          "identities_in_pack": 1,
+          "recalled": 0,
+          "hits": [
+            {
+              "display_name": "深圳市则成电子股份有限公司",
+              "document_id": "lookup-document:sha256:bec1aa48d41676ee632a9f2ef46ca51fd55ad4ba3735ed73b73ca4851ea869f0",
+              "rank": null,
+              "pool_rank": 62
+            }
+          ]
+        },
+        {
+          "alias": "上达",
+          "identities_in_pack": 1,
+          "recalled": 0,
+          "hits": [
+            {
+              "display_name": "上达电子（深圳）股份有限公司",
+              "document_id": "lookup-document:sha256:6448199b0cac53f9ca4c1e33a704244c7e2052f4b8b81a15f8cb51e2a678c8d0",
+              "rank": null,
+              "pool_rank": null
+            }
+          ]
+        },
+        {
+          "alias": "精诚达",
+          "identities_in_pack": 1,
+          "recalled": 0,
+          "hits": [
+            {
+              "display_name": "深圳市精诚达电路科技股份有限公司",
+              "document_id": "lookup-document:sha256:de4c342b537887dc220a4d23953b9149d4e5bde9a2497d524c67387f0cdaad39",
+              "rank": null,
+              "pool_rank": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "pcb-list",
+      "query": "深圳有哪些做PCB的公司",
+      "terms": [
+        {
+          "term": "pcb",
+          "weight": 2
+        }
+      ],
+      "term_coverage": {
+        "pcb": 150
+      },
+      "before_primary_hits": 0,
+      "after_fallback_hits": 48,
+      "scored_pool_size": 150,
+      "fallback_elapsed_ms": 602.0,
+      "fallback_elapsed_ms_warm": 120.3,
+      "recalled_names": [
+        "深圳天创无限科技有限公司",
+        "深圳市升达康科技有限公司",
+        "深圳市亿科迈科技有限公司",
+        "深圳市声雄电子有限公司",
+        "深圳市驭鹰者电子有限公司",
+        "百芯智能制造科技（深圳）有限公司",
+        "深圳市深华科电子有限公司",
+        "深圳赛维创新技术集团有限公司",
+        "深圳顺易捷科技有限公司",
+        "深圳市赛尔博特软件有限公司",
+        "深圳市迈威科技有限公司",
+        "深圳市科易博软件有限公司",
+        "深圳市壹科物联网技术有限公司",
+        "深圳优卫乐得科技有限公司",
+        "深圳正指向科技有限公司",
+        "深圳市天吉机电有限公司",
+        "深圳市动力飞扬智能装备有限公司",
+        "深圳市华仁智信技术有限公司",
+        "深圳市比昂芯科技有限公司",
+        "诡谷子人工智能科技（深圳）有限公司",
+        "深圳市优克雷技术有限公司",
+        "深圳智赛精密装备有限公司",
+        "深圳市高素科技有限公司",
+        "深圳市中科领创实业有限公司",
+        "深圳市赛晟科技有限公司",
+        "深圳鼎界科技有限公司",
+        "深圳市盛矽电子科技有限公司",
+        "众志科技（深圳）有限公司",
+        "深圳市兆赫技术有限公司",
+        "深圳市玉成创新科技有限公司",
+        "深圳市中禾旭精密机械有限公司",
+        "深圳市雄思科技有限公司",
+        "深圳砺芯半导体有限责任公司",
+        "深圳市软博智能科技有限公司",
+        "深圳市舟海贸易有限公司",
+        "深圳市震远电子科技有限公司",
+        "深圳市智芯云创科技有限公司",
+        "深圳橙子自动化有限公司",
+        "锐视数字科技（深圳）有限公司",
+        "深南电路股份有限公司",
+        "深圳市雷赛自动化系统有限公司",
+        "深圳思路名扬通讯技术股份有限公司",
+        "深圳市洁驰科技有限公司",
+        "深圳国芯微半导体有限公司",
+        "深圳市腾进达信息技术有限公司",
+        "深圳市大族视觉技术有限公司",
+        "深圳市米克力美科技有限公司",
+        "深圳市汇昇科技有限公司"
+      ],
+      "gt": [
+        {
+          "alias": "嘉立创",
+          "identities_in_pack": 1,
+          "recalled": 0,
+          "hits": [
+            {
+              "display_name": "深圳嘉立创科技集团股份有限公司",
+              "document_id": "lookup-document:sha256:294ec60ebf54ed1c1ffbf2b4f259065326b1ba7f6b38d7afa326874dd6fa86ee",
+              "rank": null,
+              "pool_rank": 53
+            }
+          ]
+        },
+        {
+          "alias": "深南电路",
+          "identities_in_pack": 1,
+          "recalled": 1,
+          "hits": [
+            {
+              "display_name": "深南电路股份有限公司",
+              "document_id": "lookup-document:sha256:a509a32aaeb9f3d407060c04503376e08093225d12b9ced9d25461f30901882b",
+              "rank": 40,
+              "pool_rank": 40
+            }
+          ]
+        },
+        {
+          "alias": "一博",
+          "identities_in_pack": 1,
+          "recalled": 0,
+          "hits": [
+            {
+              "display_name": "深圳市一博科技股份有限公司",
+              "document_id": "lookup-document:sha256:3b593c20f1b6d35be6c6ad5ddaa7229cdc7c3b2b58ad3a7d3a2634e61bc1c410",
+              "rank": null,
+              "pool_rank": 97
+            }
+          ]
+        },
+        {
+          "alias": "顺易捷",
+          "identities_in_pack": 1,
+          "recalled": 1,
+          "hits": [
+            {
+              "display_name": "深圳顺易捷科技有限公司",
+              "document_id": "lookup-document:sha256:2b337b99d56338beae4c5ac6bf88d770740ed461cf9eefc473bd7522fa10805f",
+              "rank": 9,
+              "pool_rank": 9
+            }
+          ]
+        },
+        {
+          "alias": "兴森",
+          "identities_in_pack": 1,
+          "recalled": 0,
+          "hits": [
+            {
+              "display_name": "深圳市兴森快捷电路科技股份有限公司",
+              "document_id": "lookup-document:sha256:3892f483407ee8715e667ea58dbd0d6e0c57cb64a959debd63cb36c644f7ddb1",
+              "rank": null,
+              "pool_rank": 69
+            }
+          ]
+        },
+        {
+          "alias": "则成",
+          "identities_in_pack": 1,
+          "recalled": 0,
+          "hits": [
+            {
+              "display_name": "深圳市则成电子股份有限公司",
+              "document_id": "lookup-document:sha256:bec1aa48d41676ee632a9f2ef46ca51fd55ad4ba3735ed73b73ca4851ea869f0",
+              "rank": null,
+              "pool_rank": 61
+            }
+          ]
+        },
+        {
+          "alias": "上达",
+          "identities_in_pack": 1,
+          "recalled": 0,
+          "hits": [
+            {
+              "display_name": "上达电子（深圳）股份有限公司",
+              "document_id": "lookup-document:sha256:6448199b0cac53f9ca4c1e33a704244c7e2052f4b8b81a15f8cb51e2a678c8d0",
+              "rank": null,
+              "pool_rank": null
+            }
+          ]
+        },
+        {
+          "alias": "精诚达",
+          "identities_in_pack": 1,
+          "recalled": 0,
+          "hits": [
+            {
+              "display_name": "深圳市精诚达电路科技股份有限公司",
+              "document_id": "lookup-document:sha256:de4c342b537887dc220a4d23953b9149d4e5bde9a2497d524c67387f0cdaad39",
+              "rank": null,
+              "pool_rank": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "embodied",
+      "query": "深圳有哪些做具身智能的公司",
+      "terms": [
+        {
+          "term": "具身",
+          "weight": 1
+        },
+        {
+          "term": "智能",
+          "weight": 1
+        },
+        {
+          "term": "身智",
+          "weight": 1
+        }
+      ],
+      "term_coverage": {
+        "具身": 87,
+        "智能": 4233,
+        "身智": 81
+      },
+      "before_primary_hits": 0,
+      "after_fallback_hits": 48,
+      "scored_pool_size": 3037,
+      "fallback_elapsed_ms": 140.1,
+      "fallback_elapsed_ms_warm": 139.9,
+      "recalled_names": [
+        "深圳墨奇智能技术有限公司",
+        "深圳市诺因智能有限公司",
+        "简智新创（北京）机器人科技有限公司",
+        "智身科技（北京）有限公司",
+        "魔法工场（无锡）科技有限公司",
+        "北京银河通用机器人有限公司",
+        "深圳市智拓欣扬科技有限公司",
+        "深圳市格松科技有限公司",
+        "北京灵御智能科技有限公司",
+        "深圳市探真智能科技有限公司",
+        "安徽聆动通用机器人科技有限公司",
+        "深圳国创具身智能机器人有限公司",
+        "深圳极数迭代科技有限公司",
+        "光年创新（深圳）科技有限公司",
+        "深圳亿合机器人有限公司",
+        "深圳市枣橙科技有限公司",
+        "智元创新（上海）科技有限公司",
+        "丘脑智能科技（深圳）有限公司",
+        "视启未来（深圳）科技有限公司",
+        "斯坦德机器人（无锡）股份有限公司",
+        "深圳市御膳智能科技有限公司",
+        "远行光年科技（深圳）有限公司",
+        "深圳市优联智能控股有限公司",
+        "深圳玉树智能机器人有限公司",
+        "知有无界（深圳）智能科技有限公司",
+        "深圳无界智航科技有限公司",
+        "深圳国际先进技术应用推进中心",
+        "深圳跃瓦创新科技有限公司",
+        "深圳市道和通泰机器人有限公司",
+        "深圳鹰瞰智翼科技有限公司",
+        "寻界科技（深圳）有限公司",
+        "现实回环（深圳）科技有限公司",
+        "广东具身风暴机器人有限公司",
+        "自变量机器人科技（深圳）有限公司",
+        "上海非夕机器人科技有限公司",
+        "深圳璇玑动力科技有限公司",
+        "戴盟（深圳）机器人科技有限公司",
+        "方舟无限（北京）科技有限公司",
+        "嘉蕴兴自动化科技（深圳）有限公司",
+        "北京智源人工智能研究院",
+        "深圳地瓜机器人有限公司",
+        "智平方（深圳）科技有限公司",
+        "中科时代（深圳）计算机系统有限公司",
+        "杭州云深处科技有限公司",
+        "深圳缔宙科技有限公司",
+        "光轮智能",
+        "深圳赛博格机器人有限公司",
+        "深圳星际光年科技有限公司"
+      ],
+      "gt": []
+    }
+  ]
+}

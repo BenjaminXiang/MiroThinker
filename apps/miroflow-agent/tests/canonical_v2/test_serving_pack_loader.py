@@ -467,6 +467,42 @@ def test_pack_lane_adapters_match_upstream(serving_fixture: _PackFixture) -> Non
         assert upstream_result.candidates, lane
 
 
+def test_pack_lexical_category_fallback_matches_upstream(
+    serving_fixture: _PackFixture,
+) -> None:
+    """F1 (close-workbook-gaps B1): a list-style category query can never
+    whole-phrase-match a single field value, so the primary pass is empty and
+    the term-level fallback fires — identically on the isolated and pack
+    lexical adapters."""
+    fixture = serving_fixture
+    authority = _open_authority(fixture, fixture.pack_dir)
+    bundle = authority.release_bundle
+    lookup_view = isolated_read._create_audited_lookup_view(bundle)
+    upstream = isolated_read.create_isolated_lexical_lookup_adapter(
+        release_bundle=fixture.bundle,
+        published_release=fixture.published,
+    )
+    pack = pack_loader._create_pack_lexical_lookup_adapter(
+        bundle=bundle,
+        publication=fixture.published,
+        lookup_view=lookup_view,
+    )
+    # The fixture's only public company is "Robotics Co"; the query's single
+    # surviving term (robotics, latin weight 2) hits its name and summaries.
+    request = _lane_request(lane="lexical", query_text="深圳有哪些robotics公司")
+    upstream_result = upstream(request)
+    pack_result = pack(request)
+    assert upstream_result == pack_result
+    assert [candidate.canonical_id for candidate in pack_result.candidates] == [
+        "company-robotics"
+    ]
+    assert pack_result.candidates[0].lane == "lexical"
+    # A markerless query on the same text never falls back.
+    plain = _lane_request(lane="lexical", query_text="robotics 这家怎么样")
+    assert pack(plain).candidates == ()
+    assert upstream(plain).candidates == ()
+
+
 def test_generator_round_trip_reloads_exact_authority(
     serving_fixture: _PackFixture,
 ) -> None:

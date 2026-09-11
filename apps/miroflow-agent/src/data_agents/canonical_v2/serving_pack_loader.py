@@ -1049,6 +1049,28 @@ def _create_pack_lexical_lookup_adapter(
                     adapter_version=iso._LEXICAL_ADAPTER_VERSION,
                 )
             )
+        if not candidates:
+            # F1 (close-workbook-gaps B1): same category-recall fallback as
+            # the isolated adapter — the pack parity test keeps the two
+            # lexical paths in lockstep.
+            return RetrievalLaneResult(
+                candidates=tuple(
+                    iso._candidate_from_document(
+                        request=validated_request,
+                        bundle=bundle,
+                        publication=publication,
+                        document=entry.document,
+                        display_name=entry.display_name,
+                        identifier_terms=entry.identifier_terms,
+                        lane="lexical",
+                        adapter_version=iso._LEXICAL_ADAPTER_VERSION,
+                    )
+                    for entry in iso._category_recall_entries(
+                        request=validated_request,
+                        entries=entries,
+                    )
+                )
+            )
         candidates.sort(
             key=lambda candidate: (
                 candidate.domain,
