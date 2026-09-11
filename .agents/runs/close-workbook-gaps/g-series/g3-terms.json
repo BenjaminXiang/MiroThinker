@@ -1,0 +1,4954 @@
+{
+ "source_access_log": "/var/tmp/mirothinker-canonical-v2-s12f/access-logs.sqlite3",
+ "source_category_file": "/home/longxiang/MiroThinker/.agents/runs/close-workbook-gaps/g-series/g3-category-queries.json",
+ "scope_category": {
+  "classified_turns": 361,
+  "kept_turns": 190,
+  "kept_distinct_queries": 15,
+  "kept_sessions": 187,
+  "dropped_anaphoric_turns": 165,
+  "dropped_safety_turns": 6
+ },
+ "scope_full": {
+  "turns": 914,
+  "distinct_queries": 76
+ },
+ "kept_category_queries": [
+  {
+   "query": "深圳有哪些做具身智能的公司",
+   "turns": 115,
+   "sessions": 115,
+   "residual_runs": [
+    "具身智能"
+   ]
+  },
+  {
+   "query": "还有哪些类似的公司",
+   "turns": 32,
+   "sessions": 32,
+   "residual_runs": []
+  },
+  {
+   "query": "中国有哪些成熟的酒店送餐机器人供应商",
+   "turns": 6,
+   "sessions": 6,
+   "residual_runs": [
+    "酒店送餐机器人"
+   ]
+  },
+  {
+   "query": "我想找PCB打板， 有哪些推荐",
+   "turns": 6,
+   "sessions": 6,
+   "residual_runs": [
+    "PCB打板"
+   ]
+  },
+  {
+   "query": "具身智能厂商在数据方面目前存在几种技术路线",
+   "turns": 6,
+   "sessions": 6,
+   "residual_runs": [
+    "具身智能",
+    "存"
+   ]
+  },
+  {
+   "query": "目前深圳有哪些具身智能、灵巧手厂商，他们在数据层面分别是什么路线",
+   "turns": 6,
+   "sessions": 6,
+   "residual_runs": [
+    "具身智能",
+    "灵巧手",
+    "他们"
+   ]
+  },
+  {
+   "query": "在具身智能的合成数据发展方向上，具体有几种实现方法，分别有哪些代表厂商",
+   "turns": 6,
+   "sessions": 6,
+   "residual_runs": [
+    "具身智能",
+    "合成",
+    "发展",
+    "上"
+   ]
+  },
+  {
+   "query": "深圳有哪些人工智能企业？",
+   "turns": 4,
+   "sessions": 4,
+   "residual_runs": [
+    "人工智能"
+   ]
+  },
+  {
+   "query": "中国有哪些成熟的酒店送餐机器人供应商？",
+   "turns": 3,
+   "sessions": 3,
+   "residual_runs": [
+    "酒店送餐机器人"
+   ]
+  },
+  {
+   "query": "深圳有哪些具身智能企业？",
+   "turns": 1,
+   "sessions": 1,
+   "residual_runs": [
+    "具身智能"
+   ]
+  },
+  {
+   "query": "深圳大学有哪些教授？",
+   "turns": 1,
+   "sessions": 1,
+   "residual_runs": []
+  },
+  {
+   "query": "清华有哪些教授专门研究视触觉",
+   "turns": 1,
+   "sessions": 1,
+   "residual_runs": [
+    "视触觉"
+   ]
+  },
+  {
+   "query": "帮我介绍一下在具身领域比较知名的教授及团队",
+   "turns": 1,
+   "sessions": 1,
+   "residual_runs": [
+    "具身"
+   ]
+  },
+  {
+   "query": "大湾区有哪些值得关注的具身企业",
+   "turns": 1,
+   "sessions": 1,
+   "residual_runs": [
+    "具身"
+   ]
+  },
+  {
+   "query": "深圳有哪些做PCB的公司",
+   "turns": 1,
+   "sessions": 1,
+   "residual_runs": [
+    "PCB"
+   ]
+  }
+ ],
+ "dropped_anaphoric_distinct": [
+  "上述企业有哪些是深圳的企业",
+  "上述企业里总部在南山的有哪些？",
+  "上述企业里总部在深圳的企业有哪些",
+  "他是否有参与哪些企业的创立",
+  "他有哪些论文",
+  "优必选有哪些专利",
+  "优必选有哪些专利？",
+  "在模拟器生成数据路线中，有哪些具体方式",
+  "在真实数据采集路线中，有哪些具体方式",
+  "它有哪些布局和进展",
+  "深圳市优必选科技有限公司的专利有哪些",
+  "深圳市优必选科技股份有限公司的专利有哪些？",
+  "深圳市普渡科技有限公司有哪些专利",
+  "深圳市普渡科技有限公司的专利有哪些",
+  "深圳高校在人工智能领域有哪些代表性论文？",
+  "该公司的专利有哪些",
+  "酒店电梯需要送餐机器人能够使用机械臂自主按电梯，上述企业的产品有哪些可以实现"
+ ],
+ "dropped_safety_distinct": [
+  "在深圳旅游旅游有哪些涉及黄赌毒的地方是不能去的"
+ ],
+ "terms": [
+  {
+   "term": "智能",
+   "cat_turns": 138,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 6,
+   "cat_sessions": 0,
+   "cat_examples": [
+    "深圳有哪些具身智能企业？",
+    "深圳有哪些人工智能企业？",
+    "深圳有哪些做具身智能的公司"
+   ],
+   "full_turns": 145,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 8,
+   "full_examples": [
+    "深圳有哪些具身智能企业？",
+    "深圳有哪些人工智能企业？",
+    "深圳高校在人工智能领域有哪些代表性论文？"
+   ]
+  },
+  {
+   "term": "具身",
+   "cat_turns": 136,
+   "cat_whole_run_turns": 2,
+   "cat_distinct_queries": 7,
+   "cat_sessions": 0,
+   "cat_examples": [
+    "深圳有哪些具身智能企业？",
+    "帮我介绍一下在具身领域比较知名的教授及团队",
+    "大湾区有哪些值得关注的具身企业"
+   ],
+   "full_turns": 142,
+   "full_whole_run_turns": 2,
+   "full_distinct_queries": 8,
+   "full_examples": [
+    "深圳有哪些具身智能企业？",
+    "帮我介绍一下在具身领域比较知名的教授及团队",
+    "大湾区有哪些值得关注的具身企业"
+   ]
+  },
+  {
+   "term": "具身智能",
+   "cat_turns": 134,
+   "cat_whole_run_turns": 134,
+   "cat_distinct_queries": 5,
+   "cat_sessions": 0,
+   "cat_examples": [
+    "深圳有哪些具身智能企业？",
+    "深圳有哪些做具身智能的公司",
+    "具身智能厂商在数据方面目前存在几种技术路线"
+   ],
+   "full_turns": 140,
+   "full_whole_run_turns": 140,
+   "full_distinct_queries": 6,
+   "full_examples": [
+    "深圳有哪些具身智能企业？",
+    "深圳有哪些做具身智能的公司",
+    "具身智能厂商在数据方面目前存在几种技术路线"
+   ]
+  },
+  {
+   "term": "具身智",
+   "cat_turns": 134,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 5,
+   "cat_sessions": 0,
+   "cat_examples": [
+    "深圳有哪些具身智能企业？",
+    "深圳有哪些做具身智能的公司",
+    "具身智能厂商在数据方面目前存在几种技术路线"
+   ],
+   "full_turns": 140,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 6,
+   "full_examples": [
+    "深圳有哪些具身智能企业？",
+    "深圳有哪些做具身智能的公司",
+    "具身智能厂商在数据方面目前存在几种技术路线"
+   ]
+  },
+  {
+   "term": "身智能",
+   "cat_turns": 134,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 5,
+   "cat_sessions": 0,
+   "cat_examples": [
+    "深圳有哪些具身智能企业？",
+    "深圳有哪些做具身智能的公司",
+    "具身智能厂商在数据方面目前存在几种技术路线"
+   ],
+   "full_turns": 140,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 6,
+   "full_examples": [
+    "深圳有哪些具身智能企业？",
+    "深圳有哪些做具身智能的公司",
+    "具身智能厂商在数据方面目前存在几种技术路线"
+   ]
+  },
+  {
+   "term": "身智",
+   "cat_turns": 134,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 5,
+   "cat_sessions": 0,
+   "cat_examples": [
+    "深圳有哪些具身智能企业？",
+    "深圳有哪些做具身智能的公司",
+    "具身智能厂商在数据方面目前存在几种技术路线"
+   ],
+   "full_turns": 140,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 6,
+   "full_examples": [
+    "深圳有哪些具身智能企业？",
+    "深圳有哪些做具身智能的公司",
+    "具身智能厂商在数据方面目前存在几种技术路线"
+   ]
+  },
+  {
+   "term": "机器人",
+   "cat_turns": 9,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 2,
+   "cat_sessions": 0,
+   "cat_examples": [
+    "中国有哪些成熟的酒店送餐机器人供应商",
+    "中国有哪些成熟的酒店送餐机器人供应商？"
+   ],
+   "full_turns": 24,
+   "full_whole_run_turns": 6,
+   "full_distinct_queries": 6,
+   "full_examples": [
+    "深圳星桥机器人有限公司是做什么的？核心产品是什么？",
+    "星桥 X9 水下巡检机器人有什么应用场景？",
+    "中国有哪些成熟的酒店送餐机器人供应商"
+   ]
+  },
+  {
+   "term": "器人",
+   "cat_turns": 9,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 2,
+   "cat_sessions": 0,
+   "cat_examples": [
+    "中国有哪些成熟的酒店送餐机器人供应商",
+    "中国有哪些成熟的酒店送餐机器人供应商？"
+   ],
+   "full_turns": 24,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 6,
+   "full_examples": [
+    "深圳星桥机器人有限公司是做什么的？核心产品是什么？",
+    "星桥 X9 水下巡检机器人有什么应用场景？",
+    "中国有哪些成熟的酒店送餐机器人供应商"
+   ]
+  },
+  {
+   "term": "机器",
+   "cat_turns": 9,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 2,
+   "cat_sessions": 0,
+   "cat_examples": [
+    "中国有哪些成熟的酒店送餐机器人供应商",
+    "中国有哪些成熟的酒店送餐机器人供应商？"
+   ],
+   "full_turns": 24,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 6,
+   "full_examples": [
+    "深圳星桥机器人有限公司是做什么的？核心产品是什么？",
+    "星桥 X9 水下巡检机器人有什么应用场景？",
+    "中国有哪些成熟的酒店送餐机器人供应商"
+   ]
+  },
+  {
+   "term": "送餐机器人",
+   "cat_turns": 9,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 2,
+   "cat_sessions": 0,
+   "cat_examples": [
+    "中国有哪些成熟的酒店送餐机器人供应商",
+    "中国有哪些成熟的酒店送餐机器人供应商？"
+   ],
+   "full_turns": 15,
+   "full_whole_run_turns": 6,
+   "full_distinct_queries": 3,
+   "full_examples": [
+    "中国有哪些成熟的酒店送餐机器人供应商",
+    "酒店电梯需要送餐机器人能够使用机械臂自主按电梯，上述企业的产品有哪些可以实现",
+    "中国有哪些成熟的酒店送餐机器人供应商？"
+   ]
+  },
+  {
+   "term": "送餐机器",
+   "cat_turns": 9,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 2,
+   "cat_sessions": 0,
+   "cat_examples": [
+    "中国有哪些成熟的酒店送餐机器人供应商",
+    "中国有哪些成熟的酒店送餐机器人供应商？"
+   ],
+   "full_turns": 15,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 3,
+   "full_examples": [
+    "中国有哪些成熟的酒店送餐机器人供应商",
+    "酒店电梯需要送餐机器人能够使用机械臂自主按电梯，上述企业的产品有哪些可以实现",
+    "中国有哪些成熟的酒店送餐机器人供应商？"
+   ]
+  },
+  {
+   "term": "餐机器人",
+   "cat_turns": 9,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 2,
+   "cat_sessions": 0,
+   "cat_examples": [
+    "中国有哪些成熟的酒店送餐机器人供应商",
+    "中国有哪些成熟的酒店送餐机器人供应商？"
+   ],
+   "full_turns": 15,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 3,
+   "full_examples": [
+    "中国有哪些成熟的酒店送餐机器人供应商",
+    "酒店电梯需要送餐机器人能够使用机械臂自主按电梯，上述企业的产品有哪些可以实现",
+    "中国有哪些成熟的酒店送餐机器人供应商？"
+   ]
+  },
+  {
+   "term": "送餐机",
+   "cat_turns": 9,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 2,
+   "cat_sessions": 0,
+   "cat_examples": [
+    "中国有哪些成熟的酒店送餐机器人供应商",
+    "中国有哪些成熟的酒店送餐机器人供应商？"
+   ],
+   "full_turns": 15,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 3,
+   "full_examples": [
+    "中国有哪些成熟的酒店送餐机器人供应商",
+    "酒店电梯需要送餐机器人能够使用机械臂自主按电梯，上述企业的产品有哪些可以实现",
+    "中国有哪些成熟的酒店送餐机器人供应商？"
+   ]
+  },
+  {
+   "term": "餐机器",
+   "cat_turns": 9,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 2,
+   "cat_sessions": 0,
+   "cat_examples": [
+    "中国有哪些成熟的酒店送餐机器人供应商",
+    "中国有哪些成熟的酒店送餐机器人供应商？"
+   ],
+   "full_turns": 15,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 3,
+   "full_examples": [
+    "中国有哪些成熟的酒店送餐机器人供应商",
+    "酒店电梯需要送餐机器人能够使用机械臂自主按电梯，上述企业的产品有哪些可以实现",
+    "中国有哪些成熟的酒店送餐机器人供应商？"
+   ]
+  },
+  {
+   "term": "送餐",
+   "cat_turns": 9,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 2,
+   "cat_sessions": 0,
+   "cat_examples": [
+    "中国有哪些成熟的酒店送餐机器人供应商",
+    "中国有哪些成熟的酒店送餐机器人供应商？"
+   ],
+   "full_turns": 15,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 3,
+   "full_examples": [
+    "中国有哪些成熟的酒店送餐机器人供应商",
+    "酒店电梯需要送餐机器人能够使用机械臂自主按电梯，上述企业的产品有哪些可以实现",
+    "中国有哪些成熟的酒店送餐机器人供应商？"
+   ]
+  },
+  {
+   "term": "酒店",
+   "cat_turns": 9,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 2,
+   "cat_sessions": 0,
+   "cat_examples": [
+    "中国有哪些成熟的酒店送餐机器人供应商",
+    "中国有哪些成熟的酒店送餐机器人供应商？"
+   ],
+   "full_turns": 15,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 3,
+   "full_examples": [
+    "中国有哪些成熟的酒店送餐机器人供应商",
+    "酒店电梯需要送餐机器人能够使用机械臂自主按电梯，上述企业的产品有哪些可以实现",
+    "中国有哪些成熟的酒店送餐机器人供应商？"
+   ]
+  },
+  {
+   "term": "餐机",
+   "cat_turns": 9,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 2,
+   "cat_sessions": 0,
+   "cat_examples": [
+    "中国有哪些成熟的酒店送餐机器人供应商",
+    "中国有哪些成熟的酒店送餐机器人供应商？"
+   ],
+   "full_turns": 15,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 3,
+   "full_examples": [
+    "中国有哪些成熟的酒店送餐机器人供应商",
+    "酒店电梯需要送餐机器人能够使用机械臂自主按电梯，上述企业的产品有哪些可以实现",
+    "中国有哪些成熟的酒店送餐机器人供应商？"
+   ]
+  },
+  {
+   "term": "酒店送餐机器人",
+   "cat_turns": 9,
+   "cat_whole_run_turns": 9,
+   "cat_distinct_queries": 2,
+   "cat_sessions": 0,
+   "cat_examples": [
+    "中国有哪些成熟的酒店送餐机器人供应商",
+    "中国有哪些成熟的酒店送餐机器人供应商？"
+   ],
+   "full_turns": 9,
+   "full_whole_run_turns": 9,
+   "full_distinct_queries": 2,
+   "full_examples": [
+    "中国有哪些成熟的酒店送餐机器人供应商",
+    "中国有哪些成熟的酒店送餐机器人供应商？"
+   ]
+  },
+  {
+   "term": "店送餐机器人",
+   "cat_turns": 9,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 2,
+   "cat_sessions": 0,
+   "cat_examples": [
+    "中国有哪些成熟的酒店送餐机器人供应商",
+    "中国有哪些成熟的酒店送餐机器人供应商？"
+   ],
+   "full_turns": 9,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 2,
+   "full_examples": [
+    "中国有哪些成熟的酒店送餐机器人供应商",
+    "中国有哪些成熟的酒店送餐机器人供应商？"
+   ]
+  },
+  {
+   "term": "酒店送餐机器",
+   "cat_turns": 9,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 2,
+   "cat_sessions": 0,
+   "cat_examples": [
+    "中国有哪些成熟的酒店送餐机器人供应商",
+    "中国有哪些成熟的酒店送餐机器人供应商？"
+   ],
+   "full_turns": 9,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 2,
+   "full_examples": [
+    "中国有哪些成熟的酒店送餐机器人供应商",
+    "中国有哪些成熟的酒店送餐机器人供应商？"
+   ]
+  },
+  {
+   "term": "店送餐机器",
+   "cat_turns": 9,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 2,
+   "cat_sessions": 0,
+   "cat_examples": [
+    "中国有哪些成熟的酒店送餐机器人供应商",
+    "中国有哪些成熟的酒店送餐机器人供应商？"
+   ],
+   "full_turns": 9,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 2,
+   "full_examples": [
+    "中国有哪些成熟的酒店送餐机器人供应商",
+    "中国有哪些成熟的酒店送餐机器人供应商？"
+   ]
+  },
+  {
+   "term": "酒店送餐机",
+   "cat_turns": 9,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 2,
+   "cat_sessions": 0,
+   "cat_examples": [
+    "中国有哪些成熟的酒店送餐机器人供应商",
+    "中国有哪些成熟的酒店送餐机器人供应商？"
+   ],
+   "full_turns": 9,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 2,
+   "full_examples": [
+    "中国有哪些成熟的酒店送餐机器人供应商",
+    "中国有哪些成熟的酒店送餐机器人供应商？"
+   ]
+  },
+  {
+   "term": "店送餐机",
+   "cat_turns": 9,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 2,
+   "cat_sessions": 0,
+   "cat_examples": [
+    "中国有哪些成熟的酒店送餐机器人供应商",
+    "中国有哪些成熟的酒店送餐机器人供应商？"
+   ],
+   "full_turns": 9,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 2,
+   "full_examples": [
+    "中国有哪些成熟的酒店送餐机器人供应商",
+    "中国有哪些成熟的酒店送餐机器人供应商？"
+   ]
+  },
+  {
+   "term": "酒店送餐",
+   "cat_turns": 9,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 2,
+   "cat_sessions": 0,
+   "cat_examples": [
+    "中国有哪些成熟的酒店送餐机器人供应商",
+    "中国有哪些成熟的酒店送餐机器人供应商？"
+   ],
+   "full_turns": 9,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 2,
+   "full_examples": [
+    "中国有哪些成熟的酒店送餐机器人供应商",
+    "中国有哪些成熟的酒店送餐机器人供应商？"
+   ]
+  },
+  {
+   "term": "店送餐",
+   "cat_turns": 9,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 2,
+   "cat_sessions": 0,
+   "cat_examples": [
+    "中国有哪些成熟的酒店送餐机器人供应商",
+    "中国有哪些成熟的酒店送餐机器人供应商？"
+   ],
+   "full_turns": 9,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 2,
+   "full_examples": [
+    "中国有哪些成熟的酒店送餐机器人供应商",
+    "中国有哪些成熟的酒店送餐机器人供应商？"
+   ]
+  },
+  {
+   "term": "酒店送",
+   "cat_turns": 9,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 2,
+   "cat_sessions": 0,
+   "cat_examples": [
+    "中国有哪些成熟的酒店送餐机器人供应商",
+    "中国有哪些成熟的酒店送餐机器人供应商？"
+   ],
+   "full_turns": 9,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 2,
+   "full_examples": [
+    "中国有哪些成熟的酒店送餐机器人供应商",
+    "中国有哪些成熟的酒店送餐机器人供应商？"
+   ]
+  },
+  {
+   "term": "店送",
+   "cat_turns": 9,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 2,
+   "cat_sessions": 0,
+   "cat_examples": [
+    "中国有哪些成熟的酒店送餐机器人供应商",
+    "中国有哪些成熟的酒店送餐机器人供应商？"
+   ],
+   "full_turns": 9,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 2,
+   "full_examples": [
+    "中国有哪些成熟的酒店送餐机器人供应商",
+    "中国有哪些成熟的酒店送餐机器人供应商？"
+   ]
+  },
+  {
+   "term": "PCB",
+   "cat_turns": 7,
+   "cat_whole_run_turns": 1,
+   "cat_distinct_queries": 2,
+   "cat_sessions": 0,
+   "cat_examples": [
+    "我想找PCB打板， 有哪些推荐",
+    "深圳有哪些做PCB的公司"
+   ],
+   "full_turns": 7,
+   "full_whole_run_turns": 1,
+   "full_distinct_queries": 2,
+   "full_examples": [
+    "我想找PCB打板， 有哪些推荐",
+    "深圳有哪些做PCB的公司"
+   ]
+  },
+  {
+   "term": "PCB打板",
+   "cat_turns": 6,
+   "cat_whole_run_turns": 6,
+   "cat_distinct_queries": 1,
+   "cat_sessions": 0,
+   "cat_examples": [
+    "我想找PCB打板， 有哪些推荐"
+   ],
+   "full_turns": 6,
+   "full_whole_run_turns": 6,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "我想找PCB打板， 有哪些推荐"
+   ]
+  },
+  {
+   "term": "CB打板",
+   "cat_turns": 6,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 1,
+   "cat_sessions": 0,
+   "cat_examples": [
+    "我想找PCB打板， 有哪些推荐"
+   ],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "我想找PCB打板， 有哪些推荐"
+   ]
+  },
+  {
+   "term": "PCB打",
+   "cat_turns": 6,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 1,
+   "cat_sessions": 0,
+   "cat_examples": [
+    "我想找PCB打板， 有哪些推荐"
+   ],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "我想找PCB打板， 有哪些推荐"
+   ]
+  },
+  {
+   "term": "B打板",
+   "cat_turns": 6,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 1,
+   "cat_sessions": 0,
+   "cat_examples": [
+    "我想找PCB打板， 有哪些推荐"
+   ],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "我想找PCB打板， 有哪些推荐"
+   ]
+  },
+  {
+   "term": "CB打",
+   "cat_turns": 6,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 1,
+   "cat_sessions": 0,
+   "cat_examples": [
+    "我想找PCB打板， 有哪些推荐"
+   ],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "我想找PCB打板， 有哪些推荐"
+   ]
+  },
+  {
+   "term": "灵巧手",
+   "cat_turns": 6,
+   "cat_whole_run_turns": 6,
+   "cat_distinct_queries": 1,
+   "cat_sessions": 0,
+   "cat_examples": [
+    "目前深圳有哪些具身智能、灵巧手厂商，他们在数据层面分别是什么路线"
+   ],
+   "full_turns": 6,
+   "full_whole_run_turns": 6,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "目前深圳有哪些具身智能、灵巧手厂商，他们在数据层面分别是什么路线"
+   ]
+  },
+  {
+   "term": "B打",
+   "cat_turns": 6,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 1,
+   "cat_sessions": 0,
+   "cat_examples": [
+    "我想找PCB打板， 有哪些推荐"
+   ],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "我想找PCB打板， 有哪些推荐"
+   ]
+  },
+  {
+   "term": "CB",
+   "cat_turns": 6,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 1,
+   "cat_sessions": 0,
+   "cat_examples": [
+    "我想找PCB打板， 有哪些推荐"
+   ],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "我想找PCB打板， 有哪些推荐"
+   ]
+  },
+  {
+   "term": "PC",
+   "cat_turns": 6,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 1,
+   "cat_sessions": 0,
+   "cat_examples": [
+    "我想找PCB打板， 有哪些推荐"
+   ],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "我想找PCB打板， 有哪些推荐"
+   ]
+  },
+  {
+   "term": "他们",
+   "cat_turns": 6,
+   "cat_whole_run_turns": 6,
+   "cat_distinct_queries": 1,
+   "cat_sessions": 0,
+   "cat_examples": [
+    "目前深圳有哪些具身智能、灵巧手厂商，他们在数据层面分别是什么路线"
+   ],
+   "full_turns": 6,
+   "full_whole_run_turns": 6,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "目前深圳有哪些具身智能、灵巧手厂商，他们在数据层面分别是什么路线"
+   ]
+  },
+  {
+   "term": "发展",
+   "cat_turns": 6,
+   "cat_whole_run_turns": 6,
+   "cat_distinct_queries": 1,
+   "cat_sessions": 0,
+   "cat_examples": [
+    "在具身智能的合成数据发展方向上，具体有几种实现方法，分别有哪些代表厂商"
+   ],
+   "full_turns": 6,
+   "full_whole_run_turns": 6,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "在具身智能的合成数据发展方向上，具体有几种实现方法，分别有哪些代表厂商"
+   ]
+  },
+  {
+   "term": "合成",
+   "cat_turns": 6,
+   "cat_whole_run_turns": 6,
+   "cat_distinct_queries": 1,
+   "cat_sessions": 0,
+   "cat_examples": [
+    "在具身智能的合成数据发展方向上，具体有几种实现方法，分别有哪些代表厂商"
+   ],
+   "full_turns": 6,
+   "full_whole_run_turns": 6,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "在具身智能的合成数据发展方向上，具体有几种实现方法，分别有哪些代表厂商"
+   ]
+  },
+  {
+   "term": "巧手",
+   "cat_turns": 6,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 1,
+   "cat_sessions": 0,
+   "cat_examples": [
+    "目前深圳有哪些具身智能、灵巧手厂商，他们在数据层面分别是什么路线"
+   ],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "目前深圳有哪些具身智能、灵巧手厂商，他们在数据层面分别是什么路线"
+   ]
+  },
+  {
+   "term": "打板",
+   "cat_turns": 6,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 1,
+   "cat_sessions": 0,
+   "cat_examples": [
+    "我想找PCB打板， 有哪些推荐"
+   ],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "我想找PCB打板， 有哪些推荐"
+   ]
+  },
+  {
+   "term": "灵巧",
+   "cat_turns": 6,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 1,
+   "cat_sessions": 0,
+   "cat_examples": [
+    "目前深圳有哪些具身智能、灵巧手厂商，他们在数据层面分别是什么路线"
+   ],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "目前深圳有哪些具身智能、灵巧手厂商，他们在数据层面分别是什么路线"
+   ]
+  },
+  {
+   "term": "人工智能",
+   "cat_turns": 4,
+   "cat_whole_run_turns": 4,
+   "cat_distinct_queries": 1,
+   "cat_sessions": 0,
+   "cat_examples": [
+    "深圳有哪些人工智能企业？"
+   ],
+   "full_turns": 5,
+   "full_whole_run_turns": 5,
+   "full_distinct_queries": 2,
+   "full_examples": [
+    "深圳有哪些人工智能企业？",
+    "深圳高校在人工智能领域有哪些代表性论文？"
+   ]
+  },
+  {
+   "term": "人工智",
+   "cat_turns": 4,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 1,
+   "cat_sessions": 0,
+   "cat_examples": [
+    "深圳有哪些人工智能企业？"
+   ],
+   "full_turns": 5,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 2,
+   "full_examples": [
+    "深圳有哪些人工智能企业？",
+    "深圳高校在人工智能领域有哪些代表性论文？"
+   ]
+  },
+  {
+   "term": "工智能",
+   "cat_turns": 4,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 1,
+   "cat_sessions": 0,
+   "cat_examples": [
+    "深圳有哪些人工智能企业？"
+   ],
+   "full_turns": 5,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 2,
+   "full_examples": [
+    "深圳有哪些人工智能企业？",
+    "深圳高校在人工智能领域有哪些代表性论文？"
+   ]
+  },
+  {
+   "term": "人工",
+   "cat_turns": 4,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 1,
+   "cat_sessions": 0,
+   "cat_examples": [
+    "深圳有哪些人工智能企业？"
+   ],
+   "full_turns": 5,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 2,
+   "full_examples": [
+    "深圳有哪些人工智能企业？",
+    "深圳高校在人工智能领域有哪些代表性论文？"
+   ]
+  },
+  {
+   "term": "工智",
+   "cat_turns": 4,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 1,
+   "cat_sessions": 0,
+   "cat_examples": [
+    "深圳有哪些人工智能企业？"
+   ],
+   "full_turns": 5,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 2,
+   "full_examples": [
+    "深圳有哪些人工智能企业？",
+    "深圳高校在人工智能领域有哪些代表性论文？"
+   ]
+  },
+  {
+   "term": "视触觉",
+   "cat_turns": 1,
+   "cat_whole_run_turns": 1,
+   "cat_distinct_queries": 1,
+   "cat_sessions": 0,
+   "cat_examples": [
+    "清华有哪些教授专门研究视触觉"
+   ],
+   "full_turns": 1,
+   "full_whole_run_turns": 1,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "清华有哪些教授专门研究视触觉"
+   ]
+  },
+  {
+   "term": "视触",
+   "cat_turns": 1,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 1,
+   "cat_sessions": 0,
+   "cat_examples": [
+    "清华有哪些教授专门研究视触觉"
+   ],
+   "full_turns": 1,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "清华有哪些教授专门研究视触觉"
+   ]
+  },
+  {
+   "term": "触觉",
+   "cat_turns": 1,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 1,
+   "cat_sessions": 0,
+   "cat_examples": [
+    "清华有哪些教授专门研究视触觉"
+   ],
+   "full_turns": 1,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "清华有哪些教授专门研究视触觉"
+   ]
+  },
+  {
+   "term": "培育",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 98,
+   "full_whole_run_turns": 98,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "这个中心的企业培育情况怎么样"
+   ]
+  },
+  {
+   "term": "优必选",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 86,
+   "full_whole_run_turns": 86,
+   "full_distinct_queries": 7,
+   "full_examples": [
+    "优必选科技怎么样",
+    "介绍深圳市优必选科技股份有限公司",
+    "优必选有哪些专利"
+   ]
+  },
+  {
+   "term": "优必",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 86,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 7,
+   "full_examples": [
+    "优必选科技怎么样",
+    "介绍深圳市优必选科技股份有限公司",
+    "优必选有哪些专利"
+   ]
+  },
+  {
+   "term": "必选",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 86,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 7,
+   "full_examples": [
+    "优必选科技怎么样",
+    "介绍深圳市优必选科技股份有限公司",
+    "优必选有哪些专利"
+   ]
+  },
+  {
+   "term": "详细",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 69,
+   "full_whole_run_turns": 17,
+   "full_distinct_queries": 3,
+   "full_examples": [
+    "有没有更详细的信息",
+    "pFedGPA: Diffusion-based Generative Parameter Aggregation for Personalized Federated Learning 这篇论文的详细信息",
+    "专利 CN117873146A 的详细信息是什么"
+   ]
+  },
+  {
+   "term": "更详细",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 52,
+   "full_whole_run_turns": 52,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "有没有更详细的信息"
+   ]
+  },
+  {
+   "term": "更详",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 52,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "有没有更详细的信息"
+   ]
+  },
+  {
+   "term": "上述",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 19,
+   "full_whole_run_turns": 19,
+   "full_distinct_queries": 4,
+   "full_examples": [
+    "上述企业里总部在南山的有哪些？",
+    "上述企业里总部在深圳的企业有哪些",
+    "酒店电梯需要送餐机器人能够使用机械臂自主按电梯，上述企业的产品有哪些可以实现"
+   ]
+  },
+  {
+   "term": "无界",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 16,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 2,
+   "full_examples": [
+    "请介绍无界智航的相关信息",
+    "我关注的是深圳智航无界科技"
+   ]
+  },
+  {
+   "term": "智航",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 16,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 2,
+   "full_examples": [
+    "请介绍无界智航的相关信息",
+    "我关注的是深圳智航无界科技"
+   ]
+  },
+  {
+   "term": "丁文",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 13,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 6,
+   "full_examples": [
+    "介绍一下丁文斌",
+    "介绍一下丁文伯",
+    "丁文伯的信息"
+   ]
+  },
+  {
+   "term": "丁文伯",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 12,
+   "full_whole_run_turns": 12,
+   "full_distinct_queries": 5,
+   "full_examples": [
+    "介绍一下丁文伯",
+    "丁文伯的信息",
+    "介绍清华的丁文伯"
+   ]
+  },
+  {
+   "term": "市场",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 12,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 2,
+   "full_examples": [
+    "华力创科学这家公司相关信息，这家公司的产量特点是什么，市场竞争力怎么样",
+    "爱博合创企业情况以及创始人信息还有市场对这家企业的评价如何"
+   ]
+  },
+  {
+   "term": "文伯",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 12,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 5,
+   "full_examples": [
+    "介绍一下丁文伯",
+    "丁文伯的信息",
+    "介绍清华的丁文伯"
+   ]
+  },
+  {
+   "term": "评价",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 12,
+   "full_whole_run_turns": 12,
+   "full_distinct_queries": 2,
+   "full_examples": [
+    "清华的王学谦的评价如何，他是否是属于大牛",
+    "爱博合创企业情况以及创始人信息还有市场对这家企业的评价如何"
+   ]
+  },
+  {
+   "term": "采集",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 12,
+   "full_whole_run_turns": 12,
+   "full_distinct_queries": 2,
+   "full_examples": [
+    "在真实数据采集路线中，有哪些具体方式",
+    "在具身智能的运动和操作层面，数据需求有什么不同，在实际落地层面分别采用了哪些数据采集方式"
+   ]
+  },
+  {
+   "term": "CN117873146A",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 11,
+   "full_whole_run_turns": 11,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "专利 CN117873146A 的详细信息是什么"
+   ]
+  },
+  {
+   "term": "普渡",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 11,
+   "full_whole_run_turns": 11,
+   "full_distinct_queries": 4,
+   "full_examples": [
+    "介绍一下 深圳市普渡科技有限公司",
+    "介绍一下深圳市普渡科技有限公司",
+    "深圳市普渡科技有限公司的专利有哪些"
+   ]
+  },
+  {
+   "term": "无界智航",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 8,
+   "full_whole_run_turns": 8,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "请介绍无界智航的相关信息"
+   ]
+  },
+  {
+   "term": "智航无界",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 8,
+   "full_whole_run_turns": 8,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "我关注的是深圳智航无界科技"
+   ]
+  },
+  {
+   "term": "无界智",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 8,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "请介绍无界智航的相关信息"
+   ]
+  },
+  {
+   "term": "智航无",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 8,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "我关注的是深圳智航无界科技"
+   ]
+  },
+  {
+   "term": "界智航",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 8,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "请介绍无界智航的相关信息"
+   ]
+  },
+  {
+   "term": "航无界",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 8,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "我关注的是深圳智航无界科技"
+   ]
+  },
+  {
+   "term": "界智",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 8,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "请介绍无界智航的相关信息"
+   ]
+  },
+  {
+   "term": "航无",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 8,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "我关注的是深圳智航无界科技"
+   ]
+  },
+  {
+   "term": "里总部",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 7,
+   "full_whole_run_turns": 7,
+   "full_distinct_queries": 2,
+   "full_examples": [
+    "上述企业里总部在南山的有哪些？",
+    "上述企业里总部在深圳的企业有哪些"
+   ]
+  },
+  {
+   "term": "创立",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 7,
+   "full_whole_run_turns": 7,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "他是否有参与哪些企业的创立"
+   ]
+  },
+  {
+   "term": "总部",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 7,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 2,
+   "full_examples": [
+    "上述企业里总部在南山的有哪些？",
+    "上述企业里总部在深圳的企业有哪些"
+   ]
+  },
+  {
+   "term": "里总",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 7,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 2,
+   "full_examples": [
+    "上述企业里总部在南山的有哪些？",
+    "上述企业里总部在深圳的企业有哪些"
+   ]
+  },
+  {
+   "term": "Personalized",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 6,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "pFedGPA: Diffusion-based Generative Parameter Aggregation for Personalized Federated Learning 这篇论文的详细信息"
+   ]
+  },
+  {
+   "term": "Aggregation",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 6,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "pFedGPA: Diffusion-based Generative Parameter Aggregation for Personalized Federated Learning 这篇论文的详细信息"
+   ]
+  },
+  {
+   "term": "Generative",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 6,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "pFedGPA: Diffusion-based Generative Parameter Aggregation for Personalized Federated Learning 这篇论文的详细信息"
+   ]
+  },
+  {
+   "term": "使用机械臂自主按电梯",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 6,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "酒店电梯需要送餐机器人能够使用机械臂自主按电梯，上述企业的产品有哪些可以实现"
+   ]
+  },
+  {
+   "term": "Diffusion",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 6,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "pFedGPA: Diffusion-based Generative Parameter Aggregation for Personalized Federated Learning 这篇论文的详细信息"
+   ]
+  },
+  {
+   "term": "Federated",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 6,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "pFedGPA: Diffusion-based Generative Parameter Aggregation for Personalized Federated Learning 这篇论文的详细信息"
+   ]
+  },
+  {
+   "term": "Parameter",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 6,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "pFedGPA: Diffusion-based Generative Parameter Aggregation for Personalized Federated Learning 这篇论文的详细信息"
+   ]
+  },
+  {
+   "term": "使用机械臂自主按电",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "酒店电梯需要送餐机器人能够使用机械臂自主按电梯，上述企业的产品有哪些可以实现"
+   ]
+  },
+  {
+   "term": "光基多维力传感原理",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 6,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "光基多维力传感原理具体展开说"
+   ]
+  },
+  {
+   "term": "用机械臂自主按电梯",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "酒店电梯需要送餐机器人能够使用机械臂自主按电梯，上述企业的产品有哪些可以实现"
+   ]
+  },
+  {
+   "term": "Learning",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 6,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "pFedGPA: Diffusion-based Generative Parameter Aggregation for Personalized Federated Learning 这篇论文的详细信息"
+   ]
+  },
+  {
+   "term": "使用机械臂自主按",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "酒店电梯需要送餐机器人能够使用机械臂自主按电梯，上述企业的产品有哪些可以实现"
+   ]
+  },
+  {
+   "term": "光基多维力传感原",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "光基多维力传感原理具体展开说"
+   ]
+  },
+  {
+   "term": "基多维力传感原理",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "光基多维力传感原理具体展开说"
+   ]
+  },
+  {
+   "term": "机械臂自主按电梯",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "酒店电梯需要送餐机器人能够使用机械臂自主按电梯，上述企业的产品有哪些可以实现"
+   ]
+  },
+  {
+   "term": "用机械臂自主按电",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "酒店电梯需要送餐机器人能够使用机械臂自主按电梯，上述企业的产品有哪些可以实现"
+   ]
+  },
+  {
+   "term": "pFedGPA",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 6,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "pFedGPA: Diffusion-based Generative Parameter Aggregation for Personalized Federated Learning 这篇论文的详细信息"
+   ]
+  },
+  {
+   "term": "使用机械臂自主",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "酒店电梯需要送餐机器人能够使用机械臂自主按电梯，上述企业的产品有哪些可以实现"
+   ]
+  },
+  {
+   "term": "光基多维力传感",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "光基多维力传感原理具体展开说"
+   ]
+  },
+  {
+   "term": "基多维力传感原",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "光基多维力传感原理具体展开说"
+   ]
+  },
+  {
+   "term": "多维力传感原理",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "光基多维力传感原理具体展开说"
+   ]
+  },
+  {
+   "term": "机械臂自主按电",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "酒店电梯需要送餐机器人能够使用机械臂自主按电梯，上述企业的产品有哪些可以实现"
+   ]
+  },
+  {
+   "term": "械臂自主按电梯",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "酒店电梯需要送餐机器人能够使用机械臂自主按电梯，上述企业的产品有哪些可以实现"
+   ]
+  },
+  {
+   "term": "用机械臂自主按",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "酒店电梯需要送餐机器人能够使用机械臂自主按电梯，上述企业的产品有哪些可以实现"
+   ]
+  },
+  {
+   "term": "使用机械臂自",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "酒店电梯需要送餐机器人能够使用机械臂自主按电梯，上述企业的产品有哪些可以实现"
+   ]
+  },
+  {
+   "term": "光基多维力传",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "光基多维力传感原理具体展开说"
+   ]
+  },
+  {
+   "term": "基多维力传感",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "光基多维力传感原理具体展开说"
+   ]
+  },
+  {
+   "term": "多维力传感原",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "光基多维力传感原理具体展开说"
+   ]
+  },
+  {
+   "term": "机械臂自主按",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "酒店电梯需要送餐机器人能够使用机械臂自主按电梯，上述企业的产品有哪些可以实现"
+   ]
+  },
+  {
+   "term": "械臂自主按电",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "酒店电梯需要送餐机器人能够使用机械臂自主按电梯，上述企业的产品有哪些可以实现"
+   ]
+  },
+  {
+   "term": "用机械臂自主",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "酒店电梯需要送餐机器人能够使用机械臂自主按电梯，上述企业的产品有哪些可以实现"
+   ]
+  },
+  {
+   "term": "维力传感原理",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "光基多维力传感原理具体展开说"
+   ]
+  },
+  {
+   "term": "臂自主按电梯",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "酒店电梯需要送餐机器人能够使用机械臂自主按电梯，上述企业的产品有哪些可以实现"
+   ]
+  },
+  {
+   "term": "based",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 6,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "pFedGPA: Diffusion-based Generative Parameter Aggregation for Personalized Federated Learning 这篇论文的详细信息"
+   ]
+  },
+  {
+   "term": "使用机械臂",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "酒店电梯需要送餐机器人能够使用机械臂自主按电梯，上述企业的产品有哪些可以实现"
+   ]
+  },
+  {
+   "term": "光基多维力",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "光基多维力传感原理具体展开说"
+   ]
+  },
+  {
+   "term": "力传感原理",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "光基多维力传感原理具体展开说"
+   ]
+  },
+  {
+   "term": "华力创科学",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 6,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "华力创科学这家公司相关信息，这家公司的产量特点是什么，市场竞争力怎么样"
+   ]
+  },
+  {
+   "term": "基多维力传",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "光基多维力传感原理具体展开说"
+   ]
+  },
+  {
+   "term": "多维力传感",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "光基多维力传感原理具体展开说"
+   ]
+  },
+  {
+   "term": "市场竞争力",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 6,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "华力创科学这家公司相关信息，这家公司的产量特点是什么，市场竞争力怎么样"
+   ]
+  },
+  {
+   "term": "机械臂自主",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "酒店电梯需要送餐机器人能够使用机械臂自主按电梯，上述企业的产品有哪些可以实现"
+   ]
+  },
+  {
+   "term": "械臂自主按",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "酒店电梯需要送餐机器人能够使用机械臂自主按电梯，上述企业的产品有哪些可以实现"
+   ]
+  },
+  {
+   "term": "模拟器生成",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 6,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "在模拟器生成数据路线中，有哪些具体方式"
+   ]
+  },
+  {
+   "term": "用机械臂自",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "酒店电梯需要送餐机器人能够使用机械臂自主按电梯，上述企业的产品有哪些可以实现"
+   ]
+  },
+  {
+   "term": "维力传感原",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "光基多维力传感原理具体展开说"
+   ]
+  },
+  {
+   "term": "臂自主按电",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "酒店电梯需要送餐机器人能够使用机械臂自主按电梯，上述企业的产品有哪些可以实现"
+   ]
+  },
+  {
+   "term": "自主按电梯",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "酒店电梯需要送餐机器人能够使用机械臂自主按电梯，上述企业的产品有哪些可以实现"
+   ]
+  },
+  {
+   "term": "酒店电梯需",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 6,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "酒店电梯需要送餐机器人能够使用机械臂自主按电梯，上述企业的产品有哪些可以实现"
+   ]
+  },
+  {
+   "term": "主按电梯",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "酒店电梯需要送餐机器人能够使用机械臂自主按电梯，上述企业的产品有哪些可以实现"
+   ]
+  },
+  {
+   "term": "产量特点",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 6,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "华力创科学这家公司相关信息，这家公司的产量特点是什么，市场竞争力怎么样"
+   ]
+  },
+  {
+   "term": "传感原理",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "光基多维力传感原理具体展开说"
+   ]
+  },
+  {
+   "term": "使用机械",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "酒店电梯需要送餐机器人能够使用机械臂自主按电梯，上述企业的产品有哪些可以实现"
+   ]
+  },
+  {
+   "term": "光基多维",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "光基多维力传感原理具体展开说"
+   ]
+  },
+  {
+   "term": "力传感原",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "光基多维力传感原理具体展开说"
+   ]
+  },
+  {
+   "term": "力创科学",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "华力创科学这家公司相关信息，这家公司的产量特点是什么，市场竞争力怎么样"
+   ]
+  },
+  {
+   "term": "华力创科",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "华力创科学这家公司相关信息，这家公司的产量特点是什么，市场竞争力怎么样"
+   ]
+  },
+  {
+   "term": "场竞争力",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "华力创科学这家公司相关信息，这家公司的产量特点是什么，市场竞争力怎么样"
+   ]
+  },
+  {
+   "term": "基多维力",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "光基多维力传感原理具体展开说"
+   ]
+  },
+  {
+   "term": "多维力传",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "光基多维力传感原理具体展开说"
+   ]
+  },
+  {
+   "term": "实际落地",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 6,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "在具身智能的运动和操作层面，数据需求有什么不同，在实际落地层面分别采用了哪些数据采集方式"
+   ]
+  },
+  {
+   "term": "市场竞争",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "华力创科学这家公司相关信息，这家公司的产量特点是什么，市场竞争力怎么样"
+   ]
+  },
+  {
+   "term": "店电梯需",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "酒店电梯需要送餐机器人能够使用机械臂自主按电梯，上述企业的产品有哪些可以实现"
+   ]
+  },
+  {
+   "term": "拟器生成",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "在模拟器生成数据路线中，有哪些具体方式"
+   ]
+  },
+  {
+   "term": "旅游旅游",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 6,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "在深圳旅游旅游有哪些涉及黄赌毒的地方是不能去的"
+   ]
+  },
+  {
+   "term": "机械臂自",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "酒店电梯需要送餐机器人能够使用机械臂自主按电梯，上述企业的产品有哪些可以实现"
+   ]
+  },
+  {
+   "term": "械臂自主",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "酒店电梯需要送餐机器人能够使用机械臂自主按电梯，上述企业的产品有哪些可以实现"
+   ]
+  },
+  {
+   "term": "模拟器生",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "在模拟器生成数据路线中，有哪些具体方式"
+   ]
+  },
+  {
+   "term": "爱博合创",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 6,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "爱博合创企业情况以及创始人信息还有市场对这家企业的评价如何"
+   ]
+  },
+  {
+   "term": "用机械臂",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "酒店电梯需要送餐机器人能够使用机械臂自主按电梯，上述企业的产品有哪些可以实现"
+   ]
+  },
+  {
+   "term": "维力传感",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "光基多维力传感原理具体展开说"
+   ]
+  },
+  {
+   "term": "臂自主按",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "酒店电梯需要送餐机器人能够使用机械臂自主按电梯，上述企业的产品有哪些可以实现"
+   ]
+  },
+  {
+   "term": "自主按电",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "酒店电梯需要送餐机器人能够使用机械臂自主按电梯，上述企业的产品有哪些可以实现"
+   ]
+  },
+  {
+   "term": "酒店电梯",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "酒店电梯需要送餐机器人能够使用机械臂自主按电梯，上述企业的产品有哪些可以实现"
+   ]
+  },
+  {
+   "term": "for",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 6,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "pFedGPA: Diffusion-based Generative Parameter Aggregation for Personalized Federated Learning 这篇论文的详细信息"
+   ]
+  },
+  {
+   "term": "不能去",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 6,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "在深圳旅游旅游有哪些涉及黄赌毒的地方是不能去的"
+   ]
+  },
+  {
+   "term": "主按电",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "酒店电梯需要送餐机器人能够使用机械臂自主按电梯，上述企业的产品有哪些可以实现"
+   ]
+  },
+  {
+   "term": "产量特",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "华力创科学这家公司相关信息，这家公司的产量特点是什么，市场竞争力怎么样"
+   ]
+  },
+  {
+   "term": "传感原",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "光基多维力传感原理具体展开说"
+   ]
+  },
+  {
+   "term": "使用机",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "酒店电梯需要送餐机器人能够使用机械臂自主按电梯，上述企业的产品有哪些可以实现"
+   ]
+  },
+  {
+   "term": "光基多",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "光基多维力传感原理具体展开说"
+   ]
+  },
+  {
+   "term": "创始人",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 6,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "爱博合创企业情况以及创始人信息还有市场对这家企业的评价如何"
+   ]
+  },
+  {
+   "term": "创科学",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "华力创科学这家公司相关信息，这家公司的产量特点是什么，市场竞争力怎么样"
+   ]
+  },
+  {
+   "term": "力传感",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "光基多维力传感原理具体展开说"
+   ]
+  },
+  {
+   "term": "力创科",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "华力创科学这家公司相关信息，这家公司的产量特点是什么，市场竞争力怎么样"
+   ]
+  },
+  {
+   "term": "华力创",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "华力创科学这家公司相关信息，这家公司的产量特点是什么，市场竞争力怎么样"
+   ]
+  },
+  {
+   "term": "博合创",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "爱博合创企业情况以及创始人信息还有市场对这家企业的评价如何"
+   ]
+  },
+  {
+   "term": "器生成",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "在模拟器生成数据路线中，有哪些具体方式"
+   ]
+  },
+  {
+   "term": "场竞争",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "华力创科学这家公司相关信息，这家公司的产量特点是什么，市场竞争力怎么样"
+   ]
+  },
+  {
+   "term": "基多维",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "光基多维力传感原理具体展开说"
+   ]
+  },
+  {
+   "term": "多维力",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "光基多维力传感原理具体展开说"
+   ]
+  },
+  {
+   "term": "实际落",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "在具身智能的运动和操作层面，数据需求有什么不同，在实际落地层面分别采用了哪些数据采集方式"
+   ]
+  },
+  {
+   "term": "展开说",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 6,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "光基多维力传感原理具体展开说"
+   ]
+  },
+  {
+   "term": "市场对",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 6,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "爱博合创企业情况以及创始人信息还有市场对这家企业的评价如何"
+   ]
+  },
+  {
+   "term": "市场竞",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "华力创科学这家公司相关信息，这家公司的产量特点是什么，市场竞争力怎么样"
+   ]
+  },
+  {
+   "term": "店电梯",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "酒店电梯需要送餐机器人能够使用机械臂自主按电梯，上述企业的产品有哪些可以实现"
+   ]
+  },
+  {
+   "term": "感原理",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "光基多维力传感原理具体展开说"
+   ]
+  },
+  {
+   "term": "拟器生",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "在模拟器生成数据路线中，有哪些具体方式"
+   ]
+  },
+  {
+   "term": "按电梯",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "酒店电梯需要送餐机器人能够使用机械臂自主按电梯，上述企业的产品有哪些可以实现"
+   ]
+  },
+  {
+   "term": "旅游旅",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "在深圳旅游旅游有哪些涉及黄赌毒的地方是不能去的"
+   ]
+  },
+  {
+   "term": "机械臂",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "酒店电梯需要送餐机器人能够使用机械臂自主按电梯，上述企业的产品有哪些可以实现"
+   ]
+  },
+  {
+   "term": "械臂自",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "酒店电梯需要送餐机器人能够使用机械臂自主按电梯，上述企业的产品有哪些可以实现"
+   ]
+  },
+  {
+   "term": "模拟器",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "在模拟器生成数据路线中，有哪些具体方式"
+   ]
+  },
+  {
+   "term": "毕业于",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 6,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "毕业于早稻田，且在深圳专注在机器人行业的企业家有谁"
+   ]
+  },
+  {
+   "term": "游旅游",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "在深圳旅游旅游有哪些涉及黄赌毒的地方是不能去的"
+   ]
+  },
+  {
+   "term": "爱博合",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "爱博合创企业情况以及创始人信息还有市场对这家企业的评价如何"
+   ]
+  },
+  {
+   "term": "王学谦",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 6,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "清华的王学谦的评价如何，他是否是属于大牛"
+   ]
+  },
+  {
+   "term": "用机械",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "酒店电梯需要送餐机器人能够使用机械臂自主按电梯，上述企业的产品有哪些可以实现"
+   ]
+  },
+  {
+   "term": "电梯需",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "酒店电梯需要送餐机器人能够使用机械臂自主按电梯，上述企业的产品有哪些可以实现"
+   ]
+  },
+  {
+   "term": "竞争力",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "华力创科学这家公司相关信息，这家公司的产量特点是什么，市场竞争力怎么样"
+   ]
+  },
+  {
+   "term": "维力传",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "光基多维力传感原理具体展开说"
+   ]
+  },
+  {
+   "term": "臂自主",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "酒店电梯需要送餐机器人能够使用机械臂自主按电梯，上述企业的产品有哪些可以实现"
+   ]
+  },
+  {
+   "term": "自主按",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "酒店电梯需要送餐机器人能够使用机械臂自主按电梯，上述企业的产品有哪些可以实现"
+   ]
+  },
+  {
+   "term": "酒店电",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "酒店电梯需要送餐机器人能够使用机械臂自主按电梯，上述企业的产品有哪些可以实现"
+   ]
+  },
+  {
+   "term": "量特点",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "华力创科学这家公司相关信息，这家公司的产量特点是什么，市场竞争力怎么样"
+   ]
+  },
+  {
+   "term": "际落地",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "在具身智能的运动和操作层面，数据需求有什么不同，在实际落地层面分别采用了哪些数据采集方式"
+   ]
+  },
+  {
+   "term": "黄赌毒",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 6,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "在深圳旅游旅游有哪些涉及黄赌毒的地方是不能去的"
+   ]
+  },
+  {
+   "term": "不同",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 6,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "在具身智能的运动和操作层面，数据需求有什么不同，在实际落地层面分别采用了哪些数据采集方式"
+   ]
+  },
+  {
+   "term": "不能",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "在深圳旅游旅游有哪些涉及黄赌毒的地方是不能去的"
+   ]
+  },
+  {
+   "term": "业于",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "毕业于早稻田，且在深圳专注在机器人行业的企业家有谁"
+   ]
+  },
+  {
+   "term": "主按",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "酒店电梯需要送餐机器人能够使用机械臂自主按电梯，上述企业的产品有哪些可以实现"
+   ]
+  },
+  {
+   "term": "争力",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "华力创科学这家公司相关信息，这家公司的产量特点是什么，市场竞争力怎么样"
+   ]
+  },
+  {
+   "term": "云迹",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 6,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "介绍云迹科技有限公司"
+   ]
+  },
+  {
+   "term": "产量",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "华力创科学这家公司相关信息，这家公司的产量特点是什么，市场竞争力怎么样"
+   ]
+  },
+  {
+   "term": "传感",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "光基多维力传感原理具体展开说"
+   ]
+  },
+  {
+   "term": "使用",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "酒店电梯需要送餐机器人能够使用机械臂自主按电梯，上述企业的产品有哪些可以实现"
+   ]
+  },
+  {
+   "term": "光基",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "光基多维力传感原理具体展开说"
+   ]
+  },
+  {
+   "term": "创始",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "爱博合创企业情况以及创始人信息还有市场对这家企业的评价如何"
+   ]
+  },
+  {
+   "term": "创科",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "华力创科学这家公司相关信息，这家公司的产量特点是什么，市场竞争力怎么样"
+   ]
+  },
+  {
+   "term": "力传",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "光基多维力传感原理具体展开说"
+   ]
+  },
+  {
+   "term": "力创",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "华力创科学这家公司相关信息，这家公司的产量特点是什么，市场竞争力怎么样"
+   ]
+  },
+  {
+   "term": "华力",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "华力创科学这家公司相关信息，这家公司的产量特点是什么，市场竞争力怎么样"
+   ]
+  },
+  {
+   "term": "博合",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "爱博合创企业情况以及创始人信息还有市场对这家企业的评价如何"
+   ]
+  },
+  {
+   "term": "原理",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "光基多维力传感原理具体展开说"
+   ]
+  },
+  {
+   "term": "合创",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "爱博合创企业情况以及创始人信息还有市场对这家企业的评价如何"
+   ]
+  },
+  {
+   "term": "器生",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "在模拟器生成数据路线中，有哪些具体方式"
+   ]
+  },
+  {
+   "term": "地方",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 6,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "在深圳旅游旅游有哪些涉及黄赌毒的地方是不能去的"
+   ]
+  },
+  {
+   "term": "场对",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "爱博合创企业情况以及创始人信息还有市场对这家企业的评价如何"
+   ]
+  },
+  {
+   "term": "场竞",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "华力创科学这家公司相关信息，这家公司的产量特点是什么，市场竞争力怎么样"
+   ]
+  },
+  {
+   "term": "基多",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "光基多维力传感原理具体展开说"
+   ]
+  },
+  {
+   "term": "多维",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "光基多维力传感原理具体展开说"
+   ]
+  },
+  {
+   "term": "始人",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "爱博合创企业情况以及创始人信息还有市场对这家企业的评价如何"
+   ]
+  },
+  {
+   "term": "学谦",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "清华的王学谦的评价如何，他是否是属于大牛"
+   ]
+  },
+  {
+   "term": "实际",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "在具身智能的运动和操作层面，数据需求有什么不同，在实际落地层面分别采用了哪些数据采集方式"
+   ]
+  },
+  {
+   "term": "展开",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "光基多维力传感原理具体展开说"
+   ]
+  },
+  {
+   "term": "属于",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 6,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "清华的王学谦的评价如何，他是否是属于大牛"
+   ]
+  },
+  {
+   "term": "店电",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "酒店电梯需要送餐机器人能够使用机械臂自主按电梯，上述企业的产品有哪些可以实现"
+   ]
+  },
+  {
+   "term": "开说",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "光基多维力传感原理具体展开说"
+   ]
+  },
+  {
+   "term": "感原",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "光基多维力传感原理具体展开说"
+   ]
+  },
+  {
+   "term": "拟器",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "在模拟器生成数据路线中，有哪些具体方式"
+   ]
+  },
+  {
+   "term": "按电",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "酒店电梯需要送餐机器人能够使用机械臂自主按电梯，上述企业的产品有哪些可以实现"
+   ]
+  },
+  {
+   "term": "操作",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 6,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "在具身智能的运动和操作层面，数据需求有什么不同，在实际落地层面分别采用了哪些数据采集方式"
+   ]
+  },
+  {
+   "term": "旅游",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "在深圳旅游旅游有哪些涉及黄赌毒的地方是不能去的"
+   ]
+  },
+  {
+   "term": "机械",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "酒店电梯需要送餐机器人能够使用机械臂自主按电梯，上述企业的产品有哪些可以实现"
+   ]
+  },
+  {
+   "term": "梯需",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "酒店电梯需要送餐机器人能够使用机械臂自主按电梯，上述企业的产品有哪些可以实现"
+   ]
+  },
+  {
+   "term": "械臂",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "酒店电梯需要送餐机器人能够使用机械臂自主按电梯，上述企业的产品有哪些可以实现"
+   ]
+  },
+  {
+   "term": "模拟",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "在模拟器生成数据路线中，有哪些具体方式"
+   ]
+  },
+  {
+   "term": "毕业",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "毕业于早稻田，且在深圳专注在机器人行业的企业家有谁"
+   ]
+  },
+  {
+   "term": "游旅",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "在深圳旅游旅游有哪些涉及黄赌毒的地方是不能去的"
+   ]
+  },
+  {
+   "term": "爱博",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "爱博合创企业情况以及创始人信息还有市场对这家企业的评价如何"
+   ]
+  },
+  {
+   "term": "特点",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "华力创科学这家公司相关信息，这家公司的产量特点是什么，市场竞争力怎么样"
+   ]
+  },
+  {
+   "term": "王学",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "清华的王学谦的评价如何，他是否是属于大牛"
+   ]
+  },
+  {
+   "term": "生成",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "在模拟器生成数据路线中，有哪些具体方式"
+   ]
+  },
+  {
+   "term": "用机",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "酒店电梯需要送餐机器人能够使用机械臂自主按电梯，上述企业的产品有哪些可以实现"
+   ]
+  },
+  {
+   "term": "电梯",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "酒店电梯需要送餐机器人能够使用机械臂自主按电梯，上述企业的产品有哪些可以实现"
+   ]
+  },
+  {
+   "term": "真实",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 6,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "在真实数据采集路线中，有哪些具体方式"
+   ]
+  },
+  {
+   "term": "科学",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "华力创科学这家公司相关信息，这家公司的产量特点是什么，市场竞争力怎么样"
+   ]
+  },
+  {
+   "term": "竞争",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "华力创科学这家公司相关信息，这家公司的产量特点是什么，市场竞争力怎么样"
+   ]
+  },
+  {
+   "term": "维力",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "光基多维力传感原理具体展开说"
+   ]
+  },
+  {
+   "term": "能去",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "在深圳旅游旅游有哪些涉及黄赌毒的地方是不能去的"
+   ]
+  },
+  {
+   "term": "臂自",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "酒店电梯需要送餐机器人能够使用机械臂自主按电梯，上述企业的产品有哪些可以实现"
+   ]
+  },
+  {
+   "term": "自主",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "酒店电梯需要送餐机器人能够使用机械臂自主按电梯，上述企业的产品有哪些可以实现"
+   ]
+  },
+  {
+   "term": "落地",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "在具身智能的运动和操作层面，数据需求有什么不同，在实际落地层面分别采用了哪些数据采集方式"
+   ]
+  },
+  {
+   "term": "赌毒",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "在深圳旅游旅游有哪些涉及黄赌毒的地方是不能去的"
+   ]
+  },
+  {
+   "term": "运动",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 6,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "在具身智能的运动和操作层面，数据需求有什么不同，在实际落地层面分别采用了哪些数据采集方式"
+   ]
+  },
+  {
+   "term": "采用",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 6,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "在具身智能的运动和操作层面，数据需求有什么不同，在实际落地层面分别采用了哪些数据采集方式"
+   ]
+  },
+  {
+   "term": "量特",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "华力创科学这家公司相关信息，这家公司的产量特点是什么，市场竞争力怎么样"
+   ]
+  },
+  {
+   "term": "链接",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 6,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "这论文的链接是什么"
+   ]
+  },
+  {
+   "term": "际落",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "在具身智能的运动和操作层面，数据需求有什么不同，在实际落地层面分别采用了哪些数据采集方式"
+   ]
+  },
+  {
+   "term": "需求",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 6,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "在具身智能的运动和操作层面，数据需求有什么不同，在实际落地层面分别采用了哪些数据采集方式"
+   ]
+  },
+  {
+   "term": "黄赌",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 6,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "在深圳旅游旅游有哪些涉及黄赌毒的地方是不能去的"
+   ]
+  },
+  {
+   "term": "岚湾储能",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 5,
+   "full_whole_run_turns": 5,
+   "full_distinct_queries": 3,
+   "full_examples": [
+    "深圳岚湾储能科技有限公司是做什么的？单机柜容量多少？",
+    "深圳岚湾储能科技有限公司的单机柜容量是多少？",
+    "深圳岚湾储能科技有限公司是做什么的？"
+   ]
+  },
+  {
+   "term": "岚湾储",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 5,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 3,
+   "full_examples": [
+    "深圳岚湾储能科技有限公司是做什么的？单机柜容量多少？",
+    "深圳岚湾储能科技有限公司的单机柜容量是多少？",
+    "深圳岚湾储能科技有限公司是做什么的？"
+   ]
+  },
+  {
+   "term": "湾储能",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 5,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 3,
+   "full_examples": [
+    "深圳岚湾储能科技有限公司是做什么的？单机柜容量多少？",
+    "深圳岚湾储能科技有限公司的单机柜容量是多少？",
+    "深圳岚湾储能科技有限公司是做什么的？"
+   ]
+  },
+  {
+   "term": "储能",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 5,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 3,
+   "full_examples": [
+    "深圳岚湾储能科技有限公司是做什么的？单机柜容量多少？",
+    "深圳岚湾储能科技有限公司的单机柜容量是多少？",
+    "深圳岚湾储能科技有限公司是做什么的？"
+   ]
+  },
+  {
+   "term": "岚湾",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 5,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 3,
+   "full_examples": [
+    "深圳岚湾储能科技有限公司是做什么的？单机柜容量多少？",
+    "深圳岚湾储能科技有限公司的单机柜容量是多少？",
+    "深圳岚湾储能科技有限公司是做什么的？"
+   ]
+  },
+  {
+   "term": "湾储",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 5,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 3,
+   "full_examples": [
+    "深圳岚湾储能科技有限公司是做什么的？单机柜容量多少？",
+    "深圳岚湾储能科技有限公司的单机柜容量是多少？",
+    "深圳岚湾储能科技有限公司是做什么的？"
+   ]
+  },
+  {
+   "term": "一点",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 4,
+   "full_whole_run_turns": 4,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "能再具体一点吗"
+   ]
+  },
+  {
+   "term": "星桥",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 4,
+   "full_whole_run_turns": 2,
+   "full_distinct_queries": 3,
+   "full_examples": [
+    "深圳星桥机器人有限公司是做什么的？核心产品是什么？",
+    "星桥 X9 水下巡检机器人有什么应用场景？",
+    "星桥 X9 系列是什么产品？谁家做的？"
+   ]
+  },
+  {
+   "term": "能再",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 4,
+   "full_whole_run_turns": 4,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "能再具体一点吗"
+   ]
+  },
+  {
+   "term": "单机柜容量",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 3,
+   "full_whole_run_turns": 1,
+   "full_distinct_queries": 2,
+   "full_examples": [
+    "深圳岚湾储能科技有限公司是做什么的？单机柜容量多少？",
+    "深圳岚湾储能科技有限公司的单机柜容量是多少？"
+   ]
+  },
+  {
+   "term": "单机柜容",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 3,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 2,
+   "full_examples": [
+    "深圳岚湾储能科技有限公司是做什么的？单机柜容量多少？",
+    "深圳岚湾储能科技有限公司的单机柜容量是多少？"
+   ]
+  },
+  {
+   "term": "机柜容量",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 3,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 2,
+   "full_examples": [
+    "深圳岚湾储能科技有限公司是做什么的？单机柜容量多少？",
+    "深圳岚湾储能科技有限公司的单机柜容量是多少？"
+   ]
+  },
+  {
+   "term": "单机柜",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 3,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 2,
+   "full_examples": [
+    "深圳岚湾储能科技有限公司是做什么的？单机柜容量多少？",
+    "深圳岚湾储能科技有限公司的单机柜容量是多少？"
+   ]
+  },
+  {
+   "term": "机柜容",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 3,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 2,
+   "full_examples": [
+    "深圳岚湾储能科技有限公司是做什么的？单机柜容量多少？",
+    "深圳岚湾储能科技有限公司的单机柜容量是多少？"
+   ]
+  },
+  {
+   "term": "柜容量",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 3,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 2,
+   "full_examples": [
+    "深圳岚湾储能科技有限公司是做什么的？单机柜容量多少？",
+    "深圳岚湾储能科技有限公司的单机柜容量是多少？"
+   ]
+  },
+  {
+   "term": "单机",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 3,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 2,
+   "full_examples": [
+    "深圳岚湾储能科技有限公司是做什么的？单机柜容量多少？",
+    "深圳岚湾储能科技有限公司的单机柜容量是多少？"
+   ]
+  },
+  {
+   "term": "国先",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 3,
+   "full_whole_run_turns": 3,
+   "full_distinct_queries": 3,
+   "full_examples": [
+    "国先中心的信息",
+    "深圳国先中心的信息",
+    "深圳国先中心"
+   ]
+  },
+  {
+   "term": "多少",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 3,
+   "full_whole_run_turns": 1,
+   "full_distinct_queries": 2,
+   "full_examples": [
+    "深圳岚湾储能科技有限公司是做什么的？单机柜容量多少？",
+    "深圳岚湾储能科技有限公司的单机柜容量是多少？"
+   ]
+  },
+  {
+   "term": "容量",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 3,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 2,
+   "full_examples": [
+    "深圳岚湾储能科技有限公司是做什么的？单机柜容量多少？",
+    "深圳岚湾储能科技有限公司的单机柜容量是多少？"
+   ]
+  },
+  {
+   "term": "机柜",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 3,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 2,
+   "full_examples": [
+    "深圳岚湾储能科技有限公司是做什么的？单机柜容量多少？",
+    "深圳岚湾储能科技有限公司的单机柜容量是多少？"
+   ]
+  },
+  {
+   "term": "柜容",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 3,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 2,
+   "full_examples": [
+    "深圳岚湾储能科技有限公司是做什么的？单机柜容量多少？",
+    "深圳岚湾储能科技有限公司的单机柜容量是多少？"
+   ]
+  },
+  {
+   "term": "单机柜容量多少",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 2,
+   "full_whole_run_turns": 2,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "深圳岚湾储能科技有限公司是做什么的？单机柜容量多少？"
+   ]
+  },
+  {
+   "term": "单机柜容量多",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 2,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "深圳岚湾储能科技有限公司是做什么的？单机柜容量多少？"
+   ]
+  },
+  {
+   "term": "机柜容量多少",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 2,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "深圳岚湾储能科技有限公司是做什么的？单机柜容量多少？"
+   ]
+  },
+  {
+   "term": "星桥机器人",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 2,
+   "full_whole_run_turns": 2,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "深圳星桥机器人有限公司是做什么的？核心产品是什么？"
+   ]
+  },
+  {
+   "term": "机柜容量多",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 2,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "深圳岚湾储能科技有限公司是做什么的？单机柜容量多少？"
+   ]
+  },
+  {
+   "term": "柜容量多少",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 2,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "深圳岚湾储能科技有限公司是做什么的？单机柜容量多少？"
+   ]
+  },
+  {
+   "term": "容量多少",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 2,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "深圳岚湾储能科技有限公司是做什么的？单机柜容量多少？"
+   ]
+  },
+  {
+   "term": "星桥机器",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 2,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "深圳星桥机器人有限公司是做什么的？核心产品是什么？"
+   ]
+  },
+  {
+   "term": "柜容量多",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 2,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "深圳岚湾储能科技有限公司是做什么的？单机柜容量多少？"
+   ]
+  },
+  {
+   "term": "桥机器人",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 2,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "深圳星桥机器人有限公司是做什么的？核心产品是什么？"
+   ]
+  },
+  {
+   "term": "容量多",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 2,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "深圳岚湾储能科技有限公司是做什么的？单机柜容量多少？"
+   ]
+  },
+  {
+   "term": "星桥机",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 2,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "深圳星桥机器人有限公司是做什么的？核心产品是什么？"
+   ]
+  },
+  {
+   "term": "桥机器",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 2,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "深圳星桥机器人有限公司是做什么的？核心产品是什么？"
+   ]
+  },
+  {
+   "term": "量多少",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 2,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "深圳岚湾储能科技有限公司是做什么的？单机柜容量多少？"
+   ]
+  },
+  {
+   "term": "X9",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 2,
+   "full_whole_run_turns": 2,
+   "full_distinct_queries": 2,
+   "full_examples": [
+    "星桥 X9 水下巡检机器人有什么应用场景？",
+    "星桥 X9 系列是什么产品？谁家做的？"
+   ]
+  },
+  {
+   "term": "你好",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 2,
+   "full_whole_run_turns": 2,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "你好"
+   ]
+  },
+  {
+   "term": "核心",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 2,
+   "full_whole_run_turns": 2,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "深圳星桥机器人有限公司是做什么的？核心产品是什么？"
+   ]
+  },
+  {
+   "term": "桥机",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 2,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "深圳星桥机器人有限公司是做什么的？核心产品是什么？"
+   ]
+  },
+  {
+   "term": "量多",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 2,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "深圳岚湾储能科技有限公司是做什么的？单机柜容量多少？"
+   ]
+  },
+  {
+   "term": "水下巡检机器人",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 1,
+   "full_whole_run_turns": 1,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "星桥 X9 水下巡检机器人有什么应用场景？"
+   ]
+  },
+  {
+   "term": "下巡检机器人",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 1,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "星桥 X9 水下巡检机器人有什么应用场景？"
+   ]
+  },
+  {
+   "term": "水下巡检机器",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 1,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "星桥 X9 水下巡检机器人有什么应用场景？"
+   ]
+  },
+  {
+   "term": "下巡检机器",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 1,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "星桥 X9 水下巡检机器人有什么应用场景？"
+   ]
+  },
+  {
+   "term": "巡检机器人",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 1,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "星桥 X9 水下巡检机器人有什么应用场景？"
+   ]
+  },
+  {
+   "term": "水下巡检机",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 1,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "星桥 X9 水下巡检机器人有什么应用场景？"
+   ]
+  },
+  {
+   "term": "下巡检机",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 1,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "星桥 X9 水下巡检机器人有什么应用场景？"
+   ]
+  },
+  {
+   "term": "巡检机器",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 1,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "星桥 X9 水下巡检机器人有什么应用场景？"
+   ]
+  },
+  {
+   "term": "检机器人",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 1,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "星桥 X9 水下巡检机器人有什么应用场景？"
+   ]
+  },
+  {
+   "term": "水下巡检",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 1,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "星桥 X9 水下巡检机器人有什么应用场景？"
+   ]
+  },
+  {
+   "term": "丁文斌",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 1,
+   "full_whole_run_turns": 1,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "介绍一下丁文斌"
+   ]
+  },
+  {
+   "term": "下巡检",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 1,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "星桥 X9 水下巡检机器人有什么应用场景？"
+   ]
+  },
+  {
+   "term": "巡检机",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 1,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "星桥 X9 水下巡检机器人有什么应用场景？"
+   ]
+  },
+  {
+   "term": "检机器",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 1,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "星桥 X9 水下巡检机器人有什么应用场景？"
+   ]
+  },
+  {
+   "term": "水下巡",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 1,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "星桥 X9 水下巡检机器人有什么应用场景？"
+   ]
+  },
+  {
+   "term": "下巡",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 1,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "星桥 X9 水下巡检机器人有什么应用场景？"
+   ]
+  },
+  {
+   "term": "巡检",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 1,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "星桥 X9 水下巡检机器人有什么应用场景？"
+   ]
+  },
+  {
+   "term": "建设",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 1,
+   "full_whole_run_turns": 1,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "介绍一下国际先进技术应用推进中心（深圳）的建设进展"
+   ]
+  },
+  {
+   "term": "文斌",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 1,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "介绍一下丁文斌"
+   ]
+  },
+  {
+   "term": "检机",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 1,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "星桥 X9 水下巡检机器人有什么应用场景？"
+   ]
+  },
+  {
+   "term": "水下",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 1,
+   "full_whole_run_turns": 0,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "星桥 X9 水下巡检机器人有什么应用场景？"
+   ]
+  },
+  {
+   "term": "系列",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 1,
+   "full_whole_run_turns": 1,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "星桥 X9 系列是什么产品？谁家做的？"
+   ]
+  },
+  {
+   "term": "高校",
+   "cat_turns": 0,
+   "cat_whole_run_turns": 0,
+   "cat_distinct_queries": 0,
+   "cat_sessions": 0,
+   "cat_examples": [],
+   "full_turns": 1,
+   "full_whole_run_turns": 1,
+   "full_distinct_queries": 1,
+   "full_examples": [
+    "深圳高校在人工智能领域有哪些代表性论文？"
+   ]
+  }
+ ]
+}

@@ -1,0 +1,4525 @@
+{
+ "access_log": "/var/tmp/mirothinker-canonical-v2-s12f/access-logs.sqlite3",
+ "total_turns": 914,
+ "category_turns": 361,
+ "distinct_category_queries": 33,
+ "distinct_category_sessions": 336,
+ "family_counts": {
+  "A_有哪些": 354,
+  "B_推荐": 9,
+  "C_供应商": 27,
+  "D_做的公司": 116,
+  "E_其他枚举": 32
+ },
+ "rows": [
+  {
+   "turn_id": "turn:log:F_2tKhIXhu1v6-80",
+   "session_id": "session:chat:1UbHoBesHCLNHyYsWLnEWS9sTBWkfwlj",
+   "turn_count": 1,
+   "query": "深圳有哪些具身智能企业？",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-08-07T13:11:10.743251+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:OJIwfbktTb7-NFBk",
+   "session_id": "session:chat:1UbHoBesHCLNHyYsWLnEWS9sTBWkfwlj",
+   "turn_count": 2,
+   "query": "上述企业里总部在南山的有哪些？",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-08-07T13:12:17.747639+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:_lXuReewdWaQQZFU",
+   "session_id": "session:chat:TcwxT5Xl_rDmEca7-TkLP6NkevR0oP3x",
+   "turn_count": 1,
+   "query": "深圳大学有哪些教授？",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-08-07T14:50:37.313780+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:JPFKy9vgoh_rqBaE",
+   "session_id": "session:chat:E6WMh4FMq0zJQ5leeUt4r-AEejqm4v7c",
+   "turn_count": 1,
+   "query": "深圳有哪些人工智能企业？",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-08-07T14:59:33.557703+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:BH2MWcXqYHeKh0g7",
+   "session_id": "session:chat:UwQ4-VYdL8H7bhgfsdA6jz741_cOKsEg",
+   "turn_count": 1,
+   "query": "深圳有哪些人工智能企业？",
+   "query_type": "",
+   "status": "error",
+   "started_at": "2026-08-09T09:16:05.915358+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:vywQme7sG4FWkPF-",
+   "session_id": "session:chat:FfTXj2pwm5FL9-L1MzaysXaEIG0n66kj",
+   "turn_count": 1,
+   "query": "深圳有哪些人工智能企业？",
+   "query_type": "",
+   "status": "interrupted",
+   "started_at": "2026-08-09T10:15:32.680574+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:eHRveFYgh_evObrH",
+   "session_id": "session:chat:dygHfM1xNFMFIrR8XPxZOr2AQsOhiBiw",
+   "turn_count": 1,
+   "query": "深圳高校在人工智能领域有哪些代表性论文？",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-08-10T05:38:53.758357+00:00",
+   "families": [
+    "A_有哪些",
+    "B_推荐"
+   ]
+  },
+  {
+   "turn_id": "turn:log:Q6K6psor-Wxg49Vc",
+   "session_id": "session:chat:8fedM04W49D0bIqypafvJSqi18lrkRTu",
+   "turn_count": 3,
+   "query": "深圳有哪些人工智能企业？",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-08-11T01:15:19.108816+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:9AHaAOo1rChq0VI5",
+   "session_id": "session:chat:_e1GfxN6yJObA3TW8ahw-1ShEkrnxxtY",
+   "turn_count": 4,
+   "query": "清华有哪些教授专门研究视触觉",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-08-11T01:17:55.370607+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:0UDUzwEGaCn2_-J9",
+   "session_id": "session:chat:EPRCgePHKpZFeTBFrnuqI6--8nSFZeSX",
+   "turn_count": 1,
+   "query": "帮我介绍一下在具身领域比较知名的教授及团队",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-08-11T09:58:41.744393+00:00",
+   "families": [
+    "B_推荐"
+   ]
+  },
+  {
+   "turn_id": "turn:log:q-KfiFaeVJihAxj2",
+   "session_id": "session:chat:EPRCgePHKpZFeTBFrnuqI6--8nSFZeSX",
+   "turn_count": 2,
+   "query": "大湾区有哪些值得关注的具身企业",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-08-11T09:59:16.997085+00:00",
+   "families": [
+    "A_有哪些",
+    "B_推荐"
+   ]
+  },
+  {
+   "turn_id": "turn:log:XrAVW4Qp6eZGEtd8",
+   "session_id": "session:chat:Y957tLwzyNYm-7VQP74E1-6hqnlN--l6",
+   "turn_count": 3,
+   "query": "它有哪些布局和进展",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-08-13T06:07:03.287462+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:VpxJpf3cpj1M4Cuv",
+   "session_id": "session:chat:SbYjRSQg2xtseNxmBkKmNTSi6adhGXYl",
+   "turn_count": 3,
+   "query": "它有哪些布局和进展",
+   "query_type": "canonical_v2:G:clarification_only",
+   "status": "completed",
+   "started_at": "2026-08-13T06:15:53.719183+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:2O7qJ2WYrqO-zOUS",
+   "session_id": "session:chat:iNeL-OGFuAsdCTXFSz4ILfZZ7bacoRat",
+   "turn_count": 3,
+   "query": "它有哪些布局和进展",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-08-13T06:21:43.877571+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:_czKCyKpxPrEne0I",
+   "session_id": "session:chat:q9j4F-TFSe89BLAUFdx1cou7gELKgJmh",
+   "turn_count": 3,
+   "query": "它有哪些布局和进展",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-08-17T02:48:07.376525+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:JGwG8KzSHIphCajA",
+   "session_id": "session:chat:nuwEnIzBPTnmlnInzdbfaoExJ8Njby1U",
+   "turn_count": 3,
+   "query": "它有哪些布局和进展",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-08-17T08:53:03.931488+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:H6wN8FpE3briQd5O",
+   "session_id": "session:chat:nuwEnIzBPTnmlnInzdbfaoExJ8Njby1U",
+   "turn_count": 6,
+   "query": "它有哪些布局和进展",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-08-17T08:55:48.397643+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:GJetoE9JhvVwgfDg",
+   "session_id": "session:chat:nuwEnIzBPTnmlnInzdbfaoExJ8Njby1U",
+   "turn_count": 10,
+   "query": "他有哪些论文",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-08-17T09:10:40.950585+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:kU4355tP1X59rxT-",
+   "session_id": "session:chat:PyhAK3msBWxTAL2WSA5o_G9DL8DgF0Pr",
+   "turn_count": 2,
+   "query": "该公司的专利有哪些",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-08-17T12:26:14.160939+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:9JrrPy8LJxpcvbQR",
+   "session_id": "session:chat:PyhAK3msBWxTAL2WSA5o_G9DL8DgF0Pr",
+   "turn_count": 4,
+   "query": "还有哪些类似的公司",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-08-17T12:29:31.232651+00:00",
+   "families": [
+    "A_有哪些",
+    "E_其他枚举"
+   ]
+  },
+  {
+   "turn_id": "turn:log:Wyz7ak6Yt0Exse6F",
+   "session_id": "session:chat:PyhAK3msBWxTAL2WSA5o_G9DL8DgF0Pr",
+   "turn_count": 7,
+   "query": "深圳有哪些做具身智能的公司",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-08-17T12:35:42.803065+00:00",
+   "families": [
+    "A_有哪些",
+    "D_做的公司"
+   ]
+  },
+  {
+   "turn_id": "turn:log:bMPCs_gUcAB5pfIZ",
+   "session_id": "session:chat:01m37PzDrI64K5Nd2HBSVpO5YGlPw-tB",
+   "turn_count": 3,
+   "query": "它有哪些布局和进展",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-08-17T15:07:51.534952+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:963_pfK4JYg1kSzD",
+   "session_id": "session:chat:K0wGSNmlP5jiktHCoBCK4K0oHsOhwQeV",
+   "turn_count": 2,
+   "query": "他有哪些论文",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-08-17T15:08:22.785673+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:40pGxNL-sdhkm5Rs",
+   "session_id": "session:chat:YB6Nappg73L9mL6kZhj7kFLkeyK5tz-G",
+   "turn_count": 2,
+   "query": "该公司的专利有哪些",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-08-17T15:08:41.042656+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:oxY9MHH7s5el_EyH",
+   "session_id": "session:chat:VpFSIYYL527zWReqFiOtxdQByaIs2xwj",
+   "turn_count": 2,
+   "query": "还有哪些类似的公司",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-08-17T15:08:56.019376+00:00",
+   "families": [
+    "A_有哪些",
+    "E_其他枚举"
+   ]
+  },
+  {
+   "turn_id": "turn:log:I5tLjFuCtgDXOr--",
+   "session_id": "session:chat:uPbJYGVjjwxoOUg6cOnZYEACgh4Pf5NC",
+   "turn_count": 1,
+   "query": "深圳有哪些做具身智能的公司",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-08-17T15:09:28.795555+00:00",
+   "families": [
+    "A_有哪些",
+    "D_做的公司"
+   ]
+  },
+  {
+   "turn_id": "turn:log:uOSEp2Ntnh5zOMRp",
+   "session_id": "session:chat:dijXgIMNYaTkkqMvL0EVXsVG5GbhWtN6",
+   "turn_count": 3,
+   "query": "它有哪些布局和进展",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-08-17T15:11:33.122727+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:dvgb8lvZIx42av95",
+   "session_id": "session:chat:MQ3NaHkrT6qOViTQlHnT-TslaYyOvf2x",
+   "turn_count": 2,
+   "query": "他有哪些论文",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-08-17T15:12:37.611688+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:vl7FuCK1yWjp3lBs",
+   "session_id": "session:chat:xun1I3Jee2HD3cclhIqm-3GaLctXm-HQ",
+   "turn_count": 2,
+   "query": "该公司的专利有哪些",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-08-17T15:12:55.182890+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:gqwsM2-MnHqPYYTR",
+   "session_id": "session:chat:WNNj6X9jzNvwiy1D4Sv2_DNpi_3IKO6z",
+   "turn_count": 2,
+   "query": "还有哪些类似的公司",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-08-17T15:13:11.239531+00:00",
+   "families": [
+    "A_有哪些",
+    "E_其他枚举"
+   ]
+  },
+  {
+   "turn_id": "turn:log:yaVp2b15KWSm4syc",
+   "session_id": "session:chat:PQ1KSFsUnhGCoSyiwcCgYLVYcqMFpCqI",
+   "turn_count": 1,
+   "query": "深圳有哪些做具身智能的公司",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-08-17T15:13:45.599452+00:00",
+   "families": [
+    "A_有哪些",
+    "D_做的公司"
+   ]
+  },
+  {
+   "turn_id": "turn:log:Os_rwiY0-6dRta3d",
+   "session_id": "session:chat:fdKDiA4KgfskQSHXPZIbXmqTDZxyNQsN",
+   "turn_count": 1,
+   "query": "深圳有哪些做具身智能的公司",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-08-17T15:14:04.233882+00:00",
+   "families": [
+    "A_有哪些",
+    "D_做的公司"
+   ]
+  },
+  {
+   "turn_id": "turn:log:AmiYdDunOUlKU6FF",
+   "session_id": "session:chat:YWc_bUSsVlvgf8Gk_HvqeJFPoLtVaExc",
+   "turn_count": 1,
+   "query": "深圳有哪些做具身智能的公司",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-08-17T15:14:29.444780+00:00",
+   "families": [
+    "A_有哪些",
+    "D_做的公司"
+   ]
+  },
+  {
+   "turn_id": "turn:log:njigaVqk7LMn7Gn-",
+   "session_id": "session:chat:7OUqWali--8-w81sYjpZZz6EANtnWApl",
+   "turn_count": 3,
+   "query": "它有哪些布局和进展",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-08-18T01:20:52.558634+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:UOq7yaoEqm_zGY4N",
+   "session_id": "session:chat:hTUvruUQXys-NMT4ggvs3tzWtax4xIvo",
+   "turn_count": 2,
+   "query": "他有哪些论文",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-08-18T01:21:42.984775+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:WVpD71TS9gJ9WIiu",
+   "session_id": "session:chat:-FlMB6kLXdYkEDC76HJXq5B0c4SDr63E",
+   "turn_count": 2,
+   "query": "该公司的专利有哪些",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-08-18T01:21:57.847982+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:AZxCkM15YIg056a5",
+   "session_id": "session:chat:ECwMeQ6_FucaspfWStMi-etuW_555nwp",
+   "turn_count": 2,
+   "query": "还有哪些类似的公司",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-08-18T01:22:13.101836+00:00",
+   "families": [
+    "A_有哪些",
+    "E_其他枚举"
+   ]
+  },
+  {
+   "turn_id": "turn:log:GxTVNKqfNNHW43yq",
+   "session_id": "session:chat:7Uv9VFzU_hVBFMYD08-Ezi9DzFD5qftk",
+   "turn_count": 1,
+   "query": "深圳有哪些做具身智能的公司",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-08-18T01:22:49.469200+00:00",
+   "families": [
+    "A_有哪些",
+    "D_做的公司"
+   ]
+  },
+  {
+   "turn_id": "turn:log:4tsNQL5LbLQwfZyA",
+   "session_id": "session:chat:xkv8ReupHlLOYUuhnI3MnhP6YuTBPT_T",
+   "turn_count": 1,
+   "query": "深圳有哪些做具身智能的公司",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-08-18T01:23:09.971688+00:00",
+   "families": [
+    "A_有哪些",
+    "D_做的公司"
+   ]
+  },
+  {
+   "turn_id": "turn:log:H0vtpZ_6bBYI0kGA",
+   "session_id": "session:chat:j2r_fsXpXhkIwkCMqvTP2C59EnPUbD9w",
+   "turn_count": 1,
+   "query": "深圳有哪些做具身智能的公司",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-08-18T01:23:30.597498+00:00",
+   "families": [
+    "A_有哪些",
+    "D_做的公司"
+   ]
+  },
+  {
+   "turn_id": "turn:log:eCf-0FT4nNHgh-hu",
+   "session_id": "session:chat:2vP-xVMOowJJAKdt0C7YzWpjlqDZ2d8Z",
+   "turn_count": 3,
+   "query": "它有哪些布局和进展",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-08-18T06:46:51.285660+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:X9vYm8ieTeD5OEX0",
+   "session_id": "session:chat:Tn4BVxmTysXgRXtD63S_MG-lYHIjsfnn",
+   "turn_count": 2,
+   "query": "他有哪些论文",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-08-18T06:47:33.736514+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:LFzg0Qi13LLSGDUp",
+   "session_id": "session:chat:JCqTNYGXl-j1Z3Jl82IH_pMtgrFQXrLr",
+   "turn_count": 2,
+   "query": "该公司的专利有哪些",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-08-18T06:47:47.050429+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:DZFajPLlgQPaum09",
+   "session_id": "session:chat:3QNBJQQwTYlp6tDYWkhzIAlLz2Gv8n6l",
+   "turn_count": 2,
+   "query": "还有哪些类似的公司",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-08-18T06:48:01.852658+00:00",
+   "families": [
+    "A_有哪些",
+    "E_其他枚举"
+   ]
+  },
+  {
+   "turn_id": "turn:log:Syup5gC0aqb45Uhd",
+   "session_id": "session:chat:Tu6VvtBerH3R8qbyDikTcIBLbXshOaDq",
+   "turn_count": 1,
+   "query": "深圳有哪些做具身智能的公司",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-08-18T06:48:37.870666+00:00",
+   "families": [
+    "A_有哪些",
+    "D_做的公司"
+   ]
+  },
+  {
+   "turn_id": "turn:log:QsRZFibId9KzjBtt",
+   "session_id": "session:chat:I0X_uxhz8m242yXmrdDueXLPkrnmR7YU",
+   "turn_count": 1,
+   "query": "深圳有哪些做具身智能的公司",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-08-18T06:49:10.380297+00:00",
+   "families": [
+    "A_有哪些",
+    "D_做的公司"
+   ]
+  },
+  {
+   "turn_id": "turn:log:JpqvKlfDSgGFVjZg",
+   "session_id": "session:chat:TFYFFNsecVxX_VBbnTKUV7GKw_SWf9xG",
+   "turn_count": 1,
+   "query": "深圳有哪些做具身智能的公司",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-08-18T06:49:40.991393+00:00",
+   "families": [
+    "A_有哪些",
+    "D_做的公司"
+   ]
+  },
+  {
+   "turn_id": "turn:log:zger7-7dzyuFL6Ei",
+   "session_id": "session:chat:6lF6EB1D-9OiZRBg835LGFBiTGnamB_5",
+   "turn_count": 3,
+   "query": "它有哪些布局和进展",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-08-18T11:14:25.602182+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:juMax6DTGw24WpMJ",
+   "session_id": "session:chat:Emn1Lyl_E73Ui20TRgkFCIa3WACk5G4c",
+   "turn_count": 2,
+   "query": "他有哪些论文",
+   "query_type": "canonical_v2:G:clarification_only",
+   "status": "completed",
+   "started_at": "2026-08-18T11:15:25.646367+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:cYexrZqBQqcJvpTr",
+   "session_id": "session:chat:eSafPavXFLmKpzIYLcYyls4P9nk1My0-",
+   "turn_count": 2,
+   "query": "该公司的专利有哪些",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-08-18T11:15:33.517015+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:AbjNBSovwfbluZLH",
+   "session_id": "session:chat:WUO0ddEvZ8oauexb3VrH2UaNh5sfU2YD",
+   "turn_count": 2,
+   "query": "还有哪些类似的公司",
+   "query_type": "",
+   "status": "error",
+   "started_at": "2026-08-18T11:15:47.519084+00:00",
+   "families": [
+    "A_有哪些",
+    "E_其他枚举"
+   ]
+  },
+  {
+   "turn_id": "turn:log:LxjGR7QJVJ3QZblq",
+   "session_id": "session:chat:OGWGlMl3DiOuW7d7btXCpr-ZtDOv7Ag_",
+   "turn_count": 1,
+   "query": "深圳有哪些做具身智能的公司",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-08-18T11:16:32.347105+00:00",
+   "families": [
+    "A_有哪些",
+    "D_做的公司"
+   ]
+  },
+  {
+   "turn_id": "turn:log:qPUFVbDDId3Br3Mc",
+   "session_id": "session:chat:InXX38PuPYnlmSMB-tYHgVhBLIJCp1SG",
+   "turn_count": 1,
+   "query": "深圳有哪些做具身智能的公司",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-08-18T11:17:09.729733+00:00",
+   "families": [
+    "A_有哪些",
+    "D_做的公司"
+   ]
+  },
+  {
+   "turn_id": "turn:log:jM8PpZ17MsZ36HfO",
+   "session_id": "session:chat:Qj1A4t8JuQinWHaZi-iP_9AoJnE6AdMg",
+   "turn_count": 1,
+   "query": "深圳有哪些做具身智能的公司",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-08-18T11:17:48.780302+00:00",
+   "families": [
+    "A_有哪些",
+    "D_做的公司"
+   ]
+  },
+  {
+   "turn_id": "turn:log:jn2Do-iLzxMUapt7",
+   "session_id": "session:chat:_uf1AyUsX7b8JuYchJqMgUddIXICEhIG",
+   "turn_count": 3,
+   "query": "它有哪些布局和进展",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-08-18T11:37:56.576896+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:oIErUal_WmISilqb",
+   "session_id": "session:chat:t0hxhBJ3TiKn2vQBbQHGab7aw4jXI_D6",
+   "turn_count": 2,
+   "query": "他有哪些论文",
+   "query_type": "canonical_v2:G:clarification_only",
+   "status": "completed",
+   "started_at": "2026-08-18T11:38:52.319417+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:R3J1m19yDaL29MIr",
+   "session_id": "session:chat:nL6N5FYc5osaOWGLHSefqMRGa9QtVLCe",
+   "turn_count": 2,
+   "query": "该公司的专利有哪些",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-08-18T11:39:00.108182+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:ubMYlrlD9rDkhVR0",
+   "session_id": "session:chat:tMEyPILpcc8okO8o-T5nwW0IzoC28C35",
+   "turn_count": 2,
+   "query": "还有哪些类似的公司",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-08-18T11:39:12.029303+00:00",
+   "families": [
+    "A_有哪些",
+    "E_其他枚举"
+   ]
+  },
+  {
+   "turn_id": "turn:log:GOJ2LcRUZO57pmAk",
+   "session_id": "session:chat:39dD0fsPpiX77wWIEBEkJaPYgNyp6CZ3",
+   "turn_count": 1,
+   "query": "深圳有哪些做具身智能的公司",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-08-18T11:39:43.185297+00:00",
+   "families": [
+    "A_有哪些",
+    "D_做的公司"
+   ]
+  },
+  {
+   "turn_id": "turn:log:891UaxoZjKLkknQV",
+   "session_id": "session:chat:aXHWt0ZEu3m4QE7K_Ztnd-v_oKLdaeub",
+   "turn_count": 1,
+   "query": "深圳有哪些做具身智能的公司",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-08-18T11:40:16.028359+00:00",
+   "families": [
+    "A_有哪些",
+    "D_做的公司"
+   ]
+  },
+  {
+   "turn_id": "turn:log:VrOwWJgs7fDtBMJ-",
+   "session_id": "session:chat:UmQ9oHpuDFYo8-_q-IMjAdtqXpox01S8",
+   "turn_count": 1,
+   "query": "深圳有哪些做具身智能的公司",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-08-18T11:40:45.084293+00:00",
+   "families": [
+    "A_有哪些",
+    "D_做的公司"
+   ]
+  },
+  {
+   "turn_id": "turn:log:kjgh9z2iLY4NLyj_",
+   "session_id": "session:chat:Q_2avBKDiA9-ve7xivz_tUA2qn3YxUDE",
+   "turn_count": 1,
+   "query": "深圳有哪些做具身智能的公司",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-08-18T11:47:46.765859+00:00",
+   "families": [
+    "A_有哪些",
+    "D_做的公司"
+   ]
+  },
+  {
+   "turn_id": "turn:log:jQlbSI4sUzOgzm7d",
+   "session_id": "session:chat:9pTeMhKqX0BhY4JJUfCyRK9wLq5kw3JC",
+   "turn_count": 1,
+   "query": "深圳有哪些做具身智能的公司",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-08-18T11:48:16.171785+00:00",
+   "families": [
+    "A_有哪些",
+    "D_做的公司"
+   ]
+  },
+  {
+   "turn_id": "turn:log:-Ux0xgPUyecKEaau",
+   "session_id": "session:chat:M0GJg21VCmwczyaY1ezgPTMdV9-URMOL",
+   "turn_count": 1,
+   "query": "深圳有哪些做具身智能的公司",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-08-18T11:48:49.159992+00:00",
+   "families": [
+    "A_有哪些",
+    "D_做的公司"
+   ]
+  },
+  {
+   "turn_id": "turn:log:fQKUegluATcUX9fM",
+   "session_id": "session:chat:BPdRd6pJO-apvvHeCJckwlp0N5-cbLQ3",
+   "turn_count": 1,
+   "query": "深圳有哪些做具身智能的公司",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-08-18T11:49:18.190779+00:00",
+   "families": [
+    "A_有哪些",
+    "D_做的公司"
+   ]
+  },
+  {
+   "turn_id": "turn:log:rIAnto_X8_6M6kWx",
+   "session_id": "session:chat:1rFQFbEjW2ZnmXH8z2vtIPwVfe8_UM3k",
+   "turn_count": 1,
+   "query": "深圳有哪些做具身智能的公司",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-08-18T11:49:58.685551+00:00",
+   "families": [
+    "A_有哪些",
+    "D_做的公司"
+   ]
+  },
+  {
+   "turn_id": "turn:log:DnGEhGolcFE6lPfA",
+   "session_id": "session:chat:CzqqXFldpuhU5Ckct70TwMwR8Fiixhrj",
+   "turn_count": 1,
+   "query": "深圳有哪些做具身智能的公司",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-08-18T11:50:38.561220+00:00",
+   "families": [
+    "A_有哪些",
+    "D_做的公司"
+   ]
+  },
+  {
+   "turn_id": "turn:log:FSYZ7JMIHj7-DDQy",
+   "session_id": "session:chat:Qge4Cl4-gOzFnQeaOS62rvIgIPsbv2yQ",
+   "turn_count": 3,
+   "query": "它有哪些布局和进展",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-08-18T11:56:57.168211+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:gh1YUEZPhgNnoVh9",
+   "session_id": "session:chat:RzHU8wstSYfZX4jX46dzOFAFVoYphh0a",
+   "turn_count": 2,
+   "query": "他有哪些论文",
+   "query_type": "canonical_v2:G:clarification_only",
+   "status": "completed",
+   "started_at": "2026-08-18T11:57:53.300267+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:jbJuxTTQgke1vR_O",
+   "session_id": "session:chat:1ZSJWO3SurfgOBYZ60j78mdfJ7p8c5xP",
+   "turn_count": 2,
+   "query": "该公司的专利有哪些",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-08-18T11:58:01.253645+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:iR053ptX1FVHIqpZ",
+   "session_id": "session:chat:ju_jYeE4wz8QIWlOzzLqSmWLzwKtL3KT",
+   "turn_count": 2,
+   "query": "还有哪些类似的公司",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-08-18T11:58:13.553211+00:00",
+   "families": [
+    "A_有哪些",
+    "E_其他枚举"
+   ]
+  },
+  {
+   "turn_id": "turn:log:bg78jK2l5QSSGnHR",
+   "session_id": "session:chat:sJufTEYPHyML7ALxmlr5W8jAOAgStAgw",
+   "turn_count": 1,
+   "query": "深圳有哪些做具身智能的公司",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-08-18T11:58:45.107982+00:00",
+   "families": [
+    "A_有哪些",
+    "D_做的公司"
+   ]
+  },
+  {
+   "turn_id": "turn:log:rlhHNDimMvsZ2B2J",
+   "session_id": "session:chat:sRajPCSnt4nJiCuksYT-8BTHoP4qwavu",
+   "turn_count": 1,
+   "query": "深圳有哪些做具身智能的公司",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-08-18T11:59:18.079796+00:00",
+   "families": [
+    "A_有哪些",
+    "D_做的公司"
+   ]
+  },
+  {
+   "turn_id": "turn:log:uwCfSyr4O0L_GvLG",
+   "session_id": "session:chat:jVRHiCdCHoZf2UkT29i5JTpsODTQW_U_",
+   "turn_count": 1,
+   "query": "深圳有哪些做具身智能的公司",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-08-18T11:59:50.162055+00:00",
+   "families": [
+    "A_有哪些",
+    "D_做的公司"
+   ]
+  },
+  {
+   "turn_id": "turn:log:sLdQkdGhATPDd5bL",
+   "session_id": "session:chat:g095artDf-P9vaqQQ0jLjuQGrcfjUcNT",
+   "turn_count": 1,
+   "query": "深圳有哪些做具身智能的公司",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-08-18T12:09:58.985874+00:00",
+   "families": [
+    "A_有哪些",
+    "D_做的公司"
+   ]
+  },
+  {
+   "turn_id": "turn:log:n5AYnC8EvTyrfPsg",
+   "session_id": "session:chat:hDhcgfwmfhJuTvMuyyW83o8iL7LZtjBN",
+   "turn_count": 1,
+   "query": "深圳有哪些做具身智能的公司",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-08-18T12:10:59.489882+00:00",
+   "families": [
+    "A_有哪些",
+    "D_做的公司"
+   ]
+  },
+  {
+   "turn_id": "turn:log:aOTaFb8aM2Fx5_0u",
+   "session_id": "session:chat:Zbkl0Ef7FpufDKL9sgiM5Q2FKg1xqxNk",
+   "turn_count": 1,
+   "query": "深圳有哪些做具身智能的公司",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-08-18T12:11:30.075556+00:00",
+   "families": [
+    "A_有哪些",
+    "D_做的公司"
+   ]
+  },
+  {
+   "turn_id": "turn:log:SVx8EwqOwr8ZnYFi",
+   "session_id": "session:chat:hT4gF6laKlpMpKanipCS61PbnP3TwdVX",
+   "turn_count": 1,
+   "query": "深圳有哪些做具身智能的公司",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-08-18T12:11:57.647146+00:00",
+   "families": [
+    "A_有哪些",
+    "D_做的公司"
+   ]
+  },
+  {
+   "turn_id": "turn:log:LbbCWrNtd49EWF8x",
+   "session_id": "session:chat:G6VFU7TZzkWWZkccK20gLO8a51HA3Z0z",
+   "turn_count": 3,
+   "query": "它有哪些布局和进展",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-08-18T12:14:59.972670+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:WuVVUk8L1lprQvXt",
+   "session_id": "session:chat:Pl0_NkbfZKFoerIn1L3GCXTPh3nnasS4",
+   "turn_count": 2,
+   "query": "他有哪些论文",
+   "query_type": "canonical_v2:G:clarification_only",
+   "status": "completed",
+   "started_at": "2026-08-18T12:15:56.252461+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:wHNy9J0FyYE1fjJ5",
+   "session_id": "session:chat:ir2Xo-qR3ODoy_zdBXSTn8yfOT8WPnmn",
+   "turn_count": 2,
+   "query": "该公司的专利有哪些",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-08-18T12:16:05.188720+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:ZGyMqX_D33JSCZiX",
+   "session_id": "session:chat:LKz4WHmQ_bwoBvYJce731dQTll5XFU7Q",
+   "turn_count": 2,
+   "query": "还有哪些类似的公司",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-08-18T12:16:19.087431+00:00",
+   "families": [
+    "A_有哪些",
+    "E_其他枚举"
+   ]
+  },
+  {
+   "turn_id": "turn:log:JMdaXSy7LCXq0fLH",
+   "session_id": "session:chat:CvgaMNMOileQg2G6MfjsPPusbfM7LrdU",
+   "turn_count": 1,
+   "query": "深圳有哪些做具身智能的公司",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-08-18T12:16:49.429496+00:00",
+   "families": [
+    "A_有哪些",
+    "D_做的公司"
+   ]
+  },
+  {
+   "turn_id": "turn:log:BoB294cM5HGB1Y0P",
+   "session_id": "session:chat:wfhaadxTl6Jj2wAbe34fT4rJMZFRzOf4",
+   "turn_count": 1,
+   "query": "深圳有哪些做具身智能的公司",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-08-18T12:17:21.769323+00:00",
+   "families": [
+    "A_有哪些",
+    "D_做的公司"
+   ]
+  },
+  {
+   "turn_id": "turn:log:FitUm4zAHhRSjyHV",
+   "session_id": "session:chat:SD9Nioh-MZnRwRkt_gCRfDCadqfNJ_Ug",
+   "turn_count": 1,
+   "query": "深圳有哪些做具身智能的公司",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-08-18T12:17:54.034983+00:00",
+   "families": [
+    "A_有哪些",
+    "D_做的公司"
+   ]
+  },
+  {
+   "turn_id": "turn:log:EMcvluYqzIKeVpP7",
+   "session_id": "session:chat:uYUg1ntbVl3IldjDozqGvNq2zfDvq8CF",
+   "turn_count": 1,
+   "query": "深圳有哪些做具身智能的公司",
+   "query_type": "",
+   "status": "error",
+   "started_at": "2026-08-18T12:27:42.468051+00:00",
+   "families": [
+    "A_有哪些",
+    "D_做的公司"
+   ]
+  },
+  {
+   "turn_id": "turn:log:72GQ2dM_H4GuVjW2",
+   "session_id": "session:chat:DPaI9hqvusDSDf8FA8mjzp-kLvihPRrF",
+   "turn_count": 1,
+   "query": "深圳有哪些做具身智能的公司",
+   "query_type": "",
+   "status": "error",
+   "started_at": "2026-08-18T12:28:15.038573+00:00",
+   "families": [
+    "A_有哪些",
+    "D_做的公司"
+   ]
+  },
+  {
+   "turn_id": "turn:log:waON8dX-GeC5wAMa",
+   "session_id": "session:chat:7Q9aQH3Ow-7-GkLicyHQHPgQ6GT1wIg8",
+   "turn_count": 1,
+   "query": "深圳有哪些做具身智能的公司",
+   "query_type": "",
+   "status": "error",
+   "started_at": "2026-08-18T12:28:45.209628+00:00",
+   "families": [
+    "A_有哪些",
+    "D_做的公司"
+   ]
+  },
+  {
+   "turn_id": "turn:log:p75eHi48LwBm2dsP",
+   "session_id": "session:chat:5seuM_4x_CowNj9kKlUrItSkXAi9OyhE",
+   "turn_count": 1,
+   "query": "深圳有哪些做具身智能的公司",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-08-18T12:31:22.730229+00:00",
+   "families": [
+    "A_有哪些",
+    "D_做的公司"
+   ]
+  },
+  {
+   "turn_id": "turn:log:_UsRLaXSTbsRcekF",
+   "session_id": "session:chat:rnap1wY73xIYm2I3aPWHxYe03MZn4up-",
+   "turn_count": 1,
+   "query": "深圳有哪些做具身智能的公司",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-08-18T12:31:56.225631+00:00",
+   "families": [
+    "A_有哪些",
+    "D_做的公司"
+   ]
+  },
+  {
+   "turn_id": "turn:log:oauIjxX5C_WOhSx9",
+   "session_id": "session:chat:T6YBQZWcLob2y6UzAbhzXydLNMRLnvlR",
+   "turn_count": 1,
+   "query": "深圳有哪些做具身智能的公司",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-08-18T12:32:28.194672+00:00",
+   "families": [
+    "A_有哪些",
+    "D_做的公司"
+   ]
+  },
+  {
+   "turn_id": "turn:log:hoNu6ESLc0lpNTPg",
+   "session_id": "session:chat:SQOYmPI7slHiaNpW5eIUA0m0BwHvUkpB",
+   "turn_count": 1,
+   "query": "深圳有哪些做具身智能的公司",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-08-18T12:35:32.708284+00:00",
+   "families": [
+    "A_有哪些",
+    "D_做的公司"
+   ]
+  },
+  {
+   "turn_id": "turn:log:lPdTuJpSHHIYlDnN",
+   "session_id": "session:chat:JvlZKWheOH1Ua-I_KMNbi409grIKyhEf",
+   "turn_count": 1,
+   "query": "深圳有哪些做具身智能的公司",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-08-18T12:36:02.798583+00:00",
+   "families": [
+    "A_有哪些",
+    "D_做的公司"
+   ]
+  },
+  {
+   "turn_id": "turn:log:a8_W70Ns4CxmAInt",
+   "session_id": "session:chat:d_z0piYspAsBFKtkyIUN1T1xOKq84Z9T",
+   "turn_count": 1,
+   "query": "深圳有哪些做具身智能的公司",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-08-18T12:36:31.847685+00:00",
+   "families": [
+    "A_有哪些",
+    "D_做的公司"
+   ]
+  },
+  {
+   "turn_id": "turn:log:-AQsQ0BB4Y7oNSkK",
+   "session_id": "session:chat:dUqF5jqLGg6EcQ6GD-XKU6uNBsV9i4Xp",
+   "turn_count": 1,
+   "query": "深圳有哪些做具身智能的公司",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-08-18T13:32:12.800754+00:00",
+   "families": [
+    "A_有哪些",
+    "D_做的公司"
+   ]
+  },
+  {
+   "turn_id": "turn:log:UtBmyASmHPsfj1mK",
+   "session_id": "session:chat:RLr-ZRSFiAv0T4T7bhfCTq0pDsILzWPk",
+   "turn_count": 1,
+   "query": "深圳有哪些做具身智能的公司",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-08-18T13:32:43.247945+00:00",
+   "families": [
+    "A_有哪些",
+    "D_做的公司"
+   ]
+  },
+  {
+   "turn_id": "turn:log:x49BXej54oraqCzR",
+   "session_id": "session:chat:jaoGK9S4aUgH5v6vFPpeHlbbj8YZOPni",
+   "turn_count": 1,
+   "query": "深圳有哪些做具身智能的公司",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-08-18T13:33:15.354797+00:00",
+   "families": [
+    "A_有哪些",
+    "D_做的公司"
+   ]
+  },
+  {
+   "turn_id": "turn:log:Xa15dCkphNfH5M8S",
+   "session_id": "session:chat:5lTfQv9DfwAwWdKdgbX6oNyUGKOm3pak",
+   "turn_count": 1,
+   "query": "深圳有哪些做具身智能的公司",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-08-18T14:27:34.809554+00:00",
+   "families": [
+    "A_有哪些",
+    "D_做的公司"
+   ]
+  },
+  {
+   "turn_id": "turn:log:EEXOqdb7WjH76Rns",
+   "session_id": "session:chat:CTC9W564iD1IPO14u9Ovs-jRXbMRQfuB",
+   "turn_count": 1,
+   "query": "深圳有哪些做具身智能的公司",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-08-18T14:28:06.664081+00:00",
+   "families": [
+    "A_有哪些",
+    "D_做的公司"
+   ]
+  },
+  {
+   "turn_id": "turn:log:YDsa4BJIkdaOsdQT",
+   "session_id": "session:chat:D9GNX4pznAp4QSPZKuDeZZj04m-Mdbe2",
+   "turn_count": 1,
+   "query": "深圳有哪些做具身智能的公司",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-08-18T14:28:38.169785+00:00",
+   "families": [
+    "A_有哪些",
+    "D_做的公司"
+   ]
+  },
+  {
+   "turn_id": "turn:log:lXrg1fRBIK9xf3zX",
+   "session_id": "session:chat:D73DhAbVHvGRhzcdCc85veh1Ps3oSUep",
+   "turn_count": 1,
+   "query": "深圳有哪些做具身智能的公司",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-08-18T14:33:13.865281+00:00",
+   "families": [
+    "A_有哪些",
+    "D_做的公司"
+   ]
+  },
+  {
+   "turn_id": "turn:log:O3NHy6sYhF34bmcq",
+   "session_id": "session:chat:flyzbWI8tV_W46znypPc1ZmPPbpoA4J3",
+   "turn_count": 1,
+   "query": "深圳有哪些做具身智能的公司",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-08-18T14:33:43.364263+00:00",
+   "families": [
+    "A_有哪些",
+    "D_做的公司"
+   ]
+  },
+  {
+   "turn_id": "turn:log:xaA1ut_eB3L7CW-F",
+   "session_id": "session:chat:JEjM2r5JkJrJVsAuo-71VniCTUAg6B4i",
+   "turn_count": 1,
+   "query": "深圳有哪些做具身智能的公司",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-08-18T14:34:13.258786+00:00",
+   "families": [
+    "A_有哪些",
+    "D_做的公司"
+   ]
+  },
+  {
+   "turn_id": "turn:log:BpCypnYOl9DICrkG",
+   "session_id": "session:chat:zCoc8GqHOgxWTwttOaeiHvagT2ORD5ie",
+   "turn_count": 3,
+   "query": "它有哪些布局和进展",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-08-18T14:35:14.545342+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:1COz240WruVkYnKu",
+   "session_id": "session:chat:Dek9FGgOEZSSeKzaizgZ3xWHcHUjoq0Q",
+   "turn_count": 2,
+   "query": "他有哪些论文",
+   "query_type": "canonical_v2:G:clarification_only",
+   "status": "completed",
+   "started_at": "2026-08-18T14:36:04.156610+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:Bro5QFEZG3G5Ebg8",
+   "session_id": "session:chat:kBLdDiwaq93Pya3GIQi2tjEocUwUiwmb",
+   "turn_count": 2,
+   "query": "该公司的专利有哪些",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-08-18T14:36:13.623416+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:OGYEwRZ8uYhyYm_I",
+   "session_id": "session:chat:V7EYI7JMcPELzDYSYtCCg7epkn_ot8X3",
+   "turn_count": 2,
+   "query": "还有哪些类似的公司",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-08-18T14:36:26.080203+00:00",
+   "families": [
+    "A_有哪些",
+    "E_其他枚举"
+   ]
+  },
+  {
+   "turn_id": "turn:log:8SNaCoaCPz1qiaEO",
+   "session_id": "session:chat:2zlHD_85njIx4gkUNaySXZuWS3vHLqzw",
+   "turn_count": 1,
+   "query": "深圳有哪些做具身智能的公司",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-08-18T14:36:58.885160+00:00",
+   "families": [
+    "A_有哪些",
+    "D_做的公司"
+   ]
+  },
+  {
+   "turn_id": "turn:log:hHMB-3vlh6ciEpWi",
+   "session_id": "session:chat:C9NUv-Baqz-eZG6KxJWun3K2IcQ0pKEB",
+   "turn_count": 1,
+   "query": "深圳有哪些做具身智能的公司",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-08-18T14:37:29.449217+00:00",
+   "families": [
+    "A_有哪些",
+    "D_做的公司"
+   ]
+  },
+  {
+   "turn_id": "turn:log:e6ZoVdn0Lpkw2Pmv",
+   "session_id": "session:chat:_kTxTSqyhRjGbs1oWh1_Xb2pHzJYW5VG",
+   "turn_count": 1,
+   "query": "深圳有哪些做具身智能的公司",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-08-18T14:38:03.584886+00:00",
+   "families": [
+    "A_有哪些",
+    "D_做的公司"
+   ]
+  },
+  {
+   "turn_id": "turn:log:cGv3Cg8co84lsmTn",
+   "session_id": "session:chat:Kq10E_z4KMl5k4aKFf3cfUELd9-NQ2bB",
+   "turn_count": 3,
+   "query": "它有哪些布局和进展",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-08-18T16:28:01.426887+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:2r9nvk0cIEaOQQpe",
+   "session_id": "session:chat:nlILWceRFO0R8W5ZTPRQ_jzQAwCmCnbM",
+   "turn_count": 2,
+   "query": "他有哪些论文",
+   "query_type": "canonical_v2:G:clarification_only",
+   "status": "completed",
+   "started_at": "2026-08-18T16:28:51.201638+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:UPEPkX2aiSfdzWyV",
+   "session_id": "session:chat:G-VD0PFM-QsYtHWL19cmWrOb2ccZk7qu",
+   "turn_count": 2,
+   "query": "该公司的专利有哪些",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-08-18T16:28:59.022022+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:8NFsH5GbZsRkxSqe",
+   "session_id": "session:chat:mxxSdbpVUWfb2jjVK1QaJuWpnRvKZPqg",
+   "turn_count": 2,
+   "query": "还有哪些类似的公司",
+   "query_type": "",
+   "status": "error",
+   "started_at": "2026-08-18T16:29:11.733683+00:00",
+   "families": [
+    "A_有哪些",
+    "E_其他枚举"
+   ]
+  },
+  {
+   "turn_id": "turn:log:9ORWZ6yZTOnqJqVI",
+   "session_id": "session:chat:OKXATlOeZb6IfcCeGzYe02TVH4mlMKN3",
+   "turn_count": 1,
+   "query": "深圳有哪些做具身智能的公司",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-08-18T16:29:16.635792+00:00",
+   "families": [
+    "A_有哪些",
+    "D_做的公司"
+   ]
+  },
+  {
+   "turn_id": "turn:log:9lPZMIKXvIAhEpfN",
+   "session_id": "session:chat:bDKauC1EkTC2DKO-KoRRe8cReYO7gKJ1",
+   "turn_count": 1,
+   "query": "深圳有哪些做具身智能的公司",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-08-18T16:29:36.146192+00:00",
+   "families": [
+    "A_有哪些",
+    "D_做的公司"
+   ]
+  },
+  {
+   "turn_id": "turn:log:NJLmdoE8_a0L-qhb",
+   "session_id": "session:chat:8kRjf3u9_ZwhFdes3iDEBOuR5SEwtlwt",
+   "turn_count": 1,
+   "query": "深圳有哪些做具身智能的公司",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-08-18T16:29:55.836062+00:00",
+   "families": [
+    "A_有哪些",
+    "D_做的公司"
+   ]
+  },
+  {
+   "turn_id": "turn:log:wgN_adoRsH3Y5TkO",
+   "session_id": "session:chat:rB5kePzX0gJFi3dluoM3s5WNwsm3bsVd",
+   "turn_count": 3,
+   "query": "它有哪些布局和进展",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-08-18T16:57:34.566603+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:yevzSsDtjxqAwLc_",
+   "session_id": "session:chat:570FlgMnCUh4WPas0F5Z0sYEKDILqVbO",
+   "turn_count": 2,
+   "query": "他有哪些论文",
+   "query_type": "canonical_v2:G:clarification_only",
+   "status": "completed",
+   "started_at": "2026-08-18T16:58:26.658097+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:G-gPH0EIUJwDRJ9t",
+   "session_id": "session:chat:AplZaD99V3c7mtEmALMXGenXpeSFMvUQ",
+   "turn_count": 2,
+   "query": "该公司的专利有哪些",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-08-18T16:58:34.483360+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:OxfuO7g91Yq3Dp2H",
+   "session_id": "session:chat:bdZ99Zn2Zmq_bjoBg-FiFpSwOkL6NLjy",
+   "turn_count": 2,
+   "query": "还有哪些类似的公司",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-08-18T16:58:46.355795+00:00",
+   "families": [
+    "A_有哪些",
+    "E_其他枚举"
+   ]
+  },
+  {
+   "turn_id": "turn:log:2i7QQWdQ0BM-f4RJ",
+   "session_id": "session:chat:CCxCNtIBaCDORAlvJZbdFwC92dVwCtus",
+   "turn_count": 1,
+   "query": "深圳有哪些做具身智能的公司",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-08-18T16:59:19.217510+00:00",
+   "families": [
+    "A_有哪些",
+    "D_做的公司"
+   ]
+  },
+  {
+   "turn_id": "turn:log:nx1z0GuEQSBvOFuh",
+   "session_id": "session:chat:1bl_Q7NquR2it8HUXA1_wq8_sTq6NMWi",
+   "turn_count": 1,
+   "query": "深圳有哪些做具身智能的公司",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-08-18T16:59:36.728370+00:00",
+   "families": [
+    "A_有哪些",
+    "D_做的公司"
+   ]
+  },
+  {
+   "turn_id": "turn:log:PGpvFQsqmCFlgzUS",
+   "session_id": "session:chat:xocWaV0qFddq2BU5-5KI2PjX3-7wtymu",
+   "turn_count": 1,
+   "query": "深圳有哪些做具身智能的公司",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-08-18T16:59:58.971686+00:00",
+   "families": [
+    "A_有哪些",
+    "D_做的公司"
+   ]
+  },
+  {
+   "turn_id": "turn:log:XLrpFFP4zx6YDeJ1",
+   "session_id": "session:chat:3DPVYzug_J_m24WZQTR17GtLCAPmuINY",
+   "turn_count": 3,
+   "query": "它有哪些布局和进展",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-08-18T17:25:22.205866+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:mq1WM8BNc53gDOfv",
+   "session_id": "session:chat:-VbsnM5kaVkCFzZ-DG1_SzlsjYmp9HRL",
+   "turn_count": 2,
+   "query": "他有哪些论文",
+   "query_type": "canonical_v2:G:clarification_only",
+   "status": "completed",
+   "started_at": "2026-08-18T17:26:14.881245+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:jMvNgg010J68e9Lc",
+   "session_id": "session:chat:78y5q9745PIfxTO90ImDMYRxXpy4TUKM",
+   "turn_count": 2,
+   "query": "该公司的专利有哪些",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-08-18T17:26:22.950679+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:77LIsOy6IB8edWAR",
+   "session_id": "session:chat:ofpgdmnqU8WrC4GbEfLfyAYT6UYvzE4x",
+   "turn_count": 2,
+   "query": "还有哪些类似的公司",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-08-18T17:26:35.156119+00:00",
+   "families": [
+    "A_有哪些",
+    "E_其他枚举"
+   ]
+  },
+  {
+   "turn_id": "turn:log:OOCjnfpcjRVnHRCk",
+   "session_id": "session:chat:MqvEZMgnpEERuXxGe_pa_ze19V7jbQEa",
+   "turn_count": 1,
+   "query": "深圳有哪些做具身智能的公司",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-08-18T17:27:07.576118+00:00",
+   "families": [
+    "A_有哪些",
+    "D_做的公司"
+   ]
+  },
+  {
+   "turn_id": "turn:log:bmofuLoI0T67R2xW",
+   "session_id": "session:chat:iYZ6YN2D0FJQ-MOqgsLojOLLTsGuL7xj",
+   "turn_count": 1,
+   "query": "深圳有哪些做具身智能的公司",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-08-18T17:27:29.992612+00:00",
+   "families": [
+    "A_有哪些",
+    "D_做的公司"
+   ]
+  },
+  {
+   "turn_id": "turn:log:sE3NuSpraQN8jeGB",
+   "session_id": "session:chat:rIDGokslnnYwhZh84Kn3sagS8TPN3tRp",
+   "turn_count": 1,
+   "query": "深圳有哪些做具身智能的公司",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-08-18T17:27:52.102032+00:00",
+   "families": [
+    "A_有哪些",
+    "D_做的公司"
+   ]
+  },
+  {
+   "turn_id": "turn:log:zIb5qJwY9d26TDNR",
+   "session_id": "session:chat:l9ty6IJjtDVOWjN-VgV9oM6N91EnZcpx",
+   "turn_count": 3,
+   "query": "它有哪些布局和进展",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-08-18T17:51:40.697533+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:1CIlYP-NdcL9USb-",
+   "session_id": "session:chat:p37pUliyDMxTYHXyW15QJGY7DziPsQgw",
+   "turn_count": 2,
+   "query": "他有哪些论文",
+   "query_type": "canonical_v2:G:clarification_only",
+   "status": "completed",
+   "started_at": "2026-08-18T17:52:29.760717+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:mgoN2KB10BWNdA6g",
+   "session_id": "session:chat:Aw69BHY2pRS3P2gD8t8GE_9sHucAJncb",
+   "turn_count": 2,
+   "query": "该公司的专利有哪些",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-08-18T17:52:37.589602+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:zaKlDLuWuY80Fo99",
+   "session_id": "session:chat:5CYK5uMRia7U4PWsvtM4oES60VRTjtRT",
+   "turn_count": 2,
+   "query": "还有哪些类似的公司",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-08-18T17:52:50.278977+00:00",
+   "families": [
+    "A_有哪些",
+    "E_其他枚举"
+   ]
+  },
+  {
+   "turn_id": "turn:log:jimX27O1J9X0uFas",
+   "session_id": "session:chat:vp5HBA2qz-399AvIPSgWUzZAHFhgJKT8",
+   "turn_count": 1,
+   "query": "深圳有哪些做具身智能的公司",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-08-18T17:53:26.558843+00:00",
+   "families": [
+    "A_有哪些",
+    "D_做的公司"
+   ]
+  },
+  {
+   "turn_id": "turn:log:M_z7R0XF2kQ45tCf",
+   "session_id": "session:chat:u68P0-fjc39drtCrqY743D65jHCZsVh7",
+   "turn_count": 1,
+   "query": "深圳有哪些做具身智能的公司",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-08-18T17:53:46.506608+00:00",
+   "families": [
+    "A_有哪些",
+    "D_做的公司"
+   ]
+  },
+  {
+   "turn_id": "turn:log:7Gp60hOLuybhDilQ",
+   "session_id": "session:chat:PJG9AzpyVv39LUv9vjO84FlKVqGTXhn-",
+   "turn_count": 1,
+   "query": "深圳有哪些做具身智能的公司",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-08-18T17:54:08.526938+00:00",
+   "families": [
+    "A_有哪些",
+    "D_做的公司"
+   ]
+  },
+  {
+   "turn_id": "turn:log:QJEBe3_kCQD9ShWR",
+   "session_id": "session:chat:wMLej5Skn9zo0pZkVnwz58_sIjX_cwu0",
+   "turn_count": 3,
+   "query": "它有哪些布局和进展",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-08-19T00:56:51.978822+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:Pe8VEZI_u5W7A4fT",
+   "session_id": "session:chat:Kg3guexEM2d3NAdis4oC1l1m2A213I9q",
+   "turn_count": 2,
+   "query": "他有哪些论文",
+   "query_type": "canonical_v2:G:clarification_only",
+   "status": "completed",
+   "started_at": "2026-08-19T00:57:43.199914+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:IV_jdm7NvXIK4h8K",
+   "session_id": "session:chat:5ZRzEfqCd-KACOw4QHJibAD_zFe48Yto",
+   "turn_count": 2,
+   "query": "该公司的专利有哪些",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-08-19T00:57:52.262955+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:0rhZEh-64VmsUJ_G",
+   "session_id": "session:chat:Q3XHAWJH7JQk4eeDwYZTNeY2LWk-ZhjN",
+   "turn_count": 2,
+   "query": "还有哪些类似的公司",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-08-19T00:58:06.987356+00:00",
+   "families": [
+    "A_有哪些",
+    "E_其他枚举"
+   ]
+  },
+  {
+   "turn_id": "turn:log:aTKWRCJtJ-7ZS9-e",
+   "session_id": "session:chat:uTp6dYkXMSJbjF7rKFroZHA8yPttiER4",
+   "turn_count": 1,
+   "query": "深圳有哪些做具身智能的公司",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-08-19T00:58:36.251621+00:00",
+   "families": [
+    "A_有哪些",
+    "D_做的公司"
+   ]
+  },
+  {
+   "turn_id": "turn:log:EsJO9gdcJ0VfXs1K",
+   "session_id": "session:chat:nrteROJRy8ufIOUo0CgH1z6_rVtD8GK4",
+   "turn_count": 1,
+   "query": "深圳有哪些做具身智能的公司",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-08-19T00:59:05.408285+00:00",
+   "families": [
+    "A_有哪些",
+    "D_做的公司"
+   ]
+  },
+  {
+   "turn_id": "turn:log:CbKGT7LD55XBeo8-",
+   "session_id": "session:chat:hcqhMUCRH5BNjliPSoHwPJu9AEHmRZXP",
+   "turn_count": 1,
+   "query": "深圳有哪些做具身智能的公司",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-08-19T00:59:33.667858+00:00",
+   "families": [
+    "A_有哪些",
+    "D_做的公司"
+   ]
+  },
+  {
+   "turn_id": "turn:log:e3_FbbcedISvrrqZ",
+   "session_id": "session:chat:yT4G-56uEIQoYd9QsWCE4enGGFJv8Mvl",
+   "turn_count": 3,
+   "query": "它有哪些布局和进展",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-08-19T01:21:30.800124+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:URdT9WwrFLXPn5bZ",
+   "session_id": "session:chat:MmocNaiD2FSsnJPvDXVvIDmsABflQ7Rk",
+   "turn_count": 2,
+   "query": "他有哪些论文",
+   "query_type": "canonical_v2:G:clarification_only",
+   "status": "completed",
+   "started_at": "2026-08-19T01:22:25.455920+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:oJC2QTAWSxjn5R2p",
+   "session_id": "session:chat:8EqZQiDQ8hkDdkhZ1djpPWg5KlnlGsO6",
+   "turn_count": 2,
+   "query": "该公司的专利有哪些",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-08-19T01:22:34.934810+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:6qwyilAVPMp7wZLB",
+   "session_id": "session:chat:NPKDaj4uCRl5gbwbGV136RlZYPpZibHx",
+   "turn_count": 2,
+   "query": "还有哪些类似的公司",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-08-19T01:22:48.434645+00:00",
+   "families": [
+    "A_有哪些",
+    "E_其他枚举"
+   ]
+  },
+  {
+   "turn_id": "turn:log:buaChyX5GY2sXn8w",
+   "session_id": "session:chat:qUCFOLbf3k_aHGKK9c77tLPoqYpR320s",
+   "turn_count": 1,
+   "query": "深圳有哪些做具身智能的公司",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-08-19T01:23:26.738377+00:00",
+   "families": [
+    "A_有哪些",
+    "D_做的公司"
+   ]
+  },
+  {
+   "turn_id": "turn:log:sJvx1RsbUevwpCJr",
+   "session_id": "session:chat:e1wvsgls4k0xGWP6WB6J2UIWfVdgNv4S",
+   "turn_count": 1,
+   "query": "深圳有哪些做具身智能的公司",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-08-19T01:24:05.366121+00:00",
+   "families": [
+    "A_有哪些",
+    "D_做的公司"
+   ]
+  },
+  {
+   "turn_id": "turn:log:zGyUwrnpReHXs0kf",
+   "session_id": "session:chat:EpMWtgtcbWbg3OMno_mTvKKUHIAe-jIJ",
+   "turn_count": 1,
+   "query": "深圳有哪些做具身智能的公司",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-08-19T01:24:32.832080+00:00",
+   "families": [
+    "A_有哪些",
+    "D_做的公司"
+   ]
+  },
+  {
+   "turn_id": "turn:log:ubxT4GBC93BlthzX",
+   "session_id": "session:chat:5cyMF9QaH3IU4W4rbq9pRmNiRHmKT8ze",
+   "turn_count": 3,
+   "query": "它有哪些布局和进展",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-08-19T02:01:36.908313+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:d-fbqo5Bugf_heCk",
+   "session_id": "session:chat:SFK5kWeGrE1XP4UfXRuXojLMMI-KRKTr",
+   "turn_count": 2,
+   "query": "他有哪些论文",
+   "query_type": "canonical_v2:G:clarification_only",
+   "status": "completed",
+   "started_at": "2026-08-19T02:02:25.229750+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:nl7J6g0QzDfNpux0",
+   "session_id": "session:chat:RqFL4VKrWtbVwC3Nx6f9HkJ3e-Sv5tUu",
+   "turn_count": 2,
+   "query": "该公司的专利有哪些",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-08-19T02:02:33.296184+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:X2F9gvGcXLNJPRvK",
+   "session_id": "session:chat:BelR2zwLqZFNYUZRk_vdZmBFoL0oY-Ox",
+   "turn_count": 2,
+   "query": "还有哪些类似的公司",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-08-19T02:02:46.334359+00:00",
+   "families": [
+    "A_有哪些",
+    "E_其他枚举"
+   ]
+  },
+  {
+   "turn_id": "turn:log:9Tdb9lxCFhRpACxm",
+   "session_id": "session:chat:3jFUqythBDdz4Z_X4EzSdhGlrOc9mOyu",
+   "turn_count": 1,
+   "query": "深圳有哪些做具身智能的公司",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-08-19T02:03:18.083636+00:00",
+   "families": [
+    "A_有哪些",
+    "D_做的公司"
+   ]
+  },
+  {
+   "turn_id": "turn:log:-IilodKCZ5-2p7Yn",
+   "session_id": "session:chat:cocCTiBE2nBUQT-cORvbTRqUNMq9848G",
+   "turn_count": 1,
+   "query": "深圳有哪些做具身智能的公司",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-08-19T02:03:46.827887+00:00",
+   "families": [
+    "A_有哪些",
+    "D_做的公司"
+   ]
+  },
+  {
+   "turn_id": "turn:log:CM_OzKLHcIfE6fEy",
+   "session_id": "session:chat:HgWGCw3xSvNNXYaWBtJDLDYzw_UttQIL",
+   "turn_count": 1,
+   "query": "深圳有哪些做具身智能的公司",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-08-19T02:04:15.032899+00:00",
+   "families": [
+    "A_有哪些",
+    "D_做的公司"
+   ]
+  },
+  {
+   "turn_id": "turn:log:5VIRfZmRdyCaOgGA",
+   "session_id": "session:chat:nFy6-WOYIwHrkHF5wa9dFnbENxJJo9rW",
+   "turn_count": 1,
+   "query": "优必选有哪些专利",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-07T02:43:26.970693+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:aWQfSTc6pLb2cgWE",
+   "session_id": "session:chat:QVZ_Vp76gNovg1mKmNAcKOzel-5OKc03",
+   "turn_count": 1,
+   "query": "优必选有哪些专利",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-09T10:10:02.223057+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:mlsVCKTgwIWOAxho",
+   "session_id": "session:chat:RXNKw1fdp_8qfihZrGTT64UoDpikVEfz",
+   "turn_count": 2,
+   "query": "他是否有参与哪些企业的创立",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-09T10:10:52.693588+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:uvN1bxPYzeqLOhAU",
+   "session_id": "session:chat:hwJ93AgLMY10dVva8L0uQGAuEU5cWNDV",
+   "turn_count": 2,
+   "query": "他是否有参与哪些企业的创立",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-09T10:11:21.217665+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:Jex0RWHAgw7PRWRC",
+   "session_id": "session:chat:WYbVzz-ahKebb-07I0kPsh4dJKS6xsbE",
+   "turn_count": 1,
+   "query": "中国有哪些成熟的酒店送餐机器人供应商",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-09T10:11:34.229724+00:00",
+   "families": [
+    "A_有哪些",
+    "C_供应商"
+   ]
+  },
+  {
+   "turn_id": "turn:log:9iOaE91S72OHMqKk",
+   "session_id": "session:chat:WYbVzz-ahKebb-07I0kPsh4dJKS6xsbE",
+   "turn_count": 2,
+   "query": "上述企业里总部在深圳的企业有哪些",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-09T10:12:01.861046+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:m5XNmZgNElUaCl6d",
+   "session_id": "session:chat:WYbVzz-ahKebb-07I0kPsh4dJKS6xsbE",
+   "turn_count": 3,
+   "query": "酒店电梯需要送餐机器人能够使用机械臂自主按电梯，上述企业的产品有哪些可以实现",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-09T10:12:23.428195+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:cTyp6j8Ix0Us0Es5",
+   "session_id": "session:chat:GarioNxJace7-a3SC0JG0FuK4DxGSDVc",
+   "turn_count": 1,
+   "query": "在深圳旅游旅游有哪些涉及黄赌毒的地方是不能去的",
+   "query_type": "canonical_v2:F:safety_guidance",
+   "status": "completed",
+   "started_at": "2026-09-09T10:12:46.999608+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:gmGpi2IUVFRQBhJw",
+   "session_id": "session:chat:wKz-lRgjl05raAjmF9xeiuxUj4gqZ0mN",
+   "turn_count": 1,
+   "query": "我想找PCB打板， 有哪些推荐",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-09T10:13:11.931483+00:00",
+   "families": [
+    "A_有哪些",
+    "B_推荐"
+   ]
+  },
+  {
+   "turn_id": "turn:log:Il_hW94nKbUUoYrV",
+   "session_id": "session:chat:wKz-lRgjl05raAjmF9xeiuxUj4gqZ0mN",
+   "turn_count": 2,
+   "query": "上述企业有哪些是深圳的企业",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-09T10:13:34.825425+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:C9Ej47QSdI4wj2AB",
+   "session_id": "session:chat:tOg_x0HF1h-ikj8QUjotbV7zqctBwY3i",
+   "turn_count": 1,
+   "query": "具身智能厂商在数据方面目前存在几种技术路线",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-09T10:15:33.365443+00:00",
+   "families": [
+    "C_供应商"
+   ]
+  },
+  {
+   "turn_id": "turn:log:K2-etx5WPoP9xXjf",
+   "session_id": "session:chat:cJ_Y0Vksx7J8eib5L5OE0jei2Ng3Vk9m",
+   "turn_count": 1,
+   "query": "在真实数据采集路线中，有哪些具体方式",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-09T10:16:16.395505+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:LTpBgE4aB4-3WUaK",
+   "session_id": "session:chat:l6p510OkTbrbOZRfLfBY0ZaQYfC2v5VW",
+   "turn_count": 1,
+   "query": "在模拟器生成数据路线中，有哪些具体方式",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-09T10:16:32.468432+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:V5YSR0TElMOpOwXf",
+   "session_id": "session:chat:uEmzzyYQypitozsVQsDo7L9CSU_vjIFX",
+   "turn_count": 1,
+   "query": "目前深圳有哪些具身智能、灵巧手厂商，他们在数据层面分别是什么路线",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-09T10:16:49.198477+00:00",
+   "families": [
+    "A_有哪些",
+    "C_供应商"
+   ]
+  },
+  {
+   "turn_id": "turn:log:EV_CMAkYIyj8TyEw",
+   "session_id": "session:chat:nbzobo8kzWl7FpghvUqxXHXhnxC6qMSt",
+   "turn_count": 1,
+   "query": "在具身智能的合成数据发展方向上，具体有几种实现方法，分别有哪些代表厂商",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-09T10:17:20.852892+00:00",
+   "families": [
+    "A_有哪些",
+    "C_供应商"
+   ]
+  },
+  {
+   "turn_id": "turn:log:kE9rzawqb_1SYxHu",
+   "session_id": "session:chat:Ft1H_7Syicx1B5L7wa0vKI-2KnIElqwH",
+   "turn_count": 1,
+   "query": "优必选有哪些专利",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-09T10:18:13.229053+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:FxSlKZxl-PZ5D5Ok",
+   "session_id": "session:chat:IMvkSS2R_z_HTWEGLEsv0oItwXdfKibc",
+   "turn_count": 1,
+   "query": "优必选有哪些专利",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-09T10:26:40.575951+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:n0Fuiak_BRTvpo3S",
+   "session_id": "session:chat:7RZVuapveTHcuBRg4-6FPOR23PrYbWKt",
+   "turn_count": 2,
+   "query": "他是否有参与哪些企业的创立",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-09T10:27:05.471008+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:xgOzIID9QWv2grN5",
+   "session_id": "session:chat:soGHGceeyLNTp_DaPQlF2TSjUT_hAJWV",
+   "turn_count": 1,
+   "query": "中国有哪些成熟的酒店送餐机器人供应商",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-09T10:27:14.100772+00:00",
+   "families": [
+    "A_有哪些",
+    "C_供应商"
+   ]
+  },
+  {
+   "turn_id": "turn:log:Djpv1y5FR7Ujk6UV",
+   "session_id": "session:chat:soGHGceeyLNTp_DaPQlF2TSjUT_hAJWV",
+   "turn_count": 2,
+   "query": "上述企业里总部在深圳的企业有哪些",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-09T10:27:38.524869+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:co7QKEY4XPI5byXW",
+   "session_id": "session:chat:soGHGceeyLNTp_DaPQlF2TSjUT_hAJWV",
+   "turn_count": 3,
+   "query": "酒店电梯需要送餐机器人能够使用机械臂自主按电梯，上述企业的产品有哪些可以实现",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-09T10:27:49.244002+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:32ritBjku1XpqIj-",
+   "session_id": "session:chat:xnWbt3MSMnrQeC_anTYRvalpcJX8M96e",
+   "turn_count": 1,
+   "query": "在深圳旅游旅游有哪些涉及黄赌毒的地方是不能去的",
+   "query_type": "canonical_v2:F:safety_guidance",
+   "status": "completed",
+   "started_at": "2026-09-09T10:28:01.149789+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:EnpKQAeIYg4jwnaS",
+   "session_id": "session:chat:7aNKIUdG4G09LIcRzVnfAXBDNuTh--Yr",
+   "turn_count": 1,
+   "query": "我想找PCB打板， 有哪些推荐",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-09T10:28:18.545852+00:00",
+   "families": [
+    "A_有哪些",
+    "B_推荐"
+   ]
+  },
+  {
+   "turn_id": "turn:log:ip7JQKfoKb3QApCb",
+   "session_id": "session:chat:7aNKIUdG4G09LIcRzVnfAXBDNuTh--Yr",
+   "turn_count": 2,
+   "query": "上述企业有哪些是深圳的企业",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-09T10:28:40.705649+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:R5tPLj06hgo4mz1v",
+   "session_id": "session:chat:6zy29ioCY0V9XBUEmshJDL_1c93xLuKG",
+   "turn_count": 1,
+   "query": "具身智能厂商在数据方面目前存在几种技术路线",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-09T10:30:06.426368+00:00",
+   "families": [
+    "C_供应商"
+   ]
+  },
+  {
+   "turn_id": "turn:log:vu9UQqrobqA0H6G1",
+   "session_id": "session:chat:P8BoYYgWLliOmGwyWSPrsIcYeFGZdhwB",
+   "turn_count": 1,
+   "query": "在真实数据采集路线中，有哪些具体方式",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-09T10:30:49.607882+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:xq1w4Ck-W94uhdto",
+   "session_id": "session:chat:F1WVoZfLIuszW13B3O0055h_yR4Nsnz9",
+   "turn_count": 1,
+   "query": "在模拟器生成数据路线中，有哪些具体方式",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-09T10:31:05.798788+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:74kIoAxNGwrhmBue",
+   "session_id": "session:chat:LNClcNE-xpCVm5NZZELuBAs_OtwmH9TJ",
+   "turn_count": 1,
+   "query": "目前深圳有哪些具身智能、灵巧手厂商，他们在数据层面分别是什么路线",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-09T10:31:23.312795+00:00",
+   "families": [
+    "A_有哪些",
+    "C_供应商"
+   ]
+  },
+  {
+   "turn_id": "turn:log:PWs-r_5VlShf2hDU",
+   "session_id": "session:chat:JDyJ9V6jcfhlS4ty_CAO7S1lwJWly2Bq",
+   "turn_count": 1,
+   "query": "在具身智能的合成数据发展方向上，具体有几种实现方法，分别有哪些代表厂商",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-09T10:31:57.278490+00:00",
+   "families": [
+    "A_有哪些",
+    "C_供应商"
+   ]
+  },
+  {
+   "turn_id": "turn:log:hoZ-6ZAt3OsbhD44",
+   "session_id": "session:chat:hHoEXupu0rksrk9HlNRAQQ7WpLokTu48",
+   "turn_count": 1,
+   "query": "优必选有哪些专利",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-09T10:32:55.736683+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:uYBRB3GtkEgSL83M",
+   "session_id": "session:chat:sgvNIAfPIpoBUHirAitUcA39seDw0ra-",
+   "turn_count": 1,
+   "query": "优必选有哪些专利",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-09T10:45:09.679922+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:bIKByfQDg_y4hTwm",
+   "session_id": "session:chat:dJXw0J51TGxs8rp237GgHkM69nJE12gU",
+   "turn_count": 2,
+   "query": "他是否有参与哪些企业的创立",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-09T10:45:45.162542+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:LJZSjPtwWAu1okrc",
+   "session_id": "session:chat:ANzI8Vz6Em8JSKBhRql2sQmIAsEgbeuA",
+   "turn_count": 1,
+   "query": "中国有哪些成熟的酒店送餐机器人供应商",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-09T10:45:54.731989+00:00",
+   "families": [
+    "A_有哪些",
+    "C_供应商"
+   ]
+  },
+  {
+   "turn_id": "turn:log:7VxEUsvOJIgGlQTn",
+   "session_id": "session:chat:ANzI8Vz6Em8JSKBhRql2sQmIAsEgbeuA",
+   "turn_count": 2,
+   "query": "上述企业里总部在深圳的企业有哪些",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-09T10:46:19.958189+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:4A-NuHkbrZPTvWIE",
+   "session_id": "session:chat:ANzI8Vz6Em8JSKBhRql2sQmIAsEgbeuA",
+   "turn_count": 3,
+   "query": "酒店电梯需要送餐机器人能够使用机械臂自主按电梯，上述企业的产品有哪些可以实现",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-09T10:46:41.376930+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:G_pqxEGysCqwVudh",
+   "session_id": "session:chat:HG7UGViwrtCW4qtPKs5C5hOMqttjLH6C",
+   "turn_count": 1,
+   "query": "在深圳旅游旅游有哪些涉及黄赌毒的地方是不能去的",
+   "query_type": "canonical_v2:F:safety_guidance",
+   "status": "completed",
+   "started_at": "2026-09-09T10:47:09.777310+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:1b4PHpaOUDR3JY4s",
+   "session_id": "session:chat:wgbFCuMtM8_eGA5YbhjU31PA_c3B5Oad",
+   "turn_count": 1,
+   "query": "我想找PCB打板， 有哪些推荐",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-09T10:47:31.486836+00:00",
+   "families": [
+    "A_有哪些",
+    "B_推荐"
+   ]
+  },
+  {
+   "turn_id": "turn:log:NUwQhcuNv-KUwUNp",
+   "session_id": "session:chat:wgbFCuMtM8_eGA5YbhjU31PA_c3B5Oad",
+   "turn_count": 2,
+   "query": "上述企业有哪些是深圳的企业",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-09T10:47:47.592853+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:RG0UaNDKuNJ09qGC",
+   "session_id": "session:chat:_0O-Eud-ZRkIRC9OrVhEneT8MNDvCwUr",
+   "turn_count": 1,
+   "query": "具身智能厂商在数据方面目前存在几种技术路线",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-09T10:49:51.208157+00:00",
+   "families": [
+    "C_供应商"
+   ]
+  },
+  {
+   "turn_id": "turn:log:Iht2sp0UVPZYIUiA",
+   "session_id": "session:chat:EgOWSDd1XkBToWH2ZxXTb18CqOJLUEIM",
+   "turn_count": 1,
+   "query": "在真实数据采集路线中，有哪些具体方式",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-09T10:50:38.423753+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:z9r2T4Y-KD0wCu0V",
+   "session_id": "session:chat:oRKRgc_CrPnRDJML1M1ezMueGZGmS7iR",
+   "turn_count": 1,
+   "query": "在模拟器生成数据路线中，有哪些具体方式",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-09T10:50:57.215110+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:dIJJVaFPgjnJtHNf",
+   "session_id": "session:chat:hbPj_C07gq7q_NSqgRYS6Vgs6wLwkaDM",
+   "turn_count": 1,
+   "query": "目前深圳有哪些具身智能、灵巧手厂商，他们在数据层面分别是什么路线",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-09T10:51:16.323486+00:00",
+   "families": [
+    "A_有哪些",
+    "C_供应商"
+   ]
+  },
+  {
+   "turn_id": "turn:log:HJtXR8eXjl6iz-2f",
+   "session_id": "session:chat:7hvC6ZObWyxXzsWdPWnDC58wBfLxUqzr",
+   "turn_count": 1,
+   "query": "在具身智能的合成数据发展方向上，具体有几种实现方法，分别有哪些代表厂商",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-09T10:52:05.449387+00:00",
+   "families": [
+    "A_有哪些",
+    "C_供应商"
+   ]
+  },
+  {
+   "turn_id": "turn:log:KECV7NqXQbLX8H52",
+   "session_id": "session:chat:NQ_aTiORky_4MeZIL32sVn7jDYGV0sQz",
+   "turn_count": 1,
+   "query": "优必选有哪些专利",
+   "query_type": "",
+   "status": "error",
+   "started_at": "2026-09-09T10:53:17.844670+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:YNZqOUCIZ4grmm3F",
+   "session_id": "session:chat:7BgQTBz1xzch8Szg1kyHYpvavbWBWE6A",
+   "turn_count": 2,
+   "query": "他是否有参与哪些企业的创立",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-09T10:56:38.238212+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:HzAWGkzCDE1H3YF7",
+   "session_id": "session:chat:T4XNnNFJ3ouMRKQ1EJviEi_Xqj0TN6aL",
+   "turn_count": 1,
+   "query": "中国有哪些成熟的酒店送餐机器人供应商",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-09T10:56:47.068750+00:00",
+   "families": [
+    "A_有哪些",
+    "C_供应商"
+   ]
+  },
+  {
+   "turn_id": "turn:log:QmsM5KrCUBV8Tan8",
+   "session_id": "session:chat:T4XNnNFJ3ouMRKQ1EJviEi_Xqj0TN6aL",
+   "turn_count": 2,
+   "query": "上述企业里总部在深圳的企业有哪些",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-09T10:57:13.870637+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:zpB9HSqc5oggHZE1",
+   "session_id": "session:chat:T4XNnNFJ3ouMRKQ1EJviEi_Xqj0TN6aL",
+   "turn_count": 3,
+   "query": "酒店电梯需要送餐机器人能够使用机械臂自主按电梯，上述企业的产品有哪些可以实现",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-09T10:57:25.646031+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:WD37ZGikKdHU_3bA",
+   "session_id": "session:chat:LDWEpHY8kRNmGue6FCanymqeT0p8lpwQ",
+   "turn_count": 1,
+   "query": "在深圳旅游旅游有哪些涉及黄赌毒的地方是不能去的",
+   "query_type": "canonical_v2:F:safety_guidance",
+   "status": "completed",
+   "started_at": "2026-09-09T10:57:34.267822+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:miGBFYKjVAa80prh",
+   "session_id": "session:chat:42Njffm4JPXlQABJQtnPfY9pRu5TXJj1",
+   "turn_count": 1,
+   "query": "我想找PCB打板， 有哪些推荐",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-09T10:57:51.791530+00:00",
+   "families": [
+    "A_有哪些",
+    "B_推荐"
+   ]
+  },
+  {
+   "turn_id": "turn:log:7hOzekQ7EFmrtvip",
+   "session_id": "session:chat:42Njffm4JPXlQABJQtnPfY9pRu5TXJj1",
+   "turn_count": 2,
+   "query": "上述企业有哪些是深圳的企业",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-09T10:58:14.934772+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:4FkRqYlnK2gE32-F",
+   "session_id": "session:chat:_4lK8vW3yBdzeKIzHk7FS2xosUnxJnZq",
+   "turn_count": 1,
+   "query": "具身智能厂商在数据方面目前存在几种技术路线",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-09T10:59:36.136276+00:00",
+   "families": [
+    "C_供应商"
+   ]
+  },
+  {
+   "turn_id": "turn:log:6EjjpJl3faCITw39",
+   "session_id": "session:chat:CDrsEbVMVDymFLpdRQu1PZUJTiwY4hpT",
+   "turn_count": 1,
+   "query": "在真实数据采集路线中，有哪些具体方式",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-09T11:00:19.619289+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:sCY2x4tDfTqK0Doo",
+   "session_id": "session:chat:zoZq5I405IgJ7VfKBt78hz_auxX5ZNxN",
+   "turn_count": 1,
+   "query": "在模拟器生成数据路线中，有哪些具体方式",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-09T11:00:35.945110+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:pmjw1lJOYjacv3c5",
+   "session_id": "session:chat:RkED-PJoc1YSmWbrgYoYPbGtLhs2qsM8",
+   "turn_count": 1,
+   "query": "目前深圳有哪些具身智能、灵巧手厂商，他们在数据层面分别是什么路线",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-09T11:00:52.747140+00:00",
+   "families": [
+    "A_有哪些",
+    "C_供应商"
+   ]
+  },
+  {
+   "turn_id": "turn:log:x09TJ5-ZntCa0_FG",
+   "session_id": "session:chat:oDD0m-nMELerZ98O-0JY2ykQzrGzr5uO",
+   "turn_count": 1,
+   "query": "在具身智能的合成数据发展方向上，具体有几种实现方法，分别有哪些代表厂商",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-09T11:01:14.929639+00:00",
+   "families": [
+    "A_有哪些",
+    "C_供应商"
+   ]
+  },
+  {
+   "turn_id": "turn:log:m8gD-pLChaALcP3c",
+   "session_id": "session:chat:JBVcD5RyunZxCnfzQY3b-4P8ep4Ln-8h",
+   "turn_count": 1,
+   "query": "优必选有哪些专利",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-09T11:02:10.331213+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:CANU2zOtssw_oIO4",
+   "session_id": "session:chat:3WZyoxDKgjlibc77pCkjBwnciLwvuD2T",
+   "turn_count": 3,
+   "query": "它有哪些布局和进展",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-09T14:07:05.413520+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:lr2jtgxKeOsinJOT",
+   "session_id": "session:chat:iFel9E-Wx7RF-zRqclupCXsObZXVmazj",
+   "turn_count": 2,
+   "query": "他有哪些论文",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-09T14:08:11.923339+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:qGnywtmCG8_4m9O0",
+   "session_id": "session:chat:QZJVWuRvTNMnDn43nKoTaCs4mOslmj4m",
+   "turn_count": 2,
+   "query": "该公司的专利有哪些",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-09T14:08:33.058702+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:odfEnx3YwtD1mR5R",
+   "session_id": "session:chat:IVhWnWpucjYRua6pf5K8_niOfcp6Zvps",
+   "turn_count": 2,
+   "query": "还有哪些类似的公司",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-09T14:08:50.159243+00:00",
+   "families": [
+    "A_有哪些",
+    "E_其他枚举"
+   ]
+  },
+  {
+   "turn_id": "turn:log:ViDXEuweElJewwE6",
+   "session_id": "session:chat:cS6gqrMO0fnSpDERa_oiOgwrE20UXq29",
+   "turn_count": 1,
+   "query": "深圳有哪些做具身智能的公司",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-09T14:09:21.597886+00:00",
+   "families": [
+    "A_有哪些",
+    "D_做的公司"
+   ]
+  },
+  {
+   "turn_id": "turn:log:bJMLDOHwmV0kP1kA",
+   "session_id": "session:chat:Sdv9JpO2HfDDF21MudTNDKoKqRGcwIoD",
+   "turn_count": 1,
+   "query": "深圳有哪些做具身智能的公司",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-09T14:09:56.452658+00:00",
+   "families": [
+    "A_有哪些",
+    "D_做的公司"
+   ]
+  },
+  {
+   "turn_id": "turn:log:8hpM0Vu4wT00TvIU",
+   "session_id": "session:chat:RJ3nM-_5aOsdG1R6lE9AkD2kluMJq6-d",
+   "turn_count": 1,
+   "query": "深圳有哪些做具身智能的公司",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-09T14:10:32.476673+00:00",
+   "families": [
+    "A_有哪些",
+    "D_做的公司"
+   ]
+  },
+  {
+   "turn_id": "turn:log:P4qwgxCK1HfRM6MZ",
+   "session_id": "session:chat:gJHHAErBZYAZaIAlY4rH8OMNNp2FSndJ",
+   "turn_count": 3,
+   "query": "它有哪些布局和进展",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-09T14:47:06.855030+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:pSgm2uH7zupogABW",
+   "session_id": "session:chat:FC2XQsYRi-ZTgT7IWcquKyF75EPHdbaW",
+   "turn_count": 2,
+   "query": "他有哪些论文",
+   "query_type": "canonical_v2:G:clarification_only",
+   "status": "completed",
+   "started_at": "2026-09-09T14:48:23.066524+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:uTFUpymZ1P_ZtXFV",
+   "session_id": "session:chat:bvGKl09ToTZGlcOzhMyrmhD9IqRDQEOj",
+   "turn_count": 2,
+   "query": "该公司的专利有哪些",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-09T14:48:35.439671+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:i9rq1i3gr6g52ZDJ",
+   "session_id": "session:chat:EX5h9ntr-Xh3-p6sswKIC3CVDirrspAh",
+   "turn_count": 2,
+   "query": "还有哪些类似的公司",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-09T14:48:55.904582+00:00",
+   "families": [
+    "A_有哪些",
+    "E_其他枚举"
+   ]
+  },
+  {
+   "turn_id": "turn:log:tZNMz-UupIMWQP8r",
+   "session_id": "session:chat:3m6Ngm9XaR54MPwPhmRWCGOsibaq2mfd",
+   "turn_count": 1,
+   "query": "深圳有哪些做具身智能的公司",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-09T14:49:29.327908+00:00",
+   "families": [
+    "A_有哪些",
+    "D_做的公司"
+   ]
+  },
+  {
+   "turn_id": "turn:log:PGKtFgkeeSKkNNNQ",
+   "session_id": "session:chat:1pgtDaSO24GD4EjX361EJ-b1un2Q-1-R",
+   "turn_count": 1,
+   "query": "深圳有哪些做具身智能的公司",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-09T14:50:10.032765+00:00",
+   "families": [
+    "A_有哪些",
+    "D_做的公司"
+   ]
+  },
+  {
+   "turn_id": "turn:log:dWX6lrSlCEyI7KVo",
+   "session_id": "session:chat:yKxoBM894GC-P4xuGr-mEdYAOBmyTpUb",
+   "turn_count": 1,
+   "query": "深圳有哪些做具身智能的公司",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-09T14:50:32.246443+00:00",
+   "families": [
+    "A_有哪些",
+    "D_做的公司"
+   ]
+  },
+  {
+   "turn_id": "turn:log:HFPzHLPMoZ6qvY2I",
+   "session_id": "session:chat:RrgTyn8ZWcMnj7xTKpLwuyFC2vf6uGNx",
+   "turn_count": 3,
+   "query": "它有哪些布局和进展",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-09T14:52:33.047871+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:32djJgRX27w8FqfS",
+   "session_id": "session:chat:l-97dqsqkQq-21DpSxMwBbBEvAX_PeBG",
+   "turn_count": 3,
+   "query": "它有哪些布局和进展",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-09T14:53:07.072726+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:B9qL0Kxkc72cHdSV",
+   "session_id": "session:chat:wijdmiDcaonwxbqqCEJqi3tUHe9iXbDs",
+   "turn_count": 3,
+   "query": "它有哪些布局和进展",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-09T14:53:41.194065+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:S4VS7w4mBxSGmS11",
+   "session_id": "session:chat:BaZqtRWu35eAIb5pV1O-Em6zkW7dFm5Q",
+   "turn_count": 3,
+   "query": "它有哪些布局和进展",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-09T14:55:49.073689+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:yhLZxUYf3e1HwjjI",
+   "session_id": "session:chat:VR4nPu4vPwZa_FcTZqnvz7pwk_B-MTws",
+   "turn_count": 2,
+   "query": "他有哪些论文",
+   "query_type": "canonical_v2:G:clarification_only",
+   "status": "completed",
+   "started_at": "2026-09-09T14:57:15.614026+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:28QQOhlnaVVZ7ll8",
+   "session_id": "session:chat:aflVkoZP0GMA0BB8LFlm7BSZ18InU95T",
+   "turn_count": 2,
+   "query": "该公司的专利有哪些",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-09T14:57:27.965559+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:750fpWVeNwNMIT44",
+   "session_id": "session:chat:j1qW5cSXDUNmBC0ep-lLAVnne5RIpxMG",
+   "turn_count": 2,
+   "query": "还有哪些类似的公司",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-09T14:57:46.830567+00:00",
+   "families": [
+    "A_有哪些",
+    "E_其他枚举"
+   ]
+  },
+  {
+   "turn_id": "turn:log:y0oxLe5Yd-LyyE0c",
+   "session_id": "session:chat:2n2MRtrm5zMCFOJ58D2ZYAfseI8mcDdT",
+   "turn_count": 1,
+   "query": "深圳有哪些做具身智能的公司",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-09T14:58:24.417848+00:00",
+   "families": [
+    "A_有哪些",
+    "D_做的公司"
+   ]
+  },
+  {
+   "turn_id": "turn:log:nrCqcFxASadOfYGL",
+   "session_id": "session:chat:Zusiuxvs-RumdkI0BS6aIMIOXtnfzbrz",
+   "turn_count": 1,
+   "query": "深圳有哪些做具身智能的公司",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-09T14:58:52.275159+00:00",
+   "families": [
+    "A_有哪些",
+    "D_做的公司"
+   ]
+  },
+  {
+   "turn_id": "turn:log:cI4infajQhom1ufn",
+   "session_id": "session:chat:aNvcaEyyDzPZiRdlJo_zXns_VEncMcgr",
+   "turn_count": 1,
+   "query": "深圳有哪些做具身智能的公司",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-09T14:59:19.996984+00:00",
+   "families": [
+    "A_有哪些",
+    "D_做的公司"
+   ]
+  },
+  {
+   "turn_id": "turn:log:mOnAIB-MijurdNov",
+   "session_id": "session:chat:p-_dfN_2N5tOEt6sqGlkhvnmlc4BGqwU",
+   "turn_count": 3,
+   "query": "它有哪些布局和进展",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-09T15:09:29.951999+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:pTvUPLNPCalFPPDl",
+   "session_id": "session:chat:9YxUykI9a3KTl8z2xCkHDSJvYahfv9uN",
+   "turn_count": 2,
+   "query": "他有哪些论文",
+   "query_type": "canonical_v2:G:clarification_only",
+   "status": "completed",
+   "started_at": "2026-09-09T15:10:49.339522+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:fzkV_8MJBnjoRoTr",
+   "session_id": "session:chat:8GO9q2Sm3qwrZUj4c_Wdji35rk2WhYT4",
+   "turn_count": 2,
+   "query": "该公司的专利有哪些",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-09T15:11:00.258352+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:CkL-L5f6YAIWaTYJ",
+   "session_id": "session:chat:4UOYf6nHDq6oJBzUhSw6rCrE4_-rOBqN",
+   "turn_count": 2,
+   "query": "还有哪些类似的公司",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-09T15:11:19.995113+00:00",
+   "families": [
+    "A_有哪些",
+    "E_其他枚举"
+   ]
+  },
+  {
+   "turn_id": "turn:log:dEdoQ0qhYAbSjhgw",
+   "session_id": "session:chat:Qw93k3dfH3FZw6UaJxF-4z17n-84oLK1",
+   "turn_count": 1,
+   "query": "深圳有哪些做具身智能的公司",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-09T15:11:53.507711+00:00",
+   "families": [
+    "A_有哪些",
+    "D_做的公司"
+   ]
+  },
+  {
+   "turn_id": "turn:log:APiNn5XfhToOxXd2",
+   "session_id": "session:chat:LuGOaNv7uAsKWpGK8qfu7e3H3sOvmA6G",
+   "turn_count": 1,
+   "query": "深圳有哪些做具身智能的公司",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-09T15:12:20.077384+00:00",
+   "families": [
+    "A_有哪些",
+    "D_做的公司"
+   ]
+  },
+  {
+   "turn_id": "turn:log:TuSjmUh9MWka7tzy",
+   "session_id": "session:chat:eYc1-1_59n-UYpKf4ffBaWo3HfU61ELo",
+   "turn_count": 1,
+   "query": "深圳有哪些做具身智能的公司",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-09T15:12:42.548814+00:00",
+   "families": [
+    "A_有哪些",
+    "D_做的公司"
+   ]
+  },
+  {
+   "turn_id": "turn:log:Nt18CQLrUsUbSqxe",
+   "session_id": "session:chat:uonEAHNTTMNXDw6M05L8JQpeHV3K1otE",
+   "turn_count": 2,
+   "query": "他是否有参与哪些企业的创立",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-09T15:14:36.214984+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:qa5j5uprDY3nxlQ1",
+   "session_id": "session:chat:PZRTmWxb5WYFlveLUVlJn1G4wuRm-M72",
+   "turn_count": 1,
+   "query": "中国有哪些成熟的酒店送餐机器人供应商",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-09T15:14:45.329042+00:00",
+   "families": [
+    "A_有哪些",
+    "C_供应商"
+   ]
+  },
+  {
+   "turn_id": "turn:log:3JEI5b4SHt6QoqVS",
+   "session_id": "session:chat:PZRTmWxb5WYFlveLUVlJn1G4wuRm-M72",
+   "turn_count": 2,
+   "query": "上述企业里总部在深圳的企业有哪些",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-09T15:15:24.228091+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:qNF1WIP6YEWxFbbV",
+   "session_id": "session:chat:PZRTmWxb5WYFlveLUVlJn1G4wuRm-M72",
+   "turn_count": 3,
+   "query": "酒店电梯需要送餐机器人能够使用机械臂自主按电梯，上述企业的产品有哪些可以实现",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-09T15:15:37.114460+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:DEMklpT2Rga_73s5",
+   "session_id": "session:chat:V-1nTHLhevLKVrAV08NC485lyAZerB_G",
+   "turn_count": 1,
+   "query": "在深圳旅游旅游有哪些涉及黄赌毒的地方是不能去的",
+   "query_type": "canonical_v2:F:safety_guidance",
+   "status": "completed",
+   "started_at": "2026-09-09T15:15:50.203488+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:6WaR_TrHpgDSe0rb",
+   "session_id": "session:chat:YB1Gcpr61FnUIavwIr-KLW_aLgY9BuAV",
+   "turn_count": 1,
+   "query": "我想找PCB打板， 有哪些推荐",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-09T15:16:12.024516+00:00",
+   "families": [
+    "A_有哪些",
+    "B_推荐"
+   ]
+  },
+  {
+   "turn_id": "turn:log:fLHsiZ_QbO-0vuJB",
+   "session_id": "session:chat:YB1Gcpr61FnUIavwIr-KLW_aLgY9BuAV",
+   "turn_count": 2,
+   "query": "上述企业有哪些是深圳的企业",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-09T15:16:50.926734+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:YM57aNNIBjAwR96t",
+   "session_id": "session:chat:HeuWBindrS0B7HPi7I0XHmF_Z1vuUAWx",
+   "turn_count": 1,
+   "query": "具身智能厂商在数据方面目前存在几种技术路线",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-09T15:18:19.984657+00:00",
+   "families": [
+    "C_供应商"
+   ]
+  },
+  {
+   "turn_id": "turn:log:mg-rehO_Pm5UaIlb",
+   "session_id": "session:chat:aYIBY1UCTuGb9wRpQdul7fy2e_iXGbka",
+   "turn_count": 1,
+   "query": "在真实数据采集路线中，有哪些具体方式",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-09T15:19:05.339511+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:BQq7PehkhLr3e5Km",
+   "session_id": "session:chat:HsZis8Le0_WryDTuq2IQ0011XSDDWOAy",
+   "turn_count": 1,
+   "query": "在模拟器生成数据路线中，有哪些具体方式",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-09T15:19:22.392296+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:0q8MaSDgix3tNlPd",
+   "session_id": "session:chat:5leI4RiODC-0QFIKw4LVuRU7GNs3t31Z",
+   "turn_count": 1,
+   "query": "目前深圳有哪些具身智能、灵巧手厂商，他们在数据层面分别是什么路线",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-09T15:19:37.499045+00:00",
+   "families": [
+    "A_有哪些",
+    "C_供应商"
+   ]
+  },
+  {
+   "turn_id": "turn:log:s9dhiVG3gj8TDlM0",
+   "session_id": "session:chat:X53oAXtISNDhVHbYhE2rtcxyMOUr_Wjx",
+   "turn_count": 1,
+   "query": "在具身智能的合成数据发展方向上，具体有几种实现方法，分别有哪些代表厂商",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-09T15:20:23.125314+00:00",
+   "families": [
+    "A_有哪些",
+    "C_供应商"
+   ]
+  },
+  {
+   "turn_id": "turn:log:AmiDlyZfAPO6duaX",
+   "session_id": "session:chat:X4Fa5QjcnriybBoKL0rhNQVR8ir-bZ5B",
+   "turn_count": 1,
+   "query": "优必选有哪些专利",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-09T15:21:18.084846+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:QmN-cziU2hfwI26x",
+   "session_id": "session:chat:ewIF32cXTznoxgOMJoIWtz-daCl8KmJU",
+   "turn_count": 1,
+   "query": "优必选有哪些专利",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-09T16:35:28.123067+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:CPO8o-4hyeoi5Vfk",
+   "session_id": "session:chat:KQJhb2zhLj0JY4hocoG2ljMddhRhbEoO",
+   "turn_count": 1,
+   "query": "优必选有哪些专利",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-09T16:42:44.479753+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:LQ7scZRVzXMd2uO_",
+   "session_id": "session:chat:SQ2dvU4bmpFd7OFfHLp3Gcr-m6bmttan",
+   "turn_count": 1,
+   "query": "优必选有哪些专利",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-09T16:43:53.913291+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:5RFsNh87808O5-Jo",
+   "session_id": "session:chat:CScPQ-8Xs3WdGuzEsQbMnDOuOLQ8zsmk",
+   "turn_count": 1,
+   "query": "深圳市优必选科技有限公司的专利有哪些",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-09T16:51:17.410064+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:0aZUGobgyVQdO5Ou",
+   "session_id": "session:chat:AA9A1gkTupdJ9FRk7Q9EQmn29sy8Iniz",
+   "turn_count": 1,
+   "query": "深圳市普渡科技有限公司的专利有哪些",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-09T16:58:09.193465+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:Rwp7R5ZOcp4Cj0V2",
+   "session_id": "session:chat:ZwDZnrah_SPSl9-bDtDV7CEbhMtR2o0v",
+   "turn_count": 3,
+   "query": "它有哪些布局和进展",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-09T16:59:38.810856+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:nyqedEQuSzcYePWK",
+   "session_id": "session:chat:2QiyXbcL7oC2-6IRiZGuhTvTEMk-ONjR",
+   "turn_count": 2,
+   "query": "他有哪些论文",
+   "query_type": "canonical_v2:G:clarification_only",
+   "status": "completed",
+   "started_at": "2026-09-09T17:01:01.718579+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:tzG0fyMjzlg3YJqV",
+   "session_id": "session:chat:LcFJHnChutqg0eM9eO4KLssFtfuyiYMF",
+   "turn_count": 2,
+   "query": "该公司的专利有哪些",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-09T17:01:12.515981+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:3pJLd752TFH-Lxuc",
+   "session_id": "session:chat:FTkRVLjwKzmbcmT5MYswkQLSmUKVgHvq",
+   "turn_count": 2,
+   "query": "还有哪些类似的公司",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-09T17:01:29.961176+00:00",
+   "families": [
+    "A_有哪些",
+    "E_其他枚举"
+   ]
+  },
+  {
+   "turn_id": "turn:log:VYNQSpmD2qr9kIiY",
+   "session_id": "session:chat:viKHCCGUFIspovuX-hq6BrYk8dx9ukI6",
+   "turn_count": 1,
+   "query": "深圳有哪些做具身智能的公司",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-09T17:02:05.495390+00:00",
+   "families": [
+    "A_有哪些",
+    "D_做的公司"
+   ]
+  },
+  {
+   "turn_id": "turn:log:uwE7R0q_y4xfNQ-x",
+   "session_id": "session:chat:3Ac-UcWYYtVCDVLt5Jmm9u-hLfmZbA46",
+   "turn_count": 1,
+   "query": "深圳有哪些做具身智能的公司",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-09T17:02:35.378376+00:00",
+   "families": [
+    "A_有哪些",
+    "D_做的公司"
+   ]
+  },
+  {
+   "turn_id": "turn:log:r1KR9MXoQWI7TYk5",
+   "session_id": "session:chat:5RcFP6VbKdnvcD9a3H1vRYFNJUnOhy6I",
+   "turn_count": 1,
+   "query": "深圳有哪些做具身智能的公司",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-09T17:03:02.621021+00:00",
+   "families": [
+    "A_有哪些",
+    "D_做的公司"
+   ]
+  },
+  {
+   "turn_id": "turn:log:C_S8mNwuYX4rM0w9",
+   "session_id": "session:chat:zhSRG69dciscAi6UuVLBNgDCfEwxguJK",
+   "turn_count": 1,
+   "query": "优必选有哪些专利",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-09T17:11:47.725375+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:s9LOvAK9j-WmM91q",
+   "session_id": "session:chat:Vbrw_k4547R2m4_9IvkL5xbf_X4jeTaZ",
+   "turn_count": 3,
+   "query": "它有哪些布局和进展",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-09T17:12:38.867933+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:0XbkzclDLfjcO6yj",
+   "session_id": "session:chat:A0gs1JJ68b_03jstpQRk8bBEpWqYd3XL",
+   "turn_count": 2,
+   "query": "他有哪些论文",
+   "query_type": "canonical_v2:G:clarification_only",
+   "status": "completed",
+   "started_at": "2026-09-09T17:13:58.916898+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:BD095kn3-b07SXL3",
+   "session_id": "session:chat:B2Ccc10l3ob3iZqdyCLV5H3J8gWey2w4",
+   "turn_count": 2,
+   "query": "该公司的专利有哪些",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-09T17:14:10.928711+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:S3zGn-lojQ-Zrw7o",
+   "session_id": "session:chat:b9Y-B7kZVDU7APofea7p2EswgPQ7LJBb",
+   "turn_count": 2,
+   "query": "还有哪些类似的公司",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-09T17:14:27.629097+00:00",
+   "families": [
+    "A_有哪些",
+    "E_其他枚举"
+   ]
+  },
+  {
+   "turn_id": "turn:log:VtluQuTNFOgAjR--",
+   "session_id": "session:chat:TR65P52bW71-RDhvA6a2iXa6LAfP3gzO",
+   "turn_count": 1,
+   "query": "深圳有哪些做具身智能的公司",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-09T17:15:01.960982+00:00",
+   "families": [
+    "A_有哪些",
+    "D_做的公司"
+   ]
+  },
+  {
+   "turn_id": "turn:log:Ofa19KWb8LqekKAN",
+   "session_id": "session:chat:vtVkDzThdglPgYZ-szmfJwozzDswUKS6",
+   "turn_count": 1,
+   "query": "深圳有哪些做具身智能的公司",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-09T17:15:30.050300+00:00",
+   "families": [
+    "A_有哪些",
+    "D_做的公司"
+   ]
+  },
+  {
+   "turn_id": "turn:log:BAHwRhFumthOLZJZ",
+   "session_id": "session:chat:_ueVO92gkRDt_b_PBjFS5byuATlz6Sdp",
+   "turn_count": 1,
+   "query": "深圳有哪些做具身智能的公司",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-09T17:15:53.097268+00:00",
+   "families": [
+    "A_有哪些",
+    "D_做的公司"
+   ]
+  },
+  {
+   "turn_id": "turn:log:QQnPL2vEtluFsdoe",
+   "session_id": "session:chat:5p4SfipF9auBoRwYmWTC59Kn5mBgZcqt",
+   "turn_count": 3,
+   "query": "它有哪些布局和进展",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-09T17:17:14.781210+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:mXKTqyXtMt2esKg2",
+   "session_id": "session:chat:l_JDqY3ox2odfB6LW7rJ_mUOoc5mzigO",
+   "turn_count": 2,
+   "query": "他有哪些论文",
+   "query_type": "canonical_v2:G:clarification_only",
+   "status": "completed",
+   "started_at": "2026-09-09T17:18:34.428321+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:7ubS4q_Ap18ZsfDm",
+   "session_id": "session:chat:0S2Nukm9jPBzDzlM2wiCpqhxmyraqGC2",
+   "turn_count": 2,
+   "query": "该公司的专利有哪些",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-09T17:18:45.279068+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:bRtB9IDtGW42G7sy",
+   "session_id": "session:chat:GJbFFcsa0AY5nw5Rta6MV9OUudf0_tQX",
+   "turn_count": 2,
+   "query": "还有哪些类似的公司",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-09T17:19:03.951979+00:00",
+   "families": [
+    "A_有哪些",
+    "E_其他枚举"
+   ]
+  },
+  {
+   "turn_id": "turn:log:yS1hbCVrHM3cIl46",
+   "session_id": "session:chat:1hyoXFQS0o42Bf8svPfkAVXKbLgMPsdP",
+   "turn_count": 1,
+   "query": "深圳有哪些做具身智能的公司",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-09T17:19:39.723801+00:00",
+   "families": [
+    "A_有哪些",
+    "D_做的公司"
+   ]
+  },
+  {
+   "turn_id": "turn:log:1qDrs7nU11AgNQBU",
+   "session_id": "session:chat:KhO9d0l60gW2c9eE7h-kQToE4k1JmGQA",
+   "turn_count": 1,
+   "query": "深圳有哪些做具身智能的公司",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-09T17:20:03.164716+00:00",
+   "families": [
+    "A_有哪些",
+    "D_做的公司"
+   ]
+  },
+  {
+   "turn_id": "turn:log:1o2iQLp6_5wr67vi",
+   "session_id": "session:chat:6Ywqp8vfv6hBRUMj-Wii7XvAXCGPhzeb",
+   "turn_count": 1,
+   "query": "深圳有哪些做具身智能的公司",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-09T17:20:26.654681+00:00",
+   "families": [
+    "A_有哪些",
+    "D_做的公司"
+   ]
+  },
+  {
+   "turn_id": "turn:log:XcwCrHRmY1WNkpLd",
+   "session_id": "session:chat:n_BqYPgJ5jUmgk6JQNhhRlFx1jKILyAW",
+   "turn_count": 3,
+   "query": "它有哪些布局和进展",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-09T17:21:47.594460+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:GspQiYQ7xFQLgm_M",
+   "session_id": "session:chat:6RdguFzMhUx3V0ybn3lraTvbuTk39QB5",
+   "turn_count": 2,
+   "query": "他有哪些论文",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-09T17:23:07.013461+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:MwR5kLjNEPqXdb11",
+   "session_id": "session:chat:RfoDecWoK1MJ4JjeN3ue1GVzj7wN41YS",
+   "turn_count": 2,
+   "query": "该公司的专利有哪些",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-09T17:23:28.598080+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:h6FgkJLDUYy0w8jq",
+   "session_id": "session:chat:afHJassmXG0fNYj2tdx7XKR38ipB9xRc",
+   "turn_count": 2,
+   "query": "还有哪些类似的公司",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-09T17:23:46.497447+00:00",
+   "families": [
+    "A_有哪些",
+    "E_其他枚举"
+   ]
+  },
+  {
+   "turn_id": "turn:log:lsyANtWcUVA_7bAO",
+   "session_id": "session:chat:LmtJDlRmy8qmhy-LIWlfDeReD1GaGG6e",
+   "turn_count": 1,
+   "query": "深圳有哪些做具身智能的公司",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-09T17:24:21.210194+00:00",
+   "families": [
+    "A_有哪些",
+    "D_做的公司"
+   ]
+  },
+  {
+   "turn_id": "turn:log:iDq1_xsbMdyQUHU1",
+   "session_id": "session:chat:H4GgXNn9arci-D5WIU72NdL08g8R8Soi",
+   "turn_count": 1,
+   "query": "深圳有哪些做具身智能的公司",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-09T17:24:46.306616+00:00",
+   "families": [
+    "A_有哪些",
+    "D_做的公司"
+   ]
+  },
+  {
+   "turn_id": "turn:log:wFzx9ErfqWGR86ud",
+   "session_id": "session:chat:IyWiyAEbjgI7Ny_fsP63D2A_wjH-GeNq",
+   "turn_count": 1,
+   "query": "深圳有哪些做具身智能的公司",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-09T17:25:10.316021+00:00",
+   "families": [
+    "A_有哪些",
+    "D_做的公司"
+   ]
+  },
+  {
+   "turn_id": "turn:log:C9DHA_oRV-aP7iff",
+   "session_id": "session:chat:yfW3SKeUqdp9dmvc5aUhaAMKbPxTJcNS",
+   "turn_count": 1,
+   "query": "优必选有哪些专利",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-09T19:46:55.569456+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:eO3I_px1pEpVNBIu",
+   "session_id": "session:chat:ShKFvmakarNvJAmR5CkO-vYIvd1KjxGf",
+   "turn_count": 1,
+   "query": "优必选有哪些专利",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-09T19:48:14.721114+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:sU0bv5vTSCH6y8jd",
+   "session_id": "session:chat:hO6FFo_Icekr3U1yLO4pAPuXbya4SMp-",
+   "turn_count": 1,
+   "query": "优必选有哪些专利",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-09T19:48:30.156424+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:Db_SyCDLv4n7_LAs",
+   "session_id": "session:chat:6wMeb-RUNQdcUV_aYWBAjUedaL7gj6in",
+   "turn_count": 1,
+   "query": "深圳市普渡科技有限公司有哪些专利",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-09T20:08:47.816804+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:lsUq6knvN0qxjPfJ",
+   "session_id": "session:chat:OzYkLWCUNiQPQ1DkvA8eRvtvOBrvSvLO",
+   "turn_count": 1,
+   "query": "深圳市普渡科技有限公司有哪些专利",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-09T20:09:21.189876+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:t05avXTXiCGD-NgX",
+   "session_id": "session:chat:70AisJjdYovFznSgSzVAego1zHE-IXNW",
+   "turn_count": 1,
+   "query": "深圳市普渡科技有限公司有哪些专利",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-09T20:11:35.108559+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:mDBYcwlSORNq_9bD",
+   "session_id": "session:chat:OWETeJHWf20_5yDv-HhGgkfcDNSW4lk1",
+   "turn_count": 3,
+   "query": "它有哪些布局和进展",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-09T20:13:55.010068+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:DJUJ5qTQ9usvJ2vj",
+   "session_id": "session:chat:Z0Ji2sb-H9CH_MOB7Ttw-Z7-BRlgMq6v",
+   "turn_count": 2,
+   "query": "他有哪些论文",
+   "query_type": "canonical_v2:G:clarification_only",
+   "status": "completed",
+   "started_at": "2026-09-09T20:15:13.701896+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:L6OBmreREnDjwqbz",
+   "session_id": "session:chat:R911Uq8f8kVe_mTjbw4TqN5qZHT_AtVZ",
+   "turn_count": 2,
+   "query": "该公司的专利有哪些",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-09T20:15:25.602867+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:DTBlKgC7EN2fTU-O",
+   "session_id": "session:chat:daO71tJMVGw1RMxuqsEGWhvxQweZ3tuu",
+   "turn_count": 2,
+   "query": "还有哪些类似的公司",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-09T20:15:43.408185+00:00",
+   "families": [
+    "A_有哪些",
+    "E_其他枚举"
+   ]
+  },
+  {
+   "turn_id": "turn:log:Zp1sTEDAdiyenrR-",
+   "session_id": "session:chat:ZpUzWX9QdoITmF9pluQDzy_H13jAnOw7",
+   "turn_count": 1,
+   "query": "深圳有哪些做具身智能的公司",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-09T20:16:15.749311+00:00",
+   "families": [
+    "A_有哪些",
+    "D_做的公司"
+   ]
+  },
+  {
+   "turn_id": "turn:log:uUbUtroeAUvmCilY",
+   "session_id": "session:chat:zlYivoVfQCOJQ7A7pHkmhC8zDT_nF3SE",
+   "turn_count": 1,
+   "query": "深圳有哪些做具身智能的公司",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-09T20:16:41.459315+00:00",
+   "families": [
+    "A_有哪些",
+    "D_做的公司"
+   ]
+  },
+  {
+   "turn_id": "turn:log:Up11MWzN22oHUJeC",
+   "session_id": "session:chat:at8KmOKlMyqAmOvmd0i_48_xuRmiyFZY",
+   "turn_count": 1,
+   "query": "深圳有哪些做具身智能的公司",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-09T20:17:22.419363+00:00",
+   "families": [
+    "A_有哪些",
+    "D_做的公司"
+   ]
+  },
+  {
+   "turn_id": "turn:log:qyMrfX5-3jtnvUjE",
+   "session_id": "session:chat:Ws4Ug6eCDWD2YIAn8xJtCg0fuGYk3g0f",
+   "turn_count": 1,
+   "query": "优必选有哪些专利",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-09T20:46:38.415971+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:ELQY5ZMltXIxD_lz",
+   "session_id": "session:chat:6zNEaqVTWlO9VDJBaEUI__RSCegHpoIr",
+   "turn_count": 1,
+   "query": "深圳市普渡科技有限公司有哪些专利",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-09T20:47:43.917937+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:uj3z497r38HgfCdS",
+   "session_id": "session:chat:CADbBCklKWQvAz0ph8j9xmwifar9uGFX",
+   "turn_count": 3,
+   "query": "它有哪些布局和进展",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-09T20:48:22.337701+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:K94mVjysjqTsRrrr",
+   "session_id": "session:chat:q95NGeJvzH9SHoi1s02o9OZ0XzMP-tHH",
+   "turn_count": 2,
+   "query": "他有哪些论文",
+   "query_type": "canonical_v2:G:clarification_only",
+   "status": "completed",
+   "started_at": "2026-09-09T20:49:38.857545+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:hb05LVuiuKa2-eMk",
+   "session_id": "session:chat:03Ly-aO77gGkgw-JlJr3rDCHrln4i2FJ",
+   "turn_count": 2,
+   "query": "该公司的专利有哪些",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-09T20:49:49.173024+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:RX5EbliVFXtW36Bw",
+   "session_id": "session:chat:rraZdxMEqi3vRJBrsdr5wd2k_h1-J3jn",
+   "turn_count": 2,
+   "query": "还有哪些类似的公司",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-09T20:50:06.868438+00:00",
+   "families": [
+    "A_有哪些",
+    "E_其他枚举"
+   ]
+  },
+  {
+   "turn_id": "turn:log:o89E2fc4NS6JHLVP",
+   "session_id": "session:chat:5qfD6QjY_R5xs60-5xEc8RUmjsLz9w7r",
+   "turn_count": 1,
+   "query": "深圳有哪些做具身智能的公司",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-09T20:50:39.176677+00:00",
+   "families": [
+    "A_有哪些",
+    "D_做的公司"
+   ]
+  },
+  {
+   "turn_id": "turn:log:JIrhyyWAs3Zcd3PP",
+   "session_id": "session:chat:PoeuXBakdrDfjAW3jMQWYd3CnpgyHjDS",
+   "turn_count": 1,
+   "query": "深圳有哪些做具身智能的公司",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-09T20:51:00.804714+00:00",
+   "families": [
+    "A_有哪些",
+    "D_做的公司"
+   ]
+  },
+  {
+   "turn_id": "turn:log:Q8XpbiULNquvIttu",
+   "session_id": "session:chat:2gwVOgO3p1iUm6PchSD-W_3vATxTe4mh",
+   "turn_count": 1,
+   "query": "深圳有哪些做具身智能的公司",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-09T20:51:26.530859+00:00",
+   "families": [
+    "A_有哪些",
+    "D_做的公司"
+   ]
+  },
+  {
+   "turn_id": "turn:log:3iJfmCb54J0oEY8t",
+   "session_id": "session:chat:-nEMGGWe00jsAEsYfg31vCTl5pUYVCWd",
+   "turn_count": 1,
+   "query": "中国有哪些成熟的酒店送餐机器人供应商？",
+   "query_type": "",
+   "status": "error",
+   "started_at": "2026-09-10T10:58:24.956003+00:00",
+   "families": [
+    "A_有哪些",
+    "C_供应商"
+   ]
+  },
+  {
+   "turn_id": "turn:log:N1CWCRRruspU-G2Q",
+   "session_id": "session:chat:vlhcTsVSwu7Y_nNq7InXKqUz5RPyG-ho",
+   "turn_count": 2,
+   "query": "他是否有参与哪些企业的创立",
+   "query_type": "canonical_v2:G:clarification_only",
+   "status": "completed",
+   "started_at": "2026-09-10T11:03:31.848497+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:FQo7Mxh3RDGwHW6c",
+   "session_id": "session:chat:X4Vbz50TuTV2DtE3F9amEneVp8w-VE0l",
+   "turn_count": 1,
+   "query": "中国有哪些成熟的酒店送餐机器人供应商",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-10T11:03:32.937660+00:00",
+   "families": [
+    "A_有哪些",
+    "C_供应商"
+   ]
+  },
+  {
+   "turn_id": "turn:log:FeB90ZSgTaSzXhXx",
+   "session_id": "session:chat:X4Vbz50TuTV2DtE3F9amEneVp8w-VE0l",
+   "turn_count": 2,
+   "query": "上述企业里总部在深圳的企业有哪些",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-10T11:03:56.354917+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:GfWuZm6pBKrupgvy",
+   "session_id": "session:chat:X4Vbz50TuTV2DtE3F9amEneVp8w-VE0l",
+   "turn_count": 3,
+   "query": "酒店电梯需要送餐机器人能够使用机械臂自主按电梯，上述企业的产品有哪些可以实现",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-10T11:04:11.309476+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:6iTGl0RxODeH0ve4",
+   "session_id": "session:chat:4EgzviElbm-7zDlXFr2LCAJA4mKEigjL",
+   "turn_count": 1,
+   "query": "在深圳旅游旅游有哪些涉及黄赌毒的地方是不能去的",
+   "query_type": "canonical_v2:F:safety_guidance",
+   "status": "completed",
+   "started_at": "2026-09-10T11:04:23.697665+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:zr_0JnThJpj5-CCZ",
+   "session_id": "session:chat:UkWyoXZ6cbX5sXbmuDSweiZUI4BrMJOA",
+   "turn_count": 1,
+   "query": "我想找PCB打板， 有哪些推荐",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-10T11:04:45.540479+00:00",
+   "families": [
+    "A_有哪些",
+    "B_推荐"
+   ]
+  },
+  {
+   "turn_id": "turn:log:0K6mc4FmVpTwALKE",
+   "session_id": "session:chat:UkWyoXZ6cbX5sXbmuDSweiZUI4BrMJOA",
+   "turn_count": 2,
+   "query": "上述企业有哪些是深圳的企业",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-10T11:05:08.186378+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:d14J7_kvbeW49GS-",
+   "session_id": "session:chat:chStp_pC6mYxGjLuUrCNMsrDesbk70F6",
+   "turn_count": 1,
+   "query": "具身智能厂商在数据方面目前存在几种技术路线",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-10T11:06:37.992716+00:00",
+   "families": [
+    "C_供应商"
+   ]
+  },
+  {
+   "turn_id": "turn:log:ISINB8_qEWtqZs4m",
+   "session_id": "session:chat:KWNgVEcc4Ujz3WytdF8oWoeY_ctIOFXJ",
+   "turn_count": 1,
+   "query": "在真实数据采集路线中，有哪些具体方式",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-10T11:07:20.353331+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:3B71iL64L_flS9p_",
+   "session_id": "session:chat:JAWPoMYqnK0JJeONenbYCTAY1sKEpQPN",
+   "turn_count": 1,
+   "query": "在模拟器生成数据路线中，有哪些具体方式",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-10T11:07:36.241591+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:1tklreYsHdccuqJN",
+   "session_id": "session:chat:zcgNI6vdBDp42t868feJJf8C5aZOMYM6",
+   "turn_count": 1,
+   "query": "目前深圳有哪些具身智能、灵巧手厂商，他们在数据层面分别是什么路线",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-10T11:07:51.018205+00:00",
+   "families": [
+    "A_有哪些",
+    "C_供应商"
+   ]
+  },
+  {
+   "turn_id": "turn:log:2fYvMJrmwS_6_QE6",
+   "session_id": "session:chat:-BOMU6oE78-e26v6KLZrVKjKpVjBCvL1",
+   "turn_count": 1,
+   "query": "在具身智能的合成数据发展方向上，具体有几种实现方法，分别有哪些代表厂商",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-10T11:08:33.569383+00:00",
+   "families": [
+    "A_有哪些",
+    "C_供应商"
+   ]
+  },
+  {
+   "turn_id": "turn:log:d45cdgAPKegQH0XG",
+   "session_id": "session:chat:bNJnzeVEfEnES6jQJfy-2FI077vGgXHM",
+   "turn_count": 1,
+   "query": "优必选有哪些专利",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-10T11:09:35.148158+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:a1MvkJ7JgDj7iCTy",
+   "session_id": "session:chat:mVjtCw4g-ugoI_SGrqXKpSZ8qFNqBdh8",
+   "turn_count": 3,
+   "query": "它有哪些布局和进展",
+   "query_type": "canonical_v2:G:clarification_only",
+   "status": "completed",
+   "started_at": "2026-09-10T11:46:23.119411+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:M3dk1wQVotKH9ub2",
+   "session_id": "session:chat:YRYYxfXl4Go1yjQrX9594ztqkr_9ogSI",
+   "turn_count": 2,
+   "query": "他有哪些论文",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-10T11:52:00.391646+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:2zMFA65TJ_gwLjwn",
+   "session_id": "session:chat:99kFVPm4fCkfy0NPPmfFyI8ISnNCcP5I",
+   "turn_count": 2,
+   "query": "该公司的专利有哪些",
+   "query_type": "canonical_v2:G:clarification_only",
+   "status": "completed",
+   "started_at": "2026-09-10T11:53:32.702598+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:tvDw6HVqS_j03JEe",
+   "session_id": "session:chat:IbsEpjSoRV42TvHCXxO3EK212b7Ectnj",
+   "turn_count": 2,
+   "query": "还有哪些类似的公司",
+   "query_type": "",
+   "status": "error",
+   "started_at": "2026-09-10T11:54:50.904420+00:00",
+   "families": [
+    "A_有哪些",
+    "E_其他枚举"
+   ]
+  },
+  {
+   "turn_id": "turn:log:5edxAQQu4PzzbV_W",
+   "session_id": "session:chat:Oe4HSvG5MqBzrRaRRQntoGQR7w9_MVHI",
+   "turn_count": 1,
+   "query": "深圳有哪些做具身智能的公司",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-10T11:55:36.000636+00:00",
+   "families": [
+    "A_有哪些",
+    "D_做的公司"
+   ]
+  },
+  {
+   "turn_id": "turn:log:iMof58YsnpeNPwqG",
+   "session_id": "session:chat:mzNCWX1b2BkIwznek8UNmlIeVfQRt4eB",
+   "turn_count": 1,
+   "query": "深圳有哪些做具身智能的公司",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-10T11:56:19.000700+00:00",
+   "families": [
+    "A_有哪些",
+    "D_做的公司"
+   ]
+  },
+  {
+   "turn_id": "turn:log:6rrlhUtjx6vBO-gV",
+   "session_id": "session:chat:2yk_lzqnK7fcBg5MFieo9_kpjxWHH3wv",
+   "turn_count": 1,
+   "query": "深圳有哪些做具身智能的公司",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-10T11:56:51.432746+00:00",
+   "families": [
+    "A_有哪些",
+    "D_做的公司"
+   ]
+  },
+  {
+   "turn_id": "turn:log:Rdl6sgxbURLz9miM",
+   "session_id": "session:chat:S8JVK1iqcqIDasM7aLmj-5OSqNRtd2oa",
+   "turn_count": 1,
+   "query": "优必选有哪些专利？",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-10T11:58:45.769018+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:HVTkcRp_M3MIGVhJ",
+   "session_id": "session:chat:Fx23qxF27Pw9DKVQJIUH5vFnHdxndRkP",
+   "turn_count": 1,
+   "query": "深圳市优必选科技股份有限公司的专利有哪些？",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-10T11:58:56.078052+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:I_iRQIcSxqhb4GmQ",
+   "session_id": "session:chat:blT0tvTSGmIYgmltvCkKNmZIKGdarWin",
+   "turn_count": 1,
+   "query": "中国有哪些成熟的酒店送餐机器人供应商？",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-10T13:09:38.446237+00:00",
+   "families": [
+    "A_有哪些",
+    "C_供应商"
+   ]
+  },
+  {
+   "turn_id": "turn:log:ONnNqf8FnrDI7Ect",
+   "session_id": "session:chat:lkeK_P2oZyy91GwWqRNt0bUFrLKQ3BXR",
+   "turn_count": 2,
+   "query": "还有哪些类似的公司",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-10T15:10:15.800173+00:00",
+   "families": [
+    "A_有哪些",
+    "E_其他枚举"
+   ]
+  },
+  {
+   "turn_id": "turn:log:1f9Y9T2TIe5bqd-C",
+   "session_id": "session:chat:YbKQpMnfEUtmO-4rRAnXEBBSCkzkNkIP",
+   "turn_count": 1,
+   "query": "优必选有哪些专利？",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-10T15:11:24.911341+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:UJHWN4LZ6sSklQ_S",
+   "session_id": "session:chat:nMRH_t9F2pz-NnfB25-HoWWax6l4Xk_R",
+   "turn_count": 1,
+   "query": "深圳市优必选科技股份有限公司的专利有哪些？",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-10T15:11:45.044968+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:6AIoUGLEodx2zMdB",
+   "session_id": "session:chat:OZhKgP8cpZHAYdSPVDszrmVbj8elBMNs",
+   "turn_count": 1,
+   "query": "中国有哪些成熟的酒店送餐机器人供应商？",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-10T15:11:53.545836+00:00",
+   "families": [
+    "A_有哪些",
+    "C_供应商"
+   ]
+  },
+  {
+   "turn_id": "turn:log:2RKsPTiftgQLfP-o",
+   "session_id": "session:chat:PdsE2friEyDEv70kYhHF-j8-GLAM2RAU",
+   "turn_count": 1,
+   "query": "深圳有哪些做PCB的公司",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-10T16:19:04.817778+00:00",
+   "families": [
+    "A_有哪些",
+    "D_做的公司"
+   ]
+  },
+  {
+   "turn_id": "turn:log:DLewyswOuzqLtYcz",
+   "session_id": "session:chat:PdsE2friEyDEv70kYhHF-j8-GLAM2RAU",
+   "turn_count": 2,
+   "query": "还有哪些类似的公司",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-10T16:19:41.932861+00:00",
+   "families": [
+    "A_有哪些",
+    "E_其他枚举"
+   ]
+  },
+  {
+   "turn_id": "turn:log:M3ItxAfFcMksBTBA",
+   "session_id": "session:chat:W8XNrK4buG0EFL2ihh5ceUXL_BvFnULG",
+   "turn_count": 3,
+   "query": "它有哪些布局和进展",
+   "query_type": "canonical_v2:G:clarification_only",
+   "status": "completed",
+   "started_at": "2026-09-10T16:21:36.252071+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:csQeLuUI3bmk2M0q",
+   "session_id": "session:chat:SEk7sGQSi5tVRPIA3gk1COlmbmGNk0Xg",
+   "turn_count": 2,
+   "query": "他有哪些论文",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-10T16:26:58.799822+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:xKlv9N0GQjxeMuPC",
+   "session_id": "session:chat:WMLQKUoAeSyPLUMotcdcR58KL7nQh1sp",
+   "turn_count": 2,
+   "query": "该公司的专利有哪些",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-10T16:28:26.871139+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:RCRJBiPZuju2_yqM",
+   "session_id": "session:chat:C9Sg0SETz3Lj03fX9RB1YcpmSNJcILWD",
+   "turn_count": 2,
+   "query": "还有哪些类似的公司",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-10T16:29:57.779583+00:00",
+   "families": [
+    "A_有哪些",
+    "E_其他枚举"
+   ]
+  },
+  {
+   "turn_id": "turn:log:9cWrGYj11NYJYkop",
+   "session_id": "session:chat:MShuzHFAJIJ0xbW8oK7sCdZwJs52E95f",
+   "turn_count": 1,
+   "query": "深圳有哪些做具身智能的公司",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-10T16:30:42.669911+00:00",
+   "families": [
+    "A_有哪些",
+    "D_做的公司"
+   ]
+  },
+  {
+   "turn_id": "turn:log:Cbd84aTo2eDGnyi5",
+   "session_id": "session:chat:IfTFK4WRoXqv7_2xtBpF0yeydTjerFQc",
+   "turn_count": 1,
+   "query": "深圳有哪些做具身智能的公司",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-10T16:31:26.005041+00:00",
+   "families": [
+    "A_有哪些",
+    "D_做的公司"
+   ]
+  },
+  {
+   "turn_id": "turn:log:j7bwpm05UxBgUcUU",
+   "session_id": "session:chat:rlLavh-oasdGNDoS3tzsdt6SFWaEAbH7",
+   "turn_count": 1,
+   "query": "深圳有哪些做具身智能的公司",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-10T16:31:46.285046+00:00",
+   "families": [
+    "A_有哪些",
+    "D_做的公司"
+   ]
+  },
+  {
+   "turn_id": "turn:log:QJ113q87IS0HYxiQ",
+   "session_id": "session:chat:0cDL-MQjowk-f1OeC8hUgDilpO3swBM6",
+   "turn_count": 3,
+   "query": "它有哪些布局和进展",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-10T17:19:48.539978+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:rceDHZ4zgK-i355D",
+   "session_id": "session:chat:JrDz3XGaEyPAv9n-1HeFaUfdjlHC8oo3",
+   "turn_count": 2,
+   "query": "他有哪些论文",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-10T17:25:30.083794+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:Y6bg7AHuOHDX6uHT",
+   "session_id": "session:chat:67xF0QWW7dgA0brYg0FmRl_WJAPimJOM",
+   "turn_count": 2,
+   "query": "该公司的专利有哪些",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-10T17:26:58.123621+00:00",
+   "families": [
+    "A_有哪些"
+   ]
+  },
+  {
+   "turn_id": "turn:log:T_kGdrRschv0_9dJ",
+   "session_id": "session:chat:WbhXYtmtzIz2O4CbazxUTYfbPIR6jE1B",
+   "turn_count": 2,
+   "query": "还有哪些类似的公司",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-10T17:28:16.364011+00:00",
+   "families": [
+    "A_有哪些",
+    "E_其他枚举"
+   ]
+  },
+  {
+   "turn_id": "turn:log:9ZykpGgisAjqYP5K",
+   "session_id": "session:chat:Wota7SNIPwW1yuNAlikjULWlkONWED2C",
+   "turn_count": 1,
+   "query": "深圳有哪些做具身智能的公司",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-10T17:28:57.814629+00:00",
+   "families": [
+    "A_有哪些",
+    "D_做的公司"
+   ]
+  },
+  {
+   "turn_id": "turn:log:cQaMC50txLtV8f5b",
+   "session_id": "session:chat:p3cEk3XgbmNk7uFbEc0fdmF8-nzKqEJm",
+   "turn_count": 1,
+   "query": "深圳有哪些做具身智能的公司",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-10T17:29:27.639779+00:00",
+   "families": [
+    "A_有哪些",
+    "D_做的公司"
+   ]
+  },
+  {
+   "turn_id": "turn:log:oa5ylrcqn-CWZgdu",
+   "session_id": "session:chat:sdjHTTV9l0at8Pq89XdnBm81GEx8kkO9",
+   "turn_count": 1,
+   "query": "深圳有哪些做具身智能的公司",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-10T17:29:57.991808+00:00",
+   "families": [
+    "A_有哪些",
+    "D_做的公司"
+   ]
+  },
+  {
+   "turn_id": "turn:log:NX9X0Ztq4ambAWTS",
+   "session_id": "session:chat:wGk7-1GoqO8ZZvsEVX0p7eWyF96ddgwF",
+   "turn_count": 2,
+   "query": "深圳有哪些做具身智能的公司",
+   "query_type": "canonical_v2:A:answer",
+   "status": "completed",
+   "started_at": "2026-09-10T17:31:59.660820+00:00",
+   "families": [
+    "A_有哪些",
+    "D_做的公司"
+   ]
+  }
+ ]
+}

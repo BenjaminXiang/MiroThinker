@@ -1,0 +1,87 @@
+# all stem clusters
+- 华芯 (size=3, conflict_fields=13): 深圳市华芯机器人技术有限责任公司 [company-p4] company-c-09fd4866e9e1db6f68fcfabf; 深圳华芯信息技术股份有限公司 [company-p4] company-c-429482ca52b32010d14172e3; 深圳市华芯智能装备有限公司 [COMP-5F6BCD4926FC] company-c-cfa53df2228f128f98e06801
+- 中智科创 (size=2, conflict_fields=13): 深圳中智科创机器人有限公司 [company-p4] company-c-fb0b761ce5db8e890212df0f; 中智科创机器人有限公司 [company-p4] company-c-ffd53c40d2712631eb6f88c8
+- 中科 (size=2, conflict_fields=13): 中科（深圳）能源物联网有限公司 [company-p4] company-c-1a6af39000b64931602bec79; 中科科技技术（深圳）有限公司 [company-p4] company-c-abfd5d8bb6719410eb6434be
+- 互连 (size=2, conflict_fields=13): 深圳互连科技有限公司 [company-p4] company-c-2184294fce545760bf9d0b29; 深圳市互连电子有限公司 [company-p4] company-c-bb270bd3c476f0dc8eba31d7
+- 志凌伟业 (size=2, conflict_fields=13): 深圳市志凌伟业光电有限公司 [company-p4] company-c-ea322f35b93a0328edc3bb94; 深圳市志凌伟业技术股份有限公司 [company-p4] company-c-ff7910dfb70696d94ff1e428
+- 数心 (size=2, conflict_fields=13): 深圳数心网络科技有限公司 [company-p4] company-c-a0012e90800dbd1986916e5c; 深圳市数心科技有限公司 [company-p4] company-c-e7624ff1d9faeae2a36ec347
+- 普兰 (size=2, conflict_fields=13): 深圳市普兰软件有限公司 [company-p4] company-c-4925d75cda0b20f82a7b701e; 深圳市普兰电子技术有限公司 [company-p4] company-c-f181693f64e15349d356f21e
+- 深信 (size=2, conflict_fields=13): 深圳深信生物科技有限公司 [company-p4] company-c-98008fbf5a119efedaf24fa5; 深圳市深信信息技术有限公司 [company-p4] company-c-ec3f5c0b932e4d600efb372a
+- 特康 (size=2, conflict_fields=13): 特康控股科技（深圳）有限公司 [company-p4] company-c-60ae103fbaca8d31c50042b6; 深圳特康医疗器械有限公司 [company-p4] company-c-a5e11c59ffbab09dc6b918d9
+- 砺芯 (size=2, conflict_fields=13): 深圳市砺芯科技有限公司 [company-p4] company-c-7ad3422db5bafd2cb792a9b0; 深圳砺芯半导体有限责任公司 [company-p4] company-c-d02a7f01b3980a66c1600124
+- 索菱 (size=2, conflict_fields=13): 深圳市索菱通信技术有限公司 [company-p4] company-c-d7098e84d3bc8d8df22b7481; 深圳市索菱实业股份有限公司 [company-p4] company-c-db28f85be58f8c22ffb607dc
+- 聚电 (size=2, conflict_fields=13): 深圳聚电智能科技股份有限公司 [company-p4] company-c-713822595c8e6da082cb8724; 深圳市聚电网络科技有限公司 [company-p4] company-c-a70a3908ba0bee6bbe91b42f
+- 芝麻开门 (size=2, conflict_fields=13): 深圳市芝麻开门智能网络科技有限公司 [company-p4] company-c-925ef3810953f051f3f7318a; 深圳市芝麻开门电子科技有限公司 [company-p4] company-c-d0e97dd041c050a5670efc0f
+- 超维 (size=2, conflict_fields=13): 深圳市超维光电科技有限公司 [company-p4] company-c-03668321c5b855e4a6a3e95e; 深圳市超维实业有限公司 [company-p4] company-c-54f7ea77eb67aac2298d84f3
+- 达实 (size=2, conflict_fields=13): 深圳达实智能股份有限公司 [company-p4] company-c-77288ab37ef51144aca0ca4c; 深圳达实物联网技术有限公司 [company-p4] company-c-ba60f01134357e7f4fa193e8
+- 锐曼 (size=2, conflict_fields=13): 深圳市锐曼智能技术有限公司 [company-p4] company-c-30d1da20c9d086b995e476ec; 深圳市锐曼智能装备有限公司 [company-p4] company-c-b81769c24debcf1713384371
+- 香蕉 (size=2, conflict_fields=13): 深圳市香蕉智能科技有限公司 [company-p4] company-c-37d7f16d3346532b763258df; 深圳市香蕉科技有限公司 [company-p4] company-c-664ca7463984d329f6c12b53
+- 创想未来 (size=2, conflict_fields=12): 深圳市创想未来科技有限公司 [company-p4] company-c-01cb37c0c85cdc05891dcf73; 深圳创想未来机器人有限公司 [company-p4] company-c-aaa703b17f7e0f4b3297bc6c
+- 华讯方舟 (size=2, conflict_fields=12): 华讯方舟股份有限公司 [company-p4] company-c-6c06765b4be7f14f672cb8d2; 华讯方舟科技有限公司 [company-p4] company-c-cdc4d767b78b4e5c00452a4b
+- 小煷伴 (size=2, conflict_fields=12): 深圳市小煷伴科技有限公司 [company-p4] company-c-9cd4dc6a0d42c1314988c120; 小煷伴（深圳）智能科技有限公司 [company-p4] company-c-b88337354d339a19947d8b28
+- 易联 (size=2, conflict_fields=12): 深圳易联光电技术有限公司 [company-p4] company-c-01ffe0b5868bdca37a4c993a; 深圳市易联电子有限公司 [company-p4] company-c-1d77eeeb843f59c0d6fcb43e
+- 汇能 (size=2, conflict_fields=12): 深圳市汇能光电科技有限公司 [company-p4] company-c-048401b1cf408fdb0cc0fb5f; 深圳汇能新能源科技有限公司 [company-p4] company-c-8ce14365b1f9db77e9e526a9
+- 法本 (size=2, conflict_fields=12): 深圳市法本信息技术股份有限公司 [company-p4] company-c-812a3543a67cf3192be5ba43; 深圳法本电子股份有限公司 [company-p4] company-c-cb160a8e87d23f8f061ebb56
+- 泰克 (size=2, conflict_fields=12): 深圳泰克教育科技有限公司 [company-p4] company-c-1ac1051d3deda40305ba2fc7; 泰克半导体装备（深圳）有限公司 [company-p4] company-c-a6dd567b6c5a1dbceed7b18d
+- 中微 (size=2, conflict_fields=11): 中微半导体（深圳）股份有限公司 [company-p4] company-c-2af55c44df2c27bb1e42f9a0; 深圳市中微信息技术有限公司 [company-p4] company-c-67bcf6a934255fa6bf3de438
+- 国微 (size=2, conflict_fields=11): 国微集团（深圳）有限公司 [company-p4] company-c-86935a84811828086eca7975; 深圳市国微电子有限公司 [company-p4] company-c-b9af31ac39cd8c6175d713a5
+- 浩科 (size=2, conflict_fields=11): 深圳市浩科电子有限公司 [company-p4] company-c-5022d37977cfd76070b76948; 深圳市浩科智能信息技术有限公司 [company-p4] company-c-cb1ee1132a5bb581f3ea04a5
+- 阿西莫夫 (size=2, conflict_fields=11): 深圳市阿西莫夫人工智能有限公司 [company-p4] company-c-14426b3f2ab66627e135c806; 深圳市阿西莫夫科技有限公司 [company-p4] company-c-c2f6b4bab85370ecd5149524
+- 顺丰 (size=2, conflict_fields=11): 顺丰科技有限公司 [company-p4] company-c-3c7242f9860e02e90c7fa48e; 顺丰控股股份有限公司 [company-p4] company-c-fc778dec7c307bd22418a775
+- 云影 (size=2, conflict_fields=10): 深圳市云影医疗科技有限公司 [company-p4] company-c-22f24708a85cb34ae904f2c5; 深圳市云影网络科技有限公司 [company-p4] company-c-f89f7fc392836027d4c99454
+- 今天国际 (size=2, conflict_fields=10): 深圳市今天国际软件技术有限公司 [company-p4] company-c-6350fb11687f26b5c82b2c95; 深圳市今天国际智能机器人有限公司 [company-p4] company-c-8fae549b159eb94ad31d3be5
+- 宝能 (size=2, conflict_fields=10): 深圳市宝能汽车有限公司 [company-p4] company-c-8109665f54688b12857d2a43; 宝能汽车集团有限公司 [company-p4] company-c-b54d8f801885c30058b9d78d
+- 比亚迪 (size=2, conflict_fields=10): 比亚迪半导体股份有限公司 [company-p4] company-c-0eb3bbca298f11493ed67080; 比亚迪股份有限公司 [company-p4] company-c-4101fbf3c4a1337524030879
+- 邦深 (size=2, conflict_fields=10): 邦深电子（深圳）有限公司 [company-p4] company-c-80752b458d84bde4fd7f692b; 邦深科技（深圳）有限公司 [company-p4] company-c-bf215a78dc6cb58cf41b0f42
+- 中舟 (size=2, conflict_fields=9): 中舟（深圳）健康科技有限公司 [COMP-9674BE55B750] company-c-6da2213f4ce256e539aa8bf5; 深圳市中舟智能科技有限公司 [company-p4] company-c-7b1fb07b5602d900c20c193b
+- 新国都 (size=2, conflict_fields=9): 深圳市新国都智能有限公司 [COMP-E38E895F010B] company-c-29341937ae1ddd1f7e3baf48; 深圳市新国都股份有限公司 [company-p4] company-c-a4ef7c826f5e6b4313786192
+- 盖亚 (size=2, conflict_fields=9): 深圳市盖亚云计算有限公司 [COMP-A9DF1A242D11] company-c-53d0e3d4a138bf7247b1ab59; 深圳市盖亚信息技术有限公司 [company-p4] company-c-69a46a8798694c512c67d4c1
+- 码隆 (size=2, conflict_fields=9): 深圳码隆智能科技有限公司 [company-p4] company-c-6622c7f896c2b8d4a71eb69e; 深圳码隆科技有限公司 [company-p4] company-c-a6dda6a1bae323a4064737db
+- 阿尔法 (size=2, conflict_fields=9): 阿尔法仪器技术（深圳）有限公司 [COMP-493774205E15] company-c-6f7712cce98f0e194709d917; 阿尔法云计算（深圳）有限公司 [COMP-A584F7B85F40] company-c-89591438237cbdc1fa80f669
+- 仁心 (size=2, conflict_fields=8): 仁心健康（深圳）有限公司 [COMP-78BEB7E2C78B] company-c-9055f0879b243940187f3429; 深圳仁心医疗有限公司 [COMP-6CBCB522B859] company-c-ecb71f9eef4310e351156f0b
+- 冠乔 (size=2, conflict_fields=8): 深圳市冠乔智能科技有限公司 [company-p4] company-c-2c1c515ea3714343e8322089; 深圳市冠乔科技有限公司 [company-p4] company-c-b8c1c10b55f11f65da23d1a4
+- 华云 (size=2, conflict_fields=8): 深圳市华云通信有限公司 [company-p4] company-c-57de40f105a78cef3e23eff4; 深圳市华云智能健康有限公司 [COMP-E58B554DC23E] company-c-df96d0b041f25c3674e1b165
+- 智汇 (size=2, conflict_fields=8): 深圳市智汇机器人科技有限公司 [company-p4] company-c-642e16ac50558f7bb440192b; 深圳市智汇物联网科技有限公司 [COMP-67CC8C5EDC05] company-c-d72272545fe9c7f98380b863
+- 未艾 (size=2, conflict_fields=8): 深圳未艾教育科技有限公司 [COMP-2CE641298D90] company-c-01a157dc0c3512e43e23c34e; 未艾医疗技术（深圳）有限公司 [company-p4] company-c-6dabb17319e3aa154939970f
+- 深研 (size=2, conflict_fields=8): 深研人工智能技术（深圳）有限公司 [COMP-A26FBAE0517B] company-c-44e011959b840a0af5d17161; 深圳市深研生物科技有限公司 [company-p4] company-c-c9e6ef7fea781af995a51b4d
+- 麦思威 (size=2, conflict_fields=8): 麦思威科技（深圳）有限责任公司 [company-p4] company-c-368633b1ec86b1c7d8e725b8; 麦思威电子（深圳）有限公司 [COMP-D2CA4A8B31D3] company-c-5d0adfd00b6747f4fd7eff66
+- 乐聚 (size=2, conflict_fields=7): 乐聚智能（深圳）股份有限公司 [company-p4] company-c-28bf2bb10cb49b0e4fdc07ca; 乐聚（深圳）机器人技术有限公司 [company-p4] company-c-6313cfcefa7dd04a51e70739
+- 智慧 (size=2, conflict_fields=7): 深圳智慧能源技术有限公司 [company-p4] company-c-29efeb593437ffd201597d34; 深圳智慧教育科技有限公司 [COMP-D3906F96F809] company-c-ca55a47716b84fda4f6b62ca
+- 智眸 (size=2, conflict_fields=7): 深圳智眸科技有限公司 [company-p4] company-c-4003abc05ba02ffc9e4c7e49; 智眸医疗（深圳）有限公司 [COMP-1BE006248FE1] company-c-f045459ec1d6056d4af6fb72
+- 普渡 (size=3, conflict_fields=6): 深圳市普渡科技有限公司 [COMP-0A61012B350E] company-c-72b2ec528908ac199ee1dbc7; 深圳市普渡科技股份有限公司 [company-p4] company-c-f11204f5f0dee0d8a1e1fdd4; 成都市普渡机器人有限公司 [company-backfill] company-c-f465962ae6d0ac84c5f8cad3
+- 云豹 (size=2, conflict_fields=6): 深圳云豹智能股份有限公司 [COMP-4427001BAFCD] company-c-594dd59da1f0ddb6088e6cc9; 深圳云豹智能有限公司 [company-p4] company-c-f01cdba855c16a1dac48ec4b
+- 国际先进技术应用推进中心 (size=2, conflict_fields=6): 合肥国际先进技术应用推进中心 [company-p4] company-c-60af86764946ad394ec1e8bb; 深圳国际先进技术应用推进中心 [company-p4] company-c-c841e20d983b33640734ccfe
+- 海思 (size=2, conflict_fields=6): 深圳海思机器人有限公司 [COMP-55BCF0424C0F] company-c-b6d53c7efbeba015805a5907; 深圳市海思半导体有限公司 [company-p4] company-c-fe83382735f6e38e759fd152
+- 银河通用 (size=2, conflict_fields=5): 银河通用 [COMP-49A538F54ABA] company-c-12bb60608a1c9e5205a55caf; 北京银河通用机器人有限公司 [company-p4] company-c-746c8de849c4300d3d863175
+- 中国广核 (size=2, conflict_fields=4): 中国广核集团有限公司 [company-p4] company-c-3bfba7b2158dabd4584e1715; 中国广核电力股份有限公司 [company-backfill] company-c-51ba1335547096f3b8e6c765
+- 中建三局 (size=2, conflict_fields=4): 中建三局集团（深圳）有限公司 [company-backfill] company-c-277474a470b2a3c66237bda4; 中建三局集团有限公司 [company-backfill] company-c-fcdb6508b02d5d52c94c27ad
+- 中建五局第三建设 (size=2, conflict_fields=4): 中建五局第三建设有限公司 [company-backfill] company-c-32ea991d975f5d20796f38af; 中建五局第三建设（深圳）有限公司 [company-backfill] company-c-9063652ecd9417c4996a7441
+- 中建科工 (size=2, conflict_fields=4): 中建科工集团有限公司 [company-p4] company-c-2fd3a34e2dd560f74850b4b5; 中建科工智能科技（深圳）有限公司 [company-backfill] company-c-5babe7bb34933f04336721b3
+- 云天励飞 (size=2, conflict_fields=4): 成都云天励飞技术有限公司 [company-backfill] company-c-4f35bc18ae561b0f40a2fb16; 深圳云天励飞技术股份有限公司 [company-p4] company-c-7537d17b709c1489221746ba
+- 亿道 (size=2, conflict_fields=4): 深圳市亿道电子科技有限公司 [company-backfill] company-c-1f18d8cd6b4994f034bbd203; 深圳市亿道信息股份有限公司 [company-p4] company-c-a5dae351216f23b6663db32f
+- 光影焕像 (size=2, conflict_fields=4): 广州光影焕像科技有限公司 [COMP-DF864B2B500B] company-c-7723d484de05e19a052b4b03; 深圳光影焕像科技有限公司 [company-p4] company-c-efa6488b4c2461d1db6f7ad3
+- 创益通 (size=2, conflict_fields=4): 深圳市创益通技术股份有限公司 [company-p4] company-c-88fc9a695ce86480ca3142d2; 惠州市创益通电子科技有限公司 [company-backfill] company-c-c4761cf9a20b16ab4681cf5c
+- 华为 (size=2, conflict_fields=4): 华为技术有限公司 [company-p4] company-c-416da59f223a3a3272cba493; 深圳华为云计算技术有限公司 [company-backfill] company-c-8882fd5f889bb46f6a6b7b77
+- 卧安 (size=2, conflict_fields=4): 卧安机器人（深圳）股份有限公司 [company-p4] company-c-56c63a9b4353b8d39d536378; 卧安科技（深圳）有限公司 [company-backfill] company-c-b86e1740a286838ad1b8ebf4
+- 国电 (size=2, conflict_fields=4): 深圳市国电科技通信有限公司 [company-backfill] company-c-32324a059a50d41c771ee42d; 深圳市国电投资有限公司 [company-p4] company-c-e1c8d6baf18cc83e674c23d9
+- 平安 (size=2, conflict_fields=4): 平安科技（深圳）有限公司 [company-backfill] company-c-4a57215bd706e512cd8239bb; 深圳平安通信科技有限公司 [company-backfill] company-c-e89a7af5b5be157d7b92d648
+- 汇顶 (size=2, conflict_fields=4): 深圳市汇顶自动化技术有限公司 [company-backfill] company-c-168894b9dcd19b3a958f4372; 深圳市汇顶科技股份有限公司 [company-p4] company-c-c94600e8f6b5bb6ed13f2021
+- 精控集成 (size=2, conflict_fields=4): 杭州精控集成半导体有限公司 [COMP-8594F6A99E4C] company-c-31bd9a93db4e01aa2fee93c7; 深圳精控集成半导体有限公司 [company-p4] company-c-91c276fb62d64fc486f6dfe1
+- 诺因 (size=2, conflict_fields=4): 深圳市诺因智能有限公司 [company-p4] company-c-15f905da84b692918f211800; 深圳诺因智能有限公司 [COMP-9451C47EFDF9] company-c-a41a5cfd4a3f50e1f1566b75
+- 迈威 (size=2, conflict_fields=4): 深圳市迈威机器人有限公司 [company-backfill] company-c-6476e91cf6516e59a539de24; 深圳市迈威科技有限公司 [company-p4] company-c-b8dfec9fcf1256f472cb553c
+- 尚科宁家 (size=2, conflict_fields=3): 深圳尚科宁家科技有限公司 [company-backfill] company-c-439102692dc451b1ad9f1125; 尚科宁家（中国）科技有限公司 [company-backfill] company-c-c2776d1ceace996828a244e2
+- 易普森 (size=2, conflict_fields=3): 易普森生物科技（深圳）有限公司 [company-backfill] company-c-620d7d4842805a1e2d1613e4; 深圳易普森科技股份有限公司 [company-backfill] company-c-fc9dafb743637df64db9e09e
+
+# core clusters
+- 中建三局 (size=2, conflict_fields=4): 中建三局集团（深圳）有限公司 [company-backfill]; 中建三局集团有限公司 [company-backfill]
+- 中建五局第三建设 (size=2, conflict_fields=4): 中建五局第三建设有限公司 [company-backfill]; 中建五局第三建设（深圳）有限公司 [company-backfill]
+- 中智科创机器人 (size=2, conflict_fields=13): 深圳中智科创机器人有限公司 [company-p4]; 中智科创机器人有限公司 [company-p4]
+- 云天励飞技术 (size=2, conflict_fields=4): 成都云天励飞技术有限公司 [company-backfill]; 深圳云天励飞技术股份有限公司 [company-p4]
+- 云豹智能 (size=2, conflict_fields=6): 深圳云豹智能股份有限公司 [COMP-4427001BAFCD]; 深圳云豹智能有限公司 [company-p4]
+- 光影焕像科技 (size=2, conflict_fields=4): 广州光影焕像科技有限公司 [COMP-DF864B2B500B]; 深圳光影焕像科技有限公司 [company-p4]
+- 国际先进技术应用推进中心 (size=2, conflict_fields=6): 合肥国际先进技术应用推进中心 [company-p4]; 深圳国际先进技术应用推进中心 [company-p4]
+- 宝能汽车 (size=2, conflict_fields=10): 深圳市宝能汽车有限公司 [company-p4]; 宝能汽车集团有限公司 [company-p4]
+- 尚科宁家科技 (size=2, conflict_fields=3): 深圳尚科宁家科技有限公司 [company-backfill]; 尚科宁家（中国）科技有限公司 [company-backfill]
+- 普渡科技 (size=2, conflict_fields=6): 深圳市普渡科技有限公司 [COMP-0A61012B350E]; 深圳市普渡科技股份有限公司 [company-p4]
+- 精控集成半导体 (size=2, conflict_fields=4): 杭州精控集成半导体有限公司 [COMP-8594F6A99E4C]; 深圳精控集成半导体有限公司 [company-p4]
+- 诺因智能 (size=2, conflict_fields=4): 深圳市诺因智能有限公司 [company-p4]; 深圳诺因智能有限公司 [COMP-9451C47EFDF9]

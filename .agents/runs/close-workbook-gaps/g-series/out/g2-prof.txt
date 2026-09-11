@@ -1,0 +1,11 @@
+# professor name clusters
+- 陈斌 (size=3): 陈斌 [PROF-2E860FAB2D2F]; 陈斌 [PROF-E3A11A598DB2]; 陈斌 [PROF-C6ABA72DC6A7]
+- ParvejAlam (size=2): Parvej Alam [PROF-A4A3D3B0C942]; Parvej Alam [PROF-9F7B367BD507]
+- 冯娟 (size=2): 冯娟 [PROF-CFC6D134A4FC]; 冯娟 [PROF-7B5F7969C278]
+- 刘清侠 (size=2): 刘清侠 [PROF-A348C2BD1EA8]; 刘清侠 [PROF-FA2F996AB5AA]
+- 成会明 (size=2): 成会明 [PROF-767ED53B4708]; 成会明 [PROF-E5B1A8A3F147]
+- 朱宝亭 (size=2): 朱宝亭 [PROF-06043996655D]; 朱宝亭 [PROF-71DC4C85522E]
+- 李佳 (size=2): 李佳 [PROF-D5F21F8D93DA]; 李佳 [PROF-2BB872AF25E2]
+- 李兵 (size=2): 李兵 [PROF-2E6F9B82225E]; 李兵 [PROF-C515DAB91C42]
+- 李翔 (size=2): 李翔 [PROF-F7023E32A3A7]; 李翔 [PROF-AF2C663FC7CE]
+- 梁永生 (size=2): 梁永生 [PROF-B02F8D6E9E18]; 梁永生 [PROF-42AFBC4C6403]

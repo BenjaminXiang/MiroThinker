@@ -359,3 +359,18 @@
 - B5.5 re-verify (task A): 289 passed serving+trace (265+24 new);
   hermetic 36; B1 96/26; admin 147+3 pre-existing — all baseline-
   identical.
+
+## 2026-09-11 — G1 delivered: retrieval-critical field contract draft (4 domains)
+
+- Artifacts in `.agents/runs/close-workbook-gaps/g-series/` (g1 doc + 3
+  reproducible probes). Headline findings: placeholder pollution in
+  content_terms (professor 100% / company 30.3% of docs; 12,872 + 3,099
+  occurrences; matcher must be prefix/pattern-based; "placeholders out of
+  content_terms" is an ingestion-side rule recommendation); category
+  anchoring — stable structured anchors only company.tech_tags/industry,
+  patent.title, professor.research_directions; company category words
+  8/14 >80% summary-only (储能 96.6%, PCB 91.8%); paper 13/14 summary-only.
+- Thresholds (single-pack calibrated): only industry (91.9%<92) and
+  patent summary (83.2%<85) warn on run14; target-state list of 9 items.
+- G2 (identity) / G3 (category anchoring) sibling streams still running;
+  combined C1-contract consolidation after all three land.

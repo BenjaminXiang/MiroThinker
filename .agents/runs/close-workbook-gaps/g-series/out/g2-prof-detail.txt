@@ -1,0 +1,55 @@
+== ParvejAlam (2 docs) ==
+  professor-c-1d5dfa230038de524721c8e7 | institution='香港中文大学（深圳）' | dept='理工学院' | title='客座助理教授' | email='alamparvej@cuhk.edu.cn' | homepage='https://sse.cuhk.edu.cn/faculty/parvejalam' | family=PROF-A4A3D3B0C942
+  professor-c-838889828080d10984c86eda | institution='清华大学深圳国际研究生院' | dept='材料研究学院' | title='助理教授、博士生导师' | email='alamparvej@sz.tsinghua.edu.cn' | homepage='http://www.sigs.tsinghua.edu.cn/Parvej Alam/main.htm' | family=PROF-9F7B367BD507
+== 冯娟 (2 docs) ==
+  professor-c-154d80cb7fc5f80d12d34e85 | institution='清华大学深圳国际研究生院' | dept='创新管理研究院' | title='教授、博士生导师' | email='juan.feng@sz.tsinghua.edu.cn' | homepage='http://www.sigs.tsinghua.edu.cn/fj/main.htm' | family=PROF-CFC6D134A4FC
+  professor-c-c0aeb695105954f62d9f0580 | institution='深圳技术大学' | dept='健康与环境工程学院' | title='助理教授' | email='hsee@sztu.edu.cn' | homepage='http://www.sztu.edu.cn/' | family=PROF-7B5F7969C278
+== 刘清侠 (2 docs) ==
+  professor-c-b529e42502a0e97add91aaa2 | institution='深圳技术大学' | dept='新材料与新能源学院' | title='讲席教授、博士生导师、加拿大工程院院士' | email='Not supplied by the historical source.' | homepage='https://nmne.sztu.edu.cn/info/1033/3214.htm' | family=PROF-A348C2BD1EA8
+  professor-c-d4243ebb0274410ce8acab01 | institution='深圳技术大学' | dept='人工智能学院' | title='讲席教授' | email='Not supplied by the historical source.' | homepage='https://ai.sztu.edu.cn/info/1332/6057.htm' | family=PROF-FA2F996AB5AA
+== 成会明 (2 docs) ==
+  professor-c-0adc93086db357fb32da799f | institution='清华大学深圳国际研究生院' | dept='低维材料与器件实验室' | title='教授' | email='Not supplied by the historical source.' | homepage='http://www.sigs.tsinghua.edu.cn/chm/main.htm' | family=PROF-767ED53B4708
+  professor-c-ea807415184b771eed44d4fa | institution='深圳理工大学' | dept='材料科学与能源工程学院' | title='院士' | email='chenghuiming@suat-sz.edu.cn' | homepage='https://suat-sz.edu.cn/' | family=PROF-E5B1A8A3F147
+== 朱宝亭 (2 docs) ==
+  professor-c-0bcec3a68c18178eca6cfd8f | institution='香港中文大学（深圳）' | dept='理工学院' | title='校长讲座教授' | email='btzhu@cuhk.edu.cn' | homepage='https://sse.cuhk.edu.cn/faculty/zhubaoting' | family=PROF-06043996655D
+  professor-c-ef722da2e2660ae84c160651 | institution='香港中文大学（深圳）' | dept='医学院' | title='校长讲席教授' | email='Not supplied by the historical source.' | homepage='https://med.cuhk.edu.cn/teacher/117' | family=PROF-71DC4C85522E
+== 李佳 (2 docs) ==
+  professor-c-64c54482d24e7bfbf20f142d | institution='清华大学深圳国际研究生院' | dept='Not supplied by the historical source.' | title='副教授、博士生导师' | email='li.jia@sz.tsinghua.edu.cn' | homepage='http://www.sigs.tsinghua.edu.cn/lj/main.htm' | family=PROF-D5F21F8D93DA
+  professor-c-7a2f7608ce037ce97a9bf10f | institution='深圳技术大学' | dept='工程物理学院' | title='教授' | email='lijia@sztu.edu.cn' | homepage='http://www.sztu.edu.cn/' | family=PROF-2BB872AF25E2
+== 李兵 (2 docs) ==
+  professor-c-5e7a37670cfe9ff0ba19212f | institution='哈尔滨工业大学（深圳）' | dept='机器人与先进制造学院（深圳）' | title='Not supplied by the historical source.' | email='libing.sgs@hit.edu.cn' | homepage='https://homepage.hit.edu.cn/libing' | family=PROF-2E6F9B82225E
+  professor-c-b9e9ee3ff30ce25523148ce6 | institution='清华大学深圳国际研究生院' | dept='Not supplied by the historical source.' | title='副教授、博士生导师' | email='li.bing@sz.tsinghua.edu.cn' | homepage='http://www.sigs.tsinghua.edu.cn/lb2_2931/main.htm' | family=PROF-C515DAB91C42
+== 李翔 (2 docs) ==
+  professor-c-60bdb1a8858f2ad5b8020b89 | institution='哈尔滨工业大学（深圳）' | dept='马克思主义学院（深圳）' | title='教授' | email='Not supplied by the historical source.' | homepage='https://homepage.hit.edu.cn/LIL' | family=PROF-F7023E32A3A7
+  professor-c-d50aa2328ef22f790c1b63c7 | institution='深圳理工大学' | dept='生命健康学院' | title='副教授' | email='lhs@suat-sz.edu.cn' | homepage='https://xiangLiLab.lhs.suat-sz.edu.cn/' | family=PROF-AF2C663FC7CE
+== 梁永生 (2 docs) ==
+  professor-c-33a1f605279241866cc14499 | institution='哈尔滨工业大学（深圳）' | dept='信息学部/信息科学与技术学院（深圳）' | title='Not supplied by the historical source.' | email='Not supplied by the historical source.' | homepage='https://homepage.hit.edu.cn/liangyongsheng' | family=PROF-B02F8D6E9E18
+  professor-c-375a3ee37695daf56edd3c42 | institution='深圳技术大学' | dept='人工智能学院' | title='讲席教授' | email='Not supplied by the historical source.' | homepage='https://ai.sztu.edu.cn/szdw/jytd/jxjs.htm' | family=PROF-42AFBC4C6403
+== 王伟 (2 docs) ==
+  professor-c-5d91c2e1c31dac18c80a610a | institution='哈尔滨工业大学（深圳）' | dept='信息学部/信息科学与技术学院（深圳）' | title='Not supplied by the historical source.' | email='Not supplied by the historical source.' | homepage='https://homepage.hit.edu.cn/wangwei16' | family=PROF-C0ADF2A7AD59
+  professor-c-9cce5e18a5b2b546160fbf1c | institution='中山大学（深圳）' | dept='电子与通信工程学院' | title='教授' | email='wangw278@mail.sysu.edu.cn' | homepage='http://sece.sysu.edu.cn/szll/js/zngz/1361652.htm' | family=PROF-5C48917BFEC1
+== 王威 (2 docs) ==
+  professor-c-1a339270f40702b62aae5847 | institution='哈尔滨工业大学（深圳）' | dept='前沿学部/理学院（深圳）' | title='Not supplied by the historical source.' | email='Not supplied by the historical source.' | homepage='https://homepage.hit.edu.cn/wangweihitsz' | family=PROF-D6D6EE1C1F85
+  professor-c-8c71d5be685e5935e5931719 | institution='哈尔滨工业大学（深圳）' | dept='前沿学部/材料科学与工程学院（深圳）' | title='教授' | email='Not supplied by the historical source.' | homepage='https://homepage.hit.edu.cn/wangwei3' | family=PROF-0FE07BAB6484
+== 王飞 (2 docs) ==
+  professor-c-205db9d24524182bb77279b3 | institution='清华大学深圳国际研究生院' | dept='安全科学与技术研究所（清华大学公共安全研究院广东分院）' | title='副教授' | email='feiwang@tsinghua.edu.cn' | homepage='http://www.sigs.tsinghua.edu.cn/wf/main.htm' | family=PROF-5281ED0D760B
+  professor-c-93adbf28f8bc20b683690a4d | institution='深圳技术大学' | dept='工程物理学院' | title='讲师' | email='wangfei@sztu.edu.cn' | homepage='http://www.sztu.edu.cn/' | family=PROF-2059FC237958
+== 罗智泉 (2 docs) ==
+  professor-c-24244abbae18b52794d98155 | institution='香港中文大学（深圳）' | dept='人工智能学院' | title='教授' | email='Not supplied by the historical source.' | homepage='https://sai.cuhk.edu.cn/teacher/92' | family=PROF-2CE8D5F39807
+  professor-c-3a1a3aca1ff3de33c2b8c376 | institution='香港中文大学（深圳）' | dept='理工学院' | title='X.Q. Deng 讲席教授' | email='emailpengyanni@cuhk.edu.cnofficeaddressp' | homepage='https://myweb.cuhk.edu.cn/luozhiquan' | family=PROF-2B20C29090FC
+== 胡君杰 (2 docs) ==
+  professor-c-b6ba68c04a57e870e6be08b9 | institution='香港中文大学（深圳）' | dept='理工学院' | title='客座助理教授' | email='hujunjie@cuhk.edu.cn' | homepage='https://sse.cuhk.edu.cn/faculty/hujunjie' | family=PROF-EB021431749E
+  professor-c-d07689864b8bec5aaf59b9d5 | institution='香港中文大学（深圳）' | dept='人工智能学院' | title='助理教授' | email='sai@cuhk.edu.cn' | homepage='https://sai.cuhk.edu.cn/teacher/153' | family=PROF-AF4C06DDFC0E
+== 蔡小强 (2 docs) ==
+  professor-c-58cd24615d7771411740fba6 | institution='香港中文大学（深圳）' | dept='理工学院' | title='客座教授' | email='xqcai@cuhk.edu.cn' | homepage='https://sse.cuhk.edu.cn/faculty/caixiaoqiang' | family=PROF-E23D62591115
+  professor-c-ee15fec9d71e3005f09f0766 | institution='香港中文大学（深圳）' | dept='数据科学学院' | title='校长讲席教授' | email='Not supplied by the historical source.' | homepage='https://sds.cuhk.edu.cn/teacher/262' | family=PROF-6C2F529C2B03
+== 赵阳 (2 docs) ==
+  professor-c-9a67b39930fd7368d5021731 | institution='哈尔滨工业大学（深圳）' | dept='医工学院（深圳）' | title='Not supplied by the historical source.' | email='Not supplied by the historical source.' | homepage='https://homepage.hit.edu.cn/yangz' | family=PROF-84D967588160
+  professor-c-a6c2ff911cbfb1812fae8a6f | institution='哈尔滨工业大学（深圳）' | dept='空天科技学院（深圳）' | title='研究员' | email='yang.zhao@hit.edu.cn' | homepage='https://homepage.hit.edu.cn/yang_zhao' | family=PROF-637149DF5D3C
+== 陈斌 (3 docs) ==
+  professor-c-223787eb1acb034f131cdb09 | institution='哈尔滨工业大学（深圳）' | dept='前沿学部/理学院（深圳）' | title='Not supplied by the historical source.' | email='Not supplied by the historical source.' | homepage='https://homepage.hit.edu.cn/chenbin' | family=PROF-2E860FAB2D2F
+  professor-c-4e718d765b59f02a9181eaef | institution='哈尔滨工业大学（深圳）' | dept='信息学部/计算机科学与技术学院（深圳）' | title='Not supplied by the historical source.' | email='Not supplied by the historical source.' | homepage='https://homepage.hit.edu.cn/BinChen' | family=PROF-E3A11A598DB2
+  professor-c-7ecbac31648c9f1676ccf8d8 | institution='哈尔滨工业大学（深圳）' | dept='信息学部/国际人工智能研究院（深圳）' | title='Not supplied by the historical source.' | email='Not supplied by the historical source.' | homepage='https://homepage.hit.edu.cn/chenbin2020' | family=PROF-C6ABA72DC6A7
+== 黄宪达 (2 docs) ==
+  professor-c-6216469ff26b1a6678f56573 | institution='香港中文大学（深圳）' | dept='医学院' | title='校长讲座教授' | email='Not supplied by the historical source.' | homepage='https://med.cuhk.edu.cn/teacher/120' | family=PROF-17586612024F
+  professor-c-88df2e668d851520b09d73d6 | institution='香港中文大学（深圳）' | dept='理工学院' | title='校长讲座教授' | email='huanghsienda@cuhk.edu.cn' | homepage='https://sse.cuhk.edu.cn/faculty/huanghsienda' | family=PROF-7D055509E303

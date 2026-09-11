@@ -1,0 +1,1172 @@
+{
+  "run14_release": "candidate-v2-20260819-r1",
+  "s12f_release": "candidate-s12f-20260801-v1",
+  "counts": {
+    "run14": {
+      "company": 7089,
+      "professor": 3958,
+      "paper": 24520,
+      "patent": 11504
+    },
+    "s12f": {
+      "company": 1737,
+      "professor": 1428,
+      "paper": 563,
+      "patent": 1931
+    }
+  },
+  "stability": {
+    "company_exact_name": {
+      "left_docs": 1737,
+      "right_docs": 7089,
+      "matched_keys": 1733,
+      "unambiguous_pairs": 1733,
+      "same_id": 0,
+      "changed_id": 1733,
+      "changed_pct": 100.0,
+      "ambiguous_keys": 0,
+      "changed_samples": [
+        {
+          "key": "一思（深圳）人工智能有限公司",
+          "s12f": "company-c-4cacc13aa38cae5b1c53149a",
+          "run14": "company-c-423e81f0f7be1a66c34134f4"
+        },
+        {
+          "key": "七海行（深圳）科技有限公司",
+          "s12f": "company-c-e6d0f3cfd4d9bc7e0e9cf030",
+          "run14": "company-c-5896332b1fdb5734a1f4a142"
+        },
+        {
+          "key": "万勋科技（深圳）有限公司",
+          "s12f": "company-c-4237a1f3f2f428a2c077dd02",
+          "run14": "company-c-f84e4136c53f9f2f65354018"
+        },
+        {
+          "key": "万有生化智能科技（深圳）有限公司",
+          "s12f": "company-c-4611c500d4717aae1e46ea69",
+          "run14": "company-c-2271b59537951fe07d25ba0a"
+        },
+        {
+          "key": "万汇互联（深圳）科技有限公司",
+          "s12f": "company-c-0d55ee7e88a855fe52537bc4",
+          "run14": "company-c-8a04c047ae1ca77df8c8e320"
+        },
+        {
+          "key": "万物智灵（深圳）科技有限公司",
+          "s12f": "company-c-d3966636e066901cb05b6b73",
+          "run14": "company-c-47a19d181152f8d64fc361b2"
+        },
+        {
+          "key": "三农振兴科技（深圳）有限公司",
+          "s12f": "company-c-8dd871ba801ff6ee7594c125",
+          "run14": "company-c-7f7da4100a4e9faf71262a32"
+        },
+        {
+          "key": "上海市雷智电机有限公司",
+          "s12f": "company-c-f5bf0f7538ad08766a794883",
+          "run14": "company-c-f699adbface99f88d9d567ee"
+        },
+        {
+          "key": "上海开普勒机器人有限公司",
+          "s12f": "company-c-0e874b17677c6e53d4e37c7e",
+          "run14": "company-c-eb40cc90a933f36555686875"
+        },
+        {
+          "key": "上海振华重工(集团)股份有限公司",
+          "s12f": "company-c-9d71b150241337462abdb5c7",
+          "run14": "company-c-ef8249d79bc7e109ab49cbf0"
+        },
+        {
+          "key": "上海擎朗智能科技有限公司",
+          "s12f": "company-c-e5a1e3006efaca4e566da81a",
+          "run14": "company-c-ff45b82218426752f15699b1"
+        },
+        {
+          "key": "上海雷赛机器人科技有限公司",
+          "s12f": "company-c-69b6ff472913bed293526df3",
+          "run14": "company-c-7969af98174b422cd13c8e2f"
+        },
+        {
+          "key": "世博创想数字科技（深圳）有限公司",
+          "s12f": "company-c-65d160e76e88fd6f20d65b41",
+          "run14": "company-c-fc278f983c649abf21f3e534"
+        },
+        {
+          "key": "东方电气启能（深圳）科技有限公司",
+          "s12f": "company-c-8df7c6c54ddc43f5e8d13400",
+          "run14": "company-c-9772684c1980ff72bf582477"
+        },
+        {
+          "key": "东方电气集团东方锅炉股份有限公司",
+          "s12f": "company-c-4e98a8cb6305fff0ddc45eb5",
+          "run14": "company-c-f0772df9134bcbed68877c6d"
+        }
+      ]
+    },
+    "company_core_name": {
+      "left_docs": 1737,
+      "right_docs": 7089,
+      "matched_keys": 1731,
+      "unambiguous_pairs": 1722,
+      "same_id": 0,
+      "changed_id": 1722,
+      "changed_pct": 100.0,
+      "ambiguous_keys": 9,
+      "changed_samples": [
+        {
+          "key": "一博科技",
+          "s12f": "company-c-22a5896dab395032a70f475b",
+          "run14": "company-c-8f303a46ca0b58ad9b92f2dc"
+        },
+        {
+          "key": "一思人工智能",
+          "s12f": "company-c-4cacc13aa38cae5b1c53149a",
+          "run14": "company-c-423e81f0f7be1a66c34134f4"
+        },
+        {
+          "key": "一股科技",
+          "s12f": "company-c-7d2697d04c44ea83a59d89e6",
+          "run14": "company-c-f519c8e006cd41418e6bd0bc"
+        },
+        {
+          "key": "七海行科技",
+          "s12f": "company-c-e6d0f3cfd4d9bc7e0e9cf030",
+          "run14": "company-c-5896332b1fdb5734a1f4a142"
+        },
+        {
+          "key": "万勋科技",
+          "s12f": "company-c-4237a1f3f2f428a2c077dd02",
+          "run14": "company-c-f84e4136c53f9f2f65354018"
+        },
+        {
+          "key": "万德昌创新智能",
+          "s12f": "company-c-d65933420547b53912b665da",
+          "run14": "company-c-5d378456d303796ccf257246"
+        },
+        {
+          "key": "万有生化智能科技",
+          "s12f": "company-c-4611c500d4717aae1e46ea69",
+          "run14": "company-c-2271b59537951fe07d25ba0a"
+        },
+        {
+          "key": "万校引擎科技",
+          "s12f": "company-c-1b39355eb6140199af41b51f",
+          "run14": "company-c-817d978629b8067c39b5b96e"
+        },
+        {
+          "key": "万汇互联科技",
+          "s12f": "company-c-0d55ee7e88a855fe52537bc4",
+          "run14": "company-c-8a04c047ae1ca77df8c8e320"
+        },
+        {
+          "key": "万物智灵科技",
+          "s12f": "company-c-d3966636e066901cb05b6b73",
+          "run14": "company-c-47a19d181152f8d64fc361b2"
+        },
+        {
+          "key": "万珏科技",
+          "s12f": "company-c-00e58600dfb8435c73310774",
+          "run14": "company-c-85db92fb41fbadeabe085e3a"
+        },
+        {
+          "key": "万立达科技",
+          "s12f": "company-c-df3a0630bdbca1fb21709a57",
+          "run14": "company-c-622754931e5e0bcc275ed404"
+        },
+        {
+          "key": "万色智匠智能科技",
+          "s12f": "company-c-15aed131a47b0779ffd88b0c",
+          "run14": "company-c-49704b41da8810ec48b328cd"
+        },
+        {
+          "key": "万邑通信息科技",
+          "s12f": "company-c-7d099a3c7a4d6ecab3046c34",
+          "run14": "company-c-62ece54467555f938ae37aab"
+        },
+        {
+          "key": "万顺兴科技",
+          "s12f": "company-c-968c0d4825337a4e0acc57fe",
+          "run14": "company-c-e54681a757269f9cfbced848"
+        }
+      ]
+    },
+    "professor_name": {
+      "left_docs": 1428,
+      "right_docs": 3958,
+      "matched_keys": 1409,
+      "unambiguous_pairs": 1391,
+      "same_id": 0,
+      "changed_id": 1391,
+      "changed_pct": 100.0,
+      "ambiguous_keys": 18,
+      "changed_samples": [
+        {
+          "key": "(Name):张贺晔（HeyeZhang）",
+          "s12f": "professor-c-0a93f98c21a3a395ff621d26",
+          "run14": "professor-c-503747536cfbfe8a2f5234b9"
+        },
+        {
+          "key": "AhmedElazab",
+          "s12f": "professor-c-703ed2d5b2b67c0f997f0a25",
+          "run14": "professor-c-66764a3af7bce04243e98e2b"
+        },
+        {
+          "key": "AlamMd.Mahbub",
+          "s12f": "professor-c-6aa30bb6ef7f5e7c6db22216",
+          "run14": "professor-c-faef24df8195db49df688c2d"
+        },
+        {
+          "key": "AymanKachmar",
+          "s12f": "professor-c-4d53df7cc2accf6e81574b6a",
+          "run14": "professor-c-1830de8f99334f997ac90f83"
+        },
+        {
+          "key": "BlazejKuzma",
+          "s12f": "professor-c-48481fbe748472662b05975b",
+          "run14": "professor-c-5f05b19bdee23e0b6f00feed"
+        },
+        {
+          "key": "BradleyJ.Nelson",
+          "s12f": "professor-c-bcb6e37db30ef17dc8e99011",
+          "run14": "professor-c-79f1b1b6275b216cfa73cd29"
+        },
+        {
+          "key": "BuddhiWijesiri",
+          "s12f": "professor-c-8f92b050bb65d8b36db5d76e",
+          "run14": "professor-c-813256dbce6d84df60a49a64"
+        },
+        {
+          "key": "CharlesM.Lieber",
+          "s12f": "professor-c-9713e820f82e719e4d190237",
+          "run14": "professor-c-585559466a9388a4fcbda137"
+        },
+        {
+          "key": "CharlieY.DONG",
+          "s12f": "professor-c-69995f908f16e3f25eb4d101",
+          "run14": "professor-c-8449a1c68b99b3fce5e57c7b"
+        },
+        {
+          "key": "ChristosN.Markides",
+          "s12f": "professor-c-1bfffee16c05487141562d8e",
+          "run14": "professor-c-b6c5944f1c47c5ee85143d63"
+        },
+        {
+          "key": "DeepBitlab",
+          "s12f": "professor-c-4c3acbd3bd7f3adb94557a7f",
+          "run14": "professor-c-e2b0b41f8b6d11ac80751bdd"
+        },
+        {
+          "key": "DongpyoKim",
+          "s12f": "professor-c-bc47b2e0736d1b42e3e5f640",
+          "run14": "professor-c-e649671cba40cf7aa543f6a0"
+        },
+        {
+          "key": "EstebanPedroBusso",
+          "s12f": "professor-c-f6567d8cb190e3a530000f47",
+          "run14": "professor-c-5cf5e01e9f7ae5840bb859a9"
+        },
+        {
+          "key": "FaisalNadeemKhan",
+          "s12f": "professor-c-cdfd5dbaea9192b397cdb2a0",
+          "run14": "professor-c-7cb06163e94ce2650cc6018b"
+        },
+        {
+          "key": "FangxinWang",
+          "s12f": "professor-c-bd7b703f430d0dcfa2af5db3",
+          "run14": "professor-c-8dab20b7199af259989d1e12"
+        }
+      ]
+    },
+    "professor_name_institution": {
+      "left_docs": 1428,
+      "right_docs": 3958,
+      "matched_keys": 1418,
+      "unambiguous_pairs": 1409,
+      "same_id": 0,
+      "changed_id": 1409,
+      "changed_pct": 100.0,
+      "ambiguous_keys": 9,
+      "changed_samples": [
+        {
+          "key": "(Name):张贺晔（HeyeZhang）|中山大学（深圳）",
+          "s12f": "professor-c-0a93f98c21a3a395ff621d26",
+          "run14": "professor-c-503747536cfbfe8a2f5234b9"
+        },
+        {
+          "key": "AhmedElazab|清华大学深圳国际研究生院",
+          "s12f": "professor-c-703ed2d5b2b67c0f997f0a25",
+          "run14": "professor-c-66764a3af7bce04243e98e2b"
+        },
+        {
+          "key": "AlamMd.Mahbub|哈尔滨工业大学（深圳）",
+          "s12f": "professor-c-6aa30bb6ef7f5e7c6db22216",
+          "run14": "professor-c-faef24df8195db49df688c2d"
+        },
+        {
+          "key": "AymanKachmar|香港中文大学（深圳）",
+          "s12f": "professor-c-4d53df7cc2accf6e81574b6a",
+          "run14": "professor-c-1830de8f99334f997ac90f83"
+        },
+        {
+          "key": "BlazejKuzma|哈尔滨工业大学（深圳）",
+          "s12f": "professor-c-48481fbe748472662b05975b",
+          "run14": "professor-c-5f05b19bdee23e0b6f00feed"
+        },
+        {
+          "key": "BradleyJ.Nelson|香港中文大学（深圳）",
+          "s12f": "professor-c-bcb6e37db30ef17dc8e99011",
+          "run14": "professor-c-79f1b1b6275b216cfa73cd29"
+        },
+        {
+          "key": "BuddhiWijesiri|清华大学深圳国际研究生院",
+          "s12f": "professor-c-8f92b050bb65d8b36db5d76e",
+          "run14": "professor-c-813256dbce6d84df60a49a64"
+        },
+        {
+          "key": "CharlesM.Lieber|清华大学深圳国际研究生院",
+          "s12f": "professor-c-9713e820f82e719e4d190237",
+          "run14": "professor-c-585559466a9388a4fcbda137"
+        },
+        {
+          "key": "CharlieY.DONG|香港中文大学（深圳）",
+          "s12f": "professor-c-69995f908f16e3f25eb4d101",
+          "run14": "professor-c-8449a1c68b99b3fce5e57c7b"
+        },
+        {
+          "key": "ChristosN.Markides|香港中文大学（深圳）",
+          "s12f": "professor-c-1bfffee16c05487141562d8e",
+          "run14": "professor-c-b6c5944f1c47c5ee85143d63"
+        },
+        {
+          "key": "DeepBitlab|香港中文大学（深圳）",
+          "s12f": "professor-c-4c3acbd3bd7f3adb94557a7f",
+          "run14": "professor-c-e2b0b41f8b6d11ac80751bdd"
+        },
+        {
+          "key": "DongpyoKim|哈尔滨工业大学（深圳）",
+          "s12f": "professor-c-bc47b2e0736d1b42e3e5f640",
+          "run14": "professor-c-e649671cba40cf7aa543f6a0"
+        },
+        {
+          "key": "EstebanPedroBusso|哈尔滨工业大学（深圳）",
+          "s12f": "professor-c-f6567d8cb190e3a530000f47",
+          "run14": "professor-c-5cf5e01e9f7ae5840bb859a9"
+        },
+        {
+          "key": "FaisalNadeemKhan|清华大学深圳国际研究生院",
+          "s12f": "professor-c-cdfd5dbaea9192b397cdb2a0",
+          "run14": "professor-c-7cb06163e94ce2650cc6018b"
+        },
+        {
+          "key": "FangxinWang|香港中文大学（深圳）",
+          "s12f": "professor-c-bd7b703f430d0dcfa2af5db3",
+          "run14": "professor-c-8dab20b7199af259989d1e12"
+        }
+      ]
+    },
+    "paper_doi": {
+      "left_docs": 563,
+      "right_docs": 24520,
+      "matched_keys": 494,
+      "unambiguous_pairs": 494,
+      "same_id": 0,
+      "changed_id": 494,
+      "changed_pct": 100.0,
+      "ambiguous_keys": 0,
+      "changed_samples": [
+        {
+          "key": "10.1002/adfm.201700049",
+          "s12f": "paper-c-f40959ce6629afc975536ec6",
+          "run14": "paper-c-aa1bffb330e8ccb076ab50e5"
+        },
+        {
+          "key": "10.1002/adfm.201805540",
+          "s12f": "paper-c-d80e383d332e2f4a5b484054",
+          "run14": "paper-c-38116d140de72b0971491521"
+        },
+        {
+          "key": "10.1002/adfm.202107082",
+          "s12f": "paper-c-bc0de340d0255276a8443440",
+          "run14": "paper-c-d2a01b2374fd4b8eea1f23bf"
+        },
+        {
+          "key": "10.1002/adfm.202306249",
+          "s12f": "paper-c-043fb76615a827ada3ab4478",
+          "run14": "paper-c-1b36b2f3dccab3b41c5ba550"
+        },
+        {
+          "key": "10.1002/adfm.202311906",
+          "s12f": "paper-c-16d0d0ed333b7105c254aced",
+          "run14": "paper-c-e96a7fafa01b49db84e29af0"
+        },
+        {
+          "key": "10.1002/adfm.202401311",
+          "s12f": "paper-c-b9cfa6cf87043d6228e4d713",
+          "run14": "paper-c-377a5cc2ed108dfb35bb6b33"
+        },
+        {
+          "key": "10.1002/adfm.202402708",
+          "s12f": "paper-c-4160164d320bccf8c30ce611",
+          "run14": "paper-c-b78572c0c8d69600bc78d1d5"
+        },
+        {
+          "key": "10.1002/adfm.202516196",
+          "s12f": "paper-c-a3173e27b265c8b5498c0efc",
+          "run14": "paper-c-197d6ca64f68b4621a1bbdf4"
+        },
+        {
+          "key": "10.1002/adma.201702648",
+          "s12f": "paper-c-411fac0daf62e7a659c85201",
+          "run14": "paper-c-c551a7b0b39747f96056d244"
+        },
+        {
+          "key": "10.1002/adma.201705195",
+          "s12f": "paper-c-e5b151dd3cfd6500df17f56e",
+          "run14": "paper-c-7e3481cfdaf778d0a5177629"
+        },
+        {
+          "key": "10.1002/adma.201705918",
+          "s12f": "paper-c-1b77664a78625cfb89623a15",
+          "run14": "paper-c-6c213c0a5696b2d692931354"
+        },
+        {
+          "key": "10.1002/adma.201807751",
+          "s12f": "paper-c-940dae4244163c5e7aeba22e",
+          "run14": "paper-c-fe126317caedcfd0e4943c18"
+        },
+        {
+          "key": "10.1002/adma.201908311",
+          "s12f": "paper-c-ff674237f9a4647b79fcc32a",
+          "run14": "paper-c-3451aef63ecfbddc775bb993"
+        },
+        {
+          "key": "10.1002/adma.202205649",
+          "s12f": "paper-c-b6d8438231ac03c4fee76c33",
+          "run14": "paper-c-eb4b288ffef075f5a54d0d39"
+        },
+        {
+          "key": "10.1002/adma.202400020",
+          "s12f": "paper-c-28cf38f794cc4e61d8900844",
+          "run14": "paper-c-03d942229a2c0d05cadfd0b0"
+        }
+      ]
+    },
+    "paper_title_norm": {
+      "left_docs": 563,
+      "right_docs": 24520,
+      "matched_keys": 557,
+      "unambiguous_pairs": 551,
+      "same_id": 0,
+      "changed_id": 551,
+      "changed_pct": 100.0,
+      "ambiguous_keys": 6,
+      "changed_samples": [
+        {
+          "key": "110wallfiberpicosecondlaserinmopaconfigurationwithhighpeakpower",
+          "s12f": "paper-c-39f18ca07968aa71fdd1bb9c",
+          "run14": "paper-c-88b4143d19ff77bd9123d41b"
+        },
+        {
+          "key": "237三羟基935二溴2羟基苯基荧光酮ctmab胶束荧",
+          "s12f": "paper-c-822a10a6ce86bd959ba189e2",
+          "run14": "paper-c-2753c1b6ab9f959628854982"
+        },
+        {
+          "key": "237三羟基9425二羟基苯偶氮苯基荧光酮的合成及胶束增敏测定钨vi的研究",
+          "s12f": "paper-c-c2bbb04db828f15e55fa0e0f",
+          "run14": "paper-c-8dbb11afc2c231012f955c08"
+        },
+        {
+          "key": "2dseleniumallotropesfromfirstprinciplesandswarmintelligence",
+          "s12f": "paper-c-cf83f5c29f30d63218f24bae",
+          "run14": "paper-c-4fec670c2ba942875bcc6603"
+        },
+        {
+          "key": "3dinterconnectedconductivegraphitenanoplateletweldedcarbonnanotubenetworksforstretchableconductors",
+          "s12f": "paper-c-bc0de340d0255276a8443440",
+          "run14": "paper-c-d2a01b2374fd4b8eea1f23bf"
+        },
+        {
+          "key": "3dorthogonalwoventriboelectricnanogeneratorforeffectivebiomechanicalenergyharvestingandasselfpoweredactivemotionsensors",
+          "s12f": "paper-c-411fac0daf62e7a659c85201",
+          "run14": "paper-c-c551a7b0b39747f96056d244"
+        },
+        {
+          "key": "44二偶氮苯重氮氨基偶氮苯分光光度法测定水和废水中的痕量汞ii",
+          "s12f": "paper-c-3d4d2dbd187f1afa958ee0c4",
+          "run14": "paper-c-a1fb695b0fbcd8f35c509de2"
+        },
+        {
+          "key": "5kwneardiffractionlimitedand8kwhighbrightnessmonolithiccontinuouswavefiberlasersdirectlypumpedbylaserdiodes",
+          "s12f": "paper-c-b72309cf5a9d65e3da5c988e",
+          "run14": "paper-c-e14bdf1d816e12b6d6f0786f"
+        },
+        {
+          "key": "97μjsinglefrequencylinearlypolarizednanosecondpulsedlaserat775nmusingfrequencydoublingofahighenergyfiberlasersystem",
+          "s12f": "paper-c-066b8262b12441f545ae78eb",
+          "run14": "paper-c-bb2949748af9e8b77303bd5f"
+        },
+        {
+          "key": "a3dimagingmethodbasedonsparsityadaptivematchingpursuitformultibaselinecircularsar",
+          "s12f": "paper-c-edfc9ecc3d82384de94b7cd9",
+          "run14": "paper-c-067c7d120e7f8c935d8e3295"
+        },
+        {
+          "key": "accuratelaserlinewidthestimationusingthedamlcarrierphaseestimator",
+          "s12f": "paper-c-f392812e977ccf2d7fa22416",
+          "run14": "paper-c-63932e9dcc1e86591f391c29"
+        },
+        {
+          "key": "achievelocationprivacypreservingrangequeryinvehicularsensing",
+          "s12f": "paper-c-82c232016cff578a22ad7fb1",
+          "run14": "paper-c-a710cb122bdd87920e9a9e8e"
+        },
+        {
+          "key": "achievesecurehandoversessionkeymanagementviamobilerelayinlteadvancednetworks",
+          "s12f": "paper-c-f943687ac678f5a0bd872e3d",
+          "run14": "paper-c-0f01f41a9a75629bc2220ec5"
+        },
+        {
+          "key": "achieving2080efficiencyinternaryorganicsolarcellsviasuppressionofstaticanddynamicdisorder",
+          "s12f": "paper-c-72a7210ea01d28c4680af4a4",
+          "run14": "paper-c-761740b976317f90f5eca3ae"
+        },
+        {
+          "key": "achieving20efficiencyforbinaryorganicsolarcellswithsuppressednonradiativerecombinationviatriphenylaminehalides",
+          "s12f": "paper-c-c7a3fd83cb1f5aaba226194e",
+          "run14": "paper-c-e6ed689fcb4c9972a0a6cf9d"
+        }
+      ]
+    },
+    "patent_number": {
+      "left_docs": 1931,
+      "right_docs": 11504,
+      "matched_keys": 1931,
+      "unambiguous_pairs": 1931,
+      "same_id": 0,
+      "changed_id": 1931,
+      "changed_pct": 100.0,
+      "ambiguous_keys": 0,
+      "changed_samples": [
+        {
+          "key": "CN115795017A",
+          "s12f": "patent-c-f703064f38383fe59850a5f5",
+          "run14": "patent-c-b0f277c20bdcd91742758761"
+        },
+        {
+          "key": "CN115905499A",
+          "s12f": "patent-c-259b2e06ed6977f013da1a1a",
+          "run14": "patent-c-84029dceedda6ca27d754f16"
+        },
+        {
+          "key": "CN115973709A",
+          "s12f": "patent-c-fc2e417ec221fdebf01fe9a3",
+          "run14": "patent-c-e8f5979b57d0d2cf97af4ef3"
+        },
+        {
+          "key": "CN115979259A",
+          "s12f": "patent-c-8e2c35e5e6af0dd7143e6c33",
+          "run14": "patent-c-a0cea0e9a455766676b55218"
+        },
+        {
+          "key": "CN115980065A",
+          "s12f": "patent-c-30de6ac4387e0991d05b3cc1",
+          "run14": "patent-c-60de4e85da72a2ffa05c31a3"
+        },
+        {
+          "key": "CN116029536A",
+          "s12f": "patent-c-eecf58b146db3176d8a8b641",
+          "run14": "patent-c-a87ee11bef4ce526f5b87a79"
+        },
+        {
+          "key": "CN116032067A",
+          "s12f": "patent-c-df012c77b9da2a05c5aa54cd",
+          "run14": "patent-c-63bd36e98b1382026613fd69"
+        },
+        {
+          "key": "CN116032079A",
+          "s12f": "patent-c-5410ae205d389d0a64048ca2",
+          "run14": "patent-c-69b73495189768340437cbc9"
+        },
+        {
+          "key": "CN116035476A",
+          "s12f": "patent-c-49ed80d1a9fe2d561b15ea87",
+          "run14": "patent-c-65f5d5ebd7f3c4c23fb4ae81"
+        },
+        {
+          "key": "CN116035871A",
+          "s12f": "patent-c-9b93167ead7b5e6d78251d5a",
+          "run14": "patent-c-9a994e81acdea8ce260fc1b6"
+        },
+        {
+          "key": "CN116038707A",
+          "s12f": "patent-c-1fcff4eb21e6f4424910d8d8",
+          "run14": "patent-c-c6b6f0a932440dd902fc6f0f"
+        },
+        {
+          "key": "CN116047539A",
+          "s12f": "patent-c-3ab8787fd7179d4f2ee65fd1",
+          "run14": "patent-c-005ce41627359cc3478f6975"
+        },
+        {
+          "key": "CN116055852A",
+          "s12f": "patent-c-0909a4da5f50fc38c7d0cb9a",
+          "run14": "patent-c-bf4e5325bfdf61fc4b3c6d6b"
+        },
+        {
+          "key": "CN116068578A",
+          "s12f": "patent-c-5a4647976e185552df1a66ce",
+          "run14": "patent-c-413cc14eb7f28f118d42c908"
+        },
+        {
+          "key": "CN116079729A",
+          "s12f": "patent-c-cddca19a74280f41b64ad7da",
+          "run14": "patent-c-fcdc3db77ba4fc2e3980ac8d"
+        }
+      ]
+    }
+  },
+  "content_vs_id": {
+    "same_fingerprint_same_id": 0,
+    "same_fingerprint_changed_id": 575,
+    "diff_fingerprint_changed_id": 1158,
+    "diff_fingerprint_same_id": 0
+  },
+  "sample_companies": [
+    {
+      "keyword": "优必选",
+      "s12f": [
+        {
+          "cid": "company-c-64e631c0e0cd9e91d032d209",
+          "name": "深圳市优必选科技股份有限公司"
+        }
+      ],
+      "run14": [
+        {
+          "cid": "company-c-b2aac54891e3fce8c98612d8",
+          "name": "深圳市优必选科技股份有限公司"
+        }
+      ]
+    },
+    {
+      "keyword": "一博",
+      "s12f": [
+        {
+          "cid": "company-c-22a5896dab395032a70f475b",
+          "name": "深圳市一博科技股份有限公司"
+        }
+      ],
+      "run14": [
+        {
+          "cid": "company-c-8f303a46ca0b58ad9b92f2dc",
+          "name": "深圳市一博科技股份有限公司"
+        }
+      ]
+    },
+    {
+      "keyword": "普渡",
+      "s12f": [
+        {
+          "cid": "company-c-c7447b81221857b0e6d3279c",
+          "name": "深圳市普渡科技有限公司"
+        },
+        {
+          "cid": "company-c-cab3113e488332e737708042",
+          "name": "成都市普渡机器人有限公司"
+        }
+      ],
+      "run14": [
+        {
+          "cid": "company-c-72b2ec528908ac199ee1dbc7",
+          "name": "深圳市普渡科技有限公司"
+        },
+        {
+          "cid": "company-c-f11204f5f0dee0d8a1e1fdd4",
+          "name": "深圳市普渡科技股份有限公司"
+        },
+        {
+          "cid": "company-c-f465962ae6d0ac84c5f8cad3",
+          "name": "成都市普渡机器人有限公司"
+        }
+      ]
+    },
+    {
+      "keyword": "嘉立创",
+      "s12f": [
+        {
+          "cid": "company-c-c9f7ac38017325ec6747fc71",
+          "name": "深圳嘉立创科技集团股份有限公司"
+        }
+      ],
+      "run14": [
+        {
+          "cid": "company-c-2ccb5dd970b63ba26f6a3a47",
+          "name": "深圳嘉立创科技集团股份有限公司"
+        }
+      ]
+    },
+    {
+      "keyword": "深南电路",
+      "s12f": [
+        {
+          "cid": "company-c-217aec96f04d2c2a33181b17",
+          "name": "深南电路股份有限公司"
+        }
+      ],
+      "run14": [
+        {
+          "cid": "company-c-0c087bba8369e127acde08a2",
+          "name": "深南电路股份有限公司"
+        }
+      ]
+    },
+    {
+      "keyword": "云迹",
+      "s12f": [
+        {
+          "cid": "company-c-d7c54a5dc6da0ade14005f36",
+          "name": "云迹科技股份有限公司"
+        }
+      ],
+      "run14": [
+        {
+          "cid": "company-c-46be538b64accf560e186de3",
+          "name": "云迹科技股份有限公司"
+        }
+      ]
+    },
+    {
+      "keyword": "九号",
+      "s12f": [
+        {
+          "cid": "company-c-43df421eadbcedfa730a1b18",
+          "name": "九号机器人"
+        }
+      ],
+      "run14": [
+        {
+          "cid": "company-c-fd3242c863d6bb6b3fa59213",
+          "name": "九号机器人"
+        }
+      ]
+    },
+    {
+      "keyword": "越疆",
+      "s12f": [
+        {
+          "cid": "company-c-5924fd2757a24f885d95f010",
+          "name": "深圳市越疆科技股份有限公司"
+        }
+      ],
+      "run14": [
+        {
+          "cid": "company-c-7f76af831850602aeb8bc005",
+          "name": "深圳市越疆科技股份有限公司"
+        }
+      ]
+    },
+    {
+      "keyword": "拓竹",
+      "s12f": [],
+      "run14": []
+    },
+    {
+      "keyword": "海柔",
+      "s12f": [
+        {
+          "cid": "company-c-a34c0c6380643b393a795938",
+          "name": "深圳市海柔创新科技有限公司"
+        }
+      ],
+      "run14": [
+        {
+          "cid": "company-c-1872f7750afe13f38897e39d",
+          "name": "深圳市海柔创新科技有限公司"
+        },
+        {
+          "cid": "company-c-c6c34b896248c5a3c18cb966",
+          "name": "深圳前海柔云科技有限公司"
+        },
+        {
+          "cid": "company-c-ef73fea398a9330cea565aee",
+          "name": "深圳市海柔智能科技有限公司"
+        }
+      ]
+    },
+    {
+      "keyword": "速腾聚创",
+      "s12f": [
+        {
+          "cid": "company-c-31ad6d19744b2f101c9cb53f",
+          "name": "深圳市速腾聚创科技有限公司"
+        }
+      ],
+      "run14": [
+        {
+          "cid": "company-c-c0148d5b0736647a3fe5be6f",
+          "name": "深圳市速腾聚创科技有限公司"
+        }
+      ]
+    },
+    {
+      "keyword": "逐际动力",
+      "s12f": [
+        {
+          "cid": "company-c-dbc8d3e4fa9d06230f8d87f7",
+          "name": "深圳逐际动力科技有限公司"
+        }
+      ],
+      "run14": [
+        {
+          "cid": "company-c-fcdce12325469d4d7e022e6c",
+          "name": "深圳逐际动力科技有限公司"
+        }
+      ]
+    },
+    {
+      "keyword": "优地",
+      "s12f": [
+        {
+          "cid": "company-c-0fec79c3bac76a220fe0a6e9",
+          "name": "深圳优地智能有限公司"
+        }
+      ],
+      "run14": [
+        {
+          "cid": "company-c-ce16d7182d134cacca7061d7",
+          "name": "深圳优地智能有限公司"
+        }
+      ]
+    },
+    {
+      "keyword": "大疆",
+      "s12f": [
+        {
+          "cid": "company-c-c25587293bccecc5cdee9094",
+          "name": "深圳市大疆创新科技有限公司"
+        }
+      ],
+      "run14": [
+        {
+          "cid": "company-c-0e423959d58e241f23c487ff",
+          "name": "深圳市大疆创新科技有限公司"
+        },
+        {
+          "cid": "company-c-49c047ea1a2e4368959f2e1b",
+          "name": "深圳市大疆百旺科技有限公司"
+        },
+        {
+          "cid": "company-c-f042898bbb4bb6bb2a8873cb",
+          "name": "深圳市鑫大疆智能科技有限公司"
+        }
+      ]
+    },
+    {
+      "keyword": "迈瑞",
+      "s12f": [
+        {
+          "cid": "company-c-2887b8f58525cd5f13159c9b",
+          "name": "深圳迈瑞生物医疗电子股份有限公司"
+        }
+      ],
+      "run14": [
+        {
+          "cid": "company-c-9f581f4e28040bfad9cafdeb",
+          "name": "深圳迈瑞生物医疗电子股份有限公司"
+        }
+      ]
+    },
+    {
+      "keyword": "华大基因",
+      "s12f": [],
+      "run14": [
+        {
+          "cid": "company-c-54dd29d8cd0f9d1ad64eb890",
+          "name": "深圳华大基因科技服务有限公司"
+        },
+        {
+          "cid": "company-c-fb9a5be209e4a257f39f08af",
+          "name": "深圳华大基因股份有限公司"
+        }
+      ]
+    },
+    {
+      "keyword": "奥比中光",
+      "s12f": [
+        {
+          "cid": "company-c-54c39afbb068418cac50042a",
+          "name": "奥比中光科技集团股份有限公司"
+        }
+      ],
+      "run14": [
+        {
+          "cid": "company-c-a26bd746b8854ca669ffba2c",
+          "name": "奥比中光科技集团股份有限公司"
+        }
+      ]
+    },
+    {
+      "keyword": "众擎",
+      "s12f": [
+        {
+          "cid": "company-c-a2da803e704a06bd442b719d",
+          "name": "深圳市众擎机器人科技有限公司"
+        }
+      ],
+      "run14": [
+        {
+          "cid": "company-c-d4d6affe1c22344b1df6eec6",
+          "name": "深圳市众擎机器人科技有限公司"
+        }
+      ]
+    },
+    {
+      "keyword": "智平方",
+      "s12f": [
+        {
+          "cid": "company-c-36d6be622580c294ab285de3",
+          "name": "智平方（深圳）科技有限公司"
+        }
+      ],
+      "run14": [
+        {
+          "cid": "company-c-424090d101c433b80efde9de",
+          "name": "智平方（深圳）科技有限公司"
+        }
+      ]
+    },
+    {
+      "keyword": "元化智能",
+      "s12f": [
+        {
+          "cid": "company-c-2025470a0285534bce1fd7b6",
+          "name": "元化智能科技（深圳）有限公司"
+        }
+      ],
+      "run14": [
+        {
+          "cid": "company-c-9c8337c13ed347c19e4e9902",
+          "name": "元化智能科技（深圳）有限公司"
+        }
+      ]
+    }
+  ],
+  "bindings": {
+    "run14": {
+      "applicant_entries_with_company_id": 7650,
+      "distinct_company_ids": 963,
+      "dangling_ids": 0,
+      "dangling_entries": 0,
+      "dangling_sample": []
+    },
+    "s12f": {
+      "applicant_entries_with_company_id": 1704,
+      "distinct_company_ids": 697,
+      "dangling_ids": 0,
+      "dangling_entries": 0,
+      "dangling_sample": []
+    },
+    "run14_top_bound": [
+      {
+        "cid": "company-c-b2aac54891e3fce8c98612d8",
+        "name": "深圳市优必选科技股份有限公司",
+        "patents": 450
+      },
+      {
+        "cid": "company-c-da03f16eb3365ad2ae39245a",
+        "name": "深圳市杉川机器人有限公司",
+        "patents": 333
+      },
+      {
+        "cid": "company-c-ad7a7f8380f1336d9db2878c",
+        "name": "深圳银星智能集团股份有限公司",
+        "patents": 183
+      },
+      {
+        "cid": "company-c-1872f7750afe13f38897e39d",
+        "name": "深圳市海柔创新科技有限公司",
+        "patents": 146
+      },
+      {
+        "cid": "company-c-922a65d44cabe43cfd81854f",
+        "name": "云鲸智能创新（深圳）有限公司",
+        "patents": 135
+      },
+      {
+        "cid": "company-c-40f8a97e51df175dffc41ab3",
+        "name": "云鲸智能（深圳）有限公司",
+        "patents": 135
+      },
+      {
+        "cid": "company-c-72b2ec528908ac199ee1dbc7",
+        "name": "深圳市普渡科技有限公司",
+        "patents": 128
+      },
+      {
+        "cid": "company-c-330adc82bbd5ff6d790c87e9",
+        "name": "深圳乐动机器人股份有限公司",
+        "patents": 127
+      },
+      {
+        "cid": "company-c-c31004bdd0aab7f1e141e4e3",
+        "name": "未来机器人（深圳）有限公司",
+        "patents": 127
+      },
+      {
+        "cid": "company-c-fcdce12325469d4d7e022e6c",
+        "name": "深圳逐际动力科技有限公司",
+        "patents": 116
+      },
+      {
+        "cid": "company-c-b12b4daaf45164d6d77d8d8b",
+        "name": "深圳市元鼎智能创新有限公司",
+        "patents": 103
+      },
+      {
+        "cid": "company-c-f59cbdf01e3daf1f7d38448e",
+        "name": "深圳康诺思腾科技有限公司",
+        "patents": 95
+      },
+      {
+        "cid": "company-c-fafeed4d45270242604f4f2b",
+        "name": "深圳爱博合创医疗机器人有限公司",
+        "patents": 94
+      },
+      {
+        "cid": "company-c-7875ac0734fecd0d5d7b9e38",
+        "name": "劢微机器人科技（深圳）有限公司",
+        "patents": 89
+      },
+      {
+        "cid": "company-c-1937e885a28e0271df440050",
+        "name": "深圳市普森斯科技有限公司",
+        "patents": 88
+      }
+    ],
+    "s12f_top_bound": [
+      {
+        "cid": "company-c-66bfa1165525a669c55d5714",
+        "name": "深圳市杉川机器人有限公司",
+        "patents": 72
+      },
+      {
+        "cid": "company-c-64e631c0e0cd9e91d032d209",
+        "name": "深圳市优必选科技股份有限公司",
+        "patents": 58
+      },
+      {
+        "cid": "company-c-d0830f322a3361b2c668b020",
+        "name": "深圳以内创新科技有限公司",
+        "patents": 55
+      },
+      {
+        "cid": "company-c-8b53db54fd814bd6adc6c23b",
+        "name": "平安科技（深圳）有限公司",
+        "patents": 39
+      },
+      {
+        "cid": "company-c-f23bc112bd9fbe4336a5da94",
+        "name": "深圳市华成工业控制股份有限公司",
+        "patents": 38
+      },
+      {
+        "cid": "company-c-0db9878c29d04aee7c06a79f",
+        "name": "深圳市欢创科技股份有限公司",
+        "patents": 38
+      },
+      {
+        "cid": "company-c-4702518235d06f6c72c0502f",
+        "name": "深圳康诺思腾科技有限公司",
+        "patents": 36
+      },
+      {
+        "cid": "company-c-de1bdbf1c6055df5f8975bf3",
+        "name": "深圳赛动智造科技有限公司",
+        "patents": 33
+      },
+      {
+        "cid": "company-c-a34c0c6380643b393a795938",
+        "name": "深圳市海柔创新科技有限公司",
+        "patents": 28
+      },
+      {
+        "cid": "company-c-a7918a46d0f0500e56f9de80",
+        "name": "深圳汉阳科技有限公司",
+        "patents": 24
+      },
+      {
+        "cid": "company-c-31c1261eb8b91d97d4a5b9fc",
+        "name": "腾讯科技（深圳）有限公司",
+        "patents": 22
+      },
+      {
+        "cid": "company-c-cb24f89483ed7fc0b7f9a605",
+        "name": "云鲸智能创新（深圳）有限公司",
+        "patents": 20
+      },
+      {
+        "cid": "company-c-2345ebe4cfa361ffd5b4c6a8",
+        "name": "云鲸智能（深圳）有限公司",
+        "patents": 20
+      },
+      {
+        "cid": "company-c-94c0c57d2d7c084704308944",
+        "name": "深圳市元鼎智能创新有限公司",
+        "patents": 20
+      },
+      {
+        "cid": "company-c-04b6f346d477d44aafea70f4",
+        "name": "比亚迪股份有限公司",
+        "patents": 20
+      }
+    ]
+  },
+  "anchors": {
+    "优必选": {
+      "run14": {
+        "company_ids": [
+          "company-c-b2aac54891e3fce8c98612d8"
+        ],
+        "bound_patents_by_id": {
+          "company-c-b2aac54891e3fce8c98612d8": 450
+        },
+        "applicant_entries_by_name": 450
+      },
+      "s12f": {
+        "company_ids": [
+          "company-c-64e631c0e0cd9e91d032d209"
+        ],
+        "bound_patents_by_id": {
+          "company-c-64e631c0e0cd9e91d032d209": 58
+        },
+        "applicant_entries_by_name": 58
+      }
+    },
+    "普渡": {
+      "run14": {
+        "company_ids": [
+          "company-c-72b2ec528908ac199ee1dbc7",
+          "company-c-f11204f5f0dee0d8a1e1fdd4",
+          "company-c-f465962ae6d0ac84c5f8cad3"
+        ],
+        "bound_patents_by_id": {
+          "company-c-f11204f5f0dee0d8a1e1fdd4": 0,
+          "company-c-f465962ae6d0ac84c5f8cad3": 27,
+          "company-c-72b2ec528908ac199ee1dbc7": 128
+        },
+        "applicant_entries_by_name": 155
+      },
+      "s12f": {
+        "company_ids": [
+          "company-c-c7447b81221857b0e6d3279c",
+          "company-c-cab3113e488332e737708042"
+        ],
+        "bound_patents_by_id": {
+          "company-c-c7447b81221857b0e6d3279c": 0,
+          "company-c-cab3113e488332e737708042": 4
+        },
+        "applicant_entries_by_name": 4
+      }
+    }
+  }
+}

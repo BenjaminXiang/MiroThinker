@@ -1,0 +1,3703 @@
+{
+  "release": "candidate-v2-20260819-r1",
+  "counts": {
+    "company": 7089,
+    "professor": 3958,
+    "paper": 24520,
+    "patent": 11504
+  },
+  "company_stem_groups_top": [
+    {
+      "key": "华芯",
+      "size": 3,
+      "members": [
+        {
+          "cid": "company-c-09fd4866e9e1db6f68fcfabf",
+          "name": "深圳市华芯机器人技术有限责任公司",
+          "family": "company-p4",
+          "run_id": "p4-build-20260819-v1"
+        },
+        {
+          "cid": "company-c-429482ca52b32010d14172e3",
+          "name": "深圳华芯信息技术股份有限公司",
+          "family": "company-p4",
+          "run_id": "p4-build-20260819-v1"
+        },
+        {
+          "cid": "company-c-cfa53df2228f128f98e06801",
+          "name": "深圳市华芯智能装备有限公司",
+          "family": "COMP-5F6BCD4926FC",
+          "run_id": "p4-build-20260819-v1"
+        }
+      ]
+    },
+    {
+      "key": "普渡",
+      "size": 3,
+      "members": [
+        {
+          "cid": "company-c-72b2ec528908ac199ee1dbc7",
+          "name": "深圳市普渡科技有限公司",
+          "family": "COMP-0A61012B350E",
+          "run_id": "p4-build-20260819-v1"
+        },
+        {
+          "cid": "company-c-f11204f5f0dee0d8a1e1fdd4",
+          "name": "深圳市普渡科技股份有限公司",
+          "family": "company-p4",
+          "run_id": "p4-build-20260819-v1"
+        },
+        {
+          "cid": "company-c-f465962ae6d0ac84c5f8cad3",
+          "name": "成都市普渡机器人有限公司",
+          "family": "company-backfill",
+          "run_id": "p4-build-20260819-v1"
+        }
+      ]
+    },
+    {
+      "key": "中国广核",
+      "size": 2,
+      "members": [
+        {
+          "cid": "company-c-3bfba7b2158dabd4584e1715",
+          "name": "中国广核集团有限公司",
+          "family": "company-p4",
+          "run_id": "p4-build-20260819-v1"
+        },
+        {
+          "cid": "company-c-51ba1335547096f3b8e6c765",
+          "name": "中国广核电力股份有限公司",
+          "family": "company-backfill",
+          "run_id": "p4-build-20260819-v1"
+        }
+      ]
+    },
+    {
+      "key": "中建三局",
+      "size": 2,
+      "members": [
+        {
+          "cid": "company-c-277474a470b2a3c66237bda4",
+          "name": "中建三局集团（深圳）有限公司",
+          "family": "company-backfill",
+          "run_id": "p4-build-20260819-v1"
+        },
+        {
+          "cid": "company-c-fcdb6508b02d5d52c94c27ad",
+          "name": "中建三局集团有限公司",
+          "family": "company-backfill",
+          "run_id": "p4-build-20260819-v1"
+        }
+      ]
+    },
+    {
+      "key": "中建五局第三建设",
+      "size": 2,
+      "members": [
+        {
+          "cid": "company-c-32ea991d975f5d20796f38af",
+          "name": "中建五局第三建设有限公司",
+          "family": "company-backfill",
+          "run_id": "p4-build-20260819-v1"
+        },
+        {
+          "cid": "company-c-9063652ecd9417c4996a7441",
+          "name": "中建五局第三建设（深圳）有限公司",
+          "family": "company-backfill",
+          "run_id": "p4-build-20260819-v1"
+        }
+      ]
+    },
+    {
+      "key": "中建科工",
+      "size": 2,
+      "members": [
+        {
+          "cid": "company-c-2fd3a34e2dd560f74850b4b5",
+          "name": "中建科工集团有限公司",
+          "family": "company-p4",
+          "run_id": "p4-build-20260819-v1"
+        },
+        {
+          "cid": "company-c-5babe7bb34933f04336721b3",
+          "name": "中建科工智能科技（深圳）有限公司",
+          "family": "company-backfill",
+          "run_id": "p4-build-20260819-v1"
+        }
+      ]
+    },
+    {
+      "key": "中微",
+      "size": 2,
+      "members": [
+        {
+          "cid": "company-c-2af55c44df2c27bb1e42f9a0",
+          "name": "中微半导体（深圳）股份有限公司",
+          "family": "company-p4",
+          "run_id": "p4-build-20260819-v1"
+        },
+        {
+          "cid": "company-c-67bcf6a934255fa6bf3de438",
+          "name": "深圳市中微信息技术有限公司",
+          "family": "company-p4",
+          "run_id": "p4-build-20260819-v1"
+        }
+      ]
+    },
+    {
+      "key": "中智科创",
+      "size": 2,
+      "members": [
+        {
+          "cid": "company-c-fb0b761ce5db8e890212df0f",
+          "name": "深圳中智科创机器人有限公司",
+          "family": "company-p4",
+          "run_id": "p4-build-20260819-v1"
+        },
+        {
+          "cid": "company-c-ffd53c40d2712631eb6f88c8",
+          "name": "中智科创机器人有限公司",
+          "family": "company-p4",
+          "run_id": "p4-build-20260819-v1"
+        }
+      ]
+    },
+    {
+      "key": "中科",
+      "size": 2,
+      "members": [
+        {
+          "cid": "company-c-1a6af39000b64931602bec79",
+          "name": "中科（深圳）能源物联网有限公司",
+          "family": "company-p4",
+          "run_id": "p4-build-20260819-v1"
+        },
+        {
+          "cid": "company-c-abfd5d8bb6719410eb6434be",
+          "name": "中科科技技术（深圳）有限公司",
+          "family": "company-p4",
+          "run_id": "p4-build-20260819-v1"
+        }
+      ]
+    },
+    {
+      "key": "中舟",
+      "size": 2,
+      "members": [
+        {
+          "cid": "company-c-6da2213f4ce256e539aa8bf5",
+          "name": "中舟（深圳）健康科技有限公司",
+          "family": "COMP-9674BE55B750",
+          "run_id": "p4-build-20260819-v1"
+        },
+        {
+          "cid": "company-c-7b1fb07b5602d900c20c193b",
+          "name": "深圳市中舟智能科技有限公司",
+          "family": "company-p4",
+          "run_id": "p4-build-20260819-v1"
+        }
+      ]
+    },
+    {
+      "key": "乐聚",
+      "size": 2,
+      "members": [
+        {
+          "cid": "company-c-28bf2bb10cb49b0e4fdc07ca",
+          "name": "乐聚智能（深圳）股份有限公司",
+          "family": "company-p4",
+          "run_id": "p4-build-20260819-v1"
+        },
+        {
+          "cid": "company-c-6313cfcefa7dd04a51e70739",
+          "name": "乐聚（深圳）机器人技术有限公司",
+          "family": "company-p4",
+          "run_id": "p4-build-20260819-v1"
+        }
+      ]
+    },
+    {
+      "key": "云天励飞",
+      "size": 2,
+      "members": [
+        {
+          "cid": "company-c-4f35bc18ae561b0f40a2fb16",
+          "name": "成都云天励飞技术有限公司",
+          "family": "company-backfill",
+          "run_id": "p4-build-20260819-v1"
+        },
+        {
+          "cid": "company-c-7537d17b709c1489221746ba",
+          "name": "深圳云天励飞技术股份有限公司",
+          "family": "company-p4",
+          "run_id": "p4-build-20260819-v1"
+        }
+      ]
+    },
+    {
+      "key": "云影",
+      "size": 2,
+      "members": [
+        {
+          "cid": "company-c-22f24708a85cb34ae904f2c5",
+          "name": "深圳市云影医疗科技有限公司",
+          "family": "company-p4",
+          "run_id": "p4-build-20260819-v1"
+        },
+        {
+          "cid": "company-c-f89f7fc392836027d4c99454",
+          "name": "深圳市云影网络科技有限公司",
+          "family": "company-p4",
+          "run_id": "p4-build-20260819-v1"
+        }
+      ]
+    },
+    {
+      "key": "云豹",
+      "size": 2,
+      "members": [
+        {
+          "cid": "company-c-594dd59da1f0ddb6088e6cc9",
+          "name": "深圳云豹智能股份有限公司",
+          "family": "COMP-4427001BAFCD",
+          "run_id": "p4-build-20260819-v1"
+        },
+        {
+          "cid": "company-c-f01cdba855c16a1dac48ec4b",
+          "name": "深圳云豹智能有限公司",
+          "family": "company-p4",
+          "run_id": "p4-build-20260819-v1"
+        }
+      ]
+    },
+    {
+      "key": "互连",
+      "size": 2,
+      "members": [
+        {
+          "cid": "company-c-2184294fce545760bf9d0b29",
+          "name": "深圳互连科技有限公司",
+          "family": "company-p4",
+          "run_id": "p4-build-20260819-v1"
+        },
+        {
+          "cid": "company-c-bb270bd3c476f0dc8eba31d7",
+          "name": "深圳市互连电子有限公司",
+          "family": "company-p4",
+          "run_id": "p4-build-20260819-v1"
+        }
+      ]
+    },
+    {
+      "key": "亿道",
+      "size": 2,
+      "members": [
+        {
+          "cid": "company-c-1f18d8cd6b4994f034bbd203",
+          "name": "深圳市亿道电子科技有限公司",
+          "family": "company-backfill",
+          "run_id": "p4-build-20260819-v1"
+        },
+        {
+          "cid": "company-c-a5dae351216f23b6663db32f",
+          "name": "深圳市亿道信息股份有限公司",
+          "family": "company-p4",
+          "run_id": "p4-build-20260819-v1"
+        }
+      ]
+    },
+    {
+      "key": "仁心",
+      "size": 2,
+      "members": [
+        {
+          "cid": "company-c-9055f0879b243940187f3429",
+          "name": "仁心健康（深圳）有限公司",
+          "family": "COMP-78BEB7E2C78B",
+          "run_id": "p4-build-20260819-v1"
+        },
+        {
+          "cid": "company-c-ecb71f9eef4310e351156f0b",
+          "name": "深圳仁心医疗有限公司",
+          "family": "COMP-6CBCB522B859",
+          "run_id": "p4-build-20260819-v1"
+        }
+      ]
+    },
+    {
+      "key": "今天国际",
+      "size": 2,
+      "members": [
+        {
+          "cid": "company-c-6350fb11687f26b5c82b2c95",
+          "name": "深圳市今天国际软件技术有限公司",
+          "family": "company-p4",
+          "run_id": "p4-build-20260819-v1"
+        },
+        {
+          "cid": "company-c-8fae549b159eb94ad31d3be5",
+          "name": "深圳市今天国际智能机器人有限公司",
+          "family": "company-p4",
+          "run_id": "p4-build-20260819-v1"
+        }
+      ]
+    },
+    {
+      "key": "光影焕像",
+      "size": 2,
+      "members": [
+        {
+          "cid": "company-c-7723d484de05e19a052b4b03",
+          "name": "广州光影焕像科技有限公司",
+          "family": "COMP-DF864B2B500B",
+          "run_id": "p4-build-20260819-v1"
+        },
+        {
+          "cid": "company-c-efa6488b4c2461d1db6f7ad3",
+          "name": "深圳光影焕像科技有限公司",
+          "family": "company-p4",
+          "run_id": "p4-build-20260819-v1"
+        }
+      ]
+    },
+    {
+      "key": "冠乔",
+      "size": 2,
+      "members": [
+        {
+          "cid": "company-c-2c1c515ea3714343e8322089",
+          "name": "深圳市冠乔智能科技有限公司",
+          "family": "company-p4",
+          "run_id": "p4-build-20260819-v1"
+        },
+        {
+          "cid": "company-c-b8c1c10b55f11f65da23d1a4",
+          "name": "深圳市冠乔科技有限公司",
+          "family": "company-p4",
+          "run_id": "p4-build-20260819-v1"
+        }
+      ]
+    },
+    {
+      "key": "创想未来",
+      "size": 2,
+      "members": [
+        {
+          "cid": "company-c-01cb37c0c85cdc05891dcf73",
+          "name": "深圳市创想未来科技有限公司",
+          "family": "company-p4",
+          "run_id": "p4-build-20260819-v1"
+        },
+        {
+          "cid": "company-c-aaa703b17f7e0f4b3297bc6c",
+          "name": "深圳创想未来机器人有限公司",
+          "family": "company-p4",
+          "run_id": "p4-build-20260819-v1"
+        }
+      ]
+    },
+    {
+      "key": "创益通",
+      "size": 2,
+      "members": [
+        {
+          "cid": "company-c-88fc9a695ce86480ca3142d2",
+          "name": "深圳市创益通技术股份有限公司",
+          "family": "company-p4",
+          "run_id": "p4-build-20260819-v1"
+        },
+        {
+          "cid": "company-c-c4761cf9a20b16ab4681cf5c",
+          "name": "惠州市创益通电子科技有限公司",
+          "family": "company-backfill",
+          "run_id": "p4-build-20260819-v1"
+        }
+      ]
+    },
+    {
+      "key": "华为",
+      "size": 2,
+      "members": [
+        {
+          "cid": "company-c-416da59f223a3a3272cba493",
+          "name": "华为技术有限公司",
+          "family": "company-p4",
+          "run_id": "p4-build-20260819-v1"
+        },
+        {
+          "cid": "company-c-8882fd5f889bb46f6a6b7b77",
+          "name": "深圳华为云计算技术有限公司",
+          "family": "company-backfill",
+          "run_id": "p4-build-20260819-v1"
+        }
+      ]
+    },
+    {
+      "key": "华云",
+      "size": 2,
+      "members": [
+        {
+          "cid": "company-c-57de40f105a78cef3e23eff4",
+          "name": "深圳市华云通信有限公司",
+          "family": "company-p4",
+          "run_id": "p4-build-20260819-v1"
+        },
+        {
+          "cid": "company-c-df96d0b041f25c3674e1b165",
+          "name": "深圳市华云智能健康有限公司",
+          "family": "COMP-E58B554DC23E",
+          "run_id": "p4-build-20260819-v1"
+        }
+      ]
+    },
+    {
+      "key": "华讯方舟",
+      "size": 2,
+      "members": [
+        {
+          "cid": "company-c-6c06765b4be7f14f672cb8d2",
+          "name": "华讯方舟股份有限公司",
+          "family": "company-p4",
+          "run_id": "p4-build-20260819-v1"
+        },
+        {
+          "cid": "company-c-cdc4d767b78b4e5c00452a4b",
+          "name": "华讯方舟科技有限公司",
+          "family": "company-p4",
+          "run_id": "p4-build-20260819-v1"
+        }
+      ]
+    }
+  ],
+  "company_core_groups_top": [
+    {
+      "key": "中建三局",
+      "size": 2,
+      "members": [
+        {
+          "cid": "company-c-277474a470b2a3c66237bda4",
+          "name": "中建三局集团（深圳）有限公司",
+          "family": "company-backfill",
+          "run_id": "p4-build-20260819-v1"
+        },
+        {
+          "cid": "company-c-fcdb6508b02d5d52c94c27ad",
+          "name": "中建三局集团有限公司",
+          "family": "company-backfill",
+          "run_id": "p4-build-20260819-v1"
+        }
+      ]
+    },
+    {
+      "key": "中建五局第三建设",
+      "size": 2,
+      "members": [
+        {
+          "cid": "company-c-32ea991d975f5d20796f38af",
+          "name": "中建五局第三建设有限公司",
+          "family": "company-backfill",
+          "run_id": "p4-build-20260819-v1"
+        },
+        {
+          "cid": "company-c-9063652ecd9417c4996a7441",
+          "name": "中建五局第三建设（深圳）有限公司",
+          "family": "company-backfill",
+          "run_id": "p4-build-20260819-v1"
+        }
+      ]
+    },
+    {
+      "key": "中智科创机器人",
+      "size": 2,
+      "members": [
+        {
+          "cid": "company-c-fb0b761ce5db8e890212df0f",
+          "name": "深圳中智科创机器人有限公司",
+          "family": "company-p4",
+          "run_id": "p4-build-20260819-v1"
+        },
+        {
+          "cid": "company-c-ffd53c40d2712631eb6f88c8",
+          "name": "中智科创机器人有限公司",
+          "family": "company-p4",
+          "run_id": "p4-build-20260819-v1"
+        }
+      ]
+    },
+    {
+      "key": "云天励飞技术",
+      "size": 2,
+      "members": [
+        {
+          "cid": "company-c-4f35bc18ae561b0f40a2fb16",
+          "name": "成都云天励飞技术有限公司",
+          "family": "company-backfill",
+          "run_id": "p4-build-20260819-v1"
+        },
+        {
+          "cid": "company-c-7537d17b709c1489221746ba",
+          "name": "深圳云天励飞技术股份有限公司",
+          "family": "company-p4",
+          "run_id": "p4-build-20260819-v1"
+        }
+      ]
+    },
+    {
+      "key": "云豹智能",
+      "size": 2,
+      "members": [
+        {
+          "cid": "company-c-594dd59da1f0ddb6088e6cc9",
+          "name": "深圳云豹智能股份有限公司",
+          "family": "COMP-4427001BAFCD",
+          "run_id": "p4-build-20260819-v1"
+        },
+        {
+          "cid": "company-c-f01cdba855c16a1dac48ec4b",
+          "name": "深圳云豹智能有限公司",
+          "family": "company-p4",
+          "run_id": "p4-build-20260819-v1"
+        }
+      ]
+    },
+    {
+      "key": "光影焕像科技",
+      "size": 2,
+      "members": [
+        {
+          "cid": "company-c-7723d484de05e19a052b4b03",
+          "name": "广州光影焕像科技有限公司",
+          "family": "COMP-DF864B2B500B",
+          "run_id": "p4-build-20260819-v1"
+        },
+        {
+          "cid": "company-c-efa6488b4c2461d1db6f7ad3",
+          "name": "深圳光影焕像科技有限公司",
+          "family": "company-p4",
+          "run_id": "p4-build-20260819-v1"
+        }
+      ]
+    },
+    {
+      "key": "国际先进技术应用推进中心",
+      "size": 2,
+      "members": [
+        {
+          "cid": "company-c-60af86764946ad394ec1e8bb",
+          "name": "合肥国际先进技术应用推进中心",
+          "family": "company-p4",
+          "run_id": "p4-build-20260819-v1"
+        },
+        {
+          "cid": "company-c-c841e20d983b33640734ccfe",
+          "name": "深圳国际先进技术应用推进中心",
+          "family": "company-p4",
+          "run_id": "p4-build-20260819-v1"
+        }
+      ]
+    },
+    {
+      "key": "宝能汽车",
+      "size": 2,
+      "members": [
+        {
+          "cid": "company-c-8109665f54688b12857d2a43",
+          "name": "深圳市宝能汽车有限公司",
+          "family": "company-p4",
+          "run_id": "p4-build-20260819-v1"
+        },
+        {
+          "cid": "company-c-b54d8f801885c30058b9d78d",
+          "name": "宝能汽车集团有限公司",
+          "family": "company-p4",
+          "run_id": "p4-build-20260819-v1"
+        }
+      ]
+    },
+    {
+      "key": "尚科宁家科技",
+      "size": 2,
+      "members": [
+        {
+          "cid": "company-c-439102692dc451b1ad9f1125",
+          "name": "深圳尚科宁家科技有限公司",
+          "family": "company-backfill",
+          "run_id": "p4-build-20260819-v1"
+        },
+        {
+          "cid": "company-c-c2776d1ceace996828a244e2",
+          "name": "尚科宁家（中国）科技有限公司",
+          "family": "company-backfill",
+          "run_id": "p4-build-20260819-v1"
+        }
+      ]
+    },
+    {
+      "key": "普渡科技",
+      "size": 2,
+      "members": [
+        {
+          "cid": "company-c-72b2ec528908ac199ee1dbc7",
+          "name": "深圳市普渡科技有限公司",
+          "family": "COMP-0A61012B350E",
+          "run_id": "p4-build-20260819-v1"
+        },
+        {
+          "cid": "company-c-f11204f5f0dee0d8a1e1fdd4",
+          "name": "深圳市普渡科技股份有限公司",
+          "family": "company-p4",
+          "run_id": "p4-build-20260819-v1"
+        }
+      ]
+    },
+    {
+      "key": "精控集成半导体",
+      "size": 2,
+      "members": [
+        {
+          "cid": "company-c-31bd9a93db4e01aa2fee93c7",
+          "name": "杭州精控集成半导体有限公司",
+          "family": "COMP-8594F6A99E4C",
+          "run_id": "p4-build-20260819-v1"
+        },
+        {
+          "cid": "company-c-91c276fb62d64fc486f6dfe1",
+          "name": "深圳精控集成半导体有限公司",
+          "family": "company-p4",
+          "run_id": "p4-build-20260819-v1"
+        }
+      ]
+    },
+    {
+      "key": "诺因智能",
+      "size": 2,
+      "members": [
+        {
+          "cid": "company-c-15f905da84b692918f211800",
+          "name": "深圳市诺因智能有限公司",
+          "family": "company-p4",
+          "run_id": "p4-build-20260819-v1"
+        },
+        {
+          "cid": "company-c-a41a5cfd4a3f50e1f1566b75",
+          "name": "深圳诺因智能有限公司",
+          "family": "COMP-9451C47EFDF9",
+          "run_id": "p4-build-20260819-v1"
+        }
+      ]
+    }
+  ],
+  "company_pudu_clusters": [
+    {
+      "key": "普渡",
+      "size": 3,
+      "members": [
+        {
+          "cid": "company-c-72b2ec528908ac199ee1dbc7",
+          "name": "深圳市普渡科技有限公司",
+          "family": "COMP-0A61012B350E",
+          "run_id": "p4-build-20260819-v1"
+        },
+        {
+          "cid": "company-c-f11204f5f0dee0d8a1e1fdd4",
+          "name": "深圳市普渡科技股份有限公司",
+          "family": "company-p4",
+          "run_id": "p4-build-20260819-v1"
+        },
+        {
+          "cid": "company-c-f465962ae6d0ac84c5f8cad3",
+          "name": "成都市普渡机器人有限公司",
+          "family": "company-backfill",
+          "run_id": "p4-build-20260819-v1"
+        }
+      ]
+    }
+  ],
+  "professor_name_samples": [
+    {
+      "key": "陈斌",
+      "size": 3,
+      "members": [
+        {
+          "cid": "professor-c-223787eb1acb034f131cdb09",
+          "name": "陈斌",
+          "family": "PROF-2E860FAB2D2F",
+          "run_id": "p4-build-20260819-v1"
+        },
+        {
+          "cid": "professor-c-4e718d765b59f02a9181eaef",
+          "name": "陈斌",
+          "family": "PROF-E3A11A598DB2",
+          "run_id": "p4-build-20260819-v1"
+        },
+        {
+          "cid": "professor-c-7ecbac31648c9f1676ccf8d8",
+          "name": "陈斌",
+          "family": "PROF-C6ABA72DC6A7",
+          "run_id": "p4-build-20260819-v1"
+        }
+      ]
+    },
+    {
+      "key": "ParvejAlam",
+      "size": 2,
+      "members": [
+        {
+          "cid": "professor-c-1d5dfa230038de524721c8e7",
+          "name": "Parvej Alam",
+          "family": "PROF-A4A3D3B0C942",
+          "run_id": "p4-build-20260819-v1"
+        },
+        {
+          "cid": "professor-c-838889828080d10984c86eda",
+          "name": "Parvej Alam",
+          "family": "PROF-9F7B367BD507",
+          "run_id": "p4-build-20260819-v1"
+        }
+      ]
+    },
+    {
+      "key": "冯娟",
+      "size": 2,
+      "members": [
+        {
+          "cid": "professor-c-154d80cb7fc5f80d12d34e85",
+          "name": "冯娟",
+          "family": "PROF-CFC6D134A4FC",
+          "run_id": "p4-build-20260819-v1"
+        },
+        {
+          "cid": "professor-c-c0aeb695105954f62d9f0580",
+          "name": "冯娟",
+          "family": "PROF-7B5F7969C278",
+          "run_id": "p4-build-20260819-v1"
+        }
+      ]
+    },
+    {
+      "key": "刘清侠",
+      "size": 2,
+      "members": [
+        {
+          "cid": "professor-c-b529e42502a0e97add91aaa2",
+          "name": "刘清侠",
+          "family": "PROF-A348C2BD1EA8",
+          "run_id": "p4-build-20260819-v1"
+        },
+        {
+          "cid": "professor-c-d4243ebb0274410ce8acab01",
+          "name": "刘清侠",
+          "family": "PROF-FA2F996AB5AA",
+          "run_id": "p4-build-20260819-v1"
+        }
+      ]
+    },
+    {
+      "key": "成会明",
+      "size": 2,
+      "members": [
+        {
+          "cid": "professor-c-0adc93086db357fb32da799f",
+          "name": "成会明",
+          "family": "PROF-767ED53B4708",
+          "run_id": "p4-build-20260819-v1"
+        },
+        {
+          "cid": "professor-c-ea807415184b771eed44d4fa",
+          "name": "成会明",
+          "family": "PROF-E5B1A8A3F147",
+          "run_id": "p4-build-20260819-v1"
+        }
+      ]
+    },
+    {
+      "key": "朱宝亭",
+      "size": 2,
+      "members": [
+        {
+          "cid": "professor-c-0bcec3a68c18178eca6cfd8f",
+          "name": "朱宝亭",
+          "family": "PROF-06043996655D",
+          "run_id": "p4-build-20260819-v1"
+        },
+        {
+          "cid": "professor-c-ef722da2e2660ae84c160651",
+          "name": "朱宝亭",
+          "family": "PROF-71DC4C85522E",
+          "run_id": "p4-build-20260819-v1"
+        }
+      ]
+    },
+    {
+      "key": "李佳",
+      "size": 2,
+      "members": [
+        {
+          "cid": "professor-c-64c54482d24e7bfbf20f142d",
+          "name": "李佳",
+          "family": "PROF-D5F21F8D93DA",
+          "run_id": "p4-build-20260819-v1"
+        },
+        {
+          "cid": "professor-c-7a2f7608ce037ce97a9bf10f",
+          "name": "李佳",
+          "family": "PROF-2BB872AF25E2",
+          "run_id": "p4-build-20260819-v1"
+        }
+      ]
+    },
+    {
+      "key": "李兵",
+      "size": 2,
+      "members": [
+        {
+          "cid": "professor-c-5e7a37670cfe9ff0ba19212f",
+          "name": "李兵",
+          "family": "PROF-2E6F9B82225E",
+          "run_id": "p4-build-20260819-v1"
+        },
+        {
+          "cid": "professor-c-b9e9ee3ff30ce25523148ce6",
+          "name": "李兵",
+          "family": "PROF-C515DAB91C42",
+          "run_id": "p4-build-20260819-v1"
+        }
+      ]
+    },
+    {
+      "key": "李翔",
+      "size": 2,
+      "members": [
+        {
+          "cid": "professor-c-60bdb1a8858f2ad5b8020b89",
+          "name": "李翔",
+          "family": "PROF-F7023E32A3A7",
+          "run_id": "p4-build-20260819-v1"
+        },
+        {
+          "cid": "professor-c-d50aa2328ef22f790c1b63c7",
+          "name": "李翔",
+          "family": "PROF-AF2C663FC7CE",
+          "run_id": "p4-build-20260819-v1"
+        }
+      ]
+    },
+    {
+      "key": "梁永生",
+      "size": 2,
+      "members": [
+        {
+          "cid": "professor-c-33a1f605279241866cc14499",
+          "name": "梁永生",
+          "family": "PROF-B02F8D6E9E18",
+          "run_id": "p4-build-20260819-v1"
+        },
+        {
+          "cid": "professor-c-375a3ee37695daf56edd3c42",
+          "name": "梁永生",
+          "family": "PROF-42AFBC4C6403",
+          "run_id": "p4-build-20260819-v1"
+        }
+      ]
+    }
+  ],
+  "paper_title_samples": [
+    {
+      "key": "5gmmwavecooperativepositioningandmappingusingmultimodelphdfilterandmapfusion",
+      "size": 2,
+      "members": [
+        {
+          "cid": "paper-c-d0edd72c44f9615e27bf1b58",
+          "name": "5G mmWave Cooperative Positioning and Mapping using Multi-Model PHD Filter and Map Fusion",
+          "family": "PAPER-D007CFE5DD02",
+          "run_id": "p4-build-20260819-v1"
+        },
+        {
+          "cid": "paper-c-ed2555ec268e518fb2466c85",
+          "name": "5G mmWave Cooperative Positioning and Mapping Using Multi-Model PHD Filter and Map Fusion",
+          "family": "PAPER-88EF6BE64DBD",
+          "run_id": "p4-build-20260819-v1"
+        }
+      ]
+    },
+    {
+      "key": "continuousspatialprocessmodelsforspatialextremevalues",
+      "size": 2,
+      "members": [
+        {
+          "cid": "paper-c-242c19a67d14605d8fb0e15b",
+          "name": "Continuous Spatial Process Models for Spatial Extreme Values",
+          "family": "PAPER-BCD234850CC2",
+          "run_id": "p4-build-20260819-v1"
+        },
+        {
+          "cid": "paper-c-a96ca1a20708ee3323099563",
+          "name": "Continuous Spatial Process Models for Spatial Extreme Values",
+          "family": "PAPER-6B68896AEC7C",
+          "run_id": "p4-build-20260819-v1"
+        }
+      ]
+    },
+    {
+      "key": "modelingheterogeneousrealtimecomponentsinbip",
+      "size": 2,
+      "members": [
+        {
+          "cid": "paper-c-5069d1d847434c9f7301f5a0",
+          "name": "Modeling Heterogeneous Real-time Components in BIP",
+          "family": "PAPER-A75C87509514",
+          "run_id": "p4-build-20260819-v1"
+        },
+        {
+          "cid": "paper-c-dfc4ae9afdb3eeaf6faf2549",
+          "name": "Modeling Heterogeneous Real-time Components in BIP",
+          "family": "PAPER-2CF1BB0F327D",
+          "run_id": "p4-build-20260819-v1"
+        }
+      ]
+    },
+    {
+      "key": "onblockingrulesforthebootstrapwithdependentdata",
+      "size": 2,
+      "members": [
+        {
+          "cid": "paper-c-36b329979be6a861b1851ed9",
+          "name": "On Blocking Rules for the Bootstrap with Dependent Data",
+          "family": "PAPER-D7A88DD7D82B",
+          "run_id": "p4-build-20260819-v1"
+        },
+        {
+          "cid": "paper-c-ad95bfa6e47c2101c58e4594",
+          "name": "On blocking rules for the bootstrap with dependent data",
+          "family": "PAPER-91FC3CE3A999",
+          "run_id": "p4-build-20260819-v1"
+        }
+      ]
+    },
+    {
+      "key": "relaxingwrinklesinjammedinterfacialassemblies",
+      "size": 2,
+      "members": [
+        {
+          "cid": "paper-c-1fe6942869f98a9a96fbae29",
+          "name": "Relaxing Wrinkles in Jammed Interfacial Assemblies",
+          "family": "PAPER-06F023900A08",
+          "run_id": "p4-build-20260819-v1"
+        },
+        {
+          "cid": "paper-c-9dabbce48c2ad55b2962e44a",
+          "name": "Relaxing Wrinkles in Jammed Interfacial Assemblies",
+          "family": "PAPER-C991E91CAD27",
+          "run_id": "p4-build-20260819-v1"
+        }
+      ]
+    },
+    {
+      "key": "symbolicmodelcheckingforrealtimesystems",
+      "size": 2,
+      "members": [
+        {
+          "cid": "paper-c-563ccbc032511b4b064cae4e",
+          "name": "Symbolic Model Checking for Real-Time Systems",
+          "family": "PAPER-2095B6FECC34",
+          "run_id": "p4-build-20260819-v1"
+        },
+        {
+          "cid": "paper-c-f09fa127f7d2031033ce4003",
+          "name": "Symbolic model checking for real-time systems",
+          "family": "PAPER-7A3C81563D66",
+          "run_id": "p4-build-20260819-v1"
+        }
+      ]
+    }
+  ],
+  "patent_number_samples": [],
+  "fragmentation": {
+    "company_exact": {
+      "fragmented_entities": 0,
+      "docs_in_fragmented": 0,
+      "size_hist": {},
+      "max_size": 1,
+      "total_docs": 7089
+    },
+    "company_core": {
+      "fragmented_entities": 12,
+      "docs_in_fragmented": 24,
+      "size_hist": {
+        "2": 12
+      },
+      "max_size": 2,
+      "total_docs": 7089
+    },
+    "company_stem": {
+      "fragmented_entities": 72,
+      "docs_in_fragmented": 146,
+      "size_hist": {
+        "2": 70,
+        "3": 2
+      },
+      "max_size": 3,
+      "total_docs": 7089
+    },
+    "professor_name": {
+      "fragmented_entities": 18,
+      "docs_in_fragmented": 37,
+      "size_hist": {
+        "2": 17,
+        "3": 1
+      },
+      "max_size": 3,
+      "total_docs": 3958
+    },
+    "professor_name_institution": {
+      "fragmented_entities": 9,
+      "docs_in_fragmented": 19,
+      "size_hist": {
+        "2": 8,
+        "3": 1
+      },
+      "max_size": 3,
+      "total_docs": 3958
+    },
+    "paper_title_norm": {
+      "fragmented_entities": 6,
+      "docs_in_fragmented": 12,
+      "size_hist": {
+        "2": 6
+      },
+      "max_size": 2,
+      "total_docs": 24520
+    },
+    "paper_doi": {
+      "fragmented_entities": 0,
+      "docs_in_fragmented": 0,
+      "size_hist": {},
+      "max_size": 1,
+      "total_docs": 24520
+    },
+    "patent_number": {
+      "fragmented_entities": 0,
+      "docs_in_fragmented": 0,
+      "size_hist": {},
+      "max_size": 1,
+      "total_docs": 11504
+    }
+  },
+  "conflicts": {
+    "stem": {
+      "field_stats": {
+        "name": {
+          "conflict": 72,
+          "coverage_gap": 0,
+          "no_conflict": 0
+        },
+        "normalized_name": {
+          "conflict": 72,
+          "coverage_gap": 0,
+          "no_conflict": 0
+        },
+        "industry": {
+          "conflict": 43,
+          "coverage_gap": 23,
+          "no_conflict": 6
+        },
+        "industry_tags": {
+          "conflict": 29,
+          "coverage_gap": 35,
+          "no_conflict": 8
+        },
+        "tech_tags": {
+          "conflict": 37,
+          "coverage_gap": 28,
+          "no_conflict": 7
+        },
+        "geography": {
+          "conflict": 2,
+          "coverage_gap": 63,
+          "no_conflict": 7
+        },
+        "registered_address": {
+          "conflict": 49,
+          "coverage_gap": 18,
+          "no_conflict": 5
+        },
+        "website": {
+          "conflict": 36,
+          "coverage_gap": 26,
+          "no_conflict": 10
+        },
+        "founded_at": {
+          "conflict": 36,
+          "coverage_gap": 28,
+          "no_conflict": 8
+        },
+        "legal_representative": {
+          "conflict": 30,
+          "coverage_gap": 34,
+          "no_conflict": 8
+        },
+        "profile_summary": {
+          "conflict": 72,
+          "coverage_gap": 0,
+          "no_conflict": 0
+        },
+        "technology_route_summary": {
+          "conflict": 66,
+          "coverage_gap": 6,
+          "no_conflict": 0
+        },
+        "product_description": {
+          "conflict": 43,
+          "coverage_gap": 16,
+          "no_conflict": 13
+        },
+        "team_description": {
+          "conflict": 41,
+          "coverage_gap": 25,
+          "no_conflict": 6
+        },
+        "quality_status": {
+          "conflict": 0,
+          "coverage_gap": 72,
+          "no_conflict": 0
+        },
+        "registered_capital": {
+          "conflict": 0,
+          "coverage_gap": 0,
+          "no_conflict": 72
+        },
+        "credit_code": {
+          "conflict": 0,
+          "coverage_gap": 0,
+          "no_conflict": 72
+        },
+        "aliases": {
+          "conflict": 3,
+          "coverage_gap": 9,
+          "no_conflict": 60
+        }
+      },
+      "field_examples": {
+        "name": [
+          {
+            "cluster": "华芯",
+            "values": [
+              "深圳市华芯机器人技术有限责任公司",
+              "深圳华芯信息技术股份有限公司",
+              "深圳市华芯智能装备有限公司"
+            ]
+          },
+          {
+            "cluster": "普渡",
+            "values": [
+              "深圳市普渡科技有限公司",
+              "深圳市普渡科技股份有限公司",
+              "成都市普渡机器人有限公司"
+            ]
+          },
+          {
+            "cluster": "中国广核",
+            "values": [
+              "中国广核集团有限公司",
+              "中国广核电力股份有限公司"
+            ]
+          },
+          {
+            "cluster": "中建三局",
+            "values": [
+              "中建三局集团（深圳）有限公司",
+              "中建三局集团有限公司"
+            ]
+          },
+          {
+            "cluster": "中建五局第三建设",
+            "values": [
+              "中建五局第三建设有限公司",
+              "中建五局第三建设（深圳）有限公司"
+            ]
+          }
+        ],
+        "normalized_name": [
+          {
+            "cluster": "华芯",
+            "values": [
+              "深圳市华芯机器人技术有限责任公司",
+              "深圳华芯信息技术股份有限公司",
+              "华芯智能装备"
+            ]
+          },
+          {
+            "cluster": "普渡",
+            "values": [
+              "普渡科技",
+              "深圳市普渡科技股份有限公司",
+              "成都市普渡机器人有限公司"
+            ]
+          },
+          {
+            "cluster": "中国广核",
+            "values": [
+              "中国广核集团有限公司",
+              "中国广核电力股份有限公司"
+            ]
+          },
+          {
+            "cluster": "中建三局",
+            "values": [
+              "中建三局集团（深圳）有限公司",
+              "中建三局集团有限公司"
+            ]
+          },
+          {
+            "cluster": "中建五局第三建设",
+            "values": [
+              "中建五局第三建设有限公司",
+              "中建五局第三建设（深圳）有限公司"
+            ]
+          }
+        ],
+        "industry": [
+          {
+            "cluster": "华芯",
+            "values": [
+              "先进制造",
+              "人工智能"
+            ]
+          },
+          {
+            "cluster": "普渡",
+            "values": [
+              "机器人",
+              "物流运输"
+            ]
+          },
+          {
+            "cluster": "中微",
+            "values": [
+              "先进制造",
+              "硬件"
+            ]
+          },
+          {
+            "cluster": "中智科创",
+            "values": [
+              "人工智能",
+              "先进制造"
+            ]
+          },
+          {
+            "cluster": "中科",
+            "values": [
+              "能源电力",
+              "硬件"
+            ]
+          }
+        ],
+        "industry_tags": [
+          {
+            "cluster": "华芯",
+            "values": [
+              "先进制造",
+              "人工智能"
+            ]
+          },
+          {
+            "cluster": "中微",
+            "values": [
+              "先进制造",
+              "硬件"
+            ]
+          },
+          {
+            "cluster": "中智科创",
+            "values": [
+              "人工智能",
+              "先进制造"
+            ]
+          },
+          {
+            "cluster": "中科",
+            "values": [
+              "能源电力",
+              "硬件"
+            ]
+          },
+          {
+            "cluster": "互连",
+            "values": [
+              "人工智能",
+              "生产制造"
+            ]
+          }
+        ],
+        "tech_tags": [
+          {
+            "cluster": "华芯",
+            "values": [
+              "无人机研发公司",
+              "智能服务机器人综合制造商"
+            ]
+          },
+          {
+            "cluster": "中微",
+            "values": [
+              "MCU芯片设计商",
+              "自主行业产品解决方案及产品一站式服务平台"
+            ]
+          },
+          {
+            "cluster": "中智科创",
+            "values": [
+              "智能门禁产品开发商",
+              "智能安保机器人研发商"
+            ]
+          },
+          {
+            "cluster": "中科",
+            "values": [
+              "能源信息化服务商",
+              "智能门锁生产商"
+            ]
+          },
+          {
+            "cluster": "云影",
+            "values": [
+              "医学影像信息化解决方案提供商",
+              "医疗影像系统平台"
+            ]
+          }
+        ],
+        "registered_address": [
+          {
+            "cluster": "华芯",
+            "values": [
+              "深圳市宝安区福永街道凤凰社区腾丰五路2号A栋1单元201-C",
+              "深圳市光明区马田街道合水口社区第七工业区第四栋厂房B101、B201、B301、B401、B501、B601、B701、B801",
+              "深圳市宝安区福海街道展城社区福园二路10号濠和智创A栋108、212"
+            ]
+          },
+          {
+            "cluster": "中微",
+            "values": [
+              "深圳市前海深港合作区南山街道桂湾三路91号景兴海上大厦2101",
+              "深圳市龙华区民治街道民治社区127陈设艺术产业园B801"
+            ]
+          },
+          {
+            "cluster": "中智科创",
+            "values": [
+              "深圳市光明区新湖街道圳美社区圳美同富裕工业园万代恒光明高新科技园厂房1栋一层",
+              "深圳市光明新区光明街道万代恒高新科技工业园5号厂房5楼"
+            ]
+          },
+          {
+            "cluster": "中科",
+            "values": [
+              "深圳市光明区凤凰街道塘尾社区光明大道380号尚智科技园1栋B座2006",
+              "深圳市宝安区沙井街道后亭社区茅洲山工业园工业大厦全至科技创新园科创大厦9层B"
+            ]
+          },
+          {
+            "cluster": "中舟",
+            "values": [
+              "深圳市南山区粤海街道高新区社区沙河西路1819号深圳湾科技生态园7栋B210",
+              "深圳市龙岗区坂田街道五和社区珠江旭景佳园第一栋1-227"
+            ]
+          }
+        ],
+        "website": [
+          {
+            "cluster": "华芯",
+            "values": [
+              "http://www.zksinochip.com/",
+              "http://www.cnchip.net.cn/",
+              "http://www.cnchip-e.com/"
+            ]
+          },
+          {
+            "cluster": "普渡",
+            "values": [
+              "https://www.pudurobotics.com",
+              "http://pudutech.com/"
+            ]
+          },
+          {
+            "cluster": "中微",
+            "values": [
+              "http://www.mcu.com.cn/",
+              "http://www.sakway.com/"
+            ]
+          },
+          {
+            "cluster": "中智科创",
+            "values": [
+              "http://www.coson.com/",
+              "http://www.csstrobot.com"
+            ]
+          },
+          {
+            "cluster": "中科",
+            "values": [
+              "http://www.eiotview.com",
+              "http://www.zkzw168.com"
+            ]
+          }
+        ],
+        "founded_at": [
+          {
+            "cluster": "华芯",
+            "values": [
+              "2016-08-25",
+              "2016-07-20"
+            ]
+          },
+          {
+            "cluster": "中微",
+            "values": [
+              "2001-06-22",
+              "2017-02-08"
+            ]
+          },
+          {
+            "cluster": "中智科创",
+            "values": [
+              "2013-09-06",
+              "1994-11-26"
+            ]
+          },
+          {
+            "cluster": "中科",
+            "values": [
+              "2017-06-28",
+              "2017-10-10"
+            ]
+          },
+          {
+            "cluster": "云影",
+            "values": [
+              "2014-12-15",
+              "2016-12-16"
+            ]
+          }
+        ],
+        "legal_representative": [
+          {
+            "cluster": "华芯",
+            "values": [
+              "何兴扬",
+              "李军应"
+            ]
+          },
+          {
+            "cluster": "中微",
+            "values": [
+              "YANG YONG",
+              "汪永安"
+            ]
+          },
+          {
+            "cluster": "中智科创",
+            "values": [
+              "胡元根",
+              "刘跃根"
+            ]
+          },
+          {
+            "cluster": "中科",
+            "values": [
+              "袁战刚",
+              "唐耀华"
+            ]
+          },
+          {
+            "cluster": "云影",
+            "values": [
+              "俞峰",
+              "赵一帆"
+            ]
+          }
+        ],
+        "profile_summary": [
+          {
+            "cluster": "华芯",
+            "values": [
+              "无人机研发公司",
+              "HX-V390、HX-X500、T800、VP200、VP100、WIS210Y、WIS300、WIS210、WIS3000L-D、WIS1000L-D、VX1000-01D",
+              "深圳市华芯智能装备有限公司是一家聚焦先进制造的企业。细分方向覆盖半导体设备。当前业务定位为半导体晶圆级封测分选检测方案供应商。深圳市华芯智能装备有限公司（简称：华芯智能）成立于2…"
+            ]
+          },
+          {
+            "cluster": "普渡",
+            "values": [
+              "深圳市普渡科技有限公司是一家聚焦机器人的企业。细分方向覆盖商用服务机器人。当前业务定位为商用配送机器人与服务机器人解决方案。提供商用服务机器人与配送解决方案，覆盖餐饮、酒店、零售…",
+              "PUDU CC1 Pro、PUDU T600系列（标准版/潜伏版）、PUDU MT1 Max、PUDU MT1 Vac、PUDU MT1、PUDU SH1、PUDU T300、P…",
+              "成都市普渡机器人有限公司专注于商用服务机器人的研发、生产与销售，定位为室内无人配送解决方案提供商。主要产品包括用于餐厅送餐的配送机器人、用于酒店客房服务的楼宇配送机器人，以及用于…"
+            ]
+          },
+          {
+            "cluster": "中国广核",
+            "values": [
+              "清洁能源服务商",
+              "中国广核电力股份有限公司（中广核电力）是中国广核集团旗下核心上市平台，主营业务为核电站的建设、运营与管理。公司通过核裂变发电，向电网输送电力，并涉及核电站相关的技术服务与支持。其…"
+            ]
+          },
+          {
+            "cluster": "中建三局",
+            "values": [
+              "中建三局集团（深圳）有限公司是中建三局驻深的二级法人单位，深耕深圳、辐射粤港澳大湾区。业务范围涉及传统住宅、城市商业综合体、科教文卫、产业园区以及基础设施等领域，提供房屋建筑、市…",
+              "中建三局集团有限公司是中国建筑集团旗下核心国有骨干企业，主营建筑工程总承包、施工、技术开发及路桥建设等业务。主要产品与服务包括超高层建筑、大型公共建筑、工业厂房、住宅等房屋建筑工…"
+            ]
+          },
+          {
+            "cluster": "中建五局第三建设",
+            "values": [
+              "中建五局第三建设有限公司是中国建筑股份有限公司旗下骨干企业，持有建筑工程和市政公用工程施工总承包双特级资质。主营业务涵盖房屋建筑、市政工程等领域，形成商业综合体、公共场馆、教育医…",
+              "中建五局第三建设（深圳）有限公司是中建五局第三建设有限公司的全资子公司，2020年在深圳市龙华区注册成立。公司持有建筑工程施工总承包二级、市政公用工程施工总承包二级、地基基础工程…"
+            ]
+          }
+        ],
+        "technology_route_summary": [
+          {
+            "cluster": "华芯",
+            "values": [
+              "根据深圳市华芯机器人技术有限责任公司经营范围包括机器人及自动化设备、智能装备等产品的研发与销售，可以推测其产品可能应用于工业自动化生产线、智能仓储物流、精密制造加工、电子设备组装…",
+              "谐振式MEMS压力传感器：工业过程控制、航空航天、气象监测；高精度MEMS惯性测量单元：无人机、机器人、平台稳定控制；高精度MEMS组合导航系统：自动驾驶、无人船、轨道交通、测绘…",
+              "深圳市华芯智能装备有限公司的技术路线围绕先进制造展开。当前重点落在半导体设备。业务场景集中在半导体晶圆级封测分选检测方案供应商。深圳市华芯智能装备有限公司（简称：华芯智能）成立于…"
+            ]
+          },
+          {
+            "cluster": "普渡",
+            "values": [
+              "深圳市普渡科技有限公司的技术路线围绕机器人展开。当前重点落在商用服务机器人。业务场景集中在商用配送机器人与服务机器人解决方案。提供商用服务机器人与配送解决方案，覆盖餐饮、酒店、零…",
+              "PUDU CC1 Pro：商业综合体、医院、机场、工业仓储。 PUDU T600系列：工业仓储、生产线边仓、多层厂房需跨楼层运输场景。 PUDU MT1 Max/MT1 Vac/…",
+              "Not supplied by the backfill source."
+            ]
+          },
+          {
+            "cluster": "中国广核",
+            "values": [
+              "Not supplied by the full-column workbook source.",
+              "Not supplied by the backfill source."
+            ]
+          },
+          {
+            "cluster": "中建科工",
+            "values": [
+              "墙板安装机器人：装配式建筑住宅、学校等项目的ALC轻质围护墙板安装。 厨余垃圾模块：社区、菜场等分散式厨余就地处理。 交流充电桩：各类公共及专用停车场电动汽车交流补电。 乡村宜居…",
+              "Not supplied by the backfill source."
+            ]
+          },
+          {
+            "cluster": "中微",
+            "values": [
+              "嵌入式MCU程序存储、小型智能硬件配置存储、低功耗IoT终端存储、外设/模块配套存储",
+              "小家电、消费电子、电机电池、医疗健康、大家电、工业控制、汽车电子（车身域控、底盘域控、ADAS雷达、发动机管理等），已被美的、格力、九阳、苏泊尔、小米、ATL、TTI、Nidec…"
+            ]
+          }
+        ],
+        "product_description": [
+          {
+            "cluster": "华芯",
+            "values": [
+              "HX-V390、HX-X500、T800、VP200、VP100、WIS210Y、WIS300、WIS210、WIS3000L-D、WIS1000L-D、VX1000-01D",
+              "深圳市华芯智能装备有限公司（简称：华芯智能）成立于2021年7月，是一家集专业研发、生产、销售于一体的半导体晶圆级封装设备企业。华芯智能自主研发的晶圆级封测分选设备自2023年开…"
+            ]
+          },
+          {
+            "cluster": "中智科创",
+            "values": [
+              "Roby系列安保巡逻机器人、Roby-Guard智能门岗机器人、Roby-Patrol室外巡逻机器人、Roby-Service安保服务机器人、室内立体巡更机器人",
+              "：窄体叉取型FMR_GS-150-V1；托盘搬运型_GP-150-V1；安保巡逻机器人；安保巡更机器人；智能门岗机器人；迎宾服务机器人；移动岗哨机器人；消防机器人"
+            ]
+          },
+          {
+            "cluster": "中科",
+            "values": [
+              "EIOT-N830系列边缘智能物联网关、EIOT-N852系列环网柜智能测温堵头装置、EIOT-N863系列变压器红外测温装置、EIOT-S801系列烟雾传感器、EIOT-S80…",
+              "BT892X系列、BT889X系列、BT885X系列、AB535X系列、AB537X系列、AB532X系列、AB533X系列、AB536X系列、AB530X系列、AB11X系列"
+            ]
+          },
+          {
+            "cluster": "中舟",
+            "values": [
+              "未找到",
+              "i跟班系列跟随搬运机器人、全向重载AGV、室内通用运输平台（小型/大型）、室外通用运输平台（运输型/单兵型）、第二代送餐机器人、楼宇配送机器人、小伊家庭服务机器人、巡检安防机器人"
+            ]
+          },
+          {
+            "cluster": "乐聚",
+            "values": [
+              "Roban机器人-科教版、Aelos Smart机器人-教育版、Aelos鸿蒙机器人-教育版、Aelos Pro3机器人-教育版",
+              "KUAVO-MY、KUAVO 3.0、AELOS娱乐版、AELOS教育版、AELOS 1S、AELOS Smart、AELOS 鸿蒙版、AELOS Pro3、Roban、PAND…"
+            ]
+          }
+        ],
+        "team_description": [
+          {
+            "cluster": "华芯",
+            "values": [
+              "何兴扬，职务：执行董事&总经理，介绍：何兴扬，深圳市华芯机器人技术有限责任公司执行董事&总经理。",
+              "李军应，华芯股份董事长&总经理",
+              "陈双成，职务：董事长&总经理，介绍：陈双成，深圳市华芯智能装备有限公司董事长&总经理。"
+            ]
+          },
+          {
+            "cluster": "中智科创",
+            "values": [
+              "熊凤梅，科松电子执行董事&总经理",
+              "钟翔宇，职务：创始人，介绍：钟翔宇 ，中智科创创始人。 曹易，职务：联系人，介绍：曹易，中智科创联系人。"
+            ]
+          },
+          {
+            "cluster": "中科",
+            "values": [
+              "王建文，执行董事&总经理，中科能源执行董事&总经理 袁战刚，监事，中科能源监事",
+              "吴闪光，中科智王创始人"
+            ]
+          },
+          {
+            "cluster": "中舟",
+            "values": [
+              "陈京萍，中舟健康执行董事",
+              "韦元江，中舟智能创始人"
+            ]
+          },
+          {
+            "cluster": "乐聚",
+            "values": [
+              "冷晓琨，创始人，乐聚机器人董事长&CTO。为哈尔滨工业大学计算机科学与技术博士，任哈工大研究员，智能机器人研究中心副主任，曾主持各类研发项目共36项，主持编写人工智能与机器人相关…",
+              "冷晓琨，创始人/首席技术官兼董事长，哈尔滨工业大学计算机学院博士，乐聚机器人创始人，入选雷锋网新智造成长榜50强、福布斯中国U30榜单 安子威，联合创始人，哈尔滨工业大学博士，曾…"
+            ]
+          }
+        ],
+        "aliases": [
+          {
+            "cluster": "中建三局",
+            "values": [
+              "中建三局深圳公司",
+              "中建三局建设工程股份有限公司|中国建筑第三工程局"
+            ]
+          },
+          {
+            "cluster": "中建五局第三建设",
+            "values": [
+              "中国建筑第五工程局第三建筑安装公司",
+              "深圳公司"
+            ]
+          },
+          {
+            "cluster": "平安",
+            "values": [
+              "平安科技|Ping An Technology (Shenzhen) Co., Ltd.",
+              "平安通信科技|平安云"
+            ]
+          }
+        ],
+        "geography": [
+          {
+            "cluster": "国际先进技术应用推进中心",
+            "values": [
+              "安徽省-合肥市",
+              "广东省-深圳市"
+            ]
+          },
+          {
+            "cluster": "特康",
+            "values": [
+              "广东省",
+              "广东省-深圳市"
+            ]
+          }
+        ]
+      },
+      "clusters_all": [
+        {
+          "cluster": "华芯",
+          "size": 3,
+          "conflicting_fields": 13,
+          "members": [
+            {
+              "name": "深圳市华芯机器人技术有限责任公司",
+              "cid": "company-c-09fd4866e9e1db6f68fcfabf",
+              "family": "company-p4"
+            },
+            {
+              "name": "深圳华芯信息技术股份有限公司",
+              "cid": "company-c-429482ca52b32010d14172e3",
+              "family": "company-p4"
+            },
+            {
+              "name": "深圳市华芯智能装备有限公司",
+              "cid": "company-c-cfa53df2228f128f98e06801",
+              "family": "COMP-5F6BCD4926FC"
+            }
+          ]
+        },
+        {
+          "cluster": "中智科创",
+          "size": 2,
+          "conflicting_fields": 13,
+          "members": [
+            {
+              "name": "深圳中智科创机器人有限公司",
+              "cid": "company-c-fb0b761ce5db8e890212df0f",
+              "family": "company-p4"
+            },
+            {
+              "name": "中智科创机器人有限公司",
+              "cid": "company-c-ffd53c40d2712631eb6f88c8",
+              "family": "company-p4"
+            }
+          ]
+        },
+        {
+          "cluster": "中科",
+          "size": 2,
+          "conflicting_fields": 13,
+          "members": [
+            {
+              "name": "中科（深圳）能源物联网有限公司",
+              "cid": "company-c-1a6af39000b64931602bec79",
+              "family": "company-p4"
+            },
+            {
+              "name": "中科科技技术（深圳）有限公司",
+              "cid": "company-c-abfd5d8bb6719410eb6434be",
+              "family": "company-p4"
+            }
+          ]
+        },
+        {
+          "cluster": "互连",
+          "size": 2,
+          "conflicting_fields": 13,
+          "members": [
+            {
+              "name": "深圳互连科技有限公司",
+              "cid": "company-c-2184294fce545760bf9d0b29",
+              "family": "company-p4"
+            },
+            {
+              "name": "深圳市互连电子有限公司",
+              "cid": "company-c-bb270bd3c476f0dc8eba31d7",
+              "family": "company-p4"
+            }
+          ]
+        },
+        {
+          "cluster": "志凌伟业",
+          "size": 2,
+          "conflicting_fields": 13,
+          "members": [
+            {
+              "name": "深圳市志凌伟业光电有限公司",
+              "cid": "company-c-ea322f35b93a0328edc3bb94",
+              "family": "company-p4"
+            },
+            {
+              "name": "深圳市志凌伟业技术股份有限公司",
+              "cid": "company-c-ff7910dfb70696d94ff1e428",
+              "family": "company-p4"
+            }
+          ]
+        },
+        {
+          "cluster": "数心",
+          "size": 2,
+          "conflicting_fields": 13,
+          "members": [
+            {
+              "name": "深圳数心网络科技有限公司",
+              "cid": "company-c-a0012e90800dbd1986916e5c",
+              "family": "company-p4"
+            },
+            {
+              "name": "深圳市数心科技有限公司",
+              "cid": "company-c-e7624ff1d9faeae2a36ec347",
+              "family": "company-p4"
+            }
+          ]
+        },
+        {
+          "cluster": "普兰",
+          "size": 2,
+          "conflicting_fields": 13,
+          "members": [
+            {
+              "name": "深圳市普兰软件有限公司",
+              "cid": "company-c-4925d75cda0b20f82a7b701e",
+              "family": "company-p4"
+            },
+            {
+              "name": "深圳市普兰电子技术有限公司",
+              "cid": "company-c-f181693f64e15349d356f21e",
+              "family": "company-p4"
+            }
+          ]
+        },
+        {
+          "cluster": "深信",
+          "size": 2,
+          "conflicting_fields": 13,
+          "members": [
+            {
+              "name": "深圳深信生物科技有限公司",
+              "cid": "company-c-98008fbf5a119efedaf24fa5",
+              "family": "company-p4"
+            },
+            {
+              "name": "深圳市深信信息技术有限公司",
+              "cid": "company-c-ec3f5c0b932e4d600efb372a",
+              "family": "company-p4"
+            }
+          ]
+        },
+        {
+          "cluster": "特康",
+          "size": 2,
+          "conflicting_fields": 13,
+          "members": [
+            {
+              "name": "特康控股科技（深圳）有限公司",
+              "cid": "company-c-60ae103fbaca8d31c50042b6",
+              "family": "company-p4"
+            },
+            {
+              "name": "深圳特康医疗器械有限公司",
+              "cid": "company-c-a5e11c59ffbab09dc6b918d9",
+              "family": "company-p4"
+            }
+          ]
+        },
+        {
+          "cluster": "砺芯",
+          "size": 2,
+          "conflicting_fields": 13,
+          "members": [
+            {
+              "name": "深圳市砺芯科技有限公司",
+              "cid": "company-c-7ad3422db5bafd2cb792a9b0",
+              "family": "company-p4"
+            },
+            {
+              "name": "深圳砺芯半导体有限责任公司",
+              "cid": "company-c-d02a7f01b3980a66c1600124",
+              "family": "company-p4"
+            }
+          ]
+        },
+        {
+          "cluster": "索菱",
+          "size": 2,
+          "conflicting_fields": 13,
+          "members": [
+            {
+              "name": "深圳市索菱通信技术有限公司",
+              "cid": "company-c-d7098e84d3bc8d8df22b7481",
+              "family": "company-p4"
+            },
+            {
+              "name": "深圳市索菱实业股份有限公司",
+              "cid": "company-c-db28f85be58f8c22ffb607dc",
+              "family": "company-p4"
+            }
+          ]
+        },
+        {
+          "cluster": "聚电",
+          "size": 2,
+          "conflicting_fields": 13,
+          "members": [
+            {
+              "name": "深圳聚电智能科技股份有限公司",
+              "cid": "company-c-713822595c8e6da082cb8724",
+              "family": "company-p4"
+            },
+            {
+              "name": "深圳市聚电网络科技有限公司",
+              "cid": "company-c-a70a3908ba0bee6bbe91b42f",
+              "family": "company-p4"
+            }
+          ]
+        },
+        {
+          "cluster": "芝麻开门",
+          "size": 2,
+          "conflicting_fields": 13,
+          "members": [
+            {
+              "name": "深圳市芝麻开门智能网络科技有限公司",
+              "cid": "company-c-925ef3810953f051f3f7318a",
+              "family": "company-p4"
+            },
+            {
+              "name": "深圳市芝麻开门电子科技有限公司",
+              "cid": "company-c-d0e97dd041c050a5670efc0f",
+              "family": "company-p4"
+            }
+          ]
+        },
+        {
+          "cluster": "超维",
+          "size": 2,
+          "conflicting_fields": 13,
+          "members": [
+            {
+              "name": "深圳市超维光电科技有限公司",
+              "cid": "company-c-03668321c5b855e4a6a3e95e",
+              "family": "company-p4"
+            },
+            {
+              "name": "深圳市超维实业有限公司",
+              "cid": "company-c-54f7ea77eb67aac2298d84f3",
+              "family": "company-p4"
+            }
+          ]
+        },
+        {
+          "cluster": "达实",
+          "size": 2,
+          "conflicting_fields": 13,
+          "members": [
+            {
+              "name": "深圳达实智能股份有限公司",
+              "cid": "company-c-77288ab37ef51144aca0ca4c",
+              "family": "company-p4"
+            },
+            {
+              "name": "深圳达实物联网技术有限公司",
+              "cid": "company-c-ba60f01134357e7f4fa193e8",
+              "family": "company-p4"
+            }
+          ]
+        },
+        {
+          "cluster": "锐曼",
+          "size": 2,
+          "conflicting_fields": 13,
+          "members": [
+            {
+              "name": "深圳市锐曼智能技术有限公司",
+              "cid": "company-c-30d1da20c9d086b995e476ec",
+              "family": "company-p4"
+            },
+            {
+              "name": "深圳市锐曼智能装备有限公司",
+              "cid": "company-c-b81769c24debcf1713384371",
+              "family": "company-p4"
+            }
+          ]
+        },
+        {
+          "cluster": "香蕉",
+          "size": 2,
+          "conflicting_fields": 13,
+          "members": [
+            {
+              "name": "深圳市香蕉智能科技有限公司",
+              "cid": "company-c-37d7f16d3346532b763258df",
+              "family": "company-p4"
+            },
+            {
+              "name": "深圳市香蕉科技有限公司",
+              "cid": "company-c-664ca7463984d329f6c12b53",
+              "family": "company-p4"
+            }
+          ]
+        },
+        {
+          "cluster": "创想未来",
+          "size": 2,
+          "conflicting_fields": 12,
+          "members": [
+            {
+              "name": "深圳市创想未来科技有限公司",
+              "cid": "company-c-01cb37c0c85cdc05891dcf73",
+              "family": "company-p4"
+            },
+            {
+              "name": "深圳创想未来机器人有限公司",
+              "cid": "company-c-aaa703b17f7e0f4b3297bc6c",
+              "family": "company-p4"
+            }
+          ]
+        },
+        {
+          "cluster": "华讯方舟",
+          "size": 2,
+          "conflicting_fields": 12,
+          "members": [
+            {
+              "name": "华讯方舟股份有限公司",
+              "cid": "company-c-6c06765b4be7f14f672cb8d2",
+              "family": "company-p4"
+            },
+            {
+              "name": "华讯方舟科技有限公司",
+              "cid": "company-c-cdc4d767b78b4e5c00452a4b",
+              "family": "company-p4"
+            }
+          ]
+        },
+        {
+          "cluster": "小煷伴",
+          "size": 2,
+          "conflicting_fields": 12,
+          "members": [
+            {
+              "name": "深圳市小煷伴科技有限公司",
+              "cid": "company-c-9cd4dc6a0d42c1314988c120",
+              "family": "company-p4"
+            },
+            {
+              "name": "小煷伴（深圳）智能科技有限公司",
+              "cid": "company-c-b88337354d339a19947d8b28",
+              "family": "company-p4"
+            }
+          ]
+        },
+        {
+          "cluster": "易联",
+          "size": 2,
+          "conflicting_fields": 12,
+          "members": [
+            {
+              "name": "深圳易联光电技术有限公司",
+              "cid": "company-c-01ffe0b5868bdca37a4c993a",
+              "family": "company-p4"
+            },
+            {
+              "name": "深圳市易联电子有限公司",
+              "cid": "company-c-1d77eeeb843f59c0d6fcb43e",
+              "family": "company-p4"
+            }
+          ]
+        },
+        {
+          "cluster": "汇能",
+          "size": 2,
+          "conflicting_fields": 12,
+          "members": [
+            {
+              "name": "深圳市汇能光电科技有限公司",
+              "cid": "company-c-048401b1cf408fdb0cc0fb5f",
+              "family": "company-p4"
+            },
+            {
+              "name": "深圳汇能新能源科技有限公司",
+              "cid": "company-c-8ce14365b1f9db77e9e526a9",
+              "family": "company-p4"
+            }
+          ]
+        },
+        {
+          "cluster": "法本",
+          "size": 2,
+          "conflicting_fields": 12,
+          "members": [
+            {
+              "name": "深圳市法本信息技术股份有限公司",
+              "cid": "company-c-812a3543a67cf3192be5ba43",
+              "family": "company-p4"
+            },
+            {
+              "name": "深圳法本电子股份有限公司",
+              "cid": "company-c-cb160a8e87d23f8f061ebb56",
+              "family": "company-p4"
+            }
+          ]
+        },
+        {
+          "cluster": "泰克",
+          "size": 2,
+          "conflicting_fields": 12,
+          "members": [
+            {
+              "name": "深圳泰克教育科技有限公司",
+              "cid": "company-c-1ac1051d3deda40305ba2fc7",
+              "family": "company-p4"
+            },
+            {
+              "name": "泰克半导体装备（深圳）有限公司",
+              "cid": "company-c-a6dd567b6c5a1dbceed7b18d",
+              "family": "company-p4"
+            }
+          ]
+        },
+        {
+          "cluster": "中微",
+          "size": 2,
+          "conflicting_fields": 11,
+          "members": [
+            {
+              "name": "中微半导体（深圳）股份有限公司",
+              "cid": "company-c-2af55c44df2c27bb1e42f9a0",
+              "family": "company-p4"
+            },
+            {
+              "name": "深圳市中微信息技术有限公司",
+              "cid": "company-c-67bcf6a934255fa6bf3de438",
+              "family": "company-p4"
+            }
+          ]
+        },
+        {
+          "cluster": "国微",
+          "size": 2,
+          "conflicting_fields": 11,
+          "members": [
+            {
+              "name": "国微集团（深圳）有限公司",
+              "cid": "company-c-86935a84811828086eca7975",
+              "family": "company-p4"
+            },
+            {
+              "name": "深圳市国微电子有限公司",
+              "cid": "company-c-b9af31ac39cd8c6175d713a5",
+              "family": "company-p4"
+            }
+          ]
+        },
+        {
+          "cluster": "浩科",
+          "size": 2,
+          "conflicting_fields": 11,
+          "members": [
+            {
+              "name": "深圳市浩科电子有限公司",
+              "cid": "company-c-5022d37977cfd76070b76948",
+              "family": "company-p4"
+            },
+            {
+              "name": "深圳市浩科智能信息技术有限公司",
+              "cid": "company-c-cb1ee1132a5bb581f3ea04a5",
+              "family": "company-p4"
+            }
+          ]
+        },
+        {
+          "cluster": "阿西莫夫",
+          "size": 2,
+          "conflicting_fields": 11,
+          "members": [
+            {
+              "name": "深圳市阿西莫夫人工智能有限公司",
+              "cid": "company-c-14426b3f2ab66627e135c806",
+              "family": "company-p4"
+            },
+            {
+              "name": "深圳市阿西莫夫科技有限公司",
+              "cid": "company-c-c2f6b4bab85370ecd5149524",
+              "family": "company-p4"
+            }
+          ]
+        },
+        {
+          "cluster": "顺丰",
+          "size": 2,
+          "conflicting_fields": 11,
+          "members": [
+            {
+              "name": "顺丰科技有限公司",
+              "cid": "company-c-3c7242f9860e02e90c7fa48e",
+              "family": "company-p4"
+            },
+            {
+              "name": "顺丰控股股份有限公司",
+              "cid": "company-c-fc778dec7c307bd22418a775",
+              "family": "company-p4"
+            }
+          ]
+        },
+        {
+          "cluster": "云影",
+          "size": 2,
+          "conflicting_fields": 10,
+          "members": [
+            {
+              "name": "深圳市云影医疗科技有限公司",
+              "cid": "company-c-22f24708a85cb34ae904f2c5",
+              "family": "company-p4"
+            },
+            {
+              "name": "深圳市云影网络科技有限公司",
+              "cid": "company-c-f89f7fc392836027d4c99454",
+              "family": "company-p4"
+            }
+          ]
+        },
+        {
+          "cluster": "今天国际",
+          "size": 2,
+          "conflicting_fields": 10,
+          "members": [
+            {
+              "name": "深圳市今天国际软件技术有限公司",
+              "cid": "company-c-6350fb11687f26b5c82b2c95",
+              "family": "company-p4"
+            },
+            {
+              "name": "深圳市今天国际智能机器人有限公司",
+              "cid": "company-c-8fae549b159eb94ad31d3be5",
+              "family": "company-p4"
+            }
+          ]
+        },
+        {
+          "cluster": "宝能",
+          "size": 2,
+          "conflicting_fields": 10,
+          "members": [
+            {
+              "name": "深圳市宝能汽车有限公司",
+              "cid": "company-c-8109665f54688b12857d2a43",
+              "family": "company-p4"
+            },
+            {
+              "name": "宝能汽车集团有限公司",
+              "cid": "company-c-b54d8f801885c30058b9d78d",
+              "family": "company-p4"
+            }
+          ]
+        },
+        {
+          "cluster": "比亚迪",
+          "size": 2,
+          "conflicting_fields": 10,
+          "members": [
+            {
+              "name": "比亚迪半导体股份有限公司",
+              "cid": "company-c-0eb3bbca298f11493ed67080",
+              "family": "company-p4"
+            },
+            {
+              "name": "比亚迪股份有限公司",
+              "cid": "company-c-4101fbf3c4a1337524030879",
+              "family": "company-p4"
+            }
+          ]
+        },
+        {
+          "cluster": "邦深",
+          "size": 2,
+          "conflicting_fields": 10,
+          "members": [
+            {
+              "name": "邦深电子（深圳）有限公司",
+              "cid": "company-c-80752b458d84bde4fd7f692b",
+              "family": "company-p4"
+            },
+            {
+              "name": "邦深科技（深圳）有限公司",
+              "cid": "company-c-bf215a78dc6cb58cf41b0f42",
+              "family": "company-p4"
+            }
+          ]
+        },
+        {
+          "cluster": "中舟",
+          "size": 2,
+          "conflicting_fields": 9,
+          "members": [
+            {
+              "name": "中舟（深圳）健康科技有限公司",
+              "cid": "company-c-6da2213f4ce256e539aa8bf5",
+              "family": "COMP-9674BE55B750"
+            },
+            {
+              "name": "深圳市中舟智能科技有限公司",
+              "cid": "company-c-7b1fb07b5602d900c20c193b",
+              "family": "company-p4"
+            }
+          ]
+        },
+        {
+          "cluster": "新国都",
+          "size": 2,
+          "conflicting_fields": 9,
+          "members": [
+            {
+              "name": "深圳市新国都智能有限公司",
+              "cid": "company-c-29341937ae1ddd1f7e3baf48",
+              "family": "COMP-E38E895F010B"
+            },
+            {
+              "name": "深圳市新国都股份有限公司",
+              "cid": "company-c-a4ef7c826f5e6b4313786192",
+              "family": "company-p4"
+            }
+          ]
+        },
+        {
+          "cluster": "盖亚",
+          "size": 2,
+          "conflicting_fields": 9,
+          "members": [
+            {
+              "name": "深圳市盖亚云计算有限公司",
+              "cid": "company-c-53d0e3d4a138bf7247b1ab59",
+              "family": "COMP-A9DF1A242D11"
+            },
+            {
+              "name": "深圳市盖亚信息技术有限公司",
+              "cid": "company-c-69a46a8798694c512c67d4c1",
+              "family": "company-p4"
+            }
+          ]
+        },
+        {
+          "cluster": "码隆",
+          "size": 2,
+          "conflicting_fields": 9,
+          "members": [
+            {
+              "name": "深圳码隆智能科技有限公司",
+              "cid": "company-c-6622c7f896c2b8d4a71eb69e",
+              "family": "company-p4"
+            },
+            {
+              "name": "深圳码隆科技有限公司",
+              "cid": "company-c-a6dda6a1bae323a4064737db",
+              "family": "company-p4"
+            }
+          ]
+        },
+        {
+          "cluster": "阿尔法",
+          "size": 2,
+          "conflicting_fields": 9,
+          "members": [
+            {
+              "name": "阿尔法仪器技术（深圳）有限公司",
+              "cid": "company-c-6f7712cce98f0e194709d917",
+              "family": "COMP-493774205E15"
+            },
+            {
+              "name": "阿尔法云计算（深圳）有限公司",
+              "cid": "company-c-89591438237cbdc1fa80f669",
+              "family": "COMP-A584F7B85F40"
+            }
+          ]
+        },
+        {
+          "cluster": "仁心",
+          "size": 2,
+          "conflicting_fields": 8,
+          "members": [
+            {
+              "name": "仁心健康（深圳）有限公司",
+              "cid": "company-c-9055f0879b243940187f3429",
+              "family": "COMP-78BEB7E2C78B"
+            },
+            {
+              "name": "深圳仁心医疗有限公司",
+              "cid": "company-c-ecb71f9eef4310e351156f0b",
+              "family": "COMP-6CBCB522B859"
+            }
+          ]
+        },
+        {
+          "cluster": "冠乔",
+          "size": 2,
+          "conflicting_fields": 8,
+          "members": [
+            {
+              "name": "深圳市冠乔智能科技有限公司",
+              "cid": "company-c-2c1c515ea3714343e8322089",
+              "family": "company-p4"
+            },
+            {
+              "name": "深圳市冠乔科技有限公司",
+              "cid": "company-c-b8c1c10b55f11f65da23d1a4",
+              "family": "company-p4"
+            }
+          ]
+        },
+        {
+          "cluster": "华云",
+          "size": 2,
+          "conflicting_fields": 8,
+          "members": [
+            {
+              "name": "深圳市华云通信有限公司",
+              "cid": "company-c-57de40f105a78cef3e23eff4",
+              "family": "company-p4"
+            },
+            {
+              "name": "深圳市华云智能健康有限公司",
+              "cid": "company-c-df96d0b041f25c3674e1b165",
+              "family": "COMP-E58B554DC23E"
+            }
+          ]
+        },
+        {
+          "cluster": "智汇",
+          "size": 2,
+          "conflicting_fields": 8,
+          "members": [
+            {
+              "name": "深圳市智汇机器人科技有限公司",
+              "cid": "company-c-642e16ac50558f7bb440192b",
+              "family": "company-p4"
+            },
+            {
+              "name": "深圳市智汇物联网科技有限公司",
+              "cid": "company-c-d72272545fe9c7f98380b863",
+              "family": "COMP-67CC8C5EDC05"
+            }
+          ]
+        },
+        {
+          "cluster": "未艾",
+          "size": 2,
+          "conflicting_fields": 8,
+          "members": [
+            {
+              "name": "深圳未艾教育科技有限公司",
+              "cid": "company-c-01a157dc0c3512e43e23c34e",
+              "family": "COMP-2CE641298D90"
+            },
+            {
+              "name": "未艾医疗技术（深圳）有限公司",
+              "cid": "company-c-6dabb17319e3aa154939970f",
+              "family": "company-p4"
+            }
+          ]
+        },
+        {
+          "cluster": "深研",
+          "size": 2,
+          "conflicting_fields": 8,
+          "members": [
+            {
+              "name": "深研人工智能技术（深圳）有限公司",
+              "cid": "company-c-44e011959b840a0af5d17161",
+              "family": "COMP-A26FBAE0517B"
+            },
+            {
+              "name": "深圳市深研生物科技有限公司",
+              "cid": "company-c-c9e6ef7fea781af995a51b4d",
+              "family": "company-p4"
+            }
+          ]
+        },
+        {
+          "cluster": "麦思威",
+          "size": 2,
+          "conflicting_fields": 8,
+          "members": [
+            {
+              "name": "麦思威科技（深圳）有限责任公司",
+              "cid": "company-c-368633b1ec86b1c7d8e725b8",
+              "family": "company-p4"
+            },
+            {
+              "name": "麦思威电子（深圳）有限公司",
+              "cid": "company-c-5d0adfd00b6747f4fd7eff66",
+              "family": "COMP-D2CA4A8B31D3"
+            }
+          ]
+        },
+        {
+          "cluster": "乐聚",
+          "size": 2,
+          "conflicting_fields": 7,
+          "members": [
+            {
+              "name": "乐聚智能（深圳）股份有限公司",
+              "cid": "company-c-28bf2bb10cb49b0e4fdc07ca",
+              "family": "company-p4"
+            },
+            {
+              "name": "乐聚（深圳）机器人技术有限公司",
+              "cid": "company-c-6313cfcefa7dd04a51e70739",
+              "family": "company-p4"
+            }
+          ]
+        },
+        {
+          "cluster": "智慧",
+          "size": 2,
+          "conflicting_fields": 7,
+          "members": [
+            {
+              "name": "深圳智慧能源技术有限公司",
+              "cid": "company-c-29efeb593437ffd201597d34",
+              "family": "company-p4"
+            },
+            {
+              "name": "深圳智慧教育科技有限公司",
+              "cid": "company-c-ca55a47716b84fda4f6b62ca",
+              "family": "COMP-D3906F96F809"
+            }
+          ]
+        },
+        {
+          "cluster": "智眸",
+          "size": 2,
+          "conflicting_fields": 7,
+          "members": [
+            {
+              "name": "深圳智眸科技有限公司",
+              "cid": "company-c-4003abc05ba02ffc9e4c7e49",
+              "family": "company-p4"
+            },
+            {
+              "name": "智眸医疗（深圳）有限公司",
+              "cid": "company-c-f045459ec1d6056d4af6fb72",
+              "family": "COMP-1BE006248FE1"
+            }
+          ]
+        },
+        {
+          "cluster": "普渡",
+          "size": 3,
+          "conflicting_fields": 6,
+          "members": [
+            {
+              "name": "深圳市普渡科技有限公司",
+              "cid": "company-c-72b2ec528908ac199ee1dbc7",
+              "family": "COMP-0A61012B350E"
+            },
+            {
+              "name": "深圳市普渡科技股份有限公司",
+              "cid": "company-c-f11204f5f0dee0d8a1e1fdd4",
+              "family": "company-p4"
+            },
+            {
+              "name": "成都市普渡机器人有限公司",
+              "cid": "company-c-f465962ae6d0ac84c5f8cad3",
+              "family": "company-backfill"
+            }
+          ]
+        },
+        {
+          "cluster": "云豹",
+          "size": 2,
+          "conflicting_fields": 6,
+          "members": [
+            {
+              "name": "深圳云豹智能股份有限公司",
+              "cid": "company-c-594dd59da1f0ddb6088e6cc9",
+              "family": "COMP-4427001BAFCD"
+            },
+            {
+              "name": "深圳云豹智能有限公司",
+              "cid": "company-c-f01cdba855c16a1dac48ec4b",
+              "family": "company-p4"
+            }
+          ]
+        },
+        {
+          "cluster": "国际先进技术应用推进中心",
+          "size": 2,
+          "conflicting_fields": 6,
+          "members": [
+            {
+              "name": "合肥国际先进技术应用推进中心",
+              "cid": "company-c-60af86764946ad394ec1e8bb",
+              "family": "company-p4"
+            },
+            {
+              "name": "深圳国际先进技术应用推进中心",
+              "cid": "company-c-c841e20d983b33640734ccfe",
+              "family": "company-p4"
+            }
+          ]
+        },
+        {
+          "cluster": "海思",
+          "size": 2,
+          "conflicting_fields": 6,
+          "members": [
+            {
+              "name": "深圳海思机器人有限公司",
+              "cid": "company-c-b6d53c7efbeba015805a5907",
+              "family": "COMP-55BCF0424C0F"
+            },
+            {
+              "name": "深圳市海思半导体有限公司",
+              "cid": "company-c-fe83382735f6e38e759fd152",
+              "family": "company-p4"
+            }
+          ]
+        },
+        {
+          "cluster": "银河通用",
+          "size": 2,
+          "conflicting_fields": 5,
+          "members": [
+            {
+              "name": "银河通用",
+              "cid": "company-c-12bb60608a1c9e5205a55caf",
+              "family": "COMP-49A538F54ABA"
+            },
+            {
+              "name": "北京银河通用机器人有限公司",
+              "cid": "company-c-746c8de849c4300d3d863175",
+              "family": "company-p4"
+            }
+          ]
+        },
+        {
+          "cluster": "中国广核",
+          "size": 2,
+          "conflicting_fields": 4,
+          "members": [
+            {
+              "name": "中国广核集团有限公司",
+              "cid": "company-c-3bfba7b2158dabd4584e1715",
+              "family": "company-p4"
+            },
+            {
+              "name": "中国广核电力股份有限公司",
+              "cid": "company-c-51ba1335547096f3b8e6c765",
+              "family": "company-backfill"
+            }
+          ]
+        },
+        {
+          "cluster": "中建三局",
+          "size": 2,
+          "conflicting_fields": 4,
+          "members": [
+            {
+              "name": "中建三局集团（深圳）有限公司",
+              "cid": "company-c-277474a470b2a3c66237bda4",
+              "family": "company-backfill"
+            },
+            {
+              "name": "中建三局集团有限公司",
+              "cid": "company-c-fcdb6508b02d5d52c94c27ad",
+              "family": "company-backfill"
+            }
+          ]
+        },
+        {
+          "cluster": "中建五局第三建设",
+          "size": 2,
+          "conflicting_fields": 4,
+          "members": [
+            {
+              "name": "中建五局第三建设有限公司",
+              "cid": "company-c-32ea991d975f5d20796f38af",
+              "family": "company-backfill"
+            },
+            {
+              "name": "中建五局第三建设（深圳）有限公司",
+              "cid": "company-c-9063652ecd9417c4996a7441",
+              "family": "company-backfill"
+            }
+          ]
+        },
+        {
+          "cluster": "中建科工",
+          "size": 2,
+          "conflicting_fields": 4,
+          "members": [
+            {
+              "name": "中建科工集团有限公司",
+              "cid": "company-c-2fd3a34e2dd560f74850b4b5",
+              "family": "company-p4"
+            },
+            {
+              "name": "中建科工智能科技（深圳）有限公司",
+              "cid": "company-c-5babe7bb34933f04336721b3",
+              "family": "company-backfill"
+            }
+          ]
+        },
+        {
+          "cluster": "云天励飞",
+          "size": 2,
+          "conflicting_fields": 4,
+          "members": [
+            {
+              "name": "成都云天励飞技术有限公司",
+              "cid": "company-c-4f35bc18ae561b0f40a2fb16",
+              "family": "company-backfill"
+            },
+            {
+              "name": "深圳云天励飞技术股份有限公司",
+              "cid": "company-c-7537d17b709c1489221746ba",
+              "family": "company-p4"
+            }
+          ]
+        },
+        {
+          "cluster": "亿道",
+          "size": 2,
+          "conflicting_fields": 4,
+          "members": [
+            {
+              "name": "深圳市亿道电子科技有限公司",
+              "cid": "company-c-1f18d8cd6b4994f034bbd203",
+              "family": "company-backfill"
+            },
+            {
+              "name": "深圳市亿道信息股份有限公司",
+              "cid": "company-c-a5dae351216f23b6663db32f",
+              "family": "company-p4"
+            }
+          ]
+        },
+        {
+          "cluster": "光影焕像",
+          "size": 2,
+          "conflicting_fields": 4,
+          "members": [
+            {
+              "name": "广州光影焕像科技有限公司",
+              "cid": "company-c-7723d484de05e19a052b4b03",
+              "family": "COMP-DF864B2B500B"
+            },
+            {
+              "name": "深圳光影焕像科技有限公司",
+              "cid": "company-c-efa6488b4c2461d1db6f7ad3",
+              "family": "company-p4"
+            }
+          ]
+        },
+        {
+          "cluster": "创益通",
+          "size": 2,
+          "conflicting_fields": 4,
+          "members": [
+            {
+              "name": "深圳市创益通技术股份有限公司",
+              "cid": "company-c-88fc9a695ce86480ca3142d2",
+              "family": "company-p4"
+            },
+            {
+              "name": "惠州市创益通电子科技有限公司",
+              "cid": "company-c-c4761cf9a20b16ab4681cf5c",
+              "family": "company-backfill"
+            }
+          ]
+        },
+        {
+          "cluster": "华为",
+          "size": 2,
+          "conflicting_fields": 4,
+          "members": [
+            {
+              "name": "华为技术有限公司",
+              "cid": "company-c-416da59f223a3a3272cba493",
+              "family": "company-p4"
+            },
+            {
+              "name": "深圳华为云计算技术有限公司",
+              "cid": "company-c-8882fd5f889bb46f6a6b7b77",
+              "family": "company-backfill"
+            }
+          ]
+        },
+        {
+          "cluster": "卧安",
+          "size": 2,
+          "conflicting_fields": 4,
+          "members": [
+            {
+              "name": "卧安机器人（深圳）股份有限公司",
+              "cid": "company-c-56c63a9b4353b8d39d536378",
+              "family": "company-p4"
+            },
+            {
+              "name": "卧安科技（深圳）有限公司",
+              "cid": "company-c-b86e1740a286838ad1b8ebf4",
+              "family": "company-backfill"
+            }
+          ]
+        },
+        {
+          "cluster": "国电",
+          "size": 2,
+          "conflicting_fields": 4,
+          "members": [
+            {
+              "name": "深圳市国电科技通信有限公司",
+              "cid": "company-c-32324a059a50d41c771ee42d",
+              "family": "company-backfill"
+            },
+            {
+              "name": "深圳市国电投资有限公司",
+              "cid": "company-c-e1c8d6baf18cc83e674c23d9",
+              "family": "company-p4"
+            }
+          ]
+        },
+        {
+          "cluster": "平安",
+          "size": 2,
+          "conflicting_fields": 4,
+          "members": [
+            {
+              "name": "平安科技（深圳）有限公司",
+              "cid": "company-c-4a57215bd706e512cd8239bb",
+              "family": "company-backfill"
+            },
+            {
+              "name": "深圳平安通信科技有限公司",
+              "cid": "company-c-e89a7af5b5be157d7b92d648",
+              "family": "company-backfill"
+            }
+          ]
+        },
+        {
+          "cluster": "汇顶",
+          "size": 2,
+          "conflicting_fields": 4,
+          "members": [
+            {
+              "name": "深圳市汇顶自动化技术有限公司",
+              "cid": "company-c-168894b9dcd19b3a958f4372",
+              "family": "company-backfill"
+            },
+            {
+              "name": "深圳市汇顶科技股份有限公司",
+              "cid": "company-c-c94600e8f6b5bb6ed13f2021",
+              "family": "company-p4"
+            }
+          ]
+        },
+        {
+          "cluster": "精控集成",
+          "size": 2,
+          "conflicting_fields": 4,
+          "members": [
+            {
+              "name": "杭州精控集成半导体有限公司",
+              "cid": "company-c-31bd9a93db4e01aa2fee93c7",
+              "family": "COMP-8594F6A99E4C"
+            },
+            {
+              "name": "深圳精控集成半导体有限公司",
+              "cid": "company-c-91c276fb62d64fc486f6dfe1",
+              "family": "company-p4"
+            }
+          ]
+        },
+        {
+          "cluster": "诺因",
+          "size": 2,
+          "conflicting_fields": 4,
+          "members": [
+            {
+              "name": "深圳市诺因智能有限公司",
+              "cid": "company-c-15f905da84b692918f211800",
+              "family": "company-p4"
+            },
+            {
+              "name": "深圳诺因智能有限公司",
+              "cid": "company-c-a41a5cfd4a3f50e1f1566b75",
+              "family": "COMP-9451C47EFDF9"
+            }
+          ]
+        },
+        {
+          "cluster": "迈威",
+          "size": 2,
+          "conflicting_fields": 4,
+          "members": [
+            {
+              "name": "深圳市迈威机器人有限公司",
+              "cid": "company-c-6476e91cf6516e59a539de24",
+              "family": "company-backfill"
+            },
+            {
+              "name": "深圳市迈威科技有限公司",
+              "cid": "company-c-b8dfec9fcf1256f472cb553c",
+              "family": "company-p4"
+            }
+          ]
+        },
+        {
+          "cluster": "尚科宁家",
+          "size": 2,
+          "conflicting_fields": 3,
+          "members": [
+            {
+              "name": "深圳尚科宁家科技有限公司",
+              "cid": "company-c-439102692dc451b1ad9f1125",
+              "family": "company-backfill"
+            },
+            {
+              "name": "尚科宁家（中国）科技有限公司",
+              "cid": "company-c-c2776d1ceace996828a244e2",
+              "family": "company-backfill"
+            }
+          ]
+        },
+        {
+          "cluster": "易普森",
+          "size": 2,
+          "conflicting_fields": 3,
+          "members": [
+            {
+              "name": "易普森生物科技（深圳）有限公司",
+              "cid": "company-c-620d7d4842805a1e2d1613e4",
+              "family": "company-backfill"
+            },
+            {
+              "name": "深圳易普森科技股份有限公司",
+              "cid": "company-c-fc9dafb743637df64db9e09e",
+              "family": "company-backfill"
+            }
+          ]
+        }
+      ]
+    },
+    "core": {
+      "field_stats": {
+        "name": {
+          "conflict": 12,
+          "coverage_gap": 0,
+          "no_conflict": 0
+        },
+        "normalized_name": {
+          "conflict": 12,
+          "coverage_gap": 0,
+          "no_conflict": 0
+        },
+        "industry": {
+          "conflict": 2,
+          "coverage_gap": 6,
+          "no_conflict": 4
+        },
+        "industry_tags": {
+          "conflict": 1,
+          "coverage_gap": 7,
+          "no_conflict": 4
+        },
+        "tech_tags": {
+          "conflict": 3,
+          "coverage_gap": 6,
+          "no_conflict": 3
+        },
+        "geography": {
+          "conflict": 1,
+          "coverage_gap": 8,
+          "no_conflict": 3
+        },
+        "registered_address": {
+          "conflict": 2,
+          "coverage_gap": 7,
+          "no_conflict": 3
+        },
+        "website": {
+          "conflict": 2,
+          "coverage_gap": 4,
+          "no_conflict": 6
+        },
+        "founded_at": {
+          "conflict": 2,
+          "coverage_gap": 6,
+          "no_conflict": 4
+        },
+        "legal_representative": {
+          "conflict": 2,
+          "coverage_gap": 6,
+          "no_conflict": 4
+        },
+        "profile_summary": {
+          "conflict": 12,
+          "coverage_gap": 0,
+          "no_conflict": 0
+        },
+        "technology_route_summary": {
+          "conflict": 9,
+          "coverage_gap": 3,
+          "no_conflict": 0
+        },
+        "product_description": {
+          "conflict": 3,
+          "coverage_gap": 5,
+          "no_conflict": 4
+        },
+        "team_description": {
+          "conflict": 3,
+          "coverage_gap": 6,
+          "no_conflict": 3
+        },
+        "quality_status": {
+          "conflict": 0,
+          "coverage_gap": 12,
+          "no_conflict": 0
+        },
+        "registered_capital": {
+          "conflict": 0,
+          "coverage_gap": 0,
+          "no_conflict": 12
+        },
+        "credit_code": {
+          "conflict": 0,
+          "coverage_gap": 0,
+          "no_conflict": 12
+        },
+        "aliases": {
+          "conflict": 2,
+          "coverage_gap": 1,
+          "no_conflict": 9
+        }
+      },
+      "field_examples": {
+        "name": [
+          {
+            "cluster": "中建三局",
+            "values": [
+              "中建三局集团（深圳）有限公司",
+              "中建三局集团有限公司"
+            ]
+          },
+          {
+            "cluster": "中建五局第三建设",
+            "values": [
+              "中建五局第三建设有限公司",
+              "中建五局第三建设（深圳）有限公司"
+            ]
+          },
+          {
+            "cluster": "中智科创机器人",
+            "values": [
+              "深圳中智科创机器人有限公司",
+              "中智科创机器人有限公司"
+            ]
+          },
+          {
+            "cluster": "云天励飞技术",
+            "values": [
+              "成都云天励飞技术有限公司",
+              "深圳云天励飞技术股份有限公司"
+            ]
+          },
+          {
+            "cluster": "云豹智能",
+            "values": [
+              "深圳云豹智能股份有限公司",
+              "深圳云豹智能有限公司"
+            ]
+          }
+        ],
+        "normalized_name": [
+          {
+            "cluster": "中建三局",
+            "values": [
+              "中建三局集团（深圳）有限公司",
+              "中建三局集团有限公司"
+            ]
+          },
+          {
+            "cluster": "中建五局第三建设",
+            "values": [
+              "中建五局第三建设有限公司",
+              "中建五局第三建设（深圳）有限公司"
+            ]
+          },
+          {
+            "cluster": "中智科创机器人",
+            "values": [
+              "深圳中智科创机器人有限公司",
+              "中智科创机器人有限公司"
+            ]
+          },
+          {
+            "cluster": "云天励飞技术",
+            "values": [
+              "成都云天励飞技术有限公司",
+              "深圳云天励飞技术股份有限公司"
+            ]
+          },
+          {
+            "cluster": "云豹智能",
+            "values": [
+              "深圳云豹智能",
+              "深圳云豹智能有限公司"
+            ]
+          }
+        ],
+        "profile_summary": [
+          {
+            "cluster": "中建三局",
+            "values": [
+              "中建三局集团（深圳）有限公司是中建三局驻深的二级法人单位，深耕深圳、辐射粤港澳大湾区。业务范围涉及传统住宅、城市商业综合体、科教文卫、产业园区以及基础设施等领域，提供房屋建筑、市…",
+              "中建三局集团有限公司是中国建筑集团旗下核心国有骨干企业，主营建筑工程总承包、施工、技术开发及路桥建设等业务。主要产品与服务包括超高层建筑、大型公共建筑、工业厂房、住宅等房屋建筑工…"
+            ]
+          },
+          {
+            "cluster": "中建五局第三建设",
+            "values": [
+              "中建五局第三建设有限公司是中国建筑股份有限公司旗下骨干企业，持有建筑工程和市政公用工程施工总承包双特级资质。主营业务涵盖房屋建筑、市政工程等领域，形成商业综合体、公共场馆、教育医…",
+              "中建五局第三建设（深圳）有限公司是中建五局第三建设有限公司的全资子公司，2020年在深圳市龙华区注册成立。公司持有建筑工程施工总承包二级、市政公用工程施工总承包二级、地基基础工程…"
+            ]
+          },
+          {
+            "cluster": "中智科创机器人",
+            "values": [
+              "Roby系列安保巡逻机器人、Roby-Guard智能门岗机器人、Roby-Patrol室外巡逻机器人、Roby-Service安保服务机器人、室内立体巡更机器人",
+              "：窄体叉取型FMR_GS-150-V1；托盘搬运型_GP-150-V1；安保巡逻机器人；安保巡更机器人；智能门岗机器人；迎宾服务机器人；移动岗哨机器人；消防机器人"
+            ]
+          },
+          {
+            "cluster": "云天励飞技术",
+            "values": [
+              "成都云天励飞技术有限公司是人工智能企业云天励飞在西南地区的重要布局，属于人工智能与智慧城市行业。公司业务定位聚焦于视觉AI算法、芯片及大数据平台的落地应用，依托“算法+芯片+数据…",
+              "DeepEye1000、DeepEdge10C、DeepEdge10、DeepEdge10Max、DeepEdge200、IPU-X100、IPU-X200、IPU-A300、I…"
+            ]
+          },
+          {
+            "cluster": "云豹智能",
+            "values": [
+              "深圳云豹智能股份有限公司是一家聚焦先进制造的企业。细分方向覆盖芯片。当前业务定位为DPU芯片研发商。云豹智能是一家专注于云计算和数据中心数据处理器芯片（DPU）和解决方案的领先半…",
+              "：云霄DPU网卡、云霄S10、高性能软件定义DPU SoC芯片"
+            ]
+          }
+        ],
+        "aliases": [
+          {
+            "cluster": "中建三局",
+            "values": [
+              "中建三局深圳公司",
+              "中建三局建设工程股份有限公司|中国建筑第三工程局"
+            ]
+          },
+          {
+            "cluster": "中建五局第三建设",
+            "values": [
+              "中国建筑第五工程局第三建筑安装公司",
+              "深圳公司"
+            ]
+          }
+        ],
+        "industry": [
+          {
+            "cluster": "中智科创机器人",
+            "values": [
+              "人工智能",
+              "先进制造"
+            ]
+          },
+          {
+            "cluster": "普渡科技",
+            "values": [
+              "机器人",
+              "物流运输"
+            ]
+          }
+        ],
+        "industry_tags": [
+          {
+            "cluster": "中智科创机器人",
+            "values": [
+              "人工智能",
+              "先进制造"
+            ]
+          }
+        ],
+        "tech_tags": [
+          {
+            "cluster": "中智科创机器人",
+            "values": [
+              "智能门禁产品开发商",
+              "智能安保机器人研发商"
+            ]
+          },
+          {
+            "cluster": "国际先进技术应用推进中心",
+            "values": [
+              "合肥国际先进技术应用推进中心是由国家发展改革委指导的综合性技术应用机构，首个实体中心于2022年11月在合肥成立，聚焦无人体系、数据交易等五大体系，布局航天、生物医药等八大领域，…",
+              "深圳国际先进技术应用推进中心（又被称为国先中心（深圳）），国际先进技术应用推进中心（深圳）是在国家发展改革委、深圳市政府支持指导下设立，深圳市科技创新局作为业务主管部门，依托粤港…"
+            ]
+          },
+          {
+            "cluster": "宝能汽车",
+            "values": [
+              "现代化汽车生产商",
+              "新能源整车及核心零部件研发商"
+            ]
+          }
+        ],
+        "registered_address": [
+          {
+            "cluster": "中智科创机器人",
+            "values": [
+              "深圳市光明区新湖街道圳美社区圳美同富裕工业园万代恒光明高新科技园厂房1栋一层",
+              "深圳市光明新区光明街道万代恒高新科技工业园5号厂房5楼"
+            ]
+          },
+          {
+            "cluster": "宝能汽车",
+            "values": [
+              "广东省深圳市龙华新区观澜观光路1226号",
+              "深圳市罗湖区笋岗街道宝安北路2088号深业物流大厦1008"
+            ]
+          }
+        ],
+        "website": [
+          {
+            "cluster": "中智科创机器人",
+            "values": [
+              "http://www.coson.com/",
+              "http://www.csstrobot.com"
+            ]
+          },
+          {
+            "cluster": "普渡科技",
+            "values": [
+              "https://www.pudurobotics.com",
+              "http://pudutech.com/"
+            ]
+          }
+        ],
+        "founded_at": [
+          {
+            "cluster": "中智科创机器人",
+            "values": [
+              "2013-09-06",
+              "1994-11-26"
+            ]
+          },
+          {
+            "cluster": "宝能汽车",
+            "values": [
+              "2011-11-16",
+              "2017-03-20"
+            ]
+          }
+        ],
+        "legal_representative": [
+          {
+            "cluster": "中智科创机器人",
+            "values": [
+              "胡元根",
+              "刘跃根"
+            ]
+          },
+          {
+            "cluster": "宝能汽车",
+            "values": [
+              "管宇",
+              "孙莉"
+            ]
+          }
+        ],
+        "technology_route_summary": [
+          {
+            "cluster": "中智科创机器人",
+            "values": [
+              "园区、金融商业中心、社区、展馆、政务中心、物业楼宇、消防、教育、养老等场景的安保巡逻、门岗值守、迎宾导引、咨询讲解及室内跨楼层巡更",
+              "园区、金融、商业中心、社区、展馆、政务中心、自动化生产线上下料、线边对接、物料转运、地面密集存储、货架巷道存储、室内外安保巡逻、极楼宇巡更、门岗值守、迎宾讲解、边远区域布控、火灾…"
+            ]
+          },
+          {
+            "cluster": "云天励飞技术",
+            "values": [
+              "Not supplied by the backfill source.",
+              "智慧安防、智慧交通、城市治理、智慧社区、智慧园区、智慧楼宇、智慧商业、智能摄像机、工业检测、机器人、无人机、智算中心、AI眼镜、AI拍学机、家庭主机、可穿戴设备、企业SoC开发、…"
+            ]
+          },
+          {
+            "cluster": "云豹智能",
+            "values": [
+              "云豹云霄系列DPU主要部署于大型云数据中心，为公有云、私有云及混合云服务提供商提供裸金属云、虚拟化、容器化业务的统一加速与管理，支撑高性能计算、分布式存储、云网络卸载及多租户安全…",
+              "大型公有云/私有云数据中心、智算中心、运营商5G核心网、金融机构分布式核心系统、AI训练与推理集群、边缘计算节点等需要高带宽、低时延及统一资源池化的场景"
+            ]
+          },
+          {
+            "cluster": "光影焕像科技",
+            "values": [
+              "广州光影焕像科技有限公司的技术路线围绕人工智能展开。当前重点落在AIGC。业务场景集中在三维AIGC人工智能技术开发商。广州光影焕像科技有限公司是一家专注于三维AIGC的初创人工…",
+              "适用于游戏资产快速制作、影视动画原型设计、电商3D商品展示、AR/VR内容开发等需要高效生成高质量三维模型的场景。"
+            ]
+          },
+          {
+            "cluster": "国际先进技术应用推进中心",
+            "values": [
+              "全空间无人体系建设：实现标准体系、数据中心、运行管控、检测认证、通信协议、政策法规“六个统一”，破解运营体制、空域规划、数据安全和场景开放4方面的市场准入障碍，为全国全空间无人体…",
+              "国际先进技术成果汇聚平台：加快汇聚⼤湾区乃⾄国内外前沿技术创新成果和⾼端创新要素，为先进技术应⽤策划场景项⽬、提供场景机会，推动成果⾯向应⽤场景的⼯程化落地与直接转化。 产业应⽤…"
+            ]
+          }
+        ],
+        "product_description": [
+          {
+            "cluster": "中智科创机器人",
+            "values": [
+              "Roby系列安保巡逻机器人、Roby-Guard智能门岗机器人、Roby-Patrol室外巡逻机器人、Roby-Service安保服务机器人、室内立体巡更机器人",
+              "：窄体叉取型FMR_GS-150-V1；托盘搬运型_GP-150-V1；安保巡逻机器人；安保巡更机器人；智能门岗机器人；迎宾服务机器人；移动岗哨机器人；消防机器人"
+            ]
+          },
+          {
+            "cluster": "云豹智能",
+            "values": [
+              "0",
+              "：云霄DPU网卡、云霄S10、高性能软件定义DPU SoC芯片"
+            ]
+          },
+          {
+            "cluster": "宝能汽车",
+            "values": [
+              "：观致REV3、观致REV5、GX16、CAP6471（观致牌多用途乘用车）",
+              "观致REV3、观致REV5、观致7、GX16、GX5"
+            ]
+          }
+        ],
+        "team_description": [
+          {
+            "cluster": "中智科创机器人",
+            "values": [
+              "熊凤梅，科松电子执行董事&总经理",
+              "钟翔宇，职务：创始人，介绍：钟翔宇 ，中智科创创始人。 曹易，职务：联系人，介绍：曹易，中智科创联系人。"
+            ]
+          },
+          {
+            "cluster": "云豹智能",
+            "values": [
+              "张学利，联合创始人&COO，深圳云豹智能有限公司联合创始人&COO。萧启阳，董事长&总经理，创立云豹智能前，曾任博通公司(Broadcom)处理器和无线基础设施事业部大中华区总经…",
+              "张学利，联合创始人&COO，深圳云豹智能有限公司联合创始人&COO 萧启阳，董事长&总经理，美国加州斯坦福大学电子工程博士和硕士学位，纽约大学数学和计算机科学学士学位，纽约库珀大…"
+            ]
+          },
+          {
+            "cluster": "宝能汽车",
+            "values": [
+              "文森特•科比 CEO，雪铁龙 CAPSA CEO。朱华荣 董事长，1965年3月生，2014年12月起长安汽车股份有限公司总裁、党委书记。莫奈 总裁，2016年3月起长安标致雪铁…",
+              "陈琳，董事长，宝能汽车董事长 郑状，总经理，宝能汽车总经理"
+            ]
+          }
+        ],
+        "geography": [
+          {
+            "cluster": "国际先进技术应用推进中心",
+            "values": [
+              "安徽省-合肥市",
+              "广东省-深圳市"
+            ]
+          }
+        ]
+      },
+      "clusters_all": [
+        {
+          "cluster": "中建三局",
+          "size": 2,
+          "conflicting_fields": 4,
+          "members": [
+            {
+              "name": "中建三局集团（深圳）有限公司",
+              "cid": "company-c-277474a470b2a3c66237bda4",
+              "family": "company-backfill"
+            },
+            {
+              "name": "中建三局集团有限公司",
+              "cid": "company-c-fcdb6508b02d5d52c94c27ad",
+              "family": "company-backfill"
+            }
+          ]
+        },
+        {
+          "cluster": "中建五局第三建设",
+          "size": 2,
+          "conflicting_fields": 4,
+          "members": [
+            {
+              "name": "中建五局第三建设有限公司",
+              "cid": "company-c-32ea991d975f5d20796f38af",
+              "family": "company-backfill"
+            },
+            {
+              "name": "中建五局第三建设（深圳）有限公司",
+              "cid": "company-c-9063652ecd9417c4996a7441",
+              "family": "company-backfill"
+            }
+          ]
+        },
+        {
+          "cluster": "中智科创机器人",
+          "size": 2,
+          "conflicting_fields": 13,
+          "members": [
+            {
+              "name": "深圳中智科创机器人有限公司",
+              "cid": "company-c-fb0b761ce5db8e890212df0f",
+              "family": "company-p4"
+            },
+            {
+              "name": "中智科创机器人有限公司",
+              "cid": "company-c-ffd53c40d2712631eb6f88c8",
+              "family": "company-p4"
+            }
+          ]
+        },
+        {
+          "cluster": "云天励飞技术",
+          "size": 2,
+          "conflicting_fields": 4,
+          "members": [
+            {
+              "name": "成都云天励飞技术有限公司",
+              "cid": "company-c-4f35bc18ae561b0f40a2fb16",
+              "family": "company-backfill"
+            },
+            {
+              "name": "深圳云天励飞技术股份有限公司",
+              "cid": "company-c-7537d17b709c1489221746ba",
+              "family": "company-p4"
+            }
+          ]
+        },
+        {
+          "cluster": "云豹智能",
+          "size": 2,
+          "conflicting_fields": 6,
+          "members": [
+            {
+              "name": "深圳云豹智能股份有限公司",
+              "cid": "company-c-594dd59da1f0ddb6088e6cc9",
+              "family": "COMP-4427001BAFCD"
+            },
+            {
+              "name": "深圳云豹智能有限公司",
+              "cid": "company-c-f01cdba855c16a1dac48ec4b",
+              "family": "company-p4"
+            }
+          ]
+        },
+        {
+          "cluster": "光影焕像科技",
+          "size": 2,
+          "conflicting_fields": 4,
+          "members": [
+            {
+              "name": "广州光影焕像科技有限公司",
+              "cid": "company-c-7723d484de05e19a052b4b03",
+              "family": "COMP-DF864B2B500B"
+            },
+            {
+              "name": "深圳光影焕像科技有限公司",
+              "cid": "company-c-efa6488b4c2461d1db6f7ad3",
+              "family": "company-p4"
+            }
+          ]
+        },
+        {
+          "cluster": "国际先进技术应用推进中心",
+          "size": 2,
+          "conflicting_fields": 6,
+          "members": [
+            {
+              "name": "合肥国际先进技术应用推进中心",
+              "cid": "company-c-60af86764946ad394ec1e8bb",
+              "family": "company-p4"
+            },
+            {
+              "name": "深圳国际先进技术应用推进中心",
+              "cid": "company-c-c841e20d983b33640734ccfe",
+              "family": "company-p4"
+            }
+          ]
+        },
+        {
+          "cluster": "宝能汽车",
+          "size": 2,
+          "conflicting_fields": 10,
+          "members": [
+            {
+              "name": "深圳市宝能汽车有限公司",
+              "cid": "company-c-8109665f54688b12857d2a43",
+              "family": "company-p4"
+            },
+            {
+              "name": "宝能汽车集团有限公司",
+              "cid": "company-c-b54d8f801885c30058b9d78d",
+              "family": "company-p4"
+            }
+          ]
+        },
+        {
+          "cluster": "尚科宁家科技",
+          "size": 2,
+          "conflicting_fields": 3,
+          "members": [
+            {
+              "name": "深圳尚科宁家科技有限公司",
+              "cid": "company-c-439102692dc451b1ad9f1125",
+              "family": "company-backfill"
+            },
+            {
+              "name": "尚科宁家（中国）科技有限公司",
+              "cid": "company-c-c2776d1ceace996828a244e2",
+              "family": "company-backfill"
+            }
+          ]
+        },
+        {
+          "cluster": "普渡科技",
+          "size": 2,
+          "conflicting_fields": 6,
+          "members": [
+            {
+              "name": "深圳市普渡科技有限公司",
+              "cid": "company-c-72b2ec528908ac199ee1dbc7",
+              "family": "COMP-0A61012B350E"
+            },
+            {
+              "name": "深圳市普渡科技股份有限公司",
+              "cid": "company-c-f11204f5f0dee0d8a1e1fdd4",
+              "family": "company-p4"
+            }
+          ]
+        },
+        {
+          "cluster": "精控集成半导体",
+          "size": 2,
+          "conflicting_fields": 4,
+          "members": [
+            {
+              "name": "杭州精控集成半导体有限公司",
+              "cid": "company-c-31bd9a93db4e01aa2fee93c7",
+              "family": "COMP-8594F6A99E4C"
+            },
+            {
+              "name": "深圳精控集成半导体有限公司",
+              "cid": "company-c-91c276fb62d64fc486f6dfe1",
+              "family": "company-p4"
+            }
+          ]
+        },
+        {
+          "cluster": "诺因智能",
+          "size": 2,
+          "conflicting_fields": 4,
+          "members": [
+            {
+              "name": "深圳市诺因智能有限公司",
+              "cid": "company-c-15f905da84b692918f211800",
+              "family": "company-p4"
+            },
+            {
+              "name": "深圳诺因智能有限公司",
+              "cid": "company-c-a41a5cfd4a3f50e1f1566b75",
+              "family": "COMP-9451C47EFDF9"
+            }
+          ]
+        }
+      ]
+    },
+    "placeholder_docs_by_field_family": {
+      "product_description|COMP-legacy": 1,
+      "product_description|company-p4": 5,
+      "profile_summary|COMP-legacy": 2,
+      "profile_summary|company-backfill": 10,
+      "profile_summary|company-p4": 6,
+      "technology_route_summary|company-backfill": 561,
+      "technology_route_summary|company-p4": 713
+    }
+  },
+  "provenance": {
+    "families": {
+      "company-p4": 5491,
+      "COMP-legacy": 1037,
+      "company-backfill": 561
+    },
+    "run_ids": {
+      "p4-build-20260819-v1": 7089
+    },
+    "completeness_mean_by_family": {
+      "COMP-legacy": 7.15,
+      "company-backfill": 2,
+      "company-p4": 11.5
+    },
+    "completeness_median_by_family": {
+      "COMP-legacy": 8,
+      "company-backfill": 2,
+      "company-p4": 12
+    },
+    "completeness_max_by_family": {
+      "COMP-legacy": 8,
+      "company-backfill": 2,
+      "company-p4": 12
+    },
+    "placeholder_docs_by_family": {
+      "company-p4": 719,
+      "company-backfill": 561,
+      "COMP-legacy": 2
+    },
+    "field_nonempty_counts": {
+      "normalized_name": 7087,
+      "profile_summary": 7071,
+      "industry": 6517,
+      "registered_address": 6506,
+      "technology_route_summary": 5815,
+      "team_description": 5517,
+      "geography": 5491,
+      "founded_at": 5486,
+      "legal_representative": 5486,
+      "tech_tags": 5485,
+      "industry_tags": 5480,
+      "product_description": 5362,
+      "website": 5339,
+      "key_personnel": 851,
+      "aliases": 342
+    }
+  },
+  "pudu_full_sample": [
+    {
+      "cid": "company-c-72b2ec528908ac199ee1dbc7",
+      "family": "COMP-0A61012B350E",
+      "run_id": "p4-build-20260819-v1",
+      "last_updated": "2026-04-16T15:12:27.654567Z",
+      "name": "深圳市普渡科技有限公司",
+      "normalized_name": "普渡科技",
+      "industry": "机器人",
+      "industry_tags": "",
+      "tech_tags": "",
+      "geography": "",
+      "registered_address": null,
+      "founded_at": null,
+      "legal_representative": "",
+      "website": "https://www.pudurobotics.com",
+      "profile_summary": "深圳市普渡科技有限公司是一家聚焦机器人的企业。细分方向覆盖商用服务机器人。当前业务定位为商用配送机器人与服务机器人解决方案。提供商用服务机器人与配送解决方案，覆盖餐饮、酒店、零售等场景。",
+      "technology_route_summary": "深圳市普渡科技有限公司的技术路线围绕机器人展开。当前重点落在商用服务机器人。业务场景集中在商用配送机器人与服务机器人解决方案。提供商用服务机器人与配送解决方案，覆盖餐饮、酒店、零售等场景。",
+      "product_description": "",
+      "quality_status": "partial"
+    },
+    {
+      "cid": "company-c-f11204f5f0dee0d8a1e1fdd4",
+      "family": "company-p4",
+      "run_id": "p4-build-20260819-v1",
+      "last_updated": "2026-09-07T15:56:13.332723Z",
+      "name": "深圳市普渡科技股份有限公司",
+      "normalized_name": "深圳市普渡科技股份有限公司",
+      "industry": "物流运输",
+      "industry_tags": "物流运输",
+      "tech_tags": "室内外配送机器人研发商",
+      "geography": "广东省",
+      "registered_address": "深圳市南山区西丽街道西丽社区打石一路深圳国际创新谷1栋A座501",
+      "founded_at": "2016-01-13",
+      "legal_representative": "张涛",
+      "website": "http://pudutech.com/",
+      "profile_summary": "PUDU CC1 Pro、PUDU T600系列（标准版/潜伏版）、PUDU MT1 Max、PUDU MT1 Vac、PUDU MT1、PUDU SH1、PUDU T300、PUDU D9、PUDU D7、闪电匣Arm",
+      "technology_route_summary": "PUDU CC1 Pro：商业综合体、医院、机场、工业仓储。 PUDU T600系列：工业仓储、生产线边仓、多层厂房需跨楼层运输场景。 PUDU MT1 Max/MT1 Vac/MT1：写字楼、酒店、政务大厅、学校。 PUDU SH1：商场、超市、车站。 PUDU T300：工业车间、仓储物流。 PUDU D9/D7/闪电匣Arm：复杂商业服务、展览展示、科研教育、柔性生产线。",
+      "product_description": "PUDU CC1 Pro、PUDU T600系列（标准版/潜伏版）、PUDU MT1 Max、PUDU MT1 Vac、PUDU MT1、PUDU SH1、PUDU T300、PUDU D9、PUDU D7、闪电匣Arm",
+      "quality_status": "partial"
+    },
+    {
+      "cid": "company-c-f465962ae6d0ac84c5f8cad3",
+      "family": "company-backfill",
+      "run_id": "p4-build-20260819-v1",
+      "last_updated": "2026-09-07T15:56:13.332723Z",
+      "name": "成都市普渡机器人有限公司",
+      "normalized_name": "成都市普渡机器人有限公司",
+      "industry": "",
+      "industry_tags": "",
+      "tech_tags": "",
+      "geography": "",
+      "registered_address": null,
+      "founded_at": null,
+      "legal_representative": "",
+      "website": null,
+      "profile_summary": "成都市普渡机器人有限公司专注于商用服务机器人的研发、生产与销售，定位为室内无人配送解决方案提供商。主要产品包括用于餐厅送餐的配送机器人、用于酒店客房服务的楼宇配送机器人，以及用于楼宇清洁的商用清洁机器人。其应用场景主要面向餐饮、酒店、写字楼、医院及KTV等商业场所，通过机器人完成物品递送、回盘、地面清洁等重复性工作",
+      "technology_route_summary": "Not supplied by the backfill source.",
+      "product_description": "",
+      "quality_status": "partial"
+    }
+  ]
+}
