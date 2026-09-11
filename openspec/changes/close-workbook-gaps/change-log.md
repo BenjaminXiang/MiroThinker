@@ -761,3 +761,18 @@
   qualify alone — require ≥2 bigrams of one run, or the contiguous run
   substring. Measure impact on the GT queries (esp. 储能电池/医疗器
   械-type compounds) before landing.
+
+## 2026-09-11 — AQ-S5 live (deployed alone): g5-t2 coverage 1/12 → 6/12; in-pack ceiling verified at 8/12
+
+- Live (S5 only, 3+2 samples): g5-t2 key-point coverage **1/12 → 6/12**
+  in all three runs (the six in-window GTs: 顺易捷/精诚达/上达/兴森/
+  一博/则成 now named); g5-t1 1/3 samples fully PASS, the other two miss
+  only 深南电路; **g2 regression clean — 3/3 ×2 samples**.
+- Remaining g5-t2 gap = 嘉立创/深南电路 (outside the 32-local claim
+  window; S2c targets them) + ONE more of {华秋, 中信华, 领智, 广州}.
+- Verified by direct pack queries: **华秋 / 中信华 / 领智 / 鼎纪 are NOT
+  in the pack** — the local ceiling for this GT list is exactly 8/12
+  (the design's "8 in-pack" prediction confirmed). 9/12 therefore
+  requires ≥1 web-sourced name in the answer, or a re-baseline of the
+  anchor — pending: S2c lands (expected 8/12), then the web-route vs
+  re-baseline decision goes to the user with this table.
