@@ -16,6 +16,7 @@ import unicodedata
 
 import numpy as np
 
+from .anchoring_declaration import PACKAGED_ANCHORING_DECLARATION
 from .candidate_projection import (
     CandidateProjectionIntegrityError,
     CandidateProjectionRequest,
@@ -139,6 +140,7 @@ from .relationship_projection import (
     create_ephemeral_relationship_projection,
 )
 from .path_eligibility import PathEligibilityEngine
+from .placeholder_scrub import scrub_placeholder_value, scrub_projection_payload
 from .release_publication_isolated import IsolatedReleaseBundle
 
 
@@ -8188,7 +8190,12 @@ def _projection_terms(
         display_name,
         frozenset(_normalized_values(display_values)),
         frozenset(_normalized_values(identifier_values)),
-        _normalized_scalar_values(projection.model_dump(mode="json")),
+        # C1 batch 0: the validated projection's derived term set is scrubbed
+        # of placeholder values (the stored bytes stay untouched; validation
+        # and its lineage assertions above bind the pre-scrub projection).
+        _normalized_scalar_values(
+            scrub_projection_payload(projection.model_dump(mode="json"))
+        ),
     )
 
 
@@ -8202,17 +8209,26 @@ def _projection_category_term_buckets(
     # for now; other domains score on the flat content terms alone.
     if not isinstance(projection, CompanyProjection):
         return frozenset(), frozenset(), frozenset()
+    # Placeholder values must not enter the top F1 weight bucket (C1 batch
+    # 0): scrub industry/tag/product field values; the record-identity fields
+    # (name / normalized_name) pass through untouched.
     industry_label_values: list[str | None] = [
-        projection.industry.name if projection.industry is not None else None
+        scrub_placeholder_value(projection.industry.name)
+        if projection.industry is not None
+        else None
     ]
     tag_values: list[str | None] = [
-        *(tag.name for tag in projection.industry_tags),
-        *(tag.name for tag in projection.tech_tags),
+        *(scrub_placeholder_value(tag.name) for tag in projection.industry_tags),
+        *(scrub_placeholder_value(tag.name) for tag in projection.tech_tags),
     ]
     product_values: list[str | None] = [
         projection.name,
         projection.normalized_name,
-        projection.product_description,
+        (
+            scrub_placeholder_value(projection.product_description)
+            if projection.product_description is not None
+            else None
+        ),
     ]
     return (
         frozenset(_normalized_values(tuple(industry_label_values))),
@@ -8402,11 +8418,8 @@ _CATEGORY_RECALL_STOP_PHRASES = (
 # a category word — singleton bigram hits are entity-name fragments owned by
 # the exact lane. Weight-2 terms are self-delimiting words (PCB, 机器人), so
 # even a singleton hit is a real category signal (e.g. the one document whose
-# summary says 打板).
-_CATEGORY_RECALL_MIN_BIGRAM_COVERAGE = 2
-# A document must reach this score to be recalled: one stray bigram (机器 in
-# 机器视觉 for a 机器人 query) never suffices.
-_CATEGORY_RECALL_MIN_SCORE = 2
+# summary says 打板). A document must reach the minimum score to be recalled:
+# one stray bigram (机器 in 机器视觉 for a 机器人 query) never suffices.
 # Field-tier multipliers applied to a matched term's weight, measured on the
 # sealed run14 pack:
 # - the long template summaries mention category words across hundreds of
@@ -8423,9 +8436,11 @@ _CATEGORY_RECALL_MIN_SCORE = 2
 #   scores 13 (two tag terms at x4 plus product/summary extras), and two
 #   bigram label hits at x8 score 16 — x8 clears it with margin.
 # A term hitting several tiers counts once, at the highest tier.
-_CATEGORY_INDUSTRY_LABEL_MULTIPLIER = 8
-_CATEGORY_TAG_FIELD_MULTIPLIER = 4
-_CATEGORY_PRODUCT_FIELD_MULTIPLIER = 2
+# C1 batch 0: the values themselves load from the packaged anchoring
+# declaration (catalogs/anchoring-declaration-v1.json), seeded identical to
+# the measured constants above (industry 8 / tag 4 / product 2, bigram
+# coverage 2, min score 2) so behavior is unchanged.
+_F1_CATEGORY_SCORING = PACKAGED_ANCHORING_DECLARATION.f1_category_scoring
 _CATEGORY_CJK_RUN = re.compile(r"[一-鿿]+")
 _CATEGORY_LATIN_RUN = re.compile(r"[a-z0-9]+")
 
@@ -8530,7 +8545,7 @@ def _category_recall_entries(
         term: weight
         for term, weight in terms
         if coverage.get(term, 0)
-        >= (_CATEGORY_RECALL_MIN_BIGRAM_COVERAGE if weight < 2 else 1)
+        >= (_F1_CATEGORY_SCORING.min_bigram_coverage if weight < 2 else 1)
     }
     if not surviving:
         return []
@@ -8551,18 +8566,18 @@ def _category_recall_entries(
         score = sum(
             surviving[term]
             * (
-                _CATEGORY_INDUSTRY_LABEL_MULTIPLIER
+                _F1_CATEGORY_SCORING.field_tier_multipliers.industry_label
                 if term in industry
-                else _CATEGORY_TAG_FIELD_MULTIPLIER
+                else _F1_CATEGORY_SCORING.field_tier_multipliers.tag
                 if term in tags
-                else _CATEGORY_PRODUCT_FIELD_MULTIPLIER
+                else _F1_CATEGORY_SCORING.field_tier_multipliers.product
                 if term in product
                 else 1
             )
             for term in matched
             if term in surviving
         )
-        if score >= _CATEGORY_RECALL_MIN_SCORE:
+        if score >= _F1_CATEGORY_SCORING.min_score:
             scored.append((score, entry))
     scored.sort(
         key=lambda pair: (

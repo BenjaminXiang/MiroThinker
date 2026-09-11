@@ -1,0 +1,1012 @@
+{
+  "schema_version": "canonical-v2-anchoring-declaration-v1",
+  "generated_from": {
+    "pack_id": "serving-pack:candidate-v2-20260819-r1",
+    "pack_sha256": "c392d559f403da928f3baeed8092c19717059b3bd1e8339fcde07fa2b7970c91",
+    "sources": [
+      "g-series/g3-vocabulary.json",
+      "knowledge_read_isolated F1 constants (close-workbook-gaps B1)"
+    ]
+  },
+  "f1_category_scoring": {
+    "field_tier_multipliers": {
+      "industry_label": 8,
+      "tag": 4,
+      "product": 2
+    },
+    "min_bigram_coverage": 2,
+    "min_score": 2
+  },
+  "terms": [
+    {
+      "term": "具身智能",
+      "tier": "T",
+      "anchor_field": null,
+      "match_mode": "substring",
+      "multiplier": 1,
+      "confidence_class": "text_only",
+      "whitelisted": false
+    },
+    {
+      "term": "机器人",
+      "tier": "S",
+      "anchor_field": "tech_tags",
+      "match_mode": "substring",
+      "multiplier": 1,
+      "confidence_class": "structured_anchored",
+      "whitelisted": false
+    },
+    {
+      "term": "送餐机器人",
+      "tier": "T",
+      "anchor_field": null,
+      "match_mode": "substring",
+      "multiplier": 1,
+      "confidence_class": "text_only",
+      "whitelisted": false
+    },
+    {
+      "term": "酒店送餐机器人",
+      "tier": "N",
+      "anchor_field": null,
+      "match_mode": "substring",
+      "multiplier": 1,
+      "confidence_class": "no_signal",
+      "whitelisted": false
+    },
+    {
+      "term": "PCB",
+      "tier": "T",
+      "anchor_field": null,
+      "match_mode": "substring",
+      "multiplier": 1,
+      "confidence_class": "text_only",
+      "whitelisted": false
+    },
+    {
+      "term": "PCB打板",
+      "tier": "N",
+      "anchor_field": null,
+      "match_mode": "substring",
+      "multiplier": 1,
+      "confidence_class": "no_signal",
+      "whitelisted": false
+    },
+    {
+      "term": "灵巧手",
+      "tier": "S",
+      "anchor_field": "tech_tags",
+      "match_mode": "substring",
+      "multiplier": 1,
+      "confidence_class": "structured_anchored",
+      "whitelisted": false
+    },
+    {
+      "term": "人工智能",
+      "tier": "S",
+      "anchor_field": "industry",
+      "match_mode": "substring",
+      "multiplier": 1,
+      "confidence_class": "structured_anchored",
+      "whitelisted": false
+    },
+    {
+      "term": "视触觉",
+      "tier": "T",
+      "anchor_field": null,
+      "match_mode": "substring",
+      "multiplier": 1,
+      "confidence_class": "text_only",
+      "whitelisted": false
+    },
+    {
+      "term": "芯片",
+      "tier": "S",
+      "anchor_field": "tech_tags",
+      "match_mode": "substring",
+      "multiplier": 1,
+      "confidence_class": "structured_anchored",
+      "whitelisted": false
+    },
+    {
+      "term": "元器件",
+      "tier": "S",
+      "anchor_field": "tech_tags",
+      "match_mode": "substring",
+      "multiplier": 1,
+      "confidence_class": "structured_anchored",
+      "whitelisted": false
+    },
+    {
+      "term": "传感器",
+      "tier": "S",
+      "anchor_field": "tech_tags",
+      "match_mode": "substring",
+      "multiplier": 1,
+      "confidence_class": "structured_anchored",
+      "whitelisted": false
+    },
+    {
+      "term": "电子元器件",
+      "tier": "S",
+      "anchor_field": "tech_tags",
+      "match_mode": "substring",
+      "multiplier": 1,
+      "confidence_class": "structured_anchored",
+      "whitelisted": false
+    },
+    {
+      "term": "智能家居",
+      "tier": "S",
+      "anchor_field": "tech_tags",
+      "match_mode": "substring",
+      "multiplier": 1,
+      "confidence_class": "structured_anchored",
+      "whitelisted": false
+    },
+    {
+      "term": "电池",
+      "tier": "S",
+      "anchor_field": "tech_tags",
+      "match_mode": "substring",
+      "multiplier": 1,
+      "confidence_class": "structured_anchored",
+      "whitelisted": false
+    },
+    {
+      "term": "电子产品",
+      "tier": "S",
+      "anchor_field": "tech_tags",
+      "match_mode": "substring",
+      "multiplier": 1,
+      "confidence_class": "structured_anchored",
+      "whitelisted": false
+    },
+    {
+      "term": "显示屏",
+      "tier": "S",
+      "anchor_field": "tech_tags",
+      "match_mode": "substring",
+      "multiplier": 1,
+      "confidence_class": "structured_anchored",
+      "whitelisted": false
+    },
+    {
+      "term": "无人机",
+      "tier": "S",
+      "anchor_field": "tech_tags",
+      "match_mode": "substring",
+      "multiplier": 1,
+      "confidence_class": "structured_anchored",
+      "whitelisted": false
+    },
+    {
+      "term": "智能硬件",
+      "tier": "S",
+      "anchor_field": "tech_tags",
+      "match_mode": "substring",
+      "multiplier": 1,
+      "confidence_class": "structured_anchored",
+      "whitelisted": false
+    },
+    {
+      "term": "家居产品",
+      "tier": "S",
+      "anchor_field": "tech_tags",
+      "match_mode": "substring",
+      "multiplier": 1,
+      "confidence_class": "structured_anchored",
+      "whitelisted": false
+    },
+    {
+      "term": "智能家居产品",
+      "tier": "S",
+      "anchor_field": "tech_tags",
+      "match_mode": "substring",
+      "multiplier": 1,
+      "confidence_class": "structured_anchored",
+      "whitelisted": false
+    },
+    {
+      "term": "智能机器人",
+      "tier": "S",
+      "anchor_field": "tech_tags",
+      "match_mode": "substring",
+      "multiplier": 1,
+      "confidence_class": "structured_anchored",
+      "whitelisted": false
+    },
+    {
+      "term": "穿戴设备",
+      "tier": "S",
+      "anchor_field": "tech_tags",
+      "match_mode": "substring",
+      "multiplier": 1,
+      "confidence_class": "structured_anchored",
+      "whitelisted": false
+    },
+    {
+      "term": "智能产品",
+      "tier": "S",
+      "anchor_field": "tech_tags",
+      "match_mode": "substring",
+      "multiplier": 1,
+      "confidence_class": "structured_anchored",
+      "whitelisted": false
+    },
+    {
+      "term": "智能门锁",
+      "tier": "S",
+      "anchor_field": "tech_tags",
+      "match_mode": "substring",
+      "multiplier": 1,
+      "confidence_class": "structured_anchored",
+      "whitelisted": false
+    },
+    {
+      "term": "自动化设备",
+      "tier": "S",
+      "anchor_field": "tech_tags",
+      "match_mode": "substring",
+      "multiplier": 1,
+      "confidence_class": "structured_anchored",
+      "whitelisted": false
+    },
+    {
+      "term": "安防产品",
+      "tier": "S",
+      "anchor_field": "tech_tags",
+      "match_mode": "substring",
+      "multiplier": 1,
+      "confidence_class": "structured_anchored",
+      "whitelisted": false
+    },
+    {
+      "term": "工业机器人",
+      "tier": "S",
+      "anchor_field": "tech_tags",
+      "match_mode": "substring",
+      "multiplier": 1,
+      "confidence_class": "structured_anchored",
+      "whitelisted": false
+    },
+    {
+      "term": "LED显示屏",
+      "tier": "S",
+      "anchor_field": "tech_tags",
+      "match_mode": "substring",
+      "multiplier": 1,
+      "confidence_class": "structured_anchored",
+      "whitelisted": false
+    },
+    {
+      "term": "电商",
+      "tier": "T",
+      "anchor_field": null,
+      "match_mode": "substring",
+      "multiplier": 1,
+      "confidence_class": "text_only",
+      "whitelisted": false
+    },
+    {
+      "term": "智能设备",
+      "tier": "S",
+      "anchor_field": "tech_tags",
+      "match_mode": "substring",
+      "multiplier": 1,
+      "confidence_class": "structured_anchored",
+      "whitelisted": false
+    },
+    {
+      "term": "穿戴产品",
+      "tier": "S",
+      "anchor_field": "tech_tags",
+      "match_mode": "substring",
+      "multiplier": 1,
+      "confidence_class": "structured_anchored",
+      "whitelisted": false
+    },
+    {
+      "term": "控制器",
+      "tier": "T",
+      "anchor_field": null,
+      "match_mode": "substring",
+      "multiplier": 1,
+      "confidence_class": "text_only",
+      "whitelisted": false
+    },
+    {
+      "term": "智能穿戴设备",
+      "tier": "S",
+      "anchor_field": "tech_tags",
+      "match_mode": "substring",
+      "multiplier": 1,
+      "confidence_class": "structured_anchored",
+      "whitelisted": false
+    },
+    {
+      "term": "可穿戴设备",
+      "tier": "T",
+      "anchor_field": null,
+      "match_mode": "substring",
+      "multiplier": 1,
+      "confidence_class": "text_only",
+      "whitelisted": false
+    },
+    {
+      "term": "硬件产品",
+      "tier": "S",
+      "anchor_field": "tech_tags",
+      "match_mode": "substring",
+      "multiplier": 1,
+      "confidence_class": "structured_anchored",
+      "whitelisted": false
+    },
+    {
+      "term": "教育机器人",
+      "tier": "S",
+      "anchor_field": "tech_tags",
+      "match_mode": "substring",
+      "multiplier": 1,
+      "confidence_class": "structured_anchored",
+      "whitelisted": false
+    },
+    {
+      "term": "智能穿戴产品",
+      "tier": "S",
+      "anchor_field": "tech_tags",
+      "match_mode": "substring",
+      "multiplier": 1,
+      "confidence_class": "structured_anchored",
+      "whitelisted": false
+    },
+    {
+      "term": "检测设备",
+      "tier": "T",
+      "anchor_field": null,
+      "match_mode": "substring",
+      "multiplier": 1,
+      "confidence_class": "text_only",
+      "whitelisted": false
+    },
+    {
+      "term": "电子元件",
+      "tier": "S",
+      "anchor_field": "tech_tags",
+      "match_mode": "substring",
+      "multiplier": 1,
+      "confidence_class": "structured_anchored",
+      "whitelisted": false
+    },
+    {
+      "term": "APP",
+      "tier": "T",
+      "anchor_field": null,
+      "match_mode": "substring",
+      "multiplier": 1,
+      "confidence_class": "text_only",
+      "whitelisted": false
+    },
+    {
+      "term": "智能锁",
+      "tier": "S",
+      "anchor_field": "tech_tags",
+      "match_mode": "substring",
+      "multiplier": 1,
+      "confidence_class": "structured_anchored",
+      "whitelisted": false
+    },
+    {
+      "term": "服务机器人",
+      "tier": "T",
+      "anchor_field": null,
+      "match_mode": "substring",
+      "multiplier": 1,
+      "confidence_class": "text_only",
+      "whitelisted": false
+    },
+    {
+      "term": "销商",
+      "tier": "S",
+      "anchor_field": "tech_tags",
+      "match_mode": "substring",
+      "multiplier": 1,
+      "confidence_class": "structured_anchored",
+      "whitelisted": false
+    },
+    {
+      "term": "显示产品",
+      "tier": "S",
+      "anchor_field": "tech_tags",
+      "match_mode": "substring",
+      "multiplier": 1,
+      "confidence_class": "structured_anchored",
+      "whitelisted": false
+    },
+    {
+      "term": "物流",
+      "tier": "T",
+      "anchor_field": null,
+      "match_mode": "substring",
+      "multiplier": 1,
+      "confidence_class": "text_only",
+      "whitelisted": false
+    },
+    {
+      "term": "电机",
+      "tier": "T",
+      "anchor_field": null,
+      "match_mode": "substring",
+      "multiplier": 1,
+      "confidence_class": "text_only",
+      "whitelisted": false
+    },
+    {
+      "term": "相关产品",
+      "tier": "S",
+      "anchor_field": "tech_tags",
+      "match_mode": "substring",
+      "multiplier": 1,
+      "confidence_class": "structured_anchored",
+      "whitelisted": false
+    },
+    {
+      "term": "触摸屏",
+      "tier": "S",
+      "anchor_field": "tech_tags",
+      "match_mode": "substring",
+      "multiplier": 1,
+      "confidence_class": "structured_anchored",
+      "whitelisted": false
+    },
+    {
+      "term": "集成电路芯片",
+      "tier": "S",
+      "anchor_field": "tech_tags",
+      "match_mode": "substring",
+      "multiplier": 1,
+      "confidence_class": "structured_anchored",
+      "whitelisted": false
+    },
+    {
+      "term": "安全",
+      "tier": "T",
+      "anchor_field": null,
+      "match_mode": "substring",
+      "multiplier": 1,
+      "confidence_class": "text_only",
+      "whitelisted": false
+    },
+    {
+      "term": "应用商",
+      "tier": "S",
+      "anchor_field": "tech_tags",
+      "match_mode": "substring",
+      "multiplier": 1,
+      "confidence_class": "structured_anchored",
+      "whitelisted": false
+    },
+    {
+      "term": "控制芯片",
+      "tier": "S",
+      "anchor_field": "tech_tags",
+      "match_mode": "substring",
+      "multiplier": 1,
+      "confidence_class": "structured_anchored",
+      "whitelisted": false
+    },
+    {
+      "term": "数码产品",
+      "tier": "S",
+      "anchor_field": "tech_tags",
+      "match_mode": "substring",
+      "multiplier": 1,
+      "confidence_class": "structured_anchored",
+      "whitelisted": false
+    },
+    {
+      "term": "物联网",
+      "tier": "S",
+      "anchor_field": "industry",
+      "match_mode": "substring",
+      "multiplier": 1,
+      "confidence_class": "structured_anchored",
+      "whitelisted": false
+    },
+    {
+      "term": "陪伴机器人",
+      "tier": "S",
+      "anchor_field": "tech_tags",
+      "match_mode": "substring",
+      "multiplier": 1,
+      "confidence_class": "structured_anchored",
+      "whitelisted": false
+    },
+    {
+      "term": "VR/AR",
+      "tier": "S",
+      "anchor_field": "industry",
+      "match_mode": "substring",
+      "multiplier": 1,
+      "confidence_class": "structured_anchored",
+      "whitelisted": false
+    },
+    {
+      "term": "云计算",
+      "tier": "S",
+      "anchor_field": "tech_tags",
+      "match_mode": "substring",
+      "multiplier": 1,
+      "confidence_class": "structured_anchored",
+      "whitelisted": false
+    },
+    {
+      "term": "人形机器人",
+      "tier": "T",
+      "anchor_field": null,
+      "match_mode": "substring",
+      "multiplier": 1,
+      "confidence_class": "text_only",
+      "whitelisted": false
+    },
+    {
+      "term": "企业服务",
+      "tier": "S",
+      "anchor_field": "industry",
+      "match_mode": "substring",
+      "multiplier": 1,
+      "confidence_class": "structured_anchored",
+      "whitelisted": false
+    },
+    {
+      "term": "体育健身",
+      "tier": "S",
+      "anchor_field": "industry_tags",
+      "match_mode": "substring",
+      "multiplier": 1,
+      "confidence_class": "structured_anchored",
+      "whitelisted": false
+    },
+    {
+      "term": "信息安全",
+      "tier": "S",
+      "anchor_field": "tech_tags",
+      "match_mode": "substring",
+      "multiplier": 1,
+      "confidence_class": "structured_anchored",
+      "whitelisted": false
+    },
+    {
+      "term": "先进制造",
+      "tier": "S",
+      "anchor_field": "industry",
+      "match_mode": "substring",
+      "multiplier": 1,
+      "confidence_class": "structured_anchored",
+      "whitelisted": false
+    },
+    {
+      "term": "农业",
+      "tier": "T",
+      "anchor_field": null,
+      "match_mode": "substring",
+      "multiplier": 1,
+      "confidence_class": "text_only",
+      "whitelisted": false
+    },
+    {
+      "term": "减速器",
+      "tier": "S",
+      "anchor_field": "tech_tags",
+      "match_mode": "substring",
+      "multiplier": 1,
+      "confidence_class": "structured_anchored",
+      "whitelisted": false
+    },
+    {
+      "term": "力传感",
+      "tier": "T",
+      "anchor_field": null,
+      "match_mode": "substring",
+      "multiplier": 1,
+      "confidence_class": "text_only",
+      "whitelisted": false
+    },
+    {
+      "term": "区块链",
+      "tier": "S",
+      "anchor_field": "industry",
+      "match_mode": "substring",
+      "multiplier": 1,
+      "confidence_class": "structured_anchored",
+      "whitelisted": false
+    },
+    {
+      "term": "医疗健康",
+      "tier": "S",
+      "anchor_field": "industry",
+      "match_mode": "substring",
+      "multiplier": 1,
+      "confidence_class": "structured_anchored",
+      "whitelisted": false
+    },
+    {
+      "term": "医疗器械",
+      "tier": "T",
+      "anchor_field": null,
+      "match_mode": "substring",
+      "multiplier": 1,
+      "confidence_class": "text_only",
+      "whitelisted": false
+    },
+    {
+      "term": "半导体",
+      "tier": "T",
+      "anchor_field": null,
+      "match_mode": "substring",
+      "multiplier": 1,
+      "confidence_class": "text_only",
+      "whitelisted": false
+    },
+    {
+      "term": "大数据",
+      "tier": "S",
+      "anchor_field": "industry",
+      "match_mode": "substring",
+      "multiplier": 1,
+      "confidence_class": "structured_anchored",
+      "whitelisted": false
+    },
+    {
+      "term": "大模型",
+      "tier": "T",
+      "anchor_field": null,
+      "match_mode": "substring",
+      "multiplier": 1,
+      "confidence_class": "text_only",
+      "whitelisted": false
+    },
+    {
+      "term": "工业互联网",
+      "tier": "T",
+      "anchor_field": null,
+      "match_mode": "substring",
+      "multiplier": 1,
+      "confidence_class": "text_only",
+      "whitelisted": false
+    },
+    {
+      "term": "工具软件",
+      "tier": "S",
+      "anchor_field": "industry",
+      "match_mode": "substring",
+      "multiplier": 1,
+      "confidence_class": "structured_anchored",
+      "whitelisted": false
+    },
+    {
+      "term": "建筑",
+      "tier": "T",
+      "anchor_field": null,
+      "match_mode": "substring",
+      "multiplier": 1,
+      "confidence_class": "text_only",
+      "whitelisted": false
+    },
+    {
+      "term": "开采",
+      "tier": "S",
+      "anchor_field": "tech_tags",
+      "match_mode": "substring",
+      "multiplier": 1,
+      "confidence_class": "structured_anchored",
+      "whitelisted": false
+    },
+    {
+      "term": "房产家居",
+      "tier": "S",
+      "anchor_field": "industry",
+      "match_mode": "substring",
+      "multiplier": 1,
+      "confidence_class": "structured_anchored",
+      "whitelisted": false
+    },
+    {
+      "term": "批发零售",
+      "tier": "S",
+      "anchor_field": "industry_tags",
+      "match_mode": "substring",
+      "multiplier": 1,
+      "confidence_class": "structured_anchored",
+      "whitelisted": false
+    },
+    {
+      "term": "政务及公共服务",
+      "tier": "S",
+      "anchor_field": "industry_tags",
+      "match_mode": "substring",
+      "multiplier": 1,
+      "confidence_class": "structured_anchored",
+      "whitelisted": false
+    },
+    {
+      "term": "教育培训",
+      "tier": "S",
+      "anchor_field": "industry",
+      "match_mode": "substring",
+      "multiplier": 1,
+      "confidence_class": "structured_anchored",
+      "whitelisted": false
+    },
+    {
+      "term": "数字经济",
+      "tier": "S",
+      "anchor_field": "tech_tags",
+      "match_mode": "substring",
+      "multiplier": 1,
+      "confidence_class": "structured_anchored",
+      "whitelisted": false
+    },
+    {
+      "term": "文娱传媒",
+      "tier": "S",
+      "anchor_field": "industry",
+      "match_mode": "substring",
+      "multiplier": 1,
+      "confidence_class": "structured_anchored",
+      "whitelisted": false
+    },
+    {
+      "term": "新基建",
+      "tier": "S",
+      "anchor_field": "industry",
+      "match_mode": "substring",
+      "multiplier": 1,
+      "confidence_class": "structured_anchored",
+      "whitelisted": false
+    },
+    {
+      "term": "新能源",
+      "tier": "T",
+      "anchor_field": null,
+      "match_mode": "substring",
+      "multiplier": 1,
+      "confidence_class": "text_only",
+      "whitelisted": false
+    },
+    {
+      "term": "旅游户外",
+      "tier": "S",
+      "anchor_field": "industry_tags",
+      "match_mode": "substring",
+      "multiplier": 1,
+      "confidence_class": "structured_anchored",
+      "whitelisted": false
+    },
+    {
+      "term": "智能制造",
+      "tier": "T",
+      "anchor_field": null,
+      "match_mode": "substring",
+      "multiplier": 1,
+      "confidence_class": "text_only",
+      "whitelisted": false
+    },
+    {
+      "term": "服装纺织",
+      "tier": "S",
+      "anchor_field": "industry_tags",
+      "match_mode": "substring",
+      "multiplier": 1,
+      "confidence_class": "structured_anchored",
+      "whitelisted": false
+    },
+    {
+      "term": "机器视觉",
+      "tier": "S",
+      "anchor_field": "tech_tags",
+      "match_mode": "substring",
+      "multiplier": 1,
+      "confidence_class": "structured_anchored",
+      "whitelisted": false
+    },
+    {
+      "term": "机械臂",
+      "tier": "T",
+      "anchor_field": null,
+      "match_mode": "substring",
+      "multiplier": 1,
+      "confidence_class": "text_only",
+      "whitelisted": false
+    },
+    {
+      "term": "水下机器人",
+      "tier": "S",
+      "anchor_field": "tech_tags",
+      "match_mode": "substring",
+      "multiplier": 1,
+      "confidence_class": "structured_anchored",
+      "whitelisted": false
+    },
+    {
+      "term": "汽车交通",
+      "tier": "S",
+      "anchor_field": "industry",
+      "match_mode": "substring",
+      "multiplier": 1,
+      "confidence_class": "structured_anchored",
+      "whitelisted": false
+    },
+    {
+      "term": "消费升级",
+      "tier": "S",
+      "anchor_field": "industry",
+      "match_mode": "substring",
+      "multiplier": 1,
+      "confidence_class": "structured_anchored",
+      "whitelisted": false
+    },
+    {
+      "term": "游戏",
+      "tier": "T",
+      "anchor_field": null,
+      "match_mode": "substring",
+      "multiplier": 1,
+      "confidence_class": "text_only",
+      "whitelisted": false
+    },
+    {
+      "term": "激光雷达",
+      "tier": "T",
+      "anchor_field": null,
+      "match_mode": "substring",
+      "multiplier": 1,
+      "confidence_class": "text_only",
+      "whitelisted": false
+    },
+    {
+      "term": "物流运输",
+      "tier": "S",
+      "anchor_field": "industry",
+      "match_mode": "substring",
+      "multiplier": 1,
+      "confidence_class": "structured_anchored",
+      "whitelisted": false
+    },
+    {
+      "term": "环保",
+      "tier": "T",
+      "anchor_field": null,
+      "match_mode": "substring",
+      "multiplier": 1,
+      "confidence_class": "text_only",
+      "whitelisted": false
+    },
+    {
+      "term": "生产制造",
+      "tier": "S",
+      "anchor_field": "industry",
+      "match_mode": "substring",
+      "multiplier": 1,
+      "confidence_class": "structured_anchored",
+      "whitelisted": false
+    },
+    {
+      "term": "生活服务",
+      "tier": "S",
+      "anchor_field": "industry",
+      "match_mode": "substring",
+      "multiplier": 1,
+      "confidence_class": "structured_anchored",
+      "whitelisted": false
+    },
+    {
+      "term": "电子制造",
+      "tier": "T",
+      "anchor_field": null,
+      "match_mode": "substring",
+      "multiplier": 1,
+      "confidence_class": "text_only",
+      "whitelisted": false
+    },
+    {
+      "term": "电子商务",
+      "tier": "S",
+      "anchor_field": "industry",
+      "match_mode": "substring",
+      "multiplier": 1,
+      "confidence_class": "structured_anchored",
+      "whitelisted": false
+    },
+    {
+      "term": "硬件",
+      "tier": "S",
+      "anchor_field": "industry",
+      "match_mode": "substring",
+      "multiplier": 1,
+      "confidence_class": "structured_anchored",
+      "whitelisted": false
+    },
+    {
+      "term": "硬科技",
+      "tier": "S",
+      "anchor_field": "industry",
+      "match_mode": "substring",
+      "multiplier": 1,
+      "confidence_class": "structured_anchored",
+      "whitelisted": false
+    },
+    {
+      "term": "社交社区",
+      "tier": "S",
+      "anchor_field": "industry_tags",
+      "match_mode": "substring",
+      "multiplier": 1,
+      "confidence_class": "structured_anchored",
+      "whitelisted": false
+    },
+    {
+      "term": "科研及技术服务",
+      "tier": "S",
+      "anchor_field": "industry",
+      "match_mode": "substring",
+      "multiplier": 1,
+      "confidence_class": "structured_anchored",
+      "whitelisted": false
+    },
+    {
+      "term": "能源电力",
+      "tier": "S",
+      "anchor_field": "industry",
+      "match_mode": "substring",
+      "multiplier": 1,
+      "confidence_class": "structured_anchored",
+      "whitelisted": false
+    },
+    {
+      "term": "自动驾驶",
+      "tier": "T",
+      "anchor_field": null,
+      "match_mode": "substring",
+      "multiplier": 1,
+      "confidence_class": "text_only",
+      "whitelisted": false
+    },
+    {
+      "term": "边缘计算",
+      "tier": "T",
+      "anchor_field": null,
+      "match_mode": "substring",
+      "multiplier": 1,
+      "confidence_class": "text_only",
+      "whitelisted": false
+    },
+    {
+      "term": "金融",
+      "tier": "S",
+      "anchor_field": "industry",
+      "match_mode": "substring",
+      "multiplier": 1,
+      "confidence_class": "structured_anchored",
+      "whitelisted": false
+    },
+    {
+      "term": "食品饮料",
+      "tier": "T",
+      "anchor_field": null,
+      "match_mode": "substring",
+      "multiplier": 1,
+      "confidence_class": "text_only",
+      "whitelisted": false
+    },
+    {
+      "term": "餐饮业",
+      "tier": "S",
+      "anchor_field": "industry",
+      "match_mode": "substring",
+      "multiplier": 1,
+      "confidence_class": "structured_anchored",
+      "whitelisted": false
+    }
+  ]
+}

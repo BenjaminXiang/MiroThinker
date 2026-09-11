@@ -505,3 +505,112 @@ def test_category_recall_field_tier_counts_highest_tier_once() -> None:
         "company-c-a",
         "company-c-b",
     ]
+
+
+def _declaration_module() -> Any:
+    return import_module("src.data_agents.canonical_v2.anchoring_declaration")
+
+
+def test_anchoring_declaration_unknown_schema_fails_closed() -> None:
+    declaration_module = _declaration_module()
+    valid_bytes = json.dumps(
+        {
+            "schema_version": declaration_module.DECLARATION_SCHEMA_VERSION,
+            "generated_from": {
+                "pack_id": "serving-pack:test",
+                "pack_sha256": "0" * 64,
+                "sources": ["test"],
+            },
+            "f1_category_scoring": {
+                "field_tier_multipliers": {
+                    "industry_label": 8,
+                    "tag": 4,
+                    "product": 2,
+                },
+                "min_bigram_coverage": 2,
+                "min_score": 2,
+            },
+            "terms": [],
+        }
+    ).encode("utf-8")
+    parsed = declaration_module.parse_anchoring_declaration(valid_bytes)
+    assert parsed.f1_category_scoring.field_tier_multipliers.industry_label == 8
+
+    tampered = json.loads(valid_bytes)
+    tampered["schema_version"] = "canonical-v2-anchoring-declaration-v999"
+    try:
+        declaration_module.parse_anchoring_declaration(
+            json.dumps(tampered).encode("utf-8")
+        )
+    except RuntimeError as exc:
+        assert "schema version" in str(exc)
+    else:  # pragma: no cover - the raise is the contract
+        raise AssertionError("unknown schema must fail closed")
+    try:
+        declaration_module.parse_anchoring_declaration(b"[]")
+    except RuntimeError as exc:
+        assert "JSON object" in str(exc)
+    else:  # pragma: no cover - the raise is the contract
+        raise AssertionError("non-object declaration must fail closed")
+    try:
+        declaration_module.parse_anchoring_declaration(
+            b'{"schema_version": 1, "schema_version": 2}'
+        )
+    except ValueError as exc:
+        assert "duplicate" in str(exc)
+    else:  # pragma: no cover - the raise is the contract
+        raise AssertionError("duplicate keys must fail closed")
+
+
+def test_f1_scoring_consumes_anchoring_declaration_equivalently() -> None:
+    module = _module()
+    read_module = _read_module()
+    index_module = _index_module()
+    declaration_module = _declaration_module()
+    scoring = declaration_module.PACKAGED_ANCHORING_DECLARATION.f1_category_scoring
+    # Equivalence pin: the packaged declaration carries exactly the constants
+    # measured on the sealed run14 pack (design.md §C1-5: behavior-preserving).
+    assert (
+        scoring.field_tier_multipliers.industry_label,
+        scoring.field_tier_multipliers.tag,
+        scoring.field_tier_multipliers.product,
+        scoring.min_bigram_coverage,
+        scoring.min_score,
+    ) == (8, 4, 2, 2, 2)
+    assert module._F1_CATEGORY_SCORING is scoring
+
+    # Behavioral equivalence: a weight-2 term scores 2*8=16 on the industry
+    # label, 2*4=8 on curated tags, 2*1=2 in a long summary — the exact
+    # ranking the hardcoded constants produced.
+    label_member = _entry(
+        module,
+        index_module,
+        canonical_id="company-c-label",
+        display_name="甲企业",
+        content_terms=("甲机器人研发商",),
+        industry_terms=("机器人",),
+    )
+    tag_member = _entry(
+        module,
+        index_module,
+        canonical_id="company-c-tag",
+        display_name="乙企业",
+        content_terms=("乙机器人研发商",),
+        tag_terms=("机器人",),
+    )
+    summary_only = _entry(
+        module,
+        index_module,
+        canonical_id="company-c-summary",
+        display_name="丙企业",
+        content_terms=("丙企业长期从事机器人集成业务",),
+    )
+    result = module._category_recall_entries(
+        request=_request(read_module, "深圳有哪些机器人公司"),
+        entries=(summary_only, tag_member, label_member),
+    )
+    assert [entry.document.canonical_object_id for entry in result] == [
+        "company-c-label",
+        "company-c-tag",
+        "company-c-summary",
+    ]

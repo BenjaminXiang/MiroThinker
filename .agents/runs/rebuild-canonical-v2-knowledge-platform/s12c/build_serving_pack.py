@@ -53,6 +53,9 @@ from src.data_agents.canonical_v2 import (  # noqa: E402
     knowledge_read_isolated as isolated_read,
 )
 from src.data_agents.canonical_v2 import (  # noqa: E402
+    placeholder_scrub,
+)
+from src.data_agents.canonical_v2 import (  # noqa: E402
     serving_pack_loader as pack_loader,
 )
 from src.data_agents.canonical_v2.index_projection_isolated import (  # noqa: E402
@@ -241,6 +244,39 @@ def build_serving_pack_from_authority(
     )
     isolated_read._require_snapshot_matches_bundle(snapshot, bundle)
     mark("index_snapshot_verify")
+
+    # C1 batch 0 placeholder gate (close-workbook-gaps, design §C1-4): a
+    # read-only census of the source index (sqlite mode=ro&immutable=1),
+    # written as a side-car report NEXT TO the pack dir — never into the
+    # index (any write would break the manifest/release binding) and never
+    # into the pack (a stray file would also fail the fresh-dir check below
+    # and escape the manifest's fixed file list). First release is
+    # warn-only: counts print, the build never refuses on them.
+    normalized_pack_dir = Path(os.path.abspath(os.fspath(pack_dir)))
+    placeholder_report_path = normalized_pack_dir.parent / (
+        f"{normalized_pack_dir.name}.placeholder-scan-report.json"
+    )
+    try:
+        placeholder_report = placeholder_scrub.scan_lookup_index(
+            target.root / "lookup.sqlite3"
+        )
+        placeholder_report["release_id"] = release_id
+        placeholder_report["generator_run_id"] = generator_run_id
+        _write_json(placeholder_report_path, placeholder_report)
+        placeholder_totals = placeholder_report["field_placeholder_hits"]
+        print(
+            "phase=placeholder_scan"
+            f" report={placeholder_report_path}"
+            f" professor={placeholder_totals.get('professor', 0)}"
+            f" company={placeholder_totals.get('company', 0)}"
+            f" glued={placeholder_report['glued_runs']}"
+            " whole_value_weizhaodao="
+            f"{placeholder_report['whole_value_weizhaodao_exact']}",
+            flush=True,
+        )
+    except Exception as exc:  # warn-only first release (C1 batch 0)
+        print(f"phase=placeholder_scan warning={exc!r}", flush=True)
+    mark("placeholder_scan")
 
     destination = _prepare_pack_dir(pack_dir)
 
