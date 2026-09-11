@@ -662,3 +662,10 @@
   honest; the prose itself carries the narrowing).
 - Next: g5 sampling (3) + replay gate for the same deploy; g5-t2 still
   waits on A-2 / web for the out-of-pack names.
+- Honest caveat on g2-t3: the 5/5 stance pass is phrasing-dependent — the
+  sampled answers hedge with a global "没有任何一家…无法确认" whose
+  token distance falls OUTSIDE the two `stance_forbid` windows; they do
+  not affirm the GT capability (普渡 闪电匣Arm via 机械臂直接按电梯).
+  The evidence-level fix (AQ-S4 / D-1 binding) stays required for the
+  answer to assert it with support; the harness pass alone does not
+  close the user-facing gap.
