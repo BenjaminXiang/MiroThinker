@@ -1290,6 +1290,76 @@ def _enumeration_coverage_sentences(
     return (f"{accounting}，为代表性结果而非穷尽列表。",)
 
 
+# AQ-S2b (close-workbook-gaps): on enumeration turns the final answer
+# deterministically names the displayed-but-unmentioned local companies
+# (displayed order, capped), extending the count-only coverage sentence above
+# from "how many" to "which ones". The sentence is appended before the
+# prose-scope commit so the named members join the session's committed
+# universe (selected ∪ answer-named) — that is what lets a narrowing
+# follow-up keep the richer pool (g2-t2 stabilization). The marker tuple
+# mirrors the serving selector's enumeration family
+# (knowledge_serving_isolated._ENUMERATION_QUERY_MARKERS); this module cannot
+# import the serving one (serving imports this module), and a serving-suite
+# test pins the two copies to identical membership. Fresh list queries carry
+# no enumeration_context, so the marker path covers them while the coverage
+# path covers chat-attached follow-ups.
+_ENUMERATION_QUERY_MARKERS = (
+    "哪些",
+    "谁",
+    "多少",
+    "几个",
+    "几种",
+    "列出",
+    "所有",
+    "分别",
+    "推荐",
+    "厂商",
+    "供应商",
+)
+_ENUMERATION_MEMBER_COVERAGE_LIMIT = 24
+
+
+def _enumeration_member_coverage_sentence(
+    *,
+    request: TurnRequest,
+    context: ContextReceipt | None,
+    answer_text: str,
+) -> str | None:
+    """The AQ-S2b member coverage sentence for an enumeration turn.
+
+    Names displayed local companies the prose answer did not mention, in
+    displayed order; members beyond the display window stay count-only, and
+    the sentence makes no capability claim about any of them. Returns None
+    when the turn is not an enumeration turn, when nothing is displayed, or
+    when every displayed local member is already named.
+    """
+    displayed = None if context is None else context.displayed_result_set
+    if displayed is None:
+        return None
+    if request.evidence_set.enumeration_coverage is None and not any(
+        marker in request.query for marker in _ENUMERATION_QUERY_MARKERS
+    ):
+        return None
+    folded_answer = answer_text.casefold()
+    unmentioned = tuple(
+        handle.display_name
+        for handle in displayed.handles
+        if isinstance(handle, CanonicalEntityHandle)
+        and handle.domain == "company"
+        and handle.display_name.strip()
+        and not any(
+            form in folded_answer
+            for form in _prose_mention_name_forms(handle.display_name)
+        )
+    )
+    if not unmentioned:
+        return None
+    listing = "、".join(unmentioned[:_ENUMERATION_MEMBER_COVERAGE_LIMIT])
+    if len(unmentioned) > _ENUMERATION_MEMBER_COVERAGE_LIMIT:
+        listing = f"{listing} 等（共 {len(unmentioned)} 家）"
+    return f"此外，本次检索还召回以下相关本地企业：{listing}。"
+
+
 def _append_required_sentences(text: str, sentences: tuple[str, ...]) -> str:
     rendered = text
     for sentence in sentences:
@@ -2478,19 +2548,34 @@ class _EphemeralKnowledgeAnswer(KnowledgeAnswer):
             for conflict in result.conflicts
             if set(conflict.evidence_ids) <= selected_evidence_ids
         )
+        # AQ-S2b: on enumeration turns the deterministic member coverage
+        # sentence is appended BEFORE the commit so its named members widen
+        # the F2 union (selected ∪ answer-named) and stay in the session
+        # universe for narrowing follow-ups. Deterministic gap sentences stay
+        # post-commit and never widen the union.
+        coverage_sentence = _enumeration_member_coverage_sentence(
+            request=request,
+            context=context,
+            answer_text=synthesis.answer_text,
+        )
+        committed_text = (
+            synthesis.answer_text
+            if coverage_sentence is None
+            else _append_required_sentences(
+                synthesis.answer_text, (coverage_sentence,)
+            )
+        )
         narrowed_context, narrowed_traversal = self._commit_prose_scope(
             request=request,
             context=context,
             selected_handle_ids=synthesis.selected_handle_ids,
-            # The pre-append prose text: deterministic gap sentences added by
-            # _append_required_sentences below never widen the commit union.
-            answer_text=synthesis.answer_text,
+            answer_text=committed_text,
             traversal=result.traversal_receipt,
         )
         return result.model_copy(
             update={
                 "answer_text": _append_required_sentences(
-                    synthesis.answer_text,
+                    committed_text,
                     gap_sentences,
                 ),
                 "claims": selected_claims,

@@ -4973,7 +4973,10 @@ def test_final_llm_selection_commits_only_answer_entities(tmp_path: Path) -> Non
     )
     evidence_set = EvidenceSet(
         release_id=RELEASE_ID,
-        original_query="上述企业里总部在深圳的企业有哪些",
+        # AQ-S2b: non-enumeration wording ("哪家" carries no enumeration
+        # marker) keeps the member coverage sentence out of this streaming /
+        # commit-discipline assertion, which is orthogonal to enumeration.
+        original_query="上述企业里总部在深圳的是哪家",
         protected_slots=(ProtectedSlot(kind="geography", value="深圳"),),
         items=(pudu, yunji),
         traces=(),
@@ -6898,6 +6901,18 @@ def test_enumeration_window_constants_and_plan_windows() -> None:
         serving_module._ENUMERATION_CANDIDATE_WINDOW // 2
     )
     assert serving_module._ENUMERATION_WEB_CLAIM_WINDOW == 32
+
+
+def test_answer_layer_enumeration_markers_mirror_the_serving_family() -> None:
+    """AQ-S2b: the answer layer cannot import the serving module (serving
+    imports knowledge_answer), so its enumeration marker tuple is a mirror;
+    this pins the two copies to identical membership."""
+    from src.data_agents.canonical_v2 import knowledge_answer as answer_module
+
+    assert (
+        tuple(answer_module._ENUMERATION_QUERY_MARKERS)
+        == serving_module._ENUMERATION_QUERY_MARKERS
+    )
 
 
 def test_enumeration_plan_windows_follow_the_64_candidate_window(
