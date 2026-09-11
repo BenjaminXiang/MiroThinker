@@ -1291,14 +1291,17 @@ def _enumeration_coverage_sentences(
     return (f"{accounting}，为代表性结果而非穷尽列表。",)
 
 
-# AQ-S2b (close-workbook-gaps): on enumeration turns the final answer
-# deterministically names the displayed-but-unmentioned local companies
-# (displayed order, capped), extending the count-only coverage sentence above
-# from "how many" to "which ones". The sentence is appended before the
-# prose-scope commit so the named members join the session's committed
-# universe (selected ∪ answer-named) — that is what lets a narrowing
-# follow-up keep the richer pool (g2-t2 stabilization). The marker tuple
-# mirrors the serving selector's enumeration family
+# AQ-S2c (close-workbook-gaps, design.md §AQ-S2b amendment 2026-09-11): on
+# enumeration turns the final answer deterministically names the recalled-but-
+# unmentioned local companies — the full read window (recall-rank order,
+# capped), not just the claim-window displayed set. Recalled-but-not-claimed
+# members (e.g. 深南电路 at rank 37, 嘉立创 at 56) are the same honesty class
+# as the displayed ones, so the disclosure extends to them; members beyond
+# the read window (never retrieved) stay count-only. The sentence is appended
+# before the prose-scope commit so the named members join the session's
+# committed universe (selected ∪ answer-named) — that is what lets a
+# narrowing follow-up keep the richer pool (g2-t2/g5-t2 stabilization). The
+# marker tuple mirrors the serving selector's enumeration family
 # (knowledge_serving_isolated._ENUMERATION_QUERY_MARKERS); this module cannot
 # import the serving one (serving imports this module), and a serving-suite
 # test pins the two copies to identical membership. Fresh list queries carry
@@ -1317,7 +1320,16 @@ _ENUMERATION_QUERY_MARKERS = (
     "厂商",
     "供应商",
 )
-_ENUMERATION_MEMBER_COVERAGE_LIMIT = 24
+_ENUMERATION_MEMBER_COVERAGE_LIMIT = 32
+
+
+def _is_enumeration_turn(request: TurnRequest) -> bool:
+    """The AQ-S2b/S2c enumeration gate: chat-attached coverage context or a
+    list-style marker in the query text (fresh enumerations carry no
+    context)."""
+    return request.evidence_set.enumeration_coverage is not None or any(
+        marker in request.query for marker in _ENUMERATION_QUERY_MARKERS
+    )
 
 
 def _enumeration_member_coverage_sentence(
@@ -1326,25 +1338,23 @@ def _enumeration_member_coverage_sentence(
     context: ContextReceipt | None,
     answer_text: str,
 ) -> str | None:
-    """The AQ-S2b member coverage sentence for an enumeration turn.
+    """The AQ-S2c member coverage sentence for an enumeration turn.
 
-    Names displayed local companies the prose answer did not mention, in
-    displayed order; members beyond the display window stay count-only, and
-    the sentence makes no capability claim about any of them. Returns None
-    when the turn is not an enumeration turn, when nothing is displayed, or
-    when every displayed local member is already named.
+    Names recalled local companies (the read window's entity handles, in
+    recall-rank order) the prose answer did not mention — including
+    recalled-but-not-claimed members the claim window cut. The sentence makes
+    no capability claim about any of them. Returns None when the turn is not
+    an enumeration turn, when nothing was recalled, or when every recalled
+    local member is already named.
     """
-    displayed = None if context is None else context.displayed_result_set
-    if displayed is None:
+    if context is None:
         return None
-    if request.evidence_set.enumeration_coverage is None and not any(
-        marker in request.query for marker in _ENUMERATION_QUERY_MARKERS
-    ):
+    if not _is_enumeration_turn(request):
         return None
     folded_answer = answer_text.casefold()
     unmentioned = tuple(
         handle.display_name
-        for handle in displayed.handles
+        for handle in request.evidence_set.entity_handles
         if isinstance(handle, CanonicalEntityHandle)
         and handle.domain == "company"
         and handle.display_name.strip()
@@ -2560,10 +2570,11 @@ class _EphemeralKnowledgeAnswer(KnowledgeAnswer):
             for conflict in result.conflicts
             if set(conflict.evidence_ids) <= selected_evidence_ids
         )
-        # AQ-S2b: on enumeration turns the deterministic member coverage
-        # sentence is appended BEFORE the commit so its named members widen
-        # the F2 union (selected ∪ answer-named) and stay in the session
-        # universe for narrowing follow-ups. Deterministic gap sentences stay
+        # AQ-S2b/S2c: on enumeration turns the deterministic member coverage
+        # sentence (recall set, recall-rank order, cap 32) is appended BEFORE
+        # the commit so its named members widen the F2 union (selected ∪
+        # answer-named over the recall pool) and stay in the session universe
+        # for narrowing follow-ups. Deterministic gap sentences stay
         # post-commit and never widen the union.
         coverage_sentence = _enumeration_member_coverage_sentence(
             request=request,
@@ -2636,13 +2647,29 @@ class _EphemeralKnowledgeAnswer(KnowledgeAnswer):
             # mentioned-but-unselected members in displayed order, so the
             # result-set hash below stays deterministic.
             folded_answer = answer_text.casefold()
+            scan_pool: list[tuple[EntityHandle, str]] = list(
+                zip(prior_set.handles, prior_set.handle_ids, strict=True)
+            )
+            if _is_enumeration_turn(request):
+                # AQ-S2c: on enumeration turns the answer-named scan covers
+                # the whole recalled local-company pool (read window), not
+                # just the claim-window displayed set — the coverage sentence
+                # names recalled-but-not-claimed members, and a member the
+                # prose itself names must not leave the session universe
+                # either. Non-enumeration turns keep the displayed-only scan.
+                displayed_ids = frozenset(prior_set.handle_ids)
+                scan_pool.extend(
+                    (handle, _handle_id(handle))
+                    for handle in request.evidence_set.entity_handles
+                    if isinstance(handle, CanonicalEntityHandle)
+                    and handle.domain == "company"
+                    and _handle_id(handle) not in displayed_ids
+                )
             selected_handle_ids = (
                 *selected_handle_ids,
                 *(
                     handle_id
-                    for handle, handle_id in zip(
-                        prior_set.handles, prior_set.handle_ids, strict=True
-                    )
+                    for handle, handle_id in scan_pool
                     if handle_id not in selected_handle_ids
                     and any(
                         form in folded_answer

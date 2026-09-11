@@ -2703,8 +2703,9 @@ def _s2b_request(
             _S2B_COMPANY_IDS, _S2B_COMPANY_NAMES, strict=True
         )
     )
-    # A truncated member has full evidence and a handle but never enters the
-    # selector's displayed set (the claim window cut it).
+    # AQ-S2c: a claim-window-cut member — full evidence and a handle inside
+    # the read window, but never in the selector's displayed set (the
+    # 深南电路-at-rank-37 case the recall-sourced sentence now names).
     truncated_item = _item(
         read_module,
         evidence_id="evidence:company:s2b-epsilon",
@@ -2773,16 +2774,74 @@ def _s2b_prose_alpha_only(module: Any) -> Any:
 
 _S2B_COVERAGE_SENTENCE = (
     "此外，本次检索还召回以下相关本地企业："
-    "深圳市贝塔智能有限公司、深圳市伽马精工有限公司、深圳市德尔塔智造有限公司。"
+    "深圳市贝塔智能有限公司、深圳市伽马精工有限公司、深圳市德尔塔智造有限公司、"
+    "深圳市埃普西龙有限公司。"
 )
+
+
+# AQ-S2c fixtures: a 40-member recall window (read 64 analog) whose selector
+# displays only the first 32 (the claim window). Brand aliases stay distinct
+# per member (`_compact_company_alias` strips 深圳市…机器人有限公司 to
+# 粤科NN), so mention matching never collapses two members together.
+_S2C_RECALL_IDS = tuple(f"company:s2c-{index:02d}" for index in range(1, 41))
+_S2C_RECALL_NAMES = tuple(
+    f"深圳市粤科{index:02d}机器人有限公司" for index in range(1, 41)
+)
+
+
+def _s2c_request(
+    module: Any,
+    read_module: Any,
+    *,
+    session_id: str,
+    turn_id: str,
+    company_ids: tuple[str, ...] = _S2C_RECALL_IDS,
+    company_names: tuple[str, ...] = _S2C_RECALL_NAMES,
+    query: str = _S2B_ENUM_QUERY,
+) -> Any:
+    items = tuple(
+        _item(
+            read_module,
+            evidence_id=f"evidence:{company_id}",
+            object_id=company_id,
+            domain="company",
+            subject_id=company_id,
+            predicate="preferred_name",
+            value=name,
+            snippet=f"{name} 是一家深圳机器人企业。",
+        )
+        for company_id, name in zip(company_ids, company_names, strict=True)
+    )
+    handles = tuple(
+        _canonical_handle(
+            read_module,
+            canonical_id=company_id,
+            domain="company",
+            display_name=name,
+            evidence_ids=(f"evidence:{company_id}",),
+        )
+        for company_id, name in zip(company_ids, company_names, strict=True)
+    )
+    return _request(
+        module,
+        session_id=session_id,
+        turn_id=turn_id,
+        query=query,
+        evidence_set=_evidence_set(
+            read_module,
+            query=query,
+            items=items,
+            handles=handles,
+        ),
+    )
 
 
 def test_enumeration_answer_appends_member_coverage_sentence_deterministically() -> (
     None
 ):
-    """AQ-S2b: enumeration turns deterministically append the displayed-but-
-    unmentioned local members after prose synthesis — displayed order, honest
-    wording, identical output for identical inputs."""
+    """AQ-S2c: enumeration turns deterministically append the recalled-but-
+    unmentioned local members after prose synthesis — recall-rank order,
+    honest wording, identical output for identical inputs."""
     module = _answer_module()
     read_module = _read_module()
 
@@ -2837,39 +2896,14 @@ def test_member_coverage_sentence_triggered_by_enumeration_coverage_context() ->
     assert result.answer_text.endswith(_S2B_COVERAGE_SENTENCE)
 
 
-def test_member_coverage_sentence_caps_at_24_with_overflow_count() -> None:
-    """AQ-S2b: the sentence names at most 24 members in displayed order and
-    discloses the rest as a count ("等（共 N 家）")."""
+def test_member_coverage_sentence_caps_at_32_with_overflow_count() -> None:
+    """AQ-S2c: the sentence names at most 32 recalled members in recall-rank
+    order and discloses the overflow as a count ("等（共 N 家）")."""
     module = _answer_module()
     read_module = _read_module()
-    cap_ids = tuple(f"company:s2b-cap-{index:02d}" for index in range(1, 31))
-    cap_names = tuple(f"示例机器人企业{index:02d}号" for index in range(1, 31))
-    items = tuple(
-        _item(
-            read_module,
-            evidence_id=f"evidence:{company_id}",
-            object_id=company_id,
-            domain="company",
-            subject_id=company_id,
-            predicate="preferred_name",
-            value=name,
-            snippet=f"{name} 是一家深圳机器人企业。",
-        )
-        for company_id, name in zip(cap_ids, cap_names, strict=True)
-    )
-    handles = tuple(
-        _canonical_handle(
-            read_module,
-            canonical_id=company_id,
-            domain="company",
-            display_name=name,
-            evidence_ids=(f"evidence:{company_id}",),
-        )
-        for company_id, name in zip(cap_ids, cap_names, strict=True)
-    )
 
     def selector(inner: Any) -> Any:
-        return _proposal(module, inner, displayed_handle_ids=cap_ids)
+        return _proposal(module, inner, displayed_handle_ids=_S2C_RECALL_IDS)
 
     def prose(result: Any) -> Any:
         return module.ProseSynthesisResult(
@@ -2883,33 +2917,31 @@ def test_member_coverage_sentence_caps_at_24_with_overflow_count() -> None:
         prose_renderer=prose,
     )
     result = answer.answer(
-        _request(
+        _s2c_request(
             module,
-            session_id="session:s2b:cap",
-            turn_id="turn:s2b:cap:1",
-            query=_S2B_ENUM_QUERY,
-            evidence_set=_evidence_set(
-                read_module,
-                query=_S2B_ENUM_QUERY,
-                items=items,
-                handles=handles,
-            ),
+            read_module,
+            session_id="session:s2c:cap",
+            turn_id="turn:s2c:cap:1",
         )
     )
-    assert "示例机器人企业24号" in result.answer_text
-    assert "示例机器人企业25号" not in result.answer_text
-    assert "等（共 30 家）" in result.answer_text
+    assert "深圳市粤科32机器人有限公司" in result.answer_text
+    assert "深圳市粤科33机器人有限公司" not in result.answer_text
+    assert "等（共 40 家）" in result.answer_text
 
 
 def test_member_coverage_sentence_skipped_when_all_members_mentioned() -> None:
-    """AQ-S2b: when the prose already names every displayed local member, no
-    coverage sentence is appended."""
+    """AQ-S2c: when the prose already names every recalled local member
+    (the claim-window-cut member included), no coverage sentence is
+    appended."""
     module = _answer_module()
     read_module = _read_module()
 
     def prose(result: Any) -> Any:
         return module.ProseSynthesisResult(
-            answer_text="、".join(_S2B_COMPANY_NAMES) + "四家都可评估。",
+            answer_text="、".join(
+                (*_S2B_COMPANY_NAMES, "深圳市埃普西龙有限公司")
+            )
+            + "五家都可评估。",
             selected_claim_ids=("claim:s2b-alpha",),
             selected_handle_ids=("company:s2b-alpha",),
         )
@@ -2930,35 +2962,53 @@ def test_member_coverage_sentence_skipped_when_all_members_mentioned() -> None:
 
 
 def test_non_enumeration_turn_never_appends_member_coverage_sentence() -> None:
-    """AQ-S2b: non-enumeration turns stay byte-identical — the final answer
-    text is exactly the prose output with nothing appended."""
+    """AQ-S2c: non-enumeration turns stay byte-identical — the final answer
+    text is exactly the prose output with nothing appended, and the
+    recall-pool commit scan stays gated off: a recalled-but-undisplayed
+    member the prose names does NOT join the committed scope."""
     module = _answer_module()
     read_module = _read_module()
-    prose_text = "酒店送餐场景可以优先看深圳市阿尔法机器人有限公司。"
+    prose_text = (
+        "酒店送餐场景可以优先看深圳市阿尔法机器人有限公司；"
+        "深圳市埃普西龙有限公司也可评估。"
+    )
+
+    def prose(result: Any) -> Any:
+        return module.ProseSynthesisResult(
+            answer_text=prose_text,
+            selected_claim_ids=("claim:s2b-alpha",),
+            selected_handle_ids=("company:s2b-alpha",),
+        )
+
     answer = module.create_ephemeral_knowledge_answer(
         answer_selector=_s2b_selector(module),
-        prose_renderer=_s2b_prose_alpha_only(module),
+        prose_renderer=prose,
     )
     result = answer.answer(
         _s2b_request(
             module,
             read_module,
-            session_id="session:s2b:non-enum",
-            turn_id="turn:s2b:non-enum:1",
+            session_id="session:s2c:non-enum",
+            turn_id="turn:s2c:non-enum:1",
             query="深圳市阿尔法机器人有限公司的主营业务是什么",
         )
     )
     assert result.render_mode == "prose_renderer"
     assert result.answer_text == prose_text
+    displayed = result.context_receipt.displayed_result_set
+    assert displayed is not None
+    assert displayed.handle_ids == ("company:s2b-alpha",)
 
 
 def test_member_coverage_sentence_feeds_the_narrowing_turn_scope() -> None:
-    """AQ-S2b commit propagation: the coverage-sentence names join the prose
-    commit union (selected ∪ answer-named), so the narrowing follow-up's
-    session universe keeps the coverage-named members and their claims bind."""
+    """AQ-S2c commit propagation: the coverage sentence names a
+    claim-window-cut recall member (epsilon — never displayed on t1); the
+    name joins the prose commit union (selected ∪ answer-named over the
+    recall pool), so the narrowing follow-up's session universe keeps that
+    member and its claim binds (the g5-t2 深南电路/嘉立创 case)."""
     module = _answer_module()
     read_module = _read_module()
-    session_id = "session:s2b:narrowing"
+    session_id = "session:s2c:narrowing"
 
     def selector(inner: Any) -> Any:
         if inner.turn_id.endswith(":1"):
@@ -2976,17 +3026,17 @@ def test_member_coverage_sentence_feeds_the_narrowing_turn_scope() -> None:
                 ),
             )
         # Narrowing turn: the selector displays nothing new and grounds one
-        # claim bound to a coverage-named member.
+        # claim bound to the coverage-named, never-displayed member.
         return _proposal(
             module,
             inner,
             displayed_handle_ids=(),
             claims=(
                 (
-                    "claim:s2b-beta-geo",
-                    "深圳市贝塔智能有限公司注册地在深圳。",
-                    ("company:s2b-beta",),
-                    ("evidence:company:s2b-beta",),
+                    "claim:s2b-epsilon-geo",
+                    "深圳市埃普西龙有限公司注册地在深圳。",
+                    ("company:s2b-epsilon",),
+                    ("evidence:company:s2b-epsilon",),
                 ),
             ),
         )
@@ -2999,9 +3049,9 @@ def test_member_coverage_sentence_feeds_the_narrowing_turn_scope() -> None:
                 selected_handle_ids=("company:s2b-alpha",),
             )
         return module.ProseSynthesisResult(
-            answer_text="其中深圳市贝塔智能有限公司注册地在深圳。",
-            selected_claim_ids=("claim:s2b-beta-geo",),
-            selected_handle_ids=("company:s2b-beta",),
+            answer_text="其中深圳市埃普西龙有限公司注册地在深圳。",
+            selected_claim_ids=("claim:s2b-epsilon-geo",),
+            selected_handle_ids=("company:s2b-epsilon",),
         )
 
     answer = module.create_ephemeral_knowledge_answer(
@@ -3013,34 +3063,37 @@ def test_member_coverage_sentence_feeds_the_narrowing_turn_scope() -> None:
             module,
             read_module,
             session_id=session_id,
-            turn_id="turn:s2b:narrowing:1",
+            turn_id="turn:s2c:narrowing:1",
         )
     )
     committed = enum_result.context_receipt.displayed_result_set
     assert committed is not None
     # The commit union: selector-chosen alpha first, then the coverage-named
-    # members in displayed order — the narrowing turn inherits this pool.
-    assert committed.handle_ids == _S2B_COMPANY_IDS
+    # members — displayed ones in displayed order, then epsilon from the
+    # recall pool. The narrowing turn inherits this whole pool.
+    assert committed.handle_ids == (*_S2B_COMPANY_IDS, "company:s2b-epsilon")
 
     narrow_result = answer.answer(
         _s2b_request(
             module,
             read_module,
             session_id=session_id,
-            turn_id="turn:s2b:narrowing:2",
+            turn_id="turn:s2c:narrowing:2",
             query="其中注册地在深圳的有哪些",
         )
     )
     assert narrow_result.render_mode == "prose_renderer"
     assert any(
-        claim.claim_id == "claim:s2b-beta-geo" for claim in narrow_result.claims
+        claim.claim_id == "claim:s2b-epsilon-geo" for claim in narrow_result.claims
     )
 
 
-def test_member_coverage_sentence_lists_only_displayed_members() -> None:
-    """AQ-S2b: members cut by the claim window (evidence and handle present,
-    but never displayed) stay out of the sentence — they remain covered by
-    the count-only wording."""
+def test_member_coverage_sentence_lists_recalled_members_beyond_the_claim_window() -> (
+    None
+):
+    """AQ-S2c: a claim-window-cut member (recalled inside the read window —
+    evidence and handle present — but never displayed) IS named by the
+    sentence; only members beyond the read window stay count-only."""
     module = _answer_module()
     read_module = _read_module()
     answer = module.create_ephemeral_knowledge_answer(
@@ -3051,12 +3104,12 @@ def test_member_coverage_sentence_lists_only_displayed_members() -> None:
         _s2b_request(
             module,
             read_module,
-            session_id="session:s2b:displayed-only",
-            turn_id="turn:s2b:displayed-only:1",
+            session_id="session:s2c:recalled-beyond-claim",
+            turn_id="turn:s2c:recalled-beyond-claim:1",
         )
     )
     assert result.answer_text.endswith(_S2B_COVERAGE_SENTENCE)
-    assert "埃普西龙" not in result.answer_text
+    assert "埃普西龙" in result.answer_text
 
 
 def test_member_coverage_sentence_counts_short_brand_mentions() -> None:
@@ -3088,9 +3141,11 @@ def test_member_coverage_sentence_counts_short_brand_mentions() -> None:
         )
     )
     # 贝塔 (compact alias) and 伽马精工 (city-stripped stem) count as
-    # mentioned; only 德尔塔 stays unmentioned and gets the sentence.
+    # mentioned; 德尔塔 and the claim-window-cut 埃普西龙 stay unmentioned
+    # and get the sentence in recall order.
     assert result.answer_text.endswith(
-        "此外，本次检索还召回以下相关本地企业：深圳市德尔塔智造有限公司。"
+        "此外，本次检索还召回以下相关本地企业："
+        "深圳市德尔塔智造有限公司、深圳市埃普西龙有限公司。"
     )
 
 
@@ -3179,6 +3234,159 @@ def test_member_coverage_sentence_brand_alias_does_not_cross_match() -> None:
     assert result.answer_text.endswith(
         "此外，本次检索还召回以下相关本地企业：深圳市普渡科技有限公司。"
     )
+
+
+def test_member_coverage_sentence_sources_the_recalled_set_beyond_the_claim_window() -> (
+    None
+):
+    """AQ-S2c: the member source is the recall set (read window), not the
+    displayed set — with 40 recalled and a 32-member claim window, the eight
+    recalled-but-never-claimed members (ranks 33-40) enter the sentence once
+    the prose names the first eight displayed members."""
+    module = _answer_module()
+    read_module = _read_module()
+
+    def selector(inner: Any) -> Any:
+        return _proposal(
+            module,
+            inner,
+            displayed_handle_ids=_S2C_RECALL_IDS[:32],
+            claims=(
+                (
+                    "claim:s2c-01",
+                    "深圳市粤科01机器人有限公司主打酒店配送。",
+                    ("company:s2c-01",),
+                    ("evidence:company:s2c-01",),
+                ),
+            ),
+        )
+
+    def prose(result: Any) -> Any:
+        return module.ProseSynthesisResult(
+            answer_text="、".join(_S2C_RECALL_NAMES[:8]) + "都可评估。",
+            selected_claim_ids=("claim:s2c-01",),
+            selected_handle_ids=("company:s2c-01",),
+        )
+
+    answer = module.create_ephemeral_knowledge_answer(
+        answer_selector=selector,
+        prose_renderer=prose,
+    )
+    result = answer.answer(
+        _s2c_request(
+            module,
+            read_module,
+            session_id="session:s2c:recall-source",
+            turn_id="turn:s2c:recall-source:1",
+        )
+    )
+    # 32 unmentioned members (ranks 9-40) — the claim-window cut (ranks
+    # 33-40) is exactly the newly disclosed segment; the cap is not hit.
+    expected = (
+        "此外，本次检索还召回以下相关本地企业："
+        + "、".join(_S2C_RECALL_NAMES[8:])
+        + "。"
+    )
+    assert result.answer_text.endswith(expected)
+    assert "等（共" not in result.answer_text
+
+
+def test_member_coverage_sentence_follows_recall_rank_order() -> None:
+    """AQ-S2c: listing order is the recall rank (entity_handles order), not
+    the selector's displayed order — a shuffled displayed subset must not
+    reorder the sentence."""
+    module = _answer_module()
+    read_module = _read_module()
+    recall_ids = (
+        "company:s2c-ord-c",
+        "company:s2c-ord-a",
+        "company:s2c-ord-d",
+        "company:s2c-ord-b",
+    )
+    recall_names = (
+        "深圳市序丙机器人有限公司",
+        "深圳市序甲机器人有限公司",
+        "深圳市序丁机器人有限公司",
+        "深圳市序乙机器人有限公司",
+    )
+
+    def selector(inner: Any) -> Any:
+        # The displayed subset sits in a DIFFERENT order than the recall
+        # window; the sentence must ignore it.
+        return _proposal(
+            module,
+            inner,
+            displayed_handle_ids=("company:s2c-ord-a", "company:s2c-ord-b"),
+        )
+
+    def prose(result: Any) -> Any:
+        return module.ProseSynthesisResult(
+            answer_text="这些企业在酒店配送场景各有侧重。",
+            selected_claim_ids=(),
+            selected_handle_ids=(),
+        )
+
+    answer = module.create_ephemeral_knowledge_answer(
+        answer_selector=selector,
+        prose_renderer=prose,
+    )
+    result = answer.answer(
+        _s2c_request(
+            module,
+            read_module,
+            session_id="session:s2c:rank-order",
+            turn_id="turn:s2c:rank-order:1",
+            company_ids=recall_ids,
+            company_names=recall_names,
+        )
+    )
+    assert result.answer_text.endswith(
+        "此外，本次检索还召回以下相关本地企业："
+        "深圳市序丙机器人有限公司、深圳市序甲机器人有限公司、"
+        "深圳市序丁机器人有限公司、深圳市序乙机器人有限公司。"
+    )
+
+
+def test_member_coverage_sentence_names_all_resolve_to_recalled_handles() -> None:
+    """AQ-S2c no-fabrication: every name the sentence lists resolves back to
+    a recalled handle — the offline mirror of the live P1 property check."""
+    module = _answer_module()
+    read_module = _read_module()
+
+    def selector(inner: Any) -> Any:
+        return _proposal(module, inner, displayed_handle_ids=_S2C_RECALL_IDS[:32])
+
+    def prose(result: Any) -> Any:
+        return module.ProseSynthesisResult(
+            answer_text="这些企业在酒店配送场景各有侧重。",
+            selected_claim_ids=(),
+            selected_handle_ids=(),
+        )
+
+    answer = module.create_ephemeral_knowledge_answer(
+        answer_selector=selector,
+        prose_renderer=prose,
+    )
+    request = _s2c_request(
+        module,
+        read_module,
+        session_id="session:s2c:no-fabrication",
+        turn_id="turn:s2c:no-fabrication:1",
+    )
+    result = answer.answer(request)
+    prefix = "此外，本次检索还召回以下相关本地企业："
+    sentence = next(
+        line for line in result.answer_text.split("\n") if line.startswith(prefix)
+    )
+    body = sentence[len(prefix) :].removesuffix("。")
+    listing, _, overflow = body.partition(" 等（共 ")
+    listed = tuple(listing.split("、"))
+    recalled_names = {
+        handle.display_name for handle in request.evidence_set.entity_handles
+    }
+    assert len(listed) == 32
+    assert set(listed) <= recalled_names
+    assert overflow == "40 家）"
 
 
 def test_attributed_items_failing_grounding_keep_the_degrade() -> None:
