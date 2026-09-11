@@ -669,3 +669,21 @@
   The evidence-level fix (AQ-S4 / D-1 binding) stays required for the
   answer to assert it with support; the harness pass alone does not
   close the user-facing gap.
+
+## 2026-09-11 — g5 root cause pinned: 嘉立创/深南电路 beyond the 32-local DISPLAY window
+
+- g5 sampling with S2b (3 runs): t1 misses only 一博 in 2/3 (嘉立创 /
+  深南电路 appear via WEB text only); t2 stays 1/12 in all runs.
+- Traced why: t2's pool = t1's committed displayed set (26 members, all
+  long-tail locals). 嘉立创 (category-recall rank 54) and 深南电路 (41)
+  are inside the read truncation (64) but OUTSIDE the local display
+  window (32) → not displayed → not in the coverage sentence → not
+  committable; the prose names them from web pages, which carry no
+  canonical handle. 一博 (rank 98) is outside even the read window.
+- Implication: g5-t2 ≥9/12 needs (a) recall-ranking improvement so the
+  GT companies enter the top-32 (AQ-S5 / A-2 synonym expansion —
+  measurement-gated), and/or (b) a wider enumeration local window
+  (32→64, payload +~6K chars, TTFT cost), plus the out-of-pack trio
+  (华秋/中信华/领智) via web. Decision order: run AQ-S5 first, measure
+  the 8 in-pack GT ranks; if the ceiling still < 9/12, escalate to the
+  user with the window-widening vs re-baseline options (design §4-4).
