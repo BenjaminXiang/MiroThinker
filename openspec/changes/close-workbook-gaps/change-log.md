@@ -460,6 +460,48 @@
   ad hoc.
 - Harness local-judgement to change to `local-source-` prefix (currently
   counts every non-web card as local, including official-source).
-- First step after adjudication: D0-style 9-round per-segment card-loss
+- First step after adjudication: D0-style 9-round card-loss
   probe (answer-layer vs adapter-layer loss) before Hook A lands.
   g1-t1 / g17-t2 need a post-B5 re-run for coverage.
+
+## 2026-09-11 — F4 deployed; acceptance r3/r4 (live) red 0/5 — attribution map
+
+- Deploy: 18188 restarted on the F4 worktree state; lane-level evidence
+  (trace `var/turn-trace/2026-09-11.jsonl`) shows lexical in=48 on the
+  enumeration turns; answers switched from hex-lucky companies to the
+  lane-ranked canonical set (r3 g2-t1 names 云迹/普渡/擎朗/艾唯尔/中科世界/
+  小村; g5-t1 names 嘉立创/顺易捷/深南电路) — F4's effect is live.
+- Acceptance double-run (r3/r4, `results-b3b2-acc-r3/r4.json`): both 0/5.
+  Signatures are stable across runs (开普勒/九号 and 一博 missing in
+  every post-F4 run; g2-t2 pool 1–2<5; g5-t2 coverage 1/12).
+- Attribution (evidence: replay after-F4 stage tables + trace + in-pack
+  records):
+  1. **g2-t1** — payload has the five must-entities (开普勒 local#3,
+     九号 local#8, both inside the 16-window); 安赛步/锐曼 are OUTSIDE
+     the local-16 window. The prose answer names 云迹/普渡/擎朗 but skips
+     开普勒/九号: their in-pack records are thin/generic (九号:
+     `product_description=null`, boilerplate profile; 开普勒: product
+     names only, hotel mention sits in `technology_route_summary`), so no
+     claim supports naming them as hotel-delivery suppliers. GT expects
+     them because of outside knowledge → needs web-supplement binding or
+     data (D9).
+  2. **g2-t2** (narrowing) — pool companies ARE 深圳 by name/address,
+     but the follow-up answer only confirms 普渡: address/geography
+     evidence does not reach the narrow-turn claims (models refuses to
+     infer HQ from a name prefix). entity pool stuck at 1–2/6 in all
+     four runs.
+  3. **g2-t3** (stance) — GT: 普渡 can 自主按电梯; in-pack has no such
+     claim → post-F4 answers say "无法确认" (forbidden pattern). Pre-F4
+     runs failed the entity layer instead (普渡 not mentioned at all).
+  4. **g5-t1/g5-t2** — the four PCB names beyond F1 recall
+     (一博 pool 98 / 兴森 70 / 则成 62 / 上达+精诚达 no score) never enter
+     the candidate set; 一博 missing in all runs. 深南电路/嘉立创 appear
+     in r3 but not r4 (answer-layer selection variance). g5-t2 breadth
+     stays 1/12 because t1's committed set is 4–5 entities (session
+     snapshot `displayed_id_count`), far below the GT 9/12.
+- Verdict: B3B2-ACC NOT met; F1–F4 delivered their retrieval-level
+  effect; the remaining gaps are answer-content class (display/claim
+  breadth, narrowing attribution, stance data) + F1 recall windows —
+  i.e. the answer-quality slice, not another rerank fix. Run-to-run
+  variance is large (pre-F4 r1 2/10 vs r2 6/10 key points on g2-t1);
+  only the double-run-stable misses count as findings.
