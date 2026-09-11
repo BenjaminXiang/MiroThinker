@@ -551,11 +551,57 @@ target queries read from `run_testset.py`'s query table.
   set + planner/reader) preferred over read-layer `read:8147-8172`
   (cannot see which key entities are missing without a pass-through).
 
-**Acceptance.** g2-t1 entities 5/5 (普渡/开普勒/云迹/九号/擎朗) +
-key_points ≥0.8; g2-t2 pool ≥5/6 (安赛步/小村/中科世界/艾唯尔/锐曼/普渡);
-g5-t2 ≥9/12 key_points; replay zero new signatures; same-day differential
-non-regression; latency not worse than the C2 baseline (p50/p95 within
-noise).
+### D0.5 evidence and the LOCKED phase-1 fix set (2026-09-11)
+
+D0.5 (`.agents/runs/close-workbook-gaps/d0-probe/d05-findings.md`, gate
+replay uses production functions against real captured provider bodies):
+confirmed root causes — ① category queries have NO deterministic recall
+path (exact=name equality, structured=displayed-id re-query + empty
+short-circuit, lexical=whole-phrase substring; all scalar fields already
+sit in `content_terms` via `_normalized_scalar_values`,
+`knowledge_read_isolated.py:8147`, industry 91.9% / tech_tags 77.4% /
+summaries 100% filled in the run14 pack); ② web→canonical binding is
+structurally impossible on first-turn category queries (binding set
+empty → `_matched_bound_entity` always None, `serving:2497`); ③
+`_commit_prose_scope` commits ONLY `selected_handle_ids` — entities
+mentioned in prose but unselected are evicted (深南电路 case,
+`answer:2488-2559`); ④ the subject-consistency gate's `kept<floor`
+backfill truncates to exactly 3, discarding ALL full-name member hits
+(g5-t2: 9 B+ items cut; g2-t2 gate itself judged mostly correctly — the
+real g2 loss was probe-path invisibility, below); ⑤ supplemental probe
+results bypass the gate and lane counting (`_merged_results`) and their
+probe→candidate death is unpersisted (普渡 HQ evidence in views 5–6).
+
+**Locked phase-1 fixes (critical path only):**
+- **F1 category recall** — deterministic category-term recall over
+  `content_terms` for category queries ("做X的公司"): term extraction
+  (strip stopwords/city/metadata; terms ≥2 chars), bounded matching in
+  the lane layer, enumeration window applies. Offline-verifiable: count
+  GT recall over the sealed pack for the g2/g5 query terms. Retrieval-
+  critical: if the shape needs contract changes beyond
+  matcher/planner level, STOP and return a micro-design.
+- **F2 commit union** — `_commit_prose_scope` commits
+  `selected ∪ (displayed entities whose names appear in the answer)` so
+  mentioned members stay reachable next turn (kills the 深南电路
+  eviction).
+- **F3 gate backfill** — `kept<floor` keeps ALL full-name hits (T2/T3;
+  the same signal the kept≥3 branch trusts); only T4/T5 backfill is
+  truncated to floor. Verify by re-running the D0.5 gate replay
+  (g5-t2 expected 3→12). The anchor-qualifier/kept-count semantics
+  change is NOT taken now (neutralized by F3 for the failing cases).
+
+**Deferred (phase 2, trigger-based — per D0.5 evidence not on the
+critical path):** B2-a carried-manifest fidelity (canonical-only filters
+`chat:2047/:714` — canonical GT entities flow fine once F1/F2 land),
+B2-b per-member verdict probes, B2-c coverage statement + count
+semantics, F-bind web-name binding, probe-path visibility/qualification.
+Revisit if multi-run acceptance shows residual shortfall.
+
+**Acceptance (multi-run; single replay insufficient — carried sets vary
+day to day):** g2-t1 entities 5/5; g2-t2 pool ≥5/6; g5-t2 ≥9/12
+key_points (data ceiling noted: 8 in-pack + the Guangzhou exception —
+all eight must hit); replay zero new signatures; differential
+non-regression.
 
 **Rejected.** ① Blanket window/lane enlargement — cost without precision.
 ② Prompt-only fixes — no retrieval reconciliation, incompleteness

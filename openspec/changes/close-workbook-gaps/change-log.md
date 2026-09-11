@@ -336,3 +336,26 @@
   network from subagents (3rd approval-stall of this class today).
 - D0.5 (selection-admission rules / subject-gate per-item drops /
   structured-lane facts) resumed after the re-verify.
+
+## 2026-09-11 — D0.5 done; B3+B2 phase-1 fix set LOCKED (F1/F2/F3)
+
+- D0.5 findings (d0-probe/d05-findings.md): gate replay uses production
+  functions against real captured provider bodies (6/6 anchors). Root
+  causes confirmed: no deterministic category recall anywhere (fields
+  exist in content_terms: industry 91.9%/tech_tags 77.4%/summaries
+  100%); web→canonical binding impossible on first-turn category
+  queries; `_commit_prose_scope` commits only selected handles (mention
+  ≠ commit, 深南电路 evicted); gate backfill truncates full-name hits
+  (g5-t2 9 B+ items cut; g2-t2 gate itself mostly correct — its real
+  loss was probe-path invisibility of 普渡 HQ evidence at views 5–6).
+- Locked phase-1: F3 gate backfill (kept<floor keeps all T2/T3) → F2
+  commit union (selected ∪ mentioned) → F1 category recall over
+  content_terms (micro-design in implementation; stop+report if beyond
+  matcher/planner level). Deferred phase-2 (B2-a/b/c, F-bind, probe
+  visibility) with trigger = multi-run acceptance shortfall.
+- Acceptance: multi-run (carried sets vary day to day); g2-t1 5/5 /
+  g2-t2 ≥5/6 / g5-t2 ≥9/12 (data ceiling noted); replay zero new
+  signatures; differential non-regression.
+- B5.5 re-verify (task A): 289 passed serving+trace (265+24 new);
+  hermetic 36; B1 96/26; admin 147+3 pre-existing — all baseline-
+  identical.

@@ -40,26 +40,31 @@
        (commit `197b7f5`: knowledge_read.py +21; 3 new tests RED→GREEN —
        positive value-endpoint witness, 4 negatives, 5-fixture selector
        equivalence; focused suite 96 passed / 0 failed)
-- [ ] B3B2-D0 Diagnostic gate: per-entity drop-stage table for g2-t1 /
-       g2-t2 / g5-t2 on the live run14 line (retrieval / displayed /
-       answer / naming); final fix shape locked by this table
-       (design.md §B2+B3).
-- [ ] B2.1a Faithful carried manifest: session carries all displayed
-       members (kind,id,name); canonical-only filtering kept only for
-       identity-binding consumers (chat:2047, chat:714 sites).
-- [ ] B2.1b Per-member narrowing verdicts for the full carried set
-       (local claim → name heuristic → web probe); budget-capped
-       remainder stated honestly.
-- [ ] B2.1c Coverage statement (共 N / 确认 M / 排除 K / 未决 J) from
-       actual outcomes; fix representative count semantics
-       (read:6925-6933).
-- [ ] B3.1a Enumeration completeness self-check pre-render: reconcile
-       retrieved vs selected; one supplemental probe on shortfall;
-       `required_member_ids` wired from the retrieved strong set (chat
-       hook chat:1836-1868 preferred).
-- [ ] B3.1b Acceptance: g2-t1 5/5 entities + ratio ≥0.8; g2-t2 ≥5/6;
-       g5-t2 ≥9/12; replay zero new signatures; differential
+- [x] B3B2-D0 Diagnostic gate (DONE `1313c0f5` + D0.5
+       `d05-findings.md`): per-entity drop-stage tables + production-
+       function gate replay + lane construction facts; fix shape locked
+       in design.md §B2+B3 "D0.5 locked phase-1 fix set".
+- [ ] B3B2-F3 Gate backfill fix (small): `kept<floor` keeps ALL
+       full-name hits (T2/T3); only T4/T5 truncated to floor. Verify =
+       re-run the D0.5 gate replay (g5-t2 3→12 expected; g2-t2
+       unchanged at 7).
+- [ ] B3B2-F2 Commit union: `_commit_prose_scope` commits selected ∪
+       (displayed names appearing in the answer text) — kills the
+       深南电路-style eviction (`answer:2488-2559`).
+- [ ] B3B2-F1 Category recall: deterministic category-term recall over
+       `content_terms` (all scalar fields already in the lexicon,
+       `knowledge_read_isolated.py:8147`); term extraction (stopword/
+       city strip, ≥2 chars), bounded, enumeration window; offline
+       GT-recall count over the sealed pack. Retrieval-critical —
+       micro-design in implementation; STOP+report if it needs contract
+       changes beyond matcher/planner level.
+- [ ] B3B2-ACC Acceptance (main context, multi-run): g2-t1 5/5;
+       g2-t2 ≥5/6; g5-t2 ≥9/12 (data ceiling: 8 in-pack + Guangzhou
+       exception); replay zero new signatures; differential
        non-regression.
+- [ ] B3B2-DEFERRED (phase 2, trigger-based): B2-a manifest fidelity /
+       B2-b per-member verdict probes / B2-c coverage statement /
+       F-bind web-name binding / probe-path visibility.
 - [ ] B4.1 Local-citation floor at render; local answers carry ≥1 local
        citation.
 - [ ] B4.2 Web-citation boilerplate filter (navigation/error templates).
