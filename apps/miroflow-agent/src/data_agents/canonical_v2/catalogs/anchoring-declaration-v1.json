@@ -5,7 +5,8 @@
     "pack_sha256": "c392d559f403da928f3baeed8092c19717059b3bd1e8339fcde07fa2b7970c91",
     "sources": [
       "g-series/g3-vocabulary.json",
-      "knowledge_read_isolated F1 constants (close-workbook-gaps B1)"
+      "knowledge_read_isolated F1 constants (close-workbook-gaps B1)",
+      "AQ-S5 PCB paraphrase family (close-workbook-gaps A-2)"
     ]
   },
   "f1_category_scoring": {
@@ -1007,6 +1008,166 @@
       "multiplier": 1,
       "confidence_class": "structured_anchored",
       "whitelisted": false
+    },
+    {
+      "term": "印制电路板",
+      "tier": "T",
+      "anchor_field": null,
+      "match_mode": "substring",
+      "multiplier": 2,
+      "confidence_class": "text_only",
+      "whitelisted": false,
+      "expands": "PCB"
+    },
+    {
+      "term": "印制线路板",
+      "tier": "T",
+      "anchor_field": null,
+      "match_mode": "substring",
+      "multiplier": 2,
+      "confidence_class": "text_only",
+      "whitelisted": false,
+      "expands": "PCB"
+    },
+    {
+      "term": "柔性线路板",
+      "tier": "T",
+      "anchor_field": null,
+      "match_mode": "substring",
+      "multiplier": 2,
+      "confidence_class": "text_only",
+      "whitelisted": false,
+      "expands": "PCB"
+    },
+    {
+      "term": "柔性电路板",
+      "tier": "T",
+      "anchor_field": null,
+      "match_mode": "substring",
+      "multiplier": 2,
+      "confidence_class": "text_only",
+      "whitelisted": false,
+      "expands": "PCB"
+    },
+    {
+      "term": "封装基板",
+      "tier": "T",
+      "anchor_field": null,
+      "match_mode": "substring",
+      "multiplier": 2,
+      "confidence_class": "text_only",
+      "whitelisted": false,
+      "expands": "PCB"
+    },
+    {
+      "term": "刚挠结合",
+      "tier": "T",
+      "anchor_field": null,
+      "match_mode": "substring",
+      "multiplier": 2,
+      "confidence_class": "text_only",
+      "whitelisted": false,
+      "expands": "PCB"
+    },
+    {
+      "term": "PCBA",
+      "tier": "T",
+      "anchor_field": null,
+      "match_mode": "substring",
+      "multiplier": 2,
+      "confidence_class": "text_only",
+      "whitelisted": false,
+      "expands": "PCB"
+    },
+    {
+      "term": "电路板",
+      "tier": "T",
+      "anchor_field": null,
+      "match_mode": "substring",
+      "multiplier": 1,
+      "confidence_class": "text_only",
+      "whitelisted": false,
+      "expands": "PCB"
+    },
+    {
+      "term": "线路板",
+      "tier": "T",
+      "anchor_field": null,
+      "match_mode": "substring",
+      "multiplier": 1,
+      "confidence_class": "text_only",
+      "whitelisted": false,
+      "expands": "PCB"
+    },
+    {
+      "term": "柔性板",
+      "tier": "T",
+      "anchor_field": null,
+      "match_mode": "substring",
+      "multiplier": 1,
+      "confidence_class": "text_only",
+      "whitelisted": false,
+      "expands": "PCB"
+    },
+    {
+      "term": "FPC",
+      "tier": "T",
+      "anchor_field": null,
+      "match_mode": "substring",
+      "multiplier": 1,
+      "confidence_class": "text_only",
+      "whitelisted": false,
+      "expands": "PCB"
+    },
+    {
+      "term": "SMT",
+      "tier": "T",
+      "anchor_field": null,
+      "match_mode": "substring",
+      "multiplier": 1,
+      "confidence_class": "text_only",
+      "whitelisted": false,
+      "expands": "PCB"
+    },
+    {
+      "term": "打样",
+      "tier": "T",
+      "anchor_field": null,
+      "match_mode": "substring",
+      "multiplier": 1,
+      "confidence_class": "text_only",
+      "whitelisted": false,
+      "expands": "PCB"
+    },
+    {
+      "term": "打板",
+      "tier": "T",
+      "anchor_field": null,
+      "match_mode": "substring",
+      "multiplier": 1,
+      "confidence_class": "text_only",
+      "whitelisted": false,
+      "expands": "PCB"
+    },
+    {
+      "term": "制板",
+      "tier": "T",
+      "anchor_field": null,
+      "match_mode": "substring",
+      "multiplier": 1,
+      "confidence_class": "text_only",
+      "whitelisted": false,
+      "expands": "PCB"
+    },
+    {
+      "term": "贴片",
+      "tier": "T",
+      "anchor_field": null,
+      "match_mode": "substring",
+      "multiplier": 1,
+      "confidence_class": "text_only",
+      "whitelisted": false,
+      "expands": "PCB"
     }
   ]
 }

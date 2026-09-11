@@ -2338,10 +2338,12 @@ def test_prose_commit_unions_displayed_entities_named_in_answer() -> None:
     displayed member the answer names stays in the session universe.
     AQ-S2b: this is an enumeration turn, so the deterministic coverage
     sentence also names the displayed members the prose did not mention
-    under the shared name-form rule (full name or legal-suffix stem). The
-    short brand mention 嘉立创 is not a name form, so 嘉立创 is listed too;
-    深南电路 is a stem form and stays out. The commit union keeps the whole
-    displayed pool — that is the g2-t2 stabilization mechanism."""
+    under the shared name-form rule, and the commit union keeps the whole
+    displayed pool — that is the g2-t2 stabilization mechanism.
+    S2b-r: the name-form rule also matches the city-prefix-stripped stem
+    and the compact brand alias, so the bare 嘉立创 mention counts as naming
+    jlc and the coverage sentence lists only 顺易捷/一博; 深南电路 matches
+    via its legal-suffix stem and stays out as before."""
     module = _answer_module()
     read_module = _read_module()
     request = _f2_pcb_request(
@@ -2361,14 +2363,12 @@ def test_prose_commit_unions_displayed_entities_named_in_answer() -> None:
     )
     result = answer.answer(request)
     assert result.render_mode == "prose_renderer"
-    # AQ-S2b: the coverage sentence follows the prose tail verbatim. It
-    # lists 嘉立创 because the prose only used the short brand form, which
-    # the shared name-form rule (full name / legal-suffix stem) does not
-    # count as naming the entity.
+    # AQ-S2b: the coverage sentence follows the prose tail verbatim. S2b-r:
+    # the bare 嘉立创 brand mention now counts (compact alias form), so the
+    # sentence lists only the two members the prose never named.
     assert result.answer_text.endswith(
         "此外，本次检索还召回以下相关本地企业："
-        "深圳市嘉立创科技发展有限公司、深圳市顺易捷信息科技有限公司、"
-        "深圳市一博科技股份有限公司。"
+        "深圳市顺易捷信息科技有限公司、深圳市一博科技股份有限公司。"
     )
     displayed = result.context_receipt.displayed_result_set
     assert displayed is not None
@@ -2562,6 +2562,63 @@ def test_prose_commit_mention_matching_skips_sub_two_char_forms() -> None:
     displayed = result.context_receipt.displayed_result_set
     assert displayed is not None
     assert displayed.handle_ids == ("company:f2-jlc",)
+
+
+def test_prose_mention_name_forms_include_city_stripped_stem_and_brand_alias() -> None:
+    """S2b-r: mention forms add the city-prefix-stripped legal stem (>= 4
+    chars, mirroring the serving web-identity rule) and the compact brand
+    alias (`_compact_company_alias`, >= 2 chars) — prose writes 普渡/嘉立创
+    where the handle carries the full legal name. The sub-2-char floor is
+    unchanged."""
+    module = _answer_module()
+    assert module._prose_mention_name_forms("深圳市普渡科技有限公司") == (
+        "深圳市普渡科技有限公司",
+        "深圳市普渡科技",
+        "普渡科技",
+        "普渡",
+    )
+    # No city prefix and no shorter distinctive brand: no extra forms.
+    assert module._prose_mention_name_forms("深南电路股份有限公司") == (
+        "深南电路股份有限公司",
+        "深南电路",
+    )
+    # Nothing strippable: the sub-2-char stem stays out, the alias equals the
+    # full name and dedups.
+    assert module._prose_mention_name_forms("甲公司") == ("甲公司",)
+
+
+def test_prose_commit_union_picks_up_short_brand_mentions() -> None:
+    """S2b-r: the commit mention scan uses the same forms, so a bare brand
+    alias in the prose pulls the displayed member into the committed union
+    (before S2b-r only full-name / legal-stem mentions counted)."""
+    module = _answer_module()
+    read_module = _read_module()
+
+    def prose(result: Any) -> Any:
+        return module.ProseSynthesisResult(
+            answer_text="批量产能上深南电路更稳；嘉立创也可备选。",
+            selected_claim_ids=("claim:f2-scc",),
+            selected_handle_ids=("company:f2-scc",),
+        )
+
+    answer = module.create_ephemeral_knowledge_answer(
+        answer_selector=_f2_selector(module),
+        prose_renderer=prose,
+    )
+    result = answer.answer(
+        _f2_pcb_request(
+            module,
+            read_module,
+            session_id="session:f2:alias-union",
+            turn_id="turn:f2:alias-union:1",
+            query="深圳 PCB 打样企业对比",
+        )
+    )
+    displayed = result.context_receipt.displayed_result_set
+    assert displayed is not None
+    # Selector-chosen scc first, then answer-named members in displayed
+    # order — jlc joins via the bare 嘉立创 alias.
+    assert displayed.handle_ids == ("company:f2-scc", "company:f2-jlc")
 
 
 def test_prose_commit_empty_selection_keeps_displayed_set() -> None:
@@ -3000,6 +3057,128 @@ def test_member_coverage_sentence_lists_only_displayed_members() -> None:
     )
     assert result.answer_text.endswith(_S2B_COVERAGE_SENTENCE)
     assert "埃普西龙" not in result.answer_text
+
+
+def test_member_coverage_sentence_counts_short_brand_mentions() -> None:
+    """S2b-r: a bare short brand mention (贝塔 for 深圳市贝塔智能有限公司)
+    counts as naming the member — the coverage sentence no longer re-lists
+    companies the prose already described under a short form."""
+    module = _answer_module()
+    read_module = _read_module()
+
+    def prose(result: Any) -> Any:
+        return module.ProseSynthesisResult(
+            answer_text=(
+                "场景上优先看深圳市阿尔法机器人有限公司；贝塔、伽马精工也可评估。"
+            ),
+            selected_claim_ids=("claim:s2b-alpha",),
+            selected_handle_ids=("company:s2b-alpha",),
+        )
+
+    answer = module.create_ephemeral_knowledge_answer(
+        answer_selector=_s2b_selector(module),
+        prose_renderer=prose,
+    )
+    result = answer.answer(
+        _s2b_request(
+            module,
+            read_module,
+            session_id="session:s2b:short-brand",
+            turn_id="turn:s2b:short-brand:1",
+        )
+    )
+    # 贝塔 (compact alias) and 伽马精工 (city-stripped stem) count as
+    # mentioned; only 德尔塔 stays unmentioned and gets the sentence.
+    assert result.answer_text.endswith(
+        "此外，本次检索还召回以下相关本地企业：深圳市德尔塔智造有限公司。"
+    )
+
+
+def test_member_coverage_sentence_brand_alias_does_not_cross_match() -> None:
+    """S2b-r negative: brand aliases match per company, exactly — prose
+    naming 普天 never swallows the distinct displayed member 普渡."""
+    module = _answer_module()
+    read_module = _read_module()
+    putian_item = _item(
+        read_module,
+        evidence_id="evidence:company:s2br-putian",
+        object_id="company:s2br-putian",
+        domain="company",
+        subject_id="company:s2br-putian",
+        predicate="preferred_name",
+        value="深圳市普天智能有限公司",
+        snippet="深圳市普天智能有限公司是一家深圳机器人企业。",
+    )
+    pudu_item = _item(
+        read_module,
+        evidence_id="evidence:company:s2br-pudu",
+        object_id="company:s2br-pudu",
+        domain="company",
+        subject_id="company:s2br-pudu",
+        predicate="preferred_name",
+        value="深圳市普渡科技有限公司",
+        snippet="深圳市普渡科技有限公司是一家深圳机器人企业。",
+    )
+    request = _request(
+        module,
+        session_id="session:s2br:no-cross",
+        turn_id="turn:s2br:no-cross:1",
+        query="深圳有哪些配送机器人企业",
+        evidence_set=_evidence_set(
+            read_module,
+            query="深圳有哪些配送机器人企业",
+            items=(putian_item, pudu_item),
+            handles=(
+                _canonical_handle(
+                    read_module,
+                    canonical_id="company:s2br-putian",
+                    domain="company",
+                    display_name="深圳市普天智能有限公司",
+                    evidence_ids=("evidence:company:s2br-putian",),
+                ),
+                _canonical_handle(
+                    read_module,
+                    canonical_id="company:s2br-pudu",
+                    domain="company",
+                    display_name="深圳市普渡科技有限公司",
+                    evidence_ids=("evidence:company:s2br-pudu",),
+                ),
+            ),
+        ),
+    )
+
+    def selector(inner: Any) -> Any:
+        return _proposal(
+            module,
+            inner,
+            displayed_handle_ids=("company:s2br-putian", "company:s2br-pudu"),
+            claims=(
+                (
+                    "claim:s2br-putian",
+                    "深圳市普天智能有限公司做楼宇配送。",
+                    ("company:s2br-putian",),
+                    ("evidence:company:s2br-putian",),
+                ),
+            ),
+        )
+
+    def prose(result: Any) -> Any:
+        return module.ProseSynthesisResult(
+            answer_text="楼宇配送场景可以优先看普天。",
+            selected_claim_ids=("claim:s2br-putian",),
+            selected_handle_ids=("company:s2br-putian",),
+        )
+
+    answer = module.create_ephemeral_knowledge_answer(
+        answer_selector=selector,
+        prose_renderer=prose,
+    )
+    result = answer.answer(request)
+    # 普天 counts as mentioned (compact alias); 普渡 was never named and is
+    # still listed — the 普天 alias must not cover it.
+    assert result.answer_text.endswith(
+        "此外，本次检索还召回以下相关本地企业：深圳市普渡科技有限公司。"
+    )
 
 
 def test_attributed_items_failing_grounding_keep_the_degrade() -> None:

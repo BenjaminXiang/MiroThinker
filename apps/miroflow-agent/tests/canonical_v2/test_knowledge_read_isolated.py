@@ -614,3 +614,224 @@ def test_f1_scoring_consumes_anchoring_declaration_equivalently() -> None:
         "company-c-tag",
         "company-c-summary",
     ]
+
+
+# --- AQ-S5 (A-2): declared paraphrase family expansion ---------------------
+#
+# The F1 category recall consumes the declaration's `terms[]` expansion
+# entries (`expands: "PCB"`): when the trigger head is itself an extracted
+# query term, the declared paraphrase members join the term set at their
+# declared (downweighted) multiplier; query-extracted terms are never
+# downgraded. Measurement basis: d0-probe/aq-s5-explore.json (sealed run14).
+
+
+def test_category_term_expansions_fire_only_on_pcb_trigger() -> None:
+    module = _module()
+    base = module._category_query_terms("我想找PCB打板， 有哪些推荐")
+    assert base == (("pcb", 2), ("我想找", 2), ("打板", 2))
+    expanded = dict(module._expand_category_query_terms(base))
+    # The declared family joins at its declared (downweighted) weights.
+    assert expanded["电路板"] == 1
+    assert expanded["线路板"] == 1
+    assert expanded["打样"] == 1
+    assert expanded["fpc"] == 1
+    assert expanded["smt"] == 1
+    assert expanded["印制电路板"] == 2
+    assert expanded["柔性电路板"] == 2
+    assert expanded["pcba"] == 2
+    assert expanded["封装基板"] == 2
+    # Query-extracted terms keep their own weights — an extracted word that
+    # is also a declared member (打板) is never downgraded to the member
+    # weight.
+    assert expanded["pcb"] == 2
+    assert expanded["打板"] == 2
+    assert expanded["我想找"] == 2
+    # No trigger in the extracted terms -> no expansion, byte-identical.
+    hotel = module._category_query_terms("中国有哪些成熟的酒店送餐机器人供应商")
+    assert module._expand_category_query_terms(hotel) == hotel
+    robot = module._category_query_terms("深圳有哪些机器人公司")
+    assert module._expand_category_query_terms(robot) == robot
+    assert module._expand_category_query_terms(()) == ()
+
+
+def test_category_term_expansions_keep_query_term_weights() -> None:
+    module = _module()
+    # 电路板 extracts as a weight-2 word here; the expansion must not pull it
+    # down to its member weight 1.
+    base = module._category_query_terms("深圳有哪些PCB电路板厂家")
+    assert ("电路板", 2) in base
+    expanded = dict(module._expand_category_query_terms(base))
+    assert expanded["电路板"] == 2
+    assert expanded["pcb"] == 2
+
+
+def _s5_entries(module: Any, index_module: Any) -> tuple[Any, ...]:
+    flex_only = _entry(
+        module,
+        index_module,
+        canonical_id="company-c-s5-flex",
+        display_name="深圳柔性电路有限公司",
+        content_terms=("fpc组件产品研发商", "柔性电路板制造商"),
+        tag_terms=("fpc组件产品研发商",),
+        product_terms=("柔性电路板制造商",),
+    )
+    pcb_summary = _entry(
+        module,
+        index_module,
+        canonical_id="company-c-s5-pcb",
+        display_name="丙企业",
+        content_terms=("丙企业长期从事pcb贸易",),
+    )
+    weak_flex = _entry(
+        module,
+        index_module,
+        canonical_id="company-c-s5-weak",
+        display_name="戊企业",
+        # Carries fpc/电路板 so both expansion terms clear the two-document
+        # bigram coverage floor; its own score stays at the base tier.
+        content_terms=("戊企业简介顺带提到fpc与电路板",),
+    )
+    stray_circuit = _entry(
+        module,
+        index_module,
+        canonical_id="company-c-s5-stray",
+        display_name="丁企业",
+        # A lone 线路板 mention: the only hit of that expansion member, so the
+        # term dies at the coverage floor and the company stays out — the
+        # "机器视觉 vs 机器人" guard shape, one level down.
+        content_terms=("丁企业的历史沿革提到一次线路板采购",),
+    )
+    return (flex_only, pcb_summary, weak_flex, stray_circuit)
+
+
+def test_category_recall_promotes_paraphrase_only_entries() -> None:
+    module = _module()
+    read_module = _read_module()
+    index_module = _index_module()
+    entries = _s5_entries(module, index_module)
+    result = module._category_recall_entries(
+        request=_request(read_module, "深圳有哪些做PCB的公司"),
+        entries=entries,
+    )
+    # The paraphrase-only FPC entry (zero pcb mentions) is recalled and
+    # outranks a summary-only pcb mention via its tag/product tier hits;
+    # the stray single-mention entry stays out.
+    assert [entry.document.canonical_object_id for entry in result] == [
+        "company-c-s5-flex",
+        "company-c-s5-pcb",
+        "company-c-s5-weak",
+    ]
+
+
+def test_category_recall_paraphrase_never_fires_without_trigger() -> None:
+    module = _module()
+    read_module = _read_module()
+    index_module = _index_module()
+    entries = _s5_entries(module, index_module)
+    # Same entries, a robot-category query: the family stays inactive, so the
+    # FPC/pcb profiles score nothing and nothing is recalled.
+    result = module._category_recall_entries(
+        request=_request(read_module, "深圳有哪些机器人公司"),
+        entries=entries,
+    )
+    assert result == []
+
+
+def test_anchoring_declaration_carries_pcb_paraphrase_family() -> None:
+    module = _module()
+    declaration_module = _declaration_module()
+    declaration = declaration_module.PACKAGED_ANCHORING_DECLARATION
+    family = {
+        term.term: term for term in declaration.terms if term.expands is not None
+    }
+    assert set(family) == {
+        "印制电路板",
+        "印制线路板",
+        "柔性线路板",
+        "柔性电路板",
+        "封装基板",
+        "刚挠结合",
+        "PCBA",
+        "电路板",
+        "线路板",
+        "柔性板",
+        "FPC",
+        "SMT",
+        "打样",
+        "打板",
+        "制板",
+        "贴片",
+    }
+    assert all(term.expands == "PCB" for term in family.values())
+    # Declared weight rule: self-delimiting phrases (>= 4 chars) weigh 2,
+    # shorter members weigh 1 — both below the trigger's extracted weight.
+    for text, term in family.items():
+        assert term.multiplier == (2 if len(text) >= 4 else 1)
+        assert term.tier == "T"
+        assert term.anchor_field is None
+        assert term.match_mode == "substring"
+    # The expansion target is itself a declared term.
+    declared = {term.term for term in declaration.terms}
+    assert {term.expands for term in family.values()} <= declared
+    # The consumer map is derived from the declaration (single source).
+    expansions = module._CATEGORY_TERM_EXPANSIONS
+    assert dict(expansions["pcb"]) == {
+        "印制电路板": 2,
+        "印制线路板": 2,
+        "柔性线路板": 2,
+        "柔性电路板": 2,
+        "封装基板": 2,
+        "刚挠结合": 2,
+        "pcba": 2,
+        "电路板": 1,
+        "线路板": 1,
+        "柔性板": 1,
+        "fpc": 1,
+        "smt": 1,
+        "打样": 1,
+        "打板": 1,
+        "制板": 1,
+        "贴片": 1,
+    }
+
+
+def test_anchoring_declaration_entry_unknown_field_fails_closed() -> None:
+    declaration_module = _declaration_module()
+    payload = json.dumps(
+        {
+            "schema_version": declaration_module.DECLARATION_SCHEMA_VERSION,
+            "generated_from": {
+                "pack_id": "serving-pack:test",
+                "pack_sha256": "0" * 64,
+                "sources": ["test"],
+            },
+            "f1_category_scoring": {
+                "field_tier_multipliers": {
+                    "industry_label": 8,
+                    "tag": 4,
+                    "product": 2,
+                },
+                "min_bigram_coverage": 2,
+                "min_score": 2,
+            },
+            "terms": [
+                {
+                    "term": "电路板",
+                    "tier": "T",
+                    "anchor_field": None,
+                    "match_mode": "substring",
+                    "multiplier": 1,
+                    "confidence_class": "text_only",
+                    "whitelisted": False,
+                    "expands": "PCB",
+                    "bogus_field": "not-in-schema",
+                }
+            ],
+        }
+    ).encode("utf-8")
+    try:
+        declaration_module.parse_anchoring_declaration(payload)
+    except Exception as exc:
+        assert "bogus_field" in str(exc)
+    else:  # pragma: no cover - the raise is the contract
+        raise AssertionError("unknown term field must fail closed")

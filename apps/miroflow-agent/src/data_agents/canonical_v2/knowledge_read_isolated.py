@@ -8445,6 +8445,51 @@ _CATEGORY_CJK_RUN = re.compile(r"[一-鿿]+")
 _CATEGORY_LATIN_RUN = re.compile(r"[a-z0-9]+")
 
 
+def _build_category_term_expansions() -> dict[str, tuple[tuple[str, int], ...]]:
+    # AQ-S5 (A-2): the declaration's paraphrase families, keyed by the
+    # casefolded trigger head with casefolded members at their declared
+    # weights (`multiplier`). This is the first consumer of `terms[]`;
+    # entries without `expands` stay declaration-only metadata.
+    grouped: dict[str, dict[str, int]] = {}
+    for term in PACKAGED_ANCHORING_DECLARATION.terms:
+        if term.expands is None:
+            continue
+        grouped.setdefault(term.expands.casefold(), {})[term.term.casefold()] = (
+            term.multiplier
+        )
+    return {
+        head: tuple(sorted(members.items()))
+        for head, members in sorted(grouped.items())
+    }
+
+
+_CATEGORY_TERM_EXPANSIONS = _build_category_term_expansions()
+
+
+def _expand_category_query_terms(
+    terms: tuple[tuple[str, int], ...],
+) -> tuple[tuple[str, int], ...]:
+    """Join declared paraphrase members whose trigger head was extracted.
+
+    A member joins at its declared (downweighted) weight only when the head
+    is itself an extracted query term; a term the query already carries is
+    never downgraded to its member weight. Expansion is single-hop (members
+    never trigger further families).
+    """
+    if not terms:
+        return terms
+    heads = {term for term, _weight in terms}
+    expanded = dict(terms)
+    for head, members in _CATEGORY_TERM_EXPANSIONS.items():
+        if head not in heads:
+            continue
+        for member, weight in members:
+            expanded.setdefault(member, weight)
+    if len(expanded) == len(terms):
+        return terms
+    return tuple(sorted(expanded.items()))
+
+
 def _category_query_terms(query_text: str) -> tuple[tuple[str, int], ...]:
     # Term extraction is deterministic (no segmenter dependency): latin/digit
     # runs >= 2 chars are self-delimiting words (weight 2); CJK runs of 2-3
@@ -8484,8 +8529,9 @@ def _category_recall_entries(
     # Substring matching against content terms: category field values are
     # free text (tech_tags "室内外配送机器人研发商"), so token equality would
     # miss them. Scored, deterministically ordered, and truncated to the
-    # request window (64 on the enumeration branch, AQ-S2).
-    terms = _category_query_terms(request.query_text)
+    # request window (64 on the enumeration branch, AQ-S2). Declared
+    # paraphrase members join the term set here (AQ-S5).
+    terms = _expand_category_query_terms(_category_query_terms(request.query_text))
     if not terms:
         return []
     constraints = request.structured_constraints

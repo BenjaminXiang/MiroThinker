@@ -24,6 +24,7 @@ _logger = logging.getLogger(__name__)
 from pydantic import Field, ValidationError, model_serializer, model_validator
 
 from .contracts import ContractModel
+from .followup_referents import _compact_company_alias
 from .knowledge_read import (
     AmbiguityCandidate,
     AmbiguityDecision,
@@ -1691,16 +1692,27 @@ def _prose_mention_name_forms(display_name: str) -> tuple[str, ...]:
     # Name forms that count as the final answer naming a displayed entity
     # (F2, close-workbook-gaps B3): the full display name plus its company
     # legal-suffix-stripped stem — prose writes 深南电路 where the handle
-    # carries 深南电路股份有限公司. Forms shorter than two characters never
-    # match; single-character stems would union on stray text.
+    # carries 深南电路股份有限公司. S2b-r adds two more forms because live
+    # prose also writes short brand names (普渡/嘉立创): the city-prefix-
+    # stripped legal stem (>= 4 chars, mirroring the serving web-identity
+    # rule) and the compact brand alias from `_compact_company_alias`
+    # (>= 2 chars). Forms shorter than two characters never match;
+    # single-character stems would union on stray text.
     forms = [display_name]
     for suffix in _PROSE_MENTION_COMPANY_LEGAL_SUFFIXES:
         if display_name.endswith(suffix):
             stem = display_name[: -len(suffix)]
             if stem != display_name:
                 forms.append(stem)
+                city_stripped = re.sub(r"^[一-鿿]{2,4}市", "", stem, count=1)
+                if city_stripped != stem and len(city_stripped) >= 4:
+                    forms.append(city_stripped)
             break
-    return tuple(form.casefold() for form in forms if len(form) >= 2)
+    brand_alias = _compact_company_alias(display_name)
+    if brand_alias != display_name:
+        forms.append(brand_alias)
+    deduped = tuple(dict.fromkeys(forms))
+    return tuple(form.casefold() for form in deduped if len(form) >= 2)
 
 
 def _physical_traversal_authorized(

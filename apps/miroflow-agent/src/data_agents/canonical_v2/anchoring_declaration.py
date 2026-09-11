@@ -49,6 +49,10 @@ class AnchoringDeclarationTerm(ContractModel):
     multiplier: int = 1
     confidence_class: Literal["structured_anchored", "text_only", "no_signal"]
     whitelisted: bool = False
+    # AQ-S5 (A-2): when set, this entry is a paraphrase member of the named
+    # trigger head; the F1 category recall admits it only on queries whose
+    # extracted terms include the head, at `multiplier` as the member weight.
+    expands: NonEmptyStr | None = None
 
 
 class InstalledAnchoringDeclaration(ContractModel):
