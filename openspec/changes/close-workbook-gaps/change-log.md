@@ -374,3 +374,32 @@
   patent summary (83.2%<85) warn on run14; target-state list of 9 items.
 - G2 (identity) / G3 (category anchoring) sibling streams still running;
   combined C1-contract consolidation after all three land.
+
+## 2026-09-11 — G2 delivered: identity audit — FOUR-DOMAIN ID CHURN 100% across releases
+
+- Headline: s12f→run14 four domains changed ALL ids (company 1,733/1,733,
+  professor 1,391, paper DOI 494, patent 1,931; natural-key hit 98.7-100%);
+  575/1,733 companies (33%) had 16-field snapshots IDENTICAL yet got new ids
+  — pure re-forging loss. Mechanism: the identity minting hash includes
+  release_id (`canonical_identity_resolution.py:2219-2237`), no persistent
+  identity state between generations.
+- Fragmentation: company T2-core 12 entities/24 docs; T3-stem 72/146 (upper
+  bound, brand collisions); professor 18 clusters/37 (9 sameness dup + 9
+  homonyms); paper 6 clusters/12 (preprint vs journal, ALL DOIs different —
+  dedup cannot rely on DOI equality); patent 0. Conflicts: 30/72 clusters
+  have address+legal-rep mutually exclusive (42%) — brand-name auto-merge
+  would merge different legal entities; only 42 clusters soft-mergeable.
+  普渡 full sample: 3 identities, conflicting industry, bindings split
+  128/0/27. credit_code/registered_capital fully empty; quality_status
+  always "partial".
+- §4 proposal = direct ADR input: primary-record rule (source family
+  p4>legacy>backfill + completeness + deterministic tie-break); field
+  merge rules; **stable_uid protocol** (ledger-allocated once, never
+  re-minted; canonical id kept as version id; merge/split/rename event log;
+  reference surfaces write stable_uid only) + interim option (drop
+  release_id from the mint hash; max benefit 33%) with cost list and
+  acceptance KPIs.
+- Impact: every periodic update (C6) currently churns ALL ids — manual
+  recalls, uploads, session/binding references break each cycle (the
+  earlier manual-recall release_mismatch is a symptom of this class).
+  The ADR (two-line contract home) now has its core input.
