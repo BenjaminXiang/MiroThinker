@@ -86,6 +86,7 @@ from .knowledge_read import (
 )
 from .knowledge_read_isolated import _NAMED_COMPANY_PATENT_PATTERN
 from .llm_judgments import create_llm_judge
+from .placeholder_scrub import scrub_placeholder_value
 from .turn_trace_context import TurnTraceReporter, current_turn_trace
 from .web_lane_resilience import (
     RETRY_BACKOFF_SECONDS,
@@ -2769,8 +2770,16 @@ _DISPLAYED_COMPANY_ID_PREFIXES = ("company:", "company-", "web-handle:")
 _SUPPLEMENTAL_GEOGRAPHY_CITIES = ("深圳", "广州", "上海", "北京")
 _SUPPLEMENTAL_WEB_SOURCE_NATURE = "supplemental_web"
 # Candidate window for enumeration (list-style) queries; wide enough to keep
-# vector ranks 10-25 inside the fused retention.
-_ENUMERATION_CANDIDATE_WINDOW = 48
+# vector ranks 10-25 inside the fused retention. AQ-S2 widened 48 -> 64 so the
+# read/F1 truncation (which follows the plan window) pulls pool ranks 49-64
+# (嘉立创 pool 54, 则成 62) into the category-recall window.
+_ENUMERATION_CANDIDATE_WINDOW = 64
+# Enumeration claim windows (AQ-S2). The selector interleaves local/web 1:1,
+# so the local claim window must stay exactly half the candidate window; the
+# web claim window is deliberately decoupled from it — 64 web claims would
+# flood the prose prompt (local +16 / web -16 vs the pre-AQ-S2 split).
+_ENUMERATION_LOCAL_CLAIM_WINDOW = 32
+_ENUMERATION_WEB_CLAIM_WINDOW = 32
 # List-style markers mirroring the answer selector's enumeration family; a
 # fresh list query carries no enumeration_context, so the planner keys on the
 # query text itself.
@@ -4149,12 +4158,38 @@ _WEB_CLAIM_SNIPPET_LIMIT = 240
 _LOCAL_CLAIM_FIELD_LIMIT = 160
 
 
-def _semantic_text(item: EvidenceItem, display_name: str) -> str:
+def _registered_address_claim_value(payload: Mapping[str, Any]) -> str | None:
+    """Registered-place claim value from a company lookup payload.
+
+    Prefers the full `registered_address`, falls back to `geography.name`;
+    placeholder values ("未找到"/"暂无", the C1 families) render as absent.
+    """
+    address = payload.get("registered_address")
+    if isinstance(address, str):
+        scrubbed = scrub_placeholder_value(address.strip())
+        if scrubbed:
+            return scrubbed[:_LOCAL_CLAIM_FIELD_LIMIT]
+    geography = payload.get("geography")
+    if isinstance(geography, Mapping):
+        name = geography.get("name")
+        if isinstance(name, str):
+            scrubbed = scrub_placeholder_value(name.strip())
+            if scrubbed:
+                return scrubbed[:_LOCAL_CLAIM_FIELD_LIMIT]
+    return None
+
+
+def _semantic_text(
+    item: EvidenceItem,
+    display_name: str,
+    *,
+    include_registered_address: bool = False,
+) -> str:
     if item.source_nature == "current_web":
         # Cap the claim text: fetched page bodies (up to 1200 chars per
-        # item) times the 48-claim enumeration window made the prose prompt
-        # enormous and the model started copying raw listings instead of
-        # answering.  The first 240 chars keep the title and the binding
+        # item) times the widened enumeration claim window made the prose
+        # prompt enormous and the model started copying raw listings instead
+        # of answering.  The first 240 chars keep the title and the binding
         # sentence.
         return f"{item.snippet[:_WEB_CLAIM_SNIPPET_LIMIT]}；来源：{item.source_locator}"
     try:
@@ -4218,6 +4253,13 @@ def _semantic_text(item: EvidenceItem, display_name: str) -> str:
                     text = text[len(f"{name}：") :]
                 if text:
                     parts.append(f"{label}：{text}")
+        if include_registered_address:
+            # AQ-S1 (C-1): narrowing/geography turns carry the registered
+            # place so the prose can name members whose 注册地 matches the
+            # requested city; worded 注册地, never 总部 (locked decision 3).
+            address = _registered_address_claim_value(payload)
+            if address:
+                parts.append(f"注册地：{address}")
     elif item.domain == "paper":
         authors = _list_names(payload.get("authors"))
         if authors:
@@ -5777,6 +5819,17 @@ def _answer_selector(
                 "供应商",
             )
         )
+        # AQ-S1 (C-1): only narrowing/geography turns attach registered-place
+        # evidence to company claims — a relation frame (总部/注册地址/办公室/
+        # 分公司/产品能力) or a protected geography slot. Every other turn
+        # keeps the claim text byte-identical.
+        geography_turn = (
+            _question_frame(request.query).predicate in _RELATION_FRAME_PREDICATES
+            or any(
+                slot.kind == "geography"
+                for slot in request.evidence_set.protected_slots
+            )
+        )
         preferred_objects = {
             item.object_id
             for item in request.evidence_set.items
@@ -5855,19 +5908,19 @@ def _answer_selector(
             if index < len(web_items):
                 balanced_items.append(web_items[index])
         local_claim_limit = (
-            # Enumeration answers may show a representative sixteen (the
-            # coverage sentence discloses the rest); non-enumeration stays
-            # tight.
-            max(bundle.max_candidates, 16)
+            # Enumeration answers show a representative 32 (half the 64
+            # candidate window; the coverage sentence discloses the rest);
+            # non-enumeration stays tight.
+            _ENUMERATION_LOCAL_CLAIM_WINDOW
             if enumeration
             else min(bundle.max_candidates, 3)
         )
         web_claim_limit = (
-            # Enumeration turns widen the web candidate window to cover the
-            # discovery-view tails (九号 sits at merged rank 36-43); the
-            # claim limit must follow the window or those web-only suppliers
-            # never reach the prose model.
-            _ENUMERATION_CANDIDATE_WINDOW
+            # Enumeration turns widen the web claim window to cover the
+            # discovery-view tails (九号 sits at merged rank 36-43), but stay
+            # decoupled from the 64 candidate window: 64 web claims would
+            # flood the prose prompt.
+            _ENUMERATION_WEB_CLAIM_WINDOW
             if enumeration
             else bundle.max_web_results
         )
@@ -5898,7 +5951,9 @@ def _answer_selector(
             seen_objects.add(seen_key)
             handle = handle_by_evidence.get(item.evidence_id)
             display_name = handle.display_name if handle is not None else item.object_id
-            claim_text = _semantic_text(item, display_name)
+            claim_text = _semantic_text(
+                item, display_name, include_registered_address=geography_turn
+            )
             # Content-farm/login-wall dumps are never answer content: dropping
             # them here keeps both the prose prompt small (large prompts made
             # the renderer fail its wire protocol) and the deterministic

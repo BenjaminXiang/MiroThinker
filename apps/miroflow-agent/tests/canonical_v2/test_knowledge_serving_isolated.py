@@ -6454,9 +6454,10 @@ def test_theme_probes_include_web_extracted_company_names_ordered_by_partial_mat
 
 
 def test_enumeration_selector_web_claim_limit_follows_widened_window() -> None:
-    """Enumeration turns widen the selector web-claim limit to the candidate
-    window: discovery-view tails (九号 at merged rank 36-43) must reach the
-    prose model, while non-enumeration stays at the bundle web cap."""
+    """Enumeration turns widen the selector web-claim limit to the 32-claim
+    enumeration web window (AQ-S2: decoupled from the 64 candidate window):
+    discovery-view tails (九号 at merged rank 36-43) must reach the prose
+    model, while non-enumeration stays at the bundle web cap."""
     query = "中国有哪些成熟的酒店送餐机器人供应商"
 
     def web_item(index: int, name: str) -> EvidenceItem:
@@ -6544,6 +6545,390 @@ def test_enumeration_selector_web_claim_limit_follows_widened_window() -> None:
         )
     )
     assert not any("九号机器人" in claim.text for claim in ordinary.claims)
+
+
+def _aq_company_item(
+    payload: dict[str, Any],
+    *,
+    evidence_id: str,
+    object_id: str,
+) -> EvidenceItem:
+    return EvidenceItem(
+        evidence_id=evidence_id,
+        object_id=object_id,
+        domain="company",
+        lane="lexical",
+        source_nature="local",
+        source_locator=f"canonical-v2-isolated:{object_id}",
+        snippet=json.dumps(payload, ensure_ascii=False),
+        score=1.0,
+        source_authority="canonical_release",
+        claim_binding=EvidenceClaimBinding(
+            subject_id=object_id,
+            predicate="canonical_projection",
+            value="a" * 64,
+            status="admitted",
+        ),
+    )
+
+
+def test_semantic_text_company_registered_address_requires_geography_flag() -> None:
+    """AQ-S1 (C-1): the company claim text renders 注册地 evidence only when
+    the caller passes the geography-turn flag; with the flag off the text
+    stays byte-identical to the pre-AQ-S1 shape, and placeholder address
+    values never render (C1 scrubber reuse)."""
+    item = _aq_company_item(
+        {
+            "name": "深圳示例机器人有限公司",
+            "profile_summary": "聚焦酒店送餐机器人。",
+            "technology_route_summary": "自主导航。",
+            "registered_address": "深圳市南山区示例路1号",
+            "geography": {"name": "广东省"},
+        },
+        evidence_id="evidence:aq-s1:full",
+        object_id="company:aq-s1:full",
+    )
+    off_state = serving_module._semantic_text(item, "深圳示例机器人有限公司")
+    assert off_state == (
+        "深圳示例机器人有限公司；简介：聚焦酒店送餐机器人。；技术路线：自主导航。。"
+    )
+    assert (
+        serving_module._semantic_text(
+            item, "深圳示例机器人有限公司", include_registered_address=False
+        )
+        == off_state
+    )
+    assert (
+        serving_module._semantic_text(
+            item, "深圳示例机器人有限公司", include_registered_address=True
+        )
+        == "深圳示例机器人有限公司；简介：聚焦酒店送餐机器人。；技术路线：自主导航。"
+        "；注册地：深圳市南山区示例路1号。"
+    )
+
+    fallback = _aq_company_item(
+        {"name": "广州示例机器人有限公司", "geography": {"name": "广东省广州市"}},
+        evidence_id="evidence:aq-s1:geo",
+        object_id="company:aq-s1:geo",
+    )
+    assert (
+        serving_module._semantic_text(
+            fallback, "广州示例机器人有限公司", include_registered_address=True
+        )
+        == "广州示例机器人有限公司；注册地：广东省广州市。"
+    )
+
+    null_item = _aq_company_item(
+        {"name": "无地址企业", "registered_address": None, "geography": None},
+        evidence_id="evidence:aq-s1:null",
+        object_id="company:aq-s1:null",
+    )
+    assert (
+        serving_module._semantic_text(
+            null_item, "无地址企业", include_registered_address=True
+        )
+        == "无地址企业。"
+    )
+
+    placeholder = _aq_company_item(
+        {
+            "name": "占位企业",
+            "registered_address": "未找到",
+            "geography": {"name": "暂无"},
+        },
+        evidence_id="evidence:aq-s1:placeholder",
+        object_id="company:aq-s1:placeholder",
+    )
+    assert (
+        serving_module._semantic_text(
+            placeholder, "占位企业", include_registered_address=True
+        )
+        == "占位企业。"
+    )
+
+
+def test_selector_renders_registered_address_only_on_geography_turns() -> None:
+    """AQ-S1 (C-1) selector wiring: narrowing turns with a geography relation
+    frame or a geography protected slot carry 注册地 evidence in company
+    claims; any other turn keeps the pre-AQ-S1 claim text byte-identical."""
+    items = (
+        _aq_company_item(
+            {
+                "name": "深圳示例机器人有限公司",
+                "profile_summary": "聚焦酒店送餐机器人。",
+                "technology_route_summary": "自主导航。",
+                "registered_address": "深圳市南山区示例路1号",
+            },
+            evidence_id="evidence:aq-s1:shenzhen",
+            object_id="company:aq-s1:shenzhen",
+        ),
+        _aq_company_item(
+            {
+                "name": "上海示例机器人有限公司",
+                "registered_address": "上海市浦东新区示例路2号",
+            },
+            evidence_id="evidence:aq-s1:shanghai",
+            object_id="company:aq-s1:shanghai",
+        ),
+        _aq_company_item(
+            {"name": "无地址企业"},
+            evidence_id="evidence:aq-s1:null",
+            object_id="company:aq-s1:null",
+        ),
+    )
+
+    def evidence_set(slots: tuple[ProtectedSlot, ...]) -> EvidenceSet:
+        return EvidenceSet(
+            release_id=RELEASE_ID,
+            original_query="",
+            protected_slots=slots,
+            items=items,
+            traces=(),
+            limitations=(),
+            entity_handles=tuple(
+                CanonicalEntityHandle(
+                    canonical_id=item.object_id,
+                    domain="company",
+                    display_name=str(
+                        json.loads(item.snippet).get("name") or item.object_id
+                    ),
+                    evidence_ids=(item.evidence_id,),
+                )
+                for item in items
+            ),
+        )
+
+    selector = serving_module._answer_selector(
+        bundle=SimpleNamespace(
+            max_candidates=8,
+            max_web_results=8,
+            answer_model_id="canonical-v2-deterministic-answer-v1",
+        )
+    )
+
+    def select(query: str, slots: tuple[ProtectedSlot, ...] = ()) -> tuple[str, ...]:
+        proposal = selector(
+            TurnRequest(
+                session_id="session:aq-s1",
+                turn_id=f"turn:aq-s1:{len(query)}",
+                query=query,
+                release_id=RELEASE_ID,
+                evidence_set=evidence_set(slots).model_copy(
+                    update={"original_query": query}
+                ),
+            )
+        )
+        return tuple(claim.text for claim in proposal.claims)
+
+    # Relation-frame trigger (headquarters_city ∈ _RELATION_FRAME_PREDICATES).
+    frame_texts = select("上述企业里总部在深圳的有哪些")
+    assert any("注册地：深圳市南山区示例路1号" in text for text in frame_texts)
+    assert any("注册地：上海市浦东新区示例路2号" in text for text in frame_texts)
+    null_claim = next(text for text in frame_texts if text.startswith("无地址企业"))
+    assert "注册地" not in null_claim
+
+    # Geography-slot trigger (predicate "geography" is not a relation frame).
+    slot_texts = select(
+        "深圳有哪些做PCB的公司",
+        (ProtectedSlot(kind="geography", value="深圳", raw_text="深圳"),),
+    )
+    assert any("注册地：深圳市南山区示例路1号" in text for text in slot_texts)
+
+    # Off-state: enumeration without geography frame/slot keeps claim text
+    # byte-identical to the pre-AQ-S1 rendering.
+    off_texts = select("这些送餐机器人供应商有哪些产品特点")
+    assert off_texts
+    assert all("注册地" not in text for text in off_texts)
+    assert (
+        "深圳示例机器人有限公司；简介：聚焦酒店送餐机器人。；技术路线：自主导航。。"
+        in off_texts
+    )
+
+    # A city word alone (no relation frame, no protected slot) does not open
+    # the gate — the named-entity span suppression path stays byte-identical.
+    plain_texts = select("深圳示例机器人有限公司的主营业务")
+    assert plain_texts
+    assert all("注册地" not in text for text in plain_texts)
+
+
+def test_enumeration_selector_local_and_web_claim_windows_widen_to_32() -> None:
+    """AQ-S2 (A-1): enumeration turns show 32 local + 32 web claims (the 64
+    candidate window split 1:1 by the selector interleave); local ranks 17-32
+    must reach the claims and the displayed handles. Non-enumeration stays at
+    3 local / bundle web cap."""
+    query = "中国有哪些成熟的酒店送餐机器人供应商"
+
+    def local_item(index: int) -> EvidenceItem:
+        return _aq_company_item(
+            {"name": f"本地机器人企业{index:02d}"},
+            evidence_id=f"evidence:local:{index:02d}",
+            object_id=f"company:local:{index:02d}",
+        )
+
+    def web_item(index: int) -> EvidenceItem:
+        return EvidenceItem(
+            evidence_id=f"evidence:web:{index:02d}",
+            object_id=f"web-object:{index:02d}",
+            domain="company",
+            lane="web",
+            source_nature="current_web",
+            source_locator=f"https://example.test/{index:02d}",
+            snippet=f"网页企业{index:02d}：酒店送餐机器人相关公开信息",
+            score=1.0 - index * 0.01,
+            source_authority="web_search",
+            claim_binding=EvidenceClaimBinding(
+                subject_id=f"web-object:{index:02d}",
+                predicate="current_web_result",
+                value="v" * 64,
+                status="observed",
+            ),
+        )
+
+    items = tuple(
+        (local_item(index) if index <= 40 else web_item(index - 40))
+        for index in range(1, 81)
+    )
+    evidence_set = EvidenceSet(
+        release_id=RELEASE_ID,
+        original_query=query,
+        protected_slots=(),
+        items=items,
+        traces=(),
+        limitations=(),
+        entity_handles=tuple(
+            CanonicalEntityHandle(
+                canonical_id=item.object_id,
+                domain="company",
+                display_name=(
+                    str(json.loads(item.snippet).get("name"))
+                    if item.source_nature != "current_web"
+                    else f"网页企业{index:02d}"
+                ),
+                evidence_ids=(item.evidence_id,),
+            )
+            for index, item in enumerate(items, start=1)
+        ),
+    )
+    selector = serving_module._answer_selector(
+        bundle=SimpleNamespace(
+            max_candidates=8,
+            max_web_results=8,
+            answer_model_id="canonical-v2-deterministic-answer-v1",
+        )
+    )
+
+    proposal = selector(
+        TurnRequest(
+            session_id="session:aq-s2",
+            turn_id="turn:aq-s2:enum",
+            query=query,
+            release_id=RELEASE_ID,
+            evidence_set=evidence_set,
+        )
+    )
+    claim_evidence = {
+        evidence_id
+        for claim in proposal.claims
+        for evidence_id in claim.evidence_ids
+    }
+    local_evidence = {
+        evidence_id
+        for evidence_id in claim_evidence
+        if evidence_id.startswith("evidence:local:")
+    }
+    web_evidence = {
+        evidence_id
+        for evidence_id in claim_evidence
+        if evidence_id.startswith("evidence:web:")
+    }
+    assert len(local_evidence) == 32
+    assert "evidence:local:32" in local_evidence
+    assert "evidence:local:33" not in local_evidence
+    assert len(web_evidence) == 32
+    assert "evidence:web:32" in web_evidence
+    assert "evidence:web:33" not in web_evidence
+    for index in range(17, 33):
+        assert f"company:local:{index:02d}" in proposal.displayed_handle_ids
+
+    ordinary = selector(
+        TurnRequest(
+            session_id="session:aq-s2",
+            turn_id="turn:aq-s2:ordinary",
+            query="丁文伯教授的研究方向是什么？",
+            release_id=RELEASE_ID,
+            evidence_set=evidence_set.model_copy(
+                update={"original_query": "丁文伯教授的研究方向是什么？"}
+            ),
+        )
+    )
+    ordinary_evidence = {
+        evidence_id
+        for claim in ordinary.claims
+        for evidence_id in claim.evidence_ids
+    }
+    assert (
+        len(
+            [
+                evidence_id
+                for evidence_id in ordinary_evidence
+                if evidence_id.startswith("evidence:local:")
+            ]
+        )
+        == 3
+    )
+    assert (
+        len(
+            [
+                evidence_id
+                for evidence_id in ordinary_evidence
+                if evidence_id.startswith("evidence:web:")
+            ]
+        )
+        == 8
+    )
+
+
+def test_enumeration_window_constants_and_plan_windows() -> None:
+    """AQ-S2 (A-1): the enumeration candidate window is 64; the local claim
+    window stays cut/2 (the selector interleaves local/web 1:1) and the web
+    claim window is decoupled at 32 so the wider recall cannot flood the
+    prose prompt."""
+    assert serving_module._ENUMERATION_CANDIDATE_WINDOW == 64
+    assert serving_module._ENUMERATION_LOCAL_CLAIM_WINDOW == (
+        serving_module._ENUMERATION_CANDIDATE_WINDOW // 2
+    )
+    assert serving_module._ENUMERATION_WEB_CLAIM_WINDOW == 32
+
+
+def test_enumeration_plan_windows_follow_the_64_candidate_window(
+    tmp_path: Path,
+) -> None:
+    """AQ-S2 (A-1): enumeration plans request 64 candidates and a 64-result
+    web cap (the read/F1 truncation follows the plan window, pulling F1 pool
+    ranks 49-64 into the window); non-enumeration plans stay unchanged."""
+    provider = serving_module._proposal_provider(bundle=_bundle(tmp_path))
+    enumeration = provider(
+        QueryPlanningRequest(
+            request_id="query-request:aq-s2-enum",
+            release_id=RELEASE_ID,
+            original_query="中国有哪些成熟的酒店送餐机器人供应商",
+            as_of=NOW,
+        )
+    )
+    assert enumeration.max_candidates == 64
+    assert enumeration.max_web_results == 64
+
+    bundle = _bundle(tmp_path)
+    ordinary = provider(
+        QueryPlanningRequest(
+            request_id="query-request:aq-s2-ordinary",
+            release_id=RELEASE_ID,
+            original_query="丁文伯教授的研究方向是什么？",
+            as_of=NOW,
+        )
+    )
+    assert ordinary.max_candidates == bundle.max_candidates + bundle.max_web_results
+    assert ordinary.max_web_results == bundle.max_web_results
 
 
 def test_focused_named_traversal_drops_relationship_items_unbound_to_displayed_anchor() -> None:

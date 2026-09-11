@@ -1,0 +1,115 @@
+{
+  "pack": "/var/tmp/mirothinker-data-v2/serving-pack-run14-sealed/lookup.sqlite3",
+  "release_id": "candidate-v2-20260819-r1",
+  "windows": [
+    48,
+    64
+  ],
+  "queries": [
+    {
+      "id": "g2-t1",
+      "query": "中国有哪些成熟的酒店送餐机器人供应商",
+      "windows": {
+        "48": {
+          "recalled": 48,
+          "gt_ranks": {
+            "普渡": 2,
+            "开普勒": 3,
+            "云迹": 1,
+            "九号": 8,
+            "擎朗": 4,
+            "艾唯尔": 12,
+            "锐曼": 26
+          }
+        },
+        "64": {
+          "recalled": 64,
+          "gt_ranks": {
+            "普渡": 2,
+            "开普勒": 3,
+            "云迹": 1,
+            "九号": 8,
+            "擎朗": 4,
+            "艾唯尔": 12,
+            "锐曼": 26
+          }
+        }
+      }
+    },
+    {
+      "id": "g5-t1",
+      "query": "我想找PCB打板， 有哪些推荐",
+      "windows": {
+        "48": {
+          "recalled": 48,
+          "gt_ranks": {
+            "深南电路": 41,
+            "顺易捷": 9
+          }
+        },
+        "64": {
+          "recalled": 64,
+          "gt_ranks": {
+            "嘉立创": 54,
+            "深南电路": 41,
+            "顺易捷": 9,
+            "则成": 62
+          }
+        }
+      }
+    },
+    {
+      "id": "pcb-list",
+      "query": "深圳有哪些做PCB的公司",
+      "windows": {
+        "48": {
+          "recalled": 48,
+          "gt_ranks": {
+            "深南电路": 40,
+            "顺易捷": 9
+          }
+        },
+        "64": {
+          "recalled": 64,
+          "gt_ranks": {
+            "嘉立创": 53,
+            "深南电路": 40,
+            "顺易捷": 9,
+            "则成": 61
+          }
+        }
+      }
+    }
+  ],
+  "registered_place_coverage": {
+    "company_entries": 7089,
+    "registered_address_usable": 6506,
+    "geography_name_fallback_only": 8,
+    "registered_address_share": 0.9178,
+    "any_registered_place_share": 0.9189
+  },
+  "claim_payload_cost": {
+    "per_query_local_claim_stats": {
+      "g2-t1": {
+        "local_claims_in_64_window": 64,
+        "local_claim_chars_mean": 171.4,
+        "local_claim_chars_median": 166.0,
+        "local_claim_chars_max": 345
+      },
+      "g5-t1": {
+        "local_claims_in_64_window": 64,
+        "local_claim_chars_mean": 197.9,
+        "local_claim_chars_median": 193.5,
+        "local_claim_chars_max": 345
+      },
+      "pcb-list": {
+        "local_claims_in_64_window": 64,
+        "local_claim_chars_mean": 198.3,
+        "local_claim_chars_median": 193.5,
+        "local_claim_chars_max": 345
+      }
+    },
+    "web_claim_char_cap": 267,
+    "delta_estimate": "local +16 x mean_local_claim_chars vs web -16 x <= web_claim_char_cap per enumeration turn"
+  }
+}

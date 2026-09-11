@@ -8484,7 +8484,7 @@ def _category_recall_entries(
     # Substring matching against content terms: category field values are
     # free text (tech_tags "室内外配送机器人研发商"), so token equality would
     # miss them. Scored, deterministically ordered, and truncated to the
-    # request window (48 on the enumeration branch).
+    # request window (64 on the enumeration branch, AQ-S2).
     terms = _category_query_terms(request.query_text)
     if not terms:
         return []
