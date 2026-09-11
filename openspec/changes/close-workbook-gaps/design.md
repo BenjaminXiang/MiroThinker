@@ -885,3 +885,28 @@ worktree; S0 needs a live LLM backend (main context runs it).
 - Protocol-JSON leak (selection JSON in answer text, r2/r3) fixed with
   its own RED fixture under S3's visibility work or a dedicated small
   fix — decision at implementation time.
+
+### AQ-S2b — deterministic coverage layer for enumeration turns (adjudicated 2026-09-11, after the N=5 sampling)
+
+- Problem the sampling exposed: over a 32-local payload the prose names a
+  variable subset (t1 coverage 4–7/10 across 5 samples) and never names
+  the thin-record members (开普勒 5/5 miss); g2-t2 then passes only when
+  t1 happened to cover 7/10. LLM selection cannot be made stable by
+  evidence alone.
+- Rule: for enumeration turns, after prose synthesis, deterministically
+  append the displayed-but-unmentioned local members as a coverage
+  sentence in the final answer — displayed order, cap ~16, honest wording
+  ("本次召回的相关本地企业还包括：…"). Only DISPLAYED members are named;
+  members truncated by the 48/64 cut stay covered by the count-only
+  sentence (adjudication §4-2 unchanged for them).
+- Why honest: these are recalled, display-eligible local entities matched
+  by the category lane; the line makes no capability claims. It is the
+  same class as the existing coverage sentence, extended from "how many"
+  to "which ones".
+- Side effect (intended): F2's commit-union (`selected ∪ answer-named`)
+  picks the named members up, so narrowing turns inherit the richer pool
+  — this is what stabilises g2-t2.
+- Verification: determinism test (same payload → same line); ordering and
+  cap tests; no-line-when-all-mentioned; non-enumeration untouched
+  (byte-identical); the line must feed the commit-union; live N≥5 g2
+  sampling must show t2 ≥5/6 in ≥4/5 samples (vs 2/5 today).

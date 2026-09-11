@@ -580,3 +580,26 @@
 - Deployed 19:35 via the systemd unit; live checks next: N≥5 g2 sampling
   (causal-chain: address claims → pool naming ≥5/6), g5 sampling,
   replay gate, TTFT measurement.
+
+## 2026-09-11 — AQ-S1/S2 live sampling (N=5, g2): chain confirmed, stability needs a deterministic layer
+
+- Matrix (samples s1–s5; `results-aq-g2-s*.json`):
+  t1 coverage 5/10, 7/10, 4/10, 7/10, 4/10; t2 pool 2, ≥5(PASS), 2, ≥5(PASS), 2;
+  t3 2/5 PASS. g2-t2 passes exactly when t1 coverage = 7/10.
+- Confirmed: C-1 works — the t2 answers name 锐曼/普渡 with "注册地在深圳"
+  wording (registered-place evidence is now usable and used); AQ-S2's wider
+  window keeps the payload rich (cit up to 11).
+- Confirmed limit: 开普勒 missing in 5/5 samples, 九号 in 4/5 — the
+  thin-record members are never described (no local claim supports them),
+  and t1's breadth itself is LLM-variable (4–7/10) over a 32-local payload.
+- Adjudication (extends design §4-2): add **AQ-S2b deterministic coverage
+  layer** for enumeration turns — after prose synthesis, append the
+  displayed-but-unmentioned local members as a coverage sentence
+  ("本次召回的相关本地企业还包括：…", displayed order, cap ~16, honest
+  wording that these are additionally recalled entries). This names only
+  DISPLAYED members (never truncated ones) and keeps the count-only rule
+  for anything beyond the display window. Rationale: 在库内穷尽 + 引导;
+  deterministic (no LLM dependence); feeds F2's commit-union so narrowing
+  turns inherit the richer pool.
+- Next: AQ-S2b + AQ-S3 (member probes + protocol-JSON leak) implementation;
+  g5 sampling and replay gate after.

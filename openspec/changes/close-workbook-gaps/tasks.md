@@ -272,19 +272,30 @@
 
 ## Answer-quality slice (2026-09-11, design locked in design.md; runs after C1 batch 0)
 
-- [ ] AQ-S0 Payload A/B causal-chain experiment: fixed after-F4 payload,
-       ± "注册地址：深圳市…" injection, N≥5 samples per arm on the live
-       LLM backend; pass = pool naming rate ~1/6 → ≥5/6. Fail → fall back
-       to the deterministic completeness backstop
-       (`required_member_ids` + answer-side self-check, the per-member
-       branch at `knowledge_read.py:4285-4295` is dead code) and re-plan.
-- [ ] AQ-S1 C-1 address claims: `_semantic_text` company branch gains
+- [x] AQ-S0 Reframed to live sampling (offline injected-payload harness
+       dropped — payload assembly is not reproducible offline). Executed
+       as N=5 g2 samples after AQ-S1/S2 deploy: chain CONFIRMED (t2 names
+       pool members with 注册地在深圳 wording; passes when t1 coverage
+       7/10), stability insufficient (2/5) → AQ-S2b added.
+- [x] AQ-S1 C-1 address claims: `_semantic_text` company branch gains
        注册地址/注册地 lines behind a narrow/geography-turn switch
        (`serving:5901` call site); off-switch output byte-identical.
-- [ ] AQ-S2 A-1 enumeration windows: local 32 / web 32 / cut 48→64 for
+       (landed `5900bd98`, deployed 19:35; live: address wording present
+       in narrowing answers, 91.78% address availability)
+- [x] AQ-S2 A-1 enumeration windows: local 32 / web 32 / cut 48→64 for
        enumeration-class queries; `web_claim_limit` decoupled; selector
        unit RED (#17–32 locals -> claims), plan unit (max_candidates 64);
        offline pack probe (嘉立创/则成 enter the window); TTFT recorded.
+       (landed `5900bd98`; probe: 嘉立创54/则成62 in at 64, 锐曼26 in
+       with local 32; payload net −1.3K chars; elapsed 21–39s per turn
+       in sampling)
+- [ ] AQ-S2b Deterministic coverage layer for enumeration turns
+       (design.md §AQ-S2b): append displayed-but-unmentioned local
+       members as a coverage sentence (displayed order, cap ~16, honest
+       wording); only displayed members (truncated stay count-only);
+       must feed F2 commit-union; non-enumeration byte-identical.
+       Verify: determinism/order/cap tests + live N≥5 g2 sampling
+       (t2 ≥5/6 in ≥4/5 samples).
 - [ ] AQ-S3 B-probe member category probes + probe visibility fixes
        (subject-consistency gate, lane counters, claims inclusion;
        `chat:1813-1836` integration point); RED = enumeration turn sends
