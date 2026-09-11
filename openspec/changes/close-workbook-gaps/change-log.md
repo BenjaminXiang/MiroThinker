@@ -696,3 +696,34 @@
   the largest-payload turns (32/32 windows + coverage sentence); if they
   cluster there, the window widening carries a backend-timeout cost that
   the TTFT measurement must capture.
+
+## 2026-09-11 — Generalization probe r1 (live, 14 turns, S2b deploy): P1/P3 clean; two real findings
+
+- P1 no-fabrication: every coverage-sentence name resolves to a pack
+  entity (all 14 turns) — no invented companies.
+- P2 category precision: clean for drone/storage/medical (0 off-category);
+  **lidar shows compound-term leakage** (4/12 and 3/14): the recall for
+  「激光雷达」 pulls in 毫米波雷达/测速雷达/成像雷达 companies
+  (承泰科技/牧野微电子/杰士安电子) — the term matcher treats the bare
+  雷达 components as sufficient. Fix direction: prefer the full compound
+  term in extraction/matching; demote bare sub-terms (F1 matcher
+  refinement — queued with the A-2 family work).
+- P3 shape: company enumerations carry the coverage sentence; other
+  turns don't (one narrowing-with-谁 turn also carries it — by design).
+- P4 latency: 13.6–73.7s per turn; slowest = 大疆 single-entity question
+  (73.7s), professor enumeration (59.8s), lidar enumeration (45s).
+- **Out-of-test domain gaps surfaced with evidence**: professor-by-
+  direction enumeration admits no list (59.8s, 266 chars);
+  patent-applicant aggregation admits no list (274 chars); 大疆's
+  per-patent list admits no relation list (136 chars) — the company→patent
+  traversal (B1) handles POINTED questions but there is no aggregation/
+  enumeration path (C3/C4 territory). 大疆 answer carried 0 citations
+  (B4 territory).
+- Probe tooling: `generalization-probes/{probe_generalization.py,
+  check_generalization.py}`; the checker itself produced the first
+  false-positive wave (escaped-JSON lookup missed; category check omitted
+  tags) — fixed twice; lesson: check the checker before believing the
+  signal.
+- Verdict: mechanisms generalise on P1/P3/P4; P2 needs the compound-term
+  refinement; the probe set becomes a standing gate alongside the
+  workbook acceptance (design.md §Generalization validation).
