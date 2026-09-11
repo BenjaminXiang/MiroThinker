@@ -103,9 +103,21 @@
 
 ## Stage C — data groundwork
 
-- [ ] C1.1 Field-quality contract + cleanup (professor boilerplate /
-       placeholders; company placeholders; alias closure; key_personnel
-       education).
+- [ ] G1 Retrieval-critical field contract draft: 4-domain field
+       coverage inventory (measured) + per-field thresholds + category-
+       anchoring input + gate-at-import sketch. (parallel subagent,
+       read-only; artifact `g-series/g1-field-contract-draft.md`)
+- [ ] G2 Identity governance audit: fragmentation counts + cross-
+       identity conflict inventory + cross-release id stability +
+       merge-rules proposal (input to the two-line contract ADR).
+       (parallel subagent; artifact `g-series/g2-identity-audit.md`)
+- [ ] G3 Category lexicon & field anchoring: from 353 real category
+       queries; anchoring rules + offline verification table + gap list
+       (feeds G1/C1). (parallel subagent; `g-series/g3-category-
+       anchoring.md`)
+- [ ] C1.1 Ingestion quality gate implementation (G-series contracts →
+       gate-at-import: field thresholds + anchoring + identity merge;
+       folded into the C6 update pipeline). (depends G1-G3)
 - [ ] C2.1 run14 thin-load online (47,071 docs) + reconciliation report;
        workbook score not regressed. Sub-steps (design.md §C2, contract
        verified line-by-line 2026-09-10):
