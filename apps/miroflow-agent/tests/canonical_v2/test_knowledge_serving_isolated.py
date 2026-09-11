@@ -4504,7 +4504,52 @@ def test_gate_backfills_in_tier_order_below_floor() -> None:
         "国际先进技术应用推进中心（深圳）揭牌",
         "国际先进技术应用推进中心由发改委指导",
         "国际先进技术应用推进中心（合肥）理事会扩容",
-    ]  # backfilled to FLOOR=3 in T2→T3 order; T4/T5 dropped
+    ]  # kept + all related = 3; no room for T4/T5 backfill
+
+
+def test_gate_backfill_keeps_every_full_name_hit_above_floor() -> None:
+    # F3 (close-workbook-gaps B2): below the floor, full-name hits (T2/T3)
+    # are the same subject signal the kept branch trusts, so they ALL
+    # survive; only the T4/T5 backfill is truncated to the floor.
+    # Production shape: run14 g5-t2 kept=0 with 12 full-name hits — the old
+    # truncation dropped 9 registry pages naming displayed members verbatim.
+    results = [
+        _result("国际先进技术应用推进中心由发改委指导"),  # T2
+        _result("国际先进技术应用推进中心年度工作报告发布"),  # T2
+        _result("国际先进技术应用推进中心（合肥）理事会扩容"),  # T3
+        _result("国际先进技术应用推进中心公开招聘"),  # T2
+        _result("南开国际先进研究院（深圳福田）"),  # T4
+        _result("完全无关"),  # T5
+    ]
+    out = [r.title for r in _gate(results)]
+    assert out == [
+        "国际先进技术应用推进中心由发改委指导",
+        "国际先进技术应用推进中心年度工作报告发布",
+        "国际先进技术应用推进中心公开招聘",
+        "国际先进技术应用推进中心（合肥）理事会扩容",
+    ]  # kept=0, all four T2/T3 survive in T2-before-T3 order
+    assert "南开国际先进研究院（深圳福田）" not in out  # T4: related already
+    # covers the floor, so the suspect/missed backfill window is zero
+    assert "完全无关" not in out
+
+
+def test_gate_backfill_still_backfills_suspect_channels_when_related_is_short() -> None:
+    # F3 invariant: the lane never empties for obscure single-channel
+    # subjects — when kept + related fall short of the floor, T4/T5 still
+    # backfill the gap in original order.
+    results = [
+        _result("国际先进技术应用推进中心（深圳）揭牌"),  # T1, kept=1
+        _result("国际先进技术应用推进中心由发改委指导"),  # T2
+        _result("南开国际先进研究院（深圳福田）揭牌"),  # T4
+        _result("南开国际先进研究院最新动态"),  # T4
+        _result("完全无关"),  # T5
+    ]
+    out = [r.title for r in _gate(results)]
+    assert out == [
+        "国际先进技术应用推进中心（深圳）揭牌",
+        "国际先进技术应用推进中心由发改委指导",
+        "南开国际先进研究院（深圳福田）揭牌",
+    ]  # 1 + 1 < FLOOR=3: exactly one T4 backfills; the rest drop
 
 
 def test_gate_soft_subject_still_binds_and_qualifier_comes_from_soft_name() -> None:

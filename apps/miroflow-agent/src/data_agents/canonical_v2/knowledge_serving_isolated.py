@@ -838,9 +838,10 @@ def _prioritize_relation_evidence(
     )
 
 
-# Subject-consistency floor: with bound anchors, off-subject single-channel
-# results may only backfill the lane up to this many survivors; corroborated
-# results and subject hits always outrank them.
+# Subject-consistency floor: with bound anchors, the suspect/missed channels
+# (T4/T5) may only backfill the lane up to this many survivors; corroborated
+# results and subject hits always outrank them, and full-name hits (T2/T3)
+# are never truncated by the floor (F3, close-workbook-gaps B2).
 _WEB_SUBJECT_CONSISTENCY_FLOOR = 3
 
 
@@ -904,13 +905,17 @@ def _apply_web_subject_consistency(
         # same-organization background and stay, ordered after the anchor hits.
         filtered = tuple(unwrap(kept) + unwrap(related))
     else:
-        # Demotion first, filtering second: below the floor the demoted results
-        # backfill in tier order so obscure single-channel subjects keep evidence
-        # and the lane never empties into the unavailable branch.
-        pool = unwrap(related) + unwrap(suspect) + unwrap(missed)
-        filtered = tuple(
-            unwrap(kept) + pool[: _WEB_SUBJECT_CONSISTENCY_FLOOR - len(kept)]
+        # Below the floor, full-name hits (T2/T3) are the same subject signal
+        # the kept branch trusts, so they all stay (F3: run14 g5-t2 truncated
+        # 9 registry pages naming displayed members verbatim down to the
+        # floor). Only the suspect/missed channels backfill, and only up to
+        # whatever floor room remains, so the lane still never empties into
+        # the unavailable branch for obscure single-channel subjects.
+        backfill_room = max(
+            _WEB_SUBJECT_CONSISTENCY_FLOOR - len(kept) - len(related), 0
         )
+        pool = unwrap(suspect) + unwrap(missed)
+        filtered = tuple(unwrap(kept) + unwrap(related) + pool[:backfill_room])
     reporter = current_turn_trace()
     if reporter is not None and len(filtered) < len(results):
         reporter.record_gate_drop(

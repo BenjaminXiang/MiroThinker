@@ -1,0 +1,1848 @@
+{
+ "g2-t2": {
+  "query": "上述企业里总部在深圳的企业有哪些",
+  "recorded_views": [
+   "(\"深圳市小村机器人智能科技有限公司\" OR \"深圳市锐曼智能技术有限公司\" OR \"深圳中科世界机器人有限公司\" OR \"中铧机器人（深圳）有限公司\" OR \"深圳中智卫安机器人技术有限公司\" OR \"深圳市普波科技有限公司\" OR \"深圳市中舟智能科技有限公司\" OR \"上海擎朗智能科技有限公司\" OR \"云迹科技股份有限公司\" OR \"睿博天米科技（深圳）有限公司\" OR \"深圳市智贝尔机器人设备科技有限公司\" OR \"深圳科卫机器人科技有限公司\") 总部 深圳",
+   "深圳 总部 企业 名单",
+   "深圳 上市公司 总部",
+   "深圳 知名企业 总部",
+   "深圳 机器人 企业 总部",
+   "深圳 服务机器人 公司 列表"
+  ],
+  "missing_payloads": [],
+  "view_cap": 4,
+  "admitted_permutations": 72,
+  "expected_in": 74,
+  "expected_retained": 7,
+  "expected_gate_drop": 67,
+  "distinct_survivor_sets": 5,
+  "class_count_range_across_permutations": {
+   "A": [
+    0,
+    8
+   ],
+   "B+": [
+    0,
+    0
+   ],
+   "B": [
+    0,
+    0
+   ],
+   "C": [
+    1,
+    4
+   ],
+   "D": [
+    57,
+    67
+   ]
+  },
+  "canonical_permutation": {
+   "views": [
+    "(\"深圳市小村机器人智能科技有限公司\" OR \"深圳市锐曼智能技术有限公司\" OR \"深圳中科世界机器人有限公司\" OR \"中铧机器人（深圳）有限公司\" OR \"深圳中智卫安机器人技术有限公司\" OR \"深圳市普波科技有限公司\" OR \"深圳市中舟智能科技有限公司\" OR \"上海擎朗智能科技有限公司\" OR \"云迹科技股份有限公司\" OR \"睿博天米科技（深圳）有限公司\" OR \"深圳市智贝尔机器人设备科技有限公司\" OR \"深圳科卫机器人科技有限公司\") 总部 深圳",
+    "深圳 总部 企业 名单",
+    "深圳 上市公司 总部",
+    "深圳 知名企业 总部"
+   ],
+   "anchor_qualifier": "深圳",
+   "tier_counts": {
+    "t0": 0,
+    "t1": 4,
+    "t2": 3,
+    "t3": 0,
+    "t4": 8,
+    "t5": 59
+   },
+   "kept_t01": 4,
+   "related_t23": 3,
+   "backfill_branch": false,
+   "survivor_count": 7,
+   "survivors_match_trace": true,
+   "survivor_urls": [
+    "https://baike.baidu.com/item/%E4%B8%8A%E6%B5%B7%E6%93%8E%E6%9C%97%E6%99%BA%E8%83%BD%E7%A7%91%E6%8A%80%E8%82%A1%E4%BB%BD%E6%9C%89%E9%99%90%E5%85%AC%E5%8F%B8/67533796",
+    "https://finance.stockstar.com/IG2021011400000571.shtml",
+    "https://m.114best.com/gs44/6727070423.html",
+    "https://robot.ofweek.com/tag-%E4%B8%AD%E6%99%BA%E9%94%90%E6%9B%BC.HTM",
+    "https://robotemi.cn/",
+    "https://www.chinapp.com/company/46537",
+    "https://www.yunjichina.com.cn/"
+   ],
+   "survivors": [
+    {
+     "tier": 1,
+     "title": "中智锐曼 - OFweek机器人网",
+     "url": "https://robot.ofweek.com/tag-%E4%B8%AD%E6%99%BA%E9%94%90%E6%9B%BC.HTM",
+     "providers": [
+      "bocha-v1"
+     ]
+    },
+    {
+     "tier": 1,
+     "title": "深圳中科世界机器人有限公司企业信息-电话-公司地址-品牌网",
+     "url": "https://www.chinapp.com/company/46537",
+     "providers": [
+      "bocha-v1"
+     ]
+    },
+    {
+     "tier": 1,
+     "title": "深圳中科世界机器人有限公司",
+     "url": "https://m.114best.com/gs44/6727070423.html",
+     "providers": [
+      "bocha-v1"
+     ]
+    },
+    {
+     "tier": 1,
+     "title": "深圳中智锐曼机器人有限公司揭牌签约仪式于阿尔麦斯机器人基地举行_财经频道_证券之星",
+     "url": "https://finance.stockstar.com/IG2021011400000571.shtml",
+     "providers": [
+      "bocha-v1"
+     ]
+    },
+    {
+     "tier": 2,
+     "title": "云迹科技— 构建全球领先的服务智能体生态系统",
+     "url": "https://www.yunjichina.com.cn/",
+     "providers": [
+      "serper-v1"
+     ]
+    },
+    {
+     "tier": 2,
+     "title": "睿博天米科技(深圳)有限公司",
+     "url": "https://robotemi.cn/",
+     "providers": [
+      "serper-v1"
+     ]
+    },
+    {
+     "tier": 2,
+     "title": "上海擎朗智能科技股份有限公司 - 百度百科",
+     "url": "https://baike.baidu.com/item/%E4%B8%8A%E6%B5%B7%E6%93%8E%E6%9C%97%E6%99%BA%E8%83%BD%E7%A7%91%E6%8A%80%E8%82%A1%E4%BB%BD%E6%9C%89%E9%99%90%E5%85%AC%E5%8F%B8/67533796",
+     "providers": [
+      "serper-v1"
+     ]
+    }
+   ],
+   "dropped_class_counts": {
+    "A": 8,
+    "D": 58,
+    "C": 1
+   },
+   "dropped_items": [
+    {
+     "tier": 4,
+     "class": "A",
+     "why": "alias-only hit on a displayed member",
+     "title": "深圳市锐曼智能装备有限公司 电子通讯产品计算机软硬件数码产品_机械设备_智能机械__图页网",
+     "url": "http://photo.psznh.com/show-21259.html",
+     "snippet": "企业图页浏览完毕 重新浏览 推荐企业图页 致力于让服务机器人像电脑和手机一样走进人们的日常生活,成为我们人类友好、实用的助手。 深圳市锐曼智能装备有限公司办公室地址位于中国个经济特区,鹏城深圳,深圳",
+     "providers": [
+      "bocha-v1"
+     ]
+    },
+    {
+     "tier": 4,
+     "class": "A",
+     "why": "alias-only hit on a displayed member",
+     "title": "深圳市锐曼智能装备有限公司",
+     "url": "http://szbaike.com/industry/enterprise/2022-12-12/3122.html",
+     "snippet": "深圳市 锐曼智能装备有限公司(下文简称“锐曼智能”)是一家高科 技有限公司,成立于2014年,公司位于深圳市宝安区中粮机器人产业园,拥有2000平方米研发办公区域,专注于研发及生产家庭服务机器人与商业",
+     "providers": [
+      "bocha-v1"
+     ]
+    },
+    {
+     "tier": 4,
+     "class": "A",
+     "why": "alias-only hit on a displayed member",
+     "title": "公司新闻_深圳市锐曼智能装备有限公司",
+     "url": "https://www.chinaagv.com/shop/2095/news/",
+     "snippet": "经营模式: 服务型机器人厂商 所在地区: 中国 广东省 深圳市 暂无信息. 联系方式详细>>在线交谈: 电话: 400-019-0081 公司新闻",
+     "providers": [
+      "bocha-v1"
+     ]
+    },
+    {
+     "tier": 4,
+     "class": "A",
+     "why": "alias-only hit on a displayed member",
+     "title": "深圳市锐曼智能装备有限公司",
+     "url": "https://www.huangye88.com/city13413/4642476.html",
+     "snippet": "公司简介 深圳市锐曼智能装备有限公司是一家高科技有限公司,是家庭玩伴机器人的研发和制造商。在2016年推出款家庭儿童玩伴机器人,实现真正的语音交互,锐曼将创造属于它的历史,将智能服务型机器人普及到每个",
+     "providers": [
+      "bocha-v1"
+     ]
+    },
+    {
+     "tier": 4,
+     "class": "A",
+     "why": "alias-only hit on a displayed member",
+     "title": "深圳市锐曼智能装备有限公司",
+     "url": "https://www.qqjxwlw.cn/index.php?homepage=18312160619a",
+     "snippet": "深圳市锐曼智能装备有限公司成立于2015年,是一家以机器人平台技术和自动驾驶技术为核心业务的国家级高新技术企业。拥有现代化办公场所2000多平方米,拥有一支专业扎实、朝气蓬勃的技术研发团队、具有现代管",
+     "providers": [
+      "bocha-v1"
+     ]
+    },
+    {
+     "tier": 4,
+     "class": "A",
+     "why": "alias-only hit on a displayed member",
+     "title": "深圳中智锐曼机器人有限公司_【工商信息_信用信息_纳税人识别号_地址_电话_怎么样】-企查猫(企业查询宝)",
+     "url": "https://www.qichamao.com/orgcompany/searchitemdtl/c88381dedbaa4d481ca0e446f7c10ad3.html",
+     "snippet": "联系方式: 深圳中智锐曼机器人有限公司,于2021-01-14在光明局登记成立,林启雄担任法定代表人,注册资本为1,000(万人民币),公司位于深圳市光明区新湖街道圳美社区公常路171号万代恒高新科技",
+     "providers": [
+      "bocha-v1"
+     ]
+    },
+    {
+     "tier": 5,
+     "class": "D",
+     "why": "no displayed-member or GT signal",
+     "title": "总部在深圳的知名企业有哪些?-早鸽网",
+     "url": "https://www.zaoge.com/question/FI16317705020.html",
+     "snippet": "提示:以下回答均以本问题为中心,仅供参考;如需更多帮助,请咨询早鸽顾问。 回答 | 共1个 汪安柯 从业11年 商标驳回复审 软著申请 所在地区:成都市 网易,微信,唯品会,YY,酷狗,UC,环球市场",
+     "providers": [
+      "bocha-v1"
+     ]
+    },
+    {
+     "tier": 5,
+     "class": "D",
+     "why": "no displayed-member or GT signal",
+     "title": "深圳市企业总部名单.pdf-原创力文档",
+     "url": "https://max.book118.com/html/2020/1204/5240244131003034.shtm",
+     "snippet": "共享知识 分享快乐 深圳市第一批拟认定总部企业名单 1 、 招商银行股份有限公司 2 、 深圳华为投资控股有限公司 3 、 中国平安人寿保险股份有限公司 4 、 万科企业股份有限公司 5 、 深圳发展",
+     "providers": [
+      "bocha-v1"
+     ]
+    },
+    {
+     "tier": 5,
+     "class": "D",
+     "why": "no displayed-member or GT signal",
+     "title": "总部设在深圳的公司有哪些? 爱问知识人",
+     "url": "https://iask.sina.com.cn/b/OmWQnH1muoT.html",
+     "snippet": "总部设在深圳的公司有哪些? 全部 全部答案 2018-05-25 17:48:53 01中国最大地产运营商——万科地产02中国最大旅游地产商——华侨城03中国最大主题公园运营商——华侨城04中国最大别",
+     "providers": [
+      "bocha-v1"
+     ]
+    },
+    {
+     "tier": 5,
+     "class": "D",
+     "why": "no displayed-member or GT signal",
+     "title": "深圳大公司 - 搜狗问问",
+     "url": "http://wenwen.sogou.com/z/q1710705051.htm",
+     "snippet": "请教深圳有哪些比较大的公司,能否列举10个?回答好了,我追加分 华为技术有限公司,富士康企业集团,富士施乐高科技(深圳)有限公司,福群电子(深圳)有限公司,东芝泰格流通信息机器(深圳)有限公司,欧姆龙",
+     "providers": [
+      "bocha-v1"
+     ]
+    },
+    {
+     "tier": 5,
+     "class": "D",
+     "why": "no displayed-member or GT signal",
+     "title": "总部在深圳的知名企业有哪些-装修问答-有货号",
+     "url": "http://www.youhuohao.com/zhuangxiu/218016.html",
+     "snippet": "东莞市荣浩地板有限公司 回答 2 2024-06-11 00:01 总部在深圳的知名企业有哪些 总部在深圳的知名企业有哪些求高手给解答 举报 0 收藏 0 分享 1 网易,微信,唯品会,YY,酷狗,U",
+     "providers": [
+      "bocha-v1"
+     ]
+    },
+    {
+     "tier": 5,
+     "class": "D",
+     "why": "no displayed-member or GT signal",
+     "title": "深圳市有哪些公司_深圳市企业名录 - 深圳都市圈",
+     "url": "https://msz.dushiquan.net/qy/shenzhenshi5276/p3.html",
+     "snippet": "地址:深圳市宝安区新安街道海旺社区宝兴路6号海纳百川总部大厦B座6层、7层、8层 地址:深圳市坪山区坑梓街道金辉路14号深圳市生物医药创新产业园区10号楼12层 地址:深圳市龙华区观湖街道观",
+     "providers": [
+      "bocha-v1"
+     ]
+    },
+    {
+     "tier": 5,
+     "class": "D",
+     "why": "no displayed-member or GT signal",
+     "title": "深圳公布第十一批跨国公司总部企业名单 累计认定总数达207家|世界500强|国际竞争力|外资|深圳|跨国公司_手机网易网",
+     "url": "https://m.163.com/dy/article/KIM1HP290519D45U.html",
+     "snippet": "深圳公布第十一批跨国公司总部企业名单\n累计认定总数达207家\n观点机构\n2026-01-07\n12:59\n·广东\n·观点机构官方网易号\n观点网讯:近日,深圳市投资促进局发布“深圳市第十一批跨国公司总部",
+     "providers": [
+      "bocha-v1"
+     ]
+    },
+    {
+     "tier": 5,
+     "class": "D",
+     "why": "no displayed-member or GT signal",
+     "title": "深圳企业名录 深圳十大电气公司排名? - 酷米网",
+     "url": "https://www.kmw.com/news/4723615.html",
+     "snippet": "深圳有多少家央企和国企?深圳有五大央企:中广核集团、华侨城集团、华润集团、招商局集团、中旅集团(原港中旅集团)。这五家央企的总部都在深圳。深圳有哪些500强企业?深圳本身并不在500强企业之列。深圳的",
+     "providers": [
+      "bocha-v1"
+     ]
+    },
+    {
+     "tier": 5,
+     "class": "D",
+     "why": "no displayed-member or GT signal",
+     "title": "中粮集团-北极星环保网",
+     "url": "https://mhuanbao.bjx.com.cn/topics/zhongliangjituan/",
+     "snippet": "深圳)有限公司26\n中国电信股份有限公司深圳分公司27\n中国联合网络通信有限公司深圳市分公司28\n铭基食品有限公司29\n深圳国威电子有限公司30\n深圳嘉年实业股份有限公司31\n中兴新通讯有限公司32",
+     "providers": [
+      "bocha-v1"
+     ]
+    },
+    {
+     "tier": 5,
+     "class": "D",
+     "why": "no displayed-member or GT signal",
+     "title": "深圳市投资促进局关于发布深圳市第十一批跨国公司总部企业认定 ...",
+     "url": "https://commerce.sz.gov.cn/gkmlpt/content/12/12580/post_12580493.html",
+     "snippet": "为贯彻落实《深圳市鼓励跨国公司设立总部企业办法（修订版）》（深府办规〔2023〕8号），鼓励更多跨国公司在深圳设立总部企业，我局开展了第十一批跨国 ...",
+     "providers": [
+      "serper-v1"
+     ]
+    },
+    {
+     "tier": 5,
+     "class": "D",
+     "why": "no displayed-member or GT signal",
+     "title": "深圳市投资促进局关于发布深圳市第十批跨国公司总部企业认定名单 ...",
+     "url": "https://www.sz.gov.cn/cn/xxgk/zfxxgj/tzgg/content/post_12433785.html",
+     "snippet": "为贯彻落实《深圳市鼓励跨国公司设立总部企业办法（修订版）》（深府办规〔2023〕8号），鼓励更多跨国公司在深圳设立总部企业，我局开展了第十批跨国公司 ...",
+     "providers": [
+      "serper-v1"
+     ]
+    },
+    {
+     "tier": 5,
+     "class": "D",
+     "why": "no displayed-member or GT signal",
+     "title": "深圳市人民政府办公厅关于印发深圳市总部企业认定办法（试行）的 ...",
+     "url": "https://www.sz.gov.cn/zfgb/2008/gb620/content/post_4951957.html",
+     "snippet": "第四条总部企业包括综合型总部企业、职能型总部企业和成长型总部企业三类。 ... 第十四条市发展改革局根据公示结果，将总部企业名单核定后上报市总部经济工作联席会议审定。",
+     "providers": [
+      "serper-v1"
+     ]
+    },
+    {
+     "tier": 5,
+     "class": "D",
+     "why": "no displayed-member or GT signal",
+     "title": "深圳再认定18家跨国公司总部企业",
+     "url": "http://sz.people.com.cn/n2/2025/0801/c202846-41309620.html",
+     "snippet": "深圳市跨国公司总部企业又添新成员。近日，深圳市投资促进局发布“深圳市第九批跨国公司总部企业认定名单”，包括盈湃科技、云登科技、拉珂帝服饰、金蝶 ...",
+     "providers": [
+      "serper-v1"
+     ]
+    },
+    {
+     "tier": 5,
+     "class": "D",
+     "why": "no displayed-member or GT signal",
+     "title": "深圳累计认定跨国公司总部企业超200家 - 第一财经",
+     "url": "https://www.yicai.com/news/102991088.html",
+     "snippet": "深圳市投资促进局发布“深圳市第十一批跨国公司总部企业认定名单”,包括万通博汇、鸥贝云、众智汇、综合信兴、钜科投资、茉莉奶白、中旅森泊等21家企业。",
+     "providers": [
+      "serper-v1"
+     ]
+    },
+    {
+     "tier": 5,
+     "class": "D",
+     "why": "no displayed-member or GT signal",
+     "title": "小村 - song and lyrics by Yutaka Yamada - Spotify",
+     "url": "https://open.spotify.com/track/6Xb9Oj6TB2FDO4YIxE6lsQ",
+     "snippet": "Listen to 小村 on Spotify. Song · Yutaka Yamada · 2020. TVアニメ『東京喰種』ORIGINAL SOUNDTRACK Album • 2015 … ℗ 2020 Sony Music La",
+     "providers": [
+      "serper-v1"
+     ]
+    },
+    {
+     "tier": 4,
+     "class": "A",
+     "why": "alias-only hit on a displayed member",
+     "title": "深圳市锐曼智能装备有限公司: 首页--",
+     "url": "https://www.reeman.cn/",
+     "snippet": "深圳市锐曼智能装备有限公司（REEMAN）成立于2015年，国内新一代智能移动机器人的技术先行者和开拓者，2018&2021连续荣获国家级高新技术企业，工厂占地6000平米， ...",
+     "providers": [
+      "serper-v1"
+     ]
+    },
+    {
+     "tier": 5,
+     "class": "D",
+     "why": "no displayed-member or GT signal",
+     "title": "雲跡科技：讓人類更幸福是願景也是產品邏輯YUNJI ... - YouTube",
+     "url": "https://www.youtube.com/watch?v=UyoXZeIdaho",
+     "snippet": "作為引進辦重點企業，專注於機器人研發 、製造與運營的高科技企業雲跡科技，選擇將其國際業務總部紮根香港數碼港，開展從ToB 到ToC、從內地到全球的 ...",
+     "providers": [
+      "serper-v1"
+     ]
+    },
+    {
+     "tier": 5,
+     "class": "D",
+     "why": "no displayed-member or GT signal",
+     "title": "北京雲迹科技股份有限公司 - InvestHK",
+     "url": "https://www.investhk.gov.hk/zh-hk/our-clients/beijing-yunji-technology-co-ltd",
+     "snippet": "提供機器人及人工智能(AI)智能體服務。目前,公司產品已累計服務全球超過40,000個企業客戶,包括接近40,000家酒店、150多家醫院",
+     "providers": [
+      "serper-v1"
+     ]
+    },
+    {
+     "tier": 5,
+     "class": "D",
+     "why": "no displayed-member or GT signal",
+     "title": "雲跡(2670.HK) 股價、新聞、報價和記錄 - Yahoo 財經",
+     "url": "https://hk.finance.yahoo.com/quote/2670.HK/",
+     "snippet": "價值評估 · 市值. 7.23B · 企業價值. 6.59B · 追蹤市盈率. -- · 預測市盈率. -- · 市盈增長率(預期5 年). -- · 股價營收比(過去12 個月). 17.28 · 股價淨值比(最近一季).",
+     "providers": [
+      "serper-v1"
+     ]
+    },
+    {
+     "tier": 4,
+     "class": "A",
+     "why": "alias-only hit on a displayed member",
+     "title": "关于我们| 锐曼机器人- 十年创新 - Reeman Robotics",
+     "url": "https://reemanbot.com/zh/about-us",
+     "snippet": "锐曼成立于10年前,专注于移动机器人的研发与生产,为全球企业提供创新的自动化解决方案。 中国广东省深圳市+86-186 6589 8745+86-755-8623 9429",
+     "providers": [
+      "serper-v1"
+     ]
+    },
+    {
+     "tier": 5,
+     "class": "D",
+     "why": "no displayed-member or GT signal",
+     "title": "[PDF] 小村神社前駅",
+     "url": "https://www.jr-shikoku.co.jp/01_trainbus/jikoku/pdf/omurajinjamae.pdf",
+     "snippet": "Page 1. 発車時刻 Timetable. 小村神社前駅. Omurajinjamae Station. K. 08-1. 方面. 高知 for Kōchi for Tosa-Yamada. 土佐山田. 4. 5. 6. 7. 8. 9",
+     "providers": [
+      "serper-v1"
+     ]
+    },
+    {
+     "tier": 5,
+     "class": "D",
+     "why": "no displayed-member or GT signal",
+     "title": "深圳上市公司及品牌企业名录1213—12-罗湖开发区招商网-中国招商引资信息网",
+     "url": "http://www.cnzsyz.com/guangdong/info/436113.html",
+     "snippet": "深圳市深宝实业股份有限公司 上市公司中文简称:深宝 上市公司外文名称: SHENZHEN sHENBAO iNDUSTRIAL cO.,LTD. 上市公司法定代表人:郑煜曦 上市公司注册地址:深圳市南",
+     "providers": [
+      "bocha-v1"
+     ]
+    },
+    {
+     "tier": 5,
+     "class": "D",
+     "why": "no displayed-member or GT signal",
+     "title": "深圳上市公司及品牌企业名录1213—10-福田开发区招商网-中国招商引资信息网",
+     "url": "http://www.cnzsyz.com/guangdong/info/436111.html",
+     "snippet": "来源:网群国际 浏览: 次 深圳万讯自控股份有限公司 上市公司中文简称:万讯自控 上市公司外文名称: Shenzhen maxonic Automation control cO,.Ltd.",
+     "providers": [
+      "bocha-v1"
+     ]
+    },
+    {
+     "tier": 5,
+     "class": "D",
+     "why": "no displayed-member or GT signal",
+     "title": "深圳上市公司 截至2014-08-14 - 道客巴巴",
+     "url": "https://www.doc88.com/p-0716147620862.html",
+     "snippet": "下载积分: 100 内容提示: 公司代码 公司简称 公司全称 英文名称 注册地址 A 股代码 A 股简称 A 股上市日期 A 股总股本 A 股流通股本 B 股代码 B 股简称B股上市日期 B 股总股本",
+     "providers": [
+      "bocha-v1"
+     ]
+    },
+    {
+     "tier": 5,
+     "class": "D",
+     "why": "no displayed-member or GT signal",
+     "title": "深圳上市公司一览负责人 电话 网站 - 道客巴巴",
+     "url": "https://www.doc88.com/p-685404111121.html",
+     "snippet": "下载积分: 0 内容提示: 公司名称注册地址法人代表广东省深圳市深南中路5047号深圳发展银行大厦万科企业股份有限公司广东省深圳市福田区梅林路63号万科建筑研究中心深圳发展银行股份有限公司广东省深圳市",
+     "providers": [
+      "bocha-v1"
+     ]
+    },
+    {
+     "tier": 5,
+     "class": "D",
+     "why": "no displayed-member or GT signal",
+     "title": "深圳上市公司名单一览-私募排排网",
+     "url": "https://www.simuwang.com/tag/53881.html",
+     "snippet": "深圳上市公司数量排名全国前列,汇聚了腾讯、比亚迪、迈瑞医疗、汇川技术等众多高科技企业、创新型企业及行业领军企业。这些企业在不断发展壮大的过程中,纷纷选择通过上市融资来加速其业务扩展和技术创新。那么,深",
+     "providers": [
+      "bocha-v1"
+     ]
+    },
+    {
+     "tier": 5,
+     "class": "D",
+     "why": "no displayed-member or GT signal",
+     "title": "「深圳上市公司」深圳上市公司黄页 - 顺企网",
+     "url": "https://b2b.11467.com/search/-6df157334e0a5e02516c53f8.htm",
+     "snippet": "上市公司 员工减持 政策 报价:未提供 询价 上市公司股东减持 上市企业股东减持 报价:未提供 询价 深圳老企业注销步骤 报价:未提供 询价 深圳湾车牌 指标新办 FU指标申请 报价:未提供 询价 开",
+     "providers": [
+      "bocha-v1"
+     ]
+    },
+    {
+     "tier": 5,
+     "class": "D",
+     "why": "no displayed-member or GT signal",
+     "title": "深圳上市公司名录",
+     "url": "https://3g.yjbys.com/qiuzhizhinan/show-16889.html",
+     "snippet": "深圳上市公司名录\n深圳上市公司一览 \n代码 证券名称 公司名称 英文名称 注册地址 公司网站 法人代表 公司电话 传真 公司邮件地址\n000001 深发展A 深圳发展银行股份有限公司 SHENZHEN",
+     "providers": [
+      "bocha-v1"
+     ]
+    },
+    {
+     "tier": 5,
+     "class": "D",
+     "why": "no displayed-member or GT signal",
+     "title": "深圳上市公司名单",
+     "url": "https://mobile.simuwang.com/tag/53883.html",
+     "snippet": "深圳上市公司数量排名全国前列,汇聚了腾讯、比亚迪、迈瑞医疗、汇川技术等众多高科技企业、创新型企业及行业领军企业。这些企业在不断发展壮大的过程中,纷纷选择通过上市融资来加速其业务扩展和技术创新。那么,深",
+     "providers": [
+      "bocha-v1"
+     ]
+    },
+    {
+     "tier": 5,
+     "class": "D",
+     "why": "no displayed-member or GT signal",
+     "title": "深圳上市公司协会招聘信息 - 天眼查",
+     "url": "https://www.tianyancha.com/srecruit/3078896141-d75a",
+     "snippet": "上市公司 浏览量:3万+ 近7天的访问量趋势 更新 下载报告 “无限层级股权穿透报告”上线啦! 风险监控 正常 社会组织 电话: 13662596293 地址: 深圳市福田区深圳国际创新中心A座7层",
+     "providers": [
+      "bocha-v1"
+     ]
+    },
+    {
+     "tier": 5,
+     "class": "D",
+     "why": "no displayed-member or GT signal",
+     "title": "深圳上市公司基本情况表 - 豆丁网",
+     "url": "https://www.docin.com/p-22734589.html",
+     "snippet": "A, B, C, D, E, F, G, H. 1, 深圳辖区上市公司一览表. 2. 3, 证券代码, 证券简称, 公司中文名称, 公司英文名称, 注册地址, 公司电话, 公司传真, 公司电子邮件地址",
+     "providers": [
+      "bocha-v1"
+     ]
+    },
+    {
+     "tier": 5,
+     "class": "D",
+     "why": "no displayed-member or GT signal",
+     "title": "深圳上市公司 - 豆丁网",
+     "url": "https://www.docin.com/p-204105141.html&endPro=true",
+     "snippet": "ListedCompaniesShenzhenStockExchange代码股票简称公司全称主营业务范围行业代码董事长地址电话邮政编码CodeSharesAbbreviationCompaniesFi",
+     "providers": [
+      "bocha-v1"
+     ]
+    },
+    {
+     "tier": 5,
+     "class": "C",
+     "why": "names off-displayed GT entity alias 普渡",
+     "title": "2024年十大关键词数说深圳576家上市公司",
+     "url": "https://jr.sz.gov.cn/sjrb/xxgk/gzdt/content/post_11934425.html",
+     "snippet": "除了越疆科技以外，深圳市南山区还拥有云鲸智能、普渡科技、优必选（9880.HK）等龙头企业；也坐落着固高科技(301510.SZ)、潜行创新、奥比中光(688322.SH) ...",
+     "providers": [
+      "serper-v1"
+     ]
+    },
+    {
+     "tier": 5,
+     "class": "D",
+     "why": "no displayed-member or GT signal",
+     "title": "上市公司按地区查询结果 - 上海证券交易所",
+     "url": "https://www.sse.com.cn/assortment/stock/areatrade/area/detail.shtml?AREANAME=440000",
+     "snippet": "按地区查询相应股票 ; 688575, 深圳市亚辉龙生物科技股份有限公司, 688575 ; 688589, 深圳市力合微电子股份有限公司, 688589 ; 688595, 芯海科技(深圳)股份有限公司, 688595 ...",
+     "providers": [
+      "serper-v1"
+     ]
+    },
+    {
+     "tier": 5,
+     "class": "D",
+     "why": "no displayed-member or GT signal",
+     "title": "深圳上市公司协会",
+     "url": "http://szpco.org.cn/",
+     "snippet": "首页; 关于协会. 协会简介; 协会章程; 组织架构. 党建园地; 入会指南. 会员管理; 入会流程; 联系我们. 协会动态. 协会通知; 协会动态; 会员动态; 监管动态. 活动培训.",
+     "providers": [
+      "serper-v1"
+     ]
+    },
+    {
+     "tier": 5,
+     "class": "D",
+     "why": "no displayed-member or GT signal",
+     "title": "分类:深圳上市公司 - 维基百科",
+     "url": "https://zh.wikipedia.org/zh-hans/Category:%E6%B7%B1%E5%9C%B3%E4%B8%8A%E5%B8%82%E5%85%AC%E5%8F%B8",
+     "snippet": "万. 万泽股份 · 万物云 · 万科 ; 东. 东鹏饮料 ; 中. 中信證券 · 中国平安 · 中洲控股 · 中科蓝讯 · 中集安瑞科 ; 五. 五谷磨房 ; 优. 优必选科技 ...",
+     "providers": [
+      "serper-v1"
+     ]
+    },
+    {
+     "tier": 5,
+     "class": "D",
+     "why": "no displayed-member or GT signal",
+     "title": "南山区A股上市公司信息表",
+     "url": "https://www.szns.gov.cn/nsqjjcjj/gkmlpt/content/10/10841/post_10841366.html",
+     "snippet": "南山区A股上市公司信息表 ; 9, 301366.SZ, 一博科技, 深圳市一博科技股份有限公司, 创业板 ; 10, 688401.SH, 路维光电, 深圳市路维光电股份有限公司, 科创板 ...",
+     "providers": [
+      "serper-v1"
+     ]
+    },
+    {
+     "tier": 5,
+     "class": "D",
+     "why": "no displayed-member or GT signal",
+     "title": "深圳打造全链条上市培育体系今年已新增境内外上市公司十五家",
+     "url": "https://www.sz.gov.cn/cn/xxgk/zfxxgj/zwdt/content/post_12509747.html",
+     "snippet": "得益于优良的创新与市场环境，深圳已经成为上市公司成长的沃土。截至目前，深圳境内外上市公司合计592家，其中，境内A股上市公司424家，包括深交所主板179 ...",
+     "providers": [
+      "serper-v1"
+     ]
+    },
+    {
+     "tier": 5,
+     "class": "D",
+     "why": "no displayed-member or GT signal",
+     "title": "http://www.szse.cn/application/users/ipo/",
+     "url": "http://www.szse.cn/application/users/ipo/",
+     "snippet": "",
+     "providers": [
+      "serper-v1"
+     ]
+    },
+    {
+     "tier": 5,
+     "class": "D",
+     "why": "no displayed-member or GT signal",
+     "title": "深圳上市公司协会_百度百科",
+     "url": "https://baike.baidu.com/item/%E6%B7%B1%E5%9C%B3%E4%B8%8A%E5%B8%82%E5%85%AC%E5%8F%B8%E5%8D%8F%E4%BC%9A/65508292",
+     "snippet": "深圳上市公司协会（简称“深上协”）成立于2005年，是由中国证券监督管理委员会深圳监管局主管、深圳市民政局登记备案的上市公司行业自律管理组织，具有独立法人资格。",
+     "providers": [
+      "serper-v1"
+     ]
+    },
+    {
+     "tier": 5,
+     "class": "D",
+     "why": "no displayed-member or GT signal",
+     "title": "來自中國內地的上市公司統計 - HKEX",
+     "url": "https://www.hkex.com.hk/Market-Data/Statistics/Consolidated-Reports/China-Dimension?sc_lang=zh-HK",
+     "snippet": "來自中國內地的上市公司統計 ; 2026/03/23, 03355, 深圳市飛速創新技術股份有限公司 ; 2013/11/12, 03698, 徽商銀行股份有限公司 ; 2020/11/09, 09995, 榮昌生物製藥(煙台) ...",
+     "providers": [
+      "serper-v1"
+     ]
+    },
+    {
+     "tier": 5,
+     "class": "D",
+     "why": "no displayed-member or GT signal",
+     "title": "深圳上市公司达600家A股“含深量”十分之一 - 21财经",
+     "url": "https://www.21jingji.com/article/20260206/herald/69ec0a16e0be25d23c847f7c9b95e55e.html",
+     "snippet": "Wind数据显示，截至最新收盘日，深圳境内上市公司总市值12.43万亿元，占A股上市公司总市值的十分之一以上，总市值稳居全国大中城市第二；近三年新增境外 ...",
+     "providers": [
+      "serper-v1"
+     ]
+    },
+    {
+     "tier": 5,
+     "class": "D",
+     "why": "no displayed-member or GT signal",
+     "title": "深圳",
+     "url": "https://m.liepin.com/city-sz/zpyingwensiji/pn1/",
+     "snippet": "某知名计算机软件上市公司\n某知名公司\n某国内医疗器械公司\n某大型世界500强银行公司\n某深圳大型智能硬件公司\n某知名公司\n某知名公司\n某东莞科技推广服务公司",
+     "providers": [
+      "bocha-v1"
+     ]
+    },
+    {
+     "tier": 5,
+     "class": "D",
+     "why": "no displayed-member or GT signal",
+     "title": "总部在深圳的知名企业有哪些-建材知道-有货号",
+     "url": "http://www.youhuohao.com/know/295740.html",
+     "snippet": "生活家装修 回答 2 2024-06-13 05:57 总部在深圳的知名企业有哪些 总部在深圳的知名企业有哪些求高手给解答 举报 0 收藏 0 分享 1 网易,微信,唯品会,YY,酷狗,UC,环球市场",
+     "providers": [
+      "bocha-v1"
+     ]
+    },
+    {
+     "tier": 5,
+     "class": "D",
+     "why": "no displayed-member or GT signal",
+     "title": "深圳知名企业列表 - 搜狗问问",
+     "url": "http://wenwen.sogou.com/z/q1709170412.htm",
+     "snippet": "最好能提供联系方式就更好了~ 华为 深圳龙岗区坂田街道华为科技园 比亚迪 深圳龙岗区坪山街道 新天下集团(神州电脑)深圳龙岗区坂田街道 汇源 深圳龙岗区坪山街道",
+     "providers": [
+      "bocha-v1"
+     ]
+    },
+    {
+     "tier": 5,
+     "class": "D",
+     "why": "no displayed-member or GT signal",
+     "title": "深圳总部型知名企业逾百家_新闻中心_新浪网",
+     "url": "https://news.sina.com.cn/o/2006-09-01/04069905729s.shtml",
+     "snippet": "深圳总部型知名企业逾百家 高新产业总部聚合优势明显金融业总部聚集效应突出 深圳总部型知名企业逾百家 深圳商报记者李纬娜陈姝季杰 【本报讯】招商银行、平安保险、华为、中兴、万科、康佳、创维、金威....",
+     "providers": [
+      "bocha-v1"
+     ]
+    },
+    {
+     "tier": 5,
+     "class": "D",
+     "why": "no displayed-member or GT signal",
+     "title": "深圳公司名字,深圳有哪些知名企业总部 - 富程好名网",
+     "url": "http://www.fccylm.com/zwqm/19682.html",
+     "snippet": "深圳有哪些知名企业总部 截至2018年底,深圳市商事主体(企业和个体工商户)超过300万家,其中企业达196万家。在这近200万家企业中,上市企业约400家,总市值超过10万亿元人民币。深圳市上市企业",
+     "providers": [
+      "bocha-v1"
+     ]
+    },
+    {
+     "tier": 5,
+     "class": "D",
+     "why": "no displayed-member or GT signal",
+     "title": "知名企业逾百家 深圳总部经济实力名列前茅_滚动新闻_财经纵横_新浪网",
+     "url": "https://finance.sina.com.cn/roll/20060906/0208906078.shtml",
+     "snippet": "深圳总部聚合优势凸显,知名企业逾百家。日前,记者从深圳有关部门获悉,到目前为止,从深圳成长起来的总部型如招商银行、平安保险、华为、中兴、万科、康佳、创维、金威等知名企业已高达百余家,他们的最低年销售额",
+     "providers": [
+      "bocha-v1"
+     ]
+    },
+    {
+     "tier": 5,
+     "class": "D",
+     "why": "no displayed-member or GT signal",
+     "title": "深圳有哪些有名的企业? - 搜狗问问",
+     "url": "http://wenwen.sogou.com/z/q655952403.htm",
+     "snippet": "听说有华为,富式康,我还想知道更多些,麻烦知道的告知下,小弟谢谢了。 > 腾讯 > 深圳长城开发科技股份有限公司 > 深圳市大族激光科技股份有限公司 > 华侨城集团企业(包括有康佳集团,深圳华侨城房地",
+     "providers": [
+      "bocha-v1"
+     ]
+    },
+    {
+     "tier": 5,
+     "class": "D",
+     "why": "no displayed-member or GT signal",
+     "title": "深圳再认定18家跨国公司总部企业",
+     "url": "https://www.sz.gov.cn/cn/xxgk/zfxxgj/zwdt/content/post_12307119.html",
+     "snippet": "深圳市跨国公司总部企业又添新成员。近日，深圳市投资促进局发布“深圳市第九批跨国公司总部企业认定名单”，包括盈湃科技、云登科技、拉珂帝服饰、金蝶 ...",
+     "providers": [
+      "serper-v1"
+     ]
+    },
+    {
+     "tier": 5,
+     "class": "D",
+     "why": "no displayed-member or GT signal",
+     "title": "《财富》世界500强榜单正式揭晓深圳上榜企业数量增至11家",
+     "url": "https://www.sz.gov.cn/cn/xxgk/zfxxgj/zwdt/content/post_10754795.html",
+     "snippet": "2022年，深圳拥有中国民营500强企业25家，经认定的市级总部企业数量达335家，较2017年增长2.5倍，且市级总部企业去年在深圳营业收入占全市比重约三分之一 ...",
+     "providers": [
+      "serper-v1"
+     ]
+    },
+    {
+     "tier": 5,
+     "class": "D",
+     "why": "no displayed-member or GT signal",
+     "title": "深圳值得期待的10大新概念企业总部 - 搜狐",
+     "url": "https://www.sohu.com/a/455608305_791225",
+     "snippet": "深圳值得期待的10大新概念企业总部 ; 02、大疆总部大楼 ; 03、 · 国际总部大楼 ; 04、字节跳动总部大楼 ; 05、中兴通讯总部大楼 ; 06、神州数码总部大楼.",
+     "providers": [
+      "serper-v1"
+     ]
+    },
+    {
+     "tier": 5,
+     "class": "D",
+     "why": "no displayed-member or GT signal",
+     "title": "腾讯三迁！总部从一间房到一座城 - 深圳市发展和改革委员会",
+     "url": "https://fgw.sz.gov.cn/ztzl/qtztzl/szscjmyjjfzzhfwpt/mqfc/myqyfzdt/content/post_12813718.html",
+     "snippet": "5月30日至31日，位于深圳大铲湾的腾讯总部园区，将迎来首个“企鹅开放日”。这个占地80.9万平方米、未来可容纳约8万人办公的超级园区，如今已完成约30%的 ...",
+     "providers": [
+      "serper-v1"
+     ]
+    },
+    {
+     "tier": 5,
+     "class": "D",
+     "why": "no displayed-member or GT signal",
+     "title": "培育发展总部经济深圳跨国公司总部超200家- 21经济网 - 21财经",
+     "url": "https://www.21jingji.com/article/20260104/herald/3b8a88611b815cbd10a659dd98ef12fd.html",
+     "snippet": "近年来，西门子、英特尔、亚马逊等一批知名外资企业陆续落子深圳。深圳市科技创新局数据显示，目前，深圳已汇聚英特尔、高通、苹果、ARM等15家世界顶尖 ...",
+     "providers": [
+      "serper-v1"
+     ]
+    },
+    {
+     "tier": 5,
+     "class": "D",
+     "why": "no displayed-member or GT signal",
+     "title": "分类:总部在深圳的跨国公司 - 维基百科",
+     "url": "https://zh.wikipedia.org/zh-hans/Category:%E6%80%BB%E9%83%A8%E5%9C%A8%E6%B7%B1%E5%9C%B3%E7%9A%84%E8%B7%A8%E5%9B%BD%E5%85%AC%E5%8F%B8",
+     "snippet": "深圳市投資控股 (25个页面). 华. 華潤 (3个分类， 45个页面). 華為 (6个分类， 15个页面). 分类“总部在深圳的跨国公司”中的页面. 本分类共含有7个页面，以下显示 ...",
+     "providers": [
+      "serper-v1"
+     ]
+    },
+    {
+     "tier": 5,
+     "class": "D",
+     "why": "no displayed-member or GT signal",
+     "title": "深圳再认定18家跨国公司总部企业",
+     "url": "https://www.sznews.com/news/content/2025-08/01/content_31648394.htm",
+     "snippet": "近年来，深圳不断加大总部企业招引力度，持续引进世界500强、行业龙头企业等优质外资企业，吸引更多跨国公司总部在深圳集聚。截至目前，我市已累计认定 ...",
+     "providers": [
+      "serper-v1"
+     ]
+    },
+    {
+     "tier": 5,
+     "class": "D",
+     "why": "no displayed-member or GT signal",
+     "title": "世界500强企业出炉！8家深企上榜！总部楼宇哪家强？ - 知乎",
+     "url": "https://zhuanlan.zhihu.com/p/398760499",
+     "snippet": "深圳有8家企业上榜，分别是：中国平安（16位）、华为（44位）、正威国际（68位）、恒大（122位）、腾讯（132位）、万科（160位）、招商银行（162位）、深 ...",
+     "providers": [
+      "serper-v1"
+     ]
+    },
+    {
+     "tier": 5,
+     "class": "D",
+     "why": "no displayed-member or GT signal",
+     "title": "深圳公布第十一批跨国公司总部企业名单累计认定总数达207家",
+     "url": "http://finance.sina.com.cn/stock/estate/integration/2026-01-07/doc-inhfmycv4910110.shtml",
+     "snippet": "目前，深圳已累计认定跨国公司总部企业207家，汇聚了沃尔玛、麦克韦尔、华润微科技、百胜餐饮、英富曼会展、金拱门、星巴克、杜邦中国等世界500强以及行业 ...",
+     "providers": [
+      "serper-v1"
+     ]
+    },
+    {
+     "tier": 5,
+     "class": "D",
+     "why": "no displayed-member or GT signal",
+     "title": "深圳市商务局关于发布2025年贸易型总部企业（第一批）认定项目 ...",
+     "url": "https://commerce.sz.gov.cn/xxgk/qt/tzgg_1/content/post_12465859.html",
+     "snippet": "经核查确认，现发布2025年贸易型总部企业（第一批）认定项目清单。 特此通知。 附件：2025年贸易型总部企业（第一批）认定项目清单. 深圳市商务局. 2025 ...",
+     "providers": [
+      "serper-v1"
+     ]
+    },
+    {
+     "tier": 5,
+     "class": "D",
+     "why": "no displayed-member or GT signal",
+     "title": "深圳市企业总部名单",
+     "url": "http://report.baidu.com/view/5a1a5bfec8d376eeaeaa3137.html",
+     "snippet": "深圳市企业总部名单 · 1 、 招商银行股份有限公司 · 2 、 深圳华为投资控股有限公司 · 3 、 中国平安人寿保险股份有限公司 · 4 、 万科企业股份有限公司 · 5 、 深圳发展银行 ...",
+     "providers": [
+      "serper-v1"
+     ]
+    },
+    {
+     "tier": 5,
+     "class": "D",
+     "why": "no displayed-member or GT signal",
+     "title": "《深圳市鼓励跨国公司设立总部企业办法（修订版）》政策解读",
+     "url": "https://www.sz.gov.cn/szsrmzfmhwzgkml/szsrmzfmhwzgkml/zcjd/content/mpost_11093458.html",
+     "snippet": "《深圳市鼓励跨国公司设立总部企业办法（修订版）》政策解读 · 1.具有独立法人资格的外商投资企业； · 2.申报企业实缴注册资本不低于200万美元； · 3.母 ...",
+     "providers": [
+      "serper-v1"
+     ]
+    }
+   ]
+  }
+ },
+ "g5-t2": {
+  "query": "上述企业有哪些是深圳的企业",
+  "recorded_views": [
+   "深圳 上市公司 企业",
+   "深圳 企业 名单",
+   "(\"深圳顺易捷科技有限公司\" OR \"深圳市驭鹰者电子有限公司\" OR \"深圳嘉立创科技集团股份有限公司\" OR \"深圳市深华科电子有限公司\") 是深圳的企业",
+   "深圳顺易捷科技有限公司 百度百科",
+   "上述企业名单",
+   "企业注册地 深圳"
+  ],
+  "missing_payloads": [],
+  "view_cap": 4,
+  "admitted_permutations": 24,
+  "expected_in": 84,
+  "expected_retained": 3,
+  "expected_gate_drop": 81,
+  "distinct_survivor_sets": 1,
+  "class_count_range_across_permutations": {
+   "A": [
+    4,
+    4
+   ],
+   "B+": [
+    0,
+    0
+   ],
+   "B": [
+    0,
+    0
+   ],
+   "C": [
+    1,
+    1
+   ],
+   "D": [
+    67,
+    67
+   ]
+  },
+  "canonical_permutation": {
+   "views": [
+    "深圳 上市公司 企业",
+    "深圳 企业 名单",
+    "(\"深圳顺易捷科技有限公司\" OR \"深圳市驭鹰者电子有限公司\" OR \"深圳嘉立创科技集团股份有限公司\" OR \"深圳市深华科电子有限公司\") 是深圳的企业",
+    "深圳顺易捷科技有限公司 百度百科"
+   ],
+   "anchor_qualifier": null,
+   "tier_counts": {
+    "t0": 0,
+    "t1": 0,
+    "t2": 12,
+    "t3": 0,
+    "t4": 4,
+    "t5": 68
+   },
+   "kept_t01": 0,
+   "related_t23": 12,
+   "backfill_branch": true,
+   "survivor_count": 12,
+   "survivors_match_trace": false,
+   "survivor_urls": [
+    "http://hszsyj.byf.com/sell/",
+    "http://hszsyj.byf.com/sell/page-1.html",
+    "http://www.qixin.com/company-operation/a6d3ede1-777e-477d-9619-8a2e070f1b41",
+    "https://baike.baidu.com/item/%E6%B7%B1%E5%9C%B3%E5%98%89%E7%AB%8B%E5%88%9B%E7%A7%91%E6%8A%80%E9%9B%86%E5%9B%A2%E8%82%A1%E4%BB%BD%E6%9C%89%E9%99%90%E5%85%AC%E5%8F%B8/62419925",
+    "https://baike.baidu.com/item/%E6%B7%B1%E5%9C%B3%E9%A1%BA%E6%98%93%E6%8D%B7%E7%A7%91%E6%8A%80%E6%9C%89%E9%99%90%E5%85%AC%E5%8F%B8/7815002",
+    "https://www.eagle-driver.com/",
+    "https://www.eagle-driver.com/NewsStd.html",
+    "https://www.huangye88.com/city13413/2118237.html",
+    "https://www.huangye88.com/city13413/4145281.html",
+    "https://www.jlc.com/portal/q7i41323.html",
+    "https://www.liepin.com/company/gs24063445/",
+    "https://www.tianyancha.com/company/2310184074"
+   ],
+   "survivors": [
+    {
+     "tier": 2,
+     "title": "【深圳市驭鹰者电子有限公司招聘信息】-猎聘",
+     "url": "https://www.liepin.com/company/gs24063445/",
+     "providers": [
+      "bocha-v1"
+     ]
+    },
+    {
+     "tier": 2,
+     "title": "深圳市驭鹰者电子有限公司",
+     "url": "https://www.eagle-driver.com/",
+     "providers": [
+      "serper-v1"
+     ]
+    },
+    {
+     "tier": 2,
+     "title": "深圳嘉立创科技集团股份有限公司",
+     "url": "https://www.jlc.com/portal/q7i41323.html",
+     "providers": [
+      "serper-v1"
+     ]
+    },
+    {
+     "tier": 2,
+     "title": "深圳嘉立创科技集团股份有限公司 - 百度百科",
+     "url": "https://baike.baidu.com/item/%E6%B7%B1%E5%9C%B3%E5%98%89%E7%AB%8B%E5%88%9B%E7%A7%91%E6%8A%80%E9%9B%86%E5%9B%A2%E8%82%A1%E4%BB%BD%E6%9C%89%E9%99%90%E5%85%AC%E5%8F%B8/62419925",
+     "providers": [
+      "serper-v1"
+     ]
+    },
+    {
+     "tier": 2,
+     "title": "新闻动态- 深圳市驭鹰者电子有限公司",
+     "url": "https://www.eagle-driver.com/NewsStd.html",
+     "providers": [
+      "serper-v1"
+     ]
+    },
+    {
+     "tier": 2,
+     "title": "深圳顺易捷科技有限公司_经营信息 - 启信宝",
+     "url": "http://www.qixin.com/company-operation/a6d3ede1-777e-477d-9619-8a2e070f1b41",
+     "providers": [
+      "bocha-v1"
+     ]
+    },
+    {
+     "tier": 2,
+     "title": "深圳顺易捷科技有限公司 - 天眼查",
+     "url": "https://www.tianyancha.com/company/2310184074",
+     "providers": [
+      "bocha-v1"
+     ]
+    },
+    {
+     "tier": 2,
+     "title": "供应产品-深圳顺易捷科技有限公司",
+     "url": "http://hszsyj.byf.com/sell/page-1.html",
+     "providers": [
+      "bocha-v1"
+     ]
+    },
+    {
+     "tier": 2,
+     "title": "深圳顺易捷科技有限公司",
+     "url": "https://www.huangye88.com/city13413/4145281.html",
+     "providers": [
+      "bocha-v1"
+     ]
+    },
+    {
+     "tier": 2,
+     "title": "供应产品-深圳顺易捷科技有限公司",
+     "url": "http://hszsyj.byf.com/sell/",
+     "providers": [
+      "bocha-v1"
+     ]
+    },
+    {
+     "tier": 2,
+     "title": "深圳顺易捷科技有限公司",
+     "url": "https://www.huangye88.com/city13413/2118237.html",
+     "providers": [
+      "bocha-v1"
+     ]
+    },
+    {
+     "tier": 2,
+     "title": "深圳顺易捷科技有限公司_百度百科",
+     "url": "https://baike.baidu.com/item/%E6%B7%B1%E5%9C%B3%E9%A1%BA%E6%98%93%E6%8D%B7%E7%A7%91%E6%8A%80%E6%9C%89%E9%99%90%E5%85%AC%E5%8F%B8/7815002",
+     "providers": [
+      "serper-v1"
+     ]
+    }
+   ],
+   "dropped_class_counts": {
+    "D": 67,
+    "C": 1,
+    "A": 4
+   },
+   "dropped_items": [
+    {
+     "tier": 5,
+     "class": "D",
+     "why": "no displayed-member or GT signal",
+     "title": "深圳上市公司及品牌企业名录1213—10-福田开发区招商网-中国招商引资信息网",
+     "url": "http://www.cnzsyz.com/guangdong/info/436111.html",
+     "snippet": "来源:网群国际 浏览: 次 深圳万讯自控股份有限公司 上市公司中文简称:万讯自控 上市公司外文名称: Shenzhen maxonic Automation control cO,.Ltd.",
+     "providers": [
+      "bocha-v1"
+     ]
+    },
+    {
+     "tier": 5,
+     "class": "D",
+     "why": "no displayed-member or GT signal",
+     "title": "深圳上市公司名单 广东深圳上市公司有哪些2018-平安证券",
+     "url": "https://zs.stock.pingan.com/a/4515.html",
+     "snippet": "深圳上市公司有哪些?深圳的上市公司信息是很多深圳网友和股票投资者关心的事情。截至2018年8月1日,我们根据网络公开信息收集到的深圳上市公司名单如下。(按上市时间排序) 深圳上市公司名单 证券简称 股",
+     "providers": [
+      "bocha-v1"
+     ]
+    },
+    {
+     "tier": 5,
+     "class": "D",
+     "why": "no displayed-member or GT signal",
+     "title": "深圳上市公司名单 - 豆丁网",
+     "url": "https://www.docin.com/p-589699431.html",
+     "snippet": "深圳上市公司名单——所有资料文档均为本人悉心收集,全部是文档中的精品,绝对值得下载收藏! 文档格式: .doc 文档大小: 40.5K 文档页数: 3 页 顶 /踩数: 收藏人数: 评论次数: 文档热",
+     "providers": [
+      "bocha-v1"
+     ]
+    },
+    {
+     "tier": 5,
+     "class": "D",
+     "why": "no displayed-member or GT signal",
+     "title": "深交所上市公司_文档下载",
+     "url": "https://doc.wendoc.com/b0d497abfbfa9052fb87f1601-2.html",
+     "snippet": "000033 000034 000035 000036 000037 000038 000039 000040 000042 000043 000045 000046 000048 000049 00",
+     "providers": [
+      "bocha-v1"
+     ]
+    },
+    {
+     "tier": 5,
+     "class": "D",
+     "why": "no displayed-member or GT signal",
+     "title": "深圳上市公司及品牌企业名录1213—12-罗湖开发区招商网-中国招商引资信息网",
+     "url": "http://www.cnzsyz.com/guangdong/info/436113.html",
+     "snippet": "深圳市深宝实业股份有限公司 上市公司中文简称:深宝 上市公司外文名称: SHENZHEN sHENBAO iNDUSTRIAL cO.,LTD. 上市公司法定代表人:郑煜曦 上市公司注册地址:深圳市南",
+     "providers": [
+      "bocha-v1"
+     ]
+    },
+    {
+     "tier": 5,
+     "class": "D",
+     "why": "no displayed-member or GT signal",
+     "title": "深圳上市公司 截至2014-08-14 - 道客巴巴",
+     "url": "https://www.doc88.com/p-0716147620862.html",
+     "snippet": "下载积分: 100 内容提示: 公司代码 公司简称 公司全称 英文名称 注册地址 A 股代码 A 股简称 A 股上市日期 A 股总股本 A 股流通股本 B 股代码 B 股简称B股上市日期 B 股总股本",
+     "providers": [
+      "bocha-v1"
+     ]
+    },
+    {
+     "tier": 5,
+     "class": "D",
+     "why": "no displayed-member or GT signal",
+     "title": "深圳上市公司名单查询深圳上市公司有哪些",
+     "url": "http://www.licaixu.com/ask/202107/119320.html",
+     "snippet": "深圳上市公司名单查询深圳上市公司有哪些?据悉深圳上市公司名单查询深圳上市公司是非常多的,以下是深圳上市公司简称、代码和公司:\n世纪星源,000005,深圳世纪星源股份有限公司;\n国农科技,000004",
+     "providers": [
+      "bocha-v1"
+     ]
+    },
+    {
+     "tier": 5,
+     "class": "D",
+     "why": "no displayed-member or GT signal",
+     "title": "深圳上市公司及代码(截止2013年4月).xls_淘豆网",
+     "url": "https://www.taodocs.com/p-266644536.html",
+     "snippet": "文档列表 文档介绍 主板000001平安银行000002万科A000004国农科技000005世纪星源000010SST华新000011深物业A000012南玻A000014沙河股份000020深华发",
+     "providers": [
+      "bocha-v1"
+     ]
+    },
+    {
+     "tier": 5,
+     "class": "D",
+     "why": "no displayed-member or GT signal",
+     "title": "深圳上市公司名单_深圳上市企业数量(2023年06月15日)",
+     "url": "https://m.southmoney.com/chengshi/202306/38907858.html",
+     "snippet": "深圳的上市公司有哪些?南方财富网趋势选股系统为您整理了归属于深圳,并且在A股上市的公司。\n在数量上,目前深圳共有405家上市公司。其中涉及行业:芯片的有82家、新能源的有74家、半导体的有72家、5G",
+     "providers": [
+      "bocha-v1"
+     ]
+    },
+    {
+     "tier": 5,
+     "class": "D",
+     "why": "no displayed-member or GT signal",
+     "title": "上海证券交易所 深圳证券交易所关于上市公司大股东及其附属企业非经营性资金占用的通告(深圳证券交易所2006年第二号)_焦点透视_财经纵横_新浪网",
+     "url": "https://finance.sina.com.cn/stock/t/20060703/0000776136.shtml",
+     "snippet": "上海证券交易所 深圳证券交易所关于上市公司大股东及其附属企业非经营性资金占用的通告(深圳证券交易所2006年第二号) 上海证券交易所 深圳证券交易所 关于上市公司大股东及其附属企业非经营性资金占用的通",
+     "providers": [
+      "bocha-v1"
+     ]
+    },
+    {
+     "tier": 5,
+     "class": "D",
+     "why": "no displayed-member or GT signal",
+     "title": "深圳企业名录",
+     "url": "http://qy.58.com/sz/pn35/",
+     "snippet": "深圳企业名录 \n深圳瀚迪汽车销售服务有限公司 新城区轩茜博食品商行(个体工商户) 深圳市天坤风云劳务派遣有限公司 深圳市聚赢档案管理有限公司 深圳市天坤风云劳务派遣有限公司 深圳市安博智科技有限公司",
+     "providers": [
+      "bocha-v1"
+     ]
+    },
+    {
+     "tier": 5,
+     "class": "D",
+     "why": "no displayed-member or GT signal",
+     "title": "深圳企业名录",
+     "url": "http://qy.58.com/sz_/pn27/",
+     "snippet": "深圳企业名录 \n深圳市承丰盛塑料贸易有限公司 深圳市粤兴实业有限公司 深圳市承丰盛塑料贸易有限公司 深圳市诚富诚信息咨询有限公司 深圳市南擎国际货运代理有限公司 融湾创新发展中心(深圳)有限公司 深圳",
+     "providers": [
+      "bocha-v1"
+     ]
+    },
+    {
+     "tier": 5,
+     "class": "D",
+     "why": "no displayed-member or GT signal",
+     "title": "深圳企业名录",
+     "url": "https://qy.m.58.com/m_entlist/sz/",
+     "snippet": "深圳企业名录 深圳市诚达配送服务有限公司 冠航环科(深圳)集团有限公司 深圳市金黄大地科技有限公司 引纱(深圳)科技有限公司 第二曲线(深圳)生命科技有限公司 东莞市莱恒新材料有限公司 深圳法大大网络",
+     "providers": [
+      "bocha-v1"
+     ]
+    },
+    {
+     "tier": 5,
+     "class": "D",
+     "why": "no displayed-member or GT signal",
+     "title": "深圳企业名录",
+     "url": "http://wap.huangye88.com/b2b/dq-shenzhen/",
+     "snippet": "工业品\n深圳机械企业名录 深圳电子企业名录 深圳电气企业名录 深圳机床企业名录 深圳灯饰企业名录 深圳五金企业名录 深圳安防企业名录 深圳印刷企业名录 深圳通信企业名录 深圳仪器仪表企业名录 深圳LE",
+     "providers": [
+      "bocha-v1"
+     ]
+    },
+    {
+     "tier": 5,
+     "class": "D",
+     "why": "no displayed-member or GT signal",
+     "title": "广东省深圳市企业列表",
+     "url": "http://m.b2bname.com/area440300ye99.htm",
+     "snippet": "最新企业\n美国施乐百百货公司香港采购处驻深圳办事处 美国微科有限公司深圳代表处 代表本公司开展电子元器件贸易业务的联络活 日本株式会社NF回路设计深圳代表处 香港翱泰温控器(亚洲)有限公司深圳代表处",
+     "providers": [
+      "bocha-v1"
+     ]
+    },
+    {
+     "tier": 5,
+     "class": "D",
+     "why": "no displayed-member or GT signal",
+     "title": "广东省深圳市企业列表",
+     "url": "http://m.b2bname.com/area440300ye621.htm",
+     "snippet": "最新企业\n深圳市天浩网络科技有限公司 深圳市中环运国际物流有限公司 深圳华仕通讯有限公司 深圳市齐盛达电子有限公司 深圳美立方装饰设计工程有限公司 深圳市丰鸿世纪电子有限公司 深圳市威佳机械有限公司销",
+     "providers": [
+      "bocha-v1"
+     ]
+    },
+    {
+     "tier": 5,
+     "class": "D",
+     "why": "no displayed-member or GT signal",
+     "title": "2024深圳品牌百强企业名单",
+     "url": "https://resource.emagecompany.com/guangdong/2024shenzhenbrands.html",
+     "snippet": "繁体 |简体| ENGLISH HOME PAGE 行业名录 省区名录 城市数据 国际名录 世界买家 名录书籍 特别名录 黄页号簿 展商名录 免费资源 关于我们 在线订购 数据样本 网站地图 广东 ·",
+     "providers": [
+      "bocha-v1"
+     ]
+    },
+    {
+     "tier": 5,
+     "class": "D",
+     "why": "no displayed-member or GT signal",
+     "title": "深圳批发/零售企业名录",
+     "url": "https://qy.m.58.com/m_entlist/sz_255/",
+     "snippet": "深圳批发/零售企业名录 \n深圳迷屿科技有限公司 润泰汇通智能科技(深圳)有限公司 宁波盟阳国际贸易有限公司 深圳市博安弘科技有限公司 深圳市盐田区睿鑫商行 深圳市腾龙劳务派遣有限公司 贝弗利贸易(深圳",
+     "providers": [
+      "bocha-v1"
+     ]
+    },
+    {
+     "tier": 5,
+     "class": "D",
+     "why": "no displayed-member or GT signal",
+     "title": "深圳中型企业名单 - 道客巴巴",
+     "url": "https://www.doc88.com/p-0794520261769.html",
+     "snippet": "新 深圳 深圳市一览网络股份有限公司新 深圳 深圳市六星集团新 深圳 深圳莱宝高科技股份有限公司新 深圳 精模电子科技深圳有限公司新 深圳 深圳市科特科技股份有限公司新 深圳 雄鹰服饰(深圳)有限公司",
+     "providers": [
+      "bocha-v1"
+     ]
+    },
+    {
+     "tier": 5,
+     "class": "C",
+     "why": "names off-displayed GT entity alias 深南电路",
+     "title": "深圳500强企业.xls",
+     "url": "https://max.book118.com/html/2015/0505/16376753.shtm",
+     "snippet": "深圳500强企业,深圳500强企业名单,深圳企业100强,深圳五百强企业,深圳100强企业名单,2014深圳企业100强,深圳500强企业,深圳民营企业100强,深圳前100强企业,深圳五百强企业名录",
+     "providers": [
+      "bocha-v1"
+     ]
+    },
+    {
+     "tier": 5,
+     "class": "D",
+     "why": "no displayed-member or GT signal",
+     "title": "最新 深圳市企业汇总大全 - 360文档中心",
+     "url": "https://www.360docs.net/doc/013511018.html",
+     "snippet": "深圳工业企业500强企业名单 深圳富泰宏精密工业有限公司 联想信息产品(深圳)有限公司 深圳创维-RGB电子有限公司 深圳开发科技股份有限公司 艾默生网络能源有限公司 群康科技(深圳)有限公司 深圳市",
+     "providers": [
+      "bocha-v1"
+     ]
+    },
+    {
+     "tier": 5,
+     "class": "D",
+     "why": "no displayed-member or GT signal",
+     "title": "深圳市中小企业服务局关于2024年深圳市专精特新中小企业和2021年 ...",
+     "url": "https://zxqyj.sz.gov.cn/zwgk/zfxxgkml/tzgg/content/post_11929756.html",
+     "snippet": "经企业自主申报、各区初审推荐、我局审核认定等程序，深圳市欧冶半导体有限公司等2971家企业符合深圳市专精特新中小企业认定标准，云镝智慧科技有限公司等1740家2021年深圳 ...",
+     "providers": [
+      "serper-v1"
+     ]
+    },
+    {
+     "tier": 5,
+     "class": "D",
+     "why": "no displayed-member or GT signal",
+     "title": "2025深圳企業500強名單",
+     "url": "https://resource.emagecompany.com/big5/guangdong/2025shenzhen500.html",
+     "snippet": "排名, 企業名稱, 2024年營收/億元. 1, 中國平安保險(集團)股份有限公司, 10289.25. 2, 華爲投資控股有限公司, 8620.72. 3, 比亞迪股份有限公司, 7771.02.",
+     "providers": [
+      "serper-v1"
+     ]
+    },
+    {
+     "tier": 5,
+     "class": "D",
+     "why": "no displayed-member or GT signal",
+     "title": "深圳企业查询_深圳企业名录_深圳黄页 - 企查查",
+     "url": "https://www.qcc.com/area/gd_440300",
+     "snippet": "企查查为您提供最新深圳企业信息查询，深圳企业名录，深圳企业黄页。包括深圳企业电话、地址查询，工商信息查询、信用信息查询等。帮您快速了解深圳企业信息。",
+     "providers": [
+      "serper-v1"
+     ]
+    },
+    {
+     "tier": 5,
+     "class": "D",
+     "why": "no displayed-member or GT signal",
+     "title": "深圳上市公司名录 - 豆丁网",
+     "url": "https://www.docin.com/p-2162029003.html",
+     "snippet": "深圳上市公司名录 篇一:深圳证券交易所上市公司名 录 表5-30深圳证券交易所上市公司 名录 ListofListedCompaniesinShenzhen StockExchange 新都酒店SST",
+     "providers": [
+      "bocha-v1"
+     ]
+    },
+    {
+     "tier": 5,
+     "class": "D",
+     "why": "no displayed-member or GT signal",
+     "title": "分类:深圳上市公司 - 维基百科",
+     "url": "https://zh.wikipedia.org/zh-hans/Category:%E6%B7%B1%E5%9C%B3%E4%B8%8A%E5%B8%82%E5%85%AC%E5%8F%B8",
+     "snippet": "万. 万泽股份 · 万物云 · 万科 ; 东. 东鹏饮料 ; 中. 中信證券 · 中国平安 · 中洲控股 · 中科蓝讯 · 中集安瑞科 ; 五. 五谷磨房 ; 优. 优必选科技 ...",
+     "providers": [
+      "serper-v1"
+     ]
+    },
+    {
+     "tier": 5,
+     "class": "D",
+     "why": "no displayed-member or GT signal",
+     "title": "深圳上市公司协会",
+     "url": "http://szpco.org.cn/",
+     "snippet": "平安银行. 000001 · 万科A. 000002 · 国华网安. 000004 · 深振业A. 000006 · 全新好. 000007 · 中国宝安. 000009 · 美丽生态. 000010 · 深物业A. 000011.",
+     "providers": [
+      "serper-v1"
+     ]
+    },
+    {
+     "tier": 5,
+     "class": "D",
+     "why": "no displayed-member or GT signal",
+     "title": "上市公司按地区查询结果 - 上海证券交易所",
+     "url": "https://www.sse.com.cn/assortment/stock/areatrade/area/detail.shtml?AREANAME=440000",
+     "snippet": "按地区查询相应股票 ; 600143, 金发科技股份有限公司, 600143 ; 600162, 深圳香江控股股份有限公司, 600162 ; 600183, 广东生益科技股份有限公司, 600183 ; 600185, 珠海珠免 ...",
+     "providers": [
+      "serper-v1"
+     ]
+    },
+    {
+     "tier": 5,
+     "class": "D",
+     "why": "no displayed-member or GT signal",
+     "title": "上市公司公告 - 深圳证券交易所",
+     "url": "http://www.szse.cn/disclosure/listed/notice/",
+     "snippet": "",
+     "providers": [
+      "serper-v1"
+     ]
+    },
+    {
+     "tier": 5,
+     "class": "D",
+     "why": "no displayed-member or GT signal",
+     "title": "深圳上市公司达600家A股“含深量”十分之一 - 21财经",
+     "url": "https://www.21jingji.com/article/20260206/herald/69ec0a16e0be25d23c847f7c9b95e55e.html",
+     "snippet": "21世纪经济报道记者吴佳楠深圳报道. 深圳上市公司总数达到600家。 2月6日，大族数控（3200.HK）、卓正医疗（2677.HK）双双登陆港交所。",
+     "providers": [
+      "serper-v1"
+     ]
+    },
+    {
+     "tier": 5,
+     "class": "D",
+     "why": "no displayed-member or GT signal",
+     "title": "南山区A股上市公司信息表",
+     "url": "https://www.szns.gov.cn/nsqjjcjj/gkmlpt/content/10/10841/post_10841366.html",
+     "snippet": "南山区A股上市公司信息表 ; 61, 300656.SZ, 民德电子, 深圳市民德电子科技股份有限公司, 创业板 ; 62, 002869.SZ, 金溢科技, 深圳市金溢科技股份有限公司, 深主板 ...",
+     "providers": [
+      "serper-v1"
+     ]
+    },
+    {
+     "tier": 5,
+     "class": "D",
+     "why": "no displayed-member or GT signal",
+     "title": "深圳市宝安区A股上市企业名单 - 前瞻眼",
+     "url": "https://stock.qianzhan.com/hs/company/440306",
+     "snippet": "深圳市宝安区有哪些上市公司？深圳市宝安区共有62家A股上市公司，如立讯精密工业股份有限公司、格林美股份有限公司、顺丰控股股份有限公司等。",
+     "providers": [
+      "serper-v1"
+     ]
+    },
+    {
+     "tier": 5,
+     "class": "D",
+     "why": "no displayed-member or GT signal",
+     "title": "深圳600家上市公司总市值超19万亿元",
+     "url": "https://www.sz.gov.cn/cn/xxgk/zfxxgj/zwdt/content/post_12637648.html",
+     "snippet": "截至目前，深圳创业板和科创板上市公司数量达216家，占比过半，居全国大中城市第一。一批国家级高新技术企业、专精特新“小巨人”、制造业单项冠军企业通过 ...",
+     "providers": [
+      "serper-v1"
+     ]
+    },
+    {
+     "tier": 5,
+     "class": "D",
+     "why": "no displayed-member or GT signal",
+     "title": "深圳证券交易所主板上市公司列表 - 维基百科",
+     "url": "https://zh.wikipedia.org/zh-hans/%E6%B7%B1%E5%9C%B3%E8%AF%81%E5%88%B8%E4%BA%A4%E6%98%93%E6%89%80%E4%B8%BB%E6%9D%BF%E4%B8%8A%E5%B8%82%E5%85%AC%E5%8F%B8%E5%88%97%E8%A1%A8",
+     "snippet": "000020, 深华发, 深圳中恒华发股份有限公司 ; 000021, 深科技, 深圳长城开发科技股份有限公司 ; 000023, 深天地, 深圳市天地（集团）股份有限公司 ; 000025, 特力, 深圳市特力 ...",
+     "providers": [
+      "serper-v1"
+     ]
+    },
+    {
+     "tier": 5,
+     "class": "D",
+     "why": "no displayed-member or GT signal",
+     "title": "2024中国上市公司名单(深圳证券交易所)",
+     "url": "https://resource.emagecompany.com/publiccompanies/listedcompanies_shenzhen.html",
+     "snippet": "A股代码, A股简称, A股上市日期, 公司全称, 公司网址, 板块. 000001, 平安银行, 1991-04-03, 平安银行股份有限公司, bank.pingan.com, 主板.",
+     "providers": [
+      "serper-v1"
+     ]
+    },
+    {
+     "tier": 5,
+     "class": "D",
+     "why": "no displayed-member or GT signal",
+     "title": "广东省深圳市企业列表",
+     "url": "http://m.b2bname.com/area440300ye6273.htm",
+     "snippet": "最新企业\n深圳市鹏芯源电子科技展销部  其他IC 集成电路 IC ALTE 昂步科技有限公司  其他IC RF模块 GPS系统 通信 深圳市鸿德创电子科技有限公司  其他IC IC 连接器 IC 连接",
+     "providers": [
+      "bocha-v1"
+     ]
+    },
+    {
+     "tier": 5,
+     "class": "D",
+     "why": "no displayed-member or GT signal",
+     "title": "深圳多彩科技 深圳科创公司排名? - 酷米网",
+     "url": "https://www.kmw.com/news/4902048.html",
+     "snippet": "深圳科创公司排名?深圳市广丰科技有限公司深圳市先赢科技有限公司。深圳市漫步科技有限公司深圳市融安网络科技有限公司深圳市嘉推科技有限公司深圳市华科创智科技有限公司深圳市博耐菲特数码科技有限公司。深圳市润",
+     "providers": [
+      "bocha-v1"
+     ]
+    },
+    {
+     "tier": 5,
+     "class": "D",
+     "why": "no displayed-member or GT signal",
+     "title": "广东省深圳市企业列表",
+     "url": "http://m.b2bname.com/area440300ye6268.htm",
+     "snippet": "最新企业\n深圳市顺浩电子产品经营部  其他IC 集成电路 国半LM344 深圳市晶美润电子有限公司  其他IC IC  中芯科技有限公司  其他IC IC  通必达科技有限公司  其他IC IC 二三",
+     "providers": [
+      "bocha-v1"
+     ]
+    },
+    {
+     "tier": 5,
+     "class": "D",
+     "why": "no displayed-member or GT signal",
+     "title": "深圳市科技型中小企业名单,深圳科技型中小企业有哪些十大品牌网",
+     "url": "https://www.cnpp.cn/focus/14166.html",
+     "snippet": "行业推荐品牌 深圳市优学天下教育发展股份有限公司 统一社会信用代码:91440300585638375Y 企业类型:股份有限公司 企业地址:广东省 深圳市 天安车公庙工业区天经大厦F3.8-82(AB",
+     "providers": [
+      "bocha-v1"
+     ]
+    },
+    {
+     "tier": 5,
+     "class": "D",
+     "why": "no displayed-member or GT signal",
+     "title": "深圳市诚润捷科技有限公司",
+     "url": "https://www.huangye88.com/city13413/116489.html",
+     "snippet": "公司简介 深圳市诚润捷科技有限公司成立于2011年7月,主要业务包括销售计算机及计算机外部设备、软件、等产品,以及为客户提供IT产品全线增值服务。 详细资料 公司名称 深圳市诚润捷科技有限公司 企业法",
+     "providers": [
+      "bocha-v1"
+     ]
+    },
+    {
+     "tier": 5,
+     "class": "D",
+     "why": "no displayed-member or GT signal",
+     "title": "公司企业",
+     "url": "http://life.city8090.com/shenzhen/gongsiqiye/p21",
+     "snippet": "奋达科技园-西北门\n凤翔贸易有限公司\n地址: 广东省深圳市龙岗区富安大道 电话:(0755)89632368 标签: 公司企业公司 \n深圳慧凯源贸易有限公司\n地址: 广东省深圳市宝安区新安街道25区天",
+     "providers": [
+      "bocha-v1"
+     ]
+    },
+    {
+     "tier": 5,
+     "class": "D",
+     "why": "no displayed-member or GT signal",
+     "title": "深圳市顺捷鑫电子有限公司 - 企知道",
+     "url": "https://qiye.qizhidao.com/company/0a0dbb01d0a3b70bdbf9258c07663e1c.html",
+     "snippet": "地址: 简介: 深圳市顺捷鑫电子有限公司,成立于2013-06-09,位于广东省深圳市,是一家以从事计算机、通信和其他电子设备制造业为主的企业。企业目前的经营状态为存续,注册资本为100万人民币,统一",
+     "providers": [
+      "bocha-v1"
+     ]
+    },
+    {
+     "tier": 5,
+     "class": "D",
+     "why": "no displayed-member or GT signal",
+     "title": "职Q-深圳旻禾科技",
+     "url": "https://zq.zhaopin.com/search/%E6%B7%B1%E5%9C%B3%E6%97%BB%E7%A6%BE%E7%A7%91%E6%8A%80",
+     "snippet": "深圳,深圳爱奇丽科技有限公司\n深圳避雷企业:深圳金鼎威视科技开发有限公司\n深圳柏盛科技有限公司和深圳捷益达哪个好\n深圳凡辰科技有限公司是培训机构吗?\n深圳避坑企业:深圳市金鼎威视科技开发有限公司\n深圳",
+     "providers": [
+      "bocha-v1"
+     ]
+    },
+    {
+     "tier": 5,
+     "class": "D",
+     "why": "no displayed-member or GT signal",
+     "title": "深圳市高新技术企业名录,深圳高新技术企业有哪些十大品牌网",
+     "url": "https://www.cnpp.cn/focus/13918.html",
+     "snippet": "行业推荐品牌 华为投资控股有限公司 统一社会信用代码:91440300746645251H 企业类型:有限责任公司 企业地址:广东省 深圳市 龙岗区 坂田华为基地 成立时间:2003-03-14 荣耀",
+     "providers": [
+      "bocha-v1"
+     ]
+    },
+    {
+     "tier": 5,
+     "class": "D",
+     "why": "no displayed-member or GT signal",
+     "title": "深圳易捷科技有限公司介绍,地址",
+     "url": "https://txcphs.51sole.com/companyabout.htm",
+     "snippet": "深圳易捷科技有限公司是一家专注于科技创新的企业,定位为智能科技领域的先锋力量。公司紧跟时代步伐,致力于为客户提供高品质、高性能的科技产品。我们主营智能硬件设备和软件系统,涵盖智能家居、智能办公等多个领",
+     "providers": [
+      "bocha-v1"
+     ]
+    },
+    {
+     "tier": 4,
+     "class": "A",
+     "why": "alias-only hit on a displayed member",
+     "title": "为“中国创造”崛起“打样”筑基——从深圳嘉立创看企业新质生产力跃升",
+     "url": "http://www.xinhuanet.com/fortune/20250124/c3340a303ba0479caa8666424c9437ed/c.html",
+     "snippet": "在这个背景下，一家名为嘉立创的公司在2006年诞生，主要从事PCB打样和小批量板制造业务。“起初在深圳华强北只有一个与人共用的一米柜台，一边帮人卖变压器 ...",
+     "providers": [
+      "serper-v1"
+     ]
+    },
+    {
+     "tier": 4,
+     "class": "A",
+     "why": "alias-only hit on a displayed member",
+     "title": "PCB_PCB板_PCB电路板_PCB打样_PCB线路板设计_PCBA -深圳顺 ...",
+     "url": "https://www.syjpcb.com/",
+     "snippet": "深圳顺易捷实业是一家专注PCB板,PCBA,PCB电路板,PCB线路板设计,PCB打样的高新技术厂家,提供单面线路板样板,双面线路板等批量生产,提供钢网,SMT贴片和元器件一站式 ...",
+     "providers": [
+      "serper-v1"
+     ]
+    },
+    {
+     "tier": 5,
+     "class": "D",
+     "why": "no displayed-member or GT signal",
+     "title": "嘉立创下单助手_PCB免费打样_快捷PCB打样厂_多层电路板_JLC",
+     "url": "https://www.jlc.com/",
+     "snippet": "嘉立创PCB，全球PCB打样及中小批量首选！我们提供高可靠、短交期的优质服务，拥有遍布多地1800亩的数字化生产基地，覆盖全球180+国家/地区和超470万+客户信赖。",
+     "providers": [
+      "serper-v1"
+     ]
+    },
+    {
+     "tier": 5,
+     "class": "D",
+     "why": "no displayed-member or GT signal",
+     "title": "2026 国内PCB 十大企业盘点：嘉立创高调切入高端赛道 - 电子工程专辑",
+     "url": "https://www.eet-china.com/mp/a486838.html",
+     "snippet": "鼎控股(深圳) 鼎控股成立于1999年4月29日, 日在深圳证券交易所上市。它是同时具备各类PCB产品研发、设计、制造与销售服务的专业大型厂商",
+     "providers": [
+      "serper-v1"
+     ]
+    },
+    {
+     "tier": 5,
+     "class": "D",
+     "why": "no displayed-member or GT signal",
+     "title": "Ucreate International - ucpcba",
+     "url": "https://zh.ucpcba.com/",
+     "snippet": "深圳优创国际成立于2004 年，是一家专注于PCB研发设计、线路板批量/打样服务、SMT表面贴装、元器件采购的技术型公司。 我们拥有自己的高精密PCB制造工厂和自动化SMT ...",
+     "providers": [
+      "serper-v1"
+     ]
+    },
+    {
+     "tier": 4,
+     "class": "A",
+     "why": "alias-only hit on a displayed member",
+     "title": "顺易捷-公司介绍 - PCB电路板",
+     "url": "https://www.syjpcb.com/syjBS/about.html",
+     "snippet": "深圳顺易捷实业有限公司，是一家专注于印制PCB/线路板快速打样,以单面、双面和多层板为主并有贴片跟采购元器件一站式服务的高新技术企业。 公司实力雄厚，PCB板打样 ...",
+     "providers": [
+      "serper-v1"
+     ]
+    },
+    {
+     "tier": 5,
+     "class": "D",
+     "why": "no displayed-member or GT signal",
+     "title": "顺捷科技有限公司",
+     "url": "https://www.11467.com/shenzhen/co/296834.htm",
+     "snippet": "公司简介 顺捷科技有限公司成立于2005年,主要从事汽车电子以及汽车精品和装饰品的研发及销售.包括各种解码器.车载MP3.GPS.......虽然公司的成立时间不长,但是本公司本着服务社会.方便车主的",
+     "providers": [
+      "bocha-v1"
+     ]
+    },
+    {
+     "tier": 4,
+     "class": "A",
+     "why": "alias-only hit on a displayed member",
+     "title": "深圳顺易捷实业有限公司_知识产权_专利信息 - 启信宝",
+     "url": "https://www.qixin.com/ability/6a544feb-8b62-49dd-885c-65c00e521d44",
+     "snippet": "搜索 企业版 合作入口 应用 注册/登录 浏览:2599 存续 曾用名 A级纳税人 一般纳税人 有限责任公司 小微企业 民营企业 自身风险 4条 法定代表人: 杨开洪 关联企业1家> 统一社会信用代码",
+     "providers": [
+      "bocha-v1"
+     ]
+    },
+    {
+     "tier": 5,
+     "class": "D",
+     "why": "no displayed-member or GT signal",
+     "title": "深圳市顺易通信息科技有限公司_施工设计勘察监理资质_工商信息查询_建设库",
+     "url": "https://www.jiansheku.com/enterprise/563833565552567969/",
+     "snippet": "浏览:0次 深圳市顺易通信息科技有限公司 数据报告 加入监控 收藏 小巨人企业 粤港澳大湾区 珠三角 华南 法定代表人: 唐健 统一社会信用代码: 91440300664162117K 联系方式: 注",
+     "providers": [
+      "bocha-v1"
+     ]
+    },
+    {
+     "tier": 5,
+     "class": "D",
+     "why": "no displayed-member or GT signal",
+     "title": "深圳易顺捷信息技术有限公司 - 天眼查",
+     "url": "https://www.tianyancha.com/company/3144921845?hi=s",
+     "snippet": "简介: 深圳易顺捷信息技术有限公司,成立于2017-12-22,法定代表人为杨金海,注册地位于深圳市宝安区松岗街道塘下涌二村四巷13号606,经营范围包括一般经营项目是:计算机软件的研发和销售;信息技",
+     "providers": [
+      "bocha-v1"
+     ]
+    },
+    {
+     "tier": 5,
+     "class": "D",
+     "why": "no displayed-member or GT signal",
+     "title": "深圳市顺易通信息科技有限公司",
+     "url": "https://m.11467.com/b2b/co/55069256.htm",
+     "snippet": "公司简介\n深圳市顺易通信息科技有限公司,办公室地址位于中国第一个经济特区,鹏城深圳,深圳市福田区梅林街道龙尾路10号捷顺科技402室,我公司主要提供计算机软硬件的开发、销售、技术咨询、技术服务、技术推",
+     "providers": [
+      "bocha-v1"
+     ]
+    },
+    {
+     "tier": 5,
+     "class": "D",
+     "why": "no displayed-member or GT signal",
+     "title": "俊捷有限公司",
+     "url": "https://jt.hc23.com/company/171429.html",
+     "snippet": "企\n业\n名\n称:俊捷有限公司\n所\n属\n网\n库:顺德交通网库\n联\n系\n人:马秉图先生\n员\n工\n人\n数:未知\n主\n营\n产\n品:\n公\n司\n地\n址:中国\n广东\n佛山市顺德区\n佛山顺德区容桂\n联\n系\n电\n话:8",
+     "providers": [
+      "bocha-v1"
+     ]
+    },
+    {
+     "tier": 5,
+     "class": "D",
+     "why": "no displayed-member or GT signal",
+     "title": "深圳市顺易通信息科技有限公司 - 百度百科",
+     "url": "https://baike.baidu.com/item/%E6%B7%B1%E5%9C%B3%E5%B8%82%E9%A1%BA%E6%98%93%E9%80%9A%E4%BF%A1%E6%81%AF%E7%A7%91%E6%8A%80%E6%9C%89%E9%99%90%E5%85%AC%E5%8F%B8/20421540",
+     "snippet": "深圳市顺易通信息科技有限公司成立于2007年，法定代表人为唐健，总部位于深圳市龙华区。该公司是A股上市公司捷顺科技旗下的智慧停车一体化服务平台运营主体，于2018年 ...",
+     "providers": [
+      "serper-v1"
+     ]
+    },
+    {
+     "tier": 5,
+     "class": "D",
+     "why": "no displayed-member or GT signal",
+     "title": "深圳市捷顺科技实业有限公司 - 百度百科",
+     "url": "https://baike.baidu.com/item/%E6%B7%B1%E5%9C%B3%E5%B8%82%E6%8D%B7%E9%A1%BA%E7%A7%91%E6%8A%80%E5%AE%9E%E4%B8%9A%E6%9C%89%E9%99%90%E5%85%AC%E5%8F%B8/5056081",
+     "snippet": "深圳市捷顺科技实业股份有限公司（简称捷顺科技）成立于1992年6月17日，是一家国家级高新技术企业，总部位于广东省深圳市。公司专注于出入口控制与智慧停车运营， ...",
+     "providers": [
+      "serper-v1"
+     ]
+    },
+    {
+     "tier": 5,
+     "class": "D",
+     "why": "no displayed-member or GT signal",
+     "title": "深圳市顺易为科技发展有限公司 - 百度百科",
+     "url": "https://baike.baidu.com/item/%E6%B7%B1%E5%9C%B3%E5%B8%82%E9%A1%BA%E6%98%93%E4%B8%BA%E7%A7%91%E6%8A%80%E5%8F%91%E5%B1%95%E6%9C%89%E9%99%90%E5%85%AC%E5%8F%B8/3704277",
+     "snippet": "深圳市顺易为科技发展有限公司成立于2001年，总部位于深圳，是一家专业从事水性化特种表面涂层材料研发、生产、销售的私营企业，主营环保、高端、低碳的水性化产品包括不粘 ...",
+     "providers": [
+      "serper-v1"
+     ]
+    },
+    {
+     "tier": 5,
+     "class": "D",
+     "why": "no displayed-member or GT signal",
+     "title": "瑞邦多层线路板_百度百科",
+     "url": "https://baike.baidu.com/item/%E7%91%9E%E9%82%A6%E5%A4%9A%E5%B1%82%E7%BA%BF%E8%B7%AF%E6%9D%BF/15787079",
+     "snippet": "深圳市瑞邦多层线路板科技有限公司是一家成立于2011年03月25日的有限责任公司,法定代表人为朱凯平,位于深圳市宝安区,是一家高新技术企业。 百度百科是免费编辑平台,",
+     "providers": [
+      "serper-v1"
+     ]
+    },
+    {
+     "tier": 5,
+     "class": "D",
+     "why": "no displayed-member or GT signal",
+     "title": "线路板厂_百度百科",
+     "url": "https://baike.baidu.com/item/%E7%BA%BF%E8%B7%AF%E6%9D%BF%E5%8E%82/1224400",
+     "snippet": "线路板厂是以覆铜板为原料，通过蚀刻等工艺生产印制电路板（PCB）的制造企业，主要产品涵盖单面板、双面板及多层板。PCB以绝缘基材为载体形成导电图形，支撑电子元器件 ...",
+     "providers": [
+      "serper-v1"
+     ]
+    },
+    {
+     "tier": 5,
+     "class": "D",
+     "why": "no displayed-member or GT signal",
+     "title": "捷易商_百度百科",
+     "url": "https://baike.baidu.com/item/%E6%8D%B7%E6%98%93%E5%95%86/19752962",
+     "snippet": "捷易商是深圳市捷顺科技实业股份有限公司推出的生活服务类APP，由其控股子公司深圳市顺易通信息科技有限公司开发，适配Android及iOS系统，软件语言为中文， ...",
+     "providers": [
+      "serper-v1"
+     ]
+    },
+    {
+     "tier": 5,
+     "class": "D",
+     "why": "no displayed-member or GT signal",
+     "title": "深圳市迅捷兴电路技术有限公司 - 百度百科",
+     "url": "https://baike.baidu.com/item/%E6%B7%B1%E5%9C%B3%E5%B8%82%E8%BF%85%E6%8D%B7%E5%85%B4%E7%94%B5%E8%B7%AF%E6%8A%80%E6%9C%AF%E6%9C%89%E9%99%90%E5%85%AC%E5%8F%B8/5850432",
+     "snippet": "深圳市迅捷兴电路技术有限公司成立于2005年8月19日，总部位于深圳市宝安区，法定代表人为马卓，属其他股份有限公司。公司专注高层次、高精密度PCB快板及中小批量板生产 ...",
+     "providers": [
+      "serper-v1"
+     ]
+    },
+    {
+     "tier": 5,
+     "class": "D",
+     "why": "no displayed-member or GT signal",
+     "title": "百度- 維基百科，自由的百科全書",
+     "url": "https://zh.wikipedia.org/wiki/%E7%99%BE%E5%BA%A6",
+     "snippet": "百度公司（簡稱百度，英語：Baidu）是一家主要經營網際網路搜尋引擎、人工智慧與相關技術服務的中國北京市網際網路的跨國科技企業，於2000年1月1日由李彥宏、徐勇兩人 ...",
+     "providers": [
+      "serper-v1"
+     ]
+    },
+    {
+     "tier": 5,
+     "class": "D",
+     "why": "no displayed-member or GT signal",
+     "title": "深圳市中小企业服务局网站",
+     "url": "https://zxqyj.sz.gov.cn/",
+     "snippet": "直报系统 · 优质中小企业梯度培育 · 资金申报 · 专精特新企业证书 · 企业划型查询 · 中小企业认定.",
+     "providers": [
+      "serper-v1"
+     ]
+    },
+    {
+     "tier": 5,
+     "class": "D",
+     "why": "no displayed-member or GT signal",
+     "title": "企业名录 - 龙岗政府在线",
+     "url": "https://www.lg.gov.cn/bmzz/lcjdb/zsyz/qyml/index.html",
+     "snippet": "企业名录 ; 深圳大普微电子股份有限公司2026-09-03 ; 深圳大普微电子股份有限公司2025-09-22 ; 深圳国能环保节能科技有限公司2024-09-23 ; 深圳国能环保节能科技有限公司2023- ...",
+     "providers": [
+      "serper-v1"
+     ]
+    },
+    {
+     "tier": 5,
+     "class": "D",
+     "why": "no displayed-member or GT signal",
+     "title": "《财富》中国500强发布深圳8家企业上榜前100名单",
+     "url": "https://www.sz.gov.cn/cn/xxgk/zfxxgj/zwdt/content/post_10742005.html",
+     "snippet": "中国500强排行榜揭晓。据统计,深圳共有37家企业上榜。前100名企业名单中,深圳共有8家企业上榜,分别为中国平安(9)、华为(33)、正威(38)、腾讯(45)、万科( ...",
+     "providers": [
+      "serper-v1"
+     ]
+    },
+    {
+     "tier": 5,
+     "class": "D",
+     "why": "no displayed-member or GT signal",
+     "title": "企业信息列表 - 深圳市市场监督管理局",
+     "url": "https://amr.sz.gov.cn/aicmerout/jsp/gcloud/giapout/industry/aicmer/batchentlist/batchent_list.jsp?number=8a80845083b79e840183db83f0bf2cd1",
+     "snippet": "1, 深圳市龙岗区平湖新斯曼服装店, 92440300MA5K7U5C4W ; 2, 深圳市裕城泰信息咨询有限公司, 914403003061689734 ; 3, 深圳市坪山新区发轮理发店, 92440300MA5K25DCX2 ; 4 ",
+     "providers": [
+      "serper-v1"
+     ]
+    },
+    {
+     "tier": 5,
+     "class": "D",
+     "why": "no displayed-member or GT signal",
+     "title": "深圳行业领袖企业100强_百度百科",
+     "url": "https://baike.baidu.com/item/%E6%B7%B1%E5%9C%B3%E8%A1%8C%E4%B8%9A%E9%A2%86%E8%A2%96%E4%BC%81%E4%B8%9A100%E5%BC%BA/55734964",
+     "snippet": "9. 深圳海王集团股份有限公司. 医药业 ; 10. 中信银行股份有限公司信用卡中心. 信用卡金融 ; 11. 深圳市爱施德股份有限公司. 通讯产品批零 ; 12. 研祥高科技控股集团有限公司.",
+     "providers": [
+      "serper-v1"
+     ]
+    },
+    {
+     "tier": 5,
+     "class": "D",
+     "why": "no displayed-member or GT signal",
+     "title": "深圳市理财企业 - 天眼查",
+     "url": "https://www.tianyancha.com/index_base_shenzhen",
+     "snippet": "深圳市企业 ; 深圳市富雄达建材有限公司深圳市富达财工贸有限公司招商局物业管理有限公司深圳市食协讯网咨询有限公司 ; 深圳市一体医疗科技有限公司中航技直升机技术服务（ ...",
+     "providers": [
+      "serper-v1"
+     ]
+    },
+    {
+     "tier": 5,
+     "class": "D",
+     "why": "no displayed-member or GT signal",
+     "title": "深圳市标准技术研究院维护页面",
+     "url": "https://data.sist.org.cn/",
+     "snippet": "client: 66.249.73.96, time: 2026-07-27 07:47:55, server: 090e85e.",
+     "providers": [
+      "serper-v1"
+     ]
+    }
+   ]
+  }
+ }
+}
