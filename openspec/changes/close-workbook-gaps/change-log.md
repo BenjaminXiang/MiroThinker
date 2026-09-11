@@ -557,3 +557,26 @@
 - AQ-S1/S2 implementation in flight in the s11 tree (tests + window probe
   artifacts appearing); deploy follows on completion, then the N≥5 g2
   sampling for the causal-chain check.
+
+## 2026-09-11 — AQ-S1 + AQ-S2 delivered (5900bd98) and deployed
+
+- AQ-S1 (C-1): `_semantic_text` gains keyword-only
+  `include_registered_address` (default OFF; off-state byte-identical,
+  locked by two tests); company branch appends 注册地 line from
+  `registered_address` → `geography.name` fallback, both filtered by C1's
+  `scrub_placeholder_value`; `_answer_selector` computes `geography_turn`
+  (relation-frame predicate or geography slot in the evidence set) and
+  passes it at the single call site.
+- AQ-S2 (A-1): `_ENUMERATION_CANDIDATE_WINDOW` 48→64;
+  `_ENUMERATION_LOCAL_CLAIM_WINDOW=32` / `_ENUMERATION_WEB_CLAIM_WINDOW=32`
+  (web window decoupled from the cut); non-enumeration untouched.
+- Verification: +5 tests RED→GREEN; four-file + scrub suite 345 passed
+  (baseline 340); offline window probe on the sealed pack — 嘉立创(54) /
+  则成(62) enter at cut 64, 锐曼(26) enters with local window 32,
+  一博/兴森/上达/精诚达 still out (A-2 queued); registered-address
+  availability 91.78% (6,506/7,089); payload net ≈ −1.3K chars.
+  Pre-existing 4 failures in adjacent test files confirmed identical on
+  the ad401302 baseline (not this slice).
+- Deployed 19:35 via the systemd unit; live checks next: N≥5 g2 sampling
+  (causal-chain: address claims → pool naming ≥5/6), g5 sampling,
+  replay gate, TTFT measurement.
