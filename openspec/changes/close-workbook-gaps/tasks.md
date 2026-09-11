@@ -157,6 +157,20 @@
        gate-at-import: field thresholds + anchoring + identity merge;
        folded into the C6 update pipeline). (depends G1-G3; next:
        consolidation into C1-contract v1 + ADR draft for user review)
+  - [x] C1.1-batch0 Read-side placeholder scrub + anchoring declaration
+         + packaging scan gate. (commit `ad401302` in the s11 worktree,
+         9 files +2067/−18: `placeholder_scrub.py` 4-family matcher,
+         `_projection_terms`/`_projection_category_term_buckets` scrub
+         post-validation, `anchoring_declaration.py` +
+         `catalogs/anchoring-declaration-v1.json` (110 terms, F1 block
+         8/4/2/2/2 migrated from hardcoded), `s12c/build_serving_pack.py`
+         warn-only scan gate with sidecar report. Verified: 12 new tests
+         (main context re-ran scrub suite 10/10), four-file 340 passed
+         (baseline 328), gate dry-run counts match the census
+         (12,872/3,099/189/1,817) with byte-identical hashes, no deploy
+         in the slice. Live differential + replay gate by main context;
+         remaining: answer-side wording (consumer b), write-side cleaning
+         (batch 2+).)
 - [ ] C2.1 run14 thin-load online (47,071 docs) + reconciliation report;
        workbook score not regressed. Sub-steps (design.md §C2, contract
        verified line-by-line 2026-09-10):

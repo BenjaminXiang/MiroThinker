@@ -505,3 +505,34 @@
   i.e. the answer-quality slice, not another rerank fix. Run-to-run
   variance is large (pre-F4 r1 2/10 vs r2 6/10 key points on g2-t1);
   only the double-run-stable misses count as findings.
+- New defect class found in the archive: the prose selection protocol
+  JSON (`{"selected_claim_indexes": [...], "selected_entity_indexes":
+  [...]}`) leaks into the user-visible answer text — r2 g5-t2 and r3
+  g2-t2 (≈1 per run, intermittent). B5's redaction covers the
+  `<|canonical_v2_...|>` marker form only; this plain-JSON form passes
+  through. Same class as B5 (wire-protocol leakage), candidate for the
+  answer-quality slice.
+
+## 2026-09-11 — F4 replay gate zero new signatures; C1 batch 0 delivered; AQ-S1/S2 dispatched
+
+- Replay gate post-F4 (`replay-f4-post-deploy/`): 5/7 sessions PASS;
+  failures = G3-T2 person-scope + G7 优必选 — both in the known historical
+  jitter set; zero new signatures.
+- C1 batch 0 delivered (`ad401302` in the s11 worktree, tree clean):
+  read-side projection scrub (4-family matcher; post-validation so the
+  lineage assertions stay green; feeds `content_terms` +
+  `_projection_category_term_buckets`), anchoring declaration v1 (110
+  terms; the five hardcoded F1 scoring constants migrated — the packaged
+  file is now the scoring source), packaging scan gate (warn-only,
+  sidecar report, never writes into index/pack). 12 new tests, four-file
+  340 passed (baseline 328); gate dry-run matches the census
+  (12,872/3,099/189/1,817 + prefix variant 1,819 reported separately);
+  hash proofs on all three stores. Main context re-ran the scrub suite
+  (10/10). Deployed for live differential after the F4 window closed.
+- Answer-quality slice designed (plan agent-13; archive
+  `answer-quality-design.md`, evidence addendum) and adjudicated: A-1
+  window 32/32/64; C-1 address claims worded as 注册地; coverage stays
+  count-only; ≤6 member probes per turn; g5-t2 target stands pending
+  ceiling proof. AQ-S1 (C-1) + AQ-S2 (A-1) dispatched to the s11 writer;
+  S0 refined: the causal-chain experiment runs as live N≥5 sampling on
+  g2 after S1+S2 deploy (instead of an offline injected-payload harness).
