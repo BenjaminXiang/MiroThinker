@@ -91,3 +91,49 @@ query → planner（LLM，选域/视图/车道）
 - 安赛步/锐曼/嘉立创 rank 波动 → §6.2（字段过滤）+ §6.3（词项权重）
 - 时延（检索段 11–73s）→ 本 review 不覆盖（离线分解 harness 进行中）；
   §6.2/6.3 预期降低对 web/探针的依赖
+
+
+---
+
+# 第二部分：本地库设计 ↔ 检索（2026-09-12 补充）
+
+## 8. 本地库（serving pack）的设计事实
+
+| 组件 | 设计 | 关键数字 |
+|---|---|---|
+| `lookup.sqlite3` | 表 `lookup_document(document_id, release_id, projection_id, canonical_object_id, document_json)`；**唯一索引 (release_id, projection_id, canonical_object_id)——无任何内容索引** | 55,071 行：paper 24,520 / patent 11,504 / company 7,089 / professor 3,958 |
+| 文档 = 去规范化投影 JSON | 公司 43 字段：结构化（industry{ref}、industry_tags[]、tech_tags[]、geography{ref}、registered_address、founded_at、registered_capital、website、legal_representative、key_personnel[]、financing_events[]、products[]）；文本（profile_summary、technology_route_summary、product_description、team_description）；审计（evidence[]、field_lineage[]、quality_status、content_sha256…） | 填充率（300 抽样）：结构字段 73–93%；**aliases 仅 4%**；key_personnel 14%；tags 多数单值 |
+| `milvus.db` | 向量点按"视图"组织（professor 有 identity/research 两视图；company/paper/patent 默认视图）；**embed 内容是精选字段**（name/aliases/profile/product/tech_route/team[:600]/industry/tech_tags + _supplementary） | 干净、无哈希噪声 |
+| `relationships.json`（3.3GB） | 构建权威：candidate / eligibility / relationship / internal-reference projections + 构建请求 + path-eligibility 政策 | B1 直扫与关系车道的数据源 |
+| 多值增强 | `_supplementary`（多值断言拓宽搜索面）、`_quality_tier`（anchored/enriched 排序信号） | 设计良好：词法+向量两侧都享用 |
+| 封印 | manifest 全文件哈希 + release 绑定 | **不可就地改**：数据修正必须重建包 |
+
+## 9. 库设计 ↔ 检索的错配（核心结论）
+
+| 库的**设计意图** | 检索**实际用法** | 错配后果（已观测） |
+|---|---|---|
+| 结构化字段供精确筛选 | 全部摊平进 `content_terms` 字符串池（含 SHA/决策 ID），无字段谓词 | "深圳+机器人"无法精确命中；激光雷达泄漏（激光/雷达词面） |
+| 多值字段（tags[]/products[]/key_personnel[]）供倒排/面元 | 仅 F1 类目打分用了字段分层（8/4/2），其余场景无消费者 | 多值信息召回价值未兑现（安赛步/锐曼 rank 波动） |
+| `aliases` 供实体链接 | 填充率 4%，且**实体链接通道根本不存在** | 问句实体 0 命中（大疆/优必选） |
+| 向量侧 embed **精选文本** | 词法侧却是**全字符串池** | 两通道信息面不一致；词法侧有噪声、无权重 |
+| `relationships`/eligibility（3.3GB 图：岗位/论文/专利/投资/路径资格） | 仅 B1 直扫与少量关系车道消费 | 关系价值基本未进默认检索 |
+| 封印不可就地改 | 任何数据修正走重建包 | 数据侧修复周期长（C6 议题；四家包外公司 backlog） |
+| **无内容索引**（SQLite 只有一个大 JSON 表，无 FTS/倒排） | 全量文档驻内存、逐文档子串扫描 | O(N) 扫描是当前"关键词检索"的全部；能力上限低 |
+
+**一句话**：库是按"结构化实体 + 精选向量视图 + 关系权威"设计的；检索却主要把它当成"一堆 JSON 字符串"在扫——结构化字段、多值面元、别名、关系图这四类设计资产都没有被检索兑现。
+
+## 10. 设计层建议（库侧，与 §6 检索侧配对）
+
+1. **读视图侧派生索引（不改包）**：视图构建时生成 ① term→doc 倒排 ② facet 表
+   （domain/industry/tags/geography/founded_year/quality_tier）→ 关键词通道与 SQL
+   通道直接落在索引上（内存或临时 SQLite）。与 AQ-S7 合为「检索 v2」最小集。
+2. **打包侧持久化派生索引**（下一版包）：把倒排+facet 作为**派生文件**随包封印
+   （manifest 一并哈希、可校验），检索零扫描、启动即可用；周期更新时一次生成。
+3. **字段契约收口**：按 G1 字段契约明确"可检索字段清单"（进词法池/向量/面元/仅展示），
+   终结"全字符串扁平池"（含哈希入池的问题顺手解决）。
+4. **别名填充**：aliases 4%→目标值（G2 stable_uid + 别名闭包，C1 批 2）。
+5. **关系图接线**：把 relationships 的常用关系（company↔patent/professor↔paper 等）
+   接入默认检索的过滤/扩展路径（C3/C4 的正题）。
+6. 保持：向量精选视图、`_supplementary`、封印一致性、稳定序与窗口分层。
+
+**排序**：1（与 AQ-S7 同批）→ 3（契约收口）→ 2（持久化）→ 4/5（数据与关系侧长期项）。
