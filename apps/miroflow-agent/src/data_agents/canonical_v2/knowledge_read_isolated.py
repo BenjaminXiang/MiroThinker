@@ -11,6 +11,7 @@ import json
 import logging
 import math
 import os
+from time import monotonic
 from pathlib import Path
 import re
 from threading import Lock
@@ -7202,9 +7203,7 @@ def _indexed_lexical_document_ids(
     too few documents carry the exact term.
     """
     hits: list[tuple[str, float]] = list(
-        index.search(
-            query_phrase, domains=domains, limit=max_candidates, mode="phrase"
-        )
+        index.search(query_phrase, domains=domains, limit=max_candidates, mode="phrase")
     )
     if len(hits) < min(max_candidates, _LEXICAL_INDEX_PHRASE_FLOOR):
         seen = {document_id for document_id, _ in hits}
@@ -7228,6 +7227,7 @@ def _indexed_lexical_candidates(
     bundle: IsolatedReleaseBundle,
     publication: PublishedRelease,
     lookup_view: _AuditedLookupView,
+    document_ids: tuple[str, ...] | None = None,
 ) -> list[RecallCandidate]:
     """Index hits → candidates through the same binding path as the substring
     lane (identical evidence/claim-binding/lineage shapes), with the same
@@ -7238,17 +7238,20 @@ def _indexed_lexical_candidates(
         documents=documents,
         lookup_view=lookup_view,
     )
-    entries_by_document_id = {
-        entry.document.document_id: entry for entry in entries
-    }
+    entries_by_document_id = {entry.document.document_id: entry for entry in entries}
     constraints = request.structured_constraints
+    selected_ids = (
+        _indexed_lexical_document_ids(
+            index=index,
+            query_phrase=query_phrase,
+            domains=tuple(request.domains),
+            max_candidates=request.max_candidates,
+        )
+        if document_ids is None
+        else document_ids
+    )
     candidates: list[RecallCandidate] = []
-    for document_id in _indexed_lexical_document_ids(
-        index=index,
-        query_phrase=query_phrase,
-        domains=tuple(request.domains),
-        max_candidates=request.max_candidates,
-    ):
+    for document_id in selected_ids:
         entry = entries_by_document_id.get(document_id)
         if entry is None:
             continue
@@ -7292,6 +7295,20 @@ def _indexed_lexical_lane_result(
     index = _indexed_lexical_open(bundle)
     if index is None:
         return None
+    debug = os.environ.get("CANONICAL_V2_LEXICAL_INDEX_DEBUG", "").strip() in {
+        "1",
+        "true",
+        "yes",
+        "on",
+    }
+    started = monotonic()
+    document_ids = _indexed_lexical_document_ids(
+        index=index,
+        query_phrase=query_phrase,
+        domains=tuple(request.domains),
+        max_candidates=request.max_candidates,
+    )
+    after_select = monotonic()
     candidates = _indexed_lexical_candidates(
         index=index,
         query_phrase=query_phrase,
@@ -7299,15 +7316,22 @@ def _indexed_lexical_lane_result(
         bundle=bundle,
         publication=publication,
         lookup_view=lookup_view,
+        document_ids=document_ids,
     )
+    if debug:
+        print(
+            f"[lexical-index] phrase={query_phrase!r} selected={len(document_ids)} "
+            f"candidates={len(candidates)} select={after_select - started:.3f}s "
+            f"build={monotonic() - after_select:.3f}s "
+            f"total={monotonic() - started:.3f}s",
+            flush=True,
+        )
     if not candidates:
         return None
     # Keep the BM25 order: raw_score stays flat (1.0) so the downstream
     # stable sorts preserve this lane's rank; the substring lane's
     # (domain, id) sort exists only because that lane has no ranking.
-    return RetrievalLaneResult(
-        candidates=tuple(candidates[: request.max_candidates])
-    )
+    return RetrievalLaneResult(candidates=tuple(candidates[: request.max_candidates]))
 
 
 def create_isolated_lexical_lookup_adapter(

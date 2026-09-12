@@ -418,3 +418,32 @@ def test_lane_document_selection_is_phrase_first_then_or_fill(tmp_path: Path) ->
     )
     assert selected[0] == "doc:radar"
     assert "doc:laser" in selected  # OR fill restores ranked-sample recall
+
+
+def test_open_cache_hides_nothing_and_pins_successes(tmp_path: Path) -> None:
+    """A rejected artifact must not be cached: rebuilding it has to take
+    effect without restarting the serving process."""
+    documents = [
+        _document(
+            document_id="doc:a",
+            canonical_id="company-c-a",
+            domain="company",
+            payload={"name": "深圳市阿尔法科技有限公司"},
+        )
+    ]
+    lookup, out_dir = _build(tmp_path, documents)
+    artifact_root = tmp_path / "derived"
+
+    def _open() -> lex.LexicalIndex | None:
+        return lex.open_lexical_index(
+            artifact_root=artifact_root,
+            release_id="candidate-v2-test-r1",
+            lookup_sqlite=lookup,
+        )
+
+    assert _open() is None  # nothing published yet
+    (artifact_root / "candidate-v2-test-r1").parent.mkdir(parents=True, exist_ok=True)
+    out_dir.rename(artifact_root / "candidate-v2-test-r1")
+    first = _open()
+    assert first is not None  # the rebuild is picked up by the next call
+    assert _open() is first  # and once open, the index is cached

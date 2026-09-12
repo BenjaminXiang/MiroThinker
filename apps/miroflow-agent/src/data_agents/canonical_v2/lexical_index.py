@@ -497,7 +497,12 @@ def open_lexical_index(
     release_id: str,
     lookup_sqlite: Path,
 ) -> LexicalIndex | None:
-    """Process-wide cached open; None when no artifact exists for release."""
+    """Process-wide cached open; None when no artifact exists for release.
+
+    Only successful opens are cached: a missing or rejected artifact must not
+    pin the process to the fallback lane for its whole lifetime (an operator
+    rebuilding the index should not also have to restart the service).
+    """
     key = (str(artifact_root), release_id)
     with _OPEN_LOCK:
         if key in _OPEN_CACHE:
@@ -508,5 +513,6 @@ def open_lexical_index(
             expected_release_id=release_id,
             lookup_sqlite=lookup_sqlite,
         )
-        _OPEN_CACHE[key] = index
+        if index is not None:
+            _OPEN_CACHE[key] = index
         return index
