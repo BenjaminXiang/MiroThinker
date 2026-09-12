@@ -875,3 +875,16 @@
   view: T1 concurrency or budget (`_PlaywrightPagePool` single worker),
   fetch depth, per-turn web wall budget, cold-cache behaviour (today all
   web cache misses).
+
+  Subsequent exclusions (measured live): 大疆 is consistently 72–84s across
+  three repeats; all 8 web searches were cache hits; the actual top pages
+  (dji.com) fetch in 0.3–0.5s; the embedding endpoint answers in 0.04s;
+  the interpreter has a 3s timeout and the gap judge 1.8s. So the cost is
+  NOT in providers/pages/embedding/judge. Open hypothesis: **per-turn wall
+  budgets being exhausted** — `SupplementalBudget.max_wall_time_ms =
+  max(web_timeout_ms, 30_000)` = 30s and the web lane's own 30s budget can
+  stack into ~60s+ on some query shapes (大疆 shows 0 local lanes, web 61
+  in, vector 16). Verification: offline per-stage timing harness dispatched
+  (`latency/latency_harness.py`, agent-15) — production-config components
+  with production planner/read/reranker/selector, per-step wall times for
+  six queries (大疆/教授/lidar/g2/pcb×2).
