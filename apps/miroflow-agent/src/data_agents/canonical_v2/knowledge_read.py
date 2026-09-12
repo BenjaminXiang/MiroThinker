@@ -6505,6 +6505,42 @@ def _apply_direct_item_constraints(
     return tuple(admitted), tuple(receipts)
 
 
+def _local_company_city_witnesses(items: Sequence[EvidenceItem]) -> tuple[str, ...]:
+    """City words a local company projection proves through its own registered
+    place.
+
+    The display-name heuristic in `_constraint_failures` misses legal names
+    without the city prefix: 深南电路股份有限公司 is a Shenzhen company
+    (registered_address 深圳市龙岗区…) yet a 深圳 geography slot dropped it
+    from the g5-t2 narrowing follow-up because neither its name nor its id
+    carries 深圳. The lookup content holds the authoritative address, so its
+    leading city word — with and without the 市 suffix, mirroring the slot
+    vocabulary — witnesses the candidate itself.
+    """
+    words: list[str] = []
+    for item in items:
+        if item.domain != "company":
+            continue
+        snippet = item.snippet
+        if not isinstance(snippet, str) or "registered_address" not in snippet:
+            continue
+        try:
+            payload = json.loads(snippet)
+        except (TypeError, ValueError):
+            continue
+        if not isinstance(payload, dict):
+            continue
+        address = payload.get("registered_address")
+        if not isinstance(address, str):
+            continue
+        match = re.match(r"^([\u4e00-\u9fff]{2,4})市", address.strip())
+        if match is not None:
+            city = match.group(1)
+            words.append(city)
+            words.append(f"{city}市")
+    return tuple(dict.fromkeys(words))
+
+
 def _constraint_failures(
     *,
     slots: Sequence[ProtectedSlot],
@@ -6569,6 +6605,11 @@ def _constraint_failures(
                                     for identity_id in normalized_identity_ids
                                 )
                             )
+                        ),
+                        *(
+                            _local_company_city_witnesses(items)
+                            if domain == "company"
+                            else ()
                         ),
                     )
                 )

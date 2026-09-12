@@ -2330,6 +2330,78 @@ def test_geography_slot_accepts_relation_and_registered_name_evidence() -> None:
     assert [failure.slot_kind for failure in other_city_failures] == ["geography"]
 
 
+def test_geography_slot_accepts_registered_address_without_city_in_name() -> None:
+    """g5-t2 (2026-09-12): a company whose legal name carries no city word is
+    still provably a Shenzhen company through its own registered_address.
+
+    深南电路股份有限公司 (registered_address 深圳市龙岗区…) sat in the session
+    universe yet the 深圳 geography slot rejected it — the name heuristic saw
+    no 深圳 in "深南电路股份有限公司" — so the narrowing follow-up ("上述企业
+    有哪些是深圳的企业") silently dropped it from the answer pool. A company
+    registered elsewhere still fails the same slot.
+    """
+    module = _module()
+    address_item = module.EvidenceItem(
+        evidence_id="evidence:canonical-projection-shennan",
+        object_id="company:c-shennan",
+        domain="company",
+        lane="structured",
+        source_nature="local",
+        source_authority="other",
+        source_locator="artifact:s8rg#evidence:shennan",
+        snippet=(
+            '{"name": "深南电路股份有限公司", '
+            '"registered_address": "深圳市龙岗区坪地街道盐龙大道1639号（一照多址企业）"}'
+        ),
+        score=0.8,
+        observed_at=NOW,
+        claim_binding=module.EvidenceClaimBinding(
+            subject_id="company:c-shennan",
+            predicate="canonical_projection",
+            value="lookup:sha256",
+        ),
+    )
+    failures = module._constraint_failures(
+        slots=(module.ProtectedSlot(kind="geography", value="深圳", raw_text="深圳"),),
+        identity_ids=("company:c-shennan",),
+        claim_subject_ids=("company:c-shennan",),
+        domain="company",
+        display_name="深南电路股份有限公司",
+        items=(address_item,),
+    )
+    assert failures == []
+
+    elsewhere_item = module.EvidenceItem(
+        evidence_id="evidence:canonical-projection-beijing",
+        object_id="company:c-beijing",
+        domain="company",
+        lane="structured",
+        source_nature="local",
+        source_authority="other",
+        source_locator="artifact:s8rg#evidence:beijing",
+        snippet=(
+            '{"name": "某某电路股份有限公司", '
+            '"registered_address": "北京市朝阳区望京街道1号"}'
+        ),
+        score=0.8,
+        observed_at=NOW,
+        claim_binding=module.EvidenceClaimBinding(
+            subject_id="company:c-beijing",
+            predicate="canonical_projection",
+            value="lookup:sha256",
+        ),
+    )
+    other_city_failures = module._constraint_failures(
+        slots=(module.ProtectedSlot(kind="geography", value="深圳", raw_text="深圳"),),
+        identity_ids=("company:c-beijing",),
+        claim_subject_ids=("company:c-beijing",),
+        domain="company",
+        display_name="某某电路股份有限公司",
+        items=(elsewhere_item,),
+    )
+    assert [failure.slot_kind for failure in other_city_failures] == ["geography"]
+
+
 def _scan_fused_candidate(
     module: Any,
     *,
