@@ -964,3 +964,19 @@
   64 separately without touching the local half).
 - AQ-S7 (entity linking) dispatched to the same writer — first block of
   the retrieval-v2 programme (review part 2 §6/§10).
+
+## 2026-09-12 — AQ-S2d live verification (window 128): g5-t1 3/3 PASS; g5-t2 7/12 (only 深南电路 missing in-pack)
+
+- g5-t1: **PASS ×3** (嘉立创/一博/深南电路 all named) — first time all three
+  GT entities land together.
+- g5-t2: coverage **6/12 → 7/12** (嘉立创 now disclosed; 深南电路 still
+  missing although it appears in t1's answer/coverage text → a t2 commit/
+  pool issue, not a disclosure issue; debug queued to the writer). Remaining
+  for ≥9/12: 深南电路 (+1) plus ≥1 out-of-pack name (web route).
+- g2 regression: 3/3 ×2 clean. Latency with window 128 (probe r2): 大疆
+  79.3s / professor 60.1 / lidar 40.0 / storage 26.0 / g2-t1 41.6 / pcb-t1
+  23.7 / pcb-t2 11.4 — no material change vs window 64 (within variance);
+  the latency problem is elsewhere (harness in flight).
+- Watch: t1's coverage sentence now reaches 64 names + `等（共 120 家）`
+  (long tail); t2 lists 29 prose + ~40 coverage names.
+- Batch continues: generalization probe r3 + replay gate.
