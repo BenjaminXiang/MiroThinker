@@ -1028,6 +1028,18 @@ def _create_pack_lexical_lookup_adapter(
         query_phrase = iso._lexical_query_phrase(validated_request.query_text)
         if not query_phrase:
             return RetrievalLaneResult()
+        # retrieval-v2 Step 1: the indexed lexical lane (shared with the
+        # isolated adapter); None keeps the substring lane below, category
+        # fallback included.
+        indexed_result = iso._indexed_lexical_lane_result(
+            query_phrase=query_phrase,
+            request=validated_request,
+            bundle=bundle,
+            publication=publication,
+            lookup_view=view_provider(),
+        )
+        if indexed_result is not None:
+            return indexed_result
         documents = iso._read_bound_documents(bundle)
         entries = iso._lookup_entries_for_documents(
             documents=documents,

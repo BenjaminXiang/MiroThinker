@@ -7275,6 +7275,41 @@ def _indexed_lexical_candidates(
     return candidates
 
 
+def _indexed_lexical_lane_result(
+    *,
+    query_phrase: str,
+    request: LaneRequest,
+    bundle: IsolatedReleaseBundle,
+    publication: PublishedRelease,
+    lookup_view: _AuditedLookupView,
+) -> RetrievalLaneResult | None:
+    """The indexed lexical lane result, or None to run the substring lane.
+
+    Shared by the isolated adapter and the serving pack adapter (the two
+    lexical paths are kept in lockstep); None covers: switch off, artifact
+    absent/unbound, or an empty index result.
+    """
+    index = _indexed_lexical_open(bundle)
+    if index is None:
+        return None
+    candidates = _indexed_lexical_candidates(
+        index=index,
+        query_phrase=query_phrase,
+        request=request,
+        bundle=bundle,
+        publication=publication,
+        lookup_view=lookup_view,
+    )
+    if not candidates:
+        return None
+    # Keep the BM25 order: raw_score stays flat (1.0) so the downstream
+    # stable sorts preserve this lane's rank; the substring lane's
+    # (domain, id) sort exists only because that lane has no ranking.
+    return RetrievalLaneResult(
+        candidates=tuple(candidates[: request.max_candidates])
+    )
+
+
 def create_isolated_lexical_lookup_adapter(
     *,
     release_bundle: IsolatedReleaseBundle,
@@ -7302,27 +7337,17 @@ def create_isolated_lexical_lookup_adapter(
         if not query_phrase:
             return RetrievalLaneResult()
 
-        indexed = _indexed_lexical_open(validated_bundle)
-        if indexed is not None:
-            indexed_candidates = _indexed_lexical_candidates(
-                index=indexed,
-                query_phrase=query_phrase,
-                request=validated_request,
-                bundle=validated_bundle,
-                publication=validated_publication,
-                lookup_view=lookup_view(),
-            )
-            if indexed_candidates:
-                # Keep the BM25 order: raw_score stays flat (1.0) so the
-                # downstream stable sorts preserve this lane's rank; the
-                # substring lane's (domain, id) sort exists only because that
-                # lane has no ranking. An empty result falls through to the
-                # substring lane, category fallback included.
-                return RetrievalLaneResult(
-                    candidates=tuple(
-                        indexed_candidates[: validated_request.max_candidates]
-                    )
-                )
+        indexed_result = _indexed_lexical_lane_result(
+            query_phrase=query_phrase,
+            request=validated_request,
+            bundle=validated_bundle,
+            publication=validated_publication,
+            lookup_view=lookup_view(),
+        )
+        if indexed_result is not None:
+            # An empty index result falls through to the substring lane,
+            # category fallback included.
+            return indexed_result
 
         documents = _read_bound_documents(validated_bundle)
         entries = _lookup_entries_for_documents(
