@@ -7742,3 +7742,84 @@ def test_rewrite_views_repin_soft_subject_and_log_marker(
     for view in rewrite_views:
         assert "国际先进技术应用推进中心（深圳）" in view.text
     assert any("view repin" in record.message for record in caplog.records)
+
+
+# ---------------------------------------------------------------------------
+# AQ-S7 (close-workbook-gaps, 2026-09-12): once the exact lane links a name
+# embedded in a question-style query, the entity is a preferred object and
+# its claim reaches the answer proposal unchanged — the claim path needs no
+# new mechanism. Plus the city-root mirror pin (the read layer cannot import
+# serving, so the two tuples are asserted equal here).
+# ---------------------------------------------------------------------------
+
+
+def test_entity_link_city_roots_mirror_serving_city_names() -> None:
+    assert tuple(isolated_read_module._ENTITY_LINK_CITY_ROOTS) == tuple(
+        serving_module._CITY_NAMES
+    )
+
+
+def test_selector_prefers_exact_linked_entity_claim_on_question_turn() -> None:
+    """AQ-S7 (b): a question-style turn whose evidence carries an exact-lane
+    item (the shape the name-linked exact lane now produces) selects that
+    entity's claim — preferred_objects already covers the exact lane, so the
+    linked entity can answer instead of falling back to web-only."""
+    item = EvidenceItem(
+        evidence_id="evidence:aq-s7:exact-linked",
+        object_id="company:aq-s7:linked",
+        domain="company",
+        lane="exact",
+        source_nature="local",
+        source_locator="canonical-v2-isolated:aq-s7-linked",
+        snippet=json.dumps(
+            {
+                "name": "深圳市大疆创新科技有限公司",
+                "profile_summary": "聚焦无人机与影像技术。",
+                "technology_route_summary": "飞控与影像系统。",
+            },
+            ensure_ascii=False,
+        ),
+        score=1.0,
+        source_authority="canonical_release",
+        claim_binding=EvidenceClaimBinding(
+            subject_id="company:aq-s7:linked",
+            predicate="canonical_projection",
+            value="a" * 64,
+            status="admitted",
+        ),
+    )
+    selector = serving_module._answer_selector(
+        bundle=SimpleNamespace(
+            max_candidates=8,
+            max_web_results=8,
+            answer_model_id="canonical-v2-deterministic-answer-v1",
+        )
+    )
+    proposal = selector(
+        TurnRequest(
+            session_id="session:aq-s7",
+            turn_id="turn:aq-s7:linked",
+            query="大疆创新主要做什么",
+            release_id=RELEASE_ID,
+            evidence_set=EvidenceSet(
+                release_id=RELEASE_ID,
+                original_query="大疆创新主要做什么",
+                protected_slots=(),
+                items=(item,),
+                traces=(),
+                limitations=(),
+                entity_handles=(
+                    CanonicalEntityHandle(
+                        canonical_id=item.object_id,
+                        domain="company",
+                        display_name="深圳市大疆创新科技有限公司",
+                        evidence_ids=(item.evidence_id,),
+                    ),
+                ),
+            ),
+        )
+    )
+    assert [claim.text for claim in proposal.claims] == [
+        "深圳市大疆创新科技有限公司；简介：聚焦无人机与影像技术。；技术路线：飞控与影像系统。。"
+    ]
+    assert proposal.displayed_handle_ids == ("company:aq-s7:linked",)

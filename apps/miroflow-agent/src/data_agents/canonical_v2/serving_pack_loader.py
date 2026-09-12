@@ -897,12 +897,18 @@ def _create_pack_exact_lookup_adapter(
             bundle=bundle,
         )
         documents = iso._read_bound_documents(bundle)
+        view = view_provider()
         entries = iso._lookup_entries_for_documents(
             documents=documents,
-            lookup_view=view_provider(),
+            lookup_view=view,
+        )
+        linked_positions = iso._entity_link_indexes_for_view(
+            view=view,
+            entries=entries,
+            query_text=validated_request.query_text,
         )
         candidates: list[Any] = []
-        for entry in entries:
+        for position, entry in enumerate(entries):
             document = entry.document
             if not iso._matches_exact_request(
                 request=validated_request,
@@ -910,6 +916,7 @@ def _create_pack_exact_lookup_adapter(
                 display_terms=entry.display_terms,
                 identifier_terms=entry.identifier_terms,
                 content_terms=entry.content_terms,
+                name_linked=position in linked_positions,
             ):
                 continue
             candidates.append(

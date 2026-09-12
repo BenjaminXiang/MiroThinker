@@ -835,3 +835,406 @@ def test_anchoring_declaration_entry_unknown_field_fails_closed() -> None:
         assert "bogus_field" in str(exc)
     else:  # pragma: no cover - the raise is the contract
         raise AssertionError("unknown term field must fail closed")
+
+
+# ---------------------------------------------------------------------------
+# AQ-S7 (close-workbook-gaps, 2026-09-12): entity name-form linking — the
+# read-side name index (full form + one legal-suffix strip + one trailing
+# industry-word strip for companies, city prefixes stripped from every
+# company variant, >=2 chars) and the longest-form-first matcher that lets
+# the exact lane link a name embedded in a question-style query. Forms equal
+# to anchoring-declaration vocabulary, category-recall stop phrases, or city
+# roots never enter the index (they would link every category query), and a
+# form shared by more entities than the fan-out cap is dropped.
+# ---------------------------------------------------------------------------
+
+
+def _name_entry(
+    module: Any,
+    index_module: Any,
+    *,
+    canonical_id: str,
+    names: tuple[str, ...],
+    domain: str = "company",
+) -> Any:
+    return module._PublicLookupEntry(
+        document=_document(index_module, canonical_id=canonical_id, domain=domain),
+        display_name=names[0],
+        display_terms=frozenset(names),
+        identifier_terms=frozenset(),
+        content_terms=frozenset(),
+        industry_label_terms=frozenset(),
+        tag_category_terms=frozenset(),
+        product_category_terms=frozenset(),
+    )
+
+
+def test_entity_name_forms_company_legal_suffix_and_city_prefix_variants() -> None:
+    module = _module()
+    forms = module._entity_name_forms(
+        "company", frozenset({"深圳市大疆创新科技有限公司"})
+    )
+    # Three tiers on the city-stripped/city-carrying variants: legal suffix
+    # (有限公司) then one trailing industry word (科技) — the industry tier is
+    # what yields the anchor form 大疆创新 (probe: aq-s7-name-index-probe-v2).
+    assert forms == frozenset(
+        {
+            "深圳市大疆创新科技有限公司",
+            "深圳市大疆创新科技",
+            "深圳市大疆创新",
+            "大疆创新科技有限公司",
+            "大疆创新科技",
+            "大疆创新",
+        }
+    )
+
+
+def test_entity_name_forms_company_aliases_get_the_same_variants() -> None:
+    module = _module()
+    forms = module._entity_name_forms(
+        "company",
+        frozenset({"深圳市优必选科技股份有限公司", "优必选科技"}),
+    )
+    assert "深圳市优必选科技股份有限公司" in forms
+    assert "深圳市优必选科技" in forms
+    assert "深圳市优必选" in forms
+    assert "优必选科技股份有限公司" in forms
+    assert "优必选科技" in forms
+    # The alias itself additionally strips its trailing industry word, so the
+    # bare brand is a form even when the pack never lists it as an alias.
+    assert "优必选" in forms
+
+
+def test_entity_name_forms_reject_sub_two_char_forms() -> None:
+    module = _module()
+    # 甲 is the only residue after stripping 深圳市 + 有限公司: too short.
+    forms = module._entity_name_forms("company", frozenset({"深圳市甲有限公司"}))
+    assert "甲" not in forms
+    assert "深圳市甲" in forms
+    # A one-char name contributes nothing at all.
+    assert module._entity_name_forms("company", frozenset({"甲"})) == frozenset()
+
+
+def test_entity_name_forms_non_company_domains_never_strip() -> None:
+    module = _module()
+    # A paper title ending with 公司 keeps its full form only — legal-suffix
+    # and city stripping are company-name transforms, not title transforms.
+    forms = module._entity_name_forms("paper", frozenset({"深圳上市公司治理研究"}))
+    assert forms == frozenset({"深圳上市公司治理研究"})
+    # display_terms arrive normalized (NFKC + casefold + whitespace-collapsed)
+    # from _projection_terms; the form derivation space-strips them.
+    professor_forms = module._entity_name_forms(
+        "professor", frozenset({"张三", "san zhang"})
+    )
+    assert professor_forms == frozenset({"张三", "sanzhang"})
+
+
+def test_entity_name_forms_never_enter_category_stop_or_city_vocabulary() -> None:
+    module = _module()
+    # Fixture assumption: 机器人 is curated anchoring vocabulary on the sealed
+    # pack (the guard list derives from it, so pin the premise first).
+    assert "机器人" in {
+        term.term for term in module.PACKAGED_ANCHORING_DECLARATION.terms
+    }
+    # Anchoring-declaration vocabulary, category-recall stop phrases, and city
+    # roots are generic words: as name forms they would link every category
+    # query (probe v1: 机器人 x 23 entities, junk aliases 公司/深圳).
+    assert module._entity_name_forms("company", frozenset({"机器人"})) == frozenset()
+    assert module._entity_name_forms("company", frozenset({"公司"})) == frozenset()
+    assert module._entity_name_forms("company", frozenset({"深圳"})) == frozenset()
+    assert module._entity_name_forms("company", frozenset({"深圳市"})) == frozenset()
+    # A distinctive name one character away from a guarded word still enters.
+    forms = module._entity_name_forms("company", frozenset({"机器人视界"}))
+    assert forms == frozenset({"机器人视界"})
+
+
+def test_entity_name_index_maps_one_form_to_every_entity() -> None:
+    module = _module()
+    index_module = _index_module()
+    entries = (
+        _name_entry(
+            module,
+            index_module,
+            canonical_id="company:pudu-a",
+            names=("深圳市普渡科技有限公司",),
+        ),
+        _name_entry(
+            module,
+            index_module,
+            canonical_id="company:pudu-b",
+            names=("上海普渡机器人有限公司",),
+        ),
+        _name_entry(
+            module,
+            index_module,
+            canonical_id="company:dji",
+            names=("深圳市大疆创新科技有限公司",),
+        ),
+    )
+    index = module._build_entity_name_index(entries)
+    assert set(index.targets["普渡"]) == {0, 1}
+    assert index.targets["大疆创新"] == (2,)
+    # Longest-first ordering drives the matcher's overlap dedupe.
+    lengths = [len(form) for form in index.forms_longest_first]
+    assert lengths == sorted(lengths, reverse=True)
+
+
+def test_entity_name_index_drops_forms_shared_beyond_fanout_cap() -> None:
+    module = _module()
+    index_module = _index_module()
+    # Invented alias tokens (never in any curated vocabulary): five owners
+    # exceed the cap and the form drops out entirely; four owners stay.
+    crowded = tuple(
+        _name_entry(
+            module,
+            index_module,
+            canonical_id=f"company:crowded-{index:02d}",
+            names=(f"深圳市拥挤{index:02d}有限公司", "测试共振词"),
+        )
+        for index in range(5)
+    )
+    index = module._build_entity_name_index(crowded)
+    assert "测试共振词" not in index.targets
+    bounded = tuple(
+        _name_entry(
+            module,
+            index_module,
+            canonical_id=f"company:bounded-{index:02d}",
+            names=(f"深圳市边界{index:02d}有限公司", "四渡共振"),
+        )
+        for index in range(4)
+    )
+    bounded_index = module._build_entity_name_index(bounded)
+    assert len(bounded_index.targets["四渡共振"]) == module._ENTITY_LINK_MAX_FORM_FANOUT
+
+
+def test_entity_link_matches_longest_form_first_and_dedupes_overlap() -> None:
+    module = _module()
+    index_module = _index_module()
+    entries = (
+        _name_entry(
+            module,
+            index_module,
+            canonical_id="company:dji",
+            names=("深圳市大疆创新科技有限公司",),
+        ),
+    )
+    index = module._build_entity_name_index(entries)
+    # The full name consumes the whole span; shorter overlapping forms
+    # (大疆创新 / 深圳市大疆创新科技) never double-report the same entity.
+    assert module._entity_link_entry_indexes(
+        index, "深圳市大疆创新科技有限公司怎么样"
+    ) == (0,)
+    # Question-style embedding: the stripped form links the entity.
+    assert module._entity_link_entry_indexes(index, "大疆创新主要做什么") == (0,)
+
+
+def test_entity_link_requires_two_chars_and_returns_empty_without_match() -> None:
+    module = _module()
+    index_module = _index_module()
+    entries = (
+        _name_entry(
+            module,
+            index_module,
+            canonical_id="company:dji",
+            names=("深圳市大疆创新科技有限公司",),
+        ),
+    )
+    index = module._build_entity_name_index(entries)
+    assert module._entity_link_entry_indexes(index, "今天天气怎么样") == ()
+    assert module._entity_link_entry_indexes(index, "吗") == ()
+
+
+def test_entity_link_multi_entity_form_returns_every_candidate() -> None:
+    module = _module()
+    index_module = _index_module()
+    entries = (
+        _name_entry(
+            module,
+            index_module,
+            canonical_id="company:pudu-a",
+            names=("深圳市普渡科技有限公司", "普渡科技"),
+        ),
+        _name_entry(
+            module,
+            index_module,
+            canonical_id="company:pudu-b",
+            names=("上海普渡机器人有限公司", "普渡科技"),
+        ),
+    )
+    index = module._build_entity_name_index(entries)
+    # One form, two entities: both go to the ambiguity policy, never merged.
+    assert set(module._entity_link_entry_indexes(index, "普渡科技有哪些产品")) == {
+        0,
+        1,
+    }
+
+
+def test_entity_link_caps_candidates_in_query_span_order() -> None:
+    module = _module()
+    index_module = _index_module()
+    brands = ("甲一", "乙二", "丙三", "丁四", "戊五", "己六", "庚七", "辛八", "壬九")
+    entries = tuple(
+        _name_entry(
+            module,
+            index_module,
+            canonical_id=f"company:cap-{index:02d}",
+            names=(f"深圳市{brand}有限公司",),
+        )
+        for index, brand in enumerate(brands)
+    )
+    index = module._build_entity_name_index(entries)
+    query = "对比一下" + "和".join(brands)
+    linked = module._entity_link_entry_indexes(index, query)
+    assert linked == tuple(range(module._ENTITY_LINK_MAX_ENTITIES))
+    assert len(linked) == 8
+
+
+def test_entity_link_category_query_without_names_matches_nothing() -> None:
+    module = _module()
+    index_module = _index_module()
+    entries = (
+        _name_entry(
+            module,
+            index_module,
+            canonical_id="company:pudu",
+            names=("深圳市普渡科技有限公司",),
+        ),
+        _name_entry(
+            module,
+            index_module,
+            canonical_id="company:kepler",
+            names=("上海开普勒机器人有限公司",),
+        ),
+        # Junk alias carrying pure category vocabulary (probe v1 saw 公司/深圳
+        # style aliases on the sealed pack): guarded out of the index, so the
+        # category word in the query can never link this entity.
+        _name_entry(
+            module,
+            index_module,
+            canonical_id="company:junk-alias",
+            names=("深圳市示例建设有限公司", "机器人", "深圳"),
+        ),
+    )
+    index = module._build_entity_name_index(entries)
+    assert (
+        module._entity_link_entry_indexes(index, "中国有哪些成熟的酒店送餐机器人供应商")
+        == ()
+    )
+    assert module._entity_link_entry_indexes(index, "深圳有哪些做激光雷达的公司") == ()
+    assert module._entity_link_entry_indexes(index, "我想找PCB打板， 有哪些推荐") == ()
+    assert module._entity_link_entry_indexes(index, "机器人的发展前景怎么样") == ()
+
+
+def test_entity_link_never_sources_identifier_or_hash_fields() -> None:
+    module = _module()
+    index_module = _index_module()
+    entry = _name_entry(
+        module,
+        index_module,
+        canonical_id="company:dji",
+        names=("深圳市大疆创新科技有限公司",),
+    )
+    # Identifiers live outside display_terms by construction; even if an
+    # entry carried one, the index reads display_terms only.
+    entry = module._PublicLookupEntry(
+        document=entry.document,
+        display_name=entry.display_name,
+        display_terms=entry.display_terms,
+        identifier_terms=frozenset({"91440300ma5f8xyz1a", "a" * 64}),
+        content_terms=entry.content_terms,
+        industry_label_terms=entry.industry_label_terms,
+        tag_category_terms=entry.tag_category_terms,
+        product_category_terms=entry.product_category_terms,
+    )
+    index = module._build_entity_name_index((entry,))
+    assert (
+        module._entity_link_entry_indexes(index, "91440300MA5FXYZ1A 是哪家公司") == ()
+    )
+    assert module._entity_link_entry_indexes(index, "a" * 64) == ()
+
+
+def test_exact_match_name_linked_clause_preserves_every_gate() -> None:
+    module = _module()
+    index_module = _index_module()
+    read_module = _read_module()
+    document = _document(index_module, canonical_id="company:dji", domain="company")
+    patent_document = _document(index_module, canonical_id="patent:x", domain="patent")
+
+    def request(
+        query: str,
+        *,
+        domains: tuple[str, ...] = ("company",),
+        displayed_ids: tuple[str, ...] = (),
+        excluded_terms: tuple[str, ...] = (),
+        slots: tuple[Any, ...] = (),
+    ) -> Any:
+        return read_module.LaneRequest(
+            lane="exact",
+            release_id=RELEASE_ID,
+            query_view="view:original",
+            original_query=query,
+            behavior_class="A",
+            interaction_mode="information_retrieval",
+            web_policy=read_module.WebSearchPolicy(mode="disabled"),
+            query_text=query,
+            domains=domains,
+            protected_slots=slots,
+            structured_constraints=read_module.StructuredConstraints(
+                displayed_entity_ids=displayed_ids,
+                excluded_terms=excluded_terms,
+            ),
+            max_candidates=8,
+        )
+
+    kwargs = dict(
+        display_terms=frozenset(),
+        identifier_terms=frozenset(),
+        content_terms=frozenset(),
+    )
+    # The clause itself: a linked entry matches on a question-style query.
+    assert module._matches_exact_request(
+        request=request("大疆创新主要做什么"),
+        document=document,
+        name_linked=True,
+        **kwargs,
+    )
+    # ...while the default keeps the legacy whole-query semantics negative.
+    assert not module._matches_exact_request(
+        request=request("大疆创新主要做什么"),
+        document=document,
+        **kwargs,
+    )
+    # Domain gate: a linked patent stays out of a company-only request.
+    assert not module._matches_exact_request(
+        request=request("大疆创新主要做什么"),
+        document=patent_document,
+        name_linked=True,
+        **kwargs,
+    )
+    # Displayed-set narrowing gate.
+    assert not module._matches_exact_request(
+        request=request("大疆创新主要做什么", displayed_ids=("company:other",)),
+        document=document,
+        name_linked=True,
+        **kwargs,
+    )
+    # Excluded-term gate.
+    assert not module._matches_exact_request(
+        request=request("大疆创新主要做什么", excluded_terms=("大疆",)),
+        document=document,
+        name_linked=True,
+        **dict(kwargs, content_terms=frozenset({"大疆创新 简介"})),
+    )
+    # Quoted explicit_name slot stays a hard per-document constraint.
+    slot = read_module.ProtectedSlot(
+        kind="explicit_name",
+        value="深圳市优必选科技股份有限公司",
+        raw_text="深圳市优必选科技股份有限公司",
+    )
+    assert not module._matches_exact_request(
+        request=request("“深圳市优必选科技股份有限公司”和大疆创新", slots=(slot,)),
+        document=document,
+        name_linked=True,
+        **kwargs,
+    )

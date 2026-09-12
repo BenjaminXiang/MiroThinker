@@ -503,6 +503,44 @@ def test_pack_lexical_category_fallback_matches_upstream(
     assert upstream(plain).candidates == ()
 
 
+def test_pack_exact_lane_links_name_embedded_in_question(
+    serving_fixture: _PackFixture,
+) -> None:
+    """AQ-S7 (close-workbook-gaps): a question-style query embedding the
+    entity name links it on both exact adapters — the legacy whole-query
+    clause can never match such text — while a name-free question stays
+    empty on both."""
+    fixture = serving_fixture
+    authority = _open_authority(fixture, fixture.pack_dir)
+    bundle = authority.release_bundle
+    lookup_view = isolated_read._create_audited_lookup_view(bundle)
+    upstream = isolated_read.create_isolated_exact_lookup_adapter(
+        release_bundle=fixture.bundle,
+        published_release=fixture.published,
+    )
+    pack = pack_loader._create_pack_exact_lookup_adapter(
+        bundle=bundle,
+        publication=fixture.published,
+        lookup_view=lookup_view,
+    )
+    # The fixture's only public company is "Robotics Co".
+    question = _lane_request(lane="exact", query_text="robotics co 怎么样")
+    upstream_result = upstream(question)
+    pack_result = pack(question)
+    assert upstream_result == pack_result
+    assert [candidate.canonical_id for candidate in pack_result.candidates] == [
+        "company-robotics"
+    ]
+    assert (
+        pack_result.candidates[0].adapter_version
+        == isolated_read._EXACT_ADAPTER_VERSION
+    )
+    # A name-free question links nothing on either adapter.
+    plain = _lane_request(lane="exact", query_text="今天天气怎么样")
+    assert pack(plain).candidates == ()
+    assert upstream(plain).candidates == ()
+
+
 def test_generator_round_trip_reloads_exact_authority(
     serving_fixture: _PackFixture,
 ) -> None:

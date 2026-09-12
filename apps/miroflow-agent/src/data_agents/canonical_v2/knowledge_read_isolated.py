@@ -144,7 +144,7 @@ from .placeholder_scrub import scrub_placeholder_value, scrub_projection_payload
 from .release_publication_isolated import IsolatedReleaseBundle
 
 
-_EXACT_ADAPTER_VERSION = "canonical-v2-isolated-exact-lookup-v1"
+_EXACT_ADAPTER_VERSION = "canonical-v2-isolated-exact-lookup-v2"
 _STRUCTURED_ADAPTER_VERSION = "canonical-v2-isolated-structured-lookup-v1"
 _LEXICAL_ADAPTER_VERSION = "canonical-v2-isolated-lexical-lookup-v1"
 _VECTOR_ADAPTER_VERSION = "canonical-v2-isolated-vector-recall-v1"
@@ -6920,13 +6920,18 @@ class _PublicLookupEntry:
 class _AuditedLookupView:
     documents: tuple[LookupProjectionDocument, ...]
     public_entries: tuple[_PublicLookupEntry, ...]
+    # AQ-S7: name-form index over public_entries (positions align by
+    # construction); built once with the view and shared by every lane.
+    name_index: _EntityNameIndex
 
 
 def _create_audited_lookup_view(bundle: IsolatedReleaseBundle) -> _AuditedLookupView:
     documents = _read_bound_documents(bundle)
+    public_entries = _public_lookup_entries(documents)
     return _AuditedLookupView(
         documents=documents,
-        public_entries=_public_lookup_entries(documents),
+        public_entries=public_entries,
+        name_index=_build_entity_name_index(public_entries),
     )
 
 
@@ -7013,13 +7018,19 @@ def create_isolated_exact_lookup_adapter(
             bundle=validated_bundle,
         )
         documents = _read_bound_documents(validated_bundle)
+        view = lookup_view()
         entries = _lookup_entries_for_documents(
             documents=documents,
-            lookup_view=lookup_view(),
+            lookup_view=view,
+        )
+        linked_positions = _entity_link_indexes_for_view(
+            view=view,
+            entries=entries,
+            query_text=validated_request.query_text,
         )
 
         candidates: list[RecallCandidate] = []
-        for entry in entries:
+        for position, entry in enumerate(entries):
             document = entry.document
             if not _matches_exact_request(
                 request=validated_request,
@@ -7027,6 +7038,7 @@ def create_isolated_exact_lookup_adapter(
                 display_terms=entry.display_terms,
                 identifier_terms=entry.identifier_terms,
                 content_terms=entry.content_terms,
+                name_linked=position in linked_positions,
             ):
                 continue
             candidates.append(
@@ -8286,6 +8298,7 @@ def _matches_exact_request(
     display_terms: frozenset[str],
     identifier_terms: frozenset[str],
     content_terms: frozenset[str],
+    name_linked: bool = False,
 ) -> bool:
     domain = document.domain
     if domain is None:
@@ -8313,7 +8326,9 @@ def _matches_exact_request(
             protected_exact_match = True
     if protected_exact_match:
         return True
-    return _normalize(request.query_text) in searchable_terms
+    # AQ-S7: a name-linked entry (one of its name forms appears in the query)
+    # satisfies the final clause; every gate above is unchanged.
+    return name_linked or _normalize(request.query_text) in searchable_terms
 
 
 def _matches_structured_request(
@@ -8650,6 +8665,268 @@ def _without_company_legal_suffix(value: str) -> str:
         if normalized.endswith(suffix):
             return normalized[: -len(suffix)]
     return normalized
+
+
+# ---------------------------------------------------------------------------
+# Entity name-form linking (AQ-S7, close-workbook-gaps 2026-09-12)
+#
+# A question-style entity query ("大疆创新主要做什么") never exact-matches:
+# the whole normalized query is not one of the entity's terms, so the exact
+# lane returned zero candidates and the turn fell to web-only answering.
+# The name index inverts the check — it maps every entity name form (derived
+# from the normalized display_terms surface only; identifier/hash fields
+# never enter it) to its entry positions, and the matcher links the longest
+# forms contained in the normalized, space-stripped query. A linked entry
+# satisfies only the exact lane's final clause; every earlier gate (domain,
+# displayed-set narrowing, excluded terms, protected slots) is unchanged.
+#
+# Company forms strip one legal suffix, then one trailing industry word,
+# with city prefixes stripped from every variant
+# (深圳市大疆创新科技有限公司 → 深圳市大疆创新科技 → 深圳市大疆创新, plus
+# 大疆创新科技有限公司 / 大疆创新科技 / 大疆创新). The industry tier is the
+# minimal extension that reproduces the pinned 大疆 anchor — the two-tier
+# derivation (legal suffix + city prefix) never yields 大疆创新 (probe:
+# .agents/runs/close-workbook-gaps/d0-probe/aq-s7-name-index-probe-v2.json).
+# Non-company domains contribute the full form only: titles/person names are
+# complete surfaces, and city-stripping a paper title ("深圳上市公司治理研究")
+# would invent forms nobody names.
+#
+# Generic words must never become forms (probe v1 collisions on the sealed
+# pack: 机器人 x 23 entities, junk aliases 公司/深圳): a form equal to the
+# packaged anchoring vocabulary, a category-recall stop phrase, or a city
+# root (with or without 市) is excluded, and a form shared by more than
+# _ENTITY_LINK_MAX_FORM_FANOUT entries is dropped entirely (普渡 x 3 stays,
+# 机器人 x 23 is double-blocked).
+# ---------------------------------------------------------------------------
+_ENTITY_LINK_MAX_ENTITIES = 8
+_ENTITY_LINK_MAX_FORM_FANOUT = 4
+# Mirror of knowledge_serving_isolated._CITY_NAMES — the read layer cannot
+# import serving, so the serving suite pins the two tuples equal (same
+# precedent as _CATEGORY_RECALL_TRIGGER_MARKERS vs _ENUMERATION_QUERY_MARKERS).
+_ENTITY_LINK_CITY_ROOTS = (
+    "北京",
+    "上海",
+    "天津",
+    "重庆",
+    "深圳",
+    "广州",
+    "杭州",
+    "南京",
+    "苏州",
+    "成都",
+    "武汉",
+    "西安",
+    "长沙",
+    "郑州",
+    "青岛",
+    "宁波",
+    "厦门",
+    "福州",
+    "济南",
+    "合肥",
+    "南昌",
+    "昆明",
+    "贵阳",
+    "南宁",
+    "海口",
+    "石家庄",
+    "太原",
+    "沈阳",
+    "长春",
+    "哈尔滨",
+    "呼和浩特",
+    "兰州",
+    "西宁",
+    "银川",
+    "乌鲁木齐",
+    "香港",
+    "澳门",
+)
+_ENTITY_LINK_CITY_PREFIXES = tuple(
+    sorted(
+        {
+            *_ENTITY_LINK_CITY_ROOTS,
+            *(
+                f"{root}市"
+                for root in _ENTITY_LINK_CITY_ROOTS
+                if root not in ("香港", "澳门")
+            ),
+        },
+        key=lambda value: (-len(value), value),
+    )
+)
+_ENTITY_LINK_CITY_PREFIX_PATTERN = re.compile(
+    "^(?:" + "|".join(re.escape(prefix) for prefix in _ENTITY_LINK_CITY_PREFIXES) + ")"
+)
+# One trailing industry word strips per tier (优必选科技 → 优必选,
+# 上海开普勒机器人 → 上海开普勒); never more than one, so a brand whose name
+# ends in a generic word keeps its distinctive residue.
+_ENTITY_LINK_TRAILING_INDUSTRY_WORDS = (
+    "科技",
+    "技术",
+    "电子",
+    "智能",
+    "信息",
+    "机器人",
+    "实业",
+    "控股",
+    "集团",
+    "国际",
+    "发展",
+    "网络",
+    "通信",
+    "生物",
+    "医疗",
+    "新能源",
+)
+_ENTITY_LINK_TRAILING_INDUSTRY_PATTERN = re.compile(
+    "(?:"
+    + "|".join(
+        re.escape(word)
+        for word in sorted(
+            _ENTITY_LINK_TRAILING_INDUSTRY_WORDS, key=lambda value: (-len(value), value)
+        )
+    )
+    + ")$"
+)
+_ENTITY_LINK_FORM_BLOCKLIST = frozenset(
+    _normalize(term).replace(" ", "")
+    for term in (
+        *(entry.term for entry in PACKAGED_ANCHORING_DECLARATION.terms),
+        *_CATEGORY_RECALL_STOP_PHRASES,
+        *_ENTITY_LINK_CITY_ROOTS,
+        *(f"{root}市" for root in _ENTITY_LINK_CITY_ROOTS),
+    )
+)
+
+
+def _entity_link_strip_legal_suffix(form: str) -> str:
+    for suffix in _COMPANY_LEGAL_SUFFIXES:
+        if form.endswith(suffix) and len(form) > len(suffix):
+            return form[: -len(suffix)]
+    return form
+
+
+def _entity_link_strip_industry_word(form: str) -> str:
+    match = _ENTITY_LINK_TRAILING_INDUSTRY_PATTERN.search(form)
+    if match is not None and len(form) > len(match.group(0)):
+        return form[: match.start()]
+    return form
+
+
+def _entity_link_strip_city_prefix(form: str) -> str:
+    match = _ENTITY_LINK_CITY_PREFIX_PATTERN.match(form)
+    if match is not None and len(form) > len(match.group(0)):
+        return form[match.end() :]
+    return form
+
+
+def _entity_name_forms(domain: str, display_terms: frozenset[str]) -> frozenset[str]:
+    forms: set[str] = set()
+    for term in display_terms:
+        base = term.replace(" ", "")
+        if len(base) < 2:
+            continue
+        variants = {base}
+        if domain == "company":
+            legal_stripped = _entity_link_strip_legal_suffix(base)
+            variants.update(
+                {
+                    legal_stripped,
+                    _entity_link_strip_industry_word(legal_stripped),
+                    _entity_link_strip_industry_word(base),
+                }
+            )
+            variants.update(
+                city_stripped
+                for variant in tuple(variants)
+                if (city_stripped := _entity_link_strip_city_prefix(variant)) != variant
+            )
+        forms.update(
+            variant
+            for variant in variants
+            if len(variant) >= 2 and variant not in _ENTITY_LINK_FORM_BLOCKLIST
+        )
+    return frozenset(forms)
+
+
+@dataclass(frozen=True)
+class _EntityNameIndex:
+    # form -> positions of the entries carrying it (entry order preserved).
+    targets: dict[str, tuple[int, ...]]
+    forms_longest_first: tuple[str, ...]
+
+
+def _build_entity_name_index(
+    entries: tuple[_PublicLookupEntry, ...],
+) -> _EntityNameIndex:
+    targets: dict[str, list[int]] = {}
+    for position, entry in enumerate(entries):
+        for form in _entity_name_forms(
+            entry.document.domain or "", entry.display_terms
+        ):
+            targets.setdefault(form, []).append(position)
+    kept = {
+        form: tuple(indexes)
+        for form, indexes in targets.items()
+        if len(indexes) <= _ENTITY_LINK_MAX_FORM_FANOUT
+    }
+    return _EntityNameIndex(
+        targets=kept,
+        forms_longest_first=tuple(sorted(kept, key=lambda form: (-len(form), form))),
+    )
+
+
+def _entity_link_entry_indexes(
+    index: _EntityNameIndex,
+    query_text: str,
+    *,
+    cap: int = _ENTITY_LINK_MAX_ENTITIES,
+) -> tuple[int, ...]:
+    """Link entry positions whose name form appears in the query text.
+
+    Longest forms match first and overlapping spans dedupe, so the full name
+    consumes its span before any of its own stripped variants can re-report
+    the same entity; one form shared by several entities reports every owner
+    (ambiguity stays with the downstream policy, never merged here). Linked
+    positions are returned in query span order, capped at ``cap``.
+    """
+    needle = _normalize(query_text).replace(" ", "")
+    if len(needle) < 2:
+        return ()
+    accepted: list[tuple[int, int, str]] = []
+    for form in index.forms_longest_first:
+        start = needle.find(form)
+        if start < 0:
+            continue
+        end = start + len(form)
+        if any(
+            start < kept_end and kept_start < end
+            for kept_start, kept_end, _ in accepted
+        ):
+            continue
+        accepted.append((start, end, form))
+    linked: list[int] = []
+    for _start, _end, form in sorted(accepted):
+        for position in index.targets[form]:
+            if position not in linked:
+                linked.append(position)
+    return tuple(linked[:cap])
+
+
+def _entity_link_indexes_for_view(
+    *,
+    view: _AuditedLookupView,
+    entries: tuple[_PublicLookupEntry, ...],
+    query_text: str,
+) -> frozenset[int]:
+    if entries is view.public_entries:
+        return frozenset(_entity_link_entry_indexes(view.name_index, query_text))
+    # The entries did not come from the view (a directly constructed hermetic
+    # set): derive a per-call index so positions can never silently misalign.
+    return frozenset(
+        _entity_link_entry_indexes(_build_entity_name_index(entries), query_text)
+    )
 
 
 def _matches_transposed_company_name(

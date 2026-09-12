@@ -1,0 +1,105 @@
+{
+  "view_entries": 47071,
+  "view_build_seconds_incl_index": 66.695,
+  "index": {
+    "forms": 76075,
+    "rebuild_seconds_untraced": [
+      0.247,
+      0.258,
+      0.258
+    ],
+    "tracemalloc_peak_mb": 29.0,
+    "fanout_cap": 4,
+    "max_entities": 8,
+    "blocklist_forms": 224
+  },
+  "anchors": [
+    {
+      "query": "大疆创新主要做什么",
+      "ms": 14.36,
+      "hits": [
+        "深圳市大疆创新科技有限公司(company)"
+      ]
+    },
+    {
+      "query": "优必选科技怎么样",
+      "ms": 12.06,
+      "hits": [
+        "深圳市优必选科技股份有限公司(company)"
+      ]
+    },
+    {
+      "query": "深南电路的主要产品",
+      "ms": 9.01,
+      "hits": [
+        "深南电路股份有限公司(company)"
+      ]
+    },
+    {
+      "query": "开普勒机器人 怎么样",
+      "ms": 8.38,
+      "hits": [
+        "上海开普勒机器人有限公司(company)"
+      ]
+    },
+    {
+      "query": "普渡科技有哪些产品",
+      "ms": 8.21,
+      "hits": [
+        "深圳市普渡科技有限公司(company)",
+        "深圳市普渡科技股份有限公司(company)"
+      ]
+    },
+    {
+      "query": "普渡有哪些产品",
+      "ms": 8.06,
+      "hits": [
+        "深圳市普渡科技有限公司(company)",
+        "深圳市普渡科技股份有限公司(company)",
+        "成都市普渡机器人有限公司(company)"
+      ]
+    }
+  ],
+  "category_queries": [
+    {
+      "query": "深圳有哪些做激光雷达的公司",
+      "ms": 8.66,
+      "hits": []
+    },
+    {
+      "query": "我想找PCB打板， 有哪些推荐",
+      "ms": 8.67,
+      "hits": []
+    },
+    {
+      "query": "中国有哪些成熟的酒店送餐机器人供应商",
+      "ms": 8.83,
+      "hits": []
+    },
+    {
+      "query": "深圳有哪些机器人公司",
+      "ms": 8.33,
+      "hits": []
+    },
+    {
+      "query": "机器人的发展前景怎么样",
+      "ms": 8.35,
+      "hits": []
+    },
+    {
+      "query": "深圳的历史",
+      "ms": 7.88,
+      "hits": []
+    },
+    {
+      "query": "公司注册流程是什么",
+      "ms": 8.21,
+      "hits": []
+    },
+    {
+      "query": "送餐机器人哪个品牌好",
+      "ms": 8.32,
+      "hits": []
+    }
+  ]
+}
