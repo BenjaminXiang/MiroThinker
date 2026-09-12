@@ -269,6 +269,14 @@
 - [ ] C4.1 Paper↔professor canonical id links; paper detail lists involved
        professors.
 - [ ] C5.1 Delete taxonomy dead path after zero-reference sweep.
+- [ ] C6.0 Data-acquisition backlog (from the g5 GT check, 2026-09-12):
+       companies verified ABSENT from every local store — 华秋PCB (深圳华秋
+       电子有限公司), 中信华, 领智电路（深圳）, 鼎纪电子 (广州) — plus the
+       thin-profile GT pair (深圳嘉立创科技集团股份有限公司 /
+       深南电路股份有限公司: content-tier-only matches, no tags). Queue
+       for the next refresh cycle (C1 batch 2 / C6 pipeline) so the local
+       pack can eventually carry them; until then the web-completion track
+       covers them in answers (user-approved 2026-09-12).
 
 ## Answer-quality slice (2026-09-11, design locked in design.md; runs after C1 batch 0)
 
