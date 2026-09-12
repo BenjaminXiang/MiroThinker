@@ -921,3 +921,23 @@
 - User directive acknowledged: for the genuinely-absent companies
   (华秋/中信华/领智/鼎纪) the C6.0 data backlog stands; 大疆 class is a
   retrieval-path fix, not a data gap.
+
+## 2026-09-12 — Retrieval implementation review (user request): target = tokenized keyword + vector + SQL hybrid
+
+- Review doc: `.agents/runs/close-workbook-gaps/retrieval-review.md`.
+  Core findings: (1) keyword channel = whole-sentence substring scan over a
+  flattened bag of ALL scalar strings (incl. hashes/IDs) with NO tokenizer,
+  NO inverted index, field weights only inside the F1 category fallback;
+  (2) vector channel is the only real index (Qwen3-8B/Milvus, 0.04s) but its
+  scores are structurally non-comparable with the document lanes' 1.0;
+  (3) the "structured/SQL" channel is nominal only — `StructuredConstraints`
+  has three fields, `structured` lane = displayed-set filter, and
+  `geography` is assembled but has ZERO consumers; the pack's structured
+  fields (industry/tags/geography/address) have no filter path; (4) fusion
+  is 1:1 positional interleave, not score fusion.
+- Recommended order: AQ-S7 lexicon-driven query understanding (entity
+  index + concept maximal matching — the "tokenization" landing, fixes
+  entity questions + compound leaks) → structured-filter channel (real
+  field predicates) → tokenized keyword index (FTS5/term index with field
+  weights, replacing substring scans) → score-normalized fusion (or RRF).
+  Acceptance: g2/g5 anchors + generalization probes (P1/P2) + TTFT ≤30s.
