@@ -1535,8 +1535,9 @@ def test_probe_acceptance_batches_rule_misses_into_one_judge_call() -> None:
 
     Both results rule-miss (the first lacks any founder marker, the second
     paraphrases the constraint as 早大), so neither short-circuits; the LLM
-    rejects hit-1 but accepts hit-2, so the second result wins, and exactly
-    one judge_batch call carries both entries in result order.
+    rejects the first entry but accepts the second, so the second result
+    wins, and exactly one judge_batch call carries both entries in result
+    order (LAT-3: the batched selector keeps the per-job semantics).
     """
     from src.data_agents.canonical_v2 import llm_judgments as lj
 
@@ -1548,7 +1549,7 @@ def test_probe_acceptance_batches_rule_misses_into_one_judge_call() -> None:
         def judge_batch(self, **kwargs: Any) -> Any:
             self.calls.append(kwargs)
             return tuple(
-                lj.ProbeAcceptJudgment(item_id=item_id, accept=item_id == "hit-2")
+                lj.ProbeAcceptJudgment(item_id=item_id, accept=item_id.endswith("-hit2"))
                 for item_id in kwargs["items"]
             )
 
@@ -1569,15 +1570,90 @@ def test_probe_acceptance_batches_rule_misses_into_one_judge_call() -> None:
         primary_provider_version="bocha-v1",
         corroborating_provider_versions=("bocha-v1",),
     )
-    accepted = serving_module._select_probe_hit(
+    accepted = serving_module._select_probe_hits_batched(
         judge=judge,
-        kind="person",
         question=PERSON_QUERY,
-        entity_name=MAIBU_ROBOT_NAME,
-        semantics={"constraint": "早稻田"},
-        results=(first, second),
+        jobs=(
+            (
+                ("person", 0),
+                "person",
+                MAIBU_ROBOT_NAME,
+                {"constraint": "早稻田"},
+                (first, second),
+            ),
+        ),
     )
-    assert accepted is second
+    assert accepted[("person", 0)] is second
     assert len(judge.calls) == 1
     assert judge.calls[0]["kind"] == "probe_accept"
-    assert list(judge.calls[0]["items"]) == ["hit-1", "hit-2"]
+    assert list(judge.calls[0]["items"]) == ["job0-hit1", "job0-hit2"]
+
+
+def test_probe_acceptance_batches_misses_across_jobs_into_one_judge_call() -> None:
+    """LAT-3: rule misses from every probe job ride ONE judge call.
+
+    The old loop judged each job serially in the calling thread (up to 16
+    round-trips on wide enumeration turns — the ~25-30s supplemental tail).
+    Jobs whose rule pass already hit never enter the batch, and each job
+    still wins its own first accepted entry in result order.
+    """
+    from src.data_agents.canonical_v2 import llm_judgments as lj
+
+    class _BatchJudge:
+        def __init__(self) -> None:
+            self.calls: list[dict[str, Any]] = []
+            self.last_outcome = "ok"
+
+        def judge_batch(self, **kwargs: Any) -> Any:
+            self.calls.append(kwargs)
+            return tuple(
+                lj.ProbeAcceptJudgment(
+                    item_id=item_id,
+                    accept=item_id == "job0-hit1",
+                )
+                for item_id in kwargs["items"]
+            )
+
+    def _result(url: str, snippet: str) -> Any:
+        return serving_module._NormalizedWebResult(
+            title="深圳某某激光科技有限公司",
+            url=url,
+            snippet=snippet,
+            summary="",
+            primary_provider_version="bocha-v1",
+            corroborating_provider_versions=("bocha-v1",),
+        )
+
+    judge = _BatchJudge()
+    rule_hit = _result(
+        "https://example.test/hit",
+        "深圳某某激光科技有限公司：专注激光雷达产品研发。",
+    )
+    miss_a = _result("https://example.test/a", "公司发布新一代产品。")
+    miss_b = _result("https://example.test/b", "公司参加行业展会。")
+    jobs = (
+        (
+            ("theme", 0),
+            "theme",
+            "深圳某某激光科技有限公司",
+            {"core": "激光雷达"},
+            (rule_hit, miss_a),
+        ),
+        (
+            ("theme", 1),
+            "theme",
+            "深圳另一家公司",
+            {"core": "激光雷达"},
+            (miss_b,),
+        ),
+    )
+    accepted = serving_module._select_probe_hits_batched(
+        judge=judge,
+        question=PERSON_QUERY,
+        jobs=jobs,
+    )
+    # Job 0 rule-hits outright (no LLM entry); job 1's miss is accepted.
+    assert accepted[("theme", 0)] is rule_hit
+    assert accepted[("theme", 1)] is miss_b
+    assert len(judge.calls) == 1
+    assert list(judge.calls[0]["items"]) == ["job0-hit1"]

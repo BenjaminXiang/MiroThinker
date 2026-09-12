@@ -2808,6 +2808,11 @@ _ENUMERATION_QUERY_MARKERS = (
 # the provider holds their evidence.
 _SUPPLEMENTAL_PROBE_MAX_COMPANIES = 6
 _SUPPLEMENTAL_PROBE_COST_UNITS = 0.5
+# LAT-3 (2026-09-12): the per-job probe judgment used to run serially in the
+# supplemental loop — up to 16 enumeration probes meant up to 16 back-to-back
+# LLM round-trips and a ~25-30s tail. Rule misses are now batched across jobs
+# (chunked to keep one prompt bounded) in a single judge call per chunk.
+_PROBE_JUDGE_JOBS_PER_BATCH = 8
 _SUPPLEMENTAL_CONTEXT_CAPACITY = 256
 _EDUCATION_PATTERN = re.compile(r"毕业于\s*([一-鿿A-Za-z·]{2,20})")
 _EDUCATION_TRAILING_STOPWORDS = (
@@ -3688,23 +3693,14 @@ def _accept_probe_hit(
     return bool(getattr(judgments[0], "accept", False))
 
 
-def _select_probe_hit(
+def _probe_rule_or_misses(
     *,
-    judge: Any | None,
     kind: Literal["person", "relation", "theme"],
-    question: str,
     entity_name: str,
     semantics: Mapping[str, Any],
     results: tuple[_NormalizedWebResult, ...],
-) -> _NormalizedWebResult | None:
-    """Pick one job's accepted probe result: batch-then-pick.
-
-    The first rule hit in result order wins outright and never spends an
-    LLM call. Only when no result rule-matches are the misses rendered and
-    judged in ONE batched ``judge_batch`` call; the first accepted entry in
-    original result order wins. A failed batch (``*_fail_open``) accepts
-    nothing, keeping the deterministic rule outcome.
-    """
+) -> tuple[_NormalizedWebResult | None, tuple[_NormalizedWebResult, ...]]:
+    """Rule pass: the first rule hit in result order, else the misses."""
     misses: list[_NormalizedWebResult] = []
     for result in results:
         if _probe_rule_hit(
@@ -3713,34 +3709,92 @@ def _select_probe_hit(
             semantics=semantics,
             result=result,
         ):
-            return result
+            return result, ()
         misses.append(result)
-    if judge is None or not misses:
-        return None
-    item_ids = tuple(f"hit-{index}" for index in range(1, len(misses) + 1))
-    judgments = judge.judge_batch(
-        kind="probe_accept",
-        question=question,
-        items={
-            item_id: _render_probe_hit(
-                entity_name=entity_name,
-                semantics=semantics,
-                result=result,
+    return None, tuple(misses)
+
+
+_ProbeJudgmentJob = tuple[
+    tuple[str, int],
+    Literal["person", "relation", "theme"],
+    str,
+    Mapping[str, Any],
+    tuple[_NormalizedWebResult, ...],
+]
+
+
+def _select_probe_hits_batched(
+    *,
+    judge: Any | None,
+    question: str,
+    jobs: tuple[_ProbeJudgmentJob, ...],
+) -> dict[tuple[str, int], _NormalizedWebResult | None]:
+    """Pick every job's accepted probe result with one judge call per chunk.
+
+    LAT-3: the supplemental loop used to run ``_select_probe_hit`` per job in
+    the calling thread — up to 16 back-to-back LLM round-trips on wide
+    enumeration turns. The rule pass stays per job (a rule hit never spends an
+    LLM call); every job's rule misses then ride ONE ``judge_batch`` call per
+    ``_PROBE_JUDGE_JOBS_PER_BATCH`` chunk, namespaced by job so each job still
+    wins its first accepted entry in result order. A failed batch accepts
+    nothing for every job in the chunk, matching the per-job semantics.
+    """
+    resolved: dict[tuple[str, int], _NormalizedWebResult | None] = {}
+    pending: list[tuple[int, _ProbeJudgmentJob, tuple[_NormalizedWebResult, ...]]] = []
+    for job in jobs:
+        key, kind, entity_name, semantics, results = job
+        hit, misses = _probe_rule_or_misses(
+            kind=kind,
+            entity_name=entity_name,
+            semantics=semantics,
+            results=results,
+        )
+        if hit is not None or judge is None or not misses:
+            resolved[key] = hit
+            continue
+        pending.append((len(pending), job, misses))
+    for start in range(0, len(pending), _PROBE_JUDGE_JOBS_PER_BATCH):
+        chunk = pending[start : start + _PROBE_JUDGE_JOBS_PER_BATCH]
+        items: dict[str, str] = {}
+        item_ids_by_job: dict[int, tuple[str, ...]] = {}
+        for pending_index, (_, job, misses) in enumerate(chunk, start=start):
+            _key, _kind, entity_name, semantics, _results = job
+            item_ids = tuple(
+                f"job{pending_index}-hit{item_index}"
+                for item_index in range(1, len(misses) + 1)
             )
-            for item_id, result in zip(item_ids, misses, strict=True)
-        },
-    )
-    if _judge_failed(judge):
-        return None
-    accepted_ids = {
-        str(getattr(judgment, "item_id", ""))
-        for judgment in judgments
-        if bool(getattr(judgment, "accept", False))
-    }
-    for item_id, result in zip(item_ids, misses, strict=True):
-        if item_id in accepted_ids:
-            return result
-    return None
+            item_ids_by_job[pending_index] = item_ids
+            for item_id, result in zip(item_ids, misses, strict=True):
+                items[item_id] = _render_probe_hit(
+                    entity_name=entity_name,
+                    semantics=semantics,
+                    result=result,
+                )
+        judgments = judge.judge_batch(
+            kind="probe_accept",
+            question=question,
+            items=items,
+        )
+        accepted_ids = (
+            frozenset()
+            if _judge_failed(judge)
+            else frozenset(
+                str(getattr(judgment, "item_id", ""))
+                for judgment in judgments
+                if bool(getattr(judgment, "accept", False))
+            )
+        )
+        for pending_index, (_, job, misses) in enumerate(chunk, start=start):
+            key = job[0]
+            hit = None
+            for item_id, result in zip(
+                item_ids_by_job[pending_index], misses, strict=True
+            ):
+                if item_id in accepted_ids:
+                    hit = result
+                    break
+            resolved[key] = hit
+    return resolved
 
 
 def _theme_probe_entity_form(entity_name: str) -> str:
@@ -4002,6 +4056,7 @@ def _serving_supplemental_search(
         # providers' rate limits and randomly drop jobs (深南's probe was
         # among the dropped); 8 workers keep the batch within the limits
         # while adding at most one extra probe round.
+        probe_results: dict[tuple[str, int], tuple[_NormalizedWebResult, ...]] = {}
         with ThreadPoolExecutor(
             max_workers=min(8, len(query_by_job)),
             thread_name_prefix="canonical-v2-serving-probe",
@@ -4012,45 +4067,51 @@ def _serving_supplemental_search(
             for future, job in future_by_job.items():
                 remaining = max_wall_seconds - (monotonic() - started_at)
                 try:
-                    results = future.result(timeout=max(0.05, remaining))
+                    probe_results[job] = future.result(timeout=max(0.05, remaining))
                 except Exception:  # noqa: BLE001 - each probe degrades independently
                     continue
-                if job[0] == "person":
-                    company = person_jobs[job[1]]
-                    hit = _select_probe_hit(
-                        judge=judge,
-                        kind="person",
-                        question=context.question,
-                        entity_name=company,
-                        semantics={"constraint": context.person_constraint},
-                        results=results,
+        # LAT-3: judge every job's rule misses in one batched call per chunk
+        # instead of one serial judge round-trip per job (the wide-enumeration
+        # tail). Findings keep the original job order.
+        judgment_jobs: list[_ProbeJudgmentJob] = []
+        for job, results in probe_results.items():
+            if job[0] == "person":
+                judgment_jobs.append(
+                    (
+                        job,
+                        "person",
+                        person_jobs[job[1]],
+                        {"constraint": context.person_constraint},
+                        results,
                     )
-                    if hit is not None:
-                        person_findings.append((company, hit))
-                elif job[0] == "theme":
-                    spec = theme_jobs[job[1]]
-                    hit = _select_probe_hit(
-                        judge=judge,
-                        kind="theme",
-                        question=context.question,
-                        entity_name=spec.entity_name,
-                        semantics={"core": spec.theme_core},
-                        results=results,
-                    )
-                    if hit is not None:
-                        theme_findings.append((spec, hit))
-                else:
-                    spec = relation_jobs[job[1]]
-                    hit = _select_probe_hit(
-                        judge=judge,
-                        kind="relation",
-                        question=context.question,
-                        entity_name=spec.entity_name,
-                        semantics={"spec": spec},
-                        results=results,
-                    )
-                    if hit is not None:
-                        relation_findings.append((spec, hit))
+                )
+            elif job[0] == "theme":
+                spec = theme_jobs[job[1]]
+                judgment_jobs.append(
+                    (job, "theme", spec.entity_name, {"core": spec.theme_core}, results)
+                )
+            else:
+                spec = relation_jobs[job[1]]
+                judgment_jobs.append(
+                    (job, "relation", spec.entity_name, {"spec": spec}, results)
+                )
+        hits_by_job: dict[tuple[str, int], _NormalizedWebResult | None] = {}
+        if judgment_jobs and (monotonic() - started_at) < max_wall_seconds:
+            hits_by_job = _select_probe_hits_batched(
+                judge=judge,
+                question=context.question,
+                jobs=tuple(judgment_jobs),
+            )
+        for job, _kind, _entity_name, _semantics, _results in judgment_jobs:
+            hit = hits_by_job.get(job)
+            if hit is None:
+                continue
+            if job[0] == "person":
+                person_findings.append((person_jobs[job[1]], hit))
+            elif job[0] == "theme":
+                theme_findings.append((theme_jobs[job[1]], hit))
+            else:
+                relation_findings.append((relation_jobs[job[1]], hit))
         cost_units = (
             _SUPPLEMENTAL_PROBE_COST_UNITS * len(query_by_job)
         ) + discovery_cost
