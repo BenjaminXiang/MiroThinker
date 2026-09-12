@@ -4096,7 +4096,13 @@ def _serving_supplemental_search(
                     (job, "relation", spec.entity_name, {"spec": spec}, results)
                 )
         hits_by_job: dict[tuple[str, int], _NormalizedWebResult | None] = {}
-        if judgment_jobs and (monotonic() - started_at) < max_wall_seconds:
+        # Reserve one judge round-trip out of the pre-judgment budget: running
+        # the batch when the probes already ate the wall clock would push the
+        # lane result past budget.max_wall_time_ms and exhaust the receipt.
+        if (
+            judgment_jobs
+            and (max_wall_seconds - (monotonic() - started_at)) >= 2.0
+        ):
             hits_by_job = _select_probe_hits_batched(
                 judge=judge,
                 question=context.question,
