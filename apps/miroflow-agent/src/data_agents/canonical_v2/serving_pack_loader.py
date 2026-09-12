@@ -39,12 +39,13 @@ from __future__ import annotations
 
 import hashlib
 import json
+import logging
 import math
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from threading import Lock
+from threading import Lock, Thread
 from typing import Any, Literal, cast
 
 import numpy as np
@@ -116,6 +117,8 @@ from .relationship_projection import (
     TypedRelationshipAssertionInput,
 )
 from .release_publication_isolated import IsolatedReleaseBundle
+
+_LOGGER = logging.getLogger(__name__)
 
 PACK_SCHEMA_VERSION = "canonical-v2-serving-pack-v1"
 PACK_RELATIONSHIPS_SCHEMA_VERSION = "canonical-v2-serving-pack-relationships-v1"
@@ -1011,6 +1014,24 @@ def _create_pack_structured_lookup_adapter(
     return structured_lookup
 
 
+def _warm_indexed_lexical_lane(bundle: IsolatedReleaseBundle) -> None:
+    """Open the derived lexical index off the request path, best-effort.
+
+    The open costs ~5.7s on the run14 pack (jieba domain dictionary + FTS5
+    connect) and would otherwise be paid by the first user turn; the open is
+    process-cached and only successful opens are cached, so a rebuilt
+    artifact is picked up without a restart.
+    """
+
+    def warm() -> None:
+        try:
+            iso._indexed_lexical_open(bundle)
+        except Exception:  # noqa: BLE001 - warm-up must never fail the boot
+            _LOGGER.warning("lexical index warm-up failed", exc_info=True)
+
+    Thread(target=warm, name="canonical-v2-lexical-index-warm", daemon=True).start()
+
+
 def _create_pack_lexical_lookup_adapter(
     *,
     bundle: IsolatedReleaseBundle,
@@ -1643,6 +1664,12 @@ def create_serving_pack_knowledge_read(
         authority=relationship_authority,
     )
     supported_lanes.add("relationship")
+
+    # retrieval-v2 Step 1: the derived lexical index pays a one-time open
+    # (jieba domain dictionary + FTS5 connect, measured 5.7s on the run14
+    # pack). Warm it off the request path here, where the release bundle is
+    # the one the lexical lane binds to; the open is process-cached.
+    _warm_indexed_lexical_lane(bundle)
 
     delegate = create_ephemeral_knowledge_read(
         universal_web_policy=validated_web_policy,
