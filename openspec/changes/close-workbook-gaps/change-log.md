@@ -851,3 +851,27 @@
   compound-term refinement (bigram-coherence) is hereby promoted: a term
   should not qualify alone if it is only part of a longer compound query
   run. Latency 30–77s (大疆 77s again).
+
+
+## 2026-09-12 — TTFT requirement (user: ≤30s typical) + latency probe: retrieval is the whole cost
+
+- User directive: 73.7s is unacceptable; typical TTFT must be ≤30s. New
+  standing metric: TTFT (first answer token) measured per turn.
+- Probe (`generalization-probes/probe_latency.py`) — stage split on 7 turns:
+  planning ≈ 2s; **retrieval = 11–73s (the entire cost)**; TTFT ≈
+  retrieval_done + ~1.2s; generation 1.1–6.8s (fast). Slowest: 大疆
+  73.1s retrieval / 74.4s TTFT; professor-enum 59.5/60.5; lidar 37.9/39.4;
+  g2-t1 34.9/36.1; storage 23.0/24.9; pcb-t1 25.4/26.4; pcb-t2 11.2/13.3.
+- Component measurements: search providers are FAST (bocha 0.13–0.35s,
+  serper 0.65–1.94s per call — 8 calls ≈ 2–10s serial). Page fetch tier-0
+  fast; **tier-1 headless Chromium is serialized by design
+  (`_PlaywrightPagePool`, max_workers=1, ~5s timeout per page)**; measured
+  20.4s for 8 real cached URLs (one 13s outlier; warm-up 2.4s). Enumeration
+  turns fetch depth 8; non-enumeration 2.
+- The 73s case is not yet fully attributed to components — next step:
+  per-stage timing instrumentation in the turn trace (lane durations +
+  web-lane sub-steps: views, refinement round, fetch, gap judge, follow-ups,
+  supplemental probes), then optimize the dominant step. Candidate fixes in
+  view: T1 concurrency or budget (`_PlaywrightPagePool` single worker),
+  fetch depth, per-turn web wall budget, cold-cache behaviour (today all
+  web cache misses).
