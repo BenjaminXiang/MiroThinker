@@ -818,3 +818,27 @@
       batch 2+ / rebuild cycle.
 - Decision goes to the user with this table; no further window tuning
   without it.
+
+## 2026-09-12 — GT semantics read + exhaustive local-data check (user directive); user decision: keep 9/12, dual track
+
+- GT semantics (docs/测试集答案.xlsx, 问题5): the expected g5-t1 answer
+  recommends 12 companies; the t2 spec ("在列出的12家企业中，除鼎纪电子
+  …外其余11家均为深圳企业") presupposes the t1 list — query+GT together
+  are the answer specification, and the t2 anchor's 12 names = the GT's
+  own t1 content. Our t1 list today is a different (but same-shape) set.
+- Exhaustive local-data check for the four GT names missing from the
+  answer (华秋PCB / 中信华 / 领智电路（深圳）/ 鼎纪电子) — checked ALL
+  local stores: sealed pack (every projection), index-v1, the build
+  staging sources (`/var/tmp/.../staging-v1/*.source`), the release
+  snapshots (wave4 / pre-live-rebuild released_objects), the light-lane
+  Postgres (`miroflow_light_lane_r1`, 6,514 companies), the repo data
+  caches (only incidental serper mentions; the single 华秋 hit is a paper
+  title "五十载春华秋实"). **They are genuinely not in the local data as
+  entities.**
+- User decision (2026-09-12): keep the 9/12 target; dual track —
+  (1) local: fused candidate window 64→128 + disclosure cap up (expected
+  8/12: 嘉立创 56 / 深南电路 37 fused-local ranks); (2) web: surface
+  web-known same-category companies in enumeration/narrowing answers with
+  honest source attribution (the only route to the 9th name).
+- Track 1 dispatched (AQ-S2d); track 2 (web-company inclusion in
+  narrowing, essentially the deferred F-bind revived) gets its own design.
