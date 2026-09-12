@@ -842,3 +842,12 @@
   honest source attribution (the only route to the 9th name).
 - Track 1 dispatched (AQ-S2d); track 2 (web-company inclusion in
   narrowing, essentially the deferred F-bind revived) gets its own design.
+- Generalization probe r2 (S5+S2c deployed): P1/P3 still clean; disclosure
+  sentences now reach the 32-name cap with `等（共 N 家）` (drone 42 /
+  storage 47 / medical 35 recalled). **P2 precision regression by design
+  exposure**: lidar off-category jumps to 17/32 — the wider disclosure
+  now surfaces 激光设备/激光器 makers (铭镭/创鑫/中科创/青虹/镭霆/尊视) and
+  radar companies (承泰/牧野/杰士安) for a 激光雷达 query. The queued
+  compound-term refinement (bigram-coherence) is hereby promoted: a term
+  should not qualify alone if it is only part of a longer compound query
+  run. Latency 30–77s (大疆 77s again).
