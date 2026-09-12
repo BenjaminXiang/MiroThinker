@@ -980,3 +980,22 @@
 - Watch: t1's coverage sentence now reaches 64 names + `等（共 120 家）`
   (long tail); t2 lists 29 prose + ~40 coverage names.
 - Batch continues: generalization probe r3 + replay gate.
+
+## 2026-09-12 — LATENCY ROOT CAUSE FOUND (harness smoke): vector lane = 67.5s of 69.3s — `_professor_vector_display_names` scans all 47k documents per professor point
+
+- Offline harness smoke (大疆, production components): read 69.3s =
+  vector **67.5s** + web 6.8s (search 3.9 cached, fetch 7.2, judge 1.8) +
+  lexical 2.5 + exact 1.3; plan 0.01s. CPU 79.3s on the vector lane.
+  Thread samples: 331× in `_validated_public_projection` (parse+sha) and
+  409× in `_professor_vector_display_names` (`knowledge_read_isolated.py:7627-7630`).
+- Mechanism: `_professor_vector_display_names` iterates the professor vector
+  points (~3,958) and, for each, linearly scans ALL lookup documents
+  (47,071) to find its structural authority → **≈186M predicate evaluations
+  ≈ 50-70s per turn, not cached across turns**. Queries whose vector
+  results include professor points pay it (大疆/教授/lidar); company-only
+  results skip it (pcb-t2 11s). Consistent with every live measurement.
+- This is THE TTFT blocker: the fix is mechanical — build a
+  `canonical_id → document` (and `(id, content_sha) → document`) index once
+  (O(N)), then per-point O(1) lookup; expected 67s → <1s, bringing 大疆 from
+  ~75s to ~10s (web fetch remains ~7s). Queued to the writer right after
+  AQ-S7 commits; full 6-query harness run in flight for the complete table.

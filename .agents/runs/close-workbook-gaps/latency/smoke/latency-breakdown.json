@@ -1,0 +1,768 @@
+{
+  "harness": {
+    "generated_at": "2026-09-12T06:56:38.627730+00:00",
+    "harness_path": "/home/longxiang/MiroThinker/.agents/runs/close-workbook-gaps/latency/latency_harness.py",
+    "worktree": "/home/longxiang/MiroThinker/.worktrees/canonical-v2-s11-consolidation",
+    "pack_dir": "/var/tmp/mirothinker-data-v2/serving-pack-run14-sealed",
+    "release_id": "candidate-v2-20260819-r1",
+    "chat_llm_profile": "deepseekv4flash",
+    "rewriter_mode": "replay",
+    "bootstrap": {
+      "import_s": 10.54,
+      "load_recorded_inputs_s": 0.0,
+      "pack_open_s": 328.0,
+      "planner_compose_s": 70.64,
+      "read_compose_s": 225.97
+    },
+    "web_lane_cache": {
+      "source": "/home/longxiang/MiroThinker/.worktrees/canonical-v2-s11-consolidation/var/turn-trace/web_lane.sqlite3",
+      "copy": "/var/tmp/latency-harness/turn-trace/web_lane.sqlite3",
+      "rows": null,
+      "rows_by_day": {
+        "2026-09-09": 580,
+        "2026-09-10": 492,
+        "2026-09-11": 664,
+        "2026-09-12": 410
+      }
+    },
+    "milvus_copy": {
+      "copies": {
+        "/var/tmp/mirothinker-data-v2/index-v1/milvus.db": "/var/tmp/latency-harness/index-copy/index-v1/milvus.db"
+      },
+      "open_stats_s": {
+        "/var/tmp/mirothinker-data-v2/index-v1/milvus.db": 1.812
+      }
+    },
+    "components": {
+      "page_fetcher": "providers.page_fetch.create_tiered_page_fetcher (real httpx+BS4 tier0, real headless Chromium tier1)",
+      "planner/read/reranker/selector": "serving_pack_loader production composite over the sealed run14 pack",
+      "gap_judge/supplemental_judge": "llm_judgments.create_llm_judge (real LLM, 1.8s timeout, profile=deepseekv4flash)",
+      "embedding": "qwen-embedding-bundle-v1 via load_content_addressed_embedding_adapter /home/longxiang/MiroThinker/.worktrees/canonical-v2-s11-consolidation/.agents/runs/rebuild-canonical-v2-knowledge-platform/s12c/qwen-embedding-bundle-v1.json",
+      "web_providers": "bocha-v1 + serper-v1 behind the shared SQLite view cache (private copy)",
+      "prose_renderer": "capture stub (generation excluded)"
+    },
+    "deviations": [
+      "prose LLM stubbed: generation (live 1.1-6.8s) excluded from answer.total",
+      "contextual interpreter (chat.py, 3s timeout, before planning) not replayed",
+      "replay view order = turn-trace completion order, truncated to the first 3 non-base views",
+      "milvus + web-lane cache are private byte copies; pack/index/marker identity checks still run against the real paths",
+      "session carry for PCB turn 2 comes from this harness's own turn-1 selector output",
+      "replayed turns reuse the live web-view cache when the view text matches (day pinned to the recorded as_of)"
+    ]
+  },
+  "turns": [
+    {
+      "id": "dji-t1",
+      "session": "lat-dji",
+      "query": "大疆创新主要做什么",
+      "as_of": "2026-09-12T02:23:35.106720+00:00",
+      "continuation": false,
+      "recorded": {
+        "trace_day": "2026-09-12.jsonl",
+        "turn_ordinal": 1,
+        "total_s": 75.45,
+        "lanes": {
+          "web": {
+            "in": 61,
+            "retained": 50,
+            "filtered": 11
+          },
+          "exact": {
+            "in": 0,
+            "retained": 0,
+            "filtered": 0
+          },
+          "structured": {
+            "in": 0,
+            "retained": 0,
+            "filtered": 0
+          },
+          "lexical": {
+            "in": 0,
+            "retained": 0,
+            "filtered": 0
+          },
+          "vector": {
+            "in": 16,
+            "retained": 16,
+            "filtered": 0
+          }
+        },
+        "degradation": "prose-private-marker-redacted",
+        "replay_views": [
+          "大疆创新 主营业务",
+          "大疆 影像设备 行业应用 大疆创新",
+          "大疆 无人机 产品线 大疆创新"
+        ]
+      },
+      "rewriter": {
+        "mode": "replay",
+        "source": "replay",
+        "live_views": [],
+        "used_views": [
+          "大疆创新 主营业务",
+          "大疆 影像设备 行业应用 大疆创新",
+          "大疆 无人机 产品线 大疆创新"
+        ],
+        "wall_s": 0
+      },
+      "plan": {
+        "wall_s": 0.01,
+        "proposal_s": 0.004,
+        "lanes": [
+          "exact",
+          "structured",
+          "lexical",
+          "vector",
+          "web"
+        ],
+        "domains": [
+          "professor",
+          "company",
+          "paper",
+          "patent"
+        ],
+        "max_candidates": 16,
+        "web_max_results": 8,
+        "views": [
+          "大疆创新主要做什么",
+          "大疆创新 主营业务",
+          "大疆 影像设备 行业应用 大疆创新",
+          "大疆 无人机 产品线 大疆创新"
+        ],
+        "view_kinds": [
+          "deterministic",
+          "llm_rewrite",
+          "llm_rewrite",
+          "llm_rewrite"
+        ],
+        "supplemental_budget_ms": null
+      },
+      "read": {
+        "wall_s": 69.275,
+        "outer_s": 69.275,
+        "delegate_s": 67.524,
+        "outer_overhead_s": 1.751,
+        "lanes": {
+          "structured": 0.0004,
+          "exact": 1.2993,
+          "lexical": 2.4723,
+          "web": 6.7808,
+          "vector": 67.4864
+        },
+        "rerank_s": 0.0,
+        "sufficiency_s": 0,
+        "supplemental_s": 0,
+        "evidence_items": 17,
+        "candidates": 24,
+        "handles": 16,
+        "limitations": []
+      },
+      "web": {
+        "views_calls": [
+          {
+            "name": "web.views",
+            "wall_s": 1.2559,
+            "t_start_s": 0.067,
+            "t_end_s": 1.323,
+            "thread": "ThreadPoolExecutor-0_3",
+            "meta": {
+              "role": "main",
+              "query_count": 4,
+              "views": "大疆创新主要做什么 | 大疆创新 主营业务 | 大疆 影像设备 行业应用 大疆创新 | 大疆 无人机 产品线 大疆创新",
+              "merged": 61
+            }
+          }
+        ],
+        "merged_calls": [],
+        "provider_calls": [
+          {
+            "name": "web.provider.search",
+            "wall_s": 0.2614,
+            "t_start_s": 0.201,
+            "t_end_s": 0.463,
+            "thread": "canonical-v2-web_0",
+            "meta": {
+              "role": "main",
+              "provider": "bocha-v1",
+              "view": "大疆创新主要做什么",
+              "cache_hit": 1,
+              "results": 12
+            }
+          },
+          {
+            "name": "web.provider.search",
+            "wall_s": 0.3894,
+            "t_start_s": 0.253,
+            "t_end_s": 0.642,
+            "thread": "canonical-v2-web_1",
+            "meta": {
+              "role": "main",
+              "provider": "serper-v1",
+              "view": "大疆创新主要做什么",
+              "cache_hit": 1,
+              "results": 10
+            }
+          },
+          {
+            "name": "web.provider.search",
+            "wall_s": 0.5366,
+            "t_start_s": 0.314,
+            "t_end_s": 0.85,
+            "thread": "canonical-v2-web_2",
+            "meta": {
+              "role": "main",
+              "provider": "bocha-v1",
+              "view": "大疆创新 主营业务",
+              "cache_hit": 1,
+              "results": 12
+            }
+          },
+          {
+            "name": "web.provider.search",
+            "wall_s": 0.699,
+            "t_start_s": 0.355,
+            "t_end_s": 1.054,
+            "thread": "canonical-v2-web_3",
+            "meta": {
+              "role": "main",
+              "provider": "serper-v1",
+              "view": "大疆创新 主营业务",
+              "cache_hit": 1,
+              "results": 10
+            }
+          },
+          {
+            "name": "web.provider.search",
+            "wall_s": 0.6334,
+            "t_start_s": 0.498,
+            "t_end_s": 1.132,
+            "thread": "canonical-v2-web_4",
+            "meta": {
+              "role": "main",
+              "provider": "bocha-v1",
+              "view": "大疆 影像设备 行业应用 大疆创新",
+              "cache_hit": 1,
+              "results": 12
+            }
+          },
+          {
+            "name": "web.provider.search",
+            "wall_s": 0.6177,
+            "t_start_s": 0.539,
+            "t_end_s": 1.157,
+            "thread": "canonical-v2-web_5",
+            "meta": {
+              "role": "main",
+              "provider": "serper-v1",
+              "view": "大疆 影像设备 行业应用 大疆创新",
+              "cache_hit": 1,
+              "results": 10
+            }
+          },
+          {
+            "name": "web.provider.search",
+            "wall_s": 0.4236,
+            "t_start_s": 0.795,
+            "t_end_s": 1.218,
+            "thread": "canonical-v2-web_6",
+            "meta": {
+              "role": "main",
+              "provider": "bocha-v1",
+              "view": "大疆 无人机 产品线 大疆创新",
+              "cache_hit": 1,
+              "results": 12
+            }
+          },
+          {
+            "name": "web.provider.search",
+            "wall_s": 0.3173,
+            "t_start_s": 0.957,
+            "t_end_s": 1.274,
+            "thread": "canonical-v2-web_7",
+            "meta": {
+              "role": "main",
+              "provider": "serper-v1",
+              "view": "大疆 无人机 产品线 大疆创新",
+              "cache_hit": 1,
+              "results": 10
+            }
+          }
+        ],
+        "fetch_calls": [
+          {
+            "name": "web.fetch.page",
+            "wall_s": 3.5339,
+            "t_start_s": 1.34,
+            "t_end_s": 4.873,
+            "thread": "canonical-v2-web_1",
+            "meta": {
+              "url": "https://www.dji.com/cn",
+              "text_chars": 1294,
+              "direct_s": 3.5338,
+              "tier1_s": 0.0001
+            }
+          },
+          {
+            "name": "web.fetch.page",
+            "wall_s": 3.6251,
+            "t_start_s": 1.328,
+            "t_end_s": 4.953,
+            "thread": "canonical-v2-web_0",
+            "meta": {
+              "url": "https://www.dji.com/",
+              "text_chars": 1294,
+              "direct_s": 3.625,
+              "tier1_s": 0.0001
+            }
+          }
+        ],
+        "judge_calls": [
+          {
+            "name": "web.judge.batch",
+            "wall_s": 1.8343,
+            "t_start_s": 4.964,
+            "t_end_s": 6.798,
+            "thread": "ThreadPoolExecutor-0_3",
+            "meta": {
+              "kind": "gap_check",
+              "item_count": 1,
+              "outcome": "timeout_fail_open",
+              "results": 1
+            }
+          }
+        ],
+        "enrich_calls": [
+          {
+            "name": "web.enrich",
+            "wall_s": 3.6411,
+            "t_start_s": 1.323,
+            "t_end_s": 4.964,
+            "thread": "ThreadPoolExecutor-0_3",
+            "meta": {
+              "role": "main",
+              "depth": 2,
+              "candidates": 61
+            }
+          }
+        ],
+        "totals": {
+          "web.views": 1.256,
+          "web.merged": 0,
+          "web.provider.search": 3.878,
+          "web.fetch.page": 7.159,
+          "web.judge.batch": 1.834,
+          "web.enrich": 3.641,
+          "web.fetch.warm": 0
+        },
+        "cache_hits": 8,
+        "provider_calls_total": 8
+      },
+      "embedding": {
+        "embed.batch": {
+          "calls": 2,
+          "wall_s": 0.059
+        },
+        "embed.http": {
+          "calls": 1,
+          "wall_s": 0.057
+        }
+      },
+      "answer": {
+        "selector_s": 0.000763425137847662,
+        "total_s": 0.011,
+        "displayed_handles": 9,
+        "payload_displayed": [],
+        "claims": 9
+      },
+      "stages": [
+        {
+          "stage": "read.outer",
+          "calls": 1,
+          "wall_s": 69.275,
+          "cpu_s": 81.109
+        },
+        {
+          "stage": "read.delegate",
+          "calls": 1,
+          "wall_s": 67.524,
+          "cpu_s": 79.355
+        },
+        {
+          "stage": "read.lane.vector",
+          "calls": 1,
+          "wall_s": 67.486,
+          "cpu_s": 79.317
+        },
+        {
+          "stage": "web.fetch.page",
+          "calls": 2,
+          "wall_s": 7.159,
+          "cpu_s": 0.0
+        },
+        {
+          "stage": "read.lane.web",
+          "calls": 1,
+          "wall_s": 6.781,
+          "cpu_s": 6.902
+        },
+        {
+          "stage": "web.provider.search",
+          "calls": 8,
+          "wall_s": 3.878,
+          "cpu_s": 0.0
+        },
+        {
+          "stage": "web.enrich",
+          "calls": 1,
+          "wall_s": 3.641,
+          "cpu_s": 0.0
+        },
+        {
+          "stage": "read.lane.lexical",
+          "calls": 1,
+          "wall_s": 2.472,
+          "cpu_s": 2.497
+        },
+        {
+          "stage": "web.judge.batch",
+          "calls": 1,
+          "wall_s": 1.834,
+          "cpu_s": 0.0
+        },
+        {
+          "stage": "iso.validate_release_bound_vector_evidence",
+          "calls": 1,
+          "wall_s": 1.751,
+          "cpu_s": 1.753
+        },
+        {
+          "stage": "read.lane.exact",
+          "calls": 1,
+          "wall_s": 1.299,
+          "cpu_s": 1.315
+        },
+        {
+          "stage": "web.views",
+          "calls": 1,
+          "wall_s": 1.256,
+          "cpu_s": 0.0
+        },
+        {
+          "stage": "embed.batch",
+          "calls": 2,
+          "wall_s": 0.059,
+          "cpu_s": 0.0
+        },
+        {
+          "stage": "embed.http",
+          "calls": 1,
+          "wall_s": 0.057,
+          "cpu_s": 0.0
+        },
+        {
+          "stage": "answer.total",
+          "calls": 1,
+          "wall_s": 0.011,
+          "cpu_s": 0.0
+        },
+        {
+          "stage": "plan.total",
+          "calls": 1,
+          "wall_s": 0.01,
+          "cpu_s": 0.0
+        },
+        {
+          "stage": "plan.proposal",
+          "calls": 1,
+          "wall_s": 0.004,
+          "cpu_s": 0.004
+        },
+        {
+          "stage": "answer.selector",
+          "calls": 1,
+          "wall_s": 0.001,
+          "cpu_s": 0.001
+        },
+        {
+          "stage": "answer.selector.external",
+          "calls": 1,
+          "wall_s": 0.001,
+          "cpu_s": 0.0
+        },
+        {
+          "stage": "plan.session_bind",
+          "calls": 1,
+          "wall_s": 0.0,
+          "cpu_s": 0.0
+        },
+        {
+          "stage": "read.lane.structured",
+          "calls": 1,
+          "wall_s": 0.0,
+          "cpu_s": 0.0
+        },
+        {
+          "stage": "read.rerank",
+          "calls": 1,
+          "wall_s": 0.0,
+          "cpu_s": 0.0
+        }
+      ],
+      "sampler": {
+        "samples": 17080,
+        "by_thread": {
+          "asyncio-waitpid-0": 1082,
+          "canonical-v2-tiered-fetch_0": 1082,
+          "MainThread": 1082,
+          "canonical-v2-web_1": 1081,
+          "canonical-v2-web_0": 1081,
+          "canonical-v2-web_4": 1079,
+          "canonical-v2-web_3": 1079,
+          "canonical-v2-web_2": 1079,
+          "canonical-v2-web_5": 1078,
+          "canonical-v2-web_7": 1077,
+          "canonical-v2-web_6": 1077,
+          "ThreadPoolExecutor-0_2": 1052,
+          "ThreadPoolExecutor-0_1": 1052,
+          "ThreadPoolExecutor-0_0": 1052,
+          "ThreadPoolExecutor-0_3": 1051,
+          "canonical-v2-llm-judge_0": 995,
+          "ThreadPoolExecutor-1_0": 1
+        },
+        "top_stacks": [
+          {
+            "stack": "_worker@thread.py:90 <- run@threading.py:1012 <- _bootstrap_inner@threading.py:1075 <- _bootstrap@threading.py:1032",
+            "samples": 13207
+          },
+          {
+            "stack": "_do_waitpid@unix_events.py:1408 <- run@threading.py:1012 <- _bootstrap_inner@threading.py:1075 <- _bootstrap@threading.py:1032",
+            "samples": 1082
+          },
+          {
+            "stack": "wait@threading.py:355 <- result@_base.py:451 <- execute@knowledge_read.py:7608 <- timing_delegate_execute@latency_harness.py:971",
+            "samples": 930
+          },
+          {
+            "stack": "_canonical_sha256@domain_projection_models.py:35 <- validate_envelope@domain_projection_models.py:375 <- model_validate_json@main.py:766 <- _validated_public_projection@knowledge_read_isolated.py:8150",
+            "samples": 331
+          },
+          {
+            "stack": "__get__@enum.py:202 <- <genexpr>@knowledge_read_isolated.py:7630 <- _professor_vector_display_names@knowledge_read_isolated.py:7627 <- vector_recall@serving_pack_loader.py:1236",
+            "samples": 250
+          },
+          {
+            "stack": "<genexpr>@knowledge_read_isolated.py:7628 <- _professor_vector_display_names@knowledge_read_isolated.py:7627 <- vector_recall@serving_pack_loader.py:1236 <- wrapped@latency_harness.py:527",
+            "samples": 159
+          },
+          {
+            "stack": "wait@threading.py:359 <- result@_base.py:451 <- execute@knowledge_read.py:7608 <- timing_delegate_execute@latency_harness.py:971",
+            "samples": 121
+          },
+          {
+            "stack": "_normalize@knowledge_read_isolated.py:8261 <- visit@knowledge_read_isolated.py:8281 <- visit@knowledge_read_isolated.py:8285 <- _normalized_scalar_values@knowledge_read_isolated.py:8290",
+            "samples": 99
+          },
+          {
+            "stack": "get_data@<frozen importlib._bootstrap_external>:1190 <- get_code@<frozen importlib._bootstrap_external>:1091 <- exec_module@<frozen importlib._bootstrap_external>:995 <- _load_unlocked@<frozen importlib._bootstrap>:935",
+            "samples": 86
+          },
+          {
+            "stack": "value@enum.py:1291 <- __get__@enum.py:212 <- <genexpr>@knowledge_read_isolated.py:7630 <- _professor_vector_display_names@knowledge_read_isolated.py:7627",
+            "samples": 86
+          },
+          {
+            "stack": "wait@threading.py:359 <- result@_base.py:451 <- _enrich_with_page_text@knowledge_serving_isolated.py:1436 <- enrich@latency_harness.py:620",
+            "samples": 66
+          },
+          {
+            "stack": "get_data@<frozen importlib._bootstrap_external>:1191 <- get_code@<frozen importlib._bootstrap_external>:1091 <- exec_module@<frozen importlib._bootstrap_external>:995 <- _load_unlocked@<frozen importlib._bootstrap>:935",
+            "samples": 63
+          },
+          {
+            "stack": "cache_get@web_lane_resilience.py:174 <- _provider_search@knowledge_serving_isolated.py:1095 <- provider_search@latency_harness.py:576 <- run@thread.py:59",
+            "samples": 54
+          },
+          {
+            "stack": "acquire@<frozen importlib._bootstrap>:365 <- __enter__@<frozen importlib._bootstrap>:418 <- _find_and_load@<frozen importlib._bootstrap>:1357 <- __init__@default.py:150",
+            "samples": 48
+          },
+          {
+            "stack": "<genexpr>@knowledge_read_isolated.py:8369 <- _matches_lexical_request@knowledge_read_isolated.py:8369 <- lexical_lookup@serving_pack_loader.py:1039 <- wrapped@latency_harness.py:527",
+            "samples": 35
+          }
+        ],
+        "raw_rows": [
+          {
+            "thread": "asyncio-waitpid-0",
+            "stack": "_do_waitpid@unix_events.py:1408 <- run@threading.py:1012 <- _bootstrap_inner@threading.py:1075 <- _bootstrap@threading.py:1032",
+            "samples": 1082
+          },
+          {
+            "thread": "canonical-v2-tiered-fetch_0",
+            "stack": "_worker@thread.py:90 <- run@threading.py:1012 <- _bootstrap_inner@threading.py:1075 <- _bootstrap@threading.py:1032",
+            "samples": 1082
+          },
+          {
+            "thread": "canonical-v2-web_2",
+            "stack": "_worker@thread.py:90 <- run@threading.py:1012 <- _bootstrap_inner@threading.py:1075 <- _bootstrap@threading.py:1032",
+            "samples": 1069
+          },
+          {
+            "thread": "canonical-v2-web_3",
+            "stack": "_worker@thread.py:90 <- run@threading.py:1012 <- _bootstrap_inner@threading.py:1075 <- _bootstrap@threading.py:1032",
+            "samples": 1065
+          },
+          {
+            "thread": "canonical-v2-web_5",
+            "stack": "_worker@thread.py:90 <- run@threading.py:1012 <- _bootstrap_inner@threading.py:1075 <- _bootstrap@threading.py:1032",
+            "samples": 1064
+          },
+          {
+            "thread": "canonical-v2-web_4",
+            "stack": "_worker@thread.py:90 <- run@threading.py:1012 <- _bootstrap_inner@threading.py:1075 <- _bootstrap@threading.py:1032",
+            "samples": 1064
+          },
+          {
+            "thread": "canonical-v2-web_6",
+            "stack": "_worker@thread.py:90 <- run@threading.py:1012 <- _bootstrap_inner@threading.py:1075 <- _bootstrap@threading.py:1032",
+            "samples": 1063
+          },
+          {
+            "thread": "canonical-v2-web_7",
+            "stack": "_worker@thread.py:90 <- run@threading.py:1012 <- _bootstrap_inner@threading.py:1075 <- _bootstrap@threading.py:1032",
+            "samples": 1062
+          },
+          {
+            "thread": "ThreadPoolExecutor-0_0",
+            "stack": "_worker@thread.py:90 <- run@threading.py:1012 <- _bootstrap_inner@threading.py:1075 <- _bootstrap@threading.py:1032",
+            "samples": 1031
+          },
+          {
+            "thread": "ThreadPoolExecutor-0_2",
+            "stack": "_worker@thread.py:90 <- run@threading.py:1012 <- _bootstrap_inner@threading.py:1075 <- _bootstrap@threading.py:1032",
+            "samples": 1010
+          },
+          {
+            "thread": "canonical-v2-web_0",
+            "stack": "_worker@thread.py:90 <- run@threading.py:1012 <- _bootstrap_inner@threading.py:1075 <- _bootstrap@threading.py:1032",
+            "samples": 1008
+          },
+          {
+            "thread": "canonical-v2-web_1",
+            "stack": "_worker@thread.py:90 <- run@threading.py:1012 <- _bootstrap_inner@threading.py:1075 <- _bootstrap@threading.py:1032",
+            "samples": 1007
+          },
+          {
+            "thread": "ThreadPoolExecutor-0_3",
+            "stack": "_worker@thread.py:90 <- run@threading.py:1012 <- _bootstrap_inner@threading.py:1075 <- _bootstrap@threading.py:1032",
+            "samples": 930
+          },
+          {
+            "thread": "MainThread",
+            "stack": "wait@threading.py:355 <- result@_base.py:451 <- execute@knowledge_read.py:7608 <- timing_delegate_execute@latency_harness.py:971",
+            "samples": 930
+          },
+          {
+            "thread": "canonical-v2-llm-judge_0",
+            "stack": "_worker@thread.py:90 <- run@threading.py:1012 <- _bootstrap_inner@threading.py:1075 <- _bootstrap@threading.py:1032",
+            "samples": 752
+          },
+          {
+            "thread": "ThreadPoolExecutor-0_1",
+            "stack": "_canonical_sha256@domain_projection_models.py:35 <- validate_envelope@domain_projection_models.py:375 <- model_validate_json@main.py:766 <- _validated_public_projection@knowledge_read_isolated.py:8150",
+            "samples": 331
+          },
+          {
+            "thread": "ThreadPoolExecutor-0_1",
+            "stack": "__get__@enum.py:202 <- <genexpr>@knowledge_read_isolated.py:7630 <- _professor_vector_display_names@knowledge_read_isolated.py:7627 <- vector_recall@serving_pack_loader.py:1236",
+            "samples": 250
+          },
+          {
+            "thread": "ThreadPoolExecutor-0_1",
+            "stack": "<genexpr>@knowledge_read_isolated.py:7628 <- _professor_vector_display_names@knowledge_read_isolated.py:7627 <- vector_recall@serving_pack_loader.py:1236 <- wrapped@latency_harness.py:527",
+            "samples": 159
+          },
+          {
+            "thread": "MainThread",
+            "stack": "wait@threading.py:359 <- result@_base.py:451 <- execute@knowledge_read.py:7608 <- timing_delegate_execute@latency_harness.py:971",
+            "samples": 121
+          },
+          {
+            "thread": "ThreadPoolExecutor-0_1",
+            "stack": "_normalize@knowledge_read_isolated.py:8261 <- visit@knowledge_read_isolated.py:8281 <- visit@knowledge_read_isolated.py:8285 <- _normalized_scalar_values@knowledge_read_isolated.py:8290",
+            "samples": 99
+          },
+          {
+            "thread": "ThreadPoolExecutor-0_1",
+            "stack": "value@enum.py:1291 <- __get__@enum.py:212 <- <genexpr>@knowledge_read_isolated.py:7630 <- _professor_vector_display_names@knowledge_read_isolated.py:7627",
+            "samples": 86
+          },
+          {
+            "thread": "canonical-v2-llm-judge_0",
+            "stack": "get_data@<frozen importlib._bootstrap_external>:1190 <- get_code@<frozen importlib._bootstrap_external>:1091 <- exec_module@<frozen importlib._bootstrap_external>:995 <- _load_unlocked@<frozen importlib._bootstrap>:935",
+            "samples": 72
+          },
+          {
+            "thread": "ThreadPoolExecutor-0_3",
+            "stack": "wait@threading.py:359 <- result@_base.py:451 <- _enrich_with_page_text@knowledge_serving_isolated.py:1436 <- enrich@latency_harness.py:620",
+            "samples": 66
+          },
+          {
+            "thread": "canonical-v2-llm-judge_0",
+            "stack": "get_data@<frozen importlib._bootstrap_external>:1191 <- get_code@<frozen importlib._bootstrap_external>:1091 <- exec_module@<frozen importlib._bootstrap_external>:995 <- _load_unlocked@<frozen importlib._bootstrap>:935",
+            "samples": 54
+          },
+          {
+            "thread": "canonical-v2-web_1",
+            "stack": "acquire@<frozen importlib._bootstrap>:365 <- __enter__@<frozen importlib._bootstrap>:418 <- _find_and_load@<frozen importlib._bootstrap>:1357 <- __init__@default.py:150",
+            "samples": 48
+          },
+          {
+            "thread": "ThreadPoolExecutor-0_2",
+            "stack": "<genexpr>@knowledge_read_isolated.py:8369 <- _matches_lexical_request@knowledge_read_isolated.py:8369 <- lexical_lookup@serving_pack_loader.py:1039 <- wrapped@latency_harness.py:527",
+            "samples": 35
+          },
+          {
+            "thread": "ThreadPoolExecutor-0_3",
+            "stack": "wait@threading.py:359 <- result@_base.py:451 <- _call@llm_judgments.py:364 <- judge_batch@llm_judgments.py:394",
+            "samples": 34
+          },
+          {
+            "thread": "canonical-v2-llm-judge_0",
+            "stack": "_fill_cache@<frozen importlib._bootstrap_external>:1652 <- find_spec@<frozen importlib._bootstrap_external>:1609 <- _get_spec@<frozen importlib._bootstrap_external>:1506 <- find_spec@<frozen importlib._bootstrap_external>:1532",
+            "samples": 25
+          },
+          {
+            "thread": "ThreadPoolExecutor-0_1",
+            "stack": "__get__@enum.py:202 <- <genexpr>@knowledge_read_isolated.py:7634 <- _professor_vector_display_names@knowledge_read_isolated.py:7627 <- vector_recall@serving_pack_loader.py:1236",
+            "samples": 22
+          },
+          {
+            "thread": "canonical-v2-llm-judge_0",
+            "stack": "_path_stat@<frozen importlib._bootstrap_external>:147 <- find_spec@<frozen importlib._bootstrap_external>:1605 <- _get_spec@<frozen importlib._bootstrap_external>:1506 <- find_spec@<frozen importlib._bootstrap_external>:1532",
+            "samples": 21
+          }
+        ]
+      },
+      "counters": {
+        "plan.rewrite.replay": 1,
+        "read.lane.structured.calls": 1,
+        "read.lane.structured.candidates": 0,
+        "read.lane.structured.items": 0,
+        "read.lane.exact.calls": 1,
+        "read.lane.exact.candidates": 1,
+        "read.lane.exact.items": 0,
+        "read.lane.lexical.calls": 1,
+        "read.lane.lexical.candidates": 0,
+        "read.lane.lexical.items": 0,
+        "read.lane.web.calls": 1,
+        "read.lane.web.candidates": 16,
+        "read.lane.web.items": 0,
+        "read.lane.vector.calls": 1,
+        "read.lane.vector.candidates": 16,
+        "read.lane.vector.items": 0
+      }
+    }
+  ]
+}
