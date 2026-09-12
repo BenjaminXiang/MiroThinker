@@ -1,0 +1,987 @@
+{
+  "session_id": "session:chat:ZlqCJPHEQphj5FNRs_faRiIROgZQEpHN",
+  "turn_id": "turn:chat:sha256:57dcfbf8fdffbabeb6ade5d75ba74a2e824fcf62649007c6d7f4a2654c0c605c",
+  "turn_count": 1,
+  "query": "深圳有哪些做医疗器械的公司",
+  "planned_displayed_ids": [],
+  "recalled_handles": [
+    {
+      "id": "company-c-0f6cddc68edf947ccf484fc3",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳安特医疗股份有限公司"
+    },
+    {
+      "id": "web-handle:sha256:8d49e8a700ea185eaab0b1be8f7f2902d3dd660801fca7437c1a62d5b143ad32",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "深圳医疗器械 - 道客巴巴"
+    },
+    {
+      "id": "company-c-1108b3920e887934ed4fa727",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市天可医疗科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:ad523e77d83b59bbb809e576f76377b4ba51cd0f81de48c41895ba7acec5d9c9",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "深圳医疗器械公司排名（名录） - 职友集"
+    },
+    {
+      "id": "company-c-11b2aa54fffc2a4f564375df",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市美好创亿医疗科技股份有限公司"
+    },
+    {
+      "id": "web-handle:sha256:0fa40df08e07c8c85624810f80e9b019e14d8f68461e9d379b4e3f0ba80962da",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "深圳生物/制药/医疗器械企业名录"
+    },
+    {
+      "id": "company-c-12a8dc5401d9d4997d505162",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "诺尔医疗（深圳）有限公司"
+    },
+    {
+      "id": "web-handle:sha256:7d9c9f713e9829464bb9daf194f372687b57cb42c94fb3a9abd9cfc21c590315",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "深圳市市场监督管理局医疗器械经营企业监督检查信息公示（2023年 ..."
+    },
+    {
+      "id": "company-c-130554cc9174e8525ac2d354",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市迈康信医用机器人有限公司"
+    },
+    {
+      "id": "web-handle:sha256:567502e9c2eeb606377b62a5cd65686ad8294d6b6d062a84bdd534bfea201dc6",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "深圳有哪些医疗器械公司 - 搜狗问问"
+    },
+    {
+      "id": "company-c-3298f0380e6140bb12a2ef2e",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市凯沃尔电子有限公司"
+    },
+    {
+      "id": "web-handle:sha256:f0bfe16780c9763e4f814f3e1f7c82160063967f131521766e887f13eae8c0ee",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "深圳医疗器械公司人才招聘- 猎聘"
+    },
+    {
+      "id": "company-c-3c9c95af77d02ba5eaf250d3",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳硅基仿生科技股份有限公司"
+    },
+    {
+      "id": "web-handle:sha256:38505ee074dbe20d0d20848ea588a52da51951f317b9ab8366bc7f4ff424d3e5",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "深圳医疗器械公司"
+    },
+    {
+      "id": "company-c-5a59b7f63d8d3790bf7c7436",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市永康达电子科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:18d6420ef6712539cde1beb5f557dd860ff974af7a9214061002443a3492a0af",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "从安科到迈瑞，“医疗器械之都”深圳的流变 - 36氪"
+    },
+    {
+      "id": "company-c-60b65a056d80d2f5e076051d",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市迈泰生物医疗有限公司"
+    },
+    {
+      "id": "web-handle:sha256:6d02708175d277f14b419cadb62bc3be524c562d48138b3f37544a321d21c6de",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "深圳生物/制药/医疗器械企业名录"
+    },
+    {
+      "id": "company-c-6d1a5168a630a30b846bd262",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市易事达医疗电子有限公司"
+    },
+    {
+      "id": "web-handle:sha256:b48ae4c78e62583df6ef196b360e4d67d806248a5034c81e852004340fd3b978",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "中心简介-国家高性能医疗器械创新中心"
+    },
+    {
+      "id": "company-c-a49c29f5ed75a5f302831520",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳安维森实业有限公司"
+    },
+    {
+      "id": "web-handle:sha256:6b2b6346ae42d2c404a80515de6ac57208cc7a5eee34d108141639d9113c53ec",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "深圳有什么好的医疗器械公司 - 搜狗问问"
+    },
+    {
+      "id": "company-c-db6a78aa435679c36f1cf3cb",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市中科微光医疗器械技术有限公司"
+    },
+    {
+      "id": "web-handle:sha256:203c6cff055abce670b738660099b93e550f57e7068a4df076c35973172b4ab2",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "全国医疗器械公司 - 道客巴巴"
+    },
+    {
+      "id": "company-c-c8b4eae7e0c795b2c8371d91",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市鑫君特智能医疗器械有限公司"
+    },
+    {
+      "id": "web-handle:sha256:561725d8a57b345ecb882c9ad5ed1cc5f675e4067fa22589a65790e8d7926bd0",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "深圳市医疗器械行业协会"
+    },
+    {
+      "id": "company-c-1f5edd93544d6db5bf318181",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "新红医（深圳）护士护理集团有限公司"
+    },
+    {
+      "id": "web-handle:sha256:1c0823b317f90a0a56dce4434d6eabdb3f7993c7770fc930dde7a8163e61e1b0",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "广东省医疗器械管理学会"
+    },
+    {
+      "id": "company-c-33281333485a54a7aba76d75",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市犀锐生物科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:b9df82e3245fb69f693ae993400909935607a86a5e1db9cf19b1345f31472747",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "家用医疗器械企业15强盘点"
+    },
+    {
+      "id": "company-c-5c6c761722701aac93771c7a",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "优尼麦迪克器械（深圳）有限公司"
+    },
+    {
+      "id": "web-handle:sha256:63f9b3d58a58842aa008d80ab5fb667f325240cbf03275434cc0ef0e81882147",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "深圳医疗器械公司_深圳医疗器械厂家名录_东方医疗器械网"
+    },
+    {
+      "id": "company-c-6063be5cf332f879ff204dbb",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳乐普智能医疗器械有限公司"
+    },
+    {
+      "id": "web-handle:sha256:dbc6b5bc0ca189e71906253f25850ebed8ce4654ede2d80b3134da8129974332",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "迈瑞医疗: 生命科技如此亲近"
+    },
+    {
+      "id": "company-c-71b748860b0a647833134666",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市顺美医疗股份有限公司"
+    },
+    {
+      "id": "web-handle:sha256:21a71530e25d447133cc5be516a9d6b2977da8f9d145cd3d41ee87bed1ad0b59",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "深圳生物/制药/医疗器械企业名录"
+    },
+    {
+      "id": "company-c-732b6fdc507d6ad959f65995",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市中科先见医疗科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:5a11a37fbdeba0dcefd346f04301bbfb925e421d9b96885ae65902627d244777",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "深圳高性能医疗器械国家研究院有限公司 - 企查查"
+    },
+    {
+      "id": "company-c-850a17c1ba3f25ab9a9403a0",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市博德致远生物技术有限公司"
+    },
+    {
+      "id": "web-handle:sha256:5a3bc6e78cab7931869f7bb0423d7713f33839cc9edbd4edc6fefea894518471",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "迈瑞医疗- 维基百科，自由的百科全书"
+    },
+    {
+      "id": "company-c-d4da676145151e0fea31ae6f",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳拜尔洛克生物技术有限公司"
+    },
+    {
+      "id": "web-handle:sha256:f5dfdeb07abb83c7704e1cdee7fb448ba61a0304703306042bcbe9c57a786f39",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "深圳医疗器械有限公司"
+    },
+    {
+      "id": "company-c-efdcae040268dcaa85359769",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市乐心平江科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:a194dccfb1bfb750cae5cf31e4b83683b382a683e7ee9503efbf12cd70b8f6b8",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "深圳市凯盈医疗器械有限公司 - 百度百科"
+    },
+    {
+      "id": "company-c-07ab7bcedd9357e17c4d1375",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市奥昇医疗科技有限责任公司"
+    },
+    {
+      "id": "web-handle:sha256:04daa9bc59b4a19d99bdd5890486890b4d963807dbe138c44ddfeb33ce8a4859",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "深圳医疗器械有限公司"
+    },
+    {
+      "id": "company-c-0823d55acb1148358f0292ea",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳易美医学科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:55ca926c95c5380e166399ab0e728bbee91c555b0a98643f3f307e929e0762de",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "关于我们"
+    },
+    {
+      "id": "company-c-0a6c13ee76f69565573e8c74",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市阿瑟医疗机器人有限公司"
+    },
+    {
+      "id": "web-handle:sha256:95240c0ecdb5a2d12a200801a9d269fd7f51d52ecfdfb19ca1d31ce46040ec43",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "深圳医疗器械公司_深圳医疗器械厂家名录_第25页_东方医疗器械网"
+    },
+    {
+      "id": "company-c-1f7ff9d6ccc0d4ba1d84eeba",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳帧观德芯科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:51ddb148018ab050c3da8523c4789b110eaa2547a9e5297c21db3ae8c3632d7d",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "深圳医疗器械公司民营公司排名（名录） - 职友集"
+    },
+    {
+      "id": "company-c-2611a473f586ec5c9151d054",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市贝斯达医疗股份有限公司"
+    },
+    {
+      "id": "web-handle:sha256:18c33d875eb4a9f730c9f03c22bafba2758d903072bce403961aa0ee5545f433",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "深圳天深医疗器械有限公司"
+    },
+    {
+      "id": "company-c-2a2e17ea9d7c617f0f3d4449",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市君安康医疗科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:d2c87137caa3cb438618b198baa7065db301f80ca9a16e14ede243f4127eb4c4",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "爱奥乐医疗器械（深圳）有限公司"
+    },
+    {
+      "id": "company-c-35913a49e326cf38041653c2",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳幸福康迪功能医学科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:f854907db4932587f01fc31d4bcca780d6302bdf819a16a1632e171311bdf2f6",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "深圳市迈尔医疗器械有限公司 - 百度百科"
+    },
+    {
+      "id": "company-c-3d01a67effda4619e0d27aa5",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市金准生物医学工程有限公司"
+    },
+    {
+      "id": "web-handle:sha256:b4ef4cd29cf29952fa249fd238c5754161b02fffc479078a156ec13bd66040d2",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "「深圳医疗器械」深圳医疗器械公司黄页 - 顺企网"
+    },
+    {
+      "id": "company-c-4a0291e7f97c14b9a55c869b",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市立心科学有限公司"
+    },
+    {
+      "id": "web-handle:sha256:41e0c772a53b915ab024f462b7a3f3f43f8c57435399b23a885da67f7e120da9",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "从业人员"
+    },
+    {
+      "id": "company-c-522031ffb69c9fb15a06d154",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市润隆医疗科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:3adb63f01dec272eb0f1b68f77e175039bfaee00d78c8801c53d3529712220a0",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "深圳医疗器械、医疗设备黄页| 荟萃网库"
+    },
+    {
+      "id": "company-c-8108ad3f6121a51fb233233b",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市真迈生物科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:e5e62f2e10060a87904b6b0098660ec6e84e23012dde5ca3fe11cdd6436815cd",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "【深圳医疗器械厂家】_深圳医疗器械厂家品牌/图片/价格_深圳医疗器械厂家批发_阿里巴巴"
+    },
+    {
+      "id": "company-c-8aa5c479e972642fa758b5ea",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳微创踪影医疗装备有限公司"
+    },
+    {
+      "id": "web-handle:sha256:36b784515b32cd4439a0037505e26a7fcef81376a415bf4c3c13c788093f7c5c",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "2010年最新深圳医疗器械公司名单"
+    },
+    {
+      "id": "company-c-97522ac38eea9ac83fbaa661",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "中慧医学成像（深圳）有限公司"
+    },
+    {
+      "id": "web-handle:sha256:33feb74510a8295080d2ceb413774bef850167631d62ad78c26233b9ebf0587a",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "深圳市医疗器械产业数据纵览 - 医药魔方"
+    },
+    {
+      "id": "company-c-b5fbda910dbd0a3ec0767e2c",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳刷新生物传感科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:b585deab8473a4171e074b1ab9bf82c32c20cd043511d5de3e7904c7f2ba263c",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "21 深圳迈德士医疗器械科技有限公司 22 深圳市桓浩科技有限公司 23 深圳市信立泰生物 - 豆丁网"
+    },
+    {
+      "id": "company-c-bad45af683d2ac9fc8114d56",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "基态生物科技（深圳）有限公司"
+    },
+    {
+      "id": "web-handle:sha256:64b967861cfb96bcf444b926df4c5b9f1a408df9b8318e280b96ae918e255710",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "2023年度中国医药工业百强榜单-医疗器械企业Top20排行榜-知识百科"
+    },
+    {
+      "id": "company-c-c99f8a62797ae614c38f88d9",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市嘀嗒健康机器人科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:6dba756a12a93764063b59684c888454fa1d2e26ce7e9b05ceebb9dbfb5fde45",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "深圳市健康产业发展促进会_深圳健康产业网"
+    },
+    {
+      "id": "company-c-ce52db312c660a0fb90f2337",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市朗博生物医药股份有限公司"
+    },
+    {
+      "id": "web-handle:sha256:89b623ae9228bb62ba83db314a674ef2afb1aea33d521ffb7744ce23e29b750d",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "医疗器械公司名单"
+    },
+    {
+      "id": "company-c-d1f83355634a880667e32df2",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "康美健康云服务有限公司"
+    },
+    {
+      "id": "web-handle:sha256:6e862eb2c83031b8068cae3e4e5cb79e29d547469e3943c819444c415b56c809",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "2010年最新深圳医疗器械公司名单 - 豆丁网"
+    },
+    {
+      "id": "company-c-e46fc8f101b58b9b4608b9ac",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市深图医学影像设备有限公司"
+    },
+    {
+      "id": "web-handle:sha256:edfb1c632933e587be8a571ee9ae3d3f1b083cb568e84315bacd26195e3c0033",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "﻿﻿2026深圳医疗器械制造企业名录"
+    },
+    {
+      "id": "company-c-002b0393dac16d36c7610061",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市大耳马科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:8f7512aac05485daa787bd0e97064596c9039265204f00cf9c35cf729e63ed9f",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "鼎典设计: 深圳产品设计-工业设计-产品外观设计"
+    },
+    {
+      "id": "company-c-2aa97490300df33e8e99b39f",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市通甪科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:523a64fe3ff913ee28ada9abeee6fdb89451e6973fd59de0f0ccc8b92659e045",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "2025深圳企业斩获287项红点产品设计奖，SIDA会员收获满满"
+    },
+    {
+      "id": "company-c-012cc557538803e5fc84806e",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市云图智慧医疗科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:4c74a5b3cc5d2311110fd28146c928085060ff5ee4716dda3c8ee8e4e82dd803",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "【深圳医疗器械制造设备公司黄页_深圳医疗器械制造设备厂家大全】_第3页_顺企网"
+    },
+    {
+      "id": "company-c-0154ac34467e4216457af6de",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳普瑞金生物药业股份有限公司"
+    },
+    {
+      "id": "web-handle:sha256:4e0ff107b1f9d64203d5b0182c79943814ac5258ba83815f85f2f3d656efa1ab",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "企业信息列表 - 深圳市市场监督管理局"
+    },
+    {
+      "id": "company-c-02c29a5c4c11ecd07670361e",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市瑞意博医疗设备有限公司"
+    },
+    {
+      "id": "web-handle:sha256:3410ff31383a78dfa93b4f9358f6a22f8f2db1c8f70b6f0ff49e7b019c5fb9e9",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "企业信息列表 - 深圳市市场监督管理局"
+    },
+    {
+      "id": "company-c-031d3007f7e96a741938a142",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳泽安生物医药有限公司"
+    },
+    {
+      "id": "web-handle:sha256:c340615a343391c3696557378ee849e2b3d522151d1d1da7c3826149b5b28dbf",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "【深圳医疗器具公司黄页_深圳医疗器具厂家大全】_第4页_顺企网"
+    },
+    {
+      "id": "company-c-035803a734c7d7efe16ecb91",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市普惠医学技术有限公司"
+    },
+    {
+      "id": "web-handle:sha256:e1271cd8c5b98e1393b8576a2ceb3e3a6700580710e54b4712c9cba807fbe721",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "广东深圳企业品牌资讯大全"
+    },
+    {
+      "id": "company-c-03ee26d3e30c5fdcc84f22f5",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市格莱美电子有限公司"
+    },
+    {
+      "id": "web-handle:sha256:c2ca289935fc64f8f9a0692dcd233116e3877797386581a648236fec7534f884",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "2025深圳医疗器械制造设备企业名录"
+    },
+    {
+      "id": "company-c-05f8afb9339b5a6601d138ff",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "港龙生物技术（深圳）有限公司"
+    },
+    {
+      "id": "web-handle:sha256:16c15209f552931ca62db45f4a68654336fcc977845fe67b36b469e385069407",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "全國僅此一家！深圳這個地方，藏著全球TOP100 新奇好物Only in ..."
+    },
+    {
+      "id": "company-c-06164cb74952fae7300da0ee",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "泓博元生命科技（深圳）有限公司"
+    },
+    {
+      "id": "web-handle:sha256:4d15f82807ef5a067c0560cc9607e830b25728abf21e49b537102d206f69fc37",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "2024年平湖街道规模以上工业企业目录 - 龙岗政府在线"
+    },
+    {
+      "id": "company-c-0780a2a70d51a8d3383353fe",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市科大琥珀科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:a8474b81bdb99ebe5482b28ca8ddaf20f4ebeedd97a3495a067bde658a256942",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "15个深圳主理人品牌，个性出挑也能“搞钱” - 赢商网"
+    },
+    {
+      "id": "company-c-08c9c0a604119f6dcddede11",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳展翼伟业科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:798bf6152e558d20691ca344d35227ba3342e59d408328c9d306da0d1f73d02d",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "企业信息列表 - 深圳市市场监督管理局"
+    },
+    {
+      "id": "company-c-09bc1ff93ae0d40db4b46e6d",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "锐视数字科技（深圳）有限公司"
+    },
+    {
+      "id": "web-handle:sha256:6e37c4948c08d75868b3eb79c6b7335245da31f364c2e1c5744a41d53a702b78",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "医疗器械质量信息_坡头区政府网站"
+    },
+    {
+      "id": "company-c-09ef095db9dd2773d2efea3e",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳莱豪事科技有限公司"
+    },
+    {
+      "id": "company-c-0ac1669fab970c28a1dc0529",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳生命之源精准健康管理集团有限公司"
+    },
+    {
+      "id": "company-c-0ba66f1c1b99057822c0fc7c",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳健行仿生技术有限公司"
+    },
+    {
+      "id": "company-c-0c450ebd7140d9a324640fa1",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市众恩源科技有限公司"
+    },
+    {
+      "id": "company-c-0c7b819e595d1cd27ea38f99",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市美连医疗电子股份有限公司"
+    },
+    {
+      "id": "company-c-0d0b7c9d09a4a795b93ad5d5",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市中康联大健康生物科技有限公司"
+    },
+    {
+      "id": "company-c-0e350767cfe9ca409d8d4826",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳润岁精准医疗科技有限公司"
+    },
+    {
+      "id": "company-c-0ebe46fc511177117c38367b",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市宇君康科技有限公司"
+    },
+    {
+      "id": "company-c-121a70c82edd0b7de314f179",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "焕然新生（中国）健康产业有限公司"
+    },
+    {
+      "id": "company-c-1389534b4b304454a1c606cb",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳华迈兴微医疗科技有限公司"
+    },
+    {
+      "id": "company-c-13a12068249c4d2001e8ea54",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市讯威实业有限公司"
+    },
+    {
+      "id": "company-c-16e2b87af07e688bce999ac6",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳近邻生物科技有限公司"
+    },
+    {
+      "id": "company-c-196a9caded8a7099d36e7e89",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳铭毅智造科技有限公司"
+    },
+    {
+      "id": "company-c-1abf43512a7192b5b4779da3",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "人科（深圳）生物技术有限公司"
+    },
+    {
+      "id": "company-c-1f36f60793ceccad29450d73",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市迈高生物科技有限公司"
+    },
+    {
+      "id": "company-c-1fc323786739d484e1d60042",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市莱蒙医疗服务有限公司"
+    },
+    {
+      "id": "company-c-21dd6d09e0a2b1997257567a",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市轩付技术有限公司"
+    },
+    {
+      "id": "company-c-2244b705690188163c8d7386",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市胡桃医疗科技有限公司"
+    },
+    {
+      "id": "company-c-226d33bf20e1d2be72517ba8",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市硬核酸生物科技有限公司"
+    },
+    {
+      "id": "company-c-22f24708a85cb34ae904f2c5",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市云影医疗科技有限公司"
+    }
+  ],
+  "committed_handle_ids": [
+    "company-c-0f6cddc68edf947ccf484fc3",
+    "company-c-1108b3920e887934ed4fa727",
+    "company-c-11b2aa54fffc2a4f564375df",
+    "company-c-12a8dc5401d9d4997d505162",
+    "company-c-130554cc9174e8525ac2d354",
+    "company-c-3298f0380e6140bb12a2ef2e",
+    "company-c-3c9c95af77d02ba5eaf250d3",
+    "company-c-5a59b7f63d8d3790bf7c7436",
+    "company-c-60b65a056d80d2f5e076051d",
+    "company-c-6d1a5168a630a30b846bd262",
+    "company-c-a49c29f5ed75a5f302831520",
+    "web-handle:sha256:dbc6b5bc0ca189e71906253f25850ebed8ce4654ede2d80b3134da8129974332",
+    "company-c-db6a78aa435679c36f1cf3cb",
+    "company-c-c8b4eae7e0c795b2c8371d91",
+    "company-c-1f5edd93544d6db5bf318181",
+    "company-c-33281333485a54a7aba76d75",
+    "company-c-5c6c761722701aac93771c7a",
+    "company-c-6063be5cf332f879ff204dbb",
+    "company-c-71b748860b0a647833134666",
+    "company-c-732b6fdc507d6ad959f65995",
+    "company-c-850a17c1ba3f25ab9a9403a0",
+    "company-c-d4da676145151e0fea31ae6f",
+    "company-c-efdcae040268dcaa85359769",
+    "company-c-07ab7bcedd9357e17c4d1375",
+    "company-c-0823d55acb1148358f0292ea",
+    "company-c-0a6c13ee76f69565573e8c74",
+    "company-c-1f7ff9d6ccc0d4ba1d84eeba",
+    "company-c-2611a473f586ec5c9151d054",
+    "company-c-2a2e17ea9d7c617f0f3d4449",
+    "company-c-3d01a67effda4619e0d27aa5",
+    "company-c-4a0291e7f97c14b9a55c869b",
+    "company-c-522031ffb69c9fb15a06d154",
+    "web-handle:sha256:ad523e77d83b59bbb809e576f76377b4ba51cd0f81de48c41895ba7acec5d9c9",
+    "web-handle:sha256:0fa40df08e07c8c85624810f80e9b019e14d8f68461e9d379b4e3f0ba80962da",
+    "web-handle:sha256:f0bfe16780c9763e4f814f3e1f7c82160063967f131521766e887f13eae8c0ee",
+    "web-handle:sha256:38505ee074dbe20d0d20848ea588a52da51951f317b9ab8366bc7f4ff424d3e5",
+    "web-handle:sha256:6d02708175d277f14b419cadb62bc3be524c562d48138b3f37544a321d21c6de",
+    "web-handle:sha256:b9df82e3245fb69f693ae993400909935607a86a5e1db9cf19b1345f31472747",
+    "web-handle:sha256:63f9b3d58a58842aa008d80ab5fb667f325240cbf03275434cc0ef0e81882147",
+    "web-handle:sha256:21a71530e25d447133cc5be516a9d6b2977da8f9d145cd3d41ee87bed1ad0b59",
+    "web-handle:sha256:5a3bc6e78cab7931869f7bb0423d7713f33839cc9edbd4edc6fefea894518471",
+    "web-handle:sha256:f5dfdeb07abb83c7704e1cdee7fb448ba61a0304703306042bcbe9c57a786f39",
+    "web-handle:sha256:04daa9bc59b4a19d99bdd5890486890b4d963807dbe138c44ddfeb33ce8a4859",
+    "web-handle:sha256:95240c0ecdb5a2d12a200801a9d269fd7f51d52ecfdfb19ca1d31ce46040ec43",
+    "web-handle:sha256:51ddb148018ab050c3da8523c4789b110eaa2547a9e5297c21db3ae8c3632d7d",
+    "web-handle:sha256:18c33d875eb4a9f730c9f03c22bafba2758d903072bce403961aa0ee5545f433",
+    "web-handle:sha256:d2c87137caa3cb438618b198baa7065db301f80ca9a16e14ede243f4127eb4c4",
+    "web-handle:sha256:3adb63f01dec272eb0f1b68f77e175039bfaee00d78c8801c53d3529712220a0",
+    "company-c-35913a49e326cf38041653c2",
+    "company-c-8108ad3f6121a51fb233233b",
+    "company-c-8aa5c479e972642fa758b5ea",
+    "company-c-97522ac38eea9ac83fbaa661",
+    "company-c-b5fbda910dbd0a3ec0767e2c",
+    "company-c-bad45af683d2ac9fc8114d56",
+    "company-c-c99f8a62797ae614c38f88d9",
+    "company-c-ce52db312c660a0fb90f2337",
+    "company-c-d1f83355634a880667e32df2",
+    "company-c-e46fc8f101b58b9b4608b9ac",
+    "company-c-002b0393dac16d36c7610061",
+    "company-c-2aa97490300df33e8e99b39f",
+    "company-c-012cc557538803e5fc84806e",
+    "company-c-0154ac34467e4216457af6de",
+    "company-c-02c29a5c4c11ecd07670361e",
+    "company-c-031d3007f7e96a741938a142",
+    "company-c-035803a734c7d7efe16ecb91",
+    "company-c-03ee26d3e30c5fdcc84f22f5",
+    "company-c-05f8afb9339b5a6601d138ff",
+    "company-c-06164cb74952fae7300da0ee",
+    "company-c-0780a2a70d51a8d3383353fe",
+    "company-c-08c9c0a604119f6dcddede11",
+    "company-c-09bc1ff93ae0d40db4b46e6d",
+    "company-c-09ef095db9dd2773d2efea3e",
+    "company-c-0ac1669fab970c28a1dc0529",
+    "company-c-0ba66f1c1b99057822c0fc7c",
+    "company-c-0c450ebd7140d9a324640fa1",
+    "company-c-0c7b819e595d1cd27ea38f99",
+    "company-c-0d0b7c9d09a4a795b93ad5d5",
+    "company-c-0e350767cfe9ca409d8d4826",
+    "company-c-0ebe46fc511177117c38367b",
+    "company-c-121a70c82edd0b7de314f179",
+    "company-c-1389534b4b304454a1c606cb",
+    "company-c-13a12068249c4d2001e8ea54",
+    "company-c-16e2b87af07e688bce999ac6",
+    "company-c-196a9caded8a7099d36e7e89",
+    "company-c-1abf43512a7192b5b4779da3",
+    "company-c-1f36f60793ceccad29450d73",
+    "company-c-1fc323786739d484e1d60042",
+    "company-c-21dd6d09e0a2b1997257567a",
+    "company-c-2244b705690188163c8d7386",
+    "company-c-226d33bf20e1d2be72517ba8",
+    "company-c-22f24708a85cb34ae904f2c5"
+  ],
+  "committed_names": [
+    "深圳安特医疗股份有限公司",
+    "深圳市天可医疗科技有限公司",
+    "深圳市美好创亿医疗科技股份有限公司",
+    "诺尔医疗（深圳）有限公司",
+    "深圳市迈康信医用机器人有限公司",
+    "深圳市凯沃尔电子有限公司",
+    "深圳硅基仿生科技股份有限公司",
+    "深圳市永康达电子科技有限公司",
+    "深圳市迈泰生物医疗有限公司",
+    "深圳市易事达医疗电子有限公司",
+    "深圳安维森实业有限公司",
+    "迈瑞医疗: 生命科技如此亲近",
+    "深圳市中科微光医疗器械技术有限公司",
+    "深圳市鑫君特智能医疗器械有限公司",
+    "新红医（深圳）护士护理集团有限公司",
+    "深圳市犀锐生物科技有限公司",
+    "优尼麦迪克器械（深圳）有限公司",
+    "深圳乐普智能医疗器械有限公司",
+    "深圳市顺美医疗股份有限公司",
+    "深圳市中科先见医疗科技有限公司",
+    "深圳市博德致远生物技术有限公司",
+    "深圳拜尔洛克生物技术有限公司",
+    "深圳市乐心平江科技有限公司",
+    "深圳市奥昇医疗科技有限责任公司",
+    "深圳易美医学科技有限公司",
+    "深圳市阿瑟医疗机器人有限公司",
+    "深圳帧观德芯科技有限公司",
+    "深圳市贝斯达医疗股份有限公司",
+    "深圳市君安康医疗科技有限公司",
+    "深圳市金准生物医学工程有限公司",
+    "深圳市立心科学有限公司",
+    "深圳市润隆医疗科技有限公司",
+    "深圳医疗器械公司排名（名录） - 职友集",
+    "深圳生物/制药/医疗器械企业名录",
+    "深圳医疗器械公司人才招聘- 猎聘",
+    "深圳医疗器械公司",
+    "深圳生物/制药/医疗器械企业名录",
+    "家用医疗器械企业15强盘点",
+    "深圳医疗器械公司_深圳医疗器械厂家名录_东方医疗器械网",
+    "深圳生物/制药/医疗器械企业名录",
+    "迈瑞医疗- 维基百科，自由的百科全书",
+    "深圳医疗器械有限公司",
+    "深圳医疗器械有限公司",
+    "深圳医疗器械公司_深圳医疗器械厂家名录_第25页_东方医疗器械网",
+    "深圳医疗器械公司民营公司排名（名录） - 职友集",
+    "深圳天深医疗器械有限公司",
+    "爱奥乐医疗器械（深圳）有限公司",
+    "深圳医疗器械、医疗设备黄页| 荟萃网库",
+    "深圳幸福康迪功能医学科技有限公司",
+    "深圳市真迈生物科技有限公司",
+    "深圳微创踪影医疗装备有限公司",
+    "中慧医学成像（深圳）有限公司",
+    "深圳刷新生物传感科技有限公司",
+    "基态生物科技（深圳）有限公司",
+    "深圳市嘀嗒健康机器人科技有限公司",
+    "深圳市朗博生物医药股份有限公司",
+    "康美健康云服务有限公司",
+    "深圳市深图医学影像设备有限公司",
+    "深圳市大耳马科技有限公司",
+    "深圳市通甪科技有限公司",
+    "深圳市云图智慧医疗科技有限公司",
+    "深圳普瑞金生物药业股份有限公司",
+    "深圳市瑞意博医疗设备有限公司",
+    "深圳泽安生物医药有限公司",
+    "深圳市普惠医学技术有限公司",
+    "深圳市格莱美电子有限公司",
+    "港龙生物技术（深圳）有限公司",
+    "泓博元生命科技（深圳）有限公司",
+    "深圳市科大琥珀科技有限公司",
+    "深圳展翼伟业科技有限公司",
+    "锐视数字科技（深圳）有限公司",
+    "深圳莱豪事科技有限公司",
+    "深圳生命之源精准健康管理集团有限公司",
+    "深圳健行仿生技术有限公司",
+    "深圳市众恩源科技有限公司",
+    "深圳市美连医疗电子股份有限公司",
+    "深圳市中康联大健康生物科技有限公司",
+    "深圳润岁精准医疗科技有限公司",
+    "深圳市宇君康科技有限公司",
+    "焕然新生（中国）健康产业有限公司",
+    "深圳华迈兴微医疗科技有限公司",
+    "深圳市讯威实业有限公司",
+    "深圳近邻生物科技有限公司",
+    "深圳铭毅智造科技有限公司",
+    "人科（深圳）生物技术有限公司",
+    "深圳市迈高生物科技有限公司",
+    "深圳市莱蒙医疗服务有限公司",
+    "深圳市轩付技术有限公司",
+    "深圳市胡桃医疗科技有限公司",
+    "深圳市硬核酸生物科技有限公司",
+    "深圳市云影医疗科技有限公司"
+  ],
+  "render_mode": "prose_renderer",
+  "answer_chars": 3392,
+  "lane_timings": [
+    [
+      "structured",
+      0.0
+    ],
+    [
+      "exact",
+      0.163
+    ],
+    [
+      "lexical",
+      3.14
+    ],
+    [
+      "vector",
+      4.968
+    ],
+    [
+      "web",
+      8.594
+    ]
+  ]
+}

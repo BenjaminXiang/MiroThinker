@@ -1,0 +1,815 @@
+{
+  "session_id": "session:chat:7BdxUikPL_m6V2ImR8LDkoqRi82_qFuP",
+  "turn_id": "turn:chat:sha256:2d800221ba82ea83bf599c62dfc7249e108a6095eac56d32a21b6072026e7331",
+  "turn_count": 2,
+  "query": "他有哪些论文",
+  "planned_displayed_ids": [],
+  "recalled_handles": [
+    {
+      "id": "paper-c-009c3b8cbeeb9716d7526884",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Ultra-high sensitivity Fabry–Perot interferometer gas refractive index fiber sensor based on photonic crystal fiber and Vernier effect"
+    },
+    {
+      "id": "paper-c-017741f1b750db5699ac0d31",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Predicting Essential Proteins Based on Weighted Degree Centrality"
+    },
+    {
+      "id": "paper-c-030f43c8920f9b24e841a91f",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Empirical likelihood for partial linear models with fixed designs"
+    },
+    {
+      "id": "paper-c-038ba900ec660bace678852f",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Finite-time control for robot manipulators"
+    },
+    {
+      "id": "paper-c-03d942229a2c0d05cadfd0b0",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Manipulating Hetero‐Nanowire Films for Flexible and Multifunctional Thermoelectric Devices"
+    },
+    {
+      "id": "paper-c-0570ab9e36a167f11a2aeecc",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Reversal of optical binding force by Fano resonance in plasmonic nanorod heterodimer"
+    },
+    {
+      "id": "paper-c-0576af7656fab964f50f42c3",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "An Ultra-Compact 3-dB Power Splitter for Three Modes Based on Pixelated Meta-Structure"
+    },
+    {
+      "id": "paper-c-05d375204a3dce9600f98879",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Artificial intelligence in cancer target identification and drug discovery"
+    },
+    {
+      "id": "paper-c-066e5a3e29a129d8a7b68046",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Ln<sub>3</sub><i>@</i>C<sub>80</sub><sup>+</sup> (Ln = lanthanide): a new class of stable metallofullerene cations with multicenter metal–metal bonding in the sub-nanometer confined space"
+    },
+    {
+      "id": "paper-c-067c7d120e7f8c935d8e3295",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "A 3-D Imaging Method Based on Sparsity Adaptive Matching Pursuit for Multi-baseline Circular SAR"
+    },
+    {
+      "id": "paper-c-07acd1a44613038fdf675994",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "A Vector Space Modeling Approach to Spoken Language Identification"
+    },
+    {
+      "id": "paper-c-07f1dcd266824072811e5ce3",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Moving Target Shadow Detection Method Based on Improved ViBe in VideoSAR Images"
+    },
+    {
+      "id": "paper-c-08cf2a6f3696cbefb5456823",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "High-speed silicon photonic Mach–Zehnder modulator at 2 μm"
+    },
+    {
+      "id": "paper-c-0900f298fc13d76a39ddb312",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "A Multimodal Fusion Fatigue Driving Detection Method Based on Heart Rate and PERCLOS"
+    },
+    {
+      "id": "paper-c-09bcef5b9ef836bce61ca2ca",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "ModuPlace: LLM-Assisted Modular PCB Placement via Preference-Optimized Constraint Graph Generation"
+    },
+    {
+      "id": "paper-c-0a4acf406831729b5c53ec0a",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Vulnerability of speaker verification systems against voice conversion spoofing attacks: The case of telephone speech"
+    },
+    {
+      "id": "paper-c-0a771687dfe8d5922f495bbd",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "All-in-one strain-triboelectric sensors based on environment-friendly ionic hydrogel for wearable sensing and underwater soft robotic grasping"
+    },
+    {
+      "id": "paper-c-0a9509e9be0fb578df5904b7",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Highly Sensitive Micro-Opto-Electromechanical Systems Accelerometer Based on MIM Waveguide Wavelength Modulation"
+    },
+    {
+      "id": "paper-c-0b1bf1943391c4e88fa731e6",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Distributed Joint Detection, Tracking, and Classification via Labeled Multi-Bernoulli Filtering"
+    },
+    {
+      "id": "paper-c-0d005fbd1d8941ad2ac012e9",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "On the jump activity index for semimartingales"
+    },
+    {
+      "id": "paper-c-0d06e777b2924c083fa8fc15",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Six novel 6R metamorphic mechanisms induced from three-series-connected Bennett linkages that vary among classical linkages"
+    },
+    {
+      "id": "paper-c-0d9f3f8edca4708e052587db",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Analysis of gradient features and strengthening mechanisms of the Inconel 718 surface layer under robot belt constant-force grinding"
+    },
+    {
+      "id": "paper-c-0e76fc1267c93887c8fc50d3",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Recent advances in copper-catalysed radical-involved asymmetric 1,2-difunctionalization of alkenes"
+    },
+    {
+      "id": "paper-c-0f01f41a9a75629bc2220ec5",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Achieve Secure Handover Session Key Management via Mobile Relay in LTE-Advanced Networks"
+    },
+    {
+      "id": "paper-c-0f2e986717ee92fc52705ce9",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Magnetic porous carbon derived from a bimetallic metal–organic framework for magnetic solid-phase extraction of organochlorine pesticides from drinking and environmental water samples"
+    },
+    {
+      "id": "paper-c-1151d99976efdc37ad249d9d",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Investigation of the temperature effect on cutting of calcium fluoride single crystal using molecular dynamics simulation"
+    },
+    {
+      "id": "paper-c-116c112f2dba1beabc3a466e",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Use of Petri Nets for Performance Evaluation"
+    },
+    {
+      "id": "paper-c-124f1b938f881b237ac9f14a",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "High-sensitivity relative humidity fiber-optic sensor based on an internal–external Fabry–Perot cavity Vernier effect"
+    },
+    {
+      "id": "paper-c-1280796bf3ded1daed86492e",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "AlphaPlacer: Analog Placement Enhanced by Monte Carlo Tree Search"
+    },
+    {
+      "id": "paper-c-1347390a18fb8605b6286f3c",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Investigation of hole quality Enhancement in new glass/flax laminates via hybrid drilling techniques"
+    },
+    {
+      "id": "paper-c-136e92012016d5b60d7713e0",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Empirical Likelihood for a Class of Functionals of Survival Distribution with Censored Data"
+    },
+    {
+      "id": "paper-c-1373204a99e1f84635b3c844",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "联盟理论下风-火-电动汽车协同调度消纳风电的优化算法及利润分配"
+    },
+    {
+      "id": "paper-c-1521ccc4f84e95998fd64f3f",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Tensile mechanical properties study of SiC/graphene composites based on molecular dynamics"
+    },
+    {
+      "id": "paper-c-15b5f2b2bd9463fc063d8206",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Cultivation Model of Professional Degree Graduate Students Integrating Industry and Education Under Background of “New Engineering”"
+    },
+    {
+      "id": "paper-c-15c0bbfc372a54d08e812600",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Antiaromaticity–aromaticity transition of cyclo[16]carbon upon metal encapsulation"
+    },
+    {
+      "id": "paper-c-15f1d2d9e064fafcbfce8152",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "An Optimum Signal Detection Approach to the Joint ML Estimation of Timing Offset, Carrier Frequency and Phase Offset for Coherent Optical OFDM"
+    },
+    {
+      "id": "paper-c-161199014ec386ddddf07f1d",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Feature subset selection using naive Bayes for text classification"
+    },
+    {
+      "id": "paper-c-1665c1657a32e62b3f41b7dd",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Giant Narrow-Band Optical Absorption and Distinctive Excitonic Structures of Monolayer <mml:math xmlns:mml=\"http://www.w3.org/1998/Math/MathML\" display=\"inline\" overflow=\"scroll\"><mml:msub><mml:mrow><mml:mrow><mml:mi mathvariant=\"normal\">C</mml:mi></mml:mrow></mml:mrow><mml:mn>3</mml:mn></mml:msub><mml:mrow><mml:mrow><mml:mi mathvariant=\"normal\">N</mml:mi></mml:mrow></mml:mrow></mml:math> and <mml:math xmlns:mml=\"http://www.w3.org/1998/Math/MathML\" display=\"inline\" overflow=\"scroll\"><mml:msub><mml:mrow><mml:mrow><mml:mi mathvariant=\"normal\">C</mml:mi></mml:mrow></mml:mrow><mml:mn>3</mml:mn></mml:msub><mml:mrow><mml:mrow><mml:mi mathvariant=\"normal\">B</mml:mi></mml:mrow></mml:mrow></mml:math>"
+    },
+    {
+      "id": "paper-c-16ef2886e78fea7a8266ce51",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "PUTN: A Plane-fitting based Uneven Terrain Navigation Framework"
+    },
+    {
+      "id": "paper-c-17269afce7de9f903f1556dd",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Closure to discussion on ‘Approximate Linear Power Flow Using Logarithmic Transform of Voltage Magnitudes with Reactive Power and Power Loss Consideration"
+    },
+    {
+      "id": "paper-c-178b64e7f90626ca4f03b18c",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "SOCDet: A Lightweight and Accurate Oriented Object Detection Network for Satellite On-Orbit Computing"
+    },
+    {
+      "id": "paper-c-18756e7f0901bcfa1ef54dd8",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "A unified Bayesian filtering framework for multi-horizon wind speed prediction with improved accuracy"
+    },
+    {
+      "id": "paper-c-18ad5aab237ff69100fad01a",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "A miniaturized filtering power divider with wide stopband"
+    },
+    {
+      "id": "paper-c-18b4ba5d010031bd1e622480",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Crowd Density Estimation Using Texture Analysis and Learning"
+    },
+    {
+      "id": "paper-c-1901f888fc166a80b9cb4aa2",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "A flexible tree climbing robot: Treebot - design and implementation"
+    },
+    {
+      "id": "paper-c-190875a8cf92cedf920b4636",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Surface and Interfacial Engineering for Multifunctional Nanocarbon Materials"
+    },
+    {
+      "id": "paper-c-19316fbed1337a41dc4141a6",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "The sum-of-squares hierarchy on the sphere and applications in quantum information theory"
+    },
+    {
+      "id": "paper-c-197d6ca64f68b4621a1bbdf4",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Thickness‐Tolerant A1–A2 Polyelectrolyte Cathode Interlayers via Direct Arylation Polycondensation for 20.5% Efficiency Organic Solar Cells"
+    },
+    {
+      "id": "paper-c-19ee09829718f2f69c50fca2",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Adversarial Attacks on Content-Based Filtering Journal Recommender Systems"
+    },
+    {
+      "id": "paper-c-1a5a8f054eb456147d3136b4",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Bivariate distribution of shear strength parameters using copulas and its impact on geotechnical system reliability"
+    },
+    {
+      "id": "paper-c-1a6df2dc1e84b287291adb3e",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "A Dielectric Resonator Antenna With Enhanced Gain Bandwidth"
+    },
+    {
+      "id": "paper-c-1ac3e444f5973f37197db592",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Multifunctional carbon nanotube@expanded graphite/polydimethylsiloxane composites with exceptional electromagnetic interference shielding and thermal management capability"
+    },
+    {
+      "id": "paper-c-1b36b2f3dccab3b41c5ba550",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Recent Progress in Advanced Tactile Sensing Technologies for Soft Grippers"
+    },
+    {
+      "id": "paper-c-1b68aab30c342336d774756d",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Review of PHM Data Competitions from 2008 to 2017"
+    },
+    {
+      "id": "paper-c-1b6c854ee21ad87c35762494",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "In situ interfacial reactions in hydride–oxide composite electrolytes for stable all-solid-state Li–metal batteries"
+    },
+    {
+      "id": "paper-c-1c49e27010de184fbfe5f645",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Correction: High-performance UV detectors based on room-temperature deposited amorphous Ga 2 O 3 thin films by RF magnetron sputtering"
+    },
+    {
+      "id": "paper-c-1c4ad5cdeb0b53552b3daa3b",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "16 PAHs identification combined with Raman and infrared spectra signature through density functional theory"
+    },
+    {
+      "id": "paper-c-1d8065d44e3b244e41729f1c",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Hierarchical modeling for extreme values observed over space and time"
+    },
+    {
+      "id": "paper-c-1e2e60c4d2d67628d0df1f62",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "One Step at a Time: Does Gradualism Build Coordination?"
+    },
+    {
+      "id": "paper-c-1e32c7b8451e4b99cae2cb75",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Expanding Selectivity Functionality of a ZnO Nanotetrapod-Based Volatile Organic Compound Sensor Using Au Nanoparticle Decoration"
+    },
+    {
+      "id": "paper-c-1e5aa6c8782efc7b856cdfe6",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "An approach of peridynamic modeling associated with molecular dynamics for fracture simulation of particle reinforced metal matrix composites"
+    },
+    {
+      "id": "paper-c-1e61419641b29cc82ed56753",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "A similarity based methodology for machine prognostics by using kernel two sample test"
+    },
+    {
+      "id": "paper-c-1ea882b1add40daa1750cd25",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "The determination of the link with the smallest end-to-end network latency in ethernet architecture"
+    },
+    {
+      "id": "paper-c-1f143fbee145bbd304418b88",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Enzyme-free quantification of exosomal microRNA by the target-triggered assembly of the polymer DNAzyme nanostructure"
+    },
+    {
+      "id": "paper-c-1f192c7612b1b48e5e6fd7db",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "The algorithmic analysis of hybrid systems"
+    },
+    {
+      "id": "paper-c-1f23a9733289f8ad5abcdab0",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Spoken Language Recognition: From Fundamentals to Practice"
+    },
+    {
+      "id": "paper-c-1f311e38ce77b8a2abc33017",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Prognosability study of ball screw degradation using systematic methodology"
+    },
+    {
+      "id": "paper-c-1f3859c09393b69b02b9d929",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "A universal on-orbit servicing system used in the geostationary orbit"
+    },
+    {
+      "id": "paper-c-1f4da7bb7ac0749174cec1eb",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Hybrid Ionization Source Combining Nanoelectrospray and Dielectric Barrier Discharge Ionization for the Simultaneous Detection of Polar and Nonpolar Compounds in Single Cells"
+    },
+    {
+      "id": "paper-c-1fe6942869f98a9a96fbae29",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Relaxing Wrinkles in Jammed Interfacial Assemblies"
+    },
+    {
+      "id": "paper-c-201a6b463204a1f062961bc7",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Detection of HPV DNA in esophageal cancer specimens from different regions and ethnic groups: a descriptive study"
+    },
+    {
+      "id": "paper-c-209295f36b4020a450e0e941",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Multiport Power Combining Patch Antenna With Stable Reflection Coefficient and Radiation Pattern in Six Polarization States"
+    },
+    {
+      "id": "paper-c-209fa4f89a9f256b2f6273a3",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Spin-manipulation via novel MoPS3 nanocrystal for high-performance thick-film organic solar cells"
+    },
+    {
+      "id": "paper-c-21010f3fe299821a976bf87d",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Identification of lactic acid bacteria in suancai, a traditional Northeastern Chinese fermented food, and salt response of Lactobacillus paracasei LN-1"
+    },
+    {
+      "id": "paper-c-211aea4fa28bfb4d09964644",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Angular dependence of the upper critical field in the high-pressure 1T' phase of MoTe2"
+    },
+    {
+      "id": "paper-c-2161f17f29cfbb38dca759d4",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Synergistic Bayesian Opti- mization and Reinforcement Learning with Bidirectional Interaction for Efficient VLSI Constraint Tuning"
+    },
+    {
+      "id": "paper-c-2186204f571c745204c70aac",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Design of a Filtering Antenna With Hybrid Feed Structure for 5G Communications"
+    },
+    {
+      "id": "paper-c-21bc3c60368e937e2c887425",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Estimating Node Importance Values in Heterogeneous Information Networks"
+    },
+    {
+      "id": "paper-c-220820c02aba0cc5cac7b082",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Triboelectric Nanogenerator: A Foundation of the Energy for the New Era"
+    },
+    {
+      "id": "paper-c-222163e627e671312b168a12",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Engineering the Near-Edge Electronic Structure of SnSe through Strains"
+    },
+    {
+      "id": "paper-c-230c10f9e6f32c31c95cdcc2",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Highly Compact and Efficient Four-Mode Multiplexer Based on Pixelated Waveguides"
+    },
+    {
+      "id": "paper-c-23307072cc0d43450926f078",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "辽宁早白垩世今鸟类一新属种（Jianchangornis microdonta gen. et sp. nov. ）"
+    },
+    {
+      "id": "paper-c-2333abd3e9cf9bfd03877021",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Similarity-based Particle Filter for Remaining Useful Life prediction with enhanced performance"
+    },
+    {
+      "id": "paper-c-23c9e1506b8fa81975eef55a",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "High Sensitivity Humidity Fiber-Optic Sensor Based on All-Agar Fabry–Perot Interferometer"
+    },
+    {
+      "id": "paper-c-242c19a67d14605d8fb0e15b",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Continuous Spatial Process Models for Spatial Extreme Values"
+    },
+    {
+      "id": "paper-c-2443a4d781810f8179f1d7d6",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Balancing Testability and Security by Configurable Partial Scan Design"
+    },
+    {
+      "id": "paper-c-25983af2eb985a4269c7ba8d",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "A Circularly Polarized Antenna by Using Rotated-Stair Dielectric Resonator"
+    },
+    {
+      "id": "paper-c-25fd92ce9ec96a5dbccc77a0",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "储粮食害虫综合治理中的生物防治方法：V.抗虫粮种的应用"
+    },
+    {
+      "id": "paper-c-2606c830eeaaf2d7d8337a64",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Analytical solution for the surface states of the antiferromagnetic topological insulator MnBi2Te4"
+    },
+    {
+      "id": "paper-c-27191b238bcc8c463552428b",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Electro-plastic effect on the indentation of calcium fluoride"
+    },
+    {
+      "id": "paper-c-27201612e78b1e859d1894ab",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Thermally conductive nanocomposite with silicon carbide nanowire-bridged boron nitride skeleton for multifunctional thermal interface materials"
+    },
+    {
+      "id": "paper-c-2738981c270868d65aa1a120",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "RSizing: Robust Bayesian Optimization for Analog Circuit Sizing Under Process Variations"
+    },
+    {
+      "id": "paper-c-2753c1b6ab9f959628854982",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "2,3,7—三羟基—9—（3,5—二溴—2—羟基）苯基荧光酮—CTMAB胶束荧 …"
+    },
+    {
+      "id": "paper-c-2759bac36c5d7da8d1b5ed7c",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Smart and flexible CNTs@MXene heterostructure-decorated cellulose films with excellent electrothermal/photothermal conversion and EMI shielding performances"
+    },
+    {
+      "id": "paper-c-2777b31b3a9652ef5cb3dd8c",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Grafting of ethylene–ethyl acrylate–maleic anhydride terpolymer with amino‐terminated polydimethylsiloxane during reactive processing"
+    },
+    {
+      "id": "paper-c-27e81dd0843a354910b6ca9f",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Poly(vinyl chloride)/styrene‐butadiene rubber blends prepared by dynamic vulcanization with nitrile rubber as the compatibilizer"
+    },
+    {
+      "id": "paper-c-283047dab66d462b039065df",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "DSPlacer: DSP Placement for FPGA-based CNN Accelerator"
+    },
+    {
+      "id": "paper-c-28acc701abcb9accc079286a",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Experimental and simulated demonstration of a theoretical model for dip-type spectral sidebands in soliton fiber lasers"
+    },
+    {
+      "id": "paper-c-28d509f71f75fc4c935970fa",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Responsive‐Hydrogel Aquabots"
+    },
+    {
+      "id": "paper-c-296f0efd0a0189ea020241e8",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Carrier Frequency Offset Estimation for CO-OFDM: The Matched-Filter Approach"
+    },
+    {
+      "id": "paper-c-29d407a168f6825411bc7556",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Numerical analysis of multiwavelength erbium-doped fiber ring laser exploiting four-wave mixing"
+    },
+    {
+      "id": "paper-c-2a634ee523eda0e8b809fd09",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Ceramic-carbon Janus membrane for robust solar-thermal desalination"
+    },
+    {
+      "id": "paper-c-2ace91bed511a9a679df2c45",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Estimating Shape and Micro-Motion Parameter of Rotationally Symmetric Space Objects from the Infrared Signature"
+    },
+    {
+      "id": "paper-c-2ad0f214e2df44dcfa069d57",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Codon optimization and expression of irisin in Pichia pastoris GS115"
+    },
+    {
+      "id": "paper-c-2b6629e719395dc42dfd9110",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Corrections to “A Piecewise Monotonic Smooth Phase Variable for Speed-Adaption Control of Powered Knee-Ankle Prostheses”"
+    },
+    {
+      "id": "paper-c-2bf02fed35890addcb6e9eaf",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Efficient $k$k-Plex Mining in Temporal Graphs"
+    },
+    {
+      "id": "paper-c-2cdfb5acda6f5a858d2d0749",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Shock response of metal-ceramic nanolayered composites"
+    },
+    {
+      "id": "paper-c-2d0cdfe61b6a5cee5f21732c",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Magnetically tunable Shubnikov-de Haas oscillations in MnBi2Te4"
+    },
+    {
+      "id": "paper-c-2dc52540b7e590c4946cb111",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Multimodel Selection and Computation Resource Allocation Driven Cooperative Spectrum Sensing"
+    },
+    {
+      "id": "paper-c-2eea398e93e90cfdade65921",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Circularly Polarized Dielectric Rod Waveguide Antenna for Millimeter-Wave Applications"
+    },
+    {
+      "id": "paper-c-2f332e99718fad1a3472d222",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Improving the performance of predictive process modeling for large datasets"
+    },
+    {
+      "id": "paper-c-2f58e6da1d1a262797eec25b",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Mechanism in scratching of calcium fluoride with magneto-plasticity"
+    },
+    {
+      "id": "paper-c-2fa2217201f081802406d132",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Versatile Core–Sheath Yarn for Sustainable Biomechanical Energy Harvesting and Real‐Time Human‐Interactive Sensing"
+    },
+    {
+      "id": "paper-c-2fe6b02a0cc9c32d4573b074",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Quantum Confinement via Formation-Energy-Controlled Phase-Distribution Engineering in Quasi-2D CsPbI3 for Spectrally Stable Pure-Red Light-Emitting Diodes"
+    },
+    {
+      "id": "paper-c-31996ea30a81d04008f14b5c",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "A novel scalable method for machine degradation assessment using deep convolutional neural network"
+    },
+    {
+      "id": "paper-c-3451aef63ecfbddc775bb993",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Stacking‐Order‐Driven Optical Properties and Carrier Dynamics in ReS2"
+    },
+    {
+      "id": "paper-c-34730c5f5de1088d96a964d1",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Narrowband Radar Micromotion Targets Recognition Strategy Based on Graph Fusion Network Constructed by Cross-Modal Attention Mechanism"
+    },
+    {
+      "id": "paper-c-348f77b61a9f7ec0202456cd",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Human–Machine Interfacing Enabled by Triboelectric Nanogenerators and Tribotronics"
+    },
+    {
+      "id": "paper-c-35491c8b644466290689b2c3",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "An Overall Configuration Planning Method of Continuum Hyper-Redundant Manipulators Based on Improved Artificial Potential Field Method"
+    },
+    {
+      "id": "paper-c-359ceb42ec3bf4130d590706",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Circle Polarization Shift Keying With Direct Detection for Free-Space Optical Communication"
+    },
+    {
+      "id": "paper-c-35e99c6f7a7b1e5e2b7c926f",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "SpinLight: A High Accuracy and Robust Light Positioning System for Indoor Applications."
+    },
+    {
+      "id": "paper-c-3654728c5b0725d0b4f20d5a",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Direct generation of dip-type sidebands from WS_2 mode-locked fiber laser"
+    },
+    {
+      "id": "paper-c-36791b0037b73df94a3a4265",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "On Multivariate Markov Chains for Common and Non-Common Objects in Multiple Networks"
+    },
+    {
+      "id": "paper-c-36b329979be6a861b1851ed9",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "On Blocking Rules for the Bootstrap with Dependent Data"
+    },
+    {
+      "id": "paper-c-371848d44a45630c3504f28e",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Anomalous Andreev spectrum and transport in non-Hermitian Josephson junctions"
+    },
+    {
+      "id": "paper-c-377a5cc2ed108dfb35bb6b33",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Advanced Flexible Sensing Technologies for Soft Robots"
+    },
+    {
+      "id": "paper-c-380c5199b936fd0a07253bc4",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Autonomous rendezvous and robotic capturing of non-cooperative target in space"
+    },
+    {
+      "id": "paper-c-38116d140de72b0971491521",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "A Hierarchically Nanostructured Cellulose Fiber‐Based Triboelectric Nanogenerator for Self‐Powered Healthcare Products"
+    }
+  ],
+  "committed_handle_ids": [
+    "paper-c-009c3b8cbeeb9716d7526884",
+    "paper-c-0570ab9e36a167f11a2aeecc",
+    "paper-c-0576af7656fab964f50f42c3",
+    "paper-c-08cf2a6f3696cbefb5456823",
+    "paper-c-124f1b938f881b237ac9f14a"
+  ],
+  "committed_names": [
+    "Ultra-high sensitivity Fabry–Perot interferometer gas refractive index fiber sensor based on photonic crystal fiber and Vernier effect",
+    "Reversal of optical binding force by Fano resonance in plasmonic nanorod heterodimer",
+    "An Ultra-Compact 3-dB Power Splitter for Three Modes Based on Pixelated Meta-Structure",
+    "High-speed silicon photonic Mach–Zehnder modulator at 2 μm",
+    "High-sensitivity relative humidity fiber-optic sensor based on an internal–external Fabry–Perot cavity Vernier effect"
+  ],
+  "render_mode": "prose_renderer",
+  "answer_chars": 1474,
+  "lane_timings": [
+    [
+      "structured",
+      0.0
+    ],
+    [
+      "exact",
+      0.525
+    ],
+    [
+      "lexical",
+      2.796
+    ],
+    [
+      "vector",
+      10.314
+    ],
+    [
+      "web",
+      10.916
+    ]
+  ]
+}

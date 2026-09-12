@@ -1,0 +1,34 @@
+{
+  "session_id": "session:chat:Nmd4fBjByKiYGUcgPM2bpB2Uy1TjdrjD",
+  "turn_id": "turn:chat:sha256:1d064e2bd77f02172d913d62e9a2c77090a1f00085ac3e0c083ae9b4fc9ad2a4",
+  "turn_count": 1,
+  "query": "深圳有哪些研究机器人的教授",
+  "planned_displayed_ids": [],
+  "recalled_handles": [],
+  "committed_handle_ids": [],
+  "committed_names": [],
+  "render_mode": "prose_renderer",
+  "answer_chars": 332,
+  "lane_timings": [
+    [
+      "structured",
+      0.0
+    ],
+    [
+      "exact",
+      0.274
+    ],
+    [
+      "lexical",
+      1.156
+    ],
+    [
+      "vector",
+      15.417
+    ],
+    [
+      "web",
+      15.465
+    ]
+  ]
+}

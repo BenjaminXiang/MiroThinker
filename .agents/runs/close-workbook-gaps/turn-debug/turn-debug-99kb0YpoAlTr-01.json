@@ -1,0 +1,865 @@
+{
+  "session_id": "session:chat:99kb0YpoAlTrMWlIHg24CfuBRDh5S5Xg",
+  "turn_id": "turn:chat:sha256:ff481a968749fd08e0f27202cfbd95b3834200c82612ddb05a9032871acd1244",
+  "turn_count": 1,
+  "query": "有哪些关于钙钛矿太阳能电池的论文",
+  "planned_displayed_ids": [],
+  "recalled_handles": [
+    {
+      "id": "paper-c-2f4fa52c3a51ef3c804091a8",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Sulfur Position in Pyrene-Based PTTIs Plays a Key Role To Determine the Performance of Perovskite Solar Cells When PTTIs Were Employed as Electron Transport Layers"
+    },
+    {
+      "id": "paper-c-84cbaf59ad2eaa1ed85ec6a8",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Efficient and Highly Stable Lateral Perovskite Single‐Crystal Solar Cells through Crystal Engineering and Weak Ion Migration"
+    },
+    {
+      "id": "paper-c-e924a077a9f9dc464c8103e8",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Identifying the Optimum Morphology in High‐Performance Perovskite Solar Cells"
+    },
+    {
+      "id": "paper-c-015020dcf3b42bff1df39858",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Stable and Colorful Perovskite Solar Cells Using a Nonperiodic SiO2/TiO2 Multi-Nanolayer Filter"
+    },
+    {
+      "id": "paper-c-087f27c0da68cf442770c588",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Three-dimensional opto-electro-thermal coupled modeling and thermal optimization of perovskite solar cells using aluminum nitride interface layers"
+    },
+    {
+      "id": "paper-c-093eed73cc4002c8619a2da9",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Amine Salts Vapor Healing Perfected Perovskite Layers for NiOx Based p‐i‐n Solar Cells"
+    },
+    {
+      "id": "paper-c-174cac7497821c5fbbab5754",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Mitigating the Efficiency Deficit in Single-Crystal Perovskite Solar Cells by Precise Control of the Growth Processes"
+    },
+    {
+      "id": "paper-c-1a13896202d257d49715068b",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Dopant‐Free Organic Hole‐Transporting Material for Efficient and Stable Inverted All‐Inorganic and Hybrid Perovskite Solar Cells"
+    },
+    {
+      "id": "paper-c-1af9c7157f83172306992d46",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Stabilizing black-phase formamidinium perovskite formation at room temperature and high humidity"
+    },
+    {
+      "id": "paper-c-1fb6fc5b8d0a51dbac29b9ea",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Blade printing of low-melting-point alloys as back electrodes for high-efficiency and stable inverted perovskite solar cells"
+    },
+    {
+      "id": "paper-c-2083b7db2073b36410b6f2e6",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Electron‐Transport Materials in Perovskite Solar Cells"
+    },
+    {
+      "id": "paper-c-213b269056e63245ae827115",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Lead-chelating hole-transport layers for efficient and stable perovskite minimodules"
+    },
+    {
+      "id": "paper-c-2662b496baa6f1c639d4c7b7",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Graphene oxide as an efficient hole-transporting material for high-performance perovskite solar cells with enhanced stability"
+    },
+    {
+      "id": "paper-c-269199617831bc13aaf87a35",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Comparing the Calculated Fermi Level Splitting with the Open-Circuit Voltage in Various Perovskite Cells"
+    },
+    {
+      "id": "paper-c-28964b7b7ce708e5b13f4a70",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Automatic light-adjusting electrochromic device powered by perovskite solar cell"
+    },
+    {
+      "id": "paper-c-2ae714d8969d54b8783d903e",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "In Situ Growth of 2D Perovskite Capping Layer for Stable and Efficient Perovskite Solar Cells"
+    },
+    {
+      "id": "paper-c-2b4ce6cc4338218a87937ac9",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Self‐Assembled Molecules Toward Interface‐Optimized Perovskite Solar Cells: from One to Two"
+    },
+    {
+      "id": "paper-c-2c30f1db76b29d6a016d2295",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Structural and optical properties of 2D Ruddlesden‐Popper perovskite (BA) 2 (FA) n−1PbnI 3n+1 compounds for photovoltaic applications"
+    },
+    {
+      "id": "paper-c-2d5a98f24b2c94529c9ecdd8",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Modulating non-radiative recombination related to shallow traps in halide perovskites"
+    },
+    {
+      "id": "paper-c-2dfa0ec51c4caf161a9b0bb4",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Room-Temperature Sputtered SnO2 as Robust Electron Transport Layer for Air-Stable and Efficient Perovskite Solar Cells on Rigid and Flexible Substrates"
+    },
+    {
+      "id": "paper-c-3d6958a226070202444898f4",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "π-Conjugated zwitterion for dual-interfacial modification in high-performance perovskite solar cells"
+    },
+    {
+      "id": "paper-c-3fa7971d122a8ff4107dfdb2",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Printing photovoltaics by electrospray"
+    },
+    {
+      "id": "paper-c-466a1abbb60886d96effad14",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Mitigating Solvent Erosion to Enhance Self-Assembled Monolayer Coverage and Perovskite Solar Cell Performance"
+    },
+    {
+      "id": "paper-c-495ad8a0ddc3c6843a73962d",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Gaining Insight into the Effect of Organic Interface Layer on Suppressing Ion Migration Induced Interfacial Degradation in Perovskite Solar Cells"
+    },
+    {
+      "id": "paper-c-5011bf9ff143304d3366cacb",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Buried Interface Regulation with a Supramolecular Assembled Template Enables High‐Performance Perovskite Solar Cells for Minimizing the V OC Deficit"
+    },
+    {
+      "id": "paper-c-51c714dad3aee7d7dad2740a",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Shallow and Deep Trap State Passivation for Low-Temperature Processed Perovskite Solar Cells"
+    },
+    {
+      "id": "paper-c-54bcea234d28a964966eea4f",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Selenium-containing two-dimensional conjugated fused-ring electron acceptors for enhanced crystal packing, charge transport, and photovoltaic performance"
+    },
+    {
+      "id": "paper-c-5bda3db46e9b64cc0a4909c1",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Ionic Liquid Additives for Efficient and Durable Two-Step Perovskite Photovoltaic Devices"
+    },
+    {
+      "id": "paper-c-60fed972473312c4646b1fd3",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Moisture‐Resilient Perovskite Solar Cells for Enhanced Stability"
+    },
+    {
+      "id": "paper-c-64c13110736094b1860a9c14",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Tuning an Electrode Work Function Using Organometallic Complexes in Inverted Perovskite Solar Cells"
+    },
+    {
+      "id": "paper-c-6b47fcf04d720a7fc0698623",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Nucleation and crystal growth control for scalable solution-processed organic–inorganic hybrid perovskite solar cells"
+    },
+    {
+      "id": "paper-c-6e90381dd071cb34a6889904",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Bottom Contact Engineering for Ambient Fabrication of >25% Durable Perovskite Solar Cells"
+    },
+    {
+      "id": "paper-c-73f97705bb56b2f897dfb355",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Top‐Down Induced Crystallization Orientation toward Highly Efficient p‐i‐n Perovskite Solar Cells"
+    },
+    {
+      "id": "paper-c-7720c8069dac268063ceeb19",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Mitigating Surface Deficiencies of Perovskite Single Crystals Enables Efficient Solar Cells with Enhanced Moisture and Reverse‐Bias Stability"
+    },
+    {
+      "id": "paper-c-7af24ec7fee3edbb8ebc5757",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Mixed‐Cation Mixed‐Halide Perovskite Solar Cells by All‐Vacuum Sequential Deposition Using Metal Oxide Electron Transport Layer"
+    },
+    {
+      "id": "paper-c-8179ce429604e3aba7342275",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Unique Properties and Emerging Applications of Carbolong Metallaaromatics"
+    },
+    {
+      "id": "paper-c-84c2a4f1b3a81d9b54cc6b8a",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Precisely‐Controlled Co‐Self‐Assembled Monolayer for Improved Performance of Blade‐Coated Perovskite Solar Cells"
+    },
+    {
+      "id": "paper-c-895c507d5a20eb5cfa5732f3",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Energy level-modulated non-fullerene small molecule acceptors for improved V OC and efficiency of inverted perovskite solar cells"
+    },
+    {
+      "id": "paper-c-9ce52e19a03ec41f5d01dd14",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Efficient Semitransparent Perovskite Solar Cells for 23.0%‐Efficiency Perovskite/Silicon Four‐Terminal Tandem Cells"
+    },
+    {
+      "id": "paper-c-a8004006584d34d3269144c5",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Improving Efficiency and Stability of Antisolvent‐Free Perovskite Solar Cells via Radical Additives and Reduced‐Toxicity Strategies for Solvent Systems"
+    },
+    {
+      "id": "paper-c-a98f1bb0d5431c0d416b4efa",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Perovskite grain wrapping by converting interfaces and grain boundaries into robust and water-insoluble low-dimensional perovskites"
+    },
+    {
+      "id": "paper-c-aaf232513a0c945b9f376f8b",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Lead-Free Solar Cells Based on Hollow {en}MASnI3 Perovskites"
+    },
+    {
+      "id": "paper-c-ade1511f460029cbe0827471",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Synergy Effect of a π‐Conjugated Ionic Compound: Dual Interfacial Energy Level Regulation and Passivation to Promote V oc and Stability of Planar Perovskite Solar Cells"
+    },
+    {
+      "id": "paper-c-ae542c0e33fcaaedc66595bd",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Reversible Removal of Intermixed Shallow States by Light Soaking in Multication Mixed Halide Perovskite Films"
+    },
+    {
+      "id": "paper-c-aed314184fedf6077fc86794",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "A prenucleation strategy for ambient fabrication of perovskite solar cells with high device performance uniformity"
+    },
+    {
+      "id": "paper-c-b3203f5d99ef07ea21d3e38d",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Multifunctional Universal Additive for Stable and Efficient Inverted Perovskite Solar Cells"
+    },
+    {
+      "id": "paper-c-b376653cee120316e85d181c",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "High‐Efficiency Low‐Temperature ZnO Based Perovskite Solar Cells Based on Highly Polar, Nonwetting Self‐Assembled Molecular Layers"
+    },
+    {
+      "id": "paper-c-c1fce7d2d49893196a1392ac",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "High-efficiency tin perovskite solar cells by the dual functions of reduced voltage loss and crystal regulation"
+    },
+    {
+      "id": "paper-c-c8eae743794aa66ae446e725",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Blading of Conformal Electron‐Transport Layers in p–i–n Perovskite Solar Cells"
+    },
+    {
+      "id": "paper-c-cf52cab242ae666e3ad1f897",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Cross‐Linked 2D Perovskite Solar Cell with Uniform Phase Distribution and Increased Exciton Coupling"
+    },
+    {
+      "id": "paper-c-d632f39d4ae0edb89acc2dcb",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "A review of life cycle assessment and sustainability analysis of perovskite/Si tandem solar cells"
+    },
+    {
+      "id": "paper-c-d721d99acc55b2076618874b",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Highly reproducible perovskite solar cells with excellent CH3NH3PbI3−xClx film morphology fabricated via high precursor concentration"
+    },
+    {
+      "id": "paper-c-daf3bcd07fe0723b168ef6ab",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Bridged Carbolong Modulating Interfacial Charge Transfer Enhancement for High‐Performance Inverted Perovskite Solar Cells"
+    },
+    {
+      "id": "paper-c-e157abac90da24fc8f9b5f33",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "In situ Polymerization Induced Seed‐Root Anchoring Structure for Enhancing Stability and Efficiency in Perovskite Solar Modules"
+    },
+    {
+      "id": "paper-c-e444d88c8ef65dbe61dbf21a",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Overcoming the Limitations of Sputtered Nickel Oxide for High‐Efficiency and Large‐Area Perovskite Solar Cells"
+    },
+    {
+      "id": "paper-c-e7f24e5b224766b82e07e997",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Accelerated Redox Reactions Enable Stable Tin‐Lead Mixed Perovskite Solar Cells"
+    },
+    {
+      "id": "paper-c-e7fa7af25fc38c9060f391c7",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Crosslinked Conjugated Interlayer Network for Efficient and Stable Wide‐Bandgap Perovskite and All‐Perovskite Tandem Solar Cells"
+    },
+    {
+      "id": "paper-c-e8821708a75fdf605129556c",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Enhanced photovoltaic performance and stability with a new type of hollow 3D perovskite {en}FASnI 3"
+    },
+    {
+      "id": "paper-c-e9f5273973761bb33f784aca",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "sec-Butyl alcohol assisted pinhole-free perovskite film growth for high-performance solar cells"
+    },
+    {
+      "id": "paper-c-f07c93e92627ec9c76eb8e08",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Over-18%-Efficiency Quasi-2D Ruddlesden–Popper Pb–Sn Mixed Perovskite Solar Cells by Compositional Engineering"
+    },
+    {
+      "id": "paper-c-f7af838232b0de7bbecd7820",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Thiol‐Functionalized Conjugated Metal–Organic Frameworks for Stable and Efficient Perovskite Photovoltaics"
+    },
+    {
+      "id": "paper-c-f9953f5c22ee7388ac041235",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "ZnO electron transporting layer engineering realized over 20% efficiency and over 1.28 V open‐circuit voltage in all‐inorganic perovskite solar cells"
+    },
+    {
+      "id": "paper-c-fa1152a36dbf5a4766163119",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Achieving highly efficient all-polymer solar cells by green-solvent-processing under ambient atmosphere"
+    },
+    {
+      "id": "paper-c-fcef2c109295228b7240d8de",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Enhancing stability and efficiency of perovskite solar cells with crosslinkable silane-functionalized and doped fullerene"
+    },
+    {
+      "id": "paper-c-0912dfc4521cd50492805dca",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "A non-catalytic vapor growth regime for organohalide perovskite nanowires using anodic aluminum oxide templates"
+    },
+    {
+      "id": "paper-c-10c336373ad311a44e4c790c",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Compositional and Solvent Engineering in Dion–Jacobson 2D Perovskites Boosts Solar Cell Efficiency and Stability"
+    },
+    {
+      "id": "paper-c-1374e42dce129f6197847d42",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Overcoming Two Key Challenges in Monolithic Perovskite‐Silicon Tandem Solar Cell Development: Wide Bandgap and Textured Substrate—A Comprehensive Review"
+    },
+    {
+      "id": "paper-c-3eb9df06ed6485befdb98457",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Dion–Jacobson 2D Lead Iodide Perovskites"
+    },
+    {
+      "id": "paper-c-5a3b7df3026cb03a19e6ce84",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Organic film evolution and recombination losses in highly efficient perovskite/organic tandem solar cells"
+    },
+    {
+      "id": "paper-c-60222d0cbfeb30f6de355675",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Highly Oriented Low-Dimensional Tin Halide Perovskites with Enhanced Stability and Photovoltaic Performance"
+    },
+    {
+      "id": "paper-c-670db1b65cae998f4d3f4395",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Phase segregation due to ion migration in all-inorganic mixed-halide perovskite nanocrystals"
+    },
+    {
+      "id": "paper-c-7114fa65395a0ef429a9f75a",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Phase Segregation and Voltage Loss Mitigated Highly Efficient Perovskite–Organic Tandem Solar Cells with a Simple Ambipolar SnO x Interconnecting Layer"
+    },
+    {
+      "id": "paper-c-7db97f66fb4a0e14a8723f98",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Surface Chemistry Engineering of Perovskite Quantum Dots: Strategies, Applications, and Perspectives"
+    },
+    {
+      "id": "paper-c-826e9ebd8c18f5b4e82a127f",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Suppressing the defects in cesium-based perovskites via polymeric interlayer assisted crystallization control"
+    },
+    {
+      "id": "paper-c-8e497a584c85251ee74746f6",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "A Portable and Efficient Solar‐Rechargeable Battery with Ultrafast Photo‐Charge/Discharge Rate"
+    },
+    {
+      "id": "paper-c-a01a71ac6b42a85289858194",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Narrow-Bandgap Mixed Lead/Tin-Based 2D Dion–Jacobson Perovskites Boost the Performance of Solar Cells"
+    },
+    {
+      "id": "paper-c-ba97f061aa4788e98fbf8d3f",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Enhanced performance of single-crystal perovskite solar cells via in situ passivation of ionic liquid"
+    },
+    {
+      "id": "paper-c-be7cb0484352d1ebe65e70eb",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Titanium Dioxide Crystals with Tailored Facets"
+    },
+    {
+      "id": "paper-c-c144b0c5cb93aa9fe34f63da",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Interfaced Structures between Halide Perovskites: From Basics to Construction to Optoelectronic Applications"
+    },
+    {
+      "id": "paper-c-dbad6eb6ed10b6a60f86500f",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Symmetrization of the Crystal Lattice of MAPbI3 Boosts the Performance and Stability of Metal–Perovskite Photodiodes"
+    },
+    {
+      "id": "paper-c-f83d602ec6c88a3df1751280",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Perspective on defect control in semiconductors for photovoltaics"
+    },
+    {
+      "id": "paper-c-56ddc0b50df27f0951d22113",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Blade‐Coating with Engineered Evaporation Kinetics Enables Scalable Perovskite Photovoltaics with Minimal Efficiency Loss"
+    },
+    {
+      "id": "paper-c-010b1cb51d01f2df00b27bad",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "In Situ Growth of a ZnO Nanowire Network within a TiO2 Nanoparticle Film for Enhanced Dye‐Sensitized Solar Cell Performance"
+    },
+    {
+      "id": "paper-c-07630b66d8fa49b5d3d59a58",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Synergistic Effect of Poly(aryl ether ketone) Matrices via Rational Ternary Copolymerization Enables Efficient and Stable Organic Solar Cells"
+    },
+    {
+      "id": "paper-c-0894daead8bc5d23509119a4",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Intermediate-band solar cells employing quantum dots embedded in an energy fence barrier"
+    },
+    {
+      "id": "paper-c-09499265043f7d4d01aef252",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Three-dimensional bowl-shaped solid additive achieves 20.52% efficiency organic solar cells with enhanced thermal stability via curvature-mediated morphology regulation"
+    },
+    {
+      "id": "paper-c-0a57f20b20b0266158ce90df",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Printing of Low‐Melting‐Point Alloy as Top Electrode for Organic Solar Cells"
+    },
+    {
+      "id": "paper-c-0a7d68c7de99e281912c7fac",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Synthesis and side-chain isomeric effect of 4,9-/5,10-dialkylated-β-angular-shaped naphthodithiophenes-based donor–acceptor copolymers for polymer solar cells and field-effect transistors"
+    },
+    {
+      "id": "paper-c-0bcd75e33619f1190655a53f",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Transparent and Superhydrophobic Co3O4 Microfiber Films"
+    },
+    {
+      "id": "paper-c-0ca58622082e703e8758e9f7",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Singlet Fission in a Pyrrole-Fused Cross-Conjugated Skeleton with Adaptive Aromaticity"
+    },
+    {
+      "id": "paper-c-12630505d184a45798c4aaa2",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Regio‐Regular Polymer Acceptors Enabled by Determined Fluorination on End Groups for All‐Polymer Solar Cells with 15.2% Efficiency"
+    },
+    {
+      "id": "paper-c-15ee627e31f45c424aaa2ff8",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "A Nonfullerene Semitransparent Tandem Organic Solar Cell with 10.5% Power Conversion Efficiency"
+    },
+    {
+      "id": "paper-c-17c26d7ff299a627a4271510",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Enhancing inter-domain connectivity by reducing fractal dimensions: the key to passivating deep traps in organic photovoltaics"
+    },
+    {
+      "id": "paper-c-190dfe770952fe6a2e0fbcda",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "High-Efficiency Ternary Organic Solar Cells with a Good Figure-of-Merit Enabled by Two Low-Cost Donor Polymers"
+    },
+    {
+      "id": "paper-c-1a25ac0c84852810b134fbae",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Isomerization of Asymmetric Ladder‐Type Heteroheptacene‐Based Small‐Molecule Acceptors Improving Molecular Packing: Efficient Nonfullerene Organic Solar Cells with Excellent Fill Factors"
+    },
+    {
+      "id": "paper-c-1af32c148ce9d61e21f5d30e",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Arylamine-Based Squaraine Donors for Use in Organic Solar Cells"
+    },
+    {
+      "id": "paper-c-1c50fffa22082335db429171",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Antimonene quantum dot-based solid-state solar cells with enhanced performance and high stability"
+    },
+    {
+      "id": "paper-c-1cec1d9233a5946e1baf1bc0",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Transannularly conjugated tetrameric perylene diimide acceptors containing [2.2]paracyclophane for non-fullerene organic solar cells"
+    },
+    {
+      "id": "paper-c-1f2063ced6668a93c82e2550",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Side‐Chain Engineering on Y‐Series Acceptors with Chlorinated End Groups Enables High‐Performance Organic Solar Cells"
+    },
+    {
+      "id": "paper-c-2015bfe23d762d16d128b066",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "A Superhydrophilic Silicon Surface Enhanced by Multiscale Hierarchical Structures Fabricated by Laser Direct Writing"
+    },
+    {
+      "id": "paper-c-24b6c5bddee2728bfbceecbe",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Thermodynamic limits of quantum photovoltaic cell efficiency"
+    },
+    {
+      "id": "paper-c-25f6dfa453e13faa4a2b1023",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Saddle‐Point Excitons and Their Extraordinary Light Absorption in 2D β‐Phase Group‐IV Monochalcogenides"
+    },
+    {
+      "id": "paper-c-296897d25ef465e394591f76",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Effect of the Molecular Configuration of Perylene Diimide Acceptors on Charge Transfer and Device Performance"
+    },
+    {
+      "id": "paper-c-2bb2cada8cfcd335bee003ac",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Alkyl Chain Regiochemistry of Benzotriazole‐Based Donor Polymers Influencing Morphology and Performances of Non‐Fullerene Organic Solar Cells"
+    },
+    {
+      "id": "paper-c-329f0ec989fbea1013a2558d",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Fine-tuning of side-chain orientations on nonfullerene acceptors enables organic solar cells with 17.7% efficiency"
+    },
+    {
+      "id": "paper-c-36feec6a716fb2c18760470a",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "A Vinylene‐Linker‐Based Polymer Acceptor Featuring a Coplanar and Rigid Molecular Conformation Enables High‐Performance All‐Polymer Solar Cells with Over 17% Efficiency"
+    },
+    {
+      "id": "paper-c-39f4a01b7cda3e8b3c776085",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Efficient ternary organic solar cells based on a twin spiro-type non-fullerene acceptor"
+    },
+    {
+      "id": "paper-c-3b1340ba393a453a8efabf88",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Addition of alkynes and osmium carbynes towards functionalized dπ–pπ conjugated systems"
+    },
+    {
+      "id": "paper-c-3d19d8ec8c4f7d80576277aa",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Auxiliary sequential deposition enables 19%-efficiency organic solar cells processed from halogen-free solvents"
+    },
+    {
+      "id": "paper-c-3daa09070ae500c6c301417e",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Nanopyramid Structure for Ultrathin c-Si Tandem Solar Cells"
+    },
+    {
+      "id": "paper-c-3e05bace469ac00ca1bfb1b0",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Colloidal transfer printing method for periodically textured thin films in flexible media with greatly enhanced solar energy harvesting"
+    },
+    {
+      "id": "paper-c-41dbab5888031558cab0c14b",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Printable Fabrication of a Fully Integrated and Self‐Powered Sensor System on Plastic Substrates"
+    },
+    {
+      "id": "paper-c-420267c5a06f724b22a4f226",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "A Difluorobenzoxadiazole Building Block for Efficient Polymer Solar Cells"
+    },
+    {
+      "id": "paper-c-465907e20c134f3f1c0485c1",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Chemistry and materials based on 5,5′-bibenzo[c][1,2,5]thiadiazole"
+    },
+    {
+      "id": "paper-c-46d31f7386c36fb5ab9e91fe",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Reducing temperature swing of space objects with temperature-adaptive solar or radiative coating"
+    },
+    {
+      "id": "paper-c-470223f143a6030e74c5975d",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Toward all aerosol printing of high-efficiency organic solar cells using environmentally friendly solvents in ambient air"
+    },
+    {
+      "id": "paper-c-49d3e44b8534a27b2463ba59",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Functionalized Squaraine Donors for Nanocrystalline Organic Photovoltaics"
+    },
+    {
+      "id": "paper-c-4a4459e832ddae4da7dca77e",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Ideal rear contact formed via employing a conjugated polymer for Si/PEDOT:PSS hybrid solar cells"
+    },
+    {
+      "id": "paper-c-4c1c3dba1f1f0ee6d47679cb",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Photoluminescence from Radiative Surface States and Excitons in Methylammonium Lead Bromide Perovskites"
+    },
+    {
+      "id": "paper-c-4e0ee9f29e117d0aacec0f75",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Selective Hole and Electron Transport in Efficient Quaternary Blend Organic Solar Cells"
+    },
+    {
+      "id": "paper-c-512b9cdc6b87681eec99f2bf",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Oligomeric Acceptor: A “Two‐in‐One” Strategy to Bridge Small Molecules and Polymers for Stable Solar Devices"
+    },
+    {
+      "id": "paper-c-5aa01c318cc60752a54fe2a5",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "1D and 2D Graphdiynes: Recent Advances on the Synthesis at Interfaces and Potential Nanotechnological Applications"
+    },
+    {
+      "id": "paper-c-5cc6a737468aefeab7ff3bd8",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Dimerized Acceptors with Conjugate‐Break Linker Enable Highly Efficient and Mechanically Robust Organic Solar Cells"
+    },
+    {
+      "id": "paper-c-5f456f0ca09ce3929b01df8b",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Electro‐Optical Properties of Nanocone/Nanopillar Dual‐Structured Arrays for Ultrathin Silicon/Organic Hybrid Solar Cell Applications"
+    },
+    {
+      "id": "paper-c-5f7b81acbe8c08c05c4a661d",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Bromination: An Alternative Strategy for Non‐Fullerene Small Molecule Acceptors"
+    },
+    {
+      "id": "paper-c-5fecab9f36d8ce6a8d5bc388",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Random Polymerization Strategy Leads to a Family of Donor Polymers Enabling Well‐Controlled Morphology and Multiple Cases of High‐Performance Organic Solar Cells"
+    },
+    {
+      "id": "paper-c-614ae93499036271c2619087",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Solution-Processed Squaraine Bulk Heterojunction Photovoltaic Cells"
+    },
+    {
+      "id": "paper-c-6153a8d7688abc16306ad752",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Tuning Energy Levels without Negatively Affecting Morphology: A Promising Approach to Achieving Optimal Energetic Match and Efficient Nonfullerene Polymer Solar Cells"
+    }
+  ],
+  "committed_handle_ids": [
+    "paper-c-2f4fa52c3a51ef3c804091a8",
+    "paper-c-84cbaf59ad2eaa1ed85ec6a8",
+    "paper-c-e924a077a9f9dc464c8103e8",
+    "paper-c-015020dcf3b42bff1df39858",
+    "paper-c-087f27c0da68cf442770c588",
+    "paper-c-093eed73cc4002c8619a2da9",
+    "paper-c-174cac7497821c5fbbab5754",
+    "paper-c-1a13896202d257d49715068b",
+    "paper-c-1af9c7157f83172306992d46",
+    "paper-c-1fb6fc5b8d0a51dbac29b9ea",
+    "paper-c-2083b7db2073b36410b6f2e6",
+    "paper-c-213b269056e63245ae827115",
+    "paper-c-2662b496baa6f1c639d4c7b7",
+    "paper-c-269199617831bc13aaf87a35",
+    "paper-c-28964b7b7ce708e5b13f4a70",
+    "paper-c-2ae714d8969d54b8783d903e",
+    "paper-c-2b4ce6cc4338218a87937ac9",
+    "paper-c-2c30f1db76b29d6a016d2295",
+    "paper-c-2d5a98f24b2c94529c9ecdd8",
+    "paper-c-2dfa0ec51c4caf161a9b0bb4",
+    "paper-c-3d6958a226070202444898f4",
+    "paper-c-3fa7971d122a8ff4107dfdb2",
+    "paper-c-466a1abbb60886d96effad14",
+    "paper-c-495ad8a0ddc3c6843a73962d",
+    "paper-c-5011bf9ff143304d3366cacb",
+    "paper-c-51c714dad3aee7d7dad2740a",
+    "paper-c-54bcea234d28a964966eea4f",
+    "paper-c-5bda3db46e9b64cc0a4909c1",
+    "paper-c-60fed972473312c4646b1fd3",
+    "paper-c-64c13110736094b1860a9c14",
+    "paper-c-6b47fcf04d720a7fc0698623",
+    "paper-c-6e90381dd071cb34a6889904"
+  ],
+  "committed_names": [
+    "Sulfur Position in Pyrene-Based PTTIs Plays a Key Role To Determine the Performance of Perovskite Solar Cells When PTTIs Were Employed as Electron Transport Layers",
+    "Efficient and Highly Stable Lateral Perovskite Single‐Crystal Solar Cells through Crystal Engineering and Weak Ion Migration",
+    "Identifying the Optimum Morphology in High‐Performance Perovskite Solar Cells",
+    "Stable and Colorful Perovskite Solar Cells Using a Nonperiodic SiO2/TiO2 Multi-Nanolayer Filter",
+    "Three-dimensional opto-electro-thermal coupled modeling and thermal optimization of perovskite solar cells using aluminum nitride interface layers",
+    "Amine Salts Vapor Healing Perfected Perovskite Layers for NiOx Based p‐i‐n Solar Cells",
+    "Mitigating the Efficiency Deficit in Single-Crystal Perovskite Solar Cells by Precise Control of the Growth Processes",
+    "Dopant‐Free Organic Hole‐Transporting Material for Efficient and Stable Inverted All‐Inorganic and Hybrid Perovskite Solar Cells",
+    "Stabilizing black-phase formamidinium perovskite formation at room temperature and high humidity",
+    "Blade printing of low-melting-point alloys as back electrodes for high-efficiency and stable inverted perovskite solar cells",
+    "Electron‐Transport Materials in Perovskite Solar Cells",
+    "Lead-chelating hole-transport layers for efficient and stable perovskite minimodules",
+    "Graphene oxide as an efficient hole-transporting material for high-performance perovskite solar cells with enhanced stability",
+    "Comparing the Calculated Fermi Level Splitting with the Open-Circuit Voltage in Various Perovskite Cells",
+    "Automatic light-adjusting electrochromic device powered by perovskite solar cell",
+    "In Situ Growth of 2D Perovskite Capping Layer for Stable and Efficient Perovskite Solar Cells",
+    "Self‐Assembled Molecules Toward Interface‐Optimized Perovskite Solar Cells: from One to Two",
+    "Structural and optical properties of 2D Ruddlesden‐Popper perovskite (BA) 2 (FA) n−1PbnI 3n+1 compounds for photovoltaic applications",
+    "Modulating non-radiative recombination related to shallow traps in halide perovskites",
+    "Room-Temperature Sputtered SnO2 as Robust Electron Transport Layer for Air-Stable and Efficient Perovskite Solar Cells on Rigid and Flexible Substrates",
+    "π-Conjugated zwitterion for dual-interfacial modification in high-performance perovskite solar cells",
+    "Printing photovoltaics by electrospray",
+    "Mitigating Solvent Erosion to Enhance Self-Assembled Monolayer Coverage and Perovskite Solar Cell Performance",
+    "Gaining Insight into the Effect of Organic Interface Layer on Suppressing Ion Migration Induced Interfacial Degradation in Perovskite Solar Cells",
+    "Buried Interface Regulation with a Supramolecular Assembled Template Enables High‐Performance Perovskite Solar Cells for Minimizing the V OC Deficit",
+    "Shallow and Deep Trap State Passivation for Low-Temperature Processed Perovskite Solar Cells",
+    "Selenium-containing two-dimensional conjugated fused-ring electron acceptors for enhanced crystal packing, charge transport, and photovoltaic performance",
+    "Ionic Liquid Additives for Efficient and Durable Two-Step Perovskite Photovoltaic Devices",
+    "Moisture‐Resilient Perovskite Solar Cells for Enhanced Stability",
+    "Tuning an Electrode Work Function Using Organometallic Complexes in Inverted Perovskite Solar Cells",
+    "Nucleation and crystal growth control for scalable solution-processed organic–inorganic hybrid perovskite solar cells",
+    "Bottom Contact Engineering for Ambient Fabrication of >25% Durable Perovskite Solar Cells"
+  ],
+  "render_mode": "prose_renderer",
+  "answer_chars": 4682,
+  "lane_timings": [
+    [
+      "structured",
+      0.001
+    ],
+    [
+      "exact",
+      0.461
+    ],
+    [
+      "lexical",
+      5.406
+    ],
+    [
+      "vector",
+      11.153
+    ]
+  ]
+}

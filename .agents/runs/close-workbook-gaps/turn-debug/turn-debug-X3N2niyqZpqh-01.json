@@ -1,0 +1,941 @@
+{
+  "session_id": "session:chat:X3N2niyqZpqhy1ODOHONlzYjblc-Dyuo",
+  "turn_id": "turn:chat:sha256:e9ac50707d1ddece40d41be38160a4d6e1eb3def3c6d526ae9fa71d21a073105",
+  "turn_count": 1,
+  "query": "深圳有哪些做无人机整机的公司",
+  "planned_displayed_ids": [],
+  "recalled_handles": [
+    {
+      "id": "company-c-eff311f293f7ca2e489fe300",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市创客火科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:10cca86bbf243cee03aef378dde949d548fe314d2aef7bf47cdb534824d6ca38",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "无人机整机_企业_无人机网(www.youuav.com)_无人机专家--无人机专业网络平台"
+    },
+    {
+      "id": "company-c-60d5e0ff8198f7115762c3a1",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "优鹰智能科技（深圳）有限公司"
+    },
+    {
+      "id": "web-handle:sha256:0a3bc43245ba8405b62500789f0e957d73a40ba22efdd22227a83344a4529ace",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "30家重点无人机企业详情梳理 - 低空界"
+    },
+    {
+      "id": "company-c-6bae299c26c5d4e0d7590ddf",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳联合飞机科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:2b4135e089813909e8599b183a9930240b9b81404b6ec31e838bd41d0ed28980",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "无人机整机_企业_无人机网(www.youuav.com)_无人机专家--无人机专业网络平台"
+    },
+    {
+      "id": "company-c-006061a8a470851307fad1ca",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳九星智能航空科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:9dac95b8ffb2c9e91f10f830d8970041ae195a2f4931d55ecd2428bceb88e2b8",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "深圳无人机公司排名（名录） - 职友集"
+    },
+    {
+      "id": "company-c-028a0a33c57c05f7738c7bde",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市智璟科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:7d0965c7e37da9dce06907659f50e2f23283225ee74f5774de1fb471e195d803",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "汇总深圳15大无人机制造商和国内外无人机材料供应商-电子工程世界"
+    },
+    {
+      "id": "company-c-03ff3ad6c3e80ce15281158a",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳零度智能飞行器有限公司"
+    },
+    {
+      "id": "web-handle:sha256:e6cfc9fc72fa801540dbe09abc2dc83b7fe0969bfd544398596bbdde68cfad46",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "深圳市翼飞鸿天无人机科技有限公司 - 科创中国"
+    },
+    {
+      "id": "company-c-0575539d6e1d9d362bf36a5d",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳微孚智能信息科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:98a809114e1dd9e75e838f4eef6b5fdce2b2235e08b5f81271e3dc84631f05ab",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "深圳市创芯跃科技有限公司,广东深圳有做植保农用无人机的公司吗 - 全国头条"
+    },
+    {
+      "id": "company-c-09fd4866e9e1db6f68fcfabf",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市华芯机器人技术有限责任公司"
+    },
+    {
+      "id": "web-handle:sha256:14fc0d9e65ec7f14eb8239b2e6204f96d9a74524115c7c541aa7f7baa6b99ddc",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "About - 智航无人机"
+    },
+    {
+      "id": "company-c-0d316ce03cdf33ced6cf1c47",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市速爵科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:80d74066ba1b52f808a1b5b3cb17bc6a011787fcb01351ae2bf19cf58064600f",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "深圳无人机企业排行榜_深圳无人机有那些企业(第2页)"
+    },
+    {
+      "id": "company-c-0e423959d58e241f23c487ff",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市大疆创新科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:81141be3e035f470f566e67fcc3a4eb258e5071c49b37cafb5560bc5bc069434",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "中国有哪些头部无人机企业？"
+    },
+    {
+      "id": "company-c-0e9783e7a7f760994ffa19d1",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市普绘创新科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:dc1e2fdf28dba4528155c8c0dd7e73beb9a07817ecd4bc5a19e38dd285a16e6a",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "无人机整机_行业应用无人机_巡检无人机_企业_无人机网(www.youuav.com)_无人机专家--无人机专业网络平台(www.youuav.com)!"
+    },
+    {
+      "id": "company-c-0eb6ecee173fe78935606d17",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳新创天下网络科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:72bb567a40b878beac7340896432f488bbb89e4ea9342d1ba495cee241c347fc",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "企业_无人机网（www.youuav.com"
+    },
+    {
+      "id": "company-c-0fc060c8be5cf5ebb81acdc7",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "哈瓦国际航空技术（深圳）有限公司"
+    },
+    {
+      "id": "web-handle:sha256:200a1d8a647f2340824d540757e2f40e9f39987c30e86249016c613be9c145de",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "【深圳无人机】_深圳无人机品牌/图片/价格_深圳无人机批发_阿里巴巴 - 第41页"
+    },
+    {
+      "id": "company-c-102de25b1e3bfc5fc648692d",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳弧光航空科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:9509984099282df735aada3a04bb7db29f3b5ea2a8c1d6ae06ee303672550ce7",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "深圳智航无人机有限公司 - 百度百科"
+    },
+    {
+      "id": "company-c-128ccfce205806cbc65b7349",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳缔飞国际航空科技集团有限责任公司"
+    },
+    {
+      "id": "web-handle:sha256:8e42ed35920f3778807a25e0a87d0a9308417fa6d56b57cf07f417d7f59ef53a",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "【无人机深圳】_无人机深圳品牌/图片/价格_无人机深圳批发_阿里巴巴 - 第26页"
+    },
+    {
+      "id": "company-c-128f69fa72ed4011d7158323",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市欧拉空间科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:9919b2546a236e91d74da773113072fe995e613f8dc1c7744a0529002c01638a",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "从世界工厂到低空之城：小无人机撬动深圳大产业 - 新华网"
+    },
+    {
+      "id": "company-c-1e542d39c1d34e8aafcdcc7b",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳天鹰兄弟无人机创新有限公司"
+    },
+    {
+      "id": "web-handle:sha256:3e3f31e13b93670be451521e141335e52213ebee21cc4d779529841f41ecedcb",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "深圳智航- 全方位垂直起降固定翼无人机解决方案"
+    },
+    {
+      "id": "company-c-206ff5b9a3a11bed7bb46d38",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市明德新材技术有限公司"
+    },
+    {
+      "id": "web-handle:sha256:d52be82190034e2af3bbb77a13cd822653926cc27e47b9be45bce383cb83a92d",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "深圳无人机概念股票,深圳有哪些公司的业务涉及无人机- 股市聚焦_赢家财富网"
+    },
+    {
+      "id": "company-c-2c28eb321f066dc776c198f9",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市高端无人机有限公司"
+    },
+    {
+      "id": "web-handle:sha256:cb1de9ba2bde89e3369bff3c429261a89902a30d7215036b5f162cf797a3c528",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "深圳无人机企业1500多家年产值占全国七成 - 新浪城市"
+    },
+    {
+      "id": "company-c-2f850a3063e76245f03a6bb9",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市轩宇智能科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:ae2533e09ae04b790b5bc078c2e4c6e0fd74a00fc346865b83aa92cf19ba837b",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "深圳无人机公司有哪些? 爱问知识人"
+    },
+    {
+      "id": "company-c-301e3d2b0b9e76c5c2ec4c01",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市翔农创新科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:ec48b415615a4950427d8c6e1e3f19bfe1802d3d76b5d2534f67b3ce0b74585d",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "深圳市高巨创新科技开发有限公司 - 龙岗政府在线"
+    },
+    {
+      "id": "company-c-3116ec7a91e94cf4fbcf24fa",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "广东容祺智能科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:4c9fec7a6d3b77aeeaf7429894e380264a4f6253b742bad7686c92c7baf6e897",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "深圳无人机有哪些公司"
+    },
+    {
+      "id": "company-c-3289ad4abaebd854c9055888",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市艾特航空科技股份有限公司"
+    },
+    {
+      "id": "web-handle:sha256:55efa3891b01ec06ec4494fdb7029c883f766b0344efba2e8048e0e6c12e71a0",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "「不出南山区可造完整无人机」 深圳如何从电子城变无人机之都？"
+    },
+    {
+      "id": "company-c-3375e73928f9aa997ce446f3",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市大谷科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:d94eae0f6fde6214d987948f93bfa6882ad2c30d673329d6115af8c2178541fc",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "深圳厂家代工厂家-深圳厂家代工公司-生产批发企业-黄页名录大全 - 中外玩具网"
+    },
+    {
+      "id": "company-c-3395065856473b424cc98c2b",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳常锋信息技术有限公司"
+    },
+    {
+      "id": "web-handle:sha256:27000469ee1eeab5e949451fb84d5fc30b2ce9ceac341afce2843a4da85545c1",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "深圳无人机企业超1300家，年产值突破750亿元 - 奥一网"
+    },
+    {
+      "id": "company-c-377fd2442e5aa6f8989e25dc",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳前海汉来飞机发动机技术有限公司"
+    },
+    {
+      "id": "web-handle:sha256:5ce784398f9f04304d183a06bc53de06e733727d4641c24a38bfa48392666e93",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "深圳市圣华科技有限公司,广东深圳有做植保农用无人机的公司吗 - 全国头条"
+    },
+    {
+      "id": "company-c-3a2ef481e39bc9f19bc3783f",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳高启科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:297fa46d856d9e875abd60b0544c3cac04550b39e5cabc27ab6305963ed4b158",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "无人机整机_企业_无人机网(www.youuav.com)_无人机专家--无人机专业网络平台"
+    },
+    {
+      "id": "company-c-3baf4b22d2cb2cf319dbdcbb",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市瑞文航空科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:0e90a14fd44a311595472f57584c83ace8177f1a4696efb5ffea4dc1c02d6231",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "【无人机深圳】_无人机深圳品牌/图片/价格_无人机深圳批发_阿里巴巴"
+    },
+    {
+      "id": "company-c-3cf4cab1426c6314769c442b",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳飞豹航天航空科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:7fb892f218c40b5dbb905bc25025d2a83ef35ecefc272bbe09d73d91e16bce26",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "深圳大漠大智控技术有限公司"
+    },
+    {
+      "id": "company-c-4085d2b95b196eb475cbf846",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市爱将士创新科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:25920e0980c8efb52e13c004284c8fcbfed0d8bc28d102283cb7a842513bd035",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "深圳专业提供载重运输无人机生产线油电混合无人机组装线全案交付-阿里巴巴"
+    },
+    {
+      "id": "company-c-4182d8c51c05c67a71b84a8b",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市大德众和科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:3dc855dc7ecec025933a92eb17b54108a819cd72c92b1f8ffec6316581e759bc",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "深圳智航无人机有限公司"
+    },
+    {
+      "id": "company-c-440a9038074887fc38db8c14",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市轻准科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:ebba620068c718240484ee74d8e5a655df802ff77a85f0f154cc697debfaee4a",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "天鹰兄弟品牌专区_深圳天鹰兄弟无人机科技创新有限公司_天鹰兄弟(tianying)工程机械_-中国路面机械网"
+    },
+    {
+      "id": "company-c-44469500af4435ed703da3ef",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳一电航空技术有限公司"
+    },
+    {
+      "id": "web-handle:sha256:ffebb6f9079ab16f9d8e3cc3651859ef7d0f9ef4126e458c11716efda981ca52",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "深圳市翼飞鸿天无人机科技有限公司 - 企查查"
+    },
+    {
+      "id": "company-c-448a67ceb5e7d9f7a4438d88",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市科卫泰实业发展有限公司"
+    },
+    {
+      "id": "web-handle:sha256:9b9dc5c79d199d78a9f374bec90f4194feaa11399dc4451570dc8747f69531cb",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "深圳世界无人机大会2026_门票_时间_会刊_深圳无人机展-聚展"
+    },
+    {
+      "id": "company-c-469d299dd345582bbd054767",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市汇柏工业设备有限公司"
+    },
+    {
+      "id": "web-handle:sha256:59db2ef4c5a3ecad37bdbddcafe3b82b0df869f3028aa5280e1e972e532fcb8f",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "深圳某垂直起降固定翼无人机项目|投融界"
+    },
+    {
+      "id": "company-c-496ed6d61cdc0d7d26240f7a",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市拓天腾飞科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:b4dc6d2cb3c6e8aa87f1ffe0e39de172081888dd880170031debdefa70f69f7a",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "深圳智航无人机有限公司-泰伯网"
+    },
+    {
+      "id": "company-c-4a2797c8f9f436f5e72404ab",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳洲际通航投资控股有限公司"
+    },
+    {
+      "id": "web-handle:sha256:fe9b0c0d15f0a55d494a671b8b774f34ea25cebd903a6c7475ae8f4876ca4926",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "深圳市无人机发展整体概况_图表数据库 - 悟空智库"
+    },
+    {
+      "id": "company-c-4bdafeff090fcea679a6405c",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳华越无人机技术有限公司"
+    },
+    {
+      "id": "web-handle:sha256:ca279e42cf978df0645060ca699637c55c262fe8caf221ef9ad24050dadde1b2",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "深网头条_深圳新闻网"
+    },
+    {
+      "id": "company-c-4d4243861aad2a3a7e1501e2",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "兴天实业（深圳）有限公司"
+    },
+    {
+      "id": "web-handle:sha256:65ba44efe0c9c2f8ee30bbfc7142955b8fe772f6c3a16682422864023492d8ca",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "消费级无人机占全球市场70% 深圳竞逐“低空经济第一城”"
+    },
+    {
+      "id": "company-c-4eaf5949d7048ad3c2547df1",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市盛禾农业科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:7f2e1c3ee5e78d469507d1dc5bda49627816697dbfb95909cf1d60526bc5e5f3",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "深圳无人机企业超600家 逐步形成完备创新产业链大疆航空消费类_网易订阅"
+    },
+    {
+      "id": "company-c-54ae8dd8d15a65f408b4f384",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市道通智能航空技术股份有限公司"
+    },
+    {
+      "id": "web-handle:sha256:225269918dd8ff367b16753bdaef4a6b7ed2f5bae6f0bbe9b24a232967ff2227",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "深圳竞逐“低空经济第一城”"
+    },
+    {
+      "id": "company-c-56c412a4cb11b9e916878ebe",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳美团低空物流科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:59efe48a802f49cea1e90cfded7702fbc61b64d98b3b68ce0d898b69c324bb56",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "无人机角色:从消费级到工业级_深圳"
+    },
+    {
+      "id": "company-c-5884f237e0afc9b38855ecb4",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "狼天科技（深圳）有限公司"
+    },
+    {
+      "id": "web-handle:sha256:a633bc07bc39d62fcdf528673fbaf2720beea6adb4e1e71c451c47ce060829fb",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "消费级无人机_百度百科"
+    },
+    {
+      "id": "company-c-58e3766ada62cda169cf5aae",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市彩虹鹰无人机研究院有限公司"
+    },
+    {
+      "id": "web-handle:sha256:aeee364d85aabe16a75ef43e68440faf383a03af8565e983f432a1b85d954e20",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "我国消费级无人机首先是由深圳大疆创新科技有限公司研发生产出来的。() - 上学吧竞赛试题"
+    },
+    {
+      "id": "company-c-590d5cdc23b3045b5cf8ede9",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳创世泰克科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:b745e23241e0b1618ee64ed055bfba22f2073b9f35cf13afe37d0a74f8cd7bef",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "消费级无人机资料_电子发烧友网"
+    },
+    {
+      "id": "company-c-5b53eb3a1701508c7195510b",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市星图智控科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:31ffb118635b56775327bc5f9ac94d84766a6fb0cf1a35385755bbbac275948b",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "广州、深圳、珠海三核联动广东无人机产业占全国半壁江山 - 财联社"
+    },
+    {
+      "id": "company-c-5d6b978569bce30ea2d7bb63",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "全球鹰（深圳）无人机有限公司"
+    },
+    {
+      "id": "web-handle:sha256:c0d7dc3a3a7563c128a6cbf3fa2c900b09bd10580b1cc1fc6eec4ef804988bf5",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "无人机整机_消费级无人机_遥控航模_企业_无人机网(www.youuav.com)_无人机专家--无人机专业网络平台"
+    },
+    {
+      "id": "company-c-61c819fa61db84b1d4461bd1",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳智航无人机有限公司"
+    },
+    {
+      "id": "web-handle:sha256:72332d7ff548b244f84e6c784f5a2a50ef622dc83e95bdbfcafb4cf27274c3fd",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "[PDF] 无人机行业研究简报——附262家关联企业介绍 - 烯牛数据"
+    },
+    {
+      "id": "company-c-631864ac7dbf38671e16d1fa",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳高科新农技术有限公司"
+    },
+    {
+      "id": "web-handle:sha256:ea119552a2a08d6aa9ddc14a2435daf2847a68e0db2834d5e52a66c30a94f798",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "我国消费级无人机首先是由深圳大疆创新科技有限公司研发生产出来的。() - 众答网问答"
+    },
+    {
+      "id": "company-c-6616b8e49c7554eeae7a8c78",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市大智无疆科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:11903854d3967d3311b9acd8c78b04d3aa97096cc421c7ccc154ab296c97fba4",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "2026年中国电动无人机行业产业链、市场规模、应用及产品结构"
+    },
+    {
+      "id": "company-c-67ae30fc61266703a8d0cb72",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市飞研智能科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:3b3668927e276561fe32c5fa41f55d497f95f54431f61cd6bc908f49da371784",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "深圳市无人机行业协会 - 全国团体标准信息平台"
+    },
+    {
+      "id": "company-c-67f25077bbfaebd48777467a",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市康恒碳纤维科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:67a7f71f6c239a5498d010485428528a447b1e51dffd309a7ac882a95855b148",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "深圳飞鹰无人机科技有限公司 - 农业机械网商铺"
+    },
+    {
+      "id": "company-c-68af6342096ff8555218bd07",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "华擎创新（深圳）有限责任公司"
+    },
+    {
+      "id": "web-handle:sha256:3ed84e05538e55caeb927c5688022c3874e31cc730bfa947d76652092e05c766",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "工业无人机-工业无人机价格-工业无人机厂家-深圳市智璟科技有限公司"
+    },
+    {
+      "id": "company-c-6c0eb420cba10a6587b6eea1",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳承启未来科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:82dd2a80c4f2c96da9bbdef12b320f4e198cb2ff40288f0764b9064abf8db51e",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "无人机企业 - X-DRONERS"
+    },
+    {
+      "id": "company-c-6dadebfa545e97139c855b1e",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市普托云联技术有限公司"
+    },
+    {
+      "id": "web-handle:sha256:93607b39eb4e66300e0e45eeb1649f6ba39c790550bb28efad06e046b900b587",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "无人机在深圳卖的有哪些地区? - 搜狗问问"
+    },
+    {
+      "id": "company-c-71782c32dbd0933f1a9cdc93",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市铂航科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:7bdf7cc7110f7bff51cf7088a4c50ea8f23a24f152c1e5a56bb0a7044cc07939",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "无人机,低空经济的拓荒者-龙源期刊网"
+    },
+    {
+      "id": "company-c-71cbbc510cb6cd60bddf561a",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳一电科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:f74747979f7a5a9054a24b0b85c38a7173f34370c087e57ca1a8ab1621e80400",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "2026深圳国际无人机展览会参展商名单"
+    },
+    {
+      "id": "company-c-727ee727376f4efabc13aa6f",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市鸿昊丰电子科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:ac10bf51ea532ca742ab82440d0d39b191c5703d846f5c969e30cc7570eee2af",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "【深圳无人机】_深圳无人机品牌/图片/价格_深圳无人机批发_阿里巴巴 - 第20页"
+    },
+    {
+      "id": "company-c-7612f04fde15afd1db72e0fd",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳智空未来信息技术有限公司"
+    },
+    {
+      "id": "web-handle:sha256:f304f9318d60501016c0d53fa880acb282171081f490f3de3521d80a3cff61da",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "水下无人机-深圳市军亿电子有限公司-全球塑胶网-第2页"
+    },
+    {
+      "id": "company-c-7b1ce84165ceb47a79791cad",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市弘百业科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:4c74d56ab8bc22c4b62cd7b2bfb953dbf033efb984645892ac967f083ce73d36",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "无人机之都”深圳，贡献了全国90%以上的产值！深圳10大无人机公司排行榜。"
+    },
+    {
+      "id": "company-c-80a78ca2b1c7c57d38037ab0",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市九天创新科技有限责任公司"
+    },
+    {
+      "id": "web-handle:sha256:0e41aa606bda43b7e14c9787b27f330a5739a8055c6afd4eafcb123e193d54c7",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "无人机设备公司"
+    },
+    {
+      "id": "company-c-87f47ee5856f768ecec28c6f",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "中天泽智能装备有限公司"
+    },
+    {
+      "id": "web-handle:sha256:8d2f8ea1fb0509da65ce290ccceb48a6c56027081b039afe5192c7486c8a76b9",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "无人机企业排行榜_报告大厅"
+    },
+    {
+      "id": "company-c-88fb2f88784ed8cac62de469",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "中翼体育竞技（深圳）有限公司"
+    },
+    {
+      "id": "web-handle:sha256:444e9d728abc640ef5d16169b1898ec7896e76ea20d4cbf49af8730e24b19859",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "【深圳 产品测试工程师(无人机整机功性能)--双休,全额五险一金,研产销一体招聘】-大漠大智控深圳招聘信息-猎聘"
+    },
+    {
+      "id": "company-c-89834a02c02097bbb538da9e",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "蓝疆创新（深圳）科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:45480bbef25e65c8708df34c914411434cd5cc02c8e24538c8581060795d02e6",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "深圳消费类无人机产量占全球70%左右 质量领先-i深圳 |互联网看深圳"
+    }
+  ],
+  "committed_handle_ids": [
+    "company-c-0e423959d58e241f23c487ff",
+    "company-c-6bae299c26c5d4e0d7590ddf",
+    "company-c-006061a8a470851307fad1ca",
+    "web-handle:sha256:14fc0d9e65ec7f14eb8239b2e6204f96d9a74524115c7c541aa7f7baa6b99ddc",
+    "company-c-028a0a33c57c05f7738c7bde",
+    "company-c-03ff3ad6c3e80ce15281158a",
+    "web-handle:sha256:9509984099282df735aada3a04bb7db29f3b5ea2a8c1d6ae06ee303672550ce7",
+    "web-handle:sha256:ec48b415615a4950427d8c6e1e3f19bfe1802d3d76b5d2534f67b3ce0b74585d",
+    "company-c-0fc060c8be5cf5ebb81acdc7",
+    "company-c-102de25b1e3bfc5fc648692d",
+    "company-c-128ccfce205806cbc65b7349",
+    "company-c-128f69fa72ed4011d7158323",
+    "company-c-1e542d39c1d34e8aafcdcc7b",
+    "company-c-206ff5b9a3a11bed7bb46d38",
+    "company-c-2c28eb321f066dc776c198f9",
+    "company-c-301e3d2b0b9e76c5c2ec4c01",
+    "company-c-3116ec7a91e94cf4fbcf24fa",
+    "company-c-3289ad4abaebd854c9055888",
+    "company-c-3375e73928f9aa997ce446f3",
+    "company-c-3395065856473b424cc98c2b",
+    "company-c-3a2ef481e39bc9f19bc3783f",
+    "company-c-3baf4b22d2cb2cf319dbdcbb",
+    "company-c-3cf4cab1426c6314769c442b",
+    "company-c-4085d2b95b196eb475cbf846",
+    "company-c-440a9038074887fc38db8c14",
+    "company-c-eff311f293f7ca2e489fe300",
+    "company-c-60d5e0ff8198f7115762c3a1",
+    "company-c-0575539d6e1d9d362bf36a5d",
+    "company-c-09fd4866e9e1db6f68fcfabf",
+    "company-c-0d316ce03cdf33ced6cf1c47",
+    "company-c-0e9783e7a7f760994ffa19d1",
+    "company-c-0eb6ecee173fe78935606d17",
+    "web-handle:sha256:3dc855dc7ecec025933a92eb17b54108a819cd72c92b1f8ffec6316581e759bc",
+    "company-c-2f850a3063e76245f03a6bb9",
+    "company-c-377fd2442e5aa6f8989e25dc",
+    "company-c-4182d8c51c05c67a71b84a8b",
+    "company-c-44469500af4435ed703da3ef",
+    "company-c-448a67ceb5e7d9f7a4438d88",
+    "company-c-469d299dd345582bbd054767",
+    "company-c-496ed6d61cdc0d7d26240f7a",
+    "company-c-4a2797c8f9f436f5e72404ab",
+    "company-c-4bdafeff090fcea679a6405c",
+    "company-c-4d4243861aad2a3a7e1501e2",
+    "company-c-4eaf5949d7048ad3c2547df1",
+    "company-c-54ae8dd8d15a65f408b4f384",
+    "company-c-56c412a4cb11b9e916878ebe",
+    "company-c-5884f237e0afc9b38855ecb4",
+    "company-c-58e3766ada62cda169cf5aae",
+    "company-c-590d5cdc23b3045b5cf8ede9",
+    "company-c-5b53eb3a1701508c7195510b",
+    "company-c-5d6b978569bce30ea2d7bb63",
+    "company-c-61c819fa61db84b1d4461bd1",
+    "company-c-631864ac7dbf38671e16d1fa",
+    "company-c-6616b8e49c7554eeae7a8c78",
+    "company-c-67ae30fc61266703a8d0cb72",
+    "company-c-67f25077bbfaebd48777467a",
+    "company-c-68af6342096ff8555218bd07",
+    "company-c-6c0eb420cba10a6587b6eea1",
+    "company-c-6dadebfa545e97139c855b1e",
+    "company-c-71782c32dbd0933f1a9cdc93",
+    "company-c-71cbbc510cb6cd60bddf561a",
+    "company-c-727ee727376f4efabc13aa6f",
+    "company-c-7612f04fde15afd1db72e0fd",
+    "company-c-7b1ce84165ceb47a79791cad",
+    "company-c-80a78ca2b1c7c57d38037ab0",
+    "company-c-87f47ee5856f768ecec28c6f",
+    "company-c-88fb2f88784ed8cac62de469",
+    "company-c-89834a02c02097bbb538da9e"
+  ],
+  "committed_names": [
+    "深圳市大疆创新科技有限公司",
+    "深圳联合飞机科技有限公司",
+    "深圳九星智能航空科技有限公司",
+    "About - 智航无人机",
+    "深圳市智璟科技有限公司",
+    "深圳零度智能飞行器有限公司",
+    "深圳智航无人机有限公司 - 百度百科",
+    "深圳市高巨创新科技开发有限公司 - 龙岗政府在线",
+    "哈瓦国际航空技术（深圳）有限公司",
+    "深圳弧光航空科技有限公司",
+    "深圳缔飞国际航空科技集团有限责任公司",
+    "深圳市欧拉空间科技有限公司",
+    "深圳天鹰兄弟无人机创新有限公司",
+    "深圳市明德新材技术有限公司",
+    "深圳市高端无人机有限公司",
+    "深圳市翔农创新科技有限公司",
+    "广东容祺智能科技有限公司",
+    "深圳市艾特航空科技股份有限公司",
+    "深圳市大谷科技有限公司",
+    "深圳常锋信息技术有限公司",
+    "深圳高启科技有限公司",
+    "深圳市瑞文航空科技有限公司",
+    "深圳飞豹航天航空科技有限公司",
+    "深圳市爱将士创新科技有限公司",
+    "深圳市轻准科技有限公司",
+    "深圳市创客火科技有限公司",
+    "优鹰智能科技（深圳）有限公司",
+    "深圳微孚智能信息科技有限公司",
+    "深圳市华芯机器人技术有限责任公司",
+    "深圳市速爵科技有限公司",
+    "深圳市普绘创新科技有限公司",
+    "深圳新创天下网络科技有限公司",
+    "深圳智航无人机有限公司",
+    "深圳市轩宇智能科技有限公司",
+    "深圳前海汉来飞机发动机技术有限公司",
+    "深圳市大德众和科技有限公司",
+    "深圳一电航空技术有限公司",
+    "深圳市科卫泰实业发展有限公司",
+    "深圳市汇柏工业设备有限公司",
+    "深圳市拓天腾飞科技有限公司",
+    "深圳洲际通航投资控股有限公司",
+    "深圳华越无人机技术有限公司",
+    "兴天实业（深圳）有限公司",
+    "深圳市盛禾农业科技有限公司",
+    "深圳市道通智能航空技术股份有限公司",
+    "深圳美团低空物流科技有限公司",
+    "狼天科技（深圳）有限公司",
+    "深圳市彩虹鹰无人机研究院有限公司",
+    "深圳创世泰克科技有限公司",
+    "深圳市星图智控科技有限公司",
+    "全球鹰（深圳）无人机有限公司",
+    "深圳智航无人机有限公司",
+    "深圳高科新农技术有限公司",
+    "深圳市大智无疆科技有限公司",
+    "深圳市飞研智能科技有限公司",
+    "深圳市康恒碳纤维科技有限公司",
+    "华擎创新（深圳）有限责任公司",
+    "深圳承启未来科技有限公司",
+    "深圳市普托云联技术有限公司",
+    "深圳市铂航科技有限公司",
+    "深圳一电科技有限公司",
+    "深圳市鸿昊丰电子科技有限公司",
+    "深圳智空未来信息技术有限公司",
+    "深圳市弘百业科技有限公司",
+    "深圳市九天创新科技有限责任公司",
+    "中天泽智能装备有限公司",
+    "中翼体育竞技（深圳）有限公司",
+    "蓝疆创新（深圳）科技有限公司"
+  ],
+  "render_mode": "prose_renderer",
+  "answer_chars": 2255,
+  "lane_timings": [
+    [
+      "structured",
+      0.0
+    ],
+    [
+      "exact",
+      0.159
+    ],
+    [
+      "lexical",
+      2.656
+    ],
+    [
+      "vector",
+      4.821
+    ],
+    [
+      "web",
+      5.849
+    ]
+  ]
+}

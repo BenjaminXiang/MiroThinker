@@ -1050,3 +1050,28 @@
 - Harness decomposition (offline, same code): lidar/g2/pcb reads 7.4-12.1s
   (local lanes 5-9s, web 6.7-11.2s) — the local path is no longer the
   bottleneck; live variance is page fetching.
+
+## 2026-09-12 — LAT-3 deployed: probe judgments batched across jobs — all seven turns ≤24.5s TTFT
+
+- Root cause of the remaining >30s TTFT (lidar 41.5-44.0s, g2 43.2s): the
+  lane walls summed to only ~15s; the gap sat in the supplemental pipeline
+  (receipt budget 30s), whose per-job probe judgment (`_select_probe_hit`)
+  ran serially in the calling thread — up to 16 enumeration probes meant up
+  to 16 back-to-back LLM round-trips (~25-30s tail). py-spy samples during
+  a live lidar turn showed the judgment stack in ~13/28 samples.
+- Fix (`9e5bced8` + `c0cd198b`): rule misses from every probe job ride ONE
+  `judge_batch` call per 8-job chunk, namespaced by job; the rule fast path
+  stays per job, each job still wins its first accepted entry in result
+  order, a failed batch still accepts nothing, and the judgment pass
+  requires ≥2s of the 27s pre-judgment budget to remain.
+- Live latency probe r4 (same seven turns): **24.42 / 14.59 / 19.77 / 15.62 /
+  17.47 / 15.41 / 11.14s TTFT — every turn ≤24.5s** (r2 baseline: 79.33 /
+  60.08 / 39.95 / 26.01 / 41.62 / 23.66 / 11.37).
+- Regression: supplemental suite 20 passed (incl. the new cross-job batching
+  test); serving_isolated+read_isolated 330; multiturn+pack_loader 57 + 1
+  pre-existing off_anchor. Generalization r5 all OK (drone 0 off-category,
+  medical clean; storage/lidar off-category counts are the known P2 slice).
+  Testset: g2 3/3; g5 entity 2/2 (completeness awaits the web track).
+- Drive-by find: `_accept_streamed_truncation` logged through an undefined
+  `logger` (F821) — the length-capped partial-ship rescue would NameError
+  exactly when it was needed. Fixed (`eced3c83`) with a direct unit test.

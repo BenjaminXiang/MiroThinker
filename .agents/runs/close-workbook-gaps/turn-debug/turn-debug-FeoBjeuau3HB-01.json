@@ -1,0 +1,967 @@
+{
+  "session_id": "session:chat:FeoBjeuau3HBDHsH0c_8RLZ2PCxSGcS8",
+  "turn_id": "turn:chat:sha256:7aeab3c89ec0314c9537576de65be5e6763211c4dd896997a8273f2b68330c1b",
+  "turn_count": 1,
+  "query": "深圳有哪些做储能电池的公司",
+  "planned_displayed_ids": [],
+  "recalled_handles": [
+    {
+      "id": "company-c-96442e17ea07fa30cf11c87e",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市华宝新能源股份有限公司"
+    },
+    {
+      "id": "web-handle:sha256:b028add0d7f7869153b88cf6301d07c38f4aafd5d280487856823394034fdd85",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "盘点广东15家储能企业，是卷王还是黑马？ - ITES深圳工业展"
+    },
+    {
+      "id": "company-c-5541889c43eb5ab7876adb79",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳蓝锂科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:d425f2ed0f6b60dea078e432eac6c0091e0a822c1fcf755627c4a44aea9e08cf",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "深圳工商业储能电池厂家_AGV锂电池_工业自动化设备锂电池_UPS锂电池_防爆锂电池厂家定制_深圳市睿禹能科技有限公司"
+    },
+    {
+      "id": "company-c-5e1345c39bc1aa9b2c72dac2",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市中和储能科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:5d09144713034e1560d6a6d8930451bdd3a174856debb01ed178aad3d61608fe",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "深圳储能公司排名（名录） - 职友集"
+    },
+    {
+      "id": "company-c-235f7ea1c0970ad9e75ea3ef",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市智安新能源科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:aef97ddafa5b7953eed43e1c9fa9796fd7da1551b263b9d8fe67304058725639",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "户用储能_深圳市海雷新能源股份有限公司"
+    },
+    {
+      "id": "company-c-362d7d604c585480a0ebf6f9",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳珈钠能源科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:b4243288fe0fe9e7a282c08a4d174a45239e6b1ad65e5147e67390f7dc2b2c62",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "蓄电池-企业-企业频道-全球电池网"
+    },
+    {
+      "id": "company-c-6cc8d756936d4aaae071b68c",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳三晖能源科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:9ffbb564073a04ba934b6ac61dc1fe56bc09a5f26ce70fc97653f6bfaee9f02b",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "深圳市335家注册资本超1000万储能企业汇总及分布一览！"
+    },
+    {
+      "id": "company-c-7ce57d78656959ef3befd714",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳聚吉星科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:b9a4b4d497ad40ab0f150215a0c0551d75f1daf7c06c267766c6dc14171b6a7b",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "深圳储能中心有限公司"
+    },
+    {
+      "id": "company-c-8c83cde8bb8c5ab352ca970a",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市索阳新能源科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:b6a03ba5cd6cf38430464774b57daeb2f3a1c6110592ad7d480cfd2e3e8a7940",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "【新能源产业】广东省、深圳市电化学储能产业现状"
+    },
+    {
+      "id": "company-c-9a91ab4b54be315059ebb0c4",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "长园科技集团股份有限公司"
+    },
+    {
+      "id": "web-handle:sha256:66c1e40a6317715c11da3e03be91a46c8e49cff28fb5b1b2a1ed52ba5acc9e40",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "储能电池, 储能电池 产品, 储能电池 制造商, 储能电池 供应商和出口商 - 深圳市和合晋实业有限公司"
+    },
+    {
+      "id": "company-c-e3a5059c5d176da0e2fd089b",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市佰特瑞储能系统有限公司"
+    },
+    {
+      "id": "web-handle:sha256:7afd8b6c1de954f13c87a1a9d686891d3a6140e70420f51b77cba8d95636811e",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "深圳市远信储能技术股份有限公司"
+    },
+    {
+      "id": "company-c-14535187b68c652c853df05a",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市德赛电池科技股份有限公司"
+    },
+    {
+      "id": "web-handle:sha256:767a0fdace042ab56cfcede7b0094228df01795e7742c72c852198e3dcdfe81a",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "供应储能的企业第14页_新能源网"
+    },
+    {
+      "id": "company-c-145408040945ad6f538c063b",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市比亚迪锂电池有限公司"
+    },
+    {
+      "id": "web-handle:sha256:ca27c8be088ab2dd5214438369e4bdccffb8b230e853224323cfb70c1547d083",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "储能电池厂家哪家好_AGV锂电池_工业自动化设备锂电池_UPS锂电池_防爆锂电池厂家定制_深圳市睿禹能科技有限公司"
+    },
+    {
+      "id": "company-c-5d0b89bb37dac136eabad11f",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳邦凯新能源股份有限公司"
+    },
+    {
+      "id": "web-handle:sha256:de6a8bd3dce2d54df8d032135efd39575b02fadafa47b8a6c7d18577820f6710",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "全球太阳能电池储能制造商数据库"
+    },
+    {
+      "id": "company-c-5d36f13fbdb7a25f860ad8b8",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市瑞能实业股份有限公司"
+    },
+    {
+      "id": "web-handle:sha256:20420212d8e305a771af6888c3c9cb12411cf0cd35c29699246bd69264ddc651",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "工商业储能_深圳市海雷新能源股份有限公司"
+    },
+    {
+      "id": "company-c-650d77ed5368cfcfa28de771",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳吉阳智能科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:9f7afc37fd6b936b78e46d1a37fcfcc14424581a12bbbd4e65c1763936d0f75c",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "解决方案- 深圳三晖能源科技有限公司"
+    },
+    {
+      "id": "company-c-762ee0785aa3012ffb7d8ac3",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市创明新能源股份有限公司"
+    },
+    {
+      "id": "web-handle:sha256:b1d25740f298d7861a6b3769ee69aa3eab3389953cd402b28f70f883e290a1ed",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "储能蓄电池公司"
+    },
+    {
+      "id": "company-c-7b23076f872f1f3c38cc273f",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市鹏诚新能源科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:086ca39feca3ccc9f0e3cfe5e674c01773db87a6bf314388aaeecde3d1ba21dd",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "深圳拥有全球一流新型储能产业生态相关企业数量近7000家"
+    },
+    {
+      "id": "company-c-7c2e0bbacff43f6e6bc9111d",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市奕天博创科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:943711c9a303cf6cda42e005c318dc4f4f3a02cd03af8dc0d232fceb89ca0ed2",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "新闻资讯 / 常见问题_AGV锂电池_工业自动化设备锂电池_UPS锂电池_防爆锂电池厂家定制_深圳市睿禹能科技有限公司"
+    },
+    {
+      "id": "company-c-829a7bc46f2aefba2eefb1ec",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市万微半导体有限公司"
+    },
+    {
+      "id": "web-handle:sha256:d081fe8d36ffbbe05b10a86ad26e33a59b7b4c256b1542f29b133b4272e5adf2",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "深圳市未蓝新能源科技有限公司-深圳工商业储能生产厂家"
+    },
+    {
+      "id": "company-c-90b6558cfd2c2e035d41f1ab",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市海芝通电子股份有限公司"
+    },
+    {
+      "id": "web-handle:sha256:7cdfe8cb7ba471b6d6610b07d01e197eeac81532f2480d812564f600b4b793c1",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "【蓄电池】公司黄页厂家名录第35页_顺企网"
+    },
+    {
+      "id": "company-c-a326e73117ad9465f42b2fae",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市杰成镍钴新能源科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:ff9ca4e7742b9a7fbd650ddd0725b0fc08416ff67de42a6bd88e258c17169e09",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "全球顶级便携储能设备“深圳造”"
+    },
+    {
+      "id": "company-c-b49f592ca431feb42a19a49d",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市海盈科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:3fd035fde71e67d04782c4e1eec8b6e9c294ff6c18a07850b9f34bd99daf0d96",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "光伏 电池储能系统 生产商"
+    },
+    {
+      "id": "company-c-b9dac8d2762e6f4f91c4acea",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市雄韬电源科技股份有限公司"
+    },
+    {
+      "id": "web-handle:sha256:f716654f84295737e6bd9a5c133278f526e5cd45d6b1e44bb72301d6ffbef2fd",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "【深圳蓄电池公司黄页_深圳蓄电池厂家大全】_顺企网"
+    },
+    {
+      "id": "company-c-bffb4161756f8676045f3a35",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市舜源自动化科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:109f458a3960ddab06c383dba8616239cbfa7db4680bc276f85d96e9fe493641",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "深圳市中和储能科技有限公司-全钒电池_硫铁电池_液流电堆_PBI非氟 ..."
+    },
+    {
+      "id": "company-c-c562e096ff84740d90f35787",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市天威赛利机电设备有限公司"
+    },
+    {
+      "id": "web-handle:sha256:3516e0c78e1f3d6cb416bd8113786ef43b13db096732e5fbeca9d6b5e8f4c4e4",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "深圳市储能系统有限公司"
+    },
+    {
+      "id": "company-c-ec3865c713e86067f4b9cbe8",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市安德普电源科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:400d4e6caadcae7f8dd01a2558672b1dc0016cb28828e0f9a3f38ddb70c4d6d4",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "深圳耐能电池科技有限公司"
+    },
+    {
+      "id": "company-c-fc4d55ae4ffa4e05f446a88a",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市飞碟动力科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:eaf3be5dfa941810562611614d425d096609e97575aafaaec747083977e497c6",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "全球储能企业列表第547页_全球储能网"
+    },
+    {
+      "id": "company-c-0a97417bd9d8d00a57143ee4",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市格瑞普电池有限公司"
+    },
+    {
+      "id": "web-handle:sha256:e31d0c4c09b5889fd70f918168a3ae629197976117aea5631e3cdf5f343d4698",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "深圳比亚迪储能有限公司 - 百度百科"
+    },
+    {
+      "id": "company-c-16128f02f7989b4cd7fa9d7a",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市科敏传感器有限公司"
+    },
+    {
+      "id": "web-handle:sha256:8ffcd1a620a7a3502532e6ea31a85e07a31f22d1d731f523ab9d4f414b08c546",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "LiFe-Younger：储能系统与移动电动汽车充电解决方案提供商"
+    },
+    {
+      "id": "company-c-1978d66edff1608855e36e4e",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市普兰德储能技术有限公司"
+    },
+    {
+      "id": "web-handle:sha256:240e65b30f99279a558fb94a46b1fa79c0cb27702fb25491dabe849c4625231e",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "家庭储能太阳能电池| 深圳XIHO 锂电池制造商"
+    },
+    {
+      "id": "company-c-1ec3088151f5167613981fd5",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市赛德电源技术有限公司"
+    },
+    {
+      "id": "web-handle:sha256:ae36a889e4057fb6d59220ba7c5e739d2b838f797ec583e29c03a3a2e25f8fd8",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "深圳储能公司"
+    },
+    {
+      "id": "company-c-71a954b821bf676286313286",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市伏特能源股份有限公司"
+    },
+    {
+      "id": "web-handle:sha256:c31df64875e91ca9a18a0b90dc0762d5e8410344e534821d87f40599098825e6",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "深圳高能电池公司"
+    },
+    {
+      "id": "company-c-7bf57493c8c8c6e5839f30ee",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市卓誉自动化科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:c26645eeb7232600fe919e8ccf1e6fa351e8061b84d83134dbd228f3931a56f5",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "2024年中国储能电池产业供应链十大代表性企业：宁德时代、比亚迪"
+    },
+    {
+      "id": "company-c-8456e1a79180a610d0b3ab0a",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市山木新能源科技股份有限公司"
+    },
+    {
+      "id": "web-handle:sha256:98beefc8bfd0b9a378803e3688a13faafda04ca7b72d809f47469198d1139c04",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "深圳锂源电池有限公司_储能系统_锂电池储能系统"
+    },
+    {
+      "id": "company-c-9b08c38f2a86dbd108a1ebac",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市豪鹏科技股份有限公司"
+    },
+    {
+      "id": "web-handle:sha256:c98522f8a3ffae514c20f84817c2737ec59600032f7650b146eed8bc527e7da4",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "深圳储能系统公司排名（名录） - 职友集"
+    },
+    {
+      "id": "company-c-9ce2ca12de04155715725de9",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳澳睿新能源科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:ae650c7c1784b916bafd7a17a1bb6368c4fd640f1d61e3d2d67b118c902f4b87",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "动力储能电池【价格 厂家 供应商】-深圳市博力美电池有限公司_第2页"
+    },
+    {
+      "id": "company-c-a6878d1306456741716afb0a",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳昆宇电源科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:556aa0f10c452c27dc271673bbaa20c6e6a77c9e66286f0720bd1032e6f0802c",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "储能锂电池-深圳市鹏诚新能源科技有限公司_致力于高安全可靠的锂离子电池研发、生产与销售的国家高新技术企业"
+    },
+    {
+      "id": "company-c-bf9568cdff7208d4f9ecda5d",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市远信储能技术有限公司"
+    },
+    {
+      "id": "web-handle:sha256:f4f7c39413fbf984c750927958730b758c7737164db35637eb7e6eac0797dc86",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "锂电池_18650锂电池组_深圳聚合物锂电池厂家-康胜锂电池制造商"
+    },
+    {
+      "id": "company-c-c04f718593c31d73a375e598",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市创芯微微电子有限公司"
+    },
+    {
+      "id": "web-handle:sha256:ccc35c021b301877bb5bea026ed86d7f2a8ac72d7c14c492591b51ab59852c5c",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "锂电池组定制，盘点深圳十大锂电池厂家排名 - 知乎专栏"
+    },
+    {
+      "id": "company-c-cbfb99a090f109b1c0c6afd2",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市安仕新能源科技股份有限公司"
+    },
+    {
+      "id": "web-handle:sha256:2fe411a1f50557d9eb53dbe42f01f84622f0ddede22e32e106cbd859f380c652",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "48v100-储能电池锂电池 太阳能蓄电池-深圳市矿鑫发展有限公司"
+    },
+    {
+      "id": "company-c-e21ce100a2f3535e0a3f7050",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市比克动力电池有限公司"
+    },
+    {
+      "id": "web-handle:sha256:e0b5dc4eac9d39fa976e09fc030adb2a353577938a072bfa4a1ec1fa20268c9b",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "深圳储能公司盘点"
+    },
+    {
+      "id": "company-c-f3d3e5ba80f3dfad0bc7585c",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市精捷能电子有限公司"
+    },
+    {
+      "id": "web-handle:sha256:4b586ca9068bd5d2cc12a5a422bb557afc8806dd5cc97314b92e859b2b2d55d6",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "家庭储能 - 立能派（深圳）新能源"
+    },
+    {
+      "id": "company-c-f54c9adebf9956a1078a7e9b",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "孚能集团有限公司"
+    },
+    {
+      "id": "web-handle:sha256:b4bef312a58d51b46457227be9cb5aae6bf23604b9db6339633f34ee6a1e4b8c",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "充电干电池厂家-充电干电池厂家、公司、企业 - 阿里巴巴公司黄页"
+    },
+    {
+      "id": "company-c-fb966f44d9c31c5431af7256",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市正浩创新科技股份有限公司"
+    },
+    {
+      "id": "web-handle:sha256:764b8aa8906498e9349c4683720a49ee890b2fc4ad78fd0195a9b8f026b94d50",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "【深圳电池公司黄页_深圳电池厂家大全】_第11页_顺企网"
+    },
+    {
+      "id": "company-c-00a2449103c27d0ce58432d8",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳暴风智能科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:3e6a5f869eec78a61ff3f01e5fa8a93f2e58e117c2bf101066cad26a5b422b6e",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "深圳锂电池公司|厂家"
+    },
+    {
+      "id": "company-c-08e0d42d015bdd12a8b45d60",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "云趣在线（深圳）科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:82916716428b111a21be611c0f1090a660f5062a6c9279cec2008f078891427b",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "深圳科技锂离子二次电池有吗"
+    },
+    {
+      "id": "company-c-09ab078a537ea15ca2ecfed5",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市科特高电子有限公司"
+    },
+    {
+      "id": "web-handle:sha256:683c3dcf73ab583c002f07b57aa1da9ef47ef30edd89b187774f1f63959992cb",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "深圳生产电池的公司有哪些"
+    },
+    {
+      "id": "company-c-0a717a2faa25f993334c8f67",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市德宇智能装备有限公司"
+    },
+    {
+      "id": "web-handle:sha256:4472c80430b8862dcf33e84018df3ab04a5352e7a3a998736b2b64c43229f03f",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "【深圳电池公司黄页_深圳电池厂家大全】_第9页_顺企网"
+    },
+    {
+      "id": "company-c-0ad675cb2df70d1199e30893",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市奥科达实业有限公司"
+    },
+    {
+      "id": "web-handle:sha256:29b4a04e0f73a750d83c88ebdc6639d5c438f3c2883f898149009c0794094072",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "市工业和信息化局关于公布我市2023年重点用能单位能源管理岗位 ..."
+    },
+    {
+      "id": "company-c-0cfce4a4af3124ebf85c851a",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市凯曼达科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:ce4b03992261d9a02d7853927542ea996cdcf8fd3dde098a0e0a10541cd7f492",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "【蓄电池】公司黄页厂家名录第29页_顺企网"
+    },
+    {
+      "id": "company-c-0e1847eebabbc0b24cd0fd7b",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市通用氢能科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:0056aef4be205f0599349d967392e639d44472fcaee748f21b58cd8b67d221aa",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "【深圳电池公司黄页_深圳电池厂家大全】_第5页_顺企网"
+    },
+    {
+      "id": "company-c-0f9c9b1b513ecb6598262323",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳力安应急科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:512e4791a2793ec113d412733575131008f469e977e73f0a496ffc9fd8e16dff",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "2026年7月深圳堆叠式逆变储能电池/深圳大功率储能电池厂家推荐名单"
+    },
+    {
+      "id": "company-c-103e98641e57f216da3c6aef",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市安馨智能电子科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:52d674755e45a267a7862d88fd0209070a9a2879c2d12bd1b34af83873b3f509",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "深圳地区储能电池生产企业数量及产业现状分析"
+    },
+    {
+      "id": "company-c-11ddc0d613148c5ea8060c8e",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市拓能毅锂电科技有限公司"
+    },
+    {
+      "id": "company-c-16ccbf319e7880b1eea110a0",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市麦斯顿科技有限公司"
+    },
+    {
+      "id": "company-c-17f318e9cd59bdfc86b07e7d",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳基本半导体股份有限公司"
+    },
+    {
+      "id": "company-c-190fa3999ce4e6f4e4a8d258",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市辉腾创新科技有限公司"
+    },
+    {
+      "id": "company-c-1cbf0407265e2472d7def3d1",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市语乐科技有限公司"
+    },
+    {
+      "id": "company-c-203fa7b8883c3b17bdeef896",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市远益科技有限公司"
+    },
+    {
+      "id": "company-c-21dd6d09e0a2b1997257567a",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市轩付技术有限公司"
+    },
+    {
+      "id": "company-c-21f91560e949cee6eb2acc64",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市锐创新科技有限公司"
+    },
+    {
+      "id": "company-c-22a47932142c91007fd8580e",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "钛克菲斯智能科技（深圳）有限公司"
+    },
+    {
+      "id": "company-c-283e0ea4ffd492ac119e5702",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市一配科技有限公司"
+    },
+    {
+      "id": "company-c-29ae7a36683a451085e84adb",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳昇麒新能源汽车科技有限公司"
+    },
+    {
+      "id": "company-c-29efeb593437ffd201597d34",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳智慧能源技术有限公司"
+    },
+    {
+      "id": "company-c-2aa49ee37e2dbc63d0c779b3",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "广东天劲新能源科技股份有限公司"
+    },
+    {
+      "id": "company-c-2ad6ca77fbae1123a18731fb",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳魅乐智能科技有限公司"
+    },
+    {
+      "id": "company-c-2bf5d2c2c7adf25cd5b111c9",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市博辉科技有限公司"
+    },
+    {
+      "id": "company-c-30d00abecfeeabd081ee65b2",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市斯盛能源股份有限公司"
+    },
+    {
+      "id": "company-c-31307dc1d56c3afa91257538",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "英伟凌（深圳）网络科技有限公司"
+    },
+    {
+      "id": "company-c-31c20e1ff26d8b02afcd11d7",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳众赢新能源科技有限公司"
+    },
+    {
+      "id": "company-c-3513f760e666073658e8df6d",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市海马士电子有限公司"
+    },
+    {
+      "id": "company-c-361f341c954fd021ab6c6d5f",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市英得尔实业有限公司"
+    },
+    {
+      "id": "company-c-3be5b9eebd9bc1cfe43ea791",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市安朗科技有限公司"
+    },
+    {
+      "id": "company-c-3cf0d32a2dce8406016ee4c6",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市智多兴投控科技有限公司"
+    }
+  ],
+  "committed_handle_ids": [
+    "company-c-96442e17ea07fa30cf11c87e",
+    "company-c-5541889c43eb5ab7876adb79",
+    "company-c-5e1345c39bc1aa9b2c72dac2",
+    "web-handle:sha256:7afd8b6c1de954f13c87a1a9d686891d3a6140e70420f51b77cba8d95636811e",
+    "company-c-6cc8d756936d4aaae071b68c",
+    "company-c-e3a5059c5d176da0e2fd089b",
+    "web-handle:sha256:d081fe8d36ffbbe05b10a86ad26e33a59b7b4c256b1542f29b133b4272e5adf2",
+    "company-c-14535187b68c652c853df05a",
+    "company-c-145408040945ad6f538c063b",
+    "company-c-5d0b89bb37dac136eabad11f",
+    "web-handle:sha256:109f458a3960ddab06c383dba8616239cbfa7db4680bc276f85d96e9fe493641",
+    "company-c-5d36f13fbdb7a25f860ad8b8",
+    "web-handle:sha256:e31d0c4c09b5889fd70f918168a3ae629197976117aea5631e3cdf5f343d4698",
+    "company-c-762ee0785aa3012ffb7d8ac3",
+    "company-c-7b23076f872f1f3c38cc273f",
+    "company-c-90b6558cfd2c2e035d41f1ab",
+    "company-c-b49f592ca431feb42a19a49d",
+    "company-c-b9dac8d2762e6f4f91c4acea",
+    "company-c-fc4d55ae4ffa4e05f446a88a",
+    "company-c-1978d66edff1608855e36e4e",
+    "company-c-71a954b821bf676286313286",
+    "company-c-235f7ea1c0970ad9e75ea3ef",
+    "company-c-362d7d604c585480a0ebf6f9",
+    "company-c-7ce57d78656959ef3befd714",
+    "company-c-8c83cde8bb8c5ab352ca970a",
+    "company-c-9a91ab4b54be315059ebb0c4",
+    "web-handle:sha256:3516e0c78e1f3d6cb416bd8113786ef43b13db096732e5fbeca9d6b5e8f4c4e4",
+    "company-c-650d77ed5368cfcfa28de771",
+    "web-handle:sha256:ae36a889e4057fb6d59220ba7c5e739d2b838f797ec583e29c03a3a2e25f8fd8",
+    "company-c-7c2e0bbacff43f6e6bc9111d",
+    "company-c-829a7bc46f2aefba2eefb1ec",
+    "company-c-a326e73117ad9465f42b2fae",
+    "company-c-bffb4161756f8676045f3a35",
+    "company-c-c562e096ff84740d90f35787",
+    "company-c-ec3865c713e86067f4b9cbe8",
+    "company-c-0a97417bd9d8d00a57143ee4",
+    "company-c-16128f02f7989b4cd7fa9d7a",
+    "company-c-1ec3088151f5167613981fd5",
+    "company-c-7bf57493c8c8c6e5839f30ee",
+    "company-c-8456e1a79180a610d0b3ab0a",
+    "company-c-9b08c38f2a86dbd108a1ebac",
+    "company-c-9ce2ca12de04155715725de9",
+    "company-c-a6878d1306456741716afb0a",
+    "company-c-bf9568cdff7208d4f9ecda5d",
+    "company-c-c04f718593c31d73a375e598",
+    "company-c-cbfb99a090f109b1c0c6afd2",
+    "company-c-e21ce100a2f3535e0a3f7050",
+    "company-c-f3d3e5ba80f3dfad0bc7585c",
+    "company-c-f54c9adebf9956a1078a7e9b",
+    "company-c-fb966f44d9c31c5431af7256",
+    "company-c-00a2449103c27d0ce58432d8",
+    "company-c-08e0d42d015bdd12a8b45d60",
+    "company-c-09ab078a537ea15ca2ecfed5",
+    "company-c-0a717a2faa25f993334c8f67",
+    "company-c-0ad675cb2df70d1199e30893",
+    "company-c-0cfce4a4af3124ebf85c851a",
+    "company-c-0e1847eebabbc0b24cd0fd7b",
+    "company-c-0f9c9b1b513ecb6598262323",
+    "company-c-103e98641e57f216da3c6aef",
+    "company-c-11ddc0d613148c5ea8060c8e",
+    "company-c-16ccbf319e7880b1eea110a0",
+    "company-c-17f318e9cd59bdfc86b07e7d",
+    "company-c-190fa3999ce4e6f4e4a8d258",
+    "company-c-1cbf0407265e2472d7def3d1",
+    "company-c-203fa7b8883c3b17bdeef896",
+    "company-c-21dd6d09e0a2b1997257567a",
+    "company-c-21f91560e949cee6eb2acc64",
+    "company-c-22a47932142c91007fd8580e",
+    "company-c-283e0ea4ffd492ac119e5702",
+    "company-c-29ae7a36683a451085e84adb",
+    "company-c-29efeb593437ffd201597d34",
+    "company-c-2aa49ee37e2dbc63d0c779b3",
+    "company-c-2ad6ca77fbae1123a18731fb",
+    "company-c-2bf5d2c2c7adf25cd5b111c9",
+    "company-c-30d00abecfeeabd081ee65b2",
+    "company-c-31307dc1d56c3afa91257538",
+    "company-c-31c20e1ff26d8b02afcd11d7",
+    "company-c-3513f760e666073658e8df6d",
+    "company-c-361f341c954fd021ab6c6d5f",
+    "company-c-3be5b9eebd9bc1cfe43ea791",
+    "company-c-3cf0d32a2dce8406016ee4c6"
+  ],
+  "committed_names": [
+    "深圳市华宝新能源股份有限公司",
+    "深圳蓝锂科技有限公司",
+    "深圳市中和储能科技有限公司",
+    "深圳市远信储能技术股份有限公司",
+    "深圳三晖能源科技有限公司",
+    "深圳市佰特瑞储能系统有限公司",
+    "深圳市未蓝新能源科技有限公司-深圳工商业储能生产厂家",
+    "深圳市德赛电池科技股份有限公司",
+    "深圳市比亚迪锂电池有限公司",
+    "深圳邦凯新能源股份有限公司",
+    "深圳市中和储能科技有限公司-全钒电池_硫铁电池_液流电堆_PBI非氟 ...",
+    "深圳市瑞能实业股份有限公司",
+    "深圳比亚迪储能有限公司 - 百度百科",
+    "深圳市创明新能源股份有限公司",
+    "深圳市鹏诚新能源科技有限公司",
+    "深圳市海芝通电子股份有限公司",
+    "深圳市海盈科技有限公司",
+    "深圳市雄韬电源科技股份有限公司",
+    "深圳市飞碟动力科技有限公司",
+    "深圳市普兰德储能技术有限公司",
+    "深圳市伏特能源股份有限公司",
+    "深圳市智安新能源科技有限公司",
+    "深圳珈钠能源科技有限公司",
+    "深圳聚吉星科技有限公司",
+    "深圳市索阳新能源科技有限公司",
+    "长园科技集团股份有限公司",
+    "深圳市储能系统有限公司",
+    "深圳吉阳智能科技有限公司",
+    "深圳储能公司",
+    "深圳市奕天博创科技有限公司",
+    "深圳市万微半导体有限公司",
+    "深圳市杰成镍钴新能源科技有限公司",
+    "深圳市舜源自动化科技有限公司",
+    "深圳市天威赛利机电设备有限公司",
+    "深圳市安德普电源科技有限公司",
+    "深圳市格瑞普电池有限公司",
+    "深圳市科敏传感器有限公司",
+    "深圳市赛德电源技术有限公司",
+    "深圳市卓誉自动化科技有限公司",
+    "深圳市山木新能源科技股份有限公司",
+    "深圳市豪鹏科技股份有限公司",
+    "深圳澳睿新能源科技有限公司",
+    "深圳昆宇电源科技有限公司",
+    "深圳市远信储能技术有限公司",
+    "深圳市创芯微微电子有限公司",
+    "深圳市安仕新能源科技股份有限公司",
+    "深圳市比克动力电池有限公司",
+    "深圳市精捷能电子有限公司",
+    "孚能集团有限公司",
+    "深圳市正浩创新科技股份有限公司",
+    "深圳暴风智能科技有限公司",
+    "云趣在线（深圳）科技有限公司",
+    "深圳市科特高电子有限公司",
+    "深圳市德宇智能装备有限公司",
+    "深圳市奥科达实业有限公司",
+    "深圳市凯曼达科技有限公司",
+    "深圳市通用氢能科技有限公司",
+    "深圳力安应急科技有限公司",
+    "深圳市安馨智能电子科技有限公司",
+    "深圳市拓能毅锂电科技有限公司",
+    "深圳市麦斯顿科技有限公司",
+    "深圳基本半导体股份有限公司",
+    "深圳市辉腾创新科技有限公司",
+    "深圳市语乐科技有限公司",
+    "深圳市远益科技有限公司",
+    "深圳市轩付技术有限公司",
+    "深圳市锐创新科技有限公司",
+    "钛克菲斯智能科技（深圳）有限公司",
+    "深圳市一配科技有限公司",
+    "深圳昇麒新能源汽车科技有限公司",
+    "深圳智慧能源技术有限公司",
+    "广东天劲新能源科技股份有限公司",
+    "深圳魅乐智能科技有限公司",
+    "深圳市博辉科技有限公司",
+    "深圳市斯盛能源股份有限公司",
+    "英伟凌（深圳）网络科技有限公司",
+    "深圳众赢新能源科技有限公司",
+    "深圳市海马士电子有限公司",
+    "深圳市英得尔实业有限公司",
+    "深圳市安朗科技有限公司",
+    "深圳市智多兴投控科技有限公司"
+  ],
+  "render_mode": "prose_renderer",
+  "answer_chars": 2208,
+  "lane_timings": [
+    [
+      "structured",
+      0.0
+    ],
+    [
+      "exact",
+      0.377
+    ],
+    [
+      "lexical",
+      1.904
+    ],
+    [
+      "vector",
+      3.826
+    ],
+    [
+      "web",
+      4.625
+    ]
+  ]
+}

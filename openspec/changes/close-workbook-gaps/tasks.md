@@ -341,8 +341,8 @@
        only its name (landed `7241bfdc`, deployed 17:46). g5-t2 深南电路
        root cause; unit RED→GREEN; live t2 recalled 63→64 with 深南 in the
        answer ×2 samples.
-- [ ] LAT-3 Web-phase budget / page cache: live lidar TTFT is
-       web-fetch-bound (lane probe: web 10.3s vs local 6.6s; cold batches
-       seen at 44-48s). Bound the enumeration fetch phase (per-page timeout
-       already 2s floor — check the effective value) and/or add a page-level
-       cache with TTL; keep snippets as the degrade path.
+- [x] LAT-3 Batched probe judgments across jobs (landed `9e5bced8` +
+       `c0cd198b`, deployed): the supplemental's per-job serial judge calls
+       were the 25-30s tail; rule misses now ride one judge call per 8-job
+       chunk. Live r4: all seven turns ≤24.5s TTFT (lidar 41.5→19.8-22.6,
+       g2 43.2→16.8-17.5). Follow-up page cache stays optional (LAT-3b).
