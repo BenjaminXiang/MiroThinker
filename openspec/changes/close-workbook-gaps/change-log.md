@@ -941,3 +941,26 @@
   field predicates) → tokenized keyword index (FTS5/term index with field
   weights, replacing substring scans) → score-normalized fusion (or RRF).
   Acceptance: g2/g5 anchors + generalization probes (P1/P2) + TTFT ≤30s.
+
+## 2026-09-12 — AQ-S2d delivered (e3fb8527): enumeration window 64→128 by measurement — 8/8 in-pack GT disclosed
+
+- Measured window ladder on the sealed pack (g5-t1 PCB): 64 → 32 disclosed,
+  6/8 GT (深南 fused-73 cut; 嘉立创 web-handle only); **128 → 64 disclosed,
+  8/8 GT (嘉立创 at disclosure position 56, 深南 37, both ≤ cap)**;
+  160/192 → no gain, sentence up to 1748 chars. Chosen: window 128 + member
+  coverage cap 32→64. Cost: +0.8s/round, worst coverage sentence 903 chars.
+- Changes: `_ENUMERATION_CANDIDATE_WINDOW` 64→128 (+ comment rewrite);
+  claim windows stay 32/32 — the old "window = half of cut" assumption
+  decoupled (disclosure flows through the coverage sentence, not claims);
+  `_ENUMERATION_MEMBER_COVERAGE_LIMIT` 32→64. Tests: constants/plan pins,
+  fixture 40→80, cap breakpoint, recall-source pin, new web-handle
+  interleave lock; four-door + scrub 352 = baseline; six-file 70+3
+  pre-existing (main context re-ran multiturn: 33 passed + 1 pre-existing
+  off_anchor).
+- Deployed 12:05; verification batch (g5 sampling expecting 8/12, g2
+  regression, latency probe, generalization r3, replay gate) runs next.
+  Watch items: narrowing-turn coverage sentence grows (≤903 chars); web
+  window follows the cut to 128 (live network cost; can be pinned back to
+  64 separately without touching the local half).
+- AQ-S7 (entity linking) dispatched to the same writer — first block of
+  the retrieval-v2 programme (review part 2 §6/§10).
