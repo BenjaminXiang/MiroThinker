@@ -1,0 +1,11 @@
+# retrieval-v2 Step 1b fault injection: point the reranker at the local stub so
+# the malformed-payload mode can be exercised, then kill the stub to exercise
+# connection refusal. Parked as *.pending; moved into place by
+# switch_rerank.sh stub.
+[Service]
+Environment=CANONICAL_V2_RERANK_BASE_URL=http://127.0.0.1:18099
+Environment=CANONICAL_V2_RERANK_MODEL=qwen3-reranker-8b
+Environment=CANONICAL_V2_RERANK_API_KEY_FILE=/home/longxiang/.config/mirothinker/rerank-api-key
+Environment=CANONICAL_V2_RERANK_TIMEOUT_SECONDS=3
+Environment=CANONICAL_V2_RERANK_MAX_DOCUMENTS=128
+Environment=CANONICAL_V2_RERANK_DEBUG=1

@@ -1,0 +1,3526 @@
+{
+  "harness": {
+    "generated_at": "2026-09-12T14:42:53.018404+00:00",
+    "harness_path": "/home/longxiang/MiroThinker/.agents/runs/close-workbook-gaps/latency/latency_harness.py",
+    "worktree": "/home/longxiang/MiroThinker/.worktrees/canonical-v2-s11-consolidation",
+    "pack_dir": "/var/tmp/mirothinker-data-v2/serving-pack-run14-sealed",
+    "release_id": "candidate-v2-20260819-r1",
+    "chat_llm_profile": "deepseekv4flash",
+    "rewriter_mode": "replay",
+    "bootstrap": {
+      "import_s": 2.85,
+      "load_recorded_inputs_s": 0.0,
+      "pack_open_s": 324.53,
+      "planner_compose_s": 73.41,
+      "read_compose_s": 227.07
+    },
+    "web_lane_cache": {
+      "source": "/home/longxiang/MiroThinker/.worktrees/canonical-v2-s11-consolidation/var/turn-trace/web_lane.sqlite3",
+      "copy": "/var/tmp/latency-harness/turn-trace/web_lane.sqlite3",
+      "rows": null,
+      "rows_by_day": {
+        "2026-09-09": 580,
+        "2026-09-10": 492,
+        "2026-09-11": 664,
+        "2026-09-12": 658
+      }
+    },
+    "milvus_copy": {
+      "copies": {
+        "/var/tmp/mirothinker-data-v2/index-v1/milvus.db": "/var/tmp/latency-harness/index-copy/index-v1/milvus.db"
+      },
+      "open_stats_s": {
+        "/var/tmp/mirothinker-data-v2/index-v1/milvus.db": 0.59
+      }
+    },
+    "components": {
+      "page_fetcher": "providers.page_fetch.create_tiered_page_fetcher (real httpx+BS4 tier0, real headless Chromium tier1)",
+      "planner/read/reranker/selector": "serving_pack_loader production composite over the sealed run14 pack",
+      "gap_judge/supplemental_judge": "llm_judgments.create_llm_judge (real LLM, 1.8s timeout, profile=deepseekv4flash)",
+      "embedding": "qwen-embedding-bundle-v1 via load_content_addressed_embedding_adapter /home/longxiang/MiroThinker/.worktrees/canonical-v2-s11-consolidation/.agents/runs/rebuild-canonical-v2-knowledge-platform/s12c/qwen-embedding-bundle-v1.json",
+      "web_providers": "bocha-v1 + serper-v1 behind the shared SQLite view cache (private copy)",
+      "prose_renderer": "capture stub (generation excluded)"
+    },
+    "deviations": [
+      "prose LLM stubbed: generation (live 1.1-6.8s) excluded from answer.total",
+      "contextual interpreter (chat.py, 3s timeout, before planning) not replayed",
+      "replay view order = turn-trace completion order, truncated to the first 3 non-base views",
+      "milvus + web-lane cache are private byte copies; pack/index/marker identity checks still run against the real paths",
+      "session carry for PCB turn 2 comes from this harness's own turn-1 selector output",
+      "replayed turns reuse the live web-view cache when the view text matches (day pinned to the recorded as_of)"
+    ]
+  },
+  "turns": [
+    {
+      "id": "lidar-t1",
+      "session": "lat-lidar",
+      "query": "深圳有哪些做激光雷达的公司",
+      "as_of": "2026-09-12T02:25:52.213806+00:00",
+      "continuation": false,
+      "recorded": {
+        "trace_day": "2026-09-12.jsonl",
+        "turn_ordinal": 1,
+        "total_s": 44.68,
+        "lanes": {
+          "web": {
+            "in": 51,
+            "retained": 51,
+            "filtered": 0
+          },
+          "exact": {
+            "in": 0,
+            "retained": 0,
+            "filtered": 0
+          },
+          "structured": {
+            "in": 0,
+            "retained": 0,
+            "filtered": 0
+          },
+          "lexical": {
+            "in": 64,
+            "retained": 64,
+            "filtered": 0
+          },
+          "vector": {
+            "in": 64,
+            "retained": 64,
+            "filtered": 0
+          },
+          "supplemental": {
+            "in": 4,
+            "retained": 4,
+            "filtered": 0
+          }
+        },
+        "degradation": "none",
+        "replay_views": [
+          "深圳 激光雷达 企业 产业链",
+          "深圳 激光雷达 厂商",
+          "深圳 激光雷达 公司"
+        ]
+      },
+      "rewriter": {
+        "mode": "replay",
+        "source": "replay",
+        "live_views": [],
+        "used_views": [
+          "深圳 激光雷达 企业 产业链",
+          "深圳 激光雷达 厂商",
+          "深圳 激光雷达 公司"
+        ],
+        "wall_s": 0
+      },
+      "plan": {
+        "wall_s": 0.009,
+        "proposal_s": 0.003,
+        "lanes": [
+          "exact",
+          "structured",
+          "lexical",
+          "vector",
+          "web"
+        ],
+        "domains": [
+          "company"
+        ],
+        "max_candidates": 128,
+        "web_max_results": 128,
+        "views": [
+          "深圳有哪些做激光雷达的公司",
+          "深圳 激光雷达 企业 产业链",
+          "深圳 激光雷达 厂商",
+          "深圳 激光雷达 公司"
+        ],
+        "view_kinds": [
+          "deterministic",
+          "llm_rewrite",
+          "llm_rewrite",
+          "llm_rewrite"
+        ],
+        "supplemental_budget_ms": null
+      },
+      "read": {
+        "wall_s": 11.918,
+        "outer_s": 11.918,
+        "delegate_s": 10.302,
+        "outer_overhead_s": 1.616,
+        "lanes": {
+          "structured": 0.0004,
+          "exact": 0.6315,
+          "lexical": 1.133,
+          "vector": 3.7037,
+          "web": 11.0662
+        },
+        "rerank_s": 0.0,
+        "sufficiency_s": 0.081,
+        "supplemental_s": 0,
+        "evidence_items": 172,
+        "candidates": 212,
+        "handles": 128,
+        "limitations": [
+          "current_web_unavailable"
+        ]
+      },
+      "web": {
+        "views_calls": [
+          {
+            "name": "web.views",
+            "wall_s": 0.8731,
+            "t_start_s": 0.092,
+            "t_end_s": 0.965,
+            "thread": "ThreadPoolExecutor-0_3",
+            "meta": {
+              "role": "main",
+              "query_count": 4,
+              "views": "深圳有哪些做激光雷达的公司 | 深圳 激光雷达 厂商 | 深圳 激光雷达 企业 产业链 | 深圳 激光雷达 公司",
+              "merged": 51
+            }
+          },
+          {
+            "name": "web.views",
+            "wall_s": 0.003,
+            "t_start_s": 11.149,
+            "t_end_s": 11.152,
+            "thread": "ThreadPoolExecutor-0_3",
+            "meta": {
+              "role": "main",
+              "query_count": 2,
+              "views": "深圳 激光雷达 企业 名单 | 深圳 激光雷达 初创公司",
+              "merged": 39
+            }
+          }
+        ],
+        "merged_calls": [],
+        "provider_calls": [
+          {
+            "name": "web.provider.search",
+            "wall_s": 0.1481,
+            "t_start_s": 0.21,
+            "t_end_s": 0.358,
+            "thread": "canonical-v2-web_0",
+            "meta": {
+              "role": "main",
+              "provider": "bocha-v1",
+              "view": "深圳有哪些做激光雷达的公司",
+              "cache_hit": 1,
+              "results": 12
+            }
+          },
+          {
+            "name": "web.provider.search",
+            "wall_s": 0.2555,
+            "t_start_s": 0.291,
+            "t_end_s": 0.546,
+            "thread": "canonical-v2-web_1",
+            "meta": {
+              "role": "main",
+              "provider": "serper-v1",
+              "view": "深圳有哪些做激光雷达的公司",
+              "cache_hit": 1,
+              "results": 10
+            }
+          },
+          {
+            "name": "web.provider.search",
+            "wall_s": 0.3107,
+            "t_start_s": 0.347,
+            "t_end_s": 0.658,
+            "thread": "canonical-v2-web_2",
+            "meta": {
+              "role": "main",
+              "provider": "bocha-v1",
+              "view": "深圳 激光雷达 厂商",
+              "cache_hit": 1,
+              "results": 12
+            }
+          },
+          {
+            "name": "web.provider.search",
+            "wall_s": 0.3417,
+            "t_start_s": 0.393,
+            "t_end_s": 0.735,
+            "thread": "canonical-v2-web_3",
+            "meta": {
+              "role": "main",
+              "provider": "serper-v1",
+              "view": "深圳 激光雷达 厂商",
+              "cache_hit": 1,
+              "results": 10
+            }
+          },
+          {
+            "name": "web.provider.search",
+            "wall_s": 0.3474,
+            "t_start_s": 0.495,
+            "t_end_s": 0.842,
+            "thread": "canonical-v2-web_4",
+            "meta": {
+              "role": "main",
+              "provider": "bocha-v1",
+              "view": "深圳 激光雷达 企业 产业链",
+              "cache_hit": 1,
+              "results": 12
+            }
+          },
+          {
+            "name": "web.provider.search",
+            "wall_s": 0.3126,
+            "t_start_s": 0.586,
+            "t_end_s": 0.899,
+            "thread": "canonical-v2-web_5",
+            "meta": {
+              "role": "main",
+              "provider": "serper-v1",
+              "view": "深圳 激光雷达 企业 产业链",
+              "cache_hit": 1,
+              "results": 10
+            }
+          },
+          {
+            "name": "web.provider.search",
+            "wall_s": 0.221,
+            "t_start_s": 0.699,
+            "t_end_s": 0.92,
+            "thread": "canonical-v2-web_0",
+            "meta": {
+              "role": "main",
+              "provider": "bocha-v1",
+              "view": "深圳 激光雷达 公司",
+              "cache_hit": 1,
+              "results": 12
+            }
+          },
+          {
+            "name": "web.provider.search",
+            "wall_s": 0.1578,
+            "t_start_s": 0.796,
+            "t_end_s": 0.954,
+            "thread": "canonical-v2-web_6",
+            "meta": {
+              "role": "main",
+              "provider": "serper-v1",
+              "view": "深圳 激光雷达 公司",
+              "cache_hit": 1,
+              "results": 10
+            }
+          },
+          {
+            "name": "web.provider.search",
+            "wall_s": 0.0008,
+            "t_start_s": 11.149,
+            "t_end_s": 11.15,
+            "thread": "canonical-v2-web_3",
+            "meta": {
+              "role": "main",
+              "provider": "bocha-v1",
+              "view": "深圳 激光雷达 企业 名单",
+              "cache_hit": 1,
+              "results": 12
+            }
+          },
+          {
+            "name": "web.provider.search",
+            "wall_s": 0.0007,
+            "t_start_s": 11.15,
+            "t_end_s": 11.15,
+            "thread": "canonical-v2-web_4",
+            "meta": {
+              "role": "main",
+              "provider": "serper-v1",
+              "view": "深圳 激光雷达 企业 名单",
+              "cache_hit": 1,
+              "results": 10
+            }
+          },
+          {
+            "name": "web.provider.search",
+            "wall_s": 0.0011,
+            "t_start_s": 11.15,
+            "t_end_s": 11.151,
+            "thread": "canonical-v2-web_1",
+            "meta": {
+              "role": "main",
+              "provider": "bocha-v1",
+              "view": "深圳 激光雷达 初创公司",
+              "cache_hit": 1,
+              "results": 12
+            }
+          },
+          {
+            "name": "web.provider.search",
+            "wall_s": 0.0011,
+            "t_start_s": 11.15,
+            "t_end_s": 11.151,
+            "thread": "canonical-v2-web_6",
+            "meta": {
+              "role": "main",
+              "provider": "serper-v1",
+              "view": "深圳 激光雷达 初创公司",
+              "cache_hit": 1,
+              "results": 10
+            }
+          }
+        ],
+        "fetch_calls": [
+          {
+            "name": "web.fetch.page",
+            "wall_s": 0.8063,
+            "t_start_s": 1.012,
+            "t_end_s": 1.818,
+            "thread": "canonical-v2-web_3",
+            "meta": {
+              "url": "https://www.leishen-lidar.com/about",
+              "text_chars": 1180,
+              "direct_s": 0.8063,
+              "tier1_s": 0.0
+            }
+          },
+          {
+            "name": "web.fetch.page",
+            "wall_s": 1.2475,
+            "t_start_s": 1.027,
+            "t_end_s": 2.275,
+            "thread": "canonical-v2-web_4",
+            "meta": {
+              "url": "https://www.smartautoclub.com/p/11069/",
+              "text_chars": 715,
+              "direct_s": 1.2475,
+              "tier1_s": 0.0
+            }
+          },
+          {
+            "name": "web.fetch.page",
+            "wall_s": 1.3267,
+            "t_start_s": 0.971,
+            "t_end_s": 2.298,
+            "thread": "canonical-v2-web_1",
+            "meta": {
+              "url": "https://www.smartautoclub.com/p/56624/",
+              "text_chars": 3000,
+              "direct_s": 1.3267,
+              "tier1_s": 0.0
+            }
+          },
+          {
+            "name": "web.fetch.page",
+            "wall_s": 2.7932,
+            "t_start_s": 1.094,
+            "t_end_s": 3.887,
+            "thread": "canonical-v2-web_6",
+            "meta": {
+              "url": "https://www.cls.cn/detail/xk/67ca9e824e1444afb5b845ec",
+              "text_chars": 4000,
+              "direct_s": 0.6859,
+              "tier1_s": 2.1073
+            }
+          },
+          {
+            "name": "web.fetch.page",
+            "wall_s": 3.7303,
+            "t_start_s": 0.987,
+            "t_end_s": 4.717,
+            "thread": "canonical-v2-web_2",
+            "meta": {
+              "url": "https://www.sztcjd.com/sztcjd_Category_4016225_1.html",
+              "text_chars": 598,
+              "direct_s": 1.0732,
+              "tier1_s": 2.6571
+            }
+          },
+          {
+            "name": "web.fetch.page",
+            "wall_s": 4.3679,
+            "t_start_s": 0.971,
+            "t_end_s": 5.339,
+            "thread": "canonical-v2-web_7",
+            "meta": {
+              "url": "https://www.qichamao.com/businessscope/3eaffeb5c24902a310959f748be8eb85/p-13.html",
+              "text_chars": 58,
+              "direct_s": 1.2336,
+              "tier1_s": 3.1343
+            }
+          },
+          {
+            "name": "web.fetch.page",
+            "wall_s": 5.258,
+            "t_start_s": 1.073,
+            "t_end_s": 6.331,
+            "thread": "canonical-v2-web_0",
+            "meta": {
+              "url": "https://www.lisenoptics.cn/changjianwenti/14080.html",
+              "text_chars": 2701,
+              "direct_s": 2.857,
+              "tier1_s": 2.401
+            }
+          },
+          {
+            "name": "web.fetch.page",
+            "wall_s": 10.0418,
+            "t_start_s": 1.063,
+            "t_end_s": 11.104,
+            "thread": "canonical-v2-web_5",
+            "meta": {
+              "url": "https://www.oxts.com/zh/technology-partners/robosense/",
+              "text_chars": 2538,
+              "direct_s": 5.6674,
+              "tier1_s": 4.3744
+            }
+          }
+        ],
+        "judge_calls": [
+          {
+            "name": "web.judge.batch",
+            "wall_s": 1.3088,
+            "t_start_s": 9.84,
+            "t_end_s": 11.149,
+            "thread": "ThreadPoolExecutor-0_3",
+            "meta": {
+              "kind": "gap_check",
+              "item_count": 1,
+              "outcome": "ok",
+              "results": 1
+            }
+          }
+        ],
+        "enrich_calls": [
+          {
+            "name": "web.enrich",
+            "wall_s": 8.8737,
+            "t_start_s": 0.966,
+            "t_end_s": 9.84,
+            "thread": "ThreadPoolExecutor-0_3",
+            "meta": {
+              "role": "main",
+              "depth": 8,
+              "candidates": 51
+            }
+          }
+        ],
+        "totals": {
+          "web.views": 0.876,
+          "web.merged": 0,
+          "web.provider.search": 2.099,
+          "web.fetch.page": 29.572,
+          "web.judge.batch": 1.309,
+          "web.enrich": 8.874,
+          "web.fetch.warm": 0
+        },
+        "cache_hits": 12,
+        "provider_calls_total": 12
+      },
+      "embedding": {
+        "embed.batch": {
+          "calls": 2,
+          "wall_s": 0.13
+        },
+        "embed.http": {
+          "calls": 1,
+          "wall_s": 0.127
+        }
+      },
+      "answer": {
+        "selector_s": 0.003162827342748642,
+        "total_s": 0.133,
+        "displayed_handles": 32,
+        "payload_displayed": [],
+        "claims": 32
+      },
+      "stages": [
+        {
+          "stage": "web.fetch.page",
+          "calls": 8,
+          "wall_s": 29.572,
+          "cpu_s": 0.0
+        },
+        {
+          "stage": "read.outer",
+          "calls": 1,
+          "wall_s": 11.918,
+          "cpu_s": 16.168
+        },
+        {
+          "stage": "read.lane.web",
+          "calls": 1,
+          "wall_s": 11.066,
+          "cpu_s": 15.314
+        },
+        {
+          "stage": "read.delegate",
+          "calls": 1,
+          "wall_s": 10.302,
+          "cpu_s": 14.544
+        },
+        {
+          "stage": "web.enrich",
+          "calls": 1,
+          "wall_s": 8.874,
+          "cpu_s": 0.0
+        },
+        {
+          "stage": "read.lane.vector",
+          "calls": 1,
+          "wall_s": 3.704,
+          "cpu_s": 13.759
+        },
+        {
+          "stage": "web.provider.search",
+          "calls": 12,
+          "wall_s": 2.099,
+          "cpu_s": 0.0
+        },
+        {
+          "stage": "iso.validate_release_bound_vector_evidence",
+          "calls": 1,
+          "wall_s": 1.615,
+          "cpu_s": 1.623
+        },
+        {
+          "stage": "web.judge.batch",
+          "calls": 1,
+          "wall_s": 1.309,
+          "cpu_s": 0.0
+        },
+        {
+          "stage": "read.lane.lexical",
+          "calls": 1,
+          "wall_s": 1.133,
+          "cpu_s": 1.149
+        },
+        {
+          "stage": "web.views",
+          "calls": 2,
+          "wall_s": 0.876,
+          "cpu_s": 0.0
+        },
+        {
+          "stage": "read.lane.exact",
+          "calls": 1,
+          "wall_s": 0.631,
+          "cpu_s": 0.639
+        },
+        {
+          "stage": "answer.total",
+          "calls": 1,
+          "wall_s": 0.133,
+          "cpu_s": 0.0
+        },
+        {
+          "stage": "embed.batch",
+          "calls": 2,
+          "wall_s": 0.13,
+          "cpu_s": 0.0
+        },
+        {
+          "stage": "embed.http",
+          "calls": 1,
+          "wall_s": 0.127,
+          "cpu_s": 0.0
+        },
+        {
+          "stage": "read.sufficiency",
+          "calls": 1,
+          "wall_s": 0.081,
+          "cpu_s": 0.081
+        },
+        {
+          "stage": "plan.total",
+          "calls": 1,
+          "wall_s": 0.009,
+          "cpu_s": 0.0
+        },
+        {
+          "stage": "plan.proposal",
+          "calls": 1,
+          "wall_s": 0.003,
+          "cpu_s": 0.003
+        },
+        {
+          "stage": "answer.selector",
+          "calls": 1,
+          "wall_s": 0.003,
+          "cpu_s": 0.003
+        },
+        {
+          "stage": "answer.selector.external",
+          "calls": 1,
+          "wall_s": 0.003,
+          "cpu_s": 0.0
+        },
+        {
+          "stage": "plan.session_bind",
+          "calls": 1,
+          "wall_s": 0.001,
+          "cpu_s": 0.0
+        },
+        {
+          "stage": "read.lane.structured",
+          "calls": 1,
+          "wall_s": 0.0,
+          "cpu_s": 0.0
+        },
+        {
+          "stage": "read.rerank",
+          "calls": 1,
+          "wall_s": 0.0,
+          "cpu_s": 0.0
+        }
+      ],
+      "sampler": {
+        "samples": 2968,
+        "by_thread": {
+          "asyncio-waitpid-0": 206,
+          "canonical-v2-tiered-fetch_0": 206,
+          "MainThread": 206,
+          "canonical-v2-web_0": 204,
+          "canonical-v2-web_3": 203,
+          "canonical-v2-web_2": 203,
+          "canonical-v2-web_1": 203,
+          "canonical-v2-web_5": 202,
+          "canonical-v2-web_4": 202,
+          "canonical-v2-web_6": 201,
+          "canonical-v2-web_7": 191,
+          "ThreadPoolExecutor-0_3": 188,
+          "ThreadPoolExecutor-0_1": 170,
+          "ThreadPoolExecutor-0_2": 169,
+          "ThreadPoolExecutor-0_0": 169,
+          "canonical-v2-llm-judge_0": 42,
+          "ThreadPoolExecutor-1_0": 3
+        },
+        "top_stacks": [
+          {
+            "stack": "_worker@thread.py:90 <- run@threading.py:1012 <- _bootstrap_inner@threading.py:1075 <- _bootstrap@threading.py:1032",
+            "samples": 1608
+          },
+          {
+            "stack": "wait@threading.py:355 <- result@_base.py:451 <- fetch@page_fetch.py:208 <- fetch@page_fetch.py:263",
+            "samples": 216
+          },
+          {
+            "stack": "_do_waitpid@unix_events.py:1408 <- run@threading.py:1012 <- _bootstrap_inner@threading.py:1075 <- _bootstrap@threading.py:1032",
+            "samples": 206
+          },
+          {
+            "stack": "wait@threading.py:359 <- result@_base.py:451 <- execute@knowledge_read.py:7673 <- timing_delegate_execute@latency_harness.py:1066",
+            "samples": 168
+          },
+          {
+            "stack": "wait@threading.py:359 <- result@_base.py:451 <- _enrich_with_page_text@knowledge_serving_isolated.py:1436 <- enrich@latency_harness.py:620",
+            "samples": 149
+          },
+          {
+            "stack": "select@selectors.py:468 <- _run_once@base_events.py:1961 <- run_forever@base_events.py:645 <- run_until_complete@base_events.py:678",
+            "samples": 140
+          },
+          {
+            "stack": "read@ssl.py:1105 <- recv@ssl.py:1232 <- read@sync.py:128 <- _receive_event@http11.py:217",
+            "samples": 107
+          },
+          {
+            "stack": "acquire@<frozen importlib._bootstrap>:365 <- _lock_unlock_module@<frozen importlib._bootstrap>:471 <- __init__@default.py:150 <- _init_transport@_client.py:731",
+            "samples": 50
+          },
+          {
+            "stack": "cache_get@web_lane_resilience.py:174 <- _provider_search@knowledge_serving_isolated.py:1095 <- provider_search@latency_harness.py:576 <- run@thread.py:59",
+            "samples": 30
+          },
+          {
+            "stack": "wait@threading.py:359 <- result@_base.py:451 <- _call@llm_judgments.py:364 <- judge_batch@llm_judgments.py:394",
+            "samples": 25
+          },
+          {
+            "stack": "do_handshake@ssl.py:1319 <- _create@ssl.py:1041 <- wrap_socket@ssl.py:455 <- start_tls@sync.py:165",
+            "samples": 21
+          },
+          {
+            "stack": "cache_get@web_lane_resilience.py:174 <- provider_search@latency_harness.py:568 <- run@thread.py:59 <- _worker@thread.py:93",
+            "samples": 20
+          },
+          {
+            "stack": "_normalize@knowledge_read_isolated.py:8417 <- visit@knowledge_read_isolated.py:8437 <- visit@knowledge_read_isolated.py:8441 <- _normalized_scalar_values@knowledge_read_isolated.py:8446",
+            "samples": 15
+          },
+          {
+            "stack": "_update_crc@__init__.py:1023 <- _read1@__init__.py:1098 <- read@__init__.py:1008 <- _read_bytes@format.py:986",
+            "samples": 13
+          },
+          {
+            "stack": "acquire@<frozen importlib._bootstrap>:365 <- __enter__@<frozen importlib._bootstrap>:418 <- _find_and_load@<frozen importlib._bootstrap>:1357 <- __init__@default.py:150",
+            "samples": 11
+          }
+        ],
+        "raw_rows": [
+          {
+            "thread": "asyncio-waitpid-0",
+            "stack": "_do_waitpid@unix_events.py:1408 <- run@threading.py:1012 <- _bootstrap_inner@threading.py:1075 <- _bootstrap@threading.py:1032",
+            "samples": 206
+          },
+          {
+            "thread": "canonical-v2-web_3",
+            "stack": "_worker@thread.py:90 <- run@threading.py:1012 <- _bootstrap_inner@threading.py:1075 <- _bootstrap@threading.py:1032",
+            "samples": 180
+          },
+          {
+            "thread": "canonical-v2-web_1",
+            "stack": "_worker@thread.py:90 <- run@threading.py:1012 <- _bootstrap_inner@threading.py:1075 <- _bootstrap@threading.py:1032",
+            "samples": 175
+          },
+          {
+            "thread": "canonical-v2-web_4",
+            "stack": "_worker@thread.py:90 <- run@threading.py:1012 <- _bootstrap_inner@threading.py:1075 <- _bootstrap@threading.py:1032",
+            "samples": 172
+          },
+          {
+            "thread": "MainThread",
+            "stack": "wait@threading.py:359 <- result@_base.py:451 <- execute@knowledge_read.py:7673 <- timing_delegate_execute@latency_harness.py:1066",
+            "samples": 168
+          },
+          {
+            "thread": "canonical-v2-web_6",
+            "stack": "_worker@thread.py:90 <- run@threading.py:1012 <- _bootstrap_inner@threading.py:1075 <- _bootstrap@threading.py:1032",
+            "samples": 163
+          },
+          {
+            "thread": "ThreadPoolExecutor-0_0",
+            "stack": "_worker@thread.py:90 <- run@threading.py:1012 <- _bootstrap_inner@threading.py:1075 <- _bootstrap@threading.py:1032",
+            "samples": 159
+          },
+          {
+            "thread": "canonical-v2-web_2",
+            "stack": "_worker@thread.py:90 <- run@threading.py:1012 <- _bootstrap_inner@threading.py:1075 <- _bootstrap@threading.py:1032",
+            "samples": 149
+          },
+          {
+            "thread": "ThreadPoolExecutor-0_3",
+            "stack": "wait@threading.py:359 <- result@_base.py:451 <- _enrich_with_page_text@knowledge_serving_isolated.py:1436 <- enrich@latency_harness.py:620",
+            "samples": 149
+          },
+          {
+            "thread": "ThreadPoolExecutor-0_2",
+            "stack": "_worker@thread.py:90 <- run@threading.py:1012 <- _bootstrap_inner@threading.py:1075 <- _bootstrap@threading.py:1032",
+            "samples": 143
+          },
+          {
+            "thread": "canonical-v2-tiered-fetch_0",
+            "stack": "select@selectors.py:468 <- _run_once@base_events.py:1961 <- run_forever@base_events.py:645 <- run_until_complete@base_events.py:678",
+            "samples": 140
+          },
+          {
+            "thread": "canonical-v2-web_7",
+            "stack": "_worker@thread.py:90 <- run@threading.py:1012 <- _bootstrap_inner@threading.py:1075 <- _bootstrap@threading.py:1032",
+            "samples": 132
+          },
+          {
+            "thread": "ThreadPoolExecutor-0_1",
+            "stack": "_worker@thread.py:90 <- run@threading.py:1012 <- _bootstrap_inner@threading.py:1075 <- _bootstrap@threading.py:1032",
+            "samples": 126
+          },
+          {
+            "thread": "canonical-v2-web_0",
+            "stack": "_worker@thread.py:90 <- run@threading.py:1012 <- _bootstrap_inner@threading.py:1075 <- _bootstrap@threading.py:1032",
+            "samples": 115
+          },
+          {
+            "thread": "canonical-v2-web_5",
+            "stack": "wait@threading.py:355 <- result@_base.py:451 <- fetch@page_fetch.py:208 <- fetch@page_fetch.py:263",
+            "samples": 86
+          },
+          {
+            "thread": "canonical-v2-web_5",
+            "stack": "read@ssl.py:1105 <- recv@ssl.py:1232 <- read@sync.py:128 <- _receive_event@http11.py:217",
+            "samples": 57
+          },
+          {
+            "thread": "canonical-v2-tiered-fetch_0",
+            "stack": "_worker@thread.py:90 <- run@threading.py:1012 <- _bootstrap_inner@threading.py:1075 <- _bootstrap@threading.py:1032",
+            "samples": 56
+          },
+          {
+            "thread": "canonical-v2-web_0",
+            "stack": "wait@threading.py:355 <- result@_base.py:451 <- fetch@page_fetch.py:208 <- fetch@page_fetch.py:263",
+            "samples": 48
+          },
+          {
+            "thread": "canonical-v2-web_7",
+            "stack": "wait@threading.py:355 <- result@_base.py:451 <- fetch@page_fetch.py:208 <- fetch@page_fetch.py:263",
+            "samples": 38
+          },
+          {
+            "thread": "canonical-v2-web_2",
+            "stack": "wait@threading.py:355 <- result@_base.py:451 <- fetch@page_fetch.py:208 <- fetch@page_fetch.py:263",
+            "samples": 28
+          },
+          {
+            "thread": "ThreadPoolExecutor-0_3",
+            "stack": "wait@threading.py:359 <- result@_base.py:451 <- _call@llm_judgments.py:364 <- judge_batch@llm_judgments.py:394",
+            "samples": 25
+          },
+          {
+            "thread": "canonical-v2-web_5",
+            "stack": "_worker@thread.py:90 <- run@threading.py:1012 <- _bootstrap_inner@threading.py:1075 <- _bootstrap@threading.py:1032",
+            "samples": 21
+          },
+          {
+            "thread": "canonical-v2-llm-judge_0",
+            "stack": "read@ssl.py:1105 <- recv@ssl.py:1232 <- read@sync.py:128 <- _receive_event@http11.py:217",
+            "samples": 18
+          },
+          {
+            "thread": "canonical-v2-llm-judge_0",
+            "stack": "_worker@thread.py:90 <- run@threading.py:1012 <- _bootstrap_inner@threading.py:1075 <- _bootstrap@threading.py:1032",
+            "samples": 17
+          },
+          {
+            "thread": "canonical-v2-web_6",
+            "stack": "wait@threading.py:355 <- result@_base.py:451 <- fetch@page_fetch.py:208 <- fetch@page_fetch.py:263",
+            "samples": 16
+          },
+          {
+            "thread": "ThreadPoolExecutor-0_1",
+            "stack": "_normalize@knowledge_read_isolated.py:8417 <- visit@knowledge_read_isolated.py:8437 <- visit@knowledge_read_isolated.py:8441 <- _normalized_scalar_values@knowledge_read_isolated.py:8446",
+            "samples": 15
+          },
+          {
+            "thread": "canonical-v2-web_0",
+            "stack": "read@ssl.py:1105 <- recv@ssl.py:1232 <- read@sync.py:128 <- _receive_event@http11.py:217",
+            "samples": 13
+          },
+          {
+            "thread": "MainThread",
+            "stack": "_update_crc@__init__.py:1023 <- _read1@__init__.py:1098 <- read@__init__.py:1008 <- _read_bytes@format.py:986",
+            "samples": 13
+          },
+          {
+            "thread": "canonical-v2-web_5",
+            "stack": "do_handshake@ssl.py:1319 <- _create@ssl.py:1041 <- wrap_socket@ssl.py:455 <- start_tls@sync.py:165",
+            "samples": 12
+          },
+          {
+            "thread": "canonical-v2-web_1",
+            "stack": "acquire@<frozen importlib._bootstrap>:365 <- __enter__@<frozen importlib._bootstrap>:418 <- _find_and_load@<frozen importlib._bootstrap>:1357 <- __init__@default.py:150",
+            "samples": 11
+          }
+        ]
+      },
+      "counters": {
+        "plan.rewrite.replay": 1,
+        "read.lane.structured.calls": 1,
+        "read.lane.structured.candidates": 0,
+        "read.lane.structured.items": 0,
+        "read.lane.exact.calls": 1,
+        "read.lane.exact.candidates": 0,
+        "read.lane.exact.items": 0,
+        "read.lane.lexical.calls": 1,
+        "read.lane.lexical.candidates": 128,
+        "read.lane.lexical.items": 0,
+        "read.lane.vector.calls": 1,
+        "read.lane.vector.candidates": 128,
+        "read.lane.vector.items": 0,
+        "read.lane.web.calls": 1,
+        "read.lane.web.candidates": 72,
+        "read.lane.web.items": 0
+      }
+    },
+    {
+      "id": "g2-t1",
+      "session": "lat-g2",
+      "query": "中国有哪些成熟的酒店送餐机器人供应商",
+      "as_of": "2026-09-12T02:27:05.796010+00:00",
+      "continuation": false,
+      "recorded": {
+        "trace_day": "2026-09-12.jsonl",
+        "turn_ordinal": 1,
+        "total_s": 38.62,
+        "lanes": {
+          "web": {
+            "in": 70,
+            "retained": 70,
+            "filtered": 0
+          },
+          "exact": {
+            "in": 0,
+            "retained": 0,
+            "filtered": 0
+          },
+          "structured": {
+            "in": 0,
+            "retained": 0,
+            "filtered": 0
+          },
+          "lexical": {
+            "in": 64,
+            "retained": 64,
+            "filtered": 0
+          },
+          "vector": {
+            "in": 64,
+            "retained": 64,
+            "filtered": 0
+          },
+          "supplemental": {
+            "in": 3,
+            "retained": 3,
+            "filtered": 0
+          }
+        },
+        "degradation": "interpretation-rejected",
+        "replay_views": [
+          "酒店服务机器人厂商",
+          "酒店配送机器人品牌",
+          "酒店送餐机器人供应商",
+          "酒店配送机器人 供应商 落地案例",
+          "酒店送餐机器人 主流品牌 厂商排名"
+        ]
+      },
+      "rewriter": {
+        "mode": "replay",
+        "source": "replay",
+        "live_views": [],
+        "used_views": [
+          "酒店服务机器人厂商",
+          "酒店配送机器人品牌",
+          "酒店送餐机器人供应商"
+        ],
+        "wall_s": 0
+      },
+      "plan": {
+        "wall_s": 0.003,
+        "proposal_s": 0.002,
+        "lanes": [
+          "exact",
+          "structured",
+          "lexical",
+          "vector",
+          "web"
+        ],
+        "domains": [
+          "company"
+        ],
+        "max_candidates": 128,
+        "web_max_results": 128,
+        "views": [
+          "中国有哪些成熟的酒店送餐机器人供应商",
+          "酒店服务机器人厂商",
+          "酒店配送机器人品牌",
+          "酒店送餐机器人供应商"
+        ],
+        "view_kinds": [
+          "deterministic",
+          "llm_rewrite",
+          "llm_rewrite",
+          "llm_rewrite"
+        ],
+        "supplemental_budget_ms": null
+      },
+      "read": {
+        "wall_s": 10.195,
+        "outer_s": 10.194,
+        "delegate_s": 8.658,
+        "outer_overhead_s": 1.536,
+        "lanes": {
+          "structured": 0.0003,
+          "exact": 0.1686,
+          "lexical": 2.4555,
+          "vector": 4.176,
+          "web": 8.4634
+        },
+        "rerank_s": 0.001,
+        "sufficiency_s": 0.043,
+        "supplemental_s": 0,
+        "evidence_items": 159,
+        "candidates": 311,
+        "handles": 128,
+        "limitations": []
+      },
+      "web": {
+        "views_calls": [
+          {
+            "name": "web.views",
+            "wall_s": 0.8429,
+            "t_start_s": 0.037,
+            "t_end_s": 0.88,
+            "thread": "ThreadPoolExecutor-2_3",
+            "meta": {
+              "role": "main",
+              "query_count": 4,
+              "views": "中国有哪些成熟的酒店送餐机器人供应商 | 酒店服务机器人厂商 | 酒店配送机器人品牌 | 酒店送餐机器人供应商",
+              "merged": 70
+            }
+          },
+          {
+            "name": "web.views",
+            "wall_s": 1.8968,
+            "t_start_s": 6.593,
+            "t_end_s": 8.489,
+            "thread": "ThreadPoolExecutor-2_3",
+            "meta": {
+              "role": "main",
+              "query_count": 2,
+              "views": "酒店送餐机器人 品牌 厂商 排名 | 酒店配送机器人 供应商 案例",
+              "merged": 44
+            }
+          }
+        ],
+        "merged_calls": [],
+        "provider_calls": [
+          {
+            "name": "web.provider.search",
+            "wall_s": 0.1277,
+            "t_start_s": 0.174,
+            "t_end_s": 0.301,
+            "thread": "canonical-v2-web_7",
+            "meta": {
+              "role": "main",
+              "provider": "bocha-v1",
+              "view": "中国有哪些成熟的酒店送餐机器人供应商",
+              "cache_hit": 1,
+              "results": 12
+            }
+          },
+          {
+            "name": "web.provider.search",
+            "wall_s": 0.1529,
+            "t_start_s": 0.24,
+            "t_end_s": 0.393,
+            "thread": "canonical-v2-web_0",
+            "meta": {
+              "role": "main",
+              "provider": "serper-v1",
+              "view": "中国有哪些成熟的酒店送餐机器人供应商",
+              "cache_hit": 1,
+              "results": 10
+            }
+          },
+          {
+            "name": "web.provider.search",
+            "wall_s": 0.1686,
+            "t_start_s": 0.271,
+            "t_end_s": 0.439,
+            "thread": "canonical-v2-web_5",
+            "meta": {
+              "role": "main",
+              "provider": "bocha-v1",
+              "view": "酒店服务机器人厂商",
+              "cache_hit": 1,
+              "results": 12
+            }
+          },
+          {
+            "name": "web.provider.search",
+            "wall_s": 0.297,
+            "t_start_s": 0.342,
+            "t_end_s": 0.639,
+            "thread": "canonical-v2-web_2",
+            "meta": {
+              "role": "main",
+              "provider": "serper-v1",
+              "view": "酒店服务机器人厂商",
+              "cache_hit": 1,
+              "results": 10
+            }
+          },
+          {
+            "name": "web.provider.search",
+            "wall_s": 0.1793,
+            "t_start_s": 0.501,
+            "t_end_s": 0.68,
+            "thread": "canonical-v2-web_3",
+            "meta": {
+              "role": "main",
+              "provider": "bocha-v1",
+              "view": "酒店配送机器人品牌",
+              "cache_hit": 1,
+              "results": 12
+            }
+          },
+          {
+            "name": "web.provider.search",
+            "wall_s": 0.1791,
+            "t_start_s": 0.542,
+            "t_end_s": 0.721,
+            "thread": "canonical-v2-web_7",
+            "meta": {
+              "role": "main",
+              "provider": "serper-v1",
+              "view": "酒店配送机器人品牌",
+              "cache_hit": 1,
+              "results": 10
+            }
+          },
+          {
+            "name": "web.provider.search",
+            "wall_s": 0.2144,
+            "t_start_s": 0.583,
+            "t_end_s": 0.797,
+            "thread": "canonical-v2-web_4",
+            "meta": {
+              "role": "main",
+              "provider": "bocha-v1",
+              "view": "酒店送餐机器人供应商",
+              "cache_hit": 1,
+              "results": 12
+            }
+          },
+          {
+            "name": "web.provider.search",
+            "wall_s": 0.2448,
+            "t_start_s": 0.608,
+            "t_end_s": 0.853,
+            "thread": "canonical-v2-web_1",
+            "meta": {
+              "role": "main",
+              "provider": "serper-v1",
+              "view": "酒店送餐机器人供应商",
+              "cache_hit": 1,
+              "results": 10
+            }
+          },
+          {
+            "name": "web.provider.search",
+            "wall_s": 0.0045,
+            "t_start_s": 6.594,
+            "t_end_s": 6.598,
+            "thread": "canonical-v2-web_1",
+            "meta": {
+              "role": "main",
+              "provider": "serper-v1",
+              "view": "酒店送餐 品牌 厂商 排名",
+              "cache_hit": 1,
+              "results": 10
+            }
+          },
+          {
+            "name": "web.provider.search",
+            "wall_s": 0.0052,
+            "t_start_s": 6.594,
+            "t_end_s": 6.599,
+            "thread": "canonical-v2-web_2",
+            "meta": {
+              "role": "main",
+              "provider": "bocha-v1",
+              "view": "酒店送餐机器人 品牌 厂商 排名",
+              "cache_hit": 1,
+              "results": 12
+            }
+          },
+          {
+            "name": "web.provider.search",
+            "wall_s": 0.3739,
+            "t_start_s": 6.594,
+            "t_end_s": 6.968,
+            "thread": "canonical-v2-web_6",
+            "meta": {
+              "role": "main",
+              "provider": "bocha-v1",
+              "view": "酒店配送机器人 供应商 案例",
+              "cache_hit": 0,
+              "results": 12
+            }
+          },
+          {
+            "name": "web.provider.search",
+            "wall_s": 1.8945,
+            "t_start_s": 6.594,
+            "t_end_s": 8.489,
+            "thread": "canonical-v2-web_5",
+            "meta": {
+              "role": "main",
+              "provider": "serper-v1",
+              "view": "酒店配送 供应商 案例",
+              "cache_hit": 0,
+              "results": 10
+            }
+          }
+        ],
+        "fetch_calls": [
+          {
+            "name": "web.fetch.page",
+            "wall_s": 0.4702,
+            "t_start_s": 0.938,
+            "t_end_s": 1.409,
+            "thread": "canonical-v2-web_2",
+            "meta": {
+              "url": "https://www.21jingji.com/article/20231012/herald/9f567f2798ffeb4a531be212fb80f585.html",
+              "text_chars": 3000,
+              "direct_s": 0.4701,
+              "tier1_s": 0.0001
+            }
+          },
+          {
+            "name": "web.fetch.page",
+            "wall_s": 0.674,
+            "t_start_s": 0.99,
+            "t_end_s": 1.664,
+            "thread": "canonical-v2-web_1",
+            "meta": {
+              "url": "https://mtz.china.com/touzi/2026/0414/227248.html",
+              "text_chars": 2037,
+              "direct_s": 0.6739,
+              "tier1_s": 0.0001
+            }
+          },
+          {
+            "name": "web.fetch.page",
+            "wall_s": 0.978,
+            "t_start_s": 0.888,
+            "t_end_s": 1.866,
+            "thread": "canonical-v2-web_6",
+            "meta": {
+              "url": "https://www.cnblogs.com/robot-ai-lab/p/19552855",
+              "text_chars": 2932,
+              "direct_s": 0.9779,
+              "tier1_s": 0.0001
+            }
+          },
+          {
+            "name": "web.fetch.page",
+            "wall_s": 1.0846,
+            "t_start_s": 0.912,
+            "t_end_s": 1.996,
+            "thread": "canonical-v2-web_5",
+            "meta": {
+              "url": "http://tjzebao.wjw.cn/gongying/search/SCJQR.html",
+              "text_chars": 2371,
+              "direct_s": 1.0846,
+              "tier1_s": 0.0001
+            }
+          },
+          {
+            "name": "web.fetch.page",
+            "wall_s": 1.071,
+            "t_start_s": 0.969,
+            "t_end_s": 2.04,
+            "thread": "canonical-v2-web_4",
+            "meta": {
+              "url": "https://www.robot-china.com/news/201906/25/57614.html",
+              "text_chars": 487,
+              "direct_s": 1.071,
+              "tier1_s": 0.0
+            }
+          },
+          {
+            "name": "web.fetch.page",
+            "wall_s": 1.1195,
+            "t_start_s": 0.945,
+            "t_end_s": 2.064,
+            "thread": "canonical-v2-web_3",
+            "meta": {
+              "url": "https://b2b.11467.com/search/-900199104f2083dc673a56684eba.htm",
+              "text_chars": 24,
+              "direct_s": 0.3249,
+              "tier1_s": 0.7946
+            }
+          },
+          {
+            "name": "web.fetch.page",
+            "wall_s": 1.4575,
+            "t_start_s": 0.963,
+            "t_end_s": 2.42,
+            "thread": "canonical-v2-web_7",
+            "meta": {
+              "url": "https://www.guancha.cn/qiche/2025_05_16_776099.shtml",
+              "text_chars": 3000,
+              "direct_s": 1.4575,
+              "tier1_s": 0.0
+            }
+          },
+          {
+            "name": "web.fetch.page",
+            "wall_s": 4.1475,
+            "t_start_s": 0.895,
+            "t_end_s": 5.043,
+            "thread": "canonical-v2-web_0",
+            "meta": {
+              "url": "https://www.pudutech.com/zh-CN/case-studies/atour-pudu-flashbot",
+              "text_chars": 1989,
+              "direct_s": 3.1887,
+              "tier1_s": 0.9588
+            }
+          }
+        ],
+        "judge_calls": [
+          {
+            "name": "web.judge.batch",
+            "wall_s": 1.5496,
+            "t_start_s": 5.043,
+            "t_end_s": 6.593,
+            "thread": "ThreadPoolExecutor-2_3",
+            "meta": {
+              "kind": "gap_check",
+              "item_count": 1,
+              "outcome": "ok",
+              "results": 1
+            }
+          }
+        ],
+        "enrich_calls": [
+          {
+            "name": "web.enrich",
+            "wall_s": 4.1623,
+            "t_start_s": 0.881,
+            "t_end_s": 5.043,
+            "thread": "ThreadPoolExecutor-2_3",
+            "meta": {
+              "role": "main",
+              "depth": 8,
+              "candidates": 70
+            }
+          }
+        ],
+        "totals": {
+          "web.views": 2.74,
+          "web.merged": 0,
+          "web.provider.search": 3.842,
+          "web.fetch.page": 11.002,
+          "web.judge.batch": 1.55,
+          "web.enrich": 4.162,
+          "web.fetch.warm": 0
+        },
+        "cache_hits": 10,
+        "provider_calls_total": 12
+      },
+      "embedding": {
+        "embed.batch": {
+          "calls": 2,
+          "wall_s": 0.069
+        },
+        "embed.http": {
+          "calls": 1,
+          "wall_s": 0.051
+        }
+      },
+      "answer": {
+        "selector_s": 0.003184923902153969,
+        "total_s": 0.133,
+        "displayed_handles": 64,
+        "payload_displayed": [],
+        "claims": 64
+      },
+      "stages": [
+        {
+          "stage": "web.fetch.page",
+          "calls": 8,
+          "wall_s": 11.002,
+          "cpu_s": 0.0
+        },
+        {
+          "stage": "read.outer",
+          "calls": 1,
+          "wall_s": 10.194,
+          "cpu_s": 15.212
+        },
+        {
+          "stage": "read.delegate",
+          "calls": 1,
+          "wall_s": 8.658,
+          "cpu_s": 13.674
+        },
+        {
+          "stage": "read.lane.web",
+          "calls": 1,
+          "wall_s": 8.463,
+          "cpu_s": 13.479
+        },
+        {
+          "stage": "read.lane.vector",
+          "calls": 1,
+          "wall_s": 4.176,
+          "cpu_s": 13.297
+        },
+        {
+          "stage": "web.enrich",
+          "calls": 1,
+          "wall_s": 4.162,
+          "cpu_s": 0.0
+        },
+        {
+          "stage": "web.provider.search",
+          "calls": 12,
+          "wall_s": 3.842,
+          "cpu_s": 0.0
+        },
+        {
+          "stage": "web.views",
+          "calls": 2,
+          "wall_s": 2.74,
+          "cpu_s": 0.0
+        },
+        {
+          "stage": "read.lane.lexical",
+          "calls": 1,
+          "wall_s": 2.455,
+          "cpu_s": 3.582
+        },
+        {
+          "stage": "web.judge.batch",
+          "calls": 1,
+          "wall_s": 1.55,
+          "cpu_s": 0.0
+        },
+        {
+          "stage": "iso.validate_release_bound_vector_evidence",
+          "calls": 1,
+          "wall_s": 1.535,
+          "cpu_s": 1.537
+        },
+        {
+          "stage": "read.lane.exact",
+          "calls": 1,
+          "wall_s": 0.169,
+          "cpu_s": 0.17
+        },
+        {
+          "stage": "answer.total",
+          "calls": 1,
+          "wall_s": 0.133,
+          "cpu_s": 0.0
+        },
+        {
+          "stage": "embed.batch",
+          "calls": 2,
+          "wall_s": 0.069,
+          "cpu_s": 0.0
+        },
+        {
+          "stage": "embed.http",
+          "calls": 1,
+          "wall_s": 0.051,
+          "cpu_s": 0.0
+        },
+        {
+          "stage": "read.sufficiency",
+          "calls": 1,
+          "wall_s": 0.043,
+          "cpu_s": 0.043
+        },
+        {
+          "stage": "plan.total",
+          "calls": 1,
+          "wall_s": 0.003,
+          "cpu_s": 0.0
+        },
+        {
+          "stage": "answer.selector",
+          "calls": 1,
+          "wall_s": 0.003,
+          "cpu_s": 0.003
+        },
+        {
+          "stage": "answer.selector.external",
+          "calls": 1,
+          "wall_s": 0.003,
+          "cpu_s": 0.0
+        },
+        {
+          "stage": "plan.proposal",
+          "calls": 1,
+          "wall_s": 0.002,
+          "cpu_s": 0.002
+        },
+        {
+          "stage": "read.rerank",
+          "calls": 1,
+          "wall_s": 0.001,
+          "cpu_s": 0.001
+        },
+        {
+          "stage": "plan.session_bind",
+          "calls": 1,
+          "wall_s": 0.0,
+          "cpu_s": 0.0
+        },
+        {
+          "stage": "read.lane.structured",
+          "calls": 1,
+          "wall_s": 0.0,
+          "cpu_s": 0.0
+        }
+      ],
+      "sampler": {
+        "samples": 2693,
+        "by_thread": {
+          "canonical-v2-llm-judge_0": 177,
+          "canonical-v2-web_7": 177,
+          "canonical-v2-web_6": 177,
+          "canonical-v2-web_5": 177,
+          "canonical-v2-web_4": 177,
+          "canonical-v2-web_3": 177,
+          "canonical-v2-web_2": 177,
+          "canonical-v2-web_1": 177,
+          "canonical-v2-web_0": 177,
+          "asyncio-waitpid-0": 177,
+          "canonical-v2-tiered-fetch_0": 177,
+          "MainThread": 177,
+          "ThreadPoolExecutor-2_3": 142,
+          "ThreadPoolExecutor-2_2": 142,
+          "ThreadPoolExecutor-2_1": 142,
+          "ThreadPoolExecutor-2_0": 142,
+          "ThreadPoolExecutor-3_0": 1
+        },
+        "top_stacks": [
+          {
+            "stack": "_worker@thread.py:90 <- run@threading.py:1012 <- _bootstrap_inner@threading.py:1075 <- _bootstrap@threading.py:1032",
+            "samples": 1797
+          },
+          {
+            "stack": "_do_waitpid@unix_events.py:1408 <- run@threading.py:1012 <- _bootstrap_inner@threading.py:1075 <- _bootstrap@threading.py:1032",
+            "samples": 177
+          },
+          {
+            "stack": "wait@threading.py:359 <- result@_base.py:451 <- execute@knowledge_read.py:7673 <- timing_delegate_execute@latency_harness.py:1066",
+            "samples": 141
+          },
+          {
+            "stack": "read@ssl.py:1105 <- recv@ssl.py:1232 <- read@sync.py:128 <- _receive_event@http11.py:217",
+            "samples": 83
+          },
+          {
+            "stack": "wait@threading.py:359 <- result@_base.py:451 <- _enrich_with_page_text@knowledge_serving_isolated.py:1436 <- enrich@latency_harness.py:620",
+            "samples": 59
+          },
+          {
+            "stack": "wait@threading.py:359 <- result@_base.py:451 <- _merged_results_for_views@knowledge_serving_isolated.py:1377 <- merged_for_views@latency_harness.py:606",
+            "samples": 50
+          },
+          {
+            "stack": "wait@threading.py:359 <- result@_base.py:451 <- _call@llm_judgments.py:364 <- judge_batch@llm_judgments.py:394",
+            "samples": 31
+          },
+          {
+            "stack": "read@ssl.py:1103 <- recv_into@ssl.py:1251 <- readinto@socket.py:720 <- _read_status@client.py:292",
+            "samples": 31
+          },
+          {
+            "stack": "_normalize@knowledge_read_isolated.py:8417 <- visit@knowledge_read_isolated.py:8437 <- visit@knowledge_read_isolated.py:8441 <- _normalized_scalar_values@knowledge_read_isolated.py:8446",
+            "samples": 28
+          },
+          {
+            "stack": "wait@threading.py:355 <- result@_base.py:451 <- fetch@page_fetch.py:208 <- fetch@page_fetch.py:263",
+            "samples": 26
+          },
+          {
+            "stack": "select@selectors.py:468 <- _run_once@base_events.py:1961 <- run_forever@base_events.py:645 <- run_until_complete@base_events.py:678",
+            "samples": 22
+          },
+          {
+            "stack": "cache_get@web_lane_resilience.py:174 <- _provider_search@knowledge_serving_isolated.py:1095 <- provider_search@latency_harness.py:576 <- run@thread.py:59",
+            "samples": 20
+          },
+          {
+            "stack": "cache_get@web_lane_resilience.py:174 <- provider_search@latency_harness.py:568 <- run@thread.py:59 <- _worker@thread.py:93",
+            "samples": 19
+          },
+          {
+            "stack": "<genexpr>@knowledge_read_isolated.py:8731 <- <genexpr>@knowledge_read_isolated.py:8731 <- _category_recall_entries@knowledge_read_isolated.py:8728 <- lexical_lookup@serving_pack_loader.py:1075",
+            "samples": 18
+          },
+          {
+            "stack": "_update_crc@__init__.py:1023 <- _read1@__init__.py:1098 <- read@__init__.py:1008 <- _read_bytes@format.py:986",
+            "samples": 15
+          }
+        ],
+        "raw_rows": [
+          {
+            "thread": "asyncio-waitpid-0",
+            "stack": "_do_waitpid@unix_events.py:1408 <- run@threading.py:1012 <- _bootstrap_inner@threading.py:1075 <- _bootstrap@threading.py:1032",
+            "samples": 177
+          },
+          {
+            "thread": "canonical-v2-web_2",
+            "stack": "_worker@thread.py:90 <- run@threading.py:1012 <- _bootstrap_inner@threading.py:1075 <- _bootstrap@threading.py:1032",
+            "samples": 164
+          },
+          {
+            "thread": "canonical-v2-web_1",
+            "stack": "_worker@thread.py:90 <- run@threading.py:1012 <- _bootstrap_inner@threading.py:1075 <- _bootstrap@threading.py:1032",
+            "samples": 159
+          },
+          {
+            "thread": "canonical-v2-web_6",
+            "stack": "_worker@thread.py:90 <- run@threading.py:1012 <- _bootstrap_inner@threading.py:1075 <- _bootstrap@threading.py:1032",
+            "samples": 157
+          },
+          {
+            "thread": "canonical-v2-web_4",
+            "stack": "_worker@thread.py:90 <- run@threading.py:1012 <- _bootstrap_inner@threading.py:1075 <- _bootstrap@threading.py:1032",
+            "samples": 155
+          },
+          {
+            "thread": "canonical-v2-web_3",
+            "stack": "_worker@thread.py:90 <- run@threading.py:1012 <- _bootstrap_inner@threading.py:1075 <- _bootstrap@threading.py:1032",
+            "samples": 155
+          },
+          {
+            "thread": "canonical-v2-tiered-fetch_0",
+            "stack": "_worker@thread.py:90 <- run@threading.py:1012 <- _bootstrap_inner@threading.py:1075 <- _bootstrap@threading.py:1032",
+            "samples": 151
+          },
+          {
+            "thread": "canonical-v2-llm-judge_0",
+            "stack": "_worker@thread.py:90 <- run@threading.py:1012 <- _bootstrap_inner@threading.py:1075 <- _bootstrap@threading.py:1032",
+            "samples": 146
+          },
+          {
+            "thread": "canonical-v2-web_7",
+            "stack": "_worker@thread.py:90 <- run@threading.py:1012 <- _bootstrap_inner@threading.py:1075 <- _bootstrap@threading.py:1032",
+            "samples": 146
+          },
+          {
+            "thread": "MainThread",
+            "stack": "wait@threading.py:359 <- result@_base.py:451 <- execute@knowledge_read.py:7673 <- timing_delegate_execute@latency_harness.py:1066",
+            "samples": 141
+          },
+          {
+            "thread": "ThreadPoolExecutor-2_0",
+            "stack": "_worker@thread.py:90 <- run@threading.py:1012 <- _bootstrap_inner@threading.py:1075 <- _bootstrap@threading.py:1032",
+            "samples": 140
+          },
+          {
+            "thread": "canonical-v2-web_5",
+            "stack": "_worker@thread.py:90 <- run@threading.py:1012 <- _bootstrap_inner@threading.py:1075 <- _bootstrap@threading.py:1032",
+            "samples": 121
+          },
+          {
+            "thread": "canonical-v2-web_0",
+            "stack": "_worker@thread.py:90 <- run@threading.py:1012 <- _bootstrap_inner@threading.py:1075 <- _bootstrap@threading.py:1032",
+            "samples": 115
+          },
+          {
+            "thread": "ThreadPoolExecutor-2_2",
+            "stack": "_worker@thread.py:90 <- run@threading.py:1012 <- _bootstrap_inner@threading.py:1075 <- _bootstrap@threading.py:1032",
+            "samples": 103
+          },
+          {
+            "thread": "ThreadPoolExecutor-2_1",
+            "stack": "_worker@thread.py:90 <- run@threading.py:1012 <- _bootstrap_inner@threading.py:1075 <- _bootstrap@threading.py:1032",
+            "samples": 85
+          },
+          {
+            "thread": "ThreadPoolExecutor-2_3",
+            "stack": "wait@threading.py:359 <- result@_base.py:451 <- _enrich_with_page_text@knowledge_serving_isolated.py:1436 <- enrich@latency_harness.py:620",
+            "samples": 59
+          },
+          {
+            "thread": "ThreadPoolExecutor-2_3",
+            "stack": "wait@threading.py:359 <- result@_base.py:451 <- _merged_results_for_views@knowledge_serving_isolated.py:1377 <- merged_for_views@latency_harness.py:606",
+            "samples": 50
+          },
+          {
+            "thread": "canonical-v2-web_0",
+            "stack": "read@ssl.py:1105 <- recv@ssl.py:1232 <- read@sync.py:128 <- _receive_event@http11.py:217",
+            "samples": 38
+          },
+          {
+            "thread": "ThreadPoolExecutor-2_3",
+            "stack": "wait@threading.py:359 <- result@_base.py:451 <- _call@llm_judgments.py:364 <- judge_batch@llm_judgments.py:394",
+            "samples": 31
+          },
+          {
+            "thread": "canonical-v2-llm-judge_0",
+            "stack": "read@ssl.py:1105 <- recv@ssl.py:1232 <- read@sync.py:128 <- _receive_event@http11.py:217",
+            "samples": 29
+          },
+          {
+            "thread": "ThreadPoolExecutor-2_1",
+            "stack": "_normalize@knowledge_read_isolated.py:8417 <- visit@knowledge_read_isolated.py:8437 <- visit@knowledge_read_isolated.py:8441 <- _normalized_scalar_values@knowledge_read_isolated.py:8446",
+            "samples": 28
+          },
+          {
+            "thread": "canonical-v2-web_5",
+            "stack": "read@ssl.py:1103 <- recv_into@ssl.py:1251 <- readinto@socket.py:720 <- _read_status@client.py:292",
+            "samples": 28
+          },
+          {
+            "thread": "canonical-v2-tiered-fetch_0",
+            "stack": "select@selectors.py:468 <- _run_once@base_events.py:1961 <- run_forever@base_events.py:645 <- run_until_complete@base_events.py:678",
+            "samples": 22
+          },
+          {
+            "thread": "ThreadPoolExecutor-2_2",
+            "stack": "<genexpr>@knowledge_read_isolated.py:8731 <- <genexpr>@knowledge_read_isolated.py:8731 <- _category_recall_entries@knowledge_read_isolated.py:8728 <- lexical_lookup@serving_pack_loader.py:1075",
+            "samples": 18
+          },
+          {
+            "thread": "canonical-v2-web_0",
+            "stack": "wait@threading.py:355 <- result@_base.py:451 <- fetch@page_fetch.py:208 <- fetch@page_fetch.py:263",
+            "samples": 17
+          },
+          {
+            "thread": "MainThread",
+            "stack": "_update_crc@__init__.py:1023 <- _read1@__init__.py:1098 <- read@__init__.py:1008 <- _read_bytes@format.py:986",
+            "samples": 15
+          },
+          {
+            "thread": "canonical-v2-web_7",
+            "stack": "read@ssl.py:1105 <- recv@ssl.py:1232 <- read@sync.py:128 <- _receive_event@http11.py:217",
+            "samples": 12
+          },
+          {
+            "thread": "canonical-v2-web_3",
+            "stack": "wait@threading.py:355 <- result@_base.py:451 <- fetch@page_fetch.py:208 <- fetch@page_fetch.py:263",
+            "samples": 9
+          },
+          {
+            "thread": "MainThread",
+            "stack": "read_array@format.py:852 <- __getitem__@_npyio_impl.py:254 <- load_persisted_vector_matrix@index_projection_isolated.py:690 <- _validate_release_bound_vector_evidence@knowledge_read_isolated.py:8122",
+            "samples": 9
+          },
+          {
+            "thread": "ThreadPoolExecutor-2_1",
+            "stack": "_canonical_sha256@knowledge_read.py:146 <- bind_trace@knowledge_read.py:1345 <- __init__@main.py:250 <- _candidate_from_point@knowledge_read_isolated.py:7903",
+            "samples": 7
+          }
+        ]
+      },
+      "counters": {
+        "plan.rewrite.replay": 1,
+        "read.lane.structured.calls": 1,
+        "read.lane.structured.candidates": 0,
+        "read.lane.structured.items": 0,
+        "read.lane.exact.calls": 1,
+        "read.lane.exact.candidates": 0,
+        "read.lane.exact.items": 0,
+        "read.lane.lexical.calls": 1,
+        "read.lane.lexical.candidates": 128,
+        "read.lane.lexical.items": 0,
+        "read.lane.vector.calls": 1,
+        "read.lane.vector.candidates": 128,
+        "read.lane.vector.items": 0,
+        "read.lane.web.calls": 1,
+        "read.lane.web.candidates": 96,
+        "read.lane.web.items": 0
+      }
+    },
+    {
+      "id": "pcb-t1",
+      "session": "lat-pcb",
+      "query": "我想找PCB打板， 有哪些推荐",
+      "as_of": "2026-09-12T02:27:44.440748+00:00",
+      "continuation": false,
+      "recorded": {
+        "trace_day": "2026-09-12.jsonl",
+        "turn_ordinal": 1,
+        "total_s": 29.07,
+        "lanes": {
+          "web": {
+            "in": 66,
+            "retained": 66,
+            "filtered": 0
+          },
+          "exact": {
+            "in": 0,
+            "retained": 0,
+            "filtered": 0
+          },
+          "structured": {
+            "in": 0,
+            "retained": 0,
+            "filtered": 0
+          },
+          "lexical": {
+            "in": 64,
+            "retained": 64,
+            "filtered": 0
+          },
+          "vector": {
+            "in": 64,
+            "retained": 64,
+            "filtered": 0
+          },
+          "supplemental": {
+            "in": 11,
+            "retained": 11,
+            "filtered": 0
+          }
+        },
+        "degradation": "none",
+        "replay_views": [
+          "PCB打样 小批量 厂家",
+          "PCB打板 推荐 厂商",
+          "PCB打板 平台 对比"
+        ]
+      },
+      "rewriter": {
+        "mode": "replay",
+        "source": "replay",
+        "live_views": [],
+        "used_views": [
+          "PCB打样 小批量 厂家",
+          "PCB打板 推荐 厂商",
+          "PCB打板 平台 对比"
+        ],
+        "wall_s": 0
+      },
+      "plan": {
+        "wall_s": 0.002,
+        "proposal_s": 0.001,
+        "lanes": [
+          "exact",
+          "structured",
+          "lexical",
+          "vector",
+          "web"
+        ],
+        "domains": [
+          "company"
+        ],
+        "max_candidates": 128,
+        "web_max_results": 128,
+        "views": [
+          "我想找PCB打板， 有哪些推荐",
+          "PCB打样 小批量 厂家",
+          "PCB打板 推荐 厂商",
+          "PCB打板 平台 对比"
+        ],
+        "view_kinds": [
+          "deterministic",
+          "llm_rewrite",
+          "llm_rewrite",
+          "llm_rewrite"
+        ],
+        "supplemental_budget_ms": null
+      },
+      "read": {
+        "wall_s": 9.06,
+        "outer_s": 9.059,
+        "delegate_s": 7.523,
+        "outer_overhead_s": 1.536,
+        "lanes": {
+          "structured": 0.0001,
+          "exact": 0.3394,
+          "lexical": 3.7053,
+          "vector": 5.4814,
+          "web": 7.277
+        },
+        "rerank_s": 0.001,
+        "sufficiency_s": 0.04,
+        "supplemental_s": 0,
+        "evidence_items": 157,
+        "candidates": 321,
+        "handles": 128,
+        "limitations": []
+      },
+      "web": {
+        "views_calls": [
+          {
+            "name": "web.views",
+            "wall_s": 0.8893,
+            "t_start_s": 0.07,
+            "t_end_s": 0.959,
+            "thread": "ThreadPoolExecutor-4_3",
+            "meta": {
+              "role": "main",
+              "query_count": 4,
+              "views": "我想找PCB打板， 有哪些推荐 | PCB打样 小批量 厂家 | PCB打板 推荐 厂商 | PCB打板 平台 对比",
+              "merged": 66
+            }
+          },
+          {
+            "name": "web.views",
+            "wall_s": 0.0063,
+            "t_start_s": 7.318,
+            "t_end_s": 7.324,
+            "thread": "ThreadPoolExecutor-4_3",
+            "meta": {
+              "role": "main",
+              "query_count": 2,
+              "views": "PCB打板厂家推荐 排名 | PCB打样 价格 交期 对比",
+              "merged": 41
+            }
+          }
+        ],
+        "merged_calls": [],
+        "provider_calls": [
+          {
+            "name": "web.provider.search",
+            "wall_s": 0.234,
+            "t_start_s": 0.171,
+            "t_end_s": 0.405,
+            "thread": "canonical-v2-web_3",
+            "meta": {
+              "role": "main",
+              "provider": "bocha-v1",
+              "view": "我想找PCB打板， 有哪些推荐",
+              "cache_hit": 1,
+              "results": 11
+            }
+          },
+          {
+            "name": "web.provider.search",
+            "wall_s": 0.3318,
+            "t_start_s": 0.227,
+            "t_end_s": 0.559,
+            "thread": "canonical-v2-web_7",
+            "meta": {
+              "role": "main",
+              "provider": "serper-v1",
+              "view": "我想找PCB打板， 有哪些推荐",
+              "cache_hit": 1,
+              "results": 10
+            }
+          },
+          {
+            "name": "web.provider.search",
+            "wall_s": 0.3569,
+            "t_start_s": 0.379,
+            "t_end_s": 0.736,
+            "thread": "canonical-v2-web_0",
+            "meta": {
+              "role": "main",
+              "provider": "bocha-v1",
+              "view": "PCB打样 小批量 厂家",
+              "cache_hit": 1,
+              "results": 12
+            }
+          },
+          {
+            "name": "web.provider.search",
+            "wall_s": 0.341,
+            "t_start_s": 0.445,
+            "t_end_s": 0.786,
+            "thread": "canonical-v2-web_4",
+            "meta": {
+              "role": "main",
+              "provider": "serper-v1",
+              "view": "PCB打样 小批量 厂家",
+              "cache_hit": 1,
+              "results": 10
+            }
+          },
+          {
+            "name": "web.provider.search",
+            "wall_s": 0.3418,
+            "t_start_s": 0.471,
+            "t_end_s": 0.813,
+            "thread": "canonical-v2-web_1",
+            "meta": {
+              "role": "main",
+              "provider": "bocha-v1",
+              "view": "PCB打板 推荐 厂商",
+              "cache_hit": 1,
+              "results": 12
+            }
+          },
+          {
+            "name": "web.provider.search",
+            "wall_s": 0.3162,
+            "t_start_s": 0.518,
+            "t_end_s": 0.834,
+            "thread": "canonical-v2-web_2",
+            "meta": {
+              "role": "main",
+              "provider": "serper-v1",
+              "view": "PCB打板 推荐 厂商",
+              "cache_hit": 1,
+              "results": 10
+            }
+          },
+          {
+            "name": "web.provider.search",
+            "wall_s": 0.2459,
+            "t_start_s": 0.65,
+            "t_end_s": 0.896,
+            "thread": "canonical-v2-web_6",
+            "meta": {
+              "role": "main",
+              "provider": "bocha-v1",
+              "view": "PCB打板 平台 对比",
+              "cache_hit": 1,
+              "results": 10
+            }
+          },
+          {
+            "name": "web.provider.search",
+            "wall_s": 0.2516,
+            "t_start_s": 0.696,
+            "t_end_s": 0.947,
+            "thread": "canonical-v2-web_5",
+            "meta": {
+              "role": "main",
+              "provider": "serper-v1",
+              "view": "PCB打板 平台 对比",
+              "cache_hit": 1,
+              "results": 10
+            }
+          },
+          {
+            "name": "web.provider.search",
+            "wall_s": 0.0021,
+            "t_start_s": 7.319,
+            "t_end_s": 7.321,
+            "thread": "canonical-v2-web_2",
+            "meta": {
+              "role": "main",
+              "provider": "bocha-v1",
+              "view": "PCB打板厂家推荐 排名",
+              "cache_hit": 1,
+              "results": 10
+            }
+          },
+          {
+            "name": "web.provider.search",
+            "wall_s": 0.0013,
+            "t_start_s": 7.32,
+            "t_end_s": 7.321,
+            "thread": "canonical-v2-web_7",
+            "meta": {
+              "role": "main",
+              "provider": "serper-v1",
+              "view": "PCB打板厂家推荐 排名",
+              "cache_hit": 1,
+              "results": 10
+            }
+          },
+          {
+            "name": "web.provider.search",
+            "wall_s": 0.0022,
+            "t_start_s": 7.32,
+            "t_end_s": 7.323,
+            "thread": "canonical-v2-web_0",
+            "meta": {
+              "role": "main",
+              "provider": "bocha-v1",
+              "view": "PCB打样 价格 交期 对比",
+              "cache_hit": 1,
+              "results": 12
+            }
+          },
+          {
+            "name": "web.provider.search",
+            "wall_s": 0.0022,
+            "t_start_s": 7.321,
+            "t_end_s": 7.323,
+            "thread": "canonical-v2-web_3",
+            "meta": {
+              "role": "main",
+              "provider": "serper-v1",
+              "view": "PCB打样 价格 交期 对比",
+              "cache_hit": 1,
+              "results": 10
+            }
+          }
+        ],
+        "fetch_calls": [
+          {
+            "name": "web.fetch.page",
+            "wall_s": 0.9206,
+            "t_start_s": 1.074,
+            "t_end_s": 1.995,
+            "thread": "canonical-v2-web_2",
+            "meta": {
+              "url": "https://cloud.tencent.com/developer/news/2226613",
+              "text_chars": 2911,
+              "direct_s": 0.9205,
+              "tier1_s": 0.0001
+            }
+          },
+          {
+            "name": "web.fetch.page",
+            "wall_s": 1.4327,
+            "t_start_s": 1.008,
+            "t_end_s": 2.441,
+            "thread": "canonical-v2-web_7",
+            "meta": {
+              "url": "https://www.reddit.com/r/PrintedCircuitBoard/comments/10g623u/usa_quick_turn_pcb_recommendations/?tl=zh-hans",
+              "text_chars": 0,
+              "direct_s": 0.1432,
+              "tier1_s": 1.2895
+            }
+          },
+          {
+            "name": "web.fetch.page",
+            "wall_s": 2.333,
+            "t_start_s": 1.022,
+            "t_end_s": 3.355,
+            "thread": "canonical-v2-web_0",
+            "meta": {
+              "url": "http://www.912688.com/chanpin/6253677F.html",
+              "text_chars": 3000,
+              "direct_s": 2.3329,
+              "tier1_s": 0.0
+            }
+          },
+          {
+            "name": "web.fetch.page",
+            "wall_s": 2.3825,
+            "t_start_s": 0.983,
+            "t_end_s": 3.365,
+            "thread": "canonical-v2-web_3",
+            "meta": {
+              "url": "https://s.1688.com/kq/-706362B4F2B0E5.html",
+              "text_chars": 2585,
+              "direct_s": 2.3824,
+              "tier1_s": 0.0001
+            }
+          },
+          {
+            "name": "web.fetch.page",
+            "wall_s": 2.465,
+            "t_start_s": 1.13,
+            "t_end_s": 3.595,
+            "thread": "canonical-v2-web_5",
+            "meta": {
+              "url": "https://blog.csdn.net/weixin_48033504/article/details/119936255",
+              "text_chars": 17,
+              "direct_s": 0.3234,
+              "tier1_s": 2.1416
+            }
+          },
+          {
+            "name": "web.fetch.page",
+            "wall_s": 2.665,
+            "t_start_s": 1.105,
+            "t_end_s": 3.77,
+            "thread": "canonical-v2-web_6",
+            "meta": {
+              "url": "https://www.autohome.com.cn/ask/5611965.html",
+              "text_chars": 764,
+              "direct_s": 2.6649,
+              "tier1_s": 0.0
+            }
+          },
+          {
+            "name": "web.fetch.page",
+            "wall_s": 4.5542,
+            "t_start_s": 1.037,
+            "t_end_s": 5.592,
+            "thread": "canonical-v2-web_4",
+            "meta": {
+              "url": "https://www.taobao.com/list/product/top-rated/pcb%E6%89%93%E6%9D%BF.htm",
+              "text_chars": 103,
+              "direct_s": 0.5101,
+              "tier1_s": 4.0441
+            }
+          },
+          {
+            "name": "web.fetch.page",
+            "wall_s": 5.2459,
+            "t_start_s": 1.058,
+            "t_end_s": 6.304,
+            "thread": "canonical-v2-web_1",
+            "meta": {
+              "url": "https://www.pcbhunt.com/caseshow/602303125792915456.html",
+              "text_chars": 641,
+              "direct_s": 0.7147,
+              "tier1_s": 4.5311
+            }
+          }
+        ],
+        "judge_calls": [
+          {
+            "name": "web.judge.batch",
+            "wall_s": 1.0136,
+            "t_start_s": 6.304,
+            "t_end_s": 7.318,
+            "thread": "ThreadPoolExecutor-4_3",
+            "meta": {
+              "kind": "gap_check",
+              "item_count": 1,
+              "outcome": "ok",
+              "results": 1
+            }
+          }
+        ],
+        "enrich_calls": [
+          {
+            "name": "web.enrich",
+            "wall_s": 5.3447,
+            "t_start_s": 0.96,
+            "t_end_s": 6.304,
+            "thread": "ThreadPoolExecutor-4_3",
+            "meta": {
+              "role": "main",
+              "depth": 8,
+              "candidates": 66
+            }
+          }
+        ],
+        "totals": {
+          "web.views": 0.896,
+          "web.merged": 0,
+          "web.provider.search": 2.427,
+          "web.fetch.page": 21.999,
+          "web.judge.batch": 1.014,
+          "web.enrich": 5.345,
+          "web.fetch.warm": 0
+        },
+        "cache_hits": 12,
+        "provider_calls_total": 12
+      },
+      "embedding": {
+        "embed.batch": {
+          "calls": 2,
+          "wall_s": 0.198
+        },
+        "embed.http": {
+          "calls": 1,
+          "wall_s": 0.121
+        }
+      },
+      "answer": {
+        "selector_s": 0.0031483001075685024,
+        "total_s": 0.14,
+        "displayed_handles": 64,
+        "payload_displayed": [],
+        "claims": 64
+      },
+      "stages": [
+        {
+          "stage": "web.fetch.page",
+          "calls": 8,
+          "wall_s": 21.999,
+          "cpu_s": 0.0
+        },
+        {
+          "stage": "read.outer",
+          "calls": 1,
+          "wall_s": 9.059,
+          "cpu_s": 16.583
+        },
+        {
+          "stage": "read.delegate",
+          "calls": 1,
+          "wall_s": 7.523,
+          "cpu_s": 15.045
+        },
+        {
+          "stage": "read.lane.web",
+          "calls": 1,
+          "wall_s": 7.277,
+          "cpu_s": 14.797
+        },
+        {
+          "stage": "read.lane.vector",
+          "calls": 1,
+          "wall_s": 5.481,
+          "cpu_s": 14.698
+        },
+        {
+          "stage": "web.enrich",
+          "calls": 1,
+          "wall_s": 5.345,
+          "cpu_s": 0.0
+        },
+        {
+          "stage": "read.lane.lexical",
+          "calls": 1,
+          "wall_s": 3.705,
+          "cpu_s": 3.975
+        },
+        {
+          "stage": "web.provider.search",
+          "calls": 12,
+          "wall_s": 2.427,
+          "cpu_s": 0.0
+        },
+        {
+          "stage": "iso.validate_release_bound_vector_evidence",
+          "calls": 1,
+          "wall_s": 1.535,
+          "cpu_s": 1.538
+        },
+        {
+          "stage": "web.judge.batch",
+          "calls": 1,
+          "wall_s": 1.014,
+          "cpu_s": 0.0
+        },
+        {
+          "stage": "web.views",
+          "calls": 2,
+          "wall_s": 0.896,
+          "cpu_s": 0.0
+        },
+        {
+          "stage": "read.lane.exact",
+          "calls": 1,
+          "wall_s": 0.339,
+          "cpu_s": 0.343
+        },
+        {
+          "stage": "embed.batch",
+          "calls": 2,
+          "wall_s": 0.198,
+          "cpu_s": 0.0
+        },
+        {
+          "stage": "answer.total",
+          "calls": 1,
+          "wall_s": 0.14,
+          "cpu_s": 0.0
+        },
+        {
+          "stage": "embed.http",
+          "calls": 1,
+          "wall_s": 0.121,
+          "cpu_s": 0.0
+        },
+        {
+          "stage": "read.sufficiency",
+          "calls": 1,
+          "wall_s": 0.04,
+          "cpu_s": 0.04
+        },
+        {
+          "stage": "answer.selector",
+          "calls": 1,
+          "wall_s": 0.003,
+          "cpu_s": 0.003
+        },
+        {
+          "stage": "answer.selector.external",
+          "calls": 1,
+          "wall_s": 0.003,
+          "cpu_s": 0.0
+        },
+        {
+          "stage": "plan.total",
+          "calls": 1,
+          "wall_s": 0.002,
+          "cpu_s": 0.0
+        },
+        {
+          "stage": "plan.proposal",
+          "calls": 1,
+          "wall_s": 0.001,
+          "cpu_s": 0.001
+        },
+        {
+          "stage": "read.rerank",
+          "calls": 1,
+          "wall_s": 0.001,
+          "cpu_s": 0.001
+        },
+        {
+          "stage": "plan.session_bind",
+          "calls": 1,
+          "wall_s": 0.0,
+          "cpu_s": 0.0
+        },
+        {
+          "stage": "read.lane.structured",
+          "calls": 1,
+          "wall_s": 0.0,
+          "cpu_s": 0.0
+        }
+      ],
+      "sampler": {
+        "samples": 2129,
+        "by_thread": {
+          "canonical-v2-llm-judge_0": 142,
+          "canonical-v2-web_7": 142,
+          "canonical-v2-web_6": 142,
+          "canonical-v2-web_5": 142,
+          "canonical-v2-web_4": 142,
+          "canonical-v2-web_3": 142,
+          "canonical-v2-web_2": 142,
+          "canonical-v2-web_1": 142,
+          "canonical-v2-web_0": 142,
+          "asyncio-waitpid-0": 142,
+          "canonical-v2-tiered-fetch_0": 142,
+          "MainThread": 142,
+          "ThreadPoolExecutor-4_2": 106,
+          "ThreadPoolExecutor-4_1": 106,
+          "ThreadPoolExecutor-4_0": 105,
+          "ThreadPoolExecutor-4_3": 105,
+          "ThreadPoolExecutor-5_0": 3
+        },
+        "top_stacks": [
+          {
+            "stack": "_worker@thread.py:90 <- run@threading.py:1012 <- _bootstrap_inner@threading.py:1075 <- _bootstrap@threading.py:1032",
+            "samples": 1131
+          },
+          {
+            "stack": "wait@threading.py:355 <- result@_base.py:451 <- fetch@page_fetch.py:208 <- fetch@page_fetch.py:263",
+            "samples": 162
+          },
+          {
+            "stack": "_do_waitpid@unix_events.py:1408 <- run@threading.py:1012 <- _bootstrap_inner@threading.py:1075 <- _bootstrap@threading.py:1032",
+            "samples": 142
+          },
+          {
+            "stack": "wait@threading.py:359 <- result@_base.py:451 <- execute@knowledge_read.py:7673 <- timing_delegate_execute@latency_harness.py:1066",
+            "samples": 104
+          },
+          {
+            "stack": "read@ssl.py:1105 <- recv@ssl.py:1232 <- read@sync.py:128 <- _receive_event@http11.py:217",
+            "samples": 93
+          },
+          {
+            "stack": "wait@threading.py:359 <- result@_base.py:451 <- _enrich_with_page_text@knowledge_serving_isolated.py:1436 <- enrich@latency_harness.py:620",
+            "samples": 71
+          },
+          {
+            "stack": "<genexpr>@knowledge_read_isolated.py:8731 <- <genexpr>@knowledge_read_isolated.py:8731 <- _category_recall_entries@knowledge_read_isolated.py:8728 <- lexical_lookup@serving_pack_loader.py:1075",
+            "samples": 51
+          },
+          {
+            "stack": "select@selectors.py:468 <- _run_once@base_events.py:1961 <- run_forever@base_events.py:645 <- run_until_complete@base_events.py:678",
+            "samples": 48
+          },
+          {
+            "stack": "_normalize@knowledge_read_isolated.py:8417 <- visit@knowledge_read_isolated.py:8437 <- visit@knowledge_read_isolated.py:8441 <- _normalized_scalar_values@knowledge_read_isolated.py:8446",
+            "samples": 40
+          },
+          {
+            "stack": "cache_get@web_lane_resilience.py:174 <- _provider_search@knowledge_serving_isolated.py:1095 <- provider_search@latency_harness.py:576 <- run@thread.py:59",
+            "samples": 33
+          },
+          {
+            "stack": "cache_get@web_lane_resilience.py:174 <- provider_search@latency_harness.py:568 <- run@thread.py:59 <- _worker@thread.py:93",
+            "samples": 22
+          },
+          {
+            "stack": "wait@threading.py:359 <- result@_base.py:451 <- _call@llm_judgments.py:364 <- judge_batch@llm_judgments.py:394",
+            "samples": 20
+          },
+          {
+            "stack": "checkcache@linecache.py:75 <- _extract_from_extended_frame_gen@traceback.py:434 <- extract@traceback.py:395 <- extract_stack@traceback.py:232",
+            "samples": 15
+          },
+          {
+            "stack": "_update_crc@__init__.py:1023 <- _read1@__init__.py:1098 <- read@__init__.py:1008 <- _read_bytes@format.py:986",
+            "samples": 15
+          },
+          {
+            "stack": "wait@threading.py:359 <- result@_base.py:451 <- _merged_results_for_views@knowledge_serving_isolated.py:1377 <- merged_for_views@latency_harness.py:606",
+            "samples": 12
+          }
+        ],
+        "raw_rows": [
+          {
+            "thread": "asyncio-waitpid-0",
+            "stack": "_do_waitpid@unix_events.py:1408 <- run@threading.py:1012 <- _bootstrap_inner@threading.py:1075 <- _bootstrap@threading.py:1032",
+            "samples": 142
+          },
+          {
+            "thread": "canonical-v2-llm-judge_0",
+            "stack": "_worker@thread.py:90 <- run@threading.py:1012 <- _bootstrap_inner@threading.py:1075 <- _bootstrap@threading.py:1032",
+            "samples": 122
+          },
+          {
+            "thread": "canonical-v2-web_2",
+            "stack": "_worker@thread.py:90 <- run@threading.py:1012 <- _bootstrap_inner@threading.py:1075 <- _bootstrap@threading.py:1032",
+            "samples": 119
+          },
+          {
+            "thread": "canonical-v2-web_7",
+            "stack": "_worker@thread.py:90 <- run@threading.py:1012 <- _bootstrap_inner@threading.py:1075 <- _bootstrap@threading.py:1032",
+            "samples": 114
+          },
+          {
+            "thread": "MainThread",
+            "stack": "wait@threading.py:359 <- result@_base.py:451 <- execute@knowledge_read.py:7673 <- timing_delegate_execute@latency_harness.py:1066",
+            "samples": 104
+          },
+          {
+            "thread": "canonical-v2-web_3",
+            "stack": "_worker@thread.py:90 <- run@threading.py:1012 <- _bootstrap_inner@threading.py:1075 <- _bootstrap@threading.py:1032",
+            "samples": 101
+          },
+          {
+            "thread": "ThreadPoolExecutor-4_0",
+            "stack": "_worker@thread.py:90 <- run@threading.py:1012 <- _bootstrap_inner@threading.py:1075 <- _bootstrap@threading.py:1032",
+            "samples": 101
+          },
+          {
+            "thread": "canonical-v2-web_0",
+            "stack": "_worker@thread.py:90 <- run@threading.py:1012 <- _bootstrap_inner@threading.py:1075 <- _bootstrap@threading.py:1032",
+            "samples": 96
+          },
+          {
+            "thread": "canonical-v2-web_5",
+            "stack": "_worker@thread.py:90 <- run@threading.py:1012 <- _bootstrap_inner@threading.py:1075 <- _bootstrap@threading.py:1032",
+            "samples": 91
+          },
+          {
+            "thread": "canonical-v2-web_6",
+            "stack": "_worker@thread.py:90 <- run@threading.py:1012 <- _bootstrap_inner@threading.py:1075 <- _bootstrap@threading.py:1032",
+            "samples": 89
+          },
+          {
+            "thread": "canonical-v2-web_4",
+            "stack": "_worker@thread.py:90 <- run@threading.py:1012 <- _bootstrap_inner@threading.py:1075 <- _bootstrap@threading.py:1032",
+            "samples": 77
+          },
+          {
+            "thread": "canonical-v2-tiered-fetch_0",
+            "stack": "_worker@thread.py:90 <- run@threading.py:1012 <- _bootstrap_inner@threading.py:1075 <- _bootstrap@threading.py:1032",
+            "samples": 75
+          },
+          {
+            "thread": "ThreadPoolExecutor-4_3",
+            "stack": "wait@threading.py:359 <- result@_base.py:451 <- _enrich_with_page_text@knowledge_serving_isolated.py:1436 <- enrich@latency_harness.py:620",
+            "samples": 71
+          },
+          {
+            "thread": "canonical-v2-web_1",
+            "stack": "_worker@thread.py:90 <- run@threading.py:1012 <- _bootstrap_inner@threading.py:1075 <- _bootstrap@threading.py:1032",
+            "samples": 65
+          },
+          {
+            "thread": "canonical-v2-web_1",
+            "stack": "wait@threading.py:355 <- result@_base.py:451 <- fetch@page_fetch.py:208 <- fetch@page_fetch.py:263",
+            "samples": 58
+          },
+          {
+            "thread": "ThreadPoolExecutor-4_2",
+            "stack": "<genexpr>@knowledge_read_isolated.py:8731 <- <genexpr>@knowledge_read_isolated.py:8731 <- _category_recall_entries@knowledge_read_isolated.py:8728 <- lexical_lookup@serving_pack_loader.py:1075",
+            "samples": 51
+          },
+          {
+            "thread": "canonical-v2-tiered-fetch_0",
+            "stack": "select@selectors.py:468 <- _run_once@base_events.py:1961 <- run_forever@base_events.py:645 <- run_until_complete@base_events.py:678",
+            "samples": 48
+          },
+          {
+            "thread": "canonical-v2-web_4",
+            "stack": "wait@threading.py:355 <- result@_base.py:451 <- fetch@page_fetch.py:208 <- fetch@page_fetch.py:263",
+            "samples": 48
+          },
+          {
+            "thread": "ThreadPoolExecutor-4_2",
+            "stack": "_worker@thread.py:90 <- run@threading.py:1012 <- _bootstrap_inner@threading.py:1075 <- _bootstrap@threading.py:1032",
+            "samples": 45
+          },
+          {
+            "thread": "ThreadPoolExecutor-4_1",
+            "stack": "_normalize@knowledge_read_isolated.py:8417 <- visit@knowledge_read_isolated.py:8437 <- visit@knowledge_read_isolated.py:8441 <- _normalized_scalar_values@knowledge_read_isolated.py:8446",
+            "samples": 40
+          },
+          {
+            "thread": "canonical-v2-web_5",
+            "stack": "wait@threading.py:355 <- result@_base.py:451 <- fetch@page_fetch.py:208 <- fetch@page_fetch.py:263",
+            "samples": 35
+          },
+          {
+            "thread": "ThreadPoolExecutor-4_1",
+            "stack": "_worker@thread.py:90 <- run@threading.py:1012 <- _bootstrap_inner@threading.py:1075 <- _bootstrap@threading.py:1032",
+            "samples": 35
+          },
+          {
+            "thread": "canonical-v2-web_6",
+            "stack": "read@ssl.py:1105 <- recv@ssl.py:1232 <- read@sync.py:128 <- _receive_event@http11.py:217",
+            "samples": 33
+          },
+          {
+            "thread": "canonical-v2-web_7",
+            "stack": "wait@threading.py:355 <- result@_base.py:451 <- fetch@page_fetch.py:208 <- fetch@page_fetch.py:263",
+            "samples": 21
+          },
+          {
+            "thread": "ThreadPoolExecutor-4_3",
+            "stack": "wait@threading.py:359 <- result@_base.py:451 <- _call@llm_judgments.py:364 <- judge_batch@llm_judgments.py:394",
+            "samples": 20
+          },
+          {
+            "thread": "canonical-v2-llm-judge_0",
+            "stack": "read@ssl.py:1105 <- recv@ssl.py:1232 <- read@sync.py:128 <- _receive_event@http11.py:217",
+            "samples": 20
+          },
+          {
+            "thread": "canonical-v2-web_3",
+            "stack": "read@ssl.py:1105 <- recv@ssl.py:1232 <- read@sync.py:128 <- _receive_event@http11.py:217",
+            "samples": 19
+          },
+          {
+            "thread": "canonical-v2-tiered-fetch_0",
+            "stack": "checkcache@linecache.py:75 <- _extract_from_extended_frame_gen@traceback.py:434 <- extract@traceback.py:395 <- extract_stack@traceback.py:232",
+            "samples": 15
+          },
+          {
+            "thread": "MainThread",
+            "stack": "_update_crc@__init__.py:1023 <- _read1@__init__.py:1098 <- read@__init__.py:1008 <- _read_bytes@format.py:986",
+            "samples": 15
+          },
+          {
+            "thread": "ThreadPoolExecutor-4_3",
+            "stack": "wait@threading.py:359 <- result@_base.py:451 <- _merged_results_for_views@knowledge_serving_isolated.py:1377 <- merged_for_views@latency_harness.py:606",
+            "samples": 12
+          }
+        ]
+      },
+      "counters": {
+        "plan.rewrite.replay": 1,
+        "read.lane.structured.calls": 1,
+        "read.lane.structured.candidates": 0,
+        "read.lane.structured.items": 0,
+        "read.lane.exact.calls": 1,
+        "read.lane.exact.candidates": 0,
+        "read.lane.exact.items": 0,
+        "read.lane.lexical.calls": 1,
+        "read.lane.lexical.candidates": 128,
+        "read.lane.lexical.items": 0,
+        "read.lane.vector.calls": 1,
+        "read.lane.vector.candidates": 128,
+        "read.lane.vector.items": 0,
+        "read.lane.web.calls": 1,
+        "read.lane.web.candidates": 97,
+        "read.lane.web.items": 0
+      }
+    },
+    {
+      "id": "pcb-t2",
+      "session": "lat-pcb",
+      "query": "上述企业有哪些是深圳的企业",
+      "as_of": "2026-09-12T02:28:13.531436+00:00",
+      "continuation": true,
+      "recorded": {
+        "trace_day": "2026-09-12.jsonl",
+        "turn_ordinal": 2,
+        "total_s": 15.22,
+        "lanes": {
+          "web": {
+            "in": 84,
+            "retained": 27,
+            "filtered": 57
+          },
+          "exact": {
+            "in": 0,
+            "retained": 0,
+            "filtered": 0
+          },
+          "structured": {
+            "in": 32,
+            "retained": 32,
+            "filtered": 0
+          },
+          "lexical": {
+            "in": 0,
+            "retained": 0,
+            "filtered": 0
+          },
+          "vector": {
+            "in": 32,
+            "retained": 32,
+            "filtered": 0
+          }
+        },
+        "degradation": "interpretation-rejected",
+        "replay_views": [
+          "深圳 企业 名单",
+          "(\"崇达技术股份有限公司\" OR \"深圳顺易捷科技有限公司\" OR \"深圳市兴森快捷电路科技股份有限公司\" OR \"深圳市一博科技股份有限公司\" OR \"深圳市精诚达电路科技股份有限公司\" OR \"百芯智能制造科技（深圳）有限公司\" OR \"深圳赛维创新技术集团有限公司\" OR \"深圳天创无限科技有限公司\" OR \"深圳市嘉之宏电子有限公司\" OR \"深圳市驭鹰者电子有限公司\" OR \"深圳市鑫盈通达电子科技有限公司\" OR \"深圳市赛尔博特软件有限公司\" OR \"深圳市鸿洋电路科技有限公司\" OR \"深圳市星河电路股份有限公司\" OR \"深圳市柳鑫实业股份有限公司\" OR \"上达电子（深圳）股份有限公司\" OR \"深圳市深华科电子有限公司\" OR \"深圳和美精艺半导体科技股份有限公司\" OR \"深圳市升达康科技有限公司\" OR \"深圳市动力飞扬智能装备有限公司\" OR \"深圳市尊大电子科技有限公司\" OR \"深圳市亿科迈科技有限公司\" OR \"深圳市声雄电子有限公司\" OR \"深圳市汇芯高新科技有限公司\" OR \"深圳市则成电子股份有限公司\" OR \"深圳市特普生科技有限公司\" OR \"诡谷子人工智能科技（深圳）有限公司\" OR \"深圳市零壹八科技有限公司\" OR \"深圳市中科领创实业有限公司\" OR \"深圳市赛晟科技有限公司\" OR \"深圳市盛矽电子科技有限公司\" OR \"深圳市迈威科技有限公司\") 是深圳的企业",
+          "崇达技术股份有限公司 百度百科 深圳",
+          "深圳 上市公司 企业",
+          "上述企业名单 注册地 总部",
+          "精诚达 公司 注册地址 深圳"
+        ]
+      },
+      "rewriter": {
+        "mode": "replay",
+        "source": "replay",
+        "live_views": [],
+        "used_views": [
+          "深圳 企业 名单",
+          "(\"崇达技术股份有限公司\" OR \"深圳顺易捷科技有限公司\" OR \"深圳市兴森快捷电路科技股份有限公司\" OR \"深圳市一博科技股份有限公司\" OR \"深圳市精诚达电路科技股份有限公司\" OR \"百芯智能制造科技（深圳）有限公司\" OR \"深圳赛维创新技术集团有限公司\" OR \"深圳天创无限科技有限公司\" OR \"深圳市嘉之宏电子有限公司\" OR \"深圳市驭鹰者电子有限公司\" OR \"深圳市鑫盈通达电子科技有限公司\" OR \"深圳市赛尔博特软件有限公司\" OR \"深圳市鸿洋电路科技有限公司\" OR \"深圳市星河电路股份有限公司\" OR \"深圳市柳鑫实业股份有限公司\" OR \"上达电子（深圳）股份有限公司\" OR \"深圳市深华科电子有限公司\" OR \"深圳和美精艺半导体科技股份有限公司\" OR \"深圳市升达康科技有限公司\" OR \"深圳市动力飞扬智能装备有限公司\" OR \"深圳市尊大电子科技有限公司\" OR \"深圳市亿科迈科技有限公司\" OR \"深圳市声雄电子有限公司\" OR \"深圳市汇芯高新科技有限公司\" OR \"深圳市则成电子股份有限公司\" OR \"深圳市特普生科技有限公司\" OR \"诡谷子人工智能科技（深圳）有限公司\" OR \"深圳市零壹八科技有限公司\" OR \"深圳市中科领创实业有限公司\" OR \"深圳市赛晟科技有限公司\" OR \"深圳市盛矽电子科技有限公司\" OR \"深圳市迈威科技有限公司\") 是深圳的企业",
+          "崇达技术股份有限公司 百度百科 深圳"
+        ],
+        "wall_s": 0
+      },
+      "plan": {
+        "wall_s": 0.009,
+        "proposal_s": 0.003,
+        "lanes": [
+          "exact",
+          "structured",
+          "lexical",
+          "vector",
+          "web"
+        ],
+        "domains": [
+          "company"
+        ],
+        "max_candidates": 128,
+        "web_max_results": 128,
+        "views": [
+          "(\"崇达技术股份有限公司\" OR \"【pcb打板】_pcb打板品牌/图片/价格_pcb打板批发_阿里巴巴\" OR \"深圳市精诚达电路科技股份有限公司\" OR \"美国快速打样PCB推荐: r/PrintedCircuitBoard - Reddit\" OR \"打板_打板价格_优质打板批发/采购商机 - 搜好货网\" OR \"深圳顺易捷科技有限公司\" OR \"pcb打板2026年9月-月销口碑最新推荐-Taobao\" OR \"打板都上猎板网,性价比高,质量好!-客户晒单-猎板精密多层PCB智慧工厂\" OR \"百芯智能制造科技（深圳）有限公司\" OR \"硬件工程师常用的PCB 打板厂家推荐 - 腾讯云\" OR \"PCB打板哪家好?-汽车之家\" OR \"深圳赛维创新技术集团有限公司\" OR \"免费的PCB打样平台汇总，每月免费打8块板！【建议收藏】 原创\" OR \"深圳天创无限科技有限公司\" OR \"PCB打板哪家好?-太平洋汽车\" OR \"学生党推荐——PCB 免费打板，采集bom元器件 - 知乎专栏\" OR \"深圳市嘉之宏电子有限公司\" OR \"PCB打样-PCB报价-专业PCB厂家-深圳嘉立创科技集团股份有限公司\" OR \"深圳PCB打样_PCBA加工_PCBA小批量一站式服务——小铭打样\" OR \"深圳市驭鹰者电子有限公司\" OR \"PCB打样-PCBA加工-PCBA配单-深圳捷多邦科技有限公司\" OR \"捷配_PCB打样_SMT贴片_大小批量快速交付-捷配PCB&PCBA智造 ...\" OR \"深圳市鑫盈通达电子科技有限公司\" OR \"PCB打样,小批量_深圳一智快捷科技有限公司\" OR \"小批量PCB打样到批量生产如何选择合作厂家? - 捷创\" OR \"深圳市赛尔博特软件有限公司\" OR \"供应pcb打样,PCB快速打样,PCB小批量生产 - 供应 - 切它网(QieTa.com)\" OR \"小批量PCB打样品牌- 淘宝\" OR \"深圳市鸿洋电路科技有限公司\" OR \"PCB打样,小批量,线路板生产制作,铝基板,FPC_深圳市华和电路有限公司 - 免费黄页网\" OR \"PCBA小批量生产服务：从设计到交付的一站式解决方案-深圳市宏力 ...\" OR \"深圳市星河电路股份有限公司\" OR \"深圳PCB打样_PCBA加工_PCBA小批量一站式服务——小铭打样\" OR \"深圳市柳鑫实业股份有限公司\" OR \"PCB打样和小批量生产费用如何计算更划算？ - 捷创\" OR \"上达电子（深圳）股份有限公司\" OR \"pcb打样,pcb快板,小批量pcb打样-深圳捷多邦科技有限公司\" OR \"高混合贴片打样和小批量生产_一站式SMT贴片加工 - PCBA厂家\" OR \"深圳市深华科电子有限公司\" OR \"键盘板打样选猎板,独家黑芯板材,透明油墨,做出来的板子质感太好了!-客户晒单-猎板精密多层PCB智慧工厂\" OR \"【pcb快速打板】_pcb快速打板品牌/图片/价格_pcb快速打板批发_阿里巴巴\" OR \"深圳和美精艺半导体科技股份有限公司\" OR \"大厂推荐！PCB打样哪家质量好？ - 新浪财经\" OR \"深圳市升达康科技有限公司\" OR \"PCB打板-CSDN博客\" OR \"深圳市兴森快捷电路科技股份有限公司\" OR \"PCB打板省钱小妙招，强烈建议收藏！ - 其他PCB设计及方法\" OR \"PCB打板打样电路板定 做线路板制作订定 制抄板厂家批量加急设计-阿里巴巴\" OR \"深圳市动力飞扬智能装备有限公司\" OR \"pcb板打板价格报价行情- 京东\" OR \"求助 - 电子技术交流论坛 - 21ic电子技术开发论坛\" OR \"深圳市一博科技股份有限公司\" OR \"深圳市尊大电子科技有限公司\" OR \"深圳市亿科迈科技有限公司\" OR \"深圳市声雄电子有限公司\" OR \"深圳市汇芯高新科技有限公司\" OR \"深圳市则成电子股份有限公司\" OR \"深圳市特普生科技有限公司\" OR \"诡谷子人工智能科技（深圳）有限公司\" OR \"深圳市零壹八科技有限公司\" OR \"深圳市中科领创实业有限公司\" OR \"深圳市赛晟科技有限公司\" OR \"深圳市盛矽电子科技有限公司\" OR \"深圳市迈威科技有限公司\") 是深圳的企业",
+          "深圳 企业 名单",
+          "(\"崇达技术股份有限公司\" OR \"深圳顺易捷科技有限公司\" OR \"深圳市兴森快捷电路科技股份有限公司\" OR \"深圳市一博科技股份有限公司\" OR \"深圳市精诚达电路科技股份有限公司\" OR \"百芯智能制造科技（深圳）有限公司\" OR \"深圳赛维创新技术集团有限公司\" OR \"深圳天创无限科技有限公司\" OR \"深圳市嘉之宏电子有限公司\" OR \"深圳市驭鹰者电子有限公司\" OR \"深圳市鑫盈通达电子科技有限公司\" OR \"深圳市赛尔博特软件有限公司\" OR \"深圳市鸿洋电路科技有限公司\" OR \"深圳市星河电路股份有限公司\" OR \"深圳市柳鑫实业股份有限公司\" OR \"上达电子（深圳）股份有限公司\" OR \"深圳市深华科电子有限公司\" OR \"深圳和美精艺半导体科技股份有限公司\" OR \"深圳市升达康科技有限公司\" OR \"深圳市动力飞扬智能装备有限公司\" OR \"深圳市尊大电子科技有限公司\" OR \"深圳市亿科迈科技有限公司\" OR \"深圳市声雄电子有限公司\" OR \"深圳市汇芯高新科技有限公司\" OR \"深圳市则成电子股份有限公司\" OR \"深圳市特普生科技有限公司\" OR \"诡谷子人工智能科技（深圳）有限公司\" OR \"深圳市零壹八科技有限公司\" OR \"深圳市中科领创实业有限公司\" OR \"深圳市赛晟科技有限公司\" OR \"深圳市盛矽电子科技有限公司\" OR \"深圳市迈威科技有限公司\") 是深圳的企业",
+          "崇达技术股份有限公司 百度百科 深圳",
+          "崇达技术股份有限公司 官网 深圳"
+        ],
+        "view_kinds": [
+          "deterministic",
+          "llm_rewrite",
+          "llm_rewrite",
+          "llm_rewrite",
+          "authority_seeking"
+        ],
+        "supplemental_budget_ms": null
+      },
+      "read": {
+        "wall_s": 7.806,
+        "outer_s": 7.804,
+        "delegate_s": 6.39,
+        "outer_overhead_s": 1.414,
+        "lanes": {
+          "exact": 0.2366,
+          "lexical": 0.3662,
+          "vector": 0.4113,
+          "structured": 0.4991,
+          "web": 6.2554
+        },
+        "rerank_s": 0.0,
+        "sufficiency_s": 0,
+        "supplemental_s": 0,
+        "evidence_items": 139,
+        "candidates": 70,
+        "handles": 32,
+        "limitations": []
+      },
+      "web": {
+        "views_calls": [
+          {
+            "name": "web.views",
+            "wall_s": 1.2972,
+            "t_start_s": 0.062,
+            "t_end_s": 1.359,
+            "thread": "ThreadPoolExecutor-6_4",
+            "meta": {
+              "role": "main",
+              "query_count": 4,
+              "views": "(\"崇达技术股份有限公司\" OR \"【pcb打板】_pcb打板品牌/图片/价格_pcb打板批发_阿里巴巴\" OR \"深圳 | 深圳 企业 名单 | (\"崇达技术股份有限公司\" OR \"深圳顺易捷科技有限公司\" OR \"深圳市兴森快捷电路科技股份有限公司\" OR \"深圳 | 崇达技术股份有限公司 百度百科 深圳",
+              "merged": 76
+            }
+          },
+          {
+            "name": "web.views",
+            "wall_s": 0.7625,
+            "t_start_s": 5.297,
+            "t_end_s": 6.06,
+            "thread": "ThreadPoolExecutor-6_4",
+            "meta": {
+              "role": "main",
+              "query_count": 2,
+              "views": "上述企业名单 注册地 总部 | 精诚达 公司 注册地 深圳",
+              "merged": 44
+            }
+          }
+        ],
+        "merged_calls": [],
+        "provider_calls": [
+          {
+            "name": "web.provider.search",
+            "wall_s": 0.0315,
+            "t_start_s": 0.402,
+            "t_end_s": 0.434,
+            "thread": "canonical-v2-web_2",
+            "meta": {
+              "role": "main",
+              "provider": "bocha-v1",
+              "view": "(\"崇达技术股份有限公司\" OR \"深圳顺易捷科技有限公司\" OR \"深圳市兴森快捷电路科技股份有限公司\" OR \"深圳市一博科技股份有限公司\" OR \"深圳市精诚达电路科技股份有",
+              "cache_hit": 1,
+              "results": 12
+            }
+          },
+          {
+            "name": "web.provider.search",
+            "wall_s": 0.1526,
+            "t_start_s": 0.306,
+            "t_end_s": 0.458,
+            "thread": "canonical-v2-web_1",
+            "meta": {
+              "role": "main",
+              "provider": "bocha-v1",
+              "view": "深圳 企业 名单",
+              "cache_hit": 1,
+              "results": 11
+            }
+          },
+          {
+            "name": "web.provider.search",
+            "wall_s": 0.0374,
+            "t_start_s": 0.421,
+            "t_end_s": 0.459,
+            "thread": "canonical-v2-web_7",
+            "meta": {
+              "role": "main",
+              "provider": "serper-v1",
+              "view": "(崇达 OR 深圳顺易捷 OR 兴森快捷电路 OR 一博 OR 精诚达电路 OR 百芯 OR 深圳赛维创新 OR 深圳天创无限 OR 嘉之宏 OR 驭鹰者 OR 鑫盈通达 OR 赛",
+              "cache_hit": 1,
+              "results": 10
+            }
+          },
+          {
+            "name": "web.provider.search",
+            "wall_s": 0.0362,
+            "t_start_s": 0.424,
+            "t_end_s": 0.461,
+            "thread": "canonical-v2-web_0",
+            "meta": {
+              "role": "main",
+              "provider": "bocha-v1",
+              "view": "崇达技术股份有限公司 百度百科 深圳",
+              "cache_hit": 1,
+              "results": 12
+            }
+          },
+          {
+            "name": "web.provider.search",
+            "wall_s": 0.0332,
+            "t_start_s": 0.431,
+            "t_end_s": 0.464,
+            "thread": "canonical-v2-web_3",
+            "meta": {
+              "role": "main",
+              "provider": "serper-v1",
+              "view": "崇达 百度百科 深圳",
+              "cache_hit": 1,
+              "results": 10
+            }
+          },
+          {
+            "name": "web.provider.search",
+            "wall_s": 0.1073,
+            "t_start_s": 0.358,
+            "t_end_s": 0.465,
+            "thread": "canonical-v2-web_5",
+            "meta": {
+              "role": "main",
+              "provider": "serper-v1",
+              "view": "深圳 企业 名单",
+              "cache_hit": 1,
+              "results": 10
+            }
+          },
+          {
+            "name": "web.provider.search",
+            "wall_s": 0.31,
+            "t_start_s": 0.284,
+            "t_end_s": 0.594,
+            "thread": "canonical-v2-web_6",
+            "meta": {
+              "role": "main",
+              "provider": "bocha-v1",
+              "view": "(\"崇达技术股份有限公司\" OR \"【pcb打板】_pcb打板品牌/图片/价格_pcb打板批发_阿里巴巴\" OR \"深圳市精诚达电路科技股份有限公司\" OR \"美国快速打样PCB推",
+              "cache_hit": 0,
+              "results": 12
+            }
+          },
+          {
+            "name": "web.provider.search",
+            "wall_s": 1.0157,
+            "t_start_s": 0.342,
+            "t_end_s": 1.358,
+            "thread": "canonical-v2-web_4",
+            "meta": {
+              "role": "main",
+              "provider": "serper-v1",
+              "view": "(崇达 OR 【pcb打板】_pcb打板品牌/图片/价格_pcb打板批发_阿里巴巴 OR 精诚达电路 OR 美国快速打样PCB推荐: r/PrintedCircuitBoard -",
+              "cache_hit": 0,
+              "results": 1
+            }
+          },
+          {
+            "name": "web.provider.search",
+            "wall_s": 0.0005,
+            "t_start_s": 5.298,
+            "t_end_s": 5.299,
+            "thread": "canonical-v2-web_2",
+            "meta": {
+              "role": "main",
+              "provider": "bocha-v1",
+              "view": "上述企业名单 注册地 总部",
+              "cache_hit": 1,
+              "results": 12
+            }
+          },
+          {
+            "name": "web.provider.search",
+            "wall_s": 0.0005,
+            "t_start_s": 5.298,
+            "t_end_s": 5.299,
+            "thread": "canonical-v2-web_7",
+            "meta": {
+              "role": "main",
+              "provider": "serper-v1",
+              "view": "上述企业名单 注册地 总部",
+              "cache_hit": 1,
+              "results": 10
+            }
+          },
+          {
+            "name": "web.provider.search",
+            "wall_s": 0.1288,
+            "t_start_s": 5.298,
+            "t_end_s": 5.427,
+            "thread": "canonical-v2-web_5",
+            "meta": {
+              "role": "main",
+              "provider": "bocha-v1",
+              "view": "精诚达 公司 注册地 深圳",
+              "cache_hit": 0,
+              "results": 12
+            }
+          },
+          {
+            "name": "web.provider.search",
+            "wall_s": 0.7595,
+            "t_start_s": 5.298,
+            "t_end_s": 6.058,
+            "thread": "canonical-v2-web_1",
+            "meta": {
+              "role": "main",
+              "provider": "serper-v1",
+              "view": "精诚达 公司 注册地 深圳",
+              "cache_hit": 0,
+              "results": 10
+            }
+          }
+        ],
+        "fetch_calls": [
+          {
+            "name": "web.fetch.page",
+            "wall_s": 0.2503,
+            "t_start_s": 1.54,
+            "t_end_s": 1.79,
+            "thread": "canonical-v2-web_2",
+            "meta": {
+              "url": "http://city.ppsj.com.cn/gds/shangshigongsi2.html",
+              "text_chars": 3000,
+              "direct_s": 0.2502,
+              "tier1_s": 0.0
+            }
+          },
+          {
+            "name": "web.fetch.page",
+            "wall_s": 0.4047,
+            "t_start_s": 1.541,
+            "t_end_s": 1.945,
+            "thread": "canonical-v2-web_7",
+            "meta": {
+              "url": "https://www.jcdfpc.com/",
+              "text_chars": 1178,
+              "direct_s": 0.4047,
+              "tier1_s": 0.0
+            }
+          },
+          {
+            "name": "web.fetch.page",
+            "wall_s": 0.48,
+            "t_start_s": 1.542,
+            "t_end_s": 2.022,
+            "thread": "canonical-v2-web_5",
+            "meta": {
+              "url": "https://zygcsxy.gdut.edu.cn/info/1046/1260.htm",
+              "text_chars": 441,
+              "direct_s": 0.48,
+              "tier1_s": 0.0
+            }
+          },
+          {
+            "name": "web.fetch.page",
+            "wall_s": 0.9031,
+            "t_start_s": 1.54,
+            "t_end_s": 2.443,
+            "thread": "canonical-v2-web_1",
+            "meta": {
+              "url": "https://m.baike.com/wikiid/5674636253658786281",
+              "text_chars": 768,
+              "direct_s": 0.9021,
+              "tier1_s": 0.001
+            }
+          },
+          {
+            "name": "web.fetch.page",
+            "wall_s": 0.911,
+            "t_start_s": 1.542,
+            "t_end_s": 2.453,
+            "thread": "canonical-v2-web_6",
+            "meta": {
+              "url": "http://m.likuso.com/city328/5896915.html",
+              "text_chars": 1681,
+              "direct_s": 0.1514,
+              "tier1_s": 0.7595
+            }
+          },
+          {
+            "name": "web.fetch.page",
+            "wall_s": 1.0877,
+            "t_start_s": 1.543,
+            "t_end_s": 2.631,
+            "thread": "canonical-v2-web_4",
+            "meta": {
+              "url": "https://www.tianyancha.com/sholder/521317523-103e",
+              "text_chars": 3000,
+              "direct_s": 1.0877,
+              "tier1_s": 0.0
+            }
+          },
+          {
+            "name": "web.fetch.page",
+            "wall_s": 1.4506,
+            "t_start_s": 1.541,
+            "t_end_s": 2.992,
+            "thread": "canonical-v2-web_3",
+            "meta": {
+              "url": "https://baike.baidu.com/item/%E5%B4%87%E8%BE%BE%E6%8A%80%E6%9C%AF%E8%82%A1%E4%BB%BD%E6%9C%89%E9%99%90%E5%85%AC%E5%8F%B8/",
+              "text_chars": 0,
+              "direct_s": 0.1918,
+              "tier1_s": 1.2588
+            }
+          },
+          {
+            "name": "web.fetch.page",
+            "wall_s": 2.5094,
+            "t_start_s": 1.541,
+            "t_end_s": 4.05,
+            "thread": "canonical-v2-web_0",
+            "meta": {
+              "url": "https://m.job001.cn/wap/companyDetail/7ed14020-08e8-11ee-8804-b8599fc1600e.html",
+              "text_chars": 151,
+              "direct_s": 0.2571,
+              "tier1_s": 2.2522
+            }
+          }
+        ],
+        "judge_calls": [
+          {
+            "name": "web.judge.batch",
+            "wall_s": 1.2465,
+            "t_start_s": 4.051,
+            "t_end_s": 5.297,
+            "thread": "ThreadPoolExecutor-6_4",
+            "meta": {
+              "kind": "gap_check",
+              "item_count": 1,
+              "outcome": "ok",
+              "results": 1
+            }
+          }
+        ],
+        "enrich_calls": [
+          {
+            "name": "web.enrich",
+            "wall_s": 2.5108,
+            "t_start_s": 1.54,
+            "t_end_s": 4.05,
+            "thread": "ThreadPoolExecutor-6_4",
+            "meta": {
+              "role": "main",
+              "depth": 8,
+              "candidates": 31
+            }
+          }
+        ],
+        "totals": {
+          "web.views": 2.06,
+          "web.merged": 0,
+          "web.provider.search": 2.613,
+          "web.fetch.page": 7.997,
+          "web.judge.batch": 1.246,
+          "web.enrich": 2.511,
+          "web.fetch.warm": 0
+        },
+        "cache_hits": 8,
+        "provider_calls_total": 12
+      },
+      "embedding": {
+        "embed.batch": {
+          "calls": 2,
+          "wall_s": 0.186
+        },
+        "embed.http": {
+          "calls": 1,
+          "wall_s": 0.122
+        }
+      },
+      "answer": {
+        "selector_s": 0.003324124962091446,
+        "total_s": 0.08,
+        "displayed_handles": 32,
+        "payload_displayed": [],
+        "claims": 64
+      },
+      "stages": [
+        {
+          "stage": "web.fetch.page",
+          "calls": 8,
+          "wall_s": 7.997,
+          "cpu_s": 0.0
+        },
+        {
+          "stage": "read.outer",
+          "calls": 1,
+          "wall_s": 7.804,
+          "cpu_s": 12.106
+        },
+        {
+          "stage": "read.delegate",
+          "calls": 1,
+          "wall_s": 6.39,
+          "cpu_s": 10.689
+        },
+        {
+          "stage": "read.lane.web",
+          "calls": 1,
+          "wall_s": 6.255,
+          "cpu_s": 10.553
+        },
+        {
+          "stage": "web.provider.search",
+          "calls": 12,
+          "wall_s": 2.613,
+          "cpu_s": 0.0
+        },
+        {
+          "stage": "web.enrich",
+          "calls": 1,
+          "wall_s": 2.511,
+          "cpu_s": 0.0
+        },
+        {
+          "stage": "web.views",
+          "calls": 2,
+          "wall_s": 2.06,
+          "cpu_s": 0.0
+        },
+        {
+          "stage": "iso.validate_release_bound_vector_evidence",
+          "calls": 1,
+          "wall_s": 1.412,
+          "cpu_s": 1.415
+        },
+        {
+          "stage": "web.judge.batch",
+          "calls": 1,
+          "wall_s": 1.246,
+          "cpu_s": 0.0
+        },
+        {
+          "stage": "read.lane.structured",
+          "calls": 1,
+          "wall_s": 0.499,
+          "cpu_s": 6.934
+        },
+        {
+          "stage": "read.lane.vector",
+          "calls": 1,
+          "wall_s": 0.411,
+          "cpu_s": 2.561
+        },
+        {
+          "stage": "read.lane.lexical",
+          "calls": 1,
+          "wall_s": 0.366,
+          "cpu_s": 0.382
+        },
+        {
+          "stage": "read.lane.exact",
+          "calls": 1,
+          "wall_s": 0.237,
+          "cpu_s": 0.24
+        },
+        {
+          "stage": "embed.batch",
+          "calls": 2,
+          "wall_s": 0.186,
+          "cpu_s": 0.0
+        },
+        {
+          "stage": "embed.http",
+          "calls": 1,
+          "wall_s": 0.122,
+          "cpu_s": 0.0
+        },
+        {
+          "stage": "answer.total",
+          "calls": 1,
+          "wall_s": 0.08,
+          "cpu_s": 0.0
+        },
+        {
+          "stage": "plan.total",
+          "calls": 1,
+          "wall_s": 0.009,
+          "cpu_s": 0.0
+        },
+        {
+          "stage": "plan.proposal",
+          "calls": 1,
+          "wall_s": 0.003,
+          "cpu_s": 0.003
+        },
+        {
+          "stage": "answer.selector",
+          "calls": 1,
+          "wall_s": 0.003,
+          "cpu_s": 0.003
+        },
+        {
+          "stage": "answer.selector.external",
+          "calls": 1,
+          "wall_s": 0.003,
+          "cpu_s": 0.0
+        },
+        {
+          "stage": "plan.session_bind",
+          "calls": 1,
+          "wall_s": 0.002,
+          "cpu_s": 0.0
+        },
+        {
+          "stage": "read.rerank",
+          "calls": 1,
+          "wall_s": 0.0,
+          "cpu_s": 0.0
+        }
+      ],
+      "sampler": {
+        "samples": 2430,
+        "by_thread": {
+          "canonical-v2-llm-judge_0": 152,
+          "canonical-v2-web_7": 152,
+          "canonical-v2-web_6": 152,
+          "canonical-v2-web_5": 152,
+          "canonical-v2-web_4": 152,
+          "canonical-v2-web_3": 152,
+          "canonical-v2-web_2": 152,
+          "canonical-v2-web_1": 152,
+          "canonical-v2-web_0": 152,
+          "asyncio-waitpid-0": 152,
+          "canonical-v2-tiered-fetch_0": 152,
+          "MainThread": 152,
+          "ThreadPoolExecutor-6_3": 121,
+          "ThreadPoolExecutor-6_2": 121,
+          "ThreadPoolExecutor-6_1": 121,
+          "ThreadPoolExecutor-6_0": 121,
+          "ThreadPoolExecutor-6_4": 120,
+          "ThreadPoolExecutor-7_0": 2
+        },
+        "top_stacks": [
+          {
+            "stack": "_worker@thread.py:90 <- run@threading.py:1012 <- _bootstrap_inner@threading.py:1075 <- _bootstrap@threading.py:1032",
+            "samples": 1691
+          },
+          {
+            "stack": "_do_waitpid@unix_events.py:1408 <- run@threading.py:1012 <- _bootstrap_inner@threading.py:1075 <- _bootstrap@threading.py:1032",
+            "samples": 152
+          },
+          {
+            "stack": "wait@threading.py:359 <- result@_base.py:451 <- execute@knowledge_read.py:7673 <- timing_delegate_execute@latency_harness.py:1066",
+            "samples": 119
+          },
+          {
+            "stack": "wait@threading.py:355 <- result@_base.py:451 <- fetch@page_fetch.py:208 <- fetch@page_fetch.py:263",
+            "samples": 82
+          },
+          {
+            "stack": "read@ssl.py:1105 <- recv@ssl.py:1232 <- read@sync.py:128 <- _receive_event@http11.py:217",
+            "samples": 55
+          },
+          {
+            "stack": "wait@threading.py:359 <- result@_base.py:451 <- _enrich_with_page_text@knowledge_serving_isolated.py:1436 <- enrich@latency_harness.py:620",
+            "samples": 49
+          },
+          {
+            "stack": "select@selectors.py:468 <- _run_once@base_events.py:1961 <- run_forever@base_events.py:645 <- run_until_complete@base_events.py:678",
+            "samples": 41
+          },
+          {
+            "stack": "wait@threading.py:359 <- result@_base.py:451 <- _merged_results_for_views@knowledge_serving_isolated.py:1377 <- merged_for_views@latency_harness.py:606",
+            "samples": 39
+          },
+          {
+            "stack": "read@ssl.py:1103 <- recv_into@ssl.py:1251 <- readinto@socket.py:720 <- _read_status@client.py:292",
+            "samples": 38
+          },
+          {
+            "stack": "wait@threading.py:359 <- result@_base.py:451 <- _call@llm_judgments.py:364 <- judge_batch@llm_judgments.py:394",
+            "samples": 24
+          },
+          {
+            "stack": "_update_crc@__init__.py:1023 <- _read1@__init__.py:1098 <- read@__init__.py:1008 <- _read_bytes@format.py:986",
+            "samples": 14
+          },
+          {
+            "stack": "cache_get@web_lane_resilience.py:174 <- provider_search@latency_harness.py:568 <- run@thread.py:59 <- _worker@thread.py:93",
+            "samples": 11
+          },
+          {
+            "stack": "cache_get@web_lane_resilience.py:174 <- _provider_search@knowledge_serving_isolated.py:1095 <- provider_search@latency_harness.py:576 <- run@thread.py:59",
+            "samples": 10
+          },
+          {
+            "stack": "getaddrinfo@socket.py:978 <- create_connection@socket.py:841 <- connect_tcp@sync.py:208 <- _connect@connection.py:124",
+            "samples": 10
+          },
+          {
+            "stack": "create_default_context@ssl.py:707 <- create_ssl_context@_config.py:40 <- __init__@default.py:153 <- _init_transport@_client.py:731",
+            "samples": 8
+          }
+        ],
+        "raw_rows": [
+          {
+            "thread": "asyncio-waitpid-0",
+            "stack": "_do_waitpid@unix_events.py:1408 <- run@threading.py:1012 <- _bootstrap_inner@threading.py:1075 <- _bootstrap@threading.py:1032",
+            "samples": 152
+          },
+          {
+            "thread": "canonical-v2-web_2",
+            "stack": "_worker@thread.py:90 <- run@threading.py:1012 <- _bootstrap_inner@threading.py:1075 <- _bootstrap@threading.py:1032",
+            "samples": 144
+          },
+          {
+            "thread": "canonical-v2-web_7",
+            "stack": "_worker@thread.py:90 <- run@threading.py:1012 <- _bootstrap_inner@threading.py:1075 <- _bootstrap@threading.py:1032",
+            "samples": 141
+          },
+          {
+            "thread": "canonical-v2-web_5",
+            "stack": "_worker@thread.py:90 <- run@threading.py:1012 <- _bootstrap_inner@threading.py:1075 <- _bootstrap@threading.py:1032",
+            "samples": 138
+          },
+          {
+            "thread": "canonical-v2-llm-judge_0",
+            "stack": "_worker@thread.py:90 <- run@threading.py:1012 <- _bootstrap_inner@threading.py:1075 <- _bootstrap@threading.py:1032",
+            "samples": 128
+          },
+          {
+            "thread": "canonical-v2-web_6",
+            "stack": "_worker@thread.py:90 <- run@threading.py:1012 <- _bootstrap_inner@threading.py:1075 <- _bootstrap@threading.py:1032",
+            "samples": 127
+          },
+          {
+            "thread": "canonical-v2-web_3",
+            "stack": "_worker@thread.py:90 <- run@threading.py:1012 <- _bootstrap_inner@threading.py:1075 <- _bootstrap@threading.py:1032",
+            "samples": 122
+          },
+          {
+            "thread": "MainThread",
+            "stack": "wait@threading.py:359 <- result@_base.py:451 <- execute@knowledge_read.py:7673 <- timing_delegate_execute@latency_harness.py:1066",
+            "samples": 119
+          },
+          {
+            "thread": "canonical-v2-web_1",
+            "stack": "_worker@thread.py:90 <- run@threading.py:1012 <- _bootstrap_inner@threading.py:1075 <- _bootstrap@threading.py:1032",
+            "samples": 117
+          },
+          {
+            "thread": "ThreadPoolExecutor-6_0",
+            "stack": "_worker@thread.py:90 <- run@threading.py:1012 <- _bootstrap_inner@threading.py:1075 <- _bootstrap@threading.py:1032",
+            "samples": 117
+          },
+          {
+            "thread": "ThreadPoolExecutor-6_3",
+            "stack": "_worker@thread.py:90 <- run@threading.py:1012 <- _bootstrap_inner@threading.py:1075 <- _bootstrap@threading.py:1032",
+            "samples": 114
+          },
+          {
+            "thread": "ThreadPoolExecutor-6_2",
+            "stack": "_worker@thread.py:90 <- run@threading.py:1012 <- _bootstrap_inner@threading.py:1075 <- _bootstrap@threading.py:1032",
+            "samples": 114
+          },
+          {
+            "thread": "ThreadPoolExecutor-6_1",
+            "stack": "_worker@thread.py:90 <- run@threading.py:1012 <- _bootstrap_inner@threading.py:1075 <- _bootstrap@threading.py:1032",
+            "samples": 112
+          },
+          {
+            "thread": "canonical-v2-web_4",
+            "stack": "_worker@thread.py:90 <- run@threading.py:1012 <- _bootstrap_inner@threading.py:1075 <- _bootstrap@threading.py:1032",
+            "samples": 110
+          },
+          {
+            "thread": "canonical-v2-tiered-fetch_0",
+            "stack": "_worker@thread.py:90 <- run@threading.py:1012 <- _bootstrap_inner@threading.py:1075 <- _bootstrap@threading.py:1032",
+            "samples": 106
+          },
+          {
+            "thread": "canonical-v2-web_0",
+            "stack": "_worker@thread.py:90 <- run@threading.py:1012 <- _bootstrap_inner@threading.py:1075 <- _bootstrap@threading.py:1032",
+            "samples": 101
+          },
+          {
+            "thread": "ThreadPoolExecutor-6_4",
+            "stack": "wait@threading.py:359 <- result@_base.py:451 <- _enrich_with_page_text@knowledge_serving_isolated.py:1436 <- enrich@latency_harness.py:620",
+            "samples": 49
+          },
+          {
+            "thread": "canonical-v2-web_0",
+            "stack": "wait@threading.py:355 <- result@_base.py:451 <- fetch@page_fetch.py:208 <- fetch@page_fetch.py:263",
+            "samples": 44
+          },
+          {
+            "thread": "canonical-v2-tiered-fetch_0",
+            "stack": "select@selectors.py:468 <- _run_once@base_events.py:1961 <- run_forever@base_events.py:645 <- run_until_complete@base_events.py:678",
+            "samples": 41
+          },
+          {
+            "thread": "ThreadPoolExecutor-6_4",
+            "stack": "wait@threading.py:359 <- result@_base.py:451 <- _merged_results_for_views@knowledge_serving_isolated.py:1377 <- merged_for_views@latency_harness.py:606",
+            "samples": 39
+          },
+          {
+            "thread": "canonical-v2-web_3",
+            "stack": "wait@threading.py:355 <- result@_base.py:451 <- fetch@page_fetch.py:208 <- fetch@page_fetch.py:263",
+            "samples": 24
+          },
+          {
+            "thread": "ThreadPoolExecutor-6_4",
+            "stack": "wait@threading.py:359 <- result@_base.py:451 <- _call@llm_judgments.py:364 <- judge_batch@llm_judgments.py:394",
+            "samples": 24
+          },
+          {
+            "thread": "canonical-v2-llm-judge_0",
+            "stack": "read@ssl.py:1105 <- recv@ssl.py:1232 <- read@sync.py:128 <- _receive_event@http11.py:217",
+            "samples": 23
+          },
+          {
+            "thread": "canonical-v2-web_4",
+            "stack": "read@ssl.py:1103 <- recv_into@ssl.py:1251 <- readinto@socket.py:720 <- _read_status@client.py:292",
+            "samples": 18
+          },
+          {
+            "thread": "canonical-v2-web_1",
+            "stack": "read@ssl.py:1103 <- recv_into@ssl.py:1251 <- readinto@socket.py:720 <- _read_status@client.py:292",
+            "samples": 15
+          },
+          {
+            "thread": "canonical-v2-web_6",
+            "stack": "wait@threading.py:355 <- result@_base.py:451 <- fetch@page_fetch.py:208 <- fetch@page_fetch.py:263",
+            "samples": 14
+          },
+          {
+            "thread": "MainThread",
+            "stack": "_update_crc@__init__.py:1023 <- _read1@__init__.py:1098 <- read@__init__.py:1008 <- _read_bytes@format.py:986",
+            "samples": 14
+          },
+          {
+            "thread": "canonical-v2-web_4",
+            "stack": "read@ssl.py:1105 <- recv@ssl.py:1232 <- read@sync.py:128 <- _receive_event@http11.py:217",
+            "samples": 13
+          },
+          {
+            "thread": "canonical-v2-web_1",
+            "stack": "read@ssl.py:1105 <- recv@ssl.py:1232 <- read@sync.py:128 <- _receive_event@http11.py:217",
+            "samples": 11
+          },
+          {
+            "thread": "MainThread",
+            "stack": "read_array@format.py:852 <- __getitem__@_npyio_impl.py:254 <- load_persisted_vector_matrix@index_projection_isolated.py:690 <- _validate_release_bound_vector_evidence@knowledge_read_isolated.py:8122",
+            "samples": 7
+          }
+        ]
+      },
+      "counters": {
+        "plan.rewrite.replay": 1,
+        "read.lane.exact.calls": 1,
+        "read.lane.exact.candidates": 7,
+        "read.lane.exact.items": 0,
+        "read.lane.lexical.calls": 1,
+        "read.lane.lexical.candidates": 32,
+        "read.lane.lexical.items": 0,
+        "read.lane.vector.calls": 1,
+        "read.lane.vector.candidates": 32,
+        "read.lane.vector.items": 0,
+        "read.lane.structured.calls": 1,
+        "read.lane.structured.candidates": 32,
+        "read.lane.structured.items": 0,
+        "read.lane.web.calls": 1,
+        "read.lane.web.candidates": 74,
+        "read.lane.web.items": 0
+      }
+    }
+  ]
+}

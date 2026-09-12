@@ -1,0 +1,47 @@
+{
+  "session_id": "session:chat:KR0KmbMKNuZY4OHpUt6d5apMeAcf86of",
+  "turn_id": "turn:chat:sha256:53d559b488870326bef5767ddaa3305971d0cbaa1f1ac9874d27b1a26ac333cf",
+  "turn_count": 2,
+  "query": "这个中心的企业培育情况怎么样",
+  "planned_displayed_ids": [
+    "company-c-c841e20d983b33640734ccfe"
+  ],
+  "recalled_handles": [
+    {
+      "id": "company-c-c841e20d983b33640734ccfe",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳国际先进技术应用推进中心"
+    }
+  ],
+  "committed_handle_ids": [
+    "company-c-c841e20d983b33640734ccfe"
+  ],
+  "committed_names": [
+    "深圳国际先进技术应用推进中心"
+  ],
+  "render_mode": "prose_renderer",
+  "answer_chars": 444,
+  "lane_timings": [
+    [
+      "structured",
+      0.29
+    ],
+    [
+      "vector",
+      0.279
+    ],
+    [
+      "exact",
+      0.337
+    ],
+    [
+      "lexical",
+      0.325
+    ],
+    [
+      "web",
+      5.902
+    ]
+  ]
+}

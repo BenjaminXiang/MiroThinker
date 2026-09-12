@@ -1,0 +1,22 @@
+OK             gen-drone#1 cover=30 pack=29 off=1 miss=0 21.1s :: 深圳有哪些做无人机整机的公司
+      OFF-CATEGORY: ['深圳市有光图像科技有限公司']
+OK             gen-drone#2 cover=59 pack=58 off=1 miss=0 13.0s :: 上述企业里有哪些成立于十年以上
+      OFF-CATEGORY: ['深圳市有光图像科技有限公司']
+OK             gen-drone#3 cover=33 pack=32 off=1 miss=0 18.6s :: 它们的产品主要用在哪些行业
+      OFF-CATEGORY: ['深圳市有光图像科技有限公司']
+OK             gen-storage#1 cover=55 pack=50 off=5 miss=0 20.2s :: 深圳有哪些做储能电池的公司
+      OFF-CATEGORY: ['深圳昇麒新能源汽车科技有限公司', '深圳市英得尔实业有限公司', '钛克菲斯智能科技（深圳）有限公司', '艾合石数码（深圳）有限公司', '深圳市启悦光电有限公司']
+OK             gen-storage#2 cover= 0 pack= 0 off=0 miss=0 10.0s :: 上述企业里规模较大的有哪几家
+OK             gen-lidar#1 cover=64 pack=43 off=20 miss=1 25.3s :: 深圳有哪些做激光雷达的公司
+      OFF-CATEGORY: ['深圳隆庆智能激光科技有限公司', '深圳市中科创激光技术有限公司', '深圳市铭镭激光设备有限公司', '深圳市尊视激光科技有限公司', '深圳市新华鹏激光设备有限公司', '深圳镭霆激光科技有限公司', '深圳市青虹激光科技有限公司', '深圳市创鑫激光股份有限公司', '深圳明匠智能系统有限公司', '哈博智能（深圳）股份有限公司', '深圳市柠檬光子科技有限公司', '深圳市大族锐视科技有限公司', '睿思芯科（深圳）技术有限公司', '氦星光联科技（深圳）有限公司', '深圳市鹏伍科技有限公司', '深圳承泰科技股份有限公司', '深圳宜思智能科技有限公司', '深圳市欧铠智能机器人股份有限公司', '深圳电目科技有限公司', '深圳市骏普科技开发有限公司']
+      NOT-IN-PACK : ['万物感知（深圳）科技有限公司 等（共 117 家）']
+OK             gen-lidar#2 cover=60 pack=41 off=19 miss=0 18.6s :: 上述企业里谁的产品用于自动驾驶
+      OFF-CATEGORY: ['深圳市欧铠智能机器人股份有限公司', '深圳明匠智能系统有限公司', '氦星光联科技（深圳）有限公司', '深圳隆庆智能激光科技有限公司', '深圳电目科技有限公司', '哈博智能（深圳）股份有限公司', '深圳镭霆激光科技有限公司', '深圳市中科创激光技术有限公司', '深圳市大族锐视科技有限公司', '深圳宜思智能科技有限公司', '深圳市新华鹏激光设备有限公司', '深圳市尊视激光科技有限公司', '深圳承泰科技股份有限公司', '深圳市骏普科技开发有限公司', '深圳市鹏伍科技有限公司', '深圳市柠檬光子科技有限公司', '深圳市铭镭激光设备有限公司', '深圳市青虹激光科技有限公司', '深圳市创鑫激光股份有限公司']
+OK             gen-medical#1 cover=39 pack=39 off=0 miss=0 24.8s :: 深圳有哪些做医疗器械的公司
+OK             gen-professor#1 cover= 0 pack= 0 off=0 miss=0 17.4s :: 深圳有哪些研究机器人的教授
+OK             gen-professor#2 cover= 0 pack= 0 off=0 miss=0 7.2s :: 他有哪些论文
+OK             gen-paper#1 cover= 0 pack= 0 off=0 miss=0 22.6s :: 有哪些关于钙钛矿太阳能电池的论文
+OK             gen-patent#1 cover= 0 pack= 0 off=0 miss=0 16.0s :: 深圳的机器人专利主要有哪些申请人
+OK             gen-cross#1 cover= 0 pack= 0 off=0 miss=0 37.5s :: 大疆创新主要做什么
+OK             gen-cross#2 cover= 0 pack= 0 off=0 miss=0 12.1s :: 它有哪些专利
+check -> /home/longxiang/MiroThinker/.agents/runs/retrieval-v2-derived-index-and-fusion/on-20260913-generalization-check.json

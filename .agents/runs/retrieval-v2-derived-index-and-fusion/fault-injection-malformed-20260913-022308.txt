@@ -1,0 +1,15 @@
+tag=malformed mode=stub stamp=20260913-022308
+endpoint env (no secrets):
+CANONICAL_V2_RERANK_API_KEY_FILE=/home/longxiang/.config/mirothinker/rerank-api-key
+CANONICAL_V2_RERANK_BASE_URL=http://127.0.0.1:18099
+CANONICAL_V2_RERANK_DEBUG=1
+CANONICAL_V2_RERANK_MAX_DOCUMENTS=128
+CANONICAL_V2_RERANK_MODEL=qwen3-reranker-8b
+CANONICAL_V2_RERANK_TIMEOUT_SECONDS=3
+query=深圳有哪些做激光雷达的公司
+---
+bytes=82954
+error_events=0
+done_events=1
+--- answer (first 800 chars) ---
+{"answer_len": 4607, "answer_head": "深圳的激光雷达产业链相当完整，从整机厂商到上游芯片、光源模组都有布局。以下是有代表性的企业：\n\n**整机与系统厂商**\n\n- **深圳市速腾聚创科技有限公司**：产品线覆盖 RS-LiDAR-16/32、RS-Ruby Plus、RS-Helios、RS-Bpearl、RS-M3、RS-EMX、RS-Airy、RS-E1R 及 Papert 系列，面向自动驾驶与 ADAS、无人物流车、机器人导航、智慧交通路侧感知、工业三维测量、无人机测绘等。\n- **深圳市镭神智能系统有限公司**：涵盖 1550nm 光纤车规激光雷达（LS 系列 128/180/400 线）、905nm 车规混合固态（CH128 系列）、机械式（C32/C16）、大视场补盲（CB64S1）以及 3D SLAM 建图定位盒子，应用于自动驾驶、车路协同、轨道交通、低空防撞、无人叉车等。\n- **深圳市览沃科技有限公司**：大疆内部孵化，主打高性能低成本激光雷达，Mid-70 用于低速自动驾驶与移动机器人，Mid-360 用于无人叉车、AMR、服务机器人，Horiz 已搭载于小鹏 P5 等车型。\n- **深圳玩智商科技有限公司**：YDLIDAR 系列（X2、X4、G4、G6、GS2、TG30），面向服务机器人导航避障、扫地机器人、工业机器人、ROS 教学、区域安防等。\n- **深圳力策科技有限公司**：LT-I1/I2/I3、LTME-02A、LT-X 系列，用于服务机器人、AGV/AMR、低速物流车导航避障，以及自动驾驶与 ADAS 环境感知。\n- **深圳市砝石激光雷达有限公司**：S10、S20、FSD-10、F 系列、M16、M4、蜂眼系列 TOF 激光雷达，覆盖工业机器人/AGV/叉车导航、无人机定高避障、无人驾驶与 ADAS、三维地图测绘。\n- **深圳市机智人科技有限公司**：WS-15/25 "}

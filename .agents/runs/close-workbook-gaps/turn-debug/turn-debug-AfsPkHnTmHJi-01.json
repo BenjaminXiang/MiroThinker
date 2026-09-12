@@ -1,0 +1,147 @@
+{
+  "session_id": "session:chat:AfsPkHnTmHJiCuP8qMHoKY6dPnMjYta-",
+  "turn_id": "turn:chat:sha256:8cf387e67ef6cb6e5b839c69fbf0edee9ac4d031fe7f6ca88a1b6adc9b492cf5",
+  "turn_count": 1,
+  "query": "优必选科技怎么样",
+  "planned_displayed_ids": [],
+  "recalled_handles": [
+    {
+      "id": "company-c-b2aac54891e3fce8c98612d8",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市优必选科技股份有限公司"
+    },
+    {
+      "id": "web-handle:sha256:9436a0f7a8ac7d4ed8fd41b56587dc20ef36700e9cb99384859d1f42af6378bd",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "优必选 - 企查查"
+    },
+    {
+      "id": "web-handle:sha256:2bd6b8a3b3b004ffcdccd96fdfb54ff161f94e827b8bf1cd13d6d738029f8dec",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "「优必选怎么样」深圳市优必选科技股份有限公司 - 企查查"
+    },
+    {
+      "id": "web-handle:sha256:aa06316161dbf90b46f23f444dbb1493f971f21a585bdb551fcd1eb5883eb402",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "UBTECH 优必选官网-智能服务机器人领导者"
+    },
+    {
+      "id": "web-handle:sha256:2c522823ac931c64542e3241dd2e14eb04c96b4fa77f618d03066c40a9e145c6",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "深圳市优必选科技股份有限公司-特种装备网"
+    },
+    {
+      "id": "web-handle:sha256:f7c60526356b13c82de0458f270a33b00ac54a3c55974ac5bc9e69fecf51b725",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "深圳市优必选科技股份有限公司 - 百度百科"
+    },
+    {
+      "id": "web-handle:sha256:b50bcc7e4449c05303562c403473ed6a113ce6d534c937ba50ecb1fd70365c54",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "「优必选怎么样」深圳市优必选科技股份有限公司 - 职友集"
+    },
+    {
+      "id": "web-handle:sha256:1ae7738e12f6baac969f1c5b443869dcecc2e743abca89e056da573155306160",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "优必选"
+    },
+    {
+      "id": "web-handle:sha256:11f2e6921cfad7be2728c503c02cbbf0e450d68ce347d00c32ec45baff4aa9ae",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "优必选科技 - 维基百科"
+    },
+    {
+      "id": "company-c-5291283450a6add89c5f0df2",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "优程企服科技（深圳）有限公司"
+    },
+    {
+      "id": "company-c-b2627ec2e7cf7f0753c626ee",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市优必行科技有限公司"
+    },
+    {
+      "id": "company-c-b6c9e963f6bd294e9914ef93",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市百答科技有限公司"
+    },
+    {
+      "id": "company-c-f9deaa6fbfb3a1f332761c8f",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市酷选科技有限公司"
+    },
+    {
+      "id": "professor-c-460e22e2c7d45682e9c26fef",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "李成睿"
+    },
+    {
+      "id": "company-c-a2e17a71338acc3f824f198f",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳欧博思智能科技有限公司"
+    },
+    {
+      "id": "company-c-664ca7463984d329f6c12b53",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市香蕉科技有限公司"
+    }
+  ],
+  "committed_handle_ids": [
+    "company-c-b2aac54891e3fce8c98612d8",
+    "web-handle:sha256:aa06316161dbf90b46f23f444dbb1493f971f21a585bdb551fcd1eb5883eb402",
+    "web-handle:sha256:2c522823ac931c64542e3241dd2e14eb04c96b4fa77f618d03066c40a9e145c6",
+    "web-handle:sha256:f7c60526356b13c82de0458f270a33b00ac54a3c55974ac5bc9e69fecf51b725",
+    "web-handle:sha256:b50bcc7e4449c05303562c403473ed6a113ce6d534c937ba50ecb1fd70365c54",
+    "web-handle:sha256:1ae7738e12f6baac969f1c5b443869dcecc2e743abca89e056da573155306160",
+    "web-handle:sha256:11f2e6921cfad7be2728c503c02cbbf0e450d68ce347d00c32ec45baff4aa9ae"
+  ],
+  "committed_names": [
+    "深圳市优必选科技股份有限公司",
+    "UBTECH 优必选官网-智能服务机器人领导者",
+    "深圳市优必选科技股份有限公司-特种装备网",
+    "深圳市优必选科技股份有限公司 - 百度百科",
+    "「优必选怎么样」深圳市优必选科技股份有限公司 - 职友集",
+    "优必选",
+    "优必选科技 - 维基百科"
+  ],
+  "render_mode": "prose_renderer",
+  "answer_chars": 628,
+  "lane_timings": [
+    [
+      "structured",
+      0.0
+    ],
+    [
+      "exact",
+      0.305
+    ],
+    [
+      "lexical",
+      2.273
+    ],
+    [
+      "web",
+      5.083
+    ],
+    [
+      "vector",
+      18.177
+    ]
+  ]
+}

@@ -1,0 +1,93 @@
+{
+  "session_id": "session:chat:xVA98ukcpsbvuAwhLzkfv-6KpDD0Ws3j",
+  "turn_id": "turn:chat:sha256:35e65a65a584cf53343a3de7594669ca27e7911a0fc1f5961e1b82028b883655",
+  "turn_count": 1,
+  "query": "国际先进技术应用推进中心（深圳）",
+  "planned_displayed_ids": [],
+  "recalled_handles": [
+    {
+      "id": "company-c-c841e20d983b33640734ccfe",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳国际先进技术应用推进中心"
+    },
+    {
+      "id": "web-handle:sha256:7a8faff40b13f742d432da184fc89a420e759980f8e3d935c0601a59035ea745",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "河套深圳园区打造深港科技创新聚集地"
+    },
+    {
+      "id": "web-handle:sha256:8c8eee51773fe13c1f9affc4d8d8f4ee4159230f73db1506e4721b56346b930b",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "建重大平台强核心攻关优产业生态深圳新质生产力加速迸发"
+    },
+    {
+      "id": "web-handle:sha256:da503a201a166cc0c6360c895f6f394c6412857b017b8a33ed0b045c49efddbe",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "河套数学与交叉学科研究院、国际先进技术应用推进中心（深圳）揭牌"
+    },
+    {
+      "id": "web-handle:sha256:3b91ea9960e3345293e445a29ebb2431937c73842e1c9f7f686f3d2d92dffc5e",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "支持国际先进技术应用推进中心（深圳）建设具身智能技术试验场 ..."
+    },
+    {
+      "id": "web-handle:sha256:0dc263b02cd427882048b8142e374f29089678619714a93618c4e3020e26c8d5",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "粤港澳大湾区数字经济研究院（国际先进技术应用推进中心（深圳））"
+    },
+    {
+      "id": "web-handle:sha256:ec060e93bc3b2c57dae4a49b85698ee6396bd185ad003ce45f3e449b2589b71d",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "深圳：支持国际先进技术应用推进中心（深圳）建设具身智能 ... - 财联社"
+    },
+    {
+      "id": "web-handle:sha256:822e401b0e62e2c53229343140ecbe9ad0cd6677b9116095b51e4c704f78456f",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "光源资本携手国际先进技术应用推进中心（深圳） - QQ"
+    },
+    {
+      "id": "web-handle:sha256:aea8cd638cda5b85d611dc6820c5245ff7be0518359fc30be3063e5008795ba0",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "一河之隔，两岸潮涌——深港携手共建世界级“科研枢纽” - 香港中联办"
+    }
+  ],
+  "committed_handle_ids": [
+    "company-c-c841e20d983b33640734ccfe"
+  ],
+  "committed_names": [
+    "深圳国际先进技术应用推进中心"
+  ],
+  "render_mode": "prose_renderer",
+  "answer_chars": 487,
+  "lane_timings": [
+    [
+      "structured",
+      0.0
+    ],
+    [
+      "exact",
+      2.21
+    ],
+    [
+      "lexical",
+      2.752
+    ],
+    [
+      "web",
+      3.732
+    ],
+    [
+      "vector",
+      19.827
+    ]
+  ]
+}

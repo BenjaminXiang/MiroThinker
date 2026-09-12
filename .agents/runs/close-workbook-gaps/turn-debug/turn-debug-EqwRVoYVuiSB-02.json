@@ -1,0 +1,809 @@
+{
+  "session_id": "session:chat:EqwRVoYVuiSBaPWKIiEZk69RyK_ABYwF",
+  "turn_id": "turn:chat:sha256:8d9e5bec74ca9efeb3c3b87647d041a8e61aa3f17bd1600d85848e8663ea0a86",
+  "turn_count": 2,
+  "query": "他有哪些论文",
+  "planned_displayed_ids": [],
+  "recalled_handles": [
+    {
+      "id": "paper-c-46ff0e53b6f20b4c96785a14",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "艾伦·拉文·宾太空美术作品中的科学英雄主义"
+    },
+    {
+      "id": "web-handle:sha256:0ee1d30dd5bc754698a3af7d5e77ea4d9e8aaba1c7966661c0d8db83f8856ae0",
+      "kind": "web",
+      "domain": "paper",
+      "display_name": "语文讲话 (豆瓣)"
+    },
+    {
+      "id": "paper-c-4a2c98db21cd57239978e398",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "“做”与“揍”"
+    },
+    {
+      "id": "web-handle:sha256:12993d24572dc6bdfadfc348d054d637e0fdfb16f5add1c9816adc6cb238c648",
+      "kind": "web",
+      "domain": "paper",
+      "display_name": "AI撰写论文：“大学指控我学术不端，但明明那都是我自己写的。” - BBC"
+    },
+    {
+      "id": "paper-c-ae0b039ca0420a0bcea2a772",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Physical insights into single-component organic photovoltaics"
+    },
+    {
+      "id": "web-handle:sha256:df1a1a7e455dec75e8c7524e77df0e045757290f76caf6c42fc4a4f8646b1641",
+      "kind": "web",
+      "domain": "paper",
+      "display_name": "天津大学教师个人主页系统 冀中 中文主页"
+    },
+    {
+      "id": "paper-c-e6866611570eb3648930a05b",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Efficient and stable high-entropy organic photovoltaics"
+    },
+    {
+      "id": "web-handle:sha256:5f5fda56997f63cd34088f2b80da9d367de480538c9a9dd617f0a1cdb3159cc5",
+      "kind": "web",
+      "domain": "paper",
+      "display_name": "黄思远｜以一作身份发表4篇AI顶会论文，他有什么科研秘诀？"
+    },
+    {
+      "id": "paper-c-997655af7209c8d27221bc74",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Two-sample empirical likelihood method"
+    },
+    {
+      "id": "web-handle:sha256:c43f85dbba507dc619fc7cde84dfe85f6425b5cf0243dd1ac67ea669c54f7698",
+      "kind": "web",
+      "domain": "paper",
+      "display_name": "国家基金论文-学术百科-知网空间"
+    },
+    {
+      "id": "paper-c-cadae59ec2f9b608fe636f1a",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Quantum theory of the nonlinear Hall effect"
+    },
+    {
+      "id": "web-handle:sha256:ca672425db0e5c79716207b2138467c8af9d0c1fce310cdbbf37b3bc7c0e10cc",
+      "kind": "web",
+      "domain": "paper",
+      "display_name": "65篇数学论文涉嫌批量造假，杨乐院士：科研根本内涵被忽略 - 学术桥"
+    },
+    {
+      "id": "paper-c-b12a9070359329f5e3c753df",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Tunable second harmonic in altermagnetic Josephson junctions"
+    },
+    {
+      "id": "web-handle:sha256:880aa6a08d4bf1bed3d0fb7a78f9fdf05d062763b5f54fe08c1914cb8cbde9af",
+      "kind": "web",
+      "domain": "paper",
+      "display_name": "他,培养出15位院士!_艾思科蓝"
+    },
+    {
+      "id": "paper-c-eee0406c8ff627883a104dca",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "On the sampling window method for long-range dependent data"
+    },
+    {
+      "id": "web-handle:sha256:b97e1590473aa1c45c770fae5803609d13488571c6439ed546156b139e4ecc13",
+      "kind": "web",
+      "domain": "paper",
+      "display_name": "本科生一年发百余篇顶会论文，同校教授痛批：“一场灾难” - 新闻"
+    },
+    {
+      "id": "paper-c-fd7e927a4b715f023c3eb921",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Layer Hall effect in a 2D topological axion antiferromagnet"
+    },
+    {
+      "id": "web-handle:sha256:59c45b2e0c206f7d2a8c2c9d71b8d139f238ff62559f236d15837ca4d2251335",
+      "kind": "web",
+      "domain": "paper",
+      "display_name": "在国际学术刊物上发表论文300多篇,近五年代表性论文如下: - 豆丁网"
+    },
+    {
+      "id": "paper-c-190875a8cf92cedf920b4636",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Surface and Interfacial Engineering for Multifunctional Nanocarbon Materials"
+    },
+    {
+      "id": "web-handle:sha256:aef48d9a125c5edfe586d15e758ad7c8a5ff4dff121174ddb43936d28cd08af9",
+      "kind": "web",
+      "domain": "paper",
+      "display_name": "为什么有人能要到代码/论文/模型/数据，而我就要不到？ - 南京大学"
+    },
+    {
+      "id": "paper-c-a0848e5c2f41fcc735eaac62",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Nonlinear Hall effect on a disordered lattice"
+    },
+    {
+      "id": "web-handle:sha256:789af0b2062b83d7e6536d421c1673b0e5a3c0717d18c3b957afca9bafd52082",
+      "kind": "web",
+      "domain": "paper",
+      "display_name": "今日洞头数字报刊平台"
+    },
+    {
+      "id": "paper-c-432d609139966e52fb60a0e1",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Conductance oscillations of antiferromagnetic layer tunnel junctions"
+    },
+    {
+      "id": "web-handle:sha256:894848f8e59204bdbb65594583211a3dd6740dc8dadbfd98d34e7568df434a21",
+      "kind": "web",
+      "domain": "paper",
+      "display_name": "VALSE Student Club 听VALSE学生会员聊聊他AAAI杰出论文背后的 ..."
+    },
+    {
+      "id": "paper-c-b245a74a25be0604ad4f6864",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Side-surface-mediated hybridization in axion insulators"
+    },
+    {
+      "id": "web-handle:sha256:7f1f587f2c3489e1d769c1b527a6e5564fb77cdd8a5d727e594f9171451f799f",
+      "kind": "web",
+      "domain": "paper",
+      "display_name": "药物中毒过量诊治关键技术的创新开发与应用.docx_淘豆网"
+    },
+    {
+      "id": "paper-c-eef91c467f8f972a5c5013e2",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Magnetic topological transistor exploiting layer-selective transport"
+    },
+    {
+      "id": "web-handle:sha256:9d4ff90e61fce3c3f2c2d9a4afac85c92489921bfb2778a316fcf34c1c9f28f0",
+      "kind": "web",
+      "domain": "paper",
+      "display_name": "AI倒查论文100年，99.2%的顶刊都有问题 - 36氪"
+    },
+    {
+      "id": "paper-c-ee0b72f896705703475acb80",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Soft reconfigurable logic gates with high-frequency electrical switching"
+    },
+    {
+      "id": "web-handle:sha256:cde3e5efc69de474b077c84be4d4b0b358cafb83fffe449bd70b98861a273ed3",
+      "kind": "web",
+      "domain": "paper",
+      "display_name": "“天下为菊”是什么牛人? - 学术道德监督 - 经管之家(原人大经济论坛)"
+    },
+    {
+      "id": "paper-c-e1b6d4b6a8ce503186e16560",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "The IF Toolset"
+    },
+    {
+      "id": "web-handle:sha256:9a147af567bff92a2f2814fc083afb9349a4cefaee3f1437858d4600992742d8",
+      "kind": "web",
+      "domain": "paper",
+      "display_name": "一篇论文8778个作者是什么操作？人均只写5个字，仅署名就有17页......"
+    },
+    {
+      "id": "paper-c-5c7008f7f8070e3ee7a136d6",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "PCB-Migrator: Automated PCB PnR Migration"
+    },
+    {
+      "id": "web-handle:sha256:50e37e7fbc53959d301277f070b835b53bbf2077e3beb7f1babc01c95f5fd5b3",
+      "kind": "web",
+      "domain": "paper",
+      "display_name": "谢本书 - 搜狗百科"
+    },
+    {
+      "id": "paper-c-6ffb47089e8ec404a1459ea2",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Boosted room-temperature nonlinear Hall effect in sputtered films"
+    },
+    {
+      "id": "web-handle:sha256:d1a4715a2d05c22c96f9918e6c0f39532ede096e99f2ba75d39cd13a05b509e8",
+      "kind": "web",
+      "domain": "paper",
+      "display_name": "首次！上财学生论文被计算机领域国际顶会STOC 2025录用"
+    },
+    {
+      "id": "paper-c-2a634ee523eda0e8b809fd09",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Ceramic-carbon Janus membrane for robust solar-thermal desalination"
+    },
+    {
+      "id": "web-handle:sha256:1250965f9e3ea65c928df4cd6710d02b4d9fe2e96b5870e4ac1388b9601c9eea",
+      "kind": "web",
+      "domain": "paper",
+      "display_name": "论文成果"
+    },
+    {
+      "id": "paper-c-2d0cdfe61b6a5cee5f21732c",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Magnetically tunable Shubnikov-de Haas oscillations in MnBi2Te4"
+    },
+    {
+      "id": "web-handle:sha256:60aa4800d01f038e706e9a0c292215c7f19c5e8ccf513e96a354eb2d606b9838",
+      "kind": "web",
+      "domain": "paper",
+      "display_name": "他一生只发表了27篇论文，却发现了一个比圆周率更复杂的常数- 知乎"
+    },
+    {
+      "id": "paper-c-416dd2d0fac9fbb38a09f2ba",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "The Embedded Systems Design Challenge"
+    },
+    {
+      "id": "web-handle:sha256:f723768756df9808d38db3b3de51f908aa996cb7c47782c8c87235d3d57a5578",
+      "kind": "web",
+      "domain": "paper",
+      "display_name": "王习术-清华大学航天航空学院"
+    },
+    {
+      "id": "paper-c-d6fbebc5a7a12fb3588aee28",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "依靠“三个到位”管好机关干部"
+    },
+    {
+      "id": "web-handle:sha256:854dfcce1f8b6ddb961295d1662715c28eb691839ecf58bd40f3c6bf5ec5c3d1",
+      "kind": "web",
+      "domain": "paper",
+      "display_name": "学术成就"
+    },
+    {
+      "id": "paper-c-6e43a5cb72a4553c194c07d5",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Using nonlocal surface transport to identify the axion insulator"
+    },
+    {
+      "id": "web-handle:sha256:5df5d0b5b7bf271aa1ec9136c7bb7fdb2ccbad876209717bb31fb4fd9db6798b",
+      "kind": "web",
+      "domain": "paper",
+      "display_name": "论文期刊列表146115743 - 豆丁网"
+    },
+    {
+      "id": "paper-c-c4a2f45d5aaaa22b650604eb",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Tapered composite likelihood for spatial max-stable models"
+    },
+    {
+      "id": "web-handle:sha256:51835d73cbb061a5b9e8898ca86485a3405bc4ab2a073c22ec8d05758522162e",
+      "kind": "web",
+      "domain": "paper",
+      "display_name": "论文"
+    },
+    {
+      "id": "paper-c-038ba900ec660bace678852f",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Finite-time control for robot manipulators"
+    },
+    {
+      "id": "web-handle:sha256:fa195403260292ec2669dbaa49f4988cc6094a6124504a570c9c57e9575c7313",
+      "kind": "web",
+      "domain": "paper",
+      "display_name": "期刊论文、学术研讨会论文、学位论文清单列表 - 豆丁网"
+    },
+    {
+      "id": "paper-c-e3ecef5d3216f12299ce67b1",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Multifunctional Liquid Metal‐Bridged Graphite Nanoplatelets/Aramid Nanofiber Film for Thermal Management"
+    },
+    {
+      "id": "web-handle:sha256:fbbdc34114537fd006955ac4421f6b96781657d6cfabf11b143e5567f05c63db",
+      "kind": "web",
+      "domain": "paper",
+      "display_name": "学位论文 - 上海科技大学图书馆"
+    },
+    {
+      "id": "paper-c-5bca5f59fb2c3ba1cdc87031",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Soft Organic Thermoelectric Materials: Principles, Current State of the Art and Applications"
+    },
+    {
+      "id": "web-handle:sha256:31758262c8cd394f712b53fd065c9fda53d31646c3cc1e2342bf870f851cfa48",
+      "kind": "web",
+      "domain": "paper",
+      "display_name": "论文网站 - 张博的博客 - 博客园"
+    },
+    {
+      "id": "paper-c-371848d44a45630c3504f28e",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Anomalous Andreev spectrum and transport in non-Hermitian Josephson junctions"
+    },
+    {
+      "id": "web-handle:sha256:90b5c05d9613aec848243827b77d66880189ce435a2fe21b4493e5d020b42f8c",
+      "kind": "web",
+      "domain": "paper",
+      "display_name": "会议论文集- 维基百科，自由的百科全书"
+    },
+    {
+      "id": "paper-c-89a575af431d1648c6107672",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "The Algebra of Timed Processes, ATP: Theory and Application"
+    },
+    {
+      "id": "web-handle:sha256:f034914c55378c3454a39372b1e39d424c010fb223cf02734b51688ee733d7a6",
+      "kind": "web",
+      "domain": "paper",
+      "display_name": "博士论文_标签_网易出品"
+    },
+    {
+      "id": "paper-c-81439db12a24635cf615dad7",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Controller Synthesis for Timed Automata 1"
+    },
+    {
+      "id": "web-handle:sha256:fe7d863e5500f6dd3e629f33a49c16259550c8e0cda7da41044f04cd1e804ac1",
+      "kind": "web",
+      "domain": "paper",
+      "display_name": "学位论文展示 - 华南理工大学"
+    },
+    {
+      "id": "paper-c-f9c1868d4cd3645962a96cd2",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Multifunctional transparent conductive films via Langmuir–Blodgett assembly of large MXene flakes"
+    },
+    {
+      "id": "web-handle:sha256:95c031d7635ffc385ac1d0114ffe16ec75a79a45c32277e37c9553e5dc14de11",
+      "kind": "web",
+      "domain": "paper",
+      "display_name": "工作论文"
+    },
+    {
+      "id": "paper-c-943a08308c69101189296af6",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Maximum-Likelihood, Magnitude-Based, Amplitude and Noise Variance Estimation"
+    },
+    {
+      "id": "web-handle:sha256:5ae88f5d26c32078a38dc9da1ecec53c44136ebcd28b1cbc330fd29d440ca378",
+      "kind": "web",
+      "domain": "paper",
+      "display_name": "论文录用列表- CCL 2025 - 计算语言学专业委员会"
+    },
+    {
+      "id": "paper-c-030f43c8920f9b24e841a91f",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Empirical likelihood for partial linear models with fixed designs"
+    },
+    {
+      "id": "web-handle:sha256:593d4de6e4633f4869ff62c5ae395a64abcd513da3bbf41409d1beb36fd02306",
+      "kind": "web",
+      "domain": "paper",
+      "display_name": "论文列表"
+    },
+    {
+      "id": "paper-c-997542d3215e1da7cff44abd",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "DiffSP: Differentiable Sequence Pair-based Analog Placement"
+    },
+    {
+      "id": "web-handle:sha256:d1458cc1cd15c2cd58982f888b6e436ca477edb80fd68a213ef92c4624e113d6",
+      "kind": "web",
+      "domain": "paper",
+      "display_name": "数据库列表-文献类型-学位论文 - 中山大学图书馆"
+    },
+    {
+      "id": "paper-c-ecddbd8a31572f83b1c548c7",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Layer Hall effect induced by hidden Berry curvature in antiferromagnetic insulators"
+    },
+    {
+      "id": "web-handle:sha256:48439697af3774bc3975a5861aaab0f9f89079c170f159d7de954dca918efa0b",
+      "kind": "web",
+      "domain": "paper",
+      "display_name": "论文研究 - 飞书云文档"
+    },
+    {
+      "id": "paper-c-9a0edae36b09dcb647e3638a",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Probing k -Space Alternating Spin Polarization via the Anomalous Hall Effect"
+    },
+    {
+      "id": "web-handle:sha256:691810ef1e3ac412c6a3ee7f0ebefb83f32788333d807458324364343f973bf2",
+      "kind": "web",
+      "domain": "paper",
+      "display_name": "会议论文集- IOP China"
+    },
+    {
+      "id": "paper-c-dbed14bdc295fa3c262bff3b",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Generalized Mutual Information Analysis for BICM-8QAM With Residual Phase Noise"
+    },
+    {
+      "id": "web-handle:sha256:420e536cd83bd15db0efe0694e79440aed9f4d1d0b334e4ea848d95f734e1282",
+      "kind": "web",
+      "domain": "paper",
+      "display_name": "文章列表"
+    },
+    {
+      "id": "paper-c-fc3779ba31584e35cd1d1c62",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Facile Synthesis of Hollow V2O5 Microspheres for Lithium-Ion Batteries with Improved Performance"
+    },
+    {
+      "id": "web-handle:sha256:8e0b5b022247c541d8ee6146f0d4f0ffe9918f294b329e4286a54d5a1a29eed5",
+      "kind": "web",
+      "domain": "paper",
+      "display_name": "大模型论文清单（Text-Finance） - 知乎专栏"
+    },
+    {
+      "id": "paper-c-a8e997f30d30d007062d3fa4",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Space Robotics: Dynamics and Control"
+    },
+    {
+      "id": "web-handle:sha256:c1153236e54b1cfcf4241530cd1cd3c9b5b74622ff7d07ea854de003d4623603",
+      "kind": "web",
+      "domain": "paper",
+      "display_name": "工作论文"
+    },
+    {
+      "id": "paper-c-e7aded81351396914398ee27",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Water-enhanced plasticity of calcium fluoride"
+    },
+    {
+      "id": "web-handle:sha256:841e53f934f251f2fbcff4145b4457ba48a57f66bdbfa87160ff2b52fe3d460f",
+      "kind": "web",
+      "domain": "paper",
+      "display_name": "Cool Papers - Immersive Paper Discovery - GitHub"
+    },
+    {
+      "id": "paper-c-0d005fbd1d8941ad2ac012e9",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "On the jump activity index for semimartingales"
+    },
+    {
+      "id": "web-handle:sha256:0dd817e46619304d33ccd29a91ce4a2417a05f72627e4f5298337aea57df1417",
+      "kind": "web",
+      "domain": "paper",
+      "display_name": "PLC论文"
+    },
+    {
+      "id": "paper-c-944e278a3e1cb9e3bc6590a1",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Efficient Continuous Logic Opti- mization with Diffusion Model"
+    },
+    {
+      "id": "web-handle:sha256:07890d809df6d61f9506ab3058ed614539fcc1dcf0239957c366b641e5873430",
+      "kind": "web",
+      "domain": "paper",
+      "display_name": "科技论文 - 南京大学-科学技术研究院"
+    },
+    {
+      "id": "paper-c-e3af64168b29b408cf240f95",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Finite-size effect on quantum percolation in topological insulators"
+    },
+    {
+      "id": "web-handle:sha256:a0106e81e7aae93b0e4009b7ff370143a1429bc40de16bb3882ada8c7b19ef55",
+      "kind": "web",
+      "domain": "paper",
+      "display_name": "科研论文"
+    },
+    {
+      "id": "paper-c-fa0cb9347342009107c1e2f4",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "An overview and synthesis on timed process algebras"
+    },
+    {
+      "id": "web-handle:sha256:e7a68e3433b9c7d68a8f75257bbfc52ad37d87bb69da233d911cbbd08f91c9df",
+      "kind": "web",
+      "domain": "paper",
+      "display_name": "科研论文"
+    },
+    {
+      "id": "paper-c-bb6aa3b5dd3db9cce161e077",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Channel Path Identification in mmWave Systems With Large-Scale Antenna Arrays"
+    },
+    {
+      "id": "web-handle:sha256:21d17c49dd1688c1cf0dbbab297fc72c40f0c8a152d49bbd464d54f203acf2e7",
+      "kind": "web",
+      "domain": "paper",
+      "display_name": "学术论文发表怎么样发表?学术论文发表有什么要求? 爱问知识人"
+    },
+    {
+      "id": "paper-c-5e41120cb7ddbb35b80a7534",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "The complexity of classical Marcus analysis for charge transfer states in organic photovoltaics"
+    },
+    {
+      "id": "web-handle:sha256:7770876b154e94b0e6ec96319cdd2300246cd65906ba133108c85e5a26684d90",
+      "kind": "web",
+      "domain": "paper",
+      "display_name": "如何发表论文？流程是什么？需要注意哪些坑？（手把手教你发表 ..."
+    },
+    {
+      "id": "paper-c-7261576f074957ddfca44f0e",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Enhancement of Josephson supercurrent in a π -junction state by chiral antiferromagnetism"
+    },
+    {
+      "id": "web-handle:sha256:c5c901fc4790ba01ea0006145bcfdf4533cb725675b323e3c3d4004495bd8bc2",
+      "kind": "web",
+      "domain": "paper",
+      "display_name": "论文发表--中国科学院自然科学史研究所"
+    },
+    {
+      "id": "paper-c-2dc52540b7e590c4946cb111",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Multimodel Selection and Computation Resource Allocation Driven Cooperative Spectrum Sensing"
+    },
+    {
+      "id": "web-handle:sha256:038fdc70e7292e96f9d05ee5806a457e4387f50ee67b820dd72459676bd27c37",
+      "kind": "web",
+      "domain": "paper",
+      "display_name": "如何发表学术论文 - 艾思科蓝"
+    },
+    {
+      "id": "paper-c-8f4d8d8b584fcdd5b2667c8e",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Efficient blind carrier frequency offset estimation for coherent optical OFDM systems"
+    },
+    {
+      "id": "web-handle:sha256:022ca78e6be588fe978f935983d7c43aa315bd5df942c32b23b701edc4a546b4",
+      "kind": "web",
+      "domain": "paper",
+      "display_name": "学术论文的发表经验.doc_淘豆网"
+    },
+    {
+      "id": "paper-c-428ec12fb38f2693527cd5bf",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Intrinsic charge manipulation for solution‐processed organic photodetectors with high sensitivity and fast response"
+    },
+    {
+      "id": "web-handle:sha256:cd870049a22165ac74a2cd29f2725976abd0b94ed5643fd94b7e238ea4102da1",
+      "kind": "web",
+      "domain": "paper",
+      "display_name": "如何快速写好一篇期刊论文并发表？ - CSDN博客"
+    },
+    {
+      "id": "paper-c-d2a01b2374fd4b8eea1f23bf",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "3D Interconnected Conductive Graphite Nanoplatelet Welded Carbon Nanotube Networks for Stretchable Conductors"
+    },
+    {
+      "id": "web-handle:sha256:aed57c1f22dcd25de631a480d6daba339c8d1e2e6ef1620cd3fa9fc5257249d0",
+      "kind": "web",
+      "domain": "paper",
+      "display_name": "学术论文发表怎么样发表?学术论文发表有什么要求? 爱问知识人"
+    },
+    {
+      "id": "paper-c-684f864cf28b38fc64afdc7f",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Empirical likelihood for partial linear models"
+    },
+    {
+      "id": "web-handle:sha256:f2e6d398527b00a25d815d06a26df3b240961a7eb831975479acf9ec05dbd3e9",
+      "kind": "web",
+      "domain": "paper",
+      "display_name": "学术论文发表机构_百度百科"
+    },
+    {
+      "id": "paper-c-ef221562eceb439f7df2bc90",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Jamming Giant Molecules at Interface in Organic Photovoltaics to Improve Performance and Stability"
+    },
+    {
+      "id": "web-handle:sha256:5a216982bd3b74757c1d6e9c633c504d5f824d2051b9aa3701e67570cc0f7b25",
+      "kind": "web",
+      "domain": "paper",
+      "display_name": "论文发表-专业发展 - 常州市第三中学"
+    },
+    {
+      "id": "paper-c-296f0efd0a0189ea020241e8",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Carrier Frequency Offset Estimation for CO-OFDM: The Matched-Filter Approach"
+    },
+    {
+      "id": "web-handle:sha256:fc27567ec475814ea3acaf44b85249c2f635b52ff4b876a490a441e8af7c6df2",
+      "kind": "web",
+      "domain": "paper",
+      "display_name": "想发表学术论文？那你一定要知道的论文等级划分！"
+    },
+    {
+      "id": "paper-c-cec2f033803a56b77f2dd572",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "EDA Flow Matters: Stage-Aware Parameter Optimization of Tool Chain"
+    },
+    {
+      "id": "web-handle:sha256:4f39a22bfa22c95eec3dc2a0ef4fec74994f1c11e25363a4385ad80da534f17b",
+      "kind": "web",
+      "domain": "paper",
+      "display_name": "学术论文在哪里发表 - 搜狗问问"
+    },
+    {
+      "id": "paper-c-63932e9dcc1e86591f391c29",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Accurate laser linewidth estimation using the DA-ML carrier phase estimator"
+    },
+    {
+      "id": "web-handle:sha256:fa15e449aea4844112d4eda8580c7944e4e069af1f64b24866150f7c66ceaebd",
+      "kind": "web",
+      "domain": "paper",
+      "display_name": "SCI论文发表日期以什么为准？Online or 见刊时间？ - 埃米"
+    },
+    {
+      "id": "paper-c-c16ed744ca9642c72c67b1a5",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Tuning three-dimensional higher-order topological insulators by surface state hybridization"
+    },
+    {
+      "id": "web-handle:sha256:65332d4df60b9a94cf3efaa85dde9292dc9b03b068bfbdfea1021f9b104c158d",
+      "kind": "web",
+      "domain": "paper",
+      "display_name": "学术论文发表与使用 - 豆丁网"
+    },
+    {
+      "id": "paper-c-e5a5e95ce0c87d6d91149390",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Specification and verification of concurrent systems in CESAR"
+    },
+    {
+      "id": "web-handle:sha256:a0fc6982e39e85dce21802d7015766ecb9cc1b5890ee88e1c6d1802d07f5a52b",
+      "kind": "web",
+      "domain": "paper",
+      "display_name": "论文发表_发表论文_期刊发表_论文投稿-权威期刊网"
+    },
+    {
+      "id": "paper-c-2606c830eeaaf2d7d8337a64",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Analytical solution for the surface states of the antiferromagnetic topological insulator MnBi2Te4"
+    },
+    {
+      "id": "web-handle:sha256:dea89118dce366d2f98f138e3e164c68bf898b1642b7a3bab48c68dd7edef073",
+      "kind": "web",
+      "domain": "paper",
+      "display_name": "学术论文写作及发表的若干建议 - 豆丁网"
+    },
+    {
+      "id": "paper-c-242c19a67d14605d8fb0e15b",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Continuous Spatial Process Models for Spatial Extreme Values"
+    },
+    {
+      "id": "web-handle:sha256:ce2647aabd47993f761d7e4b19f899883d94191a7443950dac40d1274468ef0c",
+      "kind": "web",
+      "domain": "paper",
+      "display_name": "学术小白新手如何发表一篇学术期刊论文，超详细流程长文分享（纯 ..."
+    },
+    {
+      "id": "paper-c-1280796bf3ded1daed86492e",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "AlphaPlacer: Analog Placement Enhanced by Monte Carlo Tree Search"
+    },
+    {
+      "id": "web-handle:sha256:20138787fbfe9d38229e4803982085e881513e63de149c57215902700ec90b6d",
+      "kind": "web",
+      "domain": "paper",
+      "display_name": "学术论文期刊发表_易购文库"
+    },
+    {
+      "id": "paper-c-fcbac64bedee32c379404160",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "M-APSK Constellation Optimization in the Presence of Phase Reference Error"
+    },
+    {
+      "id": "web-handle:sha256:5cca2430ab1ea3e0578663e7ac8112eb10bd536610234c8794c96979bccf55da",
+      "kind": "web",
+      "domain": "paper",
+      "display_name": "科研小白，如何快速发表自己第一篇学术论文的思路！ - YouTube"
+    },
+    {
+      "id": "paper-c-89853a68251a0690ca40db42",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Survey of modeling, planning, and ground verification of space robotic systems"
+    },
+    {
+      "id": "web-handle:sha256:51a8a2c051138005b130fd5f391515670cf4463c440d886e7f2dc7af9d194f34",
+      "kind": "web",
+      "domain": "paper",
+      "display_name": "论文发表:谈学术论文撰写、投稿与发表 - 人大政协 - - 道客巴巴"
+    },
+    {
+      "id": "paper-c-116c112f2dba1beabc3a466e",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Use of Petri Nets for Performance Evaluation"
+    },
+    {
+      "id": "web-handle:sha256:43a2b5dd05acddd503cb0921f9cf2890f417f8ff509ebed842807d06f9b4b19d",
+      "kind": "web",
+      "domain": "paper",
+      "display_name": "怎么看论文有没有发表 - 艾思科蓝"
+    }
+  ],
+  "committed_handle_ids": [
+    "paper-c-46ff0e53b6f20b4c96785a14",
+    "web-handle:sha256:51835d73cbb061a5b9e8898ca86485a3405bc4ab2a073c22ec8d05758522162e"
+  ],
+  "committed_names": [
+    "艾伦·拉文·宾太空美术作品中的科学英雄主义",
+    "论文"
+  ],
+  "render_mode": "prose_renderer",
+  "answer_chars": 325,
+  "lane_timings": [
+    [
+      "structured",
+      0.0
+    ],
+    [
+      "exact",
+      0.404
+    ],
+    [
+      "lexical",
+      1.308
+    ],
+    [
+      "vector",
+      8.644
+    ],
+    [
+      "web",
+      8.806
+    ]
+  ]
+}

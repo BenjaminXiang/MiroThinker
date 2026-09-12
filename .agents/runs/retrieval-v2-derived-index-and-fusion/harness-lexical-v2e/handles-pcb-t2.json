@@ -1,0 +1,488 @@
+{
+  "turn": "pcb-t2",
+  "query": "上述企业有哪些是深圳的企业",
+  "handle_count": 32,
+  "handles": [
+    {
+      "display_name": "深圳嘉立创科技集团股份有限公司",
+      "domain": "company",
+      "kind": "canonical",
+      "public_id": "company-c-2ccb5dd970b63ba26f6a3a47"
+    },
+    {
+      "display_name": "深圳市芯拓科技有限公司",
+      "domain": "company",
+      "kind": "canonical",
+      "public_id": "company-c-94d4086e1a0103efd4f188fb"
+    },
+    {
+      "display_name": "深圳市一博科技股份有限公司",
+      "domain": "company",
+      "kind": "canonical",
+      "public_id": "company-c-8f303a46ca0b58ad9b92f2dc"
+    },
+    {
+      "display_name": "深圳小西贝贝科技有限公司",
+      "domain": "company",
+      "kind": "canonical",
+      "public_id": "company-c-1acb9ad832e3c9601c261232"
+    },
+    {
+      "display_name": "阿拉的（深圳）人工智能有限公司",
+      "domain": "company",
+      "kind": "canonical",
+      "public_id": "company-c-24804a5795278528b5d75b29"
+    },
+    {
+      "display_name": "深圳市驭鹰者电子有限公司",
+      "domain": "company",
+      "kind": "canonical",
+      "public_id": "company-c-689772b89aab41bbd9e19350"
+    },
+    {
+      "display_name": "深圳市赛尔博特软件有限公司",
+      "domain": "company",
+      "kind": "canonical",
+      "public_id": "company-c-a98d7fa3a07ef6977ebce044"
+    },
+    {
+      "display_name": "深圳市找铅网环保科技有限公司",
+      "domain": "company",
+      "kind": "canonical",
+      "public_id": "company-c-c0730ee86247aff52511dd01"
+    },
+    {
+      "display_name": "深圳市天农科技有限公司",
+      "domain": "company",
+      "kind": "canonical",
+      "public_id": "company-c-c0fc9f2254b81d343b42dd4a"
+    },
+    {
+      "display_name": "深圳市升达康科技有限公司",
+      "domain": "company",
+      "kind": "canonical",
+      "public_id": "company-c-10e57271380531ec3cb9b8c0"
+    },
+    {
+      "display_name": "深圳市亿科迈科技有限公司",
+      "domain": "company",
+      "kind": "canonical",
+      "public_id": "company-c-22a42fa6b8a8f101ffa3bb25"
+    },
+    {
+      "display_name": "深圳市声雄电子有限公司",
+      "domain": "company",
+      "kind": "canonical",
+      "public_id": "company-c-30dd7558ba9a46511e77a711"
+    },
+    {
+      "display_name": "深圳市汉消物联科技有限公司",
+      "domain": "company",
+      "kind": "canonical",
+      "public_id": "company-c-33ff9899598579afb361c2bb"
+    },
+    {
+      "display_name": "深圳优卫乐得科技有限公司",
+      "domain": "company",
+      "kind": "canonical",
+      "public_id": "company-c-39e10dfa777415100ddb9c66"
+    },
+    {
+      "display_name": "深圳正指向科技有限公司",
+      "domain": "company",
+      "kind": "canonical",
+      "public_id": "company-c-3a2cd364d238142c5304d410"
+    },
+    {
+      "display_name": "深圳市数位汇聚科技有限公司",
+      "domain": "company",
+      "kind": "canonical",
+      "public_id": "company-c-3edba6e861cced21980680fd"
+    },
+    {
+      "display_name": "深圳市动力飞扬智能装备有限公司",
+      "domain": "company",
+      "kind": "canonical",
+      "public_id": "company-c-5e4963a54d01b234aab8025e"
+    },
+    {
+      "display_name": "深圳市深华科电子有限公司",
+      "domain": "company",
+      "kind": "canonical",
+      "public_id": "company-c-86e620686ecf4ce9db876d01"
+    },
+    {
+      "display_name": "深圳智赛精密装备有限公司",
+      "domain": "company",
+      "kind": "canonical",
+      "public_id": "company-c-877827059543f86e22bc9c90"
+    },
+    {
+      "display_name": "深圳市高素科技有限公司",
+      "domain": "company",
+      "kind": "canonical",
+      "public_id": "company-c-8a73107321ed8412f308d14b"
+    },
+    {
+      "display_name": "深圳市大族数控科技股份有限公司",
+      "domain": "company",
+      "kind": "canonical",
+      "public_id": "company-c-92df9a614607ee1d9ae3de76"
+    },
+    {
+      "display_name": "深圳市海洲天润科技有限公司",
+      "domain": "company",
+      "kind": "canonical",
+      "public_id": "company-c-99b47f6ae4fd9f6e45e157a3"
+    },
+    {
+      "display_name": "深圳顺易捷科技有限公司",
+      "domain": "company",
+      "kind": "canonical",
+      "public_id": "company-c-9fa75ed1f5ebb759f184785f"
+    },
+    {
+      "display_name": "深圳市玉成创新科技有限公司",
+      "domain": "company",
+      "kind": "canonical",
+      "public_id": "company-c-a9952a1968867eee39ebaa57"
+    },
+    {
+      "display_name": "深圳市迈威科技有限公司",
+      "domain": "company",
+      "kind": "canonical",
+      "public_id": "company-c-b8dfec9fcf1256f472cb553c"
+    },
+    {
+      "display_name": "深圳市里德云科技有限公司",
+      "domain": "company",
+      "kind": "canonical",
+      "public_id": "company-c-c441ae7fb2de0e9f90b809c7"
+    },
+    {
+      "display_name": "深圳市科易博软件有限公司",
+      "domain": "company",
+      "kind": "canonical",
+      "public_id": "company-c-c718e78355cf2b4fd785647a"
+    },
+    {
+      "display_name": "深圳市任我达科技有限公司",
+      "domain": "company",
+      "kind": "canonical",
+      "public_id": "company-c-cea55d3ae6dcfbbcc40eef38"
+    },
+    {
+      "display_name": "定制加（深圳）科技有限公司",
+      "domain": "company",
+      "kind": "canonical",
+      "public_id": "company-c-d54d20cb4334d53188ba8106"
+    },
+    {
+      "display_name": "深圳市清宝科技有限公司",
+      "domain": "company",
+      "kind": "canonical",
+      "public_id": "company-c-d9d5eb7f7a16ecb61488d507"
+    },
+    {
+      "display_name": "深圳市宾德宝电子科技有限公司",
+      "domain": "company",
+      "kind": "canonical",
+      "public_id": "company-c-e4749a03a5ff4b6768e5afe1"
+    },
+    {
+      "display_name": "深圳市鑫贸科技有限公司",
+      "domain": "company",
+      "kind": "canonical",
+      "public_id": "company-c-fb0a68010434c66239d8c33d"
+    }
+  ],
+  "company_handles": [
+    "深圳嘉立创科技集团股份有限公司",
+    "深圳市芯拓科技有限公司",
+    "深圳市一博科技股份有限公司",
+    "深圳小西贝贝科技有限公司",
+    "阿拉的（深圳）人工智能有限公司",
+    "深圳市驭鹰者电子有限公司",
+    "深圳市赛尔博特软件有限公司",
+    "深圳市找铅网环保科技有限公司",
+    "深圳市天农科技有限公司",
+    "深圳市升达康科技有限公司",
+    "深圳市亿科迈科技有限公司",
+    "深圳市声雄电子有限公司",
+    "深圳市汉消物联科技有限公司",
+    "深圳优卫乐得科技有限公司",
+    "深圳正指向科技有限公司",
+    "深圳市数位汇聚科技有限公司",
+    "深圳市动力飞扬智能装备有限公司",
+    "深圳市深华科电子有限公司",
+    "深圳智赛精密装备有限公司",
+    "深圳市高素科技有限公司",
+    "深圳市大族数控科技股份有限公司",
+    "深圳市海洲天润科技有限公司",
+    "深圳顺易捷科技有限公司",
+    "深圳市玉成创新科技有限公司",
+    "深圳市迈威科技有限公司",
+    "深圳市里德云科技有限公司",
+    "深圳市科易博软件有限公司",
+    "深圳市任我达科技有限公司",
+    "定制加（深圳）科技有限公司",
+    "深圳市清宝科技有限公司",
+    "深圳市宾德宝电子科技有限公司",
+    "深圳市鑫贸科技有限公司"
+  ],
+  "mention_forms_by_company": {
+    "深圳嘉立创科技集团股份有限公司": [
+      "深圳嘉立创科技集团股份有限公司",
+      "深圳嘉立创科技集团",
+      "深圳嘉立创"
+    ],
+    "深圳市芯拓科技有限公司": [
+      "深圳市芯拓科技有限公司",
+      "深圳市芯拓科技",
+      "芯拓科技",
+      "芯拓"
+    ],
+    "深圳市一博科技股份有限公司": [
+      "深圳市一博科技股份有限公司",
+      "深圳市一博科技",
+      "一博科技",
+      "一博"
+    ],
+    "深圳小西贝贝科技有限公司": [
+      "深圳小西贝贝科技有限公司",
+      "深圳小西贝贝科技",
+      "深圳小西贝贝"
+    ],
+    "阿拉的（深圳）人工智能有限公司": [
+      "阿拉的（深圳）人工智能有限公司",
+      "阿拉的（深圳）人工智能",
+      "阿拉的人工"
+    ],
+    "深圳市驭鹰者电子有限公司": [
+      "深圳市驭鹰者电子有限公司",
+      "深圳市驭鹰者电子",
+      "驭鹰者电子",
+      "驭鹰者"
+    ],
+    "深圳市赛尔博特软件有限公司": [
+      "深圳市赛尔博特软件有限公司",
+      "深圳市赛尔博特软件",
+      "赛尔博特软件"
+    ],
+    "深圳市找铅网环保科技有限公司": [
+      "深圳市找铅网环保科技有限公司",
+      "深圳市找铅网环保科技",
+      "找铅网环保科技",
+      "找铅网环保"
+    ],
+    "深圳市天农科技有限公司": [
+      "深圳市天农科技有限公司",
+      "深圳市天农科技",
+      "天农科技",
+      "天农"
+    ],
+    "深圳市升达康科技有限公司": [
+      "深圳市升达康科技有限公司",
+      "深圳市升达康科技",
+      "升达康科技",
+      "升达康"
+    ],
+    "深圳市亿科迈科技有限公司": [
+      "深圳市亿科迈科技有限公司",
+      "深圳市亿科迈科技",
+      "亿科迈科技",
+      "亿科迈"
+    ],
+    "深圳市声雄电子有限公司": [
+      "深圳市声雄电子有限公司",
+      "深圳市声雄电子",
+      "声雄电子",
+      "声雄"
+    ],
+    "深圳市汉消物联科技有限公司": [
+      "深圳市汉消物联科技有限公司",
+      "深圳市汉消物联科技",
+      "汉消物联科技",
+      "汉消物联"
+    ],
+    "深圳优卫乐得科技有限公司": [
+      "深圳优卫乐得科技有限公司",
+      "深圳优卫乐得科技",
+      "深圳优卫乐得"
+    ],
+    "深圳正指向科技有限公司": [
+      "深圳正指向科技有限公司",
+      "深圳正指向科技",
+      "深圳正指向"
+    ],
+    "深圳市数位汇聚科技有限公司": [
+      "深圳市数位汇聚科技有限公司",
+      "深圳市数位汇聚科技",
+      "数位汇聚科技",
+      "数位汇聚"
+    ],
+    "深圳市动力飞扬智能装备有限公司": [
+      "深圳市动力飞扬智能装备有限公司",
+      "深圳市动力飞扬智能装备",
+      "动力飞扬智能装备",
+      "动力飞扬"
+    ],
+    "深圳市深华科电子有限公司": [
+      "深圳市深华科电子有限公司",
+      "深圳市深华科电子",
+      "深华科电子",
+      "深华科"
+    ],
+    "深圳智赛精密装备有限公司": [
+      "深圳智赛精密装备有限公司",
+      "深圳智赛精密装备"
+    ],
+    "深圳市高素科技有限公司": [
+      "深圳市高素科技有限公司",
+      "深圳市高素科技",
+      "高素科技",
+      "高素"
+    ],
+    "深圳市大族数控科技股份有限公司": [
+      "深圳市大族数控科技股份有限公司",
+      "深圳市大族数控科技",
+      "大族数控科技",
+      "大族数控"
+    ],
+    "深圳市海洲天润科技有限公司": [
+      "深圳市海洲天润科技有限公司",
+      "深圳市海洲天润科技",
+      "海洲天润科技",
+      "海洲天润"
+    ],
+    "深圳顺易捷科技有限公司": [
+      "深圳顺易捷科技有限公司",
+      "深圳顺易捷科技",
+      "深圳顺易捷"
+    ],
+    "深圳市玉成创新科技有限公司": [
+      "深圳市玉成创新科技有限公司",
+      "深圳市玉成创新科技",
+      "玉成创新科技",
+      "玉成创新"
+    ],
+    "深圳市迈威科技有限公司": [
+      "深圳市迈威科技有限公司",
+      "深圳市迈威科技",
+      "迈威科技",
+      "迈威"
+    ],
+    "深圳市里德云科技有限公司": [
+      "深圳市里德云科技有限公司",
+      "深圳市里德云科技",
+      "里德云科技",
+      "里德云"
+    ],
+    "深圳市科易博软件有限公司": [
+      "深圳市科易博软件有限公司",
+      "深圳市科易博软件",
+      "科易博软件"
+    ],
+    "深圳市任我达科技有限公司": [
+      "深圳市任我达科技有限公司",
+      "深圳市任我达科技",
+      "任我达科技",
+      "任我达"
+    ],
+    "定制加（深圳）科技有限公司": [
+      "定制加（深圳）科技有限公司",
+      "定制加（深圳）科技",
+      "定制加"
+    ],
+    "深圳市清宝科技有限公司": [
+      "深圳市清宝科技有限公司",
+      "深圳市清宝科技",
+      "清宝科技",
+      "清宝"
+    ],
+    "深圳市宾德宝电子科技有限公司": [
+      "深圳市宾德宝电子科技有限公司",
+      "深圳市宾德宝电子科技",
+      "宾德宝电子科技",
+      "宾德宝"
+    ],
+    "深圳市鑫贸科技有限公司": [
+      "深圳市鑫贸科技有限公司",
+      "深圳市鑫贸科技",
+      "鑫贸科技",
+      "鑫贸"
+    ]
+  },
+  "mentioned_in_final_answer": [],
+  "unmentioned_companies": [
+    "深圳嘉立创科技集团股份有限公司",
+    "深圳市芯拓科技有限公司",
+    "深圳市一博科技股份有限公司",
+    "深圳小西贝贝科技有限公司",
+    "阿拉的（深圳）人工智能有限公司",
+    "深圳市驭鹰者电子有限公司",
+    "深圳市赛尔博特软件有限公司",
+    "深圳市找铅网环保科技有限公司",
+    "深圳市天农科技有限公司",
+    "深圳市升达康科技有限公司",
+    "深圳市亿科迈科技有限公司",
+    "深圳市声雄电子有限公司",
+    "深圳市汉消物联科技有限公司",
+    "深圳优卫乐得科技有限公司",
+    "深圳正指向科技有限公司",
+    "深圳市数位汇聚科技有限公司",
+    "深圳市动力飞扬智能装备有限公司",
+    "深圳市深华科电子有限公司",
+    "深圳智赛精密装备有限公司",
+    "深圳市高素科技有限公司",
+    "深圳市大族数控科技股份有限公司",
+    "深圳市海洲天润科技有限公司",
+    "深圳顺易捷科技有限公司",
+    "深圳市玉成创新科技有限公司",
+    "深圳市迈威科技有限公司",
+    "深圳市里德云科技有限公司",
+    "深圳市科易博软件有限公司",
+    "深圳市任我达科技有限公司",
+    "定制加（深圳）科技有限公司",
+    "深圳市清宝科技有限公司",
+    "深圳市宾德宝电子科技有限公司",
+    "深圳市鑫贸科技有限公司"
+  ],
+  "selection_displayed_handle_ids": [
+    "company-c-2ccb5dd970b63ba26f6a3a47",
+    "company-c-94d4086e1a0103efd4f188fb",
+    "company-c-8f303a46ca0b58ad9b92f2dc",
+    "company-c-1acb9ad832e3c9601c261232",
+    "company-c-24804a5795278528b5d75b29",
+    "company-c-689772b89aab41bbd9e19350",
+    "company-c-a98d7fa3a07ef6977ebce044",
+    "company-c-c0730ee86247aff52511dd01",
+    "company-c-c0fc9f2254b81d343b42dd4a",
+    "company-c-10e57271380531ec3cb9b8c0",
+    "company-c-22a42fa6b8a8f101ffa3bb25",
+    "company-c-30dd7558ba9a46511e77a711",
+    "company-c-33ff9899598579afb361c2bb",
+    "company-c-39e10dfa777415100ddb9c66",
+    "company-c-3a2cd364d238142c5304d410",
+    "company-c-3edba6e861cced21980680fd",
+    "company-c-5e4963a54d01b234aab8025e",
+    "company-c-86e620686ecf4ce9db876d01",
+    "company-c-877827059543f86e22bc9c90",
+    "company-c-8a73107321ed8412f308d14b",
+    "company-c-92df9a614607ee1d9ae3de76",
+    "company-c-99b47f6ae4fd9f6e45e157a3",
+    "company-c-9fa75ed1f5ebb759f184785f",
+    "company-c-a9952a1968867eee39ebaa57",
+    "company-c-b8dfec9fcf1256f472cb553c",
+    "company-c-c441ae7fb2de0e9f90b809c7",
+    "company-c-c718e78355cf2b4fd785647a",
+    "company-c-cea55d3ae6dcfbbcc40eef38",
+    "company-c-d54d20cb4334d53188ba8106",
+    "company-c-d9d5eb7f7a16ecb61488d507",
+    "company-c-e4749a03a5ff4b6768e5afe1",
+    "company-c-fb0a68010434c66239d8c33d"
+  ],
+  "fused_candidate_count": 75,
+  "evidence_item_count": 100,
+  "final_answer_text": "LATENCY-HARNESS-PROSE-STUB"
+}

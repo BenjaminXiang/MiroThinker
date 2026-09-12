@@ -1,0 +1,991 @@
+{
+  "session_id": "session:chat:Tsu51ASyvqXM03-2J81ncUGaekH0ECNR",
+  "turn_id": "turn:chat:sha256:42705e1d4c3e929e36277aec08c5e0c3e4c5468aa5e55cd4037c2980e00729cd",
+  "turn_count": 1,
+  "query": "深圳有哪些做激光雷达的公司",
+  "planned_displayed_ids": [],
+  "recalled_handles": [
+    {
+      "id": "company-c-50ec137e4b3cfa13b71352f7",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市砝石激光雷达有限公司"
+    },
+    {
+      "id": "web-handle:sha256:fd91e673dba4653cc1186514753c3e7b0d61bfaeed83d8535fe27c49b3777f49",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "激光雷达深圳市同创机电一体化技术有限公司"
+    },
+    {
+      "id": "company-c-761fd6f6346d68cdd4773b07",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳煜炜光学科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:4a6fc574224f2e98a8bc1ef04619aae4c8fb143252a18ecd365b4d6e5468546c",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "企业介绍-深圳市镭神智能系统有限公司"
+    },
+    {
+      "id": "company-c-983a4f1d26eaab6e3e416f24",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳前海创壹科技发展有限公司"
+    },
+    {
+      "id": "web-handle:sha256:1310e811aeba1e76e385aaee3fee66b11b798399e7512babd93d0a46bf2e586d",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "激光雷达厂商介绍：锐驰激光（深圳）有限公司"
+    },
+    {
+      "id": "company-c-cf804fc33da16ed8b0526ac7",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市不止技术有限公司"
+    },
+    {
+      "id": "web-handle:sha256:cd9f00f33a67591701b60bcdcb700e8d966662e34b93809257cce2b90c62fa5b",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "RoboSense - 激光雷达解决方案 - OXTS"
+    },
+    {
+      "id": "company-c-f726553f3c6147c661361392",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市镭神智能系统有限公司"
+    },
+    {
+      "id": "web-handle:sha256:a355293b06e5a19294733fcd97caa2de20855e9c5be61f61ae5d07e0e9c1101d",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "深圳有没有专业的机载激光雷达高光谱成像系统生产厂家?-莱森光学(深圳)有限公司"
+    },
+    {
+      "id": "company-c-98c3f5b23e6d7f281837480b",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "阜时科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:2e31e640235933dcc576a15c35b89e1452cd3f42cae75f9792b7d34aa4642979",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "2025年中国激光雷达产业十大创新企业：禾赛科技、速腾聚创 - 财联社"
+    },
+    {
+      "id": "company-c-c84c343748766dd8fedc4f0c",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市易恬技术有限公司"
+    },
+    {
+      "id": "web-handle:sha256:d6c5585d1711576a0b45f8bdc1075c15d0ab9d3ac477b5044b0550ddc5549fd2",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "深圳有哪些企业可以提供机载激光雷达高光谱成像系统?-莱森光学(深圳)有限公司"
+    },
+    {
+      "id": "company-c-6f2c9322ee41648faf556f6b",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市机智人科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:965e6074f829eab6887b44063588f51e6046990b3a105bc156b70eef0db9a21a",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "深圳市镭神智能系统有限公司 - 百度百科"
+    },
+    {
+      "id": "company-c-18f7aa2c80b3537125ac0366",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳玩智商科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:86148a426ab91389ffa30d725608053f7c5da7b8d51afde523b17ffdeb07cf09",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "深圳激光雷达商家 服务为先 深圳市威睿晶科电子供应-产品818商贸网"
+    },
+    {
+      "id": "company-c-f36c33e01f9465ce70eec7ef",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳博升光电科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:1f2a601ab2857cf64d6ee86a8d08b80756024c763eca7b798f773fddcade2221",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "激光雷达-激光雷达价格/厂家/批发-深圳市云创传感科技有限公司"
+    },
+    {
+      "id": "company-c-d9817394e2d0f4e8e3ad65ca",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市览沃科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:b6780cd21017b40d6a86f31cfbb0f598e10c68a26c3ba9286a946a82ac5277a1",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "镭神智能-全场景激光雷达及行业解决方案"
+    },
+    {
+      "id": "company-c-c0148d5b0736647a3fe5be6f",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市速腾聚创科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:4f39e0d75e0bff48ab794a52a55ecbc5eaa8e958d12b32e498bfacd8bf2eee75",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "深圳激光雷达批发价格「上海市和控信息科技供应」 - 深圳-8684网"
+    },
+    {
+      "id": "company-c-fdfb0fba09cf62b3baee1a78",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市大族锐波传感科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:13baae9617f0cc345fe148125c1d73c41b3df489b00610f96cdc796e189de8c7",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "速腾聚创 - 城市交通与物流学院- 深圳技术大学"
+    },
+    {
+      "id": "company-c-ce6d0a6957be2108a183c553",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳源国光子通信有限公司"
+    },
+    {
+      "id": "web-handle:sha256:2bc1eac6f504b5d624f9db93f5ea43449f4e8634fc4ba15016ab8875ecab4f42",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "激光雷达厂商介绍：锐驰激光（深圳）有限公司"
+    },
+    {
+      "id": "company-c-39cddf3d32137b0fbb048952",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳雅果智能科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:a130e3f8b5a8933e8b26412d3615cfe3f9be646844b3de43caf5ca32e616ceae",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "深圳激光公司排名（名录） - 职友集"
+    },
+    {
+      "id": "company-c-00ba9b5629194555ede88958",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市知芯科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:0682e4cbdab282445a7c41149b2c08678be8c1075906e3582d5711f03764d812",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "深圳激光雷达哪家好 欢迎来电 深圳市威睿晶科电子供应-产品818商贸网"
+    },
+    {
+      "id": "company-c-33b788e5a31fc9fa8c418bf3",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳力策科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:b28ee4965affdd6aebb1939d29096945d509029c37e13789687a9ee4110c239b",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "深圳市速腾聚创科技有限公司 - 百度百科"
+    },
+    {
+      "id": "company-c-eae2263f3c87a7487b07a851",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳九方芯片科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:83496c654cafb4473ee23051656d190d35174a03000f3c615c05ef8423cc7c49",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "深圳市镭神智能系统有限公司-J"
+    },
+    {
+      "id": "company-c-8711fa68f5fec97b6b1644b7",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市志奋领科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:5aba5ec9e9b3cc1916598fea96d55eed937ba11a795d38c88030e42d4b5477f2",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "76家国产激光雷达公司盘点"
+    },
+    {
+      "id": "company-c-98178178f84356adb0e5b6d2",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市中科鸥鹏智能科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:f3fddb4fe364ca42762a2a9c6ec089a0876f37408008d4d696507a37f4d3f699",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "广东某激光雷达项目|投融界"
+    },
+    {
+      "id": "company-c-6b4a30f3b15538b087962786",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳易创电子科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:5dd49f83d4c0cdc5b3354d374c5cff5a5fa16f16d1c5190229ef20046cea894b",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "公司简介-YDLIDAR专注于激光雷达传感器解决方案"
+    },
+    {
+      "id": "company-c-ef34bdd624b3a57c0eab4486",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳云图智联技术有限公司"
+    },
+    {
+      "id": "web-handle:sha256:4639482c7a1a1ea1d8213f6cb98a2849fab2e69aab673f406fee00ca74ea5463",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "深圳市砝石激光雷达有限公司 激光雷达_激光_电气电子 __图页网"
+    },
+    {
+      "id": "company-c-77cef7a9c3079c7d4905795f",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳创智芯联科技股份有限公司"
+    },
+    {
+      "id": "web-handle:sha256:5a93f3ff4274645959de8c7eac2215334059361ff433736d18b6694eecfeb00b",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "深圳市工业和信息化局关于公示深圳市先进级智能工厂（2026年第一 ..."
+    },
+    {
+      "id": "company-c-ce6230f12b184b6f773ad531",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "瑞知（深圳）科技有限责任公司"
+    },
+    {
+      "id": "web-handle:sha256:a2a87f9e57eccc2b35c017516048800a1a2816b207304f513a1958549add53ae",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "「深圳测绘」深圳测绘公司黄页 - 顺企网"
+    },
+    {
+      "id": "company-c-810b713f4b6dc892cef8e79a",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市益鸿智能科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:655be75e3403380a1531fb02e38487602b2b19ab792db91c476ec9c0f9d128f4",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "激光雷达_企业查询256家_经营范围-企查猫(企业查询宝)"
+    },
+    {
+      "id": "company-c-41b3650769281391a63c521b",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市三亚微科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:1ef8489bfaabe0d5e6d369cfd0c7e0aa077cf4c66b76535c6b495302bca37a48",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "行业资讯-深圳市镭神智能系统有限公司"
+    },
+    {
+      "id": "company-c-f21210f22611d7e76d002f8f",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "奇历士技术（深圳）有限公司"
+    },
+    {
+      "id": "web-handle:sha256:a0eee6efdabe0822ac199fc87eaa402fcad195d68a18514101d12647344c0641",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "行业资讯-深圳市镭神智能系统有限公司"
+    },
+    {
+      "id": "company-c-510c4d1c46b00940b7fa7136",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "真玫智能科技（深圳）有限公司"
+    },
+    {
+      "id": "web-handle:sha256:594eaebc528d6810b573182ad6a8e65bea7ed29f01c7e5d7547fc3108f0a531f",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "YDLIDAR专注于激光雷达传感器解决方案"
+    },
+    {
+      "id": "company-c-8c48f4580e1328f2023ce039",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳见炬科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:276d0c231b0b5bba4873cdf7f61a0d6e9dcbe8eaecb8c99abdf22be0c9798a76",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "工业AGV-深圳力策科技有限公司: 避障型激光雷达产品-ToF测距-无人 ..."
+    },
+    {
+      "id": "company-c-48769e94d034b3559982de53",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "微源光子（深圳）科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:22b647bb1af27b5db40ecac500e402ce1bc96b7235c1c17bafaec9b41c18a6e3",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "激光雷达 - 深圳市力和机电设备有限公司"
+    },
+    {
+      "id": "company-c-3ccbfbac934a18f4009be82a",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "海伯森技术（深圳）有限公司"
+    },
+    {
+      "id": "web-handle:sha256:f3b2f5c99e9752960433795275180f851dc9a78857ac477c46e1926c741f6144",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "深圳市镭神智能系统有限公司-镭神智能-全场景激光雷达及行业解决方案"
+    },
+    {
+      "id": "company-c-1e32a532b1089d24a794db06",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳瑞波光电子有限公司"
+    },
+    {
+      "id": "web-handle:sha256:01ae71d405de7945cddebc9d4e04c7ac44f0af4cbbf23456a9ed6b448431821d",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "12秒生产一台激光雷达,在深圳造出“首台(套)”......深圳企业用智造实现高质量发展激光雷达_新浪财经_新浪网"
+    },
+    {
+      "id": "company-c-9d369890e19a7019808da3e5",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳光秒传感科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:3209cd04a1b307220e41f37445ef23ca66fe38e444c59885abb59b2a90f326a9",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "宝安塑造智能网联汽车产业版图的底气 - 深圳政府在线"
+    },
+    {
+      "id": "company-c-be139eee9f63e66694f2d708",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "芯思杰技术（深圳）股份有限公司"
+    },
+    {
+      "id": "web-handle:sha256:b9973b25694abcf32bf7316aa56027412a1d12f4c7f655d35835dd961ec0959b",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "自动驾驶寒冬，中国知名激光雷达企业齐聚深圳，成绩单暖人心！ - 微迷"
+    },
+    {
+      "id": "company-c-377f7e1b4e42a8e02917a074",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市戴升智能科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:3d8696ea5354f1d25cd3a7add976fd8453b4a1402456a6a515295314169198b9",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "毫米波激光雷达商家 欢迎来电「深圳市威睿晶科电子供应」 - 8684网"
+    },
+    {
+      "id": "company-c-234b7e6ef20ce09805d213fa",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳瑞识智能科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:4b6c9241231e6db16556461d012b996746978a82940f110459ca5542e0ab401b",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "深圳市镭神智能系统有限公司 - 中国汽车工程学会"
+    },
+    {
+      "id": "company-c-956d61b5a1bfb48a3434505e",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市芯盛传感科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:e570e669a996743a6172c255327de413aa74e5f8ef0f9bafb38209e82f7aa098",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "市工业和信息化局关于深圳市2024年国家级制造业单项冠军企业新 ..."
+    },
+    {
+      "id": "company-c-b02bacb388a55172afe3eda3",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳大方智能科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:8c443955d766af159e6cf3ed13ef648627a40652e6dc447a6e2d240ef7c0a4b0",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "深圳市镭神智能系统有限公司-企业号-电子发烧友网,产品列表"
+    },
+    {
+      "id": "company-c-d57b853892d121ae0852a7ad",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳灵动芯光科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:02f38c97e753326b90c083b9febf42fb2b2aad87f37a4d002f94f69749642e51",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "深圳企业名录深圳公司库企业黄页企业大全第26页-机床商务网"
+    },
+    {
+      "id": "company-c-dc9b45aa391122a1c21cbf3d",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "睿思芯科（深圳）技术有限公司"
+    },
+    {
+      "id": "web-handle:sha256:05e6a854cbd9e18f68e9b425ba1288b96afb1968429ec63bfcdd02e421c5ab2f",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "CN108802761A - 用于激光雷达点云异常的方法和系统- Google Patents"
+    },
+    {
+      "id": "company-c-95f739ea66dc0ae3da42e2e6",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳浦华激光技术有限公司"
+    },
+    {
+      "id": "web-handle:sha256:e9a0eee2bf45a718f58069b701ef0a3ee0fe4216b1f696851d40cd209417f1a0",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "【深圳激光器公司黄页_深圳激光器厂家大全】_顺企网"
+    },
+    {
+      "id": "company-c-60d5e0ff8198f7115762c3a1",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "优鹰智能科技（深圳）有限公司"
+    },
+    {
+      "id": "web-handle:sha256:488a97148893e834d59ab4e6a3c03f730b65453ff176b6b4be25d92c2b577f29",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "自动驾驶寒冬，中国知名激光雷达企业齐聚深圳，成绩单暖人心！ - 搜狐"
+    },
+    {
+      "id": "company-c-0c9b8b44de38e0cd8bcb4a03",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "灵矽微电子（深圳）有限责任公司"
+    },
+    {
+      "id": "web-handle:sha256:946059ff03ec8820279b8f2eefc1a1d2d48e939853ee2bd6130b32c88f6519dc",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "深圳激光雷达企业加速驶入发展“快车道”-行业资讯"
+    },
+    {
+      "id": "company-c-4e9006fcef5d1733be8cc461",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市灵明光子科技有限公司"
+    },
+    {
+      "id": "company-c-53b44fa9dd8375331a26d97e",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "旋智科技（深圳）有限公司"
+    },
+    {
+      "id": "company-c-664d99d54d268b0c612c7a9b",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市艾瑞机器视觉技术有限公司"
+    },
+    {
+      "id": "company-c-39f68eca8cee8ae25c03df2d",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "芯峰光电技术（深圳）有限公司"
+    },
+    {
+      "id": "company-c-0d9e5fe3b36edd23450d8603",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳新亮智能技术有限公司"
+    },
+    {
+      "id": "company-c-0e2efd02957aebdd48eef166",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市中科光芯半导体科技有限公司"
+    },
+    {
+      "id": "company-c-e514bb3b79e62e210319f343",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳罗伯泰克科技有限公司"
+    },
+    {
+      "id": "company-c-edefecef6edea9ff79cc64af",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳越登智能技术有限公司"
+    },
+    {
+      "id": "company-c-3a48342498d04c0812895c7b",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳奥锐达科技有限公司"
+    },
+    {
+      "id": "company-c-2efc20e97b5a9d49a8c1e850",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "晶华智能感知技术（深圳）有限公司"
+    },
+    {
+      "id": "company-c-7b385f8c4cd7147e83d152cf",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市智意科技有限公司"
+    },
+    {
+      "id": "company-c-9322035fd56db0012f6462aa",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市兆广安科技有限公司"
+    },
+    {
+      "id": "company-c-7f0a443085e5fa3d96576c45",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "微见智能封装技术（深圳）有限公司"
+    },
+    {
+      "id": "company-c-028f67ab17b1370ffa5a1c92",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市杰士安电子科技有限公司"
+    },
+    {
+      "id": "company-c-321e7b06906446b91f9eb4c7",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳北极芯微电子有限公司"
+    },
+    {
+      "id": "company-c-eb9fdb335e1acc5e8e03e386",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市恒先科技有限公司"
+    },
+    {
+      "id": "company-c-7ed2a1d517e9fea744903d09",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市迈测科技股份有限公司"
+    },
+    {
+      "id": "company-c-6e970be6f8fd921f35e6d65e",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市天陆海导航设备技术有限责任公司"
+    },
+    {
+      "id": "company-c-5723f6875c847545125c5636",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市大象机器人科技有限公司"
+    },
+    {
+      "id": "company-c-b833b14d2d9d4adbd38d427e",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "橙子运力（深圳）科技有限公司"
+    },
+    {
+      "id": "company-c-893dc377e23e9f7e87723b78",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "心鉴智控（深圳）科技有限公司"
+    },
+    {
+      "id": "company-c-998326ba60f7aef96d7d35e5",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市超联讯技术有限公司"
+    },
+    {
+      "id": "company-c-45ff4b70f56fce67d3dfd25a",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳宜思智能科技有限公司"
+    },
+    {
+      "id": "company-c-618a5a463b297a9bf99579ff",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳明匠智能系统有限公司"
+    },
+    {
+      "id": "company-c-5628d94000545cc210acf9e4",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市卓驭科技有限公司"
+    },
+    {
+      "id": "company-c-66dadbd906b7115a14d4af55",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市无穹创新科技有限公司"
+    },
+    {
+      "id": "company-c-c50b8e290640a8825faf2c94",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市广懋创新科技有限公司"
+    },
+    {
+      "id": "company-c-36b77b46d9ff45b9c96a0668",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "华鹏飞股份有限公司"
+    },
+    {
+      "id": "company-c-82def58805c5034734d74b59",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市全颂微波雷达传感器科技有限公司"
+    },
+    {
+      "id": "company-c-7658e2fa454465ac47a169cb",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市骏之源电子有限公司"
+    },
+    {
+      "id": "company-c-520f17d22a0b3a280517152a",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市兰星科技有限公司"
+    },
+    {
+      "id": "company-c-a5c05d7857c3f8cb6a515f1c",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市紫光同创电子股份有限公司"
+    },
+    {
+      "id": "company-c-2edd2cfa8ee1d731f474aa94",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "广东鹏行智能有限公司"
+    },
+    {
+      "id": "company-c-f9877c8b3e0568ba5e0b7014",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市恒创亿科技有限公司"
+    },
+    {
+      "id": "company-c-9ba65534018d0cb5b1c830aa",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳数智慧科技有限公司"
+    },
+    {
+      "id": "company-c-1dc16702e85e8f8c209fff94",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳隆庆智能激光科技有限公司"
+    },
+    {
+      "id": "company-c-c074e2c2396515944e958f6f",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳门庭科技有限公司"
+    },
+    {
+      "id": "company-c-d1dbed8295cc1d46284b954d",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "德龙艺彩（深圳）科技有限公司"
+    },
+    {
+      "id": "company-c-26340e429e2c94d2bb89f51a",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳承泰科技股份有限公司"
+    },
+    {
+      "id": "company-c-1c7257ffe1fd3a1811d285ca",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市瑞众科技有限公司"
+    },
+    {
+      "id": "company-c-9aa9673646950f789103d574",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市大德激光技术有限公司"
+    },
+    {
+      "id": "company-c-ee934be81f102ca5219a18d7",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市联赢激光股份有限公司"
+    }
+  ],
+  "committed_handle_ids": [
+    "company-c-50ec137e4b3cfa13b71352f7",
+    "web-handle:sha256:4a6fc574224f2e98a8bc1ef04619aae4c8fb143252a18ecd365b4d6e5468546c",
+    "company-c-761fd6f6346d68cdd4773b07",
+    "web-handle:sha256:1310e811aeba1e76e385aaee3fee66b11b798399e7512babd93d0a46bf2e586d",
+    "web-handle:sha256:cd9f00f33a67591701b60bcdcb700e8d966662e34b93809257cce2b90c62fa5b",
+    "company-c-cf804fc33da16ed8b0526ac7",
+    "web-handle:sha256:965e6074f829eab6887b44063588f51e6046990b3a105bc156b70eef0db9a21a",
+    "company-c-f726553f3c6147c661361392",
+    "web-handle:sha256:b6780cd21017b40d6a86f31cfbb0f598e10c68a26c3ba9286a946a82ac5277a1",
+    "company-c-c84c343748766dd8fedc4f0c",
+    "web-handle:sha256:13baae9617f0cc345fe148125c1d73c41b3df489b00610f96cdc796e189de8c7",
+    "company-c-6f2c9322ee41648faf556f6b",
+    "company-c-18f7aa2c80b3537125ac0366",
+    "web-handle:sha256:b28ee4965affdd6aebb1939d29096945d509029c37e13789687a9ee4110c239b",
+    "web-handle:sha256:83496c654cafb4473ee23051656d190d35174a03000f3c615c05ef8423cc7c49",
+    "company-c-d9817394e2d0f4e8e3ad65ca",
+    "web-handle:sha256:f3fddb4fe364ca42762a2a9c6ec089a0876f37408008d4d696507a37f4d3f699",
+    "company-c-c0148d5b0736647a3fe5be6f",
+    "web-handle:sha256:4639482c7a1a1ea1d8213f6cb98a2849fab2e69aab673f406fee00ca74ea5463",
+    "company-c-fdfb0fba09cf62b3baee1a78",
+    "company-c-00ba9b5629194555ede88958",
+    "company-c-33b788e5a31fc9fa8c418bf3",
+    "company-c-8711fa68f5fec97b6b1644b7",
+    "company-c-48769e94d034b3559982de53",
+    "company-c-3ccbfbac934a18f4009be82a",
+    "company-c-1e32a532b1089d24a794db06",
+    "company-c-983a4f1d26eaab6e3e416f24",
+    "company-c-98c3f5b23e6d7f281837480b",
+    "company-c-f36c33e01f9465ce70eec7ef",
+    "company-c-ce6d0a6957be2108a183c553",
+    "company-c-39cddf3d32137b0fbb048952",
+    "company-c-eae2263f3c87a7487b07a851",
+    "web-handle:sha256:f3b2f5c99e9752960433795275180f851dc9a78857ac477c46e1926c741f6144",
+    "company-c-98178178f84356adb0e5b6d2",
+    "company-c-6b4a30f3b15538b087962786",
+    "company-c-ef34bdd624b3a57c0eab4486",
+    "company-c-77cef7a9c3079c7d4905795f",
+    "company-c-ce6230f12b184b6f773ad531",
+    "company-c-810b713f4b6dc892cef8e79a",
+    "company-c-41b3650769281391a63c521b",
+    "company-c-f21210f22611d7e76d002f8f",
+    "company-c-510c4d1c46b00940b7fa7136",
+    "company-c-8c48f4580e1328f2023ce039",
+    "company-c-9d369890e19a7019808da3e5",
+    "company-c-be139eee9f63e66694f2d708",
+    "company-c-377f7e1b4e42a8e02917a074",
+    "company-c-234b7e6ef20ce09805d213fa",
+    "company-c-956d61b5a1bfb48a3434505e",
+    "company-c-b02bacb388a55172afe3eda3",
+    "company-c-d57b853892d121ae0852a7ad",
+    "company-c-dc9b45aa391122a1c21cbf3d",
+    "company-c-95f739ea66dc0ae3da42e2e6",
+    "company-c-60d5e0ff8198f7115762c3a1",
+    "company-c-0c9b8b44de38e0cd8bcb4a03",
+    "company-c-4e9006fcef5d1733be8cc461",
+    "company-c-53b44fa9dd8375331a26d97e",
+    "company-c-664d99d54d268b0c612c7a9b",
+    "company-c-39f68eca8cee8ae25c03df2d",
+    "company-c-0d9e5fe3b36edd23450d8603",
+    "company-c-0e2efd02957aebdd48eef166",
+    "company-c-e514bb3b79e62e210319f343",
+    "company-c-edefecef6edea9ff79cc64af",
+    "company-c-3a48342498d04c0812895c7b",
+    "company-c-2efc20e97b5a9d49a8c1e850",
+    "company-c-7b385f8c4cd7147e83d152cf",
+    "company-c-9322035fd56db0012f6462aa",
+    "company-c-7f0a443085e5fa3d96576c45",
+    "company-c-028f67ab17b1370ffa5a1c92",
+    "company-c-321e7b06906446b91f9eb4c7",
+    "company-c-eb9fdb335e1acc5e8e03e386",
+    "company-c-7ed2a1d517e9fea744903d09",
+    "company-c-6e970be6f8fd921f35e6d65e",
+    "company-c-5723f6875c847545125c5636",
+    "company-c-b833b14d2d9d4adbd38d427e",
+    "company-c-893dc377e23e9f7e87723b78",
+    "company-c-998326ba60f7aef96d7d35e5",
+    "company-c-45ff4b70f56fce67d3dfd25a",
+    "company-c-618a5a463b297a9bf99579ff",
+    "company-c-5628d94000545cc210acf9e4",
+    "company-c-66dadbd906b7115a14d4af55",
+    "company-c-c50b8e290640a8825faf2c94",
+    "company-c-36b77b46d9ff45b9c96a0668",
+    "company-c-82def58805c5034734d74b59",
+    "company-c-7658e2fa454465ac47a169cb",
+    "company-c-520f17d22a0b3a280517152a",
+    "company-c-a5c05d7857c3f8cb6a515f1c",
+    "company-c-2edd2cfa8ee1d731f474aa94",
+    "company-c-f9877c8b3e0568ba5e0b7014",
+    "company-c-9ba65534018d0cb5b1c830aa",
+    "company-c-1dc16702e85e8f8c209fff94",
+    "company-c-c074e2c2396515944e958f6f",
+    "company-c-d1dbed8295cc1d46284b954d",
+    "company-c-26340e429e2c94d2bb89f51a"
+  ],
+  "committed_names": [
+    "深圳市砝石激光雷达有限公司",
+    "企业介绍-深圳市镭神智能系统有限公司",
+    "深圳煜炜光学科技有限公司",
+    "激光雷达厂商介绍：锐驰激光（深圳）有限公司",
+    "RoboSense - 激光雷达解决方案 - OXTS",
+    "深圳市不止技术有限公司",
+    "深圳市镭神智能系统有限公司 - 百度百科",
+    "深圳市镭神智能系统有限公司",
+    "镭神智能-全场景激光雷达及行业解决方案",
+    "深圳市易恬技术有限公司",
+    "速腾聚创 - 城市交通与物流学院- 深圳技术大学",
+    "深圳市机智人科技有限公司",
+    "深圳玩智商科技有限公司",
+    "深圳市速腾聚创科技有限公司 - 百度百科",
+    "深圳市镭神智能系统有限公司-J",
+    "深圳市览沃科技有限公司",
+    "广东某激光雷达项目|投融界",
+    "深圳市速腾聚创科技有限公司",
+    "深圳市砝石激光雷达有限公司 激光雷达_激光_电气电子 __图页网",
+    "深圳市大族锐波传感科技有限公司",
+    "深圳市知芯科技有限公司",
+    "深圳力策科技有限公司",
+    "深圳市志奋领科技有限公司",
+    "微源光子（深圳）科技有限公司",
+    "海伯森技术（深圳）有限公司",
+    "深圳瑞波光电子有限公司",
+    "深圳前海创壹科技发展有限公司",
+    "阜时科技有限公司",
+    "深圳博升光电科技有限公司",
+    "深圳源国光子通信有限公司",
+    "深圳雅果智能科技有限公司",
+    "深圳九方芯片科技有限公司",
+    "深圳市镭神智能系统有限公司-镭神智能-全场景激光雷达及行业解决方案",
+    "深圳市中科鸥鹏智能科技有限公司",
+    "深圳易创电子科技有限公司",
+    "深圳云图智联技术有限公司",
+    "深圳创智芯联科技股份有限公司",
+    "瑞知（深圳）科技有限责任公司",
+    "深圳市益鸿智能科技有限公司",
+    "深圳市三亚微科技有限公司",
+    "奇历士技术（深圳）有限公司",
+    "真玫智能科技（深圳）有限公司",
+    "深圳见炬科技有限公司",
+    "深圳光秒传感科技有限公司",
+    "芯思杰技术（深圳）股份有限公司",
+    "深圳市戴升智能科技有限公司",
+    "深圳瑞识智能科技有限公司",
+    "深圳市芯盛传感科技有限公司",
+    "深圳大方智能科技有限公司",
+    "深圳灵动芯光科技有限公司",
+    "睿思芯科（深圳）技术有限公司",
+    "深圳浦华激光技术有限公司",
+    "优鹰智能科技（深圳）有限公司",
+    "灵矽微电子（深圳）有限责任公司",
+    "深圳市灵明光子科技有限公司",
+    "旋智科技（深圳）有限公司",
+    "深圳市艾瑞机器视觉技术有限公司",
+    "芯峰光电技术（深圳）有限公司",
+    "深圳新亮智能技术有限公司",
+    "深圳市中科光芯半导体科技有限公司",
+    "深圳罗伯泰克科技有限公司",
+    "深圳越登智能技术有限公司",
+    "深圳奥锐达科技有限公司",
+    "晶华智能感知技术（深圳）有限公司",
+    "深圳市智意科技有限公司",
+    "深圳市兆广安科技有限公司",
+    "微见智能封装技术（深圳）有限公司",
+    "深圳市杰士安电子科技有限公司",
+    "深圳北极芯微电子有限公司",
+    "深圳市恒先科技有限公司",
+    "深圳市迈测科技股份有限公司",
+    "深圳市天陆海导航设备技术有限责任公司",
+    "深圳市大象机器人科技有限公司",
+    "橙子运力（深圳）科技有限公司",
+    "心鉴智控（深圳）科技有限公司",
+    "深圳市超联讯技术有限公司",
+    "深圳宜思智能科技有限公司",
+    "深圳明匠智能系统有限公司",
+    "深圳市卓驭科技有限公司",
+    "深圳市无穹创新科技有限公司",
+    "深圳市广懋创新科技有限公司",
+    "华鹏飞股份有限公司",
+    "深圳市全颂微波雷达传感器科技有限公司",
+    "深圳市骏之源电子有限公司",
+    "深圳市兰星科技有限公司",
+    "深圳市紫光同创电子股份有限公司",
+    "广东鹏行智能有限公司",
+    "深圳市恒创亿科技有限公司",
+    "深圳数智慧科技有限公司",
+    "深圳隆庆智能激光科技有限公司",
+    "深圳门庭科技有限公司",
+    "德龙艺彩（深圳）科技有限公司",
+    "深圳承泰科技股份有限公司"
+  ],
+  "render_mode": "prose_renderer",
+  "answer_chars": 3363,
+  "lane_timings": [
+    [
+      "structured",
+      0.0
+    ],
+    [
+      "exact",
+      0.327
+    ],
+    [
+      "lexical",
+      9.408
+    ],
+    [
+      "web",
+      9.49
+    ],
+    [
+      "vector",
+      10.77
+    ]
+  ]
+}

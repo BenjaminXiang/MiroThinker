@@ -1,0 +1,489 @@
+{
+  "turn": "pcb-t2",
+  "query": "上述企业有哪些是深圳的企业",
+  "handle_count": 32,
+  "handles": [
+    {
+      "display_name": "深圳天创无限科技有限公司",
+      "domain": "company",
+      "kind": "canonical",
+      "public_id": "company-c-02252b9ce34058d58e7a1a9d"
+    },
+    {
+      "display_name": "深圳市嘉之宏电子有限公司",
+      "domain": "company",
+      "kind": "canonical",
+      "public_id": "company-c-3e4ec19778fe5fb244026aaf"
+    },
+    {
+      "display_name": "深圳市驭鹰者电子有限公司",
+      "domain": "company",
+      "kind": "canonical",
+      "public_id": "company-c-689772b89aab41bbd9e19350"
+    },
+    {
+      "display_name": "百芯智能制造科技（深圳）有限公司",
+      "domain": "company",
+      "kind": "canonical",
+      "public_id": "company-c-826cf9e0de6f78a189fc1cb4"
+    },
+    {
+      "display_name": "深圳赛维创新技术集团有限公司",
+      "domain": "company",
+      "kind": "canonical",
+      "public_id": "company-c-9e7a0bec8c96079e1af8c153"
+    },
+    {
+      "display_name": "深圳顺易捷科技有限公司",
+      "domain": "company",
+      "kind": "canonical",
+      "public_id": "company-c-9fa75ed1f5ebb759f184785f"
+    },
+    {
+      "display_name": "深圳市精诚达电路科技股份有限公司",
+      "domain": "company",
+      "kind": "canonical",
+      "public_id": "company-c-ca080dd9fe8481ea2cc0124e"
+    },
+    {
+      "display_name": "崇达技术股份有限公司",
+      "domain": "company",
+      "kind": "canonical",
+      "public_id": "company-c-f2a28c076912f5900db5e0c1"
+    },
+    {
+      "display_name": "深圳市升达康科技有限公司",
+      "domain": "company",
+      "kind": "canonical",
+      "public_id": "company-c-10e57271380531ec3cb9b8c0"
+    },
+    {
+      "display_name": "深圳市尊大电子科技有限公司",
+      "domain": "company",
+      "kind": "canonical",
+      "public_id": "company-c-20d3fb76a4d44e2e699be7b8"
+    },
+    {
+      "display_name": "深圳市亿科迈科技有限公司",
+      "domain": "company",
+      "kind": "canonical",
+      "public_id": "company-c-22a42fa6b8a8f101ffa3bb25"
+    },
+    {
+      "display_name": "深圳市声雄电子有限公司",
+      "domain": "company",
+      "kind": "canonical",
+      "public_id": "company-c-30dd7558ba9a46511e77a711"
+    },
+    {
+      "display_name": "深圳市汇芯高新科技有限公司",
+      "domain": "company",
+      "kind": "canonical",
+      "public_id": "company-c-319529aff4ee62c17d78e595"
+    },
+    {
+      "display_name": "深圳市则成电子股份有限公司",
+      "domain": "company",
+      "kind": "canonical",
+      "public_id": "company-c-3c0fda1a299ff96771a6623c"
+    },
+    {
+      "display_name": "深圳市星河电路股份有限公司",
+      "domain": "company",
+      "kind": "canonical",
+      "public_id": "company-c-41199abc028a3e61815b5a6d"
+    },
+    {
+      "display_name": "深圳市特普生科技有限公司",
+      "domain": "company",
+      "kind": "canonical",
+      "public_id": "company-c-45fa21c596da8f0fd559cab8"
+    },
+    {
+      "display_name": "深圳市兴森快捷电路科技股份有限公司",
+      "domain": "company",
+      "kind": "canonical",
+      "public_id": "company-c-533ce24c40743279002d7c7d"
+    },
+    {
+      "display_name": "深圳市动力飞扬智能装备有限公司",
+      "domain": "company",
+      "kind": "canonical",
+      "public_id": "company-c-5e4963a54d01b234aab8025e"
+    },
+    {
+      "display_name": "诡谷子人工智能科技（深圳）有限公司",
+      "domain": "company",
+      "kind": "canonical",
+      "public_id": "company-c-710dfdbd349582000300b8c4"
+    },
+    {
+      "display_name": "上达电子（深圳）股份有限公司",
+      "domain": "company",
+      "kind": "canonical",
+      "public_id": "company-c-857343e40c92721eede820cd"
+    },
+    {
+      "display_name": "深圳市深华科电子有限公司",
+      "domain": "company",
+      "kind": "canonical",
+      "public_id": "company-c-86e620686ecf4ce9db876d01"
+    },
+    {
+      "display_name": "深圳市鑫盈通达电子科技有限公司",
+      "domain": "company",
+      "kind": "canonical",
+      "public_id": "company-c-87e4f7234ef76ad3bc6ac74c"
+    },
+    {
+      "display_name": "深圳市零壹八科技有限公司",
+      "domain": "company",
+      "kind": "canonical",
+      "public_id": "company-c-88e833b1c2d83b4359cce84c"
+    },
+    {
+      "display_name": "深圳市一博科技股份有限公司",
+      "domain": "company",
+      "kind": "canonical",
+      "public_id": "company-c-8f303a46ca0b58ad9b92f2dc"
+    },
+    {
+      "display_name": "深圳市鸿洋电路科技有限公司",
+      "domain": "company",
+      "kind": "canonical",
+      "public_id": "company-c-9063b87a6e5833a80d5bcc19"
+    },
+    {
+      "display_name": "深圳市中科领创实业有限公司",
+      "domain": "company",
+      "kind": "canonical",
+      "public_id": "company-c-907492318fee90a4684c10df"
+    },
+    {
+      "display_name": "深圳市赛晟科技有限公司",
+      "domain": "company",
+      "kind": "canonical",
+      "public_id": "company-c-92dccf619bc5c9370fb36cae"
+    },
+    {
+      "display_name": "深圳市盛矽电子科技有限公司",
+      "domain": "company",
+      "kind": "canonical",
+      "public_id": "company-c-a37e1427d172fa69250c8606"
+    },
+    {
+      "display_name": "深圳市赛尔博特软件有限公司",
+      "domain": "company",
+      "kind": "canonical",
+      "public_id": "company-c-a98d7fa3a07ef6977ebce044"
+    },
+    {
+      "display_name": "深圳市迈威科技有限公司",
+      "domain": "company",
+      "kind": "canonical",
+      "public_id": "company-c-b8dfec9fcf1256f472cb553c"
+    },
+    {
+      "display_name": "深圳市柳鑫实业股份有限公司",
+      "domain": "company",
+      "kind": "canonical",
+      "public_id": "company-c-caed13e7dccaf727244bc18c"
+    },
+    {
+      "display_name": "深圳和美精艺半导体科技股份有限公司",
+      "domain": "company",
+      "kind": "canonical",
+      "public_id": "company-c-fb384119e1ee128ef10fe969"
+    }
+  ],
+  "company_handles": [
+    "深圳天创无限科技有限公司",
+    "深圳市嘉之宏电子有限公司",
+    "深圳市驭鹰者电子有限公司",
+    "百芯智能制造科技（深圳）有限公司",
+    "深圳赛维创新技术集团有限公司",
+    "深圳顺易捷科技有限公司",
+    "深圳市精诚达电路科技股份有限公司",
+    "崇达技术股份有限公司",
+    "深圳市升达康科技有限公司",
+    "深圳市尊大电子科技有限公司",
+    "深圳市亿科迈科技有限公司",
+    "深圳市声雄电子有限公司",
+    "深圳市汇芯高新科技有限公司",
+    "深圳市则成电子股份有限公司",
+    "深圳市星河电路股份有限公司",
+    "深圳市特普生科技有限公司",
+    "深圳市兴森快捷电路科技股份有限公司",
+    "深圳市动力飞扬智能装备有限公司",
+    "诡谷子人工智能科技（深圳）有限公司",
+    "上达电子（深圳）股份有限公司",
+    "深圳市深华科电子有限公司",
+    "深圳市鑫盈通达电子科技有限公司",
+    "深圳市零壹八科技有限公司",
+    "深圳市一博科技股份有限公司",
+    "深圳市鸿洋电路科技有限公司",
+    "深圳市中科领创实业有限公司",
+    "深圳市赛晟科技有限公司",
+    "深圳市盛矽电子科技有限公司",
+    "深圳市赛尔博特软件有限公司",
+    "深圳市迈威科技有限公司",
+    "深圳市柳鑫实业股份有限公司",
+    "深圳和美精艺半导体科技股份有限公司"
+  ],
+  "mention_forms_by_company": {
+    "深圳天创无限科技有限公司": [
+      "深圳天创无限科技有限公司",
+      "深圳天创无限科技",
+      "深圳天创无限"
+    ],
+    "深圳市嘉之宏电子有限公司": [
+      "深圳市嘉之宏电子有限公司",
+      "深圳市嘉之宏电子",
+      "嘉之宏电子",
+      "嘉之宏"
+    ],
+    "深圳市驭鹰者电子有限公司": [
+      "深圳市驭鹰者电子有限公司",
+      "深圳市驭鹰者电子",
+      "驭鹰者电子",
+      "驭鹰者"
+    ],
+    "百芯智能制造科技（深圳）有限公司": [
+      "百芯智能制造科技（深圳）有限公司",
+      "百芯智能制造科技（深圳）",
+      "百芯"
+    ],
+    "深圳赛维创新技术集团有限公司": [
+      "深圳赛维创新技术集团有限公司",
+      "深圳赛维创新技术集团",
+      "深圳赛维创新"
+    ],
+    "深圳顺易捷科技有限公司": [
+      "深圳顺易捷科技有限公司",
+      "深圳顺易捷科技",
+      "深圳顺易捷"
+    ],
+    "深圳市精诚达电路科技股份有限公司": [
+      "深圳市精诚达电路科技股份有限公司",
+      "深圳市精诚达电路科技",
+      "精诚达电路科技",
+      "精诚达电路"
+    ],
+    "崇达技术股份有限公司": [
+      "崇达技术股份有限公司",
+      "崇达技术",
+      "崇达"
+    ],
+    "深圳市升达康科技有限公司": [
+      "深圳市升达康科技有限公司",
+      "深圳市升达康科技",
+      "升达康科技",
+      "升达康"
+    ],
+    "深圳市尊大电子科技有限公司": [
+      "深圳市尊大电子科技有限公司",
+      "深圳市尊大电子科技",
+      "尊大电子科技",
+      "尊大"
+    ],
+    "深圳市亿科迈科技有限公司": [
+      "深圳市亿科迈科技有限公司",
+      "深圳市亿科迈科技",
+      "亿科迈科技",
+      "亿科迈"
+    ],
+    "深圳市声雄电子有限公司": [
+      "深圳市声雄电子有限公司",
+      "深圳市声雄电子",
+      "声雄电子",
+      "声雄"
+    ],
+    "深圳市汇芯高新科技有限公司": [
+      "深圳市汇芯高新科技有限公司",
+      "深圳市汇芯高新科技",
+      "汇芯高新科技",
+      "汇芯高新"
+    ],
+    "深圳市则成电子股份有限公司": [
+      "深圳市则成电子股份有限公司",
+      "深圳市则成电子",
+      "则成电子",
+      "则成"
+    ],
+    "深圳市星河电路股份有限公司": [
+      "深圳市星河电路股份有限公司",
+      "深圳市星河电路",
+      "星河电路"
+    ],
+    "深圳市特普生科技有限公司": [
+      "深圳市特普生科技有限公司",
+      "深圳市特普生科技",
+      "特普生科技",
+      "特普生"
+    ],
+    "深圳市兴森快捷电路科技股份有限公司": [
+      "深圳市兴森快捷电路科技股份有限公司",
+      "深圳市兴森快捷电路科技",
+      "兴森快捷电路科技",
+      "兴森快捷电路"
+    ],
+    "深圳市动力飞扬智能装备有限公司": [
+      "深圳市动力飞扬智能装备有限公司",
+      "深圳市动力飞扬智能装备",
+      "动力飞扬智能装备",
+      "动力飞扬"
+    ],
+    "诡谷子人工智能科技（深圳）有限公司": [
+      "诡谷子人工智能科技（深圳）有限公司",
+      "诡谷子人工智能科技（深圳）",
+      "诡谷子人工"
+    ],
+    "上达电子（深圳）股份有限公司": [
+      "上达电子（深圳）股份有限公司",
+      "上达电子（深圳）",
+      "上达"
+    ],
+    "深圳市深华科电子有限公司": [
+      "深圳市深华科电子有限公司",
+      "深圳市深华科电子",
+      "深华科电子",
+      "深华科"
+    ],
+    "深圳市鑫盈通达电子科技有限公司": [
+      "深圳市鑫盈通达电子科技有限公司",
+      "深圳市鑫盈通达电子科技",
+      "鑫盈通达电子科技",
+      "鑫盈通达"
+    ],
+    "深圳市零壹八科技有限公司": [
+      "深圳市零壹八科技有限公司",
+      "深圳市零壹八科技",
+      "零壹八科技",
+      "零壹八"
+    ],
+    "深圳市一博科技股份有限公司": [
+      "深圳市一博科技股份有限公司",
+      "深圳市一博科技",
+      "一博科技",
+      "一博"
+    ],
+    "深圳市鸿洋电路科技有限公司": [
+      "深圳市鸿洋电路科技有限公司",
+      "深圳市鸿洋电路科技",
+      "鸿洋电路科技",
+      "鸿洋电路"
+    ],
+    "深圳市中科领创实业有限公司": [
+      "深圳市中科领创实业有限公司",
+      "深圳市中科领创实业",
+      "中科领创实业",
+      "中科领创"
+    ],
+    "深圳市赛晟科技有限公司": [
+      "深圳市赛晟科技有限公司",
+      "深圳市赛晟科技",
+      "赛晟科技",
+      "赛晟"
+    ],
+    "深圳市盛矽电子科技有限公司": [
+      "深圳市盛矽电子科技有限公司",
+      "深圳市盛矽电子科技",
+      "盛矽电子科技",
+      "盛矽"
+    ],
+    "深圳市赛尔博特软件有限公司": [
+      "深圳市赛尔博特软件有限公司",
+      "深圳市赛尔博特软件",
+      "赛尔博特软件"
+    ],
+    "深圳市迈威科技有限公司": [
+      "深圳市迈威科技有限公司",
+      "深圳市迈威科技",
+      "迈威科技",
+      "迈威"
+    ],
+    "深圳市柳鑫实业股份有限公司": [
+      "深圳市柳鑫实业股份有限公司",
+      "深圳市柳鑫实业",
+      "柳鑫实业",
+      "柳鑫"
+    ],
+    "深圳和美精艺半导体科技股份有限公司": [
+      "深圳和美精艺半导体科技股份有限公司",
+      "深圳和美精艺半导体科技",
+      "深圳和美精艺半导体"
+    ]
+  },
+  "mentioned_in_final_answer": [],
+  "unmentioned_companies": [
+    "深圳天创无限科技有限公司",
+    "深圳市嘉之宏电子有限公司",
+    "深圳市驭鹰者电子有限公司",
+    "百芯智能制造科技（深圳）有限公司",
+    "深圳赛维创新技术集团有限公司",
+    "深圳顺易捷科技有限公司",
+    "深圳市精诚达电路科技股份有限公司",
+    "崇达技术股份有限公司",
+    "深圳市升达康科技有限公司",
+    "深圳市尊大电子科技有限公司",
+    "深圳市亿科迈科技有限公司",
+    "深圳市声雄电子有限公司",
+    "深圳市汇芯高新科技有限公司",
+    "深圳市则成电子股份有限公司",
+    "深圳市星河电路股份有限公司",
+    "深圳市特普生科技有限公司",
+    "深圳市兴森快捷电路科技股份有限公司",
+    "深圳市动力飞扬智能装备有限公司",
+    "诡谷子人工智能科技（深圳）有限公司",
+    "上达电子（深圳）股份有限公司",
+    "深圳市深华科电子有限公司",
+    "深圳市鑫盈通达电子科技有限公司",
+    "深圳市零壹八科技有限公司",
+    "深圳市一博科技股份有限公司",
+    "深圳市鸿洋电路科技有限公司",
+    "深圳市中科领创实业有限公司",
+    "深圳市赛晟科技有限公司",
+    "深圳市盛矽电子科技有限公司",
+    "深圳市赛尔博特软件有限公司",
+    "深圳市迈威科技有限公司",
+    "深圳市柳鑫实业股份有限公司",
+    "深圳和美精艺半导体科技股份有限公司"
+  ],
+  "selection_displayed_handle_ids": [
+    "company-c-02252b9ce34058d58e7a1a9d",
+    "company-c-3e4ec19778fe5fb244026aaf",
+    "company-c-689772b89aab41bbd9e19350",
+    "company-c-826cf9e0de6f78a189fc1cb4",
+    "company-c-9e7a0bec8c96079e1af8c153",
+    "company-c-9fa75ed1f5ebb759f184785f",
+    "company-c-ca080dd9fe8481ea2cc0124e",
+    "company-c-f2a28c076912f5900db5e0c1",
+    "company-c-10e57271380531ec3cb9b8c0",
+    "company-c-20d3fb76a4d44e2e699be7b8",
+    "company-c-22a42fa6b8a8f101ffa3bb25",
+    "company-c-30dd7558ba9a46511e77a711",
+    "company-c-319529aff4ee62c17d78e595",
+    "company-c-3c0fda1a299ff96771a6623c",
+    "company-c-41199abc028a3e61815b5a6d",
+    "company-c-45fa21c596da8f0fd559cab8",
+    "company-c-533ce24c40743279002d7c7d",
+    "company-c-5e4963a54d01b234aab8025e",
+    "company-c-710dfdbd349582000300b8c4",
+    "company-c-857343e40c92721eede820cd",
+    "company-c-86e620686ecf4ce9db876d01",
+    "company-c-87e4f7234ef76ad3bc6ac74c",
+    "company-c-88e833b1c2d83b4359cce84c",
+    "company-c-8f303a46ca0b58ad9b92f2dc",
+    "company-c-9063b87a6e5833a80d5bcc19",
+    "company-c-907492318fee90a4684c10df",
+    "company-c-92dccf619bc5c9370fb36cae",
+    "company-c-a37e1427d172fa69250c8606",
+    "company-c-a98d7fa3a07ef6977ebce044",
+    "company-c-b8dfec9fcf1256f472cb553c",
+    "company-c-caed13e7dccaf727244bc18c",
+    "company-c-fb384119e1ee128ef10fe969"
+  ],
+  "fused_candidate_count": 32,
+  "evidence_item_count": 72,
+  "final_answer_text": "LATENCY-HARNESS-PROSE-STUB"
+}

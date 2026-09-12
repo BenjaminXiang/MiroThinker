@@ -1,0 +1,44 @@
+{
+  "session_id": "session:chat:oSHBNiDXGf36QfiyusSlAcoD_-VlbZgS",
+  "turn_id": "turn:chat:sha256:38a84f82e743b79fdcba3fd8e6324cb09200dd53246a5d3f1e3503ca33f2bf92",
+  "turn_count": 2,
+  "query": "他有哪些论文",
+  "planned_displayed_ids": [
+    "web-handle:sha256:52553903f1e818c5d9678fb96ffe3bb4b3e184a6be84712c7fb7fb013b8d13a3"
+  ],
+  "recalled_handles": [],
+  "committed_handle_ids": [
+    "web-handle:sha256:52553903f1e818c5d9678fb96ffe3bb4b3e184a6be84712c7fb7fb013b8d13a3",
+    "web-handle:sha256:dae0d3b8d1f2b55657fa7f91bdef701b5faacb7a241405c3bf4e162680ceb28a",
+    "web-handle:sha256:a878df95972f9264ef2a26b25d8d3ed283be0ad517c2d86a287b52241aa3363a"
+  ],
+  "committed_names": [
+    "香港城市大学深圳研究院",
+    "香港城市大学深圳研究院",
+    "深圳"
+  ],
+  "render_mode": "prose_renderer",
+  "answer_chars": 317,
+  "lane_timings": [
+    [
+      "lexical",
+      0.058
+    ],
+    [
+      "structured",
+      0.101
+    ],
+    [
+      "vector",
+      0.055
+    ],
+    [
+      "exact",
+      0.167
+    ],
+    [
+      "web",
+      6.741
+    ]
+  ]
+}

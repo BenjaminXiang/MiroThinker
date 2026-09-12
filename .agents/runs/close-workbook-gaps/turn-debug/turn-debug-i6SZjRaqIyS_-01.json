@@ -1,0 +1,93 @@
+{
+  "session_id": "session:chat:i6SZjRaqIyS_81nnFQLh45aHOatwxyoc",
+  "turn_id": "turn:chat:sha256:83bca20e2723dd411b77d44e3d161b9278e7017d8596ace5638c528e098690e7",
+  "turn_count": 1,
+  "query": "国际先进技术应用推进中心（深圳）",
+  "planned_displayed_ids": [],
+  "recalled_handles": [
+    {
+      "id": "company-c-c841e20d983b33640734ccfe",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳国际先进技术应用推进中心"
+    },
+    {
+      "id": "web-handle:sha256:6239e81437d46881b10ca092aefcc8a807b4381ee2aeea2fdd7a1705162c0f29",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "河套深圳园区打造深港科技创新聚集地"
+    },
+    {
+      "id": "web-handle:sha256:88317a3e7630ddb6aa2c71772337b7716a2c864ba66c2c4ccafb64c58383c476",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "河套数学与交叉学科研究院、国际先进技术应用推进中心（深圳）揭牌"
+    },
+    {
+      "id": "web-handle:sha256:ad5148d6fc70baeb7fd8c7b87ffe4c5dc93a7fb0b60ce67f70e43552a81a3a67",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "支持国际先进技术应用推进中心（深圳）建设具身智能技术试验场 ..."
+    },
+    {
+      "id": "web-handle:sha256:c06baaab912a366660831ae7ea8a9a39d3208cf2d0fae548fd87981ebfc446f2",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "建重大平台强核心攻关优产业生态深圳新质生产力加速迸发"
+    },
+    {
+      "id": "web-handle:sha256:0af4bddbbc03ca1fe932b72da0c4cd1c0e6618a35d81abf285d7c14f3cfd19b0",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "粤港澳大湾区数字经济研究院（国际先进技术应用推进中心（深圳））"
+    },
+    {
+      "id": "web-handle:sha256:52b2fc1682171eccbb44f7249d697d390a42351fee1611e7bbf71e38d95ae6bf",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "一河之隔，两岸潮涌——深港携手共建世界级“科研枢纽” - 香港中联办"
+    },
+    {
+      "id": "web-handle:sha256:4eb70e0d0743554c3c1c7a01c6b5ea6898e25dbae793b1e58bb8d3c8d0afe12f",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "光源资本携手国际先进技术应用推进中心（深圳） - QQ"
+    },
+    {
+      "id": "web-handle:sha256:ad74d54ce9e44cc496d2da56c10be5f7e01a697cacc7a5893d2f55fbd704171c",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "深圳：支持国际先进技术应用推进中心（深圳）建设具身智能 ... - 财联社"
+    }
+  ],
+  "committed_handle_ids": [
+    "company-c-c841e20d983b33640734ccfe"
+  ],
+  "committed_names": [
+    "深圳国际先进技术应用推进中心"
+  ],
+  "render_mode": "prose_renderer",
+  "answer_chars": 510,
+  "lane_timings": [
+    [
+      "structured",
+      0.0
+    ],
+    [
+      "exact",
+      1.721
+    ],
+    [
+      "lexical",
+      3.028
+    ],
+    [
+      "web",
+      3.448
+    ],
+    [
+      "vector",
+      19.428
+    ]
+  ]
+}

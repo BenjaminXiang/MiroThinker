@@ -1,0 +1,47 @@
+{
+  "session_id": "session:chat:gy_hTttzdK84W59I5ifv5AbQIG0NtxTC",
+  "turn_id": "turn:chat:sha256:f53cbf347d4882dad3f2a2669743351ef9a7b71619cd922049d36fae6a5654c6",
+  "turn_count": 2,
+  "query": "有没有更详细的信息",
+  "planned_displayed_ids": [
+    "company-c-c841e20d983b33640734ccfe"
+  ],
+  "recalled_handles": [
+    {
+      "id": "company-c-c841e20d983b33640734ccfe",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳国际先进技术应用推进中心"
+    }
+  ],
+  "committed_handle_ids": [
+    "company-c-c841e20d983b33640734ccfe"
+  ],
+  "committed_names": [
+    "深圳国际先进技术应用推进中心"
+  ],
+  "render_mode": "prose_renderer",
+  "answer_chars": 401,
+  "lane_timings": [
+    [
+      "structured",
+      0.188
+    ],
+    [
+      "exact",
+      0.229
+    ],
+    [
+      "lexical",
+      0.185
+    ],
+    [
+      "vector",
+      0.272
+    ],
+    [
+      "web",
+      7.032
+    ]
+  ]
+}

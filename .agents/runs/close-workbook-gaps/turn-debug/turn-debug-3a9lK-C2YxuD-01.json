@@ -1,0 +1,581 @@
+{
+  "session_id": "session:chat:3a9lK-C2YxuDhFwyFiSYtWGsguyMXXLj",
+  "turn_id": "turn:chat:sha256:b19d58f719788da8d701638f6719416bdb2955361a6b087f81566a9c771f6698",
+  "turn_count": 1,
+  "query": "深圳有哪些研究机器人的教授",
+  "planned_displayed_ids": [],
+  "recalled_handles": [
+    {
+      "id": "web-handle:sha256:e13f563ec78a6aaab0a27c1f09cd84f024692e55e0bd559fcc59069b6d5d9ac6",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "香港城市大学深圳研究院"
+    },
+    {
+      "id": "web-handle:sha256:bb6a86e3860c0e8732dfbe340dbbd3d83302428c79c94c9f3679877863b2cfb9",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "具身智能与机器人研究所 - 深圳大学人工智能学院"
+    },
+    {
+      "id": "web-handle:sha256:4b99f3dab132d4999e344f3397f5995409c7b4f095d44de7a40002bc7fcd5b17",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "香港城市大学深圳研究院"
+    },
+    {
+      "id": "web-handle:sha256:c09903e39e9275a8a5e213b9353f778a481a7e9109280bd86430c234ba4a548d",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "科研力量朱建 - 深圳市人工智能与机器人研究院"
+    },
+    {
+      "id": "web-handle:sha256:d1e87316ab7f420a1317203e98ac463294f946284a044d96a9007d24d0cc4f90",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "深圳大学计算机与软件学院"
+    },
+    {
+      "id": "web-handle:sha256:e9395d07e9211f886ee33787b9ce8727be2eb49611fe81fef4c47eed3fbaa855",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "南方科技大学机器人研究院"
+    },
+    {
+      "id": "web-handle:sha256:4e3cbcc8e419ef32c348599c6125c12dc2c5a207180eddf8220155bbfc7ebc1d",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "机器人与自动化国际研讨会在深举办_财经_中国网"
+    },
+    {
+      "id": "web-handle:sha256:737cbef2926e274ae9d0c3b767e7cd66c5dacc91ce53733264af668ed1790ca5",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "全职教师 - 哈工大（深圳）机器人与先进制造学院"
+    },
+    {
+      "id": "web-handle:sha256:45ee8fe7da4cf98b636b67f579fe58f97dc9e997ec986eae66be100510affc8b",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "人民网:深圳机器人产业年产值已突破千亿元大关----中国科学院深圳先进技术研究院"
+    },
+    {
+      "id": "web-handle:sha256:04257b9b4314b4b8e7c001837dd4f5011ae96dd45a115d9dd891b9abfd22f2dc",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "学术科研 - 清华大学深圳国际研究生院"
+    },
+    {
+      "id": "web-handle:sha256:5f71a1b94454fea1f7d4ad8a3efdd7080b2b2247fd7c1c9ffbf9cbfa742bd927",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "深圳"
+    },
+    {
+      "id": "web-handle:sha256:35846dbe84a4c1d3f841e24b4f221a96b7791fb7119f72c071e23af4f18c6c19",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "师资阵容 - 深圳市人工智能与机器人研究院"
+    },
+    {
+      "id": "web-handle:sha256:027887761b0e3da1a2685373221953977e335a462a6f4f3b5679ca3bd145464b",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "未来机器人(深圳)有限公司"
+    },
+    {
+      "id": "web-handle:sha256:a65f1ae8b5ef2ff59def3880f08acccff6a33e6d4b6e65880ff6bec4786c3729",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "清华大学深圳国际研究生院团队攻克了空间机器人总体设计等难题 ..."
+    },
+    {
+      "id": "web-handle:sha256:a7f631a7a63d76ad86f8b1ad8d93268b5b6b07673ae300c0d08c666b8c2b6679",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "专家齐聚湾区探讨产业未来,国家机器人发展论坛深圳举行-今日头条"
+    },
+    {
+      "id": "web-handle:sha256:fe1593158b95db02abc1cbf83085ad3567ae8a8d966fcafd1b2c893c3f830503",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "理事会 - 深圳市人工智能学会"
+    },
+    {
+      "id": "web-handle:sha256:0ff9086607dc2afe4d39bb2a61f39e3df4ab665ec03116900c316e44a57865da",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "机器人协同创新中心落户深圳_中国机器人网"
+    },
+    {
+      "id": "web-handle:sha256:efe3f42b44f348475b7fddec81ce3007f12266e809c68e95242cc35dcdec4bfd",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "硕士生导师-深圳大学人工智能学院"
+    },
+    {
+      "id": "web-handle:sha256:eb462f0f656d95995bcd4a44d323f4a242a9ed5455fd18b4808c6b3d04852345",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "深圳市机器人与智能制造工程实验室 | 香港中文大学(深圳)"
+    },
+    {
+      "id": "web-handle:sha256:298c539adb9756251aa63513efbfb08e7c55ffbb2881d42c3d104b2b9a889d69",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "罗兆杰 - 生物科学与医学工程学院- 东南大学"
+    },
+    {
+      "id": "web-handle:sha256:97e183954e74e9408f9137b40f7ece5e5d1e5ac4995f414e54d6d27156d0b182",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "2021国家机器人发展论坛在深圳召开"
+    },
+    {
+      "id": "web-handle:sha256:2ef39c081c6428a06d64b2831e5e4e49cc2192b893a8f9e90b0f8881b53a6edd",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "港中大（深圳）林天麟教授在模块化自重构机器人领域取得重大突破"
+    },
+    {
+      "id": "web-handle:sha256:a0130d8a82330fab5cec525a92e28e57428f8fd9d2b826395f94b9d3893a8192",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "深圳市智能机器人研究院"
+    },
+    {
+      "id": "web-handle:sha256:a64cfa00e4a463cad111c9acb8c4b502a6954392a119dfa856b6396ef8e95b1b",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "冯平法团队系统提出具身智能工业机器人框架与技术-清华大学"
+    },
+    {
+      "id": "web-handle:sha256:9b57631f12d59c5f2a552f5c40ece49db854366571206958f8057de67bad9676",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "Teacher Search | 香港中文大学(深圳)理工学院"
+    },
+    {
+      "id": "web-handle:sha256:f73666a13210b218748b2db116c593b29c7b6afec6a324df55f5a10823cb2c91",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "研究中心 - 深圳市人工智能与机器人研究院"
+    },
+    {
+      "id": "web-handle:sha256:367e53fd51cd947f09510becff943a4bf0a4870cbe22883525c4fb8a815eb0d9",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "深圳市机器人与自动化发展国际研讨会举办----中国科学院"
+    },
+    {
+      "id": "web-handle:sha256:eeef038edff4d925a47cdfdea53e3234d4759456ab5291e8d78ce24f0c0d3786",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "深圳造出了“机器人科学家” - 地方频道- 央视网"
+    },
+    {
+      "id": "web-handle:sha256:5f68e1dc3c2a351b0497e8f26e28391c16d6f5cd68a8600fa5c0dc4cf6c904bb",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "市级科研平台 - 南方科技大学"
+    },
+    {
+      "id": "web-handle:sha256:9fe3895a99adcdedf929225936f90fbddb5f33bf66fbba6878794a323e262a79",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "深圳招聘算法研究员30000-60000元/月"
+    },
+    {
+      "id": "web-handle:sha256:6449bb1bceae4bb4a7fc87c60ece195b8065c66cb4c1acf938b37ffbe0bed56d",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "在研-首页  广东省教育厅中英合作视觉信息处理实验室 & 深圳大学计算机视觉研究所"
+    },
+    {
+      "id": "web-handle:sha256:ad2029bbfff80f8211df8496ee9b0806c8b8f46a86647a157f5f5a9cfba1eacb",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "[天下财经]广东深圳：人形机器人再进化智慧工厂开展多机协同实训"
+    },
+    {
+      "id": "web-handle:sha256:168cea8f0076e5c87a905da25f1343dd099cdec99cf498e11a3ed50e9cc6ff74",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "朱赤-深圳技术大学本科招生网"
+    },
+    {
+      "id": "web-handle:sha256:cf8595b7e3d7e44ba0b8a57021b248d540c36c7b68c8e0c26d4436512885be4c",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "产业生态让创新更美好——深圳“机器人谷”观察 - 新华网"
+    },
+    {
+      "id": "web-handle:sha256:55b74bc75748cd68b5c28584987b565bc24c3cc582760747c18b4dac4a68f104",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "深圳:加大机器人AI芯片攻关"
+    },
+    {
+      "id": "web-handle:sha256:b40ab7ce98a834a6c80809266d04ed8c4112fab61c556c201960ced029b54831",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "导师介绍-深圳理工大学算力微电子学院"
+    },
+    {
+      "id": "web-handle:sha256:a2cb9d98971a2d0b4a717350d5cc9b91cc68d32203fc2b662b4e94f7534536fa",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "具身智能与机器人研究所 - 深圳大学人工智能学院"
+    },
+    {
+      "id": "web-handle:sha256:32790ae094ce818c3a56606bb0c22c1701cada70b5101d92e1e51ef765972e2f",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "深圳大学机电与控制工程学院导师教师师资介绍简介-白小山 - 深圳大学师资导师 - Free考研考试"
+    },
+    {
+      "id": "web-handle:sha256:ab87b6b1ef0f16da94c203d3b7da2f8bc312add96f5e02150713e0ed9937306d",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "Robotics & AI Lab - CUHK(SZ): 首页 - 香港中文大学（深圳）"
+    },
+    {
+      "id": "web-handle:sha256:d49a2750a757f6fd8256d8ed39a44f260776e5199dfea0de22662160ad256aa6",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "中国科学院深圳先进技术研究院导师简况表 - 豆丁网"
+    },
+    {
+      "id": "web-handle:sha256:2c5ecbfe42b79a363dc9e2333f3f5cc766c02f749597b4b5568539906b9562e9",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "【机器人老师招聘】_深圳市智未来伙伴教育科技有限公司招聘信息-猎聘"
+    },
+    {
+      "id": "web-handle:sha256:5040f470e81027854614ee7df74c3f26717e5ba2dded142cd2e8371ef5d82eb6",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "智能机器人实验室 - 清华大学深圳国际研究生院"
+    },
+    {
+      "id": "web-handle:sha256:ac567db6c3997867d38a1ca20100e5735f84064193affcee4f126d2a41d33ac3",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "导师个人信息 - 电子科大研招网"
+    },
+    {
+      "id": "web-handle:sha256:5b1715607ba216f94e37f3ba52a9638f80b5499b9235962d99db2361f5e605fe",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "机器人视觉与自动化实验室 - 哈尔滨工业大学（深圳）"
+    },
+    {
+      "id": "web-handle:sha256:0c3aaac9b73d3901ce13c5f47d3afe3317bf880d3c4d5aee42ef0ce103fd6eb7",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "布局具身智能！深圳理工大学联合实验室+1 - 高校招生考试网"
+    },
+    {
+      "id": "web-handle:sha256:33bc880d5d7ef003b18cfbf5b45eda0e3e8ef09149392448959aec99e1bf3c69",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "深圳大学x本末高校机器人挑战赛圆满举行"
+    },
+    {
+      "id": "web-handle:sha256:8fae9262b22e4d010f9cb14c131106ba536f93b3ec05dc440abeabfbe1258154",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "中国科学院深圳先进技术研究院导师简况表 - 道客巴巴"
+    },
+    {
+      "id": "web-handle:sha256:64e2da00849e9fc1369560c5104f7a7e946e0ebd50620a12f20cdf94ac842938",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "哈尔滨工业大学(深圳)网络机器人与系统实验室2021年博士后与科研助理招聘启事_高校人才网"
+    },
+    {
+      "id": "web-handle:sha256:b37f26b01f509b071a446ee12bacd343b53245f2d51085dca9d855f41d8f05a7",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "【活动报道】2025全国高校走进信创企业研学活动深圳站（人工智能 ..."
+    },
+    {
+      "id": "web-handle:sha256:10b69f253ad50732cb2a152884ee05bc1cd5383fe9e3af64cf50a1f0c19e0c8d",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "深圳大学机电与控制工程学院导师教师师资介绍简介-罗烽 - 深圳大学师资导师 - Free考研考试"
+    },
+    {
+      "id": "web-handle:sha256:9a75fc784ce0cec812f1014df580d113a78e32324c119783b89ba1c66d5ac4e8",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "深圳造出了“机器人科学家” 数十倍提速攻克关键材料难题"
+    },
+    {
+      "id": "web-handle:sha256:a7cfb8f7688b636ae3d9de971ca6aa45f465d3ab3e5fba78a94f07a6c61bdc57",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "The 20th International Conference on Ubiquitous Robots(UR2023)学术会议通知-广东省电磁控制与智能机器人重点实验室"
+    },
+    {
+      "id": "web-handle:sha256:941d3db7304a788327dd1a7d7bd1aabb568323a3e4c4eaca3bb33a5d74662ada",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "汇聚产学研各界专家学者香港中文大学（深圳）亮相CNCC2021"
+    },
+    {
+      "id": "web-handle:sha256:dbad66df7db33ab039d536ac2479b5aadc821cf9aa60e09f28a6580e5fceed17",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "深圳市科技创新局关于印发《深圳市具身智能机器人技术创新与产业 ..."
+    },
+    {
+      "id": "web-handle:sha256:79dc38f99584efbae711422785f2a919d392cb3a6e8f474f4b56dc3e72c9cc0d",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "全部 - 深圳理工大学人工智能研究院"
+    },
+    {
+      "id": "web-handle:sha256:ab0e6255aa5de6d5ef81cda10c783a92f5a1a722dc03a9fda2d987dbfcdf6ce2",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "深圳“机器人谷”怎么做到的？｜解码广东经济生态 - 中国网"
+    },
+    {
+      "id": "web-handle:sha256:8d4429db10601ce5daa03785b9c1f53760434d9ae889170a81fb3f0608cc19dc",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "2016年度NSFC-深圳机器人基础研究中心项目会议评审专家名单"
+    },
+    {
+      "id": "web-handle:sha256:e7f03a95c768c4b6763eb3e85a240f14255b93b487520d889ffb0e1592b92a47",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "深圳口述史| 毕亚雷：亲身见证深圳机器人产业发展壮大 - 深圳市政协"
+    },
+    {
+      "id": "web-handle:sha256:332d60e2e8082319ebed259f1a2adc852af3d1b4a104fad14c746f194e1ad2ae",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "黄畅昕-大数据系统计算技术国家工程实验室"
+    },
+    {
+      "id": "web-handle:sha256:2281916031c333c42fe614e5277952e1542af41c11c12acd2a8843f614d9f038",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "水下作业机器人团队 - 深圳研究院"
+    },
+    {
+      "id": "web-handle:sha256:cef00ce970fc5888bcdd5d9a24633008071458e701edb7d4171f2a8b3fc09007",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "深圳市人工智能与机器人研究院 - 百度百科"
+    },
+    {
+      "id": "web-handle:sha256:a0a3c42e3d62d1a435ebdbd127ae8229334e2126a92adf11cfa6d68c5ad68b39",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "深圳科研人员让机器人学会“感知”_深圳晚报数字报"
+    },
+    {
+      "id": "web-handle:sha256:a64ddeefbdbd9d40181f7754caf91089508d035736c77c433fe5b6a4c6f17bf2",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "深圳奔向人形机器人第一城"
+    },
+    {
+      "id": "web-handle:sha256:a68d72172b678db79939e569a764ab16808442c428c40118a1397ff4e2a568fb",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "教师名录-哈工大(深圳)机电工程与自动化学院"
+    },
+    {
+      "id": "web-handle:sha256:a2de995519a941c6311bc7cd46a503cb87b3a2835a9c5392735eb8c8a7aaf7cf",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "评奖委员会 - 深圳市人工智能学会"
+    },
+    {
+      "id": "web-handle:sha256:a44152d2e68c3f13178ba27d0c547397b84d502c908978d62f64814bf93f3745",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "全职教师 - 哈工大（深圳）机器人与先进制造学院"
+    },
+    {
+      "id": "web-handle:sha256:23ae2cf948f5e7155f3951a62a65346079c50949a2d55de9242be9f5115a05b1",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "科研速递| 理工学院孙正隆教授团队在医疗机器人方向取得突破"
+    },
+    {
+      "id": "web-handle:sha256:2ce89a401be0281e0aa161e9df89097495f92ebbd06bfda9650d891c290ef1b4",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "深圳机器人工程家教_岭南师范学院家教库-黄教员-【易教网-深圳】"
+    },
+    {
+      "id": "web-handle:sha256:f1336fde58b6243b0a55d3c7476a5289d120ebbf751a4c1d0d233b7829083e2a",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "哈尔滨工业大学机器人技术与系统国家重点实验室"
+    },
+    {
+      "id": "web-handle:sha256:b369035d4fec1ca57e70407c394e05354f293a9442a1608ec63b0c7da415d441",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "深圳大学教授黄惠：智能图形感知解决机器人“卡脖子”问题 - 21财经"
+    },
+    {
+      "id": "web-handle:sha256:6ecceaefd65d63fcb4822500458a7770737b2f86b727294fa7c6f44362a7fa94",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "深圳市电子学会专家团队成员名单_学会通知_深圳市电子学会"
+    },
+    {
+      "id": "web-handle:sha256:d6aafa61be79e1d24b94dab6e2c4ce39c72c022d9bbf4e829579c326231358d8",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "哈尔滨工业大学（深圳）机器人与先进制造学院梁高琪教授课题组 ..."
+    },
+    {
+      "id": "web-handle:sha256:08292d2d1ac6e241347f1c649bb1c5fed9a71bb6afbeb2db78fbc56bc3d62ba1",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "机器人与智能装备研究所-深圳大学机电与控制工程学院"
+    },
+    {
+      "id": "web-handle:sha256:02cf22cc8cad86c23c16f4a281ca5ec272c77a87516b748c4762d410c73963ce",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "教授-深圳大学人工智能学院"
+    },
+    {
+      "id": "web-handle:sha256:6373384a96d751a0bb9814ca78b0d3ef0da73ac4c7cb0e7eb7e6cf473a153326",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "研究方向-中国科学院深圳先进技术研究院"
+    },
+    {
+      "id": "web-handle:sha256:e39a7ae1a66b4392d115b2d6a2850df2d4398d1bc51fd82e6105d94e79675761",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "专业三：机器人工程 - 深圳大学机电与控制工程学院"
+    },
+    {
+      "id": "web-handle:sha256:4f035147219d6d2306247d534b4e408bde840f1dedbc51c4dfbce61373a31179",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "智能装备与检测技术研究所-深圳大学机电与控制工程学院"
+    },
+    {
+      "id": "web-handle:sha256:800d86da00eade92ac94d405f4810fdc03574af8941dc06a479afc194a125964",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "教授-深圳大学人工智能学院"
+    },
+    {
+      "id": "web-handle:sha256:7a045c4cdb82bb631db10faec8244260209ad7ca4cf2f4dd779c71f0938099f6",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "李辉-深圳大学机电与控制工程学院"
+    },
+    {
+      "id": "web-handle:sha256:9d5cf260bffd4c0b6f14a1cdc048c8d79b2413b4c88b2f957622684057339252",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "研究所-深圳大学人工智能学院"
+    },
+    {
+      "id": "web-handle:sha256:1bab7eccdfccd060dc5294418ba7e3ede597fabbd145ae79ac2b9d3632cc63af",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "教授 | 香港中文大学(深圳)理工学院"
+    },
+    {
+      "id": "web-handle:sha256:0ca6345b506948bfeb0aec476d8116c1626f7c0234a94c0386c68281ba34c719",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "讲师/助理教授-深圳大学人工智能学院"
+    },
+    {
+      "id": "web-handle:sha256:e950332ed45fd2776408758f41cf959f174a8e410d0061879c8efbce558dbb81",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "机械工程学科-哈工大(深圳)机电工程与自动化学院"
+    },
+    {
+      "id": "web-handle:sha256:5f2aa3eef6fa5c1042008f624a43dc4192a088755c51c7f268e5975e806f0d64",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "080803T机器人工程 - 深圳大学教务部"
+    },
+    {
+      "id": "web-handle:sha256:bc2cb5ef993afcb7c12cfbe2666ca5da7566e1d6398bfba94c80cec1cf8644e7",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "全职教师-哈工大(深圳)机电工程与自动化学院"
+    },
+    {
+      "id": "web-handle:sha256:d459c4b0478da11905a09dc253e2db3ba538d8b8070c1ce8a3c1a4acb7a7494e",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "深圳大学工业视觉与智能系统团队2023年诚聘博士后研究人员"
+    }
+  ],
+  "committed_handle_ids": [
+    "web-handle:sha256:e13f563ec78a6aaab0a27c1f09cd84f024692e55e0bd559fcc59069b6d5d9ac6",
+    "web-handle:sha256:c09903e39e9275a8a5e213b9353f778a481a7e9109280bd86430c234ba4a548d",
+    "web-handle:sha256:737cbef2926e274ae9d0c3b767e7cd66c5dacc91ce53733264af668ed1790ca5",
+    "web-handle:sha256:35846dbe84a4c1d3f841e24b4f221a96b7791fb7119f72c071e23af4f18c6c19",
+    "web-handle:sha256:a65f1ae8b5ef2ff59def3880f08acccff6a33e6d4b6e65880ff6bec4786c3729",
+    "web-handle:sha256:efe3f42b44f348475b7fddec81ce3007f12266e809c68e95242cc35dcdec4bfd",
+    "web-handle:sha256:2ef39c081c6428a06d64b2831e5e4e49cc2192b893a8f9e90b0f8881b53a6edd",
+    "web-handle:sha256:a64cfa00e4a463cad111c9acb8c4b502a6954392a119dfa856b6396ef8e95b1b",
+    "web-handle:sha256:9b57631f12d59c5f2a552f5c40ece49db854366571206958f8057de67bad9676",
+    "web-handle:sha256:f73666a13210b218748b2db116c593b29c7b6afec6a324df55f5a10823cb2c91",
+    "web-handle:sha256:bb6a86e3860c0e8732dfbe340dbbd3d83302428c79c94c9f3679877863b2cfb9",
+    "web-handle:sha256:4b99f3dab132d4999e344f3397f5995409c7b4f095d44de7a40002bc7fcd5b17",
+    "web-handle:sha256:e9395d07e9211f886ee33787b9ce8727be2eb49611fe81fef4c47eed3fbaa855",
+    "web-handle:sha256:5f71a1b94454fea1f7d4ad8a3efdd7080b2b2247fd7c1c9ffbf9cbfa742bd927"
+  ],
+  "committed_names": [
+    "香港城市大学深圳研究院",
+    "科研力量朱建 - 深圳市人工智能与机器人研究院",
+    "全职教师 - 哈工大（深圳）机器人与先进制造学院",
+    "师资阵容 - 深圳市人工智能与机器人研究院",
+    "清华大学深圳国际研究生院团队攻克了空间机器人总体设计等难题 ...",
+    "硕士生导师-深圳大学人工智能学院",
+    "港中大（深圳）林天麟教授在模块化自重构机器人领域取得重大突破",
+    "冯平法团队系统提出具身智能工业机器人框架与技术-清华大学",
+    "Teacher Search | 香港中文大学(深圳)理工学院",
+    "研究中心 - 深圳市人工智能与机器人研究院",
+    "具身智能与机器人研究所 - 深圳大学人工智能学院",
+    "香港城市大学深圳研究院",
+    "南方科技大学机器人研究院",
+    "深圳"
+  ],
+  "render_mode": "prose_renderer",
+  "answer_chars": 729,
+  "lane_timings": [
+    [
+      "structured",
+      0.0
+    ],
+    [
+      "exact",
+      0.101
+    ],
+    [
+      "lexical",
+      0.834
+    ],
+    [
+      "vector",
+      4.706
+    ],
+    [
+      "web",
+      9.721
+    ]
+  ]
+}

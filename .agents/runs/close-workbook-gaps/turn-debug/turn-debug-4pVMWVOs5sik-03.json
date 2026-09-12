@@ -1,0 +1,508 @@
+{
+  "session_id": "session:chat:4pVMWVOs5siktCy3yuDHxl5lYpiohSbO",
+  "turn_id": "turn:chat:sha256:17e969e608114d527b3d5032202a1eba2e247160b927bc349c59f2fb65847f5a",
+  "turn_count": 3,
+  "query": "酒店电梯需要送餐机器人能够使用机械臂自主按电梯，上述企业的产品有哪些可以实现",
+  "planned_displayed_ids": [
+    "company-c-2e9661bbf7003338fcab3105",
+    "company-c-30d1da20c9d086b995e476ec",
+    "company-c-5471a6b5813d0036d900387a",
+    "company-c-72b2ec528908ac199ee1dbc7",
+    "company-c-00259b47f388656e556ceb40",
+    "company-c-0070c6786d46e46472206471",
+    "company-c-03e0fdccdc4b9784c6d58c89",
+    "company-c-0443d6ec461342553780c458",
+    "company-c-056fad62cba13291e34bea6c",
+    "company-c-0614ef33bfe1f92ebbb8fd3f",
+    "company-c-06a218747f290091decf0969",
+    "company-c-06a6d03a1cb5bdb9d54d3526",
+    "company-c-0732e77a786dd35841abd999",
+    "company-c-08945d2c8e2bb8b6e03002ef",
+    "company-c-08e0d42d015bdd12a8b45d60",
+    "company-c-0b83a85518102b275856fbdc",
+    "company-c-10e74e0166647f4352b883fd",
+    "company-c-116032c9291d3548dcb37fad",
+    "company-c-1301e7e62132e35f06f4bf2c",
+    "company-c-1937e885a28e0271df440050",
+    "company-c-1f87dac98e5754a924961a59",
+    "company-c-243b3d6ea5fbcdfbb802e114",
+    "company-c-25181f614df073ad888fd87b",
+    "company-c-330adc82bbd5ff6d790c87e9",
+    "company-c-38aaee00c3d56f0a20436d9c",
+    "company-c-43082b154d9637a79aa770dc",
+    "company-c-4455f9bea2db512928221323",
+    "company-c-50d55edbf807e56e075fbe18",
+    "company-c-52321dec821b842765effcec",
+    "company-c-5723f6875c847545125c5636",
+    "company-c-6600d34e99744e3f9640c05e",
+    "company-c-675a1a3557d441076f3dcdbb",
+    "company-c-6f5b2756377c7823ed3003b6",
+    "company-c-729df3c1dcf6949944d681b8",
+    "company-c-73a7cb548f931998a188a7a7",
+    "company-c-7a45896fdd382e682b34dd25",
+    "company-c-7b1fb07b5602d900c20c193b",
+    "company-c-7e73e92d00b34e0c9c5cc188",
+    "company-c-9a778c233e7e20a66bb77b35",
+    "company-c-9f7a09bae9457b8c5e712d2b",
+    "company-c-a289a606c38b842c928519fb",
+    "company-c-a56708d54bc094a3cf6b4fe8",
+    "company-c-a8916a638d39696b82a4e84c",
+    "company-c-ad7a7f8380f1336d9db2878c",
+    "company-c-b0e5064d07880caef50007df",
+    "company-c-b12b4daaf45164d6d77d8d8b",
+    "company-c-bc7e26ab50c64b9638e94f5e",
+    "company-c-c13f42b06068014e518bed9c",
+    "company-c-c7df9b1497b7b84acc9b91fc",
+    "company-c-cf17488d5dc1cb249f29c26a",
+    "company-c-d813cbcd7760a597384ccbe2",
+    "company-c-d9858942d76767637b5f1aa9",
+    "company-c-de06e6a7e8297827bd44638d",
+    "company-c-e5a415a00df921eb07275f8d",
+    "company-c-e8dc724a262418e2f278bf45",
+    "company-c-ec9c8bd732eb1c324cee9bbc",
+    "company-c-f11204f5f0dee0d8a1e1fdd4",
+    "company-c-f64f9ff111cc87c4b1cc48e1"
+  ],
+  "recalled_handles": [
+    {
+      "id": "company-c-2e9661bbf7003338fcab3105",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "中铧机器人（深圳）有限公司"
+    },
+    {
+      "id": "company-c-30d1da20c9d086b995e476ec",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市锐曼智能技术有限公司"
+    },
+    {
+      "id": "company-c-5723f6875c847545125c5636",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市大象机器人科技有限公司"
+    },
+    {
+      "id": "company-c-00259b47f388656e556ceb40",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市皕像科技有限公司"
+    },
+    {
+      "id": "company-c-0070c6786d46e46472206471",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳若步智能科技有限公司"
+    },
+    {
+      "id": "company-c-03e0fdccdc4b9784c6d58c89",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市新力科技有限公司"
+    },
+    {
+      "id": "company-c-0443d6ec461342553780c458",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市维象智能科技有限公司"
+    },
+    {
+      "id": "company-c-5471a6b5813d0036d900387a",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳恒需机器人科技有限公司"
+    },
+    {
+      "id": "company-c-72b2ec528908ac199ee1dbc7",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市普渡科技有限公司"
+    },
+    {
+      "id": "company-c-056fad62cba13291e34bea6c",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市路都机器人有限公司"
+    },
+    {
+      "id": "company-c-0614ef33bfe1f92ebbb8fd3f",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市全民通信息技术有限公司"
+    },
+    {
+      "id": "company-c-06a218747f290091decf0969",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳怡丰机器人科技有限公司"
+    },
+    {
+      "id": "company-c-06a6d03a1cb5bdb9d54d3526",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳无境智能机器人有限公司"
+    },
+    {
+      "id": "company-c-0732e77a786dd35841abd999",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市瓦伊机器人科技有限公司"
+    },
+    {
+      "id": "company-c-08945d2c8e2bb8b6e03002ef",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳一诺基业科技有限公司"
+    },
+    {
+      "id": "company-c-08e0d42d015bdd12a8b45d60",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "云趣在线（深圳）科技有限公司"
+    },
+    {
+      "id": "company-c-0b83a85518102b275856fbdc",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市艾特智能科技有限公司"
+    },
+    {
+      "id": "company-c-10e74e0166647f4352b883fd",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳中智卫安机器人技术有限公司"
+    },
+    {
+      "id": "company-c-116032c9291d3548dcb37fad",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳晓润控股有限公司"
+    },
+    {
+      "id": "company-c-1301e7e62132e35f06f4bf2c",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳全智能机器人科技有限公司"
+    },
+    {
+      "id": "company-c-1937e885a28e0271df440050",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市普森斯科技有限公司"
+    },
+    {
+      "id": "company-c-1f87dac98e5754a924961a59",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市繁兴科技股份有限公司"
+    },
+    {
+      "id": "company-c-243b3d6ea5fbcdfbb802e114",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "睿博天米科技（深圳）有限公司"
+    },
+    {
+      "id": "company-c-25181f614df073ad888fd87b",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市吉影科技有限公司"
+    },
+    {
+      "id": "company-c-330adc82bbd5ff6d790c87e9",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳乐动机器人股份有限公司"
+    },
+    {
+      "id": "company-c-38aaee00c3d56f0a20436d9c",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳中科世界机器人有限公司"
+    },
+    {
+      "id": "company-c-43082b154d9637a79aa770dc",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市笨笨机器人有限公司"
+    },
+    {
+      "id": "company-c-4455f9bea2db512928221323",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市石头智能机器人技术有限公司"
+    },
+    {
+      "id": "company-c-50d55edbf807e56e075fbe18",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳来创智能科技有限公司"
+    },
+    {
+      "id": "company-c-52321dec821b842765effcec",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市宇辰智能科技有限公司"
+    },
+    {
+      "id": "company-c-6600d34e99744e3f9640c05e",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳科卫机器人科技有限公司"
+    },
+    {
+      "id": "company-c-675a1a3557d441076f3dcdbb",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市御膳智能科技有限公司"
+    },
+    {
+      "id": "company-c-6f5b2756377c7823ed3003b6",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳以内创新科技有限公司"
+    },
+    {
+      "id": "company-c-729df3c1dcf6949944d681b8",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市艾唯尔科技有限公司"
+    },
+    {
+      "id": "company-c-73a7cb548f931998a188a7a7",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳普得技术有限公司"
+    },
+    {
+      "id": "company-c-7a45896fdd382e682b34dd25",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "华腾智达（深圳）智能科技有限公司"
+    },
+    {
+      "id": "company-c-7b1fb07b5602d900c20c193b",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市中舟智能科技有限公司"
+    },
+    {
+      "id": "company-c-7e73e92d00b34e0c9c5cc188",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市小村机器人智能科技有限公司"
+    },
+    {
+      "id": "company-c-9a778c233e7e20a66bb77b35",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "坎德拉（深圳）科技创新有限公司"
+    },
+    {
+      "id": "company-c-9f7a09bae9457b8c5e712d2b",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市智贝尔机器人设备科技有限公司"
+    },
+    {
+      "id": "company-c-a289a606c38b842c928519fb",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市三宝创新智能有限公司"
+    },
+    {
+      "id": "company-c-a56708d54bc094a3cf6b4fe8",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市未来天使机器人有限公司"
+    },
+    {
+      "id": "company-c-a8916a638d39696b82a4e84c",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "爱乐福（深圳）科技有限公司"
+    },
+    {
+      "id": "company-c-ad7a7f8380f1336d9db2878c",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳银星智能集团股份有限公司"
+    },
+    {
+      "id": "company-c-b0e5064d07880caef50007df",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "跨维（深圳）智能数字科技有限公司"
+    },
+    {
+      "id": "company-c-b12b4daaf45164d6d77d8d8b",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市元鼎智能创新有限公司"
+    },
+    {
+      "id": "company-c-bc7e26ab50c64b9638e94f5e",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳灵喵机器人技术有限公司"
+    },
+    {
+      "id": "company-c-c13f42b06068014e518bed9c",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市恒博智能安防机器人有限公司"
+    },
+    {
+      "id": "company-c-c7df9b1497b7b84acc9b91fc",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "敬科（深圳）机器人科技有限公司"
+    },
+    {
+      "id": "company-c-cf17488d5dc1cb249f29c26a",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市迈步机器人科技有限公司"
+    },
+    {
+      "id": "company-c-d813cbcd7760a597384ccbe2",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市源来智能设备有限公司"
+    },
+    {
+      "id": "company-c-d9858942d76767637b5f1aa9",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "中新智擎科技有限公司"
+    },
+    {
+      "id": "company-c-de06e6a7e8297827bd44638d",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳怪虫机器人有限公司"
+    },
+    {
+      "id": "company-c-e5a415a00df921eb07275f8d",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市安泽智能机器人有限公司"
+    },
+    {
+      "id": "company-c-e8dc724a262418e2f278bf45",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市谷盈天下科技有限公司"
+    },
+    {
+      "id": "company-c-ec9c8bd732eb1c324cee9bbc",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "旗瀚科技有限公司"
+    },
+    {
+      "id": "company-c-f11204f5f0dee0d8a1e1fdd4",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市普渡科技股份有限公司"
+    },
+    {
+      "id": "company-c-f64f9ff111cc87c4b1cc48e1",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市杰思谷科技有限公司"
+    }
+  ],
+  "committed_handle_ids": [
+    "company-c-2e9661bbf7003338fcab3105",
+    "company-c-30d1da20c9d086b995e476ec",
+    "company-c-5723f6875c847545125c5636",
+    "company-c-00259b47f388656e556ceb40",
+    "company-c-0070c6786d46e46472206471",
+    "company-c-03e0fdccdc4b9784c6d58c89",
+    "company-c-0443d6ec461342553780c458",
+    "company-c-5471a6b5813d0036d900387a",
+    "company-c-72b2ec528908ac199ee1dbc7",
+    "company-c-056fad62cba13291e34bea6c",
+    "company-c-0614ef33bfe1f92ebbb8fd3f",
+    "company-c-06a218747f290091decf0969",
+    "company-c-06a6d03a1cb5bdb9d54d3526",
+    "company-c-0732e77a786dd35841abd999",
+    "company-c-08945d2c8e2bb8b6e03002ef",
+    "company-c-08e0d42d015bdd12a8b45d60",
+    "company-c-0b83a85518102b275856fbdc",
+    "company-c-10e74e0166647f4352b883fd",
+    "company-c-116032c9291d3548dcb37fad",
+    "company-c-1301e7e62132e35f06f4bf2c",
+    "company-c-1937e885a28e0271df440050",
+    "company-c-1f87dac98e5754a924961a59",
+    "company-c-243b3d6ea5fbcdfbb802e114",
+    "company-c-25181f614df073ad888fd87b",
+    "company-c-330adc82bbd5ff6d790c87e9",
+    "company-c-38aaee00c3d56f0a20436d9c",
+    "company-c-43082b154d9637a79aa770dc",
+    "company-c-4455f9bea2db512928221323",
+    "company-c-50d55edbf807e56e075fbe18",
+    "company-c-52321dec821b842765effcec",
+    "company-c-6600d34e99744e3f9640c05e",
+    "company-c-675a1a3557d441076f3dcdbb"
+  ],
+  "committed_names": [
+    "中铧机器人（深圳）有限公司",
+    "深圳市锐曼智能技术有限公司",
+    "深圳市大象机器人科技有限公司",
+    "深圳市皕像科技有限公司",
+    "深圳若步智能科技有限公司",
+    "深圳市新力科技有限公司",
+    "深圳市维象智能科技有限公司",
+    "深圳恒需机器人科技有限公司",
+    "深圳市普渡科技有限公司",
+    "深圳市路都机器人有限公司",
+    "深圳市全民通信息技术有限公司",
+    "深圳怡丰机器人科技有限公司",
+    "深圳无境智能机器人有限公司",
+    "深圳市瓦伊机器人科技有限公司",
+    "深圳一诺基业科技有限公司",
+    "云趣在线（深圳）科技有限公司",
+    "深圳市艾特智能科技有限公司",
+    "深圳中智卫安机器人技术有限公司",
+    "深圳晓润控股有限公司",
+    "深圳全智能机器人科技有限公司",
+    "深圳市普森斯科技有限公司",
+    "深圳市繁兴科技股份有限公司",
+    "睿博天米科技（深圳）有限公司",
+    "深圳市吉影科技有限公司",
+    "深圳乐动机器人股份有限公司",
+    "深圳中科世界机器人有限公司",
+    "深圳市笨笨机器人有限公司",
+    "深圳市石头智能机器人技术有限公司",
+    "深圳来创智能科技有限公司",
+    "深圳市宇辰智能科技有限公司",
+    "深圳科卫机器人科技有限公司",
+    "深圳市御膳智能科技有限公司"
+  ],
+  "render_mode": "prose_renderer",
+  "answer_chars": 1485,
+  "lane_timings": [
+    [
+      "exact",
+      0.152
+    ],
+    [
+      "lexical",
+      0.201
+    ],
+    [
+      "structured",
+      0.357
+    ],
+    [
+      "vector",
+      0.312
+    ],
+    [
+      "web",
+      5.201
+    ]
+  ]
+}

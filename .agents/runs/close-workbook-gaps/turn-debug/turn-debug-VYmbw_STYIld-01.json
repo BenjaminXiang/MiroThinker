@@ -1,0 +1,137 @@
+{
+  "session_id": "session:chat:VYmbw_STYIldryzDdNUjJ59B5Boaj-JL",
+  "turn_id": "turn:chat:sha256:2f1bbbfe9a1c52ca7b6f36c192e592b61911af95e999241de1efaab2123aafc2",
+  "turn_count": 1,
+  "query": "大疆创新主要做什么",
+  "planned_displayed_ids": [],
+  "recalled_handles": [
+    {
+      "id": "company-c-0e423959d58e241f23c487ff",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市大疆创新科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:c69921f6660385ea9a1418e1653a1515731a0a6dfcdd20652ceeba31ba869f39",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "DJI 大疆创新 - 官方网站"
+    },
+    {
+      "id": "web-handle:sha256:579686ec5bd01f517e6aba080f0c38c2e52d027ede6231059cca150c20863329",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "DJI 大疆创新- 官方网站"
+    },
+    {
+      "id": "web-handle:sha256:13cead93dec6eeed2ccbc38980003c93479e5a3803b11830511091ad3859b0b4",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "大疆创新 - 创业邦"
+    },
+    {
+      "id": "web-handle:sha256:9b0ed6bc5c103c83e08598a9b27cd32ebaf544b6730d75fb4d32e4b62e450a46",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "大疆创新- 维基百科，自由的百科全书"
+    },
+    {
+      "id": "web-handle:sha256:fa7a207ee86c6aa77ebe411cfb1bb786968c44afbcb6b859ae9c71fbbf6119ff",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "大疆创新_章鱼通_智店"
+    },
+    {
+      "id": "web-handle:sha256:3f855668d3015164d75597d26946e841a240582ff85ce76159b6b54b832fba9e",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "无人机系列- DJI 大疆创新"
+    },
+    {
+      "id": "web-handle:sha256:5b59c281a068bead8c11ebcdfe8e891abf9def5f5d4d230a90373825a39e6e95",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "深圳市大疆创新科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:0cff7aaea6e69190be20c6d74714dda0b97805ad6d5963e2f644a26813062837",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "大疆创新_百度百科"
+    },
+    {
+      "id": "company-c-89834a02c02097bbb538da9e",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "蓝疆创新（深圳）科技有限公司"
+    },
+    {
+      "id": "company-c-6616b8e49c7554eeae7a8c78",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市大智无疆科技有限公司"
+    },
+    {
+      "id": "company-c-68af6342096ff8555218bd07",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "华擎创新（深圳）有限责任公司"
+    },
+    {
+      "id": "company-c-a5559dbd2b7f6af3b432085f",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳高度创新技术有限公司"
+    },
+    {
+      "id": "professor-c-31583b88158f6fa05926f52b",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "由林麟"
+    },
+    {
+      "id": "company-c-e59524f2580514139e3e998d",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市高巨创新科技开发有限公司"
+    },
+    {
+      "id": "company-c-dd919dc2e24f5f16ce1caf1d",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市疆域智能科技股份有限公司"
+    }
+  ],
+  "committed_handle_ids": [
+    "company-c-0e423959d58e241f23c487ff",
+    "web-handle:sha256:5b59c281a068bead8c11ebcdfe8e891abf9def5f5d4d230a90373825a39e6e95"
+  ],
+  "committed_names": [
+    "深圳市大疆创新科技有限公司",
+    "深圳市大疆创新科技有限公司"
+  ],
+  "render_mode": "prose_renderer",
+  "answer_chars": 596,
+  "lane_timings": [
+    [
+      "structured",
+      0.0
+    ],
+    [
+      "exact",
+      0.623
+    ],
+    [
+      "lexical",
+      3.062
+    ],
+    [
+      "web",
+      3.67
+    ],
+    [
+      "vector",
+      19.36
+    ]
+  ]
+}

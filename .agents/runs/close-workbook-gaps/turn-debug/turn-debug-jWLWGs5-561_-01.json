@@ -1,0 +1,143 @@
+{
+  "session_id": "session:chat:jWLWGs5-561_9G8y6qdFk6VIIEwrVMYm",
+  "turn_id": "turn:chat:sha256:9bbed5b88c994440bc8e1f1d4595b654d2d3d42a0fe994e953e07e928853441f",
+  "turn_count": 1,
+  "query": "优必选科技怎么样",
+  "planned_displayed_ids": [],
+  "recalled_handles": [
+    {
+      "id": "company-c-b2aac54891e3fce8c98612d8",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市优必选科技股份有限公司"
+    },
+    {
+      "id": "web-handle:sha256:c3e1396e5d97f7dd35bcb3f59ceb80d5d685c3d6a01fc17e932ce64a50d1dfaa",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "「优必选怎么样」深圳市优必选科技股份有限公司 - 职友集"
+    },
+    {
+      "id": "web-handle:sha256:a76a579054d59448e65d2413be279921821c7f308e3c120345501f0bbccfb6d2",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "UBTECH 优必选官网-智能服务机器人领导者"
+    },
+    {
+      "id": "web-handle:sha256:2b1b75903d1d4bf551ad30fa645a7fff0b8d778c853a10cc79a6e91d674f71e0",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "深圳市优必选科技股份有限公司-特种装备网"
+    },
+    {
+      "id": "web-handle:sha256:8c95f9d696a327c65606dd1fe943d4b6ac7f3c7383a387d8737fe8b79e1a3feb",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "深圳市优必选科技股份有限公司 - 百度百科"
+    },
+    {
+      "id": "web-handle:sha256:28557331fc770f2cef15a4feb3b7fc9557c96079c2ebb8cb109df5a76229102c",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "优必选科技 - 维基百科"
+    },
+    {
+      "id": "web-handle:sha256:b3fa4d9625ada0f730b9269dd7e58070eca7400c857d60b1f7590e64fe32fbb7",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "优必选"
+    },
+    {
+      "id": "web-handle:sha256:a4f3ce10f01a1b0be1514cb4785897aeb027de58d60f5c02b3cdd9e9f5558613",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "「优必选怎么样」深圳市优必选科技股份有限公司 - 企查查"
+    },
+    {
+      "id": "web-handle:sha256:7f042d07802e88565c9503b3fb4e0d143a85d56e2def8bb51fdb9fcd9b815482",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "优必选 - 企查查"
+    },
+    {
+      "id": "company-c-b2627ec2e7cf7f0753c626ee",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市优必行科技有限公司"
+    },
+    {
+      "id": "company-c-f9deaa6fbfb3a1f332761c8f",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市酷选科技有限公司"
+    },
+    {
+      "id": "company-c-5291283450a6add89c5f0df2",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "优程企服科技（深圳）有限公司"
+    },
+    {
+      "id": "company-c-2f832d8814666b3015fa5160",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市乐喔科技有限公司"
+    },
+    {
+      "id": "professor-c-460e22e2c7d45682e9c26fef",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "李成睿"
+    },
+    {
+      "id": "company-c-b6c9e963f6bd294e9914ef93",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市百答科技有限公司"
+    },
+    {
+      "id": "company-c-4533ada3cee192fabfd8450e",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "欧乐科技（深圳）有限公司"
+    }
+  ],
+  "committed_handle_ids": [
+    "company-c-b2aac54891e3fce8c98612d8",
+    "web-handle:sha256:2b1b75903d1d4bf551ad30fa645a7fff0b8d778c853a10cc79a6e91d674f71e0",
+    "web-handle:sha256:8c95f9d696a327c65606dd1fe943d4b6ac7f3c7383a387d8737fe8b79e1a3feb",
+    "web-handle:sha256:28557331fc770f2cef15a4feb3b7fc9557c96079c2ebb8cb109df5a76229102c",
+    "web-handle:sha256:b3fa4d9625ada0f730b9269dd7e58070eca7400c857d60b1f7590e64fe32fbb7"
+  ],
+  "committed_names": [
+    "深圳市优必选科技股份有限公司",
+    "深圳市优必选科技股份有限公司-特种装备网",
+    "深圳市优必选科技股份有限公司 - 百度百科",
+    "优必选科技 - 维基百科",
+    "优必选"
+  ],
+  "render_mode": "prose_renderer",
+  "answer_chars": 498,
+  "lane_timings": [
+    [
+      "structured",
+      0.0
+    ],
+    [
+      "exact",
+      0.688
+    ],
+    [
+      "lexical",
+      2.281
+    ],
+    [
+      "web",
+      4.007
+    ],
+    [
+      "vector",
+      18.364
+    ]
+  ]
+}

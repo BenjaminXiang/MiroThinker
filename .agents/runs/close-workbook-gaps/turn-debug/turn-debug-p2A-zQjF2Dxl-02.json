@@ -1,0 +1,43 @@
+{
+  "session_id": "session:chat:p2A-zQjF2Dxlt8kobQsX7VZkBELtPW3T",
+  "turn_id": "turn:chat:sha256:a62a64820d9b52eae579cafdde5e1e31685d8b10dad3f1f6c258416f3405a5bc",
+  "turn_count": 2,
+  "query": "它有哪些专利",
+  "planned_displayed_ids": [
+    "company-c-0e423959d58e241f23c487ff"
+  ],
+  "recalled_handles": [
+    {
+      "id": "patent-c-ec8c0f36d131f52353e2c2fb",
+      "kind": "canonical",
+      "domain": "patent",
+      "display_name": "驱动装置、减震模块、镜头卡口及可移动平台"
+    },
+    {
+      "id": "patent-c-b882a7b4aba30b234b1ac6f4",
+      "kind": "canonical",
+      "domain": "patent",
+      "display_name": "头戴式显示设备以及图像显示系统"
+    }
+  ],
+  "committed_handle_ids": [
+    "company-c-0e423959d58e241f23c487ff",
+    "web-handle:sha256:435a0f130920623c92c66a12cfd51b6efa9b6b7229e83e42e98689abbfac32ae"
+  ],
+  "committed_names": [
+    "深圳市大疆创新科技有限公司",
+    "深圳市大疆创新科技有限公司"
+  ],
+  "render_mode": "prose_renderer",
+  "answer_chars": 180,
+  "lane_timings": [
+    [
+      "relationship",
+      0.135
+    ],
+    [
+      "web",
+      8.174
+    ]
+  ]
+}

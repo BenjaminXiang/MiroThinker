@@ -1,0 +1,216 @@
+{
+  "session_id": "session:chat:eW9v1y58ti9oe6phQFjdcKJuPlFwyrLO",
+  "turn_id": "turn:chat:sha256:cb4be53641d930d433aadaeb6e9727f8cce454c54ddcbe9d04ae0da9b6123ea9",
+  "turn_count": 2,
+  "query": "上述企业里规模较大的有哪几家",
+  "planned_displayed_ids": [
+    "company-c-99547aab141322df687fefd5",
+    "company-c-a83813f3ce8eaebc267934f5",
+    "company-c-e3a5059c5d176da0e2fd089b",
+    "company-c-bf9568cdff7208d4f9ecda5d",
+    "company-c-1978d66edff1608855e36e4e",
+    "company-c-5e1345c39bc1aa9b2c72dac2",
+    "company-c-145408040945ad6f538c063b",
+    "company-c-14535187b68c652c853df05a",
+    "company-c-e21ce100a2f3535e0a3f7050",
+    "company-c-b9dac8d2762e6f4f91c4acea",
+    "company-c-362d7d604c585480a0ebf6f9",
+    "company-c-a6878d1306456741716afb0a",
+    "company-c-71a954b821bf676286313286",
+    "company-c-80362e9e832cbbfea9d9fc15",
+    "company-c-78565e6cf4007ba67d673712",
+    "company-c-96442e17ea07fa30cf11c87e",
+    "company-c-762ee0785aa3012ffb7d8ac3",
+    "company-c-a326e73117ad9465f42b2fae",
+    "company-c-50512f83a742aa05b391f379",
+    "company-c-0a97417bd9d8d00a57143ee4",
+    "company-c-7d08b6cc17db83da0ea777f3",
+    "company-c-11ddc0d613148c5ea8060c8e",
+    "company-c-6184c3c8b6d91334472d04e8",
+    "company-c-733923b07f421877f98ee0d6",
+    "company-c-ec3865c713e86067f4b9cbe8",
+    "company-c-1ec3088151f5167613981fd5",
+    "company-c-31c20e1ff26d8b02afcd11d7",
+    "company-c-a8394b790481bba30e462546",
+    "company-c-64570f291f5c113f3c8e89da",
+    "company-c-498b593fc2c765e0f531e848",
+    "company-c-8c83cde8bb8c5ab352ca970a",
+    "company-c-87550b4c56a3c55b00abd2d6",
+    "company-c-8456e1a79180a610d0b3ab0a",
+    "company-c-6cc8d756936d4aaae071b68c",
+    "company-c-ab13cd15b2c8f953a69a8007",
+    "company-c-7323f15c7421a172f47cbc7d",
+    "company-c-30d00abecfeeabd081ee65b2",
+    "company-c-5edbbe7bcba692c07c99b73f",
+    "company-c-cbfb99a090f109b1c0c6afd2",
+    "company-c-7b23076f872f1f3c38cc273f",
+    "company-c-9b08c38f2a86dbd108a1ebac",
+    "company-c-29ae7a36683a451085e84adb",
+    "company-c-9ce2ca12de04155715725de9",
+    "company-c-5d0b89bb37dac136eabad11f",
+    "company-c-642b2997e8a21eabc7b1ae34",
+    "company-c-4fcc1371de5be13ca457da96",
+    "company-c-29efeb593437ffd201597d34",
+    "company-c-235f7ea1c0970ad9e75ea3ef",
+    "company-c-5541889c43eb5ab7876adb79",
+    "company-c-5d36f13fbdb7a25f860ad8b8",
+    "company-c-6709caa3062951a8ff9494e5",
+    "company-c-2aa49ee37e2dbc63d0c779b3",
+    "company-c-9a230240e1f96b46f338b78b",
+    "company-c-516d0e743e3f54578c52d87c",
+    "company-c-66da2a3bad8737f7062ad201",
+    "company-c-a225838db35937188f820eb9",
+    "company-c-361f341c954fd021ab6c6d5f",
+    "company-c-17f318e9cd59bdfc86b07e7d",
+    "company-c-0e1847eebabbc0b24cd0fd7b",
+    "company-c-90b6558cfd2c2e035d41f1ab",
+    "company-c-fc4d55ae4ffa4e05f446a88a",
+    "company-c-897472400d540b73d8108c0a",
+    "company-c-4620df8a213a31a82e08b227",
+    "company-c-22a47932142c91007fd8580e",
+    "company-c-6b7fded9d00d2f52fd0efeb5",
+    "company-c-190fa3999ce4e6f4e4a8d258",
+    "company-c-8fb7dd4c658e5deea2e2ffa3",
+    "company-c-09ab078a537ea15ca2ecfed5",
+    "company-c-8fcfb9bbd8d461715c4d5123",
+    "company-c-fb966f44d9c31c5431af7256",
+    "company-c-0ad675cb2df70d1199e30893",
+    "company-c-477e370b47663b349bd2ba0a",
+    "company-c-982edea3dc92973fa83a5f41",
+    "company-c-f3d3e5ba80f3dfad0bc7585c"
+  ],
+  "recalled_handles": [
+    {
+      "id": "company-c-14535187b68c652c853df05a",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市德赛电池科技股份有限公司"
+    },
+    {
+      "id": "company-c-1978d66edff1608855e36e4e",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市普兰德储能技术有限公司"
+    },
+    {
+      "id": "company-c-145408040945ad6f538c063b",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市比亚迪锂电池有限公司"
+    },
+    {
+      "id": "company-c-bf9568cdff7208d4f9ecda5d",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市远信储能技术有限公司"
+    },
+    {
+      "id": "company-c-17f318e9cd59bdfc86b07e7d",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳基本半导体股份有限公司"
+    },
+    {
+      "id": "company-c-2aa49ee37e2dbc63d0c779b3",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "广东天劲新能源科技股份有限公司"
+    },
+    {
+      "id": "company-c-5e1345c39bc1aa9b2c72dac2",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市中和储能科技有限公司"
+    },
+    {
+      "id": "company-c-1ec3088151f5167613981fd5",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市赛德电源技术有限公司"
+    },
+    {
+      "id": "company-c-22a47932142c91007fd8580e",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "钛克菲斯智能科技（深圳）有限公司"
+    },
+    {
+      "id": "company-c-0a97417bd9d8d00a57143ee4",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市格瑞普电池有限公司"
+    },
+    {
+      "id": "company-c-09ab078a537ea15ca2ecfed5",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市科特高电子有限公司"
+    },
+    {
+      "id": "company-c-e3a5059c5d176da0e2fd089b",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市佰特瑞储能系统有限公司"
+    },
+    {
+      "id": "company-c-29ae7a36683a451085e84adb",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳昇麒新能源汽车科技有限公司"
+    },
+    {
+      "id": "company-c-29efeb593437ffd201597d34",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳智慧能源技术有限公司"
+    },
+    {
+      "id": "company-c-0ad675cb2df70d1199e30893",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市奥科达实业有限公司"
+    },
+    {
+      "id": "company-c-a83813f3ce8eaebc267934f5",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市圣驼储能技术有限公司"
+    }
+  ],
+  "committed_handle_ids": [
+    "company-c-14535187b68c652c853df05a",
+    "company-c-145408040945ad6f538c063b",
+    "company-c-bf9568cdff7208d4f9ecda5d",
+    "company-c-1978d66edff1608855e36e4e"
+  ],
+  "committed_names": [
+    "深圳市德赛电池科技股份有限公司",
+    "深圳市比亚迪锂电池有限公司",
+    "深圳市远信储能技术有限公司",
+    "深圳市普兰德储能技术有限公司"
+  ],
+  "render_mode": "prose_renderer",
+  "answer_chars": 601,
+  "lane_timings": [
+    [
+      "lexical",
+      0.15
+    ],
+    [
+      "exact",
+      0.207
+    ],
+    [
+      "structured",
+      0.342
+    ],
+    [
+      "vector",
+      0.359
+    ],
+    [
+      "web",
+      3.691
+    ]
+  ]
+}

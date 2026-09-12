@@ -1,0 +1,653 @@
+{
+  "session_id": "session:chat:k_URAqVI90RRF7a3bPV19Lq_TakexnxD",
+  "turn_id": "turn:chat:sha256:6288d3450ded95cc94cc847d1c60f611ae0e332d60b65fa170e52ca0ab81ce95",
+  "turn_count": 1,
+  "query": "深圳的机器人专利主要有哪些申请人",
+  "planned_displayed_ids": [],
+  "recalled_handles": [
+    {
+      "id": "web-handle:sha256:339ed2082a89aec9d766062bc6640e2854ab80e61d5c5c1f9acacac65e174149",
+      "kind": "web",
+      "domain": "patent",
+      "display_name": "深圳举行机器人全产业链接会"
+    },
+    {
+      "id": "web-handle:sha256:250c9099ef10987ea3ae6b58c0328d1d62e01a3be1bb85b50ee559658695fb62",
+      "kind": "web",
+      "domain": "patent",
+      "display_name": "手术机器人专利态势分析– 深圳大学知识产权信息服务中心"
+    },
+    {
+      "id": "web-handle:sha256:d4976dbf5eb0a5a5380f07694ef6f867d2833d7dc969062c2fdf0def634b4d43",
+      "kind": "web",
+      "domain": "patent",
+      "display_name": "深圳举行机器人全产业链接会"
+    },
+    {
+      "id": "web-handle:sha256:1ed3af2902b6a54eb754ce180e9c3f5b508fc2af7fdf87b05e4391c3185b9299",
+      "kind": "web",
+      "domain": "patent",
+      "display_name": "一年新增企业逾万家产业投融资持续活跃深圳机器人“人口”爆发式增长"
+    },
+    {
+      "id": "web-handle:sha256:b473d1cd15cbcd921a9e68fe4741fe65a3dc5c14aa9fb9be9c5b3912ad51bb01",
+      "kind": "web",
+      "domain": "patent",
+      "display_name": "深圳大学专利百科 - 专利汇PatentHub专利检索专利查询网发明专利查询分析"
+    },
+    {
+      "id": "web-handle:sha256:24fc586f45265517b2f02ff6f17ea3983572726561a675c38683d1908b8919e9",
+      "kind": "web",
+      "domain": "patent",
+      "display_name": "深圳举行机器人全产业链接会"
+    },
+    {
+      "id": "web-handle:sha256:837ea6dc6c4b217d286d58ea69d4ea1119e8af7825e082da1ad2351f8e146830",
+      "kind": "web",
+      "domain": "patent",
+      "display_name": "深圳70+人形机器人产业链企业一览 - 会议报名"
+    },
+    {
+      "id": "web-handle:sha256:5fae16eb1f6c41f178bb264b93eeb98afa0fea975e4e5b671c65c8d89e933b19",
+      "kind": "web",
+      "domain": "patent",
+      "display_name": "2023年4月11日公布的汽车电子行业专利新鲜出炉,深圳的是这37家_发明人_名称_方法"
+    },
+    {
+      "id": "web-handle:sha256:d91a50f025cbbe7db8ec215abb5592f03259fe4c70492c398471689c9929ce23",
+      "kind": "web",
+      "domain": "patent",
+      "display_name": "深圳口述史| 毕亚雷：亲身见证深圳机器人产业发展壮大 - 深圳市政协"
+    },
+    {
+      "id": "web-handle:sha256:d4f0ec7d0ac1108db7355feff10002c4ca769b6a31a03565e969b68bff172049",
+      "kind": "web",
+      "domain": "patent",
+      "display_name": "深圳有哪些机器人公司?汇总和梳理 - OFweek仪器仪表网"
+    },
+    {
+      "id": "web-handle:sha256:f975b939eae33fd6a05c2e586b2a39123b9da27c0ac6966de2a5d549aa79f1d8",
+      "kind": "web",
+      "domain": "patent",
+      "display_name": "深圳机器人产业产值超2400亿元 - 朋湖科创"
+    },
+    {
+      "id": "web-handle:sha256:9321b6cc1506983db860f52bab20baab5afdd196ccf1b677a851468f8bd99d6f",
+      "kind": "web",
+      "domain": "patent",
+      "display_name": "智械引擎势贯鹏城深圳机器人产业集群领跑全球智造"
+    },
+    {
+      "id": "web-handle:sha256:e213ee4bedc7070a8f2b9f704bd824426fbfe26069cef8c3e6fca9a26581d5b3",
+      "kind": "web",
+      "domain": "patent",
+      "display_name": "深圳有哪些机器人公司?汇总和梳理_腾讯新闻"
+    },
+    {
+      "id": "web-handle:sha256:43cc7b21cc972ac53cdcc48df3f8067bfbd9b171ee30364bcbbcce3637d21335",
+      "kind": "web",
+      "domain": "patent",
+      "display_name": "深圳市人工智能与机器人研究院2026年度医疗机器人方向开放课题 ..."
+    },
+    {
+      "id": "web-handle:sha256:a7245d3188609afd01b6bcac4d0f519f15dd07d514d4c42fb61a12c10e094fa3",
+      "kind": "web",
+      "domain": "patent",
+      "display_name": "劢微机器人科技（深圳）有限公司被认定为高新技术企业"
+    },
+    {
+      "id": "web-handle:sha256:7c2ba82e98bac1edcdbd22aaa47631e887368123dcdf7d19d564dedebc37c264",
+      "kind": "web",
+      "domain": "patent",
+      "display_name": "[PDF] 序号 - 深圳科创学院"
+    },
+    {
+      "id": "web-handle:sha256:b1e1b74aaa8c4f3d9cd3a332cc014e2232de4cfb2cc3a56c71203f74efdcfe0c",
+      "kind": "web",
+      "domain": "patent",
+      "display_name": "劢微机器人科技（深圳）有限公司被认定为高新技术企业"
+    },
+    {
+      "id": "web-handle:sha256:63887765ef2ff599ff2b9226072cc7b60a6ede7862a41f78463817815ac63373",
+      "kind": "web",
+      "domain": "patent",
+      "display_name": "指导案例158号：深圳市卫邦科技有限公司诉李坚毅 - 最高人民法院"
+    },
+    {
+      "id": "web-handle:sha256:873d7feefcd5cd4226cfa494798511f3cb7b923de4d99d95d6ca4f1235c97d27",
+      "kind": "web",
+      "domain": "patent",
+      "display_name": "深圳市迈步机器人科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:b86407dbf07f6afc25336549074c9180578dc7cdf9f37dd2360ca4f59efe12c2",
+      "kind": "web",
+      "domain": "patent",
+      "display_name": "深圳冲出的人形机器人独角兽:估值250亿,专利数领先本田、三星 - 今日头条"
+    },
+    {
+      "id": "web-handle:sha256:a743a6ff023391ee1fad8f10f4b7986d38c551f3a1709c075d70999e897b3e4e",
+      "kind": "web",
+      "domain": "patent",
+      "display_name": "深圳市智能机器人产业专利导航服务平台"
+    },
+    {
+      "id": "web-handle:sha256:930b1c8ff9340b5ef91e76bf7df651c318a45fcd9700b99924ab305a88f24512",
+      "kind": "web",
+      "domain": "patent",
+      "display_name": "深圳项目申报"
+    },
+    {
+      "id": "web-handle:sha256:c39cee139c19979bc70144d799d946e295905562ebc4d286edd7a8007d572fc5",
+      "kind": "web",
+      "domain": "patent",
+      "display_name": "深圳市智能机器人产业专利导航服务平台"
+    },
+    {
+      "id": "web-handle:sha256:9db2ac56c3b8f5dc344e35b8246ffebe3dc06461219febc6a827826de39c3cf7",
+      "kind": "web",
+      "domain": "patent",
+      "display_name": "灵博士机器人(深圳)有限公司专利信息查询 - 天眼查"
+    },
+    {
+      "id": "web-handle:sha256:c37fba6b3393601083e832953af630029a861d0fa5329aaa9b21e953d8271a0b",
+      "kind": "web",
+      "domain": "patent",
+      "display_name": "深圳市智能机器人产业专利导航服务平台"
+    },
+    {
+      "id": "web-handle:sha256:9c4397041a99230ab867939ed5ed03a4136bcea7bfadf431719090818194947a",
+      "kind": "web",
+      "domain": "patent",
+      "display_name": "深圳市大族机器人有限公司_知识产权_专利信息 - 启信宝"
+    },
+    {
+      "id": "web-handle:sha256:1c164748cbbded73b8f57c67ac0d284417b917d124b6d4eed3aee24811333e76",
+      "kind": "web",
+      "domain": "patent",
+      "display_name": "深圳市智能机器人产业专利导航服务平台"
+    },
+    {
+      "id": "web-handle:sha256:3beed728ed4ffa1998d522b4461bd338674a0885aeda37a061e6c712eb0212a0",
+      "kind": "web",
+      "domain": "patent",
+      "display_name": "深圳市智能机器人产业专利导航服务平台"
+    },
+    {
+      "id": "web-handle:sha256:fa06ad899c12d5a01ab9f70dace496ea2c1cc29c5eaaa38ea1d8b06f7709ee7a",
+      "kind": "web",
+      "domain": "patent",
+      "display_name": "深圳市精灵机器人自动化有限公司_知识产权_专利信息 - 启信宝"
+    },
+    {
+      "id": "web-handle:sha256:88090d940683620baad08904617e186c1df3465cbc7dd29ff1ffbd2b9f142f7b",
+      "kind": "web",
+      "domain": "patent",
+      "display_name": "深圳市智能机器人产业专利导航服务平台"
+    },
+    {
+      "id": "web-handle:sha256:ec2dc5b13313b61c58ec50f8350cd1bc6b903981b83d804b484b1267f1d39a45",
+      "kind": "web",
+      "domain": "patent",
+      "display_name": "深圳联合微创医疗机器人有限公司"
+    },
+    {
+      "id": "web-handle:sha256:37829b73b692f4516246f974a8e60d826328554400fc60f6bfdd4ab8d33fdd61",
+      "kind": "web",
+      "domain": "patent",
+      "display_name": "深圳市智能机器人产业专利导航服务平台"
+    },
+    {
+      "id": "web-handle:sha256:9c79f87a900dc67ad6c3ab50cb4508eaa200d3deea1729296e79cd8d53c05cc8",
+      "kind": "web",
+      "domain": "patent",
+      "display_name": "深圳市智能机器人产业专利导航服务平台"
+    },
+    {
+      "id": "web-handle:sha256:4ec3230d7fcf70161836e49cfaef2057c53d7f1c35d84ffaae8d75ed766260db",
+      "kind": "web",
+      "domain": "patent",
+      "display_name": "深圳市智能机器人产业专利导航服务平台"
+    },
+    {
+      "id": "web-handle:sha256:24142afd566fcdbd9ac445170014a74cd9d49f14e8a774395eb36baa64444bb1",
+      "kind": "web",
+      "domain": "patent",
+      "display_name": "深圳智胜机器人科技有限公司专利信息查询 - 天眼查"
+    },
+    {
+      "id": "web-handle:sha256:4842756fbd85da87deb4ddf4f004c6df519192bc1841e95db10a87ce36a6f37f",
+      "kind": "web",
+      "domain": "patent",
+      "display_name": "深圳市智能机器人产业专利导航服务平台"
+    },
+    {
+      "id": "web-handle:sha256:e08908b01e1d2414cfff34ab91722de2eb49b5739f8ccfac12dd508ba09cb0f6",
+      "kind": "web",
+      "domain": "patent",
+      "display_name": "附件"
+    },
+    {
+      "id": "web-handle:sha256:b6c6253556f77ad27298de7839dbff28798deff972358528defe15ab83511541",
+      "kind": "web",
+      "domain": "patent",
+      "display_name": "深圳专利企业排行榜_深圳专利有那些企业"
+    },
+    {
+      "id": "web-handle:sha256:20c54b9977ef6552e3800c903e8985cfbffecdb4513405492368e1519e11edcb",
+      "kind": "web",
+      "domain": "patent",
+      "display_name": "深圳机器人十大“尖子生”，你认识几个？欢迎补充 - 广州日报大洋网"
+    },
+    {
+      "id": "web-handle:sha256:75ccacf7181043e41a8127155346c6e9b776a15cffa1e0e8ba9a2630b74e7b2d",
+      "kind": "web",
+      "domain": "patent",
+      "display_name": "深圳机器人公司有哪些-聚超值"
+    },
+    {
+      "id": "web-handle:sha256:6f8ac1a994114bee3daedc0eb77fc88f729a2f22971be6a0d1b31235d6c26d3f",
+      "kind": "web",
+      "domain": "patent",
+      "display_name": "2024年深圳企业专利创新实力百强榜发布 38家人工智能企业入选榜单"
+    },
+    {
+      "id": "web-handle:sha256:172df64921d1e47b87e96651d032d1beace81041f9c255796120ec13d918b189",
+      "kind": "web",
+      "domain": "patent",
+      "display_name": "总产值1797亿元！深圳机器人企业卷专利、卷融资 - 国际电子商情"
+    },
+    {
+      "id": "web-handle:sha256:a249a8893e0443b0975bc04d70a6b720796fff28bccc239e71372d7e2d64030f",
+      "kind": "web",
+      "domain": "patent",
+      "display_name": "2024年深圳企业专利创新实力百强榜发布 38家人工智能企业入选榜单"
+    },
+    {
+      "id": "web-handle:sha256:b89e8e5bcaed80c62530ffd89129be4952e26e03858b52234b5cbe7a599b3a9f",
+      "kind": "web",
+      "domain": "patent",
+      "display_name": "深圳智能机器人公司排名（名录） - 职友集"
+    },
+    {
+      "id": "web-handle:sha256:bd2e474a5595f3487a34f32add00b9653e0afb7e42b660553be6b52e09c187f4",
+      "kind": "web",
+      "domain": "patent",
+      "display_name": "深圳有哪些机器人公司？汇总和梳理 - 知乎专栏"
+    },
+    {
+      "id": "web-handle:sha256:e85721ea5e5b14ad5d69f950f078ff3e535b272c94c3e9ee08918f3b865b6d1b",
+      "kind": "web",
+      "domain": "patent",
+      "display_name": "﻿数读深圳机器人产业 _大公网"
+    },
+    {
+      "id": "web-handle:sha256:0b43aa9d2cce7cd6cb988f0608f485c0933105adaf4ae84e0e64b7c14e592234",
+      "kind": "web",
+      "domain": "patent",
+      "display_name": "机器人“顶流”企业齐聚深圳！三大创新密码解锁 - 证券时报"
+    },
+    {
+      "id": "web-handle:sha256:94a3aaf63a13f9c5af0741f251b74da36c83fee04e54a0e1e9f4ab4828c7b02b",
+      "kind": "web",
+      "domain": "patent",
+      "display_name": "海外知名投行发布人形机器人最新研报 多家深企跻身全球百强榜单"
+    },
+    {
+      "id": "web-handle:sha256:b5c71f17f35ba6a779325c12faf35820433085863e20407031e6ca85619d181a",
+      "kind": "web",
+      "domain": "patent",
+      "display_name": "深圳机器人企业数量全国居首"
+    },
+    {
+      "id": "web-handle:sha256:ae96744c325b0afe3d08e7de80edb12afbce8ec2c3fd2b7b6b0e654fe6db85a6",
+      "kind": "web",
+      "domain": "patent",
+      "display_name": "深圳机器人企业信息查询-机器人行业相关公司-机器人企业名录-企查猫(企业查询宝)"
+    },
+    {
+      "id": "web-handle:sha256:a13d1fe29a9bb6b87bb8c55abbc560e22983d7e14dfa5ad03dabdd30ac7561b3",
+      "kind": "web",
+      "domain": "patent",
+      "display_name": "8年252项专利！深圳\"小巨人\"乐动机器人闯港交所，专攻\"视觉神经\""
+    },
+    {
+      "id": "web-handle:sha256:96c5ef3a373b7d2a02d07a33dd6a91ca235bca1e121ee443b9ee25de7a3657df",
+      "kind": "web",
+      "domain": "patent",
+      "display_name": "附件3"
+    },
+    {
+      "id": "web-handle:sha256:0ba235653fc2564acee646e02204be6273cd503cedc2ac81fa6982b79b50fe0b",
+      "kind": "web",
+      "domain": "patent",
+      "display_name": "深圳市智能机器人产业专利导航服务平台"
+    },
+    {
+      "id": "web-handle:sha256:8b48ffad194b6a7edbe9de1f0e7cd1f5ee34c33f0d48f45fa23ec87a1c36a8e5",
+      "kind": "web",
+      "domain": "patent",
+      "display_name": "元宝机器人(深圳)有限公司专利信息查询 - 天眼查"
+    },
+    {
+      "id": "web-handle:sha256:80a5410cb286a48db53b67f55f1878e8141c2b866ccd42e89fbd07af7de23e92",
+      "kind": "web",
+      "domain": "patent",
+      "display_name": "2024年深圳人形机器人产业链专利分析报告"
+    },
+    {
+      "id": "web-handle:sha256:1cc4c4802f1ff9f91c272925cca5c83b6963850c23c77e3e64f131cd75a431ac",
+      "kind": "web",
+      "domain": "patent",
+      "display_name": "通知公告--深圳市工业和信息化局"
+    },
+    {
+      "id": "web-handle:sha256:026abd3eee1e7d5a932c76dcdc0f68a03c0bbf446ca5618e3b18913fb89e7686",
+      "kind": "web",
+      "domain": "patent",
+      "display_name": "市级科研平台 - 南方科技大学"
+    },
+    {
+      "id": "web-handle:sha256:6c2318b83ba049d438150c2f1eec8cb64b260e50d5f0a14b606dd77e40f93e0e",
+      "kind": "web",
+      "domain": "patent",
+      "display_name": "深圳市智能机器人研究院"
+    },
+    {
+      "id": "web-handle:sha256:4c8289b130acd26c0a29a0d79c6987120a56cdda7e48b00057c705f34c123ce8",
+      "kind": "web",
+      "domain": "patent",
+      "display_name": "高研院人工智能与机器人创新研究院揭牌成立"
+    },
+    {
+      "id": "web-handle:sha256:403fdb6ea0bafa8eb7648f76e461bfc6d419255c3a0f06ce35bbf33ad3e97e53",
+      "kind": "web",
+      "domain": "patent",
+      "display_name": "深圳创想未来机器人取得机器人头部机构及其控制方法、机器人专利国家知识产权局_网易订阅"
+    },
+    {
+      "id": "web-handle:sha256:fe9708a85a9e944843aebb48a2c6ccacdb6b12271d7a5b75dff1d15473cb4f2a",
+      "kind": "web",
+      "domain": "patent",
+      "display_name": "具身智能与机器人研究所 - 深圳大学人工智能学院"
+    },
+    {
+      "id": "web-handle:sha256:cb6ee8bddc675abc3b463fa25106259dde26f456fb2c762025d0fd078d9e56ba",
+      "kind": "web",
+      "domain": "patent",
+      "display_name": "各有关单位 - 科研管理系统-通知公告"
+    },
+    {
+      "id": "web-handle:sha256:6cfcb2a90119c5bd44fb8b5287275798cdfc1339043bf1af9489e89ee4d63073",
+      "kind": "web",
+      "domain": "patent",
+      "display_name": "深圳市智能机器人研究院"
+    },
+    {
+      "id": "web-handle:sha256:99a29e59a8a380ba7073b7e7eaf3ec789415e64aacf8c36f12c17a5797b50206",
+      "kind": "web",
+      "domain": "patent",
+      "display_name": "深圳进化动力取得一种电力机器人控制相关专利专利摘要国家知识产权局_网易订阅"
+    },
+    {
+      "id": "web-handle:sha256:a4423cab01486c2ebc0185d7ac94273ee798daca7f7c0a6a408786a1698316e8",
+      "kind": "web",
+      "domain": "patent",
+      "display_name": "产业生态让创新更美好——深圳“机器人谷”观察 - 新华网"
+    },
+    {
+      "id": "web-handle:sha256:49e4f6c49881d8fbf3c28706b469be1774c986fff39d5366fb52f67fcec96f71",
+      "kind": "web",
+      "domain": "patent",
+      "display_name": "深圳机器人协会介绍(202302)宣传画册-电子书电脑版制作-云展网在线书城"
+    },
+    {
+      "id": "web-handle:sha256:ce4c35025d7d447834de2a193f72f3678309518138096474a19951f57581124d",
+      "kind": "web",
+      "domain": "patent",
+      "display_name": "深圳打造最好最优创新创业生态"
+    },
+    {
+      "id": "web-handle:sha256:180a5f914db50e5d1ef3e763d41a35f48531fa082f9d5c8dfa868fbf5f0c95e5",
+      "kind": "web",
+      "domain": "patent",
+      "display_name": "科研创新-深圳创想未来机器人有限公司"
+    },
+    {
+      "id": "web-handle:sha256:f5b70bf1c4c7bfdd58d634c549d74698bd56b856696667d69e1ea83dfe842c70",
+      "kind": "web",
+      "domain": "patent",
+      "display_name": "研究所介绍 - 先进集成技术研究所- 中国科学院深圳先进技术研究院"
+    },
+    {
+      "id": "web-handle:sha256:ad0158ee6fb2805c29df9bec2c2a1bd37e364d74c764d2cbd2324d0b1ee83351",
+      "kind": "web",
+      "domain": "patent",
+      "display_name": "中文版"
+    },
+    {
+      "id": "web-handle:sha256:c7f31c196b61f87ddf237e095e116ad8d90196044d9295fc9c00b8efab7aabac",
+      "kind": "web",
+      "domain": "patent",
+      "display_name": "大三学子手握3项发明专利……深圳这所“专升本”的大学做对了什么？"
+    },
+    {
+      "id": "web-handle:sha256:d293553024c14a320698cbe1e2ef16af76823749651f6f3a000d0d098a2cf081",
+      "kind": "web",
+      "domain": "patent",
+      "display_name": "专利"
+    },
+    {
+      "id": "web-handle:sha256:e1cc147943eecf1226dd588924931f0d1376624b6d0de9b1eda2e5cb36262672",
+      "kind": "web",
+      "domain": "patent",
+      "display_name": "深圳创想未来机器人取得机器人头部机构及其控制方法、机器人专利_金融界_日期"
+    },
+    {
+      "id": "web-handle:sha256:a08fa71aa5df4acc94c9b92d8aece15dd0aeee0aa417368cfc57dbbcf7bb711a",
+      "kind": "web",
+      "domain": "patent",
+      "display_name": "邢涛深圳创友专利商标代理有限公司代理人排行榜"
+    },
+    {
+      "id": "web-handle:sha256:2e7de9a95b1de7ba10881563464c2d200e4eca64483269e96909aa979c45786a",
+      "kind": "web",
+      "domain": "patent",
+      "display_name": "深圳着力打造最好科技生态"
+    },
+    {
+      "id": "web-handle:sha256:e54bed64c2a0ea9cc87b93bd9d3b1cfa0a8aab502ec15d6559ae248ab1621022",
+      "kind": "web",
+      "domain": "patent",
+      "display_name": "中山大学深圳研究院专利百科"
+    },
+    {
+      "id": "web-handle:sha256:95a6b8b09e4e0c1b5223294c1c051ce582a871f14c210bc82b76d3bb541691ad",
+      "kind": "web",
+      "domain": "patent",
+      "display_name": "2021年深圳机器人产业总产值1582亿元，专利申请与授权量保持高速 ..."
+    },
+    {
+      "id": "web-handle:sha256:1d4a34bdafa2b6fe093d05d54a85bde8b898c83c7f506e01c29b55e43161f3ad",
+      "kind": "web",
+      "domain": "patent",
+      "display_name": "深圳2022国内专利授权量居北上广深首位奥运会深圳市知识产权_网易订阅"
+    },
+    {
+      "id": "web-handle:sha256:0a9f5a0af154755196c4ad07ed1ad8654108b782df5ef82e33539788e4117170",
+      "kind": "web",
+      "domain": "patent",
+      "display_name": "深圳市顺天达专利商标代理有限公司 - SHENZHEN STANDARD ..."
+    },
+    {
+      "id": "web-handle:sha256:7729ced3e61f14a24ff0ec840be01de7bc6ea35106575637397a762e06322d57",
+      "kind": "web",
+      "domain": "patent",
+      "display_name": "人形机器人全球专利发展现状简析– 深圳大学知识产权信息服务中心"
+    },
+    {
+      "id": "web-handle:sha256:22acff91ead4c5b194de558eab2ed16ec0637eb4193902908a6e12a521e63d55",
+      "kind": "web",
+      "domain": "patent",
+      "display_name": "附件"
+    },
+    {
+      "id": "web-handle:sha256:9729776ed6ca219528a687502db4816970a2a44e6db2aead3edd00cca1bea8e9",
+      "kind": "web",
+      "domain": "patent",
+      "display_name": "深圳市明信测试设备有限公司专利百科 - 专利汇PatentHub专利检索专利查询网发明专利查询分析"
+    },
+    {
+      "id": "web-handle:sha256:b0664bca17503fa5b717989730ac24b6def45ecb9e51130e0ad70c987f7d6f15",
+      "kind": "web",
+      "domain": "patent",
+      "display_name": "[PDF] 2025 年度专利数据统计分析报告 - 深圳市市场监督管理局"
+    },
+    {
+      "id": "web-handle:sha256:f123a98c823239e83870ae023f7a2f28b49a4d7621cfcec26429596da3415f27",
+      "kind": "web",
+      "domain": "patent",
+      "display_name": "专利申请机构排名"
+    },
+    {
+      "id": "web-handle:sha256:4fb623c9b285eca6dbf2526d3cbd3bef6368841855edbfa96bac7d1942dbd272",
+      "kind": "web",
+      "domain": "patent",
+      "display_name": "深圳发布2018年知识产权发展状况白皮书界面新闻 · 快讯"
+    },
+    {
+      "id": "web-handle:sha256:cfb873a60798258a54aae56015b59994dae96fa040ed0d8db4cc74f2051d589d",
+      "kind": "web",
+      "domain": "patent",
+      "display_name": "深圳市机器人行业创新能力增强_中国发展网"
+    },
+    {
+      "id": "web-handle:sha256:0769bfc443662245bab4aa845c99a32c8f17b68a75fe1270ae75f17454f2013f",
+      "kind": "web",
+      "domain": "patent",
+      "display_name": "《深圳市机器人产业发展白皮书》发布，智慧芽从专利洞察产业创新"
+    },
+    {
+      "id": "web-handle:sha256:b14239acf157c4066e872b3685c1c16056dd02f81c47731ac5de11cb320173ac",
+      "kind": "web",
+      "domain": "patent",
+      "display_name": "深圳市2012年度知识产权统计分析报告"
+    },
+    {
+      "id": "web-handle:sha256:699d70c9841c5b4277b8a081fadca59dc1a95b7160c9209d30f926561037079c",
+      "kind": "web",
+      "domain": "patent",
+      "display_name": "2021年深圳机器人产业总产值1582亿元，专利申请与授权量保持高速 ..."
+    },
+    {
+      "id": "web-handle:sha256:31adf0b25528d2b1e69d82ef2d47ea9e3e7ea65f12df562651694762ad0b74e7",
+      "kind": "web",
+      "domain": "patent",
+      "display_name": "深圳市2011年度知识产权统计分析报告"
+    },
+    {
+      "id": "web-handle:sha256:ce1b93fa681c1be59f380e41ca8f828ac5830fa5f8d6ee9a10123ac22d09792b",
+      "kind": "web",
+      "domain": "patent",
+      "display_name": "深圳机器人要集中爆发了!首次突破2000亿!_腾讯新闻"
+    },
+    {
+      "id": "web-handle:sha256:997f8faff0efa463b935fb39e0c2c72d5e04e6fa08ad329024119a1057501a8a",
+      "kind": "web",
+      "domain": "patent",
+      "display_name": "深圳机器人专利申请量高速增长 - 中国高新技术产业导报"
+    },
+    {
+      "id": "web-handle:sha256:7e6685c9b5abd414223c655568e367b6731d52caf47f38565b5f524a0ee494fe",
+      "kind": "web",
+      "domain": "patent",
+      "display_name": "2000-2022年深圳人工智能发明专利申请量变化(单位:件)-行业数据-三个皮匠报告"
+    },
+    {
+      "id": "web-handle:sha256:e521495897c1d86df1161590a4e6a040952dfb565a05f4b95b4aa82a1122b1f0",
+      "kind": "web",
+      "domain": "patent",
+      "display_name": "深圳发明专利有效量超27万件占全国总量7.33% 每万人口拥有高价值 ..."
+    },
+    {
+      "id": "web-handle:sha256:a01bedea92bc6560954a59cea7c03b2f12f9b8ee09c88d8907de11e01cb33e7b",
+      "kind": "web",
+      "domain": "patent",
+      "display_name": "政府信息公开目录"
+    },
+    {
+      "id": "web-handle:sha256:dfc8ff315ef088fd01f852249c86871277c1e5c462e3007616192c404fae6676",
+      "kind": "web",
+      "domain": "patent",
+      "display_name": "一年新增10000+企业！深圳机器人“人口”爆发式增长"
+    },
+    {
+      "id": "web-handle:sha256:af0c84c7bb3adf537513c661545649d57cf1918157c8f00194f856b5cc8e0d92",
+      "kind": "web",
+      "domain": "patent",
+      "display_name": "一年新增10000+企业!深圳机器人“人口”爆发式增长 - 工控新闻 自动化新闻 中华工控网"
+    }
+  ],
+  "committed_handle_ids": [
+    "web-handle:sha256:b473d1cd15cbcd921a9e68fe4741fe65a3dc5c14aa9fb9be9c5b3912ad51bb01",
+    "web-handle:sha256:d91a50f025cbbe7db8ec215abb5592f03259fe4c70492c398471689c9929ce23",
+    "web-handle:sha256:9321b6cc1506983db860f52bab20baab5afdd196ccf1b677a851468f8bd99d6f",
+    "web-handle:sha256:a7245d3188609afd01b6bcac4d0f519f15dd07d514d4c42fb61a12c10e094fa3",
+    "web-handle:sha256:7c2ba82e98bac1edcdbd22aaa47631e887368123dcdf7d19d564dedebc37c264",
+    "web-handle:sha256:63887765ef2ff599ff2b9226072cc7b60a6ede7862a41f78463817815ac63373",
+    "web-handle:sha256:873d7feefcd5cd4226cfa494798511f3cb7b923de4d99d95d6ca4f1235c97d27",
+    "web-handle:sha256:b86407dbf07f6afc25336549074c9180578dc7cdf9f37dd2360ca4f59efe12c2",
+    "web-handle:sha256:9db2ac56c3b8f5dc344e35b8246ffebe3dc06461219febc6a827826de39c3cf7",
+    "web-handle:sha256:9c4397041a99230ab867939ed5ed03a4136bcea7bfadf431719090818194947a",
+    "web-handle:sha256:fa06ad899c12d5a01ab9f70dace496ea2c1cc29c5eaaa38ea1d8b06f7709ee7a",
+    "web-handle:sha256:ec2dc5b13313b61c58ec50f8350cd1bc6b903981b83d804b484b1267f1d39a45",
+    "web-handle:sha256:f975b939eae33fd6a05c2e586b2a39123b9da27c0ac6966de2a5d549aa79f1d8",
+    "web-handle:sha256:43cc7b21cc972ac53cdcc48df3f8067bfbd9b171ee30364bcbbcce3637d21335",
+    "web-handle:sha256:b1e1b74aaa8c4f3d9cd3a332cc014e2232de4cfb2cc3a56c71203f74efdcfe0c"
+  ],
+  "committed_names": [
+    "深圳大学专利百科 - 专利汇PatentHub专利检索专利查询网发明专利查询分析",
+    "深圳口述史| 毕亚雷：亲身见证深圳机器人产业发展壮大 - 深圳市政协",
+    "智械引擎势贯鹏城深圳机器人产业集群领跑全球智造",
+    "劢微机器人科技（深圳）有限公司被认定为高新技术企业",
+    "[PDF] 序号 - 深圳科创学院",
+    "指导案例158号：深圳市卫邦科技有限公司诉李坚毅 - 最高人民法院",
+    "深圳市迈步机器人科技有限公司",
+    "深圳冲出的人形机器人独角兽:估值250亿,专利数领先本田、三星 - 今日头条",
+    "灵博士机器人(深圳)有限公司专利信息查询 - 天眼查",
+    "深圳市大族机器人有限公司_知识产权_专利信息 - 启信宝",
+    "深圳市精灵机器人自动化有限公司_知识产权_专利信息 - 启信宝",
+    "深圳联合微创医疗机器人有限公司",
+    "深圳机器人产业产值超2400亿元 - 朋湖科创",
+    "深圳市人工智能与机器人研究院2026年度医疗机器人方向开放课题 ...",
+    "劢微机器人科技（深圳）有限公司被认定为高新技术企业"
+  ],
+  "render_mode": "prose_renderer",
+  "answer_chars": 655,
+  "lane_timings": [
+    [
+      "web",
+      16.383
+    ],
+    [
+      "structured",
+      0.0
+    ],
+    [
+      "exact",
+      0.37
+    ],
+    [
+      "lexical",
+      4.094
+    ],
+    [
+      "vector",
+      6.622
+    ],
+    [
+      "web",
+      7.36
+    ]
+  ]
+}

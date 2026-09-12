@@ -1,0 +1,865 @@
+{
+  "session_id": "session:chat:uXC4xG1d2pN7BvUmyWIy1y2sUcL4aDSG",
+  "turn_id": "turn:chat:sha256:87247b67537a663e992fa2dcaa57dc428b8215b4b82c82c7343f8fa059f19c25",
+  "turn_count": 1,
+  "query": "有哪些关于钙钛矿太阳能电池的论文",
+  "planned_displayed_ids": [],
+  "recalled_handles": [
+    {
+      "id": "paper-c-b578299c46cdba0328ba1cf7",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "褶子思想，游牧空间——关于非线性建筑参数化设计的访谈"
+    },
+    {
+      "id": "paper-c-4912defa1dec10017f2c11d6",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "石墨烯/炭黑杂化材料：新型、高效锂离子电池二元导电剂"
+    },
+    {
+      "id": "paper-c-bc674277c620b668daa9c23f",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "《汉语拼音方案》的社会性、实践性及相关问题的讨论"
+    },
+    {
+      "id": "paper-c-b0f384c46f96badf3fef6d98",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "暑假特辑——百花争艳“三步句”"
+    },
+    {
+      "id": "paper-c-459632fee52cdcae68141419",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "光子学中与连续域束缚态相关的手性现象（特邀）"
+    },
+    {
+      "id": "paper-c-b29b0fa6f0e1635cb099c818",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "贵阳市学龄前儿童血清谷草转氨酶（AST）水平分析"
+    },
+    {
+      "id": "paper-c-a1fb695b0fbcd8f35c509de2",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "4,4‘—二偶氮苯重氮氨基偶氮苯分光光度法测定水和废水中的痕量汞（II）"
+    },
+    {
+      "id": "paper-c-65af1c1fe8b49bd7d470c015",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "金融版“9.11”和战争救市"
+    },
+    {
+      "id": "paper-c-a3ca368c9a6bedb4a781567e",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "sp-sp 2 杂化碳基材料的简易合成及表征"
+    },
+    {
+      "id": "paper-c-d7bbc1fcc477d9fbd7b9c0a7",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "我写真，也写趣——来自师生的交流"
+    },
+    {
+      "id": "paper-c-8dbb11afc2c231012f955c08",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "2，3，7-三羟基-9-[4-（2，5-二羟基）苯偶氮]苯基荧光酮的合成及胶束增敏测定钨（VI）的研究"
+    },
+    {
+      "id": "paper-c-db29c0d27eee5d30499dd2aa",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "行动起来，寻找神奇魔术师！——神奇的魔术师--时间"
+    },
+    {
+      "id": "paper-c-d4c029f70b75d1e7ef9b0fc0",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "T-ZnOw/硅橡胶复合材料的非线性电导特性研究"
+    },
+    {
+      "id": "paper-c-f0c39da79b98168155f84f48",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "谈实践教学法在《电子商务安全》课程中的应用"
+    },
+    {
+      "id": "paper-c-25fd92ce9ec96a5dbccc77a0",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "储粮食害虫综合治理中的生物防治方法：V.抗虫粮种的应用"
+    },
+    {
+      "id": "paper-c-87ae1e9f4c5968e5e54f419a",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "由兩則網路“謠言”探討我國藥物食品中致癌物質的管理原則"
+    },
+    {
+      "id": "paper-c-ef0203a3165e81157db9f68a",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "中医综合疗法联合西医治疗溃疡性结肠炎患者对血清IL-23、25-（OH）D及YKL-40水平的影响"
+    },
+    {
+      "id": "paper-c-d7456ca00a73aae111e79dfd",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "流行病学:疫情之下的医学智慧——《临床研究基本概念》第2版推荐"
+    },
+    {
+      "id": "paper-c-d8faa14a8bda3bbb5fe10014",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "与会员共命运 铺垫发展新路子——昆明汽车摩托车配件行业商会五年工作报告"
+    },
+    {
+      "id": "paper-c-9995f33f2236977342abed6c",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "MiR-378a-5p直接靶向ZEB1上调鼻咽癌CNE-1细胞E-cadherin表达（英文）"
+    },
+    {
+      "id": "paper-c-1373204a99e1f84635b3c844",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "联盟理论下风-火-电动汽车协同调度消纳风电的优化算法及利润分配"
+    },
+    {
+      "id": "paper-c-bbc4b131d112214dc61e2ddc",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "循证医学中的证据效果反应链"
+    },
+    {
+      "id": "paper-c-4a2c98db21cd57239978e398",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "“做”与“揍”"
+    },
+    {
+      "id": "paper-c-c772bb021177a7b176f005e4",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "三维立体封装（3D）结构与热设计面临的挑战"
+    },
+    {
+      "id": "paper-c-ae0b039ca0420a0bcea2a772",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Physical insights into single-component organic photovoltaics"
+    },
+    {
+      "id": "paper-c-e6866611570eb3648930a05b",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Efficient and stable high-entropy organic photovoltaics"
+    },
+    {
+      "id": "paper-c-997655af7209c8d27221bc74",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Two-sample empirical likelihood method"
+    },
+    {
+      "id": "paper-c-cadae59ec2f9b608fe636f1a",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Quantum theory of the nonlinear Hall effect"
+    },
+    {
+      "id": "paper-c-8614409d66892ee93a677e09",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "草辫“编出”快乐晚年"
+    },
+    {
+      "id": "paper-c-b12a9070359329f5e3c753df",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Tunable second harmonic in altermagnetic Josephson junctions"
+    },
+    {
+      "id": "paper-c-eee0406c8ff627883a104dca",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "On the sampling window method for long-range dependent data"
+    },
+    {
+      "id": "paper-c-fd7e927a4b715f023c3eb921",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Layer Hall effect in a 2D topological axion antiferromagnet"
+    },
+    {
+      "id": "paper-c-190875a8cf92cedf920b4636",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Surface and Interfacial Engineering for Multifunctional Nanocarbon Materials"
+    },
+    {
+      "id": "paper-c-a0848e5c2f41fcc735eaac62",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Nonlinear Hall effect on a disordered lattice"
+    },
+    {
+      "id": "paper-c-432d609139966e52fb60a0e1",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Conductance oscillations of antiferromagnetic layer tunnel junctions"
+    },
+    {
+      "id": "paper-c-b245a74a25be0604ad4f6864",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Side-surface-mediated hybridization in axion insulators"
+    },
+    {
+      "id": "paper-c-eef91c467f8f972a5c5013e2",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Magnetic topological transistor exploiting layer-selective transport"
+    },
+    {
+      "id": "paper-c-66cb6b08d28ad040e6051f92",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "某铜、铅、锌多金属矿选矿试验研究"
+    },
+    {
+      "id": "paper-c-ee0b72f896705703475acb80",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Soft reconfigurable logic gates with high-frequency electrical switching"
+    },
+    {
+      "id": "paper-c-e1b6d4b6a8ce503186e16560",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "The IF Toolset"
+    },
+    {
+      "id": "paper-c-5c7008f7f8070e3ee7a136d6",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "PCB-Migrator: Automated PCB PnR Migration"
+    },
+    {
+      "id": "paper-c-6ffb47089e8ec404a1459ea2",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Boosted room-temperature nonlinear Hall effect in sputtered films"
+    },
+    {
+      "id": "paper-c-2a634ee523eda0e8b809fd09",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Ceramic-carbon Janus membrane for robust solar-thermal desalination"
+    },
+    {
+      "id": "paper-c-2d0cdfe61b6a5cee5f21732c",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Magnetically tunable Shubnikov-de Haas oscillations in MnBi2Te4"
+    },
+    {
+      "id": "paper-c-416dd2d0fac9fbb38a09f2ba",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "The Embedded Systems Design Challenge"
+    },
+    {
+      "id": "paper-c-d6fbebc5a7a12fb3588aee28",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "依靠“三个到位”管好机关干部"
+    },
+    {
+      "id": "paper-c-6e43a5cb72a4553c194c07d5",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Using nonlocal surface transport to identify the axion insulator"
+    },
+    {
+      "id": "paper-c-c4a2f45d5aaaa22b650604eb",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Tapered composite likelihood for spatial max-stable models"
+    },
+    {
+      "id": "paper-c-038ba900ec660bace678852f",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Finite-time control for robot manipulators"
+    },
+    {
+      "id": "paper-c-e3ecef5d3216f12299ce67b1",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Multifunctional Liquid Metal‐Bridged Graphite Nanoplatelets/Aramid Nanofiber Film for Thermal Management"
+    },
+    {
+      "id": "paper-c-5bca5f59fb2c3ba1cdc87031",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Soft Organic Thermoelectric Materials: Principles, Current State of the Art and Applications"
+    },
+    {
+      "id": "paper-c-371848d44a45630c3504f28e",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Anomalous Andreev spectrum and transport in non-Hermitian Josephson junctions"
+    },
+    {
+      "id": "paper-c-89a575af431d1648c6107672",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "The Algebra of Timed Processes, ATP: Theory and Application"
+    },
+    {
+      "id": "paper-c-81439db12a24635cf615dad7",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Controller Synthesis for Timed Automata 1"
+    },
+    {
+      "id": "paper-c-a4ee71dae9af20c9f3690c1a",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "空、实心钢管混凝土构件抗扭抗剪性能的研究I：刚度和模量的研究"
+    },
+    {
+      "id": "paper-c-f9c1868d4cd3645962a96cd2",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Multifunctional transparent conductive films via Langmuir–Blodgett assembly of large MXene flakes"
+    },
+    {
+      "id": "paper-c-943a08308c69101189296af6",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Maximum-Likelihood, Magnitude-Based, Amplitude and Noise Variance Estimation"
+    },
+    {
+      "id": "paper-c-030f43c8920f9b24e841a91f",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Empirical likelihood for partial linear models with fixed designs"
+    },
+    {
+      "id": "paper-c-997542d3215e1da7cff44abd",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "DiffSP: Differentiable Sequence Pair-based Analog Placement"
+    },
+    {
+      "id": "paper-c-ecddbd8a31572f83b1c548c7",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Layer Hall effect induced by hidden Berry curvature in antiferromagnetic insulators"
+    },
+    {
+      "id": "paper-c-9a0edae36b09dcb647e3638a",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Probing k -Space Alternating Spin Polarization via the Anomalous Hall Effect"
+    },
+    {
+      "id": "paper-c-dbed14bdc295fa3c262bff3b",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Generalized Mutual Information Analysis for BICM-8QAM With Residual Phase Noise"
+    },
+    {
+      "id": "paper-c-2753c1b6ab9f959628854982",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "2,3,7—三羟基—9—（3,5—二溴—2—羟基）苯基荧光酮—CTMAB胶束荧 …"
+    },
+    {
+      "id": "paper-c-fc3779ba31584e35cd1d1c62",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Facile Synthesis of Hollow V2O5 Microspheres for Lithium-Ion Batteries with Improved Performance"
+    },
+    {
+      "id": "paper-c-a8e997f30d30d007062d3fa4",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Space Robotics: Dynamics and Control"
+    },
+    {
+      "id": "paper-c-e7aded81351396914398ee27",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Water-enhanced plasticity of calcium fluoride"
+    },
+    {
+      "id": "paper-c-0d005fbd1d8941ad2ac012e9",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "On the jump activity index for semimartingales"
+    },
+    {
+      "id": "paper-c-944e278a3e1cb9e3bc6590a1",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Efficient Continuous Logic Opti- mization with Diffusion Model"
+    },
+    {
+      "id": "paper-c-e3af64168b29b408cf240f95",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Finite-size effect on quantum percolation in topological insulators"
+    },
+    {
+      "id": "paper-c-fa0cb9347342009107c1e2f4",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "An overview and synthesis on timed process algebras"
+    },
+    {
+      "id": "paper-c-bb6aa3b5dd3db9cce161e077",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Channel Path Identification in mmWave Systems With Large-Scale Antenna Arrays"
+    },
+    {
+      "id": "paper-c-5e41120cb7ddbb35b80a7534",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "The complexity of classical Marcus analysis for charge transfer states in organic photovoltaics"
+    },
+    {
+      "id": "paper-c-7261576f074957ddfca44f0e",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Enhancement of Josephson supercurrent in a π -junction state by chiral antiferromagnetism"
+    },
+    {
+      "id": "paper-c-2dc52540b7e590c4946cb111",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Multimodel Selection and Computation Resource Allocation Driven Cooperative Spectrum Sensing"
+    },
+    {
+      "id": "paper-c-8f4d8d8b584fcdd5b2667c8e",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Efficient blind carrier frequency offset estimation for coherent optical OFDM systems"
+    },
+    {
+      "id": "paper-c-428ec12fb38f2693527cd5bf",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Intrinsic charge manipulation for solution‐processed organic photodetectors with high sensitivity and fast response"
+    },
+    {
+      "id": "paper-c-d2a01b2374fd4b8eea1f23bf",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "3D Interconnected Conductive Graphite Nanoplatelet Welded Carbon Nanotube Networks for Stretchable Conductors"
+    },
+    {
+      "id": "paper-c-684f864cf28b38fc64afdc7f",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Empirical likelihood for partial linear models"
+    },
+    {
+      "id": "paper-c-ef221562eceb439f7df2bc90",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Jamming Giant Molecules at Interface in Organic Photovoltaics to Improve Performance and Stability"
+    },
+    {
+      "id": "paper-c-296f0efd0a0189ea020241e8",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Carrier Frequency Offset Estimation for CO-OFDM: The Matched-Filter Approach"
+    },
+    {
+      "id": "paper-c-cec2f033803a56b77f2dd572",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "EDA Flow Matters: Stage-Aware Parameter Optimization of Tool Chain"
+    },
+    {
+      "id": "paper-c-63932e9dcc1e86591f391c29",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Accurate laser linewidth estimation using the DA-ML carrier phase estimator"
+    },
+    {
+      "id": "paper-c-c16ed744ca9642c72c67b1a5",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Tuning three-dimensional higher-order topological insulators by surface state hybridization"
+    },
+    {
+      "id": "paper-c-e5a5e95ce0c87d6d91149390",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Specification and verification of concurrent systems in CESAR"
+    },
+    {
+      "id": "paper-c-2606c830eeaaf2d7d8337a64",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Analytical solution for the surface states of the antiferromagnetic topological insulator MnBi2Te4"
+    },
+    {
+      "id": "paper-c-979cee48d91d1a7b49b80a25",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "空、实心钢管混凝土构件抗扭抗剪性能的研究II：强度的理论研究"
+    },
+    {
+      "id": "paper-c-7ecec7417ff5304ad9512055",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "衍生化气相色谱法测定3-氨基-1，2-丙二醇的含量"
+    },
+    {
+      "id": "paper-c-242c19a67d14605d8fb0e15b",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Continuous Spatial Process Models for Spatial Extreme Values"
+    },
+    {
+      "id": "paper-c-1280796bf3ded1daed86492e",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "AlphaPlacer: Analog Placement Enhanced by Monte Carlo Tree Search"
+    },
+    {
+      "id": "paper-c-fcbac64bedee32c379404160",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "M-APSK Constellation Optimization in the Presence of Phase Reference Error"
+    },
+    {
+      "id": "paper-c-89853a68251a0690ca40db42",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Survey of modeling, planning, and ground verification of space robotic systems"
+    },
+    {
+      "id": "paper-c-116c112f2dba1beabc3a466e",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Use of Petri Nets for Performance Evaluation"
+    },
+    {
+      "id": "paper-c-d851272b252c4731b8851cc2",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Spoofing and countermeasures for speaker verification: A survey"
+    },
+    {
+      "id": "paper-c-8d74284331da492064d13589",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Impact of Pointing Errors on the Error Performance of Intersatellite Laser Communications"
+    },
+    {
+      "id": "paper-c-1d8065d44e3b244e41729f1c",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Hierarchical modeling for extreme values observed over space and time"
+    },
+    {
+      "id": "paper-c-5f9ca39691bc51b69a6f0099",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Resilient labeled multi-Bernoulli fusion with peer-to-peer sensor network"
+    },
+    {
+      "id": "paper-c-e96a7fafa01b49db84e29af0",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Microstructural Welding Engineering of Carbon Nanotube/Polydimethylsiloxane Nanocomposites with Improved Interfacial Thermal Transport"
+    },
+    {
+      "id": "paper-c-283047dab66d462b039065df",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "DSPlacer: DSP Placement for FPGA-based CNN Accelerator"
+    },
+    {
+      "id": "paper-c-161199014ec386ddddf07f1d",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Feature subset selection using naive Bayes for text classification"
+    },
+    {
+      "id": "paper-c-f6c2f46cb18edf85afea0936",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Maximum Likelihood Estimation of Wiener Phase Noise Variance in Coherent Optical Systems"
+    },
+    {
+      "id": "paper-c-506bd5d845cd6f0cf88e7271",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Model-Driven Channel Estimation Network for Orthogonal Time-Frequency Space Systems"
+    },
+    {
+      "id": "paper-c-7364c38593f7f3192b1b50e9",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "On the synthesis of discrete controllers for timed systems"
+    },
+    {
+      "id": "paper-c-4f51c777803d97fad9ad1ab0",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Template synthesis of heterostructured polyaniline/Bi2Te3 nanowires"
+    },
+    {
+      "id": "paper-c-209fa4f89a9f256b2f6273a3",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Spin-manipulation via novel MoPS3 nanocrystal for high-performance thick-film organic solar cells"
+    },
+    {
+      "id": "paper-c-50672ab640cd4ee197de6d69",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Highly sensitive, stretchable, and transparent multidirectional wearable strain sensors based on patterned vertical graphene array"
+    },
+    {
+      "id": "paper-c-27191b238bcc8c463552428b",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Electro-plastic effect on the indentation of calcium fluoride"
+    },
+    {
+      "id": "paper-c-eb0e9bcea05f0ac8afb1c65c",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Optical Absorption Tailoring Enabled High‐Performance Dual‐Narrowband Organic Photodetectors for Secure Optical Communications"
+    },
+    {
+      "id": "paper-c-7f2fb4a3f88338608569ba2a",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Expert-level Leaf Cell Layout Generation via Preference-Optimized LLM"
+    },
+    {
+      "id": "paper-c-d132af1791a71e7c9332ce47",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Online Dynamic Gesture Recognition for Human Robot Interaction"
+    },
+    {
+      "id": "paper-c-a96ca1a20708ee3323099563",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Continuous Spatial Process Models for Spatial Extreme Values"
+    },
+    {
+      "id": "paper-c-83db40f5d95462f194fd005b",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "KCLNet: Electrically Equivalence-Oriented Graph Representation Learning for Analog Circuits"
+    },
+    {
+      "id": "paper-c-6ba44a206a2f8fe0de581c04",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Multifunctional Ti3C2Tx MXene/boron nitride nanosheet/polydimethylsiloxane nanocomposites with integrated dielectric and electromagnetic interference shielding performance"
+    },
+    {
+      "id": "paper-c-d3cc1d158b6dd2cb4b6defab",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Truly Pre-Routing Timing Prediction via Considering Power Delivery Networks"
+    },
+    {
+      "id": "paper-c-d07313a02666adf0ea657463",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "游艺厅岂可“游戏”经营"
+    },
+    {
+      "id": "paper-c-5b1bc08f27a11fb59f53c76d",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Synthesis, Structural Characterization, and Hydrogen Release of Al-Based Amidoboranes Derived from MAlH4 (Li, Na)-BH3NH2CH2CH2NH2BH3"
+    },
+    {
+      "id": "paper-c-ef88ffbf558ffc9f12fff00f",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Silicon Carbide-Welded Boron Nitride Networks for Self-Healing Flexible Thermal Interface Materials"
+    },
+    {
+      "id": "paper-c-4a39f3a01bef2d8cbc543fcd",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Interpretable machine learning enables high performance of magnesium borohydride hydrogen storage system"
+    },
+    {
+      "id": "paper-c-c8905580739ac89351778548",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Strong Limit Theorems for Weighted Sums of Negatively Associated Random Variables"
+    },
+    {
+      "id": "paper-c-87d6f0268f2c740f28a255c4",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Highly stretchable and conductive 3D graphene skeleton/polyacrylamide/LiCl nanocomposite hydrogels for high-performance electromagnetic interference shielding"
+    },
+    {
+      "id": "paper-c-78ec54aadb79769b4fafc1c3",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Chiral edge state coupling theory of transport in quantum anomalous Hall insulators"
+    },
+    {
+      "id": "paper-c-761740b976317f90f5eca3ae",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Achieving 20.80% Efficiency in Ternary Organic Solar Cells via Suppression of Static and Dynamic Disorder"
+    },
+    {
+      "id": "paper-c-381db5bc9fc5ee6ff4547546",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Global Minimum-Jerk Trajectory Planning of Space Manipulator"
+    },
+    {
+      "id": "paper-c-2f58e6da1d1a262797eec25b",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Mechanism in scratching of calcium fluoride with magneto-plasticity"
+    },
+    {
+      "id": "paper-c-211aea4fa28bfb4d09964644",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Angular dependence of the upper critical field in the high-pressure 1T' phase of MoTe2"
+    },
+    {
+      "id": "paper-c-fdac374e73429fa4723297f2",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Dual-objective eco-routing strategy for vehicles with different powertrain types"
+    },
+    {
+      "id": "paper-c-2f332e99718fad1a3472d222",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Improving the performance of predictive process modeling for large datasets"
+    },
+    {
+      "id": "paper-c-ba7d637c0f254941c843a697",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "GRACE: A Ground Plane Generation and Re-routing Aware Co-design Engine"
+    },
+    {
+      "id": "paper-c-bb0f01355b547ef33e65f731",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Hydride ionic conductors: Bridging ionic transport mechanisms and design strategies for sustainable energy systems"
+    }
+  ],
+  "committed_handle_ids": [
+    "paper-c-b578299c46cdba0328ba1cf7",
+    "paper-c-4912defa1dec10017f2c11d6",
+    "paper-c-bc674277c620b668daa9c23f",
+    "paper-c-b0f384c46f96badf3fef6d98",
+    "paper-c-459632fee52cdcae68141419",
+    "paper-c-b29b0fa6f0e1635cb099c818",
+    "paper-c-a1fb695b0fbcd8f35c509de2",
+    "paper-c-65af1c1fe8b49bd7d470c015",
+    "paper-c-a3ca368c9a6bedb4a781567e",
+    "paper-c-d7bbc1fcc477d9fbd7b9c0a7",
+    "paper-c-8dbb11afc2c231012f955c08",
+    "paper-c-db29c0d27eee5d30499dd2aa",
+    "paper-c-d4c029f70b75d1e7ef9b0fc0",
+    "paper-c-f0c39da79b98168155f84f48",
+    "paper-c-25fd92ce9ec96a5dbccc77a0",
+    "paper-c-87ae1e9f4c5968e5e54f419a",
+    "paper-c-ef0203a3165e81157db9f68a",
+    "paper-c-d7456ca00a73aae111e79dfd",
+    "paper-c-d8faa14a8bda3bbb5fe10014",
+    "paper-c-9995f33f2236977342abed6c",
+    "paper-c-1373204a99e1f84635b3c844",
+    "paper-c-bbc4b131d112214dc61e2ddc",
+    "paper-c-4a2c98db21cd57239978e398",
+    "paper-c-c772bb021177a7b176f005e4",
+    "paper-c-ae0b039ca0420a0bcea2a772",
+    "paper-c-e6866611570eb3648930a05b",
+    "paper-c-997655af7209c8d27221bc74",
+    "paper-c-cadae59ec2f9b608fe636f1a",
+    "paper-c-8614409d66892ee93a677e09",
+    "paper-c-b12a9070359329f5e3c753df",
+    "paper-c-eee0406c8ff627883a104dca",
+    "paper-c-fd7e927a4b715f023c3eb921"
+  ],
+  "committed_names": [
+    "褶子思想，游牧空间——关于非线性建筑参数化设计的访谈",
+    "石墨烯/炭黑杂化材料：新型、高效锂离子电池二元导电剂",
+    "《汉语拼音方案》的社会性、实践性及相关问题的讨论",
+    "暑假特辑——百花争艳“三步句”",
+    "光子学中与连续域束缚态相关的手性现象（特邀）",
+    "贵阳市学龄前儿童血清谷草转氨酶（AST）水平分析",
+    "4,4‘—二偶氮苯重氮氨基偶氮苯分光光度法测定水和废水中的痕量汞（II）",
+    "金融版“9.11”和战争救市",
+    "sp-sp 2 杂化碳基材料的简易合成及表征",
+    "我写真，也写趣——来自师生的交流",
+    "2，3，7-三羟基-9-[4-（2，5-二羟基）苯偶氮]苯基荧光酮的合成及胶束增敏测定钨（VI）的研究",
+    "行动起来，寻找神奇魔术师！——神奇的魔术师--时间",
+    "T-ZnOw/硅橡胶复合材料的非线性电导特性研究",
+    "谈实践教学法在《电子商务安全》课程中的应用",
+    "储粮食害虫综合治理中的生物防治方法：V.抗虫粮种的应用",
+    "由兩則網路“謠言”探討我國藥物食品中致癌物質的管理原則",
+    "中医综合疗法联合西医治疗溃疡性结肠炎患者对血清IL-23、25-（OH）D及YKL-40水平的影响",
+    "流行病学:疫情之下的医学智慧——《临床研究基本概念》第2版推荐",
+    "与会员共命运 铺垫发展新路子——昆明汽车摩托车配件行业商会五年工作报告",
+    "MiR-378a-5p直接靶向ZEB1上调鼻咽癌CNE-1细胞E-cadherin表达（英文）",
+    "联盟理论下风-火-电动汽车协同调度消纳风电的优化算法及利润分配",
+    "循证医学中的证据效果反应链",
+    "“做”与“揍”",
+    "三维立体封装（3D）结构与热设计面临的挑战",
+    "Physical insights into single-component organic photovoltaics",
+    "Efficient and stable high-entropy organic photovoltaics",
+    "Two-sample empirical likelihood method",
+    "Quantum theory of the nonlinear Hall effect",
+    "草辫“编出”快乐晚年",
+    "Tunable second harmonic in altermagnetic Josephson junctions",
+    "On the sampling window method for long-range dependent data",
+    "Layer Hall effect in a 2D topological axion antiferromagnet"
+  ],
+  "render_mode": "prose_renderer",
+  "answer_chars": 425,
+  "lane_timings": [
+    [
+      "structured",
+      0.0
+    ],
+    [
+      "exact",
+      0.238
+    ],
+    [
+      "lexical",
+      1.312
+    ],
+    [
+      "vector",
+      8.739
+    ]
+  ]
+}

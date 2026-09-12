@@ -1,0 +1,1328 @@
+{
+  "turn": "g2-t1",
+  "query": "中国有哪些成熟的酒店送餐机器人供应商",
+  "handle_count": 128,
+  "handles": [
+    {
+      "display_name": "深圳闪移技术有限责任公司",
+      "domain": "company",
+      "kind": "canonical",
+      "public_id": "company-c-676a3afe75ae4b07dc4bd61d"
+    },
+    {
+      "display_name": "2026年酒店送餐机器人选购指南:猎户星空与行业主流品牌评测 - 智造出海 - 博客园企业号",
+      "domain": "company",
+      "kind": "web",
+      "public_id": "web-handle:sha256:caa26d041251e2694eb8e43d68c58292fa9ac01ff0e331b668b361153102880c"
+    },
+    {
+      "display_name": "博歌（深圳）自动化有限公司",
+      "domain": "company",
+      "kind": "canonical",
+      "public_id": "company-c-2e9452801a0a4bc7ecd5c066"
+    },
+    {
+      "display_name": "普渡机器人携手亚朵集团，以机器人技术引领酒店服务新纪元",
+      "domain": "company",
+      "kind": "web",
+      "public_id": "web-handle:sha256:1d64a92779a2c1d85d3c90aa8af27c57fb048a7f817ed4a0ea156feae2e4aeb6"
+    },
+    {
+      "display_name": "深圳市震远电子科技有限公司",
+      "domain": "company",
+      "kind": "canonical",
+      "public_id": "company-c-f552415a22ce3516ae204f60"
+    },
+    {
+      "display_name": "关于 送餐机器人 结果1",
+      "domain": "company",
+      "kind": "web",
+      "public_id": "web-handle:sha256:a6dc76ee4eb62fb408478d02980db054b62f4dec9ae05d20745169860595fa4c"
+    },
+    {
+      "display_name": "深圳市万德昌创新智能有限公司",
+      "domain": "company",
+      "kind": "canonical",
+      "public_id": "company-c-5d378456d303796ccf257246"
+    },
+    {
+      "display_name": "遍地都是的酒店机器人，已经“退烧”了- 21经济网 - 21财经",
+      "domain": "company",
+      "kind": "web",
+      "public_id": "web-handle:sha256:8bddc0706f05646c08dec875ed8042f2a5a95fc1567638e5b098c94daae3e77b"
+    },
+    {
+      "display_name": "深圳市磐硕科技有限公司",
+      "domain": "company",
+      "kind": "canonical",
+      "public_id": "company-c-4814e7df46dd0f4f5aedf681"
+    },
+    {
+      "display_name": "「送餐传菜机器人」送餐传菜机器人公司黄页 - 顺企网",
+      "domain": "company",
+      "kind": "web",
+      "public_id": "web-handle:sha256:24ec5b2fa2056dca7a2885e922f645f77958fafcd1075d38e8b97e385866b662"
+    },
+    {
+      "display_name": "智博创联科技（深圳）有限公司",
+      "domain": "company",
+      "kind": "canonical",
+      "public_id": "company-c-038a0caab6019688fde7cbb8"
+    },
+    {
+      "display_name": "烧钱8亿换“第一股”，酒店机器人是“伪刚需”吗？ - 观察者网",
+      "domain": "company",
+      "kind": "web",
+      "public_id": "web-handle:sha256:cdbc39897597ac1f5e773f748f3cfd24df02bd37f1a997d48811dd0014b35f96"
+    },
+    {
+      "display_name": "深圳威洛博机器人有限公司",
+      "domain": "company",
+      "kind": "canonical",
+      "public_id": "company-c-dde3471e6fb9b1883cb0ffb8"
+    },
+    {
+      "display_name": "酒店机器人正在中国普及_机器人网",
+      "domain": "company",
+      "kind": "web",
+      "public_id": "web-handle:sha256:371b38cd17999126a5ed33c290fa7ff3f3ea684e7d6cdf95cc610a950f3ec895"
+    },
+    {
+      "display_name": "深圳中智卫安机器人技术有限公司",
+      "domain": "company",
+      "kind": "canonical",
+      "public_id": "company-c-10e74e0166647f4352b883fd"
+    },
+    {
+      "display_name": "酒店智能机器人有哪些品牌？酒店配送机器人哪家最好？ - 中华网",
+      "domain": "company",
+      "kind": "web",
+      "public_id": "web-handle:sha256:587b27dc077e816da873fb76f442deab64b20e5a3fe21523c68060ed1c096ae4"
+    },
+    {
+      "display_name": "深圳市四维物联技术有限公司",
+      "domain": "company",
+      "kind": "canonical",
+      "public_id": "company-c-d7481c83522f6bfa03e868be"
+    },
+    {
+      "display_name": "2026年深度解析:支持OEM的酒店送餐机器人厂商与场景化解决方案 - 智造出海 - 博客园企业号",
+      "domain": "company",
+      "kind": "web",
+      "public_id": "web-handle:sha256:e2466d66848c44f79269118d2c17cb7cc05ae32d0272359e690494105e4001c4"
+    },
+    {
+      "display_name": "深圳华因康基因科技有限公司",
+      "domain": "company",
+      "kind": "canonical",
+      "public_id": "company-c-d0fb66c3c09d6d49ba881866"
+    },
+    {
+      "display_name": "从餐饮、酒店配送机器人，看国产服务机器人如何出海？ - 亿欧",
+      "domain": "company",
+      "kind": "web",
+      "public_id": "web-handle:sha256:b07299b7bc3f37d608021ed8be512202ab3a51b5626dd0c254eee7b0ddf89a05"
+    },
+    {
+      "display_name": "深圳市创显光电有限公司",
+      "domain": "company",
+      "kind": "canonical",
+      "public_id": "company-c-3e7278f34428c3407873f62e"
+    },
+    {
+      "display_name": "酒店服务机器人头部品牌有哪些?酒店机器人品牌推荐?_中华网",
+      "domain": "company",
+      "kind": "web",
+      "public_id": "web-handle:sha256:d87edec205f7cac949c8cff61e46ddcb58896c30488070a963b1ea087ac869b6"
+    },
+    {
+      "display_name": "深圳市庄合智能产业科技有限公司",
+      "domain": "company",
+      "kind": "canonical",
+      "public_id": "company-c-bc91b578e2abd66607c714df"
+    },
+    {
+      "display_name": "美国酒店服务型机器人正冲击员工就业领域-广州国际酒店及餐饮产业博览会",
+      "domain": "company",
+      "kind": "web",
+      "public_id": "web-handle:sha256:1d2fb81ecc647bfe589ee4d891d74b8f311f294af9022ef70bdfa7ffe3aad230"
+    },
+    {
+      "display_name": "深圳市长风创新技术有限公司",
+      "domain": "company",
+      "kind": "canonical",
+      "public_id": "company-c-ae227363a9b228a18782519e"
+    },
+    {
+      "display_name": "酒店服务机器人-洛必德",
+      "domain": "company",
+      "kind": "web",
+      "public_id": "web-handle:sha256:487ae51a5f74b7adf5fe5ad3d5eb5e3921dbfdee54d80f9f0154a27b8071d249"
+    },
+    {
+      "display_name": "深圳市鲸巡科技有限公司",
+      "domain": "company",
+      "kind": "canonical",
+      "public_id": "company-c-b1dd6340be9ff8e5fe56b2a5"
+    },
+    {
+      "display_name": "酒店服务机器人 - 上海贺风工业产品设计有限公司",
+      "domain": "company",
+      "kind": "web",
+      "public_id": "web-handle:sha256:84036c146e4cf926c9b9feecba5ee3586f772dbb95cb296cffd0d1ea30c01364"
+    },
+    {
+      "display_name": "深圳市红芯门控科技有限公司",
+      "domain": "company",
+      "kind": "canonical",
+      "public_id": "company-c-cc363258020edbd8cae94267"
+    },
+    {
+      "display_name": "酒店机器人公司排行榜",
+      "domain": "company",
+      "kind": "web",
+      "public_id": "web-handle:sha256:85b58255a10023a4c93951344fa4ca6192e9e76f4913710eece912419f3d1580"
+    },
+    {
+      "display_name": "深圳市企企通科技有限公司",
+      "domain": "company",
+      "kind": "canonical",
+      "public_id": "company-c-576194d9f11323b08f4be5b8"
+    },
+    {
+      "display_name": "酒店机器人 - 百度百科",
+      "domain": "company",
+      "kind": "web",
+      "public_id": "web-handle:sha256:860e9a0bc71c69f01a2dbbba9fc3a84034a59484d70a5e76e4515390c8ab60ac"
+    },
+    {
+      "display_name": "深圳腾睿微电子科技有限公司",
+      "domain": "company",
+      "kind": "canonical",
+      "public_id": "company-c-03e83727288c5352309c09b6"
+    },
+    {
+      "display_name": "#酒店服务机器人# - 标签聚合 - 创业邦",
+      "domain": "company",
+      "kind": "web",
+      "public_id": "web-handle:sha256:b5d561a6d52fdb9e7d4dde937e120dd27946b1f872e563c0ac4676a7d61074dc"
+    },
+    {
+      "display_name": "深圳市慧大成智能科技有限公司",
+      "domain": "company",
+      "kind": "canonical",
+      "public_id": "company-c-5fc50641b34591feca4c847d"
+    },
+    {
+      "display_name": "跑腿送物的酒店服务机器人跑出了多大的商机？",
+      "domain": "company",
+      "kind": "web",
+      "public_id": "web-handle:sha256:419a23a9d15425950fe6e9a42908b56533b59fc020b50de688040c76df63d187"
+    },
+    {
+      "display_name": "般诺智能（深圳）有限公司",
+      "domain": "company",
+      "kind": "canonical",
+      "public_id": "company-c-41dce47724349d4fcbbcf969"
+    },
+    {
+      "display_name": "酒店服务机器人行业国内市场消费数据分析与未来前景预测报告",
+      "domain": "company",
+      "kind": "web",
+      "public_id": "web-handle:sha256:22cb8c45355684f450a70401df1da944f635d5639b1d6455e43a334afa3e637b"
+    },
+    {
+      "display_name": "中国国际海运集装箱（集团）股份有限公司",
+      "domain": "company",
+      "kind": "canonical",
+      "public_id": "company-c-b59d301f4d3199cb427e878b"
+    },
+    {
+      "display_name": "酒店机器人图片- 京东",
+      "domain": "company",
+      "kind": "web",
+      "public_id": "web-handle:sha256:3c43b0f9850f3140d4eb6589939f9e32a0199cb3463b718c030997cf0edd7960"
+    },
+    {
+      "display_name": "深圳市东影电子有限公司",
+      "domain": "company",
+      "kind": "canonical",
+      "public_id": "company-c-c0d1d58895d9987244334206"
+    },
+    {
+      "display_name": "2025年酒店服务机器人前景 - 2025-2031年全球与中国酒店服务机器人发展现状及市场前景 - 产业调研网",
+      "domain": "company",
+      "kind": "web",
+      "public_id": "web-handle:sha256:bd4c8798bdd88f337a0f17794b41854764295ef9336ba997134fa5941211f26a"
+    },
+    {
+      "display_name": "深圳市明阳奇智能科技有限公司",
+      "domain": "company",
+      "kind": "canonical",
+      "public_id": "company-c-df46e2e083ca500b67d98cfd"
+    },
+    {
+      "display_name": "遍地都是的酒店机器人，已经“退烧”了 - 36氪",
+      "domain": "company",
+      "kind": "web",
+      "public_id": "web-handle:sha256:a8250675e8f714caee6226d2c74ca90f246fbb7d8c9588feec1c3fa27a8ab3c9"
+    },
+    {
+      "display_name": "深圳中科世界机器人有限公司",
+      "domain": "company",
+      "kind": "canonical",
+      "public_id": "company-c-38aaee00c3d56f0a20436d9c"
+    },
+    {
+      "display_name": "「酒店送物机器人」酒店送物机器人公司黄页 - 顺企网",
+      "domain": "company",
+      "kind": "web",
+      "public_id": "web-handle:sha256:355de7874f677b4b7e8c495e85a51c0bf19c5b853e709070032b65b3b843c59e"
+    },
+    {
+      "display_name": "深圳市秦合源科技有限公司",
+      "domain": "company",
+      "kind": "canonical",
+      "public_id": "company-c-d58e934a65537b942fdfcfda"
+    },
+    {
+      "display_name": "中国制造商餐厅机器人服务员服务/自主送货机器人/机器人送菜",
+      "domain": "company",
+      "kind": "web",
+      "public_id": "web-handle:sha256:789dd3dd75c1a9832197526d75ce83599dc4afd41e31e40bfd931a01e2da4598"
+    },
+    {
+      "display_name": "深圳市格乐德科技有限公司",
+      "domain": "company",
+      "kind": "canonical",
+      "public_id": "company-c-b74ecbf09ec77fb85902177a"
+    },
+    {
+      "display_name": "大火的酒店机器人，背后都是谁在砸钱？ - 环球旅讯",
+      "domain": "company",
+      "kind": "web",
+      "public_id": "web-handle:sha256:15539d01562478e5d5830845dafa13a1d3eb625463bf9dc32c8ab43f72bf5cf4"
+    },
+    {
+      "display_name": "深圳丽世宏洋光电有限公司",
+      "domain": "company",
+      "kind": "canonical",
+      "public_id": "company-c-e1e7e5bb6e3216e0639b1900"
+    },
+    {
+      "display_name": "擎朗智能官网-具身AI服务机器人_送餐机器人_酒店机器人_清洁机器人",
+      "domain": "company",
+      "kind": "web",
+      "public_id": "web-handle:sha256:49697ff0c1462a165cbb71182abb7474bb5ec9c6bfa121712ebd9ca3aba78c3d"
+    },
+    {
+      "display_name": "深圳市中达善电子有限公司",
+      "domain": "company",
+      "kind": "canonical",
+      "public_id": "company-c-f769bacb99f693779192e8c4"
+    },
+    {
+      "display_name": "3年亏了8亿，酒店送餐机器人其实是在送钱 - 36氪",
+      "domain": "company",
+      "kind": "web",
+      "public_id": "web-handle:sha256:ba0b2845502168bc7a78ae3b0b03da3b510bdde0e785dbf3b3e62e1b2db578a7"
+    },
+    {
+      "display_name": "未来机器人（深圳）有限公司",
+      "domain": "company",
+      "kind": "canonical",
+      "public_id": "company-c-c31004bdd0aab7f1e141e4e3"
+    },
+    {
+      "display_name": "酒店机器人正在中国普及",
+      "domain": "company",
+      "kind": "web",
+      "public_id": "web-handle:sha256:6d63ff9646a28372a6fed8f09406d1d69cfb8c957615c22c89ff991d2cad5e2f"
+    },
+    {
+      "display_name": "深圳光大同创新材料股份有限公司",
+      "domain": "company",
+      "kind": "canonical",
+      "public_id": "company-c-86d4daff2671b3f8a6ee379b"
+    },
+    {
+      "display_name": "酒店餐厅送餐机器人-智能制造网",
+      "domain": "company",
+      "kind": "web",
+      "public_id": "web-handle:sha256:d871f86171353c89bafad5f10b4632d429d2930e8c565ee8f7ec785cf86c1d41"
+    },
+    {
+      "display_name": "广东华冠半导体有限公司",
+      "domain": "company",
+      "kind": "canonical",
+      "public_id": "company-c-22b9ac7db61b7b6724d3b381"
+    },
+    {
+      "display_name": "要上市的酒店机器人，吃力不讨好？ - 澎湃新闻",
+      "domain": "company",
+      "kind": "web",
+      "public_id": "web-handle:sha256:bebc6cd0c654d9299c061cba935ce01aa57b1bf162ebbf694db00ad71299550b"
+    },
+    {
+      "display_name": "深圳华视美达信息技术有限公司",
+      "domain": "company",
+      "kind": "canonical",
+      "public_id": "company-c-ab9265acd5d8e4d910afeb36"
+    },
+    {
+      "display_name": "自主配送服务机器人酒店迎宾配送智能配送机器人",
+      "domain": "company",
+      "kind": "web",
+      "public_id": "web-handle:sha256:b63d37ad9ece07ec9d820c6d9cabc741fd66c7759fe91bf9403b3dde095550a6"
+    },
+    {
+      "display_name": "物种觉醒（深圳）智能科技有限公司",
+      "domain": "company",
+      "kind": "canonical",
+      "public_id": "company-c-a7ead3acb10553e1dba91e12"
+    },
+    {
+      "display_name": "China Hotel送餐机器人们，“1年绕地球507圈”",
+      "domain": "company",
+      "kind": "web",
+      "public_id": "web-handle:sha256:2108fd008bdd4ae20cb5ca7b959bff27977ba0dae9bc944fe2836b4a1efc44dc"
+    },
+    {
+      "display_name": "深圳市鼎盛智能科技有限公司",
+      "domain": "company",
+      "kind": "canonical",
+      "public_id": "company-c-351e22a8d59de37f02f008cf"
+    },
+    {
+      "display_name": "2025-2030年中国酒店送货机器人行业项目调研及市场前景预测评估报告-中国报告大厅",
+      "domain": "company",
+      "kind": "web",
+      "public_id": "web-handle:sha256:28069f39472491a0749a9d12181f3f2027dabbecabd154c23c30542d4e3d3753"
+    },
+    {
+      "display_name": "成都市普渡机器人有限公司",
+      "domain": "company",
+      "kind": "canonical",
+      "public_id": "company-c-f465962ae6d0ac84c5f8cad3"
+    },
+    {
+      "display_name": "中国送餐/传菜机器人公司|厂家",
+      "domain": "company",
+      "kind": "web",
+      "public_id": "web-handle:sha256:1d7e88c80bbb6110da16efc1051bf6c4307879df05591e26e42e05c709bdd3ae"
+    },
+    {
+      "display_name": "深圳市博铭维技术股份有限公司",
+      "domain": "company",
+      "kind": "canonical",
+      "public_id": "company-c-55053ee4e1909c09efd7c692"
+    },
+    {
+      "display_name": "旅店送餐机器人制造商_机械及行业设备-壹柒陆捌智能科技(广州)有限公司",
+      "domain": "company",
+      "kind": "web",
+      "public_id": "web-handle:sha256:c892dafd3e52527382a2f003a7dd555980bb5b30d6e35a4bab07a40eeeb5909b"
+    },
+    {
+      "display_name": "麦斯塔微电子（深圳）有限公司",
+      "domain": "company",
+      "kind": "canonical",
+      "public_id": "company-c-f6ba356cc40cee2afa9803fc"
+    },
+    {
+      "display_name": "普渡机器人官网｜商用清洁、商用配送、工业配送与具身智能机器人",
+      "domain": "company",
+      "kind": "web",
+      "public_id": "web-handle:sha256:9d97d8189dd00f19511fc84d31fd9767e62b5e169365accf6a84b76601b9eca6"
+    },
+    {
+      "display_name": "深圳市芯茂微电子有限公司",
+      "domain": "company",
+      "kind": "canonical",
+      "public_id": "company-c-43d62f4f0ddf04607fa05916"
+    },
+    {
+      "display_name": "酒店餐厅自动配送机器人 送餐机器人现货供应-阿里巴巴",
+      "domain": "company",
+      "kind": "web",
+      "public_id": "web-handle:sha256:9119ed1feff7b7d522508a820b0f5f9146d988295668a5986e65b742657e0cfe"
+    },
+    {
+      "display_name": "深圳市小村机器人智能科技有限公司",
+      "domain": "company",
+      "kind": "canonical",
+      "public_id": "company-c-7e73e92d00b34e0c9c5cc188"
+    },
+    {
+      "display_name": "熊猫送餐机器人 - 苏州穿山甲机器人股份有限公司",
+      "domain": "company",
+      "kind": "web",
+      "public_id": "web-handle:sha256:a6a565343bfbec82819ba11a68be9623e9a561233861a19f1bc6cdc7586b2a13"
+    },
+    {
+      "display_name": "深圳镭霆激光科技有限公司",
+      "domain": "company",
+      "kind": "canonical",
+      "public_id": "company-c-b46b32a4d80e673de3d96f60"
+    },
+    {
+      "display_name": "酒店送餐机器人代理-壹柒陆捌智能科技(广州)有限公司",
+      "domain": "company",
+      "kind": "web",
+      "public_id": "web-handle:sha256:1a12dd1277b1ab498db64259228387c6191fa97293119f77c38b25655dd9af15"
+    },
+    {
+      "display_name": "隆博机器人（深圳）有限公司",
+      "domain": "company",
+      "kind": "canonical",
+      "public_id": "company-c-1a199abde92a8e22a8ae8960"
+    },
+    {
+      "display_name": "酒店给你送外卖的机器人三年亏8亿 - 证券时报",
+      "domain": "company",
+      "kind": "web",
+      "public_id": "web-handle:sha256:bb2829c4fc9f978364c3b99b719b063456221d5dafda3fddf9fa94d5d71e4860"
+    },
+    {
+      "display_name": "深圳市富源盛电子科技有限公司",
+      "domain": "company",
+      "kind": "canonical",
+      "public_id": "company-c-7024a3b7f3252616a7dc6ea5"
+    },
+    {
+      "display_name": "送餐机器人服务员全自动配传送物品上菜酒店餐厅饭店商场KTV-阿里巴巴",
+      "domain": "company",
+      "kind": "web",
+      "public_id": "web-handle:sha256:7f9f8a2b0b5e78921f6644d9077f292e5765a1fae8f43e527751e411c5c2a635"
+    },
+    {
+      "display_name": "深圳思路名扬通讯技术股份有限公司",
+      "domain": "company",
+      "kind": "canonical",
+      "public_id": "company-c-12bbb8d2fd76f3be84d33e2b"
+    },
+    {
+      "display_name": "解決方案- 普渡 - Pudu Robotics",
+      "domain": "company",
+      "kind": "web",
+      "public_id": "web-handle:sha256:1b0fbe70c0913b94386ec7e4aefc6556291bdda5736183b1e8d8d1dfbd63a7fe"
+    },
+    {
+      "display_name": "深圳萨摩耶数字科技有限公司",
+      "domain": "company",
+      "kind": "canonical",
+      "public_id": "company-c-9f9c4585fa157db4657ecb17"
+    },
+    {
+      "display_name": "机器人服务员2026年9月-月销口碑最新推荐-Taobao",
+      "domain": "company",
+      "kind": "web",
+      "public_id": "web-handle:sha256:14bf760271434827033adc7ab36f61d09298316e1fb45980f261837c9702f977"
+    },
+    {
+      "display_name": "深圳市领航者汽车智能技术开发有限公司",
+      "domain": "company",
+      "kind": "canonical",
+      "public_id": "company-c-351445d7ac9216c29996490f"
+    },
+    {
+      "display_name": "酒店酒馆机器人无人送餐传菜上菜端菜智能服务员餐厅配送机器人",
+      "domain": "company",
+      "kind": "web",
+      "public_id": "web-handle:sha256:776a1b4553daea0b27bad76a43e5a47b7051b8450f8500961eb50ca5de6e98f7"
+    },
+    {
+      "display_name": "深圳市芯中芯科技有限公司",
+      "domain": "company",
+      "kind": "canonical",
+      "public_id": "company-c-5fc3d5a2fdda6dac991982c4"
+    },
+    {
+      "display_name": "餐饮服务机器人图片- 京东",
+      "domain": "company",
+      "kind": "web",
+      "public_id": "web-handle:sha256:ea0ecfaaeea74f40950e72c1824abc233dd527cae796299c63b71dcc5c102c6d"
+    },
+    {
+      "display_name": "深圳市恒越通电子有限公司",
+      "domain": "company",
+      "kind": "canonical",
+      "public_id": "company-c-a3a11bd263f7d4a221da0d76"
+    },
+    {
+      "display_name": "商用配送机器人 - 深圳市万德昌创新智能有限公司",
+      "domain": "company",
+      "kind": "web",
+      "public_id": "web-handle:sha256:1bd37739875e39159c511e89c7c3dff4f3f3f8edae2d7b25577f0a7613ffb08b"
+    },
+    {
+      "display_name": "深圳市晖谱能源科技有限公司",
+      "domain": "company",
+      "kind": "canonical",
+      "public_id": "company-c-7323f15c7421a172f47cbc7d"
+    },
+    {
+      "display_name": "基于机器人的酒店送餐方法、装置、设备和存储介质 - 道客巴巴",
+      "domain": "company",
+      "kind": "web",
+      "public_id": "web-handle:sha256:5781866c63263fdf11596ce668d6edd590294976ab6cbabd0208e7e816ee0f97"
+    },
+    {
+      "display_name": "深圳世纪源丰电子有限公司",
+      "domain": "company",
+      "kind": "canonical",
+      "public_id": "company-c-618f02dbbaff04375a06b2a0"
+    },
+    {
+      "display_name": "送餐机器人厂家 酒店端菜机器人 迎宾接待机器人 视频-搜了网",
+      "domain": "company",
+      "kind": "web",
+      "public_id": "web-handle:sha256:e8c1ffed816b5cd7904e887ef308d7670b43f7406cac49954bffaa205edcacb7"
+    },
+    {
+      "display_name": "深圳市芯智科技有限公司",
+      "domain": "company",
+      "kind": "canonical",
+      "public_id": "company-c-891b9479660876ddb1a41a9c"
+    },
+    {
+      "display_name": "中国酒店机器人公司排名（名录） - 职友集",
+      "domain": "company",
+      "kind": "web",
+      "public_id": "web-handle:sha256:44265e6706c6eae929fb946c7e96ef4746b86c304a2856f9ae1f4a529cccb4db"
+    },
+    {
+      "display_name": "深圳优地智能有限公司",
+      "domain": "company",
+      "kind": "canonical",
+      "public_id": "company-c-ce16d7182d134cacca7061d7"
+    },
+    {
+      "display_name": "酒店服务机器人厂家-苏州穿山甲机器人股份有限公司",
+      "domain": "company",
+      "kind": "web",
+      "public_id": "web-handle:sha256:4c6d4e1d28e2ad36a8842de2b459f5217a039eb542621d032b9065ed2b2d9f31"
+    },
+    {
+      "display_name": "深圳市尚锐科技有限公司",
+      "domain": "company",
+      "kind": "canonical",
+      "public_id": "company-c-0016f96baf79206afb8ff6b1"
+    },
+    {
+      "display_name": "盘点2026年值得推荐的酒店迎宾机器人生产厂，哪家性价比高？",
+      "domain": "company",
+      "kind": "web",
+      "public_id": "web-handle:sha256:2e721a1c24447aaeb469f789c9087cae12d74a317ca7a3c6616b06cfe5db8bb2"
+    },
+    {
+      "display_name": "深圳市锦帆电子有限公司",
+      "domain": "company",
+      "kind": "canonical",
+      "public_id": "company-c-cfba3d54965bb2ec8f6b2791"
+    },
+    {
+      "display_name": "一米机器人-专注酒店人工智能服务",
+      "domain": "company",
+      "kind": "web",
+      "public_id": "web-handle:sha256:aacc33eb02f980b76065b22f0906d300fcb3613da3827ef6f46bb16416410071"
+    },
+    {
+      "display_name": "深圳科得创新科技有限公司",
+      "domain": "company",
+      "kind": "canonical",
+      "public_id": "company-c-01b4c64a0d66e43e563268bc"
+    },
+    {
+      "display_name": "智慧酒店- 前台机器人-猎户星空",
+      "domain": "company",
+      "kind": "web",
+      "public_id": "web-handle:sha256:53c606c51cd842598a4a56205345f3ff9e596642f2090026b22574640408c02c"
+    },
+    {
+      "display_name": "深圳市三锐视讯科技有限公司",
+      "domain": "company",
+      "kind": "canonical",
+      "public_id": "company-c-184a99f1904bbbffd305e702"
+    },
+    {
+      "display_name": "一米机器人-专注酒店人工智能服务",
+      "domain": "company",
+      "kind": "web",
+      "public_id": "web-handle:sha256:b1ab32444c172ecb30fd50bda6a49dcf3d2b3e1d1313f9d716672269c3fe5855"
+    },
+    {
+      "display_name": "广景视睿科技（深圳）有限公司",
+      "domain": "company",
+      "kind": "canonical",
+      "public_id": "company-c-8346d86b1d2b806d069c71e2"
+    },
+    {
+      "display_name": "酒店服务机器人行业分析_市场_年复合增长率_全球",
+      "domain": "company",
+      "kind": "web",
+      "public_id": "web-handle:sha256:59c69464598ea039e9dc1c016cec4080c139c4be060c6291d7d4ad61a50a8585"
+    },
+    {
+      "display_name": "深圳市德朗能电子科技有限公司",
+      "domain": "company",
+      "kind": "canonical",
+      "public_id": "company-c-38e6109c52c5fd2b3fac43bb"
+    },
+    {
+      "display_name": "智能酒店配送机器人:让酒店物品配送更高效_送物机器人_配送机器人_供应_跨度网",
+      "domain": "company",
+      "kind": "web",
+      "public_id": "web-handle:sha256:4a84afed8c76c140e10ab957bd740a1704f79670d87e927991b4985ab9703e7f"
+    },
+    {
+      "display_name": "深圳芯微百年电子有限公司",
+      "domain": "company",
+      "kind": "canonical",
+      "public_id": "company-c-692382b709682025af8cd099"
+    },
+    {
+      "display_name": "酒店配送机器人【方案 安装 厂家】-惠州市威森腾智能科技有限公司",
+      "domain": "company",
+      "kind": "web",
+      "public_id": "web-handle:sha256:12d233bc34b7d1e4f1e7d4313c6b86e30faed81a1c1f7b97760c851e5973bc35"
+    },
+    {
+      "display_name": "深圳睿佐科技有限公司",
+      "domain": "company",
+      "kind": "canonical",
+      "public_id": "company-c-ac9e542765bedda15480fa8e"
+    },
+    {
+      "display_name": "在酒店中遇见AI：小度配送机器人打造更有人情味智能机器人",
+      "domain": "company",
+      "kind": "web",
+      "public_id": "web-handle:sha256:8fbb0b663c1920ed44f9e3d9642027593d29e89315b96ba6562614f708437780"
+    },
+    {
+      "display_name": "深圳市海泰装备有限公司",
+      "domain": "company",
+      "kind": "canonical",
+      "public_id": "company-c-6f0e99f5b0f48584c6eac9fd"
+    },
+    {
+      "display_name": "智能酒店配送机器人外卖配送客房自动乘梯送物送餐送快递领位-阿里巴巴",
+      "domain": "company",
+      "kind": "web",
+      "public_id": "web-handle:sha256:424cd2f870edc91bb557b9d46e11ad11d8735fe4b9379b984fae615fe04b0008"
+    },
+    {
+      "display_name": "深圳市锐曼智能技术有限公司",
+      "domain": "company",
+      "kind": "canonical",
+      "public_id": "company-c-30d1da20c9d086b995e476ec"
+    },
+    {
+      "display_name": "酒店配送机器人_sydong-站酷ZCOOL",
+      "domain": "company",
+      "kind": "web",
+      "public_id": "web-handle:sha256:3605250235dbef15c25afadb0016e5b9000929d9b44ca7092ea428d9682cfe49"
+    },
+    {
+      "display_name": "深圳市品固精密五金科技有限公司",
+      "domain": "company",
+      "kind": "canonical",
+      "public_id": "company-c-5e3fcaf4668e046eefe7cf6b"
+    },
+    {
+      "display_name": "「酒店配送」酒店配送公司黄页 - 顺企网",
+      "domain": "company",
+      "kind": "web",
+      "public_id": "web-handle:sha256:5975720861d0ada8da7cffb5a50975120d32eefb6ac1540159ac85cf99f2c8ab"
+    },
+    {
+      "display_name": "深圳市海尔希科技发展有限公司",
+      "domain": "company",
+      "kind": "canonical",
+      "public_id": "company-c-1edc8871b4daea3fd1ea0cb9"
+    },
+    {
+      "display_name": "酒店送物机器人 客房传送派送机器人智能配送机器人 激光自动导航-阿里巴巴",
+      "domain": "company",
+      "kind": "web",
+      "public_id": "web-handle:sha256:ad5a610ac85ed86e41f454ab2faa9c9ef20e81d2be56af5ba13314b74fc5b905"
+    },
+    {
+      "display_name": "深圳正毅新材料有限责任公司",
+      "domain": "company",
+      "kind": "canonical",
+      "public_id": "company-c-ee334911011af019b8e27b1f"
+    },
+    {
+      "display_name": "智慧酒店无人化服务方案_派宝机器人官网",
+      "domain": "company",
+      "kind": "web",
+      "public_id": "web-handle:sha256:42575fc18324fcb523ce5977ee60f007f04f33d1ddb47ba0c2043a7a4a9b152b"
+    },
+    {
+      "display_name": "先慧达技术（深圳）有限公司",
+      "domain": "company",
+      "kind": "canonical",
+      "public_id": "company-c-7cbc395fedba0e5e06fe9490"
+    },
+    {
+      "display_name": "企业样本篇丨“智造”10万台服务机器人，“小巨人”擎朗有大梦想 - 新华网",
+      "domain": "company",
+      "kind": "web",
+      "public_id": "web-handle:sha256:5688e9409ae63dff5467b8cbbab4676e9c6f8819cc534dd0db0132c789658172"
+    }
+  ],
+  "company_handles": [
+    "深圳闪移技术有限责任公司",
+    "博歌（深圳）自动化有限公司",
+    "深圳市震远电子科技有限公司",
+    "深圳市万德昌创新智能有限公司",
+    "深圳市磐硕科技有限公司",
+    "智博创联科技（深圳）有限公司",
+    "深圳威洛博机器人有限公司",
+    "深圳中智卫安机器人技术有限公司",
+    "深圳市四维物联技术有限公司",
+    "深圳华因康基因科技有限公司",
+    "深圳市创显光电有限公司",
+    "深圳市庄合智能产业科技有限公司",
+    "深圳市长风创新技术有限公司",
+    "深圳市鲸巡科技有限公司",
+    "深圳市红芯门控科技有限公司",
+    "深圳市企企通科技有限公司",
+    "深圳腾睿微电子科技有限公司",
+    "深圳市慧大成智能科技有限公司",
+    "般诺智能（深圳）有限公司",
+    "中国国际海运集装箱（集团）股份有限公司",
+    "深圳市东影电子有限公司",
+    "深圳市明阳奇智能科技有限公司",
+    "深圳中科世界机器人有限公司",
+    "深圳市秦合源科技有限公司",
+    "深圳市格乐德科技有限公司",
+    "深圳丽世宏洋光电有限公司",
+    "深圳市中达善电子有限公司",
+    "未来机器人（深圳）有限公司",
+    "深圳光大同创新材料股份有限公司",
+    "广东华冠半导体有限公司",
+    "深圳华视美达信息技术有限公司",
+    "物种觉醒（深圳）智能科技有限公司",
+    "深圳市鼎盛智能科技有限公司",
+    "成都市普渡机器人有限公司",
+    "深圳市博铭维技术股份有限公司",
+    "麦斯塔微电子（深圳）有限公司",
+    "深圳市芯茂微电子有限公司",
+    "深圳市小村机器人智能科技有限公司",
+    "深圳镭霆激光科技有限公司",
+    "隆博机器人（深圳）有限公司",
+    "深圳市富源盛电子科技有限公司",
+    "深圳思路名扬通讯技术股份有限公司",
+    "深圳萨摩耶数字科技有限公司",
+    "深圳市领航者汽车智能技术开发有限公司",
+    "深圳市芯中芯科技有限公司",
+    "深圳市恒越通电子有限公司",
+    "深圳市晖谱能源科技有限公司",
+    "深圳世纪源丰电子有限公司",
+    "深圳市芯智科技有限公司",
+    "深圳优地智能有限公司",
+    "深圳市尚锐科技有限公司",
+    "深圳市锦帆电子有限公司",
+    "深圳科得创新科技有限公司",
+    "深圳市三锐视讯科技有限公司",
+    "广景视睿科技（深圳）有限公司",
+    "深圳市德朗能电子科技有限公司",
+    "深圳芯微百年电子有限公司",
+    "深圳睿佐科技有限公司",
+    "深圳市海泰装备有限公司",
+    "深圳市锐曼智能技术有限公司",
+    "深圳市品固精密五金科技有限公司",
+    "深圳市海尔希科技发展有限公司",
+    "深圳正毅新材料有限责任公司",
+    "先慧达技术（深圳）有限公司"
+  ],
+  "mention_forms_by_company": {
+    "深圳闪移技术有限责任公司": [
+      "深圳闪移技术有限责任公司",
+      "深圳闪移技术",
+      "深圳闪移"
+    ],
+    "博歌（深圳）自动化有限公司": [
+      "博歌（深圳）自动化有限公司",
+      "博歌（深圳）自动化",
+      "博歌"
+    ],
+    "深圳市震远电子科技有限公司": [
+      "深圳市震远电子科技有限公司",
+      "深圳市震远电子科技",
+      "震远电子科技",
+      "震远"
+    ],
+    "深圳市万德昌创新智能有限公司": [
+      "深圳市万德昌创新智能有限公司",
+      "深圳市万德昌创新智能",
+      "万德昌创新智能",
+      "万德昌创新"
+    ],
+    "深圳市磐硕科技有限公司": [
+      "深圳市磐硕科技有限公司",
+      "深圳市磐硕科技",
+      "磐硕科技",
+      "磐硕"
+    ],
+    "智博创联科技（深圳）有限公司": [
+      "智博创联科技（深圳）有限公司",
+      "智博创联科技（深圳）",
+      "智博创联"
+    ],
+    "深圳威洛博机器人有限公司": [
+      "深圳威洛博机器人有限公司",
+      "深圳威洛博机器人",
+      "深圳威洛博"
+    ],
+    "深圳中智卫安机器人技术有限公司": [
+      "深圳中智卫安机器人技术有限公司",
+      "深圳中智卫安机器人技术",
+      "深圳中智卫安"
+    ],
+    "深圳市四维物联技术有限公司": [
+      "深圳市四维物联技术有限公司",
+      "深圳市四维物联技术",
+      "四维物联技术",
+      "四维物联"
+    ],
+    "深圳华因康基因科技有限公司": [
+      "深圳华因康基因科技有限公司",
+      "深圳华因康基因科技",
+      "深圳华因康基因"
+    ],
+    "深圳市创显光电有限公司": [
+      "深圳市创显光电有限公司",
+      "深圳市创显光电",
+      "创显光电"
+    ],
+    "深圳市庄合智能产业科技有限公司": [
+      "深圳市庄合智能产业科技有限公司",
+      "深圳市庄合智能产业科技",
+      "庄合智能产业科技",
+      "庄合"
+    ],
+    "深圳市长风创新技术有限公司": [
+      "深圳市长风创新技术有限公司",
+      "深圳市长风创新技术",
+      "长风创新技术",
+      "长风创新"
+    ],
+    "深圳市鲸巡科技有限公司": [
+      "深圳市鲸巡科技有限公司",
+      "深圳市鲸巡科技",
+      "鲸巡科技",
+      "鲸巡"
+    ],
+    "深圳市红芯门控科技有限公司": [
+      "深圳市红芯门控科技有限公司",
+      "深圳市红芯门控科技",
+      "红芯门控科技",
+      "红芯门控"
+    ],
+    "深圳市企企通科技有限公司": [
+      "深圳市企企通科技有限公司",
+      "深圳市企企通科技",
+      "企企通科技",
+      "企企通"
+    ],
+    "深圳腾睿微电子科技有限公司": [
+      "深圳腾睿微电子科技有限公司",
+      "深圳腾睿微电子科技",
+      "深圳腾睿微"
+    ],
+    "深圳市慧大成智能科技有限公司": [
+      "深圳市慧大成智能科技有限公司",
+      "深圳市慧大成智能科技",
+      "慧大成智能科技",
+      "慧大成"
+    ],
+    "般诺智能（深圳）有限公司": [
+      "般诺智能（深圳）有限公司",
+      "般诺智能（深圳）",
+      "般诺"
+    ],
+    "中国国际海运集装箱（集团）股份有限公司": [
+      "中国国际海运集装箱（集团）股份有限公司",
+      "中国国际海运集装箱（集团）",
+      "中国国际海运集装箱"
+    ],
+    "深圳市东影电子有限公司": [
+      "深圳市东影电子有限公司",
+      "深圳市东影电子",
+      "东影电子",
+      "东影"
+    ],
+    "深圳市明阳奇智能科技有限公司": [
+      "深圳市明阳奇智能科技有限公司",
+      "深圳市明阳奇智能科技",
+      "明阳奇智能科技",
+      "明阳奇"
+    ],
+    "深圳中科世界机器人有限公司": [
+      "深圳中科世界机器人有限公司",
+      "深圳中科世界机器人",
+      "深圳中科世界"
+    ],
+    "深圳市秦合源科技有限公司": [
+      "深圳市秦合源科技有限公司",
+      "深圳市秦合源科技",
+      "秦合源科技",
+      "秦合源"
+    ],
+    "深圳市格乐德科技有限公司": [
+      "深圳市格乐德科技有限公司",
+      "深圳市格乐德科技",
+      "格乐德科技",
+      "格乐德"
+    ],
+    "深圳丽世宏洋光电有限公司": [
+      "深圳丽世宏洋光电有限公司",
+      "深圳丽世宏洋光电"
+    ],
+    "深圳市中达善电子有限公司": [
+      "深圳市中达善电子有限公司",
+      "深圳市中达善电子",
+      "中达善电子",
+      "中达善"
+    ],
+    "未来机器人（深圳）有限公司": [
+      "未来机器人（深圳）有限公司",
+      "未来机器人（深圳）",
+      "未来"
+    ],
+    "深圳光大同创新材料股份有限公司": [
+      "深圳光大同创新材料股份有限公司",
+      "深圳光大同创新材料"
+    ],
+    "广东华冠半导体有限公司": [
+      "广东华冠半导体有限公司",
+      "广东华冠半导体"
+    ],
+    "深圳华视美达信息技术有限公司": [
+      "深圳华视美达信息技术有限公司",
+      "深圳华视美达信息技术",
+      "深圳华视美达"
+    ],
+    "物种觉醒（深圳）智能科技有限公司": [
+      "物种觉醒（深圳）智能科技有限公司",
+      "物种觉醒（深圳）智能科技",
+      "物种觉醒"
+    ],
+    "深圳市鼎盛智能科技有限公司": [
+      "深圳市鼎盛智能科技有限公司",
+      "深圳市鼎盛智能科技",
+      "鼎盛智能科技",
+      "鼎盛"
+    ],
+    "成都市普渡机器人有限公司": [
+      "成都市普渡机器人有限公司",
+      "成都市普渡机器人",
+      "普渡机器人",
+      "普渡"
+    ],
+    "深圳市博铭维技术股份有限公司": [
+      "深圳市博铭维技术股份有限公司",
+      "深圳市博铭维技术",
+      "博铭维技术",
+      "博铭维"
+    ],
+    "麦斯塔微电子（深圳）有限公司": [
+      "麦斯塔微电子（深圳）有限公司",
+      "麦斯塔微电子（深圳）",
+      "麦斯塔微"
+    ],
+    "深圳市芯茂微电子有限公司": [
+      "深圳市芯茂微电子有限公司",
+      "深圳市芯茂微电子",
+      "芯茂微电子",
+      "芯茂微"
+    ],
+    "深圳市小村机器人智能科技有限公司": [
+      "深圳市小村机器人智能科技有限公司",
+      "深圳市小村机器人智能科技",
+      "小村机器人智能科技",
+      "小村"
+    ],
+    "深圳镭霆激光科技有限公司": [
+      "深圳镭霆激光科技有限公司",
+      "深圳镭霆激光科技",
+      "深圳镭霆激光"
+    ],
+    "隆博机器人（深圳）有限公司": [
+      "隆博机器人（深圳）有限公司",
+      "隆博机器人（深圳）",
+      "隆博"
+    ],
+    "深圳市富源盛电子科技有限公司": [
+      "深圳市富源盛电子科技有限公司",
+      "深圳市富源盛电子科技",
+      "富源盛电子科技",
+      "富源盛"
+    ],
+    "深圳思路名扬通讯技术股份有限公司": [
+      "深圳思路名扬通讯技术股份有限公司",
+      "深圳思路名扬通讯技术",
+      "深圳思路名扬通讯"
+    ],
+    "深圳萨摩耶数字科技有限公司": [
+      "深圳萨摩耶数字科技有限公司",
+      "深圳萨摩耶数字科技",
+      "深圳萨摩耶数字"
+    ],
+    "深圳市领航者汽车智能技术开发有限公司": [
+      "深圳市领航者汽车智能技术开发有限公司",
+      "深圳市领航者汽车智能技术开发",
+      "领航者汽车智能技术开发",
+      "领航者汽车"
+    ],
+    "深圳市芯中芯科技有限公司": [
+      "深圳市芯中芯科技有限公司",
+      "深圳市芯中芯科技",
+      "芯中芯科技",
+      "芯中芯"
+    ],
+    "深圳市恒越通电子有限公司": [
+      "深圳市恒越通电子有限公司",
+      "深圳市恒越通电子",
+      "恒越通电子",
+      "恒越通"
+    ],
+    "深圳市晖谱能源科技有限公司": [
+      "深圳市晖谱能源科技有限公司",
+      "深圳市晖谱能源科技",
+      "晖谱能源科技",
+      "晖谱能源"
+    ],
+    "深圳世纪源丰电子有限公司": [
+      "深圳世纪源丰电子有限公司",
+      "深圳世纪源丰电子",
+      "深圳世纪源丰"
+    ],
+    "深圳市芯智科技有限公司": [
+      "深圳市芯智科技有限公司",
+      "深圳市芯智科技",
+      "芯智科技",
+      "芯智"
+    ],
+    "深圳优地智能有限公司": [
+      "深圳优地智能有限公司",
+      "深圳优地智能",
+      "深圳优地"
+    ],
+    "深圳市尚锐科技有限公司": [
+      "深圳市尚锐科技有限公司",
+      "深圳市尚锐科技",
+      "尚锐科技",
+      "尚锐"
+    ],
+    "深圳市锦帆电子有限公司": [
+      "深圳市锦帆电子有限公司",
+      "深圳市锦帆电子",
+      "锦帆电子",
+      "锦帆"
+    ],
+    "深圳科得创新科技有限公司": [
+      "深圳科得创新科技有限公司",
+      "深圳科得创新科技",
+      "深圳科得创新"
+    ],
+    "深圳市三锐视讯科技有限公司": [
+      "深圳市三锐视讯科技有限公司",
+      "深圳市三锐视讯科技",
+      "三锐视讯科技",
+      "三锐视讯"
+    ],
+    "广景视睿科技（深圳）有限公司": [
+      "广景视睿科技（深圳）有限公司",
+      "广景视睿科技（深圳）",
+      "广景视睿"
+    ],
+    "深圳市德朗能电子科技有限公司": [
+      "深圳市德朗能电子科技有限公司",
+      "深圳市德朗能电子科技",
+      "德朗能电子科技",
+      "德朗能"
+    ],
+    "深圳芯微百年电子有限公司": [
+      "深圳芯微百年电子有限公司",
+      "深圳芯微百年电子",
+      "深圳芯微百年"
+    ],
+    "深圳睿佐科技有限公司": [
+      "深圳睿佐科技有限公司",
+      "深圳睿佐科技",
+      "深圳睿佐"
+    ],
+    "深圳市海泰装备有限公司": [
+      "深圳市海泰装备有限公司",
+      "深圳市海泰装备",
+      "海泰装备"
+    ],
+    "深圳市锐曼智能技术有限公司": [
+      "深圳市锐曼智能技术有限公司",
+      "深圳市锐曼智能技术",
+      "锐曼智能技术",
+      "锐曼"
+    ],
+    "深圳市品固精密五金科技有限公司": [
+      "深圳市品固精密五金科技有限公司",
+      "深圳市品固精密五金科技",
+      "品固精密五金科技",
+      "品固精密五金"
+    ],
+    "深圳市海尔希科技发展有限公司": [
+      "深圳市海尔希科技发展有限公司",
+      "深圳市海尔希科技发展",
+      "海尔希科技发展",
+      "海尔希"
+    ],
+    "深圳正毅新材料有限责任公司": [
+      "深圳正毅新材料有限责任公司",
+      "深圳正毅新材料"
+    ],
+    "先慧达技术（深圳）有限公司": [
+      "先慧达技术（深圳）有限公司",
+      "先慧达技术（深圳）",
+      "先慧达"
+    ]
+  },
+  "mentioned_in_final_answer": [],
+  "unmentioned_companies": [
+    "深圳闪移技术有限责任公司",
+    "博歌（深圳）自动化有限公司",
+    "深圳市震远电子科技有限公司",
+    "深圳市万德昌创新智能有限公司",
+    "深圳市磐硕科技有限公司",
+    "智博创联科技（深圳）有限公司",
+    "深圳威洛博机器人有限公司",
+    "深圳中智卫安机器人技术有限公司",
+    "深圳市四维物联技术有限公司",
+    "深圳华因康基因科技有限公司",
+    "深圳市创显光电有限公司",
+    "深圳市庄合智能产业科技有限公司",
+    "深圳市长风创新技术有限公司",
+    "深圳市鲸巡科技有限公司",
+    "深圳市红芯门控科技有限公司",
+    "深圳市企企通科技有限公司",
+    "深圳腾睿微电子科技有限公司",
+    "深圳市慧大成智能科技有限公司",
+    "般诺智能（深圳）有限公司",
+    "中国国际海运集装箱（集团）股份有限公司",
+    "深圳市东影电子有限公司",
+    "深圳市明阳奇智能科技有限公司",
+    "深圳中科世界机器人有限公司",
+    "深圳市秦合源科技有限公司",
+    "深圳市格乐德科技有限公司",
+    "深圳丽世宏洋光电有限公司",
+    "深圳市中达善电子有限公司",
+    "未来机器人（深圳）有限公司",
+    "深圳光大同创新材料股份有限公司",
+    "广东华冠半导体有限公司",
+    "深圳华视美达信息技术有限公司",
+    "物种觉醒（深圳）智能科技有限公司",
+    "深圳市鼎盛智能科技有限公司",
+    "成都市普渡机器人有限公司",
+    "深圳市博铭维技术股份有限公司",
+    "麦斯塔微电子（深圳）有限公司",
+    "深圳市芯茂微电子有限公司",
+    "深圳市小村机器人智能科技有限公司",
+    "深圳镭霆激光科技有限公司",
+    "隆博机器人（深圳）有限公司",
+    "深圳市富源盛电子科技有限公司",
+    "深圳思路名扬通讯技术股份有限公司",
+    "深圳萨摩耶数字科技有限公司",
+    "深圳市领航者汽车智能技术开发有限公司",
+    "深圳市芯中芯科技有限公司",
+    "深圳市恒越通电子有限公司",
+    "深圳市晖谱能源科技有限公司",
+    "深圳世纪源丰电子有限公司",
+    "深圳市芯智科技有限公司",
+    "深圳优地智能有限公司",
+    "深圳市尚锐科技有限公司",
+    "深圳市锦帆电子有限公司",
+    "深圳科得创新科技有限公司",
+    "深圳市三锐视讯科技有限公司",
+    "广景视睿科技（深圳）有限公司",
+    "深圳市德朗能电子科技有限公司",
+    "深圳芯微百年电子有限公司",
+    "深圳睿佐科技有限公司",
+    "深圳市海泰装备有限公司",
+    "深圳市锐曼智能技术有限公司",
+    "深圳市品固精密五金科技有限公司",
+    "深圳市海尔希科技发展有限公司",
+    "深圳正毅新材料有限责任公司",
+    "先慧达技术（深圳）有限公司"
+  ],
+  "selection_displayed_handle_ids": [
+    "company-c-676a3afe75ae4b07dc4bd61d",
+    "web-handle:sha256:caa26d041251e2694eb8e43d68c58292fa9ac01ff0e331b668b361153102880c",
+    "company-c-2e9452801a0a4bc7ecd5c066",
+    "web-handle:sha256:1d64a92779a2c1d85d3c90aa8af27c57fb048a7f817ed4a0ea156feae2e4aeb6",
+    "web-handle:sha256:a6dc76ee4eb62fb408478d02980db054b62f4dec9ae05d20745169860595fa4c",
+    "company-c-f552415a22ce3516ae204f60",
+    "web-handle:sha256:8bddc0706f05646c08dec875ed8042f2a5a95fc1567638e5b098c94daae3e77b",
+    "company-c-5d378456d303796ccf257246",
+    "web-handle:sha256:24ec5b2fa2056dca7a2885e922f645f77958fafcd1075d38e8b97e385866b662",
+    "web-handle:sha256:cdbc39897597ac1f5e773f748f3cfd24df02bd37f1a997d48811dd0014b35f96",
+    "company-c-4814e7df46dd0f4f5aedf681",
+    "web-handle:sha256:371b38cd17999126a5ed33c290fa7ff3f3ea684e7d6cdf95cc610a950f3ec895",
+    "company-c-038a0caab6019688fde7cbb8",
+    "web-handle:sha256:587b27dc077e816da873fb76f442deab64b20e5a3fe21523c68060ed1c096ae4",
+    "company-c-dde3471e6fb9b1883cb0ffb8",
+    "web-handle:sha256:e2466d66848c44f79269118d2c17cb7cc05ae32d0272359e690494105e4001c4",
+    "company-c-10e74e0166647f4352b883fd",
+    "web-handle:sha256:b07299b7bc3f37d608021ed8be512202ab3a51b5626dd0c254eee7b0ddf89a05",
+    "web-handle:sha256:d87edec205f7cac949c8cff61e46ddcb58896c30488070a963b1ea087ac869b6",
+    "company-c-d7481c83522f6bfa03e868be",
+    "web-handle:sha256:1d2fb81ecc647bfe589ee4d891d74b8f311f294af9022ef70bdfa7ffe3aad230",
+    "company-c-d0fb66c3c09d6d49ba881866",
+    "web-handle:sha256:487ae51a5f74b7adf5fe5ad3d5eb5e3921dbfdee54d80f9f0154a27b8071d249",
+    "company-c-3e7278f34428c3407873f62e",
+    "web-handle:sha256:84036c146e4cf926c9b9feecba5ee3586f772dbb95cb296cffd0d1ea30c01364",
+    "company-c-bc91b578e2abd66607c714df",
+    "web-handle:sha256:85b58255a10023a4c93951344fa4ca6192e9e76f4913710eece912419f3d1580",
+    "company-c-ae227363a9b228a18782519e",
+    "web-handle:sha256:860e9a0bc71c69f01a2dbbba9fc3a84034a59484d70a5e76e4515390c8ab60ac",
+    "company-c-b1dd6340be9ff8e5fe56b2a5",
+    "web-handle:sha256:b5d561a6d52fdb9e7d4dde937e120dd27946b1f872e563c0ac4676a7d61074dc",
+    "company-c-cc363258020edbd8cae94267",
+    "web-handle:sha256:419a23a9d15425950fe6e9a42908b56533b59fc020b50de688040c76df63d187",
+    "company-c-576194d9f11323b08f4be5b8",
+    "web-handle:sha256:22cb8c45355684f450a70401df1da944f635d5639b1d6455e43a334afa3e637b",
+    "company-c-03e83727288c5352309c09b6",
+    "web-handle:sha256:3c43b0f9850f3140d4eb6589939f9e32a0199cb3463b718c030997cf0edd7960",
+    "company-c-5fc50641b34591feca4c847d",
+    "web-handle:sha256:bd4c8798bdd88f337a0f17794b41854764295ef9336ba997134fa5941211f26a",
+    "company-c-41dce47724349d4fcbbcf969",
+    "web-handle:sha256:a8250675e8f714caee6226d2c74ca90f246fbb7d8c9588feec1c3fa27a8ab3c9",
+    "company-c-b59d301f4d3199cb427e878b",
+    "web-handle:sha256:355de7874f677b4b7e8c495e85a51c0bf19c5b853e709070032b65b3b843c59e",
+    "company-c-c0d1d58895d9987244334206",
+    "web-handle:sha256:789dd3dd75c1a9832197526d75ce83599dc4afd41e31e40bfd931a01e2da4598",
+    "company-c-df46e2e083ca500b67d98cfd",
+    "web-handle:sha256:15539d01562478e5d5830845dafa13a1d3eb625463bf9dc32c8ab43f72bf5cf4",
+    "company-c-38aaee00c3d56f0a20436d9c",
+    "web-handle:sha256:49697ff0c1462a165cbb71182abb7474bb5ec9c6bfa121712ebd9ca3aba78c3d",
+    "web-handle:sha256:ba0b2845502168bc7a78ae3b0b03da3b510bdde0e785dbf3b3e62e1b2db578a7",
+    "company-c-d58e934a65537b942fdfcfda",
+    "web-handle:sha256:6d63ff9646a28372a6fed8f09406d1d69cfb8c957615c22c89ff991d2cad5e2f",
+    "company-c-b74ecbf09ec77fb85902177a",
+    "web-handle:sha256:d871f86171353c89bafad5f10b4632d429d2930e8c565ee8f7ec785cf86c1d41",
+    "company-c-e1e7e5bb6e3216e0639b1900",
+    "web-handle:sha256:bebc6cd0c654d9299c061cba935ce01aa57b1bf162ebbf694db00ad71299550b",
+    "company-c-f769bacb99f693779192e8c4",
+    "web-handle:sha256:b63d37ad9ece07ec9d820c6d9cabc741fd66c7759fe91bf9403b3dde095550a6",
+    "company-c-c31004bdd0aab7f1e141e4e3",
+    "web-handle:sha256:2108fd008bdd4ae20cb5ca7b959bff27977ba0dae9bc944fe2836b4a1efc44dc",
+    "company-c-86d4daff2671b3f8a6ee379b",
+    "company-c-22b9ac7db61b7b6724d3b381",
+    "company-c-ab9265acd5d8e4d910afeb36",
+    "company-c-a7ead3acb10553e1dba91e12"
+  ],
+  "fused_candidate_count": 343,
+  "evidence_item_count": 137,
+  "final_answer_text": "LATENCY-HARNESS-PROSE-STUB"
+}

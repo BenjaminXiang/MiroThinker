@@ -1,0 +1,21 @@
+event: stage
+data: {"name":"planning"}
+
+event: plan_done
+data: {"lanes":["exact","structured","lexical","vector","web"],"domains":["company"],"views":["与深圳市优必选科技股份有限公司类似的公司","人形机器人 厂商 深圳","人形机器人 上市公司 深圳","具身智能 机器人 公司 深圳"]}
+
+event: stage
+data: {"name":"retrieval"}
+
+event: retrieval_done
+data: {"lanes":[{"lane":"exact","status":"succeeded","candidates":1},{"lane":"structured","status":"succeeded","candidates":0},{"lane":"lexical","status":"succeeded","candidates":0},{"lane":"vector","status":"succeeded","candidates":128},{"lane":"web","status":"succeeded","candidates":121},{"lane":"supplemental","status":"succeeded","candidates":6}],"web_items":[{"title":"深圳市优必选科技股份有限公司 - 百度百科","url":"https://baike.baidu.com/item/%E6%B7%B1%E5%9C%B3%E5%B8%82%E4%BC%98%E5%BF%85%E9%80%89%E7%A7%91%E6%8A%80%E8%82%A1%E4%BB%BD%E6%9C%89%E9%99%90%E5%85%AC%E5%8F%B8/23492514","source":"baike.baidu.com"},{"title":"优必选(09880)-港股-证券之星","url":"https://hk.stockstar.com/hshare/09880","source":"hk.stockstar.com"},{"title":"深圳市优必选科技股份有限公司 - 企查查","url":"https://www.qcc.com/firm/cd6b024cf176db2943619725b60b499d.html","source":"www.qcc.com"},{"title":"深圳市优必选科技股份有限公司 - 世界机器人大会","url":"https://www.worldrobotconference.com/expo/company/396.html","source":"www.worldrobotconference.com"},{"title":"深圳市优必选科技股份有限公司主要人员_董事_监事 - 天眼查","url":"https://www.tianyancha.com/sstaff/2313844108-75fb","source":"www.tianyancha.com"},{"title":"深圳市优必选科技股份有限公司(ubtrobot)","url":"http://www.chinaagv.com/shop/864/index/","source":"www.chinaagv.com"},{"title":"深圳奔向人形机器人第一城","url":"https://www.sz.gov.cn/cn/xxgk/zfxxgj/zwdt/content/post_12289579.html","source":"www.sz.gov.cn"},{"title":"全球人形机器人百强名单发布","url":"https://m.sohu.com/a/859197883_121956424/?pvid=000115_3w_a","source":"m.sohu.com"},{"title":"深圳70+人形机器人产业链企业一览 - 会议报名","url":"http://www.robotsci.com.cn/detail/1939955203809873920","source":"www.robotsci.com.cn"},{"title":"推荐给朋友: 深圳有哪些机器人公司?汇总和梳理 - OFweek仪器仪表网","url":"https://instrument.ofweek.com/recommendfriends-30677349.html","source":"instrument.ofweek.com"}]}
+
+event: stage
+data: {"name":"synthesis"}
+
+event: answer
+data: {"query":"还有哪些类似的公司","query_type":"canonical_v2:A:answer","answer_text":"（以下为基于本地数据的简要信息）\n- 深圳市优必选科技股份有限公司 - 百度百科：深圳市优必选科技有限公司成立于2012年，位于深圳市南山区桃源街道长源社区学苑大道1001号南山智园C1栋2201，是一家集人工智能和人形机器人研发、平台软件开发运用及 ...\n- 优必选(09880)-港股-证券之星：首页 快讯 股票 财经 基金 专题 理财 数据 专栏 更多 股票 | 主板 必读 研报 新股 创业板 科创板 期权 三板 B股 港股 中概股 全球 理财 | 银行 保险 黄金 外汇 债券 期货 股指期货 酒界 热点 专栏 专题 数据 行情 汽车 地产 区块链 学堂 滤镜 基金荟 路演 千股千评 大宗交易 机构动向 龙虎榜 人物专访 商业资讯 金融扶贫 股市调查……\n- 深圳市优必选科技股份有限公司 - 企查查：{\"l1\":\"var arg1='5d884927b8748472f7ee1d8ee160eedb54654547781257c991';\"} oHhbljdwUXHjoCxImhBkYzc4pn89Ean7KdwWYpzd78OK0urk/N0WRYH1ju+l3Oru6HkBWNWh6fjsv2Y3cgcDeFexewECfFK87/uM4Y/+clR……\n- 深圳市优必选科技股份有限公司 - 世界机器人大会：首页 世界机器人博览会 深圳市优必选科技股份有限公司 展商介绍 展位号 C103 深圳市优必选科技股份有限公司 优必选科技成立于2012年3月，是人形机器人的领导者和智能服务机器人的领航企业。秉承着“让智能机器人走进千家万户，让人类的生活方式变得更加便捷化、智能化、人性化”的使命，凭借自研的人形机器人全栈技术，优必选还以智能机器人为载体，人工智能技……\n- 深圳市优必选科技股份有限公司主要人员_董事_监事 - 天眼查：都在用的商业查询工具 国家中小企业发展子基金旗下机构 查公司 查老板 查关系 首页 天眼数据 天眼AI 登录/注册 深圳市优必选科技股份有限公司 存续 科创分: 99 分 卓越 曾用名 港股(正常上市) 高新技术企业 专精特新中小企业 国家重点实验室 复制 统一社会信用代码 ： 91440300593047655L 法定代表人 ： 周剑……\n- 深圳市优必选科技股份有限公司(ubtrobot)：您好， 欢迎访问 AGV网(www.chinaagv.com) ! 帐号管理 收藏夹 退出 消息 0 请登录 免费注册 微信号:chinaagv 关注官方微信 m.chinaagv.com 手机扫码看新闻 销售 发布产品 管理产品 求购 发布求购 管理求购 添加收藏 关于我们 广告服务 关键词排名 会员升级 常见问题 买家帮助 卖家帮助 问题反馈……\n- 深圳奔向人形机器人第一城：无障碍浏览|\n繁体版|\nEnglish|\n移动版|\n数据开放|\n政务邮箱|\n站群导航|\n政务机器人\n \n热门搜索：\n首 页\n政务公开\n政务服务\n政民互动\n走进深圳\n政务动态\n\n您现在的位置 首页 > 政务公开 > 政府信息公开 > 政务动态\n\n深圳奔向人形机器人第一城\n信息来源：深圳特区报 信息提供日期：2025-07-22 12:00 【字体：大中小 】 视力保护色：……\n- 全球人形机器人百强名单发布：深圳企业引领科技潮流！中国_产业：此次榜单包括了82家已参与人形机器人领域的公司和18家被认为潜力巨大的公司,显示出这个快速发展的市场不容小觑。这些公司在技术创新及市场占有率上都有显著优势,标志着深圳在全球人形机器人产业中具备了强大的\n- 深圳70+人形机器人产业链企业一览 - 会议报名：在摩根士丹利发布的全球人形机器人上市公司百强名单中，深圳有7家企业上榜(比亚迪、腾讯、优必选、速腾聚创、雷赛智能、兆威机电、汇川技术)，占中国大陆 ...\n- 推荐给朋友: 深圳有哪些机器人公司?汇总和梳理 - OFweek仪器仪表网：芝能科技出品\n深圳凭借其独特的政策优势、完善的产业链配套和活跃的创新生态,也是人形机器人产业的集聚地。\n据深圳市人工智能协会数据,2024年深圳人形机器人产业产值达19.8亿元,同比增长113%;人形\n……（其余 22 条候选省略）\n目前公开信息较为有限，暂未能确认问题中的 关键部分。","citations":[],"evidence":[],"clarification":null,"structured_payload":{},"answer_style":"template","citation_map":{},"suggested_followups":[]}
+
+event: done
+data: {}
+

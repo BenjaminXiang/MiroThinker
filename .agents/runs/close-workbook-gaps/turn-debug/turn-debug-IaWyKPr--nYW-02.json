@@ -1,0 +1,40 @@
+{
+  "session_id": "session:chat:IaWyKPr--nYWDiXFsA77CTfl9hLJPJxN",
+  "turn_id": "turn:chat:sha256:660fdf6142ea7004ae09e8f1864a41d6a73669c31c7baf8979efdb2eb4f43331",
+  "turn_count": 2,
+  "query": "他有哪些论文",
+  "planned_displayed_ids": [
+    "web-handle:sha256:2d71306187ae69ee73e8b7d3c3c411e858b60f07087723f43dfff6c9e71a7128"
+  ],
+  "recalled_handles": [],
+  "committed_handle_ids": [
+    "web-handle:sha256:2d71306187ae69ee73e8b7d3c3c411e858b60f07087723f43dfff6c9e71a7128"
+  ],
+  "committed_names": [
+    "机器人视觉与自动化实验室 - 哈尔滨工业大学（深圳）"
+  ],
+  "render_mode": "prose_renderer",
+  "answer_chars": 218,
+  "lane_timings": [
+    [
+      "vector",
+      0.156
+    ],
+    [
+      "structured",
+      0.215
+    ],
+    [
+      "lexical",
+      0.212
+    ],
+    [
+      "exact",
+      0.258
+    ],
+    [
+      "web",
+      4.462
+    ]
+  ]
+}

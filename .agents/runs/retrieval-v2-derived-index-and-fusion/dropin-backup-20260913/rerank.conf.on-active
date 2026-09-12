@@ -1,0 +1,14 @@
+# retrieval-v2 Step 1b (2026-09-13): relevance rerank against the real
+# qwen3-reranker-8b cross-encoder at 100.64.0.27:18006. The credential is read
+# from a 0600 key file, never from this unit.
+#
+# Staged as *.pending on purpose: systemd only reads *.conf drop-ins, so this
+# file does nothing until it is renamed at the ON switch. Rename back to
+# *.pending (and restart) to return to the deterministic serving order.
+[Service]
+Environment=CANONICAL_V2_RERANK_BASE_URL=http://100.64.0.27:18006
+Environment=CANONICAL_V2_RERANK_MODEL=qwen3-reranker-8b
+Environment=CANONICAL_V2_RERANK_API_KEY_FILE=/home/longxiang/.config/mirothinker/rerank-api-key
+Environment=CANONICAL_V2_RERANK_TIMEOUT_SECONDS=3
+Environment=CANONICAL_V2_RERANK_MAX_DOCUMENTS=128
+Environment=CANONICAL_V2_RERANK_DEBUG=1

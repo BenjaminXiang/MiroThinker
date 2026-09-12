@@ -1,0 +1,47 @@
+{
+  "session_id": "session:chat:gy_hTttzdK84W59I5ifv5AbQIG0NtxTC",
+  "turn_id": "turn:chat:sha256:38f0e9cd4c76a613de0609b7d54da9c15401627b936386ef300902ba2e7fcdd2",
+  "turn_count": 3,
+  "query": "它有哪些布局和进展",
+  "planned_displayed_ids": [
+    "company-c-c841e20d983b33640734ccfe"
+  ],
+  "recalled_handles": [
+    {
+      "id": "company-c-c841e20d983b33640734ccfe",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳国际先进技术应用推进中心"
+    }
+  ],
+  "committed_handle_ids": [
+    "company-c-c841e20d983b33640734ccfe"
+  ],
+  "committed_names": [
+    "深圳国际先进技术应用推进中心"
+  ],
+  "render_mode": "prose_renderer",
+  "answer_chars": 420,
+  "lane_timings": [
+    [
+      "exact",
+      0.089
+    ],
+    [
+      "structured",
+      0.178
+    ],
+    [
+      "lexical",
+      0.142
+    ],
+    [
+      "vector",
+      0.243
+    ],
+    [
+      "web",
+      4.131
+    ]
+  ]
+}

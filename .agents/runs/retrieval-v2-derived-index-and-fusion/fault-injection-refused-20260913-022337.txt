@@ -1,0 +1,15 @@
+tag=refused mode=refused stamp=20260913-022337
+endpoint env (no secrets):
+CANONICAL_V2_RERANK_API_KEY_FILE=/home/longxiang/.config/mirothinker/rerank-api-key
+CANONICAL_V2_RERANK_BASE_URL=http://127.0.0.1:18099
+CANONICAL_V2_RERANK_DEBUG=1
+CANONICAL_V2_RERANK_MAX_DOCUMENTS=128
+CANONICAL_V2_RERANK_MODEL=qwen3-reranker-8b
+CANONICAL_V2_RERANK_TIMEOUT_SECONDS=3
+query=深圳有哪些做激光雷达的公司
+---
+bytes=89944
+error_events=0
+done_events=1
+--- answer (first 800 chars) ---
+{"answer_len": 4781, "answer_head": "深圳的激光雷达产业基础相当扎实，从整机厂商到上游芯片、光源模组都有布局。以下是有明确公开信息支撑的代表性企业：\n\n**整机与解决方案厂商**\n\n- **深圳市速腾聚创科技有限公司（RoboSense）**：总部位于深圳，是激光雷达及感知解决方案市场的全球领导者，产品覆盖RS-LiDAR系列、RS-Ruby、RS-Helios、RS-M3等，应用于自动驾驶、机器人、智慧交通等场景。\n- **深圳市镭神智能系统有限公司**：成立于2015年，总部位于深圳宝安区，定位全场景激光雷达及整体解决方案提供商，产品线涵盖1550nm光纤车规激光雷达、905nm混合固态激光雷达、机械式激光雷达及3D SLAM定位盒子等，服务自动驾驶、轨道交通、机器人、安防、测绘等领域。\n- **深圳玩智商科技有限公司（YDLIDAR）**：成立于2015年，专注智能传感器及解决方案，产品包括YDLIDAR X2/X4/G4/G6/GS2/TG30等，主要用于服务机器人导航避障、扫地机器人、工业机器人及ROS教学研究。\n- **深圳力策科技有限公司**：由光电子、半导体、计算机科学等专业博士创办，面向服务机器人、工业自动化、智能汽车提供导航与避障型激光雷达，产品有LT-I系列、LTME-02A、LT-X系列等。\n- **深圳市览沃科技有限公司（Livox）**：由大疆创新内部孵化成立，专注高性能、低成本激光雷达传感器，产品Mid-70、Mid-360、Horiz等应用于自动驾驶、智慧城市、测绘和移动机器人，已销往26个国家和地区。\n- **深圳市砝石激光雷达有限公司**：专业从事激光雷达研发、生产、销售，产品包括S10、S20、FSD-10、M16、M4及蜂眼系列TOF激光雷达，应用于工业机器人、AGV、无人机、无人驾驶等。\n- **深圳市机智人科技有限公司**：产品包括WS-15/25PCD-H2单线导航"}

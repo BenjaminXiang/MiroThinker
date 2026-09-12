@@ -1,0 +1,18 @@
+OK             gen-drone#1 cover=43 pack=43 off=0 miss=0 22.0s :: 深圳有哪些做无人机整机的公司
+OK             gen-drone#2 cover=62 pack=62 off=0 miss=0 13.4s :: 上述企业里有哪些成立于十年以上
+OK             gen-drone#3 cover=34 pack=34 off=0 miss=0 18.7s :: 它们的产品主要用在哪些行业
+OK             gen-storage#1 cover=54 pack=54 off=0 miss=0 18.9s :: 深圳有哪些做储能电池的公司
+OK             gen-storage#2 cover= 0 pack= 0 off=0 miss=0 11.6s :: 上述企业里规模较大的有哪几家
+OK             gen-lidar#1 cover=64 pack=53 off=10 miss=1 23.6s :: 深圳有哪些做激光雷达的公司
+      OFF-CATEGORY: ['睿思芯科（深圳）技术有限公司', '深圳市杰士安电子科技有限公司', '深圳市超联讯技术有限公司', '深圳宜思智能科技有限公司', '深圳明匠智能系统有限公司', '深圳数智慧科技有限公司', '深圳市兰星科技有限公司', '深圳市雷博泰克科技有限公司', '深圳电目科技有限公司', '深圳卓影科技有限公司']
+      NOT-IN-PACK : ['深圳市恒创亿科技有限公司 等（共 79 家）']
+OK             gen-lidar#2 cover=50 pack=40 off=10 miss=0 13.3s :: 上述企业里谁的产品用于自动驾驶
+      OFF-CATEGORY: ['深圳市杰士安电子科技有限公司', '深圳宜思智能科技有限公司', '深圳市兰星科技有限公司', '深圳明匠智能系统有限公司', '深圳卓影科技有限公司', '深圳市超联讯技术有限公司', '深圳数智慧科技有限公司', '深圳市雷博泰克科技有限公司', '睿思芯科（深圳）技术有限公司', '深圳市恒创亿科技有限公司']
+FORM-MISSING   gen-medical#1 cover= 0 pack= 0 off=0 miss=0 19.2s :: 深圳有哪些做医疗器械的公司
+OK             gen-professor#1 cover= 0 pack= 0 off=0 miss=0 15.9s :: 深圳有哪些研究机器人的教授
+OK             gen-professor#2 cover= 0 pack= 0 off=0 miss=0 6.6s :: 他有哪些论文
+OK             gen-paper#1 cover= 0 pack= 0 off=0 miss=0 24.0s :: 有哪些关于钙钛矿太阳能电池的论文
+OK             gen-patent#1 cover= 0 pack= 0 off=0 miss=0 15.6s :: 深圳的机器人专利主要有哪些申请人
+OK             gen-cross#1 cover= 0 pack= 0 off=0 miss=0 25.4s :: 大疆创新主要做什么
+OK             gen-cross#2 cover= 0 pack= 0 off=0 miss=0 10.7s :: 它有哪些专利
+check -> generalization-v2f-live-check.json

@@ -1,0 +1,87 @@
+{
+  "session_id": "session:chat:9LTw1Go6f1lcYlMYB6Uiph9-Upms1U0V",
+  "turn_id": "turn:chat:sha256:34ed49e6d3b9b9d12b1a6f63633576e3fe8e711dc0c39ddf15355fec098e8322",
+  "turn_count": 1,
+  "query": "介绍一下 国际先进技术应用推进中心（深圳）",
+  "planned_displayed_ids": [],
+  "recalled_handles": [
+    {
+      "id": "company-c-c841e20d983b33640734ccfe",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳国际先进技术应用推进中心"
+    },
+    {
+      "id": "web-handle:sha256:d625cc21556ae68ed8cf589646bd0003b0ec5e8fe4df017b1ce51a4340dfe08d",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "河套深圳园区打造深港科技创新聚集地"
+    },
+    {
+      "id": "web-handle:sha256:9e78d5758be53620ac14620eb3238932f0dd5fe4b42a90b4a05c1d97678bf5c2",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "河套数学与交叉学科研究院、国际先进技术应用推进中心（深圳）揭牌"
+    },
+    {
+      "id": "web-handle:sha256:bd968a0235eff91817194bc7c40a375d746a2539a0f0ff73a8f7f1e188ca40b8",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "支持国际先进技术应用推进中心（深圳）建设具身智能技术试验场 ..."
+    },
+    {
+      "id": "web-handle:sha256:ea011665807251c06b7a7f476c5c993f1da5b159e0d15206ccef2a7105877e75",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "建重大平台强核心攻关优产业生态深圳新质生产力加速迸发"
+    },
+    {
+      "id": "web-handle:sha256:f857cdee1719f4367e1d75f36a03c2da30e5e66d3c887ca5e2890e444b28fbbe",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "粤港澳大湾区数字经济研究院（国际先进技术应用推进中心（深圳））"
+    },
+    {
+      "id": "web-handle:sha256:1e4f8816ad049e545c4aaf058862114f8e7a2802185b7f5ae643faab0fee484e",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "一河之隔，两岸潮涌——深港携手共建世界级“科研枢纽” - 香港中联办"
+    },
+    {
+      "id": "web-handle:sha256:b9ab0b09f8fcc2abce5b241c2d19a09ccaba66e8fcdbefea8dd9b77dbdecb670",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "光源资本携手国际先进技术应用推进中心（深圳） - QQ"
+    }
+  ],
+  "committed_handle_ids": [
+    "company-c-c841e20d983b33640734ccfe"
+  ],
+  "committed_names": [
+    "深圳国际先进技术应用推进中心"
+  ],
+  "render_mode": "prose_renderer",
+  "answer_chars": 1071,
+  "lane_timings": [
+    [
+      "structured",
+      0.0
+    ],
+    [
+      "exact",
+      1.832
+    ],
+    [
+      "web",
+      1.845
+    ],
+    [
+      "lexical",
+      2.067
+    ],
+    [
+      "vector",
+      18.841
+    ]
+  ]
+}

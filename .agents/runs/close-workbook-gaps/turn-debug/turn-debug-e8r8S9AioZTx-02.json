@@ -1,0 +1,614 @@
+{
+  "session_id": "session:chat:e8r8S9AioZTxHn_xABkItSHnwMB0M_dn",
+  "turn_id": "turn:chat:sha256:0e3373cbb5c972dcab9c06d2923383d59254474e9972e4b9ad8166ec7f56d085",
+  "turn_count": 2,
+  "query": "上述企业里有哪些成立于十年以上",
+  "planned_displayed_ids": [
+    "company-c-e0c979c8bcce581eaf6122bc",
+    "company-c-1e542d39c1d34e8aafcdcc7b",
+    "company-c-ad319ccb935ec6244bbcfef6",
+    "company-c-61c819fa61db84b1d4461bd1",
+    "company-c-58e3766ada62cda169cf5aae",
+    "company-c-3911acf3fc789bc41d0a17cf",
+    "company-c-a7c16c46e71fbc84c2972e9c",
+    "company-c-2c28eb321f066dc776c198f9",
+    "company-c-5d6b978569bce30ea2d7bb63",
+    "company-c-4bdafeff090fcea679a6405c",
+    "company-c-0e423959d58e241f23c487ff",
+    "company-c-54ae8dd8d15a65f408b4f384",
+    "company-c-006061a8a470851307fad1ca",
+    "company-c-3cf4cab1426c6314769c442b",
+    "company-c-ce09812351e2202bd8b09910",
+    "company-c-03ff3ad6c3e80ce15281158a",
+    "company-c-44469500af4435ed703da3ef",
+    "company-c-eb06a9bae3802a7d439ba946",
+    "company-c-ab6a4dfb7cb32302c3f59ca6",
+    "company-c-f088f470aa593499b33c4657",
+    "company-c-d6d13d3d71cf13f2498106e7",
+    "company-c-3baf4b22d2cb2cf319dbdcbb",
+    "company-c-128ccfce205806cbc65b7349",
+    "company-c-3289ad4abaebd854c9055888",
+    "company-c-102de25b1e3bfc5fc648692d",
+    "company-c-5b53eb3a1701508c7195510b",
+    "company-c-2ce434f071723c5b17ead658",
+    "company-c-6bae299c26c5d4e0d7590ddf",
+    "company-c-be45805b83afe01f2580152a",
+    "company-c-08d651a7088d57667f0fd0f7",
+    "company-c-d85315f3cfd37245d6a80eb3",
+    "company-c-8da2ddbf2411ab301f2b73dc",
+    "company-c-67ae30fc61266703a8d0cb72",
+    "company-c-128f69fa72ed4011d7158323",
+    "company-c-a8d03a3285c38fbb6e5320fe",
+    "company-c-89834a02c02097bbb538da9e",
+    "company-c-71782c32dbd0933f1a9cdc93",
+    "company-c-b73f5e2d50a5e22830b70a41",
+    "company-c-aa2eedf10bba3096af8460bb",
+    "company-c-07308b444bfbb0eaa23b15eb",
+    "company-c-f23edc6c1a7cd23b9912e977",
+    "company-c-c960f670cdb47534949cbeb4",
+    "company-c-0fc060c8be5cf5ebb81acdc7",
+    "company-c-60d5e0ff8198f7115762c3a1",
+    "company-c-2f850a3063e76245f03a6bb9",
+    "company-c-b9710dccab05a83719ead3db",
+    "company-c-80a78ca2b1c7c57d38037ab0",
+    "company-c-377fd2442e5aa6f8989e25dc",
+    "company-c-b42ddb5b36bf9e2138d6dfeb",
+    "company-c-496ed6d61cdc0d7d26240f7a",
+    "company-c-71cbbc510cb6cd60bddf561a",
+    "company-c-d121261f86f702f22e88a54f",
+    "company-c-e3843f7e1005a1e3b30a2ee2",
+    "company-c-dd919dc2e24f5f16ce1caf1d",
+    "company-c-7612f04fde15afd1db72e0fd",
+    "company-c-cef01bbccd256f8f2bb21c3d",
+    "company-c-440a9038074887fc38db8c14",
+    "company-c-5884f237e0afc9b38855ecb4",
+    "company-c-f4e007b849a5737cc1a019aa",
+    "company-c-164d45886f3684f3a76669f2",
+    "company-c-028a0a33c57c05f7738c7bde",
+    "company-c-6616b8e49c7554eeae7a8c78",
+    "company-c-4182d8c51c05c67a71b84a8b",
+    "company-c-301e3d2b0b9e76c5c2ec4c01"
+  ],
+  "recalled_handles": [
+    {
+      "id": "company-c-0e423959d58e241f23c487ff",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市大疆创新科技有限公司"
+    },
+    {
+      "id": "company-c-3911acf3fc789bc41d0a17cf",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳天神无人机发展有限公司"
+    },
+    {
+      "id": "company-c-2c28eb321f066dc776c198f9",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市高端无人机有限公司"
+    },
+    {
+      "id": "company-c-61c819fa61db84b1d4461bd1",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳智航无人机有限公司"
+    },
+    {
+      "id": "company-c-1e542d39c1d34e8aafcdcc7b",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳天鹰兄弟无人机创新有限公司"
+    },
+    {
+      "id": "company-c-ad319ccb935ec6244bbcfef6",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市阿拉丁无人机有限公司"
+    },
+    {
+      "id": "company-c-e0c979c8bcce581eaf6122bc",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "前海星航（深圳）科技有限公司"
+    },
+    {
+      "id": "company-c-0fc060c8be5cf5ebb81acdc7",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "哈瓦国际航空技术（深圳）有限公司"
+    },
+    {
+      "id": "company-c-89834a02c02097bbb538da9e",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "蓝疆创新（深圳）科技有限公司"
+    },
+    {
+      "id": "company-c-377fd2442e5aa6f8989e25dc",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳前海汉来飞机发动机技术有限公司"
+    },
+    {
+      "id": "company-c-d85315f3cfd37245d6a80eb3",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "艾仕达尔航空科技（深圳）有限公司"
+    },
+    {
+      "id": "company-c-eb06a9bae3802a7d439ba946",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "丰翼科技（深圳）有限公司"
+    },
+    {
+      "id": "company-c-be45805b83afe01f2580152a",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "天空创新科技（深圳）有限公司"
+    },
+    {
+      "id": "company-c-5884f237e0afc9b38855ecb4",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "狼天科技（深圳）有限公司"
+    },
+    {
+      "id": "company-c-006061a8a470851307fad1ca",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳九星智能航空科技有限公司"
+    },
+    {
+      "id": "company-c-b73f5e2d50a5e22830b70a41",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "思翼科技（深圳）有限公司"
+    },
+    {
+      "id": "company-c-a7c16c46e71fbc84c2972e9c",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳中聚世纪无人机有限公司"
+    },
+    {
+      "id": "company-c-5d6b978569bce30ea2d7bb63",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "全球鹰（深圳）无人机有限公司"
+    },
+    {
+      "id": "company-c-f23edc6c1a7cd23b9912e977",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "翔鸿电子科技（深圳）有限公司"
+    },
+    {
+      "id": "company-c-44469500af4435ed703da3ef",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳一电航空技术有限公司"
+    },
+    {
+      "id": "company-c-3289ad4abaebd854c9055888",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市艾特航空科技股份有限公司"
+    },
+    {
+      "id": "company-c-71cbbc510cb6cd60bddf561a",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳一电科技有限公司"
+    },
+    {
+      "id": "company-c-07308b444bfbb0eaa23b15eb",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市有光图像科技有限公司"
+    },
+    {
+      "id": "company-c-4182d8c51c05c67a71b84a8b",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市大德众和科技有限公司"
+    },
+    {
+      "id": "company-c-440a9038074887fc38db8c14",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市轻准科技有限公司"
+    },
+    {
+      "id": "company-c-80a78ca2b1c7c57d38037ab0",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市九天创新科技有限责任公司"
+    },
+    {
+      "id": "company-c-128f69fa72ed4011d7158323",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市欧拉空间科技有限公司"
+    },
+    {
+      "id": "company-c-08d651a7088d57667f0fd0f7",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市奇航疆域技术有限公司"
+    },
+    {
+      "id": "company-c-128ccfce205806cbc65b7349",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳缔飞国际航空科技集团有限责任公司"
+    },
+    {
+      "id": "company-c-aa2eedf10bba3096af8460bb",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "九天纵横科技（深圳）有限公司"
+    },
+    {
+      "id": "company-c-6bae299c26c5d4e0d7590ddf",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳联合飞机科技有限公司"
+    },
+    {
+      "id": "company-c-58e3766ada62cda169cf5aae",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市彩虹鹰无人机研究院有限公司"
+    },
+    {
+      "id": "company-c-b42ddb5b36bf9e2138d6dfeb",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市盛空科技有限公司"
+    },
+    {
+      "id": "company-c-8da2ddbf2411ab301f2b73dc",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市宇航智能科技有限公司"
+    },
+    {
+      "id": "company-c-301e3d2b0b9e76c5c2ec4c01",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市翔农创新科技有限公司"
+    },
+    {
+      "id": "company-c-5b53eb3a1701508c7195510b",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市星图智控科技有限公司"
+    },
+    {
+      "id": "company-c-164d45886f3684f3a76669f2",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市金大智能创新科技有限公司"
+    },
+    {
+      "id": "company-c-ce09812351e2202bd8b09910",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳中翼特种装备制造有限公司"
+    },
+    {
+      "id": "company-c-60d5e0ff8198f7115762c3a1",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "优鹰智能科技（深圳）有限公司"
+    },
+    {
+      "id": "company-c-c960f670cdb47534949cbeb4",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市北航旭飞科技有限公司"
+    },
+    {
+      "id": "company-c-e3843f7e1005a1e3b30a2ee2",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市旗客智能技术有限公司"
+    },
+    {
+      "id": "company-c-4bdafeff090fcea679a6405c",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳华越无人机技术有限公司"
+    },
+    {
+      "id": "company-c-a8d03a3285c38fbb6e5320fe",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳飞马机器人股份有限公司"
+    },
+    {
+      "id": "company-c-d121261f86f702f22e88a54f",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "灵遥机器人（深圳）有限责任公司"
+    },
+    {
+      "id": "company-c-6616b8e49c7554eeae7a8c78",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市大智无疆科技有限公司"
+    },
+    {
+      "id": "company-c-dd919dc2e24f5f16ce1caf1d",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市疆域智能科技股份有限公司"
+    },
+    {
+      "id": "company-c-102de25b1e3bfc5fc648692d",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳弧光航空科技有限公司"
+    },
+    {
+      "id": "company-c-b9710dccab05a83719ead3db",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳大漠大智控技术有限公司"
+    },
+    {
+      "id": "company-c-54ae8dd8d15a65f408b4f384",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市道通智能航空技术股份有限公司"
+    },
+    {
+      "id": "company-c-cef01bbccd256f8f2bb21c3d",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳曼塔智能科技有限公司"
+    },
+    {
+      "id": "company-c-3baf4b22d2cb2cf319dbdcbb",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市瑞文航空科技有限公司"
+    },
+    {
+      "id": "company-c-d6d13d3d71cf13f2498106e7",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市空天探索科技有限公司"
+    },
+    {
+      "id": "company-c-ab6a4dfb7cb32302c3f59ca6",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳三方无人技术有限公司"
+    },
+    {
+      "id": "company-c-028a0a33c57c05f7738c7bde",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市智璟科技有限公司"
+    },
+    {
+      "id": "company-c-2ce434f071723c5b17ead658",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市千帆智能航空有限公司"
+    },
+    {
+      "id": "company-c-3cf4cab1426c6314769c442b",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳飞豹航天航空科技有限公司"
+    },
+    {
+      "id": "company-c-03ff3ad6c3e80ce15281158a",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳零度智能飞行器有限公司"
+    },
+    {
+      "id": "company-c-7612f04fde15afd1db72e0fd",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳智空未来信息技术有限公司"
+    },
+    {
+      "id": "company-c-2f850a3063e76245f03a6bb9",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市轩宇智能科技有限公司"
+    },
+    {
+      "id": "company-c-f088f470aa593499b33c4657",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳飞凡空中机器人有限公司"
+    },
+    {
+      "id": "company-c-f4e007b849a5737cc1a019aa",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市畅天游智能科技有限公司"
+    },
+    {
+      "id": "company-c-496ed6d61cdc0d7d26240f7a",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市拓天腾飞科技有限公司"
+    },
+    {
+      "id": "company-c-67ae30fc61266703a8d0cb72",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市飞研智能科技有限公司"
+    },
+    {
+      "id": "company-c-71782c32dbd0933f1a9cdc93",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市铂航科技有限公司"
+    }
+  ],
+  "committed_handle_ids": [
+    "company-c-0e423959d58e241f23c487ff",
+    "company-c-3911acf3fc789bc41d0a17cf",
+    "company-c-2c28eb321f066dc776c198f9",
+    "company-c-61c819fa61db84b1d4461bd1",
+    "company-c-1e542d39c1d34e8aafcdcc7b",
+    "company-c-ad319ccb935ec6244bbcfef6",
+    "company-c-e0c979c8bcce581eaf6122bc",
+    "company-c-0fc060c8be5cf5ebb81acdc7",
+    "company-c-89834a02c02097bbb538da9e",
+    "company-c-377fd2442e5aa6f8989e25dc",
+    "company-c-d85315f3cfd37245d6a80eb3",
+    "company-c-eb06a9bae3802a7d439ba946",
+    "company-c-be45805b83afe01f2580152a",
+    "company-c-5884f237e0afc9b38855ecb4",
+    "company-c-006061a8a470851307fad1ca",
+    "company-c-b73f5e2d50a5e22830b70a41",
+    "company-c-a7c16c46e71fbc84c2972e9c",
+    "company-c-5d6b978569bce30ea2d7bb63",
+    "company-c-f23edc6c1a7cd23b9912e977",
+    "company-c-44469500af4435ed703da3ef",
+    "company-c-3289ad4abaebd854c9055888",
+    "company-c-71cbbc510cb6cd60bddf561a",
+    "company-c-07308b444bfbb0eaa23b15eb",
+    "company-c-4182d8c51c05c67a71b84a8b",
+    "company-c-440a9038074887fc38db8c14",
+    "company-c-80a78ca2b1c7c57d38037ab0",
+    "company-c-128f69fa72ed4011d7158323",
+    "company-c-08d651a7088d57667f0fd0f7",
+    "company-c-128ccfce205806cbc65b7349",
+    "company-c-aa2eedf10bba3096af8460bb",
+    "company-c-6bae299c26c5d4e0d7590ddf",
+    "company-c-58e3766ada62cda169cf5aae",
+    "company-c-b42ddb5b36bf9e2138d6dfeb",
+    "company-c-8da2ddbf2411ab301f2b73dc",
+    "company-c-301e3d2b0b9e76c5c2ec4c01",
+    "company-c-5b53eb3a1701508c7195510b",
+    "company-c-164d45886f3684f3a76669f2",
+    "company-c-ce09812351e2202bd8b09910",
+    "company-c-60d5e0ff8198f7115762c3a1",
+    "company-c-c960f670cdb47534949cbeb4",
+    "company-c-e3843f7e1005a1e3b30a2ee2",
+    "company-c-4bdafeff090fcea679a6405c",
+    "company-c-a8d03a3285c38fbb6e5320fe",
+    "company-c-d121261f86f702f22e88a54f",
+    "company-c-6616b8e49c7554eeae7a8c78",
+    "company-c-dd919dc2e24f5f16ce1caf1d",
+    "company-c-102de25b1e3bfc5fc648692d",
+    "company-c-b9710dccab05a83719ead3db",
+    "company-c-54ae8dd8d15a65f408b4f384",
+    "company-c-cef01bbccd256f8f2bb21c3d",
+    "company-c-3baf4b22d2cb2cf319dbdcbb",
+    "company-c-d6d13d3d71cf13f2498106e7",
+    "company-c-ab6a4dfb7cb32302c3f59ca6",
+    "company-c-028a0a33c57c05f7738c7bde",
+    "company-c-2ce434f071723c5b17ead658",
+    "company-c-3cf4cab1426c6314769c442b",
+    "company-c-03ff3ad6c3e80ce15281158a",
+    "company-c-7612f04fde15afd1db72e0fd",
+    "company-c-2f850a3063e76245f03a6bb9",
+    "company-c-f088f470aa593499b33c4657",
+    "company-c-f4e007b849a5737cc1a019aa",
+    "company-c-496ed6d61cdc0d7d26240f7a",
+    "company-c-67ae30fc61266703a8d0cb72",
+    "company-c-71782c32dbd0933f1a9cdc93"
+  ],
+  "committed_names": [
+    "深圳市大疆创新科技有限公司",
+    "深圳天神无人机发展有限公司",
+    "深圳市高端无人机有限公司",
+    "深圳智航无人机有限公司",
+    "深圳天鹰兄弟无人机创新有限公司",
+    "深圳市阿拉丁无人机有限公司",
+    "前海星航（深圳）科技有限公司",
+    "哈瓦国际航空技术（深圳）有限公司",
+    "蓝疆创新（深圳）科技有限公司",
+    "深圳前海汉来飞机发动机技术有限公司",
+    "艾仕达尔航空科技（深圳）有限公司",
+    "丰翼科技（深圳）有限公司",
+    "天空创新科技（深圳）有限公司",
+    "狼天科技（深圳）有限公司",
+    "深圳九星智能航空科技有限公司",
+    "思翼科技（深圳）有限公司",
+    "深圳中聚世纪无人机有限公司",
+    "全球鹰（深圳）无人机有限公司",
+    "翔鸿电子科技（深圳）有限公司",
+    "深圳一电航空技术有限公司",
+    "深圳市艾特航空科技股份有限公司",
+    "深圳一电科技有限公司",
+    "深圳市有光图像科技有限公司",
+    "深圳市大德众和科技有限公司",
+    "深圳市轻准科技有限公司",
+    "深圳市九天创新科技有限责任公司",
+    "深圳市欧拉空间科技有限公司",
+    "深圳市奇航疆域技术有限公司",
+    "深圳缔飞国际航空科技集团有限责任公司",
+    "九天纵横科技（深圳）有限公司",
+    "深圳联合飞机科技有限公司",
+    "深圳市彩虹鹰无人机研究院有限公司",
+    "深圳市盛空科技有限公司",
+    "深圳市宇航智能科技有限公司",
+    "深圳市翔农创新科技有限公司",
+    "深圳市星图智控科技有限公司",
+    "深圳市金大智能创新科技有限公司",
+    "深圳中翼特种装备制造有限公司",
+    "优鹰智能科技（深圳）有限公司",
+    "深圳市北航旭飞科技有限公司",
+    "深圳市旗客智能技术有限公司",
+    "深圳华越无人机技术有限公司",
+    "深圳飞马机器人股份有限公司",
+    "灵遥机器人（深圳）有限责任公司",
+    "深圳市大智无疆科技有限公司",
+    "深圳市疆域智能科技股份有限公司",
+    "深圳弧光航空科技有限公司",
+    "深圳大漠大智控技术有限公司",
+    "深圳市道通智能航空技术股份有限公司",
+    "深圳曼塔智能科技有限公司",
+    "深圳市瑞文航空科技有限公司",
+    "深圳市空天探索科技有限公司",
+    "深圳三方无人技术有限公司",
+    "深圳市智璟科技有限公司",
+    "深圳市千帆智能航空有限公司",
+    "深圳飞豹航天航空科技有限公司",
+    "深圳零度智能飞行器有限公司",
+    "深圳智空未来信息技术有限公司",
+    "深圳市轩宇智能科技有限公司",
+    "深圳飞凡空中机器人有限公司",
+    "深圳市畅天游智能科技有限公司",
+    "深圳市拓天腾飞科技有限公司",
+    "深圳市飞研智能科技有限公司",
+    "深圳市铂航科技有限公司"
+  ],
+  "render_mode": "prose_renderer",
+  "answer_chars": 1253,
+  "lane_timings": [
+    [
+      "lexical",
+      0.224
+    ],
+    [
+      "exact",
+      0.339
+    ],
+    [
+      "structured",
+      0.453
+    ],
+    [
+      "vector",
+      0.448
+    ],
+    [
+      "web",
+      5.624
+    ]
+  ]
+}
