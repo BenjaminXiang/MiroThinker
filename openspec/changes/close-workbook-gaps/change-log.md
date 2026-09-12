@@ -999,3 +999,54 @@
   (O(N)), then per-point O(1) lookup; expected 67s → <1s, bringing 大疆 from
   ~75s to ~10s (web fetch remains ~7s). Queued to the writer right after
   AQ-S7 commits; full 6-query harness run in flight for the complete table.
+## 2026-09-12 — LAT-1 deployed + AQ-S7 live-verified + AQ-S8 (g5-t2 深南电路) fixed and live-verified
+
+### LAT-1 professor vector display authority (landed `e3d7d0b2`, deployed 15:23)
+
+- `_professor_vector_display_names` now builds the `canonical_object_id →
+  structural authority` index once (O(N)) and resolves each professor point
+  in O(1); same integrity checks, only the 186M-evaluation scan is gone.
+- Live latency probe r3 (same seven turns): 大疆 79.33 → **24.2s**,
+  教授 60.08 → **15.5s** TTFT; storage 25.0, pcb-t2 12.0 unchanged-fine;
+  lidar/g2/pcb-t1 still 41.5/43.2/33.0 on that run.
+- Evidence: read_isolated 35; pack_loader+multiturn 57 + 1 pre-existing
+  (off_anchor); serving_isolated 295; generalization r4 all OK (drone 0
+  off-category; 大疆 1 local citation; lidar off-category 24 = known P2);
+  g2 3/3; g5 1/2 (深南-t2 gap → AQ-S8 below).
+- Offline harness smoke rerun segfaulted in the milvus-lite compose phase
+  (known flake, same crash IP as the 11:05 full run); the full-query
+  harness ran clean afterwards (see below).
+
+### LAT-2 env-gated turn audit probe (landed `9e0c6a00`, deployed 17:28)
+
+- `CANONICAL_V2_TURN_DEBUG_DIR` makes the chat adapter write one JSON per
+  turn: planned displayed ids, recalled handles (id/kind/domain/name),
+  committed ids + names, render mode, and per-lane wall times. Off by
+  default; dump failure never affects the turn.
+- First use pinned the g5-t2 gap (below). Lane timings for live lidar:
+  web 10.3s / vector 4.0 / lexical 2.2 / exact 0.4 → the live TTFT is now
+  web-fetch-variance-bound (19.8s on the probe run vs 44-48s on an earlier
+  cold batch); local lanes are ~6s. Next slice: web-phase budget/page cache.
+
+### AQ-S8 geography slots witness the registered address (landed `7241bfdc`, deployed 17:46)
+
+- Root cause of the g5-t2 深南电路 drop, proven with the LAT-2 probe:
+  t1 committed 64 canonical companies **including 深南** (company-c-0c087bba…,
+  registered_address 深圳市龙岗区…); t2 planned with those 64 ids but the read
+  recalled only 63 — exactly the 62 companies whose **names** contain 深圳 plus
+  the anchor (崇达技术股份有限公司, also 深圳 but name-less). The 深圳
+  geography slot proved the city only via claim predicates (web lanes) or the
+  display name/id; local lookups bind no geography claim, so any company
+  without the city word in its legal name was silently rejected.
+- Fix: the lookup content's `registered_address` leading city word (with and
+  without the 市 suffix) now witnesses the candidate itself; companies
+  registered elsewhere still fail the same slot.
+- Evidence: new test `test_geography_slot_accepts_registered_address_without_
+  city_in_name` RED on the pre-fix tree → GREEN after; atomic-green 9/9;
+  read_isolated+fusion+successor 44/44; serving_isolated+pack_loader+multiturn
+  352 passed + 1 pre-existing off_anchor. Live ×2 samples: t2 recalled
+  63 → 64 with 深南 in the answer; g5 entity layer 2/2 (completeness layer
+  still needs the out-of-pack GT companies → web-completion track).
+- Harness decomposition (offline, same code): lidar/g2/pcb reads 7.4-12.1s
+  (local lanes 5-9s, web 6.7-11.2s) — the local path is no longer the
+  bottleneck; live variance is page fetching.

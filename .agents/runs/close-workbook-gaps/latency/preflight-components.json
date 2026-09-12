@@ -1,0 +1,70 @@
+{
+  "chat_llm_profile": "deepseekv4flash",
+  "embedding": {
+    "model_id": "Qwen/Qwen3-Embedding-8B",
+    "dimension": 4096,
+    "first_call_s": 0.0733,
+    "cached_call_s": 0.0
+  },
+  "rewriter": {
+    "rows": [
+      {
+        "query": "大疆创新主要做什么",
+        "wall_s": 1.118,
+        "views": [
+          "大疆创新 主营业务",
+          "大疆 无人机 产品线",
+          "大疆 影像设备 行业应用"
+        ],
+        "producer_version": "deepseek-v4-flash"
+      },
+      {
+        "query": "深圳有哪些研究机器人的教授",
+        "wall_s": 0.621,
+        "views": [
+          "深圳 机器人 教授 研究方向",
+          "深圳 高校 机器人 实验室 导师",
+          "深圳 机器人 学者 科研团队"
+        ],
+        "producer_version": "deepseek-v4-flash"
+      }
+    ]
+  },
+  "judge": {
+    "wall_s": 0.914,
+    "outcome": "ok",
+    "results": [
+      {
+        "covered": false,
+        "missing_aspects": [
+          "具体产品线",
+          "业务板块",
+          "行业应用"
+        ],
+        "followup_queries": [
+          "大疆创新 产品线 业务",
+          "大疆 行业应用 解决方案"
+        ]
+      }
+    ]
+  },
+  "page_fetch": {
+    "browser_warm_s": 0.806,
+    "pages": [
+      {
+        "url": "https://www.dji.com/cn",
+        "total_s": 0.273,
+        "direct_s": 0.273,
+        "tier1_s": 0.0,
+        "chars": 1294
+      },
+      {
+        "url": "https://baike.baidu.com/item/%E5%A4%A7%E7%96%86%E5%88%9B%E6%96%B0",
+        "total_s": 0.618,
+        "direct_s": 0.07,
+        "tier1_s": 0.548,
+        "chars": 0
+      }
+    ]
+  }
+}

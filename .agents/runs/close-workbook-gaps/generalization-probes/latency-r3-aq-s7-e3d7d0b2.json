@@ -1,0 +1,135 @@
+[
+ {
+  "session": "lat-dji",
+  "turn": 1,
+  "query": "大疆创新主要做什么",
+  "marks": {
+   "first_event": 1.17,
+   "plan_done": 2.21,
+   "retrieval_done": 23.02,
+   "ttft": 24.2,
+   "done": 25.92,
+   "error": null
+  },
+  "total": 25.92,
+  "events": {
+   "answer_chunk": 545,
+   "error": 0
+  },
+  "answer_len": 562
+ },
+ {
+  "session": "lat-professor",
+  "turn": 1,
+  "query": "深圳有哪些研究机器人的教授",
+  "marks": {
+   "first_event": 1.08,
+   "plan_done": 2.07,
+   "retrieval_done": 13.44,
+   "ttft": 15.51,
+   "done": 17.51,
+   "error": null
+  },
+  "total": 17.52,
+  "events": {
+   "answer_chunk": 668,
+   "error": 0
+  },
+  "answer_len": 676
+ },
+ {
+  "session": "lat-lidar",
+  "turn": 1,
+  "query": "深圳有哪些做激光雷达的公司",
+  "marks": {
+   "first_event": 1.44,
+   "plan_done": 2.48,
+   "retrieval_done": 39.88,
+   "ttft": 41.51,
+   "done": 47.17,
+   "error": null
+  },
+  "total": 47.18,
+  "events": {
+   "answer_chunk": 2116,
+   "error": 0
+  },
+  "answer_len": 3185
+ },
+ {
+  "session": "lat-storage",
+  "turn": 1,
+  "query": "深圳有哪些做储能电池的公司",
+  "marks": {
+   "first_event": 0.88,
+   "plan_done": 1.95,
+   "retrieval_done": 23.27,
+   "ttft": 25.03,
+   "done": 27.9,
+   "error": null
+  },
+  "total": 27.9,
+  "events": {
+   "answer_chunk": 1102,
+   "error": 0
+  },
+  "answer_len": 2021
+ },
+ {
+  "session": "lat-g2",
+  "turn": 1,
+  "query": "中国有哪些成熟的酒店送餐机器人供应商",
+  "marks": {
+   "first_event": 0.96,
+   "plan_done": 1.98,
+   "retrieval_done": 41.78,
+   "ttft": 43.23,
+   "done": 45.55,
+   "error": null
+  },
+  "total": 45.56,
+  "events": {
+   "answer_chunk": 883,
+   "error": 0
+  },
+  "answer_len": 1787
+ },
+ {
+  "session": "lat-pcb",
+  "turn": 1,
+  "query": "我想找PCB打板， 有哪些推荐",
+  "marks": {
+   "first_event": 1.01,
+   "plan_done": 3.02,
+   "retrieval_done": 31.78,
+   "ttft": 33.01,
+   "done": 35.71,
+   "error": null
+  },
+  "total": 35.71,
+  "events": {
+   "answer_chunk": 855,
+   "error": 0
+  },
+  "answer_len": 1810
+ },
+ {
+  "session": "lat-pcb",
+  "turn": 2,
+  "query": "上述企业有哪些是深圳的企业",
+  "marks": {
+   "first_event": 1.49,
+   "plan_done": 2.21,
+   "retrieval_done": 10.0,
+   "ttft": 11.96,
+   "done": 14.86,
+   "error": null
+  },
+  "total": 14.87,
+  "events": {
+   "answer_chunk": 1119,
+   "error": 0
+  },
+  "answer_len": 1712
+ }
+]

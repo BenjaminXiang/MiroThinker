@@ -327,3 +327,22 @@
        requirement (added with B1; both scenarios now satisfied live —
        g17-t1 GREEN round 3, honest-fallback wording unchanged).
 - [ ] S-deltas for B2–B5 added with their slices.
+
+## Latency + commit-scope slices (2026-09-12 evening)
+
+- [x] LAT-1 Professor vector display authority indexing: build the
+       canonical_id → document index once, resolve each point in O(1)
+       (landed `e3d7d0b2`, deployed 15:23). Live r3: 大疆 79.3→24.2s,
+       教授 60.1→15.5s TTFT.
+- [x] LAT-2 Env-gated turn audit probe (CANONICAL_V2_TURN_DEBUG_DIR):
+       planned/committed ids, recalled handles, lane wall times; off by
+       default (landed `9e0c6a00`, deployed 17:28).
+- [x] AQ-S8 Geography slots witness a company's registered address, not
+       only its name (landed `7241bfdc`, deployed 17:46). g5-t2 深南电路
+       root cause; unit RED→GREEN; live t2 recalled 63→64 with 深南 in the
+       answer ×2 samples.
+- [ ] LAT-3 Web-phase budget / page cache: live lidar TTFT is
+       web-fetch-bound (lane probe: web 10.3s vs local 6.6s; cold batches
+       seen at 44-48s). Bound the enumeration fetch phase (per-page timeout
+       already 2s floor — check the effective value) and/or add a page-level
+       cache with TTL; keep snippets as the degrade path.

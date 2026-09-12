@@ -1,0 +1,949 @@
+{
+  "session_id": "session:chat:ynZmvguhqi4p1x7VkvSA3m3fT8EzwVXl",
+  "turn_id": "turn:chat:sha256:da6b1eb32ed37af3871c4d72e3c674fd86ae2400fdfaf49c50e57f0b4c9e2dad",
+  "turn_count": 1,
+  "query": "我想找PCB打板， 有哪些推荐",
+  "planned_displayed_ids": [],
+  "recalled_handles": [
+    {
+      "id": "company-c-f2a28c076912f5900db5e0c1",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "崇达技术股份有限公司"
+    },
+    {
+      "id": "web-handle:sha256:d94de3a3af88e5dd0ffef2ea8352394991ec57161bb5b98d7833729deb99f2f9",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "【pcb打板】_pcb打板品牌/图片/价格_pcb打板批发_阿里巴巴"
+    },
+    {
+      "id": "company-c-ca080dd9fe8481ea2cc0124e",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市精诚达电路科技股份有限公司"
+    },
+    {
+      "id": "web-handle:sha256:e219d9a71cc3dc6831ac8ab2501d6f776eee2d1630e46045c24487b51b21ee60",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "美国快速打样PCB推荐: r/PrintedCircuitBoard - Reddit"
+    },
+    {
+      "id": "company-c-9fa75ed1f5ebb759f184785f",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳顺易捷科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:1a8b60c5ee54062585ad789ebe0f3d8c7419c0f453a9abb01b393bad83b8beef",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "打板_打板价格_优质打板批发/采购商机 - 搜好货网"
+    },
+    {
+      "id": "company-c-826cf9e0de6f78a189fc1cb4",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "百芯智能制造科技（深圳）有限公司"
+    },
+    {
+      "id": "web-handle:sha256:e000a4bacc5987d1f70ccc26b396ef9df8ea4595878f481a0ef4d23d0221ea23",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "pcb打板2026年9月-月销口碑最新推荐-Taobao"
+    },
+    {
+      "id": "company-c-9e7a0bec8c96079e1af8c153",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳赛维创新技术集团有限公司"
+    },
+    {
+      "id": "web-handle:sha256:e2da57af223d5d78c3f41c455b0f11a34a6b95bf63aeafe1b0aac1af203ad8e1",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "打板都上猎板网,性价比高,质量好!-客户晒单-猎板精密多层PCB智慧工厂"
+    },
+    {
+      "id": "company-c-02252b9ce34058d58e7a1a9d",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳天创无限科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:b56cb013ff689ffef59f8ef7b34389cec54aeaf1d1d0393eb9ef312372ea809f",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "硬件工程师常用的PCB 打板厂家推荐 - 腾讯云"
+    },
+    {
+      "id": "company-c-3e4ec19778fe5fb244026aaf",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市嘉之宏电子有限公司"
+    },
+    {
+      "id": "web-handle:sha256:72d58ba16b06d68cf1c6835b502b1d79a89142eabe7e41d2b9a46d6d82035806",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "PCB打板哪家好?-汽车之家"
+    },
+    {
+      "id": "company-c-689772b89aab41bbd9e19350",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市驭鹰者电子有限公司"
+    },
+    {
+      "id": "web-handle:sha256:a7af1c41dc2ec555989c5441416d18aa12e0aab9393f5d19acd9b38086b5f34e",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "免费的PCB打样平台汇总，每月免费打8块板！【建议收藏】 原创"
+    },
+    {
+      "id": "company-c-87e4f7234ef76ad3bc6ac74c",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市鑫盈通达电子科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:b9587b5ee8807b04e8005e41e58bd03b074ad79212f08e326a7d2405dc357f19",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "PCB打板哪家好?-太平洋汽车"
+    },
+    {
+      "id": "company-c-a98d7fa3a07ef6977ebce044",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市赛尔博特软件有限公司"
+    },
+    {
+      "id": "web-handle:sha256:99150c7844ab0b4477f2a41ae3c368863202ff35ebf71051f3bb5fedfd920cba",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "学生党推荐——PCB 免费打板，采集bom元器件 - 知乎专栏"
+    },
+    {
+      "id": "company-c-9063b87a6e5833a80d5bcc19",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市鸿洋电路科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:3109ef0b848f4cf38013ee4db6b2e6c5e2ecf0caad9b6d3d662f6b654da472ef",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "PCB打样-PCB报价-专业PCB厂家-深圳嘉立创科技集团股份有限公司"
+    },
+    {
+      "id": "company-c-41199abc028a3e61815b5a6d",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市星河电路股份有限公司"
+    },
+    {
+      "id": "web-handle:sha256:d495d7ae4375083cd07e926e274e12b943a5dc319c42fdbee1ee776aeef098fa",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "硬件工程师必备：PCB 打板厂家推荐 - 电子工程专辑"
+    },
+    {
+      "id": "company-c-caed13e7dccaf727244bc18c",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市柳鑫实业股份有限公司"
+    },
+    {
+      "id": "web-handle:sha256:47105bd19562ff9159920f42a6e180691afb75665e6db09606e9118117412b1b",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "PCB打样-PCBA加工-PCBA配单-深圳捷多邦科技有限公司"
+    },
+    {
+      "id": "company-c-857343e40c92721eede820cd",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "上达电子（深圳）股份有限公司"
+    },
+    {
+      "id": "web-handle:sha256:7361a2fa091b6aa709bdf29ee3bd12b6f050c35da9f42304b26f9bea8d9ef393",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "国内较好的pcb生产厂家有哪几个?_太平洋汽车"
+    },
+    {
+      "id": "company-c-86e620686ecf4ce9db876d01",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市深华科电子有限公司"
+    },
+    {
+      "id": "web-handle:sha256:af50e2f6bbb9f3d0a211ed61f9a4dac71ded7fb20d6be57d38b28815e0ead8d7",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "PCB打样服务哪家好？看看用户的口碑推荐 - 知乎专栏"
+    },
+    {
+      "id": "company-c-fb384119e1ee128ef10fe969",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳和美精艺半导体科技股份有限公司"
+    },
+    {
+      "id": "web-handle:sha256:1d09318722d3d12f1c968c7e13819d85ddf0e4cf348cc1a680d19057e315893a",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "国内较好的pcb生产厂家有哪几个?"
+    },
+    {
+      "id": "company-c-10e57271380531ec3cb9b8c0",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市升达康科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:8512619b2d2f409929807e7829528393e210d7764e7f9c88f8ea1704bfcbce83",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "2025年PCB线路板打样企业推荐，嘉立创综合实力更强劲 - 新浪财经"
+    },
+    {
+      "id": "company-c-533ce24c40743279002d7c7d",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市兴森快捷电路科技股份有限公司"
+    },
+    {
+      "id": "web-handle:sha256:ca14b4e112be9baf0081d76577a77a5d591a47b7176f842c75e75b8157ec8c6e",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "PCB打样-PCBA加工-PCBA配单-深圳聚多邦精密电路有限公司"
+    },
+    {
+      "id": "company-c-5e4963a54d01b234aab8025e",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市动力飞扬智能装备有限公司"
+    },
+    {
+      "id": "web-handle:sha256:cfb7793113eabc76dd32c8ad7f3348b26f96f3f0aa5af246d707db1c5d931b79",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "嘉纳电子有限公司"
+    },
+    {
+      "id": "company-c-8f303a46ca0b58ad9b92f2dc",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市一博科技股份有限公司"
+    },
+    {
+      "id": "web-handle:sha256:cfe228bfe4d237aa0ad41d4992312072446f1ca3fd87bdcfc640369ab667e95a",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "键盘板打样选猎板,独家黑芯板材,透明油墨,做出来的板子质感太好了!-客户晒单-猎板精密多层PCB智慧工厂"
+    },
+    {
+      "id": "company-c-20d3fb76a4d44e2e699be7b8",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市尊大电子科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:d05da8cc6987aa7b7276a83f7d6f0a447f5781476bbdc5414af2f17173db80e7",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "【pcb快速打板】_pcb快速打板品牌/图片/价格_pcb快速打板批发_阿里巴巴"
+    },
+    {
+      "id": "company-c-22a42fa6b8a8f101ffa3bb25",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市亿科迈科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:dad50452d7026d93926ecfa9ea57b657892ac0cfcd3a1b4c4b3b0f0d4f75e25e",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "大厂推荐！PCB打样哪家质量好？ - 新浪财经"
+    },
+    {
+      "id": "company-c-30dd7558ba9a46511e77a711",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市声雄电子有限公司"
+    },
+    {
+      "id": "web-handle:sha256:f7946ed547516389aae8d8be2b34884d0779002a215947007057eacc1d7fe6ef",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "PCB打板-CSDN博客"
+    },
+    {
+      "id": "company-c-319529aff4ee62c17d78e595",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市汇芯高新科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:50b2ee1dec22435d973b4cf781ac508cf097b973e8f86ce38b36905b7d8c7946",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "PCB打板省钱小妙招，强烈建议收藏！ - 其他PCB设计及方法"
+    },
+    {
+      "id": "company-c-3c0fda1a299ff96771a6623c",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市则成电子股份有限公司"
+    },
+    {
+      "id": "web-handle:sha256:30e299319ec8e820e1f445b09ee3387b93dc053c07593d4555e85aa678dc177f",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "PCB打板打样电路板定 做线路板制作订定 制抄板厂家批量加急设计-阿里巴巴"
+    },
+    {
+      "id": "company-c-45fa21c596da8f0fd559cab8",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市特普生科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:815da072bcc3f362ee079393f948cd8173741b58ac91e0b985e378d08b2370a8",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "pcb板打板价格报价行情- 京东"
+    },
+    {
+      "id": "company-c-710dfdbd349582000300b8c4",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "诡谷子人工智能科技（深圳）有限公司"
+    },
+    {
+      "id": "web-handle:sha256:7731280d2e640d36910035db637cc9c40ef48a61e537925f0637ff6eaf9ce6d5",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "求助 - 电子技术交流论坛 - 21ic电子技术开发论坛"
+    },
+    {
+      "id": "company-c-88e833b1c2d83b4359cce84c",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市零壹八科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:c99d81020064d20f5e0de4943524ebfd40e79f76671bc937d4794a5e2fb67dcb",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "免费PCB打样教程| 嘉立创EDA教育与开源文档中心"
+    },
+    {
+      "id": "company-c-907492318fee90a4684c10df",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市中科领创实业有限公司"
+    },
+    {
+      "id": "web-handle:sha256:344f7be087495eac4b678c6609cfcc0b08a0a680cb64f839a4d1ba383e0fa86c",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "PCB打板省钱小妙招,强烈建议收藏! - PCB设计 - 电子工程网"
+    },
+    {
+      "id": "company-c-92dccf619bc5c9370fb36cae",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市赛晟科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:9813e1ce03f661c0f391f5ecb1ff9e18c4d88f09f6833bc64eb2e55399ecb885",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "PCB打样 电路板 pcb工厂直销店 快速单双面板打板-资源走廊"
+    },
+    {
+      "id": "company-c-a37e1427d172fa69250c8606",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市盛矽电子科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:8f1ba99c6173ab80d7ab70e8e982da578bac06b138147cc6a17b4edc2a1475c6",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "PCB打板的相关参数 - 道客巴巴"
+    },
+    {
+      "id": "company-c-b8dfec9fcf1256f472cb553c",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市迈威科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:56af4a9b3435a70b44aa98f31966bb7f1cb1ed6114df59bdf781fdee9bb202e5",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "FPC与PCB的区别在哪里?_fpc, module, rpcb, hdi, mini led, slp分别是什么-CSDN博客"
+    },
+    {
+      "id": "company-c-c718e78355cf2b4fd785647a",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市科易博软件有限公司"
+    },
+    {
+      "id": "web-handle:sha256:120d211dfbe91ac97a62c29bf02832831889616b12e029dbeb77864dc076ea4d",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "嘉立创layout_嘉立创设计服务_Layout设计_Layout外包_pcb设计_嘉 ..."
+    },
+    {
+      "id": "company-c-e35b7d711d309ed103db4478",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市舟海贸易有限公司"
+    },
+    {
+      "id": "web-handle:sha256:445054dade0bd42e48dfa53cad0eaa96d693852d397026ba4daa801044ecc639",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "线路板打样,行业领先佼佼者,惠州小微科技。"
+    },
+    {
+      "id": "company-c-f552415a22ce3516ae204f60",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市震远电子科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:8dfec145f28535ab52a69aafe6554a300bc0541df8bd477d77c1e9e2ee1df34f",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "哪家免费pcb打样平台更有优势 - 知乎专栏"
+    },
+    {
+      "id": "company-c-f8c965faaf7a0e4a7223f38b",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市智芯云创科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:584f172ff86ea855959d250ecee762b1375d8a85e2c3b47cd31b8102eb89296b",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "pcb打样快板厂推荐 - 电子发烧友网"
+    },
+    {
+      "id": "company-c-0c087bba8369e127acde08a2",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深南电路股份有限公司"
+    },
+    {
+      "id": "web-handle:sha256:b09f6bc81880962d7dbeb643ac758bb087ea2f334a365ed2c3590181ca539e22",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "电路板打板哪家好？揭秘嘉立创的五大核心优势 - 腾讯云"
+    },
+    {
+      "id": "company-c-3861c5082e7a4cb6d8d62be9",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳明锐理想科技股份有限公司"
+    },
+    {
+      "id": "web-handle:sha256:31280738893a6d657c2cf87157776cb23adf94e38f874cd50d1a34f19b58753f",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "PCB打标设备市场竞争格局分析 - 经管之家"
+    },
+    {
+      "id": "company-c-4ea8a2c2c281e5848ca90aed",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市百千成电子有限公司"
+    },
+    {
+      "id": "web-handle:sha256:83e6d0eafef530fcf38320a3ea6cbda3a83ad17bf429a6798233dd351f41dfe7",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "免费的PCB打样平台汇总，每月免费打8块板！【建议收藏】_pcb免费 ..."
+    },
+    {
+      "id": "company-c-b143e118b46a73f3509dff64",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市中禾旭精密机械有限公司"
+    },
+    {
+      "id": "web-handle:sha256:f55a382102d625fe6e600c4bcd2eef6592ed3591ec7c7c83195875e4762d64f4",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "PCB制板和打样的区别?"
+    },
+    {
+      "id": "company-c-d158165a0e775cb5ac343ad4",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市坤易电子有限公司"
+    },
+    {
+      "id": "web-handle:sha256:1b5f1c57a979fa37b8f212b68f96f387e084a43f8a46a542bbf9668faa2090d2",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "PCB样板打板哪家好？从工艺到交期全面对比 - SMT贴片"
+    },
+    {
+      "id": "company-c-3a2cd364d238142c5304d410",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳正指向科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:484e6ee1ce548cc7e44d47a9a221be5f57dc430dcd5702d37370cca27b01d42c",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "免费打样的时代,这些精致的PCB制作过程仍然如此养眼 - 今日头条"
+    },
+    {
+      "id": "company-c-4b084fae6abeec21f4f619b5",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市天吉机电有限公司"
+    },
+    {
+      "id": "web-handle:sha256:9dad45c79a4aa87ce7a90957769bf0e9843b413a0d8ae7bdc60dcb3c0151a4b0",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "https://smt.szlcsc.com/"
+    },
+    {
+      "id": "company-c-7b366a139dde714370745639",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市鼎立特科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:ad5291b8181c2381dcedb090f87fa0a7c6694ad3652311812d6372194e72a08e",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "pcb板材对比优缺点 - 电子发烧友网"
+    },
+    {
+      "id": "company-c-8a73107321ed8412f308d14b",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市高素科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:1d4e190f063ce351ab2078e32e2d298ff1721f4e93b13129cb7903b16af657aa",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "PCB 对比| 嘉立创EDA专业版用户指南"
+    },
+    {
+      "id": "company-c-94d4086e1a0103efd4f188fb",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市芯拓科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:3a8b6a92ff48f7c091fcc3925209dcaa998b9d104a3a88272b4a35c26215234b",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "PCB 廠商名單 - HackMD"
+    },
+    {
+      "id": "company-c-a9952a1968867eee39ebaa57",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市玉成创新科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:b24921730d75c9efc5bab6a2afd213c6ce7c8832fcd544cce47613b5c663efc0",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "国内快捷PCB打样十大品牌 - 知乎专栏"
+    },
+    {
+      "id": "company-c-b46b32a4d80e673de3d96f60",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳镭霆激光科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:1eda675258d8c91f335770e713255ec8c914f05a19da09216f1277eb15276073",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "【pcb板专业打样厂家】_优质pcb板专业打样厂家_pcb板专业打样厂家批发/直销 - 阿里巴巴"
+    },
+    {
+      "id": "company-c-b5f81394406ee1271fed18ee",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市大正科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:f61880c9e6cdfb5b9c0d918deb092d9e79d608de1b2aae5eba7943791e0a67d8",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "好用的高效PCB打样产品有哪些？ - 工业推荐榜 - 博客园"
+    },
+    {
+      "id": "company-c-d1819a2f4c013b22e064998e",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市卓茂科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:df6772999f371d545abbfea3fd462abb70a9ca55fe880d0b74b7b1482c7c6693",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "深圳PCB打样_PCBA加工_PCBA小批量一站式服务——小铭打样"
+    },
+    {
+      "id": "company-c-db97d275bf0ddf1e043b5b75",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市软博智能科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:81e0ca2d7bb784895ed1b1b9325a04de4b78cf83f52be649edbd3d5887199157",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "捷配_PCB打样_SMT贴片_大小批量快速交付-捷配PCB&PCBA智造 ..."
+    },
+    {
+      "id": "company-c-f1201bd29935857d50870750",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市大族锐视科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:86fe10e4a514a330813dbb5a48319d7cf3b9534ca1af8cf614df345de1f29d12",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "PCB打样,小批量_深圳一智快捷科技有限公司"
+    },
+    {
+      "id": "company-c-02643b3e7c4c1ced4c027010",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳橙子自动化有限公司"
+    },
+    {
+      "id": "web-handle:sha256:43f3d6ecc2bb93bf7b91595e812e379bf454cbd1ebce2099837f24820ecd4ce0",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "小批量PCB打样到批量生产如何选择合作厂家? - 捷创"
+    },
+    {
+      "id": "company-c-1208be37778bd85783ebb340",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市雷赛自动化系统有限公司"
+    },
+    {
+      "id": "web-handle:sha256:2a747b51c84489311f5cc0ecb6964b1ef3b19d8e60fea09cb81bb40b9fee8b00",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "供应pcb打样,PCB快速打样,PCB小批量生产 - 供应 - 切它网(QieTa.com)"
+    },
+    {
+      "id": "company-c-2b780e33366d20770deb6acc",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "隼鹰信息科技（深圳）有限公司"
+    },
+    {
+      "id": "web-handle:sha256:2aea25e91cebfdd6c8c31e58abcc7d44c935cd9d5c138e3811a9a0c9a40c2d1e",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "小批量PCB打样品牌- 淘宝"
+    },
+    {
+      "id": "company-c-2ccb5dd970b63ba26f6a3a47",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳嘉立创科技集团股份有限公司"
+    },
+    {
+      "id": "web-handle:sha256:a1c00ab172b517e8a55924a996b5ea3641653d2c311ace890861580f9ab27faf",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "PCB打样,小批量,线路板生产制作,铝基板,FPC_深圳市华和电路有限公司 - 免费黄页网"
+    },
+    {
+      "id": "company-c-5ec122d8180b6abba81171fb",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市华仁智信技术有限公司"
+    },
+    {
+      "id": "web-handle:sha256:5c394257fd703dfdf0e179a0479d55419d98af76ae64b8c51a74edbb5ce80d66",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "PCBA小批量生产服务：从设计到交付的一站式解决方案-深圳市宏力 ..."
+    },
+    {
+      "id": "company-c-7456fbb02574da80af2aaa44",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市思捷创科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:8c5dd3570e19d789e57e1971589510cf09a1918c3af67186486cb15cfa3c05c7",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "深圳PCB打样_PCBA加工_PCBA小批量一站式服务——小铭打样"
+    },
+    {
+      "id": "company-c-7d794fe58c1b443298bdc12c",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市超创鑫科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:ff99d588ae8857c6335a26c17482fac9ea97042e82ae8e91729fae233beb9eaa",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "PCB打样和小批量生产费用如何计算更划算？ - 捷创"
+    },
+    {
+      "id": "company-c-8f79da2350ad7f5757ba907f",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市实佳电子有限公司"
+    },
+    {
+      "id": "web-handle:sha256:ae7aeb05c0f149aec1adab0b2857b2a9b1aab73610fc9e6b3502f06d14dbe1fd",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "pcb打样,pcb快板,小批量pcb打样-深圳捷多邦科技有限公司"
+    },
+    {
+      "id": "company-c-afa403303b1b9816eca0dcfa",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市劲拓自动化设备股份有限公司"
+    },
+    {
+      "id": "web-handle:sha256:d2e31141d1aef4605310f76107defa49bbc92d598943ced514ee60da1e3e98aa",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "高混合贴片打样和小批量生产_一站式SMT贴片加工 - PCBA厂家"
+    },
+    {
+      "id": "company-c-bb2b685e443f257216b8cdca",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市小铭工业互联网有限公司"
+    },
+    {
+      "id": "web-handle:sha256:3793727dab5a292858d607cbc10a5cfa106f28707c31b3a90c7ee56a121d4604",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "深圳PCB打样_PCBA加工_PCBA小批量一站式服务——小铭打样"
+    },
+    {
+      "id": "company-c-dff632d4e75b94ff329b3a78",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市德富莱智能科技股份有限公司"
+    },
+    {
+      "id": "web-handle:sha256:d2fcdce3226ed49c95201e38dc4cdbc5602818f7c0b5f4205f72ab54bfd47160",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "快速PCB板打样批发_阿里巴巴 - 1688"
+    },
+    {
+      "id": "company-c-e547ccbe013250a16a05ecdc",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳景赛智能科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:f513c717417f2cf582e92ffd9a02df5e500977d8082de43f7b5ee40b12ba1d7a",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "pcb打样电路板线路板PCB板打样批量生产加工 厂家定 制加工-阿里巴巴"
+    }
+  ],
+  "committed_handle_ids": [
+    "company-c-9fa75ed1f5ebb759f184785f",
+    "company-c-826cf9e0de6f78a189fc1cb4",
+    "web-handle:sha256:3109ef0b848f4cf38013ee4db6b2e6c5e2ecf0caad9b6d3d662f6b654da472ef",
+    "web-handle:sha256:d495d7ae4375083cd07e926e274e12b943a5dc319c42fdbee1ee776aeef098fa",
+    "company-c-689772b89aab41bbd9e19350",
+    "web-handle:sha256:47105bd19562ff9159920f42a6e180691afb75665e6db09606e9118117412b1b",
+    "web-handle:sha256:af50e2f6bbb9f3d0a211ed61f9a4dac71ded7fb20d6be57d38b28815e0ead8d7",
+    "web-handle:sha256:8512619b2d2f409929807e7829528393e210d7764e7f9c88f8ea1704bfcbce83",
+    "web-handle:sha256:cfb7793113eabc76dd32c8ad7f3348b26f96f3f0aa5af246d707db1c5d931b79",
+    "web-handle:sha256:dad50452d7026d93926ecfa9ea57b657892ac0cfcd3a1b4c4b3b0f0d4f75e25e",
+    "web-handle:sha256:f7946ed547516389aae8d8be2b34884d0779002a215947007057eacc1d7fe6ef",
+    "company-c-86e620686ecf4ce9db876d01",
+    "company-c-533ce24c40743279002d7c7d",
+    "company-c-8f303a46ca0b58ad9b92f2dc",
+    "company-c-b8dfec9fcf1256f472cb553c",
+    "company-c-f2a28c076912f5900db5e0c1",
+    "company-c-ca080dd9fe8481ea2cc0124e",
+    "company-c-9e7a0bec8c96079e1af8c153",
+    "company-c-02252b9ce34058d58e7a1a9d",
+    "company-c-3e4ec19778fe5fb244026aaf",
+    "company-c-87e4f7234ef76ad3bc6ac74c",
+    "company-c-a98d7fa3a07ef6977ebce044",
+    "company-c-9063b87a6e5833a80d5bcc19",
+    "company-c-41199abc028a3e61815b5a6d",
+    "company-c-caed13e7dccaf727244bc18c",
+    "company-c-857343e40c92721eede820cd",
+    "company-c-fb384119e1ee128ef10fe969",
+    "company-c-10e57271380531ec3cb9b8c0",
+    "company-c-5e4963a54d01b234aab8025e",
+    "company-c-20d3fb76a4d44e2e699be7b8",
+    "company-c-22a42fa6b8a8f101ffa3bb25",
+    "company-c-30dd7558ba9a46511e77a711",
+    "company-c-319529aff4ee62c17d78e595",
+    "company-c-3c0fda1a299ff96771a6623c",
+    "company-c-45fa21c596da8f0fd559cab8",
+    "company-c-710dfdbd349582000300b8c4",
+    "company-c-88e833b1c2d83b4359cce84c",
+    "company-c-907492318fee90a4684c10df",
+    "company-c-92dccf619bc5c9370fb36cae",
+    "company-c-a37e1427d172fa69250c8606",
+    "company-c-c718e78355cf2b4fd785647a",
+    "company-c-e35b7d711d309ed103db4478",
+    "company-c-f552415a22ce3516ae204f60",
+    "company-c-f8c965faaf7a0e4a7223f38b",
+    "company-c-0c087bba8369e127acde08a2",
+    "company-c-3861c5082e7a4cb6d8d62be9",
+    "company-c-4ea8a2c2c281e5848ca90aed",
+    "company-c-b143e118b46a73f3509dff64",
+    "company-c-d158165a0e775cb5ac343ad4",
+    "company-c-3a2cd364d238142c5304d410",
+    "company-c-4b084fae6abeec21f4f619b5",
+    "company-c-7b366a139dde714370745639",
+    "company-c-8a73107321ed8412f308d14b",
+    "company-c-94d4086e1a0103efd4f188fb",
+    "company-c-a9952a1968867eee39ebaa57",
+    "company-c-b46b32a4d80e673de3d96f60",
+    "company-c-b5f81394406ee1271fed18ee",
+    "company-c-d1819a2f4c013b22e064998e",
+    "company-c-db97d275bf0ddf1e043b5b75",
+    "company-c-f1201bd29935857d50870750",
+    "company-c-02643b3e7c4c1ced4c027010",
+    "company-c-1208be37778bd85783ebb340",
+    "company-c-2b780e33366d20770deb6acc",
+    "company-c-2ccb5dd970b63ba26f6a3a47",
+    "company-c-5ec122d8180b6abba81171fb",
+    "company-c-7456fbb02574da80af2aaa44",
+    "company-c-7d794fe58c1b443298bdc12c",
+    "company-c-8f79da2350ad7f5757ba907f",
+    "company-c-afa403303b1b9816eca0dcfa",
+    "company-c-bb2b685e443f257216b8cdca",
+    "company-c-dff632d4e75b94ff329b3a78",
+    "company-c-e547ccbe013250a16a05ecdc"
+  ],
+  "committed_names": [
+    "深圳顺易捷科技有限公司",
+    "百芯智能制造科技（深圳）有限公司",
+    "PCB打样-PCB报价-专业PCB厂家-深圳嘉立创科技集团股份有限公司",
+    "硬件工程师必备：PCB 打板厂家推荐 - 电子工程专辑",
+    "深圳市驭鹰者电子有限公司",
+    "PCB打样-PCBA加工-PCBA配单-深圳捷多邦科技有限公司",
+    "PCB打样服务哪家好？看看用户的口碑推荐 - 知乎专栏",
+    "2025年PCB线路板打样企业推荐，嘉立创综合实力更强劲 - 新浪财经",
+    "嘉纳电子有限公司",
+    "大厂推荐！PCB打样哪家质量好？ - 新浪财经",
+    "PCB打板-CSDN博客",
+    "深圳市深华科电子有限公司",
+    "深圳市兴森快捷电路科技股份有限公司",
+    "深圳市一博科技股份有限公司",
+    "深圳市迈威科技有限公司",
+    "崇达技术股份有限公司",
+    "深圳市精诚达电路科技股份有限公司",
+    "深圳赛维创新技术集团有限公司",
+    "深圳天创无限科技有限公司",
+    "深圳市嘉之宏电子有限公司",
+    "深圳市鑫盈通达电子科技有限公司",
+    "深圳市赛尔博特软件有限公司",
+    "深圳市鸿洋电路科技有限公司",
+    "深圳市星河电路股份有限公司",
+    "深圳市柳鑫实业股份有限公司",
+    "上达电子（深圳）股份有限公司",
+    "深圳和美精艺半导体科技股份有限公司",
+    "深圳市升达康科技有限公司",
+    "深圳市动力飞扬智能装备有限公司",
+    "深圳市尊大电子科技有限公司",
+    "深圳市亿科迈科技有限公司",
+    "深圳市声雄电子有限公司",
+    "深圳市汇芯高新科技有限公司",
+    "深圳市则成电子股份有限公司",
+    "深圳市特普生科技有限公司",
+    "诡谷子人工智能科技（深圳）有限公司",
+    "深圳市零壹八科技有限公司",
+    "深圳市中科领创实业有限公司",
+    "深圳市赛晟科技有限公司",
+    "深圳市盛矽电子科技有限公司",
+    "深圳市科易博软件有限公司",
+    "深圳市舟海贸易有限公司",
+    "深圳市震远电子科技有限公司",
+    "深圳市智芯云创科技有限公司",
+    "深南电路股份有限公司",
+    "深圳明锐理想科技股份有限公司",
+    "深圳市百千成电子有限公司",
+    "深圳市中禾旭精密机械有限公司",
+    "深圳市坤易电子有限公司",
+    "深圳正指向科技有限公司",
+    "深圳市天吉机电有限公司",
+    "深圳市鼎立特科技有限公司",
+    "深圳市高素科技有限公司",
+    "深圳市芯拓科技有限公司",
+    "深圳市玉成创新科技有限公司",
+    "深圳镭霆激光科技有限公司",
+    "深圳市大正科技有限公司",
+    "深圳市卓茂科技有限公司",
+    "深圳市软博智能科技有限公司",
+    "深圳市大族锐视科技有限公司",
+    "深圳橙子自动化有限公司",
+    "深圳市雷赛自动化系统有限公司",
+    "隼鹰信息科技（深圳）有限公司",
+    "深圳嘉立创科技集团股份有限公司",
+    "深圳市华仁智信技术有限公司",
+    "深圳市思捷创科技有限公司",
+    "深圳市超创鑫科技有限公司",
+    "深圳市实佳电子有限公司",
+    "深圳市劲拓自动化设备股份有限公司",
+    "深圳市小铭工业互联网有限公司",
+    "深圳市德富莱智能科技股份有限公司",
+    "深圳景赛智能科技有限公司"
+  ],
+  "render_mode": "prose_renderer",
+  "answer_chars": 1907,
+  "lane_timings": [
+    [
+      "structured",
+      0.0
+    ],
+    [
+      "exact",
+      0.143
+    ],
+    [
+      "lexical",
+      3.988
+    ],
+    [
+      "vector",
+      5.717
+    ],
+    [
+      "web",
+      6.107
+    ]
+  ]
+}
