@@ -8,7 +8,10 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 import hashlib
 import json
+import logging
 import math
+import os
+from pathlib import Path
 import re
 from threading import Lock
 from typing import Any, Literal, cast
@@ -141,12 +144,23 @@ from .relationship_projection import (
 )
 from .path_eligibility import PathEligibilityEngine
 from .placeholder_scrub import scrub_placeholder_value, scrub_projection_payload
+from .lexical_index import LexicalIndex, open_lexical_index
 from .release_publication_isolated import IsolatedReleaseBundle
 
+_LOGGER = logging.getLogger(__name__)
 
 _EXACT_ADAPTER_VERSION = "canonical-v2-isolated-exact-lookup-v2"
 _STRUCTURED_ADAPTER_VERSION = "canonical-v2-isolated-structured-lookup-v1"
 _LEXICAL_ADAPTER_VERSION = "canonical-v2-isolated-lexical-lookup-v1"
+_LEXICAL_INDEX_ADAPTER_VERSION = "canonical-v2-isolated-lexical-index-v1"
+# retrieval-v2 Step 1: indexed lexical lane. Off unless the env switch is set;
+# the artifact root defaults to the derived-index location the build script
+# writes (scripts/build_lexical_index.py).
+_LEXICAL_INDEX_ENV = "CANONICAL_V2_LEXICAL_INDEX"
+_LEXICAL_INDEX_ROOT_ENV = "CANONICAL_V2_LEXICAL_INDEX_ROOT"
+_DEFAULT_LEXICAL_INDEX_ROOT = Path("/var/tmp/mirothinker-data-v2/derived/lexical")
+# Fill the window with the OR pass only when the adjacency pass is thin.
+_LEXICAL_INDEX_PHRASE_FLOOR = 8
 _VECTOR_ADAPTER_VERSION = "canonical-v2-isolated-vector-recall-v1"
 _INTERNAL_REFERENCE_ADAPTER_VERSION = "canonical-v2-isolated-internal-reference-v1"
 _RELATIONSHIP_ADAPTER_VERSION = "canonical-v2-isolated-relationship-v1"
@@ -7144,6 +7158,123 @@ def create_isolated_structured_lookup_adapter(
     return structured_lookup
 
 
+def _indexed_lexical_open(bundle: IsolatedReleaseBundle) -> LexicalIndex | None:
+    """Env-gated derived lexical index for this release, or None.
+
+    None keeps the substring lane: the switch is off, no artifact exists, or
+    the artifact is not bound to this release/pack (a broken artifact must
+    never fail a turn — the fallback is logged, not raised).
+    """
+    switch = os.environ.get(_LEXICAL_INDEX_ENV, "").strip().casefold()
+    if switch not in {"1", "true", "yes", "on"}:
+        return None
+    root = Path(
+        os.environ.get(_LEXICAL_INDEX_ROOT_ENV, "").strip()
+        or _DEFAULT_LEXICAL_INDEX_ROOT
+    )
+    try:
+        return open_lexical_index(
+            artifact_root=root,
+            release_id=bundle.release_id,
+            lookup_sqlite=bundle.index_target.root / "lookup.sqlite3",
+        )
+    except Exception:  # noqa: BLE001 - fall back, never fail the turn
+        _LOGGER.warning(
+            "indexed lexical lane unavailable for release %s; "
+            "falling back to the substring lane",
+            bundle.release_id,
+            exc_info=True,
+        )
+        return None
+
+
+def _indexed_lexical_document_ids(
+    *,
+    index: LexicalIndex,
+    query_phrase: str,
+    domains: tuple[str, ...],
+    max_candidates: int,
+) -> tuple[str, ...]:
+    """Adjacency pass first; OR fill only when the adjacency pass is thin.
+
+    The phrase pass is the precision pass (激光设备 must not surface for
+    激光雷达); the OR pass restores the old lane's ranked-sample recall when
+    too few documents carry the exact term.
+    """
+    hits: list[tuple[str, float]] = list(
+        index.search(
+            query_phrase, domains=domains, limit=max_candidates, mode="phrase"
+        )
+    )
+    if len(hits) < min(max_candidates, _LEXICAL_INDEX_PHRASE_FLOOR):
+        seen = {document_id for document_id, _ in hits}
+        for document_id, score in index.search(
+            query_phrase, domains=domains, limit=max_candidates, mode="or"
+        ):
+            if document_id in seen:
+                continue
+            hits.append((document_id, score))
+            seen.add(document_id)
+            if len(hits) >= max_candidates:
+                break
+    return tuple(document_id for document_id, _score in hits[:max_candidates])
+
+
+def _indexed_lexical_candidates(
+    *,
+    index: LexicalIndex,
+    query_phrase: str,
+    request: LaneRequest,
+    bundle: IsolatedReleaseBundle,
+    publication: PublishedRelease,
+    lookup_view: _AuditedLookupView,
+) -> list[RecallCandidate]:
+    """Index hits → candidates through the same binding path as the substring
+    lane (identical evidence/claim-binding/lineage shapes), with the same
+    gates: displayed-entity narrowing and excluded terms apply exactly as
+    `_matches_lexical_request` applies them."""
+    documents = _read_bound_documents(bundle)
+    entries = _lookup_entries_for_documents(
+        documents=documents,
+        lookup_view=lookup_view,
+    )
+    entries_by_document_id = {
+        entry.document.document_id: entry for entry in entries
+    }
+    constraints = request.structured_constraints
+    candidates: list[RecallCandidate] = []
+    for document_id in _indexed_lexical_document_ids(
+        index=index,
+        query_phrase=query_phrase,
+        domains=tuple(request.domains),
+        max_candidates=request.max_candidates,
+    ):
+        entry = entries_by_document_id.get(document_id)
+        if entry is None:
+            continue
+        document = entry.document
+        if (
+            constraints.displayed_entity_ids
+            and document.canonical_object_id not in constraints.displayed_entity_ids
+        ):
+            continue
+        if _has_excluded_term(constraints.excluded_terms, entry.content_terms):
+            continue
+        candidates.append(
+            _candidate_from_document(
+                request=request,
+                bundle=bundle,
+                publication=publication,
+                document=document,
+                display_name=entry.display_name,
+                identifier_terms=entry.identifier_terms,
+                lane="lexical",
+                adapter_version=_LEXICAL_INDEX_ADAPTER_VERSION,
+            )
+        )
+    return candidates
+
+
 def create_isolated_lexical_lookup_adapter(
     *,
     release_bundle: IsolatedReleaseBundle,
@@ -7170,6 +7301,28 @@ def create_isolated_lexical_lookup_adapter(
         query_phrase = _lexical_query_phrase(validated_request.query_text)
         if not query_phrase:
             return RetrievalLaneResult()
+
+        indexed = _indexed_lexical_open(validated_bundle)
+        if indexed is not None:
+            indexed_candidates = _indexed_lexical_candidates(
+                index=indexed,
+                query_phrase=query_phrase,
+                request=validated_request,
+                bundle=validated_bundle,
+                publication=validated_publication,
+                lookup_view=lookup_view(),
+            )
+            if indexed_candidates:
+                # Keep the BM25 order: raw_score stays flat (1.0) so the
+                # downstream stable sorts preserve this lane's rank; the
+                # substring lane's (domain, id) sort exists only because that
+                # lane has no ranking. An empty result falls through to the
+                # substring lane, category fallback included.
+                return RetrievalLaneResult(
+                    candidates=tuple(
+                        indexed_candidates[: validated_request.max_candidates]
+                    )
+                )
 
         documents = _read_bound_documents(validated_bundle)
         entries = _lookup_entries_for_documents(
