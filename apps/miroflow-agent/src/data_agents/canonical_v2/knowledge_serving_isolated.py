@@ -2772,12 +2772,19 @@ _SUPPLEMENTAL_WEB_SOURCE_NATURE = "supplemental_web"
 # Candidate window for enumeration (list-style) queries; wide enough to keep
 # vector ranks 10-25 inside the fused retention. AQ-S2 widened 48 -> 64 so the
 # read/F1 truncation (which follows the plan window) pulls pool ranks 49-64
-# (嘉立创 pool 54, 则成 62) into the category-recall window.
-_ENUMERATION_CANDIDATE_WINDOW = 64
-# Enumeration claim windows (AQ-S2). The selector interleaves local/web 1:1,
-# so the local claim window must stay exactly half the candidate window; the
-# web claim window is deliberately decoupled from it — 64 web claims would
-# flood the prose prompt (local +16 / web -16 vs the pre-AQ-S2 split).
+# (嘉立创 pool 54, 则成 62) into the category-recall window. AQ-S2d widened
+# 64 -> 128: the fused read window interleaves local/web 1:1, so a 64 window
+# retains only ~32 local candidates and dropped fused-local ranks beyond that
+# (深南电路 fused rank 73); the 128 window keeps all eight in-pack PCB
+# suppliers inside the fused local half (aq-s2d-window-probe: g5-t1 8/8,
+# 嘉立创 disclosure 56, 深南电路 37).
+_ENUMERATION_CANDIDATE_WINDOW = 128
+# Enumeration claim windows (AQ-S2). The web claim window is deliberately
+# decoupled from the candidate window — a matching web claim count would
+# flood the prose prompt. AQ-S2d decouples the local claim window the same
+# way: the candidate window grew to 128 for disclosure-pool reach, but the
+# claim/prose budget stays at the AQ-S2 level (the coverage sentence, not the
+# claim set, discloses the widened tail).
 _ENUMERATION_LOCAL_CLAIM_WINDOW = 32
 _ENUMERATION_WEB_CLAIM_WINDOW = 32
 # List-style markers mirroring the answer selector's enumeration family; a
@@ -5908,9 +5915,10 @@ def _answer_selector(
             if index < len(web_items):
                 balanced_items.append(web_items[index])
         local_claim_limit = (
-            # Enumeration answers show a representative 32 (half the 64
-            # candidate window; the coverage sentence discloses the rest);
-            # non-enumeration stays tight.
+            # Enumeration answers show a representative 32; the claim window
+            # is decoupled from the (AQ-S2d: 128) candidate window — the
+            # coverage sentence, not the claim set, discloses the rest.
+            # Non-enumeration stays tight.
             _ENUMERATION_LOCAL_CLAIM_WINDOW
             if enumeration
             else min(bundle.max_candidates, 3)
@@ -5918,8 +5926,8 @@ def _answer_selector(
         web_claim_limit = (
             # Enumeration turns widen the web claim window to cover the
             # discovery-view tails (九号 sits at merged rank 36-43), but stay
-            # decoupled from the 64 candidate window: 64 web claims would
-            # flood the prose prompt.
+            # decoupled from the candidate window: a matching web claim count
+            # would flood the prose prompt.
             _ENUMERATION_WEB_CLAIM_WINDOW
             if enumeration
             else bundle.max_web_results

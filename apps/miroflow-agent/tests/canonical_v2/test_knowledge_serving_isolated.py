@@ -6892,14 +6892,13 @@ def test_enumeration_selector_local_and_web_claim_windows_widen_to_32() -> None:
 
 
 def test_enumeration_window_constants_and_plan_windows() -> None:
-    """AQ-S2 (A-1): the enumeration candidate window is 64; the local claim
-    window stays cut/2 (the selector interleaves local/web 1:1) and the web
-    claim window is decoupled at 32 so the wider recall cannot flood the
-    prose prompt."""
-    assert serving_module._ENUMERATION_CANDIDATE_WINDOW == 64
-    assert serving_module._ENUMERATION_LOCAL_CLAIM_WINDOW == (
-        serving_module._ENUMERATION_CANDIDATE_WINDOW // 2
-    )
+    """AQ-S2d: the enumeration candidate window is 128 (its fused local half
+    keeps all eight in-pack PCB suppliers disclosable). Both claim windows
+    stay pinned at the AQ-S2 level of 32 — decoupled from the candidate
+    window, because the coverage sentence (not the claim set) discloses the
+    widened tail and 64 web claims would flood the prose prompt."""
+    assert serving_module._ENUMERATION_CANDIDATE_WINDOW == 128
+    assert serving_module._ENUMERATION_LOCAL_CLAIM_WINDOW == 32
     assert serving_module._ENUMERATION_WEB_CLAIM_WINDOW == 32
 
 
@@ -6915,12 +6914,14 @@ def test_answer_layer_enumeration_markers_mirror_the_serving_family() -> None:
     )
 
 
-def test_enumeration_plan_windows_follow_the_64_candidate_window(
+def test_enumeration_plan_windows_follow_the_128_candidate_window(
     tmp_path: Path,
 ) -> None:
-    """AQ-S2 (A-1): enumeration plans request 64 candidates and a 64-result
-    web cap (the read/F1 truncation follows the plan window, pulling F1 pool
-    ranks 49-64 into the window); non-enumeration plans stay unchanged."""
+    """AQ-S2d (A-1): enumeration plans request 128 candidates and a
+    128-result web cap (the read/F1 truncation follows the plan window, and
+    the fused read window interleaves local/web 1:1, so 128 retains the
+    ~64-deep local half the coverage sentence needs); non-enumeration plans
+    stay unchanged."""
     provider = serving_module._proposal_provider(bundle=_bundle(tmp_path))
     enumeration = provider(
         QueryPlanningRequest(
@@ -6930,8 +6931,8 @@ def test_enumeration_plan_windows_follow_the_64_candidate_window(
             as_of=NOW,
         )
     )
-    assert enumeration.max_candidates == 64
-    assert enumeration.max_web_results == 64
+    assert enumeration.max_candidates == 128
+    assert enumeration.max_web_results == 128
 
     bundle = _bundle(tmp_path)
     ordinary = provider(

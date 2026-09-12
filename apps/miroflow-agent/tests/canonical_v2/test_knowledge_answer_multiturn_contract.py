@@ -2779,13 +2779,13 @@ _S2B_COVERAGE_SENTENCE = (
 )
 
 
-# AQ-S2c fixtures: a 40-member recall window (read 64 analog) whose selector
-# displays only the first 32 (the claim window). Brand aliases stay distinct
-# per member (`_compact_company_alias` strips 深圳市…机器人有限公司 to
-# 粤科NN), so mention matching never collapses two members together.
-_S2C_RECALL_IDS = tuple(f"company:s2c-{index:02d}" for index in range(1, 41))
+# AQ-S2c fixtures: an 80-member recall window whose AQ-S2d coverage cap lists
+# only the first 64. Brand aliases stay distinct per member
+# (`_compact_company_alias` strips 深圳市…机器人有限公司 to 粤科NN), so
+# mention matching never collapses two members together.
+_S2C_RECALL_IDS = tuple(f"company:s2c-{index:02d}" for index in range(1, 81))
 _S2C_RECALL_NAMES = tuple(
-    f"深圳市粤科{index:02d}机器人有限公司" for index in range(1, 41)
+    f"深圳市粤科{index:02d}机器人有限公司" for index in range(1, 81)
 )
 
 
@@ -2896,8 +2896,8 @@ def test_member_coverage_sentence_triggered_by_enumeration_coverage_context() ->
     assert result.answer_text.endswith(_S2B_COVERAGE_SENTENCE)
 
 
-def test_member_coverage_sentence_caps_at_32_with_overflow_count() -> None:
-    """AQ-S2c: the sentence names at most 32 recalled members in recall-rank
+def test_member_coverage_sentence_caps_at_64_with_overflow_count() -> None:
+    """AQ-S2d: the sentence names at most 64 recalled members in recall-rank
     order and discloses the overflow as a count ("等（共 N 家）")."""
     module = _answer_module()
     read_module = _read_module()
@@ -2924,9 +2924,9 @@ def test_member_coverage_sentence_caps_at_32_with_overflow_count() -> None:
             turn_id="turn:s2c:cap:1",
         )
     )
-    assert "深圳市粤科32机器人有限公司" in result.answer_text
-    assert "深圳市粤科33机器人有限公司" not in result.answer_text
-    assert "等（共 40 家）" in result.answer_text
+    assert "深圳市粤科64机器人有限公司" in result.answer_text
+    assert "深圳市粤科65机器人有限公司" not in result.answer_text
+    assert "等（共 80 家）" in result.answer_text
 
 
 def test_member_coverage_sentence_skipped_when_all_members_mentioned() -> None:
@@ -3278,13 +3278,18 @@ def test_member_coverage_sentence_sources_the_recalled_set_beyond_the_claim_wind
             read_module,
             session_id="session:s2c:recall-source",
             turn_id="turn:s2c:recall-source:1",
+            # Pin a 40-member recall window: the shared fixture grew to 80
+            # with the AQ-S2d cap, but this scenario asserts the ranks 33-40
+            # disclosure segment without hitting the (now 64) cap.
+            company_ids=_S2C_RECALL_IDS[:40],
+            company_names=_S2C_RECALL_NAMES[:40],
         )
     )
     # 32 unmentioned members (ranks 9-40) — the claim-window cut (ranks
     # 33-40) is exactly the newly disclosed segment; the cap is not hit.
     expected = (
         "此外，本次检索还召回以下相关本地企业："
-        + "、".join(_S2C_RECALL_NAMES[8:])
+        + "、".join(_S2C_RECALL_NAMES[8:40])
         + "。"
     )
     assert result.answer_text.endswith(expected)
@@ -3384,9 +3389,110 @@ def test_member_coverage_sentence_names_all_resolve_to_recalled_handles() -> Non
     recalled_names = {
         handle.display_name for handle in request.evidence_set.entity_handles
     }
-    assert len(listed) == 32
+    assert len(listed) == 64
     assert set(listed) <= recalled_names
-    assert overflow == "40 家）"
+    assert overflow == "80 家）"
+
+
+def test_member_coverage_sentence_ignores_interleaved_web_handles() -> None:
+    """AQ-S2d: the fused read window interleaves local/web 1:1, so
+    entity_handles mixes canonical companies with web handles. The sentence
+    must list only canonical companies in their relative recall-rank order —
+    interleaved web handles neither appear nor consume coverage slots (the
+    unit-level lock for the AQ-S2d "fused local half" disclosure semantic)."""
+    module = _answer_module()
+    read_module = _read_module()
+    canonical_ids = tuple(f"company:s2c-mix-{index:02d}" for index in range(1, 7))
+    canonical_names = tuple(
+        f"深圳市交错{index:02d}机器人有限公司" for index in range(1, 7)
+    )
+    snapshot_bytes = b"Recorded web listing page for the interleave test."
+    snapshot = read_module.WebEvidenceSnapshot(
+        snapshot_id=f"web-snapshot:sha256:{hashlib.sha256(snapshot_bytes).hexdigest()}",
+        content_sha256=hashlib.sha256(snapshot_bytes).hexdigest(),
+        retrieved_at=NOW,
+        byte_length=len(snapshot_bytes),
+    )
+    web_handles = tuple(
+        read_module.WebEntityHandle(
+            kind="web",
+            handle_id=f"web-handle:mix-{index:02d}",
+            domain="company",
+            display_name=f"WebCo {index:02d}",
+            evidence_snapshot_ids=(snapshot.snapshot_id,),
+            evidence_ids=(f"web-evidence:mix-{index:02d}",),
+            resolution_state="unresolved",
+            candidate_canonical_ids=(),
+            originating_query=_S2B_ENUM_QUERY,
+            origin_lane="web",
+            origin_attempt=1,
+            session_id="session:s2c:interleave",
+        )
+        for index in range(1, 7)
+    )
+    canonical_handles = tuple(
+        _canonical_handle(
+            read_module,
+            canonical_id=canonical_id,
+            domain="company",
+            display_name=name,
+            evidence_ids=(f"evidence:{canonical_id}",),
+        )
+        for canonical_id, name in zip(canonical_ids, canonical_names, strict=True)
+    )
+    # The fused window's 1:1 interleave: web handle, canonical handle, ... —
+    # the canonical local half occupies every other slot.
+    handles = tuple(
+        handle
+        for pair in zip(web_handles, canonical_handles, strict=True)
+        for handle in pair
+    )
+    items = tuple(
+        _item(
+            read_module,
+            evidence_id=f"evidence:{canonical_id}",
+            object_id=canonical_id,
+            domain="company",
+            subject_id=canonical_id,
+            predicate="preferred_name",
+            value=name,
+            snippet=f"{name} 是一家深圳机器人企业。",
+        )
+        for canonical_id, name in zip(canonical_ids, canonical_names, strict=True)
+    )
+
+    def selector(inner: Any) -> Any:
+        return _proposal(module, inner)
+
+    def prose(result: Any) -> Any:
+        return module.ProseSynthesisResult(
+            answer_text="这些企业在酒店配送场景各有侧重。",
+            selected_claim_ids=(),
+            selected_handle_ids=(),
+        )
+
+    answer = module.create_ephemeral_knowledge_answer(
+        answer_selector=selector,
+        prose_renderer=prose,
+    )
+    result = answer.answer(
+        _request(
+            module,
+            session_id="session:s2c:interleave",
+            turn_id="turn:s2c:interleave:1",
+            query=_S2B_ENUM_QUERY,
+            evidence_set=_evidence_set(
+                read_module,
+                query=_S2B_ENUM_QUERY,
+                items=items,
+                handles=handles,
+            ),
+        )
+    )
+    assert result.answer_text.endswith(
+        "此外，本次检索还召回以下相关本地企业：" + "、".join(canonical_names) + "。"
+    )
+    assert "WebCo" not in result.answer_text
 
 
 def test_attributed_items_failing_grounding_keep_the_degrade() -> None:

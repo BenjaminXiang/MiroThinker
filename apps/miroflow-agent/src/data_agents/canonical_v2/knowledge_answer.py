@@ -1320,7 +1320,11 @@ _ENUMERATION_QUERY_MARKERS = (
     "厂商",
     "供应商",
 )
-_ENUMERATION_MEMBER_COVERAGE_LIMIT = 32
+# AQ-S2d (close-workbook-gaps, 2026-09-12): the AQ-S2d candidate window is
+# 128, whose fused local half retains ~64 canonical companies (aq-s2d-window
+# probe: g5-t1 disclosure pool 64, 嘉立创 at disclosure rank 56); the cap
+# tracks that half so in-window members are named, not count-only.
+_ENUMERATION_MEMBER_COVERAGE_LIMIT = 64
 
 
 def _is_enumeration_turn(request: TurnRequest) -> bool:
@@ -2571,7 +2575,7 @@ class _EphemeralKnowledgeAnswer(KnowledgeAnswer):
             if set(conflict.evidence_ids) <= selected_evidence_ids
         )
         # AQ-S2b/S2c: on enumeration turns the deterministic member coverage
-        # sentence (recall set, recall-rank order, cap 32) is appended BEFORE
+        # sentence (recall set, recall-rank order, cap 64) is appended BEFORE
         # the commit so its named members widen the F2 union (selected ∪
         # answer-named over the recall pool) and stay in the session universe
         # for narrowing follow-ups. Deterministic gap sentences stay
