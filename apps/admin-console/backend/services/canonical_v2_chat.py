@@ -9,6 +9,8 @@ import hashlib
 import ipaddress
 import json
 import logging
+import os
+from pathlib import Path
 import re
 from threading import Condition, RLock
 from typing import Any, Callable, Iterator, Literal, Protocol, cast
@@ -61,6 +63,7 @@ from src.data_agents.canonical_v2.knowledge_read import (
     QueryPlanningRequest,
     RetrievalPlan,
     WebEntityHandle,
+    take_lane_timings,
 )
 
 
@@ -1275,6 +1278,75 @@ def _merge_prior_web_evidence(
     return _validated_model(merged, EvidenceSet)
 
 
+def _maybe_dump_turn_debug(
+    *,
+    session_id: str,
+    turn_id: str,
+    turn_count: int,
+    query: str,
+    planned_displayed_ids: tuple[str, ...],
+    evidence_set: EvidenceSet,
+    turn_result: TurnResult,
+    lane_timings: tuple[tuple[str, float], ...],
+) -> None:
+    """Env-gated turn audit (CANONICAL_V2_TURN_DEBUG_DIR), off by default.
+
+    Built for the g5-t2 深南电路 investigation: it records what the planner
+    received (displayed ids), what the read recalled (handles), what the
+    answer committed (displayed result set), and the env-gated lane wall
+    times. A dump failure is logged and never affects the turn.
+    """
+    root = os.environ.get("CANONICAL_V2_TURN_DEBUG_DIR", "").strip()
+    if not root:
+        return
+    receipt = turn_result.context_receipt
+    committed = None if receipt is None else receipt.displayed_result_set
+    try:
+        payload = {
+            "session_id": session_id,
+            "turn_id": turn_id,
+            "turn_count": turn_count,
+            "query": query,
+            "planned_displayed_ids": list(planned_displayed_ids),
+            "recalled_handles": [
+                {
+                    "id": (
+                        handle.canonical_id
+                        if isinstance(handle, CanonicalEntityHandle)
+                        else handle.handle_id
+                    ),
+                    "kind": getattr(handle, "kind", "canonical"),
+                    "domain": getattr(handle, "domain", None),
+                    "display_name": getattr(handle, "display_name", ""),
+                }
+                for handle in evidence_set.entity_handles
+            ],
+            "committed_handle_ids": (
+                [] if committed is None else list(committed.handle_ids)
+            ),
+            "committed_names": (
+                []
+                if committed is None
+                else [
+                    getattr(handle, "display_name", "")
+                    for handle in committed.handles
+                ]
+            ),
+            "render_mode": getattr(turn_result, "render_mode", None),
+            "answer_chars": len(turn_result.answer_text or ""),
+            "lane_timings": [
+                [lane, round(wall_s, 3)] for lane, wall_s in lane_timings
+            ],
+        }
+        suffix = session_id.rsplit(":", 1)[-1][:12] or "session"
+        path = Path(root) / f"turn-debug-{suffix}-{turn_count:02d}.json"
+        path.write_text(
+            json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8"
+        )
+    except Exception:  # noqa: BLE001 - debug probe must never fail the turn
+        _logger.warning("turn debug dump failed", exc_info=True)
+
+
 class CanonicalV2ChatAdapter:
     """One explicit release with copy-on-write answer-session commits."""
 
@@ -1744,6 +1816,7 @@ class CanonicalV2ChatAdapter:
         with turn_gate.active():
             pass
         raw_evidence_set = self._knowledge_read.execute(plan)
+        lane_timings = take_lane_timings()
         with turn_gate.active():
             pass
         self._require_release(raw_evidence_set, stage="read")
@@ -1865,6 +1938,16 @@ class CanonicalV2ChatAdapter:
         next_displayed_ids = self._displayed_ids(
             context_receipt,
             fallback=displayed_ids,
+        )
+        _maybe_dump_turn_debug(
+            session_id=session_id,
+            turn_id=turn_id,
+            turn_count=turn_count,
+            query=normalized_query,
+            planned_displayed_ids=displayed_ids,
+            evidence_set=evidence_set,
+            turn_result=turn_result,
+            lane_timings=lane_timings,
         )
         # Per-turn stream lifecycle must not outlive this turn on the committed
         # session instance (the commit is the terminal statement, and any

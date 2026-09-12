@@ -13,6 +13,7 @@ from contextvars import copy_context
 from datetime import datetime, timedelta, timezone
 import hashlib
 import json
+import os
 import re
 from time import monotonic
 from typing import Annotated, Any, Literal
@@ -36,6 +37,26 @@ from .followup_referents import (
 
 _ZERO_SHA256 = "0" * 64
 _PUBLIC_DOMAINS = ("professor", "company", "paper", "patent")
+# Env-gated debug probe: per-lane wall times for live TTFT decomposition.
+# The serving chat adapter (CANONICAL_V2_TURN_DEBUG_DIR) reads and clears the
+# sink after each read. Lanes run in parallel threads, so concurrent sessions
+# may interleave entries — acceptable for a debug probe, never used in
+# production behavior.
+_lane_timing_sink: list[tuple[str, float]] = []
+
+
+def _record_lane_timing(lane: str, wall_s: float) -> None:
+    if os.environ.get("CANONICAL_V2_TURN_DEBUG_DIR"):
+        _lane_timing_sink.append((lane, wall_s))
+
+
+def take_lane_timings() -> tuple[tuple[str, float], ...]:
+    """Drain the env-gated lane timing sink (empty unless the debug dir is
+    configured)."""
+    recorded = tuple(_lane_timing_sink)
+    _lane_timing_sink.clear()
+    return recorded
+
 # Operator-attested manual recall sidecar (uploaded documents, manual
 # records). Manual vector traces carry this target marker instead of the
 # release hash chain, and their evidence carries this source authority; the
@@ -7466,12 +7487,15 @@ class _EphemeralKnowledgeRead(KnowledgeRead):
         if adapter is None:
             return None, "invalid_output"
         request = _lane_request(plan, lane, web_policy)
+        started = monotonic()
         try:
             raw_result = adapter(request)
         except TimeoutError:
             return None, "timeout"
         except ConnectionError:
             return None, "connection_failure"
+        finally:
+            _record_lane_timing(lane, monotonic() - started)
         try:
             result = _validate_recorded(raw_result, RetrievalLaneResult)
             all_items = (
