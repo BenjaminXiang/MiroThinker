@@ -132,8 +132,20 @@ casefold+去空格后比对）+ fan-out>4 整形丢弃。结果：**锚点 6/6 �
   （S2c/S2d 同源同断言）。
 - 波及面六文件：**70 passed + 3 failed**；3 个失败全部位于 implementation_closure
   （prose-renderer audit 类，S2b/S5/S2c/S2d 基线同名同数），存量。
-- 16 文件 import 触及面 + 本切片新增直接触及面 3 文件（fast_boot /
-  knowledge_build_isolated / manual_recall_points）：**待门 D+E 跑完填入**。
+- 16 文件 import 触及面（S2d 基线 218+3s+4）：拆两批实跑 = D15 十五文件
+  **156 passed + 1 skipped + 4 failed** + internal_reference 合同文件
+  **62 passed + 2 skipped** = **218 passed + 3 skipped + 4 failed**，逐数对齐；
+  4 个失败（founder_red×1、llm_query_rewrite×2、web_page_fetch×1）与 S2d
+  基线同名，且在本切片 HEAD（e3fb8527）上复跑同败（stash 对照）。
+- 本切片新增直接触及面 3 文件（fast_boot / knowledge_build_isolated /
+  manual_recall_points，S2d 列表外）：**163 passed，0 失败**（1h27m，
+  fast_boot 的 Milvus 物化主导）。
+- 19 文件聚合跑 3600s 超时（tail 缓冲无输出），以逐文件/小批覆盖取代 ——
+  与 S2d 记录的目录级聚合超时同因。
+- 复验：主上下文于 15:11 提交本切片（5552d85d）后叠加 perf 提交 e3d7d0b2
+  （教授向量显示名索引化，与 AQ-S7 路径无交集）；在 e3d7d0b2 树上重跑
+  四门+scrub+multiturn = **402 passed + 1 failed（存量 off_anchor）**，切片
+  行为在最新树上保持。
 - lint/format：`ruff check` 五文件 0 违规（HEAD 基线同 0）；`ruff format --diff`
   hunk 数与 HEAD 逐一相等（read_isolated 4=4、pack_loader 2=2、serving 测试 46=46、
   pack 测试 0=0、read 测试 1=1），本切片引入的 hunk 已全部手工修齐，存量漂移未碰。
