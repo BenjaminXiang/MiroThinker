@@ -888,3 +888,36 @@
   (`latency/latency_harness.py`, agent-15) — production-config components
   with production planner/read/reranker/selector, per-step wall times for
   six queries (大疆/教授/lidar/g2/pcb×2).
+
+## 2026-09-12 — Entity-question recall gap found (大疆/优必选 class): they ARE in the pack — the query path never reaches them
+
+- Evidence (traces, consistent over 12 runs): `大疆创新主要做什么` and
+  `优必选科技怎么样` show `exact 0 / structured 0 / lexical 0 / vector 16 /
+  web 61-74` — every local lane empty — although 深圳市大疆创新科技有限公司
+  IS in the pack (industry_tags/tech_tags 无人机研发制造商, product list,
+  tech route, address) and 优必选 likewise. Consequences: no local claims,
+  0 citations, answers fully web-dependent, slower.
+- Mechanism: `_matches_exact_request` ends with
+  `_normalize(request.query_text) in display_terms` — the WHOLE query must
+  equal a name; the lexical lane requires the whole query phrase as a
+  substring. Question-shaped queries about a named entity therefore never
+  match. Bare-name queries (G2 replay) do match — hence the class went
+  unnoticed.
+- Prototype (main context, over the sealed pack's 7,089 company names):
+  name-in-query linking with name-derived forms (strip legal suffixes +
+  city prefixes, ≥2 chars; 45,219 index entries) resolves
+  `大疆创新主要做什么` → 深圳市大疆创新科技有限公司; `优必选科技怎么样` →
+  深圳市优必选科技股份有限公司 (short + long forms); `深南电路的主要产品`
+  → 深南电路股份有限公司; `开普勒机器人 怎么样` → 上海开普勒机器人有限公司;
+  `普渡科技有哪些产品` → 2 candidates (ambiguity policy's job).
+  Category queries correctly produce no name match.
+- Slice AQ-S7 (queued behind AQ-S2d): entity-linking channel — index built
+  at read-view build; longest-form-first matching; feed the exact lane's
+  `explicit_name` slot path (existing machinery) + the relation/criteria
+  lanes so local profiles get described; false-positive matrix (generic
+  substrings) + ambiguity handling tests; live verification on the two
+  slow queries (expect local lanes >0, local citations >0, latency drop
+  as web dependence falls).
+- User directive acknowledged: for the genuinely-absent companies
+  (华秋/中信华/领智/鼎纪) the C6.0 data backlog stands; 大疆 class is a
+  retrieval-path fix, not a data gap.
