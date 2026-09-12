@@ -7623,19 +7623,22 @@ def _professor_vector_display_names(
         (point.canonical_object_id, point.source_projection_content_sha256)
         for point in professor_points
     }
-    for canonical_id, source_projection_sha256 in sorted(point_authorities):
-        structural_authorities = tuple(
-            document
-            for document in lookup_documents
-            if document.projection_scope.value == "public_domain"
+    structural_authorities_by_id: dict[str, list[LookupProjectionDocument]] = {}
+    for document in lookup_documents:
+        if (
+            document.projection_scope.value == "public_domain"
             and document.domain == "professor"
             and document.reference_type is None
             and document.path == "exact_lookup"
             and document.projection_view.value == "identity"
             and document.projection_id == projection_id
             and document.release_id == bundle.release_id
-            and document.canonical_object_id == canonical_id
-        )
+        ):
+            structural_authorities_by_id.setdefault(document.canonical_object_id, []).append(
+                document
+            )
+    for canonical_id, source_projection_sha256 in sorted(point_authorities):
+        structural_authorities = structural_authorities_by_id.get(canonical_id, [])
         if len(structural_authorities) != 1:
             raise IsolatedKnowledgeReadIntegrityError(
                 "Professor vector display authority requires one exact lookup projection"
