@@ -733,6 +733,35 @@ def test_openai_prose_renderer_rejects_explicit_truncated_finish_reason(
     assert len(completions.calls) == 1
 
 
+def test_accept_streamed_truncation_ships_long_length_partials() -> None:
+    """The partial-ship rescue for length-capped streams must not raise.
+
+    d88a6006 shipped this rescue with a bare ``logger`` name that the module
+    never defines; the log line only runs on the rescue path itself, so no
+    existing test exercised it. Direct call: long partials ship, short ones
+    stay rejected, and non-length finishes never ship.
+    """
+    length_choice = SimpleNamespace(finish_reason="length")
+    assert (
+        serving_module._accept_streamed_truncation(
+            length_choice, serving_module._STREAMED_PARTIAL_MIN_CHARS
+        )
+        is True
+    )
+    assert (
+        serving_module._accept_streamed_truncation(
+            length_choice, serving_module._STREAMED_PARTIAL_MIN_CHARS - 1
+        )
+        is False
+    )
+    assert (
+        serving_module._accept_streamed_truncation(
+            SimpleNamespace(finish_reason="stop"), 5_000
+        )
+        is False
+    )
+
+
 def test_openai_prose_renderer_framed_wire_streams_answer_and_preserves_selection() -> (
     None
 ):

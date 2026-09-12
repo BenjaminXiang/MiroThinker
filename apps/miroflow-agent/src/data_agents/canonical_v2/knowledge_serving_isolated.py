@@ -5013,7 +5013,7 @@ def _accept_streamed_truncation(
         return False
     if streamed_chars < _STREAMED_PARTIAL_MIN_CHARS:
         return False
-    logger.warning(
+    _logger.warning(
         "prose finish_reason=length after %d streamed chars — shipping partial",
         streamed_chars,
     )
