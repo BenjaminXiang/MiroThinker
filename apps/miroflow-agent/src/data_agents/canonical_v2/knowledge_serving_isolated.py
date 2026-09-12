@@ -87,6 +87,11 @@ from .knowledge_read import (
 from .knowledge_read_isolated import _NAMED_COMPANY_PATENT_PATTERN
 from .llm_judgments import create_llm_judge
 from .placeholder_scrub import scrub_placeholder_value
+from .rerank_client import (
+    RemoteReranker,
+    RerankUnavailable,
+    configured_reranker,
+)
 from .turn_trace_context import TurnTraceReporter, current_turn_trace
 from .web_lane_resilience import (
     RETRY_BACKOFF_SECONDS,
@@ -2522,27 +2527,32 @@ def _matched_bound_entity(
     return matches[0] if len(matches) == 1 else None
 
 
-def _serving_reranker(request: RerankRequest) -> RerankProposal:
-    # Equal scores must not be tie-broken by result_id: canonical ids embed
-    # random hex and every local lane candidate carries raw_score=1.0, so an
-    # id tie-break degenerates bucket order into random string order (evidence:
-    # .agents/runs/close-workbook-gaps/d0-probe/f1b-downstream-trace.md).
-    # Python's sort is stable, so with a score-only key equal-score candidates
-    # keep input order (= fusion first-seen order = lane order = F1 ranking).
-    def candidate_key(candidate: Any) -> float:
-        return -candidate.raw_score
+_SERVING_RERANK_DOMAIN_LABELS = {
+    "company": "企业",
+    "professor": "教授",
+    "paper": "论文",
+    "patent": "专利",
+}
+_SERVING_RERANK_DOCUMENT_SNIPPETS = 3
+_SERVING_RERANK_DOCUMENT_CHARS = 400
 
-    # List-style questions are recall-driven: the vector lane is the primary
-    # local witness (exact/lexical lanes rarely fire for theme questions), so
-    # its canonical candidates must stay in the same balanced lane as the Web
-    # gap candidates instead of being pushed to the tail as mere neighbors.
-    # Entity questions keep the conservative order: a Web gap that names the
-    # target explicitly outranks a vector neighbor that merely resembles it.
+
+def _serving_rerank_buckets(
+    request: RerankRequest,
+) -> tuple[list[Any], list[Any], list[Any], list[Any]]:
+    """Classify eligible candidates into (mixed, local, Web, other) buckets.
+
+    List-style questions are recall-driven: the vector lane is the primary
+    local witness (exact/lexical lanes rarely fire for theme questions), so
+    its canonical candidates must stay in the same balanced lane as the Web
+    gap candidates instead of being pushed to the tail as mere neighbors.
+    Entity questions keep the conservative order: a Web gap that names the
+    target explicitly outranks a vector neighbor that merely resembles it.
+    """
     enumeration = any(
         marker in request.original_query
         for marker in _ENUMERATION_QUERY_MARKERS
     )
-
     mixed: list[Any] = []
     local: list[Any] = []
     web: list[Any] = []
@@ -2577,32 +2587,123 @@ def _serving_reranker(request: RerankRequest) -> RerankProposal:
             web.append(candidate)
         else:
             other.append(candidate)
+    return mixed, local, web, other
 
-    mixed.sort(key=candidate_key)
-    local.sort(key=candidate_key)
-    web.sort(key=candidate_key)
-    other.sort(key=candidate_key)
+
+def _serving_rerank_document(candidate: Any) -> str:
+    """Render one candidate as the relevance model's document text."""
+    label = _SERVING_RERANK_DOMAIN_LABELS.get(candidate.domain, candidate.domain)
+    snippets: list[str] = []
+    for item in candidate.evidence:
+        text = " ".join(str(item.snippet).split())
+        if text and text not in snippets:
+            snippets.append(text)
+        if len(snippets) == _SERVING_RERANK_DOCUMENT_SNIPPETS:
+            break
+    body = " ｜ ".join(snippets)[:_SERVING_RERANK_DOCUMENT_CHARS]
+    header = f"{candidate.display_name}（{label}）"
+    return f"{header}：{body}" if body else header
+
+
+def _serving_rerank_ordering(
+    buckets: tuple[list[Any], list[Any], list[Any], list[Any]],
+) -> tuple[str, ...]:
+    """Interleave the ordered buckets into the final selection order."""
+    mixed, local, web, other = buckets
     balanced: list[Any] = []
     for index in range(max(len(local), len(web))):
         if index < len(local):
             balanced.append(local[index])
         if index < len(web):
             balanced.append(web[index])
-
-    ordered = tuple(
+    return tuple(
         candidate.result_id
         for candidate in (*mixed, *balanced, *other)
     )
+
+
+def _deterministic_serving_rerank(request: RerankRequest) -> RerankProposal:
+    # Equal scores must not be tie-broken by result_id: canonical ids embed
+    # random hex and every local lane candidate carries raw_score=1.0, so an
+    # id tie-break degenerates bucket order into random string order (evidence:
+    # .agents/runs/close-workbook-gaps/d0-probe/f1b-downstream-trace.md).
+    # Python's sort is stable, so with a score-only key equal-score candidates
+    # keep input order (= fusion first-seen order = lane order = F1 ranking).
+    def candidate_key(candidate: Any) -> float:
+        return -candidate.raw_score
+
+    mixed, local, web, other = _serving_rerank_buckets(request)
+    mixed.sort(key=candidate_key)
+    local.sort(key=candidate_key)
+    web.sort(key=candidate_key)
+    other.sort(key=candidate_key)
     return RerankProposal(
         decision_input_sha256=request.content_sha256,
         schema_version="canonical-v2-serving-rerank-v1",
         model_id="canonical-v2-deterministic-reranker-v1",
         prompt_version="canonical-v2-serving-rerank-v1",
-        ordered_result_ids=ordered,
+        ordered_result_ids=_serving_rerank_ordering((mixed, local, web, other)),
         rationale=(
             "Deterministic late selection preserves bounded local and current-Web recall."
         ),
     )
+
+
+def _model_serving_rerank(
+    reranker: RemoteReranker,
+    request: RerankRequest,
+) -> RerankProposal | None:
+    """Order candidates by relevance-model score, or None on any failure.
+
+    The bucket policy that balances local and current-Web witnesses is kept;
+    only the ordering inside each bucket is driven by the model, and
+    candidates past the model's document cap keep input order behind the
+    scored ones. Scores are stable-sorted, so equal scores keep input order.
+    """
+    buckets = _serving_rerank_buckets(request)
+    mixed, local, web, other = buckets
+    pool = [*mixed, *local, *web, *other]
+    scored = pool[: reranker.max_documents]
+    documents = tuple(_serving_rerank_document(candidate) for candidate in scored)
+    try:
+        scores = reranker.score(request.original_query, documents)
+    except RerankUnavailable as exc:
+        _logger.warning("serving rerank fell back to the deterministic order: %s", exc)
+        return None
+    score_by_id = {
+        candidate.result_id: score
+        for candidate, score in zip(scored, scores, strict=True)
+    }
+
+    def candidate_key(candidate: Any) -> tuple[int, float]:
+        score = score_by_id.get(candidate.result_id)
+        if score is None:
+            return (1, 0.0)
+        return (0, -score)
+
+    ordered_buckets = tuple(
+        sorted(bucket, key=candidate_key) for bucket in buckets
+    )
+    return RerankProposal(
+        decision_input_sha256=request.content_sha256,
+        schema_version="canonical-v2-serving-rerank-v1",
+        model_id=f"canonical-v2-serving-rerank-model:{reranker.model_id}",
+        prompt_version="canonical-v2-serving-rerank-v1",
+        ordered_result_ids=_serving_rerank_ordering(ordered_buckets),
+        rationale=(
+            "Relevance-model ordering inside the deterministic local and "
+            "current-Web buckets."
+        ),
+    )
+
+
+def _serving_reranker(request: RerankRequest) -> RerankProposal:
+    reranker = configured_reranker()
+    if reranker is not None:
+        proposal = _model_serving_rerank(reranker, request)
+        if proposal is not None:
+            return proposal
+    return _deterministic_serving_rerank(request)
 
 
 # --- Serving sufficiency + supplemental retrieval for person-criteria queries ---
