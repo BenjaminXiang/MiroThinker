@@ -415,9 +415,58 @@ def test_lane_document_selection_is_phrase_first_then_or_fill(tmp_path: Path) ->
         query_phrase="激光雷达",
         domains=("company",),
         max_candidates=10,
+        wide_recall=True,
     )
     assert selected[0] == "doc:radar"
-    assert "doc:laser" in selected  # OR fill restores ranked-sample recall
+    assert "doc:laser" in selected  # the wide fill restores ranked recall
+    # Entity/keyword lookups keep the narrow adjacency pass: a thin pass (one
+    # document here) is empty so the substring lane's exact-term path runs.
+    selected = _indexed_lexical_document_ids(
+        index=index,
+        query_phrase="激光雷达",
+        domains=("company",),
+        max_candidates=10,
+        wide_recall=False,
+    )
+    assert selected == ()
+
+
+def test_index_query_strips_enumeration_scaffolding() -> None:
+    """The index query is the content residue, never the raw question: the
+    raw form made the OR pass flood the window with 公司/深圳 matches and
+    pushed the g2 GT companies out of the recalled handle set."""
+    from src.data_agents.canonical_v2.knowledge_read_isolated import (
+        _lexical_index_query_text,
+    )
+
+    assert _lexical_index_query_text("深圳有哪些做激光雷达的公司") == "激光雷达"
+    assert (
+        _lexical_index_query_text("中国有哪些成熟的酒店送餐机器人供应商")
+        == "酒店送餐机器人"
+    )
+    # A name query keeps its discriminating part (股份有限 is not stripped).
+    residue = _lexical_index_query_text("深圳市大族数控科技股份有限公司")
+    assert "大族数控" in residue
+    assert "深圳" not in residue
+    # Nothing survives the stripping → the caller falls back to the raw text.
+    assert _lexical_index_query_text("有哪些公司") == ""
+
+
+def test_wide_recall_only_for_category_questions() -> None:
+    """Category questions (enumeration markers) fill the window; identity and
+    keyword lookups keep the narrow adjacency pass."""
+    from src.data_agents.canonical_v2.knowledge_read_isolated import (
+        _is_wide_recall_query,
+    )
+
+    assert _is_wide_recall_query("深圳有哪些做激光雷达的公司")
+    assert _is_wide_recall_query("中国有哪些成熟的酒店送餐机器人供应商")
+    assert _is_wide_recall_query("我想找PCB打板, 有哪些推荐")  # 推荐 is a marker
+    # No enumeration marker: an identity question (exact lane's job) and a
+    # bare keyword both stay narrow.
+    assert not _is_wide_recall_query("大疆创新主要做什么")
+    assert not _is_wide_recall_query("深圳市大族数控科技股份有限公司")
+    assert not _is_wide_recall_query("激光雷达")
 
 
 def test_open_cache_hides_nothing_and_pins_successes(tmp_path: Path) -> None:

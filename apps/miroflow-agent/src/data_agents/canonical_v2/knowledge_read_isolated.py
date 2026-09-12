@@ -7189,33 +7189,67 @@ def _indexed_lexical_open(bundle: IsolatedReleaseBundle) -> LexicalIndex | None:
         return None
 
 
+def _is_wide_recall_query(query_phrase: str) -> bool:
+    """Category questions get the wide ranked window (enumeration markers,
+    the same tuple the substring lane's category fallback triggers on)."""
+    return any(marker in query_phrase for marker in _CATEGORY_RECALL_TRIGGER_MARKERS)
+
+
+def _lexical_index_query_text(query_phrase: str) -> str:
+    """Strip enumeration scaffolding so the index sees content terms only.
+
+    Same stripping as the category-recall path (``_CATEGORY_RECALL_STOP_PHRASES``,
+    kept in lockstep): the pack is city-scoped, so 深圳/中国 carry no
+    discrimination, and 有哪些/公司/的 are question scaffolding. Measured
+    2026-09-12: without this the OR pass flooded the window with
+    scaffolding matches and pushed the g2 GT companies (云迹/普渡/开普勒/擎朗)
+    out of the recalled handle set.
+    """
+    residue = query_phrase
+    for stop in _CATEGORY_RECALL_STOP_PHRASES:
+        residue = residue.replace(stop, " ")
+    return residue.strip()
+
+
 def _indexed_lexical_document_ids(
     *,
     index: LexicalIndex,
     query_phrase: str,
     domains: tuple[str, ...],
     max_candidates: int,
+    wide_recall: bool,
 ) -> tuple[str, ...]:
-    """Adjacency pass first; OR fill only when the adjacency pass is thin.
+    """Adjacency pass first; OR fill under the lane's two query shapes.
 
-    The phrase pass is the precision pass (激光设备 must not surface for
-    激光雷达); the OR pass restores the old lane's ranked-sample recall when
-    too few documents carry the exact term.
+    - Category questions (``wide_recall``, the enumeration markers): fill the
+      remainder of the window from the content terms — 酒店送餐机器人 gets its
+      exact-phrase documents first, then the 酒店/送餐/机器人 matches ranked by
+      BM25, so the window stays both precise and wide.
+    - Everything else (entity names, keyword lookups): the adjacency pass is
+      the whole answer; a thin pass returns empty so the substring lane's
+      exact-term path handles it instead of flooding the window with the
+      tokens of a name.
     """
     hits: list[tuple[str, float]] = list(
         index.search(query_phrase, domains=domains, limit=max_candidates, mode="phrase")
     )
-    if len(hits) < min(max_candidates, _LEXICAL_INDEX_PHRASE_FLOOR):
-        seen = {document_id for document_id, _ in hits}
-        for document_id, score in index.search(
-            query_phrase, domains=domains, limit=max_candidates, mode="or"
-        ):
-            if document_id in seen:
-                continue
-            hits.append((document_id, score))
-            seen.add(document_id)
-            if len(hits) >= max_candidates:
-                break
+    if not wide_recall:
+        # Entity names / keyword lookups: the adjacency pass is the answer,
+        # and a thin pass means the substring lane's exact-term path is the
+        # better lane for it.
+        if len(hits) < min(max_candidates, _LEXICAL_INDEX_PHRASE_FLOOR):
+            return ()
+        return tuple(document_id for document_id, _score in hits[:max_candidates])
+    seen = {document_id for document_id, _ in hits}
+    for document_id, score in index.search(
+        query_phrase, domains=domains, limit=max_candidates, mode="or"
+    ):
+        if document_id in seen:
+            continue
+        hits.append((document_id, score))
+        seen.add(document_id)
+        if len(hits) >= max_candidates:
+            break
     return tuple(document_id for document_id, _score in hits[:max_candidates])
 
 
@@ -7302,16 +7336,18 @@ def _indexed_lexical_lane_result(
         "on",
     }
     started = monotonic()
+    index_query = _lexical_index_query_text(query_phrase) or query_phrase
     document_ids = _indexed_lexical_document_ids(
         index=index,
-        query_phrase=query_phrase,
+        query_phrase=index_query,
         domains=tuple(request.domains),
         max_candidates=request.max_candidates,
+        wide_recall=_is_wide_recall_query(query_phrase),
     )
     after_select = monotonic()
     candidates = _indexed_lexical_candidates(
         index=index,
-        query_phrase=query_phrase,
+        query_phrase=index_query,
         request=request,
         bundle=bundle,
         publication=publication,
@@ -7320,7 +7356,8 @@ def _indexed_lexical_lane_result(
     )
     if debug:
         print(
-            f"[lexical-index] phrase={query_phrase!r} selected={len(document_ids)} "
+            f"[lexical-index] phrase={query_phrase!r} index_query={index_query!r} "
+            f"selected={len(document_ids)} "
             f"candidates={len(candidates)} select={after_select - started:.3f}s "
             f"build={monotonic() - after_select:.3f}s "
             f"total={monotonic() - started:.3f}s",

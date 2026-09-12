@@ -84,7 +84,10 @@ from .knowledge_read import (
     _explicit_organization_name,
     _retention_values,
 )
-from .knowledge_read_isolated import _NAMED_COMPANY_PATENT_PATTERN
+from .knowledge_read_isolated import (
+    _indexed_lexical_open,
+    _NAMED_COMPANY_PATENT_PATTERN,
+)
 from .llm_judgments import create_llm_judge
 from .placeholder_scrub import scrub_placeholder_value
 from .turn_trace_context import TurnTraceReporter, current_turn_trace
@@ -6207,6 +6210,16 @@ def load_recorded_serving_inputs(
         if warm_fetcher is not None:
             warm_fetcher()
 
+    def warm_lexical_index() -> None:
+        # retrieval-v2 Step 1: the derived index pays a one-time open (jieba
+        # domain dictionary + FTS5 connect, measured 5.7s on the run14 pack).
+        # Warm it off the request path so the first user turn never pays it;
+        # the open is process-cached, so later calls are a dict lookup.
+        try:
+            _indexed_lexical_open(bundle)
+        except Exception:  # noqa: BLE001 - warm-up is best-effort
+            _logger.warning("lexical index warm-up failed", exc_info=True)
+
     idle_keepwarm_cycle = _provider_keepwarm_cycle(
         operations=(
             warm_bocha,
@@ -6249,6 +6262,11 @@ def load_recorded_serving_inputs(
             name="canonical-v2-fetch-warm",
             daemon=True,
         ).start()
+    threading.Thread(
+        target=warm_lexical_index,
+        name="canonical-v2-lexical-index-warm",
+        daemon=True,
+    ).start()
     return RecordedServingInputs(
         planning_policy=planning_policy,
         proposal_provider=_proposal_provider(
