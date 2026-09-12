@@ -1549,7 +1549,9 @@ def test_probe_acceptance_batches_rule_misses_into_one_judge_call() -> None:
         def judge_batch(self, **kwargs: Any) -> Any:
             self.calls.append(kwargs)
             return tuple(
-                lj.ProbeAcceptJudgment(item_id=item_id, accept=item_id.endswith("-hit2"))
+                lj.ProbeAcceptJudgment(
+                    item_id=item_id, accept=item_id.endswith("-hit2")
+                )
                 for item_id in kwargs["items"]
             )
 
