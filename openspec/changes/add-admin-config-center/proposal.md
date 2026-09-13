@@ -80,3 +80,9 @@ Jobs/uploads/seeds surfaces (W2/W3), session-audit enrichment (W5), periodic col
 
 Proposed 2026-09-14. Implementation + verification land in the same slice; evidence in
 `.agents/runs/admin-config-center-w1/`.
+
+## Human doc cross-link
+
+- Dry-run inventory (Chinese): `docs/plans/2026-09-14-admin-config-center-dry-run.md`
+- Execution log (Chinese, append-only): `docs/plans/2026-09-14-admin-config-center-log.md`
+- Plan entry: `docs/plans/2026-09-07-system-wrapup-config-center-and-periodic-refresh.md` §3 / §6 (W1 row)
