@@ -1,0 +1,371 @@
+{
+  "generated_at": "2026-09-13T16:05:43.164301+00:00",
+  "repo": "/home/longxiang/MiroThinker/.worktrees/admin-config-center",
+  "live_process_env": {
+    "probe": "/proc/1992450/environ",
+    "readable": true,
+    "values": {
+      "DATABASE_URL": null,
+      "DATABASE_URL_TEST": null,
+      "CANONICAL_V2_DATABASE_URL": null,
+      "CANONICAL_V2_EXPECTED_DATABASE": null,
+      "CANONICAL_V2_TARGET_KIND": null,
+      "CANONICAL_V2_BACKUP_GATE_ROOT": null,
+      "CANONICAL_V2_ACCESS_LOG_DB": "/var/tmp/mirothinker-canonical-v2-s12f/access-logs.sqlite3",
+      "CANONICAL_V2_CORRECTIONS_DB": "/var/tmp/mirothinker-canonical-v2-s12f/corrections.sqlite3",
+      "CANONICAL_V2_MANUAL_RECALL_DIR": "/var/tmp/mirothinker-data-v2/manual-recall-v1",
+      "CANONICAL_V2_SERVING_PACK": null,
+      "CANONICAL_V2_LEXICAL_INDEX": "0",
+      "CANONICAL_V2_LEXICAL_INDEX_ROOT": null,
+      "CANONICAL_V2_RERANK_BASE_URL": null,
+      "CANONICAL_V2_RERANK_MODEL": null,
+      "CANONICAL_V2_RERANK_API_KEY": null,
+      "CANONICAL_V2_RERANK_API_KEY_FILE": null,
+      "CHAT_LLM_PROFILE": "deepseekv4flash",
+      "CHAT_LLM_TIMEOUT_SECONDS": null,
+      "CHAT_LLM_SYNTHESIS": null,
+      "CHAT_AUGMENT_WEB": null,
+      "CHAT_CONTEXTUAL_INTERPRETATION": "on",
+      "CHAT_E_WEB_FALLBACK_THRESHOLD": null,
+      "CHAT_QUERY_CLASSIFIER": null,
+      "CHAT_SYNTHESIS_TIMEOUT": null,
+      "CHAT_MILVUS_URI": null,
+      "MILVUS_URI": null,
+      "TURN_TRACE_DIR": null,
+      "CANONICAL_V2_TURN_DEBUG_DIR": "/home/longxiang/MiroThinker/.agents/runs/close-workbook-gaps/turn-debug",
+      "BOCHA_API_KEY": null,
+      "SERPER_API_KEY": null,
+      "OPENALEX_API_KEY": null,
+      "SEMANTIC_SCHOLAR_API_KEY": null,
+      "DEEPSEEK_API_KEY": null,
+      "DASHSCOPE_API_KEY": null,
+      "LOCAL_LLM_BASE_URL": null,
+      "LOCAL_LLM_MODEL": null,
+      "ONLINE_LLM_BASE_URL": null,
+      "ONLINE_LLM_MODEL": null,
+      "WEB_LANE_DAILY_QUOTA": null,
+      "CANONICAL_V2_REVIEW_PROVIDER_PROFILE": null
+    },
+    "value_count": 29
+  },
+  "probe_process_env": {
+    "DATABASE_URL": null,
+    "DATABASE_URL_TEST": null,
+    "CANONICAL_V2_DATABASE_URL": null,
+    "CANONICAL_V2_EXPECTED_DATABASE": null,
+    "CANONICAL_V2_TARGET_KIND": null,
+    "CANONICAL_V2_BACKUP_GATE_ROOT": null,
+    "CANONICAL_V2_ACCESS_LOG_DB": null,
+    "CANONICAL_V2_CORRECTIONS_DB": null,
+    "CANONICAL_V2_MANUAL_RECALL_DIR": null,
+    "CANONICAL_V2_SERVING_PACK": null,
+    "CANONICAL_V2_LEXICAL_INDEX": null,
+    "CANONICAL_V2_LEXICAL_INDEX_ROOT": null,
+    "CANONICAL_V2_RERANK_BASE_URL": null,
+    "CANONICAL_V2_RERANK_MODEL": null,
+    "CANONICAL_V2_RERANK_API_KEY": null,
+    "CANONICAL_V2_RERANK_API_KEY_FILE": null,
+    "CHAT_LLM_PROFILE": null,
+    "CHAT_LLM_TIMEOUT_SECONDS": null,
+    "CHAT_LLM_SYNTHESIS": null,
+    "CHAT_AUGMENT_WEB": null,
+    "CHAT_CONTEXTUAL_INTERPRETATION": null,
+    "CHAT_E_WEB_FALLBACK_THRESHOLD": null,
+    "CHAT_QUERY_CLASSIFIER": null,
+    "CHAT_SYNTHESIS_TIMEOUT": null,
+    "CHAT_MILVUS_URI": null,
+    "MILVUS_URI": null,
+    "TURN_TRACE_DIR": null,
+    "CANONICAL_V2_TURN_DEBUG_DIR": null,
+    "BOCHA_API_KEY": null,
+    "SERPER_API_KEY": null,
+    "OPENALEX_API_KEY": null,
+    "SEMANTIC_SCHOLAR_API_KEY": null,
+    "DEEPSEEK_API_KEY": null,
+    "DASHSCOPE_API_KEY": null,
+    "LOCAL_LLM_BASE_URL": null,
+    "LOCAL_LLM_MODEL": null,
+    "ONLINE_LLM_BASE_URL": null,
+    "ONLINE_LLM_MODEL": null,
+    "WEB_LANE_DAILY_QUOTA": null,
+    "CANONICAL_V2_REVIEW_PROVIDER_PROFILE": null
+  },
+  "key_files": [
+    {
+      "name": ".bocha_api_key",
+      "worktree_root": {
+        "path": "/home/longxiang/MiroThinker/.worktrees/admin-config-center/.bocha_api_key",
+        "exists": false
+      },
+      "main_repo_root": {
+        "path": "/home/longxiang/MiroThinker/.bocha_api_key",
+        "exists": true,
+        "readable": true,
+        "bytes": 36
+      }
+    },
+    {
+      "name": ".serper_api_key",
+      "worktree_root": {
+        "path": "/home/longxiang/MiroThinker/.worktrees/admin-config-center/.serper_api_key",
+        "exists": false
+      },
+      "main_repo_root": {
+        "path": "/home/longxiang/MiroThinker/.serper_api_key",
+        "exists": true,
+        "readable": true,
+        "bytes": 41
+      }
+    },
+    {
+      "name": ".sglang_api_key",
+      "worktree_root": {
+        "path": "/home/longxiang/MiroThinker/.worktrees/admin-config-center/.sglang_api_key",
+        "exists": false
+      },
+      "main_repo_root": {
+        "path": "/home/longxiang/MiroThinker/.sglang_api_key",
+        "exists": true,
+        "readable": true,
+        "bytes": 27
+      }
+    },
+    {
+      "name": ".deepseek_api_key",
+      "worktree_root": {
+        "path": "/home/longxiang/MiroThinker/.worktrees/admin-config-center/.deepseek_api_key",
+        "exists": false
+      },
+      "main_repo_root": {
+        "path": "/home/longxiang/MiroThinker/.deepseek_api_key",
+        "exists": true,
+        "readable": true,
+        "bytes": 35
+      }
+    },
+    {
+      "name": ".dashscope_api_key",
+      "worktree_root": {
+        "path": "/home/longxiang/MiroThinker/.worktrees/admin-config-center/.dashscope_api_key",
+        "exists": false
+      },
+      "main_repo_root": {
+        "path": "/home/longxiang/MiroThinker/.dashscope_api_key",
+        "exists": false
+      }
+    },
+    {
+      "name": ".ark_api_key",
+      "worktree_root": {
+        "path": "/home/longxiang/MiroThinker/.worktrees/admin-config-center/.ark_api_key",
+        "exists": false
+      },
+      "main_repo_root": {
+        "path": "/home/longxiang/MiroThinker/.ark_api_key",
+        "exists": false
+      }
+    }
+  ],
+  "pack_manifest": {
+    "path": "/var/tmp/mirothinker-data-v2/serving-pack-run14-sealed/manifest.json",
+    "schema_version": "canonical-v2-serving-pack-v1",
+    "pack_id": "serving-pack:candidate-v2-20260819-r1",
+    "release_id": "candidate-v2-20260819-r1",
+    "generated_at": "2026-09-10T06:34:12.790327+00:00",
+    "generator_run_id": "c2-seal-20260910-v1",
+    "index_marker_sha256": "8848197caaa665fa093f054aa6c7c241b90376f311ec62e089ddb479a6e97c8b",
+    "index_root": "/var/tmp/mirothinker-data-v2/index-v1",
+    "embedding_model_id": "Qwen/Qwen3-Embedding-8B",
+    "manifest_version": "canonical-v2-build-manifest-v2",
+    "build_run_id": "p4-build-20260819-v1",
+    "build_created_at": "2026-09-07T15:56:13.332723Z",
+    "verified_at": "2026-09-07T15:56:13.332723Z",
+    "accepted": true,
+    "published_record_counts": {
+      "published:company": 7089,
+      "published:paper": 24520,
+      "published:patent": 11504,
+      "published:person": 0,
+      "published:professor": 3958,
+      "published:technology_concept": 0,
+      "published:technology_route": 0
+    },
+    "file_registry": {
+      "lookup.sqlite3": "c392d559f403da928f3baeed8092c19717059b3bd1e8339fcde07fa2b7970c91",
+      "milvus.db": "a10f4b0681cd73a82f6de43df6e100585a719f0d23df6f4c9aa5c340ef9ca230",
+      ".canonical-v2-isolated-index-target.json": "8848197caaa665fa093f054aa6c7c241b90376f311ec62e089ddb479a6e97c8b",
+      "relationships.json": "61a7ca8ec42ba51dab7dbc5e07a2659acea33dadc21d48b3eb14689a500efedc",
+      "institution_catalog.json": "a6768287c5336c486710a302c82af58cad67b3cb0c28918d151f231878e30037"
+    },
+    "file_registry_matches": {
+      "lookup.sqlite3": "skipped_large",
+      "milvus.db": "skipped_large",
+      ".canonical-v2-isolated-index-target.json": true,
+      "relationships.json": "skipped_large",
+      "institution_catalog.json": true
+    }
+  },
+  "live_index_marker": {
+    "path": "/var/tmp/mirothinker-data-v2/index-v1/.canonical-v2-isolated-index-target.json",
+    "exists": true,
+    "sha256": "8848197caaa665fa093f054aa6c7c241b90376f311ec62e089ddb479a6e97c8b",
+    "target_kind": "isolated-candidate",
+    "release_id": "candidate-v2-20260819-r1",
+    "root": "/var/tmp/mirothinker-data-v2/index-v1"
+  },
+  "sqlite": {
+    "access_log": {
+      "path": "/var/tmp/mirothinker-canonical-v2-s12f/access-logs.sqlite3",
+      "exists": true,
+      "bytes": 5550080,
+      "quick_check": "ok",
+      "tables": {
+        "workspace_meta": 1,
+        "sessions": 960,
+        "turns": 1599
+      },
+      "workspace_meta": {
+        "schema_version": "canonical-v2-access-log-v1"
+      }
+    },
+    "corrections": {
+      "path": "/var/tmp/mirothinker-canonical-v2-s12f/corrections.sqlite3",
+      "exists": true,
+      "bytes": 4096,
+      "quick_check": "ok",
+      "tables": {
+        "workspace_meta": 1,
+        "field_corrections": 3,
+        "added_records": 2
+      },
+      "workspace_meta": {
+        "schema_version": "canonical-v2-corrections-v1"
+      }
+    },
+    "pack_lookup": {
+      "path": "/var/tmp/mirothinker-data-v2/serving-pack-run14-sealed/lookup.sqlite3",
+      "exists": true,
+      "bytes": 665395200,
+      "quick_check": "ok",
+      "tables": {
+        "lookup_document": 47071,
+        "lookup_manifest": 7,
+        "build_metadata": 2,
+        "build_receipt": 1
+      },
+      "workspace_meta": {}
+    },
+    "live_index_lookup": {
+      "path": "/var/tmp/mirothinker-data-v2/index-v1/lookup.sqlite3",
+      "exists": true,
+      "bytes": 665395200,
+      "quick_check": "ok",
+      "tables": {
+        "lookup_document": 47071,
+        "lookup_manifest": 7,
+        "build_metadata": 2,
+        "build_receipt": 1
+      },
+      "workspace_meta": {}
+    }
+  },
+  "big_files": [
+    {
+      "label": "pack_milvus",
+      "path": "/var/tmp/mirothinker-data-v2/serving-pack-run14-sealed/milvus.db",
+      "exists": true,
+      "bytes": 1078865920
+    },
+    {
+      "label": "live_index_milvus",
+      "path": "/var/tmp/mirothinker-data-v2/index-v1/milvus.db",
+      "exists": true,
+      "bytes": 1078865920
+    },
+    {
+      "label": "pack_lookup",
+      "path": "/var/tmp/mirothinker-data-v2/serving-pack-run14-sealed/lookup.sqlite3",
+      "exists": true,
+      "bytes": 665395200
+    },
+    {
+      "label": "pack_relationships",
+      "path": "/var/tmp/mirothinker-data-v2/serving-pack-run14-sealed/relationships.json",
+      "exists": true,
+      "bytes": 3357118726
+    },
+    {
+      "label": "live_vector_matrix",
+      "path": "/var/tmp/mirothinker-data-v2/index-v1/vector_matrix.npz",
+      "exists": true,
+      "bytes": 1676917131
+    }
+  ],
+  "disk": [
+    {
+      "label": "root_fs",
+      "path": "/",
+      "total_bytes": 1887976378368,
+      "free_bytes": 1195467145216,
+      "used_percent": 36.7
+    },
+    {
+      "label": "var_tmp",
+      "path": "/var/tmp",
+      "total_bytes": 1887976378368,
+      "free_bytes": 1195467145216,
+      "used_percent": 36.7
+    },
+    {
+      "label": "md1",
+      "path": "/md1",
+      "total_bytes": 19125862928384,
+      "free_bytes": 2130781286400,
+      "used_percent": 88.9
+    }
+  ],
+  "manual_recall": {
+    "path": "/var/tmp/mirothinker-data-v2/manual-recall-v1",
+    "exists": true,
+    "files": [],
+    "entry_count": 0
+  },
+  "collection_scripts": [
+    {
+      "name": "run_company_news_ingest.py",
+      "exists": true
+    },
+    {
+      "name": "run_company_official_product_capture.py",
+      "exists": true
+    },
+    {
+      "name": "run_paper_search_backfill.py",
+      "exists": true
+    },
+    {
+      "name": "run_paper_summary_zh_backfill.py",
+      "exists": true
+    },
+    {
+      "name": "run_paper_doi_verify.py",
+      "exists": true
+    },
+    {
+      "name": "run_profile_bio_rescrape.py",
+      "exists": true
+    },
+    {
+      "name": "run_homepage_paper_ingest.py",
+      "exists": true
+    }
+  ],
+  "crontab": {
+    "returncode": 0,
+    "lines": [
+      "17 3 * * * /home/longxiang/MiroThinker/.worktrees/canonical-v2-s11-consolidation/deploy/backup-canonical-v2.sh >> /home/longxiang/MiroThinker/.worktrees/canonical-v2-s11-consolidation/deploy/backup.log 2>&1",
+      "41 3 * * * /home/longxiang/MiroThinker/.worktrees/canonical-v2-s11-consolidation/deploy/purge-access-logs.sh >> /home/longxiang/MiroThinker/.worktrees/canonical-v2-s11-consolidation/deploy/backup.log 2>&1",
+      "7 3 * * * /home/longxiang/mirothinker-migration/github-backup.sh >> /home/longxiang/mirothinker-migration/backup.log 2>&1"
+    ]
+  }
+}

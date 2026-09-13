@@ -1,0 +1,14 @@
+# 18188 live read-only probe (W1 status-500 evidence; no restart, no config change)
+## before-field (recorded at 2026-09-14 session start, HEAD f961eece):
+$ curl -s -o /tmp/status_head.txt -w "HTTP %{http_code}\n" http://127.0.0.1:18188/api/canonical-v2/admin/status
+HTTP 500
+Internal Server Error
+
+## root-cause traceback (journalctl --user -u canonical-v2-backend):
+Sep 14 00:02:26 gpu01 start-canonical-v2.sh[1992450]: AttributeError: '_EphemeralKnowledgeGapFeedback' object has no attribute 'list_for_admin'
+Sep 14 00:37:59 gpu01 start-canonical-v2.sh[1992450]: AttributeError: '_EphemeralKnowledgeGapFeedback' object has no attribute 'list_for_admin'
+
+## other admin endpoints on the live line (read-only):
+GET /api/canonical-v2/admin/config                 -> 404
+GET /api/canonical-v2/admin/system-status          -> 404
+GET /admin                                         -> 404

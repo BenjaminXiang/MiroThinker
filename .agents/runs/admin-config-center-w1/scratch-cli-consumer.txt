@@ -1,0 +1,16 @@
+# settings_status.py consumer evidence (W1)
+
+## default path (repository)
+$ uv run python scripts/settings_status.py --check-keys | head -6
+managed settings : /home/longxiang/MiroThinker/.worktrees/admin-config-center/config/managed/settings.json (defaults)
+schema_version   : 1
+------------------------------------------------------------------------
+[deflt] collection.enabled.company                   = true
+[deflt] collection.enabled.paper                     = true
+[deflt] collection.enabled.patent                    = true
+
+## scratch config directory
+$ CANONICAL_V2_MANAGED_SETTINGS=/tmp/w1-scratch/managed/settings.json uv run python scripts/settings_status.py --check-keys | grep -E "managed settings|\[file\]"
+managed settings : /tmp/w1-scratch/managed/settings.json (exists)
+[file] collection.max_llm_calls_per_run             = 712
+[file] paths.access_log_retention_days              = 45  <- CANONICAL_V2_ACCESS_LOG_RETENTION_DAYS

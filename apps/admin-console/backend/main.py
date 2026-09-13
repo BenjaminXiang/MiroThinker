@@ -17,6 +17,9 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 from backend.api.canonical_v2_access_logs import (
     router as canonical_v2_access_logs_router,
 )
+from backend.api.canonical_v2_admin_config import (
+    router as canonical_v2_admin_config_router,
+)
 from backend.api.canonical_v2_chat import router as canonical_v2_chat_router
 from backend.api.canonical_v2_consumers import router as canonical_v2_consumers_router
 from backend.api.canonical_v2_corrections import (
@@ -84,6 +87,7 @@ def _create_route_shell(*, include_review: bool) -> FastAPI:
     shell.include_router(canonical_v2_corrections_router)
     shell.include_router(canonical_v2_manual_recall_router)
     shell.include_router(canonical_v2_access_logs_router)
+    shell.include_router(canonical_v2_admin_config_router)
 
     @shell.api_route("/api/{path:path}", methods=list(_REJECT_METHODS))
     def reject_unknown_api(path: str) -> None:
@@ -126,6 +130,10 @@ def _create_route_shell(*, include_review: bool) -> FastAPI:
     @shell.get("/logs")
     def serve_logs() -> FileResponse:
         return FileResponse(_STATIC_DIR / "logs.html")
+
+    @shell.get("/admin")
+    def serve_admin() -> FileResponse:
+        return FileResponse(_STATIC_DIR / "admin.html")
 
     @shell.get("/chat")
     def serve_chat() -> FileResponse:

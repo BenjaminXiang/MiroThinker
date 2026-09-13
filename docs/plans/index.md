@@ -37,6 +37,7 @@
 ## 🗂 其他在途
 
 - [客户现场迁移计划](./2026-08-14-customer-site-migration-plan.md) — 无 GPU 纯 LLM API 部署，10 步路线，第 6–10 步待补
+- [管理配置中心（W1）干跑与首片](./2026-09-14-admin-config-center-dry-run.md) — 配置项全量盘点 + 受管配置文件/状态面板/页面首片（执行明细见 [日志](./2026-09-14-admin-config-center-log.md)）
 
 ## 📜 历史参考（2026 年 4–7 月，主线已由本轮接手）
 

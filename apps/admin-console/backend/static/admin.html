@@ -1,0 +1,760 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light" />
+    <title>管理配置中心 · Canonical V2</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23143d59'/%3E%3Cpath d='M17 19h8v11l12-11h10L33 32l15 13H37L25 34v11h-8z' fill='white'/%3E%3C/svg%3E" />
+    <style>
+      :root {
+        --ink: #17252f;
+        --muted: #62727d;
+        --navy: #143d59;
+        --navy-strong: #0d2c41;
+        --teal: #168b82;
+        --teal-soft: #e7f5f2;
+        --blue-soft: #edf4f8;
+        --amber: #b66916;
+        --amber-soft: #fff4df;
+        --danger: #a83f4c;
+        --danger-soft: #fff0f2;
+        --surface: #ffffff;
+        --canvas: #f3f6f7;
+        --line: #dce4e7;
+        --line-strong: #c5d2d7;
+        --shadow: 0 18px 42px rgba(24, 55, 70, 0.08);
+        --radius: 18px;
+      }
+
+      * { box-sizing: border-box; }
+
+      body {
+        margin: 0;
+        min-width: 320px;
+        color: var(--ink);
+        background:
+          radial-gradient(circle at 8% 0%, rgba(22, 139, 130, 0.09), transparent 28rem),
+          var(--canvas);
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+          "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+        line-height: 1.55;
+      }
+
+      button, a, input, select { font: inherit; }
+
+      button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible {
+        outline: 3px solid rgba(22, 139, 130, 0.28);
+        outline-offset: 2px;
+      }
+
+      .topbar {
+        color: #fff;
+        background:
+          linear-gradient(112deg, rgba(255, 255, 255, 0.05), transparent 50%),
+          var(--navy-strong);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+      }
+
+      .topbar-inner {
+        max-width: 1280px;
+        margin: 0 auto;
+        padding: 18px 24px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        flex-wrap: wrap;
+      }
+
+      .brand { display: flex; flex-direction: column; gap: 2px; }
+      .brand strong { font-size: 1.05rem; letter-spacing: 0.02em; }
+      .brand span { font-size: 0.8rem; color: rgba(255, 255, 255, 0.72); }
+
+      .nav { display: flex; gap: 8px; flex-wrap: wrap; }
+      .nav a {
+        color: rgba(255, 255, 255, 0.82);
+        text-decoration: none;
+        font-size: 0.86rem;
+        padding: 7px 14px;
+        border-radius: 999px;
+        border: 1px solid transparent;
+      }
+      .nav a:hover { border-color: rgba(255, 255, 255, 0.28); }
+      .nav a.active {
+        color: #fff;
+        background: rgba(255, 255, 255, 0.14);
+        border-color: rgba(255, 255, 255, 0.24);
+      }
+
+      main {
+        max-width: 1280px;
+        margin: 0 auto;
+        padding: 24px;
+        display: grid;
+        gap: 20px;
+      }
+
+      .card {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+        padding: 20px 22px;
+      }
+
+      .card > header {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 12px;
+        flex-wrap: wrap;
+        border-bottom: 1px solid var(--line);
+        padding-bottom: 10px;
+        margin-bottom: 14px;
+      }
+
+      .card h2 { font-size: 1rem; margin: 0; letter-spacing: 0.02em; }
+      .card header .hint { font-size: 0.8rem; color: var(--muted); }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 12px;
+      }
+
+      .tile {
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        padding: 12px 14px;
+        background: var(--blue-soft);
+      }
+      .tile .label { font-size: 0.76rem; color: var(--muted); letter-spacing: 0.04em; }
+      .tile .value { font-size: 1.02rem; font-weight: 600; word-break: break-all; }
+      .tile .value.mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.86rem; }
+      .tile .sub { font-size: 0.76rem; color: var(--muted); }
+
+      .pill {
+        display: inline-block;
+        font-size: 0.74rem;
+        padding: 2px 9px;
+        border-radius: 999px;
+        border: 1px solid var(--line-strong);
+        color: var(--muted);
+        background: var(--surface);
+      }
+      .pill.ok { color: #0d5f57; background: var(--teal-soft); border-color: #a9ded6; }
+      .pill.warn { color: #8a5312; background: var(--amber-soft); border-color: #e8c894; }
+      .pill.bad { color: #8b2f3b; background: var(--danger-soft); border-color: #e6b7bd; }
+
+      .rows { display: grid; gap: 8px; }
+      .row {
+        display: grid;
+        grid-template-columns: 220px 1fr;
+        gap: 10px;
+        align-items: center;
+        border-bottom: 1px dashed var(--line);
+        padding-bottom: 8px;
+        font-size: 0.88rem;
+      }
+      .row:last-child { border-bottom: 0; }
+      .row .key { color: var(--muted); }
+
+      table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+      th, td { text-align: left; padding: 7px 8px; border-bottom: 1px solid var(--line); }
+      th { color: var(--muted); font-weight: 600; }
+      td.mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+
+      form .field {
+        display: grid;
+        grid-template-columns: 1fr 220px;
+        gap: 10px;
+        align-items: center;
+        padding: 8px 0;
+        border-bottom: 1px dashed var(--line);
+      }
+      form .field:last-of-type { border-bottom: 0; }
+      form .field label { font-size: 0.88rem; }
+      form .field .meta { font-size: 0.74rem; color: var(--muted); }
+      input[type="number"], input[type="text"], select {
+        width: 100%;
+        padding: 7px 10px;
+        border: 1px solid var(--line-strong);
+        border-radius: 10px;
+        background: #fff;
+      }
+      input:disabled { background: #f1f4f5; color: var(--muted); }
+
+      .actions { display: flex; gap: 10px; align-items: center; margin-top: 14px; flex-wrap: wrap; }
+      button {
+        cursor: pointer;
+        border-radius: 999px;
+        border: 1px solid var(--line-strong);
+        background: #fff;
+        padding: 8px 18px;
+      }
+      button.primary { background: var(--teal); border-color: var(--teal); color: #fff; }
+      button:disabled { cursor: not-allowed; opacity: 0.55; }
+
+      .notice {
+        border-radius: 12px;
+        padding: 10px 14px;
+        font-size: 0.86rem;
+        margin-bottom: 12px;
+        border: 1px solid var(--line-strong);
+        background: var(--blue-soft);
+      }
+      .notice.ok { background: var(--teal-soft); border-color: #a9ded6; }
+      .notice.bad { background: var(--danger-soft); border-color: #e6b7bd; }
+      .notice.hidden { display: none; }
+
+      details.raw { margin-top: 12px; }
+      details.raw pre {
+        background: #0d2c41;
+        color: #dbe7ee;
+        padding: 12px;
+        border-radius: 12px;
+        overflow: auto;
+        font-size: 0.76rem;
+        max-height: 320px;
+      }
+      .footnote { font-size: 0.78rem; color: var(--muted); margin-top: 8px; }
+    </style>
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="topbar-inner">
+        <div class="brand">
+          <strong>管理配置中心</strong>
+          <span>Canonical V2 · 系统状态 / 受管配置 / provider key 状态</span>
+        </div>
+        <nav class="nav">
+          <a href="chat">对话</a>
+          <a href="browse">数据浏览</a>
+          <a href="logs">访问日志</a>
+          <a href="admin" class="active">管理配置</a>
+        </nav>
+      </div>
+    </header>
+
+    <main>
+      <section class="card" aria-label="系统状态">
+        <header>
+          <h2>系统状态</h2>
+          <span class="hint" id="statusGenerated">加载中…</span>
+        </header>
+        <div id="statusNotice" class="notice hidden" role="status"></div>
+        <div class="grid" id="statusTiles"></div>
+
+        <h3 style="font-size: 0.9rem; margin: 18px 0 8px">各域新鲜度（pack 构建时间 vs 投影时点）</h3>
+        <table id="freshnessTable">
+          <thead>
+            <tr>
+              <th>域</th>
+              <th>记录数</th>
+              <th>pack 构建时间</th>
+              <th>距今</th>
+              <th>投影 as_of</th>
+              <th>采集历史</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+
+        <h3 style="font-size: 0.9rem; margin: 18px 0 8px">存储与运维计数</h3>
+        <div class="rows" id="storageRows"></div>
+
+        <details class="raw">
+          <summary>原始 JSON（只读）</summary>
+          <pre id="statusRaw"></pre>
+        </details>
+      </section>
+
+      <section class="card" aria-label="受管配置">
+        <header>
+          <h2>受管配置</h2>
+          <span class="hint" id="configPath">—</span>
+        </header>
+        <div id="configNotice" class="notice hidden" role="status"></div>
+        <form id="configForm" autocomplete="off"></form>
+        <div class="actions">
+          <button type="submit" class="primary" form="configForm">保存</button>
+          <button type="button" id="reloadConfig">重新加载</button>
+          <span class="footnote" id="configFootnote"></span>
+        </div>
+        <p class="footnote">
+          仅白名单内的非敏感字段可写；密钥、数据库连接串、索引与 pack 路径不在此列。
+          被环境变量覆盖的字段不可编辑，以 env 为准（不制造第二真相源）。
+        </p>
+      </section>
+
+      <section class="card" aria-label="Provider key 状态">
+        <header>
+          <h2>Provider / 模型 key 状态</h2>
+          <span class="hint">只读 · 仅显示是否已配置与尾号 4 位</span>
+        </header>
+        <table id="providerTable">
+          <thead>
+            <tr>
+              <th>Provider</th>
+              <th>已配置</th>
+              <th>尾号</th>
+              <th>来源</th>
+              <th>连通性</th>
+              <th>详情</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+        <div class="actions">
+          <button type="button" id="healthCheck" class="primary">立即检查</button>
+          <span class="footnote" id="healthStamp"></span>
+        </div>
+        <p class="footnote">
+          key 明文永不通过页面/接口返回，也不写入日志或审计；检查只做一次最小探测，且不返回响应体。
+        </p>
+      </section>
+    </main>
+
+    <script>
+      "use strict";
+
+      const API = {
+        status: "api/canonical-v2/admin/system-status",
+        config: "api/canonical-v2/admin/config",
+        health: "api/canonical-v2/admin/providers/health-check",
+      };
+
+      const DOMAINS = ["company", "paper", "patent", "professor"];
+      const DOMAIN_LABEL = {
+        company: "企业",
+        paper: "论文",
+        patent: "专利",
+        professor: "教授",
+      };
+
+      // Rendered whitelist mirror. Every entry maps 1:1 to a schema field; the
+      // server remains the authority and rejects anything outside its whitelist.
+      const FIELD_SPECS = [
+        ...DOMAINS.map((domain) => ({
+          path: `collection.enabled.${domain}`,
+          label: `${DOMAIN_LABEL[domain]}采集开关`,
+          type: "bool",
+        })),
+        { path: "collection.max_web_searches_per_run", label: "每轮 web search 配额上限", type: "int", min: 0, max: 10000 },
+        { path: "collection.max_llm_calls_per_run", label: "每轮 LLM 调用上限", type: "int", min: 0, max: 100000 },
+        { path: "collection.window_start_hour_utc", label: "执行窗口起始（UTC 小时）", type: "int", min: 0, max: 23 },
+        { path: "collection.window_end_hour_utc", label: "执行窗口结束（UTC 小时）", type: "int", min: 0, max: 23 },
+        { path: "extraction_endpoints.llm_base_url", label: "采集 LLM Base URL", type: "url" },
+        { path: "extraction_endpoints.llm_model", label: "采集 LLM 模型名", type: "text" },
+        { path: "extraction_endpoints.embedding_base_url", label: "Embedding Base URL", type: "url" },
+        { path: "extraction_endpoints.embedding_model", label: "Embedding 模型名", type: "text" },
+        { path: "extraction_endpoints.rerank_base_url", label: "Rerank Base URL", type: "url" },
+        { path: "extraction_endpoints.rerank_model", label: "Rerank 模型名", type: "text" },
+        { path: "paths.access_log_retention_days", label: "访问日志保留天数", type: "int", min: 1, max: 3650 },
+      ];
+
+      let configState = null;
+
+      function el(id) {
+        return document.getElementById(id);
+      }
+
+      function notice(node, message, kind) {
+        node.textContent = message;
+        node.className = `notice ${kind || ""}`.trim();
+      }
+
+      function hideNotice(node) {
+        node.className = "notice hidden";
+        node.textContent = "";
+      }
+
+      function pill(text, kind) {
+        const span = document.createElement("span");
+        span.className = `pill ${kind || ""}`.trim();
+        span.textContent = text;
+        return span;
+      }
+
+      function humanBytes(value) {
+        if (typeof value !== "number" || !isFinite(value)) return "—";
+        const units = ["B", "KB", "MB", "GB", "TB"];
+        let index = 0;
+        let size = value;
+        while (size >= 1024 && index < units.length - 1) {
+          size /= 1024;
+          index += 1;
+        }
+        return `${size.toFixed(index === 0 ? 0 : 1)} ${units[index]}`;
+      }
+
+      function humanAge(seconds) {
+        if (typeof seconds !== "number" || !isFinite(seconds)) return "—";
+        if (seconds < 60) return `${seconds} 秒`;
+        if (seconds < 3600) return `${Math.floor(seconds / 60)} 分钟`;
+        if (seconds < 86400) return `${(seconds / 3600).toFixed(1)} 小时`;
+        return `${(seconds / 86400).toFixed(1)} 天`;
+      }
+
+      function shortTime(value) {
+        if (!value) return "—";
+        const parsed = new Date(value);
+        if (Number.isNaN(parsed.getTime())) return String(value);
+        return parsed.toLocaleString("zh-CN", { hour12: false });
+      }
+
+      function tile(label, value, sub, mono) {
+        const node = document.createElement("div");
+        node.className = "tile";
+        const labelNode = document.createElement("div");
+        labelNode.className = "label";
+        labelNode.textContent = label;
+        const valueNode = document.createElement("div");
+        valueNode.className = `value${mono ? " mono" : ""}`;
+        valueNode.textContent = value;
+        node.append(labelNode, valueNode);
+        if (sub) {
+          const subNode = document.createElement("div");
+          subNode.className = "sub";
+          subNode.textContent = sub;
+          node.append(subNode);
+        }
+        return node;
+      }
+
+      function row(key, valueNode) {
+        const node = document.createElement("div");
+        node.className = "row";
+        const keyNode = document.createElement("div");
+        keyNode.className = "key";
+        keyNode.textContent = key;
+        const valueCell = document.createElement("div");
+        if (typeof valueNode === "string") {
+          valueCell.textContent = valueNode;
+        } else {
+          valueCell.append(valueNode);
+        }
+        node.append(keyNode, valueCell);
+        return node;
+      }
+
+      async function loadStatus() {
+        try {
+          const response = await fetch(API.status, { headers: { Accept: "application/json" } });
+          if (!response.ok) {
+            notice(el("statusNotice"), `系统状态读取失败：HTTP ${response.status}`, "bad");
+            return;
+          }
+          renderStatus(await response.json());
+        } catch (error) {
+          notice(el("statusNotice"), `系统状态读取失败：${error}`, "bad");
+        }
+      }
+
+      function renderStatus(data) {
+        hideNotice(el("statusNotice"));
+        el("statusGenerated").textContent = `生成于 ${shortTime(data.generated_at)}`;
+
+        const pack = data.pack || {};
+        const marker = data.index_marker || {};
+        const disk = data.disk || {};
+        const tiles = [
+          tile("serving pack release", pack.release_id || "—", pack.build_run_id || "", true),
+          tile("pack 生成时间", shortTime(pack.generated_at), pack.pack_id || ""),
+          tile("pack 构建时间", shortTime(pack.build_created_at), pack.manifest_version || ""),
+          tile(
+            "index marker 校验",
+            marker.state === "ok" ? "通过" : "未通过",
+            marker.state === "ok" ? `期望 ${String(marker.expected_sha256 || "").slice(0, 12)}…` : marker.reason || "",
+          ),
+          tile("manifest sha256", String(pack.manifest_sha256 || "—").slice(0, 16) + "…", pack.source || "", true),
+        ];
+        const tilesNode = el("statusTiles");
+        tilesNode.replaceChildren(...tiles);
+
+        const freshness = data.freshness || {};
+        const perDomain = freshness.per_domain || {};
+        const body = el("freshnessTable").querySelector("tbody");
+        body.replaceChildren(
+          ...DOMAINS.map((domain) => {
+            const entry = perDomain[domain] || {};
+            const history = (freshness.collection_history || {}).state;
+            const tr = document.createElement("tr");
+            const cells = [
+              DOMAIN_LABEL[domain],
+              entry.record_count ?? "—",
+              shortTime(entry.pack_build_at),
+              humanAge(entry.pack_build_age_seconds),
+              shortTime(entry.projection_as_of),
+              history === "ok" ? "可读" : "不可用（构建期库不可达）",
+            ];
+            cells.forEach((value, index) => {
+              const td = document.createElement("td");
+              td.textContent = String(value);
+              if (index === 1) td.className = "mono";
+              tr.append(td);
+            });
+            return tr;
+          }),
+        );
+
+        const operations = data.operations || {};
+        const storage = data.storage || {};
+        const config = data.config || {};
+        const rows = el("storageRows");
+        const addRow = (key, node) => rows.append(row(key, node));
+        rows.replaceChildren();
+
+        addRow("受管配置文件", `${config.path || "—"}（${config.exists ? "已存在" : "尚未创建"}）`);
+        addRow("access-log 保留天数", String(operations.access_log_retention_days ?? "—"));
+
+        const accessLog = operations.access_log || {};
+        addRow(
+          "访问日志",
+          typeof accessLog.sessions === "number"
+            ? `会话 ${accessLog.sessions} · 轮次 ${accessLog.turns} · 最近 ${shortTime(accessLog.latest_at)}`
+            : `不可用：${accessLog.reason || "未知"}`,
+        );
+        const corrections = operations.corrections || {};
+        addRow(
+          "字段纠错",
+          typeof corrections.active === "number"
+            ? `生效 ${corrections.active} · 已撤销 ${corrections.reverted} · 手工新增 ${corrections.added_records} · 最近 ${shortTime(corrections.latest_at)}`
+            : `不可用：${corrections.reason || "未知"}`,
+        );
+        const manual = operations.manual_recall || {};
+        addRow(
+          "人工召回侧车",
+          typeof manual.entry_count === "number"
+            ? `条目 ${manual.entry_count}${manual.active_points != null ? ` · 生效点 ${manual.active_points}` : ""}`
+            : `不可用：${manual.reason || "未知"}`,
+        );
+
+        const sources = storage.sources || {};
+        ["lookup", "corrections", "access_log"].forEach((key) => {
+          const entry = sources[key] || {};
+          if (entry.state === "ok") {
+            const tableSummary = Object.entries(entry.tables || {})
+              .map(([name, count]) => `${name}=${count}`)
+              .join(" · ");
+            addRow(
+              `SQLite ${key}`,
+              `${humanBytes(entry.bytes)} · quick_check=${entry.quick_check} · ${tableSummary}`,
+            );
+          } else {
+            addRow(`SQLite ${key}`, `不可用：${entry.reason || "未知"}`);
+          }
+        });
+        (disk.volumes || []).forEach((volume) => {
+          if (volume.state === "ok") {
+            addRow(
+              `磁盘 ${volume.path}`,
+              `剩余 ${humanBytes(volume.free_bytes)} / 共 ${humanBytes(volume.total_bytes)}（已用 ${volume.used_percent}%）`,
+            );
+          } else {
+            addRow(`磁盘 ${volume.path}`, "不可用");
+          }
+        });
+
+        el("statusRaw").textContent = JSON.stringify(data, null, 2);
+      }
+
+      function specFor(path) {
+        return FIELD_SPECS.find((spec) => spec.path === path);
+      }
+
+      function valueAt(document_, path) {
+        return path.split(".").reduce((node, part) => (node == null ? undefined : node[part]), document_);
+      }
+
+      function renderConfig(payload) {
+        configState = payload;
+        el("configPath").textContent = `${payload.path}（${payload.exists ? "已存在" : "使用默认值，尚未落盘"}）`;
+        const form = el("configForm");
+        form.replaceChildren();
+        const fieldIndex = new Map((payload.fields || []).map((field) => [field.path, field]));
+
+        FIELD_SPECS.forEach((spec) => {
+          const field = fieldIndex.get(spec.path);
+          if (!field) return; // non-whitelisted on this server build: never rendered
+          const wrapper = document.createElement("div");
+          wrapper.className = "field";
+
+          const labelNode = document.createElement("label");
+          labelNode.htmlFor = `f-${spec.path}`;
+          labelNode.textContent = spec.label;
+          const meta = document.createElement("div");
+          meta.className = "meta";
+          meta.textContent =
+            field.source === "env"
+              ? `由 env 覆盖（${field.env_var}）`
+              : field.source === "file"
+                ? "来自受管配置文件"
+                : "默认值";
+          if (field.source === "env") {
+            const envPill = pill("env 优先", "warn");
+            meta.append(" ", envPill);
+          }
+          labelNode.append(document.createElement("br"), meta);
+
+          const input = document.createElement("input");
+          input.id = `f-${spec.path}`;
+          input.dataset.path = spec.path;
+          if (spec.type === "bool") {
+            input.type = "checkbox";
+            input.checked = Boolean(field.value);
+          } else if (spec.type === "int") {
+            input.type = "number";
+            input.min = String(spec.min);
+            input.max = String(spec.max);
+            input.value = field.value == null ? "" : String(field.value);
+          } else {
+            input.type = "text";
+            input.placeholder = spec.type === "url" ? "https://…（留空使用默认）" : "留空使用默认";
+            input.value = field.value == null ? "" : String(field.value);
+          }
+          if (!field.editable) {
+            input.disabled = true;
+            wrapper.title = `该字段被环境变量 ${field.env_var} 覆盖`;
+          }
+          wrapper.append(labelNode, input);
+          form.append(wrapper);
+        });
+
+        el("configFootnote").textContent =
+          (payload.fields || []).filter((field) => field.source === "env").length
+            ? "存在被 env 覆盖的字段，页面不可修改"
+            : "";
+      }
+
+      function collectPatch() {
+        const patch = { collection: { enabled: {} }, extraction_endpoints: {}, paths: {} };
+        FIELD_SPECS.forEach((spec) => {
+          const input = document.getElementById(`f-${spec.path}`);
+          if (!input || input.disabled) return;
+          let value;
+          if (spec.type === "bool") {
+            value = input.checked;
+          } else if (spec.type === "int") {
+            if (input.value.trim() === "") return;
+            value = Number(input.value);
+          } else {
+            const text = input.value.trim();
+            value = text === "" ? null : text;
+          }
+          const parts = spec.path.split(".");
+          let cursor = patch;
+          for (let index = 0; index < parts.length - 1; index += 1) {
+            cursor[parts[index]] = cursor[parts[index]] || {};
+            cursor = cursor[parts[index]];
+          }
+          cursor[parts[parts.length - 1]] = value;
+        });
+        return patch;
+      }
+
+      async function saveConfig(event) {
+        event.preventDefault();
+        const node = el("configNotice");
+        try {
+          const response = await fetch(API.config, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json", Accept: "application/json" },
+            body: JSON.stringify(collectPatch()),
+          });
+          const payload = await response.json();
+          if (!response.ok) {
+            notice(node, `保存被拒绝（HTTP ${response.status}）：${describeDetail(payload.detail)}`, "bad");
+            return;
+          }
+          notice(
+            node,
+            payload.changed && payload.changed.length
+              ? `已保存：${payload.changed.join("、")}`
+              : "没有字段发生变化",
+            "ok",
+          );
+          await loadConfig();
+        } catch (error) {
+          notice(node, `保存失败：${error}`, "bad");
+        }
+      }
+
+      function describeDetail(detail) {
+        if (detail == null) return "未提供原因";
+        if (typeof detail === "string") return detail;
+        if (Array.isArray(detail)) {
+          return detail
+            .map((item) => (item && item.msg ? `${(item.loc || []).join(".")}: ${item.msg}` : JSON.stringify(item)))
+            .join("；");
+        }
+        return JSON.stringify(detail);
+      }
+
+      async function loadConfig() {
+        try {
+          const response = await fetch(API.config, { headers: { Accept: "application/json" } });
+          if (!response.ok) {
+            notice(el("configNotice"), `配置读取失败：HTTP ${response.status}`, "bad");
+            return;
+          }
+          hideNotice(el("configNotice"));
+          renderConfig(await response.json());
+        } catch (error) {
+          notice(el("configNotice"), `配置读取失败：${error}`, "bad");
+        }
+      }
+
+      async function runHealthCheck() {
+        const button = el("healthCheck");
+        button.disabled = true;
+        el("healthStamp").textContent = "检查中…";
+        try {
+          const response = await fetch(API.health, {
+            method: "POST",
+            headers: { Accept: "application/json" },
+          });
+          const payload = await response.json();
+          if (!response.ok) {
+            el("healthStamp").textContent = `检查失败：HTTP ${response.status}`;
+            return;
+          }
+          const body = el("providerTable").querySelector("tbody");
+          body.replaceChildren(
+            ...(payload.providers || []).map((provider) => {
+              const tr = document.createElement("tr");
+              const cells = [
+                provider.label || provider.key,
+                provider.configured ? "是" : "否",
+                provider.suffix4 || "—",
+                provider.origin || "—",
+                provider.reachable === true ? "可达" : provider.reachable === false ? "不可达" : "未检查",
+                provider.detail || "—",
+              ];
+              cells.forEach((value, index) => {
+                const td = document.createElement("td");
+                td.textContent = String(value);
+                if (index === 2 || index === 3) td.className = "mono";
+                tr.append(td);
+              });
+              return tr;
+            }),
+          );
+          el("healthStamp").textContent = `检查于 ${shortTime(payload.generated_at)}`;
+        } catch (error) {
+          el("healthStamp").textContent = `检查失败：${error}`;
+        } finally {
+          button.disabled = false;
+        }
+      }
+
+      el("configForm").addEventListener("submit", saveConfig);
+      el("reloadConfig").addEventListener("click", loadConfig);
+      el("healthCheck").addEventListener("click", runHealthCheck);
+
+      loadStatus();
+      loadConfig();
+    </script>
+  </body>
+</html>

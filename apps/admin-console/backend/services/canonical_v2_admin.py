@@ -627,13 +627,6 @@ class CanonicalV2AdminRuntime:
         return self.candidate_projection.as_of
 
     def status(self) -> dict[str, Any]:
-        gap_summary = _exact_model(
-            self.gap_operations.list_for_admin(
-                GapAdminQuery(release_id=self.release_id)
-            ),
-            GapAdminPage,
-            "knowledge gap admin summary",
-        )
         counts = {
             domain: sum(
                 projection.entity_type == domain
@@ -643,6 +636,7 @@ class CanonicalV2AdminRuntime:
         }
         return {
             "release_id": self.release_id,
+            "manifest_version": self.manifest.manifest_version,
             "manifest_sha256": self.manifest.manifest_sha256,
             "as_of": self.as_of,
             "domains": [
@@ -653,8 +647,41 @@ class CanonicalV2AdminRuntime:
                 }
                 for domain in _PUBLIC_DOMAINS
             ],
-            "gap_summary": gap_summary.model_dump(mode="json"),
+            "gap_summary": self._gap_summary(),
         }
+
+    def _gap_summary(self) -> dict[str, Any]:
+        """Report the gap page, or a typed unavailable marker when unsupported.
+
+        The pack-mode composition installs the ephemeral in-process gap feedback,
+        which only records signals and applies remediation. Calling
+        ``list_for_admin`` on it raised ``AttributeError`` and made this endpoint
+        answer 500 on the live service (2026-09-13 traceback). The release
+        identity, manifest hash, ``as_of`` and per-domain counts stay available
+        either way.
+        """
+
+        lister = getattr(self.gap_operations, "list_for_admin", None)
+        if not callable(lister):
+            return {
+                "state": "unavailable",
+                "reason": (
+                    "composed gap operations do not support administrator listing "
+                    f"(capability: {type(self.gap_operations).__name__})"
+                ),
+            }
+        try:
+            page = _exact_model(
+                lister(GapAdminQuery(release_id=self.release_id)),
+                GapAdminPage,
+                "knowledge gap admin summary",
+            )
+        except (TypeError, ValueError, ValidationError):
+            return {
+                "state": "unavailable",
+                "reason": "gap operations returned a page that failed exact validation",
+            }
+        return {"state": "available", "page": page.model_dump(mode="json")}
 
     def _projections(self, domain: PublicDomain) -> tuple[Any, ...]:
         return tuple(

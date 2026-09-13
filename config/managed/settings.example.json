@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "collection": {
+    "enabled": {
+      "company": true,
+      "paper": true,
+      "patent": true,
+      "professor": true
+    },
+    "max_web_searches_per_run": 200,
+    "max_llm_calls_per_run": 500,
+    "window_start_hour_utc": 17,
+    "window_end_hour_utc": 22
+  },
+  "extraction_endpoints": {
+    "llm_base_url": null,
+    "llm_model": null,
+    "embedding_base_url": null,
+    "embedding_model": null,
+    "rerank_base_url": null,
+    "rerank_model": null
+  },
+  "paths": {
+    "serving_pack_dir": null,
+    "access_log_retention_days": 90
+  }
+}
