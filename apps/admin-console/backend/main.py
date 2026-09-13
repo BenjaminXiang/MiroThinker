@@ -25,6 +25,7 @@ from backend.api.canonical_v2_consumers import router as canonical_v2_consumers_
 from backend.api.canonical_v2_corrections import (
     router as canonical_v2_corrections_router,
 )
+from backend.api.canonical_v2_jobs import router as canonical_v2_jobs_router
 from backend.api.canonical_v2_manual_recall import (
     router as canonical_v2_manual_recall_router,
 )
@@ -88,6 +89,7 @@ def _create_route_shell(*, include_review: bool) -> FastAPI:
     shell.include_router(canonical_v2_manual_recall_router)
     shell.include_router(canonical_v2_access_logs_router)
     shell.include_router(canonical_v2_admin_config_router)
+    shell.include_router(canonical_v2_jobs_router)
 
     @shell.api_route("/api/{path:path}", methods=list(_REJECT_METHODS))
     def reject_unknown_api(path: str) -> None:
@@ -134,6 +136,10 @@ def _create_route_shell(*, include_review: bool) -> FastAPI:
     @shell.get("/admin")
     def serve_admin() -> FileResponse:
         return FileResponse(_STATIC_DIR / "admin.html")
+
+    @shell.get("/jobs")
+    def serve_jobs() -> FileResponse:
+        return FileResponse(_STATIC_DIR / "jobs.html")
 
     @shell.get("/chat")
     def serve_chat() -> FileResponse:
