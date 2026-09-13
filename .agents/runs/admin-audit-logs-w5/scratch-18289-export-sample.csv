@@ -1,0 +1,41 @@
+session_id,user_identity,turn_id,turn_count,query_type,status,started_at,finished_at,latency_ms,answer_style,query,answer_text,error_detail,citations,suggested_followups
+session:chat:smoke-anon,anonymous,turn:log:GDevNu7rRNIMKJ1b,1,,error,2026-09-13T20:41:39.298432+00:00,2026-09-13T20:41:39.298438+00:00,0,template,冒烟：这条记录应为匿名,,canonical_v2_invalid_option,[],[]
+session:chat:smoke,smoke-auditor,turn:log:8X90tCaHjdnvh4Le,1,,error,2026-09-13T20:41:39.292617+00:00,2026-09-13T20:41:39.292628+00:00,0,template,冒烟：这条记录应带身份,,canonical_v2_invalid_option,[],[]
+session:chat:GjrqVXIbOzRt-d3xY0RTkEOtOpTMej0h,anonymous,turn:log:DSaMD3RAbUoPyikT,1,canonical_v2:A:answer,completed,2026-09-13T01:24:12.712271+00:00,2026-09-13T01:24:37.549680+00:00,24837,llm_synthesized,优必选科技怎么样,"优必选科技（UBTECH Robotics Inc.，港交所：9880）是一家总部位于深圳南山区的机器人制造商，成立于2012年3月，定位为集人工智能和人形机器人研发、制造、销售于一体的高科技创新企业，主打智能服务机器人方向，公司使命是“让智能机器人走进千家万户”。公开信息显示其注册地址位于深圳市南山区桃源街道长源社区学苑大道1001号南山智园C1栋2201，员工规模在1000至4999人区间。
+
+产品线覆盖多个场景。工业制造方面，Walker S、Walker S1、Walker S2用于汽车及3C工厂流水线的分拣、搬运、装配、检测，强调精准安全的同步作业；商用服务方面，Walker C在展览展厅、博物馆、世博会等场景担任智能导览大使，提供多语言讲解与互动，Cruzr S2用于仓库拣选、商场导购、营业厅迎宾；教育科研方面，悟空、Alpha、Jimu系列、uKit系列等产品进入中小学及高校，此外还有Qrobot Alpha、星球大战冲锋队员机器人等消费级产品。
+
+从公开评价看，招聘平台上有员工点评给出4.3分（13位员工点评），涉及薪资待遇、公司发展和晋升等维度，可作为了解其雇主口碑的参考。整体而言，优必选是国内人形机器人领域的代表性企业之一，产品从工业、商用延伸到教育消费，业务布局较为完整。您更关心它的哪条产品线或哪个方面？我可以再深入介绍。",,"[{""type"": ""company"", ""id"": ""official-source-00c4bd4a40424540"", ""label"": ""深圳市优必选科技股份有限公司"", ""url"": ""http://www.ubtrobot.com/""}]",[]
+session:chat:fwaxE66ItiVwlK9fPPs_s_bfKY8u_1Vk,anonymous,turn:log:7ZOAz2caAqr5cisW,1,canonical_v2:A:answer,completed,2026-09-13T01:23:30.825512+00:00,2026-09-13T01:23:55.328903+00:00,24503,llm_synthesized,介绍一下 国际先进技术应用推进中心（深圳）,"国际先进技术应用推进中心（深圳）简称“国先中心（深圳）”，是在国家发展改革委、深圳市政府支持指导下设立，由深圳市科技创新局作为业务主管部门，依托粤港澳大湾区数字经济研究院建设的世界级先进技术应用推广平台，注册地在深圳。
+
+它的核心定位是聚焦人工智能、具身智能、低空经济等重点领域，为技术对接场景、为企业对接需求。具体承担两方面职能：一是作为国际先进技术成果汇聚平台，加快汇聚大湾区乃至国内外前沿技术创新成果和高端创新要素，为先进技术应用策划场景项目、提供场景机会，推动成果面向应用场景的工程化落地与直接转化；二是作为产业应用场景技术供给平台，面向重要央国企和创新型领军企业对接场景应用需求，建立常态化技术供需对接和匹配机制，搭建技术测试和应用场景，在重要领域联合创新。
+
+该中心于2025年4月在河套深港科技创新合作区深圳园区正式揭牌成立，同期揭牌的还有河套数学与交叉学科研究院，此举旨在进一步提升河套深圳园区在基础研究、技术应用等关键环节的创新发展能力。揭牌后，中心已与光源资本等机构签署战略合作协议。此外，相关政策还提出支持该中心建设具身智能技术试验场。
+</answer>",,"[{""type"": ""company"", ""id"": ""local-source-1eb9336bff29d041"", ""label"": ""深圳国际先进技术应用推进中心"", ""url"": null}]",[]
+session:chat:fwaxE66ItiVwlK9fPPs_s_bfKY8u_1Vk,anonymous,turn:log:14tvnzzUrekyYC82,2,canonical_v2:A:answer,completed,2026-09-13T01:23:55.343876+00:00,2026-09-13T01:24:12.691348+00:00,17347,llm_synthesized,他有哪些论文,"你问的这篇论文是《Ultra-high sensitivity Fabry–Perot interferometer gas refractive index fiber sensor based on photonic crystal fiber and Vernier effect》，作者为 Mingran Quan、Jiajun Tian、Yong Yao，2015 年发表于 Optics Letters。该工作提出并验证了一种基于光子晶体光纤与 Vernier 效应的开腔式法布里–珀罗干涉仪气体折射率传感器，实测折射率灵敏度高达 30899 nm/RIU，可用于气体浓度分析与湿度监测等场景。
+
+与这篇论文同属一个研究方向（光纤传感与光子器件）的相关论文还包括：
+
+- 《High-sensitivity relative humidity fiber-optic sensor based on an internal–external Fabry–Perot cavity Vernier effect》，作者 Cheng Zhou、Qian Zhou、Bo Wang、Jiajun Tian、Yong Yao，2021 年发表于 Optics Express，同样采用法布里–珀罗腔与 Vernier 效应，实现 40%–92% RH 范围内 7.15 nm/% RH 的湿度灵敏度。
+- 《Reversal of optical binding force by Fano resonance in plasmonic nanorod heterodimer》，作者 Q. Zhang、Jun‐Jun Xiao、X. M. Zhang、Yong Yao、Hui Liu，2013 年发表于 Optics Express，研究等离激元纳米棒异二聚体中 Fano 共振导致的光学结合力反转。
+- 《An Ultra-Compact 3-dB Power Splitter for Three Modes Based on Pixelated Meta-Structure》，作者 Hucheng Xie、Yingjie Liu、Yuhan Wang、Yujie Wang、Yong Yao、Qinghai Song，2020 年发表于 IEEE Photonics Technology Letters，提出仅 4 × 4.5 μm² 的超紧凑三模 3-dB 功率分束器。
+- 《High-speed silicon photonic Mach–Zehnder modulator at 2 μm》，作者 Xi Wang、Weihong Shen、Wenxiang Li、Yingjie Liu、Yong Yao、Jiangbing Du，2021 年发表于 Photonics Research，报道了面向 2 μm 波段、支持 80 Gbit/s PAM-4 调制的高速硅基马赫–曾德尔调制器。
+
+以上几篇的共同作者 Yong Yao 是该方向的核心研究者之一。如果你关注的是某位具体作者的全部论文清单，可以告诉我作者姓名，我再帮你梳理。",,"[{""type"": ""paper"", ""id"": ""official-source-23703260af8b9901"", ""label"": ""Ultra-high sensitivity Fabry–Perot interferometer gas refractive index fiber sensor based on photonic crystal fiber and Vernier effect"", ""url"": ""https://doi.org/10.1364/ol.40.004891""}, {""type"": ""paper"", ""id"": ""official-source-c0eed461b00a962d"", ""label"": ""Reversal of optical binding force by Fano resonance in plasmonic nanorod heterodimer"", ""url"": ""https://doi.org/10.1364/oe.21.006601""}, {""type"": ""paper"", ""id"": ""official-source-667a8a2afcc1934c"", ""label"": ""An Ultra-Compact 3-dB Power Splitter for Three Modes Based on Pixelated Meta-Structure"", ""url"": ""https://doi.org/10.1109/lpt.2020.2975128""}, {""type"": ""paper"", ""id"": ""official-source-39c1c3b2e0f344b1"", ""label"": ""High-speed silicon photonic Mach–Zehnder modulator at 2 μm"", ""url"": ""https://doi.org/10.1364/prj.417107""}, {""type"": ""paper"", ""id"": ""official-source-eeb260ab2b702a8a"", ""label"": ""High-sensitivity relative humidity fiber-optic sensor based on an internal–external Fabry–Perot cavity Vernier effect"", ""url"": ""https://doi.org/10.1364/oe.421060""}]",[]
+session:chat:nxnxcwSfT12bWWZksC-KlgRnNZG0gW5O,anonymous,turn:log:IEaIZBJ1rVnzxPHk,1,canonical_v2:A:answer,completed,2026-09-13T01:22:57.187794+00:00,2026-09-13T01:23:23.058919+00:00,25871,llm_synthesized,国际先进技术应用推进中心（深圳）,"国际先进技术应用推进中心（深圳）位于深圳，通常简称“国先中心（深圳）”。它是在国家发展改革委、深圳市政府支持指导下设立，由深圳市科技创新局作为业务主管部门，依托粤港澳大湾区数字经济研究院建设的世界级先进技术应用推广平台，注册地即深圳。
+
+该中心聚焦人工智能、具身智能、低空经济等重点领域，定位为技术对接场景、为企业对接需求的平台，主要承担两方面职能：一是作为国际先进技术成果汇聚平台，加快汇聚大湾区乃至国内外前沿技术创新成果和高端创新要素，为先进技术应用策划场景项目、提供场景机会，推动成果面向应用场景的工程化落地与直接转化；二是作为产业应用场景技术供给平台，面向重要央国企和创新型领军企业对接场景应用需求，建立常态化技术供需对接和匹配机制，搭建技术测试和应用场景，在重要领域联合创新。
+
+从落地进展看，该中心已在河套深港科技创新合作区深圳园区揭牌，与河套数学与交叉学科研究院同期设立，进一步提升河套深圳园区在基础研究、技术应用等关键环节的创新发展能力。揭牌成立时，光源资本等机构曾与其签署战略合作协议。此外，深圳方面也提出支持该中心建设具身智能技术试验场。
+</answer>",,"[{""type"": ""company"", ""id"": ""local-source-1eb9336bff29d041"", ""label"": ""深圳国际先进技术应用推进中心"", ""url"": null}]",[]
+session:chat:nxnxcwSfT12bWWZksC-KlgRnNZG0gW5O,anonymous,turn:log:6BrOx13OVwGFgsNX,2,canonical_v2:A:answer,completed,2026-09-13T01:23:23.072613+00:00,2026-09-13T01:23:30.811304+00:00,7739,llm_synthesized,这个中心的企业培育情况怎么样,"深圳国际先进技术应用推进中心（又称国先中心（深圳））在企业培育方面，主要走的是“为技术对接场景、为企业对接”的路线，而不是传统意义上的孵化器或投资机构模式。
+
+具体来看，它依托粤港澳大湾区数字经济研究院建设，聚焦人工智能、具身智能、低空经济等重点领域，通过两个平台来推动企业成长：一是国际先进技术成果汇聚平台，加快汇聚大湾区乃至国内外前沿技术创新成果和高端创新要素，为先进技术应用策划场景项目、提供场景机会，推动成果面向应用场景的工程化落地与直接转化；二是产业应用场景技术供给平台，面向重要央国企和创新型领军企业对接场景应用需求，建立常态化技术供需对接和匹配机制，搭建技术测试和应用场景，在重要领域联合创新。
+
+也就是说，它的企业培育更偏向于用场景和供需对接来牵引企业，帮助技术成果找到落地出口，而不是直接提供资金或场地孵化。目前公开信息中，尚未披露具体的培育企业数量、名单或成效数据。如果您想进一步了解某个重点领域（如人工智能、低空经济）的对接情况，可以再具体说明。",,"[{""type"": ""company"", ""id"": ""local-source-1eb9336bff29d041"", ""label"": ""深圳国际先进技术应用推进中心"", ""url"": null}]",[]
+session:chat:zvCqU6cZ2oc_tzs6NkczZNpxDNH5Z2Sq,anonymous,turn:log:3B86Isy6mRzZBda-,1,canonical_v2:A:answer,completed,2026-09-13T01:22:23.215094+00:00,2026-09-13T01:22:48.868550+00:00,25653,llm_synthesized,国际先进技术应用推进中心（深圳）,"国际先进技术应用推进中心（深圳）通常简称“国先中心（深圳）”，注册地在深圳，是在国家发展改革委、深圳市政府支持指导下设立，由深圳市科技创新局作为业务主管部门，依托粤港澳大湾区数字经济研究院建设的世界级先进技术应用推广平台。
+
+它的核心定位是先进技术应用推广平台，聚焦人工智能、具身智能、低空经济等重点领域，为技术对接场景、为企业对接需求。具体承担两方面职能：一是作为国际先进技术成果汇聚平台，加快汇聚大湾区乃至国内外前沿技术创新成果和高端创新要素，为先进技术应用策划场景项目、提供场景机会，推动成果面向应用场景的工程化落地与直接转化；二是作为产业应用场景技术供给平台，面向重要央国企和创新型领军企业对接场景应用需求，建立常态化技术供需对接和匹配机制，搭建技术测试和应用场景，在重要领域联合创新。
+
+该中心于2025年4月在河套深港科技创新合作区深圳园区揭牌成立，同期揭牌的还有河套数学与交叉学科研究院，两者共同提升河套深圳园区在基础研究、技术应用等关键环节的创新发展能力。揭牌后，光源资本等机构已与其签署战略合作协议。此外，深圳方面还提出支持该中心建设具身智能技术试验场。",,"[{""type"": ""company"", ""id"": ""local-source-1eb9336bff29d041"", ""label"": ""深圳国际先进技术应用推进中心"", ""url"": null}]",[]
+session:chat:zvCqU6cZ2oc_tzs6NkczZNpxDNH5Z2Sq,anonymous,turn:log:Q2XjNFXnkxjmD3hr,2,canonical_v2:A:answer,completed,2026-09-13T01:22:48.882460+00:00,2026-09-13T01:22:57.178344+00:00,8296,llm_synthesized,这个中心的企业培育情况怎么样,"深圳国际先进技术应用推进中心（又称国先中心（深圳））在企业培育方面，目前公开信息主要体现为平台化的对接与赋能机制，而非直接披露孵化企业数量或培育成果清单。

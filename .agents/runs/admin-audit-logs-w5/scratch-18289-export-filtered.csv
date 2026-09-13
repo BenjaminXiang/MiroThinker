@@ -1,0 +1,2 @@
+session_id,user_identity,turn_id,turn_count,query_type,status,started_at,finished_at,latency_ms,answer_style,query,answer_text,error_detail,citations,suggested_followups
+session:chat:smoke,smoke-auditor,turn:log:8X90tCaHjdnvh4Le,1,,error,2026-09-13T20:41:39.292617+00:00,2026-09-13T20:41:39.292628+00:00,0,template,冒烟：这条记录应带身份,,canonical_v2_invalid_option,[],[]

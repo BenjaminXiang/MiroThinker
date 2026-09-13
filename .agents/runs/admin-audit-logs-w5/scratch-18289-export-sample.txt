@@ -1,0 +1,1 @@
+Full raw dumps (1071 rows each) removed for size; row-level reconciliation evidence is in scratch-18289-checks.json and the sample files.

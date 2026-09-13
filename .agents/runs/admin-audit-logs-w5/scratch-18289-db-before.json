@@ -1,0 +1,40 @@
+{
+  "path": "/tmp/w5-scratch/data/access-logs-copy.sqlite3",
+  "marker": "canonical-v2-access-log-v1",
+  "turn_columns": [
+    "turn_id",
+    "session_id",
+    "turn_count",
+    "query",
+    "query_type",
+    "answer_text",
+    "answer_style",
+    "citations_json",
+    "suggested_followups_json",
+    "status",
+    "error_detail",
+    "started_at",
+    "finished_at",
+    "latency_ms"
+  ],
+  "sessions": 918,
+  "turns": 1530,
+  "query_types": [
+    [
+      "canonical_v2:A:answer",
+      1410
+    ],
+    [
+      "canonical_v2:G:clarification_only",
+      78
+    ],
+    [
+      "",
+      36
+    ],
+    [
+      "canonical_v2:F:safety_guidance",
+      6
+    ]
+  ]
+}
