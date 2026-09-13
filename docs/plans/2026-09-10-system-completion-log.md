@@ -1741,3 +1741,85 @@ turn-debug 产物目录，不是服务日志）。恢复态双重确认：drop-i
   → 探针（字节跳动 / 优必选 / 冲突 fail-safe / replay 7/7）；
 - web 补全轨设计稿交付后裁定 →（若采纳）进入实施；
 - B4 probe 与卫生项排期不变。
+
+## 2026-09-14 · 条目 41：重建成本定量——ETA 从"约 1 小时"校正为 ~20 小时；根因＝两处"对断言集二次全量扫描"
+
+> change-id: `close-workbook-gaps`（C1.1-batch1b 构建中）；
+> 分析成文 [重建成本分析](./2026-09-14-rebuild-cost-analysis.md)；
+> 涉及 worktree：`.worktrees/data-rebuild`（构建中，只读核对）、
+> 新建 `.worktrees/admin-config-center`（功能线）。
+
+### 做了什么
+
+- **核对"两个 session 是否重复发射"**（用户关切）：确认**只有一发在跑**——
+  A3（本会话 23:02 发射，PID 3522970 链）23:24:32 消失，死因＝**会话退出带走
+  进程组**（watchdog 只抓栈不杀进程，grep 确认无 kill 逻辑）；A4（另一会话
+  23:31:33，`setsid` 脱离会话，真身 PID 3623209 / SID 3622815）是当前唯一运行的
+  重建，参数与 A3 逐项一致；A3 残留按既有命名归档为
+  `staging-v2-failed-killed-20260913-2324` / `index-v2-failed-killed-20260913-2324`。
+- **ETA 定量校正**：用 run14（最近一次成功构建）自身库内时间戳分段复原全流程，
+  得出端到端 **20h04m**（详见分析文档 §2），据此把"约 1 小时"的估计校正为
+  ~20 小时；run15 预计 **09-14 19:30 前后**落信封。
+- **抓栈取证**：三份 py-spy dump（23:19 / 23:44 / 23:54，跨 A3 与 A4 两个进程）
+  栈完全一致，全部落在
+  `canonical_identity_resolution.py:427` 的 `validate_request` →
+  `knowledge_build_isolated.py:6038 _map_public_authority`。
+- **规模盘点 + 根因定位**：`knowledge` schema 实测行数（`source_identity` 47,075、
+  `source_assertion` 620,798、`identity_decision` 47,071、`canonical_decision`
+  417,120、`canonical_decision_assertion` 834,240 …），定位两处"对断言集二次全量
+  扫描"：`:423-430` 的嵌套推导，以及 `:1099-1106` 调用 `:2414`
+  `_has_evidence_bound_internal_identifier`（该函数每次调用重扫全量断言；调用点
+  `:1035`/`:1100`/`:3266`）。`git status` 确认 batch1a **未改**该文件——属构建侧
+  历史遗留。
+- **功能线并行**：派发 subagent 在独立 worktree `.worktrees/admin-config-center`
+  （新分支 `feat/admin-config-center`，基于当前部署线 `codex/canonical-v2-s12a-ready`
+  @ f961eece）实施**收尾计划 W1 配置中心第一片**（先真跑干跑盘点 → 受管配置文件 →
+  状态面板/配置 API/页面），硬约束：不碰 s11 与 data-rebuild、不重启 18188、
+  密钥零明文、smoke 只用 scratch 端口 18288。
+- **顺手纠错（切包步骤）**：`canonical-v2-backend.service` **确实存在**
+  （`~/.config/systemd/user/`，enabled，另有 `lexical-index.conf`、
+  `rerank.conf.pending` 等 drop-in），但**当前 18188 进程不是它拉起的**
+  （PID 1992439 的 SID 就是自身，属 setsid 直起）。切包前必须先读该 unit 的
+  ExecStart/Environment 确认它指向哪个 pack，否则会出现"restart 了但包没换"。
+
+### 发现
+
+- **ETA 校正（1h → ~20h）**：全流程最大单段是"身份解析完成 → 四域 typed
+  projection 落库"＝**14h43m**；该段不写任何日志、只在结束时落一次库，这正是
+  "看起来卡住"的来源。次大段是身份解析本身（+2h54m）。
+- **根因＝二次扫描，不是配置错误/挂死/Milvus**：两处 O(N×M)（10⁹~10¹⁰ 量级比较），
+  语义可等价降为 O(N+M)；决策/入域校验段很可能有同类形态（与 14h43m 区间吻合），
+  需 sibling 搜索后再修。
+- **watchdog 判据的局限**：它只采样"写出字节"，而本构建重活是纯 CPU 段，必然误报；
+  正确判活口径＝`utime`/`minflt` 递增 + py-spy 栈落在已知重活函数 + 阶段落库点推进。
+  09-13 23:24 的 A3 死亡**不是** watchdog 造成的。
+- **与周期更新不兼容**：20 小时级构建无法支撑 C6/W7 的月度一键发布，构建性能修复
+  应作为 C6 的**前置**单独立项，而不是"以后再说"。
+
+### 怎么验证
+
+- 进程判活：`/proc/<pid>/{io,stat,status}` 三次采样（`wchar` 恒为 131,499,092 而
+  `utime`、`minflt` 持续递增 → 在算非卡死）；`ps -o pid,sid,etime,%cpu`。
+- 栈：`/tmp/watchdog-spin-{231931,234432,235432}.txt` 三份逐帧一致。
+- 时间线：run14 库 7 张表 min/max 时间戳（`.worktrees/data-rebuild/apps/miroflow-agent/.venv/bin/python`
+  + `psycopg`，无需 psql），命令原样写在分析文档 §8。
+- 未受影响：`curl http://127.0.0.1:18188/api/health` = 200；`index-v1`、
+  `serving-pack-run14-sealed` 未被候选过程打开写入。
+
+### 影响哪些问题
+
+- **C1.1-batch1b**：处置不变（让它跑完），但"报警就杀"的判据被修正——避免再丢一轮
+  20 小时；A3 那次丢的是 20 分钟，纯因会话中断而非构建缺陷。
+- **C6/W7（周期更新 / 一键发布）**：新增硬前置＝构建性能修复，验收线（同输入产出
+  逐字节可比的信封 + 阶段耗时降到分钟级 + 中间进度可观测）写入分析文档 §7。
+- **收尾计划 A 线（管理面）**：W1 配置中心进入实施，数据无关、与数据线并行。
+- 线上行为无变化：serving 线未动，18188 仍跑 run14 sealed 包。
+
+### 下一步
+
+- 等 run15 信封（预计 09-14 19:30）→ 官方封印器出 `serving-pack-run15-sealed` →
+  scratch 端口 smoke → 18188 切包 → 探针（字节跳动→ByteDance Ltd. 直连、优必选
+  回归、冲突 fail-safe、replay 7/7）；
+- 构建性能修复立项（OpenSpec change + verification-contract），作为 C6 前置；
+- W1 配置中心交付后验收 → 按 **W5 → W2 → W3 → W4** 串行推进（admin-console 单写者）；
+- 每小时自动巡检构建（会话内 cron），异常或信封落地时才详细汇报。

@@ -1239,3 +1239,39 @@ rebuild/acceptance path, rollback = old sealed pack pointer).
 **Remaining (batch1b).** Candidate rebuild → pack build/seal → 18188
 pointer switch → probes (字节跳动 → ByteDance Ltd.; 优必选 regression;
 collision fail-safe; replay gate). Not started in this slice.
+
+### 2026-09-14 — Build-cost quantification (evidence only, no code change)
+
+Read-only forensics on the running run15 rebuild corrected this round's ETA by
+20x and located the dominant build cost.
+
+- **ETA**: one full rebuild is **~20h**, not "~1h". run14 (last successful build)
+  measured **20h04m** end-to-end from its own DB timestamps: landing 09-07
+  23:56 +0800 → `identity_resolution_run` 09-08 02:50 → four-domain typed
+  projections persisted 09-08 17:34 → `relationship_projection_run` 18:12 →
+  index段 18:52–19:10 → envelope 20:00. The largest span (14h43m) emits **no
+  log lines**, which is why the build looks stalled; run15 is projected to land
+  its envelope ~09-14 19:30 +0800.
+- **Root cause (build-side, pre-existing — batch1a did not touch this file)**:
+  two quadratic validators in `canonical_identity_resolution.py` —
+  `:423-430` (per-source full scan of all identity assertions) and `:1099-1106`
+  calling `:2414 _has_evidence_bound_internal_identifier`, which re-scans the
+  entire assertion set on every call (call sites `:1035`, `:1100`, `:3266`).
+  Measured scale: 47,075 source identities × 620,798 source assertions
+  (≈10⁹–10¹⁰ comparisons). Same shape is suspected in the decision /
+  domain-inclusion validators.
+- **Stack evidence**: three py-spy dumps (23:19 / 23:44 / 23:54, across two
+  different processes) land identically in `validate_request` ←
+  `_map_public_authority` ← `_logical_graph`.
+- **Liveness口径 correction**: the watchdog's "spin" alarm keys on bytes
+  written and is therefore a **false positive** for CPU-only phases; use
+  utime/minflt growth + py-spy stack + stage persistence points instead. The
+  23:24 death of run A3 was session-exit process-group teardown, **not** the
+  watchdog (it only dumps stacks, never kills).
+- **Consequence**: build performance becomes a prerequisite for C6/W7
+  (periodic refresh + one-click monthly publish). The fix is to be raised as
+  its own OpenSpec change (index assertions once: O(N×M) → O(N+M); acceptance =
+  byte-comparable envelope for identical input + minutes-not-hours stages);
+  **validation is not to be relaxed**. Not implemented while the rebuild runs.
+- **Human docs**: `docs/plans/2026-09-14-rebuild-cost-analysis.md` (analysis)
+  and log entry 41 in `docs/plans/2026-09-10-system-completion-log.md`.
