@@ -78,10 +78,16 @@ generation (1b.1) and the commit-superset guard (1b.3), not reranker tuning.
 
 ### Fault injection (live, 18188, serial)
 
-- [ ] malformed payload (stub `:18099`) → turn still answers, deterministic
-      fallback recorded, no error event.
-- [ ] refused connection (stub stopped) → same.
-- [ ] no credential, query or candidate text in the served logs.
+- [x] malformed payload (stub `:18099`) → turn still answers (4,607-char
+      answer, 82,954 stream bytes), deterministic fallback recorded
+      (`rerank result lacks a numeric score`), 0 error events.
+- [x] refused connection (stub stopped) → same (4,781-char answer, 89,944
+      bytes, `rerank request failed: URLError`), 0 error events.
+- [x] no credential, query or candidate text in the served journal: scan of
+      the 23,713 fault-window lines → `Bearer` 0, `authorization` 0,
+      credential content 0, query text 0; only normalized fallback lines.
+      (Query text exists only in the turn-debug artifact dir, not a served
+      log.)
 
 ## Step 1b — acceptance criteria for the remaining work
 

@@ -107,3 +107,61 @@ laned path, (b) final serving ordering — the same model orders candidates
 - Live A/B requires the same-day differential rule (both sides run the same
   day; environment failures such as httpx errors are excluded, and the
   exclusion is named).
+
+## Measured outcomes (appended 2026-09-13; contract above kept as written)
+
+- **Step 1 lexical index**: speed axis met (lane-internal 0.056–0.710 s vs
+  0.9–3.6 s baseline), quality axis RED (g2 2/3, g5 1/2, replay 3 failures)
+  → lane pinned OFF (`CANONICAL_V2_LEXICAL_INDEX=0`).
+- **Step 1b(a) cross-encoder**: unit RED→GREEN (25 + 71 green); live ON/OFF
+  differential → quality gate RED (testset 1/5 vs same-day OFF 4/5;
+  generalization on-category loss 46→30 drone, 47→39 medical; replay clean vs
+  same-day OFF runs). TTFT within budget on both arms (11.6–23.8 s); model
+  wall 208 ms at the 128-document cap; ON proven real via the endpoint request
+  counter (+128/turn). Lane OFF.
+- **Step 1b.0b fault injection**: GREEN — malformed payload and refused
+  connection each produced a complete answer with the deterministic fallback
+  recorded and zero stream error events; served-journal scan (23,713 lines)
+  shows 0 credential / 0 query / 0 candidate text. Restore to OFF verified
+  by env inspection + `/api/health`.
+- **Open**: 1b.0c (pronoun→person), 1b.1 (wide pool + bigram residue recall),
+  1b.2 (embedding scoring over the pool), 1b.3 (recall + commit superset
+  guard), 1b.4 (four-oracle default-on gate).
+
+## G7 closure slice — RED/GREEN contract (2026-09-13, diagnosis-first)
+
+Evidence basis: 26 archived 具身智能 turns (`diagnose_g7_recall.py` over
+the turn-debug dir): 优必选 in-window 6/26 (rank ~37), commit 0/26; today's
+3 replay runs: 0/3 in-window; r1/r3 passes were web-prose mentions with 0
+优必选 citations. Code points: F1 sort key `knowledge_read_isolated.py:
+8875-8883`; `expands` mechanism `:8705-8748` (PCB-only today); commit join
+`knowledge_answer.py:2678-2700`; AQ-S2c sentence `:1339-1375`.
+
+### RED definitions
+
+- R1 (recall): offline F1 rank for 优必选 on the G7 query + 4 view variants
+  — today: outside a top-32 cut in the majority of variants (record exact
+  ranks first; the slice's RED asserts top-32 in ≥90%).
+- R2 (commit): controlled turn where 优必选 IS in-window → commit universe
+  lacks it today (assert presence; RED from the 6 historical in-window
+  turns, to be re-derived on the current code before the fix).
+- R3 (anti-masking): an answer whose only 优必选 mention is web prose
+  without a local handle/citation must NOT count as green in the slice's
+  acceptance.
+
+### GREEN criteria
+
+- Offline rank table (R1) meets the ≥90% top-32 bar; live replay G7 ×3: 3/3
+  answers name 优必选 with a local handle committed or a local citation.
+- Commit probe (R2): in-window → commit 3/3.
+- No regression: G2/G5 enumeration turns, g2/g5 testset spot checks, lane
+  cost <1 s, TTFT <30 s.
+
+### Instrument-first notes
+
+- The slice opens by re-deriving R2 on the CURRENT code (the 6 historical
+  in-window turns may predate the present commit path) and by recording
+  per-lane in-window diffs (which lane carries 优必选, where it is cut).
+- The declaration update (`expands` family) is config-data: re-generate
+  provenance (`generated_from.pack_sha256`) honestly; runtime parse is
+  fail-closed on schema/shape only.

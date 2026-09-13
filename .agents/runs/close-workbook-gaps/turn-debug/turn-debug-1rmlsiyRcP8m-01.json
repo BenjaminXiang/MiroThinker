@@ -1,0 +1,147 @@
+{
+  "session_id": "session:chat:1rmlsiyRcP8maEPZQnxbPga1woGlmf8h",
+  "turn_id": "turn:chat:sha256:a2ec94833fb12701e92724619d6177539eb2932857e5d1d210ddc42a142ff425",
+  "turn_count": 1,
+  "query": "字节跳动",
+  "planned_displayed_ids": [],
+  "recalled_handles": [
+    {
+      "id": "company-c-01446a2d6af366784d4f6110",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳新言意码科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:0b3c81c9b03f9b885d75f5d66843bc0969325dad785dff320674d9e30454157d",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "字节跳动_澎湃新闻-The Paper"
+    },
+    {
+      "id": "company-c-096aca79669f683bbe9ee4cc",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市吾云创新科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:60416542b93cee681e0c47d26a80d5211eeb67801a49db3be4b667cb4a9b7ad2",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "字节跳动招聘官网｜字节跳动社招"
+    },
+    {
+      "id": "company-c-21d29cb549fd5563330cf477",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳极致上下文科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:e01089f4d8585c197278487cda05984b7547df66e08c990390772858c2c7e685",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "字节跳动 - ByteDance"
+    },
+    {
+      "id": "company-c-278843c43bee3229995561a9",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "千巡科技（深圳）有限公司"
+    },
+    {
+      "id": "web-handle:sha256:014bd33369750b571232bd6cdad47ab0d27a3a2c5199415c2e81f34b22b2dac9",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "字节跳动"
+    },
+    {
+      "id": "company-c-2db7032a983c9d8e858c7556",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳未来动力有限公司"
+    },
+    {
+      "id": "web-handle:sha256:33c6bafcaa60abf10c515940e3fd8220cdc644bbc7b50fdab8eacbd34f1f6614",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "字节跳动- 维基百科，自由的百科全书"
+    },
+    {
+      "id": "company-c-4df0a78e78c92a5c4a98ceaa",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市心感智影科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:0617a7cd88f417ea071e077f4accbdcb8e6f16d172011c33e0615acb51a5cfea",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "字节跳动是什么意思? - 头条问答"
+    },
+    {
+      "id": "company-c-5a6695f0d07342e4d503a878",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "忆生科技（深圳）有限公司"
+    },
+    {
+      "id": "web-handle:sha256:1448d226069d8ca669c4f3a77fb52e4165c6d57415908cdfaf5ac5eed5a0549c",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "字节跳动 - 领英"
+    },
+    {
+      "id": "company-c-60ea05cad5f73e709f1dda8b",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳极简未来科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:f0c5071db2502b71962917c6a0b0aefeccde341cd12fdc912a8adaa0743915e3",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "字节跳动是什么意思 - 业百科"
+    }
+  ],
+  "committed_handle_ids": [
+    "web-handle:sha256:e01089f4d8585c197278487cda05984b7547df66e08c990390772858c2c7e685",
+    "web-handle:sha256:014bd33369750b571232bd6cdad47ab0d27a3a2c5199415c2e81f34b22b2dac9",
+    "web-handle:sha256:33c6bafcaa60abf10c515940e3fd8220cdc644bbc7b50fdab8eacbd34f1f6614",
+    "web-handle:sha256:f0c5071db2502b71962917c6a0b0aefeccde341cd12fdc912a8adaa0743915e3",
+    "web-handle:sha256:0b3c81c9b03f9b885d75f5d66843bc0969325dad785dff320674d9e30454157d",
+    "web-handle:sha256:60416542b93cee681e0c47d26a80d5211eeb67801a49db3be4b667cb4a9b7ad2",
+    "company-c-096aca79669f683bbe9ee4cc"
+  ],
+  "committed_names": [
+    "字节跳动 - ByteDance",
+    "字节跳动",
+    "字节跳动- 维基百科，自由的百科全书",
+    "字节跳动是什么意思 - 业百科",
+    "字节跳动_澎湃新闻-The Paper",
+    "字节跳动招聘官网｜字节跳动社招",
+    "深圳市吾云创新科技有限公司"
+  ],
+  "render_mode": "prose_renderer",
+  "answer_chars": 493,
+  "lane_timings": [
+    [
+      "structured",
+      0.0
+    ],
+    [
+      "exact",
+      1.392
+    ],
+    [
+      "lexical",
+      3.342
+    ],
+    [
+      "web",
+      7.408
+    ],
+    [
+      "vector",
+      33.691
+    ]
+  ]
+}

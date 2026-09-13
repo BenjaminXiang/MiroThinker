@@ -27,6 +27,18 @@
 - [x] 3.2.1 Personal referent over org-anchored session → typed
        clarification or person-scoped answer; synthesis subject-type check.
        RED from G3 verbatim (他有哪些论文).
+- [x] 3.2.2 Residual on the deployment line (2026-09-13): port of the
+       personal-pronoun × anchor-type guard (`513858e0`, branch
+       data/p4-serving-pack-rebuild, never merged) + interpreter check ③
+       symmetric typed-referent / anchor-domain rejection. Under the
+       current pack T1 anchors a canonical company, so 3.2.1's no-anchor
+       branch no longer engaged and G3 T2 free-retrieved junk papers.
+       Evidence: serving worktree `replay-g3-fix-20260913/` (T2
+       clarification_only, 1.0 s) and full gate `replay-full-20260913/`
+       — 6/7 sessions, G3 both turns PASS; unit RED→GREEN (5 failing
+       before, focused suites 42/188 green); note
+       `.agents/runs/harden-deterministic-subject-layer/verification-3.2.2.md`
+       in the serving worktree.
 
 ## 3.5 / 3.6 Close
 

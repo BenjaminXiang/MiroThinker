@@ -199,6 +199,119 @@ endpoint (优必选 + ≥3 CN ids + local_citations ≥1), CN ids cross-checked
 against the pack SQLite; 普渡 positive control not regressed; replay gate
 per the interim jitter policy.
 
+## B1 revision 3 (2026-09-13) — multi-turn traversal: claim endpoints speak stable-reference ids, session handles speak bare ids
+
+Round 3's Gate C witness made scan candidates survive the **read**
+constraint layer, and the single-turn path went green. The same
+company→patent relation did not survive into a **follow-up turn**: after
+turn 1 anchors 优必选, turn 2 "深圳市优必选科技股份有限公司的专利有哪些" (and
+turn 3 "该公司的专利有哪些") ended in "未能建立关联" with claims=0 and
+citations=0 — while the relationship lane recalled the same 128 patent
+candidates as the green single-turn path (turn dumps `e2e-ubt-4-t2/t3`
+vs `e2e-ubt-6-t2/t3`: identical recall, so the loss is downstream of
+recall, in the answer layer).
+
+**Root cause — `knowledge_answer.py:_is_traversal_target` compares two id
+dialects by raw equality.** Direct-scan claim bindings name their
+endpoints in stable-reference form
+(`subject_id = canonical:patent:<patent id>`,
+`predicate = patent_has_applicant`,
+`value = canonical:company:<company id>`; `knowledge_read_isolated.py:
+3318-3355`), the same shape the projection traces use, while session
+handles carry the bare canonical id (`patent-c-...`). No patent target
+ever matched `item.object_id == target_id`; the target set came back
+empty, `allowed_subject_ids` degenerated to the previous turn's company
+anchor alone, and `_bind_claim_handles` dropped every patent claim.
+
+**Fix.** `_claim_endpoint_id` normalizes one endpoint to its trailing id
+for values in `canonical:` form; `_is_traversal_target` compares normalized
+endpoints on both sides of the binding (predicate check unchanged). This
+mirrors the two gates already living with the same id shape — the read
+layer's constraint witness (revision 2) and the serving selector's
+`_claim_binding_binds_anchor` — so all three gates now agree about what
+"same entity" means.
+
+**Scope discipline.** Only `canonical:` endpoints are normalized; no
+speculative `reference:` compatibility is added (no current producer
+emits that form; widening the match would need its own producer
+evidence). The identity test (`item.object_id == target_id`), the strict
+trace-authority branch for `local_projection_trace` items, and the
+cross-company guard are unchanged, so a foreign-company patent cannot be
+re-admitted through normalization (locked by the negative fixture in the
+same test).
+
+**Tests.** New contract test
+`test_knowledge_answer_multiturn_contract.py::test_direct_scan_patents_
+become_traversal_targets_of_the_company_anchor`: a direct applicant scan
+(two 优必选 patents, one foreign-company patent) must make the company
+anchor the traversal source, surface exactly the two patent targets with
+their bindings preserved, and keep the foreign patent rejected. RED before
+the fix (displayed targets degenerate to the lone company anchor),
+GREEN after; the implementation-closure contract file was updated to the
+new endpoint semantics.
+
+**Evidence.** Live 18188 (serving worktree `codex/canonical-v2-s12a-ready`):
+three-turn session `e2e-ubt-6` — turns 2–3 claims 0→32 and citations
+0→32 with unchanged recall (136 items, 128 patent); single-turn control
+`e2e-ubt-7` — 128 patent items, 32 claims, 32 citations at TTFT 13.1s.
+Focused suites: multiturn+closure 83 passed; serving_isolated 296 passed;
+read atomic+interface 10 passed.
+
+## B1 revision 4 (2026-09-13) — local-evidence citation cards follow the evidence nature, not the lane
+
+The revision-3 traversal fix made the multi-turn session produce 32 claims
+and 32 citations (`e2e-ubt-6`/`-7`), yet the workbook provenance layer still
+failed on the patent-detail turn: g17-t2 「专利 CN117873146A 的详细信息是
+什么」 answers correctly from the sealed pack (title / applicant / technical
+summary) while the public SSE `answer` event carries `citations=[]`
+(`.agents/runs/close-workbook-gaps/green-g17-r4-20260913.json`,
+`local_citations:0<1`).
+
+**Root cause — `_public_citations` gates the URL-less local card on the
+evidence lane.** The turn's own audit dump
+(`turn-debug/turn-debug-oiK7m73eHfvM-01.json`) records `citations: 1`,
+`admitted_claims.total: 1` (`exact_identifier`),
+`committed_handle_ids: [patent-c-0aef2768e7b7e94fb51440e5]`, evidence
+`by_lane {exact: 1, lexical: 1}` / `by_source_nature {local: 2}` — recall,
+claim admission, and answer-layer citation assembly are all intact, so the
+loss sits in the public adapter's `_public_citations` filter. That filter
+drops any citation whose evidence has no validated official public URL
+unless `evidence.lane == "relationship"` (`canonical_v2_chat.py`), a rule
+written when relationship evidence was the only URL-less local lane. The
+patent lookup projection carries no URL field at all
+(`_OFFICIAL_URL_FIELDS["patent"] = ("official_url", "source_url", "url")`;
+verified absent in the sealed pack's `lookup_document.document_json`), so a
+patent turn is dropped precisely for being `exact`/`lexical` rather than
+`relationship`.
+
+**Fix (B4 adjudication "Hook A", landed early on the round-3 evidence as
+RED).** The gate is the evidence nature: `source_nature ∈ {current_web,
+supplemental_web}` keeps requiring a validated official public URL; every
+other nature surfaces the hashed URL-less local card
+(`local-source-<sha256[:16]>`, label = public handle display name,
+`url=None`). Emission still requires a `turn_result.citations` entry bound
+to a `_PUBLIC_DOMAINS` handle, so no citation is fabricated and the
+retained-membership guard is unchanged; internal canonical ids, projection
+locators, and release metadata stay out of the payload.
+
+**Tests.** New contract test
+`test_canonical_v2_chat_http_adapter.py::test_local_evidence_without_official_url_surfaces_a_lane_independent_card`:
+an `exact`-lane local patent item with no URL-bearing snippet must surface
+exactly one URL-less `local-source-` card, while a `current_web` item and a
+`supplemental_web` item bound to the same handle stay dropped. RED before
+the fix (0 cards), GREEN after. The pre-existing
+`test_s11a_post_chat_uses_release_bound_canonical_v2_without_legacy_sql`
+assertion that pinned public citation ids to internal handle ids was
+rewritten to the public contract (prefix + label ∈ retained handle display
+names + no internal id substring), since public ids have been hashed
+derives since S12G.
+
+**Evidence.** Live 18188 re-run on the restarted serve
+(`green-g17-r5-20260913.json`): g17 2/2 turns, g17-t2 `citations_local ≥ 1`
+with the local patent card, web-only turns unchanged. Adapter suite 131
+passed; Ruff clean. Human log: entry 35 of
+`docs/plans/2026-09-10-system-completion-log.md`.
+
 ## B2–B6, C1–C5 — design stubs (filled at slice start)
 
 > Sequencing change (user decision 2026-09-10, evidence in human log entry 4):

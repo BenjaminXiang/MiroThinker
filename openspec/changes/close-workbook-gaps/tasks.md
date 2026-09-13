@@ -40,6 +40,36 @@
        (commit `197b7f5`: knowledge_read.py +21; 3 new tests RED→GREEN —
        positive value-endpoint witness, 4 negatives, 5-fixture selector
        equivalence; focused suite 96 passed / 0 failed)
+- [x] B1.7 B1 revision 3: multi-turn traversal endpoint normalization
+       (`knowledge_answer.py`). `_is_traversal_target` compares claim-
+       binding endpoints through `_claim_endpoint_id` (trailing id of
+       `canonical:<domain>:<id>` values) instead of raw equality, so the
+       direct-scan `patent_has_applicant` bindings match bare session
+       handles; predicate / identity / trace-authority / cross-company
+       checks unchanged. (worktree `codex/canonical-v2-s12a-ready`,
+       uncommitted at write time; test `test_knowledge_answer_multiturn_
+       contract.py::test_direct_scan_patents_become_traversal_targets_of_
+       the_company_anchor` RED→GREEN; live `e2e-ubt-6` 3-turn claims 0→32
+       and citations 0→32 on turns 2–3, `e2e-ubt-7` single-turn 32/32 at
+       TTFT 13.1s; focused contract files 83 + serving_isolated 296 +
+       read atomic 10 passed; suite state and the five pre-existing reds:
+       `.agents/runs/close-workbook-gaps/verification-b1.md` round 4)
+- [x] B1.8 B1 revision 4: `_public_citations` URL-less local-card gate
+       follows the evidence nature, not the lane — `source_nature ∈
+       {current_web, supplemental_web}` keeps requiring a validated
+       official public URL, every other nature surfaces the hashed
+       `local-source-` card (g17-t2's patent-detail turn is `exact`-lane
+       and the pack's patent projection has no URL field). New
+       lane-independent card test (web natures stay dropped); the
+       pre-existing handle-id citation assertion rewritten to the public
+       citation-id contract. (worktree `codex/canonical-v2-s12a-ready`,
+       uncommitted at write time; adapter suite 131 passed, re-run 18.12s;
+       live g17 r5 2/2 with the raw t2 payload re-verified —
+       `local-source-9170b0c44a9b8470`, `url=null`, label = patent title,
+       sha derivation re-computed; replay `replay-b1r4` 4/7 carrying only
+       the two pre-existing signatures, reproduced on pre-edit code at
+       01:32–02:09 the same day; multiturn+closure 83 passed. Evidence in
+       `.agents/runs/close-workbook-gaps/`.)
 - [x] B3B2-D0 Diagnostic gate (DONE `1313c0f5` + D0.5
        `d05-findings.md`): per-entity drop-stage tables + production-
        function gate replay + lane construction facts; fix shape locked
@@ -171,6 +201,28 @@
          in the slice. Live differential + replay gate by main context;
          remaining: answer-side wording (consumer b), write-side cleaning
          (batch 2+).)
+  - [x] C1.1-batch1a Alias closure — p4 brand projection (build side,
+         data-rebuild worktree `data/p4-serving-pack-rebuild`):
+         `_p4_company_record` emits `project_name` as core/selected
+         alias; `_p4_company_field_merge` unions list-form aliases
+         (self-name exclusion, casefold dedupe, `p4fill:aliases`
+         assertion). Evidence: 7 new tests RED 3 → 20/20 focused green;
+         full-batch dry run over 6,514 rows (real build functions) →
+         6,504 alias emissions, pack coverage 342 → 6,846 (4.8% →
+         96.6%), 9 collision forms all ≤ serving fanout 4 (kept +
+         reported), backfill identity side-effect 0 records. Plan +
+         report: `.agents/runs/close-workbook-gaps/c1-alias-closure-
+         plan-20260913.md`, `.agents/runs/full-column-serving-pack-
+         rebuild/alias-dry-run-20260913.json`.
+  - [ ] C1.1-batch1b Alias rebuild + acceptance (alias-3): candidate
+         rebuild (data-rebuild envelope) → pack build/seal → 18188
+         pointer switch → probes (字节跳动→ByteDance Ltd.; 优必选
+         regression; collision forms fail-safe; replay 7 sessions).
+         — IN PROGRESS 2026-09-13: batch1a frozen at data-rebuild
+         `8dc0f75d`; run15 rebuild launched detached (own session,
+         `build-run15-detached-nohup.log`; local ops note
+         `run15-status-20260913.md`); envelope pending; seal → smoke →
+         switch → probes next.
 - [ ] C2.1 run14 thin-load online (47,071 docs) + reconciliation report;
        workbook score not regressed. Sub-steps (design.md §C2, contract
        verified line-by-line 2026-09-10):

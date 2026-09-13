@@ -1075,3 +1075,167 @@
 - Drive-by find: `_accept_streamed_truncation` logged through an undefined
   `logger` (F821) — the length-capped partial-ship rescue would NameError
   exactly when it was needed. Fixed (`eced3c83`) with a direct unit test.
+
+## 2026-09-13 — B1 revision 3: multi-turn company→patent traversal (answer-layer endpoint normalization)
+
+- Symptom: session 优必选 (turn 1) → "该公司的专利有哪些" (turns 2–3)
+  answered "未能建立关联" with claims 0 / citations 0 (answer_chars 253/259)
+  although the relationship lane recalled the same 128 patent candidates
+  as the green single-turn path — turn dumps `e2e-ubt-4-t2`/`-t3` (red)
+  vs `e2e-ubt-6-t2`/`-t3` (green), identical 136-item evidence sets.
+- Root cause: `knowledge_answer.py:_is_traversal_target` compared claim
+  binding endpoints to session handles with raw equality; scan bindings
+  use the stable-reference form `canonical:<domain>:<id>` while handles
+  carry bare canonical ids, so every patent target was filtered out and
+  `_bind_claim_handles` dropped the patent claims. Recall was intact, so
+  the drop stayed invisible in lane counters — same silent-downstream
+  shape as rev-2 Gate C, one layer later.
+- Fix: `_claim_endpoint_id` reads the trailing id of `canonical:` endpoints
+  on both binding sides, mirroring the read-layer witness (rev 2) and the
+  serving selector's `_claim_binding_binds_anchor`; predicate, identity,
+  trace-authority and cross-company guards untouched.
+- RED→GREEN: new `test_direct_scan_patents_become_traversal_targets_of_
+  the_company_anchor` (2 优必选 patents surface as traversal targets and
+  keep their bindings, 1 foreign-company patent stays rejected). Focused:
+  multiturn+closure 83 passed; serving_isolated 296 passed; read
+  atomic+interface 10 passed. Ruff clean on the touched test files and
+  the chat adapter (`knowledge_answer.py` keeps 4 pre-existing E402).
+- Live 18188: 3-turn `e2e-ubt-6` (claims 32 on t2/t3, citations 32, CN ids
+  in the answer, zero SSE errors) and single-turn `e2e-ubt-7` (128 patent
+  items, 32 claims, TTFT 13.1s); g17 control `green-g17-r4-20260913.json`.
+- Suite state (canonical_v2, `-n 8 --dist loadfile`, build file ignored):
+  1233 passed / 5 failed / 149 skipped (333.70s). All five failures
+  reproduce on the stashed HEAD without this slice (stash-attributed):
+  `test_llm_query_rewrite` ×2 and `test_web_page_fetch` — stale
+  expectations vs the 08-19 Phase-5 web-lane commit `c0109f7b`
+  (enumeration refinement views 榜单/名单; depth-8 fetch 5→6 pages);
+  `test_canonical_scope_founder_red` — anchor-correction contract change
+  in the 08-18 subject-layer series (`ef90ee9f` et al., not yet bisected);
+  plus the known baseline `test_consumer_migration_boundary` (147 vs 144
+  sanctioned scripts). `test_knowledge_build_isolated.py` heavy test
+  stalls standalone (>14 min at ~100% CPU; stack in
+  `_canonical_json_bytes` ← `_map_public_authority` ← `_logical_graph`),
+  documented pre-existing on this machine. Regression-hygiene follow-up
+  registered in human log entry 35.
+
+## 2026-09-13 — B1 revision 4: local-evidence citation cards follow the evidence nature, not the lane (g17 2/2)
+
+- Symptom: with revision 3 landed, the g17 run still failed provenance on
+  the patent-detail turn — 「专利 CN117873146A 的详细信息是什么」 answered
+  correctly from the sealed pack (title / applicant / summary) yet the
+  public SSE `answer` event carried `citations=[]`
+  (`green-g17-r4-20260913.json`, `local_citations:0<1`).
+- Root cause: `canonical_v2_chat.py::_public_citations` gates the URL-less
+  local card on `evidence.lane == "relationship"` — a rule written when
+  relationship evidence was the only URL-less local lane. The turn dump
+  (`turn-debug-oiK7m73eHfvM-01.json`) shows recall (2 local items,
+  `exact` + `lexical`), claim admission (1 `exact_identifier`), the
+  committed handle and internal `citations: 1` all intact, so the loss is
+  the public filter: the patent projection carries no URL field at all
+  and the turn is `exact`-lane.
+- Fix: the gate follows the evidence nature — `source_nature ∈
+  {current_web, supplemental_web}` still requires a validated official
+  public URL; every other nature surfaces the hashed URL-less card
+  (`local-source-<sha256[:16]>`, label = handle display name, `url=None`).
+  No citation is fabricated (emission still requires a `turn_result.
+  citations` entry bound to a public-domain handle); internal ids and
+  locators stay out of the payload; `ChatCitation` untouched.
+- RED→GREEN: new `test_local_evidence_without_official_url_surfaces_a_
+  lane_independent_card` (exact-lane local patent item surfaces exactly
+  one `local-source-` card; `current_web` and `supplemental_web` items
+  bound to the same handle stay dropped), the renamed across-lanes card
+  test now asserts 3 distinct cards, and the pre-existing
+  `test_s11a_post_chat_...` assertion that pinned public citation ids to
+  internal handle ids was rewritten to the public contract. Adapter suite
+  131 passed (18.12s); Ruff clean; `git diff --check` clean.
+- Live: `green-g17-r5-20260913.json` — g17 2/2 (t1 32 local citations
+  unchanged; t2 `citations_local=1`). Raw payload captured from the same
+  endpoint and re-verified (`g17t2-citation-payload-r5.json`): `{"type":
+  "patent", "id": "local-source-9170b0c44a9b8470", "label":
+  "一种机器人的落地控制方法、机器人及终端设备", "url": null}`;
+  sha256("local:patent-c-0aef2768e7b7e94fb51440e5")[:16] =
+  9170b0c44a9b8470 recomputed by hand.
+- Replay gate (`replay-b1r4`): 5/7 sessions (3 failing turns). G3-T2 (`neither
+  clarification nor person-scoped answer`) is the deterministic P4 defect
+  registered in human log entry 34; G7 #2/#3 (`required substring
+  missing: 优必选`) is the known 缺龙头 intermittent (#1 passed in-run).
+  Both signatures reproduce on the same worktree at 01:32–02:09 the same
+  day, before the rev-3 (`knowledge_answer.py` 08:49) and rev-4
+  (`canonical_v2_chat.py` 09:04) edits — neither is introduced by this
+  slice; the rev-3 code path's own session (G4) passes in this run.
+  Full-suite state is unchanged from the rev-3 entry (1233 passed / 5
+  failed / 149 skipped; five pre-existing reds; build-stall file
+  registered separately).
+- Same-slice diff also extends the env-gated turn-debug probe
+  (`evidence_items` / `protected_slots` / `admitted_claims` /
+  `response_mode` / `citations`): write-only instrumentation, inside the
+  existing never-fail-the-turn try/except — it is the instrument that
+  located this defect.
+- Human log entry 35; slice remains uncommitted in the serving worktree.
+
+## 2026-09-13 — B1r4 follow-up: replay gate G3 closed (6/7), alias gap located
+
+**G3 closed (same worktree, uncommitted).** The `replay-b1r4` G3-T2 failure
+was root-caused to a fix stranded off-line: the personal-pronoun ×
+anchor-type guard (`513858e0`) exists only on `data/p4-serving-pack-rebuild`
+and was never merged into `codex/canonical-v2-s12a-ready`; interpreter
+check ③ additionally contradicted its own comment. Both are now fixed on
+the serving line (port + symmetric mismatch rejection; owner change:
+`harden-deterministic-subject-layer` 3.2.2, routing half of
+`retrieval-v2` 1b.0c). Endpoint: G3 T2 = `clarification_only` (0.7–1.0 s);
+full gate `replay-full-20260913/` = **6/7 sessions, 1 failing turn** (was
+5/7 / 3 failures). Remaining failure: G7 `优必选` repeat 2/3 — with the
+locally-diagnosed baseline (recall 6/23, commit 0/23) it is owned by
+retrieval-v2 1b.1 (wide pool + bigram residue recall) and 1b.3
+(commit-axis superset guard), not by this slice.
+
+**Alias gap (C1 evidence).** The workbook alias issue (字节跳动 does not
+reach ByteDance Ltd.) is a build-side projection gap, not a serving
+algorithm defect, and belongs to C1 "alias closure":
+
+- Pack (`serving-pack-run14-sealed`, byte-identical to `index-v1`):
+  `ByteDance Ltd.` exists with `aliases=[]`; only **342/7,089 (4.8%)**
+  companies carry any alias. 「字节跳动」 text-matches only other companies
+  that mention ByteDance in prose.
+- Source (`p4-company-full-v1.jsonl`): **6,504/6,514 (99.8%)** rows carry
+  `project_name` (ByteDance's row: 「字节跳动」); no code path maps it into
+  `core_facts.aliases`. The only alias source actually merged is
+  `company_backfill.jsonl` (700 records / 467 with aliases,
+  Shenzhen-focused; 优必选's aliases come from there).
+- Direction: projection-time mapping `project_name → aliases` plus a
+  curated supplement for the residual empty set; guardrails (generic-word
+  filter, cross-entity fanout cap) already exist at serving. Query-side
+  fuzzy matching stays out; web completion remains for genuinely absent
+  entities. Evidence note:
+  `.agents/runs/close-workbook-gaps/alias-projection-gap-20260913.md`.
+
+- Human log entry 36.
+
+## 2026-09-13 — C1 alias closure batch1a executed (build-side projection, dry-run measured)
+
+**What.** The p4 workbook brand name now projects into company aliases on
+the data line: `_p4_company_record` reads `project_name` into
+`core_facts.aliases` + the projection selection; `_p4_company_field_merge`
+unions list-form aliases into retained companies (self-name exclusion,
+casefold dedupe, typed `p4fill:aliases` assertion). All 6,514 p4 companies
+overlap retained objects (measured), so the merge path — not creation — is
+the one that matters. Executed in `.worktrees/data-rebuild`
+(`data/p4-serving-pack-rebuild`), the worktree that built run14.
+
+**Evidence.** Unit: 7 new tests, RED 3 → 20/20 focused green. Dry run
+(`.agents/runs/full-column-serving-pack-rebuild/alias_dry_run.py`,
+replays the real build functions over all 6,514 rows against the current
+pack's aliases read-only): 6,504 alias emissions; coverage 342 → 6,846
+companies (4.8% → 96.6%); collisions 9 forms × 2 companies (≤ serving
+fanout cap 4 → kept + reported, ambiguity falls back at serving);
+backfill identity side effect measured 0 records; samples verified
+(ByteDance Ltd. → 字节跳动, FMC → FMC汽车, TCL华星光电 → TCL华星).
+Report: `alias-dry-run-20260913.json`.
+
+**Plan + entry points.** `.agents/runs/close-workbook-gaps/c1-alias-
+closure-plan-20260913.md` (file:line change points, guardrail policy,
+rebuild/acceptance path, rollback = old sealed pack pointer).
+
+**Remaining (batch1b).** Candidate rebuild → pack build/seal → 18188
+pointer switch → probes (字节跳动 → ByteDance Ltd.; 优必选 regression;
+collision fail-safe; replay gate). Not started in this slice.

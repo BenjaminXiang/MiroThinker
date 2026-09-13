@@ -1,0 +1,139 @@
+{
+  "session_id": "session:chat:S921UoFArmH9w_t6Y1rlv-CVsY4whF4a",
+  "turn_id": "turn:chat:sha256:f76f3e271a1f825cb7a5612b67354235b4dc8c19f89fd0cc56401f91d9d21b7f",
+  "turn_count": 1,
+  "query": "字节跳动",
+  "planned_displayed_ids": [],
+  "recalled_handles": [
+    {
+      "id": "company-c-01446a2d6af366784d4f6110",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳新言意码科技有限公司"
+    },
+    {
+      "id": "company-c-096aca79669f683bbe9ee4cc",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市吾云创新科技有限公司"
+    },
+    {
+      "id": "company-c-21d29cb549fd5563330cf477",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳极致上下文科技有限公司"
+    },
+    {
+      "id": "company-c-278843c43bee3229995561a9",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "千巡科技（深圳）有限公司"
+    },
+    {
+      "id": "company-c-2db7032a983c9d8e858c7556",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳未来动力有限公司"
+    },
+    {
+      "id": "company-c-4df0a78e78c92a5c4a98ceaa",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市心感智影科技有限公司"
+    },
+    {
+      "id": "company-c-5a6695f0d07342e4d503a878",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "忆生科技（深圳）有限公司"
+    },
+    {
+      "id": "company-c-60ea05cad5f73e709f1dda8b",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳极简未来科技有限公司"
+    },
+    {
+      "id": "company-c-6f9b560c845e9bc1e92ec21a",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "空间漫步科技（深圳）有限公司"
+    },
+    {
+      "id": "company-c-a2b86b7a7fcee873628c3f21",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市万普拉斯科技有限公司"
+    },
+    {
+      "id": "company-c-bdac9b54b8e47184b7ede378",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市布尔量科技有限公司"
+    },
+    {
+      "id": "company-c-bf293239d64f54a45c5c8748",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市松果体机器人科技有限公司"
+    },
+    {
+      "id": "company-c-c725850f55349b6b308ec1ca",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "ByteDance Ltd."
+    },
+    {
+      "id": "company-c-e76762f53d8683a2688fdb60",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "拓元智慧（深圳）科技有限公司"
+    },
+    {
+      "id": "company-c-f3d4d1499f378c18238ca031",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "全灵（深圳）网络有限公司"
+    },
+    {
+      "id": "paper-c-580f283016911d51171b4264",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "CDSBen: Benchmarking the Performance of Storage Services in Cloud-Native Database System at ByteDance"
+    }
+  ],
+  "committed_handle_ids": [
+    "company-c-096aca79669f683bbe9ee4cc",
+    "company-c-01446a2d6af366784d4f6110",
+    "company-c-21d29cb549fd5563330cf477"
+  ],
+  "committed_names": [
+    "深圳市吾云创新科技有限公司",
+    "深圳新言意码科技有限公司",
+    "深圳极致上下文科技有限公司"
+  ],
+  "render_mode": "prose_renderer",
+  "answer_chars": 327,
+  "lane_timings": [
+    [
+      "structured",
+      0.0
+    ],
+    [
+      "exact",
+      1.261
+    ],
+    [
+      "lexical",
+      3.385
+    ],
+    [
+      "web",
+      14.022
+    ],
+    [
+      "vector",
+      19.518
+    ]
+  ]
+}

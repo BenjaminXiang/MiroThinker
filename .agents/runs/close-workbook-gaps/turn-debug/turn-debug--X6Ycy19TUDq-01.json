@@ -1,0 +1,181 @@
+{
+  "session_id": "session:chat:-X6Ycy19TUDq40bK1HVjdDa07l0YeyN6",
+  "turn_id": "turn:chat:sha256:70108c59c4883d57e42b32e443685ff787602b3a551aab89922988539a0f5edf",
+  "turn_count": 1,
+  "query": "深圳市优必选科技股份有限公司",
+  "planned_displayed_ids": [],
+  "recalled_handles": [
+    {
+      "id": "company-c-b2aac54891e3fce8c98612d8",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市优必选科技股份有限公司"
+    },
+    {
+      "id": "web-handle:sha256:04302bd97d5eca9af20bb18faab314cf451cb6aea4292c5e9d494e5c6d2041f8",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "深圳市优必选科技股份有限公司-特种装备网"
+    },
+    {
+      "id": "web-handle:sha256:2c28b3cc5e84e0d276c12755da95bf36a804fccb0ee90ae8a563c91c341cf7d4",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "深圳市优必选科技股份有限公司主要人员_董事_监事 - 天眼查"
+    },
+    {
+      "id": "web-handle:sha256:a30aea031dfc2af70834af6c9545202aa4474532ab54257e82b56c86659faca7",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "深圳市优必选科技股份有限公司 - 百度百科"
+    },
+    {
+      "id": "web-handle:sha256:8c8af6ccb795dcd03a47ff24982d7429bf43c205fef6e94f880b44a609fd4112",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "深圳市优必选科技股份有限公司 - 企查查"
+    },
+    {
+      "id": "web-handle:sha256:8a44e1a4caafc0adfa1f6e9a9a5c5e8d5663f719178501fdde8589aca7af4512",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "优必选科技 - 维基百科"
+    },
+    {
+      "id": "web-handle:sha256:faea421df6ad662ade4219c234be05b2c020f715c365d93225fc7f282b554254",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "账号认证"
+    },
+    {
+      "id": "web-handle:sha256:78dafd198d7888c3b0bc40ce41d377e069cc6954e873c30208339e1d60875e69",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "深圳市优必选科技股份有限公司"
+    },
+    {
+      "id": "web-handle:sha256:7a9efc0e0c574e4fef30dc0a96185b9bcccd64a415848c075be25fecc061cef6",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "深圳市优必选科技股份有限公司企业发展 - 企查查"
+    },
+    {
+      "id": "company-c-08af44cb9badaea81e65a586",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市旗瀚物联科技有限公司"
+    },
+    {
+      "id": "company-c-b622370049e76b260df0cd80",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市小柚机器人有限公司"
+    },
+    {
+      "id": "company-c-ae98312f54c404b28bf0fc07",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市宇数科技有限公司"
+    },
+    {
+      "id": "company-c-510213e35128c38ac04538e1",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳普智联科机器人技术有限公司"
+    },
+    {
+      "id": "company-c-8ae0a311fd0d0a94f05d87a6",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳优艾智合机器人科技有限公司"
+    },
+    {
+      "id": "company-c-b6c9e963f6bd294e9914ef93",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市百答科技有限公司"
+    },
+    {
+      "id": "company-c-db877dc462dd9d2f3c584a93",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳视界空间智能科技有限公司"
+    }
+  ],
+  "evidence_items": {
+    "total": 18,
+    "by_domain": {
+      "company": 18
+    },
+    "by_lane": {
+      "exact": 1,
+      "lexical": 1,
+      "vector": 8,
+      "web": 8
+    },
+    "by_source_nature": {
+      "current_web": 8,
+      "local": 10
+    },
+    "with_claim_binding": 18
+  },
+  "protected_slots": [],
+  "requested_traversal": null,
+  "admitted_claims": {
+    "total": 4,
+    "by_predicate": {
+      "canonical_projection": 1,
+      "geography": 3
+    },
+    "by_claim_type": {
+      "material_fact": 4
+    },
+    "patent_evidence_claims": 0
+  },
+  "committed_handle_ids": [
+    "company-c-b2aac54891e3fce8c98612d8",
+    "web-handle:sha256:a30aea031dfc2af70834af6c9545202aa4474532ab54257e82b56c86659faca7",
+    "web-handle:sha256:8a44e1a4caafc0adfa1f6e9a9a5c5e8d5663f719178501fdde8589aca7af4512",
+    "web-handle:sha256:04302bd97d5eca9af20bb18faab314cf451cb6aea4292c5e9d494e5c6d2041f8",
+    "web-handle:sha256:2c28b3cc5e84e0d276c12755da95bf36a804fccb0ee90ae8a563c91c341cf7d4",
+    "web-handle:sha256:8c8af6ccb795dcd03a47ff24982d7429bf43c205fef6e94f880b44a609fd4112",
+    "web-handle:sha256:78dafd198d7888c3b0bc40ce41d377e069cc6954e873c30208339e1d60875e69",
+    "web-handle:sha256:7a9efc0e0c574e4fef30dc0a96185b9bcccd64a415848c075be25fecc061cef6"
+  ],
+  "committed_names": [
+    "深圳市优必选科技股份有限公司",
+    "深圳市优必选科技股份有限公司 - 百度百科",
+    "优必选科技 - 维基百科",
+    "深圳市优必选科技股份有限公司-特种装备网",
+    "深圳市优必选科技股份有限公司主要人员_董事_监事 - 天眼查",
+    "深圳市优必选科技股份有限公司 - 企查查",
+    "深圳市优必选科技股份有限公司",
+    "深圳市优必选科技股份有限公司企业发展 - 企查查"
+  ],
+  "render_mode": "prose_renderer",
+  "response_mode": "answer",
+  "citations": 4,
+  "answer_chars": 445,
+  "lane_timings": [
+    [
+      "structured",
+      0.0
+    ],
+    [
+      "exact",
+      0.693
+    ],
+    [
+      "lexical",
+      0.684
+    ],
+    [
+      "vector",
+      2.916
+    ],
+    [
+      "web",
+      3.834
+    ]
+  ]
+}

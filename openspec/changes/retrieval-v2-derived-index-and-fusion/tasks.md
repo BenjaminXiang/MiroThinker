@@ -51,7 +51,7 @@
        Tests: `test_rerank_client.py` + `test_serving_rerank_model.py` 25
        green; four-file regression 71 green. Live ON/OFF differential is
        tracked in 1b.0b and is NOT yet closed.
-- [ ] 1b.0b Live differential for 1b.0 (same day, same pack, ON vs OFF):
+- [x] 1b.0b Live differential for 1b.0 (same day, same pack, ON vs OFF):
        **measured 2026-09-13 — quality gate failed.** testset 1/5 vs OFF 4/5
        (g2 0/3: 九号 missing, pool 4<5, stance check); generalization
        on-category lost (drone 46→30, medical 47→39) while off-category gained;
@@ -59,18 +59,66 @@
        `G3_person_pronoun` fails identically in both OFF runs (same assertion,
        same `query_type`), so it is a pre-existing deterministic defect, not a
        rerank regression. ON verified real via the endpoint's request counter
-       (+128/turn). Remaining: live fault injection (malformed payload,
-       refused connection) proving the deterministic fallback and secret-free
-       logging on a real turn.
-- [ ] 1b.0c Pronoun→person defect (found while reading the replay gate): after
+       (+128/turn). Fault injection closed the same day: malformed payload and
+       refused connection each produced a complete answer via the
+       deterministic fallback (zero stream error events); the served journal
+       carried no credential/query/candidate text (change-log 2026-09-13,
+       `fault-injection-*` artifacts).
+- [x] 1b.0c Pronoun→person defect (found while reading the replay gate): after
        an institution turn, `他有哪些论文` never routes to clarification, and
        the oracle accepts only `clarification_only` or the literal substrings
        教授/老师/学者/论文作者, so a prose clarification ("“他”具体指哪位作者")
        is scored as a failure. Fix the routing, then make the assertion measure
-       the behaviour instead of a literal proxy.
+       the behaviour instead of a literal proxy. **Routing fixed 2026-09-13**
+       (port of `513858e0` guard + interpreter check ③, serving worktree
+       `codex/canonical-v2-s12a-ready`, uncommitted): replay G3 T2 =
+       `canonical_v2:G:clarification_only` (0.7-1.0 s), full gate 6/7 with
+       G3 both turns PASS (`replay-full-20260913/`). Assertion assessment:
+       the behavior-based `clarification_only` branch now covers the defect;
+       the substring branch stays as the person-scoped-prose fallback — the
+       harness was not modified in this slice (instrument changes remain with
+       `harden-serving-test-harness`).
 - [ ] 1b.1 Wider pool: recall pass 2-4x the request window (cap ~512);
        bigram-aware recall for residue terms so F1-class hits (优必选 via
-       智能) are generated, not lost.
+       智能) are generated, not lost. **Refined 2026-09-13 (G7 diagnosis,
+       26 archived enumeration turns + today's 3 runs)**: the pool is NOT the
+       primary defect — 优必选 was in the 64/128 cut window only 6/26 turns
+       (in-window rank ~37) and reached the commit universe 0/26. Three
+       mechanism-level causes, split into two slices:
+  - [x] 1b.1a Recall determinism (owner slice; no rebuild) — **DELIVERED
+         2026-09-13**: (ii) declaration family under the extracted head 具身
+         (members 智能机器人:2 / 人形机器人:2 / 人形:1; the 4-char head
+         itself never survives bigram extraction, hence the bigram-head
+         anchor) + declared-term trigger extension in `_category_query_terms`
+         (marker-less planner views like "深圳 人形机器人 企业" were inert:
+         0 candidates measured). (i) evidence-richness tie-break and (iv)
+         whole-term extraction turned out **not needed for the acceptance**
+         and stay backlog levers (measured: family alone lifts 优必选
+         926→15, 乐聚 264→3; view5 unchanged). (iii) quota not needed.
+         Evidence: offline rank tables `g7-f1-rank-baseline-20260913.json`
+         → `g7-f1-rank-after-family-20260913.json`; 3 new unit tests in
+         `test_knowledge_read_isolated.py` (RED→GREEN 38/38 file);
+         live: recall 优必选@12 in 3/3 runs (was 0/3 today, 6/26 archive).
+         Residual measured: 越疆 stays ~800 (its tech_tag is
+         「智能机械臂解决方案提供商」 — a build-side tag-vocabulary case,
+         not a query-side one; rides the C1 rebuild decision).
+  - [x] 1b.1b Commit/coverage channel — **REDEFINED and DELIVERED
+         2026-09-13**: the original join-leak hypothesis was not
+         reproducible on current code (handles DO join via the F2 union
+         with short-name forms; commit 优必选@5 in every post-fix run). The
+         actual residual: when prose synthesis degrades, the
+         `deterministic_fallback` render dropped the AQ-S2c member coverage
+         sentence — live G7 r1 `render_mode=deterministic_fallback` with
+         优必选 committed@15 yet absent from the answer. Fix:
+         `_degraded_fallback_text(result, request=...)` appends the member
+         coverage sentence (all four fallback call sites wired); unit RED→
+         GREEN in `test_coverage_presentation.py` (5/5) + answer suites
+         87/87. Acceptance met with the full gate below.
+  Plan: `docs/plans/2026-09-13-g7-closure-plan.md`
+  (human) — includes the 8 program adjustments (G7 slices ahead of the
+  wide pool; declaration update decoupled from rebuild; alias rebuild
+  window may absorb tag-vocabulary normalization; combined re-verification
+  plan; local-proof acceptance).
 - [ ] 1b.2 Relevance rerank of the pool. Landed half: cross-encoder
        Qwen3-Reranker-8B (`:18006`, `POST /v1/rerank`) over the existing
        buckets — 1b.0. Open half: embedding scoring with Qwen3-Embedding-8B

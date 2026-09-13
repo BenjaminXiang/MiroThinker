@@ -189,3 +189,85 @@
 1. g17-t2 的 `local_citations ≥ 1`：精确道本地证据引用卡，属 B4（GAP-07 引用楼层扩展）范围。
 2. 第二轮遗留 3（数据线同源护栏回植）、4（replay 抖动治理——本轮虽全过，历史签名仍在册）不变。
 3. 服务当前运行 197b7f5；回滚：`git revert 197b7f5` 后 `systemctl --user restart canonical-v2-backend.service`（数据未动；前两轮回滚点见各轮末节）。
+
+## 第四轮（2026-09-13）：多轮 traversal 端点 id 形态修复 —— company→patent 关系在追问轮接通
+
+执行：主上下文（serving worktree `.worktrees/canonical-v2-s11-consolidation`，分支 `codex/canonical-v2-s12a-ready`，写档时未提交）。设计依据：`design.md` §"B1 revision 3"（同轮补写）。
+
+### 结论（先说结果）
+
+- **多轮丢失点定位并修复**：turn 1 锚定优必选后，turn 2/3「(该公司的)专利有哪些」由"未能建立关联"（claims 0 / citations 0 / 253、259 字）恢复为 **32 条 patent claims + 32 张引用**，答案含 CN 公开号。召回侧全程不变（同 136 条证据、128 条 relationship 道专利）——**丢失在召回下游的答案层**。
+- 修复极小：`knowledge_answer.py` 新增 `_claim_endpoint_id` + 两行调用点（+21 行含注释）；谓词 / 身份 / 物理授权 / 跨公司护栏全部保留。
+- 单轮正对照不回退：`e2e-ubt-7`（单轮同问句）128 条专利证据 / 32 claims / 32 cites，TTFT 13.1s、总 15.6s。
+
+### 根因
+
+`_is_traversal_target`（多轮 traversal 过滤）用**裸字符串相等**比较 claim binding 端点与会话 handle。直扫生成的绑定是稳定引用形态（`subject=canonical:patent:<id>`、`predicate=patent_has_applicant`、`value=canonical:company:<id>`；`knowledge_read_isolated.py:3318-3355`），而会话 handle 是裸 id（`patent-c-…`）→ 没有任何 patent 目标匹配 → target 集合为空 → `allowed_subject_ids` 退化为上一轮 company 锚 → `_bind_claim_handles` 丢弃全部 patent claims。车道计数（relationship in=128）完全正常——与第二轮 Gate C 同型的**静默下游丢弃**，只是又深一层。
+
+### RED → GREEN
+
+- 新增 `test_knowledge_answer_multiturn_contract.py::test_direct_scan_patents_become_traversal_targets_of_the_company_anchor`（fixture 模拟真实直扫：2 条优必选专利 + 1 条外公司专利）。RED 失败：displayed target 只剩 company 锚（`assert ('company-c-b2aac54891e3fce8c98612d8',) == ('patent-c-0126…','patent-c-020e…')`）；GREEN 后两个 patent 目标进入 displayed set 与 claims，绑定保留，外公司专利仍被跨公司护栏拒绝。
+- `test_knowledge_answer_implementation_closure.py` 随新端点语义同步更新（+10/-6）。
+
+### 验证（分层）
+
+① 本轮新增测试：multiturn 契约新增 1 个多轮直扫用例 + closure 契约更新（锁定端点规范化后 target/claims/证据 id 与本地专利的对应、外公司拒绝）。② 既有回归：multiturn+closure **83 passed**；serving_isolated **296 passed**；read atomic-green + interface **10 passed**；Ruff 干净（生产文件 4 处 E402 为预存，未动）。③ 真实端点：18188 三轮会话 `e2e-ubt-6`（t1 claims 4 → t2/t3 claims 32、citations 32、无 SSE error）+ 单轮 `e2e-ubt-7`；旧态对照 `e2e-ubt-4`（同召回、claims 0、chars 253）。④ 全量套件（排除 build 停滞文件）：**1233 passed / 5 failed / 149 skipped**（333.7s，`-n 8 --dist loadfile`），5 个失败已证明与本切片无关（下节）。
+
+### 全量套件 5 个既有失败（stash 对照归因，均在本轮 diff 缺席时复现）
+
+1. `test_llm_query_rewrite.py::test_rewriter_timeout_…` 与 `…empty_output_…`：Phase 5 枚举精化轮（`c0109f7b`，08-19）新增 榜单/名单 视图，bocha_queries 由 1 变 3——测试期望未随行为更新（该测试文件最后改动 08-07）。
+2. `test_web_page_fetch.py::test_enumeration_lane_fetches_deeper_pages_for_recall`：同 commit 的 depth-8 深度抓取使抓取数 5→6（测试文件最后改动 08-03）。
+3. `test_canonical_scope_founder_red.py::test_founder_prefix_uses_handles_bound_to_the_same_claim`：渲染器 anchor 校正契约变化（08-18 subject-layer 系列 `ef90ee9f` 等，尚未逐 commit bisect）。
+4. `test_consumer_migration_boundary.py::test_s11b_sanctioned_entrypoints…`：147 vs 144（新增脚本未进 sanctioned 清单），既有基线失败（08-17 快照即列出）。
+- 归因依据：08-17 的 anchor-carryover 全量快照（`.agents/runs/deepening-turn-anchor-carryover/verification.md`）只有 boundary 1 个失败 → 前四类红均在那之后引入；stash 对照证明与 B1 rev-3 无因果。
+
+### `test_knowledge_build_isolated.py` 停滞（环境/迁移阻塞，非本切片）
+
+standalone 重跑 `test_complete_build_uses_verified_copies_…`：>14 分钟 100% CPU 未收敛，3 分钟 faulthandler 栈定格 `_canonical_json_bytes ← _content_sha256 ← _decision_result ← decide ← _map_public_authority ← _logical_graph ← build`；按自身进程组 `kill -TERM -- -3795237` 终止（未动 18188）。该文件在本机"有无 diff 都超 7 分钟"已有两份历史记录（deepening-turn-anchor-carryover verification；rebuild-canonical-v2-knowledge-platform FIXLOG 的 Milvus Lite 2.5.1 close 阶段阻塞）。
+
+### 遗留
+
+1. 上述 5 个既有失败 + build 停滞：单开"回归套件卫生"切片（stale 期望 vs 行为确认；build 停滞按迁移阻塞排期）。
+2. 未跑 replay 门（本切片不在热更新窗口；按纪律下一次热更新前必跑）。
+3. g17 对照运行`green-g17-r4-20260913.json`（2026-09-13 当天发起，结果补记于 change-log 同条目）。
+4. 回滚：还原 `knowledge_answer.py` 两处改动（`_claim_endpoint_id` + `_is_traversal_target`）后重启 `canonical-v2-backend.service`（数据未动）。
+
+## 第五轮（2026-09-13）：B1 revision 4 —— 本地证据引用卡不再绑定车道；g17 2/2 收口
+
+执行：主上下文（serving worktree `.worktrees/canonical-v2-s11-consolidation`，分支 `codex/canonical-v2-s12a-ready`，写档时未提交）。设计依据：`design.md` §"B1 revision 4"。
+
+### 结论（先说结果）
+
+- **g17 2/2 全绿**（新三层 runner）：t1 保持绿（16 个本地 CN 号、`cit=32(L32/W0)`，正对照不回退）；t2 引用层转绿（`citations_local=1`）。
+- **丢失点定位为公开适配层**：turn 审计探针显示召回 2 条（exact/lexical，均 local）、1 条 `exact_identifier` claim、committed handle 1 个、**内部 `citations=1`**——召回/准入/答案层引用组装全部完好，丢失发生在 `canonical_v2_chat.py::_public_citations` 的公开过滤。
+- **根因**：无 URL 本地卡的资格条件是 `evidence.lane == "relationship"`——写这条规则时 relationship 是唯一的无 URL 本地车道；而专利投影**根本没有 URL 字段**，精确道的 t2 因此被丢。
+- **修复**：资格改看证据性质——`source_nature ∈ {current_web, supplemental_web}` 仍必须有经校验的官方 URL；其余性质一律发哈希本地卡（`local-source-<sha256[:16]>`，label=公开 handle 显示名，`url=None`）。不虚构引用（仍要求 `turn_result.citations` 中绑定到公开域 handle），内部 id / locator / release 元数据不出网。
+
+### RED → GREEN
+
+- 新增 `test_local_evidence_without_official_url_surfaces_a_lane_independent_card`（exact 道本地专利项 → 恰好 1 张 `local-source-` 卡；同 handle 的 `current_web` / `supplemental_web` 项保持被丢弃）；原 relationship 道用例改名为跨车道用例并断言 3 张互异卡；存量 `test_s11a_post_chat_…` 中把公开 citation id 当内部 handle id 的旧断言改为公开契约（前缀 + label 属于保留 handle 显示名 + 无内部 id 子串）。
+- adapter 套件 **131 passed**（18.12s）；两个文件 Ruff 全过；`git diff --check` 干净。
+
+### 端到端证据
+
+- `green-g17-r5-20260913.json`：`[g17-t1] PASS 19.9s cit=32(L32/W0)`、`[g17-t2] PASS 9.5s cit=1(L1/W0)`；三层 entity/completeness/provenance 均 2/2。
+- 公开载荷原样抓取核对（同端点，存档 `g17t2-citation-payload-r5.json`）：`{"type": "patent", "id": "local-source-9170b0c44a9b8470", "label": "一种机器人的落地控制方法、机器人及终端设备", "url": null}`；sha 派生手工重算吻合（sha256("local:patent-c-0aef2768e7b7e94fb51440e5")[:16] = 9170b0c44a9b8470）；无内部 id / locator。
+- 本轮 diff 另含审计探针对象级扩展（证据项 / 受保护槽 / 准入 claim / 响应模式 / 引用计数）：只写不读、包在既有 never-fail-the-turn try/except 内，是本次定损的仪器。
+
+### replay 门（`replay-b1r4`，活端点 18188）
+
+- **5/7 会话通过**（3 个回合失败）：G1 / G2 / G4 / G5 / G6 过；G3-T2 `neither clarification nor person-scoped answer`、G7 #2/#3 `required substring missing: 优必选` 败。
+- **归因（决定性，非本轮引入）**：① 同一 worktree 在当天 **01:32（`replay-off-20260913`）、01:38（`-r2`）、02:09（`replay-on-20260913`）** 三次运行已带同签名——G3 三连败、G7"缺优必选"于 off-r2 出现；而本切片两文件 mtime 为 `knowledge_answer.py` 08:49、`canonical_v2_chat.py` 09:04，**早于编辑**。② 两签名均见于 8 月历史记录（第一轮"回归门"节所引 `replay-after-s18.log`、`replay-s18-interp-run1.log` 等）。③ rev4 diff 位于答案文本组装**之后**的引用映射，不可能改变答案文本断言；G7#1 本轮通过（同代码内方差）。④ G3-T2 答案原文即条目 34 描述的老症状（"你问的这篇论文是《Ultra-high sensitivity…》"——把"他"绑到论文标题），属已知确定性缺陷。
+- G4-T2（「该公司的专利有哪些」，rev3 代码路径的正主）本轮通过。
+
+### 聚焦套件（本轮重跑）
+
+- `apps/admin-console`：adapter 套件 **131 passed**（18.12s）。
+- `apps/miroflow-agent`：multiturn 契约 + implementation closure **83 passed**（14.68s）。
+- 测试文件剩余 `ruff format` 漂移为预存（与本次改动行区间不相交，未做全文件格式化）。
+- 全量套件状态延续第四轮（1233 passed / 5 failed / 149 skipped；`test_knowledge_build_isolated.py` 停滞单列）。
+
+### 遗留
+
+1. replay 两签名按"回归套件卫生"切片处理（G3 行为层 + 断言层双修；G7 缺龙头归质量提升）——人类日志条目 35 已登记。
+2. 回滚：还原 `canonical_v2_chat.py` 的 `_public_citations` 语义块与测试改动（探针扩展可留可去，env-gated 无行为影响）后重启 `canonical-v2-backend.service`（数据未动）。

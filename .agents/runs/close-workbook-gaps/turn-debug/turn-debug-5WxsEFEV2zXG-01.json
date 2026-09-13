@@ -1,0 +1,153 @@
+{
+  "session_id": "session:chat:5WxsEFEV2zXGGJCJg_lJ079vucM6M29D",
+  "turn_id": "turn:chat:sha256:59e79e3102ca2f40d150cc037efbb7488df1d1321f4d246cb85be7b0d4d5982d",
+  "turn_count": 1,
+  "query": "深圳市优必选科技股份有限公司",
+  "planned_displayed_ids": [],
+  "recalled_handles": [
+    {
+      "id": "company-c-b2aac54891e3fce8c98612d8",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市优必选科技股份有限公司"
+    },
+    {
+      "id": "web-handle:sha256:2758cda0fb5148d85b8178958c2b0bfe0754871e383f899f29ae49fbd2b71b15",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "深圳市优必选科技股份有限公司-特种装备网"
+    },
+    {
+      "id": "web-handle:sha256:fceecc420c8f284c24cd364a12bd5afa6249ef0c8917af2cd1c84c22f3606d63",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "深圳市优必选科技股份有限公司主要人员_董事_监事 - 天眼查"
+    },
+    {
+      "id": "web-handle:sha256:81c941a00700edc5d77154e0ffca36f535fc0252166695bb192713d8547ac5e5",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "深圳市优必选科技股份有限公司 - 百度百科"
+    },
+    {
+      "id": "web-handle:sha256:6f21404cd7326944f25bd1b23756fb44c331b35a4db2c29587de283e71d9c79c",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "深圳市优必选科技股份有限公司 - 企查查"
+    },
+    {
+      "id": "web-handle:sha256:b813458dd75eecf14c955431bca9db5d4be146dfc6d113c2462f41471ff684d7",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "优必选科技 - 维基百科"
+    },
+    {
+      "id": "web-handle:sha256:3c8d8c65120f69ee5dc25a71a20ecc779491fd717f7a93d5c590716ab1588ab9",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "账号认证"
+    },
+    {
+      "id": "web-handle:sha256:f4c8adc803defa7e937981dd492146a3f454671784651e35d36618ebfcd380d6",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "深圳市优必选科技股份有限公司"
+    },
+    {
+      "id": "web-handle:sha256:98c80340d204906538ca7bbebe6c8b3720f9abdaee828cb3bdbe2c6d5bed5e63",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "深圳市优必选科技股份有限公司企业发展 - 企查查"
+    },
+    {
+      "id": "company-c-08af44cb9badaea81e65a586",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市旗瀚物联科技有限公司"
+    },
+    {
+      "id": "company-c-b622370049e76b260df0cd80",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市小柚机器人有限公司"
+    },
+    {
+      "id": "company-c-ae98312f54c404b28bf0fc07",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市宇数科技有限公司"
+    },
+    {
+      "id": "company-c-510213e35128c38ac04538e1",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳普智联科机器人技术有限公司"
+    },
+    {
+      "id": "company-c-8ae0a311fd0d0a94f05d87a6",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳优艾智合机器人科技有限公司"
+    },
+    {
+      "id": "company-c-b6c9e963f6bd294e9914ef93",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市百答科技有限公司"
+    },
+    {
+      "id": "company-c-db877dc462dd9d2f3c584a93",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳视界空间智能科技有限公司"
+    }
+  ],
+  "committed_handle_ids": [
+    "company-c-b2aac54891e3fce8c98612d8",
+    "web-handle:sha256:81c941a00700edc5d77154e0ffca36f535fc0252166695bb192713d8547ac5e5",
+    "web-handle:sha256:b813458dd75eecf14c955431bca9db5d4be146dfc6d113c2462f41471ff684d7",
+    "web-handle:sha256:2758cda0fb5148d85b8178958c2b0bfe0754871e383f899f29ae49fbd2b71b15",
+    "web-handle:sha256:fceecc420c8f284c24cd364a12bd5afa6249ef0c8917af2cd1c84c22f3606d63",
+    "web-handle:sha256:6f21404cd7326944f25bd1b23756fb44c331b35a4db2c29587de283e71d9c79c",
+    "web-handle:sha256:f4c8adc803defa7e937981dd492146a3f454671784651e35d36618ebfcd380d6",
+    "web-handle:sha256:98c80340d204906538ca7bbebe6c8b3720f9abdaee828cb3bdbe2c6d5bed5e63"
+  ],
+  "committed_names": [
+    "深圳市优必选科技股份有限公司",
+    "深圳市优必选科技股份有限公司 - 百度百科",
+    "优必选科技 - 维基百科",
+    "深圳市优必选科技股份有限公司-特种装备网",
+    "深圳市优必选科技股份有限公司主要人员_董事_监事 - 天眼查",
+    "深圳市优必选科技股份有限公司 - 企查查",
+    "深圳市优必选科技股份有限公司",
+    "深圳市优必选科技股份有限公司企业发展 - 企查查"
+  ],
+  "render_mode": "prose_renderer",
+  "answer_chars": 554,
+  "lane_timings": [
+    [
+      "web",
+      12.838
+    ],
+    [
+      "structured",
+      0.0
+    ],
+    [
+      "exact",
+      0.727
+    ],
+    [
+      "lexical",
+      0.957
+    ],
+    [
+      "vector",
+      3.03
+    ],
+    [
+      "web",
+      7.981
+    ]
+  ]
+}

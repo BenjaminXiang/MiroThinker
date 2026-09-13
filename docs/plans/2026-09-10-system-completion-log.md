@@ -1367,3 +1367,377 @@ commit 窗口）与机制吻合，但**决定性证据还没拿**：需要按轮
   重排后必须仍在 commit 窗口内，否则该查询回退旧路；(c) 再谈排序融合
   （模型分只做**增量**，不得替代结构化先验）。
 - **已回滚**：18188 关闭重排（lexical OFF + rerank OFF），现网行为=同日 OFF 基线。
+
+### 故障注入补记（2026-09-13，串行 18188，已完成）
+
+**做了什么**：把 18188 的重排端点先指到本地 stub（`:18099`，回畸形响应），再停掉
+stub（连接拒绝），各发一次真实聊天请求（`深圳有哪些做激光雷达的公司`），最后恢复 OFF。
+
+**发现**：两种故障下请求都完整出答案（4,607 / 4,781 字；82,954 / 89,944 字节流），
+零 error 事件；journal 两条规范化回退行——`rerank result lacks a numeric score`、
+`rerank request failed: URLError`——之后走确定性排序，答案内容与类别口径正常
+（速腾聚创 / 镭神智能 / 览沃等）。
+
+**怎么验证**：故障窗口 23,713 行 journal 扫描——`Bearer` 0、`authorization` 0、
+密钥内容 0、query 文本 0；重排相关只有上述两条回退行（query 文本只存在于
+turn-debug 产物目录，不是服务日志）。恢复态双重确认：drop-in 回到
+`lexical-index.conf` + `turn-debug.conf`（两个 `.pending` 文件不生效）、
+`CANONICAL_V2_LEXICAL_INDEX=0`、进程环境无 `CANONICAL_V2_RERANK_*`、health ok；
+原 ON/stub 配置按 SHA256 存档于 `dropin-backup-20260913/`。
+
+**影响哪些问题**：1b.0b 的"故障回退"欠账关闭——重排路的 fail-safe 在真实请求上
+成立：故障不中断服务、不泄漏凭据、不污染答案。质量门结论不变（重排默认仍 OFF），
+默认开启仍以 1b.1/1b.3 + 四门为闸。
+
+## 2026-09-13 · 条目 35：B1 revision 3+4 —— 多轮"公司→专利"接通、本地引用卡去车道绑定；g17 2/2；回归套件卫生登记
+
+> change-id: `close-workbook-gaps`（切片 B1 revision 3+4；serving worktree `codex/canonical-v2-s12a-ready`，未提交）
+
+### 做了什么
+
+- **rev3（多轮 traversal 端点归一）**：`knowledge_answer.py` 的 `_is_traversal_target`
+  改用 `_claim_endpoint_id` 比较端点——直扫 claim 绑定是稳定引用形态
+  （`canonical:patent:<id>`），会话 handle 是裸 id，原裸字符串相等把专利目标全过滤，
+  claims 归零。修复后多轮「该公司的专利有哪些」从"未能建立关联"（claims 0 /
+  citations 0）恢复为 **32 条专利 claims + 32 张引用**。
+- **rev4（本地引用卡不再绑车道）**：`canonical_v2_chat.py` 的 `_public_citations`
+  原规则"无 URL 本地卡仅限 relationship 车道"，把精确道的 g17-t2 丢卡；改为按
+  **证据性质**判定：web 派生证据（current_web / supplemental_web）仍必须有经校验的
+  官方 URL，其余本地证据一律发不可点击的哈希卡（不暴露内部 id / locator / release
+  元数据，不虚构引用）。
+- 同档扩展了 env-gated 回合审计探针（证据项 / 受保护槽 / 准入 claim / 引用计数）——
+  只写不读、失败不影响回合，是定位 rev4 缺陷的仪器。
+
+### 发现
+
+- 两个丢失点都是**静默下游丢弃**：召回与车道计数完全正常，丢在更深的答案层与公开
+  适配层——与第二轮 Gate C 同型，是这个缺陷家族的第三、四个成员。
+- **g17 收口**：t1「优必选有哪些专利」三层全绿（16 个本地 CN 号，与包内 applicants
+  绑定 16/16 核对一致）；t2「专利 CN117873146A 详情」本地引用卡落地
+  （`local-source-9170b0c44a9b8470`，url=null，label=专利标题；sha 派生手工重算吻合）。
+- **replay 门 5/7**：G4「该公司的专利有哪些」通过；G3「他有哪些论文」仍把"他"绑到
+  论文标题（条目 34 已知确定性缺陷）、G7 缺"优必选"（已知间歇性）。决定性对照：
+  同日 01:32–02:09 三次 replay 在**本切片编辑前**的代码上带完全相同的两个签名
+  （本切片两文件 mtime 08:49 / 09:04）——两个失败均非本轮引入。
+
+### 怎么验证
+
+- 端点实测：g17 r5 **2/2**（t1 cit=32(L32/W0)、t2 cit=1(L1/W0)）；t2 公开载荷原样
+  抓取核对（哈希 id、url=null、label=专利标题、无内部 id）。
+- 聚焦套件：adapter **131 passed**（18.12s）；multiturn 契约 + implementation closure
+  **83 passed**（14.68s）；Ruff 全过；`git diff --check` 干净。
+- replay 门 `replay-b1r4`：5/7，归因证据见上（pre-edit 同日三次运行同签名）。
+- 全量套件承接第四轮记录：1233 passed / 5 failed / 149 skipped（5 红与 build 停滞
+  文件均已归因登记，未动）。
+
+### 影响哪些问题
+
+- **g17 双轮全绿**（t1 早前关闭的引用层，t2 本轮补齐）：本地知识库优先路线在
+  "公司→专利"这一域上打穿——召回、归属、引用全链本地可证。
+- **P5（该公司的专利→甩国知局）**：数据根因侧接通（直扫按 id 绑定遍历，优必选 58 条；
+  多轮追问 claims 0→32），G4 本轮通过。
+- **回归套件卫生登记**：G3 行为层 + 断言层双修、G7 缺龙头质量提升、5 个既有 red、
+  build 停滞文件——单独排期，不再挤压功能切片。
+- **B4 引用楼层**（GAP-07/08）中"精确道本地证据出卡"这部分已在 rev4 提前兑现。
+
+### 下一步
+
+- web 补全实施（g5-2 的 12 家 GT 冲 ≥9/12）→ 概念词 P2 收口 → 结构化过滤通道；
+  回归套件卫生切片并行排期（G3 修行为还是修断言，属产品口径决策，届时单独立项）。
+
+## 2026-09-13 · 条目 36：G3 行为缺陷闭环（replay 5/7→6/7）；别名缺口定性为数据治理（C1）
+
+> change-id: `harden-deterministic-subject-layer`（3.2.2 残留）+
+> `retrieval-v2-derived-index-and-fusion`（1b.0c 路由半）；
+> serving worktree `codex/canonical-v2-s12a-ready`，未提交。
+
+### 做了什么
+
+- **G3 根因**：把「他有哪些论文」修好过的守卫（`513858e0`，8/28，在其分支上
+  G3 replay 已绿）**只存在于 `data/p4-serving-pack-rebuild` 分支，从未并入
+  现服务线**；本线的关门条件只在「完全没有锚点」时触发澄清——而当前包里 T1
+  锚定的是**本地公司实体**「深圳国际先进技术应用推进中心」（不再是可被 3.4
+  守卫剥掉的标题型网页锚点），于是类型不匹配的锚点放行，T2 退回无绑定自由
+  检索（128 篇无关论文，卷首"你问的这篇论文是…"）。
+- **移植守卫**：`followup_referents.has_personal_pronoun` + 澄清门新增分支——
+  「他/她」落在非 professor 锚点上必须澄清，除非查询自带显式主体或历史里
+  有人物条目（两条豁免都保留原有通过场景）。
+- **解释器检查③**：原文注释写的是"personal referent over org-anchored
+  session"，代码却要求 `hint == "professor"`——与注释相反；改为对称的
+  「typed referent × anchor-domain 不匹配即拒绝」，让 ON 状态下的解释器不能
+  再把人称代词解到机构锚点上。
+- **别名缺口定性**：用户问「字节跳动→ByteDance Ltd. 是否数据治理层解决」——
+  是。证据见下。
+
+### 发现
+
+- **修复滞留在侧分支**是这类"反复出现"问题的又一形态：同一 G3 缺陷 8/28 已
+  在另一条线上修好并有 9 个单测，但从未合并；本线 3.2.1 以"由 3.4+现有类型
+  提示覆盖"关闭，在标题型锚点时代恰好成立，换包后（公司实体作锚）即失效。
+- 别名缺口是**投影缺口而非源数据缺失**：源 `p4-company-full-v1.jsonl`
+  6,504/6,514（99.8%）带 `project_name`（ByteDance 行='字节跳动'），但包里
+  只有 **342/7,089（4.8%）** 公司有别名；唯一真进包的别名批次是
+  `company_backfill.jsonl`（700 行 / 467 带别名，深圳口径，不含 ByteDance）。
+  构建链没有任何代码把 `project_name` 投进 `aliases`。检索侧别名通道
+  （verbatim / normalized / 短名压实）早已具备——缺的是数据。
+- **G7 基线定量**：23 个历史「具身智能」回合中，优必选**本地召回 6/23**
+  （出现时排 ~37/128）、**commit 0/23**——即"召回到也不进答案窗口"，web 运气
+  才偶尔补上。重排调参解不了它；归 1b.1（宽池+bigram 残留召回）与 1b.3
+  （commit 轴超集保底）。
+
+### 怎么验证
+
+- 单测 RED→GREEN：新增守卫 9 测试 + 解释器 3 测试，修复前 **5 失败/18 通过**
+  → 聚焦套件 **42 passed**（守卫+解释器+指代历史）、**188 passed**（含
+  adapter 矩阵/主体层/G 澄清 6 文件）；miroflow `-k referent` **148 passed**。
+- 契约修正 1 行：adapter 矩阵
+  `("他有哪些代表性研究成果", True, True, False)` → `True`——无类型锚点不再
+  满足人称代词，与 `_planning_displayed_ids` 的绑定拒绝保持一致。
+- 端点（18188 重启加载本代码后实测）：G3-only replay **PASS**（T2
+  `clarification_only`，1.0s）；全量 replay `replay-full-20260913/`
+  **6/7**（1 个失败回合）——G1/G2/G3/G4/G5/G6 通过，唯一失败 G7 重复 2/3
+  缺"优必选"（已知缺陷，见上）。上一轮门 `replay-b1r4` 为 5/7、3 个失败。
+- 别名证据文档：`.agents/runs/close-workbook-gaps/alias-projection-gap-20260913.md`
+  （包/源两侧数字、机制定位、方向与守卫边界）。
+
+### 影响哪些问题
+
+- **P4（「他有哪些论文」）**：行为层修复——不再把"他"自由检索；断言层说明：
+  澄清回复走 `clarification_only` 行为分支（断言即按行为判定），教授/老师等
+  字面分支保留为"人物范围散文答"的兜底，本轮不改仪器。
+- **1b.0c（重放门发现的代词缺陷）**：路由半关闭；1b.1/1b.3（候选生成、
+  commit 超集）= G7 的下一步。
+- **C1（别名 closure）**：明确为**构建侧投影**（`project_name → aliases`）+
+  缺口补充数据；查询侧不做模糊联想；真人缺失实体仍走 web 补全。
+- **replay 门**：5/7 → **6/7**，唯一残留为 G7 间歇缺龙头（本轮 1/3）。
+
+### 下一步
+
+- G7：1b.1 宽池 + bigram 残留召回（让 F1 类命中"优必选 via 智能"进池）+
+  1b.3 commit 超集保底（结构字段命中实体不得被 commit 窗口挤掉），四门复核
+  后再谈 lexical/rerank 默认开。
+- C1 别名的构建侧落地按批 1 排期（投影映射 + 冲突/泛词报表 + 复测探针）。
+
+## 2026-09-13 · 条目 37：别名闭包规划落地 + batch1a 执行（构建侧投影，干跑实测 4.8%→96.6%）
+
+> change-id: `close-workbook-gaps`（C1.1-batch1）；执行 worktree
+> `.worktrees/data-rebuild`（`data/p4-serving-pack-rebuild`，run14 包的实际
+> 构建线），未提交；人类规划文档
+> `docs/plans/2026-09-13-alias-closure-plan.md`（本次新建）。
+
+### 做了什么
+
+- **规划落档**：把"数据治理层解决别名"拆成两批——batch1a 构建侧投影
+  （代码+干跑）、batch1b 重建+验收；插入点定位到行：
+  `_p4_company_record`（读 `project_name` → core/selected 别名）与
+  `_p4_company_field_merge`（存量公司走**列表并集**，写 `p4fill:aliases`
+  断言）。先例教训已吸收：p4 全部 6,514 家都走字段合并路径，**只改新建
+  路径会漏掉全部存量公司**。
+- **实现（data-rebuild 副本）**：小助手 `_company_alias_key`；自名剔除、
+  长度≥2、casefold 去重；不新建词表——歧义误绑交给检索侧既有唯一性守卫
+  与扇出上限（=4）兜底。
+- **测试**：两文件 +7（字段合并 +4、记录构造 +3）；RED 3 失败 → GREEN
+  20/20；定向 `-k company` 12 通过（另 1 条环境类红：DB migration
+  revision 信息不匹配，发生在源读取前，与本次正交，已登记）。
+- **干跑（复用真实构建函数，全量 6,514 行 × 现包并集模拟，只读）**：
+  - 6,504 条别名产出（其余 10 行 project_name 与全名相同，正确跳过）；
+  - 覆盖 **342 → 6,846 家（4.8% → 96.6%）**；
+  - 冲突形态 **9 个**（各 2 家；如 乐聚机器人 → 乐聚两家关联公司），
+    ≤ 扇出上限 → 保留 + 报表，歧义时回退不误绑；
+  - backfill 身份匹配副作用 **0 条**（700 条逐一验证）；
+  - 抽样核对：ByteDance Ltd.→字节跳动、FMC→FMC汽车、TCL华星光电→TCL华星。
+
+### 怎么验证
+
+- 单测 RED→GREEN（上面数字）；`git diff --check` 干净；Ruff 仅 1 条
+  F402 为 HEAD 预存（未动）。
+- 干跑产物：`.agents/runs/full-column-serving-pack-rebuild/
+  alias-dry-run-20260913.json`（含冲突表与抽样）。
+- 规划与验证口径：`.agents/runs/close-workbook-gaps/c1-alias-closure-
+  plan-20260913.md` + `verification-contract.md` C1.1-batch1a 节。
+
+### 影响哪些问题
+
+- 「字节跳动→ByteDance Ltd.」类品牌名缺口：构建侧修复就绪（待重建生效）。
+- C1"alias closure"从方向性描述推进到可验收状态：覆盖率、冲突、副作用
+  三项都有实测数字。
+- 现有系统无行为变化：本次只动数据线代码 + 干跑，18188 运行包未切换。
+
+### 下一步
+
+- batch1b：候选重建 → 打包/封印 → 18188 切新包 → 探针（字节跳动直连、
+  优必选回归、冲突形态 fail-safe、replay 门）→ 回退演练；
+- 与 G7（1b.1/1b.3 候选生成+commit 超集）并行推进，互不阻塞。
+
+## 2026-09-13 · 条目 38：G7 修复规划落档 + 对总规划的 8 项调整（三根因全部定位到行）
+
+> change-id: `retrieval-v2-derived-index-and-fusion`（1b.1/1b.3 细化）；
+> 人类规划文档 `docs/plans/2026-09-13-g7-closure-plan.md`（本次新建）。
+
+### 做了什么
+
+- 把 G7（具身智能清单缺"优必选"）的排查收口为**三个机制级根因**：
+  1. F1 类目召回排序键 `(-score, domain, canonical_object_id, document_id)`：
+     查询「具身智能」拆 bigram{具身,身智,智能}，"智能"在 industry=人工智能
+     （约上千家）命中 ×8 —— 优必选同样只有 8 分（并列），窗口（枚举 64）
+     按**对象哈希 id** 截断，进不进窗全看哈希；今天 3 跑窗口 0/3，
+     历史 6/26 在窗（~37 位）。
+  2. "每词只计最高档"吞差异信号：优必选 tech_tag「人形智能机器人研发商」
+     里可命中 智能机器人/机器人/人形 等更强证据，但当前查询词里没有，
+     "智能"已在 industry 档计过 → tag 证据零加分。
+  3. commit 通道依赖答案文本命中 `_prose_mention_name_forms(display_name)`：
+     历史 6 次在窗却 **0/26 commit**——"覆盖句已提及不重复列"与"名字形态
+     匹配"之间存在让本地 handle 失去 join 的缝（需受控复现钉死）；
+     今天 r1/r3 的通过是 web 散文顺带提及（引用 0 条优必选），属运气。
+- 规划文档给出修法（G7-a 召回：声明新增「具身智能」同义族（PCB 先例）+
+  平局按证据丰富度 + 可选结构命中的桶内保底；G7-b commit：join 条件与
+  覆盖句过滤解耦，可提及形态命中即 join）+ 验收（本地证明、3/3、泛化）。
+- **对总规划 8 项调整**（详见规划 §对总规划的调整）：1b.0c 关；
+  G7-a/b 提前于 1b.1 宽池；声明词表与重建解耦；C1 重建窗口合并 alias[+tag
+  归一化] 并一次总验；验收加"本地证明"；lexical/rerank 默认开不放宽；
+  环境类红入卫生账。
+
+### 怎么验证
+
+- 本轮为诊断+规划，未改行为代码；证据 = 26 轮 turn-debug 统计
+  （recall 6/26、commit 0/26）+ 今日 3 跑 SSE（r1/r3 靠 web、
+  r2 全缺）+ 代码行（排序键 `:8875-8883`、扩展机制 `:8705-8748`、
+  commit join `:2678-2700`、覆盖句 `:1339-1375`）。
+- 离线 rank 表与受控复现是 G7-a/b 的第一批 RED 证据，下一切片执行。
+
+### 影响哪些问题
+
+- G7：从"间歇质量问题"升级为有确定修法与验收口径的切片；
+- 1b.1/1b.3 的任务口径被本次诊断细化（宽池不等于修复，平局与 commit 是主因）；
+- C1 重建范围新增一个待决项（tag 词法归一化是否随重建做）。
+
+### 下一步
+
+- G7-a：先离线 rank 表（4 个 view 变体）→ 声明同义族 + 平局键修改 →
+  当前包 live 探针；
+- G7-b：受控复现 → commit join 修复 → 本地证明探针；
+- 随后 C1 重建（alias[+tag]）→ 新包总验（G7 探针 + replay + g2/g5 抽查）。
+
+## 2026-09-13 · 条目 39：G7 闭环——replay 门 7/7 全绿；召回确定性 + 降级路径覆盖双修
+
+> change-id: `retrieval-v2-derived-index-and-fusion`（1b.1a/1b.1b，serving
+> worktree `codex/canonical-v2-s12a-ready`，未提交）；规划文档
+> `docs/plans/2026-09-13-g7-closure-plan.md`。
+
+### 做了什么
+
+- **G7-a 召回（离线 rank 表驱动）**：
+  1. **触发门扩展**：规划器的 view 变体（"深圳 人形机器人 企业"、"深圳
+     具身智能 公司"）不带"哪些/厂商"标记时 F1 类目召回**完全不动**（实测
+     0 候选）；改为"查询含锚定声明的类目词即触发"。
+  2. **同义族挂在被抽取的 head 上**：「具身智能」4 字根本不进词表（bigram
+     拆碎），所以在 bigram head **具身**下挂成员族 智能机器人(2)/人形机器人
+     (2)/人形(1)——命中优必选 tech_tag「人形智能机器人研发商」。
+- **G7-b 重新定义后修复**：原"join 漏失"假设在现代码上**不可复现**（短称
+  形态覆盖、commit 一直正常）；live 失败回合的真相是
+  `render_mode=deterministic_fallback`——**散文降级模板路径丢了 AQ-S2c
+  成员覆盖句**（该回合优必选已 commit@15 却不在答案里）。修复：
+  `_degraded_fallback_text(result, request=...)` 在四个降级调用点统一补
+  覆盖句。
+
+### 发现
+
+- 离线 rank 基线（新仪器 `g7_f1_rank_probe.py`，复用真实 `_category_recall_
+  entries`）：优必选 **926/3037**、乐聚 264、两个 view 变体 0 候选；修复后
+  926→**15**、乐聚 264→**3**、人形机器人视图 24 不变（族正确地不误触发）。
+- 降级模板路径是与"散文路径"并行的第二条答案通道：覆盖句只在散文路径挂；
+  凡是合成失败的回合，本地已 commit 的龙头会被答案丢掉——这是"web
+  顺带提及假通过"之外的第二个质量盲区。
+- 残余量：越疆 ~800（tech_tag 是「智能机械臂解决方案提供商」，属构建侧
+  词表问题，随 C1 重建决策）；众擎/智平方/自变量/星尘在 128 窗口内、64 截
+  断外（融合窗口仍能带入）。
+
+### 怎么验证
+
+- 离线：baseline→after 两张 rank 表（`g7-f1-rank-*-20260913.json`）。
+- 单测：`test_knowledge_read_isolated.py` +3（38/38；PCB 声明测试改为按
+  族名过滤，守卫第二族的加入）、`test_coverage_presentation.py` +1（5/5）、
+  答案侧三套件 87/87；Ruff 变更文件干净（knowledge_answer.py 4 条 E402 为
+  HEAD 预存）。
+- live（18188 两次重启实装）：
+  - G7 单跑 **3/3 PASS**，turn-debug 召回@12、commit@5/5/2、官方来源引用
+    （ubtrobot.com）绑定优必选；
+  - 全量 replay（降级修复后）**7/7 ALL PASS**：G1–G7 全绿，G7 三跑
+    prose_renderer、召回@12、commit@5；diagnose 汇总 recall 6/26→15/35、
+    commit 0/26→9/35（9 个全部来自修复后回合）。
+
+### 影响哪些问题
+
+- **G7**：从"间歇缺龙头"到闭环——本地召回、commit、引用全链可证，web 运气
+  不再是必要条件；replay 门最后一红清除。
+- **P8（具身智能清单缺龙头）**：问题板上该行可更新为"已修复（本地证据）"。
+- **1b.1 口径修正**：宽池不是主因；平局/触发门/降级路径才是。宽池与平局
+  丰富度、整词抽取降为后备杠杆；lexical/rerank 默认开的闸（1b.3/1b.4）
+  不变。
+
+### 下一步
+
+- alias batch1b 重建（含 tag 归一化待定）→ 新包总验（G7 探针 + replay +
+  g2/g5 抽查）；
+- 回归套件卫生（5 个既有失败 + migration 环境红）；vector 冷启动归因。
+
+## 2026-09-13 · 条目 40：双线并行启动——run15 重建脱离会话发射；web 补全轨设计并行补产
+
+> change-id: `close-workbook-gaps`（C1.1-batch1b 执行中）+
+> `retrieval-v2-derived-index-and-fusion`（web 轨设计补产）；
+> 执行 worktree `.worktrees/data-rebuild`（batch1a 提交 `8dc0f75d`）。
+
+### 做了什么
+
+- **双线并行落地**（用户 09-13 指示：与数据无关的功能开发开 subagent 并行）：
+  - 数据线（主上下文）：C1.1-batch1b 别名闭包重建——先把 batch1a 代码在数据线
+    worktree 提交（`8dc0f75d`，含 build-run15.sh 与干跑脚本），再发射 run15；
+  - 功能线（subagent `agent-26`，只读离线）：web 补全轨设计补产（文档引用的
+    "agent-14 设计"全库无落 = 证据缺口）——设计稿落
+    `.agents/runs/close-workbook-gaps/web-completion-design.md`，待裁定后实施。
+- **run15 今晚三次停顿的取证与根治**（用户关切："跑大规模数据反复失败"）：
+  - A1（18:04）/A2（22:53）：两次配置段快速失败（envelope 须用固定候选证据
+    路径 / 目标库须绑定显式 candidate release）；A3 已证明修正后能过配置门；
+  - A3（23:03–23:24）：完成 setup + P4 合并 + 申请人绑定后，**进程随会话中断
+    被杀**（无 traceback；watchdog 23:19 仍见存活、23:24 消失，与中断时点
+    吻合）；23:19 的"自旋"经 py-spy 栈证实为正常长 CPU 段
+    （`_logical_graph → _map_public_authority` 身份解析），非缺陷；
+  - 根治：run15 以 `setsid` **脱离会话**运行（A3 死因不复现）。runner 自身
+    不可断点续跑（脚本要求 fresh target）——大运行必须完全脱离 agent 会话。
+- A4 发射：23:31:40，独立会话 PID 3622815；已过配置门 + P4 合并段
+  （`P4_MERGE_LEDGER` 与 A3 逐字节一致，含别名 `fields_filled` 3726→4632）。
+
+### 发现
+
+- 长构建的两个真实风险源都与"构建逻辑反复出错"无关：①配置段（已两道修复，
+  fail-fast 在 ~2 分钟级，不再进入小时级浪费）；②**外部中断**（会话级杀
+  进程组）——此前未被防护，今晚起以 setsid 根治。8 月旧账
+  （fingerprint/shm/inclusion-hash 代）早已修复，run13/14 是成功先例。
+- batch1a 效果侧证据：中断前的 A3 账本已显示别名填充生效；信封与 projection
+  未落地（A3 未走到），字节跳动直连探针留到新包总验。
+- 封印/打包沿用官方信封封印器（s12c/build_serving_pack.py）；其历史三层
+  fail-closed 问题均已修复（C2.1p/q），run14 是同一路径的成功先例。run15
+  的封印参数副本与预检要点已记入 `run15-status-20260913.md`。
+
+### 怎么验证
+
+- 进程证据：`ps -o pid,sid`（SID=3622815 独立会话，中断免疫）；日志两层
+  （脚本层 `build-run15-detached-nohup.log` / runner tee `build-run15.log`）；
+  watchdog 每 5 分钟落写出字节采样（`watchdog.log`）。
+- 一致性：A4 的 P4 账本与 A3 同日逐字节一致（确定性口径）。
+- 现场归档：A3 残留按既有命名规则归档为 `*-failed-killed-20260913-2324`
+  （非破坏，可回溯）。
+
+### 影响哪些问题
+
+- **C1.1-batch1b**：从"未跑"进入执行（重建中）；封印→切包→探针按序跟进。
+- **双线模式**：验证"subagent 只读离线 + 主上下文管数据/上线"可行
+  （用户问题"能否开 subagent 同时进行" = 可以，本条目即首例）。
+- 无行为变化：serving 线未动，18188 仍跑 run14 sealed；开关仍默认 OFF。
+
+### 下一步
+
+- envelope 落地（预计 1 小时量级）→ 封印参数副本 → smoke → 18188 切包
+  → 探针（字节跳动 / 优必选 / 冲突 fail-safe / replay 7/7）；
+- web 补全轨设计稿交付后裁定 →（若采纳）进入实施；
+- B4 probe 与卫生项排期不变。

@@ -1,0 +1,83 @@
+{
+  "session_id": "session:chat:O8_sCt-aozDZJ_obrBEx1EHaLy__pIsG",
+  "turn_id": "turn:chat:sha256:631d6ee8a0ab5535ae204f1ba33e6cd6311874a258a73ce4fc802a431f0ef70e",
+  "turn_count": 2,
+  "query": "专利 CN117873146A 的详细信息是什么",
+  "planned_displayed_ids": [],
+  "recalled_handles": [
+    {
+      "id": "patent-c-0aef2768e7b7e94fb51440e5",
+      "kind": "canonical",
+      "domain": "patent",
+      "display_name": "一种机器人的落地控制方法、机器人及终端设备"
+    }
+  ],
+  "evidence_items": {
+    "total": 2,
+    "by_domain": {
+      "patent": 2
+    },
+    "by_lane": {
+      "exact": 1,
+      "lexical": 1
+    },
+    "by_source_nature": {
+      "local": 2
+    },
+    "with_claim_binding": 2
+  },
+  "protected_slots": [
+    {
+      "kind": "exact_identifier",
+      "value": "CN117873146A",
+      "entity_ids": []
+    }
+  ],
+  "requested_traversal": null,
+  "admitted_claims": {
+    "total": 1,
+    "by_predicate": {
+      "exact_identifier": 1
+    },
+    "by_claim_type": {
+      "material_fact": 1
+    },
+    "patent_evidence_claims": 1
+  },
+  "committed_handle_ids": [
+    "patent-c-0aef2768e7b7e94fb51440e5"
+  ],
+  "committed_names": [
+    "一种机器人的落地控制方法、机器人及终端设备"
+  ],
+  "render_mode": "prose_renderer",
+  "response_mode": "answer",
+  "citations": 1,
+  "answer_chars": 297,
+  "lane_timings": [
+    [
+      "structured",
+      0.0
+    ],
+    [
+      "exact",
+      0.49
+    ],
+    [
+      "lexical",
+      1.091
+    ],
+    [
+      "vector",
+      4.926
+    ],
+    [
+      "web",
+      23.365
+    ],
+    [
+      "web",
+      8.501
+    ]
+  ]
+}

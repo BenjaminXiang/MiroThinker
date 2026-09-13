@@ -21,3 +21,21 @@ id-based binding exists.
 - **WHEN** a company has no patent bindings in the pack lookup
 - **THEN** the answer does not fabricate a local patent list; web fallback
   wording states the source
+
+### Requirement: Local evidence surfaces a citation card regardless of lane
+
+An answer backed by an admitted local (non-`current_web`) knowledge-base
+item SHALL expose a non-clickable local citation card for that item even
+when the item carries no validated official public URL. The card SHALL
+carry a hashed public id and the public handle display name, and SHALL NOT
+expose internal canonical ids, local projection locators, or release
+metadata. Current-Web evidence SHALL keep requiring a validated public
+official URL before any clickable citation is exposed.
+
+#### Scenario: patent-number detail turn (workbook g17-t2)
+
+- **WHEN** the user asks for the details of one patent number that resolves
+  to a sealed-pack patent record (「专利 CN117873146A 的详细信息是什么」)
+- **THEN** the answer states the local record's title, applicant, and number
+- **AND** the turn carries ≥1 local (non-web) citation card
+- **AND** no official public URL is fabricated for the patent

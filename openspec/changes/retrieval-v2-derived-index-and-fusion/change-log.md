@@ -200,3 +200,142 @@ The next step is not more reranker tuning — it is candidate generation
 (1b.1 wide pool + bigram residue recall) and the commit-superset guard (1b.3),
 with 1b.0b's live fault injection proving the fail-safe path before any
 default-on decision.
+
+## 2026-09-13 — Step 1b.0b fault injection closed (live, serial 18188)
+
+Two real `/api/chat/stream` turns on the same instance, query
+`深圳有哪些做激光雷达的公司`, endpoint pointed at a local stub
+(`fault_stub_rerank.py`, `:18099`):
+
+| mode | stub state | bytes | error events | done | answer len | journal fallback line |
+|---|---|---|---|---|---|---|
+| malformed | answering, adapter must reject the payload | 82,954 | 0 | 1 | 4,607 | `rerank result lacks a numeric score` |
+| refused | process stopped, port closed | 89,944 | 0 | 1 | 4,781 | `rerank request failed: URLError` |
+
+Both turns produced complete, category-consistent answers (速腾聚创 / 镭神智能 /
+览沃 …) with no error event on the stream. Journal scan over the 23,713 lines of
+the fault window: `Bearer` 0, `authorization` 0, credential content 0, query
+text 0; the only rerank lines are the two normalized fallback lines above.
+Scope note: the served journal is clean on all four counts; query text exists
+only under `CANONICAL_V2_TURN_DEBUG_DIR` (the turn-debug artifact directory —
+test instrumentation, not a served log).
+
+Restore verified twice (script end, then re-checked): drop-ins back to
+`lexical-index.conf` + `turn-debug.conf` (both `.pending` files inert),
+`CANONICAL_V2_LEXICAL_INDEX=0`, no `CANONICAL_V2_RERANK_*` in the process
+environment, `/api/health` ok. Original ON/stub drop-ins preserved by SHA256 in
+`dropin-backup-20260913/`.
+
+Verdict: the fail-safe path is proven on real turns. Step 1b.0b closes as
+*measured* — quality gate failed (lane OFF), fallback verified, logs clean.
+Default-on stays gated behind 1b.1/1b.3 + the four oracles.
+
+## 2026-09-13 — 1b.0c routing half closed (G3 pronoun → clarification)
+
+**What.** The replay-gate G3 defect (「他有哪些论文」 after an institution
+turn free-retrieving junk papers) is fixed on the serving line: the
+personal-pronoun × anchor-type guard from `513858e0` (branch
+`data/p4-serving-pack-rebuild`, never merged into this line) is ported into
+`canonical_v2_chat.py` + `followup_referents.py`, and interpreter check ③
+is aligned with its documented symmetric rejection (typed referent ×
+anchor-domain mismatch). Root cause for the residual: this line's 3.2.1
+only fires clarification when **no** anchor exists; under the current pack
+T1 anchors a canonical company, so the type-mismatched anchor slid through
+to unbound retrieval, and the ON interpreter could also hand the org
+subject back in place of the person pronoun.
+
+**Evidence.** Unit: new guard suite 9 tests + 3 interpreter mismatch tests,
+RED 5 failing → focused suites 42/188 green; adapter matrix row
+`(他有哪些代表性研究成果, True, True, False)` → `True` (untyped anchor no
+longer satisfies a personal pronoun, matching `_planning_displayed_ids`).
+Endpoint (18188 restarted with this code): G3-only replay PASS (T2
+`canonical_v2:G:clarification_only`, 1.0 s); full gate `replay-full-
+20260913/` = **6/7 sessions, 1 failing turn** — G1/G2/G3/G4/G5/G6 PASS,
+G7 `优必选` missing in repeat 2/3 only. Previous gate was 5/7 / 3 failures.
+
+**G7 note (unchanged scope).** `diagnose_g7_recall.py` over 23 archived
+具身智能 turns: local recall 6/23 (rank ~37/128), commit **0/23** — so
+neither more reranker tuning nor web luck can close it; 1b.1 (wide pool +
+bigram residue recall) and 1b.3 (commit-axis superset guard) own it.
+
+**Artifacts.** Serving worktree: `replay-g3-fix-20260913/`,
+`replay-full-20260913/`, `.agents/runs/harden-deterministic-subject-layer/
+verification-3.2.2.md`; code uncommitted on `codex/canonical-v2-s12a-ready`.
+
+## 2026-09-13 — G7 diagnosis closed to three mechanism causes; slice split (1b.1a/1b.1b)
+
+**Diagnosis (26 archived enumeration turns + today's 3 runs).** 优必选 was
+in the cut window only 6/26 (rank ~37/128 when present) and reached the
+commit universe 0/26; today's three replay turns have it out of window
+entirely, and the two passing runs came from web-prose mentions with zero
+优必选 citations. Mechanism, all located in code:
+
+1. F1 category scoring sorts ties by `canonical_object_id` (hash):
+   「具身智能」 decomposes to bigrams {具身,身智,智能}; 智能 hits
+   industry=人工智能 for a thousand-strong tie mass at ×8 — 优必选 ties at
+   exactly 8 and the bucket cut (64 on the enumeration branch) is decided
+   by hash order.
+2. "A term counts once at its highest tier" swallows the differentiating
+   evidence: 优必选's tech_tag 人形智能机器人研发商 contains 智能机器人/
+   机器人/人形, but those are not query terms, and 智能 already scored at
+   the industry tier.
+3. The enumeration commit joins handles by
+   `_prose_mention_name_forms(display_name)` over the answer text, while
+   the AQ-S2c coverage sentence skips already-mentioned members — an
+   in-window local handle can lose its join even when the answer text is
+   not backed by any local selection.
+
+**Plan adjustment.** 1b.1's wide pool is not the primary fix; the change
+splits into 1b.1a (recall determinism: evidence-richness tie-break +
+具身智能 `expands` family + optional struct-anchor quota) and 1b.1b
+(commit-channel decoupling + local-proof acceptance), both verifiable on
+the current pack without a rebuild. The wide pool stays, sequenced behind
+these. Human plan + 8 program adjustments:
+`docs/plans/2026-09-13-g7-closure-plan.md`; RED/GREEN contract appended to
+this change's verification-contract.
+
+## 2026-09-13 — G7 closed: replay gate 7/7; recall determinism + fallback coverage delivered (1b.1a/1b.1b)
+
+**Outcome.** The seven-session replay gate is green for the first time with
+both known reds closed: `replay-full-g7fix-r2-20260913/` = **7/7 ALL PASS**
+(G1–G7). G7 深圳有哪些做具身智能的公司 repeats 3/3 with 优必选 locally
+backed: turn-debug recall @12, commit @5 in every run, and an
+official-source citation (ubtrobot.com) bound to the company; diagnose
+totals moved recall 6/26→15/35 and commit 0/26→9/35 (all nine post-fix
+turns).
+
+**What landed (serving worktree, uncommitted).**
+
+1. Declared-category-term trigger extension in `_category_query_terms`:
+   planner view variants without 哪些/厂商 markers ("深圳 人形机器人 企业",
+   "深圳 具身智能 公司") were inert (0 candidates measured) — a declared
+   term now opens the F1 fallback.
+2. Anchoring declaration family under the extracted bigram head 具身
+   (members 智能机器人:2 / 人形机器人:2 / 人形:1; the 4-char head 具身智能
+   never survives bigram extraction, which is why the family hangs off
+   具身). Offline rank of 优必选 on the primary view 926 → 15; 乐聚 264 → 3;
+   the 人形机器人 view unchanged (family correctly inert).
+3. `_degraded_fallback_text(result, request=...)`: the deterministic
+   fallback (all four call sites) appends the AQ-S2c member coverage
+   sentence. The original 1b.1b join-leak hypothesis was **not
+   reproducible** on current code — the failing live turn was
+   `render_mode=deterministic_fallback` dropping the coverage sentence
+   while 优必选 sat committed@15; the fallback path, not the join, was the
+   gap.
+
+**Verification.** Offline rank tables (baseline → after) in the runs dir;
+3 new tests in `test_knowledge_read_isolated.py` (file 38/38; the PCB
+declaration test scoped to `expands == "PCB"` now that a second family
+exists) + 1 new test in `test_coverage_presentation.py` (5/5) + answer
+suites 87/87; live G7-only 3/3 after fix 1+2, full gate 6/7 (fallback turn
+failed → fix 3), full gate **7/7** after fix 3. Ruff clean on changed files
+(knowledge_answer.py keeps its 4 pre-existing E402s). Full note:
+`.agents/runs/retrieval-v2-derived-index-and-fusion/verification-1b1.md`.
+
+**Backlog carried.** Wide pool (1b.1 remainder), tie-break richness +
+whole-term extraction (not needed for this acceptance), 越疆-class
+tag-vocabulary case (`智能机械臂解决方案提供商`) with the C1 rebuild
+decision, lexical/rerank default-on still behind 1b.3/1b.4.
+
+**Human docs.** Plan `docs/plans/2026-09-13-g7-closure-plan.md`; system
+log entry 39.
