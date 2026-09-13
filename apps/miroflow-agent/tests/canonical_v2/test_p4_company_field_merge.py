@@ -96,3 +96,39 @@ def test_generated_route_detector() -> None:
     assert build._p4_company_route_is_generated(None)
     assert build._p4_company_route_is_generated("")
     assert not build._p4_company_route_is_generated(REAL_SCENARIOS)
+
+
+def test_alias_union_writes_new_aliases_with_assertion() -> None:
+    existing = {"name": "ByteDance Ltd.", "normalized_name": "ByteDance Ltd."}
+    _, filled, assertions = _merge(existing, {"aliases": ["字节跳动"]})
+    assert filled == 1
+    assert existing["aliases"] == ["字节跳动"]
+    assert [a.field_path for a in assertions] == ["aliases"]
+    assert assertions[0].assertion_id == "assertion:company-c-test:p4fill:aliases"
+    assert assertions[0].value == ["字节跳动"]
+
+
+def test_alias_union_dedupes_case_insensitively() -> None:
+    existing = {"name": "某公司", "aliases": ["TT语音", "PingPong"]}
+    _, filled, assertions = _merge(
+        existing, {"aliases": ["tt语音", "PingPong", "TT语音"]}
+    )
+    assert filled == 0
+    assert existing["aliases"] == ["TT语音", "PingPong"]
+    assert assertions == []
+
+
+def test_alias_union_skips_self_name_and_short_forms() -> None:
+    existing = {"name": "云豹智能", "normalized_name": "深圳云豹智能"}
+    _, filled, _ = _merge(
+        existing, {"aliases": ["云豹智能", "深圳云豹智能", "x", ""]}
+    )
+    assert filled == 0
+    assert "aliases" not in existing
+
+
+def test_alias_union_ignores_non_list_fill() -> None:
+    existing = {"name": "某公司"}
+    _, filled, _ = _merge(existing, {"aliases": "杉川"})
+    assert filled == 0
+    assert "aliases" not in existing

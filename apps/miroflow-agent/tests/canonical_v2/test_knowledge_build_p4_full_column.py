@@ -597,3 +597,79 @@ def test_manifest_p4_file_validates_against_authority() -> None:
     assert json.loads(manifest_path.read_text())["restore_root"] == str(
         Path("/var/tmp/mirothinker-restores/canonical-v2-s2b-20260711T152222Z")
     )
+
+
+def test_company_record_carries_project_name_alias() -> None:
+    """run14 alias closure: the p4 workbook's brand name (project_name) is a
+    first-class alias on the released record and the projection selection."""
+    module = _module()
+    built = module._p4_company_record(
+        {
+            "company_name": "ByteDance Ltd.",
+            "project_name": "字节跳动",
+            "industry": "企业服务",
+        },
+        now=NOW,
+    )
+    assert built is not None
+    _, domain, released, selected = built
+    assert domain == "company"
+    assert selected["aliases"] == ["字节跳动"]
+    assert released["core_facts"]["aliases"] == ["字节跳动"]
+
+
+def test_company_record_drops_same_name_and_empty_project_names() -> None:
+    module = _module()
+    same = module._p4_company_record(
+        {
+            "company_name": "深圳市同名科技有限公司",
+            "project_name": "深圳市同名科技有限公司",
+        },
+        now=NOW,
+    )
+    assert same is not None
+    assert "aliases" not in same[3]
+    assert "aliases" not in same[2]["core_facts"]
+    absent = module._p4_company_record({"company_name": "某无品牌公司"}, now=NOW)
+    assert absent is not None
+    assert "aliases" not in absent[3]
+    assert "aliases" not in absent[2]["core_facts"]
+
+
+def test_overlap_merge_unions_project_name_alias_into_retained_company() -> None:
+    """All 6,514 p4 companies overlap retained objects (measured), so the
+    alias must land through the field-merge path, not only on creation."""
+    module = _module()
+    merged = _merge_created(
+        module,
+        (
+            _p4_row(
+                module,
+                {
+                    "__batch_id__": "p4-company-full-v1",
+                    "company_name": "ByteDance Ltd.",
+                    "project_name": "字节跳动",
+                    "team": "梁汝波，CEO。",
+                },
+            ),
+        ),
+        initial_selected={
+            "company-retained-bytedance": {
+                "name": "ByteDance Ltd.",
+                "normalized_name": "ByteDance Ltd.",
+                "profile_summary": "已有的企业简介。",
+            }
+        },
+        initial_domains={"company-retained-bytedance": "company"},
+    )
+    retained = merged.selected["company-retained-bytedance"]
+    assert retained["aliases"] == ["字节跳动"]
+    assert retained["team_description"] == "梁汝波，CEO。"
+    assert merged.stats["company_full"]["records_field_merged"] == 1
+    alias_assertions = [
+        assertion
+        for assertion in merged.field_assertions
+        if assertion.field_path == "aliases"
+    ]
+    assert len(alias_assertions) == 1
+    assert alias_assertions[0].value == ["字节跳动"]

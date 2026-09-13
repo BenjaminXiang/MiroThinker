@@ -4230,6 +4230,54 @@ def _p4_company_field_merge(
             )
         )
         filled += 1
+    fill_aliases = fill.get("aliases")
+    if isinstance(fill_aliases, list) and fill_aliases:
+        # Alias union (run14 alias closure): aliases are a list surface, so
+        # the fill-empty scalar contract does not apply — merge as a set,
+        # normalized, with self-name forms and duplicates excluded. Serving
+        # keeps the ambiguity/fanout guard; this step never invents forms.
+        existing_aliases = existing.get("aliases")
+        merged_aliases = (
+            [
+                alias.strip()
+                for alias in existing_aliases
+                if isinstance(alias, str) and alias.strip()
+            ]
+            if isinstance(existing_aliases, list)
+            else []
+        )
+        blocked = {
+            _company_alias_key(value)
+            for value in (existing.get("name"), existing.get("normalized_name"))
+            if isinstance(value, str) and value.strip()
+        }
+        blocked.update(_company_alias_key(alias) for alias in merged_aliases)
+        added: list[str] = []
+        for value in fill_aliases:
+            if not isinstance(value, str):
+                continue
+            alias = value.strip()
+            key = _company_alias_key(alias)
+            if len(alias) < 2 or key in blocked:
+                continue
+            blocked.add(key)
+            added.append(alias)
+        if added:
+            merged_value = cast(JsonValue, [*merged_aliases, *added])
+            existing["aliases"] = merged_value
+            assertions.append(
+                SourceAssertion(
+                    assertion_id=f"assertion:{object_id}:p4fill:aliases",
+                    source_record_id=source_record_id,
+                    source_identity_id=f"source-released-object:{object_id}",
+                    subject_entity_type="company",
+                    field_path="aliases",
+                    value=merged_value,
+                    observed_at=observed_at,
+                    assertion_run_id=f"assertions:{run_id}",
+                )
+            )
+            filled += 1
     return filled
 _P4_PATENT_SUMMARY_FALLBACK = "Not supplied by the full-column patent source."
 _P4_PAPER_VENUE_FALLBACK = "未提供期刊出处"
@@ -4262,12 +4310,17 @@ def _p4_optional_string(value: Any) -> str | None:
     return value.strip()
 
 
+def _company_alias_key(value: str) -> str:
+    return value.strip().casefold()
+
+
 def _p4_company_record(
     payload: Mapping[str, Any], *, now: datetime
 ) -> tuple[str, str, dict[str, Any], dict[str, JsonValue]] | None:
     name = _p4_optional_string(payload.get("company_name"))
     if not name:
         return None
+    project_name = _p4_optional_string(payload.get("project_name"))
     industry = _p4_named_reference(payload.get("industry"))
     geography = _p4_named_reference(payload.get("geography"))
     legal = _p4_named_reference(payload.get("legal_representative"))
@@ -4296,6 +4349,15 @@ def _p4_company_record(
         }
     ]
     core: dict[str, Any] = {"name": name, "normalized_name": name}
+    aliases: list[str] = []
+    if project_name is not None:
+        candidate = project_name.strip()
+        if len(candidate) >= 2 and _company_alias_key(candidate) != _company_alias_key(
+            name
+        ):
+            aliases.append(candidate)
+    if aliases:
+        core["aliases"] = aliases
     if industry is not None:
         core["industry"] = industry
         core["industry_tags"] = [industry]
@@ -4320,6 +4382,8 @@ def _p4_company_record(
         "profile_summary": profile_summary,
         "technology_route_summary": route_summary,
     }
+    if aliases:
+        selected["aliases"] = cast(JsonValue, aliases)
     if industry is not None:
         selected["industry"] = industry
         selected["industry_tags"] = [industry]
