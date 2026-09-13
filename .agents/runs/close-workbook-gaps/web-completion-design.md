@@ -297,3 +297,31 @@ immediate and leaves no residue beyond trace files.
 - The §2.2 attribution rests on the LAT-2 turn-debug dumps (11 sessions) plus code
   reading; a `record_gate_drop("web_subject_consistency", …)` counter trace for `g5-t2`
   was not present in those dumps and would make it airtight.
+
+## 7. Adjudications (main context, 2026-09-13 — binding for implementation)
+
+1. **Session universe** — implement it. Verified completion members (legal-name form
+   + official URL per §4.3) join the session universe as web-only handles tagged
+   `web-completion-v1`; they participate in narrowing re-bucketing and are never
+   counted as local evidence. Title-only finds never join (disclosure only). Blast
+   radius is bounded by verification plus the `off` default.
+2. **Official hosts** — pin a starter catalog
+   `catalogs/web-completion-official-hosts-v1.json`: `gsxt.gov.cn`
+   (国家企业信用信息公示系统), `creditchina.gov.cn`, `amr.sz.gov.cn`
+   (深圳市市场监督管理局), `cninfo.com.cn` (exchange filings), plus the subject
+   company's own website domain where the page itself binds legal name ↔ domain.
+   Everything else: no card.
+3. **Mention without card** — allowed, disclosure clause only (§4.3 template); a
+   disclosed name is not a "member", carries no capability claim, and claims nothing
+   beyond "seen on public web".
+4. **Negatives** — no silent mislabeling: a member that cannot be bound to "深圳"
+   evidence is excluded from the bucket; if it plausibly belongs to the asked
+   universe it goes to the disclosure with its actual (or unverified) city. A1
+   evidence must record exclusions.
+5. **Trigger seed** — previous-turn committed web evidence pool first
+   (deterministic); answer prose only as a fallback when that pool is empty.
+6. **Budget** — rides the existing web-phase budget (cap 6 s, never additive);
+   exhaustion degrades to the disclosure clause.
+
+**First implementation slice scope** = §4.5 steps 1–5 (offline, unit-level), switch
+default `off`; live steps 6–7 (g5 session, A/B, TTFT) are main-context work.
