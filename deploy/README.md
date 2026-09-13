@@ -97,7 +97,8 @@ API 层做 overlay 合并，无修正库时与上线前逐字节一致。
 - `start-canonical-v2.sh` — 启动入口，exec s12g 钉死的完整启动命令
 - `canonical-v2-backend.service` — 用户级 systemd unit（Restart=on-failure）
 - `backup-canonical-v2.sh` — 备份到 `/md1/backups/canonical-v2/<时间戳>/`，保留 14 份
-- `purge-access-logs.sh` — 访问日志 90 天滚动清理
+- `purge-access-logs.sh` — 访问日志滚动清理；保留期顺序为「位置参数 > `CANONICAL_V2_ACCESS_LOG_RETENTION_DAYS`
+  > 受管配置 `paths.access_log_retention_days`（页面 /admin 同源可改）> 默认 90 天」，日志行会打印生效值与来源
 - `firewall-18188.sh` + `canonical-v2-firewall.service` — 18188 收口（见下）
 - `install.sh` — 安装 unit + 每日 03:17 备份 / 03:41 清理 cron（无需 sudo）
 
@@ -137,7 +138,8 @@ systemctl --user start canonical-v2-backend
 - [x] 切换 systemd 守护并观察一次自动拉起（2026-08-07 验证：kill 后 50s 恢复）
 - [x] 首次备份实跑 + 恢复演练一次（2026-08-07/09：946MB 快照，库 integrity ok，
       恢复副本行数与现网一致，manifest/npz 可解析）
-- [x] 访问日志保留策略（90 天滚动清理，`purge-access-logs.sh`，每日 03:41 cron）
+- [x] 访问日志保留策略（默认 90 天滚动清理，`purge-access-logs.sh`，每日 03:41 cron；
+      保留期改由受管配置 `paths.access_log_retention_days` 控制，2026-09-14 W5）
 - [x] 数据编辑覆盖层（2026-08-10：字段纠错 + 手工新增 + 撤销 + 导出，
       operator 经 nginx X-Remote-User 透传，端到端验证通过）
 - [x] 人工知识在线召回（2026-08-10：侧车向量并集 + 文档上传两步 UI +

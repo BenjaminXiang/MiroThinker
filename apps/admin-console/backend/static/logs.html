@@ -105,14 +105,15 @@
       }
 
       .toolbar input[type="search"] {
-        flex: 1 1 260px;
-        min-width: 180px;
+        flex: 1 1 240px;
+        min-width: 160px;
         padding: 9px 12px;
         border: 1px solid var(--line-strong);
         border-radius: 10px;
       }
 
-      .toolbar select {
+      .toolbar select,
+      .toolbar input[type="date"] {
         padding: 9px 12px;
         border: 1px solid var(--line-strong);
         border-radius: 10px;
@@ -128,6 +129,69 @@
         cursor: pointer;
       }
       .toolbar button:hover { background: var(--navy-strong); }
+      .toolbar button.ghost {
+        background: var(--surface);
+        color: var(--navy);
+        border: 1px solid var(--line-strong);
+      }
+      .toolbar button.ghost:hover { background: var(--blue-soft); }
+      .toolbar .field {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        font-size: 0.72rem;
+        color: var(--muted);
+      }
+      .toolbar .spacer { flex: 1 1 auto; }
+
+      .stat-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(132px, 1fr));
+        gap: 10px;
+        padding: 14px 16px 4px;
+      }
+      .stat {
+        background: var(--blue-soft);
+        border-radius: 12px;
+        padding: 10px 12px;
+      }
+      .stat strong { display: block; font-size: 1.2rem; }
+      .stat span { font-size: 0.74rem; color: var(--muted); }
+      .stat.alert { background: var(--danger-soft); }
+
+      .overview-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 16px;
+        padding: 12px 16px 16px;
+      }
+      .overview-grid h4 {
+        margin: 0 0 6px;
+        font-size: 0.82rem;
+        color: var(--muted);
+        font-weight: 600;
+      }
+      .mini-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.8rem;
+      }
+      .mini-table th, .mini-table td {
+        text-align: left;
+        padding: 4px 8px;
+        border-bottom: 1px solid var(--line);
+        vertical-align: top;
+        word-break: break-word;
+      }
+      .mini-table th { color: var(--muted); font-weight: 600; }
+      .mini-table td.num, .mini-table th.num { text-align: right; white-space: nowrap; }
+      .mini-table .scroll { max-height: 240px; overflow: auto; }
+      .mini-table td.truncate {
+        max-width: 260px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
 
       .layout {
         display: grid;
@@ -206,6 +270,7 @@
       .badge.completed { background: var(--teal-soft); color: var(--teal); }
       .badge.error { background: var(--danger-soft); color: var(--danger); }
       .badge.interrupted { background: var(--amber-soft); color: var(--amber); }
+      .badge.identity { background: var(--blue-soft); color: var(--navy); }
 
       .pager {
         display: flex;
@@ -316,13 +381,81 @@
     <main>
       <section class="toolbar" aria-label="过滤工具">
         <input id="search" type="search" placeholder="按提问内容搜索…" maxlength="200" />
-        <select id="statusFilter">
+        <select id="statusFilter" aria-label="状态">
           <option value="">全部状态</option>
           <option value="completed">已完成</option>
           <option value="error">错误</option>
           <option value="interrupted">中断</option>
         </select>
+        <select id="queryTypeFilter" aria-label="提问类型">
+          <option value="">全部类型</option>
+        </select>
+        <select id="identityFilter" aria-label="提问身份">
+          <option value="">全部身份</option>
+        </select>
+        <label class="field">开始<input id="sinceFilter" type="date" /></label>
+        <label class="field">结束<input id="untilFilter" type="date" /></label>
         <button id="applyFilter" type="button">查询</button>
+        <button id="resetFilter" type="button" class="ghost">重置</button>
+        <span class="spacer"></span>
+        <button id="exportCsv" type="button" class="ghost">导出 CSV</button>
+        <button id="exportJsonl" type="button" class="ghost">导出 JSONL</button>
+      </section>
+
+      <section class="pane" aria-label="概览统计">
+        <div class="pane-head">
+          <strong>概览</strong>
+          <span id="overviewRange">—</span>
+        </div>
+        <div class="stat-grid" id="statGrid">
+          <div class="stat"><strong id="statSessions">—</strong><span>会话数</span></div>
+          <div class="stat"><strong id="statTurns">—</strong><span>轮次</span></div>
+          <div class="stat" id="statErrorCard"><strong id="statErrorRate">—</strong><span>错误率</span></div>
+          <div class="stat"><strong id="statErrors">—</strong><span>错误轮次</span></div>
+          <div class="stat"><strong id="statInterrupted">—</strong><span>中断轮次</span></div>
+          <div class="stat"><strong id="statRetention">—</strong><span id="statRetentionSource">保留期</span></div>
+        </div>
+        <div class="overview-grid">
+          <div>
+            <h4>每日会话 / 轮次</h4>
+            <div class="scroll">
+              <table class="mini-table">
+                <thead>
+                  <tr><th>日期（UTC）</th><th class="num">会话</th><th class="num">轮次</th></tr>
+                </thead>
+                <tbody id="dailyBody">
+                  <tr><td colspan="3">—</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div>
+            <h4>提问类型分布</h4>
+            <div class="scroll">
+              <table class="mini-table">
+                <thead>
+                  <tr><th>类型</th><th class="num">轮次</th></tr>
+                </thead>
+                <tbody id="queryTypeBody">
+                  <tr><td colspan="2">—</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div>
+            <h4>Top 提问</h4>
+            <div class="scroll">
+              <table class="mini-table">
+                <thead>
+                  <tr><th>提问</th><th class="num">次数</th></tr>
+                </thead>
+                <tbody id="topQueryBody">
+                  <tr><td colspan="2">—</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
       </section>
 
       <section class="layout">
@@ -353,12 +486,25 @@
 
     <script>
       // 纯 DOM 构建，不引入 innerHTML，无 XSS 面（与 chat.html / browse.html 同一约定）。
-      const sessionsPath = "api/canonical-v2/admin/access-logs/sessions";
+      const logBase = "api/canonical-v2/admin/access-logs";
+      const sessionsPath = logBase + "/sessions";
+      const statsPath = logBase + "/stats";
+      const exportPath = logBase + "/export";
+      const configPath = "api/canonical-v2/admin/config";
+      const RETENTION_FIELD = "paths.access_log_retention_days";
       const PAGE_SIZE = 20;
+      const ANONYMOUS = "anonymous";
 
       const searchInput = document.getElementById("search");
       const statusFilter = document.getElementById("statusFilter");
+      const queryTypeFilter = document.getElementById("queryTypeFilter");
+      const identityFilter = document.getElementById("identityFilter");
+      const sinceFilter = document.getElementById("sinceFilter");
+      const untilFilter = document.getElementById("untilFilter");
       const applyButton = document.getElementById("applyFilter");
+      const resetButton = document.getElementById("resetFilter");
+      const exportCsvButton = document.getElementById("exportCsv");
+      const exportJsonlButton = document.getElementById("exportJsonl");
       const sessionList = document.getElementById("sessionList");
       const sessionCount = document.getElementById("sessionCount");
       const turnList = document.getElementById("turnList");
@@ -366,10 +512,26 @@
       const prevPage = document.getElementById("prevPage");
       const nextPage = document.getElementById("nextPage");
       const pageInfo = document.getElementById("pageInfo");
+      const overviewRange = document.getElementById("overviewRange");
+      const statSessions = document.getElementById("statSessions");
+      const statTurns = document.getElementById("statTurns");
+      const statErrorRate = document.getElementById("statErrorRate");
+      const statErrorCard = document.getElementById("statErrorCard");
+      const statErrors = document.getElementById("statErrors");
+      const statInterrupted = document.getElementById("statInterrupted");
+      const statRetention = document.getElementById("statRetention");
+      const statRetentionSource = document.getElementById("statRetentionSource");
+      const dailyBody = document.getElementById("dailyBody");
+      const queryTypeBody = document.getElementById("queryTypeBody");
+      const topQueryBody = document.getElementById("topQueryBody");
 
       const state = {
         q: "",
         status: "",
+        queryType: "",
+        identity: "",
+        since: "",
+        until: "",
         offset: 0,
         total: 0,
         selected: null,
@@ -379,6 +541,12 @@
         completed: "已完成",
         error: "错误",
         interrupted: "中断",
+      };
+
+      const RETENTION_SOURCES = {
+        env: "环境变量",
+        file: "配置文件",
+        default: "默认",
       };
 
       function create(tag, className, text) {
@@ -402,6 +570,18 @@
         return tail.length > 10 ? tail.slice(0, 10) + "…" : tail;
       }
 
+      function identityLabel(value) {
+        if (!value) return "匿名";
+        return value === ANONYMOUS ? "匿名" : value;
+      }
+
+      function queryTypeLabel(value) {
+        if (!value) return "（未记录）";
+        return value.startsWith("canonical_v2:")
+          ? value.slice("canonical_v2:".length)
+          : value;
+      }
+
       async function fetchJson(path) {
         const response = await fetch(path, { headers: { Accept: "application/json" } });
         if (!response.ok) throw new Error("HTTP " + response.status);
@@ -416,6 +596,140 @@
         return (statuses || []).map((status) =>
           create("span", "badge " + status, STATUS_LABELS[status] || status)
         );
+      }
+
+      function identityBadges(identities) {
+        const values = identities && identities.length ? identities : [ANONYMOUS];
+        return values.map((value) =>
+          create("span", "badge identity", identityLabel(value))
+        );
+      }
+
+      // 页面 / 统计 / 导出共用同一套过滤参数，保证导出内容与页面所见一致。
+      function filterParams() {
+        const params = new URLSearchParams();
+        if (state.q) params.set("q", state.q);
+        if (state.status) params.set("status", state.status);
+        if (state.queryType !== "") params.set("query_type", state.queryType);
+        if (state.identity) params.set("identity", state.identity);
+        if (state.since) params.set("since", state.since);
+        if (state.until) params.set("until", state.until);
+        return params;
+      }
+
+      function fillOptions(select, values, label, preserve) {
+        const current = preserve === undefined ? select.value : preserve;
+        const options = [create("option", "", label)];
+        options[0].value = "";
+        values.forEach((value) => {
+          const option = create("option", "", value.label);
+          option.value = value.value;
+          options.push(option);
+        });
+        // 当前选中的值即使被统计范围过滤掉也要留在列表里，否则筛选条件会静默失效。
+        if (current && !values.some((value) => value.value === current)) {
+          const option = create("option", "", queryTypeLabel(current));
+          option.value = current;
+          options.push(option);
+        }
+        select.replaceChildren(...options);
+        select.value = current;
+      }
+
+      function renderOverview(stats) {
+        overviewRange.textContent =
+          formatTime(stats.window.since) +
+          " → " +
+          formatTime(stats.window.until) +
+          (stats.window.since_defaulted ? "（默认近 30 天）" : "");
+        statSessions.textContent = stats.totals.sessions;
+        statTurns.textContent = stats.totals.turns;
+        statErrorRate.textContent = (stats.totals.error_rate * 100).toFixed(2) + "%";
+        statErrorCard.classList.toggle("alert", stats.totals.errors > 0);
+        statErrors.textContent = stats.totals.errors;
+        statInterrupted.textContent = stats.totals.interrupted;
+
+        dailyBody.replaceChildren(
+          ...(stats.daily.length
+            ? stats.daily.map((item) => {
+                const row = create("tr");
+                row.append(
+                  create("td", "", item.day),
+                  create("td", "num", item.sessions),
+                  create("td", "num", item.turns)
+                );
+                return row;
+              })
+            : [create("tr", "", "该区间没有记录")])
+        );
+        const typeRows = stats.query_types.length
+          ? stats.query_types.map((item) => {
+              const row = create("tr");
+              row.append(
+                create("td", "", queryTypeLabel(item.query_type)),
+                create("td", "num", item.turns)
+              );
+              return row;
+            })
+          : [create("tr", "", "该区间没有记录")];
+        queryTypeBody.replaceChildren(...typeRows);
+        const queryRows = stats.top_queries.length
+          ? stats.top_queries.map((item) => {
+              const row = create("tr");
+              const cell = create("td", "truncate", item.query);
+              cell.title = item.query;
+              row.append(cell, create("td", "num", item.turns));
+              return row;
+            })
+          : [create("tr", "", "该区间没有记录")];
+        topQueryBody.replaceChildren(...queryRows);
+
+        fillOptions(
+          queryTypeFilter,
+          stats.query_types
+            .filter((item) => item.query_type)
+            .map((item) => ({
+              value: item.query_type,
+              label: queryTypeLabel(item.query_type),
+            })),
+          "全部类型"
+        );
+        fillOptions(
+          identityFilter,
+          stats.identities.map((item) => ({
+            value: item.identity,
+            label: identityLabel(item.identity),
+          })),
+          "全部身份"
+        );
+      }
+
+      async function loadOverview() {
+        const params = filterParams();
+        try {
+          const stats = await fetchJson(statsPath + "?" + params.toString());
+          renderOverview(stats);
+        } catch (error) {
+          overviewRange.textContent = "概览加载失败 · " + errorText(error);
+          dailyBody.replaceChildren(create("tr", "", "—"));
+          queryTypeBody.replaceChildren(create("tr", "", "—"));
+          topQueryBody.replaceChildren(create("tr", "", "—"));
+        }
+      }
+
+      async function loadRetention() {
+        try {
+          const config = await fetchJson(configPath);
+          const field = (config.fields || []).find(
+            (item) => item.path === RETENTION_FIELD
+          );
+          if (!field) return;
+          statRetention.textContent = field.value + " 天";
+          statRetentionSource.textContent =
+            "保留期（" + (RETENTION_SOURCES[field.source] || field.source) + "）";
+        } catch (error) {
+          statRetention.textContent = "—";
+        }
       }
 
       function renderSessions(page) {
@@ -444,6 +758,7 @@
               const meta = create("span", "meta");
               meta.append(
                 create("span", "", shortId(item.session_id)),
+                ...identityBadges(item.identities),
                 create("span", "", item.turn_count + " 轮"),
                 create("span", "", formatTime(item.last_active_at)),
                 ...statusBadges(item.statuses)
@@ -464,11 +779,9 @@
       async function loadSessions(resetOffset) {
         if (resetOffset) state.offset = 0;
         sessionList.replaceChildren(create("div", "loading", "正在加载会话…"));
-        const params = new URLSearchParams();
+        const params = filterParams();
         params.set("limit", String(PAGE_SIZE));
         params.set("offset", String(state.offset));
-        if (state.q) params.set("q", state.q);
-        if (state.status) params.set("status", state.status);
         try {
           const page = await fetchJson(sessionsPath + "?" + params.toString());
           renderSessions(page);
@@ -488,8 +801,10 @@
             const right = create("span", "meta");
             right.append(
               create("span", "", turn.latency_ms + " ms"),
-              create("span", "", turn.answer_style || "—")
+              create("span", "", turn.answer_style || "—"),
+              create("span", "", turn.query_type ? queryTypeLabel(turn.query_type) : "类型未记录")
             );
+            right.append(...identityBadges([turn.user_identity]));
             right.append(...statusBadges([turn.status]));
             return right;
           })()
@@ -560,18 +875,46 @@
         }
       }
 
-      applyButton.addEventListener("click", () => {
+      function readFilters() {
         state.q = searchInput.value.trim();
         state.status = statusFilter.value;
+        state.queryType = queryTypeFilter.value;
+        state.identity = identityFilter.value;
+        state.since = sinceFilter.value;
+        state.until = untilFilter.value;
+      }
+
+      function applyFilters() {
+        readFilters();
         loadSessions(true);
-      });
+        loadOverview();
+      }
+
+      function downloadExport(format) {
+        readFilters();
+        const params = filterParams();
+        params.set("format", format);
+        window.location.assign(exportPath + "?" + params.toString());
+      }
+
+      applyButton.addEventListener("click", applyFilters);
       searchInput.addEventListener("keydown", (event) => {
-        if (event.key === "Enter") {
-          state.q = searchInput.value.trim();
-          state.status = statusFilter.value;
-          loadSessions(true);
-        }
+        if (event.key === "Enter") applyFilters();
       });
+      resetButton.addEventListener("click", () => {
+        searchInput.value = "";
+        statusFilter.value = "";
+        queryTypeFilter.value = "";
+        identityFilter.value = "";
+        sinceFilter.value = "";
+        untilFilter.value = "";
+        applyFilters();
+      });
+      [statusFilter, queryTypeFilter, identityFilter, sinceFilter, untilFilter].forEach(
+        (element) => element.addEventListener("change", applyFilters)
+      );
+      exportCsvButton.addEventListener("click", () => downloadExport("csv"));
+      exportJsonlButton.addEventListener("click", () => downloadExport("jsonl"));
       prevPage.addEventListener("click", () => {
         state.offset = Math.max(0, state.offset - PAGE_SIZE);
         loadSessions(false);
@@ -582,6 +925,8 @@
       });
 
       loadSessions(true);
+      loadOverview();
+      loadRetention();
     </script>
   </body>
 </html>

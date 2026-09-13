@@ -3,6 +3,10 @@
 One independent database file so access history survives candidate knowledge
 rebuilds (the candidate Postgres is disposable by design). Recording is
 fail-open: a logging failure must never break a chat turn.
+
+Auditing records the authenticated identity only (the ``X-Remote-User`` header
+of the admin zone, or the ``anonymous`` marker). No IP address, cookie, or
+user-agent is ever stored.
 """
 
 from __future__ import annotations
@@ -19,12 +23,41 @@ from typing import Any, Literal
 
 logger = logging.getLogger(__name__)
 
+# Names the *base* schema. The identity column added by this change is detected
+# structurally (see ``_ensure_identity_column``) instead of by bumping this
+# marker, so reverting to pre-W5 code still opens a migrated database and keeps
+# its audit history readable.
 SCHEMA_VERSION = "canonical-v2-access-log-v1"
+
+ANONYMOUS_IDENTITY = "anonymous"
 
 AccessLogTurnStatus = Literal["completed", "error", "interrupted"]
 
 _FIRST_QUERY_MAX = 200
 _ERROR_DETAIL_MAX = 500
+_IDENTITY_MAX = 120
+
+_EXPORT_MAX_TURNS = 5000
+_STATS_TOP_LIMIT = 10
+
+
+def _effective_identity(alias: str) -> str:
+    """SQL for the stored identity with legacy/blank rows read as anonymous.
+
+    ``ANONYMOUS_IDENTITY`` is a module constant, never caller input, so it is
+    interpolated rather than bound.
+    """
+
+    return f"COALESCE(NULLIF({alias}.user_identity, ''), '{ANONYMOUS_IDENTITY}')"
+
+
+def normalize_user_identity(value: str | None) -> str:
+    """Trim, bound, and default one identity to its stored representation."""
+
+    if value is None:
+        return ANONYMOUS_IDENTITY
+    text = value.strip()[:_IDENTITY_MAX]
+    return text or ANONYMOUS_IDENTITY
 
 
 @dataclass(frozen=True, slots=True)
@@ -45,6 +78,7 @@ class AccessLogTurnRecord:
     started_at: datetime
     finished_at: datetime
     latency_ms: int
+    user_identity: str = ANONYMOUS_IDENTITY
 
 
 @dataclass(frozen=True, slots=True)
@@ -55,6 +89,7 @@ class AccessLogSessionSummary:
     turn_count: int
     first_query: str
     statuses: tuple[str, ...]
+    identities: tuple[str, ...]
 
 
 @dataclass(frozen=True, slots=True)
@@ -73,12 +108,69 @@ class AccessLogTurnDetail:
     started_at: str
     finished_at: str
     latency_ms: int
+    user_identity: str
 
 
 @dataclass(frozen=True, slots=True)
 class AccessLogSessionDetail:
     session: AccessLogSessionSummary
     turns: tuple[AccessLogTurnDetail, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class AccessLogExportTurn:
+    """One exported turn; the field set matches what the audit page renders."""
+
+    turn_id: str
+    session_id: str
+    turn_count: int
+    query: str
+    query_type: str
+    answer_text: str
+    answer_style: str
+    citations: tuple[dict[str, Any], ...]
+    suggested_followups: tuple[str, ...]
+    status: str
+    error_detail: str | None
+    started_at: str
+    finished_at: str
+    latency_ms: int
+    user_identity: str
+
+
+@dataclass(frozen=True, slots=True)
+class AccessLogExport:
+    turns: tuple[AccessLogExportTurn, ...]
+    sessions: int
+    truncated: bool
+
+
+@dataclass(frozen=True, slots=True)
+class AccessLogDayCount:
+    day: str
+    sessions: int
+    turns: int
+
+
+@dataclass(frozen=True, slots=True)
+class AccessLogKeyCount:
+    key: str
+    turns: int
+
+
+@dataclass(frozen=True, slots=True)
+class AccessLogStatistics:
+    since: str
+    until: str
+    sessions: int
+    turns: int
+    errors: int
+    interrupted: int
+    error_rate: float
+    daily: tuple[AccessLogDayCount, ...]
+    query_types: tuple[AccessLogKeyCount, ...]
+    identities: tuple[AccessLogKeyCount, ...]
+    top_queries: tuple[AccessLogKeyCount, ...]
 
 
 _DDL = """
@@ -107,7 +199,8 @@ CREATE TABLE IF NOT EXISTS turns (
     error_detail TEXT,
     started_at TEXT NOT NULL,
     finished_at TEXT NOT NULL,
-    latency_ms INTEGER NOT NULL
+    latency_ms INTEGER NOT NULL,
+    user_identity TEXT
 );
 CREATE INDEX IF NOT EXISTS turns_session_turn_count
     ON turns (session_id, turn_count);
@@ -175,6 +268,7 @@ class AccessLogStore:
         with self._lock:
             with self._connection:
                 self._connection.executescript(_DDL)
+                self._ensure_identity_column()
                 row = self._connection.execute(
                     "SELECT value FROM workspace_meta WHERE key = 'schema_version'"
                 ).fetchone()
@@ -188,6 +282,18 @@ class AccessLogStore:
                         "access log schema version differs from "
                         f"{SCHEMA_VERSION}: {row['value']}"
                     )
+
+    def _ensure_identity_column(self) -> None:
+        """Add the identity column to a pre-W5 database, in place and idempotent."""
+
+        columns = {
+            row["name"]
+            for row in self._connection.execute("PRAGMA table_info(turns)")
+        }
+        if "user_identity" in columns:
+            return
+        self._connection.execute("ALTER TABLE turns ADD COLUMN user_identity TEXT")
+        logger.info("access log upgraded in place with the user_identity column")
 
     def record_turn(self, record: AccessLogTurnRecord) -> None:
         """Persist one turn; logging failures are logged, never raised.
@@ -221,8 +327,8 @@ class AccessLogStore:
                             turn_id, session_id, turn_count, query, query_type,
                             answer_text, answer_style, citations_json,
                             suggested_followups_json, status, error_detail,
-                            started_at, finished_at, latency_ms
-                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                            started_at, finished_at, latency_ms, user_identity
+                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                         ON CONFLICT (turn_id) DO NOTHING
                         """,
                         (
@@ -246,6 +352,7 @@ class AccessLogStore:
                             started_at,
                             finished_at,
                             record.latency_ms,
+                            normalize_user_identity(record.user_identity),
                         ),
                     )
                     self._connection.execute(
@@ -273,15 +380,22 @@ class AccessLogStore:
                 exc,
             )
 
-    def list_sessions(
+    def _session_filter_clauses(
         self,
         *,
         query_text: str | None = None,
-        status: AccessLogTurnStatus | None = None,
-        limit: int = 50,
-        offset: int = 0,
-    ) -> tuple[tuple[AccessLogSessionSummary, ...], int]:
-        """List sessions ordered by most recent activity, with total count."""
+        status: str | None = None,
+        query_type: str | None = None,
+        identity: str | None = None,
+        since: str | None = None,
+        until: str | None = None,
+    ) -> tuple[list[str], list[Any]]:
+        """Build the AND-combined session-level predicates shared by every read.
+
+        A session matches when it has at least one turn satisfying each active
+        constraint. ``query_type`` of ``""`` selects the turns whose type was
+        never recorded; an absent ``query_type`` applies no constraint.
+        """
 
         clauses: list[str] = []
         params: list[Any] = []
@@ -299,6 +413,87 @@ class AccessLogStore:
                 " AND t.status = ?)"
             )
             params.append(status)
+        if query_type is not None:
+            clauses.append(
+                "EXISTS (SELECT 1 FROM turns t WHERE t.session_id = s.session_id"
+                " AND t.query_type = ?)"
+            )
+            params.append(query_type)
+        if identity is not None:
+            clauses.append(
+                "EXISTS (SELECT 1 FROM turns t WHERE t.session_id = s.session_id"
+                f" AND {_effective_identity('t')} = ?)"
+            )
+            params.append(identity)
+        if since is not None or until is not None:
+            window = ["t.session_id = s.session_id"]
+            if since is not None:
+                window.append("t.started_at >= ?")
+                params.append(since)
+            if until is not None:
+                window.append("t.started_at <= ?")
+                params.append(until)
+            clauses.append(
+                "EXISTS (SELECT 1 FROM turns t WHERE " + " AND ".join(window) + ")"
+            )
+        return clauses, params
+
+    def _turn_filter_clauses(
+        self,
+        *,
+        query_text: str | None = None,
+        status: str | None = None,
+        query_type: str | None = None,
+        identity: str | None = None,
+        since: str | None = None,
+        until: str | None = None,
+    ) -> tuple[list[str], list[Any]]:
+        """Build the turn-level predicates used by the statistics aggregates."""
+
+        clauses: list[str] = []
+        params: list[Any] = []
+        if query_text:
+            clauses.append("t.query LIKE ?")
+            params.append(f"%{query_text}%")
+        if status:
+            clauses.append("t.status = ?")
+            params.append(status)
+        if query_type is not None:
+            clauses.append("t.query_type = ?")
+            params.append(query_type)
+        if identity is not None:
+            clauses.append(f"{_effective_identity('t')} = ?")
+            params.append(identity)
+        if since is not None:
+            clauses.append("t.started_at >= ?")
+            params.append(since)
+        if until is not None:
+            clauses.append("t.started_at <= ?")
+            params.append(until)
+        return clauses, params
+
+    def list_sessions(
+        self,
+        *,
+        query_text: str | None = None,
+        status: AccessLogTurnStatus | None = None,
+        query_type: str | None = None,
+        identity: str | None = None,
+        since: str | None = None,
+        until: str | None = None,
+        limit: int = 50,
+        offset: int = 0,
+    ) -> tuple[tuple[AccessLogSessionSummary, ...], int]:
+        """List sessions ordered by most recent activity, with total count."""
+
+        clauses, params = self._session_filter_clauses(
+            query_text=query_text,
+            status=status,
+            query_type=query_type,
+            identity=identity,
+            since=since,
+            until=until,
+        )
         where = (" WHERE " + " AND ".join(clauses)) if clauses else ""
         with self._lock:
             total_row = self._connection.execute(
@@ -321,6 +516,12 @@ class AccessLogStore:
                     "SELECT DISTINCT status FROM turns WHERE session_id = ?",
                     (row["session_id"],),
                 ).fetchall()
+                identity_rows = self._connection.execute(
+                    "SELECT DISTINCT"
+                    f" {_effective_identity('turns')} AS identity"
+                    " FROM turns WHERE session_id = ?",
+                    (row["session_id"],),
+                ).fetchall()
                 summaries.append(
                     AccessLogSessionSummary(
                         session_id=row["session_id"],
@@ -331,9 +532,177 @@ class AccessLogStore:
                         statuses=tuple(
                             sorted(item["status"] for item in status_rows)
                         ),
+                        identities=tuple(
+                            sorted(item["identity"] for item in identity_rows)
+                        ),
                     )
                 )
         return tuple(summaries), int(total_row["total"])
+
+    def export_turns(
+        self,
+        *,
+        query_text: str | None = None,
+        status: AccessLogTurnStatus | None = None,
+        query_type: str | None = None,
+        identity: str | None = None,
+        since: str | None = None,
+        until: str | None = None,
+        max_turns: int = _EXPORT_MAX_TURNS,
+    ) -> AccessLogExport:
+        """Return the turns of the matching sessions, bounded and in page order."""
+
+        clauses, params = self._session_filter_clauses(
+            query_text=query_text,
+            status=status,
+            query_type=query_type,
+            identity=identity,
+            since=since,
+            until=until,
+        )
+        where = (" WHERE " + " AND ".join(clauses)) if clauses else ""
+        with self._lock:
+            rows = self._connection.execute(
+                f"""
+                SELECT t.turn_id, t.session_id, t.turn_count, t.query,
+                       t.query_type, t.answer_text, t.answer_style,
+                       t.citations_json, t.suggested_followups_json, t.status,
+                       t.error_detail, t.started_at, t.finished_at, t.latency_ms,
+                       {_effective_identity('t')} AS user_identity
+                FROM turns t JOIN sessions s ON s.session_id = t.session_id{where}
+                ORDER BY s.last_active_at DESC, s.session_id ASC,
+                         t.turn_count ASC, t.started_at ASC
+                LIMIT ?
+                """,
+                (*params, max_turns + 1),
+            ).fetchall()
+        truncated = len(rows) > max_turns
+        selected = rows[:max_turns]
+        turns = tuple(
+            AccessLogExportTurn(
+                turn_id=item["turn_id"],
+                session_id=item["session_id"],
+                turn_count=item["turn_count"],
+                query=item["query"],
+                query_type=item["query_type"],
+                answer_text=item["answer_text"],
+                answer_style=item["answer_style"],
+                citations=tuple(json.loads(item["citations_json"])),
+                suggested_followups=tuple(
+                    json.loads(item["suggested_followups_json"])
+                ),
+                status=item["status"],
+                error_detail=item["error_detail"],
+                started_at=item["started_at"],
+                finished_at=item["finished_at"],
+                latency_ms=item["latency_ms"],
+                user_identity=item["user_identity"],
+            )
+            for item in selected
+        )
+        return AccessLogExport(
+            turns=turns,
+            sessions=len({turn.session_id for turn in turns}),
+            truncated=truncated,
+        )
+
+    def statistics(
+        self,
+        *,
+        query_text: str | None = None,
+        status: AccessLogTurnStatus | None = None,
+        query_type: str | None = None,
+        identity: str | None = None,
+        since: str,
+        until: str,
+        top_limit: int = _STATS_TOP_LIMIT,
+    ) -> AccessLogStatistics:
+        """Aggregate the matching turns themselves, over an explicit window."""
+
+        clauses, params = self._turn_filter_clauses(
+            query_text=query_text,
+            status=status,
+            query_type=query_type,
+            identity=identity,
+            since=since,
+            until=until,
+        )
+        where = (" WHERE " + " AND ".join(clauses)) if clauses else ""
+        with self._lock:
+            totals = self._connection.execute(
+                f"""
+                SELECT COUNT(*) AS turns,
+                       COUNT(DISTINCT t.session_id) AS sessions,
+                       COALESCE(SUM(t.status = 'error'), 0) AS errors,
+                       COALESCE(SUM(t.status = 'interrupted'), 0)
+                           AS interrupted
+                FROM turns t{where}
+                """,
+                params,
+            ).fetchone()
+            daily = self._connection.execute(
+                f"""
+                SELECT substr(t.started_at, 1, 10) AS day,
+                       COUNT(*) AS turns,
+                       COUNT(DISTINCT t.session_id) AS sessions
+                FROM turns t{where}
+                GROUP BY day ORDER BY day ASC
+                """,
+                params,
+            ).fetchall()
+            query_types = self._connection.execute(
+                f"""
+                SELECT t.query_type AS key, COUNT(*) AS turns
+                FROM turns t{where}
+                GROUP BY key ORDER BY turns DESC, key ASC
+                """,
+                params,
+            ).fetchall()
+            identities = self._connection.execute(
+                f"""
+                SELECT {_effective_identity('t')} AS key, COUNT(*) AS turns
+                FROM turns t{where}
+                GROUP BY key ORDER BY turns DESC, key ASC
+                """,
+                params,
+            ).fetchall()
+            top_queries = self._connection.execute(
+                f"""
+                SELECT TRIM(t.query) AS key, COUNT(*) AS turns
+                FROM turns t{where}
+                GROUP BY key ORDER BY turns DESC, key ASC LIMIT ?
+                """,
+                (*params, top_limit),
+            ).fetchall()
+        total_turns = int(totals["turns"])
+        errors = int(totals["errors"])
+        return AccessLogStatistics(
+            since=since,
+            until=until,
+            sessions=int(totals["sessions"]),
+            turns=total_turns,
+            errors=errors,
+            interrupted=int(totals["interrupted"]),
+            error_rate=round(errors / total_turns, 4) if total_turns else 0.0,
+            daily=tuple(
+                AccessLogDayCount(
+                    day=row["day"], sessions=row["sessions"], turns=row["turns"]
+                )
+                for row in daily
+            ),
+            query_types=tuple(
+                AccessLogKeyCount(key=row["key"], turns=row["turns"])
+                for row in query_types
+            ),
+            identities=tuple(
+                AccessLogKeyCount(key=row["key"], turns=row["turns"])
+                for row in identities
+            ),
+            top_queries=tuple(
+                AccessLogKeyCount(key=row["key"], turns=row["turns"])
+                for row in top_queries
+            ),
+        )
 
     def get_session(self, session_id: str) -> AccessLogSessionDetail | None:
         """Return one session with all its turns in turn order."""
@@ -347,11 +716,12 @@ class AccessLogStore:
             if row is None:
                 return None
             turn_rows = self._connection.execute(
-                """
+                f"""
                 SELECT turn_id, session_id, turn_count, query, query_type,
                        answer_text, answer_style, citations_json,
                        suggested_followups_json, status, error_detail,
-                       started_at, finished_at, latency_ms
+                       started_at, finished_at, latency_ms,
+                       {_effective_identity('turns')} AS user_identity
                 FROM turns WHERE session_id = ?
                 ORDER BY turn_count ASC, started_at ASC
                 """,
@@ -359,6 +729,12 @@ class AccessLogStore:
             ).fetchall()
             status_rows = self._connection.execute(
                 "SELECT DISTINCT status FROM turns WHERE session_id = ?",
+                (session_id,),
+            ).fetchall()
+            identity_rows = self._connection.execute(
+                "SELECT DISTINCT"
+                f" {_effective_identity('turns')} AS identity"
+                " FROM turns WHERE session_id = ?",
                 (session_id,),
             ).fetchall()
         turns = tuple(
@@ -379,6 +755,7 @@ class AccessLogStore:
                 started_at=item["started_at"],
                 finished_at=item["finished_at"],
                 latency_ms=item["latency_ms"],
+                user_identity=item["user_identity"],
             )
             for item in turn_rows
         )
@@ -390,6 +767,9 @@ class AccessLogStore:
                 turn_count=row["turn_count"],
                 first_query=row["first_query"],
                 statuses=tuple(sorted(item["status"] for item in status_rows)),
+                identities=tuple(
+                    sorted(item["identity"] for item in identity_rows)
+                ),
             ),
             turns=turns,
         )
@@ -400,11 +780,18 @@ class AccessLogStore:
 
 
 __all__ = [
+    "ANONYMOUS_IDENTITY",
     "SCHEMA_VERSION",
+    "AccessLogDayCount",
+    "AccessLogExport",
+    "AccessLogExportTurn",
+    "AccessLogKeyCount",
     "AccessLogSessionDetail",
     "AccessLogSessionSummary",
+    "AccessLogStatistics",
     "AccessLogStore",
     "AccessLogTurnDetail",
     "AccessLogTurnRecord",
     "AccessLogTurnStatus",
+    "normalize_user_identity",
 ]
