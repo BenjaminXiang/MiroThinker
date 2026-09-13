@@ -8722,6 +8722,18 @@ def _build_category_term_expansions() -> dict[str, tuple[tuple[str, int], ...]]:
 
 _CATEGORY_TERM_EXPANSIONS = _build_category_term_expansions()
 
+# G7 1b.1a: the planner's view variants of a list question often carry no
+# 哪些/厂商-style marker ("深圳 人形机器人 企业", "深圳 具身智能 公司");
+# a query whose cleaned phrase carries a declared category term is itself
+# the category signal, so the declared vocabulary opens the fallback too.
+# The 4-char head 具身智能 never survives extraction (bigram decomposition),
+# which is why the 具身 family hangs off the extracted bigram head 具身.
+_CATEGORY_DECLARED_TRIGGER_TERMS: frozenset[str] = frozenset(
+    term.term.casefold()
+    for term in PACKAGED_ANCHORING_DECLARATION.terms
+    if len(term.term) >= 2
+)
+
 
 def _expand_category_query_terms(
     terms: tuple[tuple[str, int], ...],
@@ -8756,7 +8768,13 @@ def _category_query_terms(query_text: str) -> tuple[tuple[str, int], ...]:
     phrase = _lexical_query_phrase(query_text)
     if not phrase:
         return ()
-    if not any(marker in phrase for marker in _CATEGORY_RECALL_TRIGGER_MARKERS):
+    folded_phrase = phrase.casefold()
+    if not (
+        any(marker in phrase for marker in _CATEGORY_RECALL_TRIGGER_MARKERS)
+        or any(
+            term in folded_phrase for term in _CATEGORY_DECLARED_TRIGGER_TERMS
+        )
+    ):
         return ()
     residue = phrase
     for stop in _CATEGORY_RECALL_STOP_PHRASES:

@@ -56,6 +56,39 @@ class TestValidation:
         )
         assert result is None
 
+    def test_person_pronoun_over_company_anchor_rejected(self) -> None:
+        """G3 port (check ③): a personal referent cannot resolve to an
+        org anchor — reject the interpretation and let the deterministic
+        referent gate clarify."""
+        result = interp.validate_interpretation(
+            _make(G1_SUBJECT),
+            query="他有哪些论文",
+            session_manifest_names=(G1_SUBJECT,),
+            query_is_enumeration=False,
+            referent_domain_hint="company",
+        )
+        assert result is None
+
+    def test_company_referent_over_company_anchor_kept(self) -> None:
+        result = interp.validate_interpretation(
+            _make(G1_SUBJECT),
+            query="该公司的专利有哪些",
+            session_manifest_names=(G1_SUBJECT,),
+            query_is_enumeration=False,
+            referent_domain_hint="company",
+        )
+        assert result is not None
+
+    def test_company_referent_over_professor_anchor_rejected(self) -> None:
+        result = interp.validate_interpretation(
+            _make("丁文伯"),
+            query="该公司的专利有哪些",
+            session_manifest_names=("丁文伯",),
+            query_is_enumeration=False,
+            referent_domain_hint="professor",
+        )
+        assert result is None
+
     def test_headline_rejected(self) -> None:
         assert chat.is_headline_shaped_name(HEADLINE)
         result = interp.validate_interpretation(

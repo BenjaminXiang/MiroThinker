@@ -291,3 +291,43 @@ def test_missing_coverage_leaves_both_render_paths_unchanged() -> None:
     assert deterministic_result.render_mode == "deterministic_grounded"
     assert deterministic_result.answer_text == f"- {CLAIM_TEXT}"
     assert "穷尽" not in deterministic_result.answer_text
+
+
+def test_deterministic_fallback_names_recalled_local_members() -> None:
+    """G7 1b.1b (2026-09-13): when prose synthesis fails on an enumeration
+    turn, the deterministic fallback must still name the recalled local
+    companies its own universe holds. Live repro: G7 r1 rendered
+    `deterministic_fallback` with 优必选 committed at rank 5 yet absent from
+    the answer — the AQ-S2c member coverage sentence is the prose path's
+    join channel and the fallback previously dropped it."""
+    company_handle = read_module.CanonicalEntityHandle(
+        canonical_id="company-c-ubtech",
+        domain="company",
+        display_name="深圳市优必选科技股份有限公司",
+        evidence_ids=("evidence:coverage:company-ubtech",),
+    )
+    coverage = _coverage(
+        mode="representative",
+        retrieved_count=21,
+        displayed_count=13,
+        exhaustive=False,
+        unknown_scope=True,
+    )
+    evidence_set = read_module.EvidenceSet(
+        release_id=RELEASE_ID,
+        original_query=QUERY,
+        protected_slots=(),
+        items=(_item(),),
+        traces=(),
+        limitations=(),
+        enumeration_coverage=coverage,
+        entity_handles=(company_handle,),
+    )
+
+    result = answer_module.create_ephemeral_knowledge_answer(
+        answer_selector=_selector,
+        prose_renderer=_timeout_renderer,
+    ).answer(_request(evidence_set, turn_id="turn:fallback-members"))
+
+    assert result.render_mode == "deterministic_fallback"
+    assert "深圳市优必选科技股份有限公司" in result.answer_text

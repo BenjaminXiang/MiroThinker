@@ -221,11 +221,13 @@ def test_public_citation_uses_official_homepage_without_internal_identity() -> N
     assert "/browse" not in citations[0].url
 
 
-def test_relationship_lane_local_evidence_surfaces_url_less_local_card() -> None:
+def test_local_evidence_surfaces_url_less_local_card_across_lanes() -> None:
     """Relationship-lane local evidence (traversal rows and the direct
     applicant-field scan) carries no official URL; it must still surface as a
-    URL-less local card — hashed, never exposing the internal canonical id —
-    while other local lanes without a URL stay cardless."""
+    URL-less local card — hashed, never exposing the internal canonical id.
+    Lane membership no longer decides this: an exact-lane local item without
+    a URL surfaces the same way, while Current-Web evidence keeps requiring a
+    validated public official URL."""
     service = import_module("backend.services.canonical_v2_chat")
     answer = import_module("src.data_agents.canonical_v2.knowledge_answer")
     read = import_module("src.data_agents.canonical_v2.knowledge_read")
@@ -292,16 +294,122 @@ def test_relationship_lane_local_evidence_surfaces_url_less_local_card() -> None
         evidence_by_id={item.evidence_id: item for item in (first, second, exact)},
     )
 
-    assert len(citations) == 2
+    assert len(citations) == 3
     assert {citation.type for citation in citations} == {"patent"}
     assert all(citation.url is None for citation in citations)
     assert all(citation.id.startswith("local-source-") for citation in citations)
+    assert len({citation.id for citation in citations}) == 3
     assert all(
         internal_id not in citation.id
         for citation in citations
         for internal_id in ("patent-c-1", "patent-c-2", "patent-c-3")
     )
     assert citations[0].label == "一种机器人足式落地控制方法"
+
+
+def test_local_evidence_without_official_url_surfaces_a_lane_independent_card() -> None:
+    """A local (non-web) item that backs the answer must surface a
+    URL-less local card whatever lane produced it — the workbook g17-t2
+    patent-number turn lands in the `exact` lane, and the sealed pack's
+    patent lookup projection carries no URL field at all. Web-derived
+    evidence (`current_web` / `supplemental_web`) keeps requiring a
+    validated public official URL."""
+    service = import_module("backend.services.canonical_v2_chat")
+    answer = import_module("src.data_agents.canonical_v2.knowledge_answer")
+    read = import_module("src.data_agents.canonical_v2.knowledge_read")
+
+    local = read.EvidenceItem(
+        evidence_id="evidence:exact:patent-c-0aef2768",
+        object_id="patent-c-0aef2768",
+        domain="patent",
+        lane="exact",
+        source_nature="local",
+        source_locator="artifact:lookup:exact_lookup:patent",
+        snippet=json.dumps(
+            {
+                "title": "一种机器人的落地控制方法、机器人及终端设备",
+                "patent_number": "CN117873146A",
+                "summary_text": "本申请适用于机器人技术领域。",
+            },
+            ensure_ascii=False,
+        ),
+        score=1.0,
+        source_authority="canonical_release",
+        claim_binding=read.EvidenceClaimBinding(
+            subject_id="canonical:patent:patent-c-0aef2768",
+            predicate="exact_identifier",
+            value="CN117873146A",
+            status="admitted",
+        ),
+    )
+    web = read.EvidenceItem(
+        evidence_id="evidence:web:cn117873146a",
+        object_id="patent-c-0aef2768",
+        domain="patent",
+        lane="web",
+        source_nature="current_web",
+        source_locator="https://patent-news.example/cn117873146a",
+        snippet="网页摘要",
+        score=0.4,
+    )
+    supplemental = read.EvidenceItem(
+        evidence_id="evidence:web-supplemental:cn117873146a",
+        object_id="patent-c-0aef2768",
+        domain="patent",
+        lane="exact",
+        source_nature="supplemental_web",
+        source_locator="https://news.example/cn117873146a",
+        snippet="补全网页摘要",
+        score=0.3,
+    )
+    handle = read.CanonicalEntityHandle(
+        canonical_id=local.object_id,
+        domain="patent",
+        display_name="一种机器人的落地控制方法、机器人及终端设备",
+        evidence_ids=(local.evidence_id, web.evidence_id, supplemental.evidence_id),
+    )
+    turn_result = answer.TurnResult(
+        session_id="session:g17-t2-lane-independent-card",
+        turn_id="turn:g17-t2-lane-independent-card",
+        release_id=RELEASE_ID,
+        answer_text="CN117873146A 是深圳市优必选科技股份有限公司的发明专利。",
+        citations=(
+            answer.Citation(
+                evidence_id=local.evidence_id,
+                source_nature="local",
+                source_locator=local.source_locator,
+            ),
+            answer.Citation(
+                evidence_id=web.evidence_id,
+                source_nature="current_web",
+                source_locator=web.source_locator,
+            ),
+            answer.Citation(
+                evidence_id=supplemental.evidence_id,
+                source_nature="supplemental_web",
+                source_locator=supplemental.source_locator,
+            ),
+        ),
+    )
+
+    citations = service.CanonicalV2ChatAdapter._public_citations(
+        turn_result=turn_result,
+        handles_by_id={handle.canonical_id: handle},
+        evidence_by_id={
+            local.evidence_id: local,
+            web.evidence_id: web,
+            supplemental.evidence_id: supplemental,
+        },
+    )
+
+    assert len(citations) == 1
+    card = citations[0]
+    assert card.type == "patent"
+    assert card.id.startswith("local-source-")
+    assert card.url is None
+    assert card.label == "一种机器人的落地控制方法、机器人及终端设备"
+    assert "patent-c-0aef2768" not in card.id
+    assert "artifact:" not in card.label
 
 
 @pytest.mark.parametrize(
@@ -1518,7 +1626,10 @@ def test_independent_turn_declares_topic_switch_but_referential_turn_does_not() 
         ("该公司的专利有哪些", False, False, True),
         ("上述企业有哪些是深圳的", False, False, True),
         ("他们有哪些专利", False, False, True),
-        ("他有哪些代表性研究成果", True, True, False),
+        # Type-aware guard (G3): an untyped anchor cannot satisfy a personal
+        # pronoun the way a person anchor can — 他/她 over a non-professor
+        # anchor clarifies instead of free-retrieving.
+        ("他有哪些代表性研究成果", True, True, True),
         ("这论文的链接是什么", True, True, False),
         ("上述企业有哪些是深圳的", False, True, False),
         ("他有哪些代表性研究成果", False, True, True),
@@ -2351,7 +2462,10 @@ def test_s11a_post_chat_uses_release_bound_canonical_v2_without_legacy_sql(
         citation.type in {"professor", "company", "paper", "patent"}
         for citation in first.citations
     )
-    assert all("/browse" not in citation.url for citation in first.citations)
+    assert all(
+        citation.url is None or "/browse" not in citation.url
+        for citation in first.citations
+    )
     assert first.citation_map == {
         str(index): citation.id
         for index, citation in enumerate(first.citations, start=1)
@@ -2455,7 +2569,19 @@ def test_s11a_post_chat_uses_release_bound_canonical_v2_without_legacy_sql(
         citation.evidence_id in retained_evidence_ids
         for citation in first_turn_result.citations
     )
-    assert all(citation.id in handle_ids for citation in first.citations)
+    retained_display_names = {
+        handle.display_name for handle in first_evidence_set.entity_handles
+    }
+    assert all(
+        citation.id.startswith(("local-source-", "official-source-"))
+        and citation.label in retained_display_names
+        for citation in first.citations
+    )
+    assert all(
+        internal_id not in citation.id
+        for citation in first.citations
+        for internal_id in handle_ids
+    )
     assert "selector_draft" not in trace
     assert "release_manifest" not in trace
     assert first.clarification is not None

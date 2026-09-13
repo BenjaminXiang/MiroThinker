@@ -131,14 +131,16 @@ def validate_interpretation(
             and subject.name not in named_manifest_subjects
         ):
             return None
-        # ③ domain mismatch: personal referent over org-anchored session.
+        # ③ domain mismatch: a typed referent must match the anchor domain.
+        # A personal referent (他/她) over an org-anchored session — or an
+        # org referent over a person-anchored session — must be rejected so
+        # the deterministic referent gate can clarify.
         if (
             referent_domain_hint is not None
-            and referent_domain_hint == "professor"
             and subject.source in ("anchor", "displayed")
         ):
             domain = referent_subject_domain(query)
-            if domain is not None and domain != "professor":
+            if domain is not None and domain != referent_domain_hint:
                 return None
         # ④ headline-shaped names never bind.
         if is_headline_shaped_name(subject.name):

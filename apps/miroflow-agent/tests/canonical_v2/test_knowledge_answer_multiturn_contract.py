@@ -10,6 +10,8 @@ from typing import Any
 TARGET_MODULE = "src.data_agents.canonical_v2.knowledge_answer"
 READ_TARGET_MODULE = "src.data_agents.canonical_v2.knowledge_read"
 RELEASE_ID = "candidate-r1"
+# G7 principle 2/4: the deterministic fallback self-labels as degraded.
+DEGRADED_FALLBACK_PREFIX = "（以下为基于本地数据的简要信息）\n"
 NOW = datetime(2026, 7, 15, tzinfo=UTC)
 
 
@@ -3702,6 +3704,7 @@ def test_off_anchor_correction_exhaustion_falls_back_without_refusal() -> None:
     assert len(calls) == 2
     assert result.render_mode == "deterministic_fallback"
     assert result.answer_text == (
+        f"{DEGRADED_FALLBACK_PREFIX}"
         "- 国际先进技术应用推进中心（深圳）是位于深圳的共性技术服务平台。"
     )
     assert "请提供" not in result.answer_text
@@ -3841,3 +3844,180 @@ def test_soft_subject_correction_overrides_lookalike_session_anchor() -> None:
     assert receipt.soft_context_subject == soft_subject
     assert receipt.active_anchor is not None
     assert receipt.active_anchor.display_name == lookalike_name
+
+
+def _direct_scan_patent_item(
+    read_module: Any,
+    *,
+    patent_id: str,
+    owner_company_id: str,
+    snippet: str,
+) -> Any:
+    """One direct-applicant-scan hit exactly as the reader emits it.
+
+    ``knowledge_read_isolated._direct_patent_applicant_scan`` binds the hit
+    with stable-reference endpoints (``canonical:patent:<id>`` /
+    ``canonical:company:<id>``) and no projection trace, while the handle it
+    ships carries the bare canonical id.
+    """
+    return _item(
+        read_module,
+        evidence_id=f"evidence:direct-patent:{patent_id}",
+        object_id=patent_id,
+        domain="patent",
+        lane="relationship",
+        subject_id=f"canonical:patent:{patent_id}",
+        predicate="patent_has_applicant",
+        value=f"canonical:company:{owner_company_id}",
+        snippet=snippet,
+    )
+
+
+def test_direct_scan_patents_become_traversal_targets_of_the_company_anchor() -> None:
+    module = _answer_module()
+    read_module = _read_module()
+    session_id = "session:company-patent:direct-scan"
+    company_id = "company-c-b2aac54891e3fce8c98612d8"
+    foreign_company_id = "company-c-5f4d3c2b1a09e8d7c6b5a493"
+    patent_ids = (
+        "patent-c-0126debe489feb5ee35d1104",
+        "patent-c-020e489894d4a7645bc08ac7",
+    )
+    foreign_patent_id = "patent-c-9d3c1f0a5b7e4211c8f0a6b2"
+
+    company_item = _item(
+        read_module,
+        evidence_id="evidence:company:ubt",
+        object_id=company_id,
+        domain="company",
+        subject_id=company_id,
+        predicate="canonical_projection",
+        value=company_id,
+        snippet="The accepted release identifies 深圳市优必选科技股份有限公司.",
+    )
+    company_handle = _canonical_handle(
+        read_module,
+        canonical_id=company_id,
+        domain="company",
+        display_name="深圳市优必选科技股份有限公司",
+        evidence_ids=(company_item.evidence_id,),
+    )
+
+    scan_hits = (
+        (patent_ids[0], company_id),
+        (patent_ids[1], company_id),
+        (foreign_patent_id, foreign_company_id),
+    )
+    patent_items = tuple(
+        _direct_scan_patent_item(
+            read_module,
+            patent_id=patent_id,
+            owner_company_id=owner_id,
+            snippet=f"{patent_id} lists its applicant in the accepted release.",
+        )
+        for patent_id, owner_id in scan_hits
+    )
+    patent_handles = tuple(
+        _canonical_handle(
+            read_module,
+            canonical_id=patent_id,
+            domain="patent",
+            display_name=f"专利 {patent_id}",
+            evidence_ids=(f"evidence:direct-patent:{patent_id}",),
+        )
+        for patent_id, _owner_id in scan_hits
+    )
+    traversal = read_module.TypedTraversalRequest(
+        path_id="company_to_patent",
+        source_domain="company",
+        target_domain="patent",
+        relationship_type="patent_has_applicant",
+        direction="inverse",
+    )
+    requests = (
+        _request(
+            module,
+            session_id=session_id,
+            turn_id="turn:company-patent:1",
+            query="深圳市优必选科技股份有限公司",
+            evidence_set=_evidence_set(
+                read_module,
+                query="深圳市优必选科技股份有限公司",
+                items=(company_item,),
+                handles=(company_handle,),
+            ),
+        ),
+        _request(
+            module,
+            session_id=session_id,
+            turn_id="turn:company-patent:2",
+            query="深圳市优必选科技股份有限公司的专利有哪些",
+            evidence_set=_evidence_set(
+                read_module,
+                query="深圳市优必选科技股份有限公司的专利有哪些",
+                items=patent_items,
+                handles=patent_handles,
+                protected_slots=(
+                    read_module.ProtectedSlot(
+                        kind="displayed_entity_set",
+                        value="displayed_entity_set",
+                        entity_ids=(company_id,),
+                    ),
+                ),
+                requested_traversal=traversal,
+            ),
+            session_directive=module.SessionDirective(referent="active_anchor"),
+        ),
+    )
+
+    def selector(request: Any) -> Any:
+        if request.turn_id == "turn:company-patent:1":
+            return _proposal(
+                module,
+                request,
+                displayed_handle_ids=(company_id,),
+                claims=(
+                    (
+                        "claim:company",
+                        "深圳市优必选科技股份有限公司是当前聚焦的企业。",
+                        (company_id,),
+                        (company_item.evidence_id,),
+                    ),
+                ),
+            )
+        return _proposal(
+            module,
+            request,
+            displayed_handle_ids=(*patent_ids, foreign_patent_id),
+            claims=tuple(
+                (
+                    f"claim:{patent_id}",
+                    f"专利 {patent_id} 的申请人为该公司。",
+                    (patent_id,),
+                    (f"evidence:direct-patent:{patent_id}",),
+                )
+                for patent_id in (*patent_ids, foreign_patent_id)
+            ),
+        )
+
+    answer = module.create_ephemeral_knowledge_answer(answer_selector=selector)
+    _company_turn, patents = tuple(answer.answer(request) for request in requests)
+
+    receipt = patents.context_receipt
+    assert receipt is not None
+    assert receipt.active_anchor is not None
+    assert receipt.active_anchor.canonical_id == company_id
+    displayed = receipt.displayed_result_set
+    assert displayed is not None
+    assert displayed.handle_ids == patent_ids
+    assert patents.traversal_receipt is not None
+    assert patents.traversal_receipt.path_id == "company_to_patent"
+    assert patents.traversal_receipt.source_handle_ids == (company_id,)
+    assert patents.traversal_receipt.target_handle_ids == patent_ids
+    assert {claim.predicate for claim in patents.claims} == {"patent_has_applicant"}
+    assert {
+        evidence_id
+        for claim in patents.claims
+        for evidence_id in claim.evidence_ids
+    } == {f"evidence:direct-patent:{patent_id}" for patent_id in patent_ids}
+    assert foreign_patent_id not in displayed.handle_ids

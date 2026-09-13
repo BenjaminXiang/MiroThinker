@@ -14,6 +14,8 @@ ANSWER_TARGET = "src.data_agents.canonical_v2.knowledge_answer"
 READ_TARGET = "src.data_agents.canonical_v2.knowledge_read"
 NOW = datetime(2026, 7, 20, 11, 15, tzinfo=UTC)
 RELEASE_ID = "candidate-s9i"
+# G7 principle 2/4: the deterministic fallback self-labels as degraded.
+DEGRADED_FALLBACK_PREFIX = "（以下为基于本地数据的简要信息）\n"
 
 
 def _answer_module() -> Any:
@@ -1137,7 +1139,9 @@ def test_prose_renderer_cannot_reintroduce_audit_values_or_omit_material_gap() -
     assert profile.evidence_id not in hostile.answer_text
     # The hostile renderer's text is fully discarded, while the bounded
     # server-owned fallback keeps the already validated claim and material gap.
-    assert hostile.answer_text.startswith(f"- {semantic_claim.text}")
+    assert hostile.answer_text.startswith(
+        f"{DEGRADED_FALLBACK_PREFIX}- {semantic_claim.text}"
+    )
     assert gap_sentence in hostile.answer_text
     assert "回答生成暂时不可用" not in hostile.answer_text
     assert hostile.render_mode == "deterministic_fallback"
@@ -1218,7 +1222,7 @@ def test_prose_audit_value_matching_uses_token_boundaries_for_short_ids() -> Non
     assert exposed.render_mode == "deterministic_fallback"
     # The unsafe renderer text is discarded; the fallback comes only from the
     # already validated server-owned claim text.
-    assert exposed.answer_text == f"- {semantic_claim.text}"
+    assert exposed.answer_text == f"{DEGRADED_FALLBACK_PREFIX}- {semantic_claim.text}"
     assert "Audit token:" not in exposed.answer_text
     assert any(
         limitation.code == "prose_synthesis_failed"
@@ -2366,7 +2370,7 @@ def test_prose_renderer_stream_is_duck_typed_only_when_progress_is_set() -> None
     degraded = failed_module.answer(request)
     assert failing_renderer.calls == 2
     assert degraded.render_mode == "deterministic_fallback"
-    assert degraded.answer_text == f"- {semantic_claim.text}"
+    assert degraded.answer_text == f"{DEGRADED_FALLBACK_PREFIX}- {semantic_claim.text}"
     assert any(
         limitation.code == "prose_synthesis_failed"
         and limitation.failure_kind == "timeout"

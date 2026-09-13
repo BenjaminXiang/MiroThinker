@@ -188,6 +188,16 @@ _SINGULAR_PERSON_PRONOUN_PATTERN = re.compile(
 )
 
 
+def has_personal_pronoun(query: str) -> bool:
+    """Whether the query refers to the anchor with a PERSONAL pronoun (他/她).
+
+    A personal pronoun can only bind a person anchor; over an organization /
+    paper / patent anchor the referent cannot resolve (G3 guard — callers
+    clarify instead of free-retrieving).
+    """
+    return _SINGULAR_PERSON_PRONOUN_PATTERN.search(query) is not None
+
+
 def referent_subject_domain(query: str) -> str | None:
     """Domain of the referent itself, when the query discloses it.
 
@@ -478,6 +488,7 @@ __all__ = [
     "has_explicit_named_subject",
     "has_internal_set_antecedent",
     "has_anaphoric_subject_reference",
+    "has_personal_pronoun",
     "has_set_referent",
     "has_singular_referent",
     "is_subject_carryover_reference",

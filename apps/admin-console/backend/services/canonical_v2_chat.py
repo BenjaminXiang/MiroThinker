@@ -13,7 +13,7 @@ import os
 from pathlib import Path
 import re
 from threading import Condition, RLock
-from typing import Any, Callable, Iterator, Literal, Protocol, cast
+from typing import Any, Callable, Iterable, Iterator, Literal, Protocol, cast
 from urllib.parse import urlparse, urlsplit, urlunsplit
 
 from pydantic import Field, model_validator
@@ -40,6 +40,7 @@ from src.data_agents.canonical_v2.followup_referents import (
     has_continuation_intent,
     has_explicit_named_subject,
     has_internal_set_antecedent,
+    has_personal_pronoun,
     has_set_referent,
     has_singular_referent,
     is_subject_carryover_reference,
@@ -774,6 +775,24 @@ def _referent_clarification_needed(
             and not has_internal_set_antecedent(query)
             and not _history_displayed_ids(query=query, history=history)
         )
+    # Personal-pronoun × anchor-type guard (G3): a 他/她 can only bind a
+    # person anchor. Over an organization / paper / patent anchor the
+    # referent cannot resolve — clarify instead of free-retrieving arbitrary
+    # papers. A person binding in the referent history still satisfies the
+    # pronoun.
+    if has_personal_pronoun(query) and context is not None:
+        anchor = context.active_anchor
+        if anchor is not None and str(getattr(anchor, "domain", "") or "") not in (
+            "professor",
+        ):
+            history_has_person = any(
+                getattr(entry, "domain", None) == "professor" for entry in history
+            )
+            if not history_has_person:
+                return (
+                    not has_explicit_named_subject(query)
+                    and not _history_displayed_ids(query=query, history=history)
+                )
     return False
 
 
@@ -1278,6 +1297,13 @@ def _merge_prior_web_evidence(
     return _validated_model(merged, EvidenceSet)
 
 
+def _count_by(values: Iterable[str]) -> dict[str, int]:
+    counts: dict[str, int] = {}
+    for value in values:
+        counts[value] = counts.get(value, 0) + 1
+    return dict(sorted(counts.items()))
+
+
 def _maybe_dump_turn_debug(
     *,
     session_id: str,
@@ -1294,13 +1320,24 @@ def _maybe_dump_turn_debug(
     Built for the g5-t2 深南电路 investigation: it records what the planner
     received (displayed ids), what the read recalled (handles), what the
     answer committed (displayed result set), and the env-gated lane wall
-    times. A dump failure is logged and never affects the turn.
-    """
+    times. The multi-turn company→patent loss (ubt-3) needed the object
+    level between those: the read's evidence items (domain/lane/binding),
+    the protected slots the selector anchors on, and what the answer
+    admitted as claims. A dump failure is logged and never affects the
+    turn."""
     root = os.environ.get("CANONICAL_V2_TURN_DEBUG_DIR", "").strip()
     if not root:
         return
     receipt = turn_result.context_receipt
     committed = None if receipt is None else receipt.displayed_result_set
+    items = tuple(getattr(evidence_set, "items", ()) or ())
+    item_domain_by_id = {
+        str(getattr(item, "evidence_id", "")): str(
+            getattr(item, "domain", "") or ""
+        )
+        for item in items
+    }
+    claims = tuple(getattr(turn_result, "claims", ()) or ())
     try:
         payload = {
             "session_id": session_id,
@@ -1321,6 +1358,65 @@ def _maybe_dump_turn_debug(
                 }
                 for handle in evidence_set.entity_handles
             ],
+            "evidence_items": {
+                "total": len(items),
+                "by_domain": _count_by(
+                    str(getattr(item, "domain", "") or "") for item in items
+                ),
+                "by_lane": _count_by(
+                    str(getattr(item, "lane", "") or "") for item in items
+                ),
+                "by_source_nature": _count_by(
+                    str(getattr(item, "source_nature", "") or "")
+                    for item in items
+                ),
+                "with_claim_binding": sum(
+                    1
+                    for item in items
+                    if getattr(item, "claim_binding", None) is not None
+                ),
+            },
+            "protected_slots": [
+                {
+                    "kind": getattr(slot, "kind", ""),
+                    "value": getattr(slot, "value", None),
+                    "entity_ids": list(
+                        getattr(slot, "entity_ids", ()) or ()
+                    )[:8],
+                }
+                for slot in getattr(evidence_set, "protected_slots", ()) or ()
+            ],
+            "requested_traversal": (
+                None
+                if getattr(evidence_set, "requested_traversal", None) is None
+                else str(
+                    getattr(
+                        getattr(evidence_set, "requested_traversal"), "kind", ""
+                    )
+                    or getattr(evidence_set, "requested_traversal")
+                )
+            ),
+            "admitted_claims": {
+                "total": len(claims),
+                "by_predicate": _count_by(
+                    str(getattr(claim, "predicate", "") or "")
+                    for claim in claims
+                ),
+                "by_claim_type": _count_by(
+                    str(getattr(claim, "claim_type", "") or "")
+                    for claim in claims
+                ),
+                "patent_evidence_claims": sum(
+                    1
+                    for claim in claims
+                    if any(
+                        item_domain_by_id.get(str(evidence_id)) == "patent"
+                        for evidence_id in (
+                            getattr(claim, "evidence_ids", ()) or ()
+                        )
+                    )
+                ),
+            },
             "committed_handle_ids": (
                 [] if committed is None else list(committed.handle_ids)
             ),
@@ -1333,6 +1429,10 @@ def _maybe_dump_turn_debug(
                 ]
             ),
             "render_mode": getattr(turn_result, "render_mode", None),
+            "response_mode": getattr(turn_result, "response_mode", None),
+            "citations": len(
+                getattr(turn_result, "citations", ()) or ()
+            ),
             "answer_chars": len(turn_result.answer_text or ""),
             "lane_timings": [
                 [lane, round(wall_s, 3)] for lane, wall_s in lane_timings
@@ -2348,11 +2448,14 @@ class CanonicalV2ChatAdapter:
                     official_hosts=official_hosts,
                 )
             if official_url is None:
-                # Relationship-lane local evidence (the release's own
-                # traversal/field bindings) carries no official URL; surface
+                # Local knowledge-base evidence (the release's own lookup
+                # projections, traversal/field bindings, and field scans)
+                # carries no official URL whenever the domain has no public
+                # source page — the patent projection never has one; surface
                 # it as a URL-less local card so locally answered turns still
-                # expose their provenance. Other lanes keep requiring a URL.
-                if evidence.lane != "relationship":
+                # expose their provenance. Web-derived evidence keeps
+                # requiring a validated official public URL.
+                if evidence.source_nature in {"current_web", "supplemental_web"}:
                     continue
                 local_key = f"local:{handle_id}"
                 if local_key in seen:

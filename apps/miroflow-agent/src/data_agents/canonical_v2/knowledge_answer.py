@@ -1517,9 +1517,29 @@ def _published_prose_fallback(
     )
 
 
-def _degraded_fallback_text(result: TurnResult) -> str:
-    """原则 2/4：兜底答案必须自标降级，不冒充完整回答。"""
-    return f"（以下为基于本地数据的简要信息）\n{result.answer_text}"
+def _degraded_fallback_text(
+    result: TurnResult,
+    *,
+    request: TurnRequest | None = None,
+) -> str:
+    """原则 2/4：兜底答案必须自标降级，不冒充完整答案。
+
+    G7 1b.1b (2026-09-13): an enumeration turn's deterministic fallback
+    keeps the AQ-S2c member coverage sentence — the prose path's join
+    channel — so recalled local members the prose never named stay in the
+    answer (and in the committed universe) when synthesis degrades.
+    """
+    text = f"（以下为基于本地数据的简要信息）\n{result.answer_text}"
+    if request is None:
+        return text
+    coverage_sentence = _enumeration_member_coverage_sentence(
+        request=request,
+        context=result.context_receipt,
+        answer_text=text,
+    )
+    if coverage_sentence is None:
+        return text
+    return _append_required_sentences(text, (coverage_sentence,))
 
 
 def _structured_only_public_values(
@@ -1692,6 +1712,21 @@ class _StructuredOnlyProseStreamGuard:
 
 def _handle_id(handle: EntityHandle) -> str:
     return handle.canonical_id if handle.kind == "canonical" else handle.handle_id
+
+
+def _claim_endpoint_id(value: str) -> str:
+    """Bare entity id carried by one claim-binding endpoint.
+
+    Relationship bindings name their endpoints in stable-reference form
+    (``canonical:<domain>:<id>``) — both the projection traces and the direct
+    applicant scan do — while session handles carry the bare canonical id.
+    Endpoint checks therefore read the trailing id, mirroring the read layer's
+    constraint witness rule (``knowledge_read`` candidate_subject_ids) and the
+    serving selector's ``_claim_binding_binds_anchor``.
+    """
+    if value.startswith("canonical:"):
+        return value.rsplit(":", 1)[-1]
+    return value
 
 
 _PROSE_MENTION_COMPANY_LEGAL_SUFFIXES = (
@@ -2344,7 +2379,7 @@ class _EphemeralKnowledgeAnswer(KnowledgeAnswer):
                 )
                 if shipped is not None:
                     return shipped
-                fallback_text = _degraded_fallback_text(result)
+                fallback_text = _degraded_fallback_text(result, request=request)
                 prose_limitation = AnswerLimitation(
                     code="prose_synthesis_failed",
                     material=True,
@@ -2385,7 +2420,9 @@ class _EphemeralKnowledgeAnswer(KnowledgeAnswer):
             )
             return result.model_copy(
                 update={
-                    "answer_text": _degraded_fallback_text(result),
+                    "answer_text": _degraded_fallback_text(
+                        result, request=request
+                    ),
                     "limitations": (*result.limitations, prose_limitation),
                     "render_mode": "deterministic_fallback",
                     "fallback_sha256": _canonical_sha256(
@@ -2428,7 +2465,7 @@ class _EphemeralKnowledgeAnswer(KnowledgeAnswer):
                 if answer_text_published:
                     raise ValueError("published prose stream failed safety validation")
                 abort_prose_attempt()
-                fallback_text = _degraded_fallback_text(result)
+                fallback_text = _degraded_fallback_text(result, request=request)
                 prose_limitation = AnswerLimitation(
                     code="prose_synthesis_failed",
                     material=True,
@@ -2481,7 +2518,9 @@ class _EphemeralKnowledgeAnswer(KnowledgeAnswer):
                     )
                     return result.model_copy(
                         update={
-                            "answer_text": _degraded_fallback_text(result),
+                            "answer_text": _degraded_fallback_text(
+                        result, request=request
+                    ),
                             "limitations": (*result.limitations, prose_limitation),
                             "render_mode": "deterministic_fallback",
                             "fallback_sha256": _canonical_sha256(
@@ -3207,8 +3246,10 @@ class _EphemeralKnowledgeAnswer(KnowledgeAnswer):
                 continue
             if binding.predicate != traversal.relationship_type:
                 continue
-            if (binding.subject_id in source_ids and binding.value == target_id) or (
-                binding.subject_id == target_id and binding.value in source_ids
+            subject_endpoint = _claim_endpoint_id(binding.subject_id)
+            value_endpoint = _claim_endpoint_id(binding.value)
+            if (subject_endpoint in source_ids and value_endpoint == target_id) or (
+                subject_endpoint == target_id and value_endpoint in source_ids
             ):
                 return True
         return False

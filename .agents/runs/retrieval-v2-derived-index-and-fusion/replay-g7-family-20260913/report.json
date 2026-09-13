@@ -1,0 +1,40 @@
+{
+  "base_url": "http://127.0.0.1:18188",
+  "generated_at": "2026-09-13T16:39:08",
+  "sessions": {
+    "G7_enumeration": {
+      "turns": [
+        {
+          "query": "深圳有哪些做具身智能的公司",
+          "repeat": 1,
+          "sse": "G7_enumeration_r1_t1.sse",
+          "seconds": 27.3,
+          "query_type": "canonical_v2:A:answer",
+          "answer_head": "深圳的具身智能公司数量不少，公开信息里能确认的既有整机本体企业，也有做核心零部件、触觉感知、运动控制等环节的厂商，还有华为这样的平台型玩家。以下按类型梳理一批有明确依据的代表性企业。\n\n**人形机器人与通用具身本体**\n- 深圳市优必选科技",
+          "failures": []
+        },
+        {
+          "query": "深圳有哪些做具身智能的公司",
+          "repeat": 2,
+          "sse": "G7_enumeration_r2_t1.sse",
+          "seconds": 21.5,
+          "query_type": "canonical_v2:A:answer",
+          "answer_head": "深圳的具身智能企业数量相当可观，公开信息显示深市具身智能产业链上市公司已超过100家，本地库中可确认的具身智能相关企业也有数十家。以下按业务方向列出其中有代表性的部分：\n\n**人形机器人本体**\n- 深圳市优必选科技股份有限公司：Walke",
+          "failures": []
+        },
+        {
+          "query": "深圳有哪些做具身智能的公司",
+          "repeat": 3,
+          "sse": "G7_enumeration_r3_t1.sse",
+          "seconds": 22.3,
+          "query_type": "canonical_v2:A:answer",
+          "answer_head": "深圳的具身智能企业数量较多，公开信息中常被提及的代表性公司包括以下这些（按业务方向大致归类，排名不分先后）：\n\n**人形机器人本体**\n- 深圳市优必选科技股份有限公司：Walker S、Walker S1、Walker S2 等工业人形机",
+          "failures": []
+        }
+      ],
+      "pass": true
+    }
+  },
+  "all_pass": true,
+  "total_failures": 0
+}

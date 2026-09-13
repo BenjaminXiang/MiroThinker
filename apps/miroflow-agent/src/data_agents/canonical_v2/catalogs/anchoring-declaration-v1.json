@@ -29,6 +29,36 @@
       "whitelisted": false
     },
     {
+      "term": "智能机器人",
+      "tier": "T",
+      "anchor_field": null,
+      "match_mode": "substring",
+      "multiplier": 2,
+      "confidence_class": "text_only",
+      "whitelisted": false,
+      "expands": "具身"
+    },
+    {
+      "term": "人形机器人",
+      "tier": "T",
+      "anchor_field": null,
+      "match_mode": "substring",
+      "multiplier": 2,
+      "confidence_class": "text_only",
+      "whitelisted": false,
+      "expands": "具身"
+    },
+    {
+      "term": "人形",
+      "tier": "T",
+      "anchor_field": null,
+      "match_mode": "substring",
+      "multiplier": 1,
+      "confidence_class": "text_only",
+      "whitelisted": false,
+      "expands": "具身"
+    },
+    {
       "term": "机器人",
       "tier": "S",
       "anchor_field": "tech_tags",

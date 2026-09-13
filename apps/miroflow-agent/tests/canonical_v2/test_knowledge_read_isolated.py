@@ -742,7 +742,9 @@ def test_anchoring_declaration_carries_pcb_paraphrase_family() -> None:
     declaration_module = _declaration_module()
     declaration = declaration_module.PACKAGED_ANCHORING_DECLARATION
     family = {
-        term.term: term for term in declaration.terms if term.expands is not None
+        term.term: term
+        for term in declaration.terms
+        if term.expands == "PCB"
     }
     assert set(family) == {
         "印制电路板",
@@ -1238,3 +1240,72 @@ def test_exact_match_name_linked_clause_preserves_every_gate() -> None:
         name_linked=True,
         **kwargs,
     )
+
+
+def test_category_query_terms_fire_on_declared_terms_without_markers() -> None:
+    """G7 1b.1a: the planner's view variants of a list question carry no
+    哪些/厂商 marker ("深圳 人形机器人 企业" / "深圳 具身智能 公司"); the
+    declared category vocabulary itself must open the F1 fallback."""
+    module = _module()
+    assert module._category_query_terms("深圳 人形机器人 企业") != ()
+    assert module._category_query_terms("深圳 具身智能 公司") != ()
+    # Entity questions stay inert (no declared term, no marker).
+    assert module._category_query_terms("深南电路怎么样") == ()
+    assert (
+        module._category_query_terms("介绍一下国际先进技术应用推进中心（深圳）")
+        == ()
+    )
+
+
+def test_embodied_intelligence_family_fires_under_shen_head() -> None:
+    """G7 1b.1a: 具身智能 decomposes to bigrams {具身,身智,智能} — the
+    4-char term itself never survives extraction, so the declared family
+    hangs off the extracted head 具身; members join at declared weights."""
+    module = _module()
+    base = module._category_query_terms("深圳有哪些做具身智能的公司")
+    expanded = dict(module._expand_category_query_terms(base))
+    assert expanded["智能机器人"] == 2
+    assert expanded["人形机器人"] == 2
+    assert expanded["人形"] == 1
+    # Family inert without its head.
+    robot = module._category_query_terms("深圳有哪些机器人公司")
+    assert module._expand_category_query_terms(robot) == robot
+
+
+def test_category_recall_ranks_tag_carrier_over_industry_tie_mass() -> None:
+    """G7 1b.1a behavioural RED: a company whose tech_tag carries a family
+    member (智能机器人 in 人形智能机器人研发商) outranks the
+    industry=人工智能 tie mass on the 具身智能 query. Tie entries carry
+    ids that sort before the flagship, so the pre-fix hash-order cut
+    deterministically drops it (offline baseline: rank 926/3037)."""
+    module = _module()
+    index_module = _index_module()
+    read_module = _read_module()
+    tie_mass = tuple(
+        _entry(
+            module,
+            index_module,
+            canonical_id=f"company-c-mass{index:03d}",
+            display_name=f"深圳市智能平局公司{index:03d}",
+            content_terms=("人工智能", "智能"),
+            industry_terms=("人工智能",),
+        )
+        for index in range(12)
+    )
+    flagship = _entry(
+        module,
+        index_module,
+        canonical_id="company-c-ubtech",
+        display_name="深圳市优必选科技股份有限公司",
+        content_terms=("人工智能", "人形智能机器人研发商", "智能"),
+        industry_terms=("人工智能",),
+        tag_terms=("人形智能机器人研发商",),
+    )
+    request = _request(
+        read_module, "深圳有哪些做具身智能的公司", max_candidates=8
+    )
+    recalled = module._category_recall_entries(
+        request=request, entries=(*tie_mass, flagship)
+    )
+    names = [entry.display_name for entry in recalled]
+    assert names[0] == "深圳市优必选科技股份有限公司"
