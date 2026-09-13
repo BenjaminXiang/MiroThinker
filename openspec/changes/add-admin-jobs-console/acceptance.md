@@ -45,3 +45,41 @@ Source: `docs/plans/2026-09-07-system-wrapup-config-center-and-periodic-refresh.
 - No §3.2(a) freshness integration: making W1's system-status treat the jobs store as the serving-host
   freshness source is a follow-up (the design's "取 pipeline_run 历史最晚成功记录" has no source on a
   PG-less serving host — see `current-state.md` §3/§6).
+
+---
+
+# Acceptance evidence index (W2, 2026-09-14)
+
+All paths below are under `.agents/runs/admin-jobs-console-w2/` unless stated otherwise.
+The full verification report (RED → GREEN, layered counts, before/after suite diff, gaps) is
+`verification.md`.
+
+## §6 W2 acceptance line — evidence files
+
+| Clause | Evidence |
+|---|---|
+| A1 任选白名单任务手动触发成功并入历史 | `scratch-18291-trigger-slow.json` (202, run_id) → `scratch-18291-history-slow.json` (`status=succeeded duration_ms=3015 exit_code=0 operator=smoke-operator trigger=manual`); `scratch-18291-trigger-ok.json` → `scratch-18291-history-ok.json` (`status=succeeded items_processed=2 duration_ms=18`) |
+| A2 运行中重复触发被锁拒绝并提示 | `scratch-18291-locked.json` (409 `job_already_running`) with `scratch-18291-history-while-running.json` showing the first run still in flight; unit: `tests/test_canonical_v2_jobs_runner.py::test_second_trigger_while_running_is_refused`, `::test_lock_excludes_another_process` |
+| A3 失败任务红点 | `scratch-18291-list-after-failures.json` (`failure_flag=True breaker_open=True consecutive_failures=2 last_status=failed`); the page renders it from `failure_flag` (`scratch-18291-page-jobs.html`) |
+
+## §3.2(d) / §4 C3 / §5.5 — evidence files
+
+| Clause | Evidence |
+|---|---|
+| 调度任务清单与下次运行时间 | `scratch-18291-list-before.json` (real declared table: `schedule_cron`, `schedule_display`, `next_run_at`), `scratch-18291-list-final.json` |
+| 历史运行（成功/失败/耗时/条数） | `scratch-18291-history-slow.json`, `scratch-18291-history-ok.json`, `scratch-18291-history-skipped.json` |
+| 失败样例入口 | `scratch-18291-run-detail-failed.json` — `command` + `stderr_excerpt` = `smoke failure: api_key=[redacted]` (credential-shaped value redacted before storage) |
+| 立即采集（同一闸门，不绕过） | `scratch-18291-locked.json` (409), `scratch-18291-breaker.json` (409), `scratch-18291-skip-switch-off.json` (202 skipped), `scratch-18291-skip-quota.json` (202 skipped) |
+| 连续 2 轮失败熔断 + 复位 | `scratch-18291-fail-trigger-1.json`, `scratch-18291-fail-trigger-2.json`, `scratch-18291-breaker.json` (409 `job_breaker_open`), `scratch-18291-reset.json` (`breaker_open: false`, `reset_run_id`) |
+| C3 Milvus 回填 / 检索验证并入白名单 | `scratch-18291-injection.json` (422 `job_invalid_params` for `domain="paper; rm -rf /"` on the **real** `ops-milvus-backfill-dry-run`), `scratch-18291-pg-milvus.json`, `scratch-18291-pg-e2e.json` |
+| §2 原则 4 无 PG 优雅降级 | `scratch-18291-pg-*.json` (all 503 `job_postgres_unavailable`), `scratch-18291-list-after-failures.json` / `-list-final.json` (`available=False`, `unavailable_reason=postgres_unavailable` → page hides the trigger button); service stayed up for the whole run |
+| 开关关闭空跑并如实记录 | `scratch-18291-skip-switch-off.json` (`status=skipped skip_reason=switch_off`) |
+| 整段真实 HTTP 过程 | `scratch-18291-smoke-transcript.txt` (console transcript), `scratch-18291-smoke.sh` (script), `scratch_18291_server.py` (scratch launcher, stub registry + real declared table) |
+
+## Acceptance statement
+
+- Every clause of §6's W2 row and §3.2(d)'s task-run surface is demonstrated by a real HTTP exchange
+  on a scratch instance, and by unit/contract tests that lock the same behavior deterministically.
+- §5.5's guardrails are accepted **at their W2 scope**: breaker + quota gate + window metadata; the
+  in-script per-call counter is explicitly W6's, not claimed here (design.md §3).
+- Nothing in this slice ran a real collection task, wrote `pipeline_run`, or installed a schedule.
