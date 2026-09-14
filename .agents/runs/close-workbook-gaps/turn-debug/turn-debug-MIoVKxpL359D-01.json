@@ -1,0 +1,177 @@
+{
+  "session_id": "session:chat:MIoVKxpL359D5J7McMdZqSVJrc0fmyUr",
+  "turn_id": "turn:chat:sha256:8c72d933badbae35db66f98223930783759fe99bf79b98eee4c5363d3c008572",
+  "turn_count": 1,
+  "query": "优必选科技怎么样",
+  "planned_displayed_ids": [],
+  "recalled_handles": [
+    {
+      "id": "company-c-14b17405d17649f63b539164",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市优必选科技股份有限公司"
+    },
+    {
+      "id": "web-handle:sha256:10494bac7511471b65dd6b100d7b8f5a5b27b9d5a8115e5761f649aaa5ba704f",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "「优必选怎么样」深圳市优必选科技股份有限公司 - 企查查"
+    },
+    {
+      "id": "web-handle:sha256:6fdcd6052351e2976e5870a3b18d7fa1368d172dbeeba36190531149b20b3dca",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "UBTECH 优必选官网-智能服务机器人领导者"
+    },
+    {
+      "id": "web-handle:sha256:7672872ac3aaaf08b2536777e12d258916d1d7a9f97f17a39364fafde60facb8",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "深圳市优必选科技股份有限公司-特种装备网"
+    },
+    {
+      "id": "web-handle:sha256:cc5cc574a4e3a522475e4c7d78fd76501c76b1039c70626c7bc74a6d15c42987",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "深圳市优必选科技股份有限公司 - 百度百科"
+    },
+    {
+      "id": "web-handle:sha256:e624f6fe6f2c873f3b68af54726a1a51794692ba8a2ee57e407ce8014fcaca74",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "「优必选怎么样」深圳市优必选科技股份有限公司 - 职友集"
+    },
+    {
+      "id": "web-handle:sha256:d0595d2472cd09854c5c56d9b51929bd1dcb7e2fdfcb4ba3542418ddb8d9592f",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "优必选"
+    },
+    {
+      "id": "web-handle:sha256:5591ec5877ac0ea11f7d38d65c77852602c71822cbe3cd6625e35877e69e2a12",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "优必选科技 - 维基百科"
+    },
+    {
+      "id": "web-handle:sha256:0b1d7fd707167ece50b9d45fcfbd0759e3226a5b1efa69aabc83e0047091ecbd",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "深圳市优必选科技股份有限公司 - 企查查"
+    },
+    {
+      "id": "company-c-510a0ea2210d4eb255480e44",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市小柚机器人有限公司"
+    },
+    {
+      "id": "company-c-df9c546497baffeb0afb532b",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市优必行科技有限公司"
+    },
+    {
+      "id": "company-c-f10800527e1d88b096869c64",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市百答科技有限公司"
+    },
+    {
+      "id": "company-c-4022422966ee7a45e31b472e",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳追一科技有限公司"
+    },
+    {
+      "id": "company-c-94a13bb267f5ce46c1af705f",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳欧博思智能科技有限公司"
+    },
+    {
+      "id": "company-c-aad257112e263077014b058f",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "优程企服科技（深圳）有限公司"
+    },
+    {
+      "id": "company-c-8db19ac0f0db96b5d3ceda23",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市香蕉科技有限公司"
+    }
+  ],
+  "evidence_items": {
+    "total": 17,
+    "by_domain": {
+      "company": 9,
+      "professor": 8
+    },
+    "by_lane": {
+      "exact": 1,
+      "vector": 8,
+      "web": 8
+    },
+    "by_source_nature": {
+      "current_web": 8,
+      "local": 9
+    },
+    "with_claim_binding": 17
+  },
+  "protected_slots": [],
+  "requested_traversal": null,
+  "admitted_claims": {
+    "total": 7,
+    "by_predicate": {
+      "canonical_projection": 1,
+      "current_web_result": 6
+    },
+    "by_claim_type": {
+      "material_fact": 7
+    },
+    "patent_evidence_claims": 0
+  },
+  "committed_handle_ids": [
+    "company-c-14b17405d17649f63b539164",
+    "web-handle:sha256:7672872ac3aaaf08b2536777e12d258916d1d7a9f97f17a39364fafde60facb8",
+    "web-handle:sha256:cc5cc574a4e3a522475e4c7d78fd76501c76b1039c70626c7bc74a6d15c42987",
+    "web-handle:sha256:d0595d2472cd09854c5c56d9b51929bd1dcb7e2fdfcb4ba3542418ddb8d9592f",
+    "web-handle:sha256:5591ec5877ac0ea11f7d38d65c77852602c71822cbe3cd6625e35877e69e2a12",
+    "web-handle:sha256:0b1d7fd707167ece50b9d45fcfbd0759e3226a5b1efa69aabc83e0047091ecbd"
+  ],
+  "committed_names": [
+    "深圳市优必选科技股份有限公司",
+    "深圳市优必选科技股份有限公司-特种装备网",
+    "深圳市优必选科技股份有限公司 - 百度百科",
+    "优必选",
+    "优必选科技 - 维基百科",
+    "深圳市优必选科技股份有限公司 - 企查查"
+  ],
+  "render_mode": "prose_renderer",
+  "response_mode": "answer",
+  "citations": 7,
+  "answer_chars": 652,
+  "lane_timings": [
+    [
+      "structured",
+      0.0
+    ],
+    [
+      "exact",
+      1.181
+    ],
+    [
+      "lexical",
+      1.777
+    ],
+    [
+      "web",
+      4.117
+    ],
+    [
+      "vector",
+      18.691
+    ]
+  ]
+}

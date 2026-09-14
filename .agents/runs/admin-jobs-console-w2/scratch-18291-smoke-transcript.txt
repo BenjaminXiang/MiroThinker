@@ -1,0 +1,82 @@
+
+== health ==
+status=200
+
+== page /jobs ==
+status=200
+3
+
+== list tasks (before any run) ==
+status=200
+
+== trigger stub-collect-slow ==
+status=202
+run_id=4c1d942b-36b4-49bc-b644-3f6c150e790a
+
+== duplicate trigger while running (expect 409 job_already_running) ==
+status=409
+{"detail":"job_already_running"}
+
+== history while running ==
+status=200
+
+== wait for completion, then history ==
+status=200
+status=succeeded duration_ms=3015 exit_code=0 operator=smoke-operator trigger=manual
+
+== two failing runs -> breaker open (expect 409 on the third) ==
+trigger1 status=202
+trigger2 status=202
+status=409
+{"detail":"job_breaker_open"}
+
+== list after failures (red dot + breaker) ==
+status=200
+failure_flag=True breaker_open=True consecutive_failures=2 last_status=failed
+real ops task available: False postgres_unavailable
+
+== failure sample (run detail) ==
+status=200
+status=failed exit_code=1
+command= python3 -c import sys; sys.stderr.write('smoke failure: api_key=smoke-sentinel\n'); sys.exit(1)
+stderr_excerpt= smoke failure: api_key=[redacted]
+
+== reset breaker ==
+status=200
+{"task_id":"stub-collect-fail","breaker_open":false,"consecutive_failures":0,"reset_run_id":"35010dcd-abd9-4bcc-9fda-ada69174a071"}
+
+== switch off -> recorded skip ==
+status=202
+{"task_id":"stub-collect-ok","run_id":"5ee6a2a6-4c04-44bc-bbaf-5b59c5bad617","status":"skipped","skip_reason":"switch_off","started_at":"2026-09-13T22:45:28.177014+00:00","command":["python3","-c","print('{\"job_summary\": {\"items_processed\": 2, \"items_failed\": 0}}')"]}
+
+== quota 0 -> recorded skip ==
+status=202
+{"task_id":"stub-collect-ok","run_id":"21600a3a-e529-42fa-b192-d6609606a178","status":"skipped","skip_reason":"quota_exhausted","started_at":"2026-09-13T22:45:28.210755+00:00","command":["python3","-c","print('{\"job_summary\": {\"items_processed\": 2, \"items_failed\": 0}}')"]}
+
+== restore settings -> successful stub run with item count ==
+status=202
+status=200
+status=succeeded items_processed=2 duration_ms=18
+
+== PG degradation (stub + real ops task) ==
+status=503
+status=503
+status=503
+{"detail":"job_postgres_unavailable"}{"detail":"job_postgres_unavailable"}
+
+== parameter whitelist on the real ops task (injection attempt -> 422) ==
+status=422
+{"detail":"job_invalid_params"}
+
+== unknown task (expect 404) ==
+status=404
+
+== final list + history page ==
+status=200
+status=200
+declared tasks: 14
+  stub-collect-ok available=True failure_flag=False breaker_open=False next_run_at=True
+  stub-collect-fail available=True failure_flag=True breaker_open=False next_run_at=True
+  ops-milvus-backfill available=False failure_flag=False breaker_open=False next_run_at=False
+
+== done ==

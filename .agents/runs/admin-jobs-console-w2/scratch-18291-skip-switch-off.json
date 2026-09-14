@@ -1,0 +1,1 @@
+{"task_id":"stub-collect-ok","run_id":"5ee6a2a6-4c04-44bc-bbaf-5b59c5bad617","status":"skipped","skip_reason":"switch_off","started_at":"2026-09-13T22:45:28.177014+00:00","command":["python3","-c","print('{\"job_summary\": {\"items_processed\": 2, \"items_failed\": 0}}')"]}

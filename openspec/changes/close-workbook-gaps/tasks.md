@@ -214,15 +214,29 @@
          report: `.agents/runs/close-workbook-gaps/c1-alias-closure-
          plan-20260913.md`, `.agents/runs/full-column-serving-pack-
          rebuild/alias-dry-run-20260913.json`.
-  - [ ] C1.1-batch1b Alias rebuild + acceptance (alias-3): candidate
+  - [x] C1.1-batch1b Alias rebuild + acceptance (alias-3): candidate
          rebuild (data-rebuild envelope) → pack build/seal → 18188
          pointer switch → probes (字节跳动→ByteDance Ltd.; 优必选
          regression; collision forms fail-safe; replay 7 sessions).
-         — IN PROGRESS 2026-09-13: batch1a frozen at data-rebuild
-         `8dc0f75d`; run15 rebuild launched detached (own session,
-         `build-run15-detached-nohup.log`; local ops note
-         `run15-status-20260913.md`); envelope pending; seal → smoke →
-         switch → probes next.
+         — DONE 2026-09-15 00:40: batch1a frozen at data-rebuild
+         `8dc0f75d`; run15 rebuild finished 09-14 20:44 (envelope
+         8,184,481,154 B, `envelope_sha256=0d6b2966…`,
+         `receipt_sha256=810340df…`); official sealer produced
+         `/var/tmp/mirothinker-data-v2/serving-pack-run15-sealed`
+         (4.8 GB; `envelope_validate 2071s`, `dogfood_open 351s`);
+         run15 bundle `s12g/serving-bundle-run15.json`
+         (`content_sha256=4a803895…`); switch via the systemd single
+         source of truth (`s12g/serve-18188-command.sh` ← run15 version,
+         run14 baseline kept byte-identical as
+         `…-run14-rollback.sh`); restart 00:40:17, load ≈13 min.
+         Post-switch evidence on 18188: health 200; pages `/chat
+         /browse /logs /admin /jobs /upload /seeds` 200 (`/review` 404
+         by design — separate port 18189); replay gate **7/7 ALL PASS**;
+         probes 「字节跳动」→ answer opens with `字节跳动（ByteDance
+         Ltd.）`, 「优必选有哪些专利」→ 32 local CN numbers + 32
+         citations. One generalization gap recorded (not blocking):
+         「优必选科技有哪些专利」 misses the patent lane
+         (`/var/tmp/mirothinker-data-v2/logs/probe-phrasing-gap-20260915.md`).
 - [ ] C2.1 run14 thin-load online (47,071 docs) + reconciliation report;
        workbook score not regressed. Sub-steps (design.md §C2, contract
        verified line-by-line 2026-09-10):

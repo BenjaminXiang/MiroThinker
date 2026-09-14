@@ -1,0 +1,1 @@
+{"task_id":"stub-collect-fail","run_id":"ddca35d6-3473-45d3-a0b3-b45b39e67f25","status":"running","skip_reason":null,"started_at":"2026-09-13T22:45:26.531734+00:00","command":["python3","-c","import sys; sys.stderr.write('smoke failure: api_key=smoke-sentinel\\n'); sys.exit(1)"]}

@@ -1,0 +1,935 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light" />
+    <title>访问日志 · Canonical V2</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23143d59'/%3E%3Cpath d='M17 19h8v11l12-11h10L33 32l15 13H37L25 34v11h-8z' fill='white'/%3E%3C/svg%3E" />
+    <style>
+      :root {
+        --ink: #17252f;
+        --muted: #62727d;
+        --navy: #143d59;
+        --navy-strong: #0d2c41;
+        --teal: #168b82;
+        --teal-soft: #e7f5f2;
+        --blue-soft: #edf4f8;
+        --amber: #b66916;
+        --amber-soft: #fff4df;
+        --danger: #a83f4c;
+        --danger-soft: #fff0f2;
+        --surface: #ffffff;
+        --canvas: #f3f6f7;
+        --line: #dce4e7;
+        --line-strong: #c5d2d7;
+        --shadow: 0 18px 42px rgba(24, 55, 70, 0.08);
+        --radius: 18px;
+      }
+
+      * { box-sizing: border-box; }
+
+      body {
+        margin: 0;
+        min-width: 320px;
+        color: var(--ink);
+        background:
+          radial-gradient(circle at 8% 0%, rgba(22, 139, 130, 0.09), transparent 28rem),
+          var(--canvas);
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+          "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+        line-height: 1.55;
+      }
+
+      button, a, input, select { font: inherit; }
+
+      button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible {
+        outline: 3px solid rgba(22, 139, 130, 0.28);
+        outline-offset: 2px;
+      }
+
+      .topbar {
+        color: #fff;
+        background:
+          linear-gradient(112deg, rgba(255, 255, 255, 0.05), transparent 50%),
+          var(--navy-strong);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+      }
+
+      .topbar-inner {
+        max-width: 1280px;
+        margin: 0 auto;
+        padding: 18px 24px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        flex-wrap: wrap;
+      }
+
+      .brand { display: flex; flex-direction: column; gap: 2px; }
+      .brand strong { font-size: 1.05rem; letter-spacing: 0.02em; }
+      .brand span { font-size: 0.8rem; color: rgba(255, 255, 255, 0.72); }
+
+      .nav { display: flex; gap: 8px; flex-wrap: wrap; }
+      .nav a {
+        color: rgba(255, 255, 255, 0.82);
+        text-decoration: none;
+        font-size: 0.86rem;
+        padding: 7px 14px;
+        border-radius: 999px;
+        border: 1px solid rgba(255, 255, 255, 0.18);
+      }
+      .nav a.active { background: rgba(255, 255, 255, 0.14); color: #fff; }
+      .nav a:hover { background: rgba(255, 255, 255, 0.2); }
+
+      main {
+        max-width: 1280px;
+        margin: 0 auto;
+        padding: 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+      }
+
+      .toolbar {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        align-items: center;
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        padding: 14px 16px;
+        box-shadow: var(--shadow);
+      }
+
+      .toolbar input[type="search"] {
+        flex: 1 1 240px;
+        min-width: 160px;
+        padding: 9px 12px;
+        border: 1px solid var(--line-strong);
+        border-radius: 10px;
+      }
+
+      .toolbar select,
+      .toolbar input[type="date"] {
+        padding: 9px 12px;
+        border: 1px solid var(--line-strong);
+        border-radius: 10px;
+        background: var(--surface);
+      }
+
+      .toolbar button {
+        padding: 9px 16px;
+        border: none;
+        border-radius: 10px;
+        background: var(--navy);
+        color: #fff;
+        cursor: pointer;
+      }
+      .toolbar button:hover { background: var(--navy-strong); }
+      .toolbar button.ghost {
+        background: var(--surface);
+        color: var(--navy);
+        border: 1px solid var(--line-strong);
+      }
+      .toolbar button.ghost:hover { background: var(--blue-soft); }
+      .toolbar .field {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        font-size: 0.72rem;
+        color: var(--muted);
+      }
+      .toolbar .spacer { flex: 1 1 auto; }
+
+      .stat-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(132px, 1fr));
+        gap: 10px;
+        padding: 14px 16px 4px;
+      }
+      .stat {
+        background: var(--blue-soft);
+        border-radius: 12px;
+        padding: 10px 12px;
+      }
+      .stat strong { display: block; font-size: 1.2rem; }
+      .stat span { font-size: 0.74rem; color: var(--muted); }
+      .stat.alert { background: var(--danger-soft); }
+
+      .overview-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 16px;
+        padding: 12px 16px 16px;
+      }
+      .overview-grid h4 {
+        margin: 0 0 6px;
+        font-size: 0.82rem;
+        color: var(--muted);
+        font-weight: 600;
+      }
+      .mini-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.8rem;
+      }
+      .mini-table th, .mini-table td {
+        text-align: left;
+        padding: 4px 8px;
+        border-bottom: 1px solid var(--line);
+        vertical-align: top;
+        word-break: break-word;
+      }
+      .mini-table th { color: var(--muted); font-weight: 600; }
+      .mini-table td.num, .mini-table th.num { text-align: right; white-space: nowrap; }
+      .mini-table .scroll { max-height: 240px; overflow: auto; }
+      .mini-table td.truncate {
+        max-width: 260px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .layout {
+        display: grid;
+        grid-template-columns: minmax(300px, 400px) 1fr;
+        gap: 18px;
+        align-items: start;
+      }
+
+      @media (max-width: 900px) {
+        .layout { grid-template-columns: 1fr; }
+      }
+
+      .pane {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+        overflow: hidden;
+      }
+
+      .pane-head {
+        padding: 14px 16px;
+        border-bottom: 1px solid var(--line);
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        gap: 8px;
+      }
+      .pane-head strong { font-size: 0.95rem; }
+      .pane-head span { font-size: 0.8rem; color: var(--muted); }
+
+      .session-list { display: flex; flex-direction: column; }
+
+      .session-item {
+        padding: 12px 16px;
+        border-bottom: 1px solid var(--line);
+        cursor: pointer;
+        text-align: left;
+        background: none;
+        border-left: 3px solid transparent;
+        border-top: none;
+        border-right: none;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        width: 100%;
+      }
+      .session-item:hover { background: var(--blue-soft); }
+      .session-item.selected {
+        background: var(--teal-soft);
+        border-left-color: var(--teal);
+      }
+      .session-item .query {
+        font-size: 0.9rem;
+        font-weight: 500;
+        overflow: hidden;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+      }
+      .session-item .meta {
+        display: flex;
+        gap: 10px;
+        font-size: 0.76rem;
+        color: var(--muted);
+        flex-wrap: wrap;
+      }
+
+      .badge {
+        display: inline-block;
+        padding: 1px 8px;
+        border-radius: 999px;
+        font-size: 0.72rem;
+        font-weight: 600;
+      }
+      .badge.completed { background: var(--teal-soft); color: var(--teal); }
+      .badge.error { background: var(--danger-soft); color: var(--danger); }
+      .badge.interrupted { background: var(--amber-soft); color: var(--amber); }
+      .badge.identity { background: var(--blue-soft); color: var(--navy); }
+
+      .pager {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px 16px;
+        border-top: 1px solid var(--line);
+      }
+      .pager button {
+        padding: 6px 12px;
+        border: 1px solid var(--line-strong);
+        border-radius: 8px;
+        background: var(--surface);
+        cursor: pointer;
+      }
+      .pager button:disabled { opacity: 0.45; cursor: not-allowed; }
+      .pager span { font-size: 0.8rem; color: var(--muted); }
+
+      .turn-list { display: flex; flex-direction: column; }
+
+      .turn {
+        padding: 14px 16px;
+        border-bottom: 1px solid var(--line);
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      .turn-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+        font-size: 0.78rem;
+        color: var(--muted);
+      }
+
+      .bubble {
+        border-radius: 12px;
+        padding: 10px 14px;
+        font-size: 0.9rem;
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
+      .bubble.question {
+        background: var(--blue-soft);
+        border: 1px solid var(--line);
+      }
+      .bubble.answer {
+        background: var(--surface);
+        border: 1px solid var(--line-strong);
+      }
+
+      .turn-citations {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        font-size: 0.8rem;
+      }
+      .turn-citations a {
+        color: var(--teal);
+        text-decoration: none;
+        word-break: break-all;
+      }
+      .turn-citations a:hover { text-decoration: underline; }
+
+      .error-box {
+        background: var(--danger-soft);
+        border: 1px solid rgba(168, 63, 76, 0.3);
+        border-radius: 10px;
+        padding: 8px 12px;
+        font-size: 0.82rem;
+        color: var(--danger);
+      }
+
+      .loading, .empty, .error-state {
+        padding: 28px 16px;
+        text-align: center;
+        color: var(--muted);
+        font-size: 0.88rem;
+      }
+      .error-state { color: var(--danger); }
+
+      details.answer-toggle summary {
+        cursor: pointer;
+        font-size: 0.8rem;
+        color: var(--teal);
+        user-select: none;
+      }
+    </style>
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="topbar-inner">
+        <div class="brand">
+          <strong>访问日志</strong>
+          <span>Canonical V2 用户访问记录 · 按会话组织</span>
+        </div>
+        <nav class="nav">
+          <a href="chat">对话</a>
+          <a href="browse">数据浏览</a>
+          <a href="logs" class="active">访问日志</a>
+          <a href="admin">管理配置</a>
+          <a href="jobs">任务运维</a>
+          <a href="upload">上传导入</a>
+          <a href="seeds">Seed 管理</a>
+        </nav>
+      </div>
+    </header>
+
+    <main>
+      <section class="toolbar" aria-label="过滤工具">
+        <input id="search" type="search" placeholder="按提问内容搜索…" maxlength="200" />
+        <select id="statusFilter" aria-label="状态">
+          <option value="">全部状态</option>
+          <option value="completed">已完成</option>
+          <option value="error">错误</option>
+          <option value="interrupted">中断</option>
+        </select>
+        <select id="queryTypeFilter" aria-label="提问类型">
+          <option value="">全部类型</option>
+        </select>
+        <select id="identityFilter" aria-label="提问身份">
+          <option value="">全部身份</option>
+        </select>
+        <label class="field">开始<input id="sinceFilter" type="date" /></label>
+        <label class="field">结束<input id="untilFilter" type="date" /></label>
+        <button id="applyFilter" type="button">查询</button>
+        <button id="resetFilter" type="button" class="ghost">重置</button>
+        <span class="spacer"></span>
+        <button id="exportCsv" type="button" class="ghost">导出 CSV</button>
+        <button id="exportJsonl" type="button" class="ghost">导出 JSONL</button>
+      </section>
+
+      <section class="pane" aria-label="概览统计">
+        <div class="pane-head">
+          <strong>概览</strong>
+          <span id="overviewRange">—</span>
+        </div>
+        <div class="stat-grid" id="statGrid">
+          <div class="stat"><strong id="statSessions">—</strong><span>会话数</span></div>
+          <div class="stat"><strong id="statTurns">—</strong><span>轮次</span></div>
+          <div class="stat" id="statErrorCard"><strong id="statErrorRate">—</strong><span>错误率</span></div>
+          <div class="stat"><strong id="statErrors">—</strong><span>错误轮次</span></div>
+          <div class="stat"><strong id="statInterrupted">—</strong><span>中断轮次</span></div>
+          <div class="stat"><strong id="statRetention">—</strong><span id="statRetentionSource">保留期</span></div>
+        </div>
+        <div class="overview-grid">
+          <div>
+            <h4>每日会话 / 轮次</h4>
+            <div class="scroll">
+              <table class="mini-table">
+                <thead>
+                  <tr><th>日期（UTC）</th><th class="num">会话</th><th class="num">轮次</th></tr>
+                </thead>
+                <tbody id="dailyBody">
+                  <tr><td colspan="3">—</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div>
+            <h4>提问类型分布</h4>
+            <div class="scroll">
+              <table class="mini-table">
+                <thead>
+                  <tr><th>类型</th><th class="num">轮次</th></tr>
+                </thead>
+                <tbody id="queryTypeBody">
+                  <tr><td colspan="2">—</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div>
+            <h4>Top 提问</h4>
+            <div class="scroll">
+              <table class="mini-table">
+                <thead>
+                  <tr><th>提问</th><th class="num">次数</th></tr>
+                </thead>
+                <tbody id="topQueryBody">
+                  <tr><td colspan="2">—</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="layout">
+        <aside class="pane" aria-label="会话列表">
+          <div class="pane-head">
+            <strong>会话</strong>
+            <span id="sessionCount">—</span>
+          </div>
+          <div id="sessionList" class="session-list"></div>
+          <div class="pager">
+            <button id="prevPage" type="button">上一页</button>
+            <span id="pageInfo"></span>
+            <button id="nextPage" type="button">下一页</button>
+          </div>
+        </aside>
+
+        <section class="pane" aria-label="会话详情">
+          <div class="pane-head">
+            <strong>轮次详情</strong>
+            <span id="detailCaption">选择一个会话查看问答记录</span>
+          </div>
+          <div id="turnList" class="turn-list">
+            <div class="empty">未选择会话</div>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <script>
+      // 纯 DOM 构建，不引入 innerHTML，无 XSS 面（与 chat.html / browse.html 同一约定）。
+      const logBase = "api/canonical-v2/admin/access-logs";
+      const sessionsPath = logBase + "/sessions";
+      const statsPath = logBase + "/stats";
+      const exportPath = logBase + "/export";
+      const configPath = "api/canonical-v2/admin/config";
+      const RETENTION_FIELD = "paths.access_log_retention_days";
+      const PAGE_SIZE = 20;
+      const ANONYMOUS = "anonymous";
+
+      const searchInput = document.getElementById("search");
+      const statusFilter = document.getElementById("statusFilter");
+      const queryTypeFilter = document.getElementById("queryTypeFilter");
+      const identityFilter = document.getElementById("identityFilter");
+      const sinceFilter = document.getElementById("sinceFilter");
+      const untilFilter = document.getElementById("untilFilter");
+      const applyButton = document.getElementById("applyFilter");
+      const resetButton = document.getElementById("resetFilter");
+      const exportCsvButton = document.getElementById("exportCsv");
+      const exportJsonlButton = document.getElementById("exportJsonl");
+      const sessionList = document.getElementById("sessionList");
+      const sessionCount = document.getElementById("sessionCount");
+      const turnList = document.getElementById("turnList");
+      const detailCaption = document.getElementById("detailCaption");
+      const prevPage = document.getElementById("prevPage");
+      const nextPage = document.getElementById("nextPage");
+      const pageInfo = document.getElementById("pageInfo");
+      const overviewRange = document.getElementById("overviewRange");
+      const statSessions = document.getElementById("statSessions");
+      const statTurns = document.getElementById("statTurns");
+      const statErrorRate = document.getElementById("statErrorRate");
+      const statErrorCard = document.getElementById("statErrorCard");
+      const statErrors = document.getElementById("statErrors");
+      const statInterrupted = document.getElementById("statInterrupted");
+      const statRetention = document.getElementById("statRetention");
+      const statRetentionSource = document.getElementById("statRetentionSource");
+      const dailyBody = document.getElementById("dailyBody");
+      const queryTypeBody = document.getElementById("queryTypeBody");
+      const topQueryBody = document.getElementById("topQueryBody");
+
+      const state = {
+        q: "",
+        status: "",
+        queryType: "",
+        identity: "",
+        since: "",
+        until: "",
+        offset: 0,
+        total: 0,
+        selected: null,
+      };
+
+      const STATUS_LABELS = {
+        completed: "已完成",
+        error: "错误",
+        interrupted: "中断",
+      };
+
+      const RETENTION_SOURCES = {
+        env: "环境变量",
+        file: "配置文件",
+        default: "默认",
+      };
+
+      function create(tag, className, text) {
+        const element = document.createElement(tag);
+        if (className) element.className = className;
+        if (text !== undefined && text !== null) element.textContent = String(text);
+        return element;
+      }
+
+      function formatTime(value) {
+        if (!value) return "—";
+        const parsed = new Date(value);
+        return Number.isNaN(parsed.getTime())
+          ? String(value)
+          : parsed.toLocaleString("zh-CN", { hour12: false });
+      }
+
+      function shortId(sessionId) {
+        if (!sessionId) return "—";
+        const tail = sessionId.split(":").pop() || sessionId;
+        return tail.length > 10 ? tail.slice(0, 10) + "…" : tail;
+      }
+
+      function identityLabel(value) {
+        if (!value) return "匿名";
+        return value === ANONYMOUS ? "匿名" : value;
+      }
+
+      function queryTypeLabel(value) {
+        if (!value) return "（未记录）";
+        return value.startsWith("canonical_v2:")
+          ? value.slice("canonical_v2:".length)
+          : value;
+      }
+
+      async function fetchJson(path) {
+        const response = await fetch(path, { headers: { Accept: "application/json" } });
+        if (!response.ok) throw new Error("HTTP " + response.status);
+        return response.json();
+      }
+
+      function errorText(error) {
+        return error instanceof Error ? error.message : String(error);
+      }
+
+      function statusBadges(statuses) {
+        return (statuses || []).map((status) =>
+          create("span", "badge " + status, STATUS_LABELS[status] || status)
+        );
+      }
+
+      function identityBadges(identities) {
+        const values = identities && identities.length ? identities : [ANONYMOUS];
+        return values.map((value) =>
+          create("span", "badge identity", identityLabel(value))
+        );
+      }
+
+      // 页面 / 统计 / 导出共用同一套过滤参数，保证导出内容与页面所见一致。
+      function filterParams() {
+        const params = new URLSearchParams();
+        if (state.q) params.set("q", state.q);
+        if (state.status) params.set("status", state.status);
+        if (state.queryType !== "") params.set("query_type", state.queryType);
+        if (state.identity) params.set("identity", state.identity);
+        if (state.since) params.set("since", state.since);
+        if (state.until) params.set("until", state.until);
+        return params;
+      }
+
+      function fillOptions(select, values, label, preserve) {
+        const current = preserve === undefined ? select.value : preserve;
+        const options = [create("option", "", label)];
+        options[0].value = "";
+        values.forEach((value) => {
+          const option = create("option", "", value.label);
+          option.value = value.value;
+          options.push(option);
+        });
+        // 当前选中的值即使被统计范围过滤掉也要留在列表里，否则筛选条件会静默失效。
+        if (current && !values.some((value) => value.value === current)) {
+          const option = create("option", "", queryTypeLabel(current));
+          option.value = current;
+          options.push(option);
+        }
+        select.replaceChildren(...options);
+        select.value = current;
+      }
+
+      function renderOverview(stats) {
+        overviewRange.textContent =
+          formatTime(stats.window.since) +
+          " → " +
+          formatTime(stats.window.until) +
+          (stats.window.since_defaulted ? "（默认近 30 天）" : "");
+        statSessions.textContent = stats.totals.sessions;
+        statTurns.textContent = stats.totals.turns;
+        statErrorRate.textContent = (stats.totals.error_rate * 100).toFixed(2) + "%";
+        statErrorCard.classList.toggle("alert", stats.totals.errors > 0);
+        statErrors.textContent = stats.totals.errors;
+        statInterrupted.textContent = stats.totals.interrupted;
+
+        dailyBody.replaceChildren(
+          ...(stats.daily.length
+            ? stats.daily.map((item) => {
+                const row = create("tr");
+                row.append(
+                  create("td", "", item.day),
+                  create("td", "num", item.sessions),
+                  create("td", "num", item.turns)
+                );
+                return row;
+              })
+            : [create("tr", "", "该区间没有记录")])
+        );
+        const typeRows = stats.query_types.length
+          ? stats.query_types.map((item) => {
+              const row = create("tr");
+              row.append(
+                create("td", "", queryTypeLabel(item.query_type)),
+                create("td", "num", item.turns)
+              );
+              return row;
+            })
+          : [create("tr", "", "该区间没有记录")];
+        queryTypeBody.replaceChildren(...typeRows);
+        const queryRows = stats.top_queries.length
+          ? stats.top_queries.map((item) => {
+              const row = create("tr");
+              const cell = create("td", "truncate", item.query);
+              cell.title = item.query;
+              row.append(cell, create("td", "num", item.turns));
+              return row;
+            })
+          : [create("tr", "", "该区间没有记录")];
+        topQueryBody.replaceChildren(...queryRows);
+
+        fillOptions(
+          queryTypeFilter,
+          stats.query_types
+            .filter((item) => item.query_type)
+            .map((item) => ({
+              value: item.query_type,
+              label: queryTypeLabel(item.query_type),
+            })),
+          "全部类型"
+        );
+        fillOptions(
+          identityFilter,
+          stats.identities.map((item) => ({
+            value: item.identity,
+            label: identityLabel(item.identity),
+          })),
+          "全部身份"
+        );
+      }
+
+      async function loadOverview() {
+        const params = filterParams();
+        try {
+          const stats = await fetchJson(statsPath + "?" + params.toString());
+          renderOverview(stats);
+        } catch (error) {
+          overviewRange.textContent = "概览加载失败 · " + errorText(error);
+          dailyBody.replaceChildren(create("tr", "", "—"));
+          queryTypeBody.replaceChildren(create("tr", "", "—"));
+          topQueryBody.replaceChildren(create("tr", "", "—"));
+        }
+      }
+
+      async function loadRetention() {
+        try {
+          const config = await fetchJson(configPath);
+          const field = (config.fields || []).find(
+            (item) => item.path === RETENTION_FIELD
+          );
+          if (!field) return;
+          statRetention.textContent = field.value + " 天";
+          statRetentionSource.textContent =
+            "保留期（" + (RETENTION_SOURCES[field.source] || field.source) + "）";
+        } catch (error) {
+          statRetention.textContent = "—";
+        }
+      }
+
+      function renderSessions(page) {
+        state.total = page.total;
+        sessionCount.textContent = "共 " + page.total + " 个会话";
+        pageInfo.textContent =
+          page.total === 0
+            ? ""
+            : (page.offset + 1) + "–" + Math.min(page.offset + page.limit, page.total);
+        prevPage.disabled = state.offset <= 0;
+        nextPage.disabled = state.offset + PAGE_SIZE >= page.total;
+
+        if (!page.sessions.length) {
+          sessionList.replaceChildren(
+            create("div", "empty", "没有符合条件的会话记录")
+          );
+          return;
+        }
+        const items = page.sessions.map((item) => {
+          const button = create("button", "session-item");
+          button.type = "button";
+          if (item.session_id === state.selected) button.classList.add("selected");
+          button.append(
+            create("span", "query", item.first_query || "（无提问内容）"),
+            (() => {
+              const meta = create("span", "meta");
+              meta.append(
+                create("span", "", shortId(item.session_id)),
+                ...identityBadges(item.identities),
+                create("span", "", item.turn_count + " 轮"),
+                create("span", "", formatTime(item.last_active_at)),
+                ...statusBadges(item.statuses)
+              );
+              return meta;
+            })()
+          );
+          button.addEventListener("click", () => {
+            state.selected = item.session_id;
+            loadSessions(false);
+            loadDetail(item.session_id);
+          });
+          return button;
+        });
+        sessionList.replaceChildren(...items);
+      }
+
+      async function loadSessions(resetOffset) {
+        if (resetOffset) state.offset = 0;
+        sessionList.replaceChildren(create("div", "loading", "正在加载会话…"));
+        const params = filterParams();
+        params.set("limit", String(PAGE_SIZE));
+        params.set("offset", String(state.offset));
+        try {
+          const page = await fetchJson(sessionsPath + "?" + params.toString());
+          renderSessions(page);
+        } catch (error) {
+          sessionList.replaceChildren(
+            create("div", "error-state", "会话列表加载失败 · " + errorText(error))
+          );
+        }
+      }
+
+      function renderTurn(turn) {
+        const block = create("article", "turn");
+        const head = create("div", "turn-head");
+        head.append(
+          create("span", "", "第 " + turn.turn_count + " 轮 · " + formatTime(turn.started_at)),
+          (() => {
+            const right = create("span", "meta");
+            right.append(
+              create("span", "", turn.latency_ms + " ms"),
+              create("span", "", turn.answer_style || "—"),
+              create("span", "", turn.query_type ? queryTypeLabel(turn.query_type) : "类型未记录")
+            );
+            right.append(...identityBadges([turn.user_identity]));
+            right.append(...statusBadges([turn.status]));
+            return right;
+          })()
+        );
+        block.append(head);
+        block.append(create("div", "bubble question", turn.query));
+        if (turn.status === "error" && turn.error_detail) {
+          block.append(create("div", "error-box", "错误：" + turn.error_detail));
+        }
+        if (turn.answer_text) {
+          const detail = create("details", "answer-toggle");
+          detail.open = true;
+          const summary = create("summary", "", "系统回答");
+          detail.append(summary, create("div", "bubble answer", turn.answer_text));
+          block.append(detail);
+        }
+        if (turn.citations && turn.citations.length) {
+          const box = create("div", "turn-citations");
+          box.append(create("span", "", "引用来源："));
+          turn.citations.forEach((citation) => {
+            const label = citation.label || citation.title || citation.url || "来源";
+            if (citation.url && /^https:\/\//.test(citation.url)) {
+              const link = create("a", "", "[" + (citation.index ?? "·") + "] " + label);
+              link.href = citation.url;
+              link.target = "_blank";
+              link.rel = "noopener noreferrer";
+              box.append(link);
+            } else {
+              box.append(create("span", "", "[" + (citation.index ?? "·") + "] " + label));
+            }
+          });
+          block.append(box);
+        }
+        if (turn.suggested_followups && turn.suggested_followups.length) {
+          block.append(
+            create(
+              "div",
+              "turn-citations",
+              "建议追问：" + turn.suggested_followups.join("；")
+            )
+          );
+        }
+        return block;
+      }
+
+      async function loadDetail(sessionId) {
+        turnList.replaceChildren(create("div", "loading", "正在加载轮次…"));
+        detailCaption.textContent = shortId(sessionId);
+        try {
+          const detail = await fetchJson(
+            sessionsPath + "/" + encodeURIComponent(sessionId)
+          );
+          detailCaption.textContent =
+            shortId(sessionId) +
+            " · " +
+            detail.session.turn_count +
+            " 轮 · 开始于 " +
+            formatTime(detail.session.started_at);
+          if (!detail.turns.length) {
+            turnList.replaceChildren(create("div", "empty", "该会话没有轮次记录"));
+            return;
+          }
+          turnList.replaceChildren(...detail.turns.map(renderTurn));
+        } catch (error) {
+          turnList.replaceChildren(
+            create("div", "error-state", "轮次加载失败 · " + errorText(error))
+          );
+        }
+      }
+
+      function readFilters() {
+        state.q = searchInput.value.trim();
+        state.status = statusFilter.value;
+        state.queryType = queryTypeFilter.value;
+        state.identity = identityFilter.value;
+        state.since = sinceFilter.value;
+        state.until = untilFilter.value;
+      }
+
+      function applyFilters() {
+        readFilters();
+        loadSessions(true);
+        loadOverview();
+      }
+
+      function downloadExport(format) {
+        readFilters();
+        const params = filterParams();
+        params.set("format", format);
+        window.location.assign(exportPath + "?" + params.toString());
+      }
+
+      applyButton.addEventListener("click", applyFilters);
+      searchInput.addEventListener("keydown", (event) => {
+        if (event.key === "Enter") applyFilters();
+      });
+      resetButton.addEventListener("click", () => {
+        searchInput.value = "";
+        statusFilter.value = "";
+        queryTypeFilter.value = "";
+        identityFilter.value = "";
+        sinceFilter.value = "";
+        untilFilter.value = "";
+        applyFilters();
+      });
+      [statusFilter, queryTypeFilter, identityFilter, sinceFilter, untilFilter].forEach(
+        (element) => element.addEventListener("change", applyFilters)
+      );
+      exportCsvButton.addEventListener("click", () => downloadExport("csv"));
+      exportJsonlButton.addEventListener("click", () => downloadExport("jsonl"));
+      prevPage.addEventListener("click", () => {
+        state.offset = Math.max(0, state.offset - PAGE_SIZE);
+        loadSessions(false);
+      });
+      nextPage.addEventListener("click", () => {
+        state.offset = state.offset + PAGE_SIZE;
+        loadSessions(false);
+      });
+
+      loadSessions(true);
+      loadOverview();
+      loadRetention();
+    </script>
+  </body>
+</html>

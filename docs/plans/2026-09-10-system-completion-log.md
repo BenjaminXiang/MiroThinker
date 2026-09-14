@@ -1823,3 +1823,69 @@ turn-debug 产物目录，不是服务日志）。恢复态双重确认：drop-i
 - 构建性能修复立项（OpenSpec change + verification-contract），作为 C6 前置；
 - W1 配置中心交付后验收 → 按 **W5 → W2 → W3 → W4** 串行推进（admin-console 单写者）；
 - 每小时自动巡检构建（会话内 cron），异常或信封落地时才详细汇报。
+
+## 2026-09-15 · 条目 42：run15 重建成功 → 封包 → 切包上线；别名闭包落地，四片管理面同批部署
+
+> change-id: `close-workbook-gaps`（C1.1-batch1b 完成并上线）+ W1/W5/W2/W3 四片随同部署；
+> 性能分析依据 [重建成本分析](./2026-09-14-rebuild-cost-analysis.md)（§11.2/§12/§13）；
+> 数据线 worktree `.worktrees/data-rebuild`；服务线 `.worktrees/canonical-v2-s11-consolidation`（HEAD 快进 `f961eece → 39488029`）。
+
+### 做了什么
+
+- **run15 构建**（09-13 23:31:33 发射 → 09-14 20:44 写信封，**~21h13m**）：身份解析 → 决策批次
+  （**12h40m 的 `COMMIT`**：PG 延迟触发器逐行复验"无人工评审决策"）→ 入域判定 → 四域投影 →
+  索引物化（3.2GB：lookup 669MB / milvus 1.08GB / vector_matrix 1.68GB）→ 发布连续性校验 →
+  信封 **8,184,481,154 字节**；`envelope_sha256=0d6b2966…`、`receipt_sha256=810340df…`。
+  别名填充生效：`company_full.fields_filled` **3726 → 4632（+906）**。
+- **官方封印器落包**（s12c `build_serving_pack.py`；**必须用服务线代码树跑**——build 线树缺
+  `placeholder_scrub` 等模块，fail-fast 已挡住一次误跑）：产出
+  `/var/tmp/mirothinker-data-v2/serving-pack-run15-sealed`（**4.8GB**）。phase：
+  `envelope_validate 2071s` / `index_snapshot_verify 54.4s` / `placeholder_scan 10.1s`
+  （professor=12872 company=3097 glued=189）/ `index_artifacts_copied 3.7s` /
+  `authority_documents_written 167.2s` / `manifest_written 5.3s` / `dogfood_open 351.1s`；
+  **run14 sealed 全程未被触碰**。
+- **run15 bundle**：`s12g/serving-bundle-run15.json`（`content_sha256=4a803895…`），以 run14
+  bundle 为源、只改 release 绑定字段（release/db/index/envelope），运行策略字段逐字不变。
+- **切包（走 systemd 单一事实来源）**：`s12g/serve-18188-command.sh` 换 run15 版
+  （15 个 `--source-batch-id`、零 run14 残留；回滚基线逐字节留存
+  `…-run14-rollback.sh`，sha `215a1c8ed2297b00…`）→ `systemctl --user restart canonical-v2-backend`。
+- **四片功能同批上线**：服务线分支**快进合并** `f961eece → 39488029`（W1 配置中心 / W5 会话审计 /
+  W2 任务运行面 / W3 数据正门），与切包共用**一次**重启。
+
+### 发现
+
+- **"疑似回归"实为环境差异**：我首次起 scratch 冒烟时漏了服务线的
+  `CHAT_LLM_PROFILE=deepseekv4flash`、`CANONICAL_V2_{ACCESS_LOG_DB,CORRECTIONS_DB,MANUAL_RECALL_DIR}`、
+  `CANONICAL_V2_LEXICAL_INDEX=0` → 答案落**降级模板** → 门禁 G1 T3 FAIL（可复现两轮）。
+  用**同款命令文件**重起后 **门禁 7/7 全绿**。教训（已生效）：**scratch 冒烟必须复用服务线命令文件，
+  不得手搓参数**；否则会把环境差异误判成数据回归。
+- **装载成本实测**：run15 包首启 **~13 分钟**（3.39GB `relationships.json` 的解析/规范化），
+  与 §13 判定同源——"同一份发布权威反复重算"，也是 §13.4 要治的病根。
+- **泛化缺口（新，不阻塞上线）**：查询侧**实体名变体**绑定不完整——
+  「优必选**科技**有哪些专利」→ 本地专利 0、citations 0（答案自述"本地库暂未建立与该主体直接关联的专利数据"）；
+  而「优必选有哪些专利」→ **32 个本地 CN 号 + 32 张引用卡**；「优必选」画像答复正常。
+  证据：`/var/tmp/mirothinker-data-v2/logs/probe-phrasing-gap-20260915.md`。
+
+### 怎么验证
+
+- **对 18188 实跑**：`/api/health` 200；页面 `/chat /browse /logs /admin /jobs /upload /seeds`
+  **全部 200**（`/review` 404 属预期——评审台在独立端口 18189）；
+- **replay 门 7 会话全 PASS**（G1–G7；G7 具身智能 3/3；G1 T3 从未修环境时的 FAIL → PASS）；
+- **探针**：「字节跳动」→ 答案首句即 `字节跳动（ByteDance Ltd.）`（C1 batch1b 正题）；
+  「优必选有哪些专利」→ 32 CN + 32 citations；
+- **稳定观察**：unit `Active since 00:40:17`，20+ 分钟无重启，journal 内 chat 请求连续 200；
+- 回滚资产完好：run14 sealed（mtime 09-10 14:34）、`index-v1`、run14 命令文件与 bundle。
+
+### 影响哪些问题
+
+- **C1.1-batch1b 完成并上线**（从"代码就绪"到"生产在跑"）；
+- **管理面四片**（W1 配置中心 / W5 审计增强 / W2 任务运行面 / W3 数据正门）从 Candidate → **已部署**，
+  待你在 18188 做 E2E 体验验收；
+- **新增待办**：① 查询侧实体名变体绑定（"优必选科技"类，与 C1 同类）；② 性能修复已立项
+  `reduce-rebuild-validation-cost`（触发器守卫 + 信封契约重构两步）。
+
+### 下一步
+
+- 你在 18188 上做 E2E 体验验收（四个新管理页 + 别名效果 + 审计增强）；
+- 性能修复按立项排期推进（它是 W6 周期更新 / W7 一键发布的硬前置）；
+- 查询侧名变体绑定缺口：定位后按 pattern-repair 处理（先做 sibling 搜索，不做单点补丁）。

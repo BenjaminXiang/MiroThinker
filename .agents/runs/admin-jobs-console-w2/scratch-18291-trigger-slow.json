@@ -1,0 +1,1 @@
+{"task_id":"stub-collect-slow","run_id":"4c1d942b-36b4-49bc-b644-3f6c150e790a","status":"running","skip_reason":null,"started_at":"2026-09-13T22:45:19.926103+00:00","command":["python3","-c","import time; time.sleep(3)"]}

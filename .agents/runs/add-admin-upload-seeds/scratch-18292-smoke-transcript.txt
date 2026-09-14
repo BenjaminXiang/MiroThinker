@@ -1,0 +1,241 @@
+
+== health + pages ==
+health status=200
+upload status=200
+seeds status=200
+jobs status=200
+browse status=200
+logs status=200
+admin status=200
+
+== upload ledger before ==
+status=200
+
+== company upload (commit) ==
+status=202
+{
+  "upload": {
+    "upload_id": "7f1fcfaf-4d04-4bb2-9856-d0b3b5643d86",
+    "domain": "company",
+    "filename": "w3-company-sample.xlsx",
+    "content_sha256": "0e5c67836f05db04494989f85751080193a29644c0888dec217e7147753b6f80",
+    "size_bytes": 5333,
+    "status": "running",
+    "dry_run": false,
+    "run_id": "21e251a0-9fb3-40ce-b033-c6381968954c",
+    "operator": "w3-smoke",
+    "created_at": "2026-09-14T11:43:40.441331+00:00",
+    "updated_at": "2026-09-14T11:43:40.444423+00:00",
+    "summary": {
+      "task_id": "upload-company-import",
+      "dry_run": false
+    }
+  },
+  "outcome": "running",
+  "skip_reason": null
+}
+upload_id=7f1fcfaf-4d04-4bb2-9856-d0b3b5643d86 run_id=21e251a0-9fb3-40ce-b033-c6381968954c
+
+== duplicate upload of the same bytes (expect 409 duplicate_upload) ==
+status=409
+{
+  "detail": {
+    "code": "duplicate_upload",
+    "upload_id": "7f1fcfaf-4d04-4bb2-9856-d0b3b5643d86",
+    "status": "running",
+    "created_at": "2026-09-14T11:43:40.441331+00:00"
+  }
+}
+
+== wait for the import run ==
+  upload=7f1fcfaf-4d04-4bb2-9856-d0b3b5643d86 status: succeeded succeeded
+{
+  "upload": {
+    "upload_id": "7f1fcfaf-4d04-4bb2-9856-d0b3b5643d86",
+    "domain": "company",
+    "filename": "w3-company-sample.xlsx",
+    "content_sha256": "0e5c67836f05db04494989f85751080193a29644c0888dec217e7147753b6f80",
+    "size_bytes": 5333,
+    "status": "succeeded",
+    "dry_run": false,
+    "run_id": "21e251a0-9fb3-40ce-b033-c6381968954c",
+    "operator": "w3-smoke",
+    "created_at": "2026-09-14T11:43:40.441331+00:00",
+    "updated_at": "2026-09-14T11:43:42.108606+00:00",
+    "summary": {
+      "status": "succeeded",
+      "items_processed": 3,
+      "items_failed": 0,
+      "imported": 3,
+      "batch_id": "e49d14c6-ded7-46aa-9515-42ec23006531",
+      "company_ids_for_enrichment": 3,
+      "enrichment": {
+        "status": "queued",
+        "batch_id": "8ab029d9-5078-4075-a430-615f22e1cf9f",
+        "companies_total": 3,
+        "companies_selected": 3
+      },
+      "team_members_inserted": 0,
+      "funding_events_inserted": 0,
+      "lineage_rows": 3,
+      "milvus_backfill_required": true,
+      "milvus_backfill_status": "not_triggered",
+      "milvus_backfill_command": "cd apps/miroflow-agent && uv run python scripts/run_milvus_backfill.py --domain company --milvus-uri \"${CHAT_MILVUS_URI:-./milvus.db}\"",
+      "pipeline_run_id": "4522a7b5-d8bc-44bf-8c08-0fca2b22a2e2",
+      "upload_status": "succeeded"
+    }
+  },
+  "run": {
+    "run_id": "21e251a0-9fb3-40ce-b033-c6381968954c",
+    "task_id": "upload-company-import",
+    "trigger_source": "manual",
+    "operator": "w3-smoke",
+    "status": "succeeded",
+    "skip_reason": null,
+    "started_at": "2026-09-14T11:43:40.443743+00:00",
+    "finished_at": "2026-09-14T11:43:42.304765+00:00",
+    "duration_ms": 1860,
+    "exit_code": 0,
+    "items_processed": 3,
+    "items_failed": 0,
+    "summary": {
+      "quota": {
+        "web_search": 200,
+        "llm": 500
+      },
+      "job_summary": {
+        "items_processed": 3,
+        "items_failed": 0,
+        "upload_id": "7f1fcfaf-4d04-4bb2-9856-d0b3b5643d86",
+        "domain": "company",
+        "batch_id": "e49d14c6-ded7-46aa-9515-42ec23006531",
+        "status": "succeeded"
+      }
+    },
+    "window_bound": false,
+    "inside_window": false,
+    "command": [
+      "uv",
+      "run",
+      "python",
+      "scripts/run_admin_upload_import.py",
+      "--domain",
+      "company",
+      "--upload-id",
+      "7f1fcfaf-4d04-4bb2-9856-d0b3b5643d86"
+    ],
+    "stdout_excerpt": "{\"job_summary\": {\"items_processed\": 3, \"items_failed\": 0, \"upload_id\": \"7f1fcfaf-4d04-4bb2-9856-d0b3b5643d86\", \"domain\": \"company\", \"batch_id\": \"e49d14c6-ded7-46aa-9515-42ec23006531\", \"status\": \"succeeded\"}}\n",
+    "stderr_excerpt": ""
+  },
+  "batch": {
+    "available": true,
+    "batch": {
+      "batch_id": "8ab029d9-5078-4075-a430-615f22e1cf9f",
+      "status": "queued",
+      "current_stage": "queued",
+      "companies_total": "3",
+      "companies_selected": "3",
+      "companies_processed": "0",
+      "companies_succeeded": "0",
+      "companies_failed": "0",
+      "runner_pid": null,
+      "runner_log_path": null,
+      "started_at": null,
+      "finished_at": null
+    },
+    "items": {
+      "queued": 3
+    }
+  }
+}
+run detail status=200
+
+== domain store after the import (scratch Postgres) ==
+company: 3
+import_batch: 1
+company_enrichment_batch: 1
+
+== batch progress on the upload detail ==
+batch: {"available": true, "batch": {"batch_id": "8ab029d9-5078-4075-a430-615f22e1cf9f", "status": "queued", "current_stage": "queued", "companies_total": "3", "companies_selected": "3", "companies_processed": "0", "companies_succeeded": "0", "companies_failed": "0", "runner_pid": null, "runner_log_path": null, "started_at": null, "finished_at": null}, "items": {"queued": 3}}
+
+== patent dry-run upload (no writes, no quota) ==
+status=202
+dry-run upload status=succeeded
+dry-run summary: {"status": "succeeded", "items_processed": 2, "items_failed": 0, "dry_run": true, "domain": "patent", "imported": 0, "rows_read": 2, "records_parsed": 2, "skipped_rows": 0, "skip_reasons": {}, "parse_report": {"workbook_path": "/var/tmp/w3-smoke-18292/uploads/patent/99a0eaa10ad34ff2/c4574cb5-77bf-4cff-b42f-f59c8f9332a1/w3-patent-sample.xlsx", "worksheet_title": "专利", "header_row_index": 1, "rows_read": 2, "records_parsed": 2, "skipped_rows": 0, "skip_reasons": {}, "read_only_max_row": 3, "read_o
+dry-run batch rows: dry_run=True items_processed=2
+
+== seed CRUD ==
+create status=201
+seed_id=1
+list status=200
+update status=200
+
+== seed preview trigger through the gate ==
+trigger status=202
+{
+  "run_id": "ed62ff58-882a-48dd-98eb-ce308a4f0cc0",
+  "seed_id": 1,
+  "status": "running",
+  "task_id": "admin-seed-refresh",
+  "mode": "preview",
+  "skip_reason": null
+}
+
+== sample trigger without a limit (expect 422) ==
+status=422
+
+== wait for the seed refresh run, then poll its history ==
+runs status=200
+{
+  "seed_id": 1,
+  "total": 1,
+  "runs": [
+    {
+      "run_id": "ed62ff58-882a-48dd-98eb-ce308a4f0cc0",
+      "task_id": "admin-seed-refresh",
+      "trigger_source": "manual",
+      "operator": "w3-smoke",
+      "status": "failed",
+      "skip_reason": null,
+      "started_at": "2026-09-14T11:43:46.074375+00:00",
+      "finished_at": "2026-09-14T11:43:46.650504+00:00",
+      "duration_ms": 575,
+      "exit_code": 1,
+      "items_processed": 1,
+      "items_failed": 1,
+      "summary": {
+        "quota": {
+          "web_search": 200,
+          "llm": 500
+        },
+        "job_summary": {
+          "items_processed": 1,
+          "items_failed": 1,
+          "seed_id": 1,
+          "trigger_mode": "preview",
+          "limit": null,
+          "operator": "anonymous",
+          "seed_status": "adapter_missing"
+        }
+      },
+      "window_bound": false,
+      "inside_window": false
+    }
+  ]
+}
+seed run detail status=200
+
+== delete the smoke seed ==
+delete status=204
+get after delete status=404
+
+== upload ledger after ==
+status=200
+total: 2
+  c4574cb5 patent    succeeded  dry_run=True w3-patent-sample.xlsx
+  7f1fcfaf company   succeeded  dry_run=False w3-company-sample.xlsx
+
+== quota counters recorded on the runs ==
+scratch-18292-run-detail.json: status=succeeded quota={'web_search': 200, 'llm': 500} job_summary={'items_processed': 3, 'items_failed': 0, 'upload_id': '7f1fcfaf-4d04-4bb2-9856-d0b3b5643d86', 'domain': 'company', 'batch_id': 'e49d14c6-ded7-46aa-9515-42ec23006531', 'status': 'succeeded'}
+scratch-18292-seed-run-detail.json: status=failed quota={'web_search': 200, 'llm': 500} job_summary={'items_processed': 1, 'items_failed': 1, 'seed_id': 1, 'trigger_mode': 'preview', 'limit': None, 'operator': 'anonymous', 'seed_status': 'adapter_missing'}
+  stderr tail: ng/MiroThinker/.worktrees/admin-upload-seeds/apps/admin-console/.venv` does not match the project environment path `.venv` and will be ignored; use `--active` to target the active environment instead | 

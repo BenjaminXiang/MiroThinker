@@ -1275,3 +1275,50 @@ Read-only forensics on the running run15 rebuild corrected this round's ETA by
   **validation is not to be relaxed**. Not implemented while the rebuild runs.
 - **Human docs**: `docs/plans/2026-09-14-rebuild-cost-analysis.md` (analysis)
   and log entry 41 in `docs/plans/2026-09-10-system-completion-log.md`.
+
+### 2026-09-15 — C1.1-batch1b DONE: alias closure rebuilt, sealed, switched, probed
+
+Status: **complete and live on 18188** (tasks.md C1.1-batch1b ticked).
+
+- **Rebuild (run15)**: launched 09-13 23:31:33, envelope written 09-14 20:44
+  (`8,184,481,154` B; `envelope_sha256=0d6b2966…`,
+  `receipt_sha256=810340df…`, `handoff_sha256=b5d6005f…`). Alias projection
+  confirmed in the merge ledger: `company_full.fields_filled` **3726 → 4632
+  (+906)**. Cost note: one `COMMIT` (decision batch, deferred constraint
+  trigger) took **12h40m** — see `docs/plans/2026-09-14-rebuild-cost-analysis.md`
+  §11/§11.2/§12 and the new change `reduce-rebuild-validation-cost`.
+- **Seal**: official `s12c/build_serving_pack.py`, run with the **serving-line**
+  code tree (the build-line tree lacks `placeholder_scrub`; the sealer failed
+  fast on the wrong tree and was re-run correctly). Pack
+  `/var/tmp/mirothinker-data-v2/serving-pack-run15-sealed` (4.8 GB):
+  `envelope_validate 2071.098s`, `index_snapshot_verify 54.405s`,
+  `placeholder_scan 10.078s` (professor=12872 company=3097 glued=189),
+  `index_artifacts_copied 3.736s`, `authority_documents_written 167.19s`,
+  `manifest_written 5.348s`, `dogfood_open 351.09s`; run14 sealed untouched.
+- **Bundle**: `s12g/serving-bundle-run15.json`, `content_sha256=4a803895…`
+  (derived from the run14 bundle; only release-bound fields changed).
+- **Switch**: the systemd entry is the single source of truth
+  (`deploy/start-canonical-v2.sh` → `s12g/serve-18188-command.sh`), so the
+  switch rewrote that command file (run15 identities, 15 `--source-batch-id`,
+  zero run14 leftovers) and kept the previous file byte-identical as
+  `…-run14-rollback.sh` (sha `215a1c8ed2297b00…`) → `systemctl --user restart
+  canonical-v2-backend` (00:40:17; pack load ≈13 min).
+- **Same-restart deployment**: serving line fast-forwarded
+  `f961eece → 39488029`, which puts W1 (config center), W5 (audit
+  enrichment), W2 (task-run surface) and W3 (data front door) live in the
+  same restart.
+- **Post-switch evidence (18188)**: `/api/health` 200; pages `/chat /browse
+  /logs /admin /jobs /upload /seeds` 200 (`/review` 404 by design, port
+  18189); **replay gate 7/7 ALL PASS**; probe 「字节跳动」 → the answer opens
+  with `字节跳动（ByteDance Ltd.）` (the batch1b headline); probe 「优必选有
+  哪些专利」 → 32 local CN numbers + 32 citations.
+- **False alarm worth remembering**: a first scratch smoke failed G1 T3 with a
+  degraded-template answer because the scratch instance was started *without*
+  the service env (`CHAT_LLM_PROFILE`, `CANONICAL_V2_*`,
+  `CANONICAL_V2_LEXICAL_INDEX`). Re-running from the same command file turned
+  the gate green. Rule: **smoke the pack by reusing the service command file,
+  never hand-rolled parameters.**
+- **Generalization gap recorded (not blocking)**: 「优必选**科技**有哪些专利」
+  misses the patent lane (0 local patents, 0 citations) while 「优必选有哪些
+  专利」 returns 32. Evidence:
+  `/var/tmp/mirothinker-data-v2/logs/probe-phrasing-gap-20260915.md`.

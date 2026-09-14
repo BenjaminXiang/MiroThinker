@@ -1,0 +1,137 @@
+{
+  "identity": {
+    "write_response": {
+      "recorded": true,
+      "session_id": "session:chat:smoke"
+    },
+    "identity_sessions": [
+      "session:chat:smoke"
+    ],
+    "list_identities": [
+      [
+        "smoke-auditor"
+      ]
+    ],
+    "detail_turn_identity": [
+      "smoke-auditor"
+    ],
+    "stored_value": [
+      "smoke-auditor"
+    ],
+    "no_header_detail_identity": [
+      "anonymous"
+    ],
+    "pass": true
+  },
+  "combined_filters": {
+    "http_total": 40,
+    "sql_total": 40,
+    "http_sessions_sample": [
+      "session:chat:Yn5D2pDgHk3RhF2AThSWlf1qaDpPRxdm",
+      "session:chat:lKCdGGRmnfDycZwtMzbYH3ATeF2qxB35",
+      "session:chat:jX2xUxwY0TOL9ourl6BIwocYZIVKN10I"
+    ],
+    "empty_query_type_bucket_http": 34,
+    "empty_query_type_bucket_sql": 34,
+    "invalid_naive_datetime_status": "{\"detail\":\"since must carry an explicit UTC offset\"}",
+    "invalid_order_status": "{\"detail\":\"since must not be later than until\"}",
+    "pass": true
+  },
+  "export_equals_page": {
+    "csv_rows": 1071,
+    "jsonl_rows": 1071,
+    "sampled_sessions": [
+      "session:chat:3P042Q7badMsVIOYWI3hXnVBBGAEJdAz",
+      "session:chat:-X6Ycy19TUDq40bK1HVjdDa07l0YeyN6",
+      "session:chat:vybRdUrvEOTGDmrL4PiFEwnzH-_7ZfwR",
+      "session:chat:smoke",
+      "session:chat:smoke-anon"
+    ],
+    "compared_turns": 11,
+    "mismatches": [],
+    "bad_format_response": "{\"detail\":\"format must be one of csv, jsonl\"}",
+    "pass": true
+  },
+  "statistics_reconcile": {
+    "sql_totals": [
+      1071,
+      644,
+      18,
+      3
+    ],
+    "http_totals": {
+      "sessions": 644,
+      "turns": 1071,
+      "errors": 18,
+      "interrupted": 3,
+      "error_rate": 0.0168
+    },
+    "sql_window_turns": 1071,
+    "checks": {
+      "totals": true,
+      "error_rate": true,
+      "daily": true,
+      "query_types": true,
+      "identities": true,
+      "top_queries": true
+    },
+    "default_window_days": 30,
+    "default_window_defaulted": true,
+    "empty_window": {
+      "sessions": 0,
+      "turns": 0,
+      "errors": 0,
+      "interrupted": 0,
+      "error_rate": 0.0
+    },
+    "pass": true
+  },
+  "retention": {
+    "config_field": {
+      "path": "paths.access_log_retention_days",
+      "value": 45,
+      "source": "file",
+      "env_var": "CANONICAL_V2_ACCESS_LOG_RETENTION_DAYS",
+      "editable": true
+    },
+    "purge_with_scratch_settings": "purged turns=0 sessions=0 cutoff=2026-07-30T20:42:29.660398+00:00 retention_days=45 source=file",
+    "purge_without_settings": "purged turns=0 sessions=0 cutoff=2026-06-15T20:42:29.692368+00:00 retention_days=90 source=default",
+    "turns_after_purge": 1530,
+    "settings_file": {
+      "schema_version": 1,
+      "paths": {
+        "access_log_retention_days": 45
+      }
+    },
+    "pass": true
+  },
+  "no_ip_recorded": {
+    "turn_columns": [
+      "turn_id",
+      "session_id",
+      "turn_count",
+      "query",
+      "query_type",
+      "answer_text",
+      "answer_style",
+      "citations_json",
+      "suggested_followups_json",
+      "status",
+      "error_detail",
+      "started_at",
+      "finished_at",
+      "latency_ms",
+      "user_identity"
+    ],
+    "column_hits": [],
+    "ip_pattern_in_exposed_responses": {
+      "detail": [],
+      "list": [],
+      "export.csv": [],
+      "export.jsonl": [],
+      "config": []
+    },
+    "ip_pattern_in_stored_rows": [],
+    "pass": true
+  }
+}

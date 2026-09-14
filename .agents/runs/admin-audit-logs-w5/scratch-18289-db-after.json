@@ -1,0 +1,32 @@
+{
+  "marker": "canonical-v2-access-log-v1",
+  "turn_columns": [
+    "turn_id",
+    "session_id",
+    "turn_count",
+    "query",
+    "query_type",
+    "answer_text",
+    "answer_style",
+    "citations_json",
+    "suggested_followups_json",
+    "status",
+    "error_detail",
+    "started_at",
+    "finished_at",
+    "latency_ms",
+    "user_identity"
+  ],
+  "sessions": 920,
+  "turns": 1532,
+  "identities": [
+    [
+      "anonymous",
+      1531
+    ],
+    [
+      "smoke-auditor",
+      1
+    ]
+  ]
+}

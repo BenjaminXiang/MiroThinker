@@ -1,0 +1,285 @@
+FFFFFFFFF.F                                                              [100%]
+==================================== ERRORS ====================================
+_ ERROR collecting tests/test_canonical_v2_access_log_filters_export_stats.py __
+ImportError while importing test module '/home/longxiang/MiroThinker/.worktrees/admin-audit-logs/apps/admin-console/tests/test_canonical_v2_access_log_filters_export_stats.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+../../../../../.local/share/uv/python/cpython-3.12.12-linux-x86_64-gnu/lib/python3.12/importlib/__init__.py:90: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/test_canonical_v2_access_log_filters_export_stats.py:19: in <module>
+    from backend.services.canonical_v2_access_log import (
+E   ImportError: cannot import name 'ANONYMOUS_IDENTITY' from 'backend.services.canonical_v2_access_log' (/home/longxiang/MiroThinker/.worktrees/admin-audit-logs/apps/admin-console/backend/services/canonical_v2_access_log.py)
+=================================== FAILURES ===================================
+___________ test_legacy_database_migrates_in_place_without_data_loss ___________
+
+tmp_path = PosixPath('/tmp/pytest-of-longxiang/pytest-856/test_legacy_database_migrates_0')
+
+    def test_legacy_database_migrates_in_place_without_data_loss(tmp_path: Path) -> None:
+        path = _legacy_database(tmp_path / "access-logs.sqlite3")
+        before_rows = sqlite3.connect(path).execute(
+            "SELECT turn_id, query, answer_text, status, latency_ms FROM turns"
+            " ORDER BY turn_count"
+        ).fetchall()
+    
+        store = AccessLogStore(path)
+>       assert "user_identity" in _column_names(path, "turns")
+E       AssertionError: assert 'user_identity' in ('turn_id', 'session_id', 'turn_count', 'query', 'query_type', 'answer_text', ...)
+E        +  where ('turn_id', 'session_id', 'turn_count', 'query', 'query_type', 'answer_text', ...) = _column_names(PosixPath('/tmp/pytest-of-longxiang/pytest-856/test_legacy_database_migrates_0/access-logs.sqlite3'), 'turns')
+
+tests/test_canonical_v2_access_log_migration.py:172: AssertionError
+__________ test_migrated_database_stays_readable_by_the_pre_w5_reader __________
+
+tmp_path = PosixPath('/tmp/pytest-of-longxiang/pytest-856/test_migrated_database_stays_r0')
+
+    def test_migrated_database_stays_readable_by_the_pre_w5_reader(tmp_path: Path) -> None:
+        path = _legacy_database(tmp_path / "access-logs.sqlite3")
+        store = AccessLogStore(path)
+        store.record_turn(
+>           _new_turn(
+                turn_id="turn:new:1",
+                session_id="session:chat:legacy",
+                user_identity="alice",
+            )
+        )
+
+tests/test_canonical_v2_access_log_migration.py:199: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def _new_turn(*, turn_id: str, session_id: str, user_identity: str) -> AccessLogTurnRecord:
+        started = datetime(2026, 8, 8, 10, 0, 0, tzinfo=UTC)
+>       return AccessLogTurnRecord(
+            turn_id=turn_id,
+            session_id=session_id,
+            turn_count=0,
+            query="迁移后写入的问题",
+            query_type="canonical_v2:A:answer",
+            answer_text="迁移后写入的回答。",
+            answer_style="llm_synthesized",
+            citations=(),
+            suggested_followups=(),
+            status="completed",
+            error_detail=None,
+            started_at=started,
+            finished_at=started + timedelta(seconds=2),
+            latency_ms=2000,
+            user_identity=user_identity,
+        )
+E       TypeError: AccessLogTurnRecord.__init__() got an unexpected keyword argument 'user_identity'
+
+tests/test_canonical_v2_access_log_migration.py:138: TypeError
+_______________ test_reopening_a_migrated_database_is_idempotent _______________
+
+tmp_path = PosixPath('/tmp/pytest-of-longxiang/pytest-856/test_reopening_a_migrated_data0')
+
+    def test_reopening_a_migrated_database_is_idempotent(tmp_path: Path) -> None:
+        path = _legacy_database(tmp_path / "access-logs.sqlite3")
+        first = AccessLogStore(path)
+        first.close()
+        columns_after_first_open = _column_names(path, "turns")
+    
+        second = AccessLogStore(path)
+        second.record_turn(
+>           _new_turn(
+                turn_id="turn:new:1",
+                session_id="session:chat:legacy",
+                user_identity="alice",
+            )
+        )
+
+tests/test_canonical_v2_access_log_migration.py:239: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def _new_turn(*, turn_id: str, session_id: str, user_identity: str) -> AccessLogTurnRecord:
+        started = datetime(2026, 8, 8, 10, 0, 0, tzinfo=UTC)
+>       return AccessLogTurnRecord(
+            turn_id=turn_id,
+            session_id=session_id,
+            turn_count=0,
+            query="迁移后写入的问题",
+            query_type="canonical_v2:A:answer",
+            answer_text="迁移后写入的回答。",
+            answer_style="llm_synthesized",
+            citations=(),
+            suggested_followups=(),
+            status="completed",
+            error_detail=None,
+            started_at=started,
+            finished_at=started + timedelta(seconds=2),
+            latency_ms=2000,
+            user_identity=user_identity,
+        )
+E       TypeError: AccessLogTurnRecord.__init__() got an unexpected keyword argument 'user_identity'
+
+tests/test_canonical_v2_access_log_migration.py:138: TypeError
+__________ test_migration_keeps_indexes_and_new_identity_filter_works __________
+
+tmp_path = PosixPath('/tmp/pytest-of-longxiang/pytest-856/test_migration_keeps_indexes_a0')
+
+    def test_migration_keeps_indexes_and_new_identity_filter_works(tmp_path: Path) -> None:
+        path = _legacy_database(tmp_path / "access-logs.sqlite3")
+        store = AccessLogStore(path)
+        store.record_turn(
+>           _new_turn(
+                turn_id="turn:new:1",
+                session_id="session:chat:legacy",
+                user_identity="alice",
+            )
+        )
+
+tests/test_canonical_v2_access_log_migration.py:258: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def _new_turn(*, turn_id: str, session_id: str, user_identity: str) -> AccessLogTurnRecord:
+        started = datetime(2026, 8, 8, 10, 0, 0, tzinfo=UTC)
+>       return AccessLogTurnRecord(
+            turn_id=turn_id,
+            session_id=session_id,
+            turn_count=0,
+            query="迁移后写入的问题",
+            query_type="canonical_v2:A:answer",
+            answer_text="迁移后写入的回答。",
+            answer_style="llm_synthesized",
+            citations=(),
+            suggested_followups=(),
+            status="completed",
+            error_detail=None,
+            started_at=started,
+            finished_at=started + timedelta(seconds=2),
+            latency_ms=2000,
+            user_identity=user_identity,
+        )
+E       TypeError: AccessLogTurnRecord.__init__() got an unexpected keyword argument 'user_identity'
+
+tests/test_canonical_v2_access_log_migration.py:138: TypeError
+______________ test_managed_settings_file_drives_the_purge_window ______________
+
+tmp_path = PosixPath('/tmp/pytest-of-longxiang/pytest-856/test_managed_settings_file_dri0')
+
+    def test_managed_settings_file_drives_the_purge_window(tmp_path: Path) -> None:
+        db_path = tmp_path / "access-logs.sqlite3"
+        store = _database(db_path)
+        store.close()
+        settings = _settings(tmp_path / "settings.json", 30)
+    
+        result = _run(db_path=db_path, settings_path=settings)
+    
+        assert result.returncode == 0, result.stderr
+>       assert "source=file" in result.stdout
+E       AssertionError: assert 'source=file' in 'purged turns=0 sessions=0 cutoff=2026-06-15T16:49:29.079121+00:00\n'
+E        +  where 'purged turns=0 sessions=0 cutoff=2026-06-15T16:49:29.079121+00:00\n' = CompletedProcess(args=['bash', '/home/longxiang/MiroThinker/.worktrees/admin-audit-logs/deploy/purge-access-logs.sh'], returncode=0, stdout='purged turns=0 sessions=0 cutoff=2026-06-15T16:49:29.079121+00:00\n', stderr='').stdout
+
+tests/test_purge_access_logs_retention.py:107: AssertionError
+_________________ test_environment_outranks_the_settings_file __________________
+
+tmp_path = PosixPath('/tmp/pytest-of-longxiang/pytest-856/test_environment_outranks_the_0')
+
+    def test_environment_outranks_the_settings_file(tmp_path: Path) -> None:
+        db_path = tmp_path / "access-logs.sqlite3"
+        store = _database(db_path)
+        store.close()
+        settings = _settings(tmp_path / "settings.json", 30)
+    
+        result = _run(db_path=db_path, settings_path=settings, env_days="60")
+    
+        assert result.returncode == 0, result.stderr
+>       assert "source=env" in result.stdout
+E       AssertionError: assert 'source=env' in 'purged turns=0 sessions=0 cutoff=2026-06-15T16:49:29.110066+00:00\n'
+E        +  where 'purged turns=0 sessions=0 cutoff=2026-06-15T16:49:29.110066+00:00\n' = CompletedProcess(args=['bash', '/home/longxiang/MiroThinker/.worktrees/admin-audit-logs/deploy/purge-access-logs.sh'], returncode=0, stdout='purged turns=0 sessions=0 cutoff=2026-06-15T16:49:29.110066+00:00\n', stderr='').stdout
+
+tests/test_purge_access_logs_retention.py:121: AssertionError
+_________________ test_positional_argument_outranks_everything _________________
+
+tmp_path = PosixPath('/tmp/pytest-of-longxiang/pytest-856/test_positional_argument_outra0')
+
+    def test_positional_argument_outranks_everything(tmp_path: Path) -> None:
+        db_path = tmp_path / "access-logs.sqlite3"
+        store = _database(db_path)
+        store.close()
+        settings = _settings(tmp_path / "settings.json", 90)
+    
+        result = _run(db_path=db_path, settings_path=settings, env_days="90", arg="1")
+    
+        assert result.returncode == 0, result.stderr
+>       assert "source=argument" in result.stdout
+E       AssertionError: assert 'source=argument' in 'purged turns=2 sessions=2 cutoff=2026-09-12T16:49:29.138742+00:00\n'
+E        +  where 'purged turns=2 sessions=2 cutoff=2026-09-12T16:49:29.138742+00:00\n' = CompletedProcess(args=['bash', '/home/longxiang/MiroThinker/.worktrees/admin-audit-logs/deploy/purge-access-logs.sh', '1'], returncode=0, stdout='purged turns=2 sessions=2 cutoff=2026-09-12T16:49:29.138742+00:00\n', stderr='').stdout
+
+tests/test_purge_access_logs_retention.py:135: AssertionError
+_____________ test_missing_settings_file_falls_back_to_the_default _____________
+
+tmp_path = PosixPath('/tmp/pytest-of-longxiang/pytest-856/test_missing_settings_file_fal0')
+
+    def test_missing_settings_file_falls_back_to_the_default(tmp_path: Path) -> None:
+        db_path = tmp_path / "access-logs.sqlite3"
+        store = _database(db_path)
+        store.close()
+    
+        result = _run(db_path=db_path, settings_path=tmp_path / "absent" / "settings.json")
+    
+        assert result.returncode == 0, result.stderr
+>       assert "source=default" in result.stdout
+E       AssertionError: assert 'source=default' in 'purged turns=0 sessions=0 cutoff=2026-06-15T16:49:29.169100+00:00\n'
+E        +  where 'purged turns=0 sessions=0 cutoff=2026-06-15T16:49:29.169100+00:00\n' = CompletedProcess(args=['bash', '/home/longxiang/MiroThinker/.worktrees/admin-audit-logs/deploy/purge-access-logs.sh'], returncode=0, stdout='purged turns=0 sessions=0 cutoff=2026-06-15T16:49:29.169100+00:00\n', stderr='').stdout
+
+tests/test_purge_access_logs_retention.py:148: AssertionError
+______________ test_invalid_configured_values_warn_and_fall_back _______________
+
+tmp_path = PosixPath('/tmp/pytest-of-longxiang/pytest-856/test_invalid_configured_values0')
+
+    def test_invalid_configured_values_warn_and_fall_back(tmp_path: Path) -> None:
+        for index, value in enumerate(("abc", 0, 3651, "", None)):
+            db_path = tmp_path / f"access-logs-{index}.sqlite3"
+            store = _database(db_path)
+            store.close()
+            settings = _settings(tmp_path / f"settings-{index}.json", value)
+    
+            result = _run(db_path=db_path, settings_path=settings)
+    
+            assert result.returncode == 0, (value, result.stderr)
+>           assert f"retention_days={_DEFAULT_RETENTION_DAYS}" in result.stdout, value
+E           AssertionError: abc
+E           assert 'retention_days=90' in 'purged turns=0 sessions=0 cutoff=2026-06-15T16:49:29.199032+00:00\n'
+E            +  where 'purged turns=0 sessions=0 cutoff=2026-06-15T16:49:29.199032+00:00\n' = CompletedProcess(args=['bash', '/home/longxiang/MiroThinker/.worktrees/admin-audit-logs/deploy/purge-access-logs.sh'], returncode=0, stdout='purged turns=0 sessions=0 cutoff=2026-06-15T16:49:29.199032+00:00\n', stderr='').stdout
+
+tests/test_purge_access_logs_retention.py:163: AssertionError
+____________ test_purge_also_removes_sessions_emptied_by_the_window ____________
+
+tmp_path = PosixPath('/tmp/pytest-of-longxiang/pytest-856/test_purge_also_removes_sessio0')
+
+    def test_purge_also_removes_sessions_emptied_by_the_window(tmp_path: Path) -> None:
+        db_path = tmp_path / "access-logs.sqlite3"
+        store = _database(db_path)
+        store.close()
+        settings = _settings(tmp_path / "settings.json", 30)
+    
+        _run(db_path=db_path, settings_path=settings)
+    
+        connection = sqlite3.connect(db_path)
+        try:
+            sessions = [
+                row[0] for row in connection.execute("SELECT session_id FROM sessions")
+            ]
+        finally:
+            connection.close()
+>       assert sessions == ["session:chat:recent"]
+E       AssertionError: assert ['session:cha...:chat:recent'] == ['session:chat:recent']
+E         
+E         At index 0 diff: 'session:chat:old' != 'session:chat:recent'
+E         Left contains one more item: 'session:chat:recent'
+E         Use -v to get more diff
+
+tests/test_purge_access_logs_retention.py:197: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_canonical_v2_access_log_migration.py::test_legacy_database_migrates_in_place_without_data_loss
+FAILED tests/test_canonical_v2_access_log_migration.py::test_migrated_database_stays_readable_by_the_pre_w5_reader
+FAILED tests/test_canonical_v2_access_log_migration.py::test_reopening_a_migrated_database_is_idempotent
+FAILED tests/test_canonical_v2_access_log_migration.py::test_migration_keeps_indexes_and_new_identity_filter_works
+FAILED tests/test_purge_access_logs_retention.py::test_managed_settings_file_drives_the_purge_window
+FAILED tests/test_purge_access_logs_retention.py::test_environment_outranks_the_settings_file
+FAILED tests/test_purge_access_logs_retention.py::test_positional_argument_outranks_everything
+FAILED tests/test_purge_access_logs_retention.py::test_missing_settings_file_falls_back_to_the_default
+FAILED tests/test_purge_access_logs_retention.py::test_invalid_configured_values_warn_and_fall_back
+FAILED tests/test_purge_access_logs_retention.py::test_purge_also_removes_sessions_emptied_by_the_window
+ERROR tests/test_canonical_v2_access_log_filters_export_stats.py
+10 failed, 1 passed, 1 error in 0.35s

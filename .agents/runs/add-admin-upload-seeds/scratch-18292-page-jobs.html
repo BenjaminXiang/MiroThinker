@@ -1,0 +1,690 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light" />
+    <title>任务运维 · Canonical V2</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23143d59'/%3E%3Cpath d='M17 19h8v11l12-11h10L33 32l15 13H37L25 34v11h-8z' fill='white'/%3E%3C/svg%3E" />
+    <style>
+      :root {
+        --ink: #17252f;
+        --muted: #62727d;
+        --navy-strong: #0d2c41;
+        --teal: #168b82;
+        --teal-soft: #e7f5f2;
+        --blue-soft: #edf4f8;
+        --amber: #b66916;
+        --amber-soft: #fff4df;
+        --danger: #a83f4c;
+        --danger-soft: #fff0f2;
+        --surface: #ffffff;
+        --canvas: #f3f6f7;
+        --line: #dce4e7;
+        --line-strong: #c5d2d7;
+        --shadow: 0 18px 42px rgba(24, 55, 70, 0.08);
+        --radius: 18px;
+      }
+
+      * { box-sizing: border-box; }
+
+      body {
+        margin: 0;
+        min-width: 320px;
+        color: var(--ink);
+        background:
+          radial-gradient(circle at 8% 0%, rgba(22, 139, 130, 0.09), transparent 28rem),
+          var(--canvas);
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+          "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+        line-height: 1.55;
+      }
+
+      button, a, input, select { font: inherit; }
+
+      button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible {
+        outline: 3px solid rgba(22, 139, 130, 0.28);
+        outline-offset: 2px;
+      }
+
+      .topbar {
+        color: #fff;
+        background:
+          linear-gradient(112deg, rgba(255, 255, 255, 0.05), transparent 50%),
+          var(--navy-strong);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+      }
+
+      .topbar-inner {
+        max-width: 1280px;
+        margin: 0 auto;
+        padding: 18px 24px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        flex-wrap: wrap;
+      }
+
+      .brand { display: flex; flex-direction: column; gap: 2px; }
+      .brand strong { font-size: 1.05rem; letter-spacing: 0.02em; }
+      .brand span { font-size: 0.8rem; color: rgba(255, 255, 255, 0.72); }
+
+      .nav { display: flex; gap: 8px; flex-wrap: wrap; }
+      .nav a {
+        color: rgba(255, 255, 255, 0.82);
+        text-decoration: none;
+        font-size: 0.86rem;
+        padding: 7px 14px;
+        border-radius: 999px;
+        border: 1px solid transparent;
+      }
+      .nav a:hover { border-color: rgba(255, 255, 255, 0.28); }
+      .nav a.active {
+        color: #fff;
+        background: rgba(255, 255, 255, 0.14);
+        border-color: rgba(255, 255, 255, 0.24);
+      }
+
+      main {
+        max-width: 1280px;
+        margin: 0 auto;
+        padding: 24px;
+        display: grid;
+        gap: 20px;
+      }
+
+      .card {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+        padding: 20px 22px;
+      }
+
+      .card > header {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 12px;
+        flex-wrap: wrap;
+        border-bottom: 1px solid var(--line);
+        padding-bottom: 10px;
+        margin-bottom: 14px;
+      }
+
+      .card h2 { font-size: 1rem; margin: 0; letter-spacing: 0.02em; }
+      .card header .hint { font-size: 0.8rem; color: var(--muted); }
+
+      .pill {
+        display: inline-block;
+        font-size: 0.74rem;
+        padding: 2px 9px;
+        border-radius: 999px;
+        border: 1px solid var(--line-strong);
+        color: var(--muted);
+        background: var(--surface);
+        margin-right: 4px;
+        white-space: nowrap;
+      }
+      .pill.ok { color: #0d5f57; background: var(--teal-soft); border-color: #a9ded6; }
+      .pill.warn { color: #8a5312; background: var(--amber-soft); border-color: #e8c894; }
+      .pill.bad { color: #8b2f3b; background: var(--danger-soft); border-color: #e6b7bd; }
+
+      table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+      th, td { text-align: left; padding: 7px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+      th { color: var(--muted); font-weight: 600; white-space: nowrap; }
+      td.mono, .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.8rem; }
+      tr.run-row { cursor: pointer; }
+      tr.run-row:hover { background: var(--blue-soft); }
+      tr.failed td { background: var(--danger-soft); }
+
+      .dot {
+        display: inline-block;
+        width: 9px;
+        height: 9px;
+        border-radius: 50%;
+        background: #cfd8dc;
+        margin-right: 6px;
+      }
+      .dot.bad { background: var(--danger); box-shadow: 0 0 0 3px rgba(168, 63, 76, 0.16); }
+      .dot.ok { background: var(--teal); }
+      .dot.warn { background: var(--amber); }
+
+      .actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+      button {
+        cursor: pointer;
+        border-radius: 999px;
+        border: 1px solid var(--line-strong);
+        background: #fff;
+        padding: 6px 14px;
+        font-size: 0.84rem;
+      }
+      button.primary { background: var(--teal); border-color: var(--teal); color: #fff; }
+      button:disabled { cursor: not-allowed; opacity: 0.55; }
+      select {
+        padding: 6px 10px;
+        border: 1px solid var(--line-strong);
+        border-radius: 10px;
+        background: #fff;
+      }
+
+      .notice {
+        border-radius: 12px;
+        padding: 10px 14px;
+        font-size: 0.86rem;
+        margin-bottom: 12px;
+        border: 1px solid var(--line-strong);
+        background: var(--blue-soft);
+      }
+      .notice.ok { background: var(--teal-soft); border-color: #a9ded6; }
+      .notice.bad { background: var(--danger-soft); border-color: #e6b7bd; }
+      .notice.hidden { display: none; }
+
+      .toolbar { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+
+      pre.excerpt {
+        background: #0d2c41;
+        color: #dbe7ee;
+        padding: 12px;
+        border-radius: 12px;
+        overflow: auto;
+        font-size: 0.76rem;
+        max-height: 240px;
+        white-space: pre-wrap;
+        word-break: break-all;
+      }
+      .footnote { font-size: 0.78rem; color: var(--muted); margin-top: 8px; }
+      .hidden { display: none !important; }
+    </style>
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="topbar-inner">
+        <div class="brand">
+          <strong>任务运维</strong>
+          <span>Canonical V2 · 白名单任务手动触发 / 运行历史 / 失败样例</span>
+        </div>
+        <nav class="nav">
+          <a href="chat">对话</a>
+          <a href="browse">数据浏览</a>
+          <a href="logs">访问日志</a>
+          <a href="admin">管理配置</a>
+          <a href="jobs" class="active">任务运维</a>
+          <a href="upload">上传导入</a>
+          <a href="seeds">Seed 管理</a>
+        </nav>
+      </div>
+    </header>
+
+    <main>
+      <div class="notice hidden" id="banner" role="status"></div>
+
+      <section class="card" aria-label="任务清单">
+        <header>
+          <h2>任务清单</h2>
+          <span class="hint" id="listHint">加载中…</span>
+        </header>
+        <div style="overflow-x: auto">
+          <table>
+            <thead>
+              <tr>
+                <th>任务</th>
+                <th>域</th>
+                <th>节奏（下次运行）</th>
+                <th>闸门</th>
+                <th>最近运行</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody id="taskRows">
+              <tr><td colspan="6">加载中…</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="footnote">
+          节奏写死在任务表里（改节奏走变更流程），页面只读展示；"立即采集"与周期任务共用同一道闸门
+          （防重入锁 / 开关 / 配额 / 熔断），手动触发不绕过任何限制。
+        </p>
+      </section>
+
+      <section class="card" aria-label="运行历史">
+        <header>
+          <h2>运行历史</h2>
+          <span class="hint" id="historyHint"></span>
+        </header>
+        <div class="toolbar">
+          <label>任务 <select id="historyTask"><option value="">全部任务</option></select></label>
+          <label>状态
+            <select id="historyStatus">
+              <option value="">全部</option>
+              <option value="succeeded">成功</option>
+              <option value="failed">失败</option>
+              <option value="skipped">跳过</option>
+              <option value="running">运行中</option>
+              <option value="breaker_reset">熔断复位</option>
+            </select>
+          </label>
+          <button id="historyRefresh" type="button">刷新</button>
+        </div>
+        <div style="overflow-x: auto; margin-top: 12px">
+          <table>
+            <thead>
+              <tr>
+                <th>开始时间</th>
+                <th>任务</th>
+                <th>触发</th>
+                <th>操作人</th>
+                <th>状态</th>
+                <th>耗时</th>
+                <th>条数</th>
+                <th>详情</th>
+              </tr>
+            </thead>
+            <tbody id="runRows">
+              <tr><td colspan="8">加载中…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="card hidden" id="detailCard" aria-label="运行详情">
+        <header>
+          <h2>运行详情 <span class="mono" id="detailRunId"></span></h2>
+          <button id="detailClose" type="button">关闭</button>
+        </header>
+        <div id="detailBody"></div>
+      </section>
+    </main>
+
+    <script>
+      const API = "/api/canonical-v2/admin/jobs";
+      const MESSAGES = {
+        job_already_running: "该任务正在运行中：防重入锁已拒绝本次触发。",
+        job_breaker_open: "该任务连续 2 轮失败已熔断，请排查后点「复位熔断」再触发。",
+        job_postgres_unavailable: "本机没有构建期 PostgreSQL，该任务不可用（已在页面隐藏触发入口）。",
+        job_unknown_task: "未知任务（不在白名单内）。",
+        job_invalid_params: "参数不在白名单允许的取值内，本次未执行。",
+        jobs_storage_unavailable: "运行记录存储不可用（未配置 CANONICAL_V2_JOBS_DB）。",
+        job_config_unavailable: "受管配置不可用，已拒绝触发。",
+        job_run_not_found: "运行记录不存在。",
+        job_invalid_status: "状态取值非法。",
+        unexpected: "请求失败，请稍后重试。"
+      };
+      const STATUS_TEXT = {
+        running: "运行中",
+        succeeded: "成功",
+        failed: "失败",
+        skipped: "跳过",
+        breaker_reset: "熔断复位"
+      };
+      const SKIP_TEXT = {
+        switch_off: "开关关闭",
+        quota_exhausted: "配额为 0",
+        outside_window: "窗口外"
+      };
+      const TRIGGER_TEXT = { manual: "手动", schedule: "周期", operator_reset: "运维复位" };
+
+      let TASKS = [];
+
+      function message(code) {
+        return MESSAGES[code] || MESSAGES.unexpected;
+      }
+
+      function banner(text, kind) {
+        const node = document.getElementById("banner");
+        node.textContent = text;
+        node.className = "notice " + (kind || "");
+        node.classList.remove("hidden");
+      }
+
+      function clearBanner() {
+        const node = document.getElementById("banner");
+        node.className = "notice hidden";
+      }
+
+      function escapeHtml(value) {
+        return String(value === null || value === undefined ? "" : value).replace(
+          /[&<>"']/g,
+          (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[char])
+        );
+      }
+
+      function localTime(value) {
+        if (!value) return "—";
+        const parsed = new Date(value);
+        if (Number.isNaN(parsed.getTime())) return value;
+        return parsed.toLocaleString("zh-CN", { hour12: false });
+      }
+
+      function duration(value) {
+        if (value === null || value === undefined) return "—";
+        if (value < 1000) return value + " ms";
+        return (value / 1000).toFixed(1) + " s";
+      }
+
+      function runBadge(run) {
+        if (!run) return '<span class="pill">未运行</span>';
+        const status = run.status;
+        let kind = status === "succeeded" ? "ok" : status === "failed" ? "bad" : "warn";
+        let text = STATUS_TEXT[status] || status;
+        if (status === "skipped" && run.skip_reason) {
+          text += "（" + (SKIP_TEXT[run.skip_reason] || run.skip_reason) + "）";
+        }
+        return '<span class="pill ' + kind + '">' + escapeHtml(text) + "</span>";
+      }
+
+      function gateBadges(task) {
+        const parts = [];
+        if (task.collection_gated) {
+          parts.push(
+            task.switch_enabled === false
+              ? '<span class="pill bad">采集开关：关闭</span>'
+              : '<span class="pill ok">采集开关：开</span>'
+          );
+        }
+        if (task.quota) {
+          parts.push(
+            '<span class="pill">配额：' +
+              (task.quota === "web_search" ? "web search" : "LLM") +
+              " ≤ " +
+              (task.quota_limit === null || task.quota_limit === undefined ? "—" : task.quota_limit) +
+              "</span>"
+          );
+        }
+        if (task.window_bound) parts.push('<span class="pill">夜间窗口</span>');
+        if (task.requires_postgres) {
+          parts.push(
+            task.available
+              ? '<span class="pill ok">需 PG（可用）</span>'
+              : '<span class="pill bad">需 PG（不可用）</span>'
+          );
+        }
+        return parts.join(" ");
+      }
+
+      function dotFor(task) {
+        if (task.breaker_open) return '<span class="dot bad" title="已熔断"></span>';
+        const last = task.last_run;
+        if (!last) return '<span class="dot" title="未运行"></span>';
+        if (last.status === "failed") return '<span class="dot bad" title="最近一次失败"></span>';
+        if (last.status === "running") return '<span class="dot warn" title="运行中"></span>';
+        if (last.status === "skipped") return '<span class="dot warn" title="最近一次跳过"></span>';
+        return '<span class="dot ok" title="最近一次成功"></span>';
+      }
+
+      function renderTasks(payload) {
+        TASKS = payload.tasks || [];
+        const body = document.getElementById("taskRows");
+        if (!TASKS.length) {
+          body.innerHTML = '<tr><td colspan="6">没有任务</td></tr>';
+          return;
+        }
+        body.innerHTML = TASKS.map((task) => {
+          const last = task.last_run;
+          const paramPicker = Object.entries(task.params || {})
+            .map(
+              ([name, values]) =>
+                '<select data-param="' +
+                escapeHtml(name) +
+                '" data-task="' +
+                escapeHtml(task.task_id) +
+                '">' +
+                values
+                  .map((value) => '<option value="' + escapeHtml(value) + '">' + escapeHtml(value) + "</option>")
+                  .join("") +
+                "</select>"
+            )
+            .join(" ");
+          const trigger = task.available
+            ? '<button class="primary" type="button" data-run="' +
+              escapeHtml(task.task_id) +
+              '">立即采集</button>'
+            : '<button type="button" disabled title="本机不可用">不可用</button>';
+          const reset = task.breaker_open
+            ? '<button type="button" data-reset="' + escapeHtml(task.task_id) + '">复位熔断</button>'
+            : "";
+          const cadence =
+            escapeHtml(task.schedule_display) +
+            (task.next_run_at ? ' · 下次 ' + escapeHtml(localTime(task.next_run_at)) : "");
+          return (
+            "<tr>" +
+            "<td>" +
+            dotFor(task) +
+            "<strong>" +
+            escapeHtml(task.label) +
+            "</strong>" +
+            '<div class="mono">' +
+            escapeHtml(task.task_id) +
+            "</div>" +
+            '<div class="mono" style="color:var(--muted)">' +
+            escapeHtml(task.command_display) +
+            "</div></td>" +
+            "<td>" +
+            escapeHtml(task.domain || "运维") +
+            "</td>" +
+            "<td>" +
+            cadence +
+            "</td>" +
+            "<td>" +
+            gateBadges(task) +
+            "</td>" +
+            "<td>" +
+            runBadge(last) +
+            (last
+              ? '<div class="mono">' +
+                escapeHtml(localTime(last.started_at)) +
+                " · " +
+                duration(last.duration_ms) +
+                " · 条数 " +
+                (last.items_processed === null || last.items_processed === undefined
+                  ? "—"
+                  : last.items_processed) +
+                "</div>"
+              : "") +
+            (task.breaker_open
+              ? '<div class="mono">连续失败 ' + task.consecutive_failures + " 次</div>"
+              : "") +
+            "</td>" +
+            '<td><div class="actions">' +
+            paramPicker +
+            trigger +
+            reset +
+            "</div></td>" +
+            "</tr>"
+          );
+        }).join("");
+      }
+
+      async function loadTasks() {
+        clearBanner();
+        const response = await fetch(API, { headers: { Accept: "application/json" } });
+        if (!response.ok) {
+          let detail = "unexpected";
+          try {
+            detail = (await response.json()).detail || detail;
+          } catch (error) {
+            /* keep the generic message */
+          }
+          banner(message(detail), "bad");
+          document.getElementById("taskRows").innerHTML =
+            '<tr><td colspan="6">任务清单不可用</td></tr>';
+          document.getElementById("listHint").textContent = "不可用";
+          return;
+        }
+        const payload = await response.json();
+        renderTasks(payload);
+        document.getElementById("listHint").textContent =
+          "共 " + TASKS.length + " 个任务 · 生成于 " + localTime(payload.generated_at);
+        if (payload.config && payload.config.available === false) {
+          banner("受管配置不可用，触发会被拒绝：" + (payload.config.reason || ""), "bad");
+        }
+        const options = document.getElementById("historyTask");
+        const previous = options.value;
+        options.innerHTML =
+          '<option value="">全部任务</option>' +
+          TASKS.map(
+            (task) =>
+              '<option value="' +
+              escapeHtml(task.task_id) +
+              '">' +
+              escapeHtml(task.label) +
+              "</option>"
+          ).join("");
+        options.value = previous;
+      }
+
+      async function fetchRuns(taskId, status) {
+        const params = new URLSearchParams({ limit: "50" });
+        if (status) params.set("status", status);
+        if (taskId) {
+          params.set("limit", "50");
+          const response = await fetch(API + "/" + encodeURIComponent(taskId) + "/runs?" + params);
+          if (!response.ok) throw new Error("history_failed");
+          return (await response.json()).runs;
+        }
+        const all = await Promise.all(
+          TASKS.map(async (task) => {
+            try {
+              const response = await fetch(
+                API + "/" + encodeURIComponent(task.task_id) + "/runs?" + params
+              );
+              if (!response.ok) return [];
+              return (await response.json()).runs;
+            } catch (error) {
+              return [];
+            }
+          })
+        );
+        return all.flat().sort((left, right) => (left.started_at < right.started_at ? 1 : -1)).slice(0, 50);
+      }
+
+      async function loadHistory() {
+        const taskId = document.getElementById("historyTask").value;
+        const status = document.getElementById("historyStatus").value;
+        const body = document.getElementById("runRows");
+        try {
+          const runs = await fetchRuns(taskId, status);
+          if (!runs.length) {
+            body.innerHTML = '<tr><td colspan="8">没有运行记录</td></tr>';
+            document.getElementById("historyHint").textContent = "";
+            return;
+          }
+          body.innerHTML = runs
+            .map(
+              (run) =>
+                '<tr class="run-row ' +
+                (run.status === "failed" ? "failed" : "") +
+                '" data-run-id="' +
+                escapeHtml(run.run_id) +
+                '">' +
+                "<td>" + escapeHtml(localTime(run.started_at)) + "</td>" +
+                '<td class="mono">' + escapeHtml(run.task_id) + "</td>" +
+                "<td>" + escapeHtml(TRIGGER_TEXT[run.trigger_source] || run.trigger_source) + "</td>" +
+                "<td>" + escapeHtml(run.operator) + "</td>" +
+                "<td>" + runBadge(run) + "</td>" +
+                "<td>" + duration(run.duration_ms) + "</td>" +
+                "<td>" + (run.items_processed === null || run.items_processed === undefined ? "—" : run.items_processed) + "</td>" +
+                '<td><button type="button" data-detail="' + escapeHtml(run.run_id) + '">查看</button></td>' +
+                "</tr>"
+            )
+            .join("");
+          document.getElementById("historyHint").textContent = runs.length + " 条";
+        } catch (error) {
+          body.innerHTML = '<tr><td colspan="8">运行历史不可用</td></tr>';
+        }
+      }
+
+      async function showDetail(runId) {
+        const response = await fetch(API + "/runs/" + encodeURIComponent(runId));
+        const card = document.getElementById("detailCard");
+        const body = document.getElementById("detailBody");
+        if (!response.ok) {
+          card.classList.remove("hidden");
+          document.getElementById("detailRunId").textContent = runId;
+          body.innerHTML = "<p>运行记录不可用。</p>";
+          return;
+        }
+        const run = await response.json();
+        card.classList.remove("hidden");
+        document.getElementById("detailRunId").textContent = run.run_id;
+        body.innerHTML =
+          '<div class="toolbar">' +
+          runBadge(run) +
+          '<span class="pill">触发：' + escapeHtml(TRIGGER_TEXT[run.trigger_source] || run.trigger_source) + "</span>" +
+          '<span class="pill">操作人：' + escapeHtml(run.operator) + "</span>" +
+          '<span class="pill">耗时：' + duration(run.duration_ms) + "</span>" +
+          '<span class="pill">退出码：' + escapeHtml(run.exit_code === null ? "—" : run.exit_code) + "</span>" +
+          '<span class="pill">条数：' + escapeHtml(run.items_processed === null ? "—" : run.items_processed) + "</span>" +
+          "</div>" +
+          '<p class="mono">命令：' + escapeHtml((run.command || []).join(" ")) + "</p>" +
+          (run.summary ? '<p class="mono">摘要：' + escapeHtml(JSON.stringify(run.summary)) + "</p>" : "") +
+          "<h3>失败样例（stderr 尾部）</h3>" +
+          '<pre class="excerpt">' + escapeHtml(run.stderr_excerpt || "（空）") + "</pre>" +
+          "<h3>stdout 尾部</h3>" +
+          '<pre class="excerpt">' + escapeHtml(run.stdout_excerpt || "（空）") + "</pre>";
+      }
+
+      async function trigger(taskId) {
+        const picker = document.querySelector('select[data-task="' + CSS.escape(taskId) + '"]');
+        const params = {};
+        if (picker) params[picker.dataset.param] = picker.value;
+        const response = await fetch(API + "/" + encodeURIComponent(taskId) + "/run", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ params })
+        });
+        const payload = await response.json().catch(() => ({}));
+        if (response.ok) {
+          banner(
+            payload.status === "skipped"
+              ? "已记录：本次跳过（" + (SKIP_TEXT[payload.skip_reason] || payload.skip_reason) + "）。"
+              : "已触发：" + taskId + "，运行记录 " + payload.run_id + "。",
+            payload.status === "skipped" ? "" : "ok"
+          );
+        } else {
+          banner(message(payload.detail), "bad");
+        }
+        await loadTasks();
+        await loadHistory();
+      }
+
+      async function resetBreaker(taskId) {
+        const response = await fetch(API + "/" + encodeURIComponent(taskId) + "/reset", {
+          method: "POST"
+        });
+        const payload = await response.json().catch(() => ({}));
+        banner(
+          response.ok ? "熔断已复位：" + taskId : message(payload.detail),
+          response.ok ? "ok" : "bad"
+        );
+        await loadTasks();
+        await loadHistory();
+      }
+
+      document.getElementById("taskRows").addEventListener("click", (event) => {
+        const target = event.target;
+        if (!(target instanceof HTMLElement)) return;
+        if (target.dataset.run) trigger(target.dataset.run);
+        if (target.dataset.reset) resetBreaker(target.dataset.reset);
+      });
+
+      document.getElementById("runRows").addEventListener("click", (event) => {
+        const target = event.target;
+        if (!(target instanceof HTMLElement)) return;
+        const runId = target.closest("tr") && target.closest("tr").dataset.runId;
+        if (runId) showDetail(runId);
+      });
+
+      document.getElementById("detailClose").addEventListener("click", () => {
+        document.getElementById("detailCard").classList.add("hidden");
+      });
+      document.getElementById("historyRefresh").addEventListener("click", loadHistory);
+      document.getElementById("historyTask").addEventListener("change", loadHistory);
+      document.getElementById("historyStatus").addEventListener("change", loadHistory);
+
+      loadTasks().then(loadHistory);
+      setInterval(loadHistory, 15000);
+    </script>
+  </body>
+</html>

@@ -1,0 +1,183 @@
+{
+  "session_id": "session:chat:ntYdR0mgYIGjHTYOK_3A-T9SMTlZVI4e",
+  "turn_id": "turn:chat:sha256:dae972c6ff589b4fef636568d284b724aee26cc8b10bc4d66a4e47a6334543b0",
+  "turn_count": 2,
+  "query": "优必选",
+  "planned_displayed_ids": [],
+  "recalled_handles": [
+    {
+      "id": "company-c-14b17405d17649f63b539164",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市优必选科技股份有限公司"
+    },
+    {
+      "id": "web-handle:sha256:56dbc83504588875ac396fc41eb735dd33f0aaf8e86191ddd9d9cfef812665dd",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "UBTECH 优必选官网-智能服务机器人领导者"
+    },
+    {
+      "id": "company-c-2dde69db2a9cd983ed31dce8",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "洋流科技（深圳）有限公司"
+    },
+    {
+      "id": "web-handle:sha256:65638d1c5719312f7feeb20a045ce1483c4d18e8c95736f91db33d41c2ade804",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "深圳市优必选科技股份有限公司 - 百度百科"
+    },
+    {
+      "id": "company-c-9d8b8879b85c24a37a5b3186",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "北京人形机器人创新中心有限公司"
+    },
+    {
+      "id": "web-handle:sha256:ce2961df9b58acef382188028ab88e2b19ec42fa62b69b33a32732310c1e6410",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "深圳市优必选科技股份有限公司-特种装备网"
+    },
+    {
+      "id": "patent-c-00475a5ac0fc7aaba3b0ba0f",
+      "kind": "canonical",
+      "domain": "patent",
+      "display_name": "机器人充电方法、系统、计算机设备和存储介质"
+    },
+    {
+      "id": "web-handle:sha256:21ef5f17ade217c13931df628d1c0515d88a4c873c85bfacf615f5b68bed5d81",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "优必选科技 - 维基百科"
+    },
+    {
+      "id": "patent-c-00c233a84a71e5a328783f1e",
+      "kind": "canonical",
+      "domain": "patent",
+      "display_name": "骑平衡车的机器人控制方法、装置、存储介质及机器人"
+    },
+    {
+      "id": "web-handle:sha256:953e388e4403b221b552076a3c939708cda01dbb9394d0a8576b0aecdda9e50a",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "工业|机器人(优必选等) - 飞书云文档"
+    },
+    {
+      "id": "patent-c-01923ba9814ad8e26d3a2274",
+      "kind": "canonical",
+      "domain": "patent",
+      "display_name": "机器人控制方法、装置、机器人及计算机可读存储介质"
+    },
+    {
+      "id": "web-handle:sha256:89e21c618701fbbe7f06e82f4d803330cdcbf73afaaa910f019dbeb601cbcfa1",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "优必选品牌介绍_优必选是哪个公司品牌?-百强排行-百强网"
+    },
+    {
+      "id": "patent-c-023c2460656e53a3e8fe4897",
+      "kind": "canonical",
+      "domain": "patent",
+      "display_name": "机器人导航方法、装置、计算机可读存储介质及机器人"
+    },
+    {
+      "id": "web-handle:sha256:477dcd5c46b83cd6b0dae5424471a431180fa4132d6b3eac62fc408cfc8b492e",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "深圳市优必选科技股份有限公司"
+    },
+    {
+      "id": "patent-c-026539da3433d4fb9fe0aec9",
+      "kind": "canonical",
+      "domain": "patent",
+      "display_name": "机器人关节限位机构及机器人"
+    },
+    {
+      "id": "web-handle:sha256:06b1aa93221fdf8ed81d2345ae5792d3e00c27e99ca8950b7090ced7df7b57c2",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "深圳市优必选科技有限公司"
+    }
+  ],
+  "evidence_items": {
+    "total": 18,
+    "by_domain": {
+      "company": 5,
+      "patent": 5,
+      "professor": 8
+    },
+    "by_lane": {
+      "exact": 1,
+      "lexical": 8,
+      "vector": 1,
+      "web": 8
+    },
+    "by_source_nature": {
+      "current_web": 8,
+      "local": 10
+    },
+    "with_claim_binding": 18
+  },
+  "protected_slots": [],
+  "requested_traversal": null,
+  "admitted_claims": {
+    "total": 8,
+    "by_predicate": {
+      "canonical_projection": 1,
+      "current_web_result": 7
+    },
+    "by_claim_type": {
+      "material_fact": 8
+    },
+    "patent_evidence_claims": 0
+  },
+  "committed_handle_ids": [
+    "company-c-14b17405d17649f63b539164",
+    "web-handle:sha256:65638d1c5719312f7feeb20a045ce1483c4d18e8c95736f91db33d41c2ade804",
+    "web-handle:sha256:ce2961df9b58acef382188028ab88e2b19ec42fa62b69b33a32732310c1e6410",
+    "web-handle:sha256:21ef5f17ade217c13931df628d1c0515d88a4c873c85bfacf615f5b68bed5d81",
+    "web-handle:sha256:477dcd5c46b83cd6b0dae5424471a431180fa4132d6b3eac62fc408cfc8b492e",
+    "web-handle:sha256:06b1aa93221fdf8ed81d2345ae5792d3e00c27e99ca8950b7090ced7df7b57c2"
+  ],
+  "committed_names": [
+    "深圳市优必选科技股份有限公司",
+    "深圳市优必选科技股份有限公司 - 百度百科",
+    "深圳市优必选科技股份有限公司-特种装备网",
+    "优必选科技 - 维基百科",
+    "深圳市优必选科技股份有限公司",
+    "深圳市优必选科技有限公司"
+  ],
+  "render_mode": "prose_renderer",
+  "response_mode": "answer",
+  "citations": 8,
+  "answer_chars": 508,
+  "lane_timings": [
+    [
+      "web",
+      10.646
+    ],
+    [
+      "structured",
+      0.0
+    ],
+    [
+      "exact",
+      1.048
+    ],
+    [
+      "lexical",
+      2.361
+    ],
+    [
+      "web",
+      5.834
+    ],
+    [
+      "vector",
+      29.611
+    ]
+  ]
+}

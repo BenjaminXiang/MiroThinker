@@ -224,3 +224,322 @@ ls -t /tmp/watchdog-spin-*.txt | head -3       # 最近的栈
 - `staging-v2` 107MB 已落，`index-v2` 仅有 marker，信封未生成；
 - 按 §2 节奏外推，信封预计 **09-14 19:30 前后**落地；
 - 线上 18188 全程未受影响（仍跑 run14 sealed 包，health 200）。
+
+---
+
+## 10. 现场更新（2026-09-14 约 03:20）：第三个同类热点在 PG 层
+
+**阶段已切换**：约 02:37 起，§3 的内存 CPU 段结束，进程进入
+`persist_identity_resolution`（`knowledge_build_isolated.py:8761`）；抓栈落在
+
+```text
+wait                              psycopg/connection.py:484      ← 客户端在等结果
+execute                           psycopg/cursor.py:113
+_validate_release_and_restore_triggers   canonical_identity_postgres.py:449
+persist                           canonical_identity_postgres.py:1517
+persist_identity_resolution       knowledge_build_isolated.py:8761
+_persist_owners / build / main    knowledge_build_isolated.py:9592 / :9855 / :1183
+```
+
+服务端取证（`docker top canonical-v2-s12c-pg-20260726-r8` + `pg_stat_activity`）：
+
+| 观测 | 值 | 判定 |
+|---|---|---|
+| 语句 | `SET CONSTRAINTS ALL IMMEDIATE` | 延迟触发器强制此刻校验 |
+| 后端 | `state=active`、`wait_event` 空、`stat=Rs` | 在 CPU 上跑，不是等锁 |
+| CPU | **87.7%**，累计 CPU 时间 00:42:38 → 00:43:08（30s 内 +30s） | 真在算 |
+| 时长 | 语句 38m25s→40m25s 递增；事务年龄 49m | 长耗时、非卡死 |
+| **结局（约 04:05 观测）** | 语句已结束，后端转 `idle in transaction` / `ClientRead`；**该语句共耗服务端 CPU ≈ 85 分钟**（后端累计 CPU TIME 00:42:38 → **01:25:02**） | 单条复验语句 ≈ 1.4 小时 CPU |
+| 之后 | 客户端读回 `SELECT chunk_index, chunk_b64, chunk_sha256 FROM knowledge.i…`（identity_resolution_run 分块） | 进入落库/回读环节 |
+| 锁 | `pg_locks` 无未授予项 | 非死锁 |
+| 库体积 | 45s 内 +0 字节（都在同一未提交事务里） | 复验阶段本就不写 |
+
+语义（代码注释原文）：让唯一启用的延迟触发器
+`trg_validate_identity_resolution_release` 在恢复其余触发器之前**校验整个 release 图**。
+与 §5 同一类"写完再全量复验"的成本模型，只是发生在**数据库层**——所以
+
+- §7 的性能修复不能只盯 Python 侧两处扫描；PG 侧的整图复验同样是小时级开销，
+  两者**并列**为 C6 前置的候选；
+- 该处的修法方向不同（触发器/约束策略、分批提交、把整图复验改增量或索引化），
+  需在立项时单独设计，且**不得放宽 fail-closed 语义**。
+
+复核命令：
+
+```bash
+docker top canonical-v2-s12c-pg-20260726-r8 -eo pid,etime,time,pcpu,stat,args \
+  | grep candidate_v2_20260913            # 看后端 CPU TIME 是否在涨
+# 再看语句与等待：pg_stat_activity 的 state / wait_event / xact_start / query_start
+```
+
+---
+
+## 11. 现场更新（2026-09-14 约 08:20）：决策批次 COMMIT 的确切根因已定位
+
+**现象**：约 05:35 起进入 `persist_decision_batch`（`knowledge_build_isolated.py:8771`），
+客户端卡在 `commit`（`canonical_decision_postgres.py:1349`）。至 08:20 该 `COMMIT` 已跑
+**2h42m 墙钟 / 后端 CPU 2h25m**，仍 `state=active`、`wait_event` 在
+`IPC/BgWorkerShutdown` 与空之间切换、**无未授予锁**、`state=R`、~89% CPU；
+并行 worker 每 30 秒换一批 PID（反复派生/回收），`canonical_decision` 行数仍 0
+（全部在未提交事务里）。
+
+**确切根因**（代码 + 库内实测）：
+
+- 触发器 `trg_validate_field_human_review_assertion_binding` 是
+  **`CREATE CONSTRAINT TRIGGER … DEFERRABLE INITIALLY DEFERRED FOR EACH ROW`**
+  （`canonical_v2_alembic/versions/C2_0007_bind_human_review_provenance.py:1464`），
+  即**逐行**触发、**延迟到 COMMIT** 才执行；
+- 其函数体第一段（同文件 `:1170-1185`）对**每一行** `canonical_decision_assertion`
+  执行一次
+
+  ```sql
+  IF TG_TABLE_NAME = 'canonical_decision_assertion'
+     AND EXISTS (SELECT 1 FROM knowledge.canonical_decision AS human_decision
+                 WHERE human_decision.method = 'human_review'
+                   AND human_decision.human_review_resolution->'review_case'->>'release_id' = NEW.release_id
+                   AND human_decision.human_review_resolution->'review_case'->>'originating_record_id' = NEW.decision_id)
+  ```
+
+- 而 `knowledge.canonical_decision` 上**没有任何针对 `method` 或该 JSONB 路径的索引**
+  （实测索引清单：仅 6 个唯一/主键约束索引，无表达式索引）→ 每次触发都是
+  **417,120 行表上的无索引扫描 + JSONB 取值**；
+- 代价模型：`canonical_decision_assertion` **834,240 行** × 每次扫描 417,120 行
+  ⇒ 10¹¹ 量级比较，且发生在 COMMIT 里（不可中断、不可分批）。
+
+**修法方向（三选一或组合，立项时定；不得放宽 fail-closed）**：
+
+1. 给该 `EXISTS` 加**表达式/部分索引**（如
+   `ON knowledge.canonical_decision (release_id, (human_review_resolution->'review_case'->>'originating_record_id')) WHERE method = 'human_review'`）；
+2. 把逐行触发器改为**语句级**（`AFTER INSERT … FOR EACH STATEMENT` + transition table），
+   或先做一次廉价的"本 release 是否存在 human_review 决策"守卫，无则整段跳过；
+3. 分批提交（把一次巨型 COMMIT 拆成多个受控批次），避免单事务把所有延迟触发堆到最后一刻。
+
+**验证方式**：同输入产出逐字节可比信封（或至少决策/断言行数与内容摘要一致）
+＋ `COMMIT` 从小时级降到分钟级；回归＝canonical_v2 测试全绿 + 一次完整重建。
+
+**复核命令**：
+
+```bash
+# 触发器挂载方式与函数体
+grep -n 'CREATE CONSTRAINT TRIGGER' -A2 canonical_v2_alembic/versions/C2_0007_bind_human_review_provenance.py | head
+sed -n '1170,1185p' canonical_v2_alembic/versions/C2_0007_bind_human_review_provenance.py
+# 库内确认索引缺失与触发器清单
+#   SELECT indexname FROM pg_indexes WHERE schemaname='knowledge' AND tablename='canonical_decision';
+#   SELECT tgname, tgtype FROM pg_trigger WHERE tgrelid='knowledge.canonical_decision_assertion'::regclass AND NOT tgisinternal;
+```
+
+### 11.1 代价实测（09-14 09:15，只读、带 10s 超时）
+
+在 run14 库（同 schema、数据完整）上对触发器里那条 `EXISTS` 做 `EXPLAIN (ANALYZE)`：
+
+| 观测 | 值 |
+|---|---|
+| 计划 | `Gather → Parallel Seq Scan on canonical_decision`（**无索引可用**，2 个并行 worker） |
+| **单次执行** | **42.8 ms**（`shared read=26042`，冷缓冲） |
+| `human_review` 决策数 | **0** |
+| 决策总数 | 417,120 |
+| 断言总数 | 834,240 |
+| 索引清单 | 6 个主键/唯一索引，**无 `method` 或 JSONB 路径的表达式索引** |
+
+⇒ 该触发器在本 release 的实际作用是"**每次确认一遍：本库没有人工评审决策**"，
+而代价是 **834,240 × 43 ms ≈ 10 小时**（缓存热时也在数小时量级）。
+这解释了 run15 的 `COMMIT` 为何 3h42m 仍未结束（同时段 runner 完全空转）。
+
+**性价比最高的修法是加守卫而不是加索引**：`human_review` 计数为 0 时整段跳过
+（或按 release 缓存一次"本 release 是否有 human_review 决策"），
+语义完全不变（有评审决策时仍逐行校验），却把这一步从数小时压到毫秒级。
+表达式索引（见 §11 修法 1）可作为第二步，用于真正存在评审决策的场景。
+
+
+
+---
+
+## 12. 设计评审：这一步算不算"过度设计"（2026-09-14，只读评审）
+
+> 结论先行：**规则没问题，机制过度**。规则是"人审过的字段，机器重建不得悄悄换掉其证据"，
+> 这是真实业务规则（`/review` 评审台是真实路径），**不该删**；但它的实现方式有四条可检验的
+> 过度设计特征，且第 4 条直接堵死月更重建的路线。
+
+### 12.1 规则本身（正当）
+
+触发器的三部分职责（`apps/miroflow-agent/canonical_v2_alembic/versions/C2_0007_bind_human_review_provenance.py`）：
+
+| 部分 | 位置 | 做了什么 |
+|---|---|---|
+| ① 不可变守卫 | `:1170-1185` | 新断言若挂到"已被人审过的字段决策"上即拒绝，`RAISE EXCEPTION 'reviewed field origin evidence is immutable'`（ERRCODE 23514） |
+| ② 评审来源必须是祖先 release | `:1197-1216` | 对 `knowledge.release` 递归 ancestry，禁止自引用；否则报 `'field human review binding requires an immutable ancestor case'` |
+| ③ 评审 case 与原决策逐项对齐 | `:1218-1265+` | 先 `FOR UPDATE` 锁原行，再逐项比对 `subject_id`/`field_path`/`supersedes_decision_id`/`policy_*`/`method`/`method_version`/`confidence`/`rationale`/`decided_at`/`llm_trace.*`/decision_id 前缀 |
+
+对**普通（非人工评审）决策**只有 ① 会执行（②③ 在 `:1191` 的 `IF NOT FOUND OR reviewed.method <> 'human_review' THEN RETURN NEW` 处提前返回），
+所以 §11.1 实测的那 42.8 ms × 834,240 次**全部花在 ①**。
+
+### 12.2 四条可检验的过度设计特征（四条全中）
+
+1. **同一不变量多层重复实现。** Python 侧 `canonical_identity_resolution.py:431-451` 已在校验
+   `human_review_resolutions` 的绑定（`'identity human review must bind one prior exact component'`），
+   DB 侧又用 PL/pgSQL 重写：本文件 `:1156` 一份 field 版、`:1486` 一份 relationship 版，
+   `C2_0009_typed_domain_projections.py:1140` 还有一份 domain_inclusion 版。
+   **一个规则 ≥5 份实现**，每份独立维护、独立踩性能坑——属"没有威胁模型的纵深防御"。
+2. **把全局事实放到行级事件上重推。** "本 release 是否存在 human_review 决策"是 release 级一个
+   bit 的事实，却被设计为**每插一行断言就全表查一次**。本次重建 **834,240 次触发，有效拦截 0 次**
+   （run14 库 `method='human_review'` 计数 = 0）——语义上是空操作，代价是约 10 小时（§11.1）。
+3. **执行查询没有可用索引。** ① 的谓词是 `method` 等值 + 两次 JSONB 路径取值；而
+   `knowledge.canonical_decision` 上现有 6 个索引**全是 btree**
+   （`(release_id, decision_id)`、`(decision_id)`、`(decision_id, canonical_identity_id, field_path)`、
+   `(supersedes_decision_id)`、`(canonical_identity_id, field_path) WHERE supersedes_decision_id IS NULL`、
+   `(release_id, decision_id, canonical_identity_id, field_path)`），**一个都用不上** →
+   每次触发只能顺序扫 417,120 行并对每行做 JSONB 取值。设计时若考虑过代价，这里就该有表达式/部分索引。
+4. **代价随语料规模超线性增长。** 总代价 ≈ 断言数 × 决策数（本次 834,240 × 417,120），
+   即 O(N²)。月更重建 + 四域数据持续增长的前提下，这一步**不是"现在慢一点"，而是路线走不通**。
+
+### 12.3 判定"过度设计"的四条口径（建议纳入后续同类评审）
+
+1. 同一规则在几层各实现了几遍？
+2. 是**行级**执行，还是可以**集合级**一次算完？
+3. 执行它的查询**有没有索引**？（没有＝设计时没考虑代价）
+4. 代价随数据规模是**线性**还是**超线性**？
+
+### 12.4 最小设计（语义完全不变，不删规则）
+
+1. **守卫优先**：release 级预计算一次"是否存在 human_review 决策"（小表或标记），为 0 则整段跳过——本次重建的约 10 小时直接归零；
+2. **补索引**：`CREATE INDEX … ON knowledge.canonical_decision (release_id, (human_review_resolution->'review_case'->>'originating_record_id')) WHERE method = 'human_review'`，把全表扫变成索引查找（真正存在评审决策时也快）；
+3. **改粒度**：触发器从 `FOR EACH ROW` 改 `FOR EACH STATEMENT` + transition table（或按批校验），834,240 次变 1 次集合查询；
+4. **合并同型**：四份 provenance 校验合并为一份共享不变量（与 §5 的 Python 两处一起做，属 pattern-repair 范畴）。
+
+### 12.5 验收线（与 §7 一致，不削弱 fail-closed）
+
+- 同一输入产出**逐字节可比的信封**（或至少决策/断言行数与内容摘要一致）；
+- 该 `COMMIT` 由**小时级降到秒/分钟级**；
+- **补一条回归测试**：往已评审字段插入断言必须被拒（ERRCODE `23514`）——用它证明规则没被削掉；
+- 回归：`apps/miroflow-agent` canonical_v2 相关测试全绿 + 一次完整重建通过。
+
+### 12.6 复核命令
+
+```bash
+cd /home/longxiang/MiroThinker/.worktrees/data-rebuild/apps/miroflow-agent
+
+# 触发器挂载方式（DEFERRABLE INITIALLY DEFERRED FOR EACH ROW）与函数体
+grep -n 'CREATE CONSTRAINT TRIGGER' -A2 canonical_v2_alembic/versions/C2_0007_bind_human_review_provenance.py | head
+sed -n '1170,1185p' canonical_v2_alembic/versions/C2_0007_bind_human_review_provenance.py
+
+# 库内：索引清单（确认无表达式/部分索引可用）与触发器清单
+#   SELECT indexdef FROM pg_indexes WHERE schemaname='knowledge' AND tablename='canonical_decision';
+#   SELECT tgname, tgtype FROM pg_trigger WHERE tgrelid='knowledge.canonical_decision_assertion'::regclass AND NOT tgisinternal;
+
+# 单次代价（只读，带超时；run14 库）
+#   SET statement_timeout='10s';
+#   EXPLAIN (ANALYZE, TIMING OFF, BUFFERS)
+#     SELECT 1 FROM knowledge.canonical_decision h
+#     WHERE h.method='human_review'
+#       AND h.human_review_resolution->'review_case'->>'release_id'='never-matches'
+#       AND h.human_review_resolution->'review_case'->>'originating_record_id'='never-matches';
+#   实测：Gather → Parallel Seq Scan，2 workers，Execution Time ≈ 42.8 ms
+```
+
+> 出处：本节为 2026-09-14 只读评审结论，数字与栈证据见 §11、§11.1 与 §3；
+> 修法与验收线与 §7 同源，合并立项时以 §12.4/§12.5 为准。
+
+### 11.2 结局实测（09-14 18:14）：决策批次 `COMMIT` 共约 12h40m
+
+| 观测 | 值 |
+|---|---|
+| 事务窗口 | 约 05:32 → 18:10（**≈12h40m 墙钟**），leader 累计 CPU ≈ **11h30m**（全程 ~91% 单核占用） |
+| 期间客户端 | runner 完全空转（`utime` 每小时仅 +40~50 ticks） |
+| 结束形态 | 事务提交后 `canonical_decision` = **423,493** 行、`canonical_decision_assertion` = **846,986** 行（较 run14 的 417,120 / 834,240 **+1.5%**，与别名富化一致） |
+| 对照预测 | §11.1 预测 4.6–10h、09-14 15:14 重估为 14h 量级 ⇒ **实测 12h40m 落在重估区间内**（原 9.9h 模型因未计 worker 启停开销而偏低） |
+
+**意义**：单是这一条"对 0 条人工评审决策反复确认"的延迟触发器，就吃掉了一次重建的一半以上时间。
+按 §12.4 的最小设计（release 级守卫 + 表达式索引 + 语句级粒度），这一段应回到**秒级**。
+剩余同型风险点：入域判定（`domain_inclusion_decision_assertion`，run14 口径约 41.8 万断言）
+与关系投影（2.2 万断言），量级递减但同为 O(断言数 × 决策数)。
+
+---
+
+## 13. 发布契约评审：封印器在做什麼、8GB 信封算不算过度设计（2026-09-14，侧线只读评审）
+
+> 结论先行：**规则正当，机制偏重**。封印器要证明的命题（"这个可秒级启动的包与发布信封完全等价"）
+> 是必须的；但把发布权威装成**单个 8GB JSON**，使"解析 + 规范化 + 重算哈希"每一步都变成
+> **小时级**，且同一事实被证了三遍。修法不是改封印器，而是改**契约形态**。
+> 它**不是**当前最大成本（§11.2 的触发器单次 12h40m），优先级排在其后。
+
+### 13.1 封印器在做什么（`s12c/build_serving_pack.py`）
+
+| phase | 做什么 | 关键位置 | 代价性质 |
+|---|---|---|---|
+| `envelope_validate` | 读入 8.18GB 信封 → Pydantic 解析 → **重算 canonical 内容哈希**（`external_content_addressed=True`：整模型 dump 成规范 JSON 再 sha256） | `:175-179`；哈希绑定见 `knowledge_build_isolated.py:885 _model_sha256` / `:902 bind_content_sha256` | **小时级** |
+| `index_snapshot_verify` | 打开 index 快照校验 marker/manifest，并确认与信封里的 release bundle 一致 | `:241-246` | 分钟级 |
+| `placeholder_scan` | 全扫 `lookup.sqlite3`(669MB) 找占位符残留，写 side-car 报告 | `:255-279` | **仅 warn、不阻断**；几分钟 |
+| `index_artifacts_copied` | 拷 `lookup.sqlite3`/`milvus.db`/marker，边拷边算 sha256 | `:281-304` | 3.2GB I/O，分钟级 |
+| `authority_documents_written` / `manifest_written` | 写 `relationships.json`、`institution_catalog.json`、`manifest.json`（含各文件哈希与权威哈希） | `:306-417` | 秒级 |
+| `dogfood_open` | **用真实 loader 打开刚做的包**，把重建出的权威与信封逐字段比对；不一致则拒绝出包 | `:424-444` | 分钟级 |
+
+**存在理由充分**：线上启动只读 pack（秒级），不再碰信封；所以必须有一次性离线证明"pack ≡ 信封"，
+否则改包就等于悄悄改数据。这一条**不该删**。
+
+### 13.2 成本实测（run15, 2026-09-14）
+
+- 信封体积 **8,184,481,154 字节**（run14 为 8,101,559,113）；
+- 构建收尾 **runner 读回校验**：`read_envelope (complete_candidate_runner.py:935)` → `model_validate_json`
+  → `validate_artifact_graph (knowledge_build_isolated.py:1970)` → `build (index_projection.py:457)`，
+  20:44 开始、约 **1h45m**，期间 RSS 峰值约 **93GB**；
+- 封印器（22:53 启动）**第一件事就是把这 8GB 再解析 + 再重算哈希一遍**，与上一步是同量级的重复开销：
+  **`phase=envelope_validate seconds=2071.098`（≈34.5 分钟）**，占整包耗时（各 phase 合计约 **2663 秒 ≈ 44 分钟**）的约 **78%**；
+  其余 phase：`index_snapshot_verify` 54.4s、`placeholder_scan` 10.1s（professor=12872 company=3097 glued=189）、
+  `index_artifacts_copied` 3.7s、`authority_documents_written` 167.2s、`manifest_written` 5.3s、`dogfood_open` 351.1s；
+- 包产物 **4.8GB**：`lookup.sqlite3` 668,884,992 / `milvus.db` 1,078,276,096 / `relationships.json` 3,390,932,565 /
+  `manifest.json` 11,116,209 / `.canonical-v2-isolated-index-target.json` 313 / `institution_catalog.json` 381 字节；dogfood 自举校验通过；
+- **同一份发布权威在 24 小时内被完整重算/重载了三次**：① 构建收尾读回（8.18GB 信封，≈1h45m，RSS 峰值 93GB）
+  ② 封印器 `envelope_validate`（同一 8.18GB，2071s）③ 封印器 dogfood 重载（包内 `relationships.json` 3.39GB，351s）
+  —— 合计约 **2.5 小时**，全部是"同一事实再证一遍"，这正是 §13.4 要消掉的成本。
+
+### 13.3 用 §12.3 的四条口径评审
+
+1. **同一不变量多层重复实现 —— 中招。** "这就是那个信封"被证三遍：构建收尾 runner 读回一次 →
+   封印器再解析 + 重算 canonical 哈希一次 → dogfood 再把权威重建一次。三层各自重算同一批事实
+   （对比 §12.2 第 1 条：同一规则 ≥5 份实现）。
+2. **行级 vs 集合级 —— 不适用**（一次性批任务，无逐行触发）。
+3. **有没有索引 —— 基本不适用。** 唯一"非必需"成本是那 669MB 占位符扫描，而它**只 warn 不阻断**：
+   花几分钟换一个不参与任何决策的报告（可 gate、可抽检、可移到离线巡检）。
+4. **代价是否超线性 —— 不适用**（是 O(bytes)），但**常数极大且重复 3 次**：单体 8GB JSON
+   让每一步都是小时级 + 峰值 ~93GB 内存。
+
+**根因是契约形态，不是封印器写得差**：把"一次算完的全局事实"装进最贵的执行路径，
+与 §12 的触发器同属一类病（只是没有 O(N²) 那么毒）。
+
+### 13.4 最小设计（按性价比，语义不减弱）
+
+1. **pack 为主、信封降级为"哈希收据"**：出包只读 pack 自身 manifest + 两个小文档，
+   信封只校验**顶层哈希**、不重建全模型 ⇒ 封印从小时级到分钟级；
+2. 或**信封分块内容寻址**——仓内已有先例：C2_0013 迁移"Chunk oversized run snapshots instead of
+   one jsonb value"，`identity_resolution_run_content_chunk` 就是为这个存在的，信封没享受到；
+3. 或至少**去重**：runner 读回已经算过哈希并打印 `envelope_sha256=`，封印器可直接信这张收据，
+   不必"再证明一次我是我"。
+
+**适用条件**：能接受"发布慢但极稳"时，2/3 可暂不做；但月更（C6/W7）要常态化，第 1 条迟早要做。
+
+### 13.5 验收线（若立项，不削弱 fail-closed）
+
+- 封印（含解析）从**小时级 → 分钟级**；构建收尾的读回同样受益；
+- **dogfood 等价性证明保留**（包与信封一致的证据不能少）；
+- 回归：一次完整重建 + 封印 + scratch 端口起服务 + replay 门 7/7；
+- 明确**不**为了提速而跳过 marker/索引校验或放宽哈希绑定。
+
+### 13.6 优先级与依赖
+
+- 先修 **§12/§11.2 的延迟触发器**（单次 12h40m，是真正的成本大头）；
+- 再做本节的契约重构（每次发布省 ~1h45m 读回 + ~1h+ 封印 + 峰值 93GB 内存）；
+- 两者都属 C6（周期更新）前置，建议并入同一份性能 change，分两步验收。
+
+### 13.7 复核命令
+
+```bash
+# 封印器 phase 与耗时
+tail -f /home/longxiang/MiroThinker/.worktrees/data-rebuild/.agents/runs/full-column-serving-pack-rebuild/build-run15-pack-seal.log
+# 代码位置
+sed -n '170,200p;236,300p;420,460p' \
+  /home/longxiang/MiroThinker/.worktrees/canonical-v2-s11-consolidation/.agents/runs/rebuild-canonical-v2-knowledge-platform/s12c/build_serving_pack.py
+# 信封体积与 RSS（读回窗口）
+ls -l /home/longxiang/MiroThinker/.worktrees/data-rebuild/.agents/runs/rebuild-canonical-v2-knowledge-platform/s12a/complete-candidate-build-envelope.json
+```
+
+> 出处：本节为 2026-09-14 侧线只读评审结论；证据（phase 表、`model_validate_json` 栈、8.18GB 体积、
+> 93GB RSS）与 §11.2 同源；与 §12 的四条判定口径一致，合并立项时以 §13.4/§13.5 为准。

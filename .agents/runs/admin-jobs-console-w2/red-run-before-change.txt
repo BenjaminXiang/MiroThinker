@@ -1,0 +1,20 @@
+tests/test_canonical_v2_jobs_runner.py:22: in <module>
+    from src.data_agents.canonical_v2.jobs import (
+E   ModuleNotFoundError: No module named 'src.data_agents.canonical_v2.jobs'
+_____________ ERROR collecting tests/test_canonical_v2_jobs_api.py _____________
+ImportError while importing test module '/home/longxiang/MiroThinker/.worktrees/admin-jobs-console/apps/admin-console/tests/test_canonical_v2_jobs_api.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+../../../../../.local/share/uv/python/cpython-3.12.12-linux-x86_64-gnu/lib/python3.12/importlib/__init__.py:90: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/test_canonical_v2_jobs_api.py:19: in <module>
+    from src.data_agents.canonical_v2.jobs import (
+E   ModuleNotFoundError: No module named 'src.data_agents.canonical_v2.jobs'
+=========================== short test summary info ============================
+ERROR tests/test_canonical_v2_jobs_registry.py
+ERROR tests/test_canonical_v2_jobs_store.py
+ERROR tests/test_canonical_v2_jobs_runner.py
+ERROR tests/test_canonical_v2_jobs_api.py
+!!!!!!!!!!!!!!!!!!! Interrupted: 4 errors during collection !!!!!!!!!!!!!!!!!!!!
+4 errors in 0.38s

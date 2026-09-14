@@ -1,0 +1,4 @@
+=== purge with an actually-purging window (positional 20 days) ===
+purged turns=461 sessions=276 cutoff=2026-08-24T20:42:30.003396+00:00 retention_days=20 source=argument
+days left: [('2026-09-07', 1), ('2026-09-09', 356), ('2026-09-10', 96), ('2026-09-11', 207), ('2026-09-12', 387), ('2026-09-13', 22)]
+sessions left: 642

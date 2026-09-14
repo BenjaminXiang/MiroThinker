@@ -1,0 +1,1 @@
+{"sessions":[{"session_id":"session:chat:smoke","started_at":"2026-09-13T20:41:39.292617+00:00","last_active_at":"2026-09-13T20:41:39.292628+00:00","turn_count":1,"first_query":"冒烟：这条记录应带身份","statuses":["error"],"identities":["smoke-auditor"]}],"total":1,"limit":50,"offset":0}
