@@ -1,0 +1,12 @@
+== no-PG phase ==
+health=200
+upload commit status=503
+{'detail': 'upload_requires_postgres'}
+seeds list status=503
+{'detail': 'seeds_require_postgres'}
+seed create status=503
+seed trigger status=503
+upload status=200
+seeds status=200
+uploads list (ledger readable) status=200
+ledger total: 0 postgres available: False

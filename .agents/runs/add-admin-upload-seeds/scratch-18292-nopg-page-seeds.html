@@ -1,0 +1,444 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light" />
+    <title>Seed 管理 · Canonical V2</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23143d59'/%3E%3Cpath d='M17 19h8v11l12-11h10L33 32l15 13H37L25 34v11h-8z' fill='white'/%3E%3C/svg%3E" />
+    <style>
+      :root {
+        --ink: #17252f;
+        --muted: #62727d;
+        --navy-strong: #0d2c41;
+        --teal: #168b82;
+        --teal-soft: #e7f5f2;
+        --blue-soft: #edf4f8;
+        --amber: #b66916;
+        --amber-soft: #fff4df;
+        --danger: #a83f4c;
+        --danger-soft: #fff0f2;
+        --surface: #ffffff;
+        --canvas: #f3f6f7;
+        --line: #dce4e7;
+        --line-strong: #c5d2d7;
+        --shadow: 0 18px 42px rgba(24, 55, 70, 0.08);
+        --radius: 18px;
+      }
+
+      * { box-sizing: border-box; }
+
+      body {
+        margin: 0;
+        min-width: 320px;
+        color: var(--ink);
+        background:
+          radial-gradient(circle at 8% 0%, rgba(22, 139, 130, 0.09), transparent 28rem),
+          var(--canvas);
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+          "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+        line-height: 1.55;
+      }
+
+      button, a, input, select { font: inherit; }
+
+      button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible {
+        outline: 3px solid rgba(22, 139, 130, 0.28);
+        outline-offset: 2px;
+      }
+
+      .topbar {
+        color: #fff;
+        background:
+          linear-gradient(112deg, rgba(255, 255, 255, 0.05), transparent 50%),
+          var(--navy-strong);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+      }
+
+      .topbar-inner {
+        max-width: 1280px;
+        margin: 0 auto;
+        padding: 18px 24px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        flex-wrap: wrap;
+      }
+
+      .brand { display: flex; flex-direction: column; gap: 2px; }
+      .brand strong { font-size: 1.05rem; letter-spacing: 0.02em; }
+      .brand span { font-size: 0.8rem; color: rgba(255, 255, 255, 0.72); }
+
+      .nav { display: flex; gap: 8px; flex-wrap: wrap; }
+      .nav a {
+        color: rgba(255, 255, 255, 0.82);
+        text-decoration: none;
+        font-size: 0.86rem;
+        padding: 7px 14px;
+        border-radius: 999px;
+        border: 1px solid transparent;
+      }
+      .nav a:hover { border-color: rgba(255, 255, 255, 0.28); }
+      .nav a.active {
+        color: #fff;
+        background: rgba(255, 255, 255, 0.14);
+        border-color: rgba(255, 255, 255, 0.24);
+      }
+
+      main {
+        max-width: 1280px;
+        margin: 0 auto;
+        padding: 24px;
+        display: grid;
+        gap: 20px;
+      }
+
+      .card {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+        padding: 20px 22px;
+      }
+
+      .card > header {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 12px;
+        flex-wrap: wrap;
+        border-bottom: 1px solid var(--line);
+        padding-bottom: 10px;
+        margin-bottom: 14px;
+      }
+
+      .card h2 { font-size: 1rem; margin: 0; letter-spacing: 0.02em; }
+      .card header .hint { font-size: 0.8rem; color: var(--muted); }
+
+      .pill {
+        display: inline-block;
+        font-size: 0.74rem;
+        padding: 2px 9px;
+        border-radius: 999px;
+        border: 1px solid var(--line-strong);
+        color: var(--muted);
+        background: var(--surface);
+        margin-right: 4px;
+        white-space: nowrap;
+      }
+      .pill.ok { color: #0d5f57; background: var(--teal-soft); border-color: #a9ded6; }
+      .pill.warn { color: #8a5312; background: var(--amber-soft); border-color: #e8c894; }
+      .pill.bad { color: #8b2f3b; background: var(--danger-soft); border-color: #e6b7bd; }
+
+      table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+      th, td { text-align: left; padding: 7px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+      th { color: var(--muted); font-weight: 600; white-space: nowrap; }
+      td.mono, .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.8rem; }
+
+      .actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+      button {
+        cursor: pointer;
+        border-radius: 999px;
+        border: 1px solid var(--line-strong);
+        background: #fff;
+        padding: 6px 14px;
+        font-size: 0.84rem;
+      }
+      button.primary { background: var(--teal); border-color: var(--teal); color: #fff; }
+      button.danger { color: var(--danger); border-color: #e6b7bd; }
+      button:disabled { cursor: not-allowed; opacity: 0.55; }
+      select, input {
+        padding: 6px 10px;
+        border: 1px solid var(--line-strong);
+        border-radius: 10px;
+        background: #fff;
+      }
+
+      .notice {
+        border-radius: 12px;
+        padding: 10px 14px;
+        font-size: 0.86rem;
+        margin-bottom: 12px;
+        border: 1px solid var(--line-strong);
+        background: var(--blue-soft);
+      }
+      .notice.ok { background: var(--teal-soft); border-color: #a9ded6; }
+      .notice.bad { background: var(--danger-soft); border-color: #e6b7bd; }
+      .notice.hidden { display: none; }
+
+      .toolbar { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+      .grid-form { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+      .footnote { font-size: 0.78rem; color: var(--muted); margin-top: 8px; }
+      .hidden { display: none !important; }
+    </style>
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="topbar-inner">
+        <div class="brand">
+          <strong>Seed 管理</strong>
+          <span>Canonical V2 · 教授采集源 CRUD / 触发 / 运行记录</span>
+        </div>
+        <nav class="nav">
+          <a href="chat">对话</a>
+          <a href="browse">数据浏览</a>
+          <a href="logs">访问日志</a>
+          <a href="admin">管理配置</a>
+          <a href="jobs">任务运维</a>
+          <a href="upload">上传导入</a>
+          <a href="seeds" class="active">Seed 管理</a>
+        </nav>
+      </div>
+    </header>
+
+    <main>
+      <div class="notice hidden" id="banner" role="status"></div>
+
+      <section class="card" aria-label="新增 seed" id="createCard">
+        <header>
+          <h2>新增 seed</h2>
+          <span class="hint" id="pgHint">正在探测构建期 PostgreSQL…</span>
+        </header>
+        <div class="grid-form">
+          <label>学校 <input id="newSchool" type="text" maxlength="200" /></label>
+          <label>院系（可空） <input id="newDepartment" type="text" maxlength="200" /></label>
+          <label>名册 URL <input id="newUrl" type="url" /></label>
+          <div class="actions"><button class="primary" id="createBtn" type="button">创建</button></div>
+        </div>
+        <p class="footnote">
+          触发抓取只走闸门：preview（默认，最轻）/ sample（必须带上限）/ full（不带上限）。
+          页面不提供 full 之外的放大口径，full 亦受闸门与采集开关约束。
+        </p>
+      </section>
+
+      <section class="card" aria-label="seed 清单">
+        <header>
+          <h2>seed 清单</h2>
+          <span class="hint" id="listHint">加载中…</span>
+        </header>
+        <div class="toolbar">
+          <button id="refresh" type="button">刷新</button>
+        </div>
+        <div style="overflow-x: auto">
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>学校 / 院系</th>
+                <th>名册 URL</th>
+                <th>最近运行</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody id="seedRows">
+              <tr><td colspan="5">加载中…</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="footnote" id="degraded" hidden>
+          本机没有构建期 PostgreSQL，seed 清单与触发不可用（页面入口已隐藏）。
+        </p>
+      </section>
+
+      <section class="card" aria-label="运行记录">
+        <header>
+          <h2>运行记录</h2>
+          <span class="hint" id="runHint">选择一条 seed 查看刷新记录</span>
+        </header>
+        <div id="runBody"><p class="footnote">尚未选择。</p></div>
+      </section>
+    </main>
+
+    <script>
+      const API = "/api/canonical-v2/admin";
+      const banner = document.getElementById("banner");
+      const rows = document.getElementById("seedRows");
+      const runBody = document.getElementById("runBody");
+      const runHint = document.getElementById("runHint");
+      const createCard = document.getElementById("createCard");
+      const createBtn = document.getElementById("createBtn");
+
+      const RUN_LABEL = {
+        success: "成功",
+        failure: "失败",
+        in_progress: "进行中",
+        never_run: "未运行",
+        adapter_missing: "缺少适配器",
+      };
+
+      const ERROR_TEXT = {
+        seeds_require_postgres: "本机没有构建期 PostgreSQL，seed 管理不可用。",
+        seed_url_already_exists: "该名册 URL 已存在。",
+        job_already_running: "该 seed 的刷新任务正在运行，闸门已拒绝重入。",
+        job_breaker_open: "刷新任务连续失败已熔断，需要先复位。",
+        job_invalid_params: "参数未通过闸门校验。",
+        job_postgres_unavailable: "构建期 PostgreSQL 不可用。",
+      };
+
+      function say(text, kind) {
+        banner.className = "notice" + (kind ? " " + kind : "");
+        banner.textContent = text;
+      }
+
+      function pill(text, kind) {
+        return '<span class="pill' + (kind ? " " + kind : "") + '">' + text + "</span>";
+      }
+
+      function describeError(payload, status) {
+        const detail = payload && payload.detail;
+        const code = typeof detail === "string" ? detail : (detail && detail.error) || "";
+        if (ERROR_TEXT[code]) return ERROR_TEXT[code];
+        if (typeof detail === "string" && detail.indexOf("not found") >= 0) return "seed 不存在。";
+        return "请求失败（HTTP " + status + "）" + (code ? "：" + code : "");
+      }
+
+      function setDegraded(unavailable) {
+        createCard.hidden = unavailable;
+        document.getElementById("degraded").hidden = !unavailable;
+        document.getElementById("pgHint").textContent = unavailable
+          ? "构建期 PostgreSQL 不可用：入口已隐藏。"
+          : "构建期 PostgreSQL 可用。";
+      }
+
+      async function loadSeeds() {
+        try {
+          const response = await fetch(API + "/seeds");
+          const payload = await response.json();
+          if (response.status === 503) {
+            setDegraded(true);
+            rows.innerHTML = '<tr><td colspan="5">seed 管理不可用（无构建期 PostgreSQL）。</td></tr>';
+            return;
+          }
+          setDegraded(false);
+          renderSeeds(payload || []);
+        } catch (error) {
+          rows.innerHTML = '<tr><td colspan="5">读取失败：' + error + "</td></tr>";
+        }
+      }
+
+      function renderSeeds(seeds) {
+        document.getElementById("listHint").textContent = "共 " + seeds.length + " 条";
+        if (!seeds.length) {
+          rows.innerHTML = '<tr><td colspan="5">暂无 seed。</td></tr>';
+          return;
+        }
+        rows.innerHTML = seeds
+          .map(function (seed) {
+            const status = seed.last_run_status || "never_run";
+            const kind = status === "success" ? "ok" : status === "failure" ? "bad" : "warn";
+            return (
+              "<tr>" +
+              '<td class="mono">' + seed.id + "</td>" +
+              "<td>" + seed.school + (seed.department ? " / " + seed.department : "") + "</td>" +
+              '<td class="mono">' + seed.seed_url + "</td>" +
+              "<td>" + pill(RUN_LABEL[status] || status, kind) + "<br /><span class='footnote'>" +
+              (seed.last_run_at || "—") + "</span></td>" +
+              '<td><div class="actions">' +
+              '<button data-action="preview" data-id="' + seed.id + '">preview</button>' +
+              '<button data-action="sample" data-id="' + seed.id + '">sample(20)</button>' +
+              '<button data-action="runs" data-id="' + seed.id + '">运行记录</button>' +
+              '<button class="danger" data-action="delete" data-id="' + seed.id + '">删除</button>' +
+              "</div></td></tr>"
+            );
+          })
+          .join("");
+        Array.prototype.forEach.call(rows.querySelectorAll("button[data-action]"), function (button) {
+          button.addEventListener("click", function () {
+            handleAction(button.dataset.action, button.dataset.id);
+          });
+        });
+      }
+
+      async function handleAction(action, seedId) {
+        if (action === "runs") {
+          loadRuns(seedId);
+          return;
+        }
+        if (action === "delete") {
+          if (!window.confirm("删除 seed " + seedId + "？")) return;
+          const response = await fetch(API + "/seeds/" + seedId, { method: "DELETE" });
+          say(response.ok ? "已删除 seed " + seedId + "。" : "删除失败（HTTP " + response.status + "）。",
+              response.ok ? "ok" : "bad");
+          loadSeeds();
+          return;
+        }
+        const body = action === "sample" ? { mode: "sample", limit: 20 } : { mode: "preview" };
+        const response = await fetch(API + "/seeds/" + seedId + "/trigger", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        });
+        const payload = await response.json().catch(function () { return {}; });
+        if (response.ok) {
+          say("已触发（" + payload.task_id + "），运行 " + payload.run_id + " 已入闸门。", "ok");
+          loadRuns(seedId);
+        } else {
+          say(describeError(payload, response.status), "bad");
+        }
+        loadSeeds();
+      }
+
+      async function loadRuns(seedId) {
+        runHint.textContent = "seed " + seedId;
+        const response = await fetch(API + "/seeds/" + seedId + "/runs");
+        const payload = await response.json().catch(function () { return {}; });
+        if (!response.ok) {
+          runBody.innerHTML = "<p>" + describeError(payload, response.status) + "</p>";
+          return;
+        }
+        const runs = payload.runs || [];
+        if (!runs.length) {
+          runBody.innerHTML = "<p class='footnote'>该 seed 还没有通过本面触发的运行记录。</p>";
+          return;
+        }
+        runBody.innerHTML =
+          "<table><thead><tr><th>运行</th><th>任务</th><th>模式</th><th>状态</th>" +
+          "<th>触发</th><th>操作人</th><th>开始</th></tr></thead><tbody>" +
+          runs.map(function (run) {
+            const summary = (run.summary && run.summary.job_summary) || {};
+            return (
+              "<tr><td class='mono'>" + run.run_id.slice(0, 8) + "…</td>" +
+              "<td>" + run.task_id + "</td>" +
+              "<td>" + (summary.trigger_mode || "—") + "</td>" +
+              "<td>" + pill(run.status, run.status === "succeeded" ? "ok" :
+                run.status === "failed" ? "bad" : "warn") + "</td>" +
+              "<td>" + run.trigger_source + "</td>" +
+              "<td>" + run.operator + "</td>" +
+              "<td>" + run.started_at + "</td></tr>"
+            );
+          }).join("") + "</tbody></table>";
+      }
+
+      createBtn.addEventListener("click", async function () {
+        const payload = {
+          school: document.getElementById("newSchool").value.trim(),
+          department: document.getElementById("newDepartment").value.trim() || null,
+          seed_url: document.getElementById("newUrl").value.trim(),
+        };
+        if (!payload.school || !payload.seed_url) {
+          say("学校和名册 URL 必填。", "bad");
+          return;
+        }
+        const response = await fetch(API + "/seeds", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        const result = await response.json().catch(function () { return {}; });
+        if (response.ok) {
+          say("已创建 seed " + result.id + "。", "ok");
+          document.getElementById("newSchool").value = "";
+          document.getElementById("newDepartment").value = "";
+          document.getElementById("newUrl").value = "";
+          loadSeeds();
+        } else {
+          say(describeError(result, response.status), "bad");
+        }
+      });
+
+      document.getElementById("refresh").addEventListener("click", loadSeeds);
+      loadSeeds();
+    </script>
+  </body>
+</html>
