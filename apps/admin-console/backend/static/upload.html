@@ -1,0 +1,504 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light" />
+    <title>上传导入 · Canonical V2</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23143d59'/%3E%3Cpath d='M17 19h8v11l12-11h10L33 32l15 13H37L25 34v11h-8z' fill='white'/%3E%3C/svg%3E" />
+    <style>
+      :root {
+        --ink: #17252f;
+        --muted: #62727d;
+        --navy-strong: #0d2c41;
+        --teal: #168b82;
+        --teal-soft: #e7f5f2;
+        --blue-soft: #edf4f8;
+        --amber: #b66916;
+        --amber-soft: #fff4df;
+        --danger: #a83f4c;
+        --danger-soft: #fff0f2;
+        --surface: #ffffff;
+        --canvas: #f3f6f7;
+        --line: #dce4e7;
+        --line-strong: #c5d2d7;
+        --shadow: 0 18px 42px rgba(24, 55, 70, 0.08);
+        --radius: 18px;
+      }
+
+      * { box-sizing: border-box; }
+
+      body {
+        margin: 0;
+        min-width: 320px;
+        color: var(--ink);
+        background:
+          radial-gradient(circle at 8% 0%, rgba(22, 139, 130, 0.09), transparent 28rem),
+          var(--canvas);
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+          "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+        line-height: 1.55;
+      }
+
+      button, a, input, select { font: inherit; }
+
+      button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible {
+        outline: 3px solid rgba(22, 139, 130, 0.28);
+        outline-offset: 2px;
+      }
+
+      .topbar {
+        color: #fff;
+        background:
+          linear-gradient(112deg, rgba(255, 255, 255, 0.05), transparent 50%),
+          var(--navy-strong);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+      }
+
+      .topbar-inner {
+        max-width: 1280px;
+        margin: 0 auto;
+        padding: 18px 24px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        flex-wrap: wrap;
+      }
+
+      .brand { display: flex; flex-direction: column; gap: 2px; }
+      .brand strong { font-size: 1.05rem; letter-spacing: 0.02em; }
+      .brand span { font-size: 0.8rem; color: rgba(255, 255, 255, 0.72); }
+
+      .nav { display: flex; gap: 8px; flex-wrap: wrap; }
+      .nav a {
+        color: rgba(255, 255, 255, 0.82);
+        text-decoration: none;
+        font-size: 0.86rem;
+        padding: 7px 14px;
+        border-radius: 999px;
+        border: 1px solid transparent;
+      }
+      .nav a:hover { border-color: rgba(255, 255, 255, 0.28); }
+      .nav a.active {
+        color: #fff;
+        background: rgba(255, 255, 255, 0.14);
+        border-color: rgba(255, 255, 255, 0.24);
+      }
+
+      main {
+        max-width: 1280px;
+        margin: 0 auto;
+        padding: 24px;
+        display: grid;
+        gap: 20px;
+      }
+
+      .card {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+        padding: 20px 22px;
+      }
+
+      .card > header {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 12px;
+        flex-wrap: wrap;
+        border-bottom: 1px solid var(--line);
+        padding-bottom: 10px;
+        margin-bottom: 14px;
+      }
+
+      .card h2 { font-size: 1rem; margin: 0; letter-spacing: 0.02em; }
+      .card header .hint { font-size: 0.8rem; color: var(--muted); }
+
+      .pill {
+        display: inline-block;
+        font-size: 0.74rem;
+        padding: 2px 9px;
+        border-radius: 999px;
+        border: 1px solid var(--line-strong);
+        color: var(--muted);
+        background: var(--surface);
+        margin-right: 4px;
+        white-space: nowrap;
+      }
+      .pill.ok { color: #0d5f57; background: var(--teal-soft); border-color: #a9ded6; }
+      .pill.warn { color: #8a5312; background: var(--amber-soft); border-color: #e8c894; }
+      .pill.bad { color: #8b2f3b; background: var(--danger-soft); border-color: #e6b7bd; }
+
+      table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+      th, td { text-align: left; padding: 7px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+      th { color: var(--muted); font-weight: 600; white-space: nowrap; }
+      td.mono, .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.8rem; }
+      tr.upload-row { cursor: pointer; }
+      tr.upload-row:hover { background: var(--blue-soft); }
+      tr.failed td { background: var(--danger-soft); }
+
+      .dot {
+        display: inline-block;
+        width: 9px;
+        height: 9px;
+        border-radius: 50%;
+        background: #cfd8dc;
+        margin-right: 6px;
+      }
+      .dot.bad { background: var(--danger); box-shadow: 0 0 0 3px rgba(168, 63, 76, 0.16); }
+      .dot.ok { background: var(--teal); }
+      .dot.warn { background: var(--amber); }
+
+      .actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+      button {
+        cursor: pointer;
+        border-radius: 999px;
+        border: 1px solid var(--line-strong);
+        background: #fff;
+        padding: 6px 14px;
+        font-size: 0.84rem;
+      }
+      button.primary { background: var(--teal); border-color: var(--teal); color: #fff; }
+      button:disabled { cursor: not-allowed; opacity: 0.55; }
+      select, input[type="file"] {
+        padding: 6px 10px;
+        border: 1px solid var(--line-strong);
+        border-radius: 10px;
+        background: #fff;
+      }
+
+      .notice {
+        border-radius: 12px;
+        padding: 10px 14px;
+        font-size: 0.86rem;
+        margin-bottom: 12px;
+        border: 1px solid var(--line-strong);
+        background: var(--blue-soft);
+      }
+      .notice.ok { background: var(--teal-soft); border-color: #a9ded6; }
+      .notice.bad { background: var(--danger-soft); border-color: #e6b7bd; }
+      .notice.hidden { display: none; }
+
+      .toolbar { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+
+      pre.excerpt {
+        background: #0d2c41;
+        color: #dbe7ee;
+        padding: 12px;
+        border-radius: 12px;
+        overflow: auto;
+        font-size: 0.76rem;
+        max-height: 240px;
+        white-space: pre-wrap;
+        word-break: break-all;
+      }
+      .footnote { font-size: 0.78rem; color: var(--muted); margin-top: 8px; }
+      .hidden { display: none !important; }
+    </style>
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="topbar-inner">
+        <div class="brand">
+          <strong>上传导入</strong>
+          <span>Canonical V2 · XLSX 上传 / 去重 / 批次跟踪</span>
+        </div>
+        <nav class="nav">
+          <a href="chat">对话</a>
+          <a href="browse">数据浏览</a>
+          <a href="logs">访问日志</a>
+          <a href="admin">管理配置</a>
+          <a href="jobs">任务运维</a>
+          <a href="upload" class="active">上传导入</a>
+          <a href="seeds">Seed 管理</a>
+        </nav>
+      </div>
+    </header>
+
+    <main>
+      <div class="notice hidden" id="banner" role="status"></div>
+
+      <section class="card" aria-label="上传 XLSX" id="uploadCard">
+        <header>
+          <h2>上传 XLSX</h2>
+          <span class="hint" id="pgHint">正在探测构建期 PostgreSQL…</span>
+        </header>
+        <div class="toolbar">
+          <label>知识域
+            <select id="domain">
+              <option value="company">企业</option>
+              <option value="patent">专利</option>
+              <option value="professor">教授</option>
+            </select>
+          </label>
+          <input type="file" id="file" accept=".xlsx" />
+          <label><input type="checkbox" id="dryRun" /> 干跑（只解析不写入）</label>
+          <button class="primary" id="submit" type="button">上传</button>
+        </div>
+        <p class="footnote">
+          同内容同域重复上传会被去重（409，返回首次上传编号）；提交后的导入与其它任务共用同一道闸门
+          （防重入锁 / 开关 / 配额 / 熔断），不绕过任何限制。干跑只做解析，不写库、不排富化、不消耗配额。
+        </p>
+        <p class="footnote" id="degrated" hidden>
+          本机没有构建期 PostgreSQL，提交导入不可用（已在页面隐藏）；干跑仍可用，上传记录仍可查看。
+        </p>
+      </section>
+
+      <section class="card" aria-label="上传记录">
+        <header>
+          <h2>上传记录</h2>
+          <span class="hint" id="listHint">加载中…</span>
+        </header>
+        <div class="toolbar">
+          <label>域
+            <select id="filterDomain">
+              <option value="">全部</option>
+              <option value="company">企业</option>
+              <option value="patent">专利</option>
+              <option value="professor">教授</option>
+            </select>
+          </label>
+          <button id="refresh" type="button">刷新</button>
+        </div>
+        <div style="overflow-x: auto">
+          <table>
+            <thead>
+              <tr>
+                <th>上传编号</th>
+                <th>域</th>
+                <th>文件名</th>
+                <th>内容哈希</th>
+                <th>状态</th>
+                <th>闸门运行</th>
+                <th>时间</th>
+              </tr>
+            </thead>
+            <tbody id="uploadRows">
+              <tr><td colspan="7">加载中…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="card" aria-label="上传详情">
+        <header>
+          <h2>上传详情</h2>
+          <span class="hint" id="detailHint">选择一条记录查看批次与解析摘要</span>
+        </header>
+        <div id="detailBody"><p class="footnote">尚未选择。</p></div>
+      </section>
+    </main>
+
+    <script>
+      const API = "/api/canonical-v2/admin/uploads";
+      const banner = document.getElementById("banner");
+      const rows = document.getElementById("uploadRows");
+      const detailBody = document.getElementById("detailBody");
+      const detailHint = document.getElementById("detailHint");
+      const dryRunBox = document.getElementById("dryRun");
+
+      const STATUS_LABEL = {
+        queued: "排队中",
+        running: "运行中",
+        succeeded: "成功",
+        failed: "失败",
+        skipped: "已跳过",
+        rejected: "已拒绝",
+      };
+      const STATUS_CLASS = {
+        succeeded: "ok",
+        running: "warn",
+        queued: "warn",
+        skipped: "warn",
+        failed: "bad",
+        rejected: "bad",
+      };
+      const ERROR_TEXT = {
+        upload_unknown_domain: "该知识域不在白名单（仅 企业 / 专利 / 教授）。",
+        upload_invalid_file: "只接受 .xlsx 文件，且不能为空。",
+        upload_too_large: "文件超过配置的上传大小上限。",
+        duplicate_upload: "同内容同域已上传过，已去重。",
+        upload_in_progress: "同一内容的另一次上传正在准入中，请稍后重试。",
+        upload_requires_postgres: "本机没有构建期 PostgreSQL，提交导入不可用。",
+        uploads_storage_unavailable: "上传台账存储不可用（未配置 CANONICAL_V2_UPLOADS_DB）。",
+        job_already_running: "该导入任务已有一次运行在跑，闸门已拒绝重入。",
+        job_invalid_params: "参数被闸门拒绝。",
+        job_breaker_open: "该任务连续失败已熔断，需要先复位。",
+      };
+
+      function say(text, kind) {
+        banner.className = "notice" + (kind ? " " + kind : "");
+        banner.textContent = text;
+      }
+
+      function pill(text, kind) {
+        return '<span class="pill' + (kind ? " " + kind : "") + '">' + text + "</span>";
+      }
+
+      function shortHash(hash) {
+        return hash ? hash.slice(0, 12) + "…" : "—";
+      }
+
+      function fmtTime(value) {
+        if (!value) return "—";
+        const date = new Date(value);
+        return isNaN(date) ? value : date.toLocaleString();
+      }
+
+      function describeError(payload, status) {
+        const detail = payload && payload.detail;
+        const code = typeof detail === "string" ? detail : (detail && detail.code) || "";
+        if (ERROR_TEXT[code]) return ERROR_TEXT[code];
+        if (detail && detail.upload_id) {
+          return "同内容同域已上传过（编号 " + detail.upload_id + "，状态 " + detail.status + "）。";
+        }
+        return "请求失败（HTTP " + status + "）" + (code ? "：" + code : "");
+      }
+
+      async function loadList() {
+        const domain = document.getElementById("filterDomain").value;
+        const query = domain ? "?domain=" + encodeURIComponent(domain) : "";
+        try {
+          const response = await fetch(API + query);
+          const payload = await response.json();
+          renderList(payload);
+          renderPostgres(payload.postgres);
+        } catch (error) {
+          rows.innerHTML = '<tr><td colspan="7">读取失败：' + error + "</td></tr>";
+        }
+      }
+
+      function renderPostgres(postgres) {
+        const available = postgres && postgres.available;
+        document.getElementById("pgHint").textContent = available
+          ? "构建期 PostgreSQL 可用：可提交导入。"
+          : "构建期 PostgreSQL 不可用：仅干跑与台账可读。";
+        document.getElementById("degrated").hidden = !!available;
+        dryRunBox.checked = !available;
+      }
+
+      function renderList(payload) {
+        const uploads = (payload && payload.uploads) || [];
+        document.getElementById("listHint").textContent = "共 " + (payload.total || 0) + " 条";
+        if (!uploads.length) {
+          rows.innerHTML = '<tr><td colspan="7">暂无上传记录。</td></tr>';
+          return;
+        }
+        rows.innerHTML = uploads
+          .map(function (item) {
+            const cls = item.status === "failed" || item.status === "rejected" ? ' class="failed"' : "";
+            const dot = STATUS_CLASS[item.status] === "bad" ? '<span class="dot bad"></span>' : "";
+            return (
+              "<tr" + cls + ' class="upload-row" data-id="' + item.upload_id + '">' +
+              '<td class="mono">' + item.upload_id.slice(0, 8) + "…</td>" +
+              "<td>" + item.domain + "</td>" +
+              "<td>" + item.filename + "</td>" +
+              '<td class="mono">' + shortHash(item.content_sha256) + "</td>" +
+              "<td>" + dot + pill(STATUS_LABEL[item.status] || item.status, STATUS_CLASS[item.status]) +
+              (item.dry_run ? pill("干跑") : "") + "</td>" +
+              '<td class="mono">' + (item.run_id ? item.run_id.slice(0, 8) + "…" : "—") + "</td>" +
+              "<td>" + fmtTime(item.created_at) + "</td>" +
+              "</tr>"
+            );
+          })
+          .join("");
+        Array.prototype.forEach.call(document.querySelectorAll("tr.upload-row"), function (row) {
+          row.addEventListener("click", function () {
+            loadDetail(row.dataset.id);
+          });
+        });
+      }
+
+      async function loadDetail(uploadId) {
+        detailHint.textContent = "上传 " + uploadId;
+        try {
+          const response = await fetch(API + "/" + encodeURIComponent(uploadId));
+          const payload = await response.json();
+          if (!response.ok) {
+            detailBody.innerHTML = "<p>" + describeError(payload, response.status) + "</p>";
+            return;
+          }
+          renderDetail(payload);
+        } catch (error) {
+          detailBody.innerHTML = "<p>读取失败：" + error + "</p>";
+        }
+      }
+
+      function renderDetail(payload) {
+        const upload = payload.upload || {};
+        const run = payload.run;
+        const batch = payload.batch;
+        const parts = [];
+        parts.push(
+          "<p>域 " + upload.domain + " · 文件 " + upload.filename +
+          " · 大小 " + upload.size_bytes + " 字节 · 状态 " +
+          pill(STATUS_LABEL[upload.status] || upload.status, STATUS_CLASS[upload.status]) + "</p>"
+        );
+        if (run) {
+          parts.push(
+            "<p>闸门运行 <span class='mono'>" + run.run_id + "</span> · " +
+            (STATUS_LABEL[run.status] || run.status) +
+            " · 退出码 " + (run.exit_code === null ? "—" : run.exit_code) +
+            " · 耗时 " + (run.duration_ms === null ? "—" : run.duration_ms + " ms") +
+            " · 操作人 " + run.operator + "</p>"
+          );
+        }
+        if (batch) {
+          if (batch.available === false) {
+            parts.push("<p class='footnote'>批次进度不可用（" + (batch.reason || "unknown") + "）。</p>");
+          } else {
+            parts.push("<p>富化批次 <span class='mono'>" + batch.batch.batch_id + "</span> · 状态 " +
+              batch.batch.status + " · 阶段 " + batch.batch.current_stage +
+              " · 企业 " + batch.batch.companies_selected + "/" + batch.batch.companies_total + "</p>");
+            parts.push("<p>明细：" + Object.keys(batch.items).map(function (key) {
+              return key + " " + batch.items[key];
+            }).join(" · ") + "</p>");
+          }
+        }
+        if (upload.summary) {
+          parts.push("<pre class='excerpt'>" +
+            JSON.stringify(upload.summary, null, 2).replace(/[<>&]/g, function (c) {
+              return { "<": "&lt;", ">": "&gt;", "&": "&amp;" }[c];
+            }) + "</pre>");
+        }
+        detailBody.innerHTML = parts.join("");
+      }
+
+      document.getElementById("refresh").addEventListener("click", loadList);
+      document.getElementById("filterDomain").addEventListener("change", loadList);
+
+      document.getElementById("submit").addEventListener("click", async function () {
+        const fileInput = document.getElementById("file");
+        if (!fileInput.files.length) {
+          say("请先选择 .xlsx 文件。", "bad");
+          return;
+        }
+        const domain = document.getElementById("domain").value;
+        const body = new FormData();
+        body.append("file", fileInput.files[0]);
+        const dryRun = dryRunBox.checked ? "?dry_run=true" : "";
+        try {
+          const response = await fetch(API + "/" + encodeURIComponent(domain) + dryRun, {
+            method: "POST",
+            body: body,
+          });
+          const payload = await response.json();
+          if (!response.ok) {
+            say(describeError(payload, response.status), "bad");
+          } else if (payload.outcome === "skipped") {
+            say("已准入但被闸门跳过（原因 " + payload.skip_reason + "），已记录。", "");
+          } else {
+            say("已准入，导入运行 " + payload.upload.run_id + " 已启动。", "ok");
+          }
+          loadList();
+        } catch (error) {
+          say("上传失败：" + error, "bad");
+        }
+      });
+
+      loadList();
+    </script>
+  </body>
+</html>

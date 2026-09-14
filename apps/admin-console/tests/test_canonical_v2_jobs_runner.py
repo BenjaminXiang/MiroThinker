@@ -12,6 +12,7 @@ from __future__ import annotations
 from dataclasses import replace
 from datetime import UTC, datetime
 import json
+import os
 from pathlib import Path
 import subprocess
 import sys
@@ -21,6 +22,7 @@ import pytest
 
 from src.data_agents.canonical_v2.jobs import (
     MANUAL_TRIGGER,
+    _spawn_subprocess,
     QUOTA_LLM_ENV,
     QUOTA_WEB_SEARCH_ENV,
     SCHEDULE_TRIGGER,
@@ -444,3 +446,42 @@ def test_child_environment_is_never_persisted(runtime_factory, tmp_path: Path) -
     assert SENTINEL_ENV_VALUE not in str(row.as_dict(include_samples=True))
     assert database_path.read_bytes().find(SENTINEL_ENV_VALUE.encode()) == -1
     assert redact_secrets(f"api_key={SENTINEL_ENV_VALUE}") == "api_key=[redacted]"
+
+
+def test_a_timed_out_spawn_leaves_no_grandchild_behind() -> None:
+    """R5 — the timeout kill must reach the whole process group.
+
+    ``uv run`` execs the real worker as a **grandchild**: a direct child that spawns a worker of its
+    own, exactly like the declared tasks do. Before this regression the spawn helper killed only the
+    direct child, so a timed-out run kept working (and spending quota) while the gate recorded
+    `failed` and released the lock. Read-only evidence of the old behaviour:
+    `.agents/runs/add-admin-upload-seeds/current-state.md` §2.1.
+    """
+
+    marker = f"w3-orphan-marker-{os.getpid()}-{int(time.time() * 1000)}"
+    grandchild = f"import time;time.sleep(60)  # {marker}"
+    linker = (
+        "import subprocess, sys\n"
+        f"subprocess.run([sys.executable, '-c', {grandchild!r}], check=False)\n"
+    )
+    with pytest.raises(subprocess.TimeoutExpired):
+        _spawn_subprocess(
+            ("python3", "-c", linker), cwd=str(Path.cwd()), env=dict(os.environ), timeout=1
+        )
+    deadline = time.monotonic() + 5.0
+    survivors = _processes_matching(marker)
+    while survivors and time.monotonic() < deadline:
+        time.sleep(0.2)
+        survivors = _processes_matching(marker)
+    assert survivors == [], f"process group kill left processes behind: {survivors}"
+
+
+def _processes_matching(marker: str) -> list[str]:
+    listing = subprocess.run(
+        ["ps", "-eo", "pid,cmd"], text=True, capture_output=True, check=False
+    ).stdout
+    return [
+        line.strip()
+        for line in listing.splitlines()
+        if marker in line and "ps -eo" not in line and "survivors" not in line
+    ]

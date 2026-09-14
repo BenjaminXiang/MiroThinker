@@ -33,6 +33,7 @@ import logging
 import os
 from pathlib import Path
 import re
+import signal
 import sqlite3
 import subprocess
 import threading
@@ -87,6 +88,8 @@ _SECRET_PATTERN = re.compile(
 _BEARER_PATTERN = re.compile(r"(?i)(bearer\s+)([A-Za-z0-9._\-]{8,})")
 # A parameter placeholder is a whole token: ``{domain}`` yes, ``print('{}')`` no.
 _PLACEHOLDER_PATTERN = re.compile(r"^\{([A-Za-z_][A-Za-z0-9_]*)\}$")
+# An opaque token the caller repeats back to us: no separator, no whitespace, no metacharacter.
+_TOKEN_PATTERN = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$")
 
 
 # --------------------------------------------------------------------------------------- errors
@@ -167,6 +170,10 @@ class JobTask:
     schedule_cron: str | None = None
     schedule_display: str = "手动触发"
     params: Mapping[str, tuple[str, ...]] = field(default_factory=dict)
+    # Parameters whose value is an opaque token the caller does not get to spell out: the token is
+    # shaped-checked and then resolved here, server side, to a value this process constructed
+    # earlier (an upload id becomes a staged path). The caller's text never becomes an argv token.
+    token_params: Mapping[str, "Callable[[str], str]"] = field(default_factory=dict)
     collection_gated: bool = False
     quota: Literal["web_search", "llm"] | None = None
     requires_postgres: bool = False
@@ -184,10 +191,16 @@ class JobTask:
         return " ".join(self.argv_template)
 
     def argv_for(self, values: Mapping[str, str] | None = None) -> tuple[str, ...]:
-        """Render the fixed template with values from the declared closed sets only."""
+        """Render the fixed template with declared closed-set values and resolved tokens only."""
 
+        overlap = sorted(set(self.params) & set(self.token_params))
+        if overlap:
+            raise JobsConfigurationError(
+                f"{self.task_id} declares {', '.join(overlap)} as both a closed set and a token"
+            )
         provided = dict(values or {})
-        unknown = sorted(set(provided) - set(self.params))
+        declared = set(self.params) | set(self.token_params)
+        unknown = sorted(set(provided) - declared)
         if unknown:
             raise JobParameterError(
                 f"{self.task_id} does not accept parameter(s): {', '.join(unknown)}"
@@ -202,6 +215,16 @@ class JobTask:
                     f"{self.task_id}.{name} must be one of: {', '.join(allowed)}"
                 )
             resolved[name] = value
+        for name, resolver in self.token_params.items():
+            if name not in provided:
+                raise JobParameterError(f"{self.task_id} requires parameter '{name}'")
+            token = provided[name]
+            if not isinstance(token, str) or _TOKEN_PATTERN.match(token) is None:
+                raise JobParameterError(
+                    f"{self.task_id}.{name} must be an identifier issued by this service "
+                    "(no path, whitespace or shell text)"
+                )
+            resolved[name] = resolver(token)
         argv: list[str] = []
         for token in self.argv_template:
             match = _PLACEHOLDER_PATTERN.match(token)
@@ -228,11 +251,28 @@ class JobTask:
             "schedule_cron": self.schedule_cron,
             "schedule_display": self.schedule_display,
             "params": {name: list(allowed) for name, allowed in self.params.items()},
+            "token_params": sorted(self.token_params),
             "collection_gated": self.collection_gated,
             "quota": self.quota,
             "requires_postgres": self.requires_postgres,
             "window_bound": self.window_bound,
         }
+
+
+def _resolve_upload_token(token: str) -> str:
+    """Resolve an upload id through the W3 upload ledger (imported lazily: uploads imports jobs)."""
+
+    from src.data_agents.canonical_v2.uploads import resolve_upload_token
+
+    return resolve_upload_token(token)
+
+
+def _resolve_seed_id(token: str) -> str:
+    """A professor seed id is a small positive integer; nothing else may reach the argv."""
+
+    if not token.isdigit() or not 0 < int(token) < 10**12:
+        raise JobParameterError("seed_id must be a positive integer id")
+    return token
 
 
 def _collection_task(task_id: str, label: str, domain: str, cadence: str, display: str,
@@ -379,6 +419,89 @@ JOB_TASKS: tuple[JobTask, ...] = (
         timeout_seconds=5400,
         quota="llm",
         requires_postgres=True,
+    ),
+    # -- W3 data front door (add-admin-upload-seeds) -------------------------------------------
+    # These are operator-triggered (not scheduled) tasks, so they are named like the ``ops-*``
+    # actions rather than like the §5.3 cadence table.
+    # The upload tasks carry no requires_postgres flag on purpose: a *dry-run* upload parses and
+    # reports without any store, and the API refuses a commit itself when the probe says the
+    # build-time PostgreSQL is unreachable.
+    *(
+        JobTask(
+            task_id=f"upload-{domain}-import",
+            label=f"{label} XLSX 导入",
+            description=f"导入管理区上传的 {label} XLSX（复用旧 upload 链）",
+            domain=domain,
+            argv_template=(
+                "uv",
+                "run",
+                "python",
+                "scripts/run_admin_upload_import.py",
+                "--domain",
+                domain,
+                "--upload-id",
+                "{upload_id}",
+            ),
+            cwd_relative="apps/admin-console",
+            timeout_seconds=5400,
+            collection_gated=True,
+            quota=quota,
+            window_bound=False,
+            token_params={"upload_id": _resolve_upload_token},
+        )
+        for domain, label, quota in (
+            ("company", "企业", "web_search"),
+            ("patent", "专利", "llm"),
+            ("professor", "教授", "llm"),
+        )
+    ),
+    JobTask(
+        task_id="admin-seed-refresh",
+        label="教授 seed 刷新",
+        description="按 seed 触发一次采集（preview / full，不设上限）",
+        domain="professor",
+        argv_template=(
+            "uv",
+            "run",
+            "python",
+            "scripts/run_admin_seed_refresh.py",
+            "--seed-id",
+            "{seed_id}",
+            "--trigger-mode",
+            "{mode}",
+        ),
+        cwd_relative="apps/miroflow-agent",
+        timeout_seconds=5400,
+        collection_gated=True,
+        quota="web_search",
+        window_bound=False,
+        params={"mode": ("preview", "full")},
+        token_params={"seed_id": _resolve_seed_id},
+    ),
+    JobTask(
+        task_id="admin-seed-refresh-sample",
+        label="教授 seed 抽样刷新",
+        description="按上限抽样触发一次 seed 采集（sample 必须带上限）",
+        domain="professor",
+        argv_template=(
+            "uv",
+            "run",
+            "python",
+            "scripts/run_admin_seed_refresh.py",
+            "--seed-id",
+            "{seed_id}",
+            "--trigger-mode",
+            "sample",
+            "--limit",
+            "{limit}",
+        ),
+        cwd_relative="apps/miroflow-agent",
+        timeout_seconds=5400,
+        collection_gated=True,
+        quota="web_search",
+        window_bound=False,
+        params={"limit": ("5", "20", "50", "100")},
+        token_params={"seed_id": _resolve_seed_id},
     ),
 )
 
@@ -1113,15 +1236,38 @@ class TriggerOutcome:
 def _spawn_subprocess(
     argv: Sequence[str], *, cwd: str, env: Mapping[str, str], timeout: int
 ) -> subprocess.CompletedProcess[str]:
-    return subprocess.run(
+    """Run one declared argv, and on timeout kill its whole process group.
+
+    ``uv run`` execs the real work as a grandchild, so ``subprocess.run(timeout=…)`` — which kills
+    only the direct child — would leave the worker running while the gate records ``failed`` and
+    releases the lock. Sessions are therefore started fresh and the group is killed on timeout.
+    """
+
+    with subprocess.Popen(
         list(argv),
         cwd=cwd,
         env=dict(env),
         text=True,
-        capture_output=True,
-        timeout=timeout,
-        check=False,
-    )
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        start_new_session=True,
+    ) as process:
+        try:
+            stdout, stderr = process.communicate(timeout=timeout)
+        except subprocess.TimeoutExpired:
+            _kill_process_group(process)
+            stdout, stderr = process.communicate()
+            raise subprocess.TimeoutExpired(
+                list(argv), timeout, output=stdout, stderr=stderr
+            ) from None
+    return subprocess.CompletedProcess(list(argv), process.returncode, stdout, stderr)
+
+
+def _kill_process_group(process: subprocess.Popen[str]) -> None:
+    try:
+        os.killpg(os.getpgid(process.pid), signal.SIGKILL)
+    except (ProcessLookupError, PermissionError):  # pragma: no cover - process already gone
+        process.kill()
 
 
 def parse_job_summary(stdout: str | None) -> dict[str, Any] | None:

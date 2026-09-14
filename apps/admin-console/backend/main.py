@@ -38,6 +38,8 @@ from backend.api.canonical_v2_review import (
     review_workspace_error_handler,
     router as canonical_v2_review_router,
 )
+from backend.api.canonical_v2_seeds import router as canonical_v2_seeds_router
+from backend.api.canonical_v2_uploads import router as canonical_v2_uploads_router
 from backend.canonical_v2_deps import (
     get_canonical_v2_candidate_chat_adapter,
     get_canonical_v2_chat_adapter,
@@ -90,6 +92,8 @@ def _create_route_shell(*, include_review: bool) -> FastAPI:
     shell.include_router(canonical_v2_access_logs_router)
     shell.include_router(canonical_v2_admin_config_router)
     shell.include_router(canonical_v2_jobs_router)
+    shell.include_router(canonical_v2_uploads_router)
+    shell.include_router(canonical_v2_seeds_router)
 
     @shell.api_route("/api/{path:path}", methods=list(_REJECT_METHODS))
     def reject_unknown_api(path: str) -> None:
@@ -140,6 +144,14 @@ def _create_route_shell(*, include_review: bool) -> FastAPI:
     @shell.get("/jobs")
     def serve_jobs() -> FileResponse:
         return FileResponse(_STATIC_DIR / "jobs.html")
+
+    @shell.get("/upload")
+    def serve_upload() -> FileResponse:
+        return FileResponse(_STATIC_DIR / "upload.html")
+
+    @shell.get("/seeds")
+    def serve_seeds() -> FileResponse:
+        return FileResponse(_STATIC_DIR / "seeds.html")
 
     @shell.get("/chat")
     def serve_chat() -> FileResponse:

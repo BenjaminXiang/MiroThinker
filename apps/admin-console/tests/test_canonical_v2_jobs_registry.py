@@ -6,6 +6,7 @@ parameters / out-of-set values, real script paths, and the declared-cadence next
 
 from __future__ import annotations
 
+from dataclasses import replace
 from datetime import datetime, timedelta
 from pathlib import Path
 
@@ -24,24 +25,40 @@ from src.data_agents.canonical_v2.managed_config import PUBLIC_DOMAINS
 REPO_ROOT = Path(__file__).resolve().parents[3]
 
 
+PLAN_WHITELIST = {
+    "company-news-ingest",
+    "company-official-product-capture",
+    "paper-search-backfill",
+    "paper-summary-zh-backfill",
+    "paper-doi-verify",
+    "professor-homepage-rescrape",
+    "professor-homepage-paper-ingest",
+    "ops-milvus-backfill",
+    "ops-milvus-backfill-dry-run",
+    "ops-retrieval-validation",
+}
+# W3 re-mounts the upload chain and the professor-seed trigger on this same gate, so the table grew
+# by exactly these operator-triggered actions. Naming each addition here keeps the census exact: a
+# task cannot appear or disappear without changing this test.
+W3_ADDITIONS = {
+    "upload-company-import",
+    "upload-patent-import",
+    "upload-professor-import",
+    "admin-seed-refresh",
+    "admin-seed-refresh-sample",
+}
+
+
 def _first_params(task) -> dict[str, str]:
-    return {name: values[0] for name, values in task.params.items()}
+    values = {name: allowed[0] for name, allowed in task.params.items()}
+    # A token parameter is supplied to a stub resolver in the shape tests: the registry is about
+    # argv *shape*, while resolving a real token is covered where the declaring system owns it.
+    values.update({name: "probe-token" for name in task.token_params})
+    return values
 
 
 def test_registry_covers_the_plan_whitelist() -> None:
-    expected = {
-        "company-news-ingest",
-        "company-official-product-capture",
-        "paper-search-backfill",
-        "paper-summary-zh-backfill",
-        "paper-doi-verify",
-        "professor-homepage-rescrape",
-        "professor-homepage-paper-ingest",
-        "ops-milvus-backfill",
-        "ops-milvus-backfill-dry-run",
-        "ops-retrieval-validation",
-    }
-    assert {task.task_id for task in JOB_TASKS} == expected
+    assert {task.task_id for task in JOB_TASKS} == PLAN_WHITELIST | W3_ADDITIONS
 
 
 @pytest.mark.parametrize("task", JOB_TASKS, ids=lambda task: task.task_id)
@@ -54,13 +71,20 @@ def test_declared_script_exists_in_the_repository(task) -> None:
 
 @pytest.mark.parametrize("task", JOB_TASKS, ids=lambda task: task.task_id)
 def test_argv_is_a_fixed_token_tuple(task) -> None:
-    argv = task.argv_for(_first_params(task))
+    stub = replace(
+        task, token_params={name: (lambda token: token) for name in task.token_params}
+    )
+    argv = stub.argv_for(_first_params(stub))
     assert isinstance(argv, tuple)
     assert all(isinstance(token, str) and token for token in argv)
     # every accepted value comes from a closed set declared next to the argv
     for name, allowed in task.params.items():
         assert allowed, f"{task.task_id}.{name} declares an empty value set"
         assert all(value and isinstance(value, str) for value in allowed)
+    # a token parameter accepts no caller spelling at all: it is resolved, or it is refused
+    for name in task.token_params:
+        with pytest.raises(JobParameterError):
+            stub.argv_for({**_first_params(stub), name: "bad token/path;rm"})
 
 
 def test_no_task_accepts_an_undeclared_parameter() -> None:
