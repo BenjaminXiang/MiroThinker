@@ -92,6 +92,7 @@ def _batch_progress(batch_id: str) -> dict[str, Any] | None:
         batch = conn.execute(
             """
             SELECT batch_id, status, current_stage, companies_total, companies_selected,
+                   companies_processed, companies_succeeded, companies_failed,
                    runner_pid, runner_log_path, started_at, finished_at
               FROM company_enrichment_batch
              WHERE batch_id = %s
@@ -103,7 +104,7 @@ def _batch_progress(batch_id: str) -> dict[str, Any] | None:
         items = conn.execute(
             """
             SELECT status, count(*)::int AS total
-              FROM company_enrichment_item
+              FROM company_enrichment_company_state
              WHERE batch_id = %s
              GROUP BY status
             """,

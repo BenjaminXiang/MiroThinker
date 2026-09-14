@@ -458,8 +458,13 @@ class UploadRuntime:
         )
         payload["batch"] = None
         if self._batch_reader is not None and record.summary is not None:
-            batch_id = record.summary.get("batch_id")
-            if isinstance(batch_id, str) and batch_id:
+            # The chain reports the import batch at the top level and the enrichment batch nested
+            # under ``enrichment``; the enrichment batch is the one the page tracks progress on.
+            enrichment = record.summary.get("enrichment")
+            nested = enrichment.get("batch_id") if isinstance(enrichment, Mapping) else None
+            candidates = [nested, record.summary.get("batch_id")]
+            batch_id = next((value for value in candidates if isinstance(value, str) and value), None)
+            if batch_id is not None:
                 try:
                     payload["batch"] = self._batch_reader(batch_id)
                 except Exception as exc:  # noqa: BLE001 - batch progress is best-effort detail
