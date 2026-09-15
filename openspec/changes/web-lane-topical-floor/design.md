@@ -113,3 +113,40 @@ the rest, logging a warning. The reported case still loses both junk pages.
 If the product prefers a strictly-empty lane plus a UI message instead, drop
 the guard block in `_apply_web_topical_floor` and change the lane's empty-set
 handling; that is a larger, separate change.
+
+## Design-vs-fact conflict found with real provider text (reported)
+
+T1 was completed against the **real** snippets captured from the run15 pack:
+
+```
+sohu 减肥达人训练营: "深圳国贸营地简介 深圳国贸营地位于深圳传统商业中心区,…"
+sz.gov.cn 平台综述 : "国际先进技术应用推进中心（深圳）依托粤港澳大湾区数字经济研究院建设,…"
+```
+
+Consequences the frozen design did not anticipate:
+
+1. **The frozen token set cannot filter the reported page.** With core
+   `{国先, 先中, 中心}`, the sohu page matches 中心 through its 商业中心区 address
+   line, so P1 fails on real data. Generic nouns are therefore removed from the
+   core set exactly the way location words are (`_WEB_QUERY_GENERIC_TOKENS`:
+   中心/公司/企业/集团/平台/机构/项目/服务/产品/行业/领域/市场/信息/系统/情况/
+   业务/单位/部门); the query then reduces to `{国先, 先中}`.
+2. **A known false drop.** The sz.gov.cn page is topical (it names the entity,
+   in the reordered form `国际先进技术应用推进中心（深圳）`), but that form is
+   neither a query core token nor one of `_web_identity_forms` (which keeps the
+   city prefix), so the floor drops it too. Fixing that means extending the
+   identity forms with a city-stripped variant guarded by the existing
+   branch-qualifier logic (`_evidence_branch_qualifiers`) so the 合肥 branch page
+   stays out — a subject-gate change, deliberately **not** in this slice.
+3. **Unanchored requests are out of scope.** With no bound entity and no soft
+   subject there is no subject-consistency run at all (H1) and no backfill
+   channel to compensate, and the professor fixtures show such queries
+   legitimately return pages naming neither the query words nor a bound entity
+   (`清华的王学谦` → `空间机器人团队`). The floor therefore only guards anchored
+   requests; the H1 hole remains open by design decision, reported here.
+4. **An empty filtered lane is not a provider outage.** The existing raise at
+   the end of `WebLane.__call__` turns a zero-result lane into
+   `status="unavailable"` plus a material `current_web_unavailable` limitation.
+   The lane now raises only when the providers returned nothing at all
+   (`merged` empty) and returns an empty lane result when the gates removed
+   everything; `_report_web_degradation` already owns the outage signal.

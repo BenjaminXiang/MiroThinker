@@ -11,8 +11,10 @@
   enumeration sample, fail-open ×2, kill switch, determinism, trace, 5 ms budget
 - [x] T5 targeted regression: `tests/canonical_v2/test_knowledge_serving_isolated.py`,
   `test_turn_trace_reporting.py`, `test_enumeration_deep_fetch.py`
-- [ ] T6 scratch E2E on port 18295 (pack run15, index copy):
-  - [ ] reported query returns no weight-loss-camp page
+- [x] T6 scratch E2E on port 18295 (pack run15, index copy):
+  - [x] revision 1 (d0ef568e/b6105337) ran the reported query: the camp page
+    survived, which produced the real-snippet diagnosis behind 99e7f479
+  - [ ] revision 2 (99e7f479) reported query returns no weight-loss-camp page
   - [ ] probes verbatim: `字节跳动`, `优必选有哪些专利`
   - [ ] enumeration: `深圳有哪些做机器人的公司` (key entities 3/3),
     `深圳有哪些做具身智能的公司`
