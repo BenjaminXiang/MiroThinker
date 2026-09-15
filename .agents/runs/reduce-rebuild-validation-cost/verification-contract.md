@@ -41,7 +41,7 @@ directory are never written.
 |---|---|---|
 | G1 | same predicate, same literals: execution time drops by ≥ 3 orders of magnitude and the plan becomes an index access on a `method = 'human_review'` partial index | before/after `EXPLAIN (ANALYZE)` captured in `explain-analyze-*.txt` |
 | G2 | deferred commit of the same N rows drops from ≈ N × 43 ms to ≈ N × µs, and the projected 846,986-row commit is minutes-to-seconds instead of ~10 h | `measure_trigger_commit.py` before/after |
-| G3 | behaviour equivalence: with a human-review decision present, inserting an assertion that is an origin of a review case still raises `23514` (ERRCODE unchanged), including when the review case lives in a *later* release than the assertion (the release-level guard must not fail open); with no human-review decision the same insert commits | `tests/canonical_v2/test_rebuild_trigger_guard_postgres.py` (new, runs at migration head) |
+| G3 | behaviour equivalence: with a human-review decision present, inserting an assertion that is an origin of a review case still raises `23514` (ERRCODE unchanged), including when the review case lives in a *later* release than the assertion (the release-level guard must not fail open); with no human-review decision the same insert commits | the reviewed-release fixtures of `tests/canonical_v2/test_canonical_decision_postgres.py` re-run **at migration head** via the evidence-only plugin `bump_revision_plugin.py` (`pytest-head-revision.txt`); the skip path is shown by the scratch-table commits in `measure-after.jsonl` |
 | G4 | the existing reviewed-field immutability coverage still rejects: `test_direct_sql_review_rows_reject_null_hash_and_relational_cross_wiring` and `test_concurrent_late_origin_edge_and_review_cannot_both_commit` stay green | `tests/canonical_v2/test_canonical_decision_postgres.py` |
 | G5 | identity resolution produces identical decisions/assertions with the indexed lookup (same error messages, same fail-closed rejects) | `tests/canonical_v2/` identity suites + the contract test added in this slice |
 | G6 | the new migration applies **and** downgrades cleanly on the copy database, leaving the previous trigger/index state intact | `alembic upgrade C2_0014` + `alembic downgrade C2_0013` run against `miroflow_tgfix_probe` |
@@ -59,3 +59,16 @@ directory are never written.
 Step 2 (envelope slimming); real rebuild timing (run16 re-measures in-pipeline);
 `domain_inclusion_decision_assertion` repair only if it turns out to share the
 defect — otherwise it is recorded as a measured non-issue.
+
+## Post-implementation note (2026-09-15, same slice)
+
+The contract above was written before the code. One deviation from the drafting
+detail, recorded for the record: G3's "new gated test file" was **not** written.
+Instead the already-existing reviewed-release fixtures of
+`test_canonical_decision_postgres.py` were re-run at migration head with the
+evidence-only plugin `bump_revision_plugin.py`, which exercises the C2_0014
+guard through *real* `human_review_resolution` payloads (the new file would have
+had to fabricate the same payloads by hand — more code, weaker fixtures).
+The new test added in this slice is on the Python side
+(`test_identity_request_validation_indexes_assertions_by_source_once`, RED
+5/33 iterations → GREEN 1).
