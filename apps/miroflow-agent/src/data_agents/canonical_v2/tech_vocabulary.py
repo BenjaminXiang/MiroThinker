@@ -44,7 +44,7 @@ VOCABULARY_ARTIFACT_FILENAME = "technical-vocabulary-v1.json"
 VOCABULARY_QUALITY_SECTION_KEY = "vocabulary"
 
 MAPPING_BATCH_SIZE = 100
-INDUCTION_SAMPLE_SIZE = 1000
+INDUCTION_SAMPLE_SIZE = 600
 INDUCTION_BATCH_ID = "0000"
 
 TECH_TAG_FIELD = "tech_tags"
@@ -237,13 +237,18 @@ def render_induction_prompt(values: Sequence[str], *, max_concepts: int) -> str:
         "每行一个 JSON 字符串。\n"
         "请归纳出一套**受控概念词表**：受控概念要足够粗，是用户会直接发问的类目"
         f"（如“配送机器人”“PCB 制造”），最多 {max_concepts} 个。\n"
-        "要求：\n"
-        "1) 每个概念必须有稳定的英文 id（小写、点分层级，如 robotics.delivery-robot）、"
-        "规范中文名、一句话定义（说明概念边界）、1-3 条“可接受的证据形态”"
-        "（什么样的企业自述足以支撑该概念，如“自述研发/生产该产品”“主营产品描述中为该类别”）；\n"
-        "2) kind 只能是 technology（技术/产品类）或 industry（行业类）；\n"
-        "3) 只输出 JSONL：每行一个对象，键为 id/name/definition/evidence/kind，"
-        "evidence 为字符串数组；不要输出解释、不要 Markdown 代码块。\n"
+        "每个概念必须包含：id（稳定的英文小写点分层级，如 robotics.delivery-robot）、"
+        "name（规范中文名）、definition（一句话定义，说明概念边界）、"
+        "evidence（1-3 条“可接受的证据形态”，说明什么样的企业自述足以支撑该概念，"
+        "如“自述研发/生产该产品”）、kind（只能是 technology 或 industry，"
+        "technology 表示技术/产品类，industry 表示行业类）。\n"
+        "输出格式（严格遵守）：纯 JSON Lines，每行一个 JSON 对象，"
+        "对象只能有 id/name/definition/evidence/kind 五个键，evidence 是字符串数组。\n"
+        "每一行必须以 { 开头、以 } 结尾；禁止表头、禁止 CSV、禁止 Markdown 代码块、"
+        "禁止解释文字。示例（仅示意格式）：\n"
+        '{"id":"robotics.delivery-robot","name":"配送机器人","definition":"面向室内外场景'
+        '自主完成物品配送的机器人整机与系统。","evidence":["自述研发/生产该类产品"],'
+        '"kind":"technology"}\n'
         "标签样本：\n"
         f"{listing}\n"
     )
@@ -276,8 +281,12 @@ def render_mapping_prompt(
         "1) 一个原值可以映射到多个概念（如“机器人视觉及触觉技术研发商” → 机器视觉 + 触觉传感器）；\n"
         "2) 只能在列表内选择；不确定、超出列表、或明显不是科技/产业类目（如生活服务、"
         "餐饮住宿、广告营销）的原值，一律映射为空数组 []，**不要猜测、不要发明新概念**；\n"
-        "3) 输出严格为 JSONL：每行一个对象，键为 v（原值，逐字复制）与 c（概念 id 数组）；"
-        "每行必须对应输入中的一行，不要输出解释、不要 Markdown 代码块。\n"
+        f"3) 每行必须对应输入中的一行，一共 {len(values)} 行。\n"
+        "输出格式（严格遵守）：纯 JSON Lines，每行一个 JSON 对象，"
+        "对象只能有 v 与 c 两个键：v 是原值（逐字复制），c 是概念 id 的数组。"
+        "每一行必须以 { 开头、以 } 结尾；禁止表头、禁止 CSV、禁止 Markdown 代码块、"
+        "禁止解释文字。示例（仅示意格式）：\n"
+        '{"v":"室内外配送机器人研发商","c":["robotics.delivery-robot"]}\n'
         f"概念 id 总数：{len(concept_ids)}\n"
         "原值列表：\n"
         f"{listing}\n"

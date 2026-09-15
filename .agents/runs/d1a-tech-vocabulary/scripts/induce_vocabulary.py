@@ -61,7 +61,7 @@ DEFAULT_INPUTS = (
 )
 DEFAULT_OUT = REPO_ROOT / ".agents/runs/d1a-tech-vocabulary/out"
 PROVIDER_NAME = "deepseek"
-MAX_CONCEPTS = 240
+MAX_CONCEPTS = 200
 MAX_ATTEMPTS = 3
 MAX_OUTPUT_TOKENS = 16000
 
@@ -140,6 +140,35 @@ def _validate_mapping(
     assert_mapping_arity(field, parsed)
 
 
+def _write_telemetry(
+    *, out: Path, calls: Sequence[Mapping[str, Any]], provider: Provider, model: str
+) -> None:
+    """Honest call accounting: recorded calls vs actual provider attempts."""
+    payload = {
+        "model": model,
+        "recorded_calls": len(calls),
+        "provider_attempts_total": sum(
+            int(call.get("provider_attempts", 1)) for call in calls
+        ),
+        "provider_attempts_this_process": provider.calls,
+        "retried_calls": sum(
+            1 for call in calls if int(call.get("provider_attempts", 1)) > 1
+        ),
+        "prompt_tokens": provider.prompt_tokens,
+        "completion_tokens": provider.completion_tokens,
+        "notes": (
+            "provider_attempts_this_process counts every HTTP call made by this "
+            "process, including attempts whose transcript failed validation and "
+            "were re-asked; only the accepted transcript of each call id is "
+            "recorded in the bundle and replayed by the build."
+        ),
+    }
+    (out / "induction-telemetry.json").write_text(
+        json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
+    )
+    print(json.dumps(payload, ensure_ascii=False, indent=2), flush=True)
+
+
 def record_call(
     *,
     provider: Provider,
@@ -157,7 +186,9 @@ def record_call(
         print(f"[cached ] {call_id}  values={len(input_value_ids)}", flush=True)
         return recorded
     last_error: Exception | None = None
+    attempts = 0
     for attempt in range(1, MAX_ATTEMPTS + 1):
+        attempts = attempt
         try:
             raw_output = provider.complete(prompt)
             validate(raw_output)
@@ -181,6 +212,7 @@ def record_call(
             "input_sha256": canonical_sha256(list(input_value_ids)),
             "raw_output": raw_output,
             "output_sha256": hashlib.sha256(raw_output.encode("utf-8")).hexdigest(),
+            "provider_attempts": attempts,
         }
         cache_path.write_text(
             json.dumps(recorded, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
@@ -288,6 +320,7 @@ def main() -> None:
         model=model,
         base_url=base_url,
     )
+    _write_telemetry(out=args.out, calls=calls, provider=provider, model=model)
     bundle_path = args.out / "recorded-vocabulary-decision-bundle.json"
     bundle_path.write_text(
         json.dumps(bundle, ensure_ascii=False, indent=2, sort_keys=False) + "\n",
