@@ -19,7 +19,7 @@ run15 包已在线（18188，2026-09-15 00:40 切换）。run16 把数据线三�
 | 2 | D0-a 清洗第一批 | ✅ | merge `4b546cee`（分支 `cfa41ec5`） |
 | 3 | D0-b 清洗第二批 | ✅ | 同前 |
 | 4 | C1 关系重投影 | ✅ | merge `b5af35a9`（分支 `8f737c02`） |
-| 5 | 合并集成定向测试 | ✅ | 6 文件 168 passed；revision 文件 8 passed |
+| 5 | 合并集成定向测试 + C1 重放复跑 | ✅ | 6 文件 168 passed；revision 文件 8 passed；C1 重放与记录**逐字一致**（7,611 边 / 0 缺失；仅抽样列表顺序不同） |
 | 6 | **D1-a 受控技术词表** | 🔧 最后门槛 | agent-44 续跑中；合入见 §2 |
 | 7 | P1 瘦包（服务线） | ✅ 代码就绪 | `fix/slim-serving-pack` `c5c8f58c`；封印时启用 v2 |
 | 8 | 服务线模型同步（D0-a 9 字段必填→可空） | ⏳ 切包前必须 | 不同步则 run16 包 boot 拒载（跨线契约项） |
@@ -40,6 +40,9 @@ F402 lint（`5078678b` 起既有）。
   而 `validate_fresh_targets → _assert_fresh_database` 断言**精确相等**，构建会当场
   `ValueError` 终止。修复 = 常量升 C2_0014（`10b646ac`）+ 新守卫测试钉住
   "常量 == 迁移 head"（`tests/canonical_v2/test_canonical_revision.py`）。
+- **合并树语义复验**：复跑 C1 重放（只读 run15 包 + 暂存库）——post-fix 7,611 边 /
+  960 公司 / 0 未解释缺失、pre-fix 仍被拒；除抽样列表顺序外与 `replay-run15.json`
+  逐字一致 → `.agents/runs/c1-relationship-reprojection/replay-run15-merged-tree.json`。
 
 最后一步（D1-a）：
 

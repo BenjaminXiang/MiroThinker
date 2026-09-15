@@ -114,6 +114,9 @@ C1 冲突同批解析：`knowledge_build_isolated.py` 取 C1 的 `supplemental_r
 head"：RED 先失败、GREEN 后通过，`test_canonical_revision.py` 8 passed）；合并树里
 6 个定向测试文件 **168 passed**；PG-gated 套件升级到各自 pin 的旧版本（不是 head），
 不受影响；既有红不变（isolated 12 条 mock 在 C2_0012、F402 lint 自 `5078678b` 起既有）。
+合并树里还复跑了 C1 重放（只读 run15 包 + 暂存库）：**7,611 边 / 960 公司 / 0 未解释
+缺失**，pre-fix 仍被拒；除"缺失对"抽样列表的顺序外与 `replay-run15.json` 逐字一致
+（证据 `.agents/runs/c1-relationship-reprojection/replay-run15-merged-tree.json`）。
 
 **影响哪些问题**：解除 run16 的发射阻断（否则第一步就失败）；给迁移头版本加了一条
 长期守卫——以后再加迁移忘了提常量，测试会红。发射清单见
