@@ -930,6 +930,153 @@ def _apply_web_subject_consistency(
     return filtered
 
 
+# Topical floor, web lane only: the subject gate decides on identity, not on
+# the query, so its two permissive channels drag unrelated pages in — the
+# backfill pool admits T4/T5 pages up to the floor, and the corroboration
+# shortcut (tier 0) admits anything two providers agree on regardless of
+# content. Run15 g5 shipped both: 「详细介绍一下 国先中心（深圳）」 returned a
+# sohu weight-loss-camp listing and a 11467 company-directory page next to the
+# one relevant result. The floor is the cheap second pass: no model, no
+# network, no reordering — a result either shares a topical token with the
+# query, or it is identity-exempt, or it is dropped.
+_WEB_TOPICAL_FLOOR_ENV = "CANONICAL_V2_WEB_TOPICAL_FLOOR"
+_WEB_TOPICAL_FLOOR_DISABLED = frozenset({"0", "false", "off", "no"})
+# Question scaffolding carries no topic, so its bigrams are never evidence
+# (the reported query reduces to exactly 国先/先中/中心); longest first so
+# 详细介绍一下 is stripped as one phrase rather than leaving 绍一 behind.
+_WEB_QUERY_SCAFFOLD_PHRASES = tuple(sorted(
+    (
+        "详细介绍一下", "详细介绍", "详细讲解一下", "详细讲解", "简单介绍一下",
+        "简单介绍", "介绍一下", "介绍下", "介绍", "讲解一下", "说明一下",
+        "解释一下", "总结一下", "整理一下", "归纳一下", "帮我查一下", "帮我查",
+        "帮我看看", "帮我介绍", "帮我", "麻烦", "请问", "请介绍", "请说明",
+        "查一下", "看一下", "看一看", "了解一下", "告诉我", "想知道", "说一下",
+        "讲讲", "说说", "谈谈", "有哪些", "有什么", "有没有", "是什么", "哪些方面",
+        "哪些", "哪个", "怎么", "如何", "为什么", "是否", "能否", "怎么样",
+        "列举", "罗列", "举例", "分别是",
+    ),
+    key=len,
+    reverse=True,
+))
+_WEB_QUERY_RUN_RE = re.compile(r"[0-9a-z\u3400-\u9fff]+")
+_WEB_QUERY_CJK_RUN_RE = re.compile(r"[\u3400-\u9fff]+")
+
+
+def _web_topical_floor_enabled() -> bool:
+    # Read per call, not at import: a hot-update line flips the switch by
+    # restarting with a different environment, and tests flip it in-process.
+    return (
+        os.environ.get(_WEB_TOPICAL_FLOOR_ENV, "").strip().casefold()
+        not in _WEB_TOPICAL_FLOOR_DISABLED
+    )
+
+
+def _web_query_core_tokens(query: str) -> tuple[str, ...]:
+    """Topical tokens of the user query: scaffold and location words removed.
+
+    CJK runs are split into character bigrams, latin runs into whole words.
+    Location qualifiers are deleted rather than tokenized, so a page matching
+    only 深圳 is not topical evidence (P3); a query left with no token at all
+    (「介绍一下」) yields ``()`` and the floor fails open (P4).
+    """
+    text = query.casefold()
+    for phrase in _WEB_QUERY_SCAFFOLD_PHRASES:
+        if phrase in text:
+            text = text.replace(phrase, " ")
+    tokens: list[str] = []
+    for run in _WEB_QUERY_RUN_RE.findall(text):
+        for cjk_run in _WEB_QUERY_CJK_RUN_RE.findall(run):
+            tokens.extend(
+                cjk_run[index : index + 2] for index in range(len(cjk_run) - 1)
+            )
+        tokens.extend(
+            word
+            for word in _WEB_QUERY_CJK_RUN_RE.sub(" ", run).split()
+            if len(word) >= 2
+        )
+    return tuple(
+        token
+        for token in dict.fromkeys(tokens)
+        if not any(token in location for location in _ANCHOR_LOCATION_LEXICON)
+    )
+
+
+def _web_result_identity_names(request: LaneRequest) -> tuple[str, ...]:
+    soft_subject = request.soft_context_subject
+    if soft_subject and soft_subject not in request.bound_entity_names:
+        return (*request.bound_entity_names, soft_subject)
+    return request.bound_entity_names
+
+
+def _web_result_identity_hitter(
+    names: tuple[str, ...],
+) -> Callable[[str, _NormalizedWebResult], bool]:
+    """Identity test hoisted out of the per-result loop.
+
+    Same identity口径 as the subject gate — the full name forms
+    ``_web_result_hits_bound_entity`` matches on, plus the brand pinyin domain
+    — but the name forms, the pinyin conversion and the result's normalized
+    text are computed once per lane call instead of once per result (P5).
+    """
+    prepared = tuple(
+        (name, _web_identity_forms(name), _web_identity_domain_labels(name))
+        for name in names
+    )
+
+    def hits(searchable: str, result: _NormalizedWebResult) -> bool:
+        domain_labels = _web_locator_domain_labels(result.url)
+        for _, forms, labels in prepared:
+            # Identity outranks the floor: an official site (English page,
+            # pinyin brand domain) can name the subject everywhere and still
+            # share no query token, which is the result the lane must not lose.
+            if labels is not None and domain_labels & labels:
+                return True
+            if any(_web_identity_text_matches(form, searchable) for form in forms):
+                return True
+        return False
+
+    return hits
+
+
+def _apply_web_topical_floor(
+    *,
+    results: tuple[_NormalizedWebResult, ...],
+    request: LaneRequest,
+) -> tuple[_NormalizedWebResult, ...]:
+    """Drop web results that share no topical token with the user query."""
+    if not results or not _web_topical_floor_enabled():
+        return results
+    try:
+        core_tokens = _web_query_core_tokens(
+            str(getattr(request, "original_query", "") or "")
+        )
+        if not core_tokens:
+            _logger.warning(
+                "web topical floor skipped: query %r yields no core token",
+                getattr(request, "original_query", ""),
+            )
+            return results
+        names = _web_result_identity_names(request)
+        identity_hit = _web_result_identity_hitter(names) if names else None
+        kept: list[_NormalizedWebResult] = []
+        for result in results:
+            searchable = _normalized_web_identity(f"{result.title} {result.snippet}")
+            if (
+                any(token in searchable for token in core_tokens)
+                or not searchable
+                or (identity_hit is not None and identity_hit(searchable, result))
+            ):
+                kept.append(result)
+        dropped = len(results) - len(kept)
+        reporter = current_turn_trace()
+        if dropped and reporter is not None:
+            reporter.record_gate_drop("web_topical_floor", dropped)
+        return tuple(kept)
+    except Exception:  # noqa: BLE001 - a floor bug must never break the lane
+        _logger.warning("web topical floor failed open", exc_info=True)
+        return results
+
+
 _ORG_LOOKING_TITLE_RE = re.compile(
     "(公司|科技|机器人|智能|集团|研究院|实验室|有限| institute| lab| robotics)"
 )
@@ -1471,6 +1618,7 @@ class _DualWebLaneAdapter:
             self._request_view_queries(request, query_text)
         )
         gated = _apply_web_subject_consistency(results=merged, request=request)
+        gated = _apply_web_topical_floor(results=gated, request=request)
         if (
             any(
                 marker in request.original_query
@@ -1486,7 +1634,12 @@ class _DualWebLaneAdapter:
             refined = self._merged_results_for_views(
                 (f"{query_text} 榜单", f"{query_text} 名单")
             )
-            gated = _dedupe_normalized_results((*gated, *refined))
+            gated = _dedupe_normalized_results(
+                (
+                    *gated,
+                    *_apply_web_topical_floor(results=refined, request=request),
+                )
+            )
         organic = _prioritize_relation_evidence(
             results=gated,
             frame=question_frame,
@@ -2464,21 +2617,36 @@ def _web_result_relevance_tier(
     return best
 
 
-def _web_identity_domain_matches(entity_name: str, locator: str) -> bool:
+def _web_identity_domain_labels(entity_name: str) -> frozenset[str] | None:
+    """Brand domain labels an entity name may own, or None when it cannot.
+
+    Split out of ``_web_identity_domain_matches`` so a caller that tests many
+    results against the same names pays the pinyin conversion once (the web
+    topical floor runs per result, where the conversion dominated the cost).
+    """
     alias = _compact_company_alias(entity_name)
     if re.fullmatch(r"[\u3400-\u9fff]{2,8}", alias) is None:
-        return False
+        return None
     brand = "".join(lazy_pinyin(alias)).casefold()
     if len(brand) < 4:
-        return False
+        return None
+    return frozenset(f"{brand}{suffix}" for suffix in _BRAND_DOMAIN_SUFFIXES)
+
+
+def _web_locator_domain_labels(locator: str) -> frozenset[str]:
     hostname = urlparse(locator).hostname or ""
-    labels = tuple(
+    return frozenset(
         _normalized_web_identity(label)
         for label in hostname.casefold().split(".")
         if label and label.casefold() != "www"
     )
-    allowed_labels = {f"{brand}{suffix}" for suffix in _BRAND_DOMAIN_SUFFIXES}
-    return bool(set(labels) & allowed_labels)
+
+
+def _web_identity_domain_matches(entity_name: str, locator: str) -> bool:
+    allowed_labels = _web_identity_domain_labels(entity_name)
+    if allowed_labels is None:
+        return False
+    return bool(_web_locator_domain_labels(locator) & allowed_labels)
 
 
 def _web_result_hits_bound_entity(
