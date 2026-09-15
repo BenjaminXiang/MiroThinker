@@ -15,7 +15,7 @@ comes from `.agents/runs/data-cleaning-batch1/count_cleaning_batch1.py`
 | AC6 | Company geography province-only | 0 of 4,887 derivable | 4,887 -> 2 (both have no address; kept as-is) | pass (with 2 documented exceptions) |
 | AC7 | Company geography city-level | >= baseline 601 (554 `广东省-深圳市` + 47 others) | 601 -> 5,486 | pass |
 | AC8 | Research-direction junk published | 0 (796 identified: 154 layout / 126 short / 65 dated / 333 sentence / 118 truncated) | 796 -> 0 | pass |
-| AC9 | Quarantined values traceable | rule + verbatim value + source `reference_id` | `quarantine.jsonl`, 1,060 records | pass |
+| AC9 | Quarantined values traceable | rule + verbatim value + source `reference_id` | `quarantine.jsonl`, 973 records (177 glue + 796 directions) | pass |
 | AC10 | Build gate fails closed on dirty output | gate tests | `test_gate_refuses_*` (2 tests) + wiring test | pass |
 | AC11 | New tests | all green | 53/53 pass | pass |
 | AC12 | Existing related suites | no unexplained regressions | 5 pinned-expectation tests updated for the new behaviour; related suites green (see verification.md) | pass |
