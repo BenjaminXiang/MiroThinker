@@ -78,7 +78,8 @@ the full causal chain with `file:line` references and the sibling analysis.
 
 ## Regression run
 
-Command:
+Command (parallel, matching the repo's own `addopts` intent — the first attempt ran
+serial because `-o addopts=` had also dropped `-n=auto`):
 
 ```bash
 cd apps/miroflow-agent
@@ -88,35 +89,40 @@ uv run pytest tests/canonical_v2/test_knowledge_build_isolated.py \
   tests/canonical_v2/test_patent_applicant_linking.py \
   tests/canonical_v2/test_patent_company_binding_reconciliation.py \
   tests/canonical_v2/test_applicant_binding_relationship_seeds.py \
-  -q -p no:randomly --no-header -o addopts=
+  -p no:randomly -o addopts="-rA --show-capture=stderr -n=12 --no-cov" -q
 ```
 
-Baseline comparison (this worktree detached at `1ee824a7`, same selection narrowed
-to the relationship-related tests):
+**Result on the slice revision (`88322eb0`): 187 passed, 12 failed in 14m28s.**
+Raw output: `regression-final-stdout.txt` (same directory).
+
+Baseline comparison (this worktree detached at `1ee824a7`, run at baseline):
 
 | revision | selection | result |
 |---|---|---|
-| `1ee824a7` (baseline) | `-k "relationship or applicant or seed or reconcile"` | 14 passed, **1 failed** |
-| `58405450` (slice) | same selection | 14 passed, **1 failed** (same test) |
+| `1ee824a7` (baseline) | `-k "relationship or applicant or seed or reconcile"` (15 tests) | 14 passed, **1 failed** |
+| `88322eb0` (slice) | same selection | 14 passed, **1 failed** (same test) |
+| `1ee824a7` (baseline) | `::test_complete_build_uses_verified_copies_landing_authority_projections_registry_index_and_verify` | **failed**, `assert 3097 == 3091` (gap hashes) |
+| `88322eb0` (slice) | same test | **failed**, `assert 3097 == 3091` (identical) |
 
-The single failure in both revisions is
-`test_knowledge_build_isolated.py::test_real_boundary_rejects_nonfresh_database_before_source_read[knowledge.relationship_projection_run]`:
-the test simulates alembic revision `C2_0012` (test line 1734) while
-`knowledge_build_isolated.py:324` declares `_EXPECTED_ALEMBIC_REVISION = "C2_0013"`,
-so `_assert_fresh_database` raises "candidate database migration revision differs
-from the live single head" before the "fresh" error the test matches. It is a
-**pre-existing** mismatch unrelated to this slice (no relationship/seed code on
-that path) and is part of the known pre-existing failure set noted on the
-functional line.
+All 12 failures are pre-existing and unrelated to this slice:
 
-Full-selection result: `REGRESSION_FINAL` (see below).
+1. **11 failures — stale alembic-revision simulation.** Ten
+   `test_real_boundary_rejects_nonfresh_database_before_source_read[...]`
+   parameters plus `test_real_boundary_rejects_live_schema_fingerprint_drift_before_row_probe`:
+   the tests simulate revision `C2_0012` (test lines 1734 / 1923) or `C2_0010`/`C2_0012`
+   (line 1807) while `knowledge_build_isolated.py:324` declares
+   `_EXPECTED_ALEMBIC_REVISION = "C2_0013"`, so `_assert_fresh_database` /
+   `_assert_schema_fingerprint` raise "candidate database migration revision
+   differs from the live single head" before the error the test matches. One of
+   these parameters (`knowledge.relationship_projection_run`) was reproduced
+   **identically at baseline** `1ee824a7` in this worktree.
+2. **1 failure — hard-coded gap count.**
+   `test_complete_build_uses_verified_copies_landing_authority_projections_registry_index_and_verify`
+   asserts `len(envelope.receipt.gap_hashes) == 3091` and observes `3097`
+   (six more typed gaps). Reproduced **identically at baseline** `1ee824a7`, so
+   it is a stale expectation, not a regression of this slice; the relationship
+   and reconciliation code paths add no gaps.
 
-## Gaps / not verified in this slice
+No relationship-, applicant- or projection-related test failed on the slice
+revision.
 
-- No full rebuild was run: the counts above are replay-computed on run15 data,
-  not a run16 measurement. run16's `PATENT_COMPANY_BINDING_LEDGER` line is the
-  acceptance artifact (AC6).
-- `professor_company_role` end-to-end count after the fix is not measurable
-  without a rebuild; only the shared-universe property is unit-locked (R3).
-- `patent_has_inventor` / `paper_has_author` remain empty (different root cause:
-  `person_projections = 0`).
