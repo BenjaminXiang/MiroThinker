@@ -14,6 +14,7 @@ from backend.services.canonical_v2_admin_status import (
     probe_http,
     provider_status,
 )
+from backend.services.canonical_v2_runtime_sources import resolve_connections
 from backend.services.canonical_v2_connection_tests import (
     CONNECTIONS,
     SPEC_BY_KEY,
@@ -183,10 +184,16 @@ def check_provider_health() -> ProviderHealthResponse:
 
 
 def _secrets_payload(
-    store: ManagedSecretsStore, *, environ: Mapping[str, str] | None = None
+    store: ManagedSecretsStore,
+    *,
+    environ: Mapping[str, str] | None = None,
+    settings_store: ManagedSettingsStore | None = None,
 ) -> dict[str, Any]:
     values = dict(os.environ) if environ is None else dict(environ)
     states = store.describe(environ=values, applied_env=applied_env_names(values))
+    runtime = resolve_connections(
+        environ=values, settings_store=settings_store, secrets_store=store
+    )
     return {
         "path": str(store.path),
         "exists": store.exists(),
@@ -201,6 +208,7 @@ def _secrets_payload(
                 "secret_field": spec.secret_field,
                 "requires_key": spec.requires_key,
                 "base_url_editable": spec.base_url_editable,
+                "runtime": runtime[spec.key].as_public_dict(),
             }
             for spec in CONNECTIONS
         ],
@@ -210,10 +218,11 @@ def _secrets_payload(
 @router.get("/secrets")
 def get_admin_secrets(
     store: ManagedSecretsStore = Depends(get_managed_secrets_store),
+    settings_store: ManagedSettingsStore = Depends(get_managed_settings_store),
 ) -> object:
-    """Masks and origins only: a credential is never returned by this surface."""
+    """Masks, origins and runtime state only: no credential is ever returned."""
 
-    return _secrets_payload(store)
+    return _secrets_payload(store, settings_store=settings_store)
 
 
 @router.patch("/secrets")
@@ -237,92 +246,97 @@ def patch_admin_secrets(
             detail=f"managed secrets file is not writable ({type(exc).__name__})",
         ) from exc
     return {
-        **_secrets_payload(store),
+        **_secrets_payload(store, settings_store=get_managed_settings_store(request)),
         "changed": result["changed"],
         "audit_written": result["audit_written"],
     }
 
 
-def _effective_settings_value(
-    request: Request, store: ManagedSettingsStore, path: str | None
-) -> Any:
-    if path is None:
-        return None
-    try:
-        _document, fields = store.effective()
-    except ManagedSettingsError:
-        return None
-    for field in fields:
-        if field.path == path:
-            return field.value
-    return None
+def _runtime_connections(
+    *,
+    settings_store: ManagedSettingsStore,
+    secrets_store: ManagedSecretsStore,
+) -> dict[str, Any]:
+    """Resolve every connection the way the serving process would (file:line in the module)."""
+
+    return resolve_connections(
+        environ=dict(os.environ),
+        settings_store=settings_store,
+        secrets_store=secrets_store,
+        key_file_roots=secrets_store.key_file_roots,
+    )
 
 
-def _resolve_connection_credentials(
+def _resolve_connection_request(
     request: Request,
     body: Mapping[str, Any],
     *,
     settings_store: ManagedSettingsStore,
     secrets_store: ManagedSecretsStore,
 ) -> dict[str, Any]:
+    """Request values win over runtime values; both are reported so the page can tell them apart.
+
+    The endpoint/credential chain is the runtime chain
+    (:mod:`backend.services.canonical_v2_runtime_sources`), not a page-local guess:
+    a connection the runtime has disabled is reported as disabled instead of being
+    probed against an invented default.
+    """
+
     connection = str(body.get("connection", "")).strip()
     spec = SPEC_BY_KEY.get(connection)
     if spec is None:
         raise _unprocessable(
             "connection must be one of: " + ", ".join(sorted(SPEC_BY_KEY))
         )
-    environ = dict(os.environ)
+    runtime = _runtime_connections(
+        settings_store=settings_store, secrets_store=secrets_store
+    )[spec.key]
+
     submitted_key = body.get("api_key")
-    key_source: str
-    if isinstance(submitted_key, str) and submitted_key.strip():
-        api_key = submitted_key.strip()
-        key_source = "request"
-    elif submitted_key is None:
-        api_key, origin = secrets_store.resolve_field(
-            spec.secret_field,
-            environ=environ,
-            applied_env=applied_env_names(environ),
-        )
-        key_source = origin or "none"
+    if submitted_key is None:
+        # Probing the value the operator just saved is the useful reading of
+        # "test before/after save"; the response labels it as pending so nobody
+        # mistakes it for what the running process uses today.
+        pending = secrets_store.raw().get(spec.secret_field, "")
+        if pending and runtime.pending_restart:
+            api_key, key_source = pending, "managed-file(pending-restart)"
+        else:
+            api_key, key_source = runtime.api_key, runtime.api_key_origin
+    elif isinstance(submitted_key, str) and submitted_key.strip():
+        api_key, key_source = submitted_key.strip(), "request"
     else:
         raise _unprocessable("api_key must be a string when present")
+
     submitted_base = body.get("base_url")
-    if spec.base_url_editable:
+    if isinstance(submitted_base, str) and submitted_base.strip():
         try:
-            base_url = normalize_base_url(
-                submitted_base
-                if isinstance(submitted_base, str) and submitted_base.strip()
-                else _effective_settings_value(
-                    request, settings_store, spec.base_url_field
-                ),
-                default=_normalized_default(spec),
-            )
+            base_url = normalize_base_url(submitted_base)
         except UnsafeEndpointError as exc:
             raise _unprocessable(str(exc)) from exc
+        endpoint_source = "request"
     else:
-        base_url = spec.default_base_url
+        base_url, endpoint_source = runtime.base_url, runtime.endpoint_origin
+        if base_url is not None:
+            try:
+                base_url = normalize_base_url(base_url)
+            except UnsafeEndpointError as exc:
+                raise _unprocessable(str(exc)) from exc
+
     submitted_model = body.get("model")
     if isinstance(submitted_model, str) and submitted_model.strip():
         model = submitted_model.strip()
     else:
-        model = _effective_settings_value(request, settings_store, spec.model_field)
+        model = runtime.model or spec.default_model
+
     return {
         "spec": spec,
+        "runtime": runtime,
         "api_key": api_key,
-        "key_source": key_source,
+        "key_source": key_source or "none",
         "base_url": base_url,
-        "model": model or spec.default_model,
+        "endpoint_source": endpoint_source,
+        "model": model,
     }
-
-
-def _normalized_default(spec: Any) -> str | None:
-    default = spec.default_base_url
-    if default is None:
-        return None
-    try:
-        return normalize_base_url(default)
-    except UnsafeEndpointError:  # pragma: no cover - module constants are valid
-        return default
 
 
 @router.post("/connections/test")
@@ -334,13 +348,14 @@ def test_admin_connection(
 ) -> object:
     """One minimal call per invocation. Unsaved values are allowed and never stored."""
 
-    resolved = _resolve_connection_credentials(
+    resolved = _resolve_connection_request(
         request,
         body,
         settings_store=settings_store,
         secrets_store=secrets_store,
     )
     spec = resolved["spec"]
+    runtime = resolved["runtime"]
     client = request.client.host if request.client is not None else "unknown"
     decision = _TEST_LIMITER.check([f"conn:{spec.key}", f"client:{client}"])
     if not decision.allowed:
@@ -353,11 +368,18 @@ def test_admin_connection(
             },
             headers={"Retry-After": str(decision.retry_after_seconds)},
         )
+    submitted_endpoint = isinstance(body.get("base_url"), str) and bool(
+        str(body.get("base_url")).strip()
+    )
+    disabled_reason = (
+        None if runtime.enabled or submitted_endpoint else runtime.runtime_note
+    )
     result = test_connection(
         spec,
         api_key=resolved["api_key"],
         base_url=resolved["base_url"],
         model=resolved["model"],
+        disabled_reason=disabled_reason,
     )
     return {
         "connection": spec.key,
@@ -366,17 +388,23 @@ def test_admin_connection(
         "latency_ms": result["latency_ms"],
         "http_status": result["http_status"],
         "detail": result["detail"],
+        "called": result["called"],
+        "runtime": runtime.as_public_dict(),
         "used": {
             "api_key_source": resolved["key_source"],
+            "effective_api_key_source": runtime.api_key_origin or "none",
+            "endpoint_source": resolved["endpoint_source"],
             "base_url": resolved["base_url"] if spec.base_url_editable else None,
-            "model": resolved["model"] if spec.model_field else None,
+            "model": resolved["model"]
+            if spec.kind in {"rerank", "embedding", "llm"}
+            else None,
         },
         "rate": {
             "per_minute_limit": _TEST_LIMITER.per_minute,
             "min_interval_seconds": _TEST_LIMITER.min_interval_seconds,
             "remaining": decision.remaining,
         },
-        "restart_required": None,
+        "restart_required": _RESTART_NOTICE if runtime.pending_restart else None,
     }
 
 

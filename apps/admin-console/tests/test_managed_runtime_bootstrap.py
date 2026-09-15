@@ -115,10 +115,21 @@ def test_bootstrap_is_the_only_reader_no_hot_path(tmp_path: Path) -> None:
     secrets.patch({"llm.api_key": _FAKE_KEY}, operator="ops")
 
     # Before the bootstrap runs, the process environment has nothing.
-    assert "LOCAL_LLM_API_KEY" not in environ
+    assert "API_KEY" not in environ
 
     apply_managed_runtime_config(
         environ=environ, settings_store=settings, secrets_store=secrets
     )
 
-    assert environ["LOCAL_LLM_API_KEY"] == _FAKE_KEY
+    # The LLM credential goes to the variable the ACTIVE chat profile reads
+    # (professor/llm_profiles.py:273): API_KEY for the default gemma4 profile.
+    assert environ["API_KEY"] == _FAKE_KEY
+
+    # With the live profile the same stored value targets DEEPSEEK_API_KEY.
+    live = {"CHAT_LLM_PROFILE": "deepseekv4flash"}
+    apply_managed_runtime_config(
+        environ=live, settings_store=settings, secrets_store=secrets
+    )
+
+    assert live["DEEPSEEK_API_KEY"] == _FAKE_KEY
+    assert "API_KEY" not in live

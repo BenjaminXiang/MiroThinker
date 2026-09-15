@@ -100,3 +100,78 @@
 - **P13 验收线「页面完成'设置 → 测试 → 服务读取生效'闭环；密钥明文不出接口/日志」**：闭环与断言均已产出。
 - **待办（非本片）**：18188 部署（需重启，走重放门 + 用户放行）；`.bocha_api_key` 等旧 key 文件与受管文件的
   优先级关系已在页面呈现（受管文件 > 旧 key 文件），若日后要"完全以受管文件为准"，需另立切片清理旧文件消费路径。
+
+
+---
+
+## 2026-09-15 · 第 2 轮：真端点验收暴露的"解析链不一致"修复（align to runtime）
+
+### 做了什么
+
+1. **先定位运行期真实来源**（只读取证，不打印任何明文；`/proc/<pid>/environ` 只取变量名）：
+   - 活线进程 pid 1886109 的环境里 **没有任何凭据变量**，只有 `CHAT_LLM_PROFILE=deepseekv4flash`
+     与几个路径变量；因此所有凭据都来自**仓库根的 key 文件**。
+   - embedding：端点由 **release embedding bundle 冻结**（`knowledge_build_isolated.py:6720-6728`，
+     `http://100.64.0.27:18005/v1`），实际调用形如 `{base}/embeddings` + `Authorization: Bearer`
+     （`company/vectorizer.py:22,40-53`），凭据来自 `load_local_api_key()`
+     （`providers/local_api_key.py:8-31`：`API_KEY`→`OPENAI_API_KEY`→`SGLANG_API_KEY`→`.sglang_api_key`），
+     调用点在 `knowledge_build_isolated.py:6570`。**没有任何运行期代码读 `EMBEDDING_API_KEY`** ——
+     这正是"服务在正常 embedding、页面却报 401"的原因。
+   - rerank：`canonical_v2/rerank_client.py:224-236` 的 `configured_reranker()` 在
+     **未设置 `CANONICAL_V2_RERANK_BASE_URL` 时返回 None** —— 活线**没有启用 rerank**，也没有默认端点；
+     我上一轮的 spec 里那个 `100.64.0.27:18006` 默认端点是**页面自己编的**，所以探到 401 是"测了一个
+     运行期根本不用的东西"。
+   - LLM：`knowledge_serving_isolated.py:2087-2096`（另见 5972、6070、`llm_judgments.py:304`）按
+     **当前 chat profile**（`CHAT_LLM_PROFILE`，活线为 `deepseekv4flash`）解析 → base_url
+     `https://api.deepseek.com`、model `deepseek-v4-flash`、凭据 `DEEPSEEK_API_KEY` / `.deepseek_api_key`
+     （`professor/llm_profiles.py:14-20,55-66,130-136,244-288`）。上一轮用的是采集侧
+     `extraction_endpoints.llm_base_url`（未配置）——**取错了来源**。
+2. **把 spec 的解析链对齐到运行期**：新增
+   `apps/admin-console/backend/services/canonical_v2_runtime_sources.py`，五条连接逐一按运行期代码路径解析
+   （模块头注释里带 file:line）；**删掉所有"页面自造"的默认端点**；连接未启用时**如实报"未启用"并且不发起调用**；
+   页面新增"运行期已启用/未启用 + 说明"与端点/模型占位（显示运行期实际值）。
+3. **把凭据写到运行期真正读取的变量**（`managed_secrets.SECRET_SPECS`）：
+   `embedding.api_key` → `SGLANG_API_KEY`（并接受 `API_KEY`/`OPENAI_API_KEY` 作为解析别名）；
+   `llm.api_key` → **当前 profile 的 `api_key_env`**（活线即 `DEEPSEEK_API_KEY`，逐进程解析）；
+   `rerank.api_key` 保持 `CANONICAL_V2_RERANK_API_KEY`（与 `rerank_client.py:33-38` 一致）。
+4. **区分"现在生效"与"待重启生效"**：受管文件要到重启（启动投射）才进环境，所以页面报告**当前真实来源**
+   （env / 旧 key 文件），并把已保存但未生效的值标为 `pending_restart`（页面显示"重启服务后生效"）；
+   测试按钮**优先用刚保存的值**并在结果里标注 `managed-file(pending-restart)`，避免"我测的是刚填的值"被误解为运行期现状。
+
+### 发现
+
+1. **"健康检查"曾经在骗人**：embedding 用假来源（`EMBEDDING_API_KEY`）→ 必然 401；rerank 用自造端点 →
+   把"未启用"报成"可达但被拒"。**根因不是端点问题，是 spec 没有走运行期解析链**。
+2. **两个 rerank 路径要分清**：活线用的是 `canonical_v2/rerank_client.py`（env 驱动、未启用即 None），
+   而离线侧 `providers/rerank.py:35` 用 `load_local_api_key()`。已在报告里如实标注：
+   rerank 的凭据链 = `CANONICAL_V2_RERANK_API_KEY` → 其 key 文件 → 本地凭据（标注为 `local-key:*`）。
+3. **测试隔离性是个安全属性**：第一版对齐测试没注入 key 根目录，导致解析走到了**真实 key 文件**，
+   pytest 失败信息里一度出现真实凭据片段。已改为：解析全部注入 fixture 根目录 + 环境变量一律 scrub +
+   记录器对非 fixture 值一律 redact（`<redacted-non-fixture-value>`），并在 API 测试里 autouse 清除环境中的
+   凭据变量。**明文纪律不因为"这是测试"而放宽。**
+4. **泄漏检查要用精确值匹配**：最初的"凭据样式"正则把 8 字符掩码 `k8#…0204` 也算命中（掩码是按设计暴露的
+   3 头 + 4 尾）；改成"读取真实 key 文件后在内存里精确计数"后：`/secrets`、`/config`、`/admin`、服务日志
+   **全部 0 命中**，`/secrets` 只有 1 个掩码串。
+
+### 怎么验证
+
+- **新增测试 19 个**（本轮）：`tests/test_canonical_v2_runtime_sources.py`（13）锁住"rerank 未配置=未启用而非 401"、
+  "embedding 用 bundle 冻结端点 + 本地凭据"、"`EMBEDDING_API_KEY` 不被读取"、"LLM 跟随 chat profile（含切档）"、
+  "固定 provider 主机"、"env 优先于 key 文件"、"pending vs adopted"、"公开视图不含凭据"、
+  **与官方 `resolve_professor_llm_settings` 的反漂移交叉校验**；另有 6 个补进连接测试/API/存储/bootstrap 套件
+  （未启用不发起调用、chat 路径 `/chat/completions`、`/secrets` 带运行期块、显式端点仍可先测后存、
+  凭据变量目标、profile 驱动的投射）。受影响簇 106 passed。
+- **真端点五连接复跑**（scratch 进程 18297，环境与活线一致，**18188 未重启**；脚本可重放）：
+  bocha ✅ 287ms / serper ✅ 1855ms / **rerank ➖ 未启用（0 次调用）** / embedding ✅ 30ms /
+  llm ✅ 234ms —— 与运行期现实一致（embedding、llm 都能通，正是服务在用的那条链）。
+  本轮真调用 **4 次**（每条已启用连接 1 次），rerank 0 次；逐字记录
+  `.agents/runs/config-center-secrets-and-tests/e2e-real-connections.md`。
+- **明文复核**（精确值匹配，只输出计数）：四个真实凭据在 `/secrets`、`/config`、`/admin`、服务日志中 **0 命中**。
+
+### 影响哪些问题
+
+- **R16 的验收口径被纠正**：连通性测试必须反映**运行期真实解析链**；"未配置/未启用"要如实说，不能误报 401。
+- **交付状态**：本片改动在 admin-console 侧（含 `managed_secrets` 的凭据元数据），**需要一次 18188 重启才生效**；
+  线上当前仍是上一版（`e31f173d` 的部署）。交接已写明窗口需求。
+- **遗留**：rerank 若要真正启用，需配置 `CANONICAL_V2_RERANK_BASE_URL`（页面可填，重启生效）；
+  LLM 档位切换（`CHAT_LLM_PROFILE`）目前是部署侧 env，不在页面可改范围（profile 表由数据线维护）。

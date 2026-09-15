@@ -313,6 +313,8 @@
         </table>
         <p class="footnote">
           密钥只写不读：页面永远只显示掩码与来源（env / 受管文件 / 旧 key 文件），明文既不回显也不写日志与审计。
+          「运行期已启用/未启用」由服务端按**运行期真实解析链**给出（Bocha/Serper 固定主机与旧 key 文件；
+          Embedding 的发布物冻结端点 + 本地凭据；Rerank 需配置 CANONICAL_V2_RERANK_BASE_URL 才启用；LLM 取当前 chat profile）。
           「测试连通性」用**当前填写但未保存**的值发起一次最小调用（成功/失败 + 延迟），并受服务端限频保护。
           保存后需**重启服务**才生效（服务启动时读取受管文件，不做热加载）。
         </p>
@@ -824,6 +826,22 @@
         return `已设置 · ${entry.mask || ""} · 来源 ${source}${entry.applied_to_process_env ? "（本进程已读取）" : ""}`;
       }
 
+      function runtimeCell(connection) {
+        const runtime = connection.runtime;
+        const node = document.createElement("div");
+        node.className = "meta";
+        if (!runtime) {
+          node.textContent = "运行期状态未知（服务端未返回）";
+          return node;
+        }
+        node.append(pill(runtime.enabled ? "运行期已启用" : "运行期未启用", runtime.enabled ? "ok" : "warn"), " ");
+        node.append(runtime.runtime_note || "");
+        if (runtime.pending_restart) {
+          node.append(" ", pill("待重启生效", "warn"));
+        }
+        return node;
+      }
+
       function renderSecrets(payload) {
         secretsState = payload;
         el("secretsPath").textContent = `${payload.path}（${payload.exists ? "已存在" : "尚未创建"}）`;
@@ -856,6 +874,7 @@
                 pill(entry.origin === "managed-file" ? "受管文件" : entry.origin || "未知", "ok"),
               );
             }
+            status.append(document.createElement("br"), runtimeCell(connection));
 
             const keyCell = document.createElement("td");
             const keyInput = document.createElement("input");
@@ -866,19 +885,29 @@
             keyCell.append(keyInput);
 
             const endpointCell = document.createElement("td");
+            const runtime = connection.runtime || {};
             if (connection.base_url_editable) {
               const baseInput = document.createElement("input");
               baseInput.type = "text";
-              baseInput.placeholder = "端点（留空使用当前配置）";
+              baseInput.placeholder = runtime.base_url
+                ? `运行期端点：${runtime.base_url}`
+                : "端点（留空 = 用运行期值）";
               baseInput.dataset.endpointInput = `${connection.key}:base_url`;
               const modelInput = document.createElement("input");
               modelInput.type = "text";
-              modelInput.placeholder = "模型名（留空使用当前配置）";
+              modelInput.placeholder = runtime.model
+                ? `运行期模型：${runtime.model}`
+                : "模型名（留空 = 用运行期值）";
               modelInput.dataset.endpointInput = `${connection.key}:model`;
               modelInput.style.marginTop = "6px";
               endpointCell.append(baseInput, modelInput);
             } else {
-              endpointCell.textContent = "（provider 主机固定，不可改写）";
+              const pinned = document.createElement("div");
+              pinned.className = "meta";
+              pinned.textContent = runtime.base_url
+                ? `运行期端点固定：${runtime.base_url}`
+                : "运行期端点由代码/发布物固定，不可改写";
+              endpointCell.append(pinned);
             }
 
             const actions = document.createElement("td");
@@ -1041,7 +1070,9 @@
           const verdict = payload.ok ? "成功" : "失败";
           const status = payload.http_status == null ? "" : ` · HTTP ${payload.http_status}`;
           const remaining = (payload.rate || {}).remaining;
-          node.textContent = `${verdict} · ${payload.latency_ms} ms${status} · ${payload.detail} · 凭据来源 ${(payload.used || {}).api_key_source || "—"}${remaining == null ? "" : ` · 本分钟剩余 ${remaining} 次`}`;
+          const called = payload.called === false ? "（未发起调用）" : "";
+          const runtimeNote = (payload.runtime || {}).enabled === false ? " · 运行期未启用" : "";
+          node.textContent = `${verdict}${called} · ${payload.latency_ms} ms${status} · ${payload.detail} · 凭据来源 ${(payload.used || {}).api_key_source || "—"}${runtimeNote}${remaining == null ? "" : ` · 本分钟剩余 ${remaining} 次`}`;
         } catch (error) {
           node.textContent = `测试失败：${error}`;
         } finally {

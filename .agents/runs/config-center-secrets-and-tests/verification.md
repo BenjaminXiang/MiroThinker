@@ -64,6 +64,62 @@ audit file, 0 in `/admin` HTML, 0 in `/secrets`, 0 in `/config`; 2 hits inside t
 Automated tests make **zero** real calls (transport injected). The final E2E run performs exactly one real
 call (embedding).
 
+## ④a Follow-up verification — runtime-source alignment (2026-09-15)
+
+**Trigger**: the user-approved five-connection acceptance (each connection called once
+against the live endpoints) reported embedding `401` and rerank `401` while embedding is
+demonstrably used by the running serving line and rerank is not enabled there at all.
+Root cause: three of the five connection specs resolved a page-local guess instead of the
+runtime chain (`EMBEDDING_API_KEY` — read by nothing; an invented rerank endpoint copied
+from the task text; the collection-side `llm_base_url` — unset).
+
+**Runtime truth established (file:line)**
+
+| connection | runtime source | evidence |
+|---|---|---|
+| embedding endpoint | frozen release-bundle authority `http://100.64.0.27:18005/v1` + `Qwen/Qwen3-Embedding-8B` | `knowledge_build_isolated.py:6720-6728` (bundle table), used at `6570-6583` |
+| embedding credential | `load_local_api_key()`: `API_KEY` → `OPENAI_API_KEY` → `SGLANG_API_KEY` → `.sglang_api_key` | `providers/local_api_key.py:8-31`; call site `knowledge_build_isolated.py:6570`; HTTP shape `company/vectorizer.py:22,40-53` (`{base}/embeddings`, `Authorization: Bearer`) |
+| rerank enablement | enabled **only** with `CANONICAL_V2_RERANK_BASE_URL`; `configured_reranker()` returns `None` otherwise; endpoint `{base}/v1/rerank`; key `CANONICAL_V2_RERANK_API_KEY` / `*_API_KEY_FILE` | `canonical_v2/rerank_client.py:33-38,132-150,224-236` |
+| LLM endpoint/model/credential | active chat profile: `CHAT_LLM_PROFILE` (live: `deepseekv4flash`) → `resolve_professor_llm_settings(..., apply_endpoint_env_overrides=False)` → `https://api.deepseek.com` / `deepseek-v4-flash` / `DEEPSEEK_API_KEY` (+ `.deepseek_api_key`) | `knowledge_serving_isolated.py:2087-2096` (also 5972, 6070), `llm_judgments.py:304`; `professor/llm_profiles.py:14-20,55-66,130-136,244-288` |
+| web search | pinned provider host + env→repository key file | `providers/bocha_search.py:12-33,61`; the Serper provider follows the same pattern |
+
+Grounding for the live process (read-only, names only): pid 1886109 env carries
+`CHAT_LLM_PROFILE=deepseekv4flash` and **no** credential variables, so every credential
+comes from the repository key files — which is exactly what the aligned resolution now
+reports.
+
+**Change**: new `apps/admin-console/backend/services/canonical_v2_runtime_sources.py`
+(resolution + `RuntimeConnection` value-free public view), `test_connection(...,
+disabled_reason=...)` short-circuit with `called` in the result, API wiring for
+`/secrets` and `/connections/test`, credential metadata in
+`managed_secrets.SECRET_SPECS`, page runtime pills/notes. Behaviour of the serving path
+itself is untouched.
+
+**New tests (this follow-up): 19** — `test_canonical_v2_runtime_sources.py` 13 (disabled
+rerank reporting, frozen-bundle embedding endpoint + local credential, `EMBEDDING_API_KEY`
+ignored, chat-profile LLM incl. profile switch, pinned hosts, env-over-file, pending vs
+adopted, credential-free public view, anti-drift cross-check against the official
+resolver), plus 6 added to the connection/API/store/bootstrap suites (no-call gate, chat
+path `/chat/completions`, runtime state in `/secrets`, supplied-endpoint probe, precise
+credential targets, profile-driven projection). Ambient credential variables are scrubbed
+and recorded values redacted in the API recorder so no host key can enter a failure
+message. Suite: 106 passed in the affected clusters.
+
+**Acceptance re-run (real endpoints, scratch process on 18297, live env, 18188 untouched)**
+
+| connection | verdict | latency | endpoint | credential origin |
+|---|---|---|---|---|
+| bocha | ✅ HTTP 200 | 287 ms | pinned `api.bochaai.com` | `legacy-file:.bocha_api_key` |
+| serper | ✅ HTTP 200 | 1855 ms | pinned `google.serper.dev` | `legacy-file:.serper_api_key` |
+| rerank | ➖ **未启用** (0 calls) | — | none configured | local-key fallback reported |
+| embedding | ✅ HTTP 200 | 30 ms | `http://100.64.0.27:18005/v1` (bundle-frozen) | `legacy-file:.sglang_api_key` |
+| llm | ✅ HTTP 200 | 234 ms | `https://api.deepseek.com` (profile `deepseekv4flash`) | `legacy-file:.deepseek_api_key` |
+
+Real calls this round: 4 (one per enabled connection); rerank 0. Transcript:
+`e2e-real-connections.md`. Leakage sweep with exact-value matching over all four real
+credentials: **0 hits** in `/secrets`, `/config`, `/admin` and the server log; the only
+credential-shaped string in `/secrets` is the intended 8-character mask (`k8#…0204`).
+
 ## ⑤ Open items / honest gaps
 
 1. **Deployment to the live service is not done** — the new routes/page/startup hook take effect on 18188

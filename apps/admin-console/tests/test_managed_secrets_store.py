@@ -122,7 +122,9 @@ def test_resolution_prefers_env_then_managed_file(tmp_path: Path) -> None:
     store.patch({"bocha.api_key": _FAKE_BOCHA})
     bocha = next(spec for spec in SECRET_SPECS if spec.field == "bocha.api_key")
 
-    material, origin = store.resolve(bocha, environ={"BOCHA_API_KEY": "env-fake-key-5555"})
+    material, origin = store.resolve(
+        bocha, environ={"BOCHA_API_KEY": "env-fake-key-5555"}
+    )
     assert material == "env-fake-key-5555"
     assert origin == "env:BOCHA_API_KEY"
 
@@ -189,3 +191,41 @@ def test_describe_marks_adopted_values(tmp_path: Path) -> None:
     assert bocha.origin == "managed-file"
     assert bocha.applied_to_process_env is True
     assert _FAKE_BOCHA not in json.dumps([state.as_dict() for state in states])
+
+
+def test_credentials_target_the_variables_the_runtime_reads(tmp_path: Path) -> None:
+    """A page-saved value must land where the serving process looks for it."""
+
+    from src.data_agents.canonical_v2.managed_secrets import SECRET_SPECS
+
+    by_field = {spec.field: spec for spec in SECRET_SPECS}
+
+    # knowledge_build_isolated.py:6570 -> providers/local_api_key.py:8-11
+    assert by_field["embedding.api_key"].env_var_for({}) == "SGLANG_API_KEY"
+    assert by_field["embedding.api_key"].extra_env_names == (
+        "API_KEY",
+        "OPENAI_API_KEY",
+    )
+    # canonical_v2/rerank_client.py:33-38
+    assert by_field["rerank.api_key"].env_var_for({}) == "CANONICAL_V2_RERANK_API_KEY"
+    # professor/llm_profiles.py:273 + knowledge_serving_isolated.py:2087
+    assert (
+        by_field["llm.api_key"].env_var_for({"CHAT_LLM_PROFILE": "deepseekv4flash"})
+        == "DEEPSEEK_API_KEY"
+    )
+    assert (
+        by_field["llm.api_key"].env_var_for({"CHAT_LLM_PROFILE": "gemma4"}) == "API_KEY"
+    )
+
+
+def test_llm_credential_projection_follows_the_chat_profile(tmp_path: Path) -> None:
+    store = _store(tmp_path)
+    store.patch({"llm.api_key": _FAKE_BOCHA})
+
+    default_target: dict[str, str] = {}
+    store.apply_to_environ(default_target)
+    deepseek_target: dict[str, str] = {"CHAT_LLM_PROFILE": "deepseekv4flash"}
+    store.apply_to_environ(deepseek_target)
+
+    assert default_target["API_KEY"] == _FAKE_BOCHA  # gemma4 default profile
+    assert deepseek_target["DEEPSEEK_API_KEY"] == _FAKE_BOCHA

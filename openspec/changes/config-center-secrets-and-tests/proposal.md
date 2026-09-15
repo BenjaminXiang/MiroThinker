@@ -87,10 +87,39 @@ retrieval/answer behaviour changes.
 Hot reload, key rotation workflows, secret distribution beyond the serving host, the W2/W4/W6 job and
 schedule surfaces, and any change to retrieval, fusion, rerank or answer behaviour.
 
+## Follow-up (2026-09-15, after the first deployment)
+
+The first deployment exposed one real defect in this slice's own connection specs: the
+embedding/rerank/LLM entries carried **page-local assumptions** instead of the runtime
+chain, so the user-approved five-connection acceptance reported embedding as `401`
+(credential not found) although the serving line embeds queries successfully, and
+reported rerank as reachable-but-unauthorized although rerank is not enabled on the
+live line at all.
+
+Behaviour-affecting repair, admin-console side plus one credential-metadata change:
+
+1. **Runtime-source resolution** (`apps/admin-console/backend/services/canonical_v2_runtime_sources.py`,
+   new): every connection's endpoint and credential is resolved by the same code path
+   the serving process uses — Bocha/Serper pinned host + repository key file; embedding
+   = frozen release-bundle endpoint + `load_local_api_key()`; rerank = enabled only with
+   `CANONICAL_V2_RERANK_BASE_URL`; LLM = the active chat profile
+   (`CHAT_LLM_PROFILE` → `resolve_professor_llm_settings`).
+2. **No invented defaults**: a connection the runtime has disabled is reported as
+   *not enabled* (with the reason) and costs zero outbound calls; supplying an endpoint
+   in the request still probes it (test-before-save).
+3. **Credential metadata aligned to consumption**: `embedding.api_key` targets
+   `SGLANG_API_KEY` (the variable `load_local_api_key()` reads) instead of the
+   never-read `EMBEDDING_API_KEY`; `llm.api_key` targets the active profile's
+   `api_key_env` (e.g. `DEEPSEEK_API_KEY`), resolved per process.
+4. **Effective vs pending**: the page reports what the running process uses today, and
+   marks a saved-but-unadopted value as "pending restart"; the test probe prefers the
+   just-saved value and labels it `managed-file(pending-restart)`.
+
 ## Status
 
-Proposed 2026-09-15. Implementation + verification in the same slice; evidence in
-`.agents/runs/config-center-secrets-and-tests/`.
+Proposed 2026-09-15; follow-up (runtime-source alignment) 2026-09-15. Implementation +
+verification in the same slice; evidence in `.agents/runs/config-center-secrets-and-tests/`.
+The follow-up needs **one restart of 18188** to go live; no restart was performed here.
 
 ## Human doc cross-link
 

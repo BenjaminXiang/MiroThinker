@@ -34,12 +34,24 @@ PING_TEXT = "ping"
 
 _RERANK_PATH = "/v1/rerank"
 _EMBEDDING_PATH = "/v1/embeddings"
-_CHAT_PATH = "/v1/chat/completions"
+# The OpenAI-compatible SDK the serving line uses posts to ``{base_url}/chat/completions``
+# (knowledge_serving_isolated.py:2087-2096 builds an OpenAI client from the chat profile), so
+# the probe uses the same path instead of forcing a /v1 prefix.
+_CHAT_PATH = "/chat/completions"
 
 
 @dataclass(frozen=True, slots=True)
 class ConnectionSpec:
-    """One testable connection: how to reach it, and what it needs."""
+    """One testable connection: how to reach it, and what it needs.
+
+    ``default_base_url`` is intentionally ``None`` for the connections the runtime
+    does *not* pin: an invented default would make a disabled connection look
+    reachable (live evidence: a rerank probe against a fabricated default returned
+    401 and read as "reachable but rejected" while rerank is in fact not enabled).
+    The effective endpoint always comes from
+    :mod:`backend.services.canonical_v2_runtime_sources`, i.e. from the same code
+    the serving process runs.
+    """
 
     key: str
     label: str
@@ -60,9 +72,7 @@ CONNECTIONS: tuple[ConnectionSpec, ...] = (
         kind="web_search",
         secret_field="bocha.api_key",
         requires_key=True,
-        default_base_url="https://api.bochaai.com/v1/web-search",
-        # The provider host is pinned: a page that could redirect a credential to
-        # an arbitrary host would be a credential-exfiltration surface.
+        default_base_url=None,  # pinned by the provider; resolved at runtime
         base_url_editable=False,
     ),
     ConnectionSpec(
@@ -71,7 +81,7 @@ CONNECTIONS: tuple[ConnectionSpec, ...] = (
         kind="web_search",
         secret_field="serper.api_key",
         requires_key=True,
-        default_base_url="https://google.serper.dev/search",
+        default_base_url=None,  # pinned by the provider; resolved at runtime
         base_url_editable=False,
     ),
     ConnectionSpec(
@@ -80,7 +90,7 @@ CONNECTIONS: tuple[ConnectionSpec, ...] = (
         kind="rerank",
         secret_field="rerank.api_key",
         requires_key=False,
-        default_base_url="http://100.64.0.27:18006",
+        default_base_url=None,  # runtime default: disabled without CANONICAL_V2_RERANK_BASE_URL
         default_model="qwen3-reranker-8b",
         base_url_field="extraction_endpoints.rerank_base_url",
         model_field="extraction_endpoints.rerank_model",
@@ -91,20 +101,18 @@ CONNECTIONS: tuple[ConnectionSpec, ...] = (
         kind="embedding",
         secret_field="embedding.api_key",
         requires_key=False,
-        default_base_url="http://100.64.0.27:18005/v1",
+        default_base_url=None,  # frozen release-bundle authority, resolved at runtime
         default_model="Qwen/Qwen3-Embedding-8B",
-        base_url_field="extraction_endpoints.embedding_base_url",
-        model_field="extraction_endpoints.embedding_model",
+        base_url_editable=False,
     ),
     ConnectionSpec(
         key="llm",
-        label="LLM 档位（本地/校内）",
+        label="LLM 档位",
         kind="llm",
         secret_field="llm.api_key",
         requires_key=False,
-        default_base_url=None,
-        base_url_field="extraction_endpoints.llm_base_url",
-        model_field="extraction_endpoints.llm_model",
+        default_base_url=None,  # the active chat profile owns base_url/model
+        base_url_editable=True,
     ),
 )
 
@@ -224,15 +232,30 @@ def test_connection(
     model: str | None = None,
     transport: Transport | None = None,
     timeout: float = DEFAULT_TIMEOUT_SECONDS,
+    disabled_reason: str | None = None,
 ) -> dict[str, Any]:
-    """Perform exactly one minimal call and report status + latency only."""
+    """Perform exactly one minimal call and report status + latency only.
 
+    ``disabled_reason`` short-circuits a connection the runtime has not enabled
+    (and for which the caller supplied no endpoint of its own): the honest answer
+    is "not enabled", and it costs zero outbound calls.
+    """
+
+    if disabled_reason and not base_url:
+        return {
+            "ok": False,
+            "latency_ms": 0,
+            "http_status": None,
+            "detail": disabled_reason,
+            "called": False,
+        }
     if spec.requires_key and not api_key.strip():
         return {
             "ok": False,
             "latency_ms": 0,
             "http_status": None,
             "detail": "未配置凭据：请先在页面填入并保存（或直接填入后点测试）",
+            "called": False,
         }
     try:
         url, request_spec = build_request(
@@ -244,6 +267,7 @@ def test_connection(
             "latency_ms": 0,
             "http_status": None,
             "detail": f"端点不合法：{exc}",
+            "called": False,
         }
     caller = transport or post_json
     started = monotonic()
@@ -260,6 +284,7 @@ def test_connection(
             "latency_ms": int((monotonic() - started) * 1000),
             "http_status": None,
             "detail": f"超时（>{timeout:g}s）",
+            "called": True,
         }
     except Exception as exc:  # noqa: BLE001 - any transport failure is a result
         return {
@@ -267,6 +292,7 @@ def test_connection(
             "latency_ms": int((monotonic() - started) * 1000),
             "http_status": None,
             "detail": f"传输失败（{type(exc).__name__}）",
+            "called": True,
         }
     latency_ms = int((monotonic() - started) * 1000)
     status = int(status)
@@ -276,6 +302,7 @@ def test_connection(
             "latency_ms": latency_ms,
             "http_status": status,
             "detail": f"HTTP {status}",
+            "called": True,
         }
     if status in {401, 403}:
         return {
@@ -283,6 +310,7 @@ def test_connection(
             "latency_ms": latency_ms,
             "http_status": status,
             "detail": f"HTTP {status}：端点可达，凭据被拒绝",
+            "called": True,
         }
     if status in {404, 405}:
         return {
@@ -290,12 +318,14 @@ def test_connection(
             "latency_ms": latency_ms,
             "http_status": status,
             "detail": f"HTTP {status}：端点可达，但路径或方法不被接受",
+            "called": True,
         }
     return {
         "ok": False,
         "latency_ms": latency_ms,
         "http_status": status,
         "detail": f"HTTP {status}",
+        "called": True,
     }
 
 

@@ -82,6 +82,30 @@ apply_managed_runtime_config(environ=None, *, settings_store=None, secrets_store
 Call sites: `open_serving_pack_authority()` (serving process, once per boot) and the V2 shell's FastAPI
 startup event (admin-console process). Both are the "startup read" the page tells the operator about.
 
+## 5a. Runtime alignment (follow-up 2026-09-15)
+
+The acceptance run against real endpoints found that three of the five specs described
+what the page *assumed* rather than what the serving process *does*:
+
+| connection | first spec (wrong) | runtime truth (file:line) | aligned resolution |
+|---|---|---|---|
+| embedding | key from `EMBEDDING_API_KEY` (nothing reads it); default endpoint copied from the task text | `knowledge_build_isolated.py:6570-6583` + `company/vectorizer.py:22,40-53` + `providers/local_api_key.py:8-31`: endpoint frozen by the release bundle, credential from `API_KEY`/`OPENAI_API_KEY`/`SGLANG_API_KEY`/`.sglang_api_key` | endpoint = bundle authority, credential = local chain, endpoint not editable |
+| rerank | default endpoint `http://100.64.0.27:18006` invented by the spec | `canonical_v2/rerank_client.py:224-236`: `configured_reranker()` returns `None` unless `CANONICAL_V2_RERANK_BASE_URL` is set | no default; `enabled=false` + reason when unset; probe only a supplied/configured endpoint |
+| llm | collection-side `extraction_endpoints.llm_base_url` (unset) | `knowledge_serving_isolated.py:2087-2096` → `professor/llm_profiles.py:244-288`: the active chat profile owns base_url/model and `api_key_env` | profile-driven endpoint/model/credential, labelled by profile name |
+
+Consequences encoded in the code:
+
+* **Effective vs pending.** The managed file reaches the runtime only through the
+  startup projection, so the effective credential is what the environment/key file
+  provides *now*; a saved-but-unadopted value is reported as `pending_restart` and the
+  page says "重启服务后生效". The probe prefers the pending value (the operator just
+  saved it) and labels the source `managed-file(pending-restart)`.
+* **No call when disabled.** With no runtime endpoint and no request endpoint, the route
+  returns `detail` = the reason and `called=false`; the outbound budget is untouched.
+* **Ambient safety.** Resolution takes the environment as a parameter instead of reading
+  `os.environ` internally, so a status call cannot silently pick up an unrelated ambient
+  variable and tests stay hermetic.
+
 ## 6. New switches — page-suitability judgement
 
 | env var | managed field | page | reason |

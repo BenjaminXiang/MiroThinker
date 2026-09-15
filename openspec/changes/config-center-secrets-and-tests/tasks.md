@@ -55,6 +55,27 @@
 - [x] 7.2 `docs/plans/index.md` row.
 - [x] 7.3 `openspec/change-ledger.md` entry.
 
+## 9. Runtime alignment (follow-up, 2026-09-15)
+
+- [x] 9.1 `canonical_v2_runtime_sources.py`: resolve endpoints/credentials through the
+      serving code paths (5 connections), with file:line pointers in the module docstring.
+- [x] 9.2 Remove the invented defaults: rerank/embedding/LLM endpoints come from the
+      runtime, never from a page-side guess; rerank reports "not enabled" without a call.
+- [x] 9.3 Credential metadata: `embedding.api_key` → `SGLANG_API_KEY` (+ `API_KEY`/
+      `OPENAI_API_KEY` as resolution aliases), `llm.api_key` → the active profile's
+      `api_key_env` (per-process), `rerank.api_key` unchanged (`CANONICAL_V2_RERANK_API_KEY`).
+- [x] 9.4 Effective-now vs pending-restart reporting; probe prefers the just-saved value
+      and labels it `managed-file(pending-restart)`.
+- [x] 9.5 Page: runtime pill + note per connection, runtime endpoint/model placeholders,
+      "未发起调用" surfacing.
+- [x] 9.6 Tests: `test_canonical_v2_runtime_sources.py` (13) incl. an anti-drift
+      cross-check against `resolve_professor_llm_settings`; ambient credential scrubbing
+      and value redaction in the API test recorder.
+- [x] 9.7 Re-run the five-connection acceptance (real endpoints, ≤1 call each) and record
+      it: bocha/serper/embedding/llm OK, rerank reported as not enabled (0 calls).
+- [x] 9.8 Evidence + human log + ledger updated.
+- [ ] 9.9 Deploy: requires one 18188 restart (scheduled by the user; not performed here).
+
 ## Deferred (explicitly not done in this slice)
 
 - [ ] 8.1 Hot reload of any value (out of scope by R16).

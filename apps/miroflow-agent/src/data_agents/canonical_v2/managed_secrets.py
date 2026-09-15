@@ -51,6 +51,31 @@ class ManagedSecretsUnsupportedError(ManagedSecretsError):
     """A field outside the credential whitelist was requested."""
 
 
+def chat_llm_key_env(environ: Mapping[str, str] | None = None) -> str:
+    """The credential variable the **active chat profile** reads at runtime.
+
+    Mirrors ``knowledge_serving_isolated.py:2087-2096`` (the serving answer/rewrite
+    LLM) through ``professor/llm_profiles.py:273``: the profile's own
+    ``api_key_env`` — ``DEEPSEEK_API_KEY`` for ``deepseekv4flash``, ``API_KEY`` for
+    the local ``gemma4`` endpoint. Writing a key to the wrong variable would look
+    saved on the page and change nothing at runtime, so the page follows the
+    profile.
+    """
+
+    values = os.environ if environ is None else environ
+    profile = (values.get("CHAT_LLM_PROFILE", "") or "").strip() or "gemma4"
+    try:
+        from src.data_agents.professor.llm_profiles import (
+            _LLM_PROFILES,
+            resolve_professor_llm_profile_name,
+        )
+
+        resolved = resolve_professor_llm_profile_name(profile_name=profile)
+        return str(_LLM_PROFILES[resolved].local.api_key_env)
+    except Exception:  # noqa: BLE001 - the table is optional for reporting
+        return "LOCAL_LLM_API_KEY"
+
+
 @dataclass(frozen=True, slots=True)
 class SecretSpec:
     """One credential: the page field, its environment variable, legacy key file."""
@@ -58,8 +83,24 @@ class SecretSpec:
     field: str
     connection: str
     label: str
-    env_var: str
+    env_var: str | None
     legacy_files: tuple[str, ...] = ()
+    extra_env_names: tuple[str, ...] = ()
+    env_var_resolver: Callable[[Mapping[str, str]], str] | None = None
+
+    def env_var_for(self, environ: Mapping[str, str] | None = None) -> str | None:
+        """The variable this credential must occupy, resolved for the current process."""
+
+        if self.env_var:
+            return self.env_var
+        if self.env_var_resolver is not None:
+            try:
+                return self.env_var_resolver(
+                    environ if environ is not None else os.environ
+                )
+            except Exception:  # noqa: BLE001 - never fail a read over metadata
+                return None
+        return None
 
 
 # The whitelist. Every entry is a credential some connection actually consumes;
@@ -83,20 +124,33 @@ SECRET_SPECS: tuple[SecretSpec, ...] = (
         field="rerank.api_key",
         connection="rerank",
         label="Rerank 模型端点",
+        # rerank_client.py:33-38 — the serving reranker reads exactly this variable
+        # (and its *_API_KEY_FILE sibling); rerank itself stays disabled until
+        # CANONICAL_V2_RERANK_BASE_URL is configured.
         env_var="CANONICAL_V2_RERANK_API_KEY",
     ),
     SecretSpec(
         field="embedding.api_key",
         connection="embedding",
         label="Embedding 模型端点",
-        env_var="EMBEDDING_API_KEY",
+        # The serving embedding adapter reads ``load_local_api_key()``
+        # (providers/local_api_key.py:8-11, called at knowledge_build_isolated.py:6570):
+        # API_KEY -> OPENAI_API_KEY -> SGLANG_API_KEY -> .sglang_api_key. We write the
+        # least generic of those, and accept the siblings when reporting origins.
+        env_var="SGLANG_API_KEY",
+        legacy_files=(".sglang_api_key",),
+        extra_env_names=("API_KEY", "OPENAI_API_KEY"),
     ),
     SecretSpec(
         field="llm.api_key",
         connection="llm",
-        label="LLM 档位（本地/校内）",
-        env_var="LOCAL_LLM_API_KEY",
-        legacy_files=(".sglang_api_key",),
+        label="LLM 档位（chat profile）",
+        # Profile-owned: the variable depends on CHAT_LLM_PROFILE (see chat_llm_key_env).
+        env_var=None,
+        legacy_files=(),
+        env_var_resolver=lambda environ: (
+            chat_llm_key_env(environ) or "LOCAL_LLM_API_KEY"
+        ),
     ),
 )
 
@@ -225,6 +279,12 @@ class ManagedSecretsStore:
     def audit_path(self) -> Path:
         return self._path.with_name(DEFAULT_SECRETS_AUDIT_FILENAME)
 
+    @property
+    def key_file_roots(self) -> tuple[Path, ...]:
+        """Roots searched for legacy key files (same order the providers use)."""
+
+        return self._key_file_roots
+
     # -- reads ---------------------------------------------------------------
 
     def exists(self) -> bool:
@@ -297,13 +357,18 @@ class ManagedSecretsStore:
         applied_env: frozenset[str],
     ) -> tuple[str, str | None]:
         file_value = self.raw().get(spec.field, "")
-        env_value = environ.get(spec.env_var, "").strip()
-        if env_value and spec.env_var not in applied_env:
-            return env_value, f"env:{spec.env_var}"
+        env_var = spec.env_var_for(environ)
+        env_value = environ.get(env_var, "").strip() if env_var else ""
+        if env_value and env_var not in applied_env:
+            return env_value, f"env:{env_var}"
         if file_value:
             return file_value, "managed-file"
         if env_value:
-            return env_value, f"env:{spec.env_var}"
+            return env_value, f"env:{env_var}"
+        for alias in spec.extra_env_names:
+            alias_value = environ.get(alias, "").strip()
+            if alias_value:
+                return alias_value, f"env:{alias}"
         for root in self._key_file_roots:
             for filename in spec.legacy_files:
                 candidate = root / filename
@@ -335,7 +400,7 @@ class ManagedSecretsStore:
                     field=spec.field,
                     connection=spec.connection,
                     label=spec.label,
-                    env_var=spec.env_var,
+                    env_var=spec.env_var_for(values) or "",
                     configured=bool(material),
                     mask=mask_secret(material) or None,
                     suffix4=suffix4(material),
@@ -510,11 +575,14 @@ class ManagedSecretsStore:
             file_value = stored.get(spec.field)
             if not file_value:
                 continue
-            if target.get(spec.env_var, "").strip():
-                skipped.append(spec.env_var)
+            env_var = spec.env_var_for(target)
+            if env_var is None:
                 continue
-            target[spec.env_var] = file_value
-            applied.append(spec.env_var)
+            if target.get(env_var, "").strip():
+                skipped.append(env_var)
+                continue
+            target[env_var] = file_value
+            applied.append(env_var)
         return {"applied": tuple(applied), "skipped_env": tuple(skipped)}
 
 
@@ -552,6 +620,7 @@ __all__ = [
     "SPEC_BY_FIELD",
     "SecretSpec",
     "SecretState",
+    "chat_llm_key_env",
     "default_key_file_roots",
     "default_repo_root",
     "default_secrets_path",

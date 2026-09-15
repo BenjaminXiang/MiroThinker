@@ -15,6 +15,18 @@
 | A9 | No plaintext in responses, audit, logs | R1/R3 tests + E2E grep evidence |
 | A10 | No regression of the W1 surfaces or the existing suite | before/after failure-set diff = ∅ |
 
+## A2. Runtime-alignment criteria (follow-up 2026-09-15)
+
+| # | Criterion | Evidence |
+|---|---|---|
+| A2-1 | A connection the runtime has disabled is reported as **not enabled** (with the reason), never as a misleading `401` | `test_rerank_is_reported_as_not_enabled_not_as_401`, `test_disabled_connection_reports_disabled_and_never_calls`, acceptance re-run |
+| A2-2 | A connection that works at runtime resolves the **same source** the runtime uses | `test_embedding_uses_the_frozen_bundle_endpoint_and_the_local_credential`, `test_llm_follows_the_active_chat_profile`, `test_web_search_connections_report_the_pinned_host_and_key_file`, acceptance re-run (embedding 200 / llm 200) |
+| A2-3 | A credential saved on the page is written to the variable the runtime reads | `test_credentials_target_the_variables_the_runtime_reads`, `test_llm_credential_projection_follows_the_chat_profile` |
+| A2-4 | The page distinguishes "effective now" from "pending restart" | `test_managed_value_is_pending_until_the_restart`, `test_adopted_managed_value_is_reported_as_effective` |
+| A2-5 | No invented endpoint can make a disabled connection look reachable | `test_rerank_is_reported_as_not_enabled_not_as_401` (no default endpoint) |
+| A2-6 | The console still leaks no credential | precise sweep (`e2e-real-connections.md`): 0 exact-value hits across `/secrets`, `/config`, `/admin`, server log |
+| A2-7 | Resolution matches the serving path (anti-drift) | `test_profile_resolution_matches_the_serving_path` |
+
 ## B. Non-functional
 
 | # | Criterion | Evidence |

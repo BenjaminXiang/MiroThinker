@@ -23,18 +23,46 @@ _SETTINGS_STATE = "canonical_v2_managed_settings_store"
 _SECRETS_STATE = "canonical_v2_managed_secrets_store"
 
 
+def _redact(value: Any) -> Any:
+    """Never keep a credential that did not come from this test file in a recorder.
+
+    The resolution chain may legitimately pick up an ambient key; a pytest failure
+    message must not become a place where such a value is printed.
+    """
+
+    if isinstance(value, str) and value and not value.startswith(("sk-fake", "fake-")):
+        return "<redacted-non-fixture-value>"
+    return value
+
+
 class _RecordingTransport:
     def __init__(self, *, ok: bool = True, latency_note: str = "") -> None:
         self.calls: list[dict[str, Any]] = []
         self.ok = ok
 
     def __call__(self, spec: Any, **kwargs: Any) -> dict[str, Any]:
-        self.calls.append({"spec": spec, **kwargs})
+        self.calls.append(
+            {
+                key: (_redact(value) if key == "api_key" else value)
+                for key, value in {"spec": spec, **kwargs}.items()
+            }
+        )
+        if kwargs.get("disabled_reason") and not kwargs.get("base_url"):
+            # The real service short-circuits here; mirror it so the route contract
+            # (no call, honest reason) is what gets asserted.
+            return {
+                "ok": False,
+                "latency_ms": 0,
+                "http_status": None,
+                "detail": str(kwargs["disabled_reason"]),
+                "called": False,
+            }
         return {
             "ok": self.ok,
             "latency_ms": 12,
             "http_status": 200 if self.ok else 401,
             "detail": "HTTP 200" if self.ok else "HTTP 401：端点可达，凭据被拒绝",
+            "called": True,
         }
 
 
@@ -72,6 +100,30 @@ def stores(
                 setattr(app.state, name, prior)
             elif hasattr(app.state, name):
                 delattr(app.state, name)
+
+
+# Ambient credential variables are removed for every test in this file: the
+# resolution chain mirrors the runtime, so a stray host variable would otherwise
+# decide the outcome (and could end up in a failure message).
+_AMBIENT_CREDENTIAL_VARS = (
+    "API_KEY",
+    "OPENAI_API_KEY",
+    "SGLANG_API_KEY",
+    "BOCHA_API_KEY",
+    "SERPER_API_KEY",
+    "DEEPSEEK_API_KEY",
+    "LOCAL_LLM_API_KEY",
+    "EMBEDDING_API_KEY",
+    "CANONICAL_V2_RERANK_API_KEY",
+    "CANONICAL_V2_RERANK_API_KEY_FILE",
+    "CANONICAL_V2_RERANK_BASE_URL",
+)
+
+
+@pytest.fixture(autouse=True)
+def _scrub_ambient_credentials(monkeypatch: pytest.MonkeyPatch) -> None:
+    for name in _AMBIENT_CREDENTIAL_VARS:
+        monkeypatch.delenv(name, raising=False)
 
 
 @pytest.fixture()
@@ -255,6 +307,7 @@ def test_connection_test_uses_unsaved_values_and_calls_once(
     assert response.status_code == 200
     payload = response.json()
     assert payload["ok"] is True and payload["latency_ms"] == 12
+    assert payload["called"] is True
     assert payload["used"]["api_key_source"] == "request"
     assert payload["used"]["base_url"] == "http://127.0.0.1:18006"
     assert _SENTINEL not in response.text
@@ -279,7 +332,14 @@ def test_connection_test_falls_back_to_the_stored_value(
     )
 
     assert response.status_code == 200
-    assert response.json()["used"]["api_key_source"] == "managed-file"
+    payload = response.json()
+    # The just-saved value is what the operator wants to verify; it is labelled
+    # as pending so it is never confused with the running process's source.
+    assert payload["used"]["api_key_source"] == "managed-file(pending-restart)"
+    assert (
+        payload["used"]["effective_api_key_source"] != "managed-file(pending-restart)"
+    )
+    assert payload["runtime"]["pending_restart"] is True
     assert len(transport.calls) == 1
     assert transport.calls[0]["api_key"] == _SENTINEL
 
@@ -365,3 +425,82 @@ def test_admin_page_renders_the_credentials_card() -> None:
     assert "api/canonical-v2/admin/secrets" in page.text
     assert "api/canonical-v2/admin/connections/test" in page.text
     assert "重启服务" in page.text
+
+
+def test_disabled_connection_reports_disabled_and_never_calls(
+    stores: tuple[ManagedSettingsStore, ManagedSecretsStore],
+    transport: _RecordingTransport,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Rerank without a configured endpoint: honest "not enabled", zero calls."""
+
+    monkeypatch.delenv("CANONICAL_V2_RERANK_BASE_URL", raising=False)
+    client = _client()
+
+    response = client.post(
+        "/api/canonical-v2/admin/connections/test", json={"connection": "rerank"}
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["called"] is False
+    assert payload["http_status"] is None
+    assert payload["runtime"]["enabled"] is False
+    assert "未启用" in payload["detail"]
+    assert "CANONICAL_V2_RERANK_BASE_URL" in payload["detail"]
+    # The route reaches the (fake) test seam with the disabled gate set and no
+    # endpoint: the real implementation returns before any outbound call.
+    assert len(transport.calls) == 1
+    assert transport.calls[0]["base_url"] is None
+    assert transport.calls[0]["disabled_reason"]
+
+
+def test_supplied_endpoint_is_tested_even_when_the_runtime_has_it_disabled(
+    stores: tuple[ManagedSettingsStore, ManagedSecretsStore],
+    transport: _RecordingTransport,
+) -> None:
+    """Test-before-save: an operator-supplied endpoint still gets probed (one call)."""
+
+    client = _client()
+
+    response = client.post(
+        "/api/canonical-v2/admin/connections/test",
+        json={
+            "connection": "rerank",
+            "base_url": "http://127.0.0.1:18006",
+            "api_key": _SENTINEL,
+        },
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["called"] is True
+    assert payload["ok"] is True
+    assert payload["used"]["endpoint_source"] == "request"
+    assert len(transport.calls) == 1
+    assert _SENTINEL not in response.text
+
+
+def test_secrets_payload_exposes_runtime_state_per_connection(
+    stores: tuple[ManagedSettingsStore, ManagedSecretsStore],
+) -> None:
+    """The page needs runtime truth: enabled/disabled plus the resolved origins."""
+
+    response = _client().get("/api/canonical-v2/admin/secrets")
+
+    assert response.status_code == 200
+    connections = {item["key"]: item for item in response.json()["connections"]}
+    assert set(connections) == {"bocha", "serper", "rerank", "embedding", "llm"}
+    for item in connections.values():
+        assert "runtime" in item
+        assert item["runtime"]["runtime_note"]
+        assert "api_key" not in item["runtime"]  # origins only, never a value
+    assert (
+        connections["embedding"]["runtime"]["base_url"] == "http://100.64.0.27:18005/v1"
+    )
+    entry = next(
+        item
+        for item in response.json()["secrets"]
+        if item["field"] == "embedding.api_key"
+    )
+    assert entry["env_var"] == "SGLANG_API_KEY"
