@@ -1,0 +1,79 @@
+# EXPLAIN (ANALYZE, TIMING OFF, BUFFERS) — label=before
+# database=miroflow_tgfix_probe release_id=candidate-v2-20260913-r1 decision_id=field-decision:manifest-sha256:00000f9e9cf76d719215af299e8c857153ef709baf0cc44fe6972c29878b3c54:seed-sha256:d7dc1554c9ca68a34da72c7e198171d0c87bb00b9a6da09efc92e85bf8809341
+
+
+===== field_human_review_assertion_branch =====
+Gather  (cost=1000.00..32328.62 rows=1 width=4) (actual rows=0 loops=1)
+  Workers Planned: 2
+  Workers Launched: 2
+  Buffers: shared hit=97 read=26379
+  ->  Parallel Seq Scan on canonical_decision human_decision  (cost=0.00..31328.52 rows=1 width=4) (actual rows=0 loops=3)
+        Filter: ((method = 'human_review'::text) AND (((human_review_resolution -> 'review_case'::text) ->> 'release_id'::text) = 'candidate-v2-20260913-r1'::text) AND (((human_review_resolution -> 'review_case'::text) ->> 'originating_record_id'::text) = 'field-decision:manifest-sha256:00000f9e9cf76d719215af299e8c857153ef709baf0cc44fe6972c29878b3c54:seed-sha256:d7dc1554c9ca68a34da72c7e198171d0c87bb00b9a6da09efc92e85bf8809341'::text))
+        Rows Removed by Filter: 141164
+        Buffers: shared hit=97 read=26379
+Planning Time: 0.047 ms
+Execution Time: 43.061 ms
+
+
+===== field_human_review_release_guard =====
+Gather  (cost=1000.00..31005.21 rows=1 width=4) (actual rows=0 loops=1)
+  Workers Planned: 2
+  Workers Launched: 2
+  Buffers: shared hit=193 read=26283
+  ->  Parallel Seq Scan on canonical_decision human_decision  (cost=0.00..30005.11 rows=1 width=4) (actual rows=0 loops=3)
+        Filter: ((method = 'human_review'::text) AND (((human_review_resolution -> 'review_case'::text) ->> 'release_id'::text) = 'candidate-v2-20260913-r1'::text))
+        Rows Removed by Filter: 141164
+        Buffers: shared hit=193 read=26283
+Planning Time: 0.066 ms
+Execution Time: 42.651 ms
+
+
+===== relationship_human_review_assertion_branch =====
+Seq Scan on relationship_decision human_decision  (cost=0.00..1272.26 rows=1 width=4) (actual rows=0 loops=1)
+  Filter: ((method = 'human_review'::text) AND (((human_review_resolution -> 'review_case'::text) ->> 'release_id'::text) = 'candidate-v2-20260913-r1'::text) AND (((human_review_resolution -> 'review_case'::text) ->> 'originating_record_id'::text) = 'field-decision:manifest-sha256:00000f9e9cf76d719215af299e8c857153ef709baf0cc44fe6972c29878b3c54:seed-sha256:d7dc1554c9ca68a34da72c7e198171d0c87bb00b9a6da09efc92e85bf8809341'::text))
+  Rows Removed by Filter: 10773
+  Buffers: shared read=976
+Planning:
+  Buffers: shared hit=90 read=6
+Planning Time: 0.241 ms
+Execution Time: 4.807 ms
+
+
+===== identity_human_review_decision_branch =====
+Nested Loop Left Join  (cost=0.69..3068.79 rows=1 width=4) (actual rows=0 loops=1)
+  Filter: ((verdict.verdict_id IS NULL) OR (verdict.method <> 'human_review'::text) OR ((verdict.verdict_content -> 'human_review_resolution'::text) IS DISTINCT FROM decision.human_review_resolution))
+  Buffers: shared hit=2354
+  ->  Seq Scan on identity_decision decision  (cost=0.00..3060.02 rows=1 width=140) (actual rows=0 loops=1)
+        Filter: ((release_id = 'candidate-v2-20260913-r1'::text) AND (method = 'human_review'::text))
+        Rows Removed by Filter: 47068
+        Buffers: shared hit=2354
+  ->  Nested Loop Left Join  (cost=0.69..8.75 rows=1 width=1587) (never executed)
+        ->  Index Scan using pk_knowledge_identity_decision_context on identity_decision_context context  (cost=0.41..8.43 rows=1 width=211) (never executed)
+              Index Cond: ((release_id = 'candidate-v2-20260913-r1'::text) AND (decision_id = decision.decision_id))
+        ->  Index Scan using pk_knowledge_identity_candidate_verdict on identity_candidate_verdict verdict  (cost=0.27..0.31 rows=1 width=1525) (never executed)
+              Index Cond: ((release_id = 'candidate-v2-20260913-r1'::text) AND (verdict_id = context.candidate_verdict_id))
+              Filter: (decision_run_id = context.decision_run_id)
+Planning:
+  Buffers: shared hit=179 read=22
+Planning Time: 0.867 ms
+Execution Time: 7.717 ms
+
+
+===== field_temporal_assertion_branch =====
+Index Scan using uq_knowledge_canonical_decision_domain_projection_lineage on canonical_decision decision  (cost=0.55..8.57 rows=1 width=9) (actual rows=1 loops=1)
+  Index Cond: ((release_id = 'candidate-v2-20260913-r1'::text) AND (decision_id = 'field-decision:manifest-sha256:00000f9e9cf76d719215af299e8c857153ef709baf0cc44fe6972c29878b3c54:seed-sha256:d7dc1554c9ca68a34da72c7e198171d0c87bb00b9a6da09efc92e85bf8809341'::text))
+  Buffers: shared hit=1 read=4
+Planning:
+  Buffers: shared hit=3
+Planning Time: 0.062 ms
+Execution Time: 0.052 ms
+
+
+===== domain_inclusion_assertion_owner =====
+Index Scan using pk_knowledge_current_source_identity_assignment on current_source_identity_assignment assignment  (cost=0.41..8.44 rows=1 width=4) (actual rows=1 loops=1)
+  Index Cond: ((release_id = 'candidate-v2-20260913-r1'::text) AND (source_identity_id = 'source-released-object:001ff836-ee16-4168-92dd-08af2161436b'::text))
+  Filter: (canonical_identity_id = 'paper-c-96376f15268db89f5f952a20'::text)
+  Buffers: shared hit=4
+Planning Time: 0.031 ms
+Execution Time: 0.024 ms
+

@@ -1,0 +1,1858 @@
+FF                                                                       [100%]
+=================================== FAILURES ===================================
+_______ test_store_and_c2_0007_downgrade_share_release_first_lock_order ________
+
+self = <sqlalchemy.engine.base.Connection object at 0x7f83d0f352b0>
+dialect = <sqlalchemy.dialects.postgresql.psycopg.PGDialect_psycopg object at 0x7f83d11ef740>
+context = <sqlalchemy.dialects.postgresql.psycopg.PGExecutionContext_psycopg object at 0x7f83d0da0c20>
+statement = <sqlalchemy.dialects.postgresql.psycopg.PGCompiler_psycopg object at 0x7f83d0da0c80>
+parameters = [{}]
+
+    def _exec_single_context(
+        self,
+        dialect: Dialect,
+        context: ExecutionContext,
+        statement: Union[str, Compiled],
+        parameters: Optional[_AnyMultiExecuteParams],
+    ) -> CursorResult[Any]:
+        """continue the _execute_context() method for a single DBAPI
+        cursor.execute() or cursor.executemany() call.
+    
+        """
+        if dialect.bind_typing is BindTyping.SETINPUTSIZES:
+            generic_setinputsizes = context._prepare_set_input_sizes()
+    
+            if generic_setinputsizes:
+                try:
+                    dialect.do_set_input_sizes(
+                        context.cursor, generic_setinputsizes, context
+                    )
+                except BaseException as e:
+                    self._handle_dbapi_exception(
+                        e, str(statement), parameters, None, context
+                    )
+    
+        cursor, str_statement, parameters = (
+            context.cursor,
+            context.statement,
+            context.parameters,
+        )
+    
+        effective_parameters: Optional[_AnyExecuteParams]
+    
+        if not context.executemany:
+            effective_parameters = parameters[0]
+        else:
+            effective_parameters = parameters
+    
+        if self._has_events or self.engine._has_events:
+            for fn in self.dispatch.before_cursor_execute:
+                str_statement, effective_parameters = fn(
+                    self,
+                    cursor,
+                    str_statement,
+                    effective_parameters,
+                    context,
+                    context.executemany,
+                )
+    
+        if self._echo:
+            self._log_info(str_statement)
+    
+            stats = context._get_cache_stats()
+    
+            if not self.engine.hide_parameters:
+                self._log_info(
+                    "[%s] %r",
+                    stats,
+                    sql_util._repr_params(
+                        effective_parameters,
+                        batches=10,
+                        ismulti=context.executemany,
+                    ),
+                )
+            else:
+                self._log_info(
+                    "[%s] [SQL parameters hidden due to hide_parameters=True]",
+                    stats,
+                )
+    
+        evt_handled: bool = False
+        try:
+            if context.execute_style is ExecuteStyle.EXECUTEMANY:
+                effective_parameters = cast(
+                    "_CoreMultiExecuteParams", effective_parameters
+                )
+                if self.dialect._has_events:
+                    for fn in self.dialect.dispatch.do_executemany:
+                        if fn(
+                            cursor,
+                            str_statement,
+                            effective_parameters,
+                            context,
+                        ):
+                            evt_handled = True
+                            break
+                if not evt_handled:
+                    self.dialect.do_executemany(
+                        cursor,
+                        str_statement,
+                        effective_parameters,
+                        context,
+                    )
+            elif not effective_parameters and context.no_parameters:
+                if self.dialect._has_events:
+                    for fn in self.dialect.dispatch.do_execute_no_params:
+                        if fn(cursor, str_statement, context):
+                            evt_handled = True
+                            break
+                if not evt_handled:
+                    self.dialect.do_execute_no_params(
+                        cursor, str_statement, context
+                    )
+            else:
+                effective_parameters = cast(
+                    "_CoreSingleExecuteParams", effective_parameters
+                )
+                if self.dialect._has_events:
+                    for fn in self.dialect.dispatch.do_execute:
+                        if fn(
+                            cursor,
+                            str_statement,
+                            effective_parameters,
+                            context,
+                        ):
+                            evt_handled = True
+                            break
+                if not evt_handled:
+>                   self.dialect.do_execute(
+                        cursor, str_statement, effective_parameters, context
+                    )
+
+.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py:1967: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+.venv/lib/python3.12/site-packages/sqlalchemy/engine/default.py:952: in do_execute
+    cursor.execute(statement, parameters)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <psycopg.Cursor [closed] [BAD] at 0x7f83d0f56810>
+query = "\n        DO $$\n        BEGIN\n            IF EXISTS (SELECT 1 FROM knowledge.canonical_decision WHERE human_review_...iew provenance'\n                    USING ERRCODE = '55000';\n            END IF;\n        END;\n        $$\n        "
+params = {}
+
+    def execute(
+        self,
+        query: Query,
+        params: Params | None = None,
+        *,
+        prepare: bool | None = None,
+        binary: bool | None = None,
+    ) -> Self:
+        """
+        Execute a query or command to the database.
+        """
+        try:
+            with self._conn.lock:
+                self._conn.wait(
+                    self._execute_gen(query, params, prepare=prepare, binary=binary)
+                )
+        except e._NO_TRACEBACK as ex:
+>           raise ex.with_traceback(None)
+E           psycopg.errors.ObjectNotInPrerequisiteState: C2_0007 downgrade refuses to discard retained human review provenance
+E           CONTEXT:  PL/pgSQL function inline_code_block line 4 at RAISE
+
+.venv/lib/python3.12/site-packages/psycopg/cursor.py:117: ObjectNotInPrerequisiteState
+
+The above exception was the direct cause of the following exception:
+
+target = _Target(database_url='postgresql+psycopg://miroflow@127.0.0.1:55458/miroflow_candidate_v2_pgtest_r1_s5b_eb58db3f', exp...er-fix/.agents/runs/rebuild-canonical-v2-knowledge-platform'), config=<alembic.config.Config object at 0x7f83d12b11f0>)
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f83d1283cb0>
+
+    def test_store_and_c2_0007_downgrade_share_release_first_lock_order(
+        target: _Target,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        initial = _decision_result(field_unresolved=True)
+        reviewed = _reviewed_field_result(initial)
+        _insert_prerequisites(target)
+        _insert_reviewed_release_prerequisites(target)
+        assert _store(target).persist(initial) == initial
+    
+        store_application_name = "canonical_v2_decision_store_lock_race"
+        migration_application_name = "canonical_v2_decision_downgrade_lock_race"
+        module = _postgres_module()
+        store_type = module._PostgresCanonicalDecisionStore
+        original_batch_decision_count = store_type._batch_decision_count
+        lookup_reached = Event()
+        resume_writer = Event()
+    
+        def pause_before_decision_lookup(
+            connection,
+            *,
+            release_id: str,
+            decision_run_id: str,
+        ) -> int:
+            lookup_reached.set()
+            assert resume_writer.wait(timeout=10.0)
+            return original_batch_decision_count(
+                connection,
+                release_id=release_id,
+                decision_run_id=decision_run_id,
+            )
+    
+        monkeypatch.setattr(
+            store_type,
+            "_batch_decision_count",
+            staticmethod(pause_before_decision_lookup),
+        )
+        store_url = (
+            make_url(target.database_url)
+            .update_query_dict({"application_name": store_application_name})
+            .render_as_string(hide_password=False)
+        )
+        store = module.create_postgres_canonical_decision_store(
+            database_url=store_url,
+            expected_database=target.expected_database,
+            target_kind=target.target_kind,
+            backup_gate_root=target.backup_gate_root,
+        )
+        migration_url = (
+            make_url(target.database_url)
+            .update_query_dict({"application_name": migration_application_name})
+            .render_as_string(hide_password=False)
+        )
+        migration_target = _Target(
+            database_url=migration_url,
+            expected_database=target.expected_database,
+            target_kind=target.target_kind,
+            backup_gate_root=target.backup_gate_root,
+            config=Config(),
+        )
+        migration_config = _migration_config(migration_target)
+        controller = _connect(target, autocommit=True)
+        executor = ThreadPoolExecutor(max_workers=2)
+        persist = None
+        downgrade = None
+        try:
+            persist = executor.submit(store.persist, reviewed)
+            assert lookup_reached.wait(timeout=10.0)
+            assert not persist.done()
+            granted_locks = {
+                (row[0], row[1])
+                for row in controller.execute(
+                    "SELECT relation.relname, lock.mode FROM pg_locks AS lock "
+                    "JOIN pg_stat_activity AS activity ON activity.pid = lock.pid "
+                    "JOIN pg_class AS relation ON relation.oid = lock.relation "
+                    "JOIN pg_namespace AS namespace ON namespace.oid = relation.relnamespace "
+                    "WHERE activity.datname = current_database() "
+                    "AND activity.application_name = %s "
+                    "AND namespace.nspname = 'knowledge' AND lock.granted",
+                    (store_application_name,),
+                ).fetchall()
+            }
+            assert ("release", "RowShareLock") in granted_locks
+            assert not {
+                relation_name
+                for relation_name, _ in granted_locks
+                if relation_name in {"canonical_decision", "relationship_decision"}
+            }
+    
+            downgrade = executor.submit(command.downgrade, migration_config, "C2_0006")
+            poll = Event()
+            deadline = time.monotonic() + 10.0
+            lock_wait = None
+            while time.monotonic() < deadline:
+                lock_wait = controller.execute(
+                    "SELECT wait_event_type, wait_event FROM pg_stat_activity "
+                    "WHERE datname = current_database() AND application_name = %s",
+                    (migration_application_name,),
+                ).fetchone()
+                if lock_wait is not None and lock_wait[0] == "Lock":
+                    break
+                if downgrade.done():
+                    break
+                poll.wait(0.01)
+            assert lock_wait is not None
+            assert lock_wait[0] == "Lock"
+            assert not downgrade.done()
+    
+            resume_writer.set()
+            assert persist.result(timeout=10.0) == reviewed
+            with pytest.raises(sa_exc.DBAPIError) as error:
+                downgrade.result(timeout=10.0)
+            assert getattr(error.value.orig, "sqlstate", None) == "55000"
+            with _connect(target) as connection:
+                assert connection.execute(
+                    "SELECT version_num FROM public.canonical_v2_alembic_version"
+                ).fetchone() == (EXPECTED_REVISION,)
+            assert store.load(REVIEWED_RELEASE_ID, REVIEWED_RUN_ID) == reviewed
+        finally:
+            resume_writer.set()
+            controller.close()
+            if persist is not None and not persist.done():
+                persist.result(timeout=10.0)
+            if downgrade is not None and not downgrade.done():
+>               downgrade.result(timeout=10.0)
+
+tests/canonical_v2/test_canonical_decision_postgres.py:3941: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+../../../../../.local/share/uv/python/cpython-3.12.12-linux-x86_64-gnu/lib/python3.12/concurrent/futures/_base.py:456: in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+../../../../../.local/share/uv/python/cpython-3.12.12-linux-x86_64-gnu/lib/python3.12/concurrent/futures/_base.py:401: in __get_result
+    raise self._exception
+../../../../../.local/share/uv/python/cpython-3.12.12-linux-x86_64-gnu/lib/python3.12/concurrent/futures/thread.py:59: in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/alembic/command.py:530: in downgrade
+    script.run_env()
+.venv/lib/python3.12/site-packages/alembic/script/base.py:545: in run_env
+    util.load_python_file(self.dir, "env.py")
+.venv/lib/python3.12/site-packages/alembic/util/pyfiles.py:116: in load_python_file
+    module = load_module_py(module_id, path)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/alembic/util/pyfiles.py:136: in load_module_py
+    spec.loader.exec_module(module)  # type: ignore
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap_external>:999: in exec_module
+    ???
+<frozen importlib._bootstrap>:488: in _call_with_frames_removed
+    ???
+canonical_v2_alembic/env.py:84: in <module>
+    run_migrations_online()
+canonical_v2_alembic/env.py:78: in run_migrations_online
+    context.run_migrations()
+<string>:8: in run_migrations
+    ???
+.venv/lib/python3.12/site-packages/alembic/runtime/environment.py:969: in run_migrations
+    self.get_context().run_migrations(**kw)
+.venv/lib/python3.12/site-packages/alembic/runtime/migration.py:626: in run_migrations
+    step.migration_fn(**kw)
+canonical_v2_alembic/versions/C2_0007_bind_human_review_provenance.py:2431: in downgrade
+    op.execute(
+<string>:8: in execute
+    ???
+<string>:3: in execute
+    ???
+.venv/lib/python3.12/site-packages/alembic/operations/ops.py:2667: in execute
+    return operations.invoke(op)
+           ^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/alembic/operations/base.py:452: in invoke
+    return fn(self, operation)
+           ^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/alembic/operations/toimpl.py:259: in execute_sql
+    operations.migration_context.impl.execute(
+.venv/lib/python3.12/site-packages/alembic/ddl/impl.py:263: in execute
+    self._exec(sql, execution_options)
+.venv/lib/python3.12/site-packages/alembic/ddl/impl.py:256: in _exec
+    return conn.execute(construct, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py:1419: in execute
+    return meth(
+.venv/lib/python3.12/site-packages/sqlalchemy/sql/elements.py:527: in _execute_on_connection
+    return connection._execute_clauseelement(
+.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py:1641: in _execute_clauseelement
+    ret = self._execute_context(
+.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py:1846: in _execute_context
+    return self._exec_single_context(
+.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py:1986: in _exec_single_context
+    self._handle_dbapi_exception(
+.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py:2363: in _handle_dbapi_exception
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py:1967: in _exec_single_context
+    self.dialect.do_execute(
+.venv/lib/python3.12/site-packages/sqlalchemy/engine/default.py:952: in do_execute
+    cursor.execute(statement, parameters)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <psycopg.Cursor [closed] [BAD] at 0x7f83d0f56810>
+query = "\n        DO $$\n        BEGIN\n            IF EXISTS (SELECT 1 FROM knowledge.canonical_decision WHERE human_review_...iew provenance'\n                    USING ERRCODE = '55000';\n            END IF;\n        END;\n        $$\n        "
+params = {}
+
+    def execute(
+        self,
+        query: Query,
+        params: Params | None = None,
+        *,
+        prepare: bool | None = None,
+        binary: bool | None = None,
+    ) -> Self:
+        """
+        Execute a query or command to the database.
+        """
+        try:
+            with self._conn.lock:
+                self._conn.wait(
+                    self._execute_gen(query, params, prepare=prepare, binary=binary)
+                )
+        except e._NO_TRACEBACK as ex:
+>           raise ex.with_traceback(None)
+E           sqlalchemy.exc.OperationalError: (psycopg.errors.ObjectNotInPrerequisiteState) C2_0007 downgrade refuses to discard retained human review provenance
+E           CONTEXT:  PL/pgSQL function inline_code_block line 4 at RAISE
+E           [SQL: 
+E                   DO $$
+E                   BEGIN
+E                       IF EXISTS (SELECT 1 FROM knowledge.canonical_decision WHERE human_review_resolution IS NOT NULL) OR EXISTS (SELECT 1 FROM knowledge.relationship_decision WHERE human_review_resolution IS NOT NULL) OR EXISTS (SELECT 1 FROM knowledge.identity_decision WHERE human_review_resolution IS NOT NULL) OR EXISTS (SELECT 1 FROM knowledge.identity_candidate_verdict WHERE method = 'human_review') THEN
+E                           RAISE EXCEPTION
+E                               'C2_0007 downgrade refuses to discard retained human review provenance'
+E                               USING ERRCODE = '55000';
+E                       END IF;
+E                   END;
+E                   $$
+E                   ]
+E           (Background on this error at: https://sqlalche.me/e/20/e3q8)
+
+.venv/lib/python3.12/site-packages/psycopg/cursor.py:117: OperationalError
+---------------------------- Captured stderr setup -----------------------------
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade  -> C2_0001, Create the clean Canonical V2 namespace baseline.
+INFO  [alembic.runtime.migration] Running upgrade  -> C2_0001, Create the clean Canonical V2 namespace baseline.
+INFO  [alembic.runtime.migration] Running upgrade C2_0001 -> C2_0002, Create shared evidence, decision, and release storage.
+INFO  [alembic.runtime.migration] Running upgrade C2_0001 -> C2_0002, Create shared evidence, decision, and release storage.
+INFO  [alembic.runtime.migration] Running upgrade C2_0002 -> C2_0003, Harden shared lineage, decision history, and append-only integrity.
+INFO  [alembic.runtime.migration] Running upgrade C2_0002 -> C2_0003, Harden shared lineage, decision history, and append-only integrity.
+INFO  [alembic.runtime.migration] Running upgrade C2_0003 -> C2_0004, Persist complete immutable EvidenceLanding runs.
+INFO  [alembic.runtime.migration] Running upgrade C2_0003 -> C2_0004, Persist complete immutable EvidenceLanding runs.
+INFO  [alembic.runtime.migration] Running upgrade C2_0004 -> C2_0005, Harden canonical decision evidence and append-only constraint outcomes.
+INFO  [alembic.runtime.migration] Running upgrade C2_0004 -> C2_0005, Harden canonical decision evidence and append-only constraint outcomes.
+INFO  [alembic.runtime.migration] Running upgrade C2_0005 -> C2_0006, Persist immutable offline canonical identity resolution projections.
+INFO  [alembic.runtime.migration] Running upgrade C2_0005 -> C2_0006, Persist immutable offline canonical identity resolution projections.
+INFO  [alembic.runtime.migration] Running upgrade C2_0006 -> C2_0007, Bind human review decisions to immutable evidence and reviewer provenance.
+INFO  [alembic.runtime.migration] Running upgrade C2_0006 -> C2_0007, Bind human review decisions to immutable evidence and reviewer provenance.
+INFO  [alembic.runtime.migration] Running upgrade C2_0007 -> C2_0008, Preserve date-only versus instant validity precision.
+INFO  [alembic.runtime.migration] Running upgrade C2_0007 -> C2_0008, Preserve date-only versus instant validity precision.
+INFO  [alembic.runtime.migration] Running upgrade C2_0008 -> C2_0009, Persist typed release-scoped Professor, Company, Paper, and Patent projections.
+INFO  [alembic.runtime.migration] Running upgrade C2_0008 -> C2_0009, Persist typed release-scoped Professor, Company, Paper, and Patent projections.
+INFO  [alembic.runtime.migration] Running upgrade C2_0009 -> C2_0010, Persist typed and current Canonical V2 relationship projections.
+INFO  [alembic.runtime.migration] Running upgrade C2_0009 -> C2_0010, Persist typed and current Canonical V2 relationship projections.
+INFO  [alembic.runtime.migration] Running upgrade C2_0010 -> C2_0011, Persist append-only Canonical V2 knowledge-gap operations.
+INFO  [alembic.runtime.migration] Running upgrade C2_0010 -> C2_0011, Persist append-only Canonical V2 knowledge-gap operations.
+INFO  [alembic.runtime.migration] Running upgrade C2_0011 -> C2_0012, Add company_name to the patent applicant sub-object table.
+INFO  [alembic.runtime.migration] Running upgrade C2_0011 -> C2_0012, Add company_name to the patent applicant sub-object table.
+INFO  [alembic.runtime.migration] Running upgrade C2_0012 -> C2_0013, Chunk oversized run snapshots instead of one jsonb value.
+INFO  [alembic.runtime.migration] Running upgrade C2_0012 -> C2_0013, Chunk oversized run snapshots instead of one jsonb value.
+----------------------------- Captured stderr call -----------------------------
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running downgrade C2_0013 -> C2_0012, Chunk oversized run snapshots instead of one jsonb value.
+INFO  [alembic.runtime.migration] Running downgrade C2_0013 -> C2_0012, Chunk oversized run snapshots instead of one jsonb value.
+INFO  [alembic.runtime.migration] Running downgrade C2_0012 -> C2_0011, Add company_name to the patent applicant sub-object table.
+INFO  [alembic.runtime.migration] Running downgrade C2_0012 -> C2_0011, Add company_name to the patent applicant sub-object table.
+INFO  [alembic.runtime.migration] Running downgrade C2_0011 -> C2_0010, Persist append-only Canonical V2 knowledge-gap operations.
+INFO  [alembic.runtime.migration] Running downgrade C2_0011 -> C2_0010, Persist append-only Canonical V2 knowledge-gap operations.
+INFO  [alembic.runtime.migration] Running downgrade C2_0010 -> C2_0009, Persist typed and current Canonical V2 relationship projections.
+INFO  [alembic.runtime.migration] Running downgrade C2_0010 -> C2_0009, Persist typed and current Canonical V2 relationship projections.
+INFO  [alembic.runtime.migration] Running downgrade C2_0009 -> C2_0008, Persist typed release-scoped Professor, Company, Paper, and Patent projections.
+INFO  [alembic.runtime.migration] Running downgrade C2_0009 -> C2_0008, Persist typed release-scoped Professor, Company, Paper, and Patent projections.
+INFO  [alembic.runtime.migration] Running downgrade C2_0008 -> C2_0007, Preserve date-only versus instant validity precision.
+INFO  [alembic.runtime.migration] Running downgrade C2_0008 -> C2_0007, Preserve date-only versus instant validity precision.
+INFO  [alembic.runtime.migration] Running downgrade C2_0007 -> C2_0006, Bind human review decisions to immutable evidence and reviewer provenance.
+INFO  [alembic.runtime.migration] Running downgrade C2_0007 -> C2_0006, Bind human review decisions to immutable evidence and reviewer provenance.
+__ test_missing_parents_are_not_created_and_no_current_projection_is_durable ___
+
+target = _Target(database_url='postgresql+psycopg://miroflow@127.0.0.1:55458/miroflow_candidate_v2_pgtest_r1_s5b_52f4c8df', exp...er-fix/.agents/runs/rebuild-canonical-v2-knowledge-platform'), config=<alembic.config.Config object at 0x7f83d0da3920>)
+
+    def test_missing_parents_are_not_created_and_no_current_projection_is_durable(
+        target: _Target,
+    ) -> None:
+        result = _decision_result()
+        module = _postgres_module()
+        store = _store(target)
+    
+        with pytest.raises(module.CanonicalDecisionPersistenceError):
+            store.persist(result)
+        with pytest.raises(module.CanonicalDecisionNotFoundError):
+            store.load(RELEASE_ID, RUN_ID)
+    
+        with _connect(target) as connection:
+            assert (
+                connection.execute(
+                    "SELECT "
+                    "(SELECT count(*) FROM landing.evidence_artifact), "
+                    "(SELECT count(*) FROM landing.parser_run), "
+                    "(SELECT count(*) FROM landing.source_record), "
+                    "(SELECT count(*) FROM landing.source_error), "
+                    "(SELECT count(*) FROM landing.ingest_run), "
+                    "(SELECT count(*) FROM knowledge.release), "
+                    "(SELECT count(*) FROM knowledge.policy), "
+                    "(SELECT count(*) FROM knowledge.source_identity), "
+                    "(SELECT count(*) FROM knowledge.source_identity_record), "
+                    "(SELECT count(*) FROM knowledge.identity_decision), "
+                    "(SELECT count(*) FROM knowledge.canonical_identity), "
+                    "(SELECT count(*) FROM knowledge.relationship_type), "
+                    "(SELECT count(*) FROM knowledge.source_assertion), "
+                    "(SELECT count(*) FROM knowledge.relationship_assertion), "
+                    "(SELECT count(*) FROM knowledge.canonical_decision), "
+                    "(SELECT count(*) FROM knowledge.canonical_decision_assertion), "
+                    "(SELECT count(*) FROM knowledge.canonical_decision_constraint_outcome), "
+                    "(SELECT count(*) FROM knowledge.relationship_decision), "
+                    "(SELECT count(*) FROM knowledge.relationship_decision_assertion), "
+                    "(SELECT count(*) FROM "
+                    " knowledge.relationship_decision_constraint_outcome)"
+                ).fetchone()
+                == (0,) * 20
+            )
+            current_tables = connection.execute(
+                "SELECT table_schema, table_name FROM information_schema.tables "
+                "WHERE table_schema = ANY(%s) AND table_name ILIKE %s",
+                (
+                    [
+                        "landing",
+                        "knowledge",
+                        "publish",
+                        "professor",
+                        "company",
+                        "paper",
+                        "patent",
+                        "ops",
+                    ],
+                    "%current%",
+                ),
+            ).fetchall()
+>           assert current_tables == [("knowledge", "current_source_identity_assignment")]
+E           AssertionError: assert [('knowledge'...ection'), ...] == [('knowledge'..._assignment')]
+E             
+E             Left contains 6 more items, first extra item: ('company', 'current_projection')
+E             Use -v to get more diff
+
+tests/canonical_v2/test_canonical_decision_postgres.py:4002: AssertionError
+---------------------------- Captured stderr setup -----------------------------
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade  -> C2_0001, Create the clean Canonical V2 namespace baseline.
+INFO  [alembic.runtime.migration] Running upgrade  -> C2_0001, Create the clean Canonical V2 namespace baseline.
+INFO  [alembic.runtime.migration] Running upgrade C2_0001 -> C2_0002, Create shared evidence, decision, and release storage.
+INFO  [alembic.runtime.migration] Running upgrade C2_0001 -> C2_0002, Create shared evidence, decision, and release storage.
+INFO  [alembic.runtime.migration] Running upgrade C2_0002 -> C2_0003, Harden shared lineage, decision history, and append-only integrity.
+INFO  [alembic.runtime.migration] Running upgrade C2_0002 -> C2_0003, Harden shared lineage, decision history, and append-only integrity.
+INFO  [alembic.runtime.migration] Running upgrade C2_0003 -> C2_0004, Persist complete immutable EvidenceLanding runs.
+INFO  [alembic.runtime.migration] Running upgrade C2_0003 -> C2_0004, Persist complete immutable EvidenceLanding runs.
+INFO  [alembic.runtime.migration] Running upgrade C2_0004 -> C2_0005, Harden canonical decision evidence and append-only constraint outcomes.
+INFO  [alembic.runtime.migration] Running upgrade C2_0004 -> C2_0005, Harden canonical decision evidence and append-only constraint outcomes.
+INFO  [alembic.runtime.migration] Running upgrade C2_0005 -> C2_0006, Persist immutable offline canonical identity resolution projections.
+INFO  [alembic.runtime.migration] Running upgrade C2_0005 -> C2_0006, Persist immutable offline canonical identity resolution projections.
+INFO  [alembic.runtime.migration] Running upgrade C2_0006 -> C2_0007, Bind human review decisions to immutable evidence and reviewer provenance.
+INFO  [alembic.runtime.migration] Running upgrade C2_0006 -> C2_0007, Bind human review decisions to immutable evidence and reviewer provenance.
+INFO  [alembic.runtime.migration] Running upgrade C2_0007 -> C2_0008, Preserve date-only versus instant validity precision.
+INFO  [alembic.runtime.migration] Running upgrade C2_0007 -> C2_0008, Preserve date-only versus instant validity precision.
+INFO  [alembic.runtime.migration] Running upgrade C2_0008 -> C2_0009, Persist typed release-scoped Professor, Company, Paper, and Patent projections.
+INFO  [alembic.runtime.migration] Running upgrade C2_0008 -> C2_0009, Persist typed release-scoped Professor, Company, Paper, and Patent projections.
+INFO  [alembic.runtime.migration] Running upgrade C2_0009 -> C2_0010, Persist typed and current Canonical V2 relationship projections.
+INFO  [alembic.runtime.migration] Running upgrade C2_0009 -> C2_0010, Persist typed and current Canonical V2 relationship projections.
+INFO  [alembic.runtime.migration] Running upgrade C2_0010 -> C2_0011, Persist append-only Canonical V2 knowledge-gap operations.
+INFO  [alembic.runtime.migration] Running upgrade C2_0010 -> C2_0011, Persist append-only Canonical V2 knowledge-gap operations.
+INFO  [alembic.runtime.migration] Running upgrade C2_0011 -> C2_0012, Add company_name to the patent applicant sub-object table.
+INFO  [alembic.runtime.migration] Running upgrade C2_0011 -> C2_0012, Add company_name to the patent applicant sub-object table.
+INFO  [alembic.runtime.migration] Running upgrade C2_0012 -> C2_0013, Chunk oversized run snapshots instead of one jsonb value.
+INFO  [alembic.runtime.migration] Running upgrade C2_0012 -> C2_0013, Chunk oversized run snapshots instead of one jsonb value.
+================================ tests coverage ================================
+___________________________________ coverage ___________________________________
+
+Coverage HTML written to dir htmlcov
+- Generated html report: file:///home/longxiang/MiroThinker/.worktrees/rebuild-trigger-fix/apps/miroflow-agent/report.html -
+=========================== short test summary info ============================
+FAILED tests/canonical_v2/test_canonical_decision_postgres.py::test_store_and_c2_0007_downgrade_share_release_first_lock_order
+FAILED tests/canonical_v2/test_canonical_decision_postgres.py::test_missing_parents_are_not_created_and_no_current_projection_is_durable
+2 failed, 44 deselected in 12.73s
+..............................................                           [100%]
+==================================== PASSES ====================================
+______ test_c2_0007_adds_review_provenance_without_a_mutable_queue_table _______
+---------------------------- Captured stderr setup -----------------------------
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade  -> C2_0001, Create the clean Canonical V2 namespace baseline.
+INFO  [alembic.runtime.migration] Running upgrade  -> C2_0001, Create the clean Canonical V2 namespace baseline.
+INFO  [alembic.runtime.migration] Running upgrade C2_0001 -> C2_0002, Create shared evidence, decision, and release storage.
+INFO  [alembic.runtime.migration] Running upgrade C2_0001 -> C2_0002, Create shared evidence, decision, and release storage.
+INFO  [alembic.runtime.migration] Running upgrade C2_0002 -> C2_0003, Harden shared lineage, decision history, and append-only integrity.
+INFO  [alembic.runtime.migration] Running upgrade C2_0002 -> C2_0003, Harden shared lineage, decision history, and append-only integrity.
+INFO  [alembic.runtime.migration] Running upgrade C2_0003 -> C2_0004, Persist complete immutable EvidenceLanding runs.
+INFO  [alembic.runtime.migration] Running upgrade C2_0003 -> C2_0004, Persist complete immutable EvidenceLanding runs.
+INFO  [alembic.runtime.migration] Running upgrade C2_0004 -> C2_0005, Harden canonical decision evidence and append-only constraint outcomes.
+INFO  [alembic.runtime.migration] Running upgrade C2_0004 -> C2_0005, Harden canonical decision evidence and append-only constraint outcomes.
+INFO  [alembic.runtime.migration] Running upgrade C2_0005 -> C2_0006, Persist immutable offline canonical identity resolution projections.
+INFO  [alembic.runtime.migration] Running upgrade C2_0005 -> C2_0006, Persist immutable offline canonical identity resolution projections.
+INFO  [alembic.runtime.migration] Running upgrade C2_0006 -> C2_0007, Bind human review decisions to immutable evidence and reviewer provenance.
+INFO  [alembic.runtime.migration] Running upgrade C2_0006 -> C2_0007, Bind human review decisions to immutable evidence and reviewer provenance.
+INFO  [alembic.runtime.migration] Running upgrade C2_0007 -> C2_0008, Preserve date-only versus instant validity precision.
+INFO  [alembic.runtime.migration] Running upgrade C2_0007 -> C2_0008, Preserve date-only versus instant validity precision.
+----------------------------- Captured stderr call -----------------------------
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running downgrade C2_0008 -> C2_0007, Preserve date-only versus instant validity precision.
+INFO  [alembic.runtime.migration] Running downgrade C2_0008 -> C2_0007, Preserve date-only versus instant validity precision.
+INFO  [alembic.runtime.migration] Running downgrade C2_0007 -> C2_0006, Bind human review decisions to immutable evidence and reviewer provenance.
+INFO  [alembic.runtime.migration] Running downgrade C2_0007 -> C2_0006, Bind human review decisions to immutable evidence and reviewer provenance.
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade C2_0006 -> C2_0007, Bind human review decisions to immutable evidence and reviewer provenance.
+INFO  [alembic.runtime.migration] Running upgrade C2_0006 -> C2_0007, Bind human review decisions to immutable evidence and reviewer provenance.
+INFO  [alembic.runtime.migration] Running upgrade C2_0007 -> C2_0008, Preserve date-only versus instant validity precision.
+INFO  [alembic.runtime.migration] Running upgrade C2_0007 -> C2_0008, Preserve date-only versus instant validity precision.
+INFO  [alembic.runtime.migration] Running upgrade C2_0008 -> C2_0009, Persist typed release-scoped Professor, Company, Paper, and Patent projections.
+INFO  [alembic.runtime.migration] Running upgrade C2_0008 -> C2_0009, Persist typed release-scoped Professor, Company, Paper, and Patent projections.
+INFO  [alembic.runtime.migration] Running upgrade C2_0009 -> C2_0010, Persist typed and current Canonical V2 relationship projections.
+INFO  [alembic.runtime.migration] Running upgrade C2_0009 -> C2_0010, Persist typed and current Canonical V2 relationship projections.
+INFO  [alembic.runtime.migration] Running upgrade C2_0010 -> C2_0011, Persist append-only Canonical V2 knowledge-gap operations.
+INFO  [alembic.runtime.migration] Running upgrade C2_0010 -> C2_0011, Persist append-only Canonical V2 knowledge-gap operations.
+INFO  [alembic.runtime.migration] Running upgrade C2_0011 -> C2_0012, Add company_name to the patent applicant sub-object table.
+INFO  [alembic.runtime.migration] Running upgrade C2_0011 -> C2_0012, Add company_name to the patent applicant sub-object table.
+INFO  [alembic.runtime.migration] Running upgrade C2_0012 -> C2_0013, Chunk oversized run snapshots instead of one jsonb value.
+INFO  [alembic.runtime.migration] Running upgrade C2_0012 -> C2_0013, Chunk oversized run snapshots instead of one jsonb value.
+INFO  [alembic.runtime.migration] Running upgrade C2_0013 -> C2_0014, Skip per-row review-binding scans when a release has no reviewed rows.
+INFO  [alembic.runtime.migration] Running upgrade C2_0013 -> C2_0014, Skip per-row review-binding scans when a release has no reviewed rows.
+_____ test_c2_0007_upgrade_refuses_legacy_human_review_without_provenance ______
+---------------------------- Captured stderr setup -----------------------------
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade  -> C2_0001, Create the clean Canonical V2 namespace baseline.
+INFO  [alembic.runtime.migration] Running upgrade  -> C2_0001, Create the clean Canonical V2 namespace baseline.
+INFO  [alembic.runtime.migration] Running upgrade C2_0001 -> C2_0002, Create shared evidence, decision, and release storage.
+INFO  [alembic.runtime.migration] Running upgrade C2_0001 -> C2_0002, Create shared evidence, decision, and release storage.
+INFO  [alembic.runtime.migration] Running upgrade C2_0002 -> C2_0003, Harden shared lineage, decision history, and append-only integrity.
+INFO  [alembic.runtime.migration] Running upgrade C2_0002 -> C2_0003, Harden shared lineage, decision history, and append-only integrity.
+INFO  [alembic.runtime.migration] Running upgrade C2_0003 -> C2_0004, Persist complete immutable EvidenceLanding runs.
+INFO  [alembic.runtime.migration] Running upgrade C2_0003 -> C2_0004, Persist complete immutable EvidenceLanding runs.
+INFO  [alembic.runtime.migration] Running upgrade C2_0004 -> C2_0005, Harden canonical decision evidence and append-only constraint outcomes.
+INFO  [alembic.runtime.migration] Running upgrade C2_0004 -> C2_0005, Harden canonical decision evidence and append-only constraint outcomes.
+INFO  [alembic.runtime.migration] Running upgrade C2_0005 -> C2_0006, Persist immutable offline canonical identity resolution projections.
+INFO  [alembic.runtime.migration] Running upgrade C2_0005 -> C2_0006, Persist immutable offline canonical identity resolution projections.
+INFO  [alembic.runtime.migration] Running upgrade C2_0006 -> C2_0007, Bind human review decisions to immutable evidence and reviewer provenance.
+INFO  [alembic.runtime.migration] Running upgrade C2_0006 -> C2_0007, Bind human review decisions to immutable evidence and reviewer provenance.
+INFO  [alembic.runtime.migration] Running upgrade C2_0007 -> C2_0008, Preserve date-only versus instant validity precision.
+INFO  [alembic.runtime.migration] Running upgrade C2_0007 -> C2_0008, Preserve date-only versus instant validity precision.
+----------------------------- Captured stderr call -----------------------------
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running downgrade C2_0008 -> C2_0007, Preserve date-only versus instant validity precision.
+INFO  [alembic.runtime.migration] Running downgrade C2_0008 -> C2_0007, Preserve date-only versus instant validity precision.
+INFO  [alembic.runtime.migration] Running downgrade C2_0007 -> C2_0006, Bind human review decisions to immutable evidence and reviewer provenance.
+INFO  [alembic.runtime.migration] Running downgrade C2_0007 -> C2_0006, Bind human review decisions to immutable evidence and reviewer provenance.
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade C2_0006 -> C2_0007, Bind human review decisions to immutable evidence and reviewer provenance.
+INFO  [alembic.runtime.migration] Running upgrade C2_0006 -> C2_0007, Bind human review decisions to immutable evidence and reviewer provenance.
+__________ test_c2_0007_upgrade_refuses_an_existing_supersession_fork __________
+---------------------------- Captured stderr setup -----------------------------
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade  -> C2_0001, Create the clean Canonical V2 namespace baseline.
+INFO  [alembic.runtime.migration] Running upgrade  -> C2_0001, Create the clean Canonical V2 namespace baseline.
+INFO  [alembic.runtime.migration] Running upgrade C2_0001 -> C2_0002, Create shared evidence, decision, and release storage.
+INFO  [alembic.runtime.migration] Running upgrade C2_0001 -> C2_0002, Create shared evidence, decision, and release storage.
+INFO  [alembic.runtime.migration] Running upgrade C2_0002 -> C2_0003, Harden shared lineage, decision history, and append-only integrity.
+INFO  [alembic.runtime.migration] Running upgrade C2_0002 -> C2_0003, Harden shared lineage, decision history, and append-only integrity.
+INFO  [alembic.runtime.migration] Running upgrade C2_0003 -> C2_0004, Persist complete immutable EvidenceLanding runs.
+INFO  [alembic.runtime.migration] Running upgrade C2_0003 -> C2_0004, Persist complete immutable EvidenceLanding runs.
+INFO  [alembic.runtime.migration] Running upgrade C2_0004 -> C2_0005, Harden canonical decision evidence and append-only constraint outcomes.
+INFO  [alembic.runtime.migration] Running upgrade C2_0004 -> C2_0005, Harden canonical decision evidence and append-only constraint outcomes.
+INFO  [alembic.runtime.migration] Running upgrade C2_0005 -> C2_0006, Persist immutable offline canonical identity resolution projections.
+INFO  [alembic.runtime.migration] Running upgrade C2_0005 -> C2_0006, Persist immutable offline canonical identity resolution projections.
+INFO  [alembic.runtime.migration] Running upgrade C2_0006 -> C2_0007, Bind human review decisions to immutable evidence and reviewer provenance.
+INFO  [alembic.runtime.migration] Running upgrade C2_0006 -> C2_0007, Bind human review decisions to immutable evidence and reviewer provenance.
+INFO  [alembic.runtime.migration] Running upgrade C2_0007 -> C2_0008, Preserve date-only versus instant validity precision.
+INFO  [alembic.runtime.migration] Running upgrade C2_0007 -> C2_0008, Preserve date-only versus instant validity precision.
+----------------------------- Captured stderr call -----------------------------
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running downgrade C2_0008 -> C2_0007, Preserve date-only versus instant validity precision.
+INFO  [alembic.runtime.migration] Running downgrade C2_0008 -> C2_0007, Preserve date-only versus instant validity precision.
+INFO  [alembic.runtime.migration] Running downgrade C2_0007 -> C2_0006, Bind human review decisions to immutable evidence and reviewer provenance.
+INFO  [alembic.runtime.migration] Running downgrade C2_0007 -> C2_0006, Bind human review decisions to immutable evidence and reviewer provenance.
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade C2_0006 -> C2_0007, Bind human review decisions to immutable evidence and reviewer provenance.
+INFO  [alembic.runtime.migration] Running upgrade C2_0006 -> C2_0007, Bind human review decisions to immutable evidence and reviewer provenance.
+____________ test_c2_0007_upgrade_refuses_duplicate_existing_roots _____________
+---------------------------- Captured stderr setup -----------------------------
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade  -> C2_0001, Create the clean Canonical V2 namespace baseline.
+INFO  [alembic.runtime.migration] Running upgrade  -> C2_0001, Create the clean Canonical V2 namespace baseline.
+INFO  [alembic.runtime.migration] Running upgrade C2_0001 -> C2_0002, Create shared evidence, decision, and release storage.
+INFO  [alembic.runtime.migration] Running upgrade C2_0001 -> C2_0002, Create shared evidence, decision, and release storage.
+INFO  [alembic.runtime.migration] Running upgrade C2_0002 -> C2_0003, Harden shared lineage, decision history, and append-only integrity.
+INFO  [alembic.runtime.migration] Running upgrade C2_0002 -> C2_0003, Harden shared lineage, decision history, and append-only integrity.
+INFO  [alembic.runtime.migration] Running upgrade C2_0003 -> C2_0004, Persist complete immutable EvidenceLanding runs.
+INFO  [alembic.runtime.migration] Running upgrade C2_0003 -> C2_0004, Persist complete immutable EvidenceLanding runs.
+INFO  [alembic.runtime.migration] Running upgrade C2_0004 -> C2_0005, Harden canonical decision evidence and append-only constraint outcomes.
+INFO  [alembic.runtime.migration] Running upgrade C2_0004 -> C2_0005, Harden canonical decision evidence and append-only constraint outcomes.
+INFO  [alembic.runtime.migration] Running upgrade C2_0005 -> C2_0006, Persist immutable offline canonical identity resolution projections.
+INFO  [alembic.runtime.migration] Running upgrade C2_0005 -> C2_0006, Persist immutable offline canonical identity resolution projections.
+INFO  [alembic.runtime.migration] Running upgrade C2_0006 -> C2_0007, Bind human review decisions to immutable evidence and reviewer provenance.
+INFO  [alembic.runtime.migration] Running upgrade C2_0006 -> C2_0007, Bind human review decisions to immutable evidence and reviewer provenance.
+INFO  [alembic.runtime.migration] Running upgrade C2_0007 -> C2_0008, Preserve date-only versus instant validity precision.
+INFO  [alembic.runtime.migration] Running upgrade C2_0007 -> C2_0008, Preserve date-only versus instant validity precision.
+----------------------------- Captured stderr call -----------------------------
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running downgrade C2_0008 -> C2_0007, Preserve date-only versus instant validity precision.
+INFO  [alembic.runtime.migration] Running downgrade C2_0008 -> C2_0007, Preserve date-only versus instant validity precision.
+INFO  [alembic.runtime.migration] Running downgrade C2_0007 -> C2_0006, Bind human review decisions to immutable evidence and reviewer provenance.
+INFO  [alembic.runtime.migration] Running downgrade C2_0007 -> C2_0006, Bind human review decisions to immutable evidence and reviewer provenance.
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade C2_0006 -> C2_0007, Bind human review decisions to immutable evidence and reviewer provenance.
+INFO  [alembic.runtime.migration] Running upgrade C2_0006 -> C2_0007, Bind human review decisions to immutable evidence and reviewer provenance.
+_____________ test_c2_0007_upgrade_refuses_existing_release_cycle ______________
+---------------------------- Captured stderr setup -----------------------------
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade  -> C2_0001, Create the clean Canonical V2 namespace baseline.
+INFO  [alembic.runtime.migration] Running upgrade  -> C2_0001, Create the clean Canonical V2 namespace baseline.
+INFO  [alembic.runtime.migration] Running upgrade C2_0001 -> C2_0002, Create shared evidence, decision, and release storage.
+INFO  [alembic.runtime.migration] Running upgrade C2_0001 -> C2_0002, Create shared evidence, decision, and release storage.
+INFO  [alembic.runtime.migration] Running upgrade C2_0002 -> C2_0003, Harden shared lineage, decision history, and append-only integrity.
+INFO  [alembic.runtime.migration] Running upgrade C2_0002 -> C2_0003, Harden shared lineage, decision history, and append-only integrity.
+INFO  [alembic.runtime.migration] Running upgrade C2_0003 -> C2_0004, Persist complete immutable EvidenceLanding runs.
+INFO  [alembic.runtime.migration] Running upgrade C2_0003 -> C2_0004, Persist complete immutable EvidenceLanding runs.
+INFO  [alembic.runtime.migration] Running upgrade C2_0004 -> C2_0005, Harden canonical decision evidence and append-only constraint outcomes.
+INFO  [alembic.runtime.migration] Running upgrade C2_0004 -> C2_0005, Harden canonical decision evidence and append-only constraint outcomes.
+INFO  [alembic.runtime.migration] Running upgrade C2_0005 -> C2_0006, Persist immutable offline canonical identity resolution projections.
+INFO  [alembic.runtime.migration] Running upgrade C2_0005 -> C2_0006, Persist immutable offline canonical identity resolution projections.
+INFO  [alembic.runtime.migration] Running upgrade C2_0006 -> C2_0007, Bind human review decisions to immutable evidence and reviewer provenance.
+INFO  [alembic.runtime.migration] Running upgrade C2_0006 -> C2_0007, Bind human review decisions to immutable evidence and reviewer provenance.
+INFO  [alembic.runtime.migration] Running upgrade C2_0007 -> C2_0008, Preserve date-only versus instant validity precision.
+INFO  [alembic.runtime.migration] Running upgrade C2_0007 -> C2_0008, Preserve date-only versus instant validity precision.
+----------------------------- Captured stderr call -----------------------------
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running downgrade C2_0008 -> C2_0007, Preserve date-only versus instant validity precision.
+INFO  [alembic.runtime.migration] Running downgrade C2_0008 -> C2_0007, Preserve date-only versus instant validity precision.
+INFO  [alembic.runtime.migration] Running downgrade C2_0007 -> C2_0006, Bind human review decisions to immutable evidence and reviewer provenance.
+INFO  [alembic.runtime.migration] Running downgrade C2_0007 -> C2_0006, Bind human review decisions to immutable evidence and reviewer provenance.
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade C2_0006 -> C2_0007, Bind human review decisions to immutable evidence and reviewer provenance.
+INFO  [alembic.runtime.migration] Running upgrade C2_0006 -> C2_0007, Bind human review decisions to immutable evidence and reviewer provenance.
+_________ test_c2_0007_upgrade_refuses_non_ancestral_decision_lineage __________
+---------------------------- Captured stderr setup -----------------------------
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade  -> C2_0001, Create the clean Canonical V2 namespace baseline.
+INFO  [alembic.runtime.migration] Running upgrade  -> C2_0001, Create the clean Canonical V2 namespace baseline.
+INFO  [alembic.runtime.migration] Running upgrade C2_0001 -> C2_0002, Create shared evidence, decision, and release storage.
+INFO  [alembic.runtime.migration] Running upgrade C2_0001 -> C2_0002, Create shared evidence, decision, and release storage.
+INFO  [alembic.runtime.migration] Running upgrade C2_0002 -> C2_0003, Harden shared lineage, decision history, and append-only integrity.
+INFO  [alembic.runtime.migration] Running upgrade C2_0002 -> C2_0003, Harden shared lineage, decision history, and append-only integrity.
+INFO  [alembic.runtime.migration] Running upgrade C2_0003 -> C2_0004, Persist complete immutable EvidenceLanding runs.
+INFO  [alembic.runtime.migration] Running upgrade C2_0003 -> C2_0004, Persist complete immutable EvidenceLanding runs.
+INFO  [alembic.runtime.migration] Running upgrade C2_0004 -> C2_0005, Harden canonical decision evidence and append-only constraint outcomes.
+INFO  [alembic.runtime.migration] Running upgrade C2_0004 -> C2_0005, Harden canonical decision evidence and append-only constraint outcomes.
+INFO  [alembic.runtime.migration] Running upgrade C2_0005 -> C2_0006, Persist immutable offline canonical identity resolution projections.
+INFO  [alembic.runtime.migration] Running upgrade C2_0005 -> C2_0006, Persist immutable offline canonical identity resolution projections.
+INFO  [alembic.runtime.migration] Running upgrade C2_0006 -> C2_0007, Bind human review decisions to immutable evidence and reviewer provenance.
+INFO  [alembic.runtime.migration] Running upgrade C2_0006 -> C2_0007, Bind human review decisions to immutable evidence and reviewer provenance.
+INFO  [alembic.runtime.migration] Running upgrade C2_0007 -> C2_0008, Preserve date-only versus instant validity precision.
+INFO  [alembic.runtime.migration] Running upgrade C2_0007 -> C2_0008, Preserve date-only versus instant validity precision.
+----------------------------- Captured stderr call -----------------------------
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running downgrade C2_0008 -> C2_0007, Preserve date-only versus instant validity precision.
+INFO  [alembic.runtime.migration] Running downgrade C2_0008 -> C2_0007, Preserve date-only versus instant validity precision.
+INFO  [alembic.runtime.migration] Running downgrade C2_0007 -> C2_0006, Bind human review decisions to immutable evidence and reviewer provenance.
+INFO  [alembic.runtime.migration] Running downgrade C2_0007 -> C2_0006, Bind human review decisions to immutable evidence and reviewer provenance.
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade C2_0006 -> C2_0007, Bind human review decisions to immutable evidence and reviewer provenance.
+INFO  [alembic.runtime.migration] Running upgrade C2_0006 -> C2_0007, Bind human review decisions to immutable evidence and reviewer provenance.
+______ test_c2_0007_upgrade_refuses_relationship_lineage_metadata_change _______
+---------------------------- Captured stderr setup -----------------------------
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade  -> C2_0001, Create the clean Canonical V2 namespace baseline.
+INFO  [alembic.runtime.migration] Running upgrade  -> C2_0001, Create the clean Canonical V2 namespace baseline.
+INFO  [alembic.runtime.migration] Running upgrade C2_0001 -> C2_0002, Create shared evidence, decision, and release storage.
+INFO  [alembic.runtime.migration] Running upgrade C2_0001 -> C2_0002, Create shared evidence, decision, and release storage.
+INFO  [alembic.runtime.migration] Running upgrade C2_0002 -> C2_0003, Harden shared lineage, decision history, and append-only integrity.
+INFO  [alembic.runtime.migration] Running upgrade C2_0002 -> C2_0003, Harden shared lineage, decision history, and append-only integrity.
+INFO  [alembic.runtime.migration] Running upgrade C2_0003 -> C2_0004, Persist complete immutable EvidenceLanding runs.
+INFO  [alembic.runtime.migration] Running upgrade C2_0003 -> C2_0004, Persist complete immutable EvidenceLanding runs.
+INFO  [alembic.runtime.migration] Running upgrade C2_0004 -> C2_0005, Harden canonical decision evidence and append-only constraint outcomes.
+INFO  [alembic.runtime.migration] Running upgrade C2_0004 -> C2_0005, Harden canonical decision evidence and append-only constraint outcomes.
+INFO  [alembic.runtime.migration] Running upgrade C2_0005 -> C2_0006, Persist immutable offline canonical identity resolution projections.
+INFO  [alembic.runtime.migration] Running upgrade C2_0005 -> C2_0006, Persist immutable offline canonical identity resolution projections.
+INFO  [alembic.runtime.migration] Running upgrade C2_0006 -> C2_0007, Bind human review decisions to immutable evidence and reviewer provenance.
+INFO  [alembic.runtime.migration] Running upgrade C2_0006 -> C2_0007, Bind human review decisions to immutable evidence and reviewer provenance.
+INFO  [alembic.runtime.migration] Running upgrade C2_0007 -> C2_0008, Preserve date-only versus instant validity precision.
+INFO  [alembic.runtime.migration] Running upgrade C2_0007 -> C2_0008, Preserve date-only versus instant validity precision.
+----------------------------- Captured stderr call -----------------------------
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running downgrade C2_0008 -> C2_0007, Preserve date-only versus instant validity precision.
+INFO  [alembic.runtime.migration] Running downgrade C2_0008 -> C2_0007, Preserve date-only versus instant validity precision.
+INFO  [alembic.runtime.migration] Running downgrade C2_0007 -> C2_0006, Bind human review decisions to immutable evidence and reviewer provenance.
+INFO  [alembic.runtime.migration] Running downgrade C2_0007 -> C2_0006, Bind human review decisions to immutable evidence and reviewer provenance.
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade C2_0006 -> C2_0007, Bind human review decisions to immutable evidence and reviewer provenance.
+INFO  [alembic.runtime.migration] Running upgrade C2_0006 -> C2_0007, Bind human review decisions to immutable evidence and reviewer provenance.
+_ test_complete_field_and_relationship_result_round_trips_and_replays_exactly __
+---------------------------- Captured stderr setup -----------------------------
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade  -> C2_0001, Create the clean Canonical V2 namespace baseline.
+INFO  [alembic.runtime.migration] Running upgrade  -> C2_0001, Create the clean Canonical V2 namespace baseline.
+INFO  [alembic.runtime.migration] Running upgrade C2_0001 -> C2_0002, Create shared evidence, decision, and release storage.
+INFO  [alembic.runtime.migration] Running upgrade C2_0001 -> C2_0002, Create shared evidence, decision, and release storage.
+INFO  [alembic.runtime.migration] Running upgrade C2_0002 -> C2_0003, Harden shared lineage, decision history, and append-only integrity.
+INFO  [alembic.runtime.migration] Running upgrade C2_0002 -> C2_0003, Harden shared lineage, decision history, and append-only integrity.
+INFO  [alembic.runtime.migration] Running upgrade C2_0003 -> C2_0004, Persist complete immutable EvidenceLanding runs.
+INFO  [alembic.runtime.migration] Running upgrade C2_0003 -> C2_0004, Persist complete immutable EvidenceLanding runs.
+INFO  [alembic.runtime.migration] Running upgrade C2_0004 -> C2_0005, Harden canonical decision evidence and append-only constraint outcomes.
+INFO  [alembic.runtime.migration] Running upgrade C2_0004 -> C2_0005, Harden canonical decision evidence and append-only constraint outcomes.
+INFO  [alembic.runtime.migration] Running upgrade C2_0005 -> C2_0006, Persist immutable offline canonical identity resolution projections.
+INFO  [alembic.runtime.migration] Running upgrade C2_0005 -> C2_0006, Persist immutable offline canonical identity resolution projections.
+INFO  [alembic.runtime.migration] Running upgrade C2_0006 -> C2_0007, Bind human review decisions to immutable evidence and reviewer provenance.
+INFO  [alembic.runtime.migration] Running upgrade C2_0006 -> C2_0007, Bind human review decisions to immutable evidence and reviewer provenance.
+INFO  [alembic.runtime.migration] Running upgrade C2_0007 -> C2_0008, Preserve date-only versus instant validity precision.
+INFO  [alembic.runtime.migration] Running upgrade C2_0007 -> C2_0008, Preserve date-only versus instant validity precision.
+----------------------------- Captured stderr call -----------------------------
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running downgrade C2_0008 -> C2_0007, Preserve date-only versus instant validity precision.
+INFO  [alembic.runtime.migration] Running downgrade C2_0008 -> C2_0007, Preserve date-only versus instant validity precision.
+INFO  [alembic.runtime.migration] Running downgrade C2_0007 -> C2_0006, Bind human review decisions to immutable evidence and reviewer provenance.
+INFO  [alembic.runtime.migration] Running downgrade C2_0007 -> C2_0006, Bind human review decisions to immutable evidence and reviewer provenance.
+INFO  [alembic.runtime.migration] Running downgrade C2_0006 -> C2_0005, Persist immutable offline canonical identity resolution projections.
+INFO  [alembic.runtime.migration] Running downgrade C2_0006 -> C2_0005, Persist immutable offline canonical identity resolution projections.
+_______ test_human_review_provenance_and_release_history_restart_exactly _______
+---------------------------- Captured stderr setup -----------------------------
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade  -> C2_0001, Create the clean Canonical V2 namespace baseline.
+INFO  [alembic.runtime.migration] Running upgrade  -> C2_0001, Create the clean Canonical V2 namespace baseline.
+INFO  [alembic.runtime.migration] Running upgrade C2_0001 -> C2_0002, Create shared evidence, decision, and release storage.
+INFO  [alembic.runtime.migration] Running upgrade C2_0001 -> C2_0002, Create shared evidence, decision, and release storage.
+INFO  [alembic.runtime.migration] Running upgrade C2_0002 -> C2_0003, Harden shared lineage, decision history, and append-only integrity.
+INFO  [alembic.runtime.migration] Running upgrade C2_0002 -> C2_0003, Harden shared lineage, decision history, and append-only integrity.
+INFO  [alembic.runtime.migration] Running upgrade C2_0003 -> C2_0004, Persist complete immutable EvidenceLanding runs.
+INFO  [alembic.runtime.migration] Running upgrade C2_0003 -> C2_0004, Persist complete immutable EvidenceLanding runs.
+INFO  [alembic.runtime.migration] Running upgrade C2_0004 -> C2_0005, Harden canonical decision evidence and append-only constraint outcomes.
+INFO  [alembic.runtime.migration] Running upgrade C2_0004 -> C2_0005, Harden canonical decision evidence and append-only constraint outcomes.
+INFO  [alembic.runtime.migration] Running upgrade C2_0005 -> C2_0006, Persist immutable offline canonical identity resolution projections.
+INFO  [alembic.runtime.migration] Running upgrade C2_0005 -> C2_0006, Persist immutable offline canonical identity resolution projections.
+INFO  [alembic.runtime.migration] Running upgrade C2_0006 -> C2_0007, Bind human review decisions to immutable evidence and reviewer provenance.
+INFO  [alembic.runtime.migration] Running upgrade C2_0006 -> C2_0007, Bind human review decisions to immutable evidence and reviewer provenance.
+INFO  [alembic.runtime.migration] Running upgrade C2_0007 -> C2_0008, Preserve date-only versus instant validity precision.
+INFO  [alembic.runtime.migration] Running upgrade C2_0007 -> C2_0008, Preserve date-only versus instant validity precision.
+----------------------------- Captured stderr call -----------------------------
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running downgrade C2_0008 -> C2_0007, Preserve date-only versus instant validity precision.
+INFO  [alembic.runtime.migration] Running downgrade C2_0008 -> C2_0007, Preserve date-only versus instant validity precision.
+INFO  [alembic.runtime.migration] Running downgrade C2_0007 -> C2_0006, Bind human review decisions to immutable evidence and reviewer provenance.
+INFO  [alembic.runtime.migration] Running downgrade C2_0007 -> C2_0006, Bind human review decisions to immutable evidence and reviewer provenance.
+___ test_review_json_validator_rejects_null_weak_and_hash_tampered_payloads ____
+---------------------------- Captured stderr setup -----------------------------
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade  -> C2_0001, Create the clean Canonical V2 namespace baseline.
+INFO  [alembic.runtime.migration] Running upgrade  -> C2_0001, Create the clean Canonical V2 namespace baseline.
+INFO  [alembic.runtime.migration] Running upgrade C2_0001 -> C2_0002, Create shared evidence, decision, and release storage.
+INFO  [alembic.runtime.migration] Running upgrade C2_0001 -> C2_0002, Create shared evidence, decision, and release storage.
+INFO  [alembic.runtime.migration] Running upgrade C2_0002 -> C2_0003, Harden shared lineage, decision history, and append-only integrity.
+INFO  [alembic.runtime.migration] Running upgrade C2_0002 -> C2_0003, Harden shared lineage, decision history, and append-only integrity.
+INFO  [alembic.runtime.migration] Running upgrade C2_0003 -> C2_0004, Persist complete immutable EvidenceLanding runs.
+INFO  [alembic.runtime.migration] Running upgrade C2_0003 -> C2_0004, Persist complete immutable EvidenceLanding runs.
+INFO  [alembic.runtime.migration] Running upgrade C2_0004 -> C2_0005, Harden canonical decision evidence and append-only constraint outcomes.
+INFO  [alembic.runtime.migration] Running upgrade C2_0004 -> C2_0005, Harden canonical decision evidence and append-only constraint outcomes.
+INFO  [alembic.runtime.migration] Running upgrade C2_0005 -> C2_0006, Persist immutable offline canonical identity resolution projections.
+INFO  [alembic.runtime.migration] Running upgrade C2_0005 -> C2_0006, Persist immutable offline canonical identity resolution projections.
+INFO  [alembic.runtime.migration] Running upgrade C2_0006 -> C2_0007, Bind human review decisions to immutable evidence and reviewer provenance.
+INFO  [alembic.runtime.migration] Running upgrade C2_0006 -> C2_0007, Bind human review decisions to immutable evidence and reviewer provenance.
+INFO  [alembic.runtime.migration] Running upgrade C2_0007 -> C2_0008, Preserve date-only versus instant validity precision.
+INFO  [alembic.runtime.migration] Running upgrade C2_0007 -> C2_0008, Preserve date-only versus instant validity precision.
+_ test_direct_sql_review_rows_reject_null_hash_and_relational_cross_wiring[field] _
+---------------------------- Captured stderr setup -----------------------------
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade  -> C2_0001, Create the clean Canonical V2 namespace baseline.
+INFO  [alembic.runtime.migration] Running upgrade  -> C2_0001, Create the clean Canonical V2 namespace baseline.
+INFO  [alembic.runtime.migration] Running upgrade C2_0001 -> C2_0002, Create shared evidence, decision, and release storage.
+INFO  [alembic.runtime.migration] Running upgrade C2_0001 -> C2_0002, Create shared evidence, decision, and release storage.
+INFO  [alembic.runtime.migration] Running upgrade C2_0002 -> C2_0003, Harden shared lineage, decision history, and append-only integrity.
+INFO  [alembic.runtime.migration] Running upgrade C2_0002 -> C2_0003, Harden shared lineage, decision history, and append-only integrity.
+INFO  [alembic.runtime.migration] Running upgrade C2_0003 -> C2_0004, Persist complete immutable EvidenceLanding runs.
+INFO  [alembic.runtime.migration] Running upgrade C2_0003 -> C2_0004, Persist complete immutable EvidenceLanding runs.
+INFO  [alembic.runtime.migration] Running upgrade C2_0004 -> C2_0005, Harden canonical decision evidence and append-only constraint outcomes.
+INFO  [alembic.runtime.migration] Running upgrade C2_0004 -> C2_0005, Harden canonical decision evidence and append-only constraint outcomes.
+INFO  [alembic.runtime.migration] Running upgrade C2_0005 -> C2_0006, Persist immutable offline canonical identity resolution projections.
+INFO  [alembic.runtime.migration] Running upgrade C2_0005 -> C2_0006, Persist immutable offline canonical identity resolution projections.
+INFO  [alembic.runtime.migration] Running upgrade C2_0006 -> C2_0007, Bind human review decisions to immutable evidence and reviewer provenance.
+INFO  [alembic.runtime.migration] Running upgrade C2_0006 -> C2_0007, Bind human review decisions to immutable evidence and reviewer provenance.
+INFO  [alembic.runtime.migration] Running upgrade C2_0007 -> C2_0008, Preserve date-only versus instant validity precision.
+INFO  [alembic.runtime.migration] Running upgrade C2_0007 -> C2_0008, Preserve date-only versus instant validity precision.
+_ test_direct_sql_review_rows_reject_null_hash_and_relational_cross_wiring[relationship] _
+---------------------------- Captured stderr setup -----------------------------
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade  -> C2_0001, Create the clean Canonical V2 namespace baseline.
+INFO  [alembic.runtime.migration] Running upgrade  -> C2_0001, Create the clean Canonical V2 namespace baseline.
+INFO  [alembic.runtime.migration] Running upgrade C2_0001 -> C2_0002, Create shared evidence, decision, and release storage.
+INFO  [alembic.runtime.migration] Running upgrade C2_0001 -> C2_0002, Create shared evidence, decision, and release storage.
+INFO  [alembic.runtime.migration] Running upgrade C2_0002 -> C2_0003, Harden shared lineage, decision history, and append-only integrity.
+INFO  [alembic.runtime.migration] Running upgrade C2_0002 -> C2_0003, Harden shared lineage, decision history, and append-only integrity.
+INFO  [alembic.runtime.migration] Running upgrade C2_0003 -> C2_0004, Persist complete immutable EvidenceLanding runs.
+INFO  [alembic.runtime.migration] Running upgrade C2_0003 -> C2_0004, Persist complete immutable EvidenceLanding runs.
+INFO  [alembic.runtime.migration] Running upgrade C2_0004 -> C2_0005, Harden canonical decision evidence and append-only constraint outcomes.
+INFO  [alembic.runtime.migration] Running upgrade C2_0004 -> C2_0005, Harden canonical decision evidence and append-only constraint outcomes.
+INFO  [alembic.runtime.migration] Running upgrade C2_0005 -> C2_0006, Persist immutable offline canonical identity resolution projections.
+INFO  [alembic.runtime.migration] Running upgrade C2_0005 -> C2_0006, Persist immutable offline canonical identity resolution projections.
+INFO  [alembic.runtime.migration] Running upgrade C2_0006 -> C2_0007, Bind human review decisions to immutable evidence and reviewer provenance.
+INFO  [alembic.runtime.migration] Running upgrade C2_0006 -> C2_0007, Bind human review decisions to immutable evidence and reviewer provenance.
+INFO  [alembic.runtime.migration] Running upgrade C2_0007 -> C2_0008, Preserve date-only versus instant validity precision.
+INFO  [alembic.runtime.migration] Running upgrade C2_0007 -> C2_0008, Preserve date-only versus instant validity precision.
+_ test_concurrent_late_origin_edge_and_review_cannot_both_commit[field-canonical_decision_assertion-canonical_decision-field-rejected-candidate-trg_validate_field_human_review_assertion_binding] _
+---------------------------- Captured stderr setup -----------------------------
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade  -> C2_0001, Create the clean Canonical V2 namespace baseline.
+INFO  [alembic.runtime.migration] Running upgrade  -> C2_0001, Create the clean Canonical V2 namespace baseline.
+INFO  [alembic.runtime.migration] Running upgrade C2_0001 -> C2_0002, Create shared evidence, decision, and release storage.
+INFO  [alembic.runtime.migration] Running upgrade C2_0001 -> C2_0002, Create shared evidence, decision, and release storage.
+INFO  [alembic.runtime.migration] Running upgrade C2_0002 -> C2_0003, Harden shared lineage, decision history, and append-only integrity.
+INFO  [alembic.runtime.migration] Running upgrade C2_0002 -> C2_0003, Harden shared lineage, decision history, and append-only integrity.
+INFO  [alembic.runtime.migration] Running upgrade C2_0003 -> C2_0004, Persist complete immutable EvidenceLanding runs.
+INFO  [alembic.runtime.migration] Running upgrade C2_0003 -> C2_0004, Persist complete immutable EvidenceLanding runs.
+INFO  [alembic.runtime.migration] Running upgrade C2_0004 -> C2_0005, Harden canonical decision evidence and append-only constraint outcomes.
+INFO  [alembic.runtime.migration] Running upgrade C2_0004 -> C2_0005, Harden canonical decision evidence and append-only constraint outcomes.
+INFO  [alembic.runtime.migration] Running upgrade C2_0005 -> C2_0006, Persist immutable offline canonical identity resolution projections.
+INFO  [alembic.runtime.migration] Running upgrade C2_0005 -> C2_0006, Persist immutable offline canonical identity resolution projections.
+INFO  [alembic.runtime.migration] Running upgrade C2_0006 -> C2_0007, Bind human review decisions to immutable evidence and reviewer provenance.
+INFO  [alembic.runtime.migration] Running upgrade C2_0006 -> C2_0007, Bind human review decisions to immutable evidence and reviewer provenance.
+INFO  [alembic.runtime.migration] Running upgrade C2_0007 -> C2_0008, Preserve date-only versus instant validity precision.
+INFO  [alembic.runtime.migration] Running upgrade C2_0007 -> C2_0008, Preserve date-only versus instant validity precision.
+_ test_concurrent_late_origin_edge_and_review_cannot_both_commit[relationship-relationship_decision_assertion-relationship_decision-relation-late-review-race-candidate-trg_validate_relationship_human_review_assertion_binding] _
+---------------------------- Captured stderr setup -----------------------------
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade  -> C2_0001, Create the clean Canonical V2 namespace baseline.
+INFO  [alembic.runtime.migration] Running upgrade  -> C2_0001, Create the clean Canonical V2 namespace baseline.
+INFO  [alembic.runtime.migration] Running upgrade C2_0001 -> C2_0002, Create shared evidence, decision, and release storage.
+INFO  [alembic.runtime.migration] Running upgrade C2_0001 -> C2_0002, Create shared evidence, decision, and release storage.
+INFO  [alembic.runtime.migration] Running upgrade C2_0002 -> C2_0003, Harden shared lineage, decision history, and append-only integrity.
+INFO  [alembic.runtime.migration] Running upgrade C2_0002 -> C2_0003, Harden shared lineage, decision history, and append-only integrity.
+INFO  [alembic.runtime.migration] Running upgrade C2_0003 -> C2_0004, Persist complete immutable EvidenceLanding runs.
+INFO  [alembic.runtime.migration] Running upgrade C2_0003 -> C2_0004, Persist complete immutable EvidenceLanding runs.
+INFO  [alembic.runtime.migration] Running upgrade C2_0004 -> C2_0005, Harden canonical decision evidence and append-only constraint outcomes.
+INFO  [alembic.runtime.migration] Running upgrade C2_0004 -> C2_0005, Harden canonical decision evidence and append-only constraint outcomes.
+INFO  [alembic.runtime.migration] Running upgrade C2_0005 -> C2_0006, Persist immutable offline canonical identity resolution projections.
+INFO  [alembic.runtime.migration] Running upgrade C2_0005 -> C2_0006, Persist immutable offline canonical identity resolution projections.
+INFO  [alembic.runtime.migration] Running upgrade C2_0006 -> C2_0007, Bind human review decisions to immutable evidence and reviewer provenance.
+INFO  [alembic.runtime.migration] Running upgrade C2_0006 -> C2_0007, Bind human review decisions to immutable evidence and reviewer provenance.
+INFO  [alembic.runtime.migration] Running upgrade C2_0007 -> C2_0008, Preserve date-only versus instant validity precision.
+INFO  [alembic.runtime.migration] Running upgrade C2_0007 -> C2_0008, Preserve date-only versus instant validity precision.
+_____ test_release_lineage_is_immutable_while_state_progress_can_continue ______
+---------------------------- Captured stderr setup -----------------------------
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade  -> C2_0001, Create the clean Canonical V2 namespace baseline.
+INFO  [alembic.runtime.migration] Running upgrade  -> C2_0001, Create the clean Canonical V2 namespace baseline.
+INFO  [alembic.runtime.migration] Running upgrade C2_0001 -> C2_0002, Create shared evidence, decision, and release storage.
+INFO  [alembic.runtime.migration] Running upgrade C2_0001 -> C2_0002, Create shared evidence, decision, and release storage.
+INFO  [alembic.runtime.migration] Running upgrade C2_0002 -> C2_0003, Harden shared lineage, decision history, and append-only integrity.
+INFO  [alembic.runtime.migration] Running upgrade C2_0002 -> C2_0003, Harden shared lineage, decision history, and append-only integrity.
+INFO  [alembic.runtime.migration] Running upgrade C2_0003 -> C2_0004, Persist complete immutable EvidenceLanding runs.
+INFO  [alembic.runtime.migration] Running upgrade C2_0003 -> C2_0004, Persist complete immutable EvidenceLanding runs.
+INFO  [alembic.runtime.migration] Running upgrade C2_0004 -> C2_0005, Harden canonical decision evidence and append-only constraint outcomes.
+INFO  [alembic.runtime.migration] Running upgrade C2_0004 -> C2_0005, Harden canonical decision evidence and append-only constraint outcomes.
+INFO  [alembic.runtime.migration] Running upgrade C2_0005 -> C2_0006, Persist immutable offline canonical identity resolution projections.
+INFO  [alembic.runtime.migration] Running upgrade C2_0005 -> C2_0006, Persist immutable offline canonical identity resolution projections.
+INFO  [alembic.runtime.migration] Running upgrade C2_0006 -> C2_0007, Bind human review decisions to immutable evidence and reviewer provenance.
+INFO  [alembic.runtime.migration] Running upgrade C2_0006 -> C2_0007, Bind human review decisions to immutable evidence and reviewer provenance.
+INFO  [alembic.runtime.migration] Running upgrade C2_0007 -> C2_0008, Preserve date-only versus instant validity precision.
+INFO  [alembic.runtime.migration] Running upgrade C2_0007 -> C2_0008, Preserve date-only versus instant validity precision.
+___________ test_stale_supersession_branch_rolls_back_before_commit ____________
+---------------------------- Captured stderr setup -----------------------------
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade  -> C2_0001, Create the clean Canonical V2 namespace baseline.
+INFO  [alembic.runtime.migration] Running upgrade  -> C2_0001, Create the clean Canonical V2 namespace baseline.
+INFO  [alembic.runtime.migration] Running upgrade C2_0001 -> C2_0002, Create shared evidence, decision, and release storage.
+INFO  [alembic.runtime.migration] Running upgrade C2_0001 -> C2_0002, Create shared evidence, decision, and release storage.
+INFO  [alembic.runtime.migration] Running upgrade C2_0002 -> C2_0003, Harden shared lineage, decision history, and append-only integrity.
+INFO  [alembic.runtime.migration] Running upgrade C2_0002 -> C2_0003, Harden shared lineage, decision history, and append-only integrity.
+INFO  [alembic.runtime.migration] Running upgrade C2_0003 -> C2_0004, Persist complete immutable EvidenceLanding runs.
+INFO  [alembic.runtime.migration] Running upgrade C2_0003 -> C2_0004, Persist complete immutable EvidenceLanding runs.
+INFO  [alembic.runtime.migration] Running upgrade C2_0004 -> C2_0005, Harden canonical decision evidence and append-only constraint outcomes.
+INFO  [alembic.runtime.migration] Running upgrade C2_0004 -> C2_0005, Harden canonical decision evidence and append-only constraint outcomes.
+INFO  [alembic.runtime.migration] Running upgrade C2_0005 -> C2_0006, Persist immutable offline canonical identity resolution projections.
+INFO  [alembic.runtime.migration] Running upgrade C2_0005 -> C2_0006, Persist immutable offline canonical identity resolution projections.
+INFO  [alembic.runtime.migration] Running upgrade C2_0006 -> C2_0007, Bind human review decisions to immutable evidence and reviewer provenance.
+INFO  [alembic.runtime.migration] Running upgrade C2_0006 -> C2_0007, Bind human review decisions to immutable evidence and reviewer provenance.
+INFO  [alembic.runtime.migration] Running upgrade C2_0007 -> C2_0008, Preserve date-only versus instant validity precision.
+INFO  [alembic.runtime.migration] Running upgrade C2_0007 -> C2_0008, Preserve date-only versus instant validity precision.
+______________ test_unlinked_later_root_rolls_back_before_commit _______________
+---------------------------- Captured stderr setup -----------------------------
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade  -> C2_0001, Create the clean Canonical V2 namespace baseline.
+INFO  [alembic.runtime.migration] Running upgrade  -> C2_0001, Create the clean Canonical V2 namespace baseline.
+INFO  [alembic.runtime.migration] Running upgrade C2_0001 -> C2_0002, Create shared evidence, decision, and release storage.
+INFO  [alembic.runtime.migration] Running upgrade C2_0001 -> C2_0002, Create shared evidence, decision, and release storage.
+INFO  [alembic.runtime.migration] Running upgrade C2_0002 -> C2_0003, Harden shared lineage, decision history, and append-only integrity.
+INFO  [alembic.runtime.migration] Running upgrade C2_0002 -> C2_0003, Harden shared lineage, decision history, and append-only integrity.
+INFO  [alembic.runtime.migration] Running upgrade C2_0003 -> C2_0004, Persist complete immutable EvidenceLanding runs.
+INFO  [alembic.runtime.migration] Running upgrade C2_0003 -> C2_0004, Persist complete immutable EvidenceLanding runs.
+INFO  [alembic.runtime.migration] Running upgrade C2_0004 -> C2_0005, Harden canonical decision evidence and append-only constraint outcomes.
+INFO  [alembic.runtime.migration] Running upgrade C2_0004 -> C2_0005, Harden canonical decision evidence and append-only constraint outcomes.
+INFO  [alembic.runtime.migration] Running upgrade C2_0005 -> C2_0006, Persist immutable offline canonical identity resolution projections.
+INFO  [alembic.runtime.migration] Running upgrade C2_0005 -> C2_0006, Persist immutable offline canonical identity resolution projections.
+INFO  [alembic.runtime.migration] Running upgrade C2_0006 -> C2_0007, Bind human review decisions to immutable evidence and reviewer provenance.
+INFO  [alembic.runtime.migration] Running upgrade C2_0006 -> C2_0007, Bind human review decisions to immutable evidence and reviewer provenance.
+INFO  [alembic.runtime.migration] Running upgrade C2_0007 -> C2_0008, Preserve date-only versus instant validity precision.
+INFO  [alembic.runtime.migration] Running upgrade C2_0007 -> C2_0008, Preserve date-only versus instant validity precision.
+______________ test_concurrent_duplicate_roots_cannot_both_commit ______________
+---------------------------- Captured stderr setup -----------------------------
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade  -> C2_0001, Create the clean Canonical V2 namespace baseline.
+INFO  [alembic.runtime.migration] Running upgrade  -> C2_0001, Create the clean Canonical V2 namespace baseline.
+INFO  [alembic.runtime.migration] Running upgrade C2_0001 -> C2_0002, Create shared evidence, decision, and release storage.
+INFO  [alembic.runtime.migration] Running upgrade C2_0001 -> C2_0002, Create shared evidence, decision, and release storage.
+INFO  [alembic.runtime.migration] Running upgrade C2_0002 -> C2_0003, Harden shared lineage, decision history, and append-only integrity.
+INFO  [alembic.runtime.migration] Running upgrade C2_0002 -> C2_0003, Harden shared lineage, decision history, and append-only integrity.
+INFO  [alembic.runtime.migration] Running upgrade C2_0003 -> C2_0004, Persist complete immutable EvidenceLanding runs.
+INFO  [alembic.runtime.migration] Running upgrade C2_0003 -> C2_0004, Persist complete immutable EvidenceLanding runs.
+INFO  [alembic.runtime.migration] Running upgrade C2_0004 -> C2_0005, Harden canonical decision evidence and append-only constraint outcomes.
+INFO  [alembic.runtime.migration] Running upgrade C2_0004 -> C2_0005, Harden canonical decision evidence and append-only constraint outcomes.
+INFO  [alembic.runtime.migration] Running upgrade C2_0005 -> C2_0006, Persist immutable offline canonical identity resolution projections.
+INFO  [alembic.runtime.migration] Running upgrade C2_0005 -> C2_0006, Persist immutable offline canonical identity resolution projections.
+INFO  [alembic.runtime.migration] Running upgrade C2_0006 -> C2_0007, Bind human review decisions to immutable evidence and reviewer provenance.
+INFO  [alembic.runtime.migration] Running upgrade C2_0006 -> C2_0007, Bind human review decisions to immutable evidence and reviewer provenance.
+INFO  [alembic.runtime.migration] Running upgrade C2_0007 -> C2_0008, Preserve date-only versus instant validity precision.
+INFO  [alembic.runtime.migration] Running upgrade C2_0007 -> C2_0008, Preserve date-only versus instant validity precision.
+______ test_c2_0007_direct_sql_rejects_non_ancestral_and_metadata_lineage ______
+---------------------------- Captured stderr setup -----------------------------
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade  -> C2_0001, Create the clean Canonical V2 namespace baseline.
+INFO  [alembic.runtime.migration] Running upgrade  -> C2_0001, Create the clean Canonical V2 namespace baseline.
+INFO  [alembic.runtime.migration] Running upgrade C2_0001 -> C2_0002, Create shared evidence, decision, and release storage.
+INFO  [alembic.runtime.migration] Running upgrade C2_0001 -> C2_0002, Create shared evidence, decision, and release storage.
+INFO  [alembic.runtime.migration] Running upgrade C2_0002 -> C2_0003, Harden shared lineage, decision history, and append-only integrity.
+INFO  [alembic.runtime.migration] Running upgrade C2_0002 -> C2_0003, Harden shared lineage, decision history, and append-only integrity.
+INFO  [alembic.runtime.migration] Running upgrade C2_0003 -> C2_0004, Persist complete immutable EvidenceLanding runs.
+INFO  [alembic.runtime.migration] Running upgrade C2_0003 -> C2_0004, Persist complete immutable EvidenceLanding runs.
+INFO  [alembic.runtime.migration] Running upgrade C2_0004 -> C2_0005, Harden canonical decision evidence and append-only constraint outcomes.
+INFO  [alembic.runtime.migration] Running upgrade C2_0004 -> C2_0005, Harden canonical decision evidence and append-only constraint outcomes.
+INFO  [alembic.runtime.migration] Running upgrade C2_0005 -> C2_0006, Persist immutable offline canonical identity resolution projections.
+INFO  [alembic.runtime.migration] Running upgrade C2_0005 -> C2_0006, Persist immutable offline canonical identity resolution projections.
+INFO  [alembic.runtime.migration] Running upgrade C2_0006 -> C2_0007, Bind human review decisions to immutable evidence and reviewer provenance.
+INFO  [alembic.runtime.migration] Running upgrade C2_0006 -> C2_0007, Bind human review decisions to immutable evidence and reviewer provenance.
+INFO  [alembic.runtime.migration] Running upgrade C2_0007 -> C2_0008, Preserve date-only versus instant validity precision.
+INFO  [alembic.runtime.migration] Running upgrade C2_0007 -> C2_0008, Preserve date-only versus instant validity precision.
+___________ test_history_load_uses_one_repeatable_read_only_snapshot ___________
+---------------------------- Captured stderr setup -----------------------------
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade  -> C2_0001, Create the clean Canonical V2 namespace baseline.
+INFO  [alembic.runtime.migration] Running upgrade  -> C2_0001, Create the clean Canonical V2 namespace baseline.
+INFO  [alembic.runtime.migration] Running upgrade C2_0001 -> C2_0002, Create shared evidence, decision, and release storage.
+INFO  [alembic.runtime.migration] Running upgrade C2_0001 -> C2_0002, Create shared evidence, decision, and release storage.
+INFO  [alembic.runtime.migration] Running upgrade C2_0002 -> C2_0003, Harden shared lineage, decision history, and append-only integrity.
+INFO  [alembic.runtime.migration] Running upgrade C2_0002 -> C2_0003, Harden shared lineage, decision history, and append-only integrity.
+INFO  [alembic.runtime.migration] Running upgrade C2_0003 -> C2_0004, Persist complete immutable EvidenceLanding runs.
+INFO  [alembic.runtime.migration] Running upgrade C2_0003 -> C2_0004, Persist complete immutable EvidenceLanding runs.
+INFO  [alembic.runtime.migration] Running upgrade C2_0004 -> C2_0005, Harden canonical decision evidence and append-only constraint outcomes.
+INFO  [alembic.runtime.migration] Running upgrade C2_0004 -> C2_0005, Harden canonical decision evidence and append-only constraint outcomes.
+INFO  [alembic.runtime.migration] Running upgrade C2_0005 -> C2_0006, Persist immutable offline canonical identity resolution projections.
+INFO  [alembic.runtime.migration] Running upgrade C2_0005 -> C2_0006, Persist immutable offline canonical identity resolution projections.
+INFO  [alembic.runtime.migration] Running upgrade C2_0006 -> C2_0007, Bind human review decisions to immutable evidence and reviewer provenance.
+INFO  [alembic.runtime.migration] Running upgrade C2_0006 -> C2_0007, Bind human review decisions to immutable evidence and reviewer provenance.
+INFO  [alembic.runtime.migration] Running upgrade C2_0007 -> C2_0008, Preserve date-only versus instant validity precision.
+INFO  [alembic.runtime.migration] Running upgrade C2_0007 -> C2_0008, Preserve date-only versus instant validity precision.
+_____ test_temporal_relationship_history_restarts_with_only_as_of_current ______
+---------------------------- Captured stderr setup -----------------------------
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade  -> C2_0001, Create the clean Canonical V2 namespace baseline.
+INFO  [alembic.runtime.migration] Running upgrade  -> C2_0001, Create the clean Canonical V2 namespace baseline.
+INFO  [alembic.runtime.migration] Running upgrade C2_0001 -> C2_0002, Create shared evidence, decision, and release storage.
+INFO  [alembic.runtime.migration] Running upgrade C2_0001 -> C2_0002, Create shared evidence, decision, and release storage.
+INFO  [alembic.runtime.migration] Running upgrade C2_0002 -> C2_0003, Harden shared lineage, decision history, and append-only integrity.
+INFO  [alembic.runtime.migration] Running upgrade C2_0002 -> C2_0003, Harden shared lineage, decision history, and append-only integrity.
+INFO  [alembic.runtime.migration] Running upgrade C2_0003 -> C2_0004, Persist complete immutable EvidenceLanding runs.
+INFO  [alembic.runtime.migration] Running upgrade C2_0003 -> C2_0004, Persist complete immutable EvidenceLanding runs.
+INFO  [alembic.runtime.migration] Running upgrade C2_0004 -> C2_0005, Harden canonical decision evidence and append-only constraint outcomes.
+INFO  [alembic.runtime.migration] Running upgrade C2_0004 -> C2_0005, Harden canonical decision evidence and append-only constraint outcomes.
+INFO  [alembic.runtime.migration] Running upgrade C2_0005 -> C2_0006, Persist immutable offline canonical identity resolution projections.
+INFO  [alembic.runtime.migration] Running upgrade C2_0005 -> C2_0006, Persist immutable offline canonical identity resolution projections.
+INFO  [alembic.runtime.migration] Running upgrade C2_0006 -> C2_0007, Bind human review decisions to immutable evidence and reviewer provenance.
+INFO  [alembic.runtime.migration] Running upgrade C2_0006 -> C2_0007, Bind human review decisions to immutable evidence and reviewer provenance.
+INFO  [alembic.runtime.migration] Running upgrade C2_0007 -> C2_0008, Preserve date-only versus instant validity precision.
+INFO  [alembic.runtime.migration] Running upgrade C2_0007 -> C2_0008, Preserve date-only versus instant validity precision.
+___ test_date_only_temporal_precision_restarts_without_utc_midnight_coercion ___
+---------------------------- Captured stderr setup -----------------------------
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade  -> C2_0001, Create the clean Canonical V2 namespace baseline.
+INFO  [alembic.runtime.migration] Running upgrade  -> C2_0001, Create the clean Canonical V2 namespace baseline.
+INFO  [alembic.runtime.migration] Running upgrade C2_0001 -> C2_0002, Create shared evidence, decision, and release storage.
+INFO  [alembic.runtime.migration] Running upgrade C2_0001 -> C2_0002, Create shared evidence, decision, and release storage.
+INFO  [alembic.runtime.migration] Running upgrade C2_0002 -> C2_0003, Harden shared lineage, decision history, and append-only integrity.
+INFO  [alembic.runtime.migration] Running upgrade C2_0002 -> C2_0003, Harden shared lineage, decision history, and append-only integrity.
+INFO  [alembic.runtime.migration] Running upgrade C2_0003 -> C2_0004, Persist complete immutable EvidenceLanding runs.
+INFO  [alembic.runtime.migration] Running upgrade C2_0003 -> C2_0004, Persist complete immutable EvidenceLanding runs.
+INFO  [alembic.runtime.migration] Running upgrade C2_0004 -> C2_0005, Harden canonical decision evidence and append-only constraint outcomes.
+INFO  [alembic.runtime.migration] Running upgrade C2_0004 -> C2_0005, Harden canonical decision evidence and append-only constraint outcomes.
+INFO  [alembic.runtime.migration] Running upgrade C2_0005 -> C2_0006, Persist immutable offline canonical identity resolution projections.
+INFO  [alembic.runtime.migration] Running upgrade C2_0005 -> C2_0006, Persist immutable offline canonical identity resolution projections.
+INFO  [alembic.runtime.migration] Running upgrade C2_0006 -> C2_0007, Bind human review decisions to immutable evidence and reviewer provenance.
+INFO  [alembic.runtime.migration] Running upgrade C2_0006 -> C2_0007, Bind human review decisions to immutable evidence and reviewer provenance.
+INFO  [alembic.runtime.migration] Running upgrade C2_0007 -> C2_0008, Preserve date-only versus instant validity precision.
+INFO  [alembic.runtime.migration] Running upgrade C2_0007 -> C2_0008, Preserve date-only versus instant validity precision.
+_______ test_c2_0008_backfills_and_rehashes_existing_instant_assertions ________
+---------------------------- Captured stderr setup -----------------------------
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade  -> C2_0001, Create the clean Canonical V2 namespace baseline.
+INFO  [alembic.runtime.migration] Running upgrade  -> C2_0001, Create the clean Canonical V2 namespace baseline.
+INFO  [alembic.runtime.migration] Running upgrade C2_0001 -> C2_0002, Create shared evidence, decision, and release storage.
+INFO  [alembic.runtime.migration] Running upgrade C2_0001 -> C2_0002, Create shared evidence, decision, and release storage.
+INFO  [alembic.runtime.migration] Running upgrade C2_0002 -> C2_0003, Harden shared lineage, decision history, and append-only integrity.
+INFO  [alembic.runtime.migration] Running upgrade C2_0002 -> C2_0003, Harden shared lineage, decision history, and append-only integrity.
+INFO  [alembic.runtime.migration] Running upgrade C2_0003 -> C2_0004, Persist complete immutable EvidenceLanding runs.
+INFO  [alembic.runtime.migration] Running upgrade C2_0003 -> C2_0004, Persist complete immutable EvidenceLanding runs.
+INFO  [alembic.runtime.migration] Running upgrade C2_0004 -> C2_0005, Harden canonical decision evidence and append-only constraint outcomes.
+INFO  [alembic.runtime.migration] Running upgrade C2_0004 -> C2_0005, Harden canonical decision evidence and append-only constraint outcomes.
+INFO  [alembic.runtime.migration] Running upgrade C2_0005 -> C2_0006, Persist immutable offline canonical identity resolution projections.
+INFO  [alembic.runtime.migration] Running upgrade C2_0005 -> C2_0006, Persist immutable offline canonical identity resolution projections.
+INFO  [alembic.runtime.migration] Running upgrade C2_0006 -> C2_0007, Bind human review decisions to immutable evidence and reviewer provenance.
+INFO  [alembic.runtime.migration] Running upgrade C2_0006 -> C2_0007, Bind human review decisions to immutable evidence and reviewer provenance.
+INFO  [alembic.runtime.migration] Running upgrade C2_0007 -> C2_0008, Preserve date-only versus instant validity precision.
+INFO  [alembic.runtime.migration] Running upgrade C2_0007 -> C2_0008, Preserve date-only versus instant validity precision.
+----------------------------- Captured stderr call -----------------------------
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running downgrade C2_0008 -> C2_0007, Preserve date-only versus instant validity precision.
+INFO  [alembic.runtime.migration] Running downgrade C2_0008 -> C2_0007, Preserve date-only versus instant validity precision.
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade C2_0007 -> C2_0008, Preserve date-only versus instant validity precision.
+INFO  [alembic.runtime.migration] Running upgrade C2_0007 -> C2_0008, Preserve date-only versus instant validity precision.
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running downgrade C2_0008 -> C2_0007, Preserve date-only versus instant validity precision.
+INFO  [alembic.runtime.migration] Running downgrade C2_0008 -> C2_0007, Preserve date-only versus instant validity precision.
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade C2_0007 -> C2_0008, Preserve date-only versus instant validity precision.
+INFO  [alembic.runtime.migration] Running upgrade C2_0007 -> C2_0008, Preserve date-only versus instant validity precision.
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running downgrade C2_0008 -> C2_0007, Preserve date-only versus instant validity precision.
+INFO  [alembic.runtime.migration] Running downgrade C2_0008 -> C2_0007, Preserve date-only versus instant validity precision.
+_________ test_c2_0008_refuses_to_rehash_referenced_temporal_evidence __________
+---------------------------- Captured stderr setup -----------------------------
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade  -> C2_0001, Create the clean Canonical V2 namespace baseline.
+INFO  [alembic.runtime.migration] Running upgrade  -> C2_0001, Create the clean Canonical V2 namespace baseline.
+INFO  [alembic.runtime.migration] Running upgrade C2_0001 -> C2_0002, Create shared evidence, decision, and release storage.
+INFO  [alembic.runtime.migration] Running upgrade C2_0001 -> C2_0002, Create shared evidence, decision, and release storage.
+INFO  [alembic.runtime.migration] Running upgrade C2_0002 -> C2_0003, Harden shared lineage, decision history, and append-only integrity.
+INFO  [alembic.runtime.migration] Running upgrade C2_0002 -> C2_0003, Harden shared lineage, decision history, and append-only integrity.
+INFO  [alembic.runtime.migration] Running upgrade C2_0003 -> C2_0004, Persist complete immutable EvidenceLanding runs.
+INFO  [alembic.runtime.migration] Running upgrade C2_0003 -> C2_0004, Persist complete immutable EvidenceLanding runs.
+INFO  [alembic.runtime.migration] Running upgrade C2_0004 -> C2_0005, Harden canonical decision evidence and append-only constraint outcomes.
+INFO  [alembic.runtime.migration] Running upgrade C2_0004 -> C2_0005, Harden canonical decision evidence and append-only constraint outcomes.
+INFO  [alembic.runtime.migration] Running upgrade C2_0005 -> C2_0006, Persist immutable offline canonical identity resolution projections.
+INFO  [alembic.runtime.migration] Running upgrade C2_0005 -> C2_0006, Persist immutable offline canonical identity resolution projections.
+INFO  [alembic.runtime.migration] Running upgrade C2_0006 -> C2_0007, Bind human review decisions to immutable evidence and reviewer provenance.
+INFO  [alembic.runtime.migration] Running upgrade C2_0006 -> C2_0007, Bind human review decisions to immutable evidence and reviewer provenance.
+INFO  [alembic.runtime.migration] Running upgrade C2_0007 -> C2_0008, Preserve date-only versus instant validity precision.
+INFO  [alembic.runtime.migration] Running upgrade C2_0007 -> C2_0008, Preserve date-only versus instant validity precision.
+----------------------------- Captured stderr call -----------------------------
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running downgrade C2_0008 -> C2_0007, Preserve date-only versus instant validity precision.
+INFO  [alembic.runtime.migration] Running downgrade C2_0008 -> C2_0007, Preserve date-only versus instant validity precision.
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade C2_0007 -> C2_0008, Preserve date-only versus instant validity precision.
+INFO  [alembic.runtime.migration] Running upgrade C2_0007 -> C2_0008, Preserve date-only versus instant validity precision.
+___________ test_temporal_precision_tampering_is_rejected_on_restart ___________
+---------------------------- Captured stderr setup -----------------------------
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade  -> C2_0001, Create the clean Canonical V2 namespace baseline.
+INFO  [alembic.runtime.migration] Running upgrade  -> C2_0001, Create the clean Canonical V2 namespace baseline.
+INFO  [alembic.runtime.migration] Running upgrade C2_0001 -> C2_0002, Create shared evidence, decision, and release storage.
+INFO  [alembic.runtime.migration] Running upgrade C2_0001 -> C2_0002, Create shared evidence, decision, and release storage.
+INFO  [alembic.runtime.migration] Running upgrade C2_0002 -> C2_0003, Harden shared lineage, decision history, and append-only integrity.
+INFO  [alembic.runtime.migration] Running upgrade C2_0002 -> C2_0003, Harden shared lineage, decision history, and append-only integrity.
+INFO  [alembic.runtime.migration] Running upgrade C2_0003 -> C2_0004, Persist complete immutable EvidenceLanding runs.
+INFO  [alembic.runtime.migration] Running upgrade C2_0003 -> C2_0004, Persist complete immutable EvidenceLanding runs.
+INFO  [alembic.runtime.migration] Running upgrade C2_0004 -> C2_0005, Harden canonical decision evidence and append-only constraint outcomes.
+INFO  [alembic.runtime.migration] Running upgrade C2_0004 -> C2_0005, Harden canonical decision evidence and append-only constraint outcomes.
+INFO  [alembic.runtime.migration] Running upgrade C2_0005 -> C2_0006, Persist immutable offline canonical identity resolution projections.
+INFO  [alembic.runtime.migration] Running upgrade C2_0005 -> C2_0006, Persist immutable offline canonical identity resolution projections.
+INFO  [alembic.runtime.migration] Running upgrade C2_0006 -> C2_0007, Bind human review decisions to immutable evidence and reviewer provenance.
+INFO  [alembic.runtime.migration] Running upgrade C2_0006 -> C2_0007, Bind human review decisions to immutable evidence and reviewer provenance.
+INFO  [alembic.runtime.migration] Running upgrade C2_0007 -> C2_0008, Preserve date-only versus instant validity precision.
+INFO  [alembic.runtime.migration] Running upgrade C2_0007 -> C2_0008, Preserve date-only versus instant validity precision.
+___________ test_c2_0008_downgrade_refuses_to_discard_date_precision ___________
+---------------------------- Captured stderr setup -----------------------------
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade  -> C2_0001, Create the clean Canonical V2 namespace baseline.
+INFO  [alembic.runtime.migration] Running upgrade  -> C2_0001, Create the clean Canonical V2 namespace baseline.
+INFO  [alembic.runtime.migration] Running upgrade C2_0001 -> C2_0002, Create shared evidence, decision, and release storage.
+INFO  [alembic.runtime.migration] Running upgrade C2_0001 -> C2_0002, Create shared evidence, decision, and release storage.
+INFO  [alembic.runtime.migration] Running upgrade C2_0002 -> C2_0003, Harden shared lineage, decision history, and append-only integrity.
+INFO  [alembic.runtime.migration] Running upgrade C2_0002 -> C2_0003, Harden shared lineage, decision history, and append-only integrity.
+INFO  [alembic.runtime.migration] Running upgrade C2_0003 -> C2_0004, Persist complete immutable EvidenceLanding runs.
+INFO  [alembic.runtime.migration] Running upgrade C2_0003 -> C2_0004, Persist complete immutable EvidenceLanding runs.
+INFO  [alembic.runtime.migration] Running upgrade C2_0004 -> C2_0005, Harden canonical decision evidence and append-only constraint outcomes.
+INFO  [alembic.runtime.migration] Running upgrade C2_0004 -> C2_0005, Harden canonical decision evidence and append-only constraint outcomes.
+INFO  [alembic.runtime.migration] Running upgrade C2_0005 -> C2_0006, Persist immutable offline canonical identity resolution projections.
+INFO  [alembic.runtime.migration] Running upgrade C2_0005 -> C2_0006, Persist immutable offline canonical identity resolution projections.
+INFO  [alembic.runtime.migration] Running upgrade C2_0006 -> C2_0007, Bind human review decisions to immutable evidence and reviewer provenance.
+INFO  [alembic.runtime.migration] Running upgrade C2_0006 -> C2_0007, Bind human review decisions to immutable evidence and reviewer provenance.
+INFO  [alembic.runtime.migration] Running upgrade C2_0007 -> C2_0008, Preserve date-only versus instant validity precision.
+INFO  [alembic.runtime.migration] Running upgrade C2_0007 -> C2_0008, Preserve date-only versus instant validity precision.
+----------------------------- Captured stderr call -----------------------------
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running downgrade C2_0008 -> C2_0007, Preserve date-only versus instant validity precision.
+INFO  [alembic.runtime.migration] Running downgrade C2_0008 -> C2_0007, Preserve date-only versus instant validity precision.
+______ test_direct_sql_cannot_cross_wire_relationship_temporal_precision _______
+---------------------------- Captured stderr setup -----------------------------
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade  -> C2_0001, Create the clean Canonical V2 namespace baseline.
+INFO  [alembic.runtime.migration] Running upgrade  -> C2_0001, Create the clean Canonical V2 namespace baseline.
+INFO  [alembic.runtime.migration] Running upgrade C2_0001 -> C2_0002, Create shared evidence, decision, and release storage.
+INFO  [alembic.runtime.migration] Running upgrade C2_0001 -> C2_0002, Create shared evidence, decision, and release storage.
+INFO  [alembic.runtime.migration] Running upgrade C2_0002 -> C2_0003, Harden shared lineage, decision history, and append-only integrity.
+INFO  [alembic.runtime.migration] Running upgrade C2_0002 -> C2_0003, Harden shared lineage, decision history, and append-only integrity.
+INFO  [alembic.runtime.migration] Running upgrade C2_0003 -> C2_0004, Persist complete immutable EvidenceLanding runs.
+INFO  [alembic.runtime.migration] Running upgrade C2_0003 -> C2_0004, Persist complete immutable EvidenceLanding runs.
+INFO  [alembic.runtime.migration] Running upgrade C2_0004 -> C2_0005, Harden canonical decision evidence and append-only constraint outcomes.
+INFO  [alembic.runtime.migration] Running upgrade C2_0004 -> C2_0005, Harden canonical decision evidence and append-only constraint outcomes.
+INFO  [alembic.runtime.migration] Running upgrade C2_0005 -> C2_0006, Persist immutable offline canonical identity resolution projections.
+INFO  [alembic.runtime.migration] Running upgrade C2_0005 -> C2_0006, Persist immutable offline canonical identity resolution projections.
+INFO  [alembic.runtime.migration] Running upgrade C2_0006 -> C2_0007, Bind human review decisions to immutable evidence and reviewer provenance.
+INFO  [alembic.runtime.migration] Running upgrade C2_0006 -> C2_0007, Bind human review decisions to immutable evidence and reviewer provenance.
+INFO  [alembic.runtime.migration] Running upgrade C2_0007 -> C2_0008, Preserve date-only versus instant validity precision.
+INFO  [alembic.runtime.migration] Running upgrade C2_0007 -> C2_0008, Preserve date-only versus instant validity precision.
+________ test_non_utc_temporal_inputs_restart_as_one_canonical_instant _________
+---------------------------- Captured stderr setup -----------------------------
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade  -> C2_0001, Create the clean Canonical V2 namespace baseline.
+INFO  [alembic.runtime.migration] Running upgrade  -> C2_0001, Create the clean Canonical V2 namespace baseline.
+INFO  [alembic.runtime.migration] Running upgrade C2_0001 -> C2_0002, Create shared evidence, decision, and release storage.
+INFO  [alembic.runtime.migration] Running upgrade C2_0001 -> C2_0002, Create shared evidence, decision, and release storage.
+INFO  [alembic.runtime.migration] Running upgrade C2_0002 -> C2_0003, Harden shared lineage, decision history, and append-only integrity.
+INFO  [alembic.runtime.migration] Running upgrade C2_0002 -> C2_0003, Harden shared lineage, decision history, and append-only integrity.
+INFO  [alembic.runtime.migration] Running upgrade C2_0003 -> C2_0004, Persist complete immutable EvidenceLanding runs.
+INFO  [alembic.runtime.migration] Running upgrade C2_0003 -> C2_0004, Persist complete immutable EvidenceLanding runs.
+INFO  [alembic.runtime.migration] Running upgrade C2_0004 -> C2_0005, Harden canonical decision evidence and append-only constraint outcomes.
+INFO  [alembic.runtime.migration] Running upgrade C2_0004 -> C2_0005, Harden canonical decision evidence and append-only constraint outcomes.
+INFO  [alembic.runtime.migration] Running upgrade C2_0005 -> C2_0006, Persist immutable offline canonical identity resolution projections.
+INFO  [alembic.runtime.migration] Running upgrade C2_0005 -> C2_0006, Persist immutable offline canonical identity resolution projections.
+INFO  [alembic.runtime.migration] Running upgrade C2_0006 -> C2_0007, Bind human review decisions to immutable evidence and reviewer provenance.
+INFO  [alembic.runtime.migration] Running upgrade C2_0006 -> C2_0007, Bind human review decisions to immutable evidence and reviewer provenance.
+INFO  [alembic.runtime.migration] Running upgrade C2_0007 -> C2_0008, Preserve date-only versus instant validity precision.
+INFO  [alembic.runtime.migration] Running upgrade C2_0007 -> C2_0008, Preserve date-only versus instant validity precision.
+________ test_corrupt_temporal_restart_is_wrapped_by_store_abstraction _________
+---------------------------- Captured stderr setup -----------------------------
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade  -> C2_0001, Create the clean Canonical V2 namespace baseline.
+INFO  [alembic.runtime.migration] Running upgrade  -> C2_0001, Create the clean Canonical V2 namespace baseline.
+INFO  [alembic.runtime.migration] Running upgrade C2_0001 -> C2_0002, Create shared evidence, decision, and release storage.
+INFO  [alembic.runtime.migration] Running upgrade C2_0001 -> C2_0002, Create shared evidence, decision, and release storage.
+INFO  [alembic.runtime.migration] Running upgrade C2_0002 -> C2_0003, Harden shared lineage, decision history, and append-only integrity.
+INFO  [alembic.runtime.migration] Running upgrade C2_0002 -> C2_0003, Harden shared lineage, decision history, and append-only integrity.
+INFO  [alembic.runtime.migration] Running upgrade C2_0003 -> C2_0004, Persist complete immutable EvidenceLanding runs.
+INFO  [alembic.runtime.migration] Running upgrade C2_0003 -> C2_0004, Persist complete immutable EvidenceLanding runs.
+INFO  [alembic.runtime.migration] Running upgrade C2_0004 -> C2_0005, Harden canonical decision evidence and append-only constraint outcomes.
+INFO  [alembic.runtime.migration] Running upgrade C2_0004 -> C2_0005, Harden canonical decision evidence and append-only constraint outcomes.
+INFO  [alembic.runtime.migration] Running upgrade C2_0005 -> C2_0006, Persist immutable offline canonical identity resolution projections.
+INFO  [alembic.runtime.migration] Running upgrade C2_0005 -> C2_0006, Persist immutable offline canonical identity resolution projections.
+INFO  [alembic.runtime.migration] Running upgrade C2_0006 -> C2_0007, Bind human review decisions to immutable evidence and reviewer provenance.
+INFO  [alembic.runtime.migration] Running upgrade C2_0006 -> C2_0007, Bind human review decisions to immutable evidence and reviewer provenance.
+INFO  [alembic.runtime.migration] Running upgrade C2_0007 -> C2_0008, Preserve date-only versus instant validity precision.
+INFO  [alembic.runtime.migration] Running upgrade C2_0007 -> C2_0008, Preserve date-only versus instant validity precision.
+_ test_missing_authoritative_identity_membership_fails_before_decision_writes[prof-source-b] _
+---------------------------- Captured stderr setup -----------------------------
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade  -> C2_0001, Create the clean Canonical V2 namespace baseline.
+INFO  [alembic.runtime.migration] Running upgrade  -> C2_0001, Create the clean Canonical V2 namespace baseline.
+INFO  [alembic.runtime.migration] Running upgrade C2_0001 -> C2_0002, Create shared evidence, decision, and release storage.
+INFO  [alembic.runtime.migration] Running upgrade C2_0001 -> C2_0002, Create shared evidence, decision, and release storage.
+INFO  [alembic.runtime.migration] Running upgrade C2_0002 -> C2_0003, Harden shared lineage, decision history, and append-only integrity.
+INFO  [alembic.runtime.migration] Running upgrade C2_0002 -> C2_0003, Harden shared lineage, decision history, and append-only integrity.
+INFO  [alembic.runtime.migration] Running upgrade C2_0003 -> C2_0004, Persist complete immutable EvidenceLanding runs.
+INFO  [alembic.runtime.migration] Running upgrade C2_0003 -> C2_0004, Persist complete immutable EvidenceLanding runs.
+INFO  [alembic.runtime.migration] Running upgrade C2_0004 -> C2_0005, Harden canonical decision evidence and append-only constraint outcomes.
+INFO  [alembic.runtime.migration] Running upgrade C2_0004 -> C2_0005, Harden canonical decision evidence and append-only constraint outcomes.
+INFO  [alembic.runtime.migration] Running upgrade C2_0005 -> C2_0006, Persist immutable offline canonical identity resolution projections.
+INFO  [alembic.runtime.migration] Running upgrade C2_0005 -> C2_0006, Persist immutable offline canonical identity resolution projections.
+INFO  [alembic.runtime.migration] Running upgrade C2_0006 -> C2_0007, Bind human review decisions to immutable evidence and reviewer provenance.
+INFO  [alembic.runtime.migration] Running upgrade C2_0006 -> C2_0007, Bind human review decisions to immutable evidence and reviewer provenance.
+INFO  [alembic.runtime.migration] Running upgrade C2_0007 -> C2_0008, Preserve date-only versus instant validity precision.
+INFO  [alembic.runtime.migration] Running upgrade C2_0007 -> C2_0008, Preserve date-only versus instant validity precision.
+_ test_missing_authoritative_identity_membership_fails_before_decision_writes[company-source] _
+---------------------------- Captured stderr setup -----------------------------
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade  -> C2_0001, Create the clean Canonical V2 namespace baseline.
+INFO  [alembic.runtime.migration] Running upgrade  -> C2_0001, Create the clean Canonical V2 namespace baseline.
+INFO  [alembic.runtime.migration] Running upgrade C2_0001 -> C2_0002, Create shared evidence, decision, and release storage.
+INFO  [alembic.runtime.migration] Running upgrade C2_0001 -> C2_0002, Create shared evidence, decision, and release storage.
+INFO  [alembic.runtime.migration] Running upgrade C2_0002 -> C2_0003, Harden shared lineage, decision history, and append-only integrity.
+INFO  [alembic.runtime.migration] Running upgrade C2_0002 -> C2_0003, Harden shared lineage, decision history, and append-only integrity.
+INFO  [alembic.runtime.migration] Running upgrade C2_0003 -> C2_0004, Persist complete immutable EvidenceLanding runs.
+INFO  [alembic.runtime.migration] Running upgrade C2_0003 -> C2_0004, Persist complete immutable EvidenceLanding runs.
+INFO  [alembic.runtime.migration] Running upgrade C2_0004 -> C2_0005, Harden canonical decision evidence and append-only constraint outcomes.
+INFO  [alembic.runtime.migration] Running upgrade C2_0004 -> C2_0005, Harden canonical decision evidence and append-only constraint outcomes.
+INFO  [alembic.runtime.migration] Running upgrade C2_0005 -> C2_0006, Persist immutable offline canonical identity resolution projections.
+INFO  [alembic.runtime.migration] Running upgrade C2_0005 -> C2_0006, Persist immutable offline canonical identity resolution projections.
+INFO  [alembic.runtime.migration] Running upgrade C2_0006 -> C2_0007, Bind human review decisions to immutable evidence and reviewer provenance.
+INFO  [alembic.runtime.migration] Running upgrade C2_0006 -> C2_0007, Bind human review decisions to immutable evidence and reviewer provenance.
+INFO  [alembic.runtime.migration] Running upgrade C2_0007 -> C2_0008, Preserve date-only versus instant validity precision.
+INFO  [alembic.runtime.migration] Running upgrade C2_0007 -> C2_0008, Preserve date-only versus instant validity precision.
+___ test_c2_0006_action_shape_rejects_multi_output_create_identity_decision ____
+---------------------------- Captured stderr setup -----------------------------
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade  -> C2_0001, Create the clean Canonical V2 namespace baseline.
+INFO  [alembic.runtime.migration] Running upgrade  -> C2_0001, Create the clean Canonical V2 namespace baseline.
+INFO  [alembic.runtime.migration] Running upgrade C2_0001 -> C2_0002, Create shared evidence, decision, and release storage.
+INFO  [alembic.runtime.migration] Running upgrade C2_0001 -> C2_0002, Create shared evidence, decision, and release storage.
+INFO  [alembic.runtime.migration] Running upgrade C2_0002 -> C2_0003, Harden shared lineage, decision history, and append-only integrity.
+INFO  [alembic.runtime.migration] Running upgrade C2_0002 -> C2_0003, Harden shared lineage, decision history, and append-only integrity.
+INFO  [alembic.runtime.migration] Running upgrade C2_0003 -> C2_0004, Persist complete immutable EvidenceLanding runs.
+INFO  [alembic.runtime.migration] Running upgrade C2_0003 -> C2_0004, Persist complete immutable EvidenceLanding runs.
+INFO  [alembic.runtime.migration] Running upgrade C2_0004 -> C2_0005, Harden canonical decision evidence and append-only constraint outcomes.
+INFO  [alembic.runtime.migration] Running upgrade C2_0004 -> C2_0005, Harden canonical decision evidence and append-only constraint outcomes.
+INFO  [alembic.runtime.migration] Running upgrade C2_0005 -> C2_0006, Persist immutable offline canonical identity resolution projections.
+INFO  [alembic.runtime.migration] Running upgrade C2_0005 -> C2_0006, Persist immutable offline canonical identity resolution projections.
+INFO  [alembic.runtime.migration] Running upgrade C2_0006 -> C2_0007, Bind human review decisions to immutable evidence and reviewer provenance.
+INFO  [alembic.runtime.migration] Running upgrade C2_0006 -> C2_0007, Bind human review decisions to immutable evidence and reviewer provenance.
+INFO  [alembic.runtime.migration] Running upgrade C2_0007 -> C2_0008, Preserve date-only versus instant validity precision.
+INFO  [alembic.runtime.migration] Running upgrade C2_0007 -> C2_0008, Preserve date-only versus instant validity precision.
+______ test_historical_load_uses_immutable_decision_time_identity_context ______
+---------------------------- Captured stderr setup -----------------------------
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade  -> C2_0001, Create the clean Canonical V2 namespace baseline.
+INFO  [alembic.runtime.migration] Running upgrade  -> C2_0001, Create the clean Canonical V2 namespace baseline.
+INFO  [alembic.runtime.migration] Running upgrade C2_0001 -> C2_0002, Create shared evidence, decision, and release storage.
+INFO  [alembic.runtime.migration] Running upgrade C2_0001 -> C2_0002, Create shared evidence, decision, and release storage.
+INFO  [alembic.runtime.migration] Running upgrade C2_0002 -> C2_0003, Harden shared lineage, decision history, and append-only integrity.
+INFO  [alembic.runtime.migration] Running upgrade C2_0002 -> C2_0003, Harden shared lineage, decision history, and append-only integrity.
+INFO  [alembic.runtime.migration] Running upgrade C2_0003 -> C2_0004, Persist complete immutable EvidenceLanding runs.
+INFO  [alembic.runtime.migration] Running upgrade C2_0003 -> C2_0004, Persist complete immutable EvidenceLanding runs.
+INFO  [alembic.runtime.migration] Running upgrade C2_0004 -> C2_0005, Harden canonical decision evidence and append-only constraint outcomes.
+INFO  [alembic.runtime.migration] Running upgrade C2_0004 -> C2_0005, Harden canonical decision evidence and append-only constraint outcomes.
+INFO  [alembic.runtime.migration] Running upgrade C2_0005 -> C2_0006, Persist immutable offline canonical identity resolution projections.
+INFO  [alembic.runtime.migration] Running upgrade C2_0005 -> C2_0006, Persist immutable offline canonical identity resolution projections.
+INFO  [alembic.runtime.migration] Running upgrade C2_0006 -> C2_0007, Bind human review decisions to immutable evidence and reviewer provenance.
+INFO  [alembic.runtime.migration] Running upgrade C2_0006 -> C2_0007, Bind human review decisions to immutable evidence and reviewer provenance.
+INFO  [alembic.runtime.migration] Running upgrade C2_0007 -> C2_0008, Preserve date-only versus instant validity precision.
+INFO  [alembic.runtime.migration] Running upgrade C2_0007 -> C2_0008, Preserve date-only versus instant validity precision.
+________ test_factory_interface_and_explicit_target_safety_are_enforced ________
+---------------------------- Captured stderr setup -----------------------------
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade  -> C2_0001, Create the clean Canonical V2 namespace baseline.
+INFO  [alembic.runtime.migration] Running upgrade  -> C2_0001, Create the clean Canonical V2 namespace baseline.
+INFO  [alembic.runtime.migration] Running upgrade C2_0001 -> C2_0002, Create shared evidence, decision, and release storage.
+INFO  [alembic.runtime.migration] Running upgrade C2_0001 -> C2_0002, Create shared evidence, decision, and release storage.
+INFO  [alembic.runtime.migration] Running upgrade C2_0002 -> C2_0003, Harden shared lineage, decision history, and append-only integrity.
+INFO  [alembic.runtime.migration] Running upgrade C2_0002 -> C2_0003, Harden shared lineage, decision history, and append-only integrity.
+INFO  [alembic.runtime.migration] Running upgrade C2_0003 -> C2_0004, Persist complete immutable EvidenceLanding runs.
+INFO  [alembic.runtime.migration] Running upgrade C2_0003 -> C2_0004, Persist complete immutable EvidenceLanding runs.
+INFO  [alembic.runtime.migration] Running upgrade C2_0004 -> C2_0005, Harden canonical decision evidence and append-only constraint outcomes.
+INFO  [alembic.runtime.migration] Running upgrade C2_0004 -> C2_0005, Harden canonical decision evidence and append-only constraint outcomes.
+INFO  [alembic.runtime.migration] Running upgrade C2_0005 -> C2_0006, Persist immutable offline canonical identity resolution projections.
+INFO  [alembic.runtime.migration] Running upgrade C2_0005 -> C2_0006, Persist immutable offline canonical identity resolution projections.
+INFO  [alembic.runtime.migration] Running upgrade C2_0006 -> C2_0007, Bind human review decisions to immutable evidence and reviewer provenance.
+INFO  [alembic.runtime.migration] Running upgrade C2_0006 -> C2_0007, Bind human review decisions to immutable evidence and reviewer provenance.
+INFO  [alembic.runtime.migration] Running upgrade C2_0007 -> C2_0008, Preserve date-only versus instant validity precision.
+INFO  [alembic.runtime.migration] Running upgrade C2_0007 -> C2_0008, Preserve date-only versus instant validity precision.
+____ test_decision_backup_gate_is_rechecked_immediately_before_first_write _____
+---------------------------- Captured stderr setup -----------------------------
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade  -> C2_0001, Create the clean Canonical V2 namespace baseline.
+INFO  [alembic.runtime.migration] Running upgrade  -> C2_0001, Create the clean Canonical V2 namespace baseline.
+INFO  [alembic.runtime.migration] Running upgrade C2_0001 -> C2_0002, Create shared evidence, decision, and release storage.
+INFO  [alembic.runtime.migration] Running upgrade C2_0001 -> C2_0002, Create shared evidence, decision, and release storage.
+INFO  [alembic.runtime.migration] Running upgrade C2_0002 -> C2_0003, Harden shared lineage, decision history, and append-only integrity.
+INFO  [alembic.runtime.migration] Running upgrade C2_0002 -> C2_0003, Harden shared lineage, decision history, and append-only integrity.
+INFO  [alembic.runtime.migration] Running upgrade C2_0003 -> C2_0004, Persist complete immutable EvidenceLanding runs.
+INFO  [alembic.runtime.migration] Running upgrade C2_0003 -> C2_0004, Persist complete immutable EvidenceLanding runs.
+INFO  [alembic.runtime.migration] Running upgrade C2_0004 -> C2_0005, Harden canonical decision evidence and append-only constraint outcomes.
+INFO  [alembic.runtime.migration] Running upgrade C2_0004 -> C2_0005, Harden canonical decision evidence and append-only constraint outcomes.
+INFO  [alembic.runtime.migration] Running upgrade C2_0005 -> C2_0006, Persist immutable offline canonical identity resolution projections.
+INFO  [alembic.runtime.migration] Running upgrade C2_0005 -> C2_0006, Persist immutable offline canonical identity resolution projections.
+INFO  [alembic.runtime.migration] Running upgrade C2_0006 -> C2_0007, Bind human review decisions to immutable evidence and reviewer provenance.
+INFO  [alembic.runtime.migration] Running upgrade C2_0006 -> C2_0007, Bind human review decisions to immutable evidence and reviewer provenance.
+INFO  [alembic.runtime.migration] Running upgrade C2_0007 -> C2_0008, Preserve date-only versus instant validity precision.
+INFO  [alembic.runtime.migration] Running upgrade C2_0007 -> C2_0008, Preserve date-only versus instant validity precision.
+_________ test_changed_content_conflicts_and_rolls_back_every_new_row __________
+---------------------------- Captured stderr setup -----------------------------
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade  -> C2_0001, Create the clean Canonical V2 namespace baseline.
+INFO  [alembic.runtime.migration] Running upgrade  -> C2_0001, Create the clean Canonical V2 namespace baseline.
+INFO  [alembic.runtime.migration] Running upgrade C2_0001 -> C2_0002, Create shared evidence, decision, and release storage.
+INFO  [alembic.runtime.migration] Running upgrade C2_0001 -> C2_0002, Create shared evidence, decision, and release storage.
+INFO  [alembic.runtime.migration] Running upgrade C2_0002 -> C2_0003, Harden shared lineage, decision history, and append-only integrity.
+INFO  [alembic.runtime.migration] Running upgrade C2_0002 -> C2_0003, Harden shared lineage, decision history, and append-only integrity.
+INFO  [alembic.runtime.migration] Running upgrade C2_0003 -> C2_0004, Persist complete immutable EvidenceLanding runs.
+INFO  [alembic.runtime.migration] Running upgrade C2_0003 -> C2_0004, Persist complete immutable EvidenceLanding runs.
+INFO  [alembic.runtime.migration] Running upgrade C2_0004 -> C2_0005, Harden canonical decision evidence and append-only constraint outcomes.
+INFO  [alembic.runtime.migration] Running upgrade C2_0004 -> C2_0005, Harden canonical decision evidence and append-only constraint outcomes.
+INFO  [alembic.runtime.migration] Running upgrade C2_0005 -> C2_0006, Persist immutable offline canonical identity resolution projections.
+INFO  [alembic.runtime.migration] Running upgrade C2_0005 -> C2_0006, Persist immutable offline canonical identity resolution projections.
+INFO  [alembic.runtime.migration] Running upgrade C2_0006 -> C2_0007, Bind human review decisions to immutable evidence and reviewer provenance.
+INFO  [alembic.runtime.migration] Running upgrade C2_0006 -> C2_0007, Bind human review decisions to immutable evidence and reviewer provenance.
+INFO  [alembic.runtime.migration] Running upgrade C2_0007 -> C2_0008, Preserve date-only versus instant validity precision.
+INFO  [alembic.runtime.migration] Running upgrade C2_0007 -> C2_0008, Preserve date-only versus instant validity precision.
+______ test_late_human_review_failure_rolls_back_the_complete_new_release ______
+---------------------------- Captured stderr setup -----------------------------
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade  -> C2_0001, Create the clean Canonical V2 namespace baseline.
+INFO  [alembic.runtime.migration] Running upgrade  -> C2_0001, Create the clean Canonical V2 namespace baseline.
+INFO  [alembic.runtime.migration] Running upgrade C2_0001 -> C2_0002, Create shared evidence, decision, and release storage.
+INFO  [alembic.runtime.migration] Running upgrade C2_0001 -> C2_0002, Create shared evidence, decision, and release storage.
+INFO  [alembic.runtime.migration] Running upgrade C2_0002 -> C2_0003, Harden shared lineage, decision history, and append-only integrity.
+INFO  [alembic.runtime.migration] Running upgrade C2_0002 -> C2_0003, Harden shared lineage, decision history, and append-only integrity.
+INFO  [alembic.runtime.migration] Running upgrade C2_0003 -> C2_0004, Persist complete immutable EvidenceLanding runs.
+INFO  [alembic.runtime.migration] Running upgrade C2_0003 -> C2_0004, Persist complete immutable EvidenceLanding runs.
+INFO  [alembic.runtime.migration] Running upgrade C2_0004 -> C2_0005, Harden canonical decision evidence and append-only constraint outcomes.
+INFO  [alembic.runtime.migration] Running upgrade C2_0004 -> C2_0005, Harden canonical decision evidence and append-only constraint outcomes.
+INFO  [alembic.runtime.migration] Running upgrade C2_0005 -> C2_0006, Persist immutable offline canonical identity resolution projections.
+INFO  [alembic.runtime.migration] Running upgrade C2_0005 -> C2_0006, Persist immutable offline canonical identity resolution projections.
+INFO  [alembic.runtime.migration] Running upgrade C2_0006 -> C2_0007, Bind human review decisions to immutable evidence and reviewer provenance.
+INFO  [alembic.runtime.migration] Running upgrade C2_0006 -> C2_0007, Bind human review decisions to immutable evidence and reviewer provenance.
+INFO  [alembic.runtime.migration] Running upgrade C2_0007 -> C2_0008, Preserve date-only versus instant validity precision.
+INFO  [alembic.runtime.migration] Running upgrade C2_0007 -> C2_0008, Preserve date-only versus instant validity precision.
+_______ test_empty_c2_0005_round_trips_through_c2_0004_on_owned_sibling ________
+---------------------------- Captured stderr setup -----------------------------
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade  -> C2_0001, Create the clean Canonical V2 namespace baseline.
+INFO  [alembic.runtime.migration] Running upgrade  -> C2_0001, Create the clean Canonical V2 namespace baseline.
+INFO  [alembic.runtime.migration] Running upgrade C2_0001 -> C2_0002, Create shared evidence, decision, and release storage.
+INFO  [alembic.runtime.migration] Running upgrade C2_0001 -> C2_0002, Create shared evidence, decision, and release storage.
+INFO  [alembic.runtime.migration] Running upgrade C2_0002 -> C2_0003, Harden shared lineage, decision history, and append-only integrity.
+INFO  [alembic.runtime.migration] Running upgrade C2_0002 -> C2_0003, Harden shared lineage, decision history, and append-only integrity.
+INFO  [alembic.runtime.migration] Running upgrade C2_0003 -> C2_0004, Persist complete immutable EvidenceLanding runs.
+INFO  [alembic.runtime.migration] Running upgrade C2_0003 -> C2_0004, Persist complete immutable EvidenceLanding runs.
+INFO  [alembic.runtime.migration] Running upgrade C2_0004 -> C2_0005, Harden canonical decision evidence and append-only constraint outcomes.
+INFO  [alembic.runtime.migration] Running upgrade C2_0004 -> C2_0005, Harden canonical decision evidence and append-only constraint outcomes.
+INFO  [alembic.runtime.migration] Running upgrade C2_0005 -> C2_0006, Persist immutable offline canonical identity resolution projections.
+INFO  [alembic.runtime.migration] Running upgrade C2_0005 -> C2_0006, Persist immutable offline canonical identity resolution projections.
+INFO  [alembic.runtime.migration] Running upgrade C2_0006 -> C2_0007, Bind human review decisions to immutable evidence and reviewer provenance.
+INFO  [alembic.runtime.migration] Running upgrade C2_0006 -> C2_0007, Bind human review decisions to immutable evidence and reviewer provenance.
+INFO  [alembic.runtime.migration] Running upgrade C2_0007 -> C2_0008, Preserve date-only versus instant validity precision.
+INFO  [alembic.runtime.migration] Running upgrade C2_0007 -> C2_0008, Preserve date-only versus instant validity precision.
+----------------------------- Captured stderr call -----------------------------
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running downgrade C2_0008 -> C2_0007, Preserve date-only versus instant validity precision.
+INFO  [alembic.runtime.migration] Running downgrade C2_0008 -> C2_0007, Preserve date-only versus instant validity precision.
+INFO  [alembic.runtime.migration] Running downgrade C2_0007 -> C2_0006, Bind human review decisions to immutable evidence and reviewer provenance.
+INFO  [alembic.runtime.migration] Running downgrade C2_0007 -> C2_0006, Bind human review decisions to immutable evidence and reviewer provenance.
+INFO  [alembic.runtime.migration] Running downgrade C2_0006 -> C2_0005, Persist immutable offline canonical identity resolution projections.
+INFO  [alembic.runtime.migration] Running downgrade C2_0006 -> C2_0005, Persist immutable offline canonical identity resolution projections.
+INFO  [alembic.runtime.migration] Running downgrade C2_0005 -> C2_0004, Harden canonical decision evidence and append-only constraint outcomes.
+INFO  [alembic.runtime.migration] Running downgrade C2_0005 -> C2_0004, Harden canonical decision evidence and append-only constraint outcomes.
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade C2_0004 -> C2_0005, Harden canonical decision evidence and append-only constraint outcomes.
+INFO  [alembic.runtime.migration] Running upgrade C2_0004 -> C2_0005, Harden canonical decision evidence and append-only constraint outcomes.
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade C2_0005 -> C2_0006, Persist immutable offline canonical identity resolution projections.
+INFO  [alembic.runtime.migration] Running upgrade C2_0005 -> C2_0006, Persist immutable offline canonical identity resolution projections.
+INFO  [alembic.runtime.migration] Running upgrade C2_0006 -> C2_0007, Bind human review decisions to immutable evidence and reviewer provenance.
+INFO  [alembic.runtime.migration] Running upgrade C2_0006 -> C2_0007, Bind human review decisions to immutable evidence and reviewer provenance.
+INFO  [alembic.runtime.migration] Running upgrade C2_0007 -> C2_0008, Preserve date-only versus instant validity precision.
+INFO  [alembic.runtime.migration] Running upgrade C2_0007 -> C2_0008, Preserve date-only versus instant validity precision.
+INFO  [alembic.runtime.migration] Running upgrade C2_0008 -> C2_0009, Persist typed release-scoped Professor, Company, Paper, and Patent projections.
+INFO  [alembic.runtime.migration] Running upgrade C2_0008 -> C2_0009, Persist typed release-scoped Professor, Company, Paper, and Patent projections.
+INFO  [alembic.runtime.migration] Running upgrade C2_0009 -> C2_0010, Persist typed and current Canonical V2 relationship projections.
+INFO  [alembic.runtime.migration] Running upgrade C2_0009 -> C2_0010, Persist typed and current Canonical V2 relationship projections.
+INFO  [alembic.runtime.migration] Running upgrade C2_0010 -> C2_0011, Persist append-only Canonical V2 knowledge-gap operations.
+INFO  [alembic.runtime.migration] Running upgrade C2_0010 -> C2_0011, Persist append-only Canonical V2 knowledge-gap operations.
+INFO  [alembic.runtime.migration] Running upgrade C2_0011 -> C2_0012, Add company_name to the patent applicant sub-object table.
+INFO  [alembic.runtime.migration] Running upgrade C2_0011 -> C2_0012, Add company_name to the patent applicant sub-object table.
+INFO  [alembic.runtime.migration] Running upgrade C2_0012 -> C2_0013, Chunk oversized run snapshots instead of one jsonb value.
+INFO  [alembic.runtime.migration] Running upgrade C2_0012 -> C2_0013, Chunk oversized run snapshots instead of one jsonb value.
+INFO  [alembic.runtime.migration] Running upgrade C2_0013 -> C2_0014, Skip per-row review-binding scans when a release has no reviewed rows.
+INFO  [alembic.runtime.migration] Running upgrade C2_0013 -> C2_0014, Skip per-row review-binding scans when a release has no reviewed rows.
+_ test_c2_0005_refuses_existing_decisions_without_inventing_context_snapshots[field] _
+---------------------------- Captured stderr setup -----------------------------
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade  -> C2_0001, Create the clean Canonical V2 namespace baseline.
+INFO  [alembic.runtime.migration] Running upgrade  -> C2_0001, Create the clean Canonical V2 namespace baseline.
+INFO  [alembic.runtime.migration] Running upgrade C2_0001 -> C2_0002, Create shared evidence, decision, and release storage.
+INFO  [alembic.runtime.migration] Running upgrade C2_0001 -> C2_0002, Create shared evidence, decision, and release storage.
+INFO  [alembic.runtime.migration] Running upgrade C2_0002 -> C2_0003, Harden shared lineage, decision history, and append-only integrity.
+INFO  [alembic.runtime.migration] Running upgrade C2_0002 -> C2_0003, Harden shared lineage, decision history, and append-only integrity.
+INFO  [alembic.runtime.migration] Running upgrade C2_0003 -> C2_0004, Persist complete immutable EvidenceLanding runs.
+INFO  [alembic.runtime.migration] Running upgrade C2_0003 -> C2_0004, Persist complete immutable EvidenceLanding runs.
+INFO  [alembic.runtime.migration] Running upgrade C2_0004 -> C2_0005, Harden canonical decision evidence and append-only constraint outcomes.
+INFO  [alembic.runtime.migration] Running upgrade C2_0004 -> C2_0005, Harden canonical decision evidence and append-only constraint outcomes.
+INFO  [alembic.runtime.migration] Running upgrade C2_0005 -> C2_0006, Persist immutable offline canonical identity resolution projections.
+INFO  [alembic.runtime.migration] Running upgrade C2_0005 -> C2_0006, Persist immutable offline canonical identity resolution projections.
+INFO  [alembic.runtime.migration] Running upgrade C2_0006 -> C2_0007, Bind human review decisions to immutable evidence and reviewer provenance.
+INFO  [alembic.runtime.migration] Running upgrade C2_0006 -> C2_0007, Bind human review decisions to immutable evidence and reviewer provenance.
+INFO  [alembic.runtime.migration] Running upgrade C2_0007 -> C2_0008, Preserve date-only versus instant validity precision.
+INFO  [alembic.runtime.migration] Running upgrade C2_0007 -> C2_0008, Preserve date-only versus instant validity precision.
+----------------------------- Captured stderr call -----------------------------
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running downgrade C2_0008 -> C2_0007, Preserve date-only versus instant validity precision.
+INFO  [alembic.runtime.migration] Running downgrade C2_0008 -> C2_0007, Preserve date-only versus instant validity precision.
+INFO  [alembic.runtime.migration] Running downgrade C2_0007 -> C2_0006, Bind human review decisions to immutable evidence and reviewer provenance.
+INFO  [alembic.runtime.migration] Running downgrade C2_0007 -> C2_0006, Bind human review decisions to immutable evidence and reviewer provenance.
+INFO  [alembic.runtime.migration] Running downgrade C2_0006 -> C2_0005, Persist immutable offline canonical identity resolution projections.
+INFO  [alembic.runtime.migration] Running downgrade C2_0006 -> C2_0005, Persist immutable offline canonical identity resolution projections.
+INFO  [alembic.runtime.migration] Running downgrade C2_0005 -> C2_0004, Harden canonical decision evidence and append-only constraint outcomes.
+INFO  [alembic.runtime.migration] Running downgrade C2_0005 -> C2_0004, Harden canonical decision evidence and append-only constraint outcomes.
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade C2_0004 -> C2_0005, Harden canonical decision evidence and append-only constraint outcomes.
+INFO  [alembic.runtime.migration] Running upgrade C2_0004 -> C2_0005, Harden canonical decision evidence and append-only constraint outcomes.
+_ test_c2_0005_refuses_existing_decisions_without_inventing_context_snapshots[relationship] _
+---------------------------- Captured stderr setup -----------------------------
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade  -> C2_0001, Create the clean Canonical V2 namespace baseline.
+INFO  [alembic.runtime.migration] Running upgrade  -> C2_0001, Create the clean Canonical V2 namespace baseline.
+INFO  [alembic.runtime.migration] Running upgrade C2_0001 -> C2_0002, Create shared evidence, decision, and release storage.
+INFO  [alembic.runtime.migration] Running upgrade C2_0001 -> C2_0002, Create shared evidence, decision, and release storage.
+INFO  [alembic.runtime.migration] Running upgrade C2_0002 -> C2_0003, Harden shared lineage, decision history, and append-only integrity.
+INFO  [alembic.runtime.migration] Running upgrade C2_0002 -> C2_0003, Harden shared lineage, decision history, and append-only integrity.
+INFO  [alembic.runtime.migration] Running upgrade C2_0003 -> C2_0004, Persist complete immutable EvidenceLanding runs.
+INFO  [alembic.runtime.migration] Running upgrade C2_0003 -> C2_0004, Persist complete immutable EvidenceLanding runs.
+INFO  [alembic.runtime.migration] Running upgrade C2_0004 -> C2_0005, Harden canonical decision evidence and append-only constraint outcomes.
+INFO  [alembic.runtime.migration] Running upgrade C2_0004 -> C2_0005, Harden canonical decision evidence and append-only constraint outcomes.
+INFO  [alembic.runtime.migration] Running upgrade C2_0005 -> C2_0006, Persist immutable offline canonical identity resolution projections.
+INFO  [alembic.runtime.migration] Running upgrade C2_0005 -> C2_0006, Persist immutable offline canonical identity resolution projections.
+INFO  [alembic.runtime.migration] Running upgrade C2_0006 -> C2_0007, Bind human review decisions to immutable evidence and reviewer provenance.
+INFO  [alembic.runtime.migration] Running upgrade C2_0006 -> C2_0007, Bind human review decisions to immutable evidence and reviewer provenance.
+INFO  [alembic.runtime.migration] Running upgrade C2_0007 -> C2_0008, Preserve date-only versus instant validity precision.
+INFO  [alembic.runtime.migration] Running upgrade C2_0007 -> C2_0008, Preserve date-only versus instant validity precision.
+----------------------------- Captured stderr call -----------------------------
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running downgrade C2_0008 -> C2_0007, Preserve date-only versus instant validity precision.
+INFO  [alembic.runtime.migration] Running downgrade C2_0008 -> C2_0007, Preserve date-only versus instant validity precision.
+INFO  [alembic.runtime.migration] Running downgrade C2_0007 -> C2_0006, Bind human review decisions to immutable evidence and reviewer provenance.
+INFO  [alembic.runtime.migration] Running downgrade C2_0007 -> C2_0006, Bind human review decisions to immutable evidence and reviewer provenance.
+INFO  [alembic.runtime.migration] Running downgrade C2_0006 -> C2_0005, Persist immutable offline canonical identity resolution projections.
+INFO  [alembic.runtime.migration] Running downgrade C2_0006 -> C2_0005, Persist immutable offline canonical identity resolution projections.
+INFO  [alembic.runtime.migration] Running downgrade C2_0005 -> C2_0004, Harden canonical decision evidence and append-only constraint outcomes.
+INFO  [alembic.runtime.migration] Running downgrade C2_0005 -> C2_0004, Harden canonical decision evidence and append-only constraint outcomes.
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade C2_0004 -> C2_0005, Harden canonical decision evidence and append-only constraint outcomes.
+INFO  [alembic.runtime.migration] Running upgrade C2_0004 -> C2_0005, Harden canonical decision evidence and append-only constraint outcomes.
+_________ test_downgrade_serializes_with_an_uncommitted_outcome_insert _________
+---------------------------- Captured stderr setup -----------------------------
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade  -> C2_0001, Create the clean Canonical V2 namespace baseline.
+INFO  [alembic.runtime.migration] Running upgrade  -> C2_0001, Create the clean Canonical V2 namespace baseline.
+INFO  [alembic.runtime.migration] Running upgrade C2_0001 -> C2_0002, Create shared evidence, decision, and release storage.
+INFO  [alembic.runtime.migration] Running upgrade C2_0001 -> C2_0002, Create shared evidence, decision, and release storage.
+INFO  [alembic.runtime.migration] Running upgrade C2_0002 -> C2_0003, Harden shared lineage, decision history, and append-only integrity.
+INFO  [alembic.runtime.migration] Running upgrade C2_0002 -> C2_0003, Harden shared lineage, decision history, and append-only integrity.
+INFO  [alembic.runtime.migration] Running upgrade C2_0003 -> C2_0004, Persist complete immutable EvidenceLanding runs.
+INFO  [alembic.runtime.migration] Running upgrade C2_0003 -> C2_0004, Persist complete immutable EvidenceLanding runs.
+INFO  [alembic.runtime.migration] Running upgrade C2_0004 -> C2_0005, Harden canonical decision evidence and append-only constraint outcomes.
+INFO  [alembic.runtime.migration] Running upgrade C2_0004 -> C2_0005, Harden canonical decision evidence and append-only constraint outcomes.
+INFO  [alembic.runtime.migration] Running upgrade C2_0005 -> C2_0006, Persist immutable offline canonical identity resolution projections.
+INFO  [alembic.runtime.migration] Running upgrade C2_0005 -> C2_0006, Persist immutable offline canonical identity resolution projections.
+INFO  [alembic.runtime.migration] Running upgrade C2_0006 -> C2_0007, Bind human review decisions to immutable evidence and reviewer provenance.
+INFO  [alembic.runtime.migration] Running upgrade C2_0006 -> C2_0007, Bind human review decisions to immutable evidence and reviewer provenance.
+INFO  [alembic.runtime.migration] Running upgrade C2_0007 -> C2_0008, Preserve date-only versus instant validity precision.
+INFO  [alembic.runtime.migration] Running upgrade C2_0007 -> C2_0008, Preserve date-only versus instant validity precision.
+----------------------------- Captured stderr call -----------------------------
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running downgrade C2_0008 -> C2_0007, Preserve date-only versus instant validity precision.
+INFO  [alembic.runtime.migration] Running downgrade C2_0008 -> C2_0007, Preserve date-only versus instant validity precision.
+INFO  [alembic.runtime.migration] Running downgrade C2_0007 -> C2_0006, Bind human review decisions to immutable evidence and reviewer provenance.
+INFO  [alembic.runtime.migration] Running downgrade C2_0007 -> C2_0006, Bind human review decisions to immutable evidence and reviewer provenance.
+INFO  [alembic.runtime.migration] Running downgrade C2_0006 -> C2_0005, Persist immutable offline canonical identity resolution projections.
+INFO  [alembic.runtime.migration] Running downgrade C2_0006 -> C2_0005, Persist immutable offline canonical identity resolution projections.
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running downgrade C2_0005 -> C2_0004, Harden canonical decision evidence and append-only constraint outcomes.
+INFO  [alembic.runtime.migration] Running downgrade C2_0005 -> C2_0004, Harden canonical decision evidence and append-only constraint outcomes.
+_______ test_store_and_c2_0007_downgrade_share_release_first_lock_order ________
+---------------------------- Captured stderr setup -----------------------------
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade  -> C2_0001, Create the clean Canonical V2 namespace baseline.
+INFO  [alembic.runtime.migration] Running upgrade  -> C2_0001, Create the clean Canonical V2 namespace baseline.
+INFO  [alembic.runtime.migration] Running upgrade C2_0001 -> C2_0002, Create shared evidence, decision, and release storage.
+INFO  [alembic.runtime.migration] Running upgrade C2_0001 -> C2_0002, Create shared evidence, decision, and release storage.
+INFO  [alembic.runtime.migration] Running upgrade C2_0002 -> C2_0003, Harden shared lineage, decision history, and append-only integrity.
+INFO  [alembic.runtime.migration] Running upgrade C2_0002 -> C2_0003, Harden shared lineage, decision history, and append-only integrity.
+INFO  [alembic.runtime.migration] Running upgrade C2_0003 -> C2_0004, Persist complete immutable EvidenceLanding runs.
+INFO  [alembic.runtime.migration] Running upgrade C2_0003 -> C2_0004, Persist complete immutable EvidenceLanding runs.
+INFO  [alembic.runtime.migration] Running upgrade C2_0004 -> C2_0005, Harden canonical decision evidence and append-only constraint outcomes.
+INFO  [alembic.runtime.migration] Running upgrade C2_0004 -> C2_0005, Harden canonical decision evidence and append-only constraint outcomes.
+INFO  [alembic.runtime.migration] Running upgrade C2_0005 -> C2_0006, Persist immutable offline canonical identity resolution projections.
+INFO  [alembic.runtime.migration] Running upgrade C2_0005 -> C2_0006, Persist immutable offline canonical identity resolution projections.
+INFO  [alembic.runtime.migration] Running upgrade C2_0006 -> C2_0007, Bind human review decisions to immutable evidence and reviewer provenance.
+INFO  [alembic.runtime.migration] Running upgrade C2_0006 -> C2_0007, Bind human review decisions to immutable evidence and reviewer provenance.
+INFO  [alembic.runtime.migration] Running upgrade C2_0007 -> C2_0008, Preserve date-only versus instant validity precision.
+INFO  [alembic.runtime.migration] Running upgrade C2_0007 -> C2_0008, Preserve date-only versus instant validity precision.
+----------------------------- Captured stderr call -----------------------------
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running downgrade C2_0008 -> C2_0007, Preserve date-only versus instant validity precision.
+INFO  [alembic.runtime.migration] Running downgrade C2_0008 -> C2_0007, Preserve date-only versus instant validity precision.
+INFO  [alembic.runtime.migration] Running downgrade C2_0007 -> C2_0006, Bind human review decisions to immutable evidence and reviewer provenance.
+INFO  [alembic.runtime.migration] Running downgrade C2_0007 -> C2_0006, Bind human review decisions to immutable evidence and reviewer provenance.
+__ test_missing_parents_are_not_created_and_no_current_projection_is_durable ___
+---------------------------- Captured stderr setup -----------------------------
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade  -> C2_0001, Create the clean Canonical V2 namespace baseline.
+INFO  [alembic.runtime.migration] Running upgrade  -> C2_0001, Create the clean Canonical V2 namespace baseline.
+INFO  [alembic.runtime.migration] Running upgrade C2_0001 -> C2_0002, Create shared evidence, decision, and release storage.
+INFO  [alembic.runtime.migration] Running upgrade C2_0001 -> C2_0002, Create shared evidence, decision, and release storage.
+INFO  [alembic.runtime.migration] Running upgrade C2_0002 -> C2_0003, Harden shared lineage, decision history, and append-only integrity.
+INFO  [alembic.runtime.migration] Running upgrade C2_0002 -> C2_0003, Harden shared lineage, decision history, and append-only integrity.
+INFO  [alembic.runtime.migration] Running upgrade C2_0003 -> C2_0004, Persist complete immutable EvidenceLanding runs.
+INFO  [alembic.runtime.migration] Running upgrade C2_0003 -> C2_0004, Persist complete immutable EvidenceLanding runs.
+INFO  [alembic.runtime.migration] Running upgrade C2_0004 -> C2_0005, Harden canonical decision evidence and append-only constraint outcomes.
+INFO  [alembic.runtime.migration] Running upgrade C2_0004 -> C2_0005, Harden canonical decision evidence and append-only constraint outcomes.
+INFO  [alembic.runtime.migration] Running upgrade C2_0005 -> C2_0006, Persist immutable offline canonical identity resolution projections.
+INFO  [alembic.runtime.migration] Running upgrade C2_0005 -> C2_0006, Persist immutable offline canonical identity resolution projections.
+INFO  [alembic.runtime.migration] Running upgrade C2_0006 -> C2_0007, Bind human review decisions to immutable evidence and reviewer provenance.
+INFO  [alembic.runtime.migration] Running upgrade C2_0006 -> C2_0007, Bind human review decisions to immutable evidence and reviewer provenance.
+INFO  [alembic.runtime.migration] Running upgrade C2_0007 -> C2_0008, Preserve date-only versus instant validity precision.
+INFO  [alembic.runtime.migration] Running upgrade C2_0007 -> C2_0008, Preserve date-only versus instant validity precision.
+================================ tests coverage ================================
+___________________________________ coverage ___________________________________
+
+Coverage HTML written to dir htmlcov
+- Generated html report: file:///home/longxiang/MiroThinker/.worktrees/rebuild-trigger-fix/apps/miroflow-agent/report.html -
+=========================== short test summary info ============================
+PASSED tests/canonical_v2/test_canonical_decision_postgres.py::test_migration_config_accepts_rendered_sibling_socket_url_without_a_database
+PASSED tests/canonical_v2/test_canonical_decision_postgres.py::test_assertion_readback_canonicalizes_database_collation_order
+PASSED tests/canonical_v2/test_canonical_decision_postgres.py::test_decision_readback_canonicalizes_database_collation_order
+PASSED tests/canonical_v2/test_canonical_decision_postgres.py::test_c2_0007_adds_review_provenance_without_a_mutable_queue_table
+PASSED tests/canonical_v2/test_canonical_decision_postgres.py::test_c2_0007_upgrade_refuses_legacy_human_review_without_provenance
+PASSED tests/canonical_v2/test_canonical_decision_postgres.py::test_c2_0007_upgrade_refuses_an_existing_supersession_fork
+PASSED tests/canonical_v2/test_canonical_decision_postgres.py::test_c2_0007_upgrade_refuses_duplicate_existing_roots
+PASSED tests/canonical_v2/test_canonical_decision_postgres.py::test_c2_0007_upgrade_refuses_existing_release_cycle
+PASSED tests/canonical_v2/test_canonical_decision_postgres.py::test_c2_0007_upgrade_refuses_non_ancestral_decision_lineage
+PASSED tests/canonical_v2/test_canonical_decision_postgres.py::test_c2_0007_upgrade_refuses_relationship_lineage_metadata_change
+PASSED tests/canonical_v2/test_canonical_decision_postgres.py::test_complete_field_and_relationship_result_round_trips_and_replays_exactly
+PASSED tests/canonical_v2/test_canonical_decision_postgres.py::test_human_review_provenance_and_release_history_restart_exactly
+PASSED tests/canonical_v2/test_canonical_decision_postgres.py::test_review_json_validator_rejects_null_weak_and_hash_tampered_payloads
+PASSED tests/canonical_v2/test_canonical_decision_postgres.py::test_direct_sql_review_rows_reject_null_hash_and_relational_cross_wiring[field]
+PASSED tests/canonical_v2/test_canonical_decision_postgres.py::test_direct_sql_review_rows_reject_null_hash_and_relational_cross_wiring[relationship]
+PASSED tests/canonical_v2/test_canonical_decision_postgres.py::test_concurrent_late_origin_edge_and_review_cannot_both_commit[field-canonical_decision_assertion-canonical_decision-field-rejected-candidate-trg_validate_field_human_review_assertion_binding]
+PASSED tests/canonical_v2/test_canonical_decision_postgres.py::test_concurrent_late_origin_edge_and_review_cannot_both_commit[relationship-relationship_decision_assertion-relationship_decision-relation-late-review-race-candidate-trg_validate_relationship_human_review_assertion_binding]
+PASSED tests/canonical_v2/test_canonical_decision_postgres.py::test_release_lineage_is_immutable_while_state_progress_can_continue
+PASSED tests/canonical_v2/test_canonical_decision_postgres.py::test_stale_supersession_branch_rolls_back_before_commit
+PASSED tests/canonical_v2/test_canonical_decision_postgres.py::test_unlinked_later_root_rolls_back_before_commit
+PASSED tests/canonical_v2/test_canonical_decision_postgres.py::test_concurrent_duplicate_roots_cannot_both_commit
+PASSED tests/canonical_v2/test_canonical_decision_postgres.py::test_c2_0007_direct_sql_rejects_non_ancestral_and_metadata_lineage
+PASSED tests/canonical_v2/test_canonical_decision_postgres.py::test_history_load_uses_one_repeatable_read_only_snapshot
+PASSED tests/canonical_v2/test_canonical_decision_postgres.py::test_temporal_relationship_history_restarts_with_only_as_of_current
+PASSED tests/canonical_v2/test_canonical_decision_postgres.py::test_date_only_temporal_precision_restarts_without_utc_midnight_coercion
+PASSED tests/canonical_v2/test_canonical_decision_postgres.py::test_c2_0008_backfills_and_rehashes_existing_instant_assertions
+PASSED tests/canonical_v2/test_canonical_decision_postgres.py::test_c2_0008_refuses_to_rehash_referenced_temporal_evidence
+PASSED tests/canonical_v2/test_canonical_decision_postgres.py::test_temporal_precision_tampering_is_rejected_on_restart
+PASSED tests/canonical_v2/test_canonical_decision_postgres.py::test_c2_0008_downgrade_refuses_to_discard_date_precision
+PASSED tests/canonical_v2/test_canonical_decision_postgres.py::test_direct_sql_cannot_cross_wire_relationship_temporal_precision
+PASSED tests/canonical_v2/test_canonical_decision_postgres.py::test_non_utc_temporal_inputs_restart_as_one_canonical_instant
+PASSED tests/canonical_v2/test_canonical_decision_postgres.py::test_corrupt_temporal_restart_is_wrapped_by_store_abstraction
+PASSED tests/canonical_v2/test_canonical_decision_postgres.py::test_missing_authoritative_identity_membership_fails_before_decision_writes[prof-source-b]
+PASSED tests/canonical_v2/test_canonical_decision_postgres.py::test_missing_authoritative_identity_membership_fails_before_decision_writes[company-source]
+PASSED tests/canonical_v2/test_canonical_decision_postgres.py::test_c2_0006_action_shape_rejects_multi_output_create_identity_decision
+PASSED tests/canonical_v2/test_canonical_decision_postgres.py::test_historical_load_uses_immutable_decision_time_identity_context
+PASSED tests/canonical_v2/test_canonical_decision_postgres.py::test_factory_interface_and_explicit_target_safety_are_enforced
+PASSED tests/canonical_v2/test_canonical_decision_postgres.py::test_decision_backup_gate_is_rechecked_immediately_before_first_write
+PASSED tests/canonical_v2/test_canonical_decision_postgres.py::test_changed_content_conflicts_and_rolls_back_every_new_row
+PASSED tests/canonical_v2/test_canonical_decision_postgres.py::test_late_human_review_failure_rolls_back_the_complete_new_release
+PASSED tests/canonical_v2/test_canonical_decision_postgres.py::test_empty_c2_0005_round_trips_through_c2_0004_on_owned_sibling
+PASSED tests/canonical_v2/test_canonical_decision_postgres.py::test_c2_0005_refuses_existing_decisions_without_inventing_context_snapshots[field]
+PASSED tests/canonical_v2/test_canonical_decision_postgres.py::test_c2_0005_refuses_existing_decisions_without_inventing_context_snapshots[relationship]
+PASSED tests/canonical_v2/test_canonical_decision_postgres.py::test_downgrade_serializes_with_an_uncommitted_outcome_insert
+PASSED tests/canonical_v2/test_canonical_decision_postgres.py::test_store_and_c2_0007_downgrade_share_release_first_lock_order
+PASSED tests/canonical_v2/test_canonical_decision_postgres.py::test_missing_parents_are_not_created_and_no_current_projection_is_durable
+46 passed in 46.39s
