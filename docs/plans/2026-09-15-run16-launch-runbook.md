@@ -75,7 +75,10 @@ RED/GREEN 测试 + run15 包回载验证；随切包窗口与 P1 一起进入服
 ## 3. 发射重建（脱离会话）
 
 模板：`.agents/runs/full-column-serving-pack-rebuild/build-run15.sh` → 参数副本
-`build-run16.sh`（其它参数一律不改）：
+`build-run16.sh`（**已就绪**：run16 参数 + 两道 fail-closed 闸——① `feat/d1a-tech-vocabulary`
+未并入 HEAD 则拒绝（已实测 exit 2）；② 信封路径被占用时提示先归档 run15 信封；其它参数一律不改）。
+注意 `--source-manifest-sha256` 是 manifest 的**内部 `content_sha256` 字段**（内容寻址），
+不是文件字节 sha（文件字节现为 `acc62c33…`，属正常）。
 
 | 参数 | run15 | run16 |
 |---|---|---|
@@ -83,8 +86,13 @@ RED/GREEN 测试 + run15 包回载验证；随切包窗口与 P1 一起进入服
 | `RUN_ID` | `p4-build-20260913-v1` | `p4-build-20260916-v1` |
 | `STAGING` | `staging-v2` | `staging-v3`（fresh） |
 | `INDEX` | `index-v2` | `index-v3`（fresh） |
-| `ENVELOPE` | `s12a/complete-candidate-build-envelope.json` | `s12a/complete-candidate-build-envelope-run16.json`（**必须换名**：旧文件 8.1GB 已被 run15 占用，脚本对其 fail-closed） |
+| `ENVELOPE` | `s12a/complete-candidate-build-envelope.json` | **同一固定路径**（runner 强制；见下）——发射前必须先把 run15 信封归档为 `s12a/complete-candidate-build-envelope-run15.json`（8.1GB，同盘 `mv`，秒级） |
 | release id | `candidate-v2-20260913-r1` | `candidate-v2-20260916-r1` |
+
+> runner 强制：`--envelope-output` 必须等于 `<gate-root>/s12a/complete-candidate-build-envelope.json`
+> 且必须"全新"（不存在/非符号链接/单链接；`complete_candidate_runner.py` 的配置段检查）。
+> 所以 run16 复用固定路径，run15 信封先归档保留（回滚不需要 reseal——直接切回 run15
+> sealed 包即可；归档文件仅作证据）。
 
 发射（禁止前台；run15 的 A3 死因就是前台被中断杀进程组）：
 
