@@ -121,3 +121,14 @@ head"：RED 先失败、GREEN 后通过，`test_canonical_revision.py` 8 passed�
 **影响哪些问题**：解除 run16 的发射阻断（否则第一步就失败）；给迁移头版本加了一条
 长期守卫——以后再加迁移忘了提常量，测试会红。发射清单见
 [run16 发射 Runbook](./2026-09-15-run16-launch-runbook.md)。
+
+### 追加：run16 首发的第二个阻断（冻结 schema 目录期望）
+
+第一次 run16 发射在修完版本常量后仍被 preflight 拒下：`_live_schema_catalog_sha256`
+报 `index: expected 168 / observed 174` —— 正是 C2_0014 新建的**六个 partial 索引**。
+`_assert_fresh_database` 拿"刚迁移完的候选库"对比三个**冻结期望**，而迁移只带动了零个：
+① `_EXPECTED_ALEMBIC_REVISION`（先修，见上）；② `_EXPECTED_LIVE_SCHEMA_CATALOG_COUNTS`
+（`index` 168→174）；③ `_EXPECTED_LIVE_SCHEMA_CATALOG_SHA256`（重算）。
+②③ 用模块自身的目录 SQL 在**两个独立迁移的临时库**上复算，计数与 sha
+`8a738964…` 逐字节一致后才写入。教训（已记 tasks 1.8）：**每次迁移必须同时移动这三个
+冻结期望**；F3 把管线内验证留给 run16，正是它暴露了 ②③。

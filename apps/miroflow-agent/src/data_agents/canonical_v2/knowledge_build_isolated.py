@@ -374,7 +374,7 @@ _EXPECTED_OWNER_TABLES: frozenset[str] = frozenset(
 _EXPECTED_LIVE_SCHEMA_CATALOG_COUNTS = {
     "column": 1375,
     "constraint": 1112,
-    "index": 168,
+    "index": 174,
     "internal_trigger_summary": 1,
     "relation": 87,
     "routine": 47,
@@ -383,8 +383,11 @@ _EXPECTED_LIVE_SCHEMA_CATALOG_COUNTS = {
     "trigger": 267,
     "view": 1,
 }
+# C2_0014 adds the six partial guard indexes, so both frozen live-schema
+# expectations moved with the migration (proved stable across two independently
+# migrated scratch databases before the run16 launch).
 _EXPECTED_LIVE_SCHEMA_CATALOG_SHA256 = (
-    "e1aa4b5e3e1aa507b893f74641ec34c94391b75881b0160b03b432b5e9966e4a"
+    "8a73896463c36980290ee5d92dd739ba4cd8e869207da8d5d8bf28bbd05d1c8e"
 )
 _LIBPQ_CONNECTION_ENVIRONMENT_KEYS = frozenset(
     {
