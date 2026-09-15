@@ -6614,7 +6614,8 @@ def test_patent_applicant_links_seed_from_exact_company_names() -> None:
     rows = _parsed_released_objects(module, (company, patent))
 
     seeds = module._typed_relationship_seeds(
-        source_rows=rows,
+        object_rows_by_id={row.payload["id"]: row for row in rows},
+        supplemental_rows=(),
         canonical_by_source={
             f"source-released-object:{company['id']}": "company-c-pudu",
             f"source-released-object:{patent['id']}": "patent-c-alpha",
@@ -6656,7 +6657,8 @@ def test_patent_applicant_links_abstain_on_ambiguous_names() -> None:
     rows = _parsed_released_objects(module, (company_a, company_b, patent))
 
     seeds = module._typed_relationship_seeds(
-        source_rows=rows,
+        object_rows_by_id={row.payload["id"]: row for row in rows},
+        supplemental_rows=(),
         canonical_by_source={
             f"source-released-object:{company_a['id']}": "company-c-a",
             f"source-released-object:{company_b['id']}": "company-c-b",

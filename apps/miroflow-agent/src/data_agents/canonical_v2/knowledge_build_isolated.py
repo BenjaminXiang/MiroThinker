@@ -5290,6 +5290,7 @@ def _map_public_authority(
     DomainProjectionResult,
     tuple[_ParsedReleasedObject, ...],
     tuple[_RecordedGap, ...],
+    dict[str, _ParsedReleasedObject],
 ]:
     source_rows = rows
     rows = tuple(
@@ -6381,6 +6382,11 @@ def _map_public_authority(
         domain_result,
         tuple(sorted(links, key=lambda item: cast(str, item.payload["id"]))),
         tuple(sorted(gaps, key=lambda item: item.result.gap_id)),
+        # The mapped admitted-object universe: released objects plus every
+        # object synthesized from a supplemental batch, each in released-object
+        # payload shape.  Downstream authorities that need "which objects exist"
+        # (not "which raw rows landed") must index this, never `source_rows`.
+        dict(row_by_object),
     )
 
 
@@ -6475,18 +6481,39 @@ def _professor_company_role_id(value: Any) -> str | None:
     return None
 
 
+def _relationship_seed_object_rows(
+    object_rows_by_id: Mapping[str, _ParsedReleasedObject],
+) -> dict[str, _ParsedReleasedObject]:
+    """The admitted-object universe the relationship seeds may resolve against.
+
+    `_map_public_authority`'s `row_by_object` keys every admitted object (the
+    released library plus each object synthesized from a supplemental batch by
+    `_merge_p4_created_rows` / `_merge_company_backfill_rows`) to a
+    released-object-shaped row.  The raw landed `source_rows` are NOT that
+    universe: only the released-objects source is unwrapped to released shape,
+    every supplemental JSONL row keeps its native domain keys (`patent_id`,
+    `company_name`, …) and therefore never matched the old `payload["id"]`
+    filter.  Indexing raw rows silently restricted every seeding lane to 5,561
+    released objects and cut `patent_has_applicant` from 7,611 document
+    bindings to 123 edges in run15.
+    """
+
+    return {
+        cast(str, row.payload["id"]): row
+        for row in object_rows_by_id.values()
+        if isinstance(row.payload.get("id"), str)
+    }
+
+
 def _typed_relationship_seeds(
     *,
-    source_rows: tuple[_ParsedReleasedObject, ...],
+    object_rows_by_id: Mapping[str, _ParsedReleasedObject],
+    supplemental_rows: tuple[_ParsedReleasedObject, ...],
     canonical_by_source: Mapping[str, str],
     canonical_domains: Mapping[str, str],
     bound_company_ids_by_patent: Mapping[str, tuple[str, ...]] | None = None,
 ) -> tuple[_TypedRelationshipSeed, ...]:
-    rows_by_object = {
-        cast(str, row.payload["id"]): row
-        for row in source_rows
-        if isinstance(row.payload.get("id"), str)
-    }
+    rows_by_object = _relationship_seed_object_rows(object_rows_by_id)
     if bound_company_ids_by_patent is None:
         bound_company_ids_by_patent = {}
     # Bound applicants carry CANONICAL company ids; seeds must carry source
@@ -6582,7 +6609,9 @@ def _typed_relationship_seeds(
             )
         )
 
-    for row in sorted(source_rows, key=lambda item: item.record.record_id):
+    # Source-purpose lane: this one reads per-record payloads (not objects), so
+    # it needs the raw landed rows.
+    for row in sorted(supplemental_rows, key=lambda item: item.record.record_id):
         if (
             _SUPPLEMENTAL_SOURCE_PURPOSES.get(row.source_id)
             != "professor_company_role"
@@ -6773,7 +6802,8 @@ def _relationship_authority(
     internal_result: InternalReferenceProjectionResult,
     links: tuple[_ParsedReleasedObject, ...],
     now: datetime,
-    source_rows: tuple[_ParsedReleasedObject, ...] = (),
+    source_rows: tuple[_ParsedReleasedObject, ...],
+    object_rows_by_id: Mapping[str, _ParsedReleasedObject],
 ) -> tuple[RelationshipProjectionRequest, RelationshipProjectionResult]:
     has_internal_references = any(
         (
@@ -6831,8 +6861,10 @@ def _relationship_authority(
         )
         if bound_ids:
             bound_company_ids_by_patent.setdefault(patent_object_id, bound_ids)
+    seed_object_rows = _relationship_seed_object_rows(object_rows_by_id)
     typed_seeds = _typed_relationship_seeds(
-        source_rows=source_rows,
+        object_rows_by_id=object_rows_by_id,
+        supplemental_rows=source_rows,
         canonical_by_source=canonical_by_source,
         canonical_domains=canonical_ids,
         bound_company_ids_by_patent=bound_company_ids_by_patent,
@@ -7130,7 +7162,116 @@ def _relationship_authority(
         raise IsolatedKnowledgeBuildError(
             "explicit source relationship projection is incomplete"
         )
+    _reconcile_patent_company_bindings(
+        bound_company_ids_by_patent=bound_company_ids_by_patent,
+        seed_object_rows=seed_object_rows,
+        canonical_by_source=canonical_by_source,
+        typed_seeds=typed_seeds,
+    )
     return relationship_request, relationship_result
+
+
+def _reconcile_patent_company_bindings(
+    *,
+    bound_company_ids_by_patent: Mapping[str, tuple[str, ...]],
+    seed_object_rows: Mapping[str, _ParsedReleasedObject],
+    canonical_by_source: Mapping[str, str],
+    typed_seeds: tuple[_TypedRelationshipSeed, ...],
+) -> None:
+    """Fail closed when a document-layer applicant binding is not projected.
+
+    Two stores describe the same fact: the patents' `applicants` field
+    assertions carry the resolved `canonical_company_id` the serving period
+    reads directly (G3-simple direct scan, the user-ruled authority), while the
+    relationship layer publishes `patent_has_applicant` edges.  The
+    relationship layer is allowed to be a subset of the document layer (a
+    binding whose company never became an admitted object cannot be
+    projected) — but every other difference means the projection silently
+    dropped a fact the pack serves.  run15 shipped exactly that: 123 edges
+    against 7,042 bound patents.
+    """
+
+    def _canonical(object_id: str) -> str | None:
+        return canonical_by_source.get(f"source-released-object:{object_id}")
+
+    indexed_canonical_ids = {
+        canonical_id
+        for object_id in seed_object_rows
+        if (canonical_id := _canonical(object_id)) is not None
+    }
+    document_pairs: set[tuple[str, str]] = set()
+    document_entries = 0
+    bound_patents: set[str] = set()
+    bound_companies: set[str] = set()
+    for patent_object_id, company_canonical_ids in sorted(
+        bound_company_ids_by_patent.items()
+    ):
+        patent_canonical_id = _canonical(patent_object_id)
+        if patent_canonical_id is None:
+            continue
+        for company_canonical_id in company_canonical_ids:
+            document_pairs.add((patent_canonical_id, company_canonical_id))
+            document_entries += 1
+            bound_patents.add(patent_canonical_id)
+            bound_companies.add(company_canonical_id)
+    seeded_pairs = {
+        (
+            canonical_by_source.get(
+                f"source-released-object:{seed.source_object_id}",
+                seed.source_object_id,
+            ),
+            canonical_by_source.get(
+                f"source-released-object:{seed.target_object_id}",
+                seed.target_object_id,
+            ),
+        )
+        for seed in typed_seeds
+        if seed.relationship_type_id == "patent_has_applicant"
+    }
+    unindexed_pairs = {
+        pair for pair in document_pairs if pair[1] not in indexed_canonical_ids
+    }
+    unexplained_missing = sorted(document_pairs - unindexed_pairs - seeded_pairs)
+    seed_lanes: defaultdict[str, int] = defaultdict(int)
+    typed_seed_types: defaultdict[str, int] = defaultdict(int)
+    for seed in typed_seeds:
+        typed_seed_types[seed.relationship_type_id] += 1
+        if seed.relationship_type_id != "patent_has_applicant":
+            continue
+        seed_lanes[
+            str(
+                seed.evidence_metadata.get("match_kind")
+                or seed.evidence_metadata.get("source_field")
+                or "unknown"
+            )
+        ] += 1
+    ledger = {
+        "document_binding_entries": document_entries,
+        "document_binding_pairs": len(document_pairs),
+        "document_bound_patents": len(bound_patents),
+        "document_bound_companies": len(bound_companies),
+        "seeded_pairs": len(seeded_pairs),
+        "seed_lanes": dict(sorted(seed_lanes.items())),
+        "typed_seed_types": dict(sorted(typed_seed_types.items())),
+        "unindexed_pairs": len(unindexed_pairs),
+        "unexplained_missing": len(unexplained_missing),
+        "unexplained_missing_sample": [list(pair) for pair in unexplained_missing[:5]],
+    }
+    print(
+        "PATENT_COMPANY_BINDING_LEDGER "
+        + json.dumps(ledger, ensure_ascii=False, sort_keys=True),
+        flush=True,
+    )
+    if unexplained_missing:
+        raise IsolatedKnowledgeBuildError(
+            "document-layer applicant bindings were not projected as "
+            "patent_has_applicant relationships: "
+            f"{len(unexplained_missing)} of {len(document_pairs)} pairs "
+            f"(unindexed={len(unindexed_pairs)}) sample="
+            + json.dumps(
+                [list(pair) for pair in unexplained_missing[:5]], ensure_ascii=False
+            )
+        )
 
 
 def _release_bundle_relationship_authority(
@@ -9392,6 +9533,7 @@ class _IsolatedKnowledgeBuild(KnowledgeBuild):
             domain_result,
             links,
             gaps,
+            object_rows_by_id,
         ) = _map_public_authority(
             request=request,
             rows=rows,
@@ -9420,6 +9562,7 @@ class _IsolatedKnowledgeBuild(KnowledgeBuild):
             links=links,
             now=now,
             source_rows=rows,
+            object_rows_by_id=object_rows_by_id,
         )
         (
             eligibility_requests,
