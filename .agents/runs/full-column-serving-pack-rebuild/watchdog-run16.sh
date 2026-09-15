@@ -7,7 +7,8 @@ LOG="$RUN_DIR/watchdog-run16.log"
 ENVELOPE=/home/longxiang/MiroThinker/.worktrees/data-rebuild/.agents/runs/rebuild-canonical-v2-knowledge-platform/s12a/complete-candidate-build-envelope.json
 echo "$(date +%F_%H:%M:%S) watchdog started" >> "$LOG"
 while true; do
-  pid="$(pgrep -f 'complete_candidate_runner' | head -1)"
+  pid="$(pgrep -f '[\.]venv/bin/python3 .*complete_candidate_runner' | head -1)"
+  pid="${pid:-$(pgrep -f 'complete_candidate_runner' | tail -1)}"
   stamp="$(date +%F_%H:%M:%S)"
   if [[ -z "$pid" ]]; then
     echo "$stamp runner-not-running" >> "$LOG"
