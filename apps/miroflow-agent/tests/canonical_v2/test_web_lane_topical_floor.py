@@ -150,31 +150,59 @@ def test_core_tokens_fail_open_without_topic() -> None:
 def test_reported_case_drops_diet_camp_page() -> None:
     """R1: the reported sohu page shares no core token with the query.
 
-    The sz.gov.cn round-up's fate is deliberately not asserted here: its
-    reconstructed snippet carries no core token either, and the real snippet
-    (captured in the scratch run) decides — see red-case.md.
+    Composed exactly as the lane runs it — subject gate first (which backfills
+    the two tier-5 pages to reach its floor), then the topical floor. The
+    sz.gov.cn round-up is the gate's top-ranked result and is what the
+    non-empty-lane guard retains; the two junk pages go.
     """
     results = (
         _result(_DIET_CAMP),
         _result(_PLATFORM_ROUNDUP),
         _result(_DIRECTORY_PAGE),
     )
-    kept = _titles(_floor(results, _request()))
+    request = _request()
+    gated = serving._apply_web_subject_consistency(results=results, request=request)
+    assert len(gated) == 3, "gate backfills both T5 pages (H2) — the RED fact"
+    kept = _titles(_floor(gated, request))
+    assert kept == [_PLATFORM_ROUNDUP[0]]
     assert "多彩深圳——减肥达人训练营深圳国贸营地简介" not in kept
     assert "百步先(深圳)信息技术有限公司" not in kept
 
 
 def test_location_only_overlap_is_not_enough() -> None:
     """R2: 深圳 alone (the query's location qualifier) never admits a result."""
-    results = (_result(_DIET_CAMP),)
-    assert _floor(results, _request()) == ()
+    topical = _result(
+        (
+            "国先中心正式揭牌",
+            "https://www.sz.gov.cn/redacted/gxzx",
+            ("bocha",),
+            "国先中心在深圳揭牌。",
+        )
+    )
+    kept = _titles(_floor((topical, _result(_DIET_CAMP)), _request()))
+    assert kept == [topical.title]
 
 
 def test_floor_applies_to_refinement_results() -> None:
     """R3: refinement-round results pass the floor before the merge."""
-    refined = (_result(_DIET_CAMP), _result(_PLATFORM_ROUNDUP))
+    topical = _result(
+        (
+            "机器人企业榜单",
+            "https://www.example.com/list",
+            ("bocha",),
+            "榜单收录深圳机器人企业。",
+        )
+    )
+    refined = (topical, _result(_DIET_CAMP))
     kept = _floor(refined, _request(original_query="深圳有哪些做机器人的公司"))
-    assert _titles(kept) == []
+    assert _titles(kept) == [topical.title]
+
+
+def test_empty_floor_keeps_top_ranked_result() -> None:
+    """The lane must never empty: WebLane raises 'unavailable' on no results."""
+    results = (_result(_DIET_CAMP), _result(_DIRECTORY_PAGE))
+    kept = _floor(results, _request())
+    assert _titles(kept) == [_DIET_CAMP[0]]
 
 
 # --- exemptions -----------------------------------------------------------
@@ -299,7 +327,7 @@ def test_gate_drop_is_recorded_only_when_something_drops() -> None:
     reporter = _Reporter()
     token = turn_trace_context.set_turn_trace_reporter(reporter)
     try:
-        _floor((_result(_DIET_CAMP), _result(_DIRECTORY_PAGE)), _request())
+        _floor((topical, _result(_DIET_CAMP), _result(_DIRECTORY_PAGE)), _request())
         assert reporter.gate_drops == [("web_topical_floor", 2)]
         reporter.gate_drops.clear()
         assert _titles(_floor((topical,), _request())) == [topical.title]

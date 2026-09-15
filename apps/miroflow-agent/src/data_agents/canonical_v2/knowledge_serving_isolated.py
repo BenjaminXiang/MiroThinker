@@ -1067,6 +1067,19 @@ def _apply_web_topical_floor(
                 or (identity_hit is not None and identity_hit(searchable, result))
             ):
                 kept.append(result)
+        if not kept:
+            # The lane must never empty: WebLane raises "web search is
+            # unavailable" for an empty result set, and that branch means
+            # degradation, not "nothing relevant" — the same reason
+            # _WEB_SUBJECT_CONSISTENCY_FLOOR backfills. When no result matches
+            # the query, the gate's own top-ranked result is the least-bad
+            # candidate; the rest are still dropped.
+            _logger.warning(
+                "web topical floor kept no result for %r; retaining the "
+                "top-ranked one to keep the lane non-empty",
+                getattr(request, "original_query", ""),
+            )
+            kept.append(results[0])
         dropped = len(results) - len(kept)
         reporter = current_turn_trace()
         if dropped and reporter is not None:
