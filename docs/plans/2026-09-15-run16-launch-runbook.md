@@ -147,6 +147,13 @@ setsid nohup bash .agents/runs/full-column-serving-pack-rebuild/build-run16.sh \
 `s12g/serve-18188-command.sh`（单一事实来源）。当前指向 run15 包 +
 `miroflow_candidate_v2_20260913_r1` + index-v2。
 
+0. **服务线预合（已完成于隔离树）**：`.worktrees/serving-run16-ready` @
+   `codex/canonical-v2-run16-ready` = `codex/canonical-v2-s12a-ready` + P1 + 模型同步
+   （两处 doc 冲突已按"保留双方行"解析），关键子集 **77 passed**（loader/可选字段/
+   投影合同/fast boot）。切包时：**封印从这棵树跑**，随后把活线
+   `.worktrees/canonical-v2-s11-consolidation`（当前 5afdb6f6）**fast-forward 到
+   同一提交 d8294d37**，再重启——两棵树同码，包与装载器一致。
+
 1. 回滚资产确认（已存在，不动）：`s12g/serve-18188-command-run15.sh`、
    `s12g/serving-bundle-run15.json`、`serving-pack-run15-sealed`、index-v2 / staging-v2。
 2. 生成 `s12g/serving-bundle-run16.json`：`generate_run16_serving_bundle.py`（**已就绪**：
