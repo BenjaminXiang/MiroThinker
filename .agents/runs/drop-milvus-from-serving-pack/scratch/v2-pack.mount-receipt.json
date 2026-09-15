@@ -1,0 +1,30 @@
+{
+  "file_sha256": {
+    ".canonical-v2-isolated-index-target.json": "f3fae85987ad9bf754b135837ab2944016df6aa867b5e924cdd215f3400aaba8",
+    "institution_catalog.json": "ae590c52fff2d8364014408dba1aee95407eaf2c02809dbd3595fdb8ada10edd",
+    "lookup.sqlite3": "3957c6ee5a96f42a238e61cd4a83f56f86b238565dc1aee5bc1bb316959e17c8",
+    "relationships.json": "b57d0bdbc6acfe96b7f7a5b4eece3da115fd27b77e044855f27c2ad5266c5cd7"
+  },
+  "files": {
+    ".canonical-v2-isolated-index-target.json": {
+      "first_block_sha256": "f3fae85987ad9bf754b135837ab2944016df6aa867b5e924cdd215f3400aaba8",
+      "last_block_sha256": "f3fae85987ad9bf754b135837ab2944016df6aa867b5e924cdd215f3400aaba8",
+      "size": 306
+    },
+    "lookup.sqlite3": {
+      "first_block_sha256": "de5ee2fabd5de61048fc295d9757efecaee813a1391600d43aba2bd26fd56797",
+      "last_block_sha256": "ebbad7fa5d4b4fadd54db23fe00aaef7cf4a87a9f0ed042f1bf07df76b5b2bd5",
+      "size": 896868352
+    }
+  },
+  "generated_at": "2026-09-15T09:06:20.715431+00:00",
+  "index_marker_sha256": "f3fae85987ad9bf754b135837ab2944016df6aa867b5e924cdd215f3400aaba8",
+  "index_root": "/var/tmp/slimpack-296/v2/index",
+  "index_target_id": "index:candidate-v2-20260913-r1",
+  "mount_seconds": 289.081,
+  "pack_dir": "/var/tmp/slimpack-296/v2/pack",
+  "pack_manifest_sha256": "3a7d92cce3f4d335695344a5b641763096a218915b3a842c9b717c5bc98a95ee",
+  "release_id": "candidate-v2-20260913-r1",
+  "schema_version": "canonical-v2-serving-mount-receipt-v1",
+  "verification": "receipt"
+}

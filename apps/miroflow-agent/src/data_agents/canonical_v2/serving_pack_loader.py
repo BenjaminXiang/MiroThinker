@@ -15,6 +15,13 @@ Serving Pack replaces that envelope-side input with a prebuilt directory:
       milvus.db                # accepted isolated index, bound by per-file hash)
       .canonical-v2-isolated-index-target.json   # index marker copy
 
+With ``manifest.json: schema_version = canonical-v2-serving-pack-v2`` the pack
+registers ``lookup.sqlite3`` + marker + relationships + catalog and carries no
+``milvus.db`` at all: the index points are read from the release lookup store's
+``index_point`` table, and the boot path never imports ``pymilvus``. v1 packs
+keep the exact v1 code path (see
+``openspec/changes/drop-milvus-from-serving-pack/design.md``).
+
 The on-disk index marker binds the absolute index root, so the pack is bound
 to the index root it was generated from (recorded in ``manifest.json``); the
 loader refuses any other root. This keeps every query-time trace (target
@@ -80,8 +87,11 @@ from .index_projection import (
 )
 from .index_projection_isolated import (
     EmbeddingAdapter,
+    IndexPointStore,
     IsolatedIndexSnapshot,
     IsolatedIndexTarget,
+    POINT_STORE_LOOKUP,
+    POINT_STORE_MILVUS,
     open_manifest_verified_index_snapshot,
 )
 from .internal_reference_projection import (
@@ -124,6 +134,7 @@ from .release_publication_isolated import IsolatedReleaseBundle
 _LOGGER = logging.getLogger(__name__)
 
 PACK_SCHEMA_VERSION = "canonical-v2-serving-pack-v1"
+PACK_SCHEMA_VERSION_V2 = "canonical-v2-serving-pack-v2"
 PACK_RELATIONSHIPS_SCHEMA_VERSION = "canonical-v2-serving-pack-relationships-v1"
 PACK_INSTITUTION_CATALOG_SCHEMA_VERSION = (
     "canonical-v2-serving-pack-institution-catalog-v1"
@@ -132,9 +143,34 @@ PACK_MANIFEST_FILENAME = "manifest.json"
 PACK_RELATIONSHIPS_FILENAME = "relationships.json"
 PACK_INSTITUTION_CATALOG_FILENAME = "institution_catalog.json"
 PACK_INDEX_FILENAMES = ("lookup.sqlite3", "milvus.db")
+PACK_INDEX_FILENAMES_V2 = ("lookup.sqlite3",)
 PACK_MARKER_FILENAME = ".canonical-v2-isolated-index-target.json"
 
 _HASH_CHUNK_BYTES = 8 * 1024 * 1024
+
+
+def pack_index_filenames(schema_version: str) -> tuple[str, ...]:
+    """The index files one pack schema registers in its manifest.
+
+    v1 packs carry the Milvus copy; v2 packs carry only the lookup store, whose
+    ``index_point`` table is the v2 point authority.
+    """
+
+    if schema_version == PACK_SCHEMA_VERSION_V2:
+        return PACK_INDEX_FILENAMES_V2
+    if schema_version == PACK_SCHEMA_VERSION:
+        return PACK_INDEX_FILENAMES
+    raise ServingPackIntegrityError("serving pack schema version differs")
+
+
+def pack_point_store(schema_version: str) -> IndexPointStore:
+    """Where the points of one pack schema are read from."""
+
+    if schema_version == PACK_SCHEMA_VERSION_V2:
+        return POINT_STORE_LOOKUP
+    if schema_version == PACK_SCHEMA_VERSION:
+        return POINT_STORE_MILVUS
+    raise ServingPackIntegrityError("serving pack schema version differs")
 
 
 class ServingPackIntegrityError(ValueError):
@@ -144,7 +180,9 @@ class ServingPackIntegrityError(ValueError):
 class ServingPackManifest(ContractModel):
     """Pack identity plus the small serving-authority models."""
 
-    schema_version: Literal["canonical-v2-serving-pack-v1"]
+    schema_version: Literal[
+        "canonical-v2-serving-pack-v1", "canonical-v2-serving-pack-v2"
+    ]
     pack_id: str = Field(min_length=1)
     release_id: str = Field(min_length=1)
     index_root: str = Field(min_length=1)
@@ -646,7 +684,7 @@ def open_serving_pack_authority(
         PACK_RELATIONSHIPS_FILENAME,
         PACK_INSTITUTION_CATALOG_FILENAME,
         PACK_MARKER_FILENAME,
-        *PACK_INDEX_FILENAMES,
+        *pack_index_filenames(manifest.schema_version),
     }
     if set(manifest.files) != expected_files or any(
         not isinstance(value, str) or len(value) != 64
@@ -665,10 +703,11 @@ def open_serving_pack_authority(
     full_verify = os.environ.get("CANONICAL_V2_SERVING_FULL_VERIFY", "").strip() == "1"
     receipt_path = _mount_receipt_path(pack_dir)
     manifest_file_sha256 = _sha256_file(manifest_path)
+    index_filenames = pack_index_filenames(manifest.schema_version)
     with serving_timing.timed_step("pack.mount_identity"):
         identities = {
             name: _file_identity_fingerprint(_require_regular_file(pack_dir, name))
-            for name in (*PACK_INDEX_FILENAMES, PACK_MARKER_FILENAME)
+            for name in (*index_filenames, PACK_MARKER_FILENAME)
         }
     receipt = None if full_verify else _read_mount_receipt(receipt_path)
     receipt_used = receipt is not None and _receipt_binds_mount(
@@ -683,7 +722,7 @@ def open_serving_pack_authority(
     )
     if not receipt_used:
         with serving_timing.timed_step("pack.file_hash"):
-            for name in (*PACK_INDEX_FILENAMES, PACK_MARKER_FILENAME):
+            for name in (*index_filenames, PACK_MARKER_FILENAME):
                 if _sha256_file(pack_dir / name) != manifest.files[name]:
                     raise ServingPackIntegrityError(
                         f"serving pack file hash differs: {name}"
@@ -784,6 +823,7 @@ def open_serving_pack_authority(
         snapshot = open_manifest_verified_index_snapshot(
             index_target,
             expected_embedding_model_id=manifest.embedding_model_id,
+            point_store=pack_point_store(manifest.schema_version),
         )
 
     index_result = IndexProjectionResult.model_construct(
@@ -1019,7 +1059,7 @@ def open_serving_pack_authority(
             "file_sha256": {
                 name: manifest.files[name]
                 for name in (
-                    *PACK_INDEX_FILENAMES,
+                    *index_filenames,
                     PACK_MARKER_FILENAME,
                     PACK_RELATIONSHIPS_FILENAME,
                     PACK_INSTITUTION_CATALOG_FILENAME,
@@ -1402,6 +1442,7 @@ def _create_pack_vector_recall_adapter(
     embedding_adapter: EmbeddingAdapter,
     vectorized_scoring: bool,
     preopened_snapshot: IsolatedIndexSnapshot | None,
+    point_store: IndexPointStore = POINT_STORE_MILVUS,
     manual_recall_provider: Any | None = None,
 ) -> Callable[[LaneRequest], RetrievalLaneResult]:
     expected_model_id = bundle.index_result.policy_snapshot.embedding_model
@@ -1438,6 +1479,7 @@ def _create_pack_vector_recall_adapter(
                         else open_manifest_verified_index_snapshot(
                             bundle.index_target,
                             expected_embedding_model_id=expected_model_id,
+                            point_store=point_store,
                         )
                     )
                     iso._require_snapshot_matches_bundle(snapshot, bundle)
@@ -1951,6 +1993,7 @@ def create_serving_pack_knowledge_read(
             embedding_adapter=embedding_adapter,
             vectorized_scoring=vectorized_recall,
             preopened_snapshot=authority.index_snapshot,
+            point_store=pack_point_store(authority.manifest.schema_version),
             manual_recall_provider=manual_recall_provider,
         )
         supported_lanes.add("vector")
@@ -1999,6 +2042,7 @@ def create_serving_pack_knowledge_read(
 
 __all__ = [
     "PACK_INDEX_FILENAMES",
+    "PACK_INDEX_FILENAMES_V2",
     "PACK_INSTITUTION_CATALOG_FILENAME",
     "PACK_INSTITUTION_CATALOG_SCHEMA_VERSION",
     "PACK_MANIFEST_FILENAME",
@@ -2006,10 +2050,13 @@ __all__ = [
     "PACK_RELATIONSHIPS_FILENAME",
     "PACK_RELATIONSHIPS_SCHEMA_VERSION",
     "PACK_SCHEMA_VERSION",
+    "PACK_SCHEMA_VERSION_V2",
     "ServingPackAuthority",
     "ServingPackIntegrityError",
     "ServingPackManifest",
     "create_serving_pack_knowledge_read",
     "create_serving_pack_query_planner",
     "open_serving_pack_authority",
+    "pack_index_filenames",
+    "pack_point_store",
 ]

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from dataclasses import dataclass
 from datetime import datetime
 import hashlib
 import json
@@ -10,6 +11,7 @@ import math
 import os
 from pathlib import Path
 import re
+import shutil
 import sqlite3
 from typing import Any, Literal, Protocol, cast
 import warnings
@@ -42,10 +44,19 @@ _MILVUS_FILENAME = "milvus.db"
 _LOOKUP_FILENAME = "lookup.sqlite3"
 _VECTOR_MATRIX_FILENAME = "vector_matrix.npz"
 _VECTOR_MATRIX_SCHEMA_VERSION = "canonical-v2-vector-matrix-v1"
+_INDEX_POINT_TABLE = "index_point"
 _POINT_READ_BATCH_SIZE = 128
 _POINT_WRITE_BATCH_SIZE = 128
 _MIN_VECTOR_COSINE_SIMILARITY = 0.999
 _TOKEN_RE = re.compile(r"[A-Za-z][A-Za-z0-9-]{1,}|[\u3400-\u4DBF\u4E00-\u9FFF]")
+
+#: Where a marked isolated index keeps its ``IndexProjectionPoint`` objects.
+#: ``milvus-lite`` is the v1 storage (the Milvus row's ``point_json`` column);
+#: ``lookup-sqlite`` is the v2 storage (the ``index_point`` table of the same
+#: release ``lookup.sqlite3`` that already carries the lookup documents).
+IndexPointStore = Literal["milvus-lite", "lookup-sqlite"]
+POINT_STORE_MILVUS: IndexPointStore = "milvus-lite"
+POINT_STORE_LOOKUP: IndexPointStore = "lookup-sqlite"
 
 
 class IsolatedIndexTargetSafetyError(RuntimeError):
@@ -423,23 +434,29 @@ def open_manifest_verified_index_snapshot(
     target: IsolatedIndexTarget,
     *,
     expected_embedding_model_id: str,
+    point_store: IndexPointStore = POINT_STORE_MILVUS,
 ) -> IsolatedIndexSnapshot:
     """Open the marked snapshot after manifest/hash binding, without re-embedding.
 
     This is the fast-boot alternative to :func:`audit_isolated_index_snapshot`:
     it performs the same marker, self-hashed receipt, projection-manifest,
-    lookup inventory, and Milvus collection checks and still reads every point
-    row with full per-row metadata binding, but it does not re-derive the stored
+    lookup inventory, and point-store checks and still reads every point row
+    with full per-row metadata binding, but it does not re-derive the stored
     vectors from the embedding model. Stored vectors are write-time artifacts;
     serving re-embeds ``embedded_content`` at query time, so skipping their
     readback verification does not change query behavior. The caller must still
     bind the returned snapshot to the accepted release bundle.
+
+    ``point_store`` names where the points live: ``milvus-lite`` (v1 packs)
+    opens the marked ``milvus.db``; ``lookup-sqlite`` (v2 packs) reads the
+    ``index_point`` table of the release lookup store and never touches Milvus.
     """
 
     return _open_verified_index_snapshot(
         target,
         expected_embedding_model_id=expected_embedding_model_id,
         embedding_adapter=None,
+        point_store=point_store,
     )
 
 
@@ -448,6 +465,7 @@ def _open_verified_index_snapshot(
     *,
     expected_embedding_model_id: str,
     embedding_adapter: EmbeddingAdapter | None,
+    point_store: IndexPointStore = POINT_STORE_MILVUS,
 ) -> IsolatedIndexSnapshot:
     _validate_target_marker(target)
     lookup_path = target.root / _LOOKUP_FILENAME
@@ -483,6 +501,30 @@ def _open_verified_index_snapshot(
             "isolated lookup content differs from the successful receipt"
         )
 
+    if point_store == POINT_STORE_LOOKUP:
+        if embedding_adapter is not None:
+            raise IsolatedIndexTargetSafetyError(
+                "the full vector audit requires the v1 Milvus point store"
+            )
+        stray_milvus = target.root / _MILVUS_FILENAME
+        if stray_milvus.exists() or stray_milvus.is_symlink():
+            raise IndexProjectionIntegrityError(
+                "v2 isolated target must not carry a Milvus store"
+            )
+        with serving_timing.timed_step("snapshot.lookup_points"):
+            points = _read_index_points_from_path(
+                lookup_path,
+                expected_release_id=target.release_id,
+            )
+        if tuple(sorted(point.point_id for point in points)) != receipt.point_ids:
+            raise IndexProjectionIntegrityError(
+                "isolated point store inventory differs from the receipt"
+            )
+        return IsolatedIndexSnapshot(
+            receipt=receipt,
+            points=points,
+            lookup_documents=documents,
+        )
     collection_name = _read_collection_name(
         lookup_path,
         expected_release_id=target.release_id,
@@ -732,6 +774,201 @@ def load_persisted_vector_matrix(
         point_id: index for index, point_id in enumerate(point_ids)
     }
     return positions, matrix, norms
+
+
+@dataclass(frozen=True, slots=True)
+class IsolatedIndexConversionReport:
+    """What one v1→v2 isolated index conversion materialized."""
+
+    source_root: Path
+    dest_root: Path
+    release_id: str
+    point_count: int
+    dest_lookup_bytes: int
+    dest_vector_matrix_bytes: int
+    removed_milvus_bytes: int
+    dest_lookup_sha256: str
+    dest_marker_sha256: str
+
+
+def convert_isolated_index_to_v2(
+    *,
+    source_root: Path,
+    dest_root: Path,
+) -> IsolatedIndexConversionReport:
+    """Materialize a v2 isolated index root from one v1 (Milvus-backed) root.
+
+    The v2 root keeps the same authority — the same lookup documents, the same
+    points, the same vector matrix — in the v2 storage form: the points move
+    from the Milvus ``point_json`` column into the ``index_point`` table of the
+    release ``lookup.sqlite3``, and no ``milvus.db`` is written. Fail closed on
+    any identity or inventory drift; the source root is never modified.
+    A failed conversion leaves a partial destination root behind, which the
+    operator removes before retrying (the destination must stay fresh).
+    """
+
+    if not source_root.is_absolute() or not dest_root.is_absolute():
+        raise IsolatedIndexTargetSafetyError(
+            "isolated index conversion requires explicit absolute roots"
+        )
+    source_root = source_root.resolve(strict=False)
+    dest_root = dest_root.resolve(strict=False)
+    if not source_root.is_dir() or source_root.is_symlink():
+        raise IsolatedIndexTargetSafetyError(
+            "conversion source root is missing or unsafe"
+        )
+    marker_path = source_root / _MARKER_NAME
+    if not marker_path.is_file() or marker_path.is_symlink():
+        raise IsolatedIndexTargetSafetyError(
+            "conversion source marker is missing or unsafe"
+        )
+    marker_bytes = marker_path.read_bytes()
+    marker = json.loads(marker_bytes)
+    if marker.get("schema_version") != _MARKER_SCHEMA_VERSION:
+        raise IsolatedIndexTargetSafetyError("conversion source marker schema differs")
+    if marker.get("root") != str(source_root):
+        raise IsolatedIndexTargetSafetyError("conversion source marker root differs")
+    target = IsolatedIndexTarget(
+        root=source_root,
+        target_id=marker["target_id"],
+        release_id=marker["release_id"],
+        forbidden_milvus_paths=tuple(
+            Path(value) for value in marker["forbidden_milvus_paths"]
+        ),
+        marker_sha256=_sha256_bytes(marker_bytes),
+    )
+    _validate_target_marker(target)
+
+    lookup_path = source_root / _LOOKUP_FILENAME
+    receipt = _read_receipt(lookup_path)
+    if receipt.release_id != target.release_id or receipt.target_id != target.target_id:
+        raise IndexProjectionIntegrityError(
+            "conversion source receipt differs from the marked target"
+        )
+    embedding_models = {
+        manifest.embedding_model for manifest in receipt.index_projections
+    }
+    if len(embedding_models) != 1:
+        raise IndexProjectionIntegrityError(
+            "conversion source receipt embedding model is not uniform"
+        )
+    embedding_model_id = embedding_models.pop()
+
+    milvus_path = source_root / _MILVUS_FILENAME
+    if not milvus_path.is_file() or milvus_path.is_symlink():
+        raise IndexProjectionIntegrityError(
+            "conversion source Milvus store is missing or unsafe"
+        )
+    collection_name = _read_collection_name(
+        lookup_path,
+        expected_release_id=target.release_id,
+    )
+    client = _open_milvus_client(milvus_path)
+    try:
+        points = _read_all_points_with_client(
+            client,
+            collection_name=collection_name,
+            embedding_adapter=None,
+        )
+    finally:
+        close = getattr(client, "close", None)
+        if callable(close):
+            close()
+    if tuple(sorted(point.point_id for point in points)) != receipt.point_ids:
+        raise IndexProjectionIntegrityError(
+            "conversion source point inventory differs from the receipt"
+        )
+
+    for ancestor in (dest_root, *dest_root.parents):
+        if ancestor.is_symlink():
+            raise IsolatedIndexTargetSafetyError(
+                "conversion destination ancestry contains a symlink"
+            )
+    if dest_root.exists() or dest_root.is_symlink():
+        raise IsolatedIndexTargetSafetyError(
+            "conversion destination already exists; a fresh root is required"
+        )
+    if not dest_root.parent.is_dir() or dest_root.parent.is_symlink():
+        raise IsolatedIndexTargetSafetyError(
+            "conversion destination parent must exist and not be a symlink"
+        )
+    dest_root.mkdir(mode=0o700)
+    dest_lookup = dest_root / _LOOKUP_FILENAME
+    shutil.copyfile(lookup_path, dest_lookup)
+    write_lookup_index_points(dest_lookup, points=points)
+    dest_matrix = dest_root / _VECTOR_MATRIX_FILENAME
+    source_matrix = source_root / _VECTOR_MATRIX_FILENAME
+    if not source_matrix.is_file() or source_matrix.is_symlink():
+        raise IndexProjectionIntegrityError(
+            "conversion source vector matrix is missing or unsafe"
+        )
+    shutil.copyfile(source_matrix, dest_matrix)
+    with np.load(dest_matrix, allow_pickle=True) as data:
+        matrix_meta = json.loads(str(data["meta"].item()))
+    _require_compatible_vector_matrix(
+        dest_matrix,
+        points=points,
+        expected_embedding_model_id=embedding_model_id,
+        dimension=int(matrix_meta["dimension"]),
+    )
+    dest_marker_bytes = (
+        _canonical_json_bytes(
+            cast(
+                JsonValue,
+                _marker_document(
+                    root=dest_root,
+                    target_id=target.target_id,
+                    release_id=target.release_id,
+                    forbidden_milvus_paths=target.forbidden_milvus_paths,
+                ),
+            )
+        )
+        + b"\n"
+    )
+    with (dest_root / _MARKER_NAME).open("xb") as stream:
+        stream.write(dest_marker_bytes)
+        stream.flush()
+        os.fsync(stream.fileno())
+    return IsolatedIndexConversionReport(
+        source_root=source_root,
+        dest_root=dest_root,
+        release_id=target.release_id,
+        point_count=len(points),
+        dest_lookup_bytes=dest_lookup.stat().st_size,
+        dest_vector_matrix_bytes=dest_matrix.stat().st_size,
+        removed_milvus_bytes=milvus_path.stat().st_size,
+        dest_lookup_sha256=_sha256_file(dest_lookup),
+        dest_marker_sha256=_sha256_bytes(dest_marker_bytes),
+    )
+
+
+def _require_compatible_vector_matrix(
+    path: Path,
+    *,
+    points: tuple[IndexProjectionPoint, ...],
+    expected_embedding_model_id: str,
+    dimension: int,
+) -> None:
+    if (
+        load_persisted_vector_matrix(
+            path,
+            points=points,
+            expected_embedding_model_id=expected_embedding_model_id,
+            dimension=dimension,
+        )
+        is None
+    ):
+        raise IndexProjectionIntegrityError(
+            "conversion destination vector matrix is missing"
+        )
+
+
+def _sha256_file(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as stream:
+        while chunk := stream.read(8 * 1024 * 1024):
+            digest.update(chunk)
+    return digest.hexdigest()
 
 
 def _write_milvus_projection(
@@ -1095,6 +1332,135 @@ def _read_lookup_manifests_from_path(
     return tuple(manifests)
 
 
+def has_lookup_index_points(path: Path) -> bool:
+    """Whether one release lookup store carries the v2 ``index_point`` table."""
+
+    if not path.is_file() or path.is_symlink():
+        raise IndexProjectionIntegrityError("isolated lookup store is missing")
+    uri = f"file:{path}?mode=ro&immutable=1"
+    with sqlite3.connect(uri, uri=True) as connection:
+        row = connection.execute(
+            "SELECT name FROM sqlite_master WHERE type = 'table' AND name = ?",
+            (_INDEX_POINT_TABLE,),
+        ).fetchone()
+    return row is not None
+
+
+def write_lookup_index_points(
+    path: Path,
+    *,
+    points: tuple[IndexProjectionPoint, ...],
+) -> None:
+    """Store the isolated index points in one lookup store (v2 point authority).
+
+    The four metadata columns mirror the Milvus row columns the v1 read
+    validates, so "the physical row must agree with the point JSON" keeps the
+    same strength; ``point_json`` stays the authority. Refuses a store that
+    already carries the table (one materialization per store).
+    """
+
+    if not path.is_file() or path.is_symlink():
+        raise IsolatedIndexTargetSafetyError(
+            "isolated lookup target changed before the point store was written"
+        )
+    point_ids = tuple(point.point_id for point in points)
+    if len(set(point_ids)) != len(point_ids):
+        raise IndexProjectionIntegrityError(
+            "isolated index points contain duplicate point IDs"
+        )
+    with sqlite3.connect(path) as connection:
+        connection.executescript(
+            f"""
+            PRAGMA journal_mode = DELETE;
+            CREATE TABLE {_INDEX_POINT_TABLE} (
+                point_id TEXT PRIMARY KEY,
+                release_id TEXT NOT NULL,
+                projection_id TEXT NOT NULL,
+                canonical_object_id TEXT NOT NULL,
+                embedded_content_sha256 TEXT NOT NULL,
+                point_json TEXT NOT NULL
+            ) STRICT;
+            CREATE INDEX index_point_owner
+              ON {_INDEX_POINT_TABLE}(release_id, projection_id, canonical_object_id);
+            """
+        )
+        connection.executemany(
+            f"""
+            INSERT INTO {_INDEX_POINT_TABLE} (
+                point_id, release_id, projection_id,
+                canonical_object_id, embedded_content_sha256, point_json
+            ) VALUES (?, ?, ?, ?, ?, ?)
+            """,
+            [
+                (
+                    point.point_id,
+                    point.release_id,
+                    point.projection_id,
+                    point.canonical_object_id,
+                    point.embedded_content_sha256,
+                    point.model_dump_json(),
+                )
+                for point in points
+            ],
+        )
+
+
+def _read_index_points_from_path(
+    path: Path,
+    *,
+    expected_release_id: str,
+) -> tuple[IndexProjectionPoint, ...]:
+    """Read every v2 index point, fail closed on a missing or drifting store."""
+
+    if not path.is_file() or path.is_symlink():
+        raise IndexProjectionIntegrityError("isolated lookup store is missing")
+    uri = f"file:{path}?mode=ro&immutable=1"
+    try:
+        with sqlite3.connect(uri, uri=True) as connection:
+            rows = connection.execute(
+                "SELECT point_id, release_id, projection_id, canonical_object_id, "
+                f"embedded_content_sha256, point_json FROM {_INDEX_POINT_TABLE}"
+            ).fetchall()
+    except sqlite3.DatabaseError as exc:
+        raise IndexProjectionIntegrityError(
+            "isolated point store is missing or unreadable"
+        ) from exc
+    points: list[IndexProjectionPoint] = []
+    for row in rows:
+        point = IndexProjectionPoint.model_validate_json(row[5])
+        if row[:5] != (
+            point.point_id,
+            point.release_id,
+            point.projection_id,
+            point.canonical_object_id,
+            point.embedded_content_sha256,
+        ):
+            raise IndexProjectionIntegrityError(
+                "isolated point store metadata differs from point JSON"
+            )
+        if point.release_id != expected_release_id:
+            raise IndexProjectionIntegrityError(
+                "isolated point store contains a cross-release point"
+            )
+        points.append(point)
+    ordered = tuple(
+        sorted(
+            points,
+            key=lambda item: (
+                item.projection_id,
+                item.canonical_object_id,
+                item.point_id,
+            ),
+        )
+    )
+    point_ids = tuple(point.point_id for point in ordered)
+    if len(point_ids) != len(set(point_ids)):
+        raise IndexProjectionIntegrityError(
+            "isolated point store contains duplicate point IDs"
+        )
+    return ordered
+
+
 def _write_build_metadata(path: Path, *, collection_name: str) -> None:
     if not path.is_file() or path.is_symlink():
         raise IsolatedIndexTargetSafetyError(
@@ -1227,14 +1593,21 @@ def _sha256_text(value: str) -> str:
 
 __all__ = [
     "EmbeddingAdapter",
+    "IndexPointStore",
+    "IsolatedIndexConversionReport",
     "IsolatedIndexSnapshot",
     "IsolatedIndexTarget",
     "IsolatedIndexTargetSafetyError",
+    "POINT_STORE_LOOKUP",
+    "POINT_STORE_MILVUS",
     "RecordedEmbeddingAdapter",
     "audit_isolated_index_snapshot",
+    "convert_isolated_index_to_v2",
     "create_isolated_index_projection_builder",
+    "has_lookup_index_points",
     "open_manifest_verified_index_snapshot",
     "prepare_isolated_index_target",
     "read_isolated_index_points",
     "read_isolated_lookup_documents",
+    "write_lookup_index_points",
 ]

@@ -44,6 +44,7 @@
 - [服务期索引装载提速](./2026-09-15-serving-index-load-log.md) — 归因：每查询重算全量派生态（5.1 万点逐个解析+建候选）才是首答慢的真因；进程级缓存+先排序后绑定+挂载收据，实体名首答向量轨 18.5s→亚秒级
 - [Web 轨主题相关性地板](./2026-09-15-web-lane-topical-floor-log.md) — 把与 query 无核心词元重叠、又非主体身份命中的网页从 web 轨召回中滤掉（确定性、不调模型，64 条 0.875ms；开关 CANONICAL_V2_WEB_TOPICAL_FLOOR）
 - [配置中心收尾（P13 / R16）](./2026-09-15-config-center-secrets-log.md) — 密钥可在页面设置（写受管密钥文件、0600、只回显掩码/来源，可覆盖可清除）+ 每连接「连通性测试」按钮（先测后存、一次最小调用、限频 429、只记状态与延迟）+ 统一"服务启动读取"（不做热读，页面提示需重启）+ 新开关纳管（floor/rerank 可编辑，receipt/turn-debug/full-verify 只读展示）；**第 2 轮**：真端点验收暴露「健康检查来源错位」（embedding 报 401 但服务实际在用、rerank 未启用却报可达），已把五连接的端点/凭据解析链对齐到运行期真实来源（代码 file:line 即证据），未启用连接如实报「未启用」且不发起调用；复跑真端点 4 通 / rerank 未启用（0 次调用）
+- [服务包瘦身：milvus.db 退出服务包](./2026-09-15-drop-milvus-from-serving-pack-log.md) — 1.03GB Milvus 无查询消费者却每次启动逐行回读（≈50s 卡在 mvccTs）；点对象改存 release 的 lookup.sqlite3 新增 `index_point` 表，v2 包不含 Milvus 且启动零 pymilvus；旧包(v1)照常可启；index root/pack 各省 850MB；占位符普查（无读者）删除
 
 ## 📜 历史参考（2026 年 4–7 月，主线已由本轮接手）
 
