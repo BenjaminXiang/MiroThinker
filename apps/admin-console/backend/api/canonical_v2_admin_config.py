@@ -124,9 +124,7 @@ def _config_payload(store: ManagedSettingsStore) -> dict[str, Any]:
         "settings": document.model_dump(mode="json"),
         "fields": [field.as_dict() for field in fields],
         "env_vars": {
-            field.path: field.env_var
-            for field in fields
-            if field.env_var is not None
+            field.path: field.env_var for field in fields if field.env_var is not None
         },
     }
 
@@ -294,7 +292,9 @@ def _resolve_connection_credentials(
             base_url = normalize_base_url(
                 submitted_base
                 if isinstance(submitted_base, str) and submitted_base.strip()
-                else _effective_settings_value(request, settings_store, spec.base_url_field),
+                else _effective_settings_value(
+                    request, settings_store, spec.base_url_field
+                ),
                 default=_normalized_default(spec),
             )
         except UnsafeEndpointError as exc:

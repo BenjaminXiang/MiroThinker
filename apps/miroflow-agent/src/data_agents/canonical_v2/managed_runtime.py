@@ -106,9 +106,7 @@ def _file_owned_values(store: ManagedSettingsStore) -> dict[str, Any]:
     return {
         path: value
         for path, value in flatten_settings(payload).items()
-        if path in _FIELD_ENV_VARS
-        and value is not None
-        and value != defaults.get(path)
+        if path in _FIELD_ENV_VARS and value is not None and value != defaults.get(path)
     }
 
 
@@ -123,9 +121,7 @@ def apply_managed_runtime_config(
     target: MutableMapping[str, str] = os.environ if environ is None else environ
 
     settings_path = default_settings_path(target)
-    store = settings_store or ManagedSettingsStore(
-        path=settings_path, environ=target
-    )
+    store = settings_store or ManagedSettingsStore(path=settings_path, environ=target)
     applied_fields: list[str] = []
     applied_env_vars: list[str] = []
     skipped_env_vars: list[str] = []
@@ -141,9 +137,7 @@ def apply_managed_runtime_config(
         applied_fields.append(path)
         applied_env_vars.append(env_var)
 
-    secrets = secrets_store or ManagedSecretsStore(
-        path=default_secrets_path(target)
-    )
+    secrets = secrets_store or ManagedSecretsStore(path=default_secrets_path(target))
     try:
         secret_receipt = secrets.apply_to_environ(target)
     except Exception as exc:  # noqa: BLE001 - same fail-open contract

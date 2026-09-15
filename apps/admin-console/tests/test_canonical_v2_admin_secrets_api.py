@@ -39,7 +39,9 @@ class _RecordingTransport:
 
 
 @pytest.fixture()
-def stores(tmp_path: Path) -> Iterator[tuple[ManagedSettingsStore, ManagedSecretsStore]]:
+def stores(
+    tmp_path: Path,
+) -> Iterator[tuple[ManagedSettingsStore, ManagedSecretsStore]]:
     settings = ManagedSettingsStore(
         tmp_path / "managed" / "settings.json",
         environ=dict(os.environ),
@@ -62,7 +64,10 @@ def stores(tmp_path: Path) -> Iterator[tuple[ManagedSettingsStore, ManagedSecret
     finally:
         app.dependency_overrides.pop(get_managed_settings_store, None)
         app.dependency_overrides.pop(get_managed_secrets_store, None)
-        for name, prior in ((_SETTINGS_STATE, prior_settings), (_SECRETS_STATE, prior_secrets)):
+        for name, prior in (
+            (_SETTINGS_STATE, prior_settings),
+            (_SECRETS_STATE, prior_secrets),
+        ):
             if prior is not None:
                 setattr(app.state, name, prior)
             elif hasattr(app.state, name):
@@ -189,7 +194,9 @@ def test_clear_and_overwrite_paths(
         json={"values": {"rerank.api_key": "sk-fake-second-value-9988"}},
     )
     new_mask = next(
-        item for item in overwritten.json()["secrets"] if item["field"] == "rerank.api_key"
+        item
+        for item in overwritten.json()["secrets"]
+        if item["field"] == "rerank.api_key"
     )["mask"]
     assert new_mask != tail and new_mask.endswith("9988")
 

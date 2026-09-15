@@ -140,7 +140,9 @@ def _validate_secret(field: str, value: Any) -> str:
     return text
 
 
-def default_key_file_roots(environ: Mapping[str, str] | None = None) -> tuple[Path, ...]:
+def default_key_file_roots(
+    environ: Mapping[str, str] | None = None,
+) -> tuple[Path, ...]:
     """Mirror the providers' key-file lookup: env roots, then ancestors of the checkout."""
 
     values = os.environ if environ is None else environ
@@ -338,8 +340,7 @@ class ManagedSecretsStore:
                     mask=mask_secret(material) or None,
                     suffix4=suffix4(material),
                     origin=origin,
-                    applied_to_process_env=bool(material)
-                    and spec.env_var in applied,
+                    applied_to_process_env=bool(material) and spec.env_var in applied,
                     legacy_files=spec.legacy_files,
                 )
             )
@@ -373,7 +374,9 @@ class ManagedSecretsStore:
         for raw_field, raw_value in values.items():
             field = str(raw_field)
             spec = SPEC_BY_FIELD[field]
-            if raw_value is None or (isinstance(raw_value, str) and not raw_value.strip()):
+            if raw_value is None or (
+                isinstance(raw_value, str) and not raw_value.strip()
+            ):
                 if field in after:
                     after.pop(field)
                     changes.append({"field": field, "action": "clear", "suffix4": None})
