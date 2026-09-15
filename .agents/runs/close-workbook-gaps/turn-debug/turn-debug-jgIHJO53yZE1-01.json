@@ -1,0 +1,822 @@
+{
+  "session_id": "session:chat:jgIHJO53yZE1PRf1TsSYZZf1Ed9vM2-r",
+  "turn_id": "turn:chat:sha256:65db2da27f41e021d229f742089cf3eb3eebd76a0de6c2879d00ae30a07bc4b6",
+  "turn_count": 1,
+  "query": "优必选有哪些专利",
+  "planned_displayed_ids": [],
+  "recalled_handles": [
+    {
+      "id": "patent-c-00475a5ac0fc7aaba3b0ba0f",
+      "kind": "canonical",
+      "domain": "patent",
+      "display_name": "机器人充电方法、系统、计算机设备和存储介质"
+    },
+    {
+      "id": "patent-c-00c233a84a71e5a328783f1e",
+      "kind": "canonical",
+      "domain": "patent",
+      "display_name": "骑平衡车的机器人控制方法、装置、存储介质及机器人"
+    },
+    {
+      "id": "patent-c-01923ba9814ad8e26d3a2274",
+      "kind": "canonical",
+      "domain": "patent",
+      "display_name": "机器人控制方法、装置、机器人及计算机可读存储介质"
+    },
+    {
+      "id": "patent-c-023c2460656e53a3e8fe4897",
+      "kind": "canonical",
+      "domain": "patent",
+      "display_name": "机器人导航方法、装置、计算机可读存储介质及机器人"
+    },
+    {
+      "id": "patent-c-026539da3433d4fb9fe0aec9",
+      "kind": "canonical",
+      "domain": "patent",
+      "display_name": "机器人关节限位机构及机器人"
+    },
+    {
+      "id": "patent-c-02b3d72cf3923542045150e1",
+      "kind": "canonical",
+      "domain": "patent",
+      "display_name": "一种机器人运动生成方法、装置、可读存储介质及机器人"
+    },
+    {
+      "id": "patent-c-02d059f15d84171b0a6f932e",
+      "kind": "canonical",
+      "domain": "patent",
+      "display_name": "人形机器人及人形机器人控制方法"
+    },
+    {
+      "id": "patent-c-032807bbf2d391917a67e6a5",
+      "kind": "canonical",
+      "domain": "patent",
+      "display_name": "机器人避障方法、终端设备及计算机可读存储介质"
+    },
+    {
+      "id": "patent-c-040e9a8fa2a28ecf2b97ae35",
+      "kind": "canonical",
+      "domain": "patent",
+      "display_name": "文件传输系统、文件传输方法、人机交互方法及机器人"
+    },
+    {
+      "id": "patent-c-0429bbc8f8bcd8ba670f9aaf",
+      "kind": "canonical",
+      "domain": "patent",
+      "display_name": "通讯接口、传输线材、功能模组、电子设备及控制方法"
+    },
+    {
+      "id": "patent-c-05c9ba447702cee1c94c82c6",
+      "kind": "canonical",
+      "domain": "patent",
+      "display_name": "一种仿生手及机器人"
+    },
+    {
+      "id": "patent-c-05fa1269852ccd127b49b9be",
+      "kind": "canonical",
+      "domain": "patent",
+      "display_name": "机器人关节及机器人"
+    },
+    {
+      "id": "patent-c-05fb34ce588115bc253e5ad4",
+      "kind": "canonical",
+      "domain": "patent",
+      "display_name": "发光组件、发光装置及机器人"
+    },
+    {
+      "id": "patent-c-06689bd46fba3cfea1ca2d8a",
+      "kind": "canonical",
+      "domain": "patent",
+      "display_name": "机器人后台系统的自动部署方法、系统、机器人及介质"
+    },
+    {
+      "id": "patent-c-071b6c944cf65f22a32dc88a",
+      "kind": "canonical",
+      "domain": "patent",
+      "display_name": "一种舵机连接结构、舵机及机器人"
+    },
+    {
+      "id": "patent-c-075148c1d2cf207b95774739",
+      "kind": "canonical",
+      "domain": "patent",
+      "display_name": "清洁机器人"
+    },
+    {
+      "id": "patent-c-085bbdac5042e35c4a758e1e",
+      "kind": "canonical",
+      "domain": "patent",
+      "display_name": "协同定位方法、装置、电子设备及计算机程序产品"
+    },
+    {
+      "id": "patent-c-08ec3a05f1389cf66d9b138c",
+      "kind": "canonical",
+      "domain": "patent",
+      "display_name": "主动测温方法、装置、机器人及可读存储介质"
+    },
+    {
+      "id": "patent-c-0a12a8533a3393d406f6150c",
+      "kind": "canonical",
+      "domain": "patent",
+      "display_name": "地图数据采集装置"
+    },
+    {
+      "id": "patent-c-0ace1e139b1c44e12293065e",
+      "kind": "canonical",
+      "domain": "patent",
+      "display_name": "一种障碍物检测方法、机器人、设备及存储介质"
+    },
+    {
+      "id": "patent-c-0b0b65fe4f3b6b2fd8f32d07",
+      "kind": "canonical",
+      "domain": "patent",
+      "display_name": "一种脱困控制方法、脱困控制装置、电子设备及存储介质"
+    },
+    {
+      "id": "patent-c-0b8da84bbfff140f5a4399fa",
+      "kind": "canonical",
+      "domain": "patent",
+      "display_name": "两轮足机器人的运动控制方法、装置、机器人和存储介质"
+    },
+    {
+      "id": "patent-c-0bd50c94f789e98032478d12",
+      "kind": "canonical",
+      "domain": "patent",
+      "display_name": "负载供电电路和机器人"
+    },
+    {
+      "id": "patent-c-0bed4a24017b523f7b98096e",
+      "kind": "canonical",
+      "domain": "patent",
+      "display_name": "一种机器人避障控制方法及相关设备"
+    },
+    {
+      "id": "patent-c-0c35e0d49a9820bae1212341",
+      "kind": "canonical",
+      "domain": "patent",
+      "display_name": "一种泳池清洁方法、装置、计算机可读存储介质及机器人"
+    },
+    {
+      "id": "patent-c-0d28b041eba03ba9636d00df",
+      "kind": "canonical",
+      "domain": "patent",
+      "display_name": "一种肩部结构及机器人"
+    },
+    {
+      "id": "patent-c-0d8fa842c852c721f4ec57b0",
+      "kind": "canonical",
+      "domain": "patent",
+      "display_name": "一种泳池清洁机器人"
+    },
+    {
+      "id": "patent-c-0dd13387772fd6e7770bebb7",
+      "kind": "canonical",
+      "domain": "patent",
+      "display_name": "电机过流保护自锁电路、电机过流保护自锁装置、机器人"
+    },
+    {
+      "id": "patent-c-0ead4f24c844d98542e12314",
+      "kind": "canonical",
+      "domain": "patent",
+      "display_name": "一种水面清洁装置及清洁设备"
+    },
+    {
+      "id": "patent-c-0ed4eede40faf7bc137838ce",
+      "kind": "canonical",
+      "domain": "patent",
+      "display_name": "带轮式驱动机构及泳池清洁机器人"
+    },
+    {
+      "id": "patent-c-0fb348ed9959172e77608c56",
+      "kind": "canonical",
+      "domain": "patent",
+      "display_name": "充电基站识别方法、装置、机器人及计算机程序产品"
+    },
+    {
+      "id": "patent-c-1048c331379b9aea76d7717e",
+      "kind": "canonical",
+      "domain": "patent",
+      "display_name": "显示组件及移动机器人"
+    },
+    {
+      "id": "patent-c-110101e4417f19d66df8e0c3",
+      "kind": "canonical",
+      "domain": "patent",
+      "display_name": "一种机器人转向轨迹规划方法及相关设备"
+    },
+    {
+      "id": "patent-c-1113d71df8a2057c66ae7595",
+      "kind": "canonical",
+      "domain": "patent",
+      "display_name": "机器人的控制方法、装置、电子设备及计算机程序产品"
+    },
+    {
+      "id": "patent-c-1188d721b73b6bf64c41a246",
+      "kind": "canonical",
+      "domain": "patent",
+      "display_name": "一种泳池清洁基站及泳池清洁设备"
+    },
+    {
+      "id": "patent-c-120f410af728032d0509ca7e",
+      "kind": "canonical",
+      "domain": "patent",
+      "display_name": "一种连杆机构及机器人"
+    },
+    {
+      "id": "patent-c-1269d3e4b2ac1510aee8fcf0",
+      "kind": "canonical",
+      "domain": "patent",
+      "display_name": "一种机器人抓取物体的方法、机器人及存储介质"
+    },
+    {
+      "id": "patent-c-136a0d62a997367128c206da",
+      "kind": "canonical",
+      "domain": "patent",
+      "display_name": "机器人避障模型的训练方法和机器人避障方法"
+    },
+    {
+      "id": "patent-c-13747b443f0e11cc41a4678a",
+      "kind": "canonical",
+      "domain": "patent",
+      "display_name": "清洁机器人"
+    },
+    {
+      "id": "patent-c-137cff2025cba0427a219ed5",
+      "kind": "canonical",
+      "domain": "patent",
+      "display_name": "机器人的电池充电控制方法、装置、电子设备及存储介质"
+    },
+    {
+      "id": "patent-c-146f2f63d67e3a745c9bde5c",
+      "kind": "canonical",
+      "domain": "patent",
+      "display_name": "机器人及其动作轨迹的优化方法、装置及存储介质"
+    },
+    {
+      "id": "patent-c-14a505affef7bb4c354143a5",
+      "kind": "canonical",
+      "domain": "patent",
+      "display_name": "水面清洁装置及泳池清洁机器人"
+    },
+    {
+      "id": "patent-c-15395a83d1e2b92380170cce",
+      "kind": "canonical",
+      "domain": "patent",
+      "display_name": "机器人导航方法、装置、计算机可读存储介质及机器人"
+    },
+    {
+      "id": "patent-c-1622d5378ceecad1f7555ee7",
+      "kind": "canonical",
+      "domain": "patent",
+      "display_name": "点云数据处理方法、装置、电子设备、计算机可读存储介质及计算机程序产品"
+    },
+    {
+      "id": "patent-c-16bf4d8dfa1ae6fef3e181bb",
+      "kind": "canonical",
+      "domain": "patent",
+      "display_name": "机器人控制方法、装置、计算机可读存储介质及机器人"
+    },
+    {
+      "id": "patent-c-170c9d3a90a7d1c3c0b5227e",
+      "kind": "canonical",
+      "domain": "patent",
+      "display_name": "基于盒装物体的位姿估计方法、装置、机械臂及介质"
+    },
+    {
+      "id": "patent-c-178481f8dcab1cbf26877f7c",
+      "kind": "canonical",
+      "domain": "patent",
+      "display_name": "一种悬崖检测方法、终端设备及存储介质"
+    },
+    {
+      "id": "patent-c-18d5400e678b46b7c7b2d76d",
+      "kind": "canonical",
+      "domain": "patent",
+      "display_name": "认知功能评估方法、装置、机器人及程序产品"
+    },
+    {
+      "id": "patent-c-190fd0fc88cff1d018f8c396",
+      "kind": "canonical",
+      "domain": "patent",
+      "display_name": "机器人的情绪处理方法、装置、设备及计算机可读存储介质"
+    },
+    {
+      "id": "patent-c-1a406c84e6144cbcdd477af8",
+      "kind": "canonical",
+      "domain": "patent",
+      "display_name": "零部件检测模型的训练方法、装置、机器人及程序产品"
+    },
+    {
+      "id": "patent-c-1c0a54ebb4f58b6dbaf79449",
+      "kind": "canonical",
+      "domain": "patent",
+      "display_name": "基于云计算平台的机器人控制系统、方法、机器人及介质"
+    },
+    {
+      "id": "patent-c-1ca81dbc47076d07c19a8d20",
+      "kind": "canonical",
+      "domain": "patent",
+      "display_name": "四足机器人及其步态规划方法、装置及存储介质"
+    },
+    {
+      "id": "patent-c-1d26f642580a2a885fc941d3",
+      "kind": "canonical",
+      "domain": "patent",
+      "display_name": "轮足机器人及其平衡控制方法、装置及存储介质"
+    },
+    {
+      "id": "patent-c-1deb75cb43b6148df2108ffa",
+      "kind": "canonical",
+      "domain": "patent",
+      "display_name": "一种机器人的加密处理方法、系统、设备及存储介质"
+    },
+    {
+      "id": "patent-c-1e17d45eb5fa113e1002de06",
+      "kind": "canonical",
+      "domain": "patent",
+      "display_name": "一种机身组件及移动机器人"
+    },
+    {
+      "id": "patent-c-1ea910e2e5e292847865033b",
+      "kind": "canonical",
+      "domain": "patent",
+      "display_name": "人体检测方法、装置、机器人及计算机可读存储介质"
+    },
+    {
+      "id": "patent-c-1fec13783d99635c83863280",
+      "kind": "canonical",
+      "domain": "patent",
+      "display_name": "机器人的控制方法、装置、机器人及计算机可读存储介质"
+    },
+    {
+      "id": "patent-c-203182153f13bd599927fc6b",
+      "kind": "canonical",
+      "domain": "patent",
+      "display_name": "障碍物的位置估计方法、装置、设备及存储介质"
+    },
+    {
+      "id": "patent-c-203e7d646d48aa50d92ca69b",
+      "kind": "canonical",
+      "domain": "patent",
+      "display_name": "智能供电电路和泳池机器人"
+    },
+    {
+      "id": "patent-c-20a3947b25fa4113756c748e",
+      "kind": "canonical",
+      "domain": "patent",
+      "display_name": "点云数据处理方法、装置、机器人及机器人控制方法"
+    },
+    {
+      "id": "patent-c-20f348b1c1451eebaec9c93b",
+      "kind": "canonical",
+      "domain": "patent",
+      "display_name": "风机组件及机器人"
+    },
+    {
+      "id": "patent-c-21b97e67754e9125f91e7985",
+      "kind": "canonical",
+      "domain": "patent",
+      "display_name": "一种机器人防溜控制方法、系统及移动机器人"
+    },
+    {
+      "id": "patent-c-225e05b6852e68f15f5c8065",
+      "kind": "canonical",
+      "domain": "patent",
+      "display_name": "机器人关节及机器人"
+    },
+    {
+      "id": "patent-c-229ff1e838dc00275265bd38",
+      "kind": "canonical",
+      "domain": "patent",
+      "display_name": "机器人运动控制方法、装置、电子设备及可读存储介质"
+    },
+    {
+      "id": "patent-c-22df4b3a032a709d06ffb425",
+      "kind": "canonical",
+      "domain": "patent",
+      "display_name": "机器人控制方法、装置、电子设备及存储介质"
+    },
+    {
+      "id": "patent-c-236b01d0de9f8c452ca6ab87",
+      "kind": "canonical",
+      "domain": "patent",
+      "display_name": "机器人的头部结构、机器人及其基准位置的标定方法"
+    },
+    {
+      "id": "patent-c-236c3d7c00172f33c27c7aca",
+      "kind": "canonical",
+      "domain": "patent",
+      "display_name": "机器人及其重定位方法、装置及存储介质"
+    },
+    {
+      "id": "patent-c-23eeeb9756daf9c9b2328ecd",
+      "kind": "canonical",
+      "domain": "patent",
+      "display_name": "一种锁定机构及机器人"
+    },
+    {
+      "id": "patent-c-242fda30d5303b6fae1143ff",
+      "kind": "canonical",
+      "domain": "patent",
+      "display_name": "轮子组件、万向轮结构及机器人"
+    },
+    {
+      "id": "patent-c-248ba1a122db3248e4725c07",
+      "kind": "canonical",
+      "domain": "patent",
+      "display_name": "地毯区域标记方法、装置、机器人和计算机可读存储介质"
+    },
+    {
+      "id": "patent-c-251fa178118002e56f29bade",
+      "kind": "canonical",
+      "domain": "patent",
+      "display_name": "一种连杆机构及机器人"
+    },
+    {
+      "id": "patent-c-256afa8df095e1ecd071b127",
+      "kind": "canonical",
+      "domain": "patent",
+      "display_name": "一种辅助支架"
+    },
+    {
+      "id": "patent-c-2592d2678ded31f716f198a0",
+      "kind": "canonical",
+      "domain": "patent",
+      "display_name": "机械臂控制方法、装置及智能移动设备"
+    },
+    {
+      "id": "patent-c-25cfb39996ab8b7f1cb17ee0",
+      "kind": "canonical",
+      "domain": "patent",
+      "display_name": "一种在位检测机构及清洁机器人"
+    },
+    {
+      "id": "patent-c-268ee8b704dcb263baf3961a",
+      "kind": "canonical",
+      "domain": "patent",
+      "display_name": "一种认知功能评估方法、装置、可读存储介质及电子设备"
+    },
+    {
+      "id": "patent-c-26bc3d21b60eeeb47ccb12fc",
+      "kind": "canonical",
+      "domain": "patent",
+      "display_name": "力矩校正方法、力矩校正装置、机器人及存储介质"
+    },
+    {
+      "id": "patent-c-27d9d41805b0c78844aebfc5",
+      "kind": "canonical",
+      "domain": "patent",
+      "display_name": "重定位方法、机器人及计算机可读存储介质"
+    },
+    {
+      "id": "patent-c-29686d2a5f8d9d684bdb00c6",
+      "kind": "canonical",
+      "domain": "patent",
+      "display_name": "传感器调平装置"
+    },
+    {
+      "id": "patent-c-296cb491fae12b3e490d38c0",
+      "kind": "canonical",
+      "domain": "patent",
+      "display_name": "电子仓模组及轮椅"
+    },
+    {
+      "id": "patent-c-2984edb5eb95bedfe0315d7f",
+      "kind": "canonical",
+      "domain": "patent",
+      "display_name": "腿部机构及人形机器人"
+    },
+    {
+      "id": "patent-c-299b5061c1294f95c3d0f1a7",
+      "kind": "canonical",
+      "domain": "patent",
+      "display_name": "视觉检测模型的训练方法、装置、电子设备、计算机可读存储介质及计算机程序产品"
+    },
+    {
+      "id": "patent-c-29e905a7e6566bec54b8b9f0",
+      "kind": "canonical",
+      "domain": "patent",
+      "display_name": "机器人及其运动控制方法、装置和机器人集群运动系统"
+    },
+    {
+      "id": "patent-c-2a28330014b0e2fb1b4ecd43",
+      "kind": "canonical",
+      "domain": "patent",
+      "display_name": "一种机器人定位方法、装置、机器人及可读存储介质"
+    },
+    {
+      "id": "patent-c-2b48d898a34e542cbea83187",
+      "kind": "canonical",
+      "domain": "patent",
+      "display_name": "一种过滤装置及清洁机器人"
+    },
+    {
+      "id": "patent-c-2bea615d6d81cdec26cea109",
+      "kind": "canonical",
+      "domain": "patent",
+      "display_name": "一种躯干机构和机器人"
+    },
+    {
+      "id": "patent-c-2c4527e5fe3ce812b7e34cd8",
+      "kind": "canonical",
+      "domain": "patent",
+      "display_name": "一种腕臂结构及机器人"
+    },
+    {
+      "id": "patent-c-2d5f468b37401572744df8bf",
+      "kind": "canonical",
+      "domain": "patent",
+      "display_name": "机器人及其目标跟踪方法、装置及程序产品"
+    },
+    {
+      "id": "patent-c-2df2796be2c882a4ae4f2eb3",
+      "kind": "canonical",
+      "domain": "patent",
+      "display_name": "机器人弹跳轨迹规划方法、装置、可读存储介质及机器人"
+    },
+    {
+      "id": "patent-c-2e04c22dee54f2844ad3bcd3",
+      "kind": "canonical",
+      "domain": "patent",
+      "display_name": "头部俯仰机构及机器人"
+    },
+    {
+      "id": "patent-c-2f6572596926af414fe9d421",
+      "kind": "canonical",
+      "domain": "patent",
+      "display_name": "一种机器人的数据处理方法、装置、设备及计算机可读存储介质"
+    },
+    {
+      "id": "patent-c-2fde89409e58b3d5b50f6d9e",
+      "kind": "canonical",
+      "domain": "patent",
+      "display_name": "一种机器人定位方法、机器人、设备及存储介质"
+    },
+    {
+      "id": "patent-c-2ff63d0692e5d4f76ad5fc6b",
+      "kind": "canonical",
+      "domain": "patent",
+      "display_name": "一种水下行走装置"
+    },
+    {
+      "id": "patent-c-3020858f2234eebecb82a8cc",
+      "kind": "canonical",
+      "domain": "patent",
+      "display_name": "应变检测电路、方法、机器人及计算机可读存储介质"
+    },
+    {
+      "id": "patent-c-30ba1cfc8cfdcff6a6049f17",
+      "kind": "canonical",
+      "domain": "patent",
+      "display_name": "一种配网系统、机器人、方法、电子设备及介质"
+    },
+    {
+      "id": "patent-c-310d607ade5cce5e390b62ca",
+      "kind": "canonical",
+      "domain": "patent",
+      "display_name": "机器人的导航方法、装置、电子设备和计算机程序产品"
+    },
+    {
+      "id": "patent-c-312071523a19ce44945f4ff5",
+      "kind": "canonical",
+      "domain": "patent",
+      "display_name": "一种电源电路和电子设备"
+    },
+    {
+      "id": "patent-c-313d738b145b9db4780be3cd",
+      "kind": "canonical",
+      "domain": "patent",
+      "display_name": "机器人运动控制方法及装置、机器人控制设备和存储介质"
+    },
+    {
+      "id": "patent-c-31bf5206f4c275c9f744e024",
+      "kind": "canonical",
+      "domain": "patent",
+      "display_name": "一种物体质心测量方法及相关设备"
+    },
+    {
+      "id": "patent-c-332705d0c5447174ea9654d9",
+      "kind": "canonical",
+      "domain": "patent",
+      "display_name": "一种场景识别方法、装置、计算机可读存储介质及机器人"
+    },
+    {
+      "id": "patent-c-33c17c3a05a41f47f4c38ea3",
+      "kind": "canonical",
+      "domain": "patent",
+      "display_name": "一种驱动总成"
+    },
+    {
+      "id": "patent-c-33ce52f5c83f9c947ec294ae",
+      "kind": "canonical",
+      "domain": "patent",
+      "display_name": "一种机械臂及人形机器人"
+    },
+    {
+      "id": "patent-c-342ef04cfaae829e904b217b",
+      "kind": "canonical",
+      "domain": "patent",
+      "display_name": "一种泳池清洁机器人"
+    },
+    {
+      "id": "patent-c-35336eaab39dab90c45b721b",
+      "kind": "canonical",
+      "domain": "patent",
+      "display_name": "一种机器人抖动测试方法、系统、设备和存储介质"
+    },
+    {
+      "id": "patent-c-35d1d7020e9ff88f10a85f3c",
+      "kind": "canonical",
+      "domain": "patent",
+      "display_name": "机器人的控制电路及泳池机器人"
+    },
+    {
+      "id": "patent-c-35ea2eb74bd43883d26f662f",
+      "kind": "canonical",
+      "domain": "patent",
+      "display_name": "双伺服驱动器及机器人"
+    },
+    {
+      "id": "patent-c-37a290205b05b56729ea73b5",
+      "kind": "canonical",
+      "domain": "patent",
+      "display_name": "一种清洁装置"
+    },
+    {
+      "id": "patent-c-37f7341e73c2e66e994ff2fa",
+      "kind": "canonical",
+      "domain": "patent",
+      "display_name": "直线驱动设备及人形机器人"
+    },
+    {
+      "id": "patent-c-39ea5e93adfa046bb9070b3b",
+      "kind": "canonical",
+      "domain": "patent",
+      "display_name": "机器人充电桩的电极片结构、机器人充电桩及机器人设备"
+    },
+    {
+      "id": "patent-c-3a2ce8cf54bcf7a0074e6de4",
+      "kind": "canonical",
+      "domain": "patent",
+      "display_name": "机器人控制装置及机器人"
+    },
+    {
+      "id": "patent-c-3a85fe96f0517acd19517343",
+      "kind": "canonical",
+      "domain": "patent",
+      "display_name": "机器人日志的管理方法、管理装置、机器人及存储介质"
+    },
+    {
+      "id": "patent-c-3b0e888501c4c1310316f2e8",
+      "kind": "canonical",
+      "domain": "patent",
+      "display_name": "地图数据处理方法、装置、设备及计算机可读存储介质"
+    },
+    {
+      "id": "patent-c-3b60e144c9890bea254bb5e7",
+      "kind": "canonical",
+      "domain": "patent",
+      "display_name": "机器人的信息处理方法、装置、设备及存储介质"
+    },
+    {
+      "id": "patent-c-3bbd715a106536ea593aa01a",
+      "kind": "canonical",
+      "domain": "patent",
+      "display_name": "清扫方法、装置、清扫机器人及计算机可读存储介质"
+    },
+    {
+      "id": "patent-c-3c2562c615d0e1a056eb1934",
+      "kind": "canonical",
+      "domain": "patent",
+      "display_name": "一种控制系统及模块化机器人"
+    },
+    {
+      "id": "patent-c-3cc05de8e845f99ff9c91a25",
+      "kind": "canonical",
+      "domain": "patent",
+      "display_name": "一种位姿估计方法、位姿估计装置、电子设备及存储介质"
+    },
+    {
+      "id": "patent-c-3d413ea0f77637c3dd28378d",
+      "kind": "canonical",
+      "domain": "patent",
+      "display_name": "机器人充电方法、装置、充电桩和存储介质"
+    },
+    {
+      "id": "patent-c-3e1c7ed853833ee84b773001",
+      "kind": "canonical",
+      "domain": "patent",
+      "display_name": "水箱组件及清洁机器人"
+    },
+    {
+      "id": "patent-c-3f07f2568306fec823f0a130",
+      "kind": "canonical",
+      "domain": "patent",
+      "display_name": "一种仿生手指、仿生手及机器人"
+    },
+    {
+      "id": "patent-c-400293e4d75b3ac3f56acd91",
+      "kind": "canonical",
+      "domain": "patent",
+      "display_name": "一种车辆检测机器人"
+    },
+    {
+      "id": "patent-c-40b79075645f32f06d5727d5",
+      "kind": "canonical",
+      "domain": "patent",
+      "display_name": "建图方法和机器人"
+    },
+    {
+      "id": "patent-c-40cd0cc5064abc1693349a37",
+      "kind": "canonical",
+      "domain": "patent",
+      "display_name": "带轮固定结构及泳池清洁机器人"
+    },
+    {
+      "id": "patent-c-41b9e3d8687b371fde5f5c96",
+      "kind": "canonical",
+      "domain": "patent",
+      "display_name": "一种机器人的交互处理方法、装置、设备、计算机可读存储介质及计算机程序产品"
+    },
+    {
+      "id": "patent-c-41f56c255b0aabf6c6af1720",
+      "kind": "canonical",
+      "domain": "patent",
+      "display_name": "轮足机器人及其空中轨迹跟踪方法、装置及存储介质"
+    },
+    {
+      "id": "patent-c-42510fa79930f8f5eb797035",
+      "kind": "canonical",
+      "domain": "patent",
+      "display_name": "地检机构及扫地机器人"
+    },
+    {
+      "id": "patent-c-428aba0a6746b295741362cd",
+      "kind": "canonical",
+      "domain": "patent",
+      "display_name": "机器人的控制方法、装置、机器人及可读存储介质"
+    },
+    {
+      "id": "patent-c-42b9c9416cfbb25e20929447",
+      "kind": "canonical",
+      "domain": "patent",
+      "display_name": "语义点云地图构建方法、装置、机器人及可读存储介质"
+    },
+    {
+      "id": "patent-c-42fdb17638023f26ae319e98",
+      "kind": "canonical",
+      "domain": "patent",
+      "display_name": "可拆卸电池组件、电池系统以及机器人"
+    },
+    {
+      "id": "patent-c-44500f8f0de071a4dd0c10c6",
+      "kind": "canonical",
+      "domain": "patent",
+      "display_name": "尘盒结构以及清洁机器人"
+    }
+  ],
+  "evidence_items": {
+    "total": 128,
+    "by_domain": {
+      "patent": 128
+    },
+    "by_lane": {
+      "relationship": 128
+    },
+    "by_source_nature": {
+      "local": 128
+    },
+    "with_claim_binding": 128
+  },
+  "protected_slots": [
+    {
+      "kind": "displayed_entity_set",
+      "value": "displayed_entity_set",
+      "entity_ids": [
+        "company-c-14b17405d17649f63b539164"
+      ]
+    }
+  ],
+  "requested_traversal": "path_id='company_to_patent' source_domain='company' target_domain='patent' relationship_type='patent_has_applicant' direction='inverse'",
+  "admitted_claims": {
+    "total": 32,
+    "by_predicate": {
+      "patent_has_applicant": 32
+    },
+    "by_claim_type": {
+      "material_fact": 32
+    },
+    "patent_evidence_claims": 32
+  },
+  "committed_handle_ids": [],
+  "committed_names": [],
+  "render_mode": "prose_renderer",
+  "response_mode": "answer",
+  "citations": 32,
+  "answer_chars": 1330,
+  "lane_timings": [
+    [
+      "relationship",
+      0.153
+    ]
+  ]
+}

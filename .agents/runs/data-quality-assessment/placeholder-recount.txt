@@ -1,0 +1,31 @@
+== whole-value EXACT 未找到 (值完全等于"未找到") ==
+   company: 1817
+   TOTAL = 1817  (sealer report whole_value_weizhaodao_exact = 1817)
+
+== value STARTS WITH 未找到 (not pure) by field ==
+   ('company', 'product_description'): 1
+   ('company', 'profile_summary'): 1
+   TOTAL = 2  (sealer whole_value_weizhaodao_prefix = 2)
+
+== 未找到 appears MID-string (glued) by field ==
+   ('company', 'product_description'): 88
+   ('company', 'profile_summary'): 76
+   ('company', 'technology_route_summary'): 23
+   ('patent', 'abstract'): 1
+   ('patent', 'summary_text'): 1
+   TOTAL = 189  (sealer glued_runs = 189)
+
+== all placeholder families (exact/prefix/english/glued) by (domain,field) ==
+   ('professor', 'paper_summary'): 3958
+   ('professor', 'patent_summary'): 3958
+   ('professor', 'title'): 2515
+   ('company', 'technology_route_summary'): 1597
+   ('professor', 'email'): 1251
+   ('professor', 'department'): 1188
+   ('company', 'product_description'): 861
+   ('company', 'profile_summary'): 633
+   ('professor', 'profile_summary'): 2
+   ('company', 'website'): 1
+
+== per-domain field_placeholder_hits (any family) ==
+   {'company': 3092, 'professor': 12872}   (sealer: company=3097 paper=0 patent=0 professor=12872)

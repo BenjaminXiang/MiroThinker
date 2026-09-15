@@ -1,0 +1,46 @@
+relationship_type_id counts:
+     64639  professor_attributed_to_paper
+       739  patent_has_applicant
+         7  professor_company_role
+         2  company_has_team_member
+         2  paper_has_author
+         2  patent_has_inventor
+         1  artifact_derived_from_artifact
+         1  assertion_supported_by_source_record
+         1  canonical_decision_produced_by_run
+         1  canonical_decision_selects_assertion
+         1  canonical_decision_uses_policy
+         1  canonical_identity_merged_into
+         1  canonical_identity_split_from
+         1  company_has_capability
+         1  company_has_financing_event
+         1  company_has_product
+         1  company_has_public_update
+         1  company_in_industry
+         1  company_located_in_geography
+         1  company_serves_business_scenario
+         1  entity_claims_adoption_of_technology
+         1  entity_demonstrates_use_of_technology
+         1  entity_discusses_or_mentions_technology
+         1  identity_decision_reverses_identity_decision
+         1  identity_decision_supersedes_identity_decision
+         1  paper_has_topic
+         1  paper_published_in_venue
+         1  paper_references_paper
+         1  patent_has_ipc_classification
+         1  professor_affiliated_with_institution
+         1  professor_educated_at_institution
+         1  professor_has_research_topic
+         1  professor_held_role_at_non_company_organization
+         1  professor_member_of_department
+         1  professor_page_lists_patent
+         1  source_identity_resolves_to_canonical_identity
+         1  source_record_parsed_from_artifact
+
+candidate_id prefixes:
+      2276  PROF-PAPER-LINK
+
+endpoint pairs (n matched = 22166 ):
+     21546  ('professor_attributed_to_paper', 'professor', 'paper')
+       615  ('patent_has_applicant', 'patent', 'company')
+         5  ('professor_company_role', 'professor', 'company')

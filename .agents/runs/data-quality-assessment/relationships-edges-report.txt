@@ -1,0 +1,15 @@
+wrote 10897 edges -> /home/longxiang/MiroThinker/.agents/runs/data-quality-assessment/data/relationship_edges.jsonl.gz
+
+professor_attributed_to_paper    edges= 10773 distinct_src=  1019 distinct_tgt= 10390 distinct_pairs= 10742
+patent_has_applicant             edges=   123 distinct_src=   123 distinct_tgt=    49 distinct_pairs=   123
+professor_company_role           edges=     1 distinct_src=     1 distinct_tgt=     1 distinct_pairs=     1
+
+professor->paper: edges=10773 distinct_papers=10390 distinct_professors=1019
+  papers covered = 10390/24520 = 42.4%
+  professors with >=1 linked paper = 1019/3958 = 25.7%
+  papers-per-professor dist: [(1, 108), (4, 104), (3, 87), (2, 79), (5, 76), (6, 61), (7, 58), (9, 48), (8, 47), (10, 36), (12, 36), (11, 26)]
+  max papers for one professor: [('professor-c-a32f52bb2965554be5485a85', 217), ('professor-c-711db536d8e5e941a6da42b5', 210), ('professor-c-aa6a07ad6f32ff6005412316', 91)]
+
+assertion_input_kind values: [('shared_source_relationship_assertion', 10773), ('typed_relationship_assertion', 124)]
+evidence_bindings counts: [(1, 10897)]
+observed_at years: [('2026', 10897)]

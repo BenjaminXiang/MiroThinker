@@ -1,0 +1,32 @@
+candidates array starts at 2277657285 context before: rs":[],"technology_concept_projections":[],"technology_route_projections":[],"unresolved_technology_references":[],"content_sha256":"fe4841f455c5e8d972f539fff1d550328ca4307899a6b5dffde7e4f9461a0160"},"candidates":[{"candidate_id":"candidate
+array ends at 2298663179 len 21005881
+array element count: 10897
+
+by relationship_type:
+     10773  professor_attributed_to_paper
+       123  patent_has_applicant
+         1  professor_company_role
+
+by endpoint pair:
+     10773  ('professor_attributed_to_paper', 'professor', 'paper')
+       123  ('patent_has_applicant', 'patent', 'company')
+         1  ('professor_company_role', 'professor', 'company')
+
+duplicate candidate_ids: 0 distinct: 10897
+
+keys of first element: ['assertion_input_id', 'assertion_input_kind', 'candidate_id', 'catalog_scenario_id', 'decision_input_id', 'evidence_bindings', 'evidence_metadata', 'observed_at', 'relationship_type_id', 'relationship_type_version', 'requested_paths', 'role_bindings', 'source_endpoint', 'source_event_time', 'target_endpoint', 'valid_from', 'valid_to']
+
+professor_company_role candidates: 1
+   {"candidate_id": "candidate:source-relationship:4c26f43b5dca7b17093eef43184af04013c399c5ec094d886730ac1e125d8c70", "relationship_type_id": "professor_company_role", "evidence_metadata": {"source_field": "professor_company_roles.role", "source_role": "发起人"}, "catalog_scenario_id": "catalog_scenario.professor_company_role"}
+   src: {"reference_kind": "canonical_identity", "endpoint_type": "professor", "stable_reference": "canonical:professor:professor-c-f093f28d300ea7c02b4e84c8", "canonical_identity_id": "professor-c-f093f28d300
+   tgt: {"reference_kind": "canonical_identity", "endpoint_type": "company", "stable_reference": "canonical:company:company-c-8d961882618d1950c9121c4c", "canonical_identity_id": "company-c-8d961882618d1950c91
+
+patent_has_applicant candidates: 123
+   src: {"reference_kind": "canonical_identity", "endpoint_type": "patent", "stable_reference": "canonical:patent:patent-c-d68059d3e421131d18d0664d", "canonical_identity_id": "patent-c-d68
+   tgt: {"reference_kind": "canonical_identity", "endpoint_type": "company", "stable_reference": "canonical:company:company-c-e0685d5acb03d7f5d721e1df", "canonical_identity_id": "company-c
+   src: {"reference_kind": "canonical_identity", "endpoint_type": "patent", "stable_reference": "canonical:patent:patent-c-061c4570b36a07a17dfb6fb7", "canonical_identity_id": "patent-c-061
+   tgt: {"reference_kind": "canonical_identity", "endpoint_type": "company", "stable_reference": "canonical:company:company-c-d30ac083d65e34b5b0315f65", "canonical_identity_id": "company-c
+   src: {"reference_kind": "canonical_identity", "endpoint_type": "patent", "stable_reference": "canonical:patent:patent-c-afbe532ea79bf755e2925fe2", "canonical_identity_id": "patent-c-afb
+   tgt: {"reference_kind": "canonical_identity", "endpoint_type": "company", "stable_reference": "canonical:company:company-c-8f17cef1a4acd92f33106045", "canonical_identity_id": "company-c
+
+other sample types: Counter()

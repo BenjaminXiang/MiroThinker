@@ -1,0 +1,67 @@
+## curated GT company presence (name|alias|normalized exact)
+  MISSING 嘉立创
+  OK      一博科技
+  MISSING 一博
+  OK      深南电路
+  OK      兴森科技
+  OK      则成电子
+  MISSING 鼎纪电子
+  OK      云迹科技
+  MISSING 擎朗智能
+  OK      九号机器人
+  OK      上海开普勒机器人有限公司
+  MISSING 穿山甲机器人
+  MISSING 广东瓦力科技有限公司
+  MISSING 灵启万物（深圳）科技有限公司
+  OK      深圳智航无人机有限公司
+  OK      深圳无界智航科技有限公司
+  MISSING 深圳智航无界科技
+  OK      普渡科技
+  OK      深圳市普渡科技股份有限公司
+  OK      华力创科学（深圳）有限公司
+  MISSING 深圳市安赛步机器人有限公司
+  OK      深圳安赛步机器人有限公司
+  OK      自变量机器人科技（深圳）有限公司
+  MISSING 优必选
+  OK      深圳市优必选科技股份有限公司
+  OK      帕西尼感知科技（深圳）有限公司
+  OK      跨维（深圳）智能数字科技有限公司
+  OK      戴盟（深圳）机器人科技有限公司
+  OK      赛感科技（深圳）有限公司
+  OK      深圳市宇数科技有限公司
+  OK      深圳忆海原识科技有限公司
+  OK      源升智能机器人（深圳）有限公司
+  OK      深圳赛博格机器人有限公司
+  OK      深圳市迈步机器人科技有限公司
+  OK      深圳市锐曼智能技术有限公司
+  OK      深圳市艾唯尔科技有限公司
+  OK      深圳市小村机器人智能科技有限公司
+  OK      深圳中科世界机器人有限公司
+
+found 28/38
+
+## fuzzy containment check for the MISSING ones
+  嘉立创: name~['深圳嘉立创科技集团股份有限公司'] alias~[]
+  一博: name~['深圳市一博科技股份有限公司'] alias~[]
+  鼎纪电子: name~[] alias~[]
+  擎朗智能: name~['上海擎朗智能科技有限公司'] alias~[]
+  穿山甲机器人: name~[] alias~[]
+  广东瓦力科技有限公司: name~[] alias~[]
+  灵启万物（深圳）科技有限公司: name~[] alias~[]
+  深圳智航无界科技: name~[] alias~[]
+  深圳市安赛步机器人有限公司: name~[] alias~['安赛步']
+  优必选: name~['深圳市优必选科技股份有限公司'] alias~['优必选科技']
+
+## detail records
+  深圳嘉立创科技集团股份有限公司 | industry=电子制造 | tech_tags=[] | trs_len=104
+      id=company-c-fc939b70b605d527d6dbd5fb
+  深圳市一博科技股份有限公司 | industry=电子制造 | tech_tags=[] | trs_len=146
+      id=company-c-7ab50856fa69e6cb99cd64c8
+  深南电路股份有限公司 | industry=电子制造 | tech_tags=[] | trs_len=121
+      id=company-c-7f90fb3e1e9dd35e8c6ae54f
+  深圳无界智航科技有限公司 | industry=人工智能 | tech_tags=[] | trs_len=16
+      id=company-c-8d961882618d1950c9121c4c
+  深圳市普渡科技股份有限公司 | industry=物流运输 | tech_tags=['室内外配送机器人研发商'] | trs_len=190
+      id=company-c-4dce46233fd58d10c6c1fa09
+  帕西尼感知科技（深圳）有限公司 | industry=人工智能 | tech_tags=[] | trs_len=74
+      id=company-c-e0685d5acb03d7f5d721e1df

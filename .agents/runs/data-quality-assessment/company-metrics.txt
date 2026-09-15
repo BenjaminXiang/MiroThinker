@@ -1,0 +1,170 @@
+# company  n=7086
+
+## fill rate + placeholder rate
+field                           filled    rate  placeholder    empty
+name                              7086  100.0%            0        0   
+normalized_name                   7086  100.0%            0        0   
+aliases                           6727   94.9%            0      359   
+industry                          6517   92.0%            1      569   placeholder-exact=1
+industry_tags                     5480   77.3%            1     1606   placeholder-exact=1
+tech_tags                         5485   77.4%            1     1601   placeholder-exact=1
+geography                         5491   77.5%            0     1595   
+founded_at                        5486   77.4%            0     1600   
+legal_representative              5486   77.4%            1     1600   placeholder-exact=1
+website                           5340   75.4%            1     1746   placeholder-exact=1
+credit_code                          0    0.0%            0     7086   
+registered_capital                   0    0.0%            0     7086   
+registered_address                6506   91.8%            0      580   
+patent_count                         0    0.0%            0     7086   
+product_description               5368   75.8%          949     1718   placeholder-exact=860 placeholder-glued=88 placeholder-prefix=1
+profile_summary                   7086  100.0%          709        0   placeholder-exact=631 placeholder-glued=76 placeholder-prefix=2
+technology_route_summary          7086  100.0%         1620        0   placeholder-exact=326 placeholder-glued=23 placeholder-prefix=1271
+team_description                  5518   77.9%            0     1568   
+key_personnel                      851   12.0%            0     6235   
+products                             0    0.0%            0     7086   
+business_scenarios                   0    0.0%            0     7086   
+capabilities                         0    0.0%            0     7086   
+financing_events                     0    0.0%            0     7086   
+latest_public_updates                0    0.0%            0     7086   
+personnel_education                  0    0.0%            0     7086   
+personnel_work_experience            0    0.0%            0     7086   
+_supplementary                     899   12.7%            0     6187   
+
+## industry value distribution
+distinct industry raw = 41   missing = 569
+   1297  人工智能
+   1193  硬件
+    931  生产制造
+    881  先进制造
+    555  企业服务
+    351  物联网
+    251  汽车交通
+    249  医疗健康
+     72  硬科技
+     67  金融
+     66  科研及技术服务
+     62  VR/AR
+     56  大数据
+     56  电子商务
+     42  批发零售
+     40  能源电力
+     38  教育培训
+     37  房产家居
+     34  物流运输
+     29  工具软件
+     29  生活服务
+     22  区块链
+     21  文娱传媒
+     19  农业
+     18  餐饮业
+     18  新基建
+     16  建筑
+     12  体育健身
+     11  旅游户外
+      8  环保
+
+## industry_tags: entities_with=5480/7086 (77.3%) total_items=5480 unique=39 avg_per_entity=0.8 max=1
+   1137  硬件
+    857  生产制造
+    851  人工智能
+    708  先进制造
+    470  企业服务
+    316  物联网
+    232  汽车交通
+    213  医疗健康
+     62  金融
+     57  硬科技
+     57  科研及技术服务
+     56  VR/AR
+     54  电子商务
+     48  大数据
+     42  批发零售
+     38  能源电力
+     32  物流运输
+     31  教育培训
+     28  房产家居
+     27  生活服务
+     23  工具软件
+     18  文娱传媒
+     17  区块链
+     14  餐饮业
+     14  农业
+
+## tech_tags: entities_with=5485/7086 (77.4%) total_items=5485 unique=4945 avg_per_entity=0.8 max=1
+     17  智能家居产品研发商
+     15  智能家居研发商
+     14  物联网技术服务商
+     14  智能门锁产销商
+     11  无人机研发商
+     11  智能机器人研发商
+     11  智能家居服务商
+     10  LED显示屏产销商
+     10  工业机器人研发商
+     10  智能硬件研发商
+      9  智能穿戴产品研发商
+      8  芯片研发商
+      8  传感器研发商
+      8  电子元器件代理商
+      7  电子元器件分销商
+      7  智能产品研发商
+      7  智能穿戴设备研发商
+      7  电子元器件供应商
+      6  智能门锁研发商
+      6  智能家居解决方案提供商
+      6  智能锁产销商
+      6  物联网解决方案提供商
+      6  电子元器件生产商
+      6  LED显示屏生产商
+      5  教育机器人研发商
+
+## aliases: entities_with=6727/7086 (94.9%) total_items=6888 unique=6879 avg_per_entity=1.0 max=4
+      2  网猫科技
+      2  仁云
+      2  乐聚机器人
+      2  安特保
+      2  迈斯云门禁
+      2  华弘智谷
+      2  优脉英才
+      2  云豹智能
+      2  多对多
+      1  万物仓
+      1  武迪电子
+      1  深圳市公路交通工程试验检测中心
+      1  检测中心
+      1  泰利能源
+      1  博讯飞扬
+      1  尚荣医疗
+      1  创数智享
+      1  YouWare
+      1  芯源创
+      1  ZLG
+      1  中科图灵科技
+      1  深开鸿
+      1  华鹊云医
+      1  芯毕耐科技
+      1  汉德科技
+
+## tech_tags / industry_tags anomaly scan
+  industry_tags: items=5480 suffix_hits={} fullwidth_hits=0 glued_placeholder=0
+    suffix examples: []
+  tech_tags: items=5485 suffix_hits={'提供商': 741, '研发商': 1284, '服务商': 777, '制造商': 320, '供应商': 198, '生产商': 485, '方案商': 16, '运营商': 34, '集成商': 8} fullwidth_hits=97 glued_placeholder=0
+    suffix examples: ['社区收纳系统解决方案提供商', '柔性光纤传感器研发商', '人工智能安防研发商', '嵌入式产品研发商', '人工智能技术研发商', '物联网操作系统服务商', '医疗健康软件研发商', '嵌入式技术提供商']
+  industry_tags: unique_raw=39 unique_after_case/fullwidth/space-norm=39 collapsible=0
+  tech_tags: unique_raw=4945 unique_after_case/fullwidth/space-norm=4945 collapsible=0
+
+## identity / name uniqueness
+distinct name=- raw_names=7086 duplicate_name_groups=0 entities_in_dup_groups=0
+empty name count: 0
+credit_code: filled=0 (0.0%) distinct=0 dup_groups=0 entities_with_dup_credit_code=0
+normalized_name: filled=7086 distinct=7086 dup_groups=0
+alias strings shared by >1 company: 9 (distinct alias values total=6879)
+
+## category query support (naive substring match on published text fields)
+  机器人      in_tag_fields=  414   in_any_text= 1279
+  人工智能     in_tag_fields=  903   in_any_text= 1576
+  半导体      in_tag_fields=   84   in_any_text=  516
+  新能源      in_tag_fields=   48   in_any_text=  540
+  生物医药     in_tag_fields=    2   in_any_text=   40
+  医疗器械     in_tag_fields=   12   in_any_text=  128
+  无人机      in_tag_fields=  109   in_any_text=  351
+  自动驾驶     in_tag_fields=    6   in_any_text=   88

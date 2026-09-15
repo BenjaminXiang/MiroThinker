@@ -1,0 +1,102 @@
+# paper  n=24520
+
+## fill / placeholder
+field                 filled    rate   empty  placeholder families
+title                  24520  100.0%       0            0 {}
+title_zh                   0    0.0%   24520            0 {}
+year                   24520  100.0%       0            0 {}
+venue                  24520  100.0%       0            5 {'placeholder-prefix': 5}
+doi                    23976   97.8%     544            0 {}
+arxiv_id                 499    2.0%   24021            0 {}
+authors                24520  100.0%       0            0 {}
+citation_count          8185   33.4%   16335            0 {}
+reference_count            0    0.0%   24520            0 {}
+professor_ids              0    0.0%   24520            0 {}
+fields_of_study            0    0.0%   24520            0 {}
+keywords                   0    0.0%   24520            0 {}
+abstract               11795   48.1%   12725            0 {}
+summary_zh             17894   73.0%    6626            0 {}
+summary_text           12358   50.4%   12162            0 {}
+tldr                       0    0.0%   24520            0 {}
+identifiers                0    0.0%   24520            0 {}
+publications               0    0.0%   24520            0 {}
+references                 0    0.0%   24520            0 {}
+full_texts                 0    0.0%   24520            0 {}
+license                    0    0.0%   24520            0 {}
+oa_status                  0    0.0%   24520            0 {}
+pdf_path                   0    0.0%   24520            0 {}
+publication_date           0    0.0%   24520            0 {}
+quality_status         24520  100.0%       0            0 {}
+
+## year distribution
+  range 1908 2027
+    2005: 95
+    2006: 145
+    2007: 128
+    2008: 181
+    2009: 197
+    2010: 248
+    2011: 331
+    2012: 419
+    2013: 541
+    2014: 654
+    2015: 827
+    2016: 926
+    2017: 1120
+    2018: 1628
+    2019: 1967
+    2020: 2414
+    2021: 2498
+    2022: 2571
+    2023: 2475
+    2024: 2390
+    2025: 1814
+    2026: 511
+    2027: 1
+  future years (>2026): 1
+  pre-1990: 28
+
+## venue top 20
+  distinct venues=5204
+      529  Nature Communications
+      418  arXiv (Cornell University)
+      331  Advanced Materials
+      268  Journal of the American Chemical Society
+      264  Angewandte Chemie International Edition
+      242  arXiv
+      235  Advanced Functional Materials
+      230  Proceedings of the AAAI Conference on Artificial Intelligence
+      224  Physical Review Letters
+      207  Optics Express
+      153  ACS Nano
+      146  IEEE Transactions on Wireless Communications
+      143  Proceedings of the National Academy of Sciences
+      141  Applied Physics Letters
+      124  Science Advances
+      118  ACS Applied Materials & Interfaces
+      114  Optics Letters
+      112  Physical Review B
+      108  Scientific Reports
+      107  Advanced Science
+
+## DOI quality
+  total=23976 wellformed(10.NNNN/...)= 23976  malformed=0
+  sample malformed: []
+  duplicate DOI values: 0 rows involved: 0
+
+## title duplicate / shell check
+  distinct normalized titles=24514 groups with >1=6 rows in dup groups=12
+      2  5g mmwave cooperative positioning and mapping using multimodel phd fil
+      2  relaxing wrinkles in jammed interfacial assemblies
+      2  modeling heterogeneous realtime components in bip
+      2  symbolic model checking for realtime systems
+      2  on blocking rules for the bootstrap with dependent data
+      2  continuous spatial process models for spatial extreme values
+
+## authors stats
+  papers=53 author_rows=156092 avg=6.37 distinct_names=59821
+  top repeated names (ambiguity risk): [('Lei Wang', 255), ('Haohuan Fu', 227), ('Ben Zhong Tang', 182), ('Hao Yu', 158), ('Min Zhang', 158), ('Suzhi Bi', 136), ('Wei Zhang', 135), ('Guozhi Xiao', 133), ('Botao Feng', 132), ('Chuluo Yang', 127)]
+  papers with 1 author: 561, >50 authors: 8
+
+## unanchored
+  papers with paper_unanchored limitation: 14130/24520 (57.6%)

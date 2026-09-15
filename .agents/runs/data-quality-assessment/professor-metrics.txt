@@ -1,0 +1,147 @@
+# professor  n=3958
+
+## fill rate / placeholder rate
+field                     filled    rate   empty  placeholder  families
+name                        3958  100.0%       0            0  {}
+canonical_name_zh           3958  100.0%       0            0  {}
+canonical_name_en            278    7.0%    3680            0  {}
+institution                 3958  100.0%       0            0  {}
+department                  3958  100.0%       0         1188  {'placeholder-prefix': 1188}
+title                       3958  100.0%       0         2515  {'placeholder-prefix': 2515}
+email                       3958  100.0%       0         1251  {'placeholder-prefix': 1251}
+homepage                    3958  100.0%       0            0  {}
+phone                          0    0.0%    3958            0  {}
+office                         0    0.0%    3958            0  {}
+research_directions         1969   49.7%    1989            0  {}
+paper_count                  235    5.9%    3723            0  {}
+citation_count               125    3.2%    3833            0  {}
+h_index                      123    3.1%    3835            0  {}
+patent_ids                     0    0.0%    3958            0  {}
+projects                       0    0.0%    3958            0  {}
+awards                         0    0.0%    3958            0  {}
+company_roles                  0    0.0%    3958            0  {}
+education_history              0    0.0%    3958            0  {}
+work_history                   0    0.0%    3958            0  {}
+affiliation_history            0    0.0%    3958            0  {}
+metric_snapshots               0    0.0%    3958            0  {}
+contacts                       0    0.0%    3958            0  {}
+profile_summary             3958  100.0%       0            2  {'placeholder-prefix': 2}
+paper_summary               3958  100.0%       0         3958  {'placeholder-prefix': 3958}
+patent_summary              3958  100.0%       0         3958  {'placeholder-prefix': 3958}
+aliases                        0    0.0%    3958            0  {}
+lifecycle_state                0    0.0%    3958            0  {}
+manual_override                0    0.0%    3958            0  {}
+quality_status              3958  100.0%       0            0  {}
+_supplementary                 4    0.1%    3954            0  {}
+
+## effective fill (placeholder values counted as NOT filled)
+  email                    effective= 2707/3958 (68.4%)
+  homepage                 effective= 3958/3958 (100.0%)
+  title                    effective= 1443/3958 (36.5%)
+  department               effective= 2770/3958 (70.0%)
+  research_directions      effective= 1969/3958 (49.7%)
+  profile_summary          effective= 3956/3958 (99.9%)
+  paper_summary            effective=    0/3958 (0.0%)
+  patent_summary           effective=    0/3958 (0.0%)
+  canonical_name_en        effective=  278/3958 (7.0%)
+
+## research_directions vocabulary
+  entities_with>=1=1969/3958 (49.7%) total_tags=10238 unique=9099 avg=2.59 max=144
+      50  人工智能
+      43  计算机视觉
+      43  蛹等）
+      43  不同取食策略生物的耐热性，仍缺乏系统验证
+      37  机器学习
+      23  主讲本科课程： 主讲研究生课程： 教育背景： 工作履历： 主持项目： 代表期刊论文 ： 代表会议论文： 代表专利： 代表著作： 获得荣誉： 主要学术兼职： 上一篇： 没有了 下一篇
+      16  1
+      15  自然语言处理
+      12  车路协同交通控制
+      12  深度学习
+      11  交通流建模与仿真
+      11  混合自动驾驶交通流优化
+      11  红外图像处理
+      11  2D/3D 目标分割
+      11  2D/3D目标检测
+      11  行为分析
+      11  人形机器人
+      11  非线性控制
+      11  量子控制
+      11  具身智能
+      10  多模态图像理解等
+      10  动态交通网络中分析
+      10  灵巧手
+      10  触觉传感器
+      10  足式机器人
+      10  物流配送机器人
+      10  以及不同平台机器人的具身智能实现
+      10  运动控制理论应用
+      10  机器人核心零部件关键技术
+      10  智能控制与先进制造领域的研究及应用，主要研究方向包括学习控制
+  singleton tags (appear once)=8645
+
+## institution values (raw free text)
+  distinct=9
+     1053  深圳大学
+      960  南方科技大学
+      763  哈尔滨工业大学（深圳）
+      275  清华大学深圳国际研究生院
+      274  中山大学（深圳）
+      195  香港中文大学（深圳）
+      190  深圳技术大学
+      188  深圳理工大学
+       60  北京大学深圳研究生院
+  containing 深圳: 8 distinct, entities=2998
+
+## name uniqueness / identity
+  distinct names=3939 dup_groups=18 entities_in_dups=37
+  3-char Chinese names: distinct=2538 total=2546 max_repeat=2
+      2  胡君杰
+      2  黄宪达
+      2  刘清侠
+      2  成会明
+      2  蔡小强
+      2  梁永生
+      2  朱宝亭
+      2  罗智泉
+      1  贺艳兵
+      1  高淑红
+
+## homepage URL quality
+  http(s)=3940  non-url=18
+      18  javascript:;
+
+## email quality
+  plausible emails=2707/3958
+     1251  Not supplied by the historical source.
+
+## metric coverage
+  paper_count: 235/3958 (5.9%)
+  citation_count: 125/3958 (3.2%)
+  h_index: 123/3958 (3.1%)
+
+## title values
+  distinct=313
+     2515  Not supplied by the historical source.
+      279  副教授
+      182  教授
+      155  助理教授
+       80  副教授、博士生导师
+       74  教授、博士生导师
+       30  讲师
+       29  讲席教授
+       28  助理教授、博士生导师
+       24  副研究员
+       17  特聘教授
+       14  客座教授
+       14  研究助理教授
+       13  研究员、博士生导师
+       13  博士后
+       11  教研助理教授、特聘副教授
+       11  特聘副教授
+       11  副教授 职务： 教师 电话
+       10  长聘副教授、博士生导师
+       10  副研究员、硕士生导师
+
+## aliases / patent_ids (expected empty?)
+  aliases non-empty: 0
+  patent_ids non-empty: 0

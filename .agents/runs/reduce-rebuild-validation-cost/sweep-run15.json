@@ -1,0 +1,2195 @@
+{
+ "database": "miroflow_candidate_v2_20260913_r1",
+ "row_counts": {
+  "canonical_decision_assertion": 846986,
+  "source_assertion": 627165,
+  "domain_projection_lineage": 546178,
+  "canonical_decision_constraint_outcome": 424440,
+  "domain_inclusion_decision_assertion": 424440,
+  "canonical_decision": 423493,
+  "canonical_decision_identity_context": 423493,
+  "identity_decision_assertion": 202725,
+  "source_identity_record": 74986,
+  "identity_decision_record": 74984,
+  "canonical_identity_source_membership": 47072,
+  "current_source_identity_assignment": 47072,
+  "identity_decision_output_source": 47072,
+  "identity_decision_source_identity": 47072,
+  "source_identity": 47072,
+  "canonical_identity": 47068,
+  "domain_inclusion_decision": 47068,
+  "identity_decision": 47068,
+  "identity_decision_context": 47068,
+  "identity_decision_output": 47068,
+  "relationship_decision_assertion": 21546,
+  "current_relationship_projection": 10897,
+  "relationship_projection_outcome": 10897,
+  "relationship_assertion": 10773,
+  "relationship_decision": 10773,
+  "relationship_decision_constraint_outcome": 10773,
+  "relationship_decision_identity_context": 10773,
+  "relationship_projection_shared_assertion": 10773,
+  "relationship_projection_shared_decision": 10773,
+  "identity_candidate_verdict": 491,
+  "typed_relationship_decision_assertion": 248,
+  "typed_relationship_assertion": 124,
+  "typed_relationship_decision": 124,
+  "canonical_identity_lineage": 0,
+  "decision_batch_temporal_context": 0,
+  "domain_projection_manifest": 0,
+  "identity_decision_input": 0,
+  "identity_resolution_run": 0,
+  "identity_resolution_run_content_chunk": 0,
+  "policy": 0,
+  "relationship_projection_run": 0,
+  "relationship_projection_run_content_chunk": 0,
+  "relationship_type": 0,
+  "release": 0
+ },
+ "triggers": [
+  {
+   "table": "canonical_decision",
+   "trigger": "trg_reject_mutation",
+   "deferrable": false,
+   "init_deferred": false,
+   "row_level": true,
+   "before": true,
+   "insert": false,
+   "func": "reject_append_only_mutation",
+   "mounts": 166,
+   "rows": 423493
+  },
+  {
+   "table": "canonical_decision",
+   "trigger": "trg_reject_truncate",
+   "deferrable": false,
+   "init_deferred": false,
+   "row_level": false,
+   "before": true,
+   "insert": false,
+   "func": "reject_append_only_mutation",
+   "mounts": 166,
+   "rows": 423493
+  },
+  {
+   "table": "canonical_decision",
+   "trigger": "trg_validate_field_decision_lineage_insert",
+   "deferrable": false,
+   "init_deferred": false,
+   "row_level": true,
+   "before": true,
+   "insert": true,
+   "func": "validate_field_decision_lineage_insert",
+   "mounts": 1,
+   "rows": 423493
+  },
+  {
+   "table": "canonical_decision",
+   "trigger": "trg_validate_field_human_review_binding",
+   "deferrable": true,
+   "init_deferred": true,
+   "row_level": true,
+   "before": false,
+   "insert": true,
+   "func": "validate_field_human_review_binding",
+   "mounts": 2,
+   "rows": 423493
+  },
+  {
+   "table": "canonical_decision",
+   "trigger": "trg_validate_field_temporal_binding",
+   "deferrable": true,
+   "init_deferred": true,
+   "row_level": true,
+   "before": false,
+   "insert": true,
+   "func": "validate_field_temporal_binding",
+   "mounts": 2,
+   "rows": 423493
+  },
+  {
+   "table": "canonical_decision_assertion",
+   "trigger": "trg_reject_mutation",
+   "deferrable": false,
+   "init_deferred": false,
+   "row_level": true,
+   "before": true,
+   "insert": false,
+   "func": "reject_append_only_mutation",
+   "mounts": 166,
+   "rows": 846986
+  },
+  {
+   "table": "canonical_decision_assertion",
+   "trigger": "trg_reject_truncate",
+   "deferrable": false,
+   "init_deferred": false,
+   "row_level": false,
+   "before": true,
+   "insert": false,
+   "func": "reject_append_only_mutation",
+   "mounts": 166,
+   "rows": 846986
+  },
+  {
+   "table": "canonical_decision_assertion",
+   "trigger": "trg_validate_field_assertion_temporal_binding",
+   "deferrable": true,
+   "init_deferred": true,
+   "row_level": true,
+   "before": false,
+   "insert": true,
+   "func": "validate_field_temporal_binding",
+   "mounts": 2,
+   "rows": 846986
+  },
+  {
+   "table": "canonical_decision_assertion",
+   "trigger": "trg_validate_field_human_review_assertion_binding",
+   "deferrable": true,
+   "init_deferred": true,
+   "row_level": true,
+   "before": false,
+   "insert": true,
+   "func": "validate_field_human_review_binding",
+   "mounts": 2,
+   "rows": 846986
+  },
+  {
+   "table": "canonical_decision_constraint_outcome",
+   "trigger": "trg_reject_mutation",
+   "deferrable": false,
+   "init_deferred": false,
+   "row_level": true,
+   "before": true,
+   "insert": false,
+   "func": "reject_append_only_mutation",
+   "mounts": 166,
+   "rows": 424440
+  },
+  {
+   "table": "canonical_decision_constraint_outcome",
+   "trigger": "trg_reject_truncate",
+   "deferrable": false,
+   "init_deferred": false,
+   "row_level": false,
+   "before": true,
+   "insert": false,
+   "func": "reject_append_only_mutation",
+   "mounts": 166,
+   "rows": 424440
+  },
+  {
+   "table": "canonical_decision_identity_context",
+   "trigger": "trg_reject_mutation",
+   "deferrable": false,
+   "init_deferred": false,
+   "row_level": true,
+   "before": true,
+   "insert": false,
+   "func": "reject_append_only_mutation",
+   "mounts": 166,
+   "rows": 423493
+  },
+  {
+   "table": "canonical_decision_identity_context",
+   "trigger": "trg_reject_truncate",
+   "deferrable": false,
+   "init_deferred": false,
+   "row_level": false,
+   "before": true,
+   "insert": false,
+   "func": "reject_append_only_mutation",
+   "mounts": 166,
+   "rows": 423493
+  },
+  {
+   "table": "canonical_identity",
+   "trigger": "trg_reject_mutation",
+   "deferrable": false,
+   "init_deferred": false,
+   "row_level": true,
+   "before": true,
+   "insert": false,
+   "func": "reject_append_only_mutation",
+   "mounts": 166,
+   "rows": 47068
+  },
+  {
+   "table": "canonical_identity",
+   "trigger": "trg_reject_truncate",
+   "deferrable": false,
+   "init_deferred": false,
+   "row_level": false,
+   "before": true,
+   "insert": false,
+   "func": "reject_append_only_mutation",
+   "mounts": 166,
+   "rows": 47068
+  },
+  {
+   "table": "canonical_identity",
+   "trigger": "trg_validate_identity_resolution_release",
+   "deferrable": true,
+   "init_deferred": true,
+   "row_level": true,
+   "before": false,
+   "insert": true,
+   "func": "validate_identity_resolution_release",
+   "mounts": 14,
+   "rows": 47068
+  },
+  {
+   "table": "canonical_identity_lineage",
+   "trigger": "trg_reject_mutation",
+   "deferrable": false,
+   "init_deferred": false,
+   "row_level": true,
+   "before": true,
+   "insert": false,
+   "func": "reject_append_only_mutation",
+   "mounts": 166,
+   "rows": 0
+  },
+  {
+   "table": "canonical_identity_lineage",
+   "trigger": "trg_reject_truncate",
+   "deferrable": false,
+   "init_deferred": false,
+   "row_level": false,
+   "before": true,
+   "insert": false,
+   "func": "reject_append_only_mutation",
+   "mounts": 166,
+   "rows": 0
+  },
+  {
+   "table": "canonical_identity_lineage",
+   "trigger": "trg_validate_identity_resolution_release",
+   "deferrable": true,
+   "init_deferred": true,
+   "row_level": true,
+   "before": false,
+   "insert": true,
+   "func": "validate_identity_resolution_release",
+   "mounts": 14,
+   "rows": 0
+  },
+  {
+   "table": "canonical_identity_source_membership",
+   "trigger": "trg_reject_mutation",
+   "deferrable": false,
+   "init_deferred": false,
+   "row_level": true,
+   "before": true,
+   "insert": false,
+   "func": "reject_append_only_mutation",
+   "mounts": 166,
+   "rows": 47072
+  },
+  {
+   "table": "canonical_identity_source_membership",
+   "trigger": "trg_reject_truncate",
+   "deferrable": false,
+   "init_deferred": false,
+   "row_level": false,
+   "before": true,
+   "insert": false,
+   "func": "reject_append_only_mutation",
+   "mounts": 166,
+   "rows": 47072
+  },
+  {
+   "table": "canonical_identity_source_membership",
+   "trigger": "trg_validate_entity_type",
+   "deferrable": false,
+   "init_deferred": false,
+   "row_level": true,
+   "before": true,
+   "insert": true,
+   "func": "validate_canonical_membership_entity_type",
+   "mounts": 1,
+   "rows": 47072
+  },
+  {
+   "table": "canonical_identity_source_membership",
+   "trigger": "trg_validate_identity_human_review_membership_binding",
+   "deferrable": true,
+   "init_deferred": true,
+   "row_level": true,
+   "before": false,
+   "insert": true,
+   "func": "validate_identity_human_review_binding",
+   "mounts": 9,
+   "rows": 47072
+  },
+  {
+   "table": "canonical_identity_source_membership",
+   "trigger": "trg_validate_identity_resolution_release",
+   "deferrable": true,
+   "init_deferred": true,
+   "row_level": true,
+   "before": false,
+   "insert": true,
+   "func": "validate_identity_resolution_release",
+   "mounts": 14,
+   "rows": 47072
+  },
+  {
+   "table": "current_relationship_projection",
+   "trigger": "trg_reject_mutation",
+   "deferrable": false,
+   "init_deferred": false,
+   "row_level": true,
+   "before": true,
+   "insert": false,
+   "func": "reject_append_only_mutation",
+   "mounts": 166,
+   "rows": 10897
+  },
+  {
+   "table": "current_relationship_projection",
+   "trigger": "trg_reject_truncate",
+   "deferrable": false,
+   "init_deferred": false,
+   "row_level": false,
+   "before": true,
+   "insert": false,
+   "func": "reject_append_only_mutation",
+   "mounts": 166,
+   "rows": 10897
+  },
+  {
+   "table": "current_relationship_projection",
+   "trigger": "trg_validate_current_relationship_decision",
+   "deferrable": true,
+   "init_deferred": true,
+   "row_level": true,
+   "before": false,
+   "insert": true,
+   "func": "validate_current_relationship_decision",
+   "mounts": 1,
+   "rows": 10897
+  },
+  {
+   "table": "current_relationship_projection",
+   "trigger": "trg_validate_relationship_candidate_release",
+   "deferrable": false,
+   "init_deferred": false,
+   "row_level": true,
+   "before": true,
+   "insert": true,
+   "func": "validate_relationship_projection_candidate_release",
+   "mounts": 10,
+   "rows": 10897
+  },
+  {
+   "table": "current_relationship_projection",
+   "trigger": "trg_validate_typed_relationship_endpoints",
+   "deferrable": false,
+   "init_deferred": false,
+   "row_level": true,
+   "before": true,
+   "insert": true,
+   "func": "validate_typed_relationship_endpoints",
+   "mounts": 3,
+   "rows": 10897
+  },
+  {
+   "table": "current_source_identity_assignment",
+   "trigger": "trg_reject_mutation",
+   "deferrable": false,
+   "init_deferred": false,
+   "row_level": true,
+   "before": true,
+   "insert": false,
+   "func": "reject_append_only_mutation",
+   "mounts": 166,
+   "rows": 47072
+  },
+  {
+   "table": "current_source_identity_assignment",
+   "trigger": "trg_reject_truncate",
+   "deferrable": false,
+   "init_deferred": false,
+   "row_level": false,
+   "before": true,
+   "insert": false,
+   "func": "reject_append_only_mutation",
+   "mounts": 166,
+   "rows": 47072
+  },
+  {
+   "table": "current_source_identity_assignment",
+   "trigger": "trg_validate_active_owner",
+   "deferrable": false,
+   "init_deferred": false,
+   "row_level": true,
+   "before": true,
+   "insert": true,
+   "func": "validate_current_assignment_owner",
+   "mounts": 1,
+   "rows": 47072
+  },
+  {
+   "table": "current_source_identity_assignment",
+   "trigger": "trg_validate_identity_human_review_assignment_binding",
+   "deferrable": true,
+   "init_deferred": true,
+   "row_level": true,
+   "before": false,
+   "insert": true,
+   "func": "validate_identity_human_review_binding",
+   "mounts": 9,
+   "rows": 47072
+  },
+  {
+   "table": "current_source_identity_assignment",
+   "trigger": "trg_validate_identity_resolution_release",
+   "deferrable": true,
+   "init_deferred": true,
+   "row_level": true,
+   "before": false,
+   "insert": true,
+   "func": "validate_identity_resolution_release",
+   "mounts": 14,
+   "rows": 47072
+  },
+  {
+   "table": "decision_batch_temporal_context",
+   "trigger": "trg_reject_mutation",
+   "deferrable": false,
+   "init_deferred": false,
+   "row_level": true,
+   "before": true,
+   "insert": false,
+   "func": "reject_append_only_mutation",
+   "mounts": 166,
+   "rows": 0
+  },
+  {
+   "table": "decision_batch_temporal_context",
+   "trigger": "trg_reject_truncate",
+   "deferrable": false,
+   "init_deferred": false,
+   "row_level": false,
+   "before": true,
+   "insert": false,
+   "func": "reject_append_only_mutation",
+   "mounts": 166,
+   "rows": 0
+  },
+  {
+   "table": "domain_inclusion_decision",
+   "trigger": "trg_reject_mutation",
+   "deferrable": false,
+   "init_deferred": false,
+   "row_level": true,
+   "before": true,
+   "insert": false,
+   "func": "reject_append_only_mutation",
+   "mounts": 166,
+   "rows": 47068
+  },
+  {
+   "table": "domain_inclusion_decision",
+   "trigger": "trg_reject_truncate",
+   "deferrable": false,
+   "init_deferred": false,
+   "row_level": false,
+   "before": true,
+   "insert": false,
+   "func": "reject_append_only_mutation",
+   "mounts": 166,
+   "rows": 47068
+  },
+  {
+   "table": "domain_inclusion_decision",
+   "trigger": "trg_validate_domain_projection_candidate_release",
+   "deferrable": false,
+   "init_deferred": false,
+   "row_level": true,
+   "before": true,
+   "insert": true,
+   "func": "validate_domain_projection_candidate_release",
+   "mounts": 36,
+   "rows": 47068
+  },
+  {
+   "table": "domain_inclusion_decision_assertion",
+   "trigger": "trg_reject_mutation",
+   "deferrable": false,
+   "init_deferred": false,
+   "row_level": true,
+   "before": true,
+   "insert": false,
+   "func": "reject_append_only_mutation",
+   "mounts": 166,
+   "rows": 424440
+  },
+  {
+   "table": "domain_inclusion_decision_assertion",
+   "trigger": "trg_reject_truncate",
+   "deferrable": false,
+   "init_deferred": false,
+   "row_level": false,
+   "before": true,
+   "insert": false,
+   "func": "reject_append_only_mutation",
+   "mounts": 166,
+   "rows": 424440
+  },
+  {
+   "table": "domain_inclusion_decision_assertion",
+   "trigger": "trg_validate_domain_inclusion_assertion_owner",
+   "deferrable": false,
+   "init_deferred": false,
+   "row_level": true,
+   "before": true,
+   "insert": true,
+   "func": "validate_domain_inclusion_assertion_owner",
+   "mounts": 1,
+   "rows": 424440
+  },
+  {
+   "table": "domain_inclusion_decision_assertion",
+   "trigger": "trg_validate_domain_projection_candidate_release",
+   "deferrable": false,
+   "init_deferred": false,
+   "row_level": true,
+   "before": true,
+   "insert": true,
+   "func": "validate_domain_projection_candidate_release",
+   "mounts": 36,
+   "rows": 424440
+  },
+  {
+   "table": "domain_projection_lineage",
+   "trigger": "trg_reject_mutation",
+   "deferrable": false,
+   "init_deferred": false,
+   "row_level": true,
+   "before": true,
+   "insert": false,
+   "func": "reject_append_only_mutation",
+   "mounts": 166,
+   "rows": 546178
+  },
+  {
+   "table": "domain_projection_lineage",
+   "trigger": "trg_reject_truncate",
+   "deferrable": false,
+   "init_deferred": false,
+   "row_level": false,
+   "before": true,
+   "insert": false,
+   "func": "reject_append_only_mutation",
+   "mounts": 166,
+   "rows": 546178
+  },
+  {
+   "table": "domain_projection_lineage",
+   "trigger": "trg_validate_domain_projection_candidate_release",
+   "deferrable": false,
+   "init_deferred": false,
+   "row_level": true,
+   "before": true,
+   "insert": true,
+   "func": "validate_domain_projection_candidate_release",
+   "mounts": 36,
+   "rows": 546178
+  },
+  {
+   "table": "domain_projection_lineage",
+   "trigger": "trg_validate_domain_projection_lineage_target",
+   "deferrable": false,
+   "init_deferred": false,
+   "row_level": true,
+   "before": true,
+   "insert": true,
+   "func": "validate_domain_projection_lineage_target",
+   "mounts": 1,
+   "rows": 546178
+  },
+  {
+   "table": "domain_projection_manifest",
+   "trigger": "trg_reject_mutation",
+   "deferrable": false,
+   "init_deferred": false,
+   "row_level": true,
+   "before": true,
+   "insert": false,
+   "func": "reject_append_only_mutation",
+   "mounts": 166,
+   "rows": 0
+  },
+  {
+   "table": "domain_projection_manifest",
+   "trigger": "trg_reject_truncate",
+   "deferrable": false,
+   "init_deferred": false,
+   "row_level": false,
+   "before": true,
+   "insert": false,
+   "func": "reject_append_only_mutation",
+   "mounts": 166,
+   "rows": 0
+  },
+  {
+   "table": "domain_projection_manifest",
+   "trigger": "trg_validate_domain_projection_candidate_release",
+   "deferrable": false,
+   "init_deferred": false,
+   "row_level": true,
+   "before": true,
+   "insert": true,
+   "func": "validate_domain_projection_candidate_release",
+   "mounts": 36,
+   "rows": 0
+  },
+  {
+   "table": "identity_candidate_verdict",
+   "trigger": "trg_reject_mutation",
+   "deferrable": false,
+   "init_deferred": false,
+   "row_level": true,
+   "before": true,
+   "insert": false,
+   "func": "reject_append_only_mutation",
+   "mounts": 166,
+   "rows": 491
+  },
+  {
+   "table": "identity_candidate_verdict",
+   "trigger": "trg_reject_truncate",
+   "deferrable": false,
+   "init_deferred": false,
+   "row_level": false,
+   "before": true,
+   "insert": false,
+   "func": "reject_append_only_mutation",
+   "mounts": 166,
+   "rows": 491
+  },
+  {
+   "table": "identity_candidate_verdict",
+   "trigger": "trg_validate_identity_human_review_verdict_binding",
+   "deferrable": true,
+   "init_deferred": true,
+   "row_level": true,
+   "before": false,
+   "insert": true,
+   "func": "validate_identity_human_review_binding",
+   "mounts": 9,
+   "rows": 491
+  },
+  {
+   "table": "identity_candidate_verdict",
+   "trigger": "trg_validate_identity_resolution_release",
+   "deferrable": true,
+   "init_deferred": true,
+   "row_level": true,
+   "before": false,
+   "insert": true,
+   "func": "validate_identity_resolution_release",
+   "mounts": 14,
+   "rows": 491
+  },
+  {
+   "table": "identity_decision",
+   "trigger": "trg_reject_mutation",
+   "deferrable": false,
+   "init_deferred": false,
+   "row_level": true,
+   "before": true,
+   "insert": false,
+   "func": "reject_append_only_mutation",
+   "mounts": 166,
+   "rows": 47068
+  },
+  {
+   "table": "identity_decision",
+   "trigger": "trg_reject_truncate",
+   "deferrable": false,
+   "init_deferred": false,
+   "row_level": false,
+   "before": true,
+   "insert": false,
+   "func": "reject_append_only_mutation",
+   "mounts": 166,
+   "rows": 47068
+  },
+  {
+   "table": "identity_decision",
+   "trigger": "trg_validate_identity_action_allocation",
+   "deferrable": true,
+   "init_deferred": true,
+   "row_level": true,
+   "before": false,
+   "insert": true,
+   "func": "validate_identity_action_allocation",
+   "mounts": 5,
+   "rows": 47068
+  },
+  {
+   "table": "identity_decision",
+   "trigger": "trg_validate_identity_human_review_binding",
+   "deferrable": true,
+   "init_deferred": true,
+   "row_level": true,
+   "before": false,
+   "insert": true,
+   "func": "validate_identity_human_review_binding",
+   "mounts": 9,
+   "rows": 47068
+  },
+  {
+   "table": "identity_decision",
+   "trigger": "trg_validate_identity_resolution_release",
+   "deferrable": true,
+   "init_deferred": true,
+   "row_level": true,
+   "before": false,
+   "insert": true,
+   "func": "validate_identity_resolution_release",
+   "mounts": 14,
+   "rows": 47068
+  },
+  {
+   "table": "identity_decision_assertion",
+   "trigger": "trg_reject_mutation",
+   "deferrable": false,
+   "init_deferred": false,
+   "row_level": true,
+   "before": true,
+   "insert": false,
+   "func": "reject_append_only_mutation",
+   "mounts": 166,
+   "rows": 202725
+  },
+  {
+   "table": "identity_decision_assertion",
+   "trigger": "trg_reject_truncate",
+   "deferrable": false,
+   "init_deferred": false,
+   "row_level": false,
+   "before": true,
+   "insert": false,
+   "func": "reject_append_only_mutation",
+   "mounts": 166,
+   "rows": 202725
+  },
+  {
+   "table": "identity_decision_assertion",
+   "trigger": "trg_validate_identity_human_review_assertion_binding",
+   "deferrable": true,
+   "init_deferred": true,
+   "row_level": true,
+   "before": false,
+   "insert": true,
+   "func": "validate_identity_human_review_binding",
+   "mounts": 9,
+   "rows": 202725
+  },
+  {
+   "table": "identity_decision_assertion",
+   "trigger": "trg_validate_identity_resolution_release",
+   "deferrable": true,
+   "init_deferred": true,
+   "row_level": true,
+   "before": false,
+   "insert": true,
+   "func": "validate_identity_resolution_release",
+   "mounts": 14,
+   "rows": 202725
+  },
+  {
+   "table": "identity_decision_context",
+   "trigger": "trg_reject_mutation",
+   "deferrable": false,
+   "init_deferred": false,
+   "row_level": true,
+   "before": true,
+   "insert": false,
+   "func": "reject_append_only_mutation",
+   "mounts": 166,
+   "rows": 47068
+  },
+  {
+   "table": "identity_decision_context",
+   "trigger": "trg_reject_truncate",
+   "deferrable": false,
+   "init_deferred": false,
+   "row_level": false,
+   "before": true,
+   "insert": false,
+   "func": "reject_append_only_mutation",
+   "mounts": 166,
+   "rows": 47068
+  },
+  {
+   "table": "identity_decision_context",
+   "trigger": "trg_validate_identity_human_review_context_binding",
+   "deferrable": true,
+   "init_deferred": true,
+   "row_level": true,
+   "before": false,
+   "insert": true,
+   "func": "validate_identity_human_review_binding",
+   "mounts": 9,
+   "rows": 47068
+  },
+  {
+   "table": "identity_decision_context",
+   "trigger": "trg_validate_identity_resolution_release",
+   "deferrable": true,
+   "init_deferred": true,
+   "row_level": true,
+   "before": false,
+   "insert": true,
+   "func": "validate_identity_resolution_release",
+   "mounts": 14,
+   "rows": 47068
+  },
+  {
+   "table": "identity_decision_input",
+   "trigger": "trg_reject_mutation",
+   "deferrable": false,
+   "init_deferred": false,
+   "row_level": true,
+   "before": true,
+   "insert": false,
+   "func": "reject_append_only_mutation",
+   "mounts": 166,
+   "rows": 0
+  },
+  {
+   "table": "identity_decision_input",
+   "trigger": "trg_reject_truncate",
+   "deferrable": false,
+   "init_deferred": false,
+   "row_level": false,
+   "before": true,
+   "insert": false,
+   "func": "reject_append_only_mutation",
+   "mounts": 166,
+   "rows": 0
+  },
+  {
+   "table": "identity_decision_input",
+   "trigger": "trg_validate_identity_action_allocation",
+   "deferrable": true,
+   "init_deferred": true,
+   "row_level": true,
+   "before": false,
+   "insert": true,
+   "func": "validate_identity_action_allocation",
+   "mounts": 5,
+   "rows": 0
+  },
+  {
+   "table": "identity_decision_input",
+   "trigger": "trg_validate_identity_resolution_release",
+   "deferrable": true,
+   "init_deferred": true,
+   "row_level": true,
+   "before": false,
+   "insert": true,
+   "func": "validate_identity_resolution_release",
+   "mounts": 14,
+   "rows": 0
+  },
+  {
+   "table": "identity_decision_output",
+   "trigger": "trg_reject_mutation",
+   "deferrable": false,
+   "init_deferred": false,
+   "row_level": true,
+   "before": true,
+   "insert": false,
+   "func": "reject_append_only_mutation",
+   "mounts": 166,
+   "rows": 47068
+  },
+  {
+   "table": "identity_decision_output",
+   "trigger": "trg_reject_truncate",
+   "deferrable": false,
+   "init_deferred": false,
+   "row_level": false,
+   "before": true,
+   "insert": false,
+   "func": "reject_append_only_mutation",
+   "mounts": 166,
+   "rows": 47068
+  },
+  {
+   "table": "identity_decision_output",
+   "trigger": "trg_validate_identity_action_allocation",
+   "deferrable": true,
+   "init_deferred": true,
+   "row_level": true,
+   "before": false,
+   "insert": true,
+   "func": "validate_identity_action_allocation",
+   "mounts": 5,
+   "rows": 47068
+  },
+  {
+   "table": "identity_decision_output",
+   "trigger": "trg_validate_identity_human_review_output_binding",
+   "deferrable": true,
+   "init_deferred": true,
+   "row_level": true,
+   "before": false,
+   "insert": true,
+   "func": "validate_identity_human_review_binding",
+   "mounts": 9,
+   "rows": 47068
+  },
+  {
+   "table": "identity_decision_output",
+   "trigger": "trg_validate_identity_resolution_release",
+   "deferrable": true,
+   "init_deferred": true,
+   "row_level": true,
+   "before": false,
+   "insert": true,
+   "func": "validate_identity_resolution_release",
+   "mounts": 14,
+   "rows": 47068
+  },
+  {
+   "table": "identity_decision_output_source",
+   "trigger": "trg_reject_mutation",
+   "deferrable": false,
+   "init_deferred": false,
+   "row_level": true,
+   "before": true,
+   "insert": false,
+   "func": "reject_append_only_mutation",
+   "mounts": 166,
+   "rows": 47072
+  },
+  {
+   "table": "identity_decision_output_source",
+   "trigger": "trg_reject_truncate",
+   "deferrable": false,
+   "init_deferred": false,
+   "row_level": false,
+   "before": true,
+   "insert": false,
+   "func": "reject_append_only_mutation",
+   "mounts": 166,
+   "rows": 47072
+  },
+  {
+   "table": "identity_decision_output_source",
+   "trigger": "trg_validate_identity_action_allocation",
+   "deferrable": true,
+   "init_deferred": true,
+   "row_level": true,
+   "before": false,
+   "insert": true,
+   "func": "validate_identity_action_allocation",
+   "mounts": 5,
+   "rows": 47072
+  },
+  {
+   "table": "identity_decision_output_source",
+   "trigger": "trg_validate_identity_human_review_allocation_binding",
+   "deferrable": true,
+   "init_deferred": true,
+   "row_level": true,
+   "before": false,
+   "insert": true,
+   "func": "validate_identity_human_review_binding",
+   "mounts": 9,
+   "rows": 47072
+  },
+  {
+   "table": "identity_decision_output_source",
+   "trigger": "trg_validate_identity_resolution_release",
+   "deferrable": true,
+   "init_deferred": true,
+   "row_level": true,
+   "before": false,
+   "insert": true,
+   "func": "validate_identity_resolution_release",
+   "mounts": 14,
+   "rows": 47072
+  },
+  {
+   "table": "identity_decision_record",
+   "trigger": "trg_reject_mutation",
+   "deferrable": false,
+   "init_deferred": false,
+   "row_level": true,
+   "before": true,
+   "insert": false,
+   "func": "reject_append_only_mutation",
+   "mounts": 166,
+   "rows": 74984
+  },
+  {
+   "table": "identity_decision_record",
+   "trigger": "trg_reject_truncate",
+   "deferrable": false,
+   "init_deferred": false,
+   "row_level": false,
+   "before": true,
+   "insert": false,
+   "func": "reject_append_only_mutation",
+   "mounts": 166,
+   "rows": 74984
+  },
+  {
+   "table": "identity_decision_record",
+   "trigger": "trg_validate_identity_resolution_release",
+   "deferrable": true,
+   "init_deferred": true,
+   "row_level": true,
+   "before": false,
+   "insert": true,
+   "func": "validate_identity_resolution_release",
+   "mounts": 14,
+   "rows": 74984
+  },
+  {
+   "table": "identity_decision_source_identity",
+   "trigger": "trg_reject_mutation",
+   "deferrable": false,
+   "init_deferred": false,
+   "row_level": true,
+   "before": true,
+   "insert": false,
+   "func": "reject_append_only_mutation",
+   "mounts": 166,
+   "rows": 47072
+  },
+  {
+   "table": "identity_decision_source_identity",
+   "trigger": "trg_reject_truncate",
+   "deferrable": false,
+   "init_deferred": false,
+   "row_level": false,
+   "before": true,
+   "insert": false,
+   "func": "reject_append_only_mutation",
+   "mounts": 166,
+   "rows": 47072
+  },
+  {
+   "table": "identity_decision_source_identity",
+   "trigger": "trg_validate_identity_action_allocation",
+   "deferrable": true,
+   "init_deferred": true,
+   "row_level": true,
+   "before": false,
+   "insert": true,
+   "func": "validate_identity_action_allocation",
+   "mounts": 5,
+   "rows": 47072
+  },
+  {
+   "table": "identity_decision_source_identity",
+   "trigger": "trg_validate_identity_human_review_source_binding",
+   "deferrable": true,
+   "init_deferred": true,
+   "row_level": true,
+   "before": false,
+   "insert": true,
+   "func": "validate_identity_human_review_binding",
+   "mounts": 9,
+   "rows": 47072
+  },
+  {
+   "table": "identity_decision_source_identity",
+   "trigger": "trg_validate_identity_resolution_release",
+   "deferrable": true,
+   "init_deferred": true,
+   "row_level": true,
+   "before": false,
+   "insert": true,
+   "func": "validate_identity_resolution_release",
+   "mounts": 14,
+   "rows": 47072
+  },
+  {
+   "table": "identity_resolution_run",
+   "trigger": "trg_reject_mutation",
+   "deferrable": false,
+   "init_deferred": false,
+   "row_level": true,
+   "before": true,
+   "insert": false,
+   "func": "reject_append_only_mutation",
+   "mounts": 166,
+   "rows": 0
+  },
+  {
+   "table": "identity_resolution_run",
+   "trigger": "trg_reject_truncate",
+   "deferrable": false,
+   "init_deferred": false,
+   "row_level": false,
+   "before": true,
+   "insert": false,
+   "func": "reject_append_only_mutation",
+   "mounts": 166,
+   "rows": 0
+  },
+  {
+   "table": "identity_resolution_run",
+   "trigger": "trg_validate_identity_resolution_release",
+   "deferrable": true,
+   "init_deferred": true,
+   "row_level": true,
+   "before": false,
+   "insert": true,
+   "func": "validate_identity_resolution_release",
+   "mounts": 14,
+   "rows": 0
+  },
+  {
+   "table": "policy",
+   "trigger": "trg_reject_mutation",
+   "deferrable": false,
+   "init_deferred": false,
+   "row_level": true,
+   "before": true,
+   "insert": false,
+   "func": "reject_append_only_mutation",
+   "mounts": 166,
+   "rows": 0
+  },
+  {
+   "table": "policy",
+   "trigger": "trg_reject_truncate",
+   "deferrable": false,
+   "init_deferred": false,
+   "row_level": false,
+   "before": true,
+   "insert": false,
+   "func": "reject_append_only_mutation",
+   "mounts": 166,
+   "rows": 0
+  },
+  {
+   "table": "relationship_assertion",
+   "trigger": "trg_reject_mutation",
+   "deferrable": false,
+   "init_deferred": false,
+   "row_level": true,
+   "before": true,
+   "insert": false,
+   "func": "reject_append_only_mutation",
+   "mounts": 166,
+   "rows": 10773
+  },
+  {
+   "table": "relationship_assertion",
+   "trigger": "trg_reject_truncate",
+   "deferrable": false,
+   "init_deferred": false,
+   "row_level": false,
+   "before": true,
+   "insert": false,
+   "func": "reject_append_only_mutation",
+   "mounts": 166,
+   "rows": 10773
+  },
+  {
+   "table": "relationship_decision",
+   "trigger": "trg_reject_mutation",
+   "deferrable": false,
+   "init_deferred": false,
+   "row_level": true,
+   "before": true,
+   "insert": false,
+   "func": "reject_append_only_mutation",
+   "mounts": 166,
+   "rows": 10773
+  },
+  {
+   "table": "relationship_decision",
+   "trigger": "trg_reject_truncate",
+   "deferrable": false,
+   "init_deferred": false,
+   "row_level": false,
+   "before": true,
+   "insert": false,
+   "func": "reject_append_only_mutation",
+   "mounts": 166,
+   "rows": 10773
+  },
+  {
+   "table": "relationship_decision",
+   "trigger": "trg_validate_relationship_candidate_release",
+   "deferrable": false,
+   "init_deferred": false,
+   "row_level": true,
+   "before": true,
+   "insert": true,
+   "func": "validate_relationship_projection_candidate_release",
+   "mounts": 10,
+   "rows": 10773
+  },
+  {
+   "table": "relationship_decision",
+   "trigger": "trg_validate_relationship_decision_lineage_insert",
+   "deferrable": false,
+   "init_deferred": false,
+   "row_level": true,
+   "before": true,
+   "insert": true,
+   "func": "validate_relationship_decision_lineage_insert",
+   "mounts": 1,
+   "rows": 10773
+  },
+  {
+   "table": "relationship_decision",
+   "trigger": "trg_validate_relationship_human_review_binding",
+   "deferrable": true,
+   "init_deferred": true,
+   "row_level": true,
+   "before": false,
+   "insert": true,
+   "func": "validate_relationship_human_review_binding",
+   "mounts": 2,
+   "rows": 10773
+  },
+  {
+   "table": "relationship_decision",
+   "trigger": "trg_validate_relationship_temporal_binding",
+   "deferrable": true,
+   "init_deferred": true,
+   "row_level": true,
+   "before": false,
+   "insert": true,
+   "func": "validate_relationship_temporal_binding",
+   "mounts": 2,
+   "rows": 10773
+  },
+  {
+   "table": "relationship_decision_assertion",
+   "trigger": "trg_reject_mutation",
+   "deferrable": false,
+   "init_deferred": false,
+   "row_level": true,
+   "before": true,
+   "insert": false,
+   "func": "reject_append_only_mutation",
+   "mounts": 166,
+   "rows": 21546
+  },
+  {
+   "table": "relationship_decision_assertion",
+   "trigger": "trg_reject_truncate",
+   "deferrable": false,
+   "init_deferred": false,
+   "row_level": false,
+   "before": true,
+   "insert": false,
+   "func": "reject_append_only_mutation",
+   "mounts": 166,
+   "rows": 21546
+  },
+  {
+   "table": "relationship_decision_assertion",
+   "trigger": "trg_validate_relationship_assertion_temporal_binding",
+   "deferrable": true,
+   "init_deferred": true,
+   "row_level": true,
+   "before": false,
+   "insert": true,
+   "func": "validate_relationship_temporal_binding",
+   "mounts": 2,
+   "rows": 21546
+  },
+  {
+   "table": "relationship_decision_assertion",
+   "trigger": "trg_validate_relationship_candidate_release",
+   "deferrable": false,
+   "init_deferred": false,
+   "row_level": true,
+   "before": true,
+   "insert": true,
+   "func": "validate_relationship_projection_candidate_release",
+   "mounts": 10,
+   "rows": 21546
+  },
+  {
+   "table": "relationship_decision_assertion",
+   "trigger": "trg_validate_relationship_human_review_assertion_binding",
+   "deferrable": true,
+   "init_deferred": true,
+   "row_level": true,
+   "before": false,
+   "insert": true,
+   "func": "validate_relationship_human_review_binding",
+   "mounts": 2,
+   "rows": 21546
+  },
+  {
+   "table": "relationship_decision_constraint_outcome",
+   "trigger": "trg_reject_mutation",
+   "deferrable": false,
+   "init_deferred": false,
+   "row_level": true,
+   "before": true,
+   "insert": false,
+   "func": "reject_append_only_mutation",
+   "mounts": 166,
+   "rows": 10773
+  },
+  {
+   "table": "relationship_decision_constraint_outcome",
+   "trigger": "trg_reject_truncate",
+   "deferrable": false,
+   "init_deferred": false,
+   "row_level": false,
+   "before": true,
+   "insert": false,
+   "func": "reject_append_only_mutation",
+   "mounts": 166,
+   "rows": 10773
+  },
+  {
+   "table": "relationship_decision_identity_context",
+   "trigger": "trg_reject_mutation",
+   "deferrable": false,
+   "init_deferred": false,
+   "row_level": true,
+   "before": true,
+   "insert": false,
+   "func": "reject_append_only_mutation",
+   "mounts": 166,
+   "rows": 10773
+  },
+  {
+   "table": "relationship_decision_identity_context",
+   "trigger": "trg_reject_truncate",
+   "deferrable": false,
+   "init_deferred": false,
+   "row_level": false,
+   "before": true,
+   "insert": false,
+   "func": "reject_append_only_mutation",
+   "mounts": 166,
+   "rows": 10773
+  },
+  {
+   "table": "relationship_projection_outcome",
+   "trigger": "trg_reject_mutation",
+   "deferrable": false,
+   "init_deferred": false,
+   "row_level": true,
+   "before": true,
+   "insert": false,
+   "func": "reject_append_only_mutation",
+   "mounts": 166,
+   "rows": 10897
+  },
+  {
+   "table": "relationship_projection_outcome",
+   "trigger": "trg_reject_truncate",
+   "deferrable": false,
+   "init_deferred": false,
+   "row_level": false,
+   "before": true,
+   "insert": false,
+   "func": "reject_append_only_mutation",
+   "mounts": 166,
+   "rows": 10897
+  },
+  {
+   "table": "relationship_projection_outcome",
+   "trigger": "trg_validate_relationship_candidate_release",
+   "deferrable": false,
+   "init_deferred": false,
+   "row_level": true,
+   "before": true,
+   "insert": true,
+   "func": "validate_relationship_projection_candidate_release",
+   "mounts": 10,
+   "rows": 10897
+  },
+  {
+   "table": "relationship_projection_run",
+   "trigger": "trg_reject_mutation",
+   "deferrable": false,
+   "init_deferred": false,
+   "row_level": true,
+   "before": true,
+   "insert": false,
+   "func": "reject_append_only_mutation",
+   "mounts": 166,
+   "rows": 0
+  },
+  {
+   "table": "relationship_projection_run",
+   "trigger": "trg_reject_truncate",
+   "deferrable": false,
+   "init_deferred": false,
+   "row_level": false,
+   "before": true,
+   "insert": false,
+   "func": "reject_append_only_mutation",
+   "mounts": 166,
+   "rows": 0
+  },
+  {
+   "table": "relationship_projection_run",
+   "trigger": "trg_validate_relationship_candidate_release",
+   "deferrable": false,
+   "init_deferred": false,
+   "row_level": true,
+   "before": true,
+   "insert": true,
+   "func": "validate_relationship_projection_candidate_release",
+   "mounts": 10,
+   "rows": 0
+  },
+  {
+   "table": "relationship_projection_shared_assertion",
+   "trigger": "trg_reject_mutation",
+   "deferrable": false,
+   "init_deferred": false,
+   "row_level": true,
+   "before": true,
+   "insert": false,
+   "func": "reject_append_only_mutation",
+   "mounts": 166,
+   "rows": 10773
+  },
+  {
+   "table": "relationship_projection_shared_assertion",
+   "trigger": "trg_reject_truncate",
+   "deferrable": false,
+   "init_deferred": false,
+   "row_level": false,
+   "before": true,
+   "insert": false,
+   "func": "reject_append_only_mutation",
+   "mounts": 166,
+   "rows": 10773
+  },
+  {
+   "table": "relationship_projection_shared_assertion",
+   "trigger": "trg_validate_relationship_candidate_release",
+   "deferrable": false,
+   "init_deferred": false,
+   "row_level": true,
+   "before": true,
+   "insert": true,
+   "func": "validate_relationship_projection_candidate_release",
+   "mounts": 10,
+   "rows": 10773
+  },
+  {
+   "table": "relationship_projection_shared_decision",
+   "trigger": "trg_reject_mutation",
+   "deferrable": false,
+   "init_deferred": false,
+   "row_level": true,
+   "before": true,
+   "insert": false,
+   "func": "reject_append_only_mutation",
+   "mounts": 166,
+   "rows": 10773
+  },
+  {
+   "table": "relationship_projection_shared_decision",
+   "trigger": "trg_reject_truncate",
+   "deferrable": false,
+   "init_deferred": false,
+   "row_level": false,
+   "before": true,
+   "insert": false,
+   "func": "reject_append_only_mutation",
+   "mounts": 166,
+   "rows": 10773
+  },
+  {
+   "table": "relationship_projection_shared_decision",
+   "trigger": "trg_validate_relationship_candidate_release",
+   "deferrable": false,
+   "init_deferred": false,
+   "row_level": true,
+   "before": true,
+   "insert": true,
+   "func": "validate_relationship_projection_candidate_release",
+   "mounts": 10,
+   "rows": 10773
+  },
+  {
+   "table": "relationship_type",
+   "trigger": "trg_reject_mutation",
+   "deferrable": false,
+   "init_deferred": false,
+   "row_level": true,
+   "before": true,
+   "insert": false,
+   "func": "reject_append_only_mutation",
+   "mounts": 166,
+   "rows": 0
+  },
+  {
+   "table": "relationship_type",
+   "trigger": "trg_reject_truncate",
+   "deferrable": false,
+   "init_deferred": false,
+   "row_level": false,
+   "before": true,
+   "insert": false,
+   "func": "reject_append_only_mutation",
+   "mounts": 166,
+   "rows": 0
+  },
+  {
+   "table": "release",
+   "trigger": "trg_reject_release_history_delete",
+   "deferrable": false,
+   "init_deferred": false,
+   "row_level": true,
+   "before": true,
+   "insert": false,
+   "func": "reject_release_history_mutation",
+   "mounts": 3,
+   "rows": 0
+  },
+  {
+   "table": "release",
+   "trigger": "trg_reject_release_history_truncate",
+   "deferrable": false,
+   "init_deferred": false,
+   "row_level": false,
+   "before": true,
+   "insert": false,
+   "func": "reject_release_history_mutation",
+   "mounts": 3,
+   "rows": 0
+  },
+  {
+   "table": "release",
+   "trigger": "trg_reject_release_history_update",
+   "deferrable": false,
+   "init_deferred": false,
+   "row_level": true,
+   "before": true,
+   "insert": false,
+   "func": "reject_release_history_mutation",
+   "mounts": 3,
+   "rows": 0
+  },
+  {
+   "table": "source_assertion",
+   "trigger": "trg_reject_mutation",
+   "deferrable": false,
+   "init_deferred": false,
+   "row_level": true,
+   "before": true,
+   "insert": false,
+   "func": "reject_append_only_mutation",
+   "mounts": 166,
+   "rows": 627165
+  },
+  {
+   "table": "source_assertion",
+   "trigger": "trg_reject_truncate",
+   "deferrable": false,
+   "init_deferred": false,
+   "row_level": false,
+   "before": true,
+   "insert": false,
+   "func": "reject_append_only_mutation",
+   "mounts": 166,
+   "rows": 627165
+  },
+  {
+   "table": "source_identity",
+   "trigger": "trg_reject_delete",
+   "deferrable": false,
+   "init_deferred": false,
+   "row_level": true,
+   "before": true,
+   "insert": false,
+   "func": "reject_append_only_mutation",
+   "mounts": 166,
+   "rows": 47072
+  },
+  {
+   "table": "source_identity",
+   "trigger": "trg_reject_immutable_update",
+   "deferrable": false,
+   "init_deferred": false,
+   "row_level": true,
+   "before": true,
+   "insert": false,
+   "func": "reject_append_only_mutation",
+   "mounts": 166,
+   "rows": 47072
+  },
+  {
+   "table": "source_identity",
+   "trigger": "trg_reject_truncate",
+   "deferrable": false,
+   "init_deferred": false,
+   "row_level": false,
+   "before": true,
+   "insert": false,
+   "func": "reject_append_only_mutation",
+   "mounts": 166,
+   "rows": 47072
+  },
+  {
+   "table": "source_identity_record",
+   "trigger": "trg_reject_mutation",
+   "deferrable": false,
+   "init_deferred": false,
+   "row_level": true,
+   "before": true,
+   "insert": false,
+   "func": "reject_append_only_mutation",
+   "mounts": 166,
+   "rows": 74986
+  },
+  {
+   "table": "source_identity_record",
+   "trigger": "trg_reject_truncate",
+   "deferrable": false,
+   "init_deferred": false,
+   "row_level": false,
+   "before": true,
+   "insert": false,
+   "func": "reject_append_only_mutation",
+   "mounts": 166,
+   "rows": 74986
+  },
+  {
+   "table": "typed_relationship_assertion",
+   "trigger": "trg_reject_mutation",
+   "deferrable": false,
+   "init_deferred": false,
+   "row_level": true,
+   "before": true,
+   "insert": false,
+   "func": "reject_append_only_mutation",
+   "mounts": 166,
+   "rows": 124
+  },
+  {
+   "table": "typed_relationship_assertion",
+   "trigger": "trg_reject_truncate",
+   "deferrable": false,
+   "init_deferred": false,
+   "row_level": false,
+   "before": true,
+   "insert": false,
+   "func": "reject_append_only_mutation",
+   "mounts": 166,
+   "rows": 124
+  },
+  {
+   "table": "typed_relationship_assertion",
+   "trigger": "trg_validate_relationship_candidate_release",
+   "deferrable": false,
+   "init_deferred": false,
+   "row_level": true,
+   "before": true,
+   "insert": true,
+   "func": "validate_relationship_projection_candidate_release",
+   "mounts": 10,
+   "rows": 124
+  },
+  {
+   "table": "typed_relationship_assertion",
+   "trigger": "trg_validate_typed_relationship_endpoints",
+   "deferrable": false,
+   "init_deferred": false,
+   "row_level": true,
+   "before": true,
+   "insert": true,
+   "func": "validate_typed_relationship_endpoints",
+   "mounts": 3,
+   "rows": 124
+  },
+  {
+   "table": "typed_relationship_decision",
+   "trigger": "trg_reject_mutation",
+   "deferrable": false,
+   "init_deferred": false,
+   "row_level": true,
+   "before": true,
+   "insert": false,
+   "func": "reject_append_only_mutation",
+   "mounts": 166,
+   "rows": 124
+  },
+  {
+   "table": "typed_relationship_decision",
+   "trigger": "trg_reject_truncate",
+   "deferrable": false,
+   "init_deferred": false,
+   "row_level": false,
+   "before": true,
+   "insert": false,
+   "func": "reject_append_only_mutation",
+   "mounts": 166,
+   "rows": 124
+  },
+  {
+   "table": "typed_relationship_decision",
+   "trigger": "trg_validate_relationship_candidate_release",
+   "deferrable": false,
+   "init_deferred": false,
+   "row_level": true,
+   "before": true,
+   "insert": true,
+   "func": "validate_relationship_projection_candidate_release",
+   "mounts": 10,
+   "rows": 124
+  },
+  {
+   "table": "typed_relationship_decision",
+   "trigger": "trg_validate_typed_relationship_endpoints",
+   "deferrable": false,
+   "init_deferred": false,
+   "row_level": true,
+   "before": true,
+   "insert": true,
+   "func": "validate_typed_relationship_endpoints",
+   "mounts": 3,
+   "rows": 124
+  },
+  {
+   "table": "typed_relationship_decision_assertion",
+   "trigger": "trg_reject_mutation",
+   "deferrable": false,
+   "init_deferred": false,
+   "row_level": true,
+   "before": true,
+   "insert": false,
+   "func": "reject_append_only_mutation",
+   "mounts": 166,
+   "rows": 248
+  },
+  {
+   "table": "typed_relationship_decision_assertion",
+   "trigger": "trg_reject_truncate",
+   "deferrable": false,
+   "init_deferred": false,
+   "row_level": false,
+   "before": true,
+   "insert": false,
+   "func": "reject_append_only_mutation",
+   "mounts": 166,
+   "rows": 248
+  },
+  {
+   "table": "typed_relationship_decision_assertion",
+   "trigger": "trg_validate_relationship_candidate_release",
+   "deferrable": false,
+   "init_deferred": false,
+   "row_level": true,
+   "before": true,
+   "insert": true,
+   "func": "validate_relationship_projection_candidate_release",
+   "mounts": 10,
+   "rows": 248
+  }
+ ],
+ "indexes": [
+  {
+   "table": "canonical_decision",
+   "index": "pk_knowledge_canonical_decision",
+   "def": "CREATE UNIQUE INDEX pk_knowledge_canonical_decision ON knowledge.canonical_decision USING btree (release_id, decision_id)"
+  },
+  {
+   "table": "canonical_decision",
+   "index": "uq_knowledge_canonical_decision_domain_projection_lineage",
+   "def": "CREATE UNIQUE INDEX uq_knowledge_canonical_decision_domain_projection_lineage ON knowledge.canonical_decision USING btree (release_id, decision_id, canonical_identity_id, field_path)"
+  },
+  {
+   "table": "canonical_decision",
+   "index": "uq_knowledge_canonical_decision_id",
+   "def": "CREATE UNIQUE INDEX uq_knowledge_canonical_decision_id ON knowledge.canonical_decision USING btree (decision_id)"
+  },
+  {
+   "table": "canonical_decision",
+   "index": "uq_knowledge_canonical_decision_lineage_subject",
+   "def": "CREATE UNIQUE INDEX uq_knowledge_canonical_decision_lineage_subject ON knowledge.canonical_decision USING btree (decision_id, canonical_identity_id, field_path)"
+  },
+  {
+   "table": "canonical_decision",
+   "index": "uq_knowledge_canonical_decision_one_root",
+   "def": "CREATE UNIQUE INDEX uq_knowledge_canonical_decision_one_root ON knowledge.canonical_decision USING btree (canonical_identity_id, field_path) WHERE (supersedes_decision_id IS NULL)"
+  },
+  {
+   "table": "canonical_decision",
+   "index": "uq_knowledge_canonical_decision_supersedes_once",
+   "def": "CREATE UNIQUE INDEX uq_knowledge_canonical_decision_supersedes_once ON knowledge.canonical_decision USING btree (supersedes_decision_id)"
+  },
+  {
+   "table": "canonical_decision_assertion",
+   "index": "pk_knowledge_canonical_decision_assertion",
+   "def": "CREATE UNIQUE INDEX pk_knowledge_canonical_decision_assertion ON knowledge.canonical_decision_assertion USING btree (release_id, decision_id, assertion_id, assertion_role)"
+  },
+  {
+   "table": "canonical_decision_assertion",
+   "index": "uq_knowledge_canonical_decision_assertion_terminal_role",
+   "def": "CREATE UNIQUE INDEX uq_knowledge_canonical_decision_assertion_terminal_role ON knowledge.canonical_decision_assertion USING btree (release_id, decision_id, assertion_id) WHERE (assertion_role = ANY (ARRAY['selected'::text, 'conflicting'::text]))"
+  },
+  {
+   "table": "canonical_decision_constraint_outcome",
+   "index": "pk_knowledge_canonical_decision_constraint_outcome",
+   "def": "CREATE UNIQUE INDEX pk_knowledge_canonical_decision_constraint_outcome ON knowledge.canonical_decision_constraint_outcome USING btree (release_id, decision_id, assertion_id)"
+  },
+  {
+   "table": "canonical_decision_identity_context",
+   "index": "pk_knowledge_canonical_decision_identity_context",
+   "def": "CREATE UNIQUE INDEX pk_knowledge_canonical_decision_identity_context ON knowledge.canonical_decision_identity_context USING btree (release_id, decision_id)"
+  },
+  {
+   "table": "canonical_identity",
+   "index": "pk_knowledge_canonical_identity",
+   "def": "CREATE UNIQUE INDEX pk_knowledge_canonical_identity ON knowledge.canonical_identity USING btree (release_id, canonical_identity_id)"
+  },
+  {
+   "table": "canonical_identity",
+   "index": "uq_knowledge_canonical_identity_domain_projection_decision",
+   "def": "CREATE UNIQUE INDEX uq_knowledge_canonical_identity_domain_projection_decision ON knowledge.canonical_identity USING btree (release_id, canonical_identity_id, entity_type, identity_decision_id)"
+  },
+  {
+   "table": "canonical_identity",
+   "index": "uq_knowledge_canonical_identity_domain_projection_type",
+   "def": "CREATE UNIQUE INDEX uq_knowledge_canonical_identity_domain_projection_type ON knowledge.canonical_identity USING btree (release_id, canonical_identity_id, entity_type)"
+  },
+  {
+   "table": "canonical_identity_lineage",
+   "index": "pk_knowledge_canonical_identity_lineage",
+   "def": "CREATE UNIQUE INDEX pk_knowledge_canonical_identity_lineage ON knowledge.canonical_identity_lineage USING btree (release_id, decision_id, predecessor_identity_id, successor_identity_id)"
+  },
+  {
+   "table": "canonical_identity_source_membership",
+   "index": "pk_knowledge_canonical_identity_source_membership",
+   "def": "CREATE UNIQUE INDEX pk_knowledge_canonical_identity_source_membership ON knowledge.canonical_identity_source_membership USING btree (release_id, canonical_identity_id, source_identity_id)"
+  },
+  {
+   "table": "current_relationship_projection",
+   "index": "pk_knowledge_current_relationship_projection",
+   "def": "CREATE UNIQUE INDEX pk_knowledge_current_relationship_projection ON knowledge.current_relationship_projection USING btree (release_id, canonical_relationship_id)"
+  },
+  {
+   "table": "current_source_identity_assignment",
+   "index": "pk_knowledge_current_source_identity_assignment",
+   "def": "CREATE UNIQUE INDEX pk_knowledge_current_source_identity_assignment ON knowledge.current_source_identity_assignment USING btree (release_id, source_identity_id)"
+  },
+  {
+   "table": "decision_batch_temporal_context",
+   "index": "pk_knowledge_decision_batch_temporal_context",
+   "def": "CREATE UNIQUE INDEX pk_knowledge_decision_batch_temporal_context ON knowledge.decision_batch_temporal_context USING btree (release_id, decision_run_id)"
+  },
+  {
+   "table": "domain_inclusion_decision",
+   "index": "pk_knowledge_domain_inclusion_decision",
+   "def": "CREATE UNIQUE INDEX pk_knowledge_domain_inclusion_decision ON knowledge.domain_inclusion_decision USING btree (release_id, decision_id)"
+  },
+  {
+   "table": "domain_inclusion_decision",
+   "index": "uq_knowledge_domain_inclusion_projection_binding",
+   "def": "CREATE UNIQUE INDEX uq_knowledge_domain_inclusion_projection_binding ON knowledge.domain_inclusion_decision USING btree (release_id, decision_id, canonical_identity_id, entity_type, outcome)"
+  },
+  {
+   "table": "domain_inclusion_decision_assertion",
+   "index": "pk_knowledge_domain_inclusion_decision_assertion",
+   "def": "CREATE UNIQUE INDEX pk_knowledge_domain_inclusion_decision_assertion ON knowledge.domain_inclusion_decision_assertion USING btree (release_id, decision_id, assertion_id)"
+  },
+  {
+   "table": "domain_projection_lineage",
+   "index": "pk_knowledge_domain_projection_lineage",
+   "def": "CREATE UNIQUE INDEX pk_knowledge_domain_projection_lineage ON knowledge.domain_projection_lineage USING btree (release_id, lineage_id)"
+  },
+  {
+   "table": "domain_projection_lineage",
+   "index": "uq_knowledge_domain_projection_lineage_selection",
+   "def": "CREATE UNIQUE INDEX uq_knowledge_domain_projection_lineage_selection ON knowledge.domain_projection_lineage USING btree (release_id, projection_id, subobject_id, field_path, decision_id, assertion_id) NULLS NOT DISTINCT"
+  },
+  {
+   "table": "domain_projection_manifest",
+   "index": "pk_knowledge_domain_projection_manifest",
+   "def": "CREATE UNIQUE INDEX pk_knowledge_domain_projection_manifest ON knowledge.domain_projection_manifest USING btree (release_id)"
+  },
+  {
+   "table": "domain_projection_manifest",
+   "index": "uq_knowledge_domain_projection_manifest_identity",
+   "def": "CREATE UNIQUE INDEX uq_knowledge_domain_projection_manifest_identity ON knowledge.domain_projection_manifest USING btree (release_id, manifest_content_sha256)"
+  },
+  {
+   "table": "domain_projection_manifest",
+   "index": "uq_knowledge_domain_projection_manifest_inclusion_envelope",
+   "def": "CREATE UNIQUE INDEX uq_knowledge_domain_projection_manifest_inclusion_envelope ON knowledge.domain_projection_manifest USING btree (release_id, inclusion_result_content_sha256, inclusion_decision_run_id, inclusion_evaluated_at)"
+  },
+  {
+   "table": "domain_projection_manifest",
+   "index": "uq_knowledge_domain_projection_manifest_inclusion_result",
+   "def": "CREATE UNIQUE INDEX uq_knowledge_domain_projection_manifest_inclusion_result ON knowledge.domain_projection_manifest USING btree (release_id, inclusion_result_content_sha256)"
+  },
+  {
+   "table": "identity_candidate_verdict",
+   "index": "pk_knowledge_identity_candidate_verdict",
+   "def": "CREATE UNIQUE INDEX pk_knowledge_identity_candidate_verdict ON knowledge.identity_candidate_verdict USING btree (release_id, verdict_id)"
+  },
+  {
+   "table": "identity_candidate_verdict",
+   "index": "uq_knowledge_identity_candidate_verdict_run",
+   "def": "CREATE UNIQUE INDEX uq_knowledge_identity_candidate_verdict_run ON knowledge.identity_candidate_verdict USING btree (release_id, decision_run_id, verdict_id)"
+  },
+  {
+   "table": "identity_decision",
+   "index": "pk_knowledge_identity_decision",
+   "def": "CREATE UNIQUE INDEX pk_knowledge_identity_decision ON knowledge.identity_decision USING btree (release_id, decision_id)"
+  },
+  {
+   "table": "identity_decision",
+   "index": "uq_knowledge_identity_decision_id",
+   "def": "CREATE UNIQUE INDEX uq_knowledge_identity_decision_id ON knowledge.identity_decision USING btree (decision_id)"
+  },
+  {
+   "table": "identity_decision_assertion",
+   "index": "pk_knowledge_identity_decision_assertion",
+   "def": "CREATE UNIQUE INDEX pk_knowledge_identity_decision_assertion ON knowledge.identity_decision_assertion USING btree (release_id, decision_id, assertion_id)"
+  },
+  {
+   "table": "identity_decision_context",
+   "index": "pk_knowledge_identity_decision_context",
+   "def": "CREATE UNIQUE INDEX pk_knowledge_identity_decision_context ON knowledge.identity_decision_context USING btree (release_id, decision_id)"
+  },
+  {
+   "table": "identity_decision_input",
+   "index": "pk_knowledge_identity_decision_input",
+   "def": "CREATE UNIQUE INDEX pk_knowledge_identity_decision_input ON knowledge.identity_decision_input USING btree (release_id, decision_id, canonical_identity_id)"
+  },
+  {
+   "table": "identity_decision_output",
+   "index": "pk_knowledge_identity_decision_output",
+   "def": "CREATE UNIQUE INDEX pk_knowledge_identity_decision_output ON knowledge.identity_decision_output USING btree (release_id, decision_id, canonical_identity_id)"
+  },
+  {
+   "table": "identity_decision_output_source",
+   "index": "pk_knowledge_identity_decision_output_source",
+   "def": "CREATE UNIQUE INDEX pk_knowledge_identity_decision_output_source ON knowledge.identity_decision_output_source USING btree (release_id, decision_id, source_identity_id)"
+  },
+  {
+   "table": "identity_decision_record",
+   "index": "pk_knowledge_identity_decision_record",
+   "def": "CREATE UNIQUE INDEX pk_knowledge_identity_decision_record ON knowledge.identity_decision_record USING btree (release_id, decision_id, record_id)"
+  },
+  {
+   "table": "identity_decision_source_identity",
+   "index": "pk_knowledge_identity_decision_source_identity",
+   "def": "CREATE UNIQUE INDEX pk_knowledge_identity_decision_source_identity ON knowledge.identity_decision_source_identity USING btree (release_id, decision_id, source_identity_id)"
+  },
+  {
+   "table": "identity_resolution_run",
+   "index": "pk_knowledge_identity_resolution_run",
+   "def": "CREATE UNIQUE INDEX pk_knowledge_identity_resolution_run ON knowledge.identity_resolution_run USING btree (release_id)"
+  },
+  {
+   "table": "identity_resolution_run",
+   "index": "uq_knowledge_identity_resolution_run_identity",
+   "def": "CREATE UNIQUE INDEX uq_knowledge_identity_resolution_run_identity ON knowledge.identity_resolution_run USING btree (release_id, decision_run_id)"
+  },
+  {
+   "table": "identity_resolution_run_content_chunk",
+   "index": "pk_knowledge_identity_resolution_run_content_chunk",
+   "def": "CREATE UNIQUE INDEX pk_knowledge_identity_resolution_run_content_chunk ON knowledge.identity_resolution_run_content_chunk USING btree (release_id, decision_run_id, role, chunk_index)"
+  },
+  {
+   "table": "policy",
+   "index": "pk_knowledge_policy",
+   "def": "CREATE UNIQUE INDEX pk_knowledge_policy ON knowledge.policy USING btree (policy_id, policy_version)"
+  },
+  {
+   "table": "policy",
+   "index": "uq_knowledge_policy_domain_projection_kind",
+   "def": "CREATE UNIQUE INDEX uq_knowledge_policy_domain_projection_kind ON knowledge.policy USING btree (policy_id, policy_version, policy_kind)"
+  },
+  {
+   "table": "relationship_assertion",
+   "index": "pk_knowledge_relationship_assertion",
+   "def": "CREATE UNIQUE INDEX pk_knowledge_relationship_assertion ON knowledge.relationship_assertion USING btree (assertion_id)"
+  },
+  {
+   "table": "relationship_assertion",
+   "index": "uq_knowledge_relationship_assertion_fingerprint",
+   "def": "CREATE UNIQUE INDEX uq_knowledge_relationship_assertion_fingerprint ON knowledge.relationship_assertion USING btree (assertion_fingerprint_sha256)"
+  },
+  {
+   "table": "relationship_decision",
+   "index": "pk_knowledge_relationship_decision",
+   "def": "CREATE UNIQUE INDEX pk_knowledge_relationship_decision ON knowledge.relationship_decision USING btree (release_id, decision_id)"
+  },
+  {
+   "table": "relationship_decision",
+   "index": "uq_knowledge_relationship_decision_canonical_relation",
+   "def": "CREATE UNIQUE INDEX uq_knowledge_relationship_decision_canonical_relation ON knowledge.relationship_decision USING btree (release_id, canonical_relationship_id)"
+  },
+  {
+   "table": "relationship_decision",
+   "index": "uq_knowledge_relationship_decision_id",
+   "def": "CREATE UNIQUE INDEX uq_knowledge_relationship_decision_id ON knowledge.relationship_decision USING btree (decision_id)"
+  },
+  {
+   "table": "relationship_decision",
+   "index": "uq_knowledge_relationship_decision_lineage_subject",
+   "def": "CREATE UNIQUE INDEX uq_knowledge_relationship_decision_lineage_subject ON knowledge.relationship_decision USING btree (decision_id, canonical_relationship_id)"
+  },
+  {
+   "table": "relationship_decision",
+   "index": "uq_knowledge_relationship_decision_one_root",
+   "def": "CREATE UNIQUE INDEX uq_knowledge_relationship_decision_one_root ON knowledge.relationship_decision USING btree (canonical_relationship_id) WHERE (supersedes_decision_id IS NULL)"
+  },
+  {
+   "table": "relationship_decision",
+   "index": "uq_knowledge_relationship_decision_supersedes_once",
+   "def": "CREATE UNIQUE INDEX uq_knowledge_relationship_decision_supersedes_once ON knowledge.relationship_decision USING btree (supersedes_decision_id)"
+  },
+  {
+   "table": "relationship_decision_assertion",
+   "index": "pk_knowledge_relationship_decision_assertion",
+   "def": "CREATE UNIQUE INDEX pk_knowledge_relationship_decision_assertion ON knowledge.relationship_decision_assertion USING btree (release_id, decision_id, assertion_id, assertion_role)"
+  },
+  {
+   "table": "relationship_decision_assertion",
+   "index": "uq_knowledge_relationship_decision_assertion_terminal_role",
+   "def": "CREATE UNIQUE INDEX uq_knowledge_relationship_decision_assertion_terminal_role ON knowledge.relationship_decision_assertion USING btree (release_id, decision_id, assertion_id) WHERE (assertion_role = ANY (ARRAY['selected'::text, 'conflicting'::text]))"
+  },
+  {
+   "table": "relationship_decision_constraint_outcome",
+   "index": "pk_knowledge_relationship_decision_constraint_outcome",
+   "def": "CREATE UNIQUE INDEX pk_knowledge_relationship_decision_constraint_outcome ON knowledge.relationship_decision_constraint_outcome USING btree (release_id, decision_id, assertion_id)"
+  },
+  {
+   "table": "relationship_decision_identity_context",
+   "index": "pk_knowledge_relationship_decision_identity_context",
+   "def": "CREATE UNIQUE INDEX pk_knowledge_relationship_decision_identity_context ON knowledge.relationship_decision_identity_context USING btree (release_id, decision_id)"
+  },
+  {
+   "table": "relationship_projection_outcome",
+   "index": "pk_knowledge_relationship_projection_outcome",
+   "def": "CREATE UNIQUE INDEX pk_knowledge_relationship_projection_outcome ON knowledge.relationship_projection_outcome USING btree (release_id, projection_run_id, candidate_id)"
+  },
+  {
+   "table": "relationship_projection_run",
+   "index": "pk_knowledge_relationship_projection_run",
+   "def": "CREATE UNIQUE INDEX pk_knowledge_relationship_projection_run ON knowledge.relationship_projection_run USING btree (release_id, projection_run_id)"
+  },
+  {
+   "table": "relationship_projection_run_content_chunk",
+   "index": "pk_knowledge_relationship_projection_run_content_chunk",
+   "def": "CREATE UNIQUE INDEX pk_knowledge_relationship_projection_run_content_chunk ON knowledge.relationship_projection_run_content_chunk USING btree (release_id, projection_run_id, role, chunk_index)"
+  },
+  {
+   "table": "relationship_projection_shared_assertion",
+   "index": "pk_knowledge_relationship_projection_shared_assertion",
+   "def": "CREATE UNIQUE INDEX pk_knowledge_relationship_projection_shared_assertion ON knowledge.relationship_projection_shared_assertion USING btree (release_id, projection_run_id, assertion_id)"
+  },
+  {
+   "table": "relationship_projection_shared_decision",
+   "index": "pk_knowledge_relationship_projection_shared_decision",
+   "def": "CREATE UNIQUE INDEX pk_knowledge_relationship_projection_shared_decision ON knowledge.relationship_projection_shared_decision USING btree (release_id, projection_run_id, decision_id)"
+  },
+  {
+   "table": "relationship_type",
+   "index": "pk_knowledge_relationship_type",
+   "def": "CREATE UNIQUE INDEX pk_knowledge_relationship_type ON knowledge.relationship_type USING btree (relationship_type_id, version)"
+  },
+  {
+   "table": "release",
+   "index": "pk_knowledge_release",
+   "def": "CREATE UNIQUE INDEX pk_knowledge_release ON knowledge.release USING btree (release_id)"
+  },
+  {
+   "table": "release",
+   "index": "uq_knowledge_release_domain_projection_build",
+   "def": "CREATE UNIQUE INDEX uq_knowledge_release_domain_projection_build ON knowledge.release USING btree (release_id, build_run_id)"
+  },
+  {
+   "table": "release",
+   "index": "uq_knowledge_release_manifest_identity",
+   "def": "CREATE UNIQUE INDEX uq_knowledge_release_manifest_identity ON knowledge.release USING btree (release_id, manifest_sha256)"
+  },
+  {
+   "table": "release",
+   "index": "uq_knowledge_release_manifest_sha256",
+   "def": "CREATE UNIQUE INDEX uq_knowledge_release_manifest_sha256 ON knowledge.release USING btree (manifest_sha256)"
+  },
+  {
+   "table": "source_assertion",
+   "index": "pk_knowledge_source_assertion",
+   "def": "CREATE UNIQUE INDEX pk_knowledge_source_assertion ON knowledge.source_assertion USING btree (assertion_id)"
+  },
+  {
+   "table": "source_assertion",
+   "index": "uq_knowledge_source_assertion_fingerprint",
+   "def": "CREATE UNIQUE INDEX uq_knowledge_source_assertion_fingerprint ON knowledge.source_assertion USING btree (assertion_fingerprint_sha256)"
+  },
+  {
+   "table": "source_assertion",
+   "index": "uq_knowledge_source_assertion_identity_record",
+   "def": "CREATE UNIQUE INDEX uq_knowledge_source_assertion_identity_record ON knowledge.source_assertion USING btree (assertion_id, source_identity_id, source_record_id)"
+  },
+  {
+   "table": "source_identity",
+   "index": "pk_knowledge_source_identity",
+   "def": "CREATE UNIQUE INDEX pk_knowledge_source_identity ON knowledge.source_identity USING btree (source_identity_id)"
+  },
+  {
+   "table": "source_identity",
+   "index": "uq_knowledge_source_identity_source_key",
+   "def": "CREATE UNIQUE INDEX uq_knowledge_source_identity_source_key ON knowledge.source_identity USING btree (source_system, source_key, entity_type)"
+  },
+  {
+   "table": "source_identity_record",
+   "index": "pk_knowledge_source_identity_record",
+   "def": "CREATE UNIQUE INDEX pk_knowledge_source_identity_record ON knowledge.source_identity_record USING btree (source_identity_id, record_id)"
+  },
+  {
+   "table": "typed_relationship_assertion",
+   "index": "pk_knowledge_typed_relationship_assertion",
+   "def": "CREATE UNIQUE INDEX pk_knowledge_typed_relationship_assertion ON knowledge.typed_relationship_assertion USING btree (release_id, assertion_id)"
+  },
+  {
+   "table": "typed_relationship_assertion",
+   "index": "uq_knowledge_typed_relationship_assertion_content",
+   "def": "CREATE UNIQUE INDEX uq_knowledge_typed_relationship_assertion_content ON knowledge.typed_relationship_assertion USING btree (release_id, content_sha256)"
+  },
+  {
+   "table": "typed_relationship_assertion",
+   "index": "uq_knowledge_typed_relationship_assertion_run",
+   "def": "CREATE UNIQUE INDEX uq_knowledge_typed_relationship_assertion_run ON knowledge.typed_relationship_assertion USING btree (release_id, projection_run_id, assertion_id)"
+  },
+  {
+   "table": "typed_relationship_decision",
+   "index": "pk_knowledge_typed_relationship_decision",
+   "def": "CREATE UNIQUE INDEX pk_knowledge_typed_relationship_decision ON knowledge.typed_relationship_decision USING btree (release_id, decision_id)"
+  },
+  {
+   "table": "typed_relationship_decision",
+   "index": "uq_knowledge_typed_relationship_decision_relationship",
+   "def": "CREATE UNIQUE INDEX uq_knowledge_typed_relationship_decision_relationship ON knowledge.typed_relationship_decision USING btree (release_id, canonical_relationship_id)"
+  },
+  {
+   "table": "typed_relationship_decision",
+   "index": "uq_knowledge_typed_relationship_decision_run",
+   "def": "CREATE UNIQUE INDEX uq_knowledge_typed_relationship_decision_run ON knowledge.typed_relationship_decision USING btree (release_id, projection_run_id, decision_id)"
+  },
+  {
+   "table": "typed_relationship_decision_assertion",
+   "index": "pk_knowledge_typed_relationship_decision_assertion",
+   "def": "CREATE UNIQUE INDEX pk_knowledge_typed_relationship_decision_assertion ON knowledge.typed_relationship_decision_assertion USING btree (release_id, decision_id, assertion_id, assertion_role)"
+  }
+ ]
+}

@@ -1,0 +1,62 @@
+# patent  n=11504
+
+## fill / placeholder
+field                   filled    rate   empty  placeholder families
+patent_number            11504  100.0%       0            0 {}
+title                    11504  100.0%       0            0 {}
+title_en                     0    0.0%   11504            0 {}
+applicants               11504  100.0%       0            0 {}
+inventors                    0    0.0%   11504            0 {}
+company_ids                  0    0.0%   11504            0 {}
+professor_ids                0    0.0%   11504            0 {}
+ipc_codes                    0    0.0%   11504            0 {}
+filing_date               1931   16.8%    9573            0 {}
+grant_date                   0    0.0%   11504            0 {}
+publication_date         11504  100.0%       0            0 {}
+patent_type               9573   83.2%    1931            0 {}
+abstract                  9573   83.2%    1931            0 {}
+summary_text             11504  100.0%       0            0 {}
+technology_effect         9359   81.4%    2145            0 {}
+technical_summaries          0    0.0%   11504            0 {}
+milestones                   0    0.0%   11504            0 {}
+quality_status           11504  100.0%       0            0 {}
+
+## patent_number pattern
+   11504  CN + 9-13 digits (+./letter)   e.g. CN118446383A
+  distinct patent_number=11504 duplicate_values=0 rows_in_dups=0
+
+## dates
+  publication_date year dist (top): [('2024', 4364), ('2025', 4254), ('2023', 2886)]
+  publication_date distinct-year count: 3
+  filing_date filled=1931; sample=['2025-05-29', '2023-12-26', '2025-05-06']
+  filing_date > publication_date: 0
+
+## patent_type values
+    6321  发明
+    3252  实用新型
+
+## title stats
+  distinct titles=10563
+  duplicate title values=463 rows_in_dups=1404
+     58  清洁机器人
+     30  清洁设备
+     23  机器人
+     21  一种清洁机器人
+     20  清洁装置
+     16  一种泳池清洁机器人
+     13  储能机器人和储能系统
+     13  割草机器人
+     11  泳池清洁机器人
+     10  关节模组及关节机器人
+  title char-len: min=2 max=47 avg=15.9
+
+## company binding
+  (see applicants-authors.txt for binding detail)
+  company_ids filled: 0
+  inventors filled: 0
+
+## summary/abstract content
+Traceback (most recent call last):
+  File "/home/longxiang/MiroThinker/.agents/runs/data-quality-assessment/scripts/analysis_patent.py", line 94, in <module>
+    print(f'  summary_text len avg={sum(sl)/len(sl):.0f} min={min(sl)} max={max(sl)}')
+ZeroDivisionError: division by zero

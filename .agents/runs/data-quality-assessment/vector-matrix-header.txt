@@ -1,0 +1,31 @@
+members: ['point_ids.npy', 'matrix.npy', 'norms.npy', 'meta.npy']
+  point_ids.npy    raw=    4,389,210 header= 118 meta={'descr': '|O', 'fortran_order': False, 'shape': (51026,)}
+  matrix.npy       raw=1,672,020,096 header= 118 meta={'descr': '<f8', 'fortran_order': False, 'shape': (51026, 4096)}
+  norms.npy        raw=      408,336 header= 118 meta={'descr': '<f8', 'fortran_order': False, 'shape': (51026,)}
+  meta.npy         raw=          417 header= 118 meta={'descr': '|O', 'fortran_order': False, 'shape': ()}
+
+meta.npy = "{\"dimension\": 4096, \"embedding_model_id\": \"Qwen/Qwen3-Embedding-8B\", \"point_count\": 51026, \"schema_version\": \"canonical-v2-vector-matrix-v1\"}"
+
+point_ids count: 51026 sample: ['index-point:sha256:e88bf1b97effb8b4c28ddc1487ae224f27f8ccf398dcf73b7ed6d4293bf90a45', 'index-point:sha256:b52288f2425417cd179b711de2b0c07497f9d2d1ac997a33537fed433b70057e', 'index-point:sha256:73389ba22b6d6aebdc5ea7d9ff0faf8516d91df14461ae54a99755f79dee5350', 'index-point:sha256:2d235c58831ee9709d3e009560aa1cb14e6b24c02f191476230dbab9d9465ff1', 'index-point:sha256:460adecc96904cce5e3a9a2d8bf83874db37817a3b20acbb968ea58a51ca1a30']
+
+point_id prefix (first 4 colon segments) distribution:
+         1  index-point:sha256:e88bf1b97effb8b4c28ddc1487ae224f27f8ccf398dcf73b7ed6d4293bf90a45
+         1  index-point:sha256:b52288f2425417cd179b711de2b0c07497f9d2d1ac997a33537fed433b70057e
+         1  index-point:sha256:73389ba22b6d6aebdc5ea7d9ff0faf8516d91df14461ae54a99755f79dee5350
+         1  index-point:sha256:2d235c58831ee9709d3e009560aa1cb14e6b24c02f191476230dbab9d9465ff1
+         1  index-point:sha256:460adecc96904cce5e3a9a2d8bf83874db37817a3b20acbb968ea58a51ca1a30
+         1  index-point:sha256:77a23ca411277b53fb7ebbbbd39fc3f23a6ce487ed75ea222d0625d46c9700c6
+         1  index-point:sha256:557a1aaaa1e45c1f1a3746cdd7ea76a3c9ddf1e7760034aeb188d0e1f33a352d
+         1  index-point:sha256:9a5604ad900affc0e3f8174861498e201684d5d0a081725255c30f2930edd67a
+         1  index-point:sha256:42b66154b7906f90c3ba0d00299456531ce3172a83091e076e82eae6eb930e26
+         1  index-point:sha256:4473dc4a08915cb6fcf283b39d6f164ce66433f125599e7c2168fe7a2270cb90
+         1  index-point:sha256:509c641a657d09eaf4678f64be0c42bba67c2ae0ef59d4a99c6f1543415c2e54
+         1  index-point:sha256:41ca206b22728c101fbaad769fac9fbbb8dc3ed937192c9f2ad3d64de778b71d
+         1  index-point:sha256:d98eda8566b65cff1ccaa00c8422ceeca4a029673728a9d80f276cf9ab969897
+         1  index-point:sha256:a9d558d54e9cd46b93b9f95bdfabb12a948edc8d334ce5386ce149890d5eba20
+         1  index-point:sha256:6ac17699a9782daf1fbe3bb52db0a34115949750b47fc76917226287344220b0
+         1  index-point:sha256:13ae9c1c7b00b2acce953397146b772ec32f82fb1bbb09a0c496f0e29791275c
+         1  index-point:sha256:814328cce40b622c0f10c64cb5c3f6d76d6fea73c1b5b6024379a7c3bca3ed36
+         1  index-point:sha256:3d4985010a25ac7611d84168a80ee709af41a0dd1f48972b76570be8b1a7d077
+         1  index-point:sha256:0666c4fbcc336f9f794afaa9a019786588368135108e02148409d030a5331f34
+         1  index-point:sha256:81605af30a842941d89135524dea91ac2a732f5edf36e2b14160521d4e6ac4ad

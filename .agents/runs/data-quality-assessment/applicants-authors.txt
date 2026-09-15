@@ -1,0 +1,29 @@
+=== patent.applicants
+  patents: 11504  applicant rows total: 12565  avg: 1.09
+  rows with canonical_company_id: 7614  without: 4951
+  distinct canonical_company_id: 960
+  distinct applicant company_name: 961
+  patents whose applicant rows have ZERO canonical_company_id: 4462
+  applicants-per-patent dist: {1: 10613, 2: 783, 3: 60, 4: 36, 5: 10, 6: 2} ...max 6
+  top applicant names:
+    4951  None
+     450  深圳市优必选科技股份有限公司
+     333  深圳市杉川机器人有限公司
+     183  深圳银星智能集团股份有限公司
+     146  深圳市海柔创新科技有限公司
+     135  云鲸智能创新（深圳）有限公司
+     135  云鲸智能（深圳）有限公司
+     128  深圳市普渡科技有限公司
+     127  深圳乐动机器人股份有限公司
+     127  未来机器人（深圳）有限公司
+     116  深圳逐际动力科技有限公司
+     103  深圳市元鼎智能创新有限公司
+      95  深圳康诺思腾科技有限公司
+      94  深圳爱博合创医疗机器人有限公司
+      89  劢微机器人科技（深圳）有限公司
+=== paper.authors
+  papers: 24520  author rows: 156092  avg: 6.37
+  author rows with non-empty affiliations: 0
+  authors-per-paper dist: {1: 561, 2: 1650, 3: 3141, 4: 3574, 5: 3494, 6: 3107, 7: 2214, 8: 1687} ...max 100
+  top author names: [('Lei Wang', 255), ('Haohuan Fu', 227), ('Ben Zhong Tang', 183), ('Hao Yu', 158), ('Min Zhang', 158), ('Suzhi Bi', 136), ('Wei Zhang', 135), ('Guozhi Xiao', 133), ('Botao Feng', 132), ('Chuluo Yang', 127), ('Jun Zhu', 124), ('Dan Luo', 116)]
+  top affiliation shapes: []

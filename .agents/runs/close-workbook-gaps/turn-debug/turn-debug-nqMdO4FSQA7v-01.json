@@ -1,0 +1,80 @@
+{
+  "session_id": "session:chat:nqMdO4FSQA7vWnMhVpNPsAIbIx0j24LP",
+  "turn_id": "turn:chat:sha256:2f01acd129a0c1c485c07d8cf693037720bfa3651481475c31497a594d662aa9",
+  "turn_count": 1,
+  "query": "介绍一下 国际先进技术应用推进中心（深圳）",
+  "planned_displayed_ids": [],
+  "recalled_handles": [
+    {
+      "id": "company-c-cdb522437bb0946c96ba7d33",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳国际先进技术应用推进中心"
+    }
+  ],
+  "evidence_items": {
+    "total": 3,
+    "by_domain": {
+      "company": 3
+    },
+    "by_lane": {
+      "exact": 1,
+      "lexical": 1,
+      "vector": 1
+    },
+    "by_source_nature": {
+      "local": 3
+    },
+    "with_claim_binding": 3
+  },
+  "protected_slots": [
+    {
+      "kind": "geography",
+      "value": "深圳",
+      "entity_ids": []
+    }
+  ],
+  "requested_traversal": null,
+  "admitted_claims": {
+    "total": 1,
+    "by_predicate": {
+      "canonical_projection": 1
+    },
+    "by_claim_type": {
+      "material_fact": 1
+    },
+    "patent_evidence_claims": 0
+  },
+  "committed_handle_ids": [
+    "company-c-cdb522437bb0946c96ba7d33"
+  ],
+  "committed_names": [
+    "深圳国际先进技术应用推进中心"
+  ],
+  "render_mode": "prose_renderer",
+  "response_mode": "answer",
+  "citations": 1,
+  "answer_chars": 336,
+  "lane_timings": [
+    [
+      "structured",
+      0.0
+    ],
+    [
+      "vector",
+      10.482
+    ],
+    [
+      "exact",
+      11.181
+    ],
+    [
+      "lexical",
+      11.355
+    ],
+    [
+      "web",
+      11.495
+    ]
+  ]
+}

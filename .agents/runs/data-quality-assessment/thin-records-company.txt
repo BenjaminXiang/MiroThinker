@@ -1,0 +1,132 @@
+N=7086
+thin(A: profile_summary<=150 chars) = 5412 (76.4%)
+thin(B: no tech_tags AND no product_description) = 640 (9.0%)
+thin(A or B) = 5917 (83.5%)
+thin(A and B) = 135
+
+profile_summary length distribution (chars):
+      0-49     3399
+     50-99     1122
+    100-149     874
+    150-199     852
+    200-249     683
+    250-299      80
+    300-349      33
+    350-399      14
+    400-449       9
+    450-499       8
+    500-549       1
+    600-649       1
+    650-699       2
+    700-749       1
+    750-799       1
+    800-849       2
+    850-899       2
+    900-949       1
+   1050-1099      1
+
+## key GT entities field-by-field
+
+== 深圳嘉立创科技集团股份有限公司
+   profile_summary len=103
+   technology_route_summary len=104 head='深圳嘉立创科技集团股份有限公司的技术路线围绕电子制造展开。当前重点落在PCB。业务场景集中在PCB 打样、SMT 与电子供应链基础设施服务。提供 PCB/FPC 智造、SMT、元器'
+   product_description len=0
+   team_description len=0
+   tech_tags=[]  industry_tags=[]
+   geography=None
+   founded_at=None  website=https://www.jlcgroup.cn
+   key_personnel=0
+   registered_address='None'
+   legal_rep=None
+
+== 深圳市一博科技股份有限公司
+   profile_summary len=98
+   technology_route_summary len=146 head='物联网、云计算、AI算力卡的数据采集传输存储；移动智能通讯终端SoC、IC载板、卫星导航、智能宽带设备；100G/400G通讯交换网络系统；通信网关、程控交换网终端大功率交换芯片供'
+   product_description len=3
+   team_description len=297
+   tech_tags=[]  industry_tags=[]
+   geography=None
+   founded_at=None  website=https://www.edadoc.com
+   key_personnel=0
+   registered_address='深圳市南山区粤海街道深大社区深南大道9819号地铁金融科技大厦11F'
+   legal_rep=None
+
+== 深南电路股份有限公司
+   profile_summary len=77
+   technology_route_summary len=121 head='公司产品广泛应用于通信、数据中心、工控医疗、汽车电子等领域，与全球领先的通信设备制造商及医疗设备等厂商建立了长期稳定的战略合作关系。产品主要应用于搭载CPU、GPU等逻辑芯片的FC'
+   product_description len=0
+   team_description len=194
+   tech_tags=[]  industry_tags=[]
+   geography=None
+   founded_at=None  website=https://www.scc.com.cn
+   key_personnel=0
+   registered_address='深圳市龙岗区坪地街道盐龙大道1639号（一照多址企业）'
+   legal_rep=None
+
+== 深圳无界智航科技有限公司
+   profile_summary len=180
+   technology_route_summary len=16 head='数据中心、工业制造、医疗设备散热'
+   product_description len=122
+   team_description len=169
+   tech_tags=[]  industry_tags=[]
+   geography=None
+   founded_at=None  website=None
+   key_personnel=1
+   registered_address='深圳市南山区粤海街道滨海社区海天二路19号盈峰中心1272B'
+   legal_rep=None
+
+== 深圳市普渡科技股份有限公司
+   profile_summary len=110
+   technology_route_summary len=190 head='PUDU CC1 Pro：商业综合体、医院、机场、工业仓储。 PUDU T600系列：工业仓储、生产线边仓、多层厂房需跨楼层运输场景。 PUDU MT1 Max/MT1 Vac/M'
+   product_description len=110
+   team_description len=124
+   tech_tags=['室内外配送机器人研发商']  industry_tags=['物流运输']
+   geography=广东省
+   founded_at=2016-01-13  website=http://pudutech.com/
+   key_personnel=0
+   registered_address='深圳市南山区西丽街道西丽社区打石一路深圳国际创新谷1栋A座501'
+   legal_rep=张涛
+
+== 深圳爱博合创医疗机器人有限公司
+   profile_summary len=220
+   technology_route_summary len=81 head='冠心病、神经血管疾病、外周血管病变的血管介入诊断与治疗；可在导管室、复合手术室及远程诊疗中心使用，支持急诊快速转运、基层医院远程PCI、复杂冠脉及脑血管介入手术。'
+   product_description len=33
+   team_description len=319
+   tech_tags=[]  industry_tags=[]
+   geography=None
+   founded_at=None  website=http://abrobo.com/
+   key_personnel=4
+   registered_address='深圳市龙岗区吉华街道甘坑社区甘李六路12号中海信创新产业城12栋801-806（一照多址企业）'
+   legal_rep=None
+
+== 华力创科学（深圳）有限公司
+   profile_summary len=220
+   technology_route_summary len=5 head='无明确描述'
+   product_description len=108
+   team_description len=80
+   tech_tags=[]  industry_tags=[]
+   geography=None
+   founded_at=None  website=http://www.haptron-scientific.com/
+   key_personnel=3
+   registered_address='深圳市龙岗区宝龙街道宝龙社区宝荷大道76号智慧家园B座2101'
+   legal_rep=None
+
+== 帕西尼感知科技（深圳）有限公司
+   profile_summary len=220
+   technology_route_summary len=74 head='3C 电子精密装配、车机产线零部件抓取与检测、物流仓储柔性分拣、医疗康养辅助护理与康复训练、地铁安检自主行李识别、智能座舱无感交互、高危工业工序替代'
+   product_description len=148
+   team_description len=308
+   tech_tags=[]  industry_tags=[]
+   geography=None
+   founded_at=None  website=http://www.paxini.com
+   key_personnel=3
+   registered_address='深圳市南山区西丽街道西丽社区打石二路万科云城六期一栋云中城B805（一照多址企业）'
+   legal_rep=None
+
+## companies with industry=电子制造 + empty tech_tags
+   深圳市一博科技股份有限公司 tech_tags=[] ps_len=98
+   深南电路股份有限公司 tech_tags=[] ps_len=77
+   深圳嘉立创科技集团股份有限公司 tech_tags=[] ps_len=103
+
+## how many companies have empty tech_tags but non-empty industry
+   empty tech_tags: 1601/7086 (22.6%)

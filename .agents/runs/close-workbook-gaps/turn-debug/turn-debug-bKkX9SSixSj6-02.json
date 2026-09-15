@@ -1,0 +1,192 @@
+{
+  "session_id": "session:chat:bKkX9SSixSj6uj-11vNIQVFCWIr27M8M",
+  "turn_id": "turn:chat:sha256:abe642183317056f7f0dca6e63ac618a5677df5339b0e5ab8f0ec40c7e27f3ad",
+  "turn_count": 2,
+  "query": "介绍一下国先中心",
+  "planned_displayed_ids": [],
+  "recalled_handles": [
+    {
+      "id": "company-c-855a88810e4b9869fe6f8ae6",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "合肥国际先进技术应用推进中心"
+    },
+    {
+      "id": "web-handle:sha256:b62f4c577f48a113d7d4d34cf7fb3730a5ed7e8f795b05f5da045903886a4327",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "广州市发展改革委赋能大湾区国际先进技术应用推进中心三大体系建设"
+    },
+    {
+      "id": "company-c-cdb522437bb0946c96ba7d33",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳国际先进技术应用推进中心"
+    },
+    {
+      "id": "web-handle:sha256:c6af1807ccf788f87fb31fe1233f2246c1833a66ed1f24abcf38ca1404651c0a",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "“大湾区国先中心、场景创新中心”启动大会暨深海产业发展大会在广州 ..."
+    },
+    {
+      "id": "company-c-1b61651c7cb374865b5c8c1b",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "浦东国际先进技术应用推进中心"
+    },
+    {
+      "id": "web-handle:sha256:5d848248f3775696a82590a012a2955bb42d7245d1ce4f4811bdc0d913b2a907",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "国际先进技术应用推进中心（合肥）打造世界级推广平台"
+    },
+    {
+      "id": "company-c-38d1a7a17c0da12655e73423",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "大湾区国际先进技术应用推进中心"
+    },
+    {
+      "id": "web-handle:sha256:4d12926bc63217cfbf8bcd78ffe8f1edf5ce39250d82b153e0153a7984a24653",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "先进技术应用推进超级场景发布会举办合肥国先中心发布三大超级场景"
+    },
+    {
+      "id": "company-c-9f49082fb6457ff7fc55bb28",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "横琴国际先进技术应用推进中心"
+    },
+    {
+      "id": "web-handle:sha256:81aa738e9c245524075698b889f57f5825f1e891acb4577a16dcf8288790df55",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "合肥出台支持国先中心高质量发展意见 - 新浪财经"
+    },
+    {
+      "id": "web-handle:sha256:1b5d61f90b18c5ce9bd9d5fb3a570a53339512ec7f3289e98da3286fd5a8a729",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "南方试验场正式启用，大湾区国先中心参与共建国家级路空一体测试 ..."
+    },
+    {
+      "id": "web-handle:sha256:d26a907be58e44b8d768b0a7771354bd28693d2c55deb9d2cf13e4042feba39f",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "光源资本携手国际先进技术应用推进中心(深圳),共建先进技术应用生态 | 光源新闻_腾讯新闻"
+    },
+    {
+      "id": "web-handle:sha256:f6f47066a8da2eb0878f85a56abe3b30fb1f8945f69a01380f5f220213eb2bc4",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "大湾区两大创新平台在南沙启动"
+    },
+    {
+      "id": "company-c-e04a7efa6d5a9956b196de2b",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "前海中金财富管理有限公司"
+    },
+    {
+      "id": "professor-c-c8f19ca9e0ebd0eba5fc6b01",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "李广众"
+    },
+    {
+      "id": "professor-c-d56c7952f412ee8fd346c4db",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "郝伟臣"
+    }
+  ],
+  "evidence_items": {
+    "total": 20,
+    "by_domain": {
+      "company": 10,
+      "professor": 10
+    },
+    "by_lane": {
+      "exact": 2,
+      "lexical": 5,
+      "vector": 5,
+      "web": 8
+    },
+    "by_source_nature": {
+      "current_web": 8,
+      "local": 12
+    },
+    "with_claim_binding": 20
+  },
+  "protected_slots": [],
+  "requested_traversal": null,
+  "admitted_claims": {
+    "total": 11,
+    "by_predicate": {
+      "canonical_projection": 3,
+      "current_web_result": 8
+    },
+    "by_claim_type": {
+      "material_fact": 11
+    },
+    "patent_evidence_claims": 0
+  },
+  "committed_handle_ids": [
+    "company-c-855a88810e4b9869fe6f8ae6",
+    "company-c-cdb522437bb0946c96ba7d33",
+    "company-c-1b61651c7cb374865b5c8c1b",
+    "web-handle:sha256:b62f4c577f48a113d7d4d34cf7fb3730a5ed7e8f795b05f5da045903886a4327",
+    "web-handle:sha256:c6af1807ccf788f87fb31fe1233f2246c1833a66ed1f24abcf38ca1404651c0a",
+    "web-handle:sha256:5d848248f3775696a82590a012a2955bb42d7245d1ce4f4811bdc0d913b2a907",
+    "web-handle:sha256:4d12926bc63217cfbf8bcd78ffe8f1edf5ce39250d82b153e0153a7984a24653",
+    "web-handle:sha256:81aa738e9c245524075698b889f57f5825f1e891acb4577a16dcf8288790df55",
+    "web-handle:sha256:1b5d61f90b18c5ce9bd9d5fb3a570a53339512ec7f3289e98da3286fd5a8a729",
+    "web-handle:sha256:d26a907be58e44b8d768b0a7771354bd28693d2c55deb9d2cf13e4042feba39f",
+    "web-handle:sha256:f6f47066a8da2eb0878f85a56abe3b30fb1f8945f69a01380f5f220213eb2bc4"
+  ],
+  "committed_names": [
+    "合肥国际先进技术应用推进中心",
+    "深圳国际先进技术应用推进中心",
+    "浦东国际先进技术应用推进中心",
+    "广州市发展改革委赋能大湾区国际先进技术应用推进中心三大体系建设",
+    "“大湾区国先中心、场景创新中心”启动大会暨深海产业发展大会在广州 ...",
+    "国际先进技术应用推进中心（合肥）打造世界级推广平台",
+    "先进技术应用推进超级场景发布会举办合肥国先中心发布三大超级场景",
+    "合肥出台支持国先中心高质量发展意见 - 新浪财经",
+    "南方试验场正式启用，大湾区国先中心参与共建国家级路空一体测试 ...",
+    "光源资本携手国际先进技术应用推进中心(深圳),共建先进技术应用生态 | 光源新闻_腾讯新闻",
+    "大湾区两大创新平台在南沙启动"
+  ],
+  "render_mode": "prose_renderer",
+  "response_mode": "answer",
+  "citations": 11,
+  "answer_chars": 955,
+  "lane_timings": [
+    [
+      "web",
+      12.339
+    ],
+    [
+      "structured",
+      0.0
+    ],
+    [
+      "exact",
+      0.797
+    ],
+    [
+      "lexical",
+      2.261
+    ],
+    [
+      "web",
+      6.898
+    ],
+    [
+      "vector",
+      18.998
+    ]
+  ]
+}

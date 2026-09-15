@@ -1,0 +1,89 @@
+{
+  "session_id": "session:chat:4SwA9CMnUzQCsF5kyEo0Siv804LhD_u2",
+  "turn_id": "turn:chat:sha256:e4f69e7ea969ea863a56bcb2f8008c074aaace0ce8ffcb9ae0afd900dc5c61fb",
+  "turn_count": 1,
+  "query": "详细介绍一下 国先中心（深圳）",
+  "planned_displayed_ids": [],
+  "recalled_handles": [
+    {
+      "id": "company-c-cdb522437bb0946c96ba7d33",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳国际先进技术应用推进中心"
+    },
+    {
+      "id": "company-c-2e9672f74e15e5c0a4bd5802",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳国泰安教育技术有限公司"
+    }
+  ],
+  "evidence_items": {
+    "total": 3,
+    "by_domain": {
+      "company": 3
+    },
+    "by_lane": {
+      "exact": 1,
+      "vector": 2
+    },
+    "by_source_nature": {
+      "local": 3
+    },
+    "with_claim_binding": 3
+  },
+  "protected_slots": [
+    {
+      "kind": "geography",
+      "value": "深圳",
+      "entity_ids": []
+    }
+  ],
+  "requested_traversal": null,
+  "admitted_claims": {
+    "total": 1,
+    "by_predicate": {
+      "canonical_projection": 1
+    },
+    "by_claim_type": {
+      "material_fact": 1
+    },
+    "patent_evidence_claims": 0
+  },
+  "committed_handle_ids": [
+    "company-c-cdb522437bb0946c96ba7d33"
+  ],
+  "committed_names": [
+    "深圳国际先进技术应用推进中心"
+  ],
+  "render_mode": "prose_renderer",
+  "response_mode": "answer",
+  "citations": 1,
+  "answer_chars": 366,
+  "lane_timings": [
+    [
+      "web",
+      11.518
+    ],
+    [
+      "structured",
+      0.0
+    ],
+    [
+      "web",
+      0.143
+    ],
+    [
+      "vector",
+      1.079
+    ],
+    [
+      "exact",
+      1.3
+    ],
+    [
+      "lexical",
+      1.491
+    ]
+  ]
+}

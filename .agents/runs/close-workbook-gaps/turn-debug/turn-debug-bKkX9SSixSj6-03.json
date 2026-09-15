@@ -1,0 +1,106 @@
+{
+  "session_id": "session:chat:bKkX9SSixSj6uj-11vNIQVFCWIr27M8M",
+  "turn_id": "turn:chat:sha256:e8671794494fa285c64f1b9851916f7067ed21debf5c6222344bdebf3de8dee7",
+  "turn_count": 3,
+  "query": "详细介绍一下 国先中心（深圳）",
+  "planned_displayed_ids": [],
+  "recalled_handles": [
+    {
+      "id": "company-c-cdb522437bb0946c96ba7d33",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳国际先进技术应用推进中心"
+    },
+    {
+      "id": "web-handle:sha256:d05be39e678f3d4c27f65db0192ed95addeab0e009882e89979c4f1692381462",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "多彩深圳——减肥达人训练营深圳国贸营地简介"
+    },
+    {
+      "id": "web-handle:sha256:301613877ea23a818e4bc8b0e06fb59d1988fe8d802d18bacca07e60f752dffb",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "建重大平台强核心攻关优产业生态深圳新质生产力加速迸发"
+    },
+    {
+      "id": "web-handle:sha256:4e2c5efee96bf6d2cb25a43a13b84d89d87b6cce86643e5450ab07dd8d9fd25c",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "百步先(深圳〉信息技术有限公司"
+    },
+    {
+      "id": "company-c-2e9672f74e15e5c0a4bd5802",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳国泰安教育技术有限公司"
+    }
+  ],
+  "evidence_items": {
+    "total": 6,
+    "by_domain": {
+      "company": 3,
+      "professor": 3
+    },
+    "by_lane": {
+      "exact": 1,
+      "vector": 2,
+      "web": 3
+    },
+    "by_source_nature": {
+      "current_web": 3,
+      "local": 3
+    },
+    "with_claim_binding": 6
+  },
+  "protected_slots": [
+    {
+      "kind": "geography",
+      "value": "深圳",
+      "entity_ids": []
+    }
+  ],
+  "requested_traversal": null,
+  "admitted_claims": {
+    "total": 1,
+    "by_predicate": {
+      "canonical_projection": 1
+    },
+    "by_claim_type": {
+      "material_fact": 1
+    },
+    "patent_evidence_claims": 0
+  },
+  "committed_handle_ids": [
+    "company-c-cdb522437bb0946c96ba7d33"
+  ],
+  "committed_names": [
+    "深圳国际先进技术应用推进中心"
+  ],
+  "render_mode": "prose_renderer",
+  "response_mode": "answer",
+  "citations": 1,
+  "answer_chars": 407,
+  "lane_timings": [
+    [
+      "structured",
+      0.0
+    ],
+    [
+      "exact",
+      2.781
+    ],
+    [
+      "lexical",
+      3.223
+    ],
+    [
+      "web",
+      4.159
+    ],
+    [
+      "vector",
+      19.67
+    ]
+  ]
+}

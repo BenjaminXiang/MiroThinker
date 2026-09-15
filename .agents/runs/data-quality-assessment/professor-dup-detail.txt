@@ -1,0 +1,185 @@
+duplicate-name groups: 18
+
+== 陈斌  (3 records)
+   id=professor-c-375c973f05dfc758bdb60b36
+   inst='哈尔滨工业大学（深圳）' dept='信息学部/计算机科学与技术学院（深圳）' title='Not supplied by the historical source.' hp='https://homepage.hit.edu.cn/BinChen'
+   email='Not supplied by the historical source.' rd=['大模型压缩与安全', '信息论']
+   dept_ref=source-reference:5aa33b7df6ccc01a3a3ab81bd8103a8d64988b66538
+   id=professor-c-abb296a4eab614470da86d0e
+   inst='哈尔滨工业大学（深圳）' dept='信息学部/国际人工智能研究院（深圳）' title='Not supplied by the historical source.' hp='https://homepage.hit.edu.cn/chenbin2020'
+   email='Not supplied by the historical source.' rd=['计算机视觉', '多模态大模型']
+   dept_ref=source-reference:3b038b66ff7688e705fb442a3cace40bfa678b623f4
+   id=professor-c-f10b6059acc5a068c28082a5
+   inst='哈尔滨工业大学（深圳）' dept='前沿学部/理学院（深圳）' title='Not supplied by the historical source.' hp='https://homepage.hit.edu.cn/chenbin'
+   email='Not supplied by the historical source.' rd=['纳米材料', '超导物理']
+   dept_ref=source-reference:a2477e856992265af9b40f1726cbe0e9d4b11b9b120
+
+== 王威  (2 records)
+   id=professor-c-019702c37193c1cd900a8d39
+   inst='哈尔滨工业大学（深圳）' dept='前沿学部/理学院（深圳）' title='Not supplied by the historical source.' hp='https://homepage.hit.edu.cn/wangweihitsz'
+   email='Not supplied by the historical source.' rd=[]
+   dept_ref=source-reference:a2477e856992265af9b40f1726cbe0e9d4b11b9b120
+   id=professor-c-030bcaa65d3c9fefffc1bb4f
+   inst='哈尔滨工业大学（深圳）' dept='前沿学部/材料科学与工程学院（深圳）' title='教授' hp='https://homepage.hit.edu.cn/wangwei3'
+   email='Not supplied by the historical source.' rd=['仿生材料']
+   dept_ref=source-reference:424513ead7d4518438609a0ceef4811f6ac3d06e76c
+
+== 胡君杰  (2 records)
+   id=professor-c-03e858eb5ace6488298f288e
+   inst='香港中文大学（深圳）' dept='人工智能学院' title='助理教授' hp='https://sai.cuhk.edu.cn/teacher/153'
+   email='sai@cuhk.edu.cn' rd=['多传感器融合深度估计', '传感器退化环境下的鲁棒感知', '无人机低空感知', '地空跨域知识迁移']
+   dept_ref=source-reference:db575b7ac15a63948e66b5edf3c2ec8caccfeea3add
+   id=professor-c-bc4e83bf97165d26b143f383
+   inst='香港中文大学（深圳）' dept='理工学院' title='客座助理教授' hp='https://sse.cuhk.edu.cn/faculty/hujunjie'
+   email='hujunjie@cuhk.edu.cn' rd=['多传感器融合深度估计', '传感器退化下的鲁棒感知', '无人机低空感知', '地空跨域知识迁移']
+   dept_ref=source-reference:7c400c9258cc54572f0779b6c45f42bc3b8264a659a
+
+== 李翔  (2 records)
+   id=professor-c-059f3388cafea52d725290dd
+   inst='哈尔滨工业大学（深圳）' dept='马克思主义学院（深圳）' title='教授' hp='https://homepage.hit.edu.cn/LIL'
+   email='Not supplied by the historical source.' rd=['中国共产党历史', '中国近现代史']
+   dept_ref=source-reference:00f8269ec2e669ad434fe6b0c9b4e8953dcbd27d043
+   id=professor-c-d52cf27b77f2251bd99c6954
+   inst='深圳理工大学' dept='生命健康学院' title='副教授' hp='https://xiangLiLab.lhs.suat-sz.edu.cn/'
+   email='lhs@suat-sz.edu.cn' rd=['突触后致密区（PSD）蛋白质组学', '突触修剪与皮层发育机制', '蛋白质合成机器与细胞骨架调控', '朊病毒结构域（Prion Domains）的功能研究']
+   dept_ref=source-reference:3eba02d4f462c88fd1e700fb637fb581d6981dc6636
+
+== 黄宪达  (2 records)
+   id=professor-c-12b2ba1ab67a29b377b70da0
+   inst='香港中文大学（深圳）' dept='理工学院' title='校长讲座教授' hp='https://sse.cuhk.edu.cn/faculty/huanghsienda'
+   email='huanghsienda@cuhk.edu.cn' rd=['microRNA-target相互作用数据库', '植物小RNA介导的跨界信号转导', '非编码RNA（circRNA）竞争性内源性RNA网络', 'microRNA在肿瘤发生中的调控机制']
+   dept_ref=source-reference:7c400c9258cc54572f0779b6c45f42bc3b8264a659a
+   id=professor-c-6428c21dc8dcb6547c70c400
+   inst='香港中文大学（深圳）' dept='医学院' title='校长讲座教授' hp='https://med.cuhk.edu.cn/teacher/120'
+   email='Not supplied by the historical source.' rd=['生物数据库设计', '算法开发', '多组学数据探索疾病靶标与药物靶点', '中草药分子层次《本草纲目》平台建设']
+   dept_ref=source-reference:82ed234c037483736aa82a968117fbe5824c697ee8c
+
+== 李兵  (2 records)
+   id=professor-c-1539225d9b47ec3c61951370
+   inst='清华大学深圳国际研究生院' dept='Not supplied by the historical source.' title='副教授、博士生导师' hp='http://www.sigs.tsinghua.edu.cn/lb2_2931/main.htm'
+   email='li.bing@sz.tsinghua.edu.cn' rd=['磷酸盐回收与鸟粪石生物矿化', '金属有机框架(MOFs)驱动的磷去除与资源化', '城市红树林生态系统污染风险评估', '有机磷阻燃剂在城市功能区的环境行为']
+   dept_ref=source-reference:fbbab1142c3a93da37d9b0ff800801c45105cd13785
+   id=professor-c-5d0d16ffab2a1a1b314a9ce3
+   inst='哈尔滨工业大学（深圳）' dept='机器人与先进制造学院（深圳）' title='Not supplied by the historical source.' hp='https://homepage.hit.edu.cn/libing'
+   email='libing.sgs@hit.edu.cn' rd=['智能机器人']
+   dept_ref=source-reference:2c7647cee0cad8b010fa818b65f5477982e84d9a876
+
+== 赵阳  (2 records)
+   id=professor-c-173508aaa20973ca97d2ab4d
+   inst='哈尔滨工业大学（深圳）' dept='空天科技学院（深圳）' title='研究员' hp='https://homepage.hit.edu.cn/yang_zhao'
+   email='yang.zhao@hit.edu.cn' rd=['智能感知与信号处理', '嵌入式人工智能技术（边缘AI）']
+   dept_ref=source-reference:8773b7cb9e3f1ad64ec5015531d54d7c8547a898faa
+   id=professor-c-3b6603da7574fe2b999e3c24
+   inst='哈尔滨工业大学（深圳）' dept='医工学院（深圳）' title='Not supplied by the historical source.' hp='https://homepage.hit.edu.cn/yangz'
+   email='Not supplied by the historical source.' rd=['有机化学']
+   dept_ref=source-reference:6b6b3c9623f04072f55b7c9173d3f22d387a2f5592e
+
+== 刘清侠  (2 records)
+   id=professor-c-1f09f114204a9df0d186a8b4
+   inst='深圳技术大学' dept='新材料与新能源学院' title='讲席教授、博士生导师、加拿大工程院院士' hp='https://nmne.sztu.edu.cn/info/1033/3214.htm'
+   email='Not supplied by the historical source.' rd=['新能源材料', '先进储能技术', '海洋能源', '环境保护']
+   dept_ref=source-reference:74cc8058d921cd3a76f75cb093468b8ef5cf02ae530
+   id=professor-c-b26abb69d323730ce64f7a95
+   inst='深圳技术大学' dept='人工智能学院' title='讲席教授' hp='https://ai.sztu.edu.cn/info/1332/6057.htm'
+   email='Not supplied by the historical source.' rd=['物质表面和界面分子间作用力', '环境保护', '清洁能源', '新材料研发']
+   dept_ref=source-reference:db575b7ac15a63948e66b5edf3c2ec8caccfeea3add
+
+== 王伟  (2 records)
+   id=professor-c-391299474ee30ad8e3fa7988
+   inst='哈尔滨工业大学（深圳）' dept='信息学部/信息科学与技术学院（深圳）' title='Not supplied by the historical source.' hp='https://homepage.hit.edu.cn/wangwei16'
+   email='Not supplied by the historical source.' rd=['无线通信与网络', '面向无线通信的人工智能技术']
+   dept_ref=source-reference:4b03c4377370ab7890957b83d4c9ccafdeec495094d
+   id=professor-c-d2385aaf0391808321274667
+   inst='中山大学（深圳）' dept='电子与通信工程学院' title='教授' hp='http://sece.sysu.edu.cn/szll/js/zngz/1361652.htm'
+   email='wangw278@mail.sysu.edu.cn' rd=['雷达探测', '雷达信号处理', '复杂电磁环境认知与利用', '电子信息系统建模仿真与评估']
+   dept_ref=source-reference:a00adc7412467529914b027ce9f6cb7f1bb1237c935
+
+== 成会明  (2 records)
+   id=professor-c-4d2545d32846a9bf549a803b
+   inst='清华大学深圳国际研究生院' dept='低维材料与器件实验室' title='教授' hp='http://www.sigs.tsinghua.edu.cn/chm/main.htm'
+   email='Not supplied by the historical source.' rd=['单壁碳纳米管的催化热解合成', '碳纳米管的形貌与粒径分布调控', '高活性晶面的二氧化钛单晶生长', '掺杂改性的介孔二氧化钛光催化剂']
+   dept_ref=source-reference:1491d6289135e6197381ac842457296c8a3317ff6a2
+   id=professor-c-cff744cb9adac3046d971c2c
+   inst='深圳理工大学' dept='材料科学与能源工程学院' title='院士' hp='https://suat-sz.edu.cn/'
+   email='chenghuiming@suat-sz.edu.cn' rd=['废旧锂电池材料循环再生', '高电压超稳定锂电池正极材料', '柔性锂电池技术', '石墨烯及其应用研究']
+   dept_ref=source-reference:06902169685f956a78f536df139f56c3130b02f0bc8
+
+== 蔡小强  (2 records)
+   id=professor-c-593722dd8757587e70a778a2
+   inst='香港中文大学（深圳）' dept='理工学院' title='客座教授' hp='https://sse.cuhk.edu.cn/faculty/caixiaoqiang'
+   email='xqcai@cuhk.edu.cn' rd=['协作式排队系统中的成本分摊机制', '协同生产与配送规划中的机制设计', '卡车运输中的承运人协作拍卖算法', '供应链服务渠道选择策略']
+   dept_ref=source-reference:7c400c9258cc54572f0779b6c45f42bc3b8264a659a
+   id=professor-c-c5f3307a76fb1fad203546bd
+   inst='香港中文大学（深圳）' dept='数据科学学院' title='校长讲席教授' hp='https://sds.cuhk.edu.cn/teacher/262'
+   email='Not supplied by the historical source.' rd=['共享经济下的资源配置与市场设计', '零担运输（LTL）中的成本分配机制', '非完全信息下的激励机制设计', '带约束的强化学习与多臂老虎机算法']
+   dept_ref=source-reference:13326e34671bef8977d05a66fc35c22742191a2997b
+
+== Parvej Alam  (2 records)
+   id=professor-c-6276faf523e0f380a133e6f1
+   inst='香港中文大学（深圳）' dept='理工学院' title='客座助理教授' hp='https://sse.cuhk.edu.cn/faculty/parvejalam'
+   email='alamparvej@cuhk.edu.cn' rd=['聚集诱导发光 (AIE) 材料', '光致变色与可重写光图案化材料', '基于金属有机框架 (MOF) 的荧光比率传感', '单分子白光发射簇发光体 (Clusteroluminogens)']
+   dept_ref=source-reference:7c400c9258cc54572f0779b6c45f42bc3b8264a659a
+   id=professor-c-f55c775452590ede4b71d081
+   inst='清华大学深圳国际研究生院' dept='材料研究学院' title='助理教授、博士生导师' hp='http://www.sigs.tsinghua.edu.cn/Parvej Alam/main.h'
+   email='alamparvej@sz.tsinghua.edu.cn' rd=['NIR-II AIE荧光探针与生物成像', '基于硫-π相互作用的近红外光敏剂设计', '有机磷磷光聚集体与室温磷光(RTP)材料', '纳米驱动器介导的深层血栓清除与追踪']
+   dept_ref=source-reference:83349783f7dcda1f8b4f57e0e4d361e6b45cd7da431
+
+== 冯娟  (2 records)
+   id=professor-c-66bf3bd07c200c204d663689
+   inst='深圳技术大学' dept='健康与环境工程学院' title='助理教授' hp='http://www.sztu.edu.cn/'
+   email='hsee@sztu.edu.cn' rd=['代谢相关脂肪性肝病(MAFLD)机制研究', '炎性衰老(Inflammaging)调控机制', '天然产物对代谢/炎症轴的干预作用', '肠-肝轴(Gut-liver crosstalk)在代谢病中的作用']
+   dept_ref=source-reference:7af33063d3d4e8b6dceb905427354f16dadc2c2e98e
+   id=professor-c-74cd6ef167335dfa10a8d4c9
+   inst='清华大学深圳国际研究生院' dept='创新管理研究院' title='教授、博士生导师' hp='http://www.sigs.tsinghua.edu.cn/fj/main.htm'
+   email='juan.feng@sz.tsinghua.edu.cn' rd=['在线劳动力市场的技能匹配与跨度研究', '基于在线评论的动态定价策略', '社交媒体与UGC中的激励机制研究', '直播带货中的渠道切换策略']
+   dept_ref=source-reference:a9f344a15ea83a3f5ce34a5136b0da7a1276cffb4b4
+
+== 王飞  (2 records)
+   id=professor-c-7d5e2a7fcb47ecd68ef11ce3
+   inst='深圳技术大学' dept='工程物理学院' title='讲师' hp='http://www.sztu.edu.cn/'
+   email='wangfei@sztu.edu.cn' rd=['海洋热力驱动混合机制', '混合边界条件下的热对流', '地热加热对海洋翻转环流的影响', '地球物理流体力学实验室模拟']
+   dept_ref=source-reference:d02b9ec9dae74b00d2040ea299f6da91bea05cd7ed6
+   id=professor-c-ba63bb7e4572853668e61dae
+   inst='清华大学深圳国际研究生院' dept='安全科学与技术研究所（清华大学公共安全研究院广东分院）' title='副教授' hp='http://www.sigs.tsinghua.edu.cn/wf/main.htm'
+   email='feiwang@tsinghua.edu.cn' rd=['基于虚拟现实的应急演练设计', 'VR严肃游戏中的教学策略研究', '安全知识培训的教学法比较', '虚拟现实环境下的认知负荷与学习效果']
+   dept_ref=source-reference:bab6d96528fa75dcae2494d7bd6c801a5f48ddb249b
+
+== 梁永生  (2 records)
+   id=professor-c-8da260bd0598fc93ef95b8d0
+   inst='哈尔滨工业大学（深圳）' dept='信息学部/信息科学与技术学院（深圳）' title='Not supplied by the historical source.' hp='https://homepage.hit.edu.cn/liangyongsheng'
+   email='Not supplied by the historical source.' rd=[]
+   dept_ref=source-reference:4b03c4377370ab7890957b83d4c9ccafdeec495094d
+   id=professor-c-f7b35f4dd2df41d96b92fde7
+   inst='深圳技术大学' dept='人工智能学院' title='讲席教授' hp='https://ai.sztu.edu.cn/szdw/jytd/jxjs.htm'
+   email='Not supplied by the historical source.' rd=[]
+   dept_ref=source-reference:db575b7ac15a63948e66b5edf3c2ec8caccfeea3add
+
+== 李佳  (2 records)
+   id=professor-c-8fda8f3bf127c4854e8e1607
+   inst='深圳技术大学' dept='工程物理学院' title='教授' hp='http://www.sztu.edu.cn/'
+   email='lijia@sztu.edu.cn' rd=['有机光电晶体管 (Organic Phototransistors)', '超灵敏X射线探测器 (Ultrasensitive X-ray Detectors)', '异质结光电探测器 (Heterojunction Photodetectors)', '层状有机半导体材料 (Layered Organic Semiconductors)']
+   dept_ref=source-reference:d02b9ec9dae74b00d2040ea299f6da91bea05cd7ed6
+   id=professor-c-dd4df248cd9dc5b09acbaf4b
+   inst='清华大学深圳国际研究生院' dept='Not supplied by the historical source.' title='副教授、博士生导师' hp='http://www.sigs.tsinghua.edu.cn/lj/main.htm'
+   email='li.jia@sz.tsinghua.edu.cn' rd=['基于密度泛函理论(DFT)的能源材料设计', '过渡金属硫族化合物(TMDs)电催化性能研究', 'MXene基储能材料的高通量筛选', '析氢反应(HER)电催化剂的碳包覆合金设计']
+   dept_ref=source-reference:fbbab1142c3a93da37d9b0ff800801c45105cd13785
+
+== 朱宝亭  (2 records)
+   id=professor-c-b0b1e9047f1450a8c4dabb51
+   inst='香港中文大学（深圳）' dept='医学院' title='校长讲席教授' hp='https://med.cuhk.edu.cn/teacher/117'
+   email='Not supplied by the historical source.' rd=['基础分子药理学', '疾病分子机理学']
+   dept_ref=source-reference:82ed234c037483736aa82a968117fbe5824c697ee8c
+   id=professor-c-baaa5ac229a4cdeffdfe2ca5
+   inst='香港中文大学（深圳）' dept='理工学院' title='校长讲座教授' hp='https://sse.cuhk.edu.cn/faculty/zhubaoting'
+   email='btzhu@cuhk.edu.cn' rd=['基础分子药理学', '疾病分子机理学', '分子药理学和药物作用的机理', '预防和治疗癌症的药物']
+   dept_ref=source-reference:7c400c9258cc54572f0779b6c45f42bc3b8264a659a
+
+== 罗智泉  (2 records)
+   id=professor-c-b64f620313130f6b4e6dd8a0
+   inst='香港中文大学（深圳）' dept='人工智能学院' title='教授' hp='https://sai.cuhk.edu.cn/teacher/92'
+   email='Not supplied by the historical source.' rd=['无线通信的收发机优化设计', '最优鲁棒波束成形设计', '动态频谱管理', '优化理论']
+   dept_ref=source-reference:db575b7ac15a63948e66b5edf3c2ec8caccfeea3add
+   id=professor-c-d6e2291224f9c9a5f178eb8f
+   inst='香港中文大学（深圳）' dept='理工学院' title='X.Q. Deng 讲席教授' hp='https://myweb.cuhk.edu.cn/luozhiquan'
+   email='emailpengyanni@cuhk.edu.cnofficeaddressp' rd=['非凸非光滑优化算法', 'ADMM与坐标下降法的随机化改进', '低秩核高斯过程回归', '鲁棒自适应波束形成']
+   dept_ref=source-reference:7c400c9258cc54572f0779b6c45f42bc3b8264a659a

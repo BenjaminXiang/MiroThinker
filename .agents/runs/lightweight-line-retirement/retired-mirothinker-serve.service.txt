@@ -1,0 +1,14 @@
+[Unit]
+Description=MiroThinker Simple Serving
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/home/longxiang/MiroThinker/.worktrees/data-rebuild
+EnvironmentFile=/home/longxiang/MiroThinker/apps/miroflow-agent/.env
+ExecStart=/home/longxiang/MiroThinker/.venv/bin/python /home/longxiang/MiroThinker/.worktrees/data-rebuild/.agents/runs/full-column-serving-pack-rebuild/simple_serve.py
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=default.target

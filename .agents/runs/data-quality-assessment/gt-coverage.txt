@@ -1,0 +1,77 @@
+GT company-name candidates extracted: 44
+GT patent numbers: 16 -> ['CN116700242A', 'CN117506999A', 'CN117598090A', 'CN117621134A', 'CN117742201A', 'CN117789171A', 'CN117850278A', 'CN117873146A', 'CN117944590A', 'CN118884461A', 'CN119320031A', 'CN119550385A', 'CN119675500A', 'CN119806154A', 'CN120261207A', 'CN120816529A']
+pack company name=7086 normalized=7086 aliases=6879
+
+non-junk GT company names: 40  found=21  missing=19  filtered_junk=4
+
+## GT company names NOT in pack
+   MISSING: 一博科技（2003年成立）是上市公司
+   MISSING: 丁文伯参与创立了深圳无界智航科技有限公司
+   MISSING: 不应该出现深圳智航无人机有限公司
+   MISSING: 云迹科技（北京云迹科技股份有限公司
+   MISSING: 但他们属于有潜力快速跟进此类技术的公司
+   MISSING: 兴森科技（1999年成立）是上市公司
+   MISSING: 则成电子（2003年成立）是北交所上市公司
+   MISSING: 华力创科学这家公司
+   MISSING: 另有关联度较高的深圳智航无人机有限公司
+   MISSING: 并非专注于解决酒店场景下全自动配送链条的公司
+   MISSING: 广东瓦力科技有限公司
+   MISSING: 广南县科技公司
+   MISSING: 擎朗智能（上海擎朗智能科技股份有限公司
+   MISSING: 无界智航（深圳无界智航科技有限公司
+   MISSING: 普渡科技股份有限公司
+   MISSING: 深南电路（1984年成立）是央企背景的上市公司
+   MISSING: 深圳智航无界科技的核心关联主体为深圳无界智航科技有限公司
+   MISSING: 灵启万物（深圳）科技有限公司
+   MISSING: 穿山甲机器人（苏州穿山甲机器人股份有限公司
+
+## GT company names found in pack (with match kind)
+   ok[exact]: 上海开普勒机器人有限公司
+   ok[exact]: 华力创科学（深圳）有限公司
+   ok[exact]: 帕西尼感知科技（深圳）有限公司
+   ok[exact]: 戴盟（深圳）机器人科技有限公司
+   ok[exact]: 深圳中科世界机器人有限公司
+   ok[exact]: 深圳安赛步机器人有限公司
+   ok[exact]: 深圳市优必选科技股份有限公司
+   ok[exact]: 深圳市宇数科技有限公司
+   ok[exact]: 深圳市小村机器人智能科技有限公司
+   ok[exact]: 深圳市普渡科技股份有限公司
+   ok[exact]: 深圳市艾唯尔科技有限公司
+   ok[exact]: 深圳市迈步机器人科技有限公司
+   ok[exact]: 深圳市锐曼智能技术有限公司
+   ok[exact]: 深圳忆海原识科技有限公司
+   ok[exact]: 深圳无界智航科技有限公司
+   ok[exact]: 深圳爱博合创医疗机器人有限公司
+   ok[exact]: 深圳赛博格机器人有限公司
+   ok[exact]: 源升智能机器人（深圳）有限公司
+   ok[exact]: 自变量机器人科技（深圳）有限公司
+   ok[exact]: 赛感科技（深圳）有限公司
+   ok[exact]: 跨维（深圳）智能数字科技有限公司
+
+pack patent_numbers: 11504
+   OK  CN116700242A
+   OK  CN117506999A
+   OK  CN117598090A
+   OK  CN117621134A
+   OK  CN117742201A
+   OK  CN117789171A
+   OK  CN117850278A
+   OK  CN117873146A
+   OK  CN117944590A
+   OK  CN118884461A
+   OK  CN119320031A
+   OK  CN119550385A
+   OK  CN119675500A
+   OK  CN119806154A
+   OK  CN120261207A
+   OK  CN120816529A
+
+## GT paper title check
+   OK pFedGPA: Diffusion-based Generative Parameter Aggregation for Personalized Feder
+
+## GT professor names
+   丁文伯: OK (1 record(s))
+   王学谦: OK (1 record(s))
+   许晋诚: MISSING (0 record(s))
+   穆世龙: MISSING (0 record(s))
+   罗智泉: OK (2 record(s))

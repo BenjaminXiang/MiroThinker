@@ -1,0 +1,256 @@
+## category query support: how many companies surface for each GT-flavoured query
+
+  "送餐": in_tag_fields=0   anywhere=19
+
+  "配送机器人": in_tag_fields=1   anywhere=15
+      e.g. 深圳市普渡科技股份有限公司  [tag/ind=室内外配送机器人研发商]
+
+  "餐饮机器人": in_tag_fields=1   anywhere=5
+      e.g. 深圳市智汇牛科技有限公司  [tag/ind=智能餐饮机器人研发商]
+
+  "酒店": in_tag_fields=6   anywhere=448
+      e.g. 深圳米林客智能科技有限公司  [tag/ind=智能家居智慧酒店解决方案提供商]
+      e.g. 百达屋酒店管理（深圳）有限公司  [tag/ind=旅游及酒店产业平台]
+      e.g. 深圳乐易住智能科技股份有限公司  [tag/ind=无人智慧酒店品牌]
+      e.g. 深圳市新美网络科技有限公司  [tag/ind=酒店产业客户直销方案提供商]
+      e.g. 深圳市鹿大福机器人有限公司  [tag/ind=智能酒店研发商]
+
+  "PCB": in_tag_fields=11   anywhere=136
+      e.g. 深圳天创无限科技有限公司  [tag/ind=PCBA设计生产商]
+      e.g. 深圳市亿科迈科技有限公司  [tag/ind=PCB抄板生产及芯片解密服务商]
+      e.g. 深圳市声雄电子有限公司  [tag/ind=PCB产品生产供应商]
+      e.g. 深圳市驭鹰者电子有限公司  [tag/ind=PCB打样及电路板生产商]
+      e.g. 百芯智能制造科技（深圳）有限公司  [tag/ind=PCBA一站式在线智能制造平台]
+
+  "打板": in_tag_fields=0   anywhere=1
+
+  "灵巧手": in_tag_fields=5   anywhere=26
+      e.g. 合肥伯牙智能科技有限公司  [tag/ind=灵巧手及机器人相关产品研发商]
+      e.g. 灵心巧手（北京）科技有限公司  [tag/ind=灵巧手产品研发商]
+      e.g. 浙江灵巧智能科技有限公司  [tag/ind=灵巧手研发商]
+      e.g. 源升智能机器人（深圳）有限公司  [tag/ind=机器人灵巧手研发商]
+      e.g. 深圳超维传感科技有限公司  [tag/ind=灵巧手触觉传感器研发商]
+
+  "具身智能": in_tag_fields=11   anywhere=75
+      e.g. 深圳墨奇智能技术有限公司  [tag/ind=具身智能公司]
+      e.g. 北京银河通用机器人有限公司  [tag/ind=具身智能和机器人产品研发商]
+      e.g. 深圳市诺因智能有限公司  [tag/ind=具身智能机器人研发公司]
+      e.g. 简智新创（北京）机器人科技有限公司  [tag/ind=通用具身智能解决方案提供商]
+      e.g. 魔法工场（无锡）科技有限公司  [tag/ind=通用机器人和具身智能技术研发商]
+
+  "触觉": in_tag_fields=7   anywhere=22
+      e.g. 深圳慧智星晨科技有限公司  [tag/ind=机器人视觉及触觉技术研发商]
+      e.g. 千觉机器人科技（上海）有限公司  [tag/ind=多模态触觉感知与控制技术研发商]
+      e.g. 钛深科技（深圳）有限公司  [tag/ind=柔性离电子触觉传感技术研发商]
+      e.g. 零感科技（深圳）有限公司  [tag/ind=通用智能触觉产品研发商]
+      e.g. 深圳智触计算机系统有限公司  [tag/ind=智能触觉技术平台]
+
+  "传感器": in_tag_fields=121   anywhere=490
+      e.g. 深圳市博讯飞扬科技有限公司  [tag/ind=柔性光纤传感器研发商]
+      e.g. 博思发科技（深圳）有限公司  [tag/ind=传感器研产商]
+      e.g. 华夏磁电子技术开发（深圳）有限公司  [tag/ind=磁传感器研发商]
+      e.g. 深圳市天工机械制造技术开发有限公司  [tag/ind=传感器产销商]
+      e.g. 深圳市瑞准科技有限公司  [tag/ind=温度传感器产销商]
+
+  "协作机器人": in_tag_fields=3   anywhere=31
+      e.g. 深圳市睿科智联科技有限公司  [tag/ind=协作机器人系统及解决方案提供商]
+      e.g. 深圳宇龙机器人科技有限公司  [tag/ind=协作机器人研发商]
+      e.g. 深圳市大象机器人科技有限公司  [tag/ind=协作机器人解决方案提供商]
+
+  "工业机器人": in_tag_fields=43   anywhere=180
+      e.g. 深圳博创机器人技术有限公司  [tag/ind=工业机器人研发企业]
+      e.g. 华腾智达（深圳）智能科技有限公司  [tag/ind=工业机器人研发商]
+      e.g. 深圳显扬科技有限公司  [tag/ind=工业机器人制造商]
+      e.g. 深圳市长荣科机电设备有限公司  [tag/ind=工业机器人服务企业]
+      e.g. 珞石（山东）机器人集团股份有限公司  [tag/ind=工业机器人及控制系统研发商]
+
+  "清洁机器人": in_tag_fields=6   anywhere=43
+      e.g. 深圳云峯智能科技有限公司  [tag/ind=清洁机器人研发商]
+      e.g. 深圳市宇辰智能科技有限公司  [tag/ind=智能清洁机器人研发商]
+      e.g. 深圳市小湾智能有限公司  [tag/ind=光伏清洁机器人研发商]
+      e.g. 深圳灵喵机器人技术有限公司  [tag/ind=机器人导航及清洁机器人研发商]
+      e.g. 深圳市元鼎智能创新有限公司  [tag/ind=泳池清洁机器人研发商]
+
+  "人形机器人": in_tag_fields=11   anywhere=83
+      e.g. 乐聚（深圳）机器人技术有限公司  [tag/ind=高端智能人形机器人研发商]
+      e.g. 北京加速进化科技有限公司  [tag/ind=人形机器人研发商]
+      e.g. 深圳市维兴顺科技有限公司  [tag/ind=智能人形机器人研发制造销售商]
+      e.g. 广州高擎机电科技有限公司  [tag/ind=人形机器人开发商]
+      e.g. 乐聚智能（深圳）股份有限公司  [tag/ind=高端智能人形机器人研发商]
+
+  "机器人": in_tag_fields=422   anywhere=1275
+      e.g. 弘宇（深圳）信息技术有限公司  [tag/ind=高端焊接机器人研发商]
+      e.g. 深圳恒需机器人科技有限公司  [tag/ind=教育机器人研发商]
+      e.g. 合肥伯牙智能科技有限公司  [tag/ind=灵巧手及机器人相关产品研发商]
+      e.g. 深圳市艾特智能科技有限公司  [tag/ind=智能家居及宠物机器人生产制造商]
+      e.g. 深圳鸿博智成科技有限公司  [tag/ind=全自动烹饪机器人专业制造商]
+
+## industry==机器人 (the 8)
+    九号机器人 | tech_tags= 
+    上海擎朗智能科技有限公司 | tech_tags= 
+    深圳市普渡科技有限公司 | tech_tags= 
+    跨维（深圳）智能数字科技有限公司 | tech_tags= 
+    银河通用 | tech_tags= 
+    深圳市迈步机器人科技有限公司 | tech_tags= 
+    云迹科技股份有限公司 | tech_tags= 
+    上海开普勒机器人有限公司 | tech_tags= 
+
+## PCB / electronics manufacturing cluster
+    深圳国芯微半导体有限公司 | industry= 先进制造 | tech_tags= 
+    深圳市拓微兴业科技有限公司 | industry= 硬件 | tech_tags= OLED显示屏经销商
+    深圳市芯拓科技有限公司 | industry= 硬件 | tech_tags= 
+    锐驰机器人（深圳）有限公司 | industry= 先进制造 | tech_tags= 焊锡机机器人和自动化系统研发商
+    众志科技（深圳）有限公司 | industry= 人工智能 | tech_tags= 手机主板设计方案提供商
+    深圳市联络者科技有限公司 | industry= 物联网 | tech_tags= 智能产品研发商
+    隼鹰信息科技（深圳）有限公司 | industry= 企业服务 | tech_tags= 高科技产业研发商
+    深圳市大族锐视科技有限公司 | industry= 生产制造 | tech_tags= 激光装备研发商
+    深圳市巨鼎医疗股份有限公司 | industry= 医疗健康 | tech_tags= 智慧医疗大健康解决方案提供商
+    深圳鼎界科技有限公司 | industry= VR/AR | tech_tags= AR增强现实设备及服务商
+    锐视数字科技（深圳）有限公司 | industry= 医疗健康 | tech_tags= 
+    深圳市大崀科技有限公司 | industry= 人工智能 | tech_tags= 人工智能系统解决方案提供商
+    深圳品图视觉科技有限公司 | industry= 先进制造 | tech_tags= 光机电一体智能检测设备研发商
+    深圳爱多多智能装备科技有限公司 | industry= 生产制造 | tech_tags= 智能切割机打印机研发商
+    深圳龙友科技股份有限公司 | industry= 生产制造 | tech_tags= 手机弹片、连接器研发、生产和销售商
+    深圳天创无限科技有限公司 | industry= VR/AR | tech_tags= PCBA设计生产商
+    深慧视（深圳）科技有限公司 | industry= 人工智能 | tech_tags= 机器人视觉成像系统研发商
+    深圳市亿科迈科技有限公司 | industry= 生产制造 | tech_tags= PCB抄板生产及芯片解密服务商
+    深圳市壹科物联网技术有限公司 | industry= 物联网 | tech_tags= 物联网应用解决方案提供商
+    深圳市京洲科技制造有限公司 | industry=  | tech_tags= 
+    深圳市中禾旭精密机械有限公司 | industry= 生产制造 | tech_tags= 机械设备服务商
+    深圳市汇昇科技有限公司 | industry= 物联网 | tech_tags= 物联网APP开发商
+    奥松智能科技（深圳）股份有限公司 | industry= 人工智能 | tech_tags= 
+    深圳优卫乐得科技有限公司 | industry= 硬件 | tech_tags= 光源硬件研发服务商
+    深圳市百千成电子有限公司 | industry=  | tech_tags= 
+    崇达技术股份有限公司 | industry= 生产制造 | tech_tags= 印制线路板服务企业
+    为你省机器人（深圳）有限公司 | industry= 先进制造 | tech_tags= 工业机器人制造商
+    深圳市像素偏移科技有限公司 | industry= 人工智能 | tech_tags= AI创作新视界研发商
+    深圳市乐谱兰斯科技有限公司 | industry= 先进制造 | tech_tags= 智能制造解决方案提供商
+    深圳世纪物联有限公司 | industry= 人工智能 | tech_tags= 智能家居设计公司
+    深圳市声雄电子有限公司 | industry= 生产制造 | tech_tags= PCB产品生产供应商
+    深圳银光机器人技术有限公司 | industry= 先进制造 | tech_tags= 工业机器人研发商
+    深圳市希默科技有限公司 | industry= 人工智能 | tech_tags= 传感及控制系统专业供应商
+    广东智动时代科技有限公司 | industry=  | tech_tags= 
+    深圳市佳宏迅智能科技有限公司 | industry= 生产制造 | tech_tags= 电子产品产销商
+    深圳市智慧威视科技有限公司 | industry= 人工智能 | tech_tags= 保安监控事业智能化技术企业
+    深圳市高素科技有限公司 | industry= 人工智能 | tech_tags= 视觉系统解决方案开发商
+    深圳市软博智能科技有限公司 | industry= 人工智能 | tech_tags= 4G自动导航充电机器人研发公司
+    深圳市鼎立特科技有限公司 | industry= 物联网 | tech_tags= 智慧工厂建设商
+    深圳市巴达木科技有限公司 | industry= 硬件 | tech_tags= 芯片代理和蓝牙方案解决方案供应商
+    深圳市博智达机器人有限公司 | industry= 先进制造 | tech_tags= 直驱运动系统解决方案提供商
+    深圳市超创鑫科技有限公司 | industry=  | tech_tags= 
+    深圳市腾盛精密装备股份有限公司 | industry= 先进制造 | tech_tags= 精密装备供应商
+    深圳市驭鹰者电子有限公司 | industry= 生产制造 | tech_tags= PCB打样及电路板生产商
+    深圳市海洲天润科技有限公司 | industry= 硬件 | tech_tags= 元器件代理商
+    博瀚智能（深圳）有限公司 | industry= 人工智能 | tech_tags= 
+    上达电子（深圳）股份有限公司 | industry= 生产制造 | tech_tags= FPCA产品生产企业
+    深圳市智芯云创科技有限公司 | industry= 硬件 | tech_tags= 无线充电方案商
+    深圳万珏科技有限公司 | industry= 生产制造 | tech_tags= 
+    大族激光科技产业集团股份有限公司 | industry=  | tech_tags= 
+    深圳众为兴技术股份有限公司 | industry= 先进制造 | tech_tags= 运动控制解决方案提供商
+    深圳橙子自动化有限公司 | industry= 生产制造 | tech_tags= 3C行业智能制造设备服务商
+    深圳市鑫盈通达电子科技有限公司 | industry= 企业服务 | tech_tags= 电路板软硬结合板研发商
+    深圳彩视能科技有限公司 | industry= 人工智能 | tech_tags= 机器视觉研发商
+    九一智造（深圳）信息装备有限公司 | industry= 人工智能 | tech_tags= 
+    深圳市真尚有科技有限公司 | industry= 人工智能 | tech_tags= 无线传感器研发商
+    深圳镭霆激光科技有限公司 | industry= 先进制造 | tech_tags= 激光加工系统供应商
+    深圳市满天星工业软件有限公司 | industry= 物联网 | tech_tags= 
+    深圳市杰恩世智能科技有限公司 | industry= 人工智能 | tech_tags= 通用型智能机器视觉平台研发商
+    深圳市美莱创新股份有限公司 | industry= 生产制造 | tech_tags= IC产品及功率半导体生产研发商
+    深圳市路维光电股份有限公司 | industry= 生产制造 | tech_tags= 掩膜产品生产销售商
+    深圳市小铭工业互联网有限公司 | industry= 先进制造 | tech_tags= 一站式电子产业柔性智造服务平台
+    深圳市艾兰特科技有限公司 | industry=  | tech_tags= 
+    深圳指数科技有限公司 | industry= 人工智能 | tech_tags= 
+    国奥显示与半导体技术（深圳）有限公司 | industry= 生产制造 | tech_tags= 
+    海伯森技术（深圳）有限公司 | industry= 硬件 | tech_tags= 智能化传感器研发生产商
+    深圳市米克力美科技有限公司 | industry= 先进制造 | tech_tags= 工业机器人制造商
+    深圳市懿晗科技有限公司 | industry= 物联网 | tech_tags= 工业智动化解决方案提供商
+    深圳和通自动化设备有限公司 | industry= 生产制造 | tech_tags= 非标自动化设备生产商
+    深圳市品茂电子科技有限公司 | industry= 人工智能 | tech_tags= 智能电子产品服务商
+    深圳市微觉未来科技有限公司 | industry= 人工智能 | tech_tags= 无人汽车及机器人研发商
+    深圳源诚技术有限公司 | industry= 硬件 | tech_tags= 智能数码终端产品研发
+    深圳市一博科技股份有限公司 | industry= 电子制造 | tech_tags= 
+    深圳市兆赫技术有限公司 | industry= 生产制造 | tech_tags= 无线通讯产品天线解决方案提供商
+    深圳维普创新科技有限公司 | industry= 硬件 | tech_tags= 电源、电机类相关SOC产品研发生产和销售商
+    深南电路股份有限公司 | industry= 电子制造 | tech_tags= 
+    深圳市华盛昌科技实业股份有限公司 | industry= 生产制造 | tech_tags= 测量仪器仪表产销商
+    深圳市盛世鸿恩科技有限公司 | industry= 生产制造 | tech_tags= 自动化技术研发公司
+    深圳市金石智控股份有限公司 | industry= 先进制造 | tech_tags= 个性也机器人研发生产商
+    深圳市东正光学技术股份有限公司 | industry= 生产制造 | tech_tags= 光学镜头研发生产综合服务机构
+    深圳市卓茂科技有限公司 | industry= 硬件 | tech_tags= 智能焊接及智能检测设备制造商
+    深圳市舟海贸易有限公司 | industry= 硬件 | tech_tags= 智能穿戴软硬件解决方案提供商
+    深圳砺芯半导体有限责任公司 | industry= 生产制造 | tech_tags= 集成电路设计服务公司
+    百芯智能制造科技（深圳）有限公司 | industry= 电子商务 | tech_tags= PCBA一站式在线智能制造平台
+    深圳创想家机器人科技有限公司 | industry= 人工智能 | tech_tags= 
+    深圳市丽晶微电子科技有限公司 | industry= 先进制造 | tech_tags= 芯片研发商
+    深圳市嘉宝光电科技有限公司 | industry= 硬件 | tech_tags= 家电品牌经销商企业
+    深圳精创视觉科技有限公司 | industry=  | tech_tags= 
+    深圳市昂科技术有限公司 | industry= 生产制造 | tech_tags= 半导体芯片烧录器研发商
+    深圳市迈威机器人有限公司 | industry=  | tech_tags= 
+    深圳市德富莱智能科技股份有限公司 | industry= 生产制造 | tech_tags= 精密测试及自动化设备生产商
+    深圳市创科自动化控制技术有限公司 | industry= 人工智能 | tech_tags= 机器视觉软件算法开发商
+    深圳市劲拓自动化设备股份有限公司 | industry= 先进制造 | tech_tags= 智能装备系统和先进制造系统供应商
+    深圳智赛精密装备有限公司 | industry= 人工智能 | tech_tags= 机器人系统和自动化设备供应商
+    深圳市志奋领科技有限公司 | industry= 先进制造 | tech_tags= 高精密及智能工业传感器设计及综合解决方案商
+    深圳至汉装备科技有限公司 | industry= 先进制造 | tech_tags= 智能制造产品及技术解决方案提供商
+    深圳正指向科技有限公司 | industry= 物联网 | tech_tags= 智能穿戴和GPS定位车载设备研发商
+    深圳市德龙智能高科技有限公司 | industry= 先进制造 | tech_tags= 工业高端激光通用设备制造商
+    广东华美集团有限公司 | industry= 生产制造 | tech_tags= 金属材料产销商
+    浙江人形机器人创新中心有限公司 | industry= 人工智能 | tech_tags= 人形机器人技术开发商
+    易视智瞳科技（深圳）有限公司 | industry= 人工智能 | tech_tags= 工业视觉技术解决方案提供商
+    深圳市兴森快捷电路科技股份有限公司 | industry= 生产制造 | tech_tags= 印制线路样板及小批量板研发商
+    深圳市赛尔博特软件有限公司 | industry= 生产制造 | tech_tags= PCB行业的管理软件开发服务商
+    深圳市艾姆克斯科技有限公司 | industry= 先进制造 | tech_tags= 智能制造系统提供商
+    深圳市大族数控科技股份有限公司 | industry=  | tech_tags= 
+    深圳市宾德宝电子科技有限公司 | industry= 生产制造 | tech_tags= 精密电子测试探针生产商
+    深圳市科易博软件有限公司 | industry= 生产制造 | tech_tags= PCB行业ERP软件与智能云平台服务商
+    深圳市迈威科技有限公司 | industry= 生产制造 | tech_tags= PCB设计及其增值服务
+    深圳市华仁智信技术有限公司 | industry= 大数据 | tech_tags= 
+    深圳市升立德科技有限公司 | industry=  | tech_tags= 
+    深圳创智芯联科技股份有限公司 | industry= 生产制造 | tech_tags= 电子制造商
+    诡谷子人工智能科技（深圳）有限公司 | industry= 人工智能 | tech_tags= 
+    深圳思路名扬通讯技术股份有限公司 | industry= 生产制造 | tech_tags= 智能设备整体设计方案供应商
+    深圳市动力飞扬智能装备有限公司 | industry= 先进制造 | tech_tags= 工业机器人及智能自动化设备生产商
+    深圳市清宝科技有限公司 | industry= 生产制造 | tech_tags= 
+    深圳市震远电子科技有限公司 | industry= 批发零售 | tech_tags= 电子器件供应商
+    深圳市升达康科技有限公司 | industry= 先进制造 | tech_tags= PCB行业智能工厂整体解决方案提供商
+    深圳市星河电路股份有限公司 | industry= 生产制造 | tech_tags= 印制电路板生产与销售
+    深圳市优克雷技术有限公司 | industry= 生产制造 | tech_tags= 工业电气产品经销商
+    深圳市杰普特光电股份有限公司 | industry= 生产制造 | tech_tags= 光学智能装备研发及生产商
+    深圳市圆马自动化科技有限公司 | industry= 人工智能 | tech_tags= 机器视觉技术研发商
+    深圳市赛晟科技有限公司 | industry= 企业服务 | tech_tags= 无线射频、音频测试设备供应商
+    深圳市腾进达信息技术有限公司 | industry= 人工智能 | tech_tags= 智能穿戴设备研发商
+    深圳市友创智能设备有限公司 | industry= 先进制造 | tech_tags= 自动化精密数控设备制造商
+    深圳市旗众智能科技有限公司 | industry= 物流运输 | tech_tags= agv控制系统研发商
+    深圳硬之城信息技术有限公司 | industry= 电子商务 | tech_tags= 电子产业供应链与智造平台
+    深圳市雷拓尔科技有限公司 | industry= 人工智能 | tech_tags= 机器人技术研发商
+    深圳市洁驰科技有限公司 | industry= 生产制造 | tech_tags= 印刷电路提供商
+    深圳市盛矽电子科技有限公司 | industry= 人工智能 | tech_tags= 语音方案与技术服务的提供商
+    传心影创（深圳）技术有限公司 | industry= 人工智能 | tech_tags= 
+    深圳市思捷创科技有限公司 | industry= 先进制造 | tech_tags= 工业智能机器人及自动化装配提供商
+    横川机器人（深圳）有限公司 | industry= 生产制造 | tech_tags= 直驱电机研发商
+    深圳慧闻智造技术有限公司 | industry= 先进制造 | tech_tags= 机器人轻密度零件产销商
+    深圳市冰海科技有限公司 | industry= 生产制造 | tech_tags= 控制系统及其衍生产品开发商
+    深圳市桑谷医疗机器人有限公司 | industry= 先进制造 | tech_tags= 医疗机器人研发商
+    深圳市捷特精密技术有限公司 | industry= 先进制造 | tech_tags= 精密流体控制系统产销商
+    深圳市润德通讯技术有限公司 | industry= 人工智能 | tech_tags= 智能穿戴设备研发商
+    深圳市越疆科技股份有限公司 | industry= 人工智能 | tech_tags= 智能机械臂解决方案提供商
+    深圳灿态信息技术有限公司 | industry= 物联网 | tech_tags= 智能工厂技术提供商
+    深圳市南北微电子技术有限公司 | industry= 企业服务 | tech_tags= 高性能CMOS图像传感器研发商
+    深圳明锐理想科技股份有限公司 | industry= 人工智能 | tech_tags= 自动视觉检查系统研发商
+    深圳市雷赛自动化系统有限公司 | industry= 先进制造 | tech_tags= 智能制造行业控制系统研发生产商
+    深圳市众为创造科技有限公司 | industry= 先进制造 | tech_tags= 机器人技术研发商
+    深圳顺易捷科技有限公司 | industry= 生产制造 | tech_tags= 印制PCB/线路板快速打样层板研发商
+    深圳市天农科技有限公司 | industry= 金融 | tech_tags= 金融数据服务商
+    深圳市深华科电子有限公司 | industry= 新基建 | tech_tags= pcb服务商
+    深圳市大正科技有限公司 | industry=  | tech_tags= 
+    深圳市古驰爱斯科技有限公司 | industry= 硬件 | tech_tags= GPS定位器产销商
+    深圳星进科技有限公司 | industry= 金融 | tech_tags= 金融交易系统开发商
+    深圳市景曜数控设备有限公司 | industry=  | tech_tags= 
+    深圳市坤易电子有限公司 | industry=  | tech_tags= 
+    深圳市雄思科技有限公司 | industry= 企业服务 | tech_tags= IOT物联网消费类电子产品软硬云方案开发商
+    深圳景赛智能科技有限公司 | industry= 企业服务 | tech_tags= 
+    深圳博芯科技股份有限公司 | industry= 生产制造 | tech_tags= 无线通讯芯片行业应用解决方案
+    深圳嘉立创科技集团股份有限公司 | industry= 电子制造 | tech_tags= 
+    深圳市纳研科技有限公司 | industry= 人工智能 | tech_tags= 机器视觉系统集成服务商
+    深圳赛维创新技术集团有限公司 | industry= 生产制造 | tech_tags= PCBA一站式综合制造服务商
+    深圳市诠云科技有限公司 | industry= 硬件 | tech_tags= 智能硬件研发商

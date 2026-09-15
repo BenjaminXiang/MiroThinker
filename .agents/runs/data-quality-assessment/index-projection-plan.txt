@@ -1,0 +1,61 @@
+== expected_index_projections ==
+{"projection_id": "index:semantic-recall:company:default", "domain": "company", "reference_type": null, "path": "semantic_recall", "projection_version": "canonical-v2-index-projection-v1", "record_count": null, "content_sha256": "0425c6654764f7546870e55d25e438bffb66f25a484e33813aac8ce5df323b1c"}
+{"projection_id": "index:semantic-recall:paper:default", "domain": "paper", "reference_type": null, "path": "semantic_recall", "projection_version": "canonical-v2-index-projection-v1", "record_count": null, "content_sha256": "d859dbeea4a7b60638afa5fa540498a16efe3d8864b511eaa45ada1b0b0a7a1e"}
+{"projection_id": "index:semantic-recall:patent:default", "domain": "patent", "reference_type": null, "path": "semantic_recall", "projection_version": "canonical-v2-index-projection-v1", "record_count": null, "content_sha256": "3837fad96475ed49a2881610fd65d5151662e60b44127cd2fe5346066d5d8bc7"}
+{"projection_id": "index:semantic-recall:person:default", "domain": null, "reference_type": "person", "path": "semantic_recall", "projection_version": "canonical-v2-index-projection-v1", "record_count": null, "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"}
+{"projection_id": "index:semantic-recall:professor:identity", "domain": "professor", "reference_type": null, "path": "semantic_recall", "projection_version": "canonical-v2-index-projection-v1", "record_count": null, "content_sha256": "feef1a9070ba033ac9c42bbcfc7a474b870078614e57cd049b862c89f0a682fb"}
+{"projection_id": "index:semantic-recall:professor:research", "domain": "professor", "reference_type": null, "path": "semantic_recall", "projection_version": "canonical-v2-index-projection-v1", "record_count": null, "content_sha256": "075772be1a4aec4e150b47cdba428a589a82dbb60ceca56b03bf88a71640dd86"}
+{"projection_id": "index:semantic-recall:technology_concept:default", "domain": null, "reference_type": "technology_concept", "path": "semantic_recall", "projection_version": "canonical-v2-index-projection-v1", "record_count": null, "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"}
+{"projection_id": "index:semantic-recall:technology_route:default", "domain": null, "reference_type": "technology_route", "path": "semantic_recall", "projection_version": "canonical-v2-index-projection-v1", "record_count": null, "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"}
+
+== published_projections ==
+{"projection_id": "published:company", "projection_scope": "public_domain", "projection_kind": "typed_current", "domain": "company", "reference_type": null, "path": null, "record_count": 7086}
+{"projection_id": "published:paper", "projection_scope": "public_domain", "projection_kind": "typed_current", "domain": "paper", "reference_type": null, "path": null, "record_count": 24520}
+{"projection_id": "published:patent", "projection_scope": "public_domain", "projection_kind": "typed_current", "domain": "patent", "reference_type": null, "path": null, "record_count": 11504}
+{"projection_id": "published:person", "projection_scope": "internal_auxiliary", "projection_kind": "internal_reference", "domain": null, "reference_type": "person", "path": null, "record_count": 0}
+{"projection_id": "published:professor", "projection_scope": "public_domain", "projection_kind": "typed_current", "domain": "professor", "reference_type": null, "path": null, "record_count": 3958}
+{"projection_id": "published:technology_concept", "projection_scope": "internal_auxiliary", "projection_kind": "internal_reference", "domain": null, "reference_type": "technology_concept", "path": null, "record_count": 0}
+{"projection_id": "published:technology_route", "projection_scope": "internal_auxiliary", "projection_kind": "internal_reference", "domain": null, "reference_type": "technology_route", "path": null, "record_count": 0}
+
+== object_sets ==
+{"section_id": "objects:company", "release_id": "candidate-v2-20260913-r1", "version": "domain-projection-v1", "record_count": 7086, "content_sha256": "783ad02fed0c3f04245da18e28d9ee45fb13758d883b15bd16ac59d689af8b20"}
+{"section_id": "objects:paper", "release_id": "candidate-v2-20260913-r1", "version": "domain-projection-v1", "record_count": 24520, "content_sha256": "5d522b8a1fc889c161598f6794dcf20f1e6af03887eb18a83dc775ce8203ef37"}
+{"section_id": "objects:patent", "release_id": "candidate-v2-20260913-r1", "version": "domain-projection-v1", "record_count": 11504, "content_sha256": "93a81de5c8d2fa28744db208137d04082bf7676355d83e0bfa4327c759cdd9dd"}
+{"section_id": "objects:professor", "release_id": "candidate-v2-20260913-r1", "version": "domain-projection-v1", "record_count": 3958, "content_sha256": "457ec78ce3eb50ae22f867056ce5a54bb7643927405d3a949303abc0779f472f"}
+
+== top-level misc ==
+  pack_id = serving-pack:candidate-v2-20260913-r1
+  release_id = candidate-v2-20260913-r1
+  index_root = /var/tmp/mirothinker-data-v2/index-v2
+  index_target_id = index:candidate-v2-20260913-r1
+  embedding_model_id = Qwen/Qwen3-Embedding-8B
+  generator_run_id = p4-pack-20260914-v1
+  generated_at = 2026-09-14T15:21:16.863926+00:00
+  index_forbidden_milvus_paths = ['/home/longxiang/MiroThinker/apps/miroflow-agent/milvus.db']
+
+== source_batch_ids ==
+   p4-applicant-binding-full-v1
+   p4-company-full-v1
+   p4-paper-salvage-v1
+   p4-patent-full-v1
+   p4-professor-full-v1
+   p4-professor-paper-links-v1
+   s12a-released-objects-full-v1
+   s12c-r7-company-knowledge-v1
+   s12c-r7-company-workbook-supplement-v1
+   s12c-r7-paper-identifiers-v1
+   s12c-r7-patent-identifiers-v1
+   s12c-r7-professor-company-roles-v1
+   s12e-professor-backfill-v1
+   s12f-applicant-binding-v1
+   s12f-company-backfill-v1
+
+== relationship_set ==
+{"section_id": "relationships", "release_id": "candidate-v2-20260913-r1", "version": "relationship-projection-result-v2", "record_count": 10897, "content_sha256": "ec7a60183f6f9899408ecc0c24c0769c9a5fcb96640c5e106a23716d4cfcde9c"}
+
+== decision_set ==
+{"section_id": "decisions", "release_id": "candidate-v2-20260913-r1", "version": "canonical-v2-s12a-authority-v1", "record_count": 434266, "content_sha256": "c28650993afbe5a89b3bd336a02ddef2dbeb47af053ee05c6dc6238a0593f4a0"}
+
+== index marker target ==
+{"forbidden_milvus_paths":["/home/longxiang/MiroThinker/apps/miroflow-agent/milvus.db"],"release_id":"candidate-v2-20260913-r1","root":"/var/tmp/mirothinker-data-v2/index-v2","schema_version":"canonical-v2-isolated-index-target-v1","target_id":"index:candidate-v2-20260913-r1","target_kind":"isolated-candidate"}
+

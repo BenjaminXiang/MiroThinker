@@ -1,0 +1,12 @@
+=== company ['industry', 'geography', 'legal_representative']
+  distinct reference_ids = 5257
+  reference_ids mapping to >1 label (ref reused across labels) = 0
+  labels mapping to >1 reference_id = 0
+=== professor ['institution']
+  distinct reference_ids = 0
+  reference_ids mapping to >1 label (ref reused across labels) = 0
+  labels mapping to >1 reference_id = 0
+=== company tech_tags ref/label stability
+  distinct reference_ids = 4945
+  ref->>1 label = 0
+  labels with >1 ref = 0 of 4945

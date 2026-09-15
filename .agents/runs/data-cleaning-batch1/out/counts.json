@@ -1,0 +1,69 @@
+{
+  "after": {
+    "glue_damaged_values": 0,
+    "glue_legit_values": 9,
+    "placeholder_hits": 0,
+    "research_direction_entries": 9442,
+    "research_direction_junk": 0
+  },
+  "baseline_classes_after": {
+    "company.product_description": 1,
+    "company.profile_summary": 1,
+    "company.technology_route_summary": 5,
+    "patent.abstract": 1,
+    "patent.summary_text": 1
+  },
+  "baseline_classes_before": {
+    "glue_run": 189,
+    "placeholder_family": 14154,
+    "whole_value_exact": 1817,
+    "whole_value_prefix": 2
+  },
+  "before": {
+    "glue_damaged_values": 177,
+    "glue_legit_values": 9,
+    "placeholder_hits": 15976,
+    "research_direction_entries": 10238,
+    "research_direction_junk": 796
+  },
+  "geography_after": {
+    "absent": 1595,
+    "city_level": 5486,
+    "dirty": 3,
+    "dirty:-开曼群岛": 1,
+    "dirty:广东省-珠海": 1,
+    "dirty:苏州市": 1,
+    "province_only": 2
+  },
+  "geography_before": {
+    "absent": 1595,
+    "city_level": 601,
+    "dirty": 3,
+    "dirty:-开曼群岛": 1,
+    "dirty:广东省-珠海": 1,
+    "dirty:苏州市": 1,
+    "province_only": 4887
+  },
+  "glue_kept_values": 9,
+  "pack": "/tmp/dq-batch1-scratch/lookup.sqlite3",
+  "quarantine_by_rule": {
+    "dated_dump": 65,
+    "glue_damage": 177,
+    "layout_block": 154,
+    "sentence_fragment": 333,
+    "too_short": 126,
+    "truncated_tail": 118
+  },
+  "quarantine_records": 973,
+  "research_directions_after": {
+    "clean": 9442
+  },
+  "research_directions_before": {
+    "clean": 9442,
+    "dated_dump": 65,
+    "layout_block": 154,
+    "sentence_fragment": 333,
+    "too_short": 126,
+    "truncated_tail": 118
+  }
+}

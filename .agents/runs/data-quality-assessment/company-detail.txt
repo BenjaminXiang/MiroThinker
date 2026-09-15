@@ -1,0 +1,96 @@
+## full industry taxonomy (41)
+   1297  人工智能
+   1193  硬件
+    931  生产制造
+    881  先进制造
+    555  企业服务
+    351  物联网
+    251  汽车交通
+    249  医疗健康
+     72  硬科技
+     67  金融
+     66  科研及技术服务
+     62  VR/AR
+     56  大数据
+     56  电子商务
+     42  批发零售
+     40  能源电力
+     38  教育培训
+     37  房产家居
+     34  物流运输
+     29  工具软件
+     29  生活服务
+     22  区块链
+     21  文娱传媒
+     19  农业
+     18  餐饮业
+     18  新基建
+     16  建筑
+     12  体育健身
+     11  旅游户外
+      8  环保
+      8  机器人
+      7  消费升级
+      6  社交社区
+      4  游戏
+      3  电子制造
+      2  食品饮料
+      2  政务及公共服务
+      1  信息安全
+      1  服装纺织
+      1  开采
+      1  -
+
+## industry vs industry_tags consistency
+  equal=5480 different=0 only_industry=1037 only_industry_tags=0 both_missing=569
+
+## geography distribution (top 20)
+   4887  广东省
+    554  广东省-深圳市
+     21  北京市-北京市
+     10  上海市-上海市
+      5  安徽省-合肥市
+      2  浙江省-杭州市
+      2  广东省-广州市
+      2  江苏省-无锡市
+      1  山东省-济宁市
+      1  江苏省-南京市
+      1  浙江省-绍兴市
+      1  -开曼群岛
+      1  浙江省-宁波市
+      1  广东省-珠海
+      1  广东省-东莞市
+      1  苏州市
+  cities/districts pattern check: 13 endswith 市; 1 endswith 省
+
+## founded_at format & plausibility
+  year histogram (top/bottom): [(1980, 2), (1981, 1), (1982, 1), (1983, 2), (1984, 2)] ... [(2021, 71), (2022, 40), (2023, 29), (2024, 24), (2025, 30)]
+  pre-1980: 0  post-2026: 0
+  unparseable: 0 []
+
+## website
+  non-http values: 12 ['暂无', 'www.riland.com.cn', 'www.jinxinnuoren.com', 'www.mjiel.com', 'www.huapengfei.com']
+  top domains: [('weibo.com', 15), ('ui-max.com', 3), ('coson.com', 2), ('yx2011.com', 2), ('malong.com', 2), ('maxustech.com', 2), ('jehait.com', 2), ('sanbot.com', 2), ('netcat.com.cn', 2), ('gdict.cn', 2)]
+  aggregator/portal domains: 15
+
+## _supplementary keys
+    899  technology_route_summary
+
+## key_personnel shape
+  personnel-per-company dist: {0: 6235, 1: 585, 2: 175, 3: 48, 4: 24, 5: 9, 6: 5, 8: 4, 11: 1} total personnel records: 1293
+
+## placeholder family summary (independent recount)
+  industry                     placeholder-exact      1
+  industry_tags                placeholder-exact      1
+  legal_representative         placeholder-exact      1
+  product_description          placeholder-exact      860
+  product_description          placeholder-glued      88
+  product_description          placeholder-prefix     1
+  profile_summary              placeholder-exact      631
+  profile_summary              placeholder-glued      76
+  profile_summary              placeholder-prefix     2
+  tech_tags                    placeholder-exact      1
+  technology_route_summary     placeholder-exact      326
+  technology_route_summary     placeholder-glued      23
+  technology_route_summary     placeholder-prefix     1271
+  website                      placeholder-exact      1

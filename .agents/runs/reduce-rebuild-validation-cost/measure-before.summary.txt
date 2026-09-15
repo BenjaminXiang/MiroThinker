@@ -1,0 +1,7 @@
+ before field_assertion_human_review             rows=   100 insert=   0.001s commit=    4.029s us/row=40289.81
+ before field_decision_human_review              rows=   100 insert=   0.001s commit=    0.005s us/row=52.98
+ before relationship_assertion_human_review      rows=   100 insert=   0.001s commit=    0.210s us/row=2100.8
+ before identity_assertion_human_review          rows=   100 insert=   0.001s commit=    0.624s us/row=6242.64
+ before field_assertion_temporal                 rows=   100 insert=   0.001s commit=    0.015s us/row=155.27
+ before identity_decision_resolution_release     rows=   100 insert=   0.001s commit=  165.957s us/row=1659565.13
+ before domain_inclusion_assertion_owner         rows=   100 insert=   0.012s commit=    0.000s us/row=1.79
