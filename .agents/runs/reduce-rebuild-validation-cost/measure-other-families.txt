@@ -1,0 +1,2 @@
+  after identity_action_allocation               rows=   100 insert=   0.001s commit=    0.018s us/row=183.25
+  after current_relationship_decision            rows=   100 insert=   0.001s commit=    0.007s us/row=72.15

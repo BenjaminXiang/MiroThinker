@@ -39,6 +39,18 @@
 | `validate_identity_resolution_release`（14 个挂载表） | ≈70.5 万 | 1,647,000 µs/行 | 未改（**不同病**，见下） |
 | `validate_field_temporal_binding` | 1,270,479 | 153 µs/行 ⇒ ≈54 min | 159 µs/行（索引本就命中，残值来自 selected 证据 join） |
 
+更完整的同族清单（一次扫完，全部 row 级延迟触发器）：`validate_identity_action_allocation`
+183 µs/行（5 个挂载表 ≈18.8 万次）、`validate_current_relationship_decision` 72 µs/行（1.09 万次）——
+两者都已是索引支撑，属"粒度类残值"，不是本片病种。
+
+**按表把账算平**（副本库实测 µs/行 × run15 事件数）：`canonical_decision_assertion`
+（84.7 万行）由 review 绑定 9.86 h + temporal 129.6 s → 24.3 s + 134.7 s；
+`canonical_decision`（42.3 万行）19.5 s + 64.8 s → 9.3 s + 67.3 s；
+identity 各表 review 绑定 54.0 min → 11.7 s；关系族 48.2 s → 4.0 s。
+**决策批次整体从 ≈11.1 h 降到 ≈4.0 min**（run15 实测 12h40m，差额是并行 worker 启停开销）。
+修后剩下的 ≈4 min 里约 3.4 min 是 **temporal 族**、34 s 是 identity action allocation——
+都已是索引支撑，属粒度类残值（见"未做项"），不是再加索引能解决的。
+
 `EXPLAIN ANALYZE`（副本库，同一字面量）：field 判定 **43.061 ms → 0.015 ms**（2870×），
 relationship **4.807 ms → 0.008 ms**，identity **7.717 ms → 0.038 ms**。
 

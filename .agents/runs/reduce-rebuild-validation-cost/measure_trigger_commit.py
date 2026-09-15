@@ -90,6 +90,38 @@ FAMILIES: tuple[dict[str, Any], ...] = (
         "source_columns": ("release_id", "decision_id"),
     },
     {
+        "name": "identity_action_allocation",
+        "scratch_table": "identity_decision_source_identity",
+        "function": "knowledge.validate_identity_action_allocation",
+        "trigger": "trg_validate_identity_action_allocation",
+        "timing": "AFTER_INSERT_DEFERRED",
+        "columns": ("release_id", "decision_id"),
+        "source_table": "knowledge.identity_decision",
+        "source_columns": ("release_id", "decision_id"),
+    },
+    {
+        "name": "current_relationship_decision",
+        "scratch_table": "current_relationship_projection",
+        "function": "knowledge.validate_current_relationship_decision",
+        "trigger": "trg_validate_current_relationship_decision",
+        "timing": "AFTER_INSERT_DEFERRED",
+        "columns": (
+            "release_id",
+            "decision_id",
+            "decision_kind",
+            "projection_run_id",
+            "canonical_relationship_id",
+        ),
+        "source_table": "knowledge.current_relationship_projection",
+        "source_columns": (
+            "release_id",
+            "decision_id",
+            "decision_kind",
+            "projection_run_id",
+            "canonical_relationship_id",
+        ),
+    },
+    {
         "name": "domain_inclusion_assertion_owner",
         "scratch_table": "domain_inclusion_decision_assertion",
         "function": "knowledge.validate_domain_inclusion_assertion_owner",
@@ -181,11 +213,13 @@ def measure(
     conn.commit()
 
     select_list = ", ".join(family["source_columns"])
-    alias = "d" if family["source_table"].endswith("domain_inclusion_decision") else ""
+    source_alias = (
+        "d" if family["source_table"].endswith("domain_inclusion_decision") else "src"
+    )
     insert_sql = (
         f"INSERT INTO {SCRATCH_SCHEMA}.{table} ({', '.join(family['columns'])}) "
-        f"SELECT {select_list} FROM {family['source_table']} {alias}".rstrip()
-        + " WHERE release_id = %s LIMIT %s"
+        f"SELECT {select_list} FROM {family['source_table']} {source_alias} "
+        f"WHERE {source_alias}.release_id = %s LIMIT %s"
     )
 
     insert_started = time.perf_counter()

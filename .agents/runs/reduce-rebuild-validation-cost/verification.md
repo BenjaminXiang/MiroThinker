@@ -26,6 +26,8 @@ dispatch.
 | 5 | `validate_field_temporal_binding` (2 mounts) | 1,270,479 | 153 µs/row (≈54 min) | 159 µs/row | same-cost: index already used; residual is the selected-evidence join, not a scan of the decision table |
 | 6 | `validate_identity_resolution_release` (14 mounts) | ≈704,760 | 1,647,000 µs/row | unchanged | **different disease** — release-level topology re-derived per row; see §5 |
 | 7 | `validate_domain_inclusion_assertion_owner` | 424,440 | 1.67 µs/row | 1.5 µs/row | **not the disease** (already index-backed; the analysis' sibling guess is measured and answered) |
+| 8 | `validate_identity_action_allocation` (5 mounts) | ≈188,000 | 183 µs/row | 183 µs/row | same class as #5: index-backed, residual is per-row re-derivation |
+| 9 | `validate_current_relationship_decision` (1 mount) | 10,897 | 72 µs/row | 72 µs/row | negligible |
 
 Raw data: `sweep-run15.json` (catalog sweep: 36 deferred row-level mounts on 20
 tables), `measure-before-after.jsonl`.
@@ -53,14 +55,26 @@ is the win.
 
 ## 4. Projected effect at run15 scale (deferred `COMMIT`)
 
-| mount | events | before | after |
-|---|---|---|---|
-| `canonical_decision_assertion` (field + relationship + identity + temporal) | 846,986 | 846,986 × 41.9 ms ≈ **9.9 h** (run15 measured 12 h 40 m end-to-end for this commit) | ≈ 24 s |
-| `canonical_decision` (field + temporal) | 423,493 | ≈ 25 min | ≈ 10 s |
-| identity tables (9 mounts × 6 families of identity validators) | ≈ 500k | ≈ 1 h | ≈ 20 s |
+Sum of every deferred row-level validator on the decision-batch tables
+(measured µs/row × run15 event counts from `sweep-run15.json`):
 
-The run16 rebuild re-measures the real phase; no full rebuild was run in this
-slice.
+| mount table | events | before | after C2_0014 |
+|---|---|---|---|
+| `canonical_decision_assertion` — review binding ① | 846,986 | **9.86 h** | **24.3 s** |
+| `canonical_decision_assertion` — temporal | 846,986 | 129.6 s | 134.7 s (unchanged mechanism) |
+| `canonical_decision` — review binding | 423,493 | 19.5 s | 9.3 s |
+| `canonical_decision` — temporal | 423,493 | 64.8 s | 67.3 s |
+| `relationship_decision_assertion` — review binding ① + temporal | 21,546 | 48.2 s | 4.0 s |
+| identity tables — review binding (9 mounts) | 532,708 | **54.0 min** | **11.7 s** |
+| identity tables — action allocation (5 mounts) | ≈188,000 | 34.4 s | 34.4 s |
+| `current_relationship_projection` | 10,897 | 0.8 s | 0.8 s |
+| **decision batch total (excl. the unproven #6)** | | **≈11.1 h** (run15 measured 12 h 40 m once worker start-up is included) | **≈4.0 min** |
+
+Honest reading: the 12 h 40 m collapses to **≈4 min**, and ~3.4 min of that
+residual is the *temporal* validator family (#5) plus ~34 s of identity action
+allocation (#8) — both index-backed already, both candidates for the granularity
+workstream (F2), not for another index. The projected numbers are copy-DB
+measurements extrapolated linearly; **run16 must record the real phase timing**.
 
 ## 5. Sibling recorded, not fixed (different disease)
 
