@@ -2285,6 +2285,8 @@ def test_public_authority_records_invalid_relationship_endpoint_as_typed_gap() -
         internal_result=internal[1],
         links=valid_links,
         now=NOW,
+        source_rows=parsed_rows,
+        object_rows_by_id=result[7],
     )
     assert (
         relationship_request.relationship_registry_version
@@ -3236,6 +3238,7 @@ def test_mapper_binds_all_fixed_supplements_and_uses_role_record_as_evidence() -
         links=public[5],
         now=NOW,
         source_rows=rows,
+        object_rows_by_id=public[7],
     )
     assert any(
         assertion.relationship_type_id == "professor_company_role"
@@ -3383,6 +3386,7 @@ def test_customer_relationship_authority_projects_three_supported_paths() -> Non
         internal_result=internal[1],
         links=public[5],
         source_rows=rows,
+        object_rows_by_id=public[7],
         now=NOW,
     )
 
@@ -3455,6 +3459,7 @@ def test_customer_professor_company_relationship_is_source_bound_and_queryable(
         internal_result=internal[1],
         links=public[5],
         source_rows=rows,
+        object_rows_by_id=public[7],
         now=NOW,
     )
     identities = {
@@ -3587,6 +3592,7 @@ def test_source_bound_relationship_request_is_hashed_once_per_authority(
         internal_result=internal[1],
         links=public[5],
         source_rows=rows,
+        object_rows_by_id=public[7],
         now=NOW,
     )
     identities = {
@@ -4004,6 +4010,8 @@ def test_zero_relationship_authority_is_omitted_from_release_bundle() -> None:
         internal_result=internal[1],
         links=(),
         now=NOW,
+        source_rows=(),
+        object_rows_by_id=public[7],
     )
 
     assert module._release_bundle_relationship_authority(
