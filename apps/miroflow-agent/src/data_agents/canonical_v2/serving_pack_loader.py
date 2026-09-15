@@ -41,11 +41,13 @@ import hashlib
 import json
 import logging
 import math
+import os
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from threading import Lock, Thread
+from time import monotonic
 from typing import Any, Literal, cast
 
 import numpy as np
@@ -214,6 +216,24 @@ def _require_regular_file(pack_dir: Path, name: str) -> Path:
 
 
 def _read_verified_json(pack_dir: Path, name: str, expected_sha256: str) -> Any:
+    return _read_pack_json(pack_dir, name, expected_sha256, verify_sha256=True)
+
+
+def _read_pack_json(
+    pack_dir: Path,
+    name: str,
+    expected_sha256: str,
+    *,
+    verify_sha256: bool,
+) -> Any:
+    """Read one pack JSON document; ``verify_sha256=False`` is the receipt path.
+
+    Skipping the byte hash is only allowed for a file whose identity a
+    verified mount receipt already pins (size + first/last-block fingerprint),
+    and whose content is additionally bound by the reconstructed authority
+    hashes this loader checks afterwards.
+    """
+
     path = _require_regular_file(pack_dir, name)
     try:
         content = path.read_bytes()
@@ -221,7 +241,7 @@ def _read_verified_json(pack_dir: Path, name: str, expected_sha256: str) -> Any:
         raise ServingPackIntegrityError(
             f"serving pack file is unreadable: {name}"
         ) from exc
-    if hashlib.sha256(content).hexdigest() != expected_sha256:
+    if verify_sha256 and hashlib.sha256(content).hexdigest() != expected_sha256:
         raise ServingPackIntegrityError(f"serving pack file hash differs: {name}")
     try:
         return json.loads(content)
@@ -229,6 +249,81 @@ def _read_verified_json(pack_dir: Path, name: str, expected_sha256: str) -> Any:
         raise ServingPackIntegrityError(
             f"serving pack file is invalid JSON: {name}"
         ) from exc
+
+
+_MOUNT_RECEIPT_SCHEMA_VERSION = "canonical-v2-serving-mount-receipt-v1"
+_MOUNT_BLOCK_BYTES = 64 * 1024
+
+
+def _mount_receipt_path(pack_dir: Path) -> Path:
+    override = os.environ.get("CANONICAL_V2_SERVING_RECEIPT_PATH", "").strip()
+    if override:
+        return Path(override)
+    return pack_dir.parent / f"{pack_dir.name}.mount-receipt.json"
+
+
+def _file_identity_fingerprint(path: Path) -> dict[str, Any]:
+    """Size plus first/last-block hashes: cheap proof a file is the same shape.
+
+    A truncated, appended, or header/footer-swapped copy changes at least one
+    of these; the middle of a file is covered by the authority reconstruction
+    the loader performs afterwards.
+    """
+
+    size = path.stat().st_size
+    with path.open("rb") as stream:
+        first = hashlib.sha256(stream.read(_MOUNT_BLOCK_BYTES)).hexdigest()
+        if size > _MOUNT_BLOCK_BYTES:
+            stream.seek(max(size - _MOUNT_BLOCK_BYTES, _MOUNT_BLOCK_BYTES))
+            last = hashlib.sha256(stream.read(_MOUNT_BLOCK_BYTES)).hexdigest()
+        else:
+            last = first
+    return {"size": size, "first_block_sha256": first, "last_block_sha256": last}
+
+
+def _read_mount_receipt(path: Path) -> dict[str, Any] | None:
+    try:
+        if not path.is_file() or path.is_symlink():
+            return None
+        value = json.loads(path.read_bytes())
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError):
+        return None
+    if not isinstance(value, dict):
+        return None
+    if value.get("schema_version") != _MOUNT_RECEIPT_SCHEMA_VERSION:
+        return None
+    return cast(dict[str, Any], value)
+
+
+def _write_mount_receipt(path: Path, payload: dict[str, Any]) -> None:
+    try:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        temporary = path.with_name(f".{path.name}.tmp")
+        temporary.write_text(
+            json.dumps(payload, ensure_ascii=False, sort_keys=True, indent=2),
+            encoding="utf-8",
+        )
+        temporary.replace(path)
+    except OSError:
+        # A receipt we cannot persist only costs the next boot the full
+        # verification; it must never fail a verified mount.
+        _LOGGER.warning("serving pack mount receipt could not be written: %s", path)
+
+
+def _receipt_binds_mount(
+    receipt: dict[str, Any],
+    *,
+    pack_dir: Path,
+    manifest_sha256: str,
+    marker_sha256: str,
+    identities: dict[str, dict[str, Any]],
+) -> bool:
+    return (
+        receipt.get("pack_dir") == str(pack_dir)
+        and receipt.get("pack_manifest_sha256") == manifest_sha256
+        and receipt.get("index_marker_sha256") == marker_sha256
+        and receipt.get("files") == identities
+    )
 
 
 def _require_mapping(value: object, *, owner: str) -> dict[str, Any]:
@@ -552,22 +647,55 @@ def open_serving_pack_authority(
     ):
         raise ServingPackIntegrityError("serving pack file hash registry differs")
 
-    # Verify the copied index artifacts and the marker byte-for-byte. The live
-    # index at ``index_root`` is opened separately below; the copies make the
-    # pack a complete, distributable artifact and prove it is intact.
-    for name in (*PACK_INDEX_FILENAMES, PACK_MARKER_FILENAME):
-        with serving_timing.timed_step("pack.file_hash", file=name):
-            path = _require_regular_file(pack_dir, name)
-            if _sha256_file(path) != manifest.files[name]:
+    # Mount identity (serving-index-process-scope T4): the first verified mount
+    # of a pack writes a receipt; later mounts prove the same identity from
+    # that receipt (marker hash, file sizes, first/last-block fingerprints)
+    # instead of re-hashing 1.7GB of artifacts on the user's path. Full hashing
+    # stays available (fresh receipt, changed identity, or
+    # CANONICAL_V2_SERVING_FULL_VERIFY=1) and everything the loader
+    # reconstructs below is still bound to the recorded content hashes.
+    mount_started = monotonic()
+    full_verify = os.environ.get("CANONICAL_V2_SERVING_FULL_VERIFY", "").strip() == "1"
+    receipt_path = _mount_receipt_path(pack_dir)
+    manifest_file_sha256 = _sha256_file(manifest_path)
+    with serving_timing.timed_step("pack.mount_identity"):
+        identities = {
+            name: _file_identity_fingerprint(_require_regular_file(pack_dir, name))
+            for name in (*PACK_INDEX_FILENAMES, PACK_MARKER_FILENAME)
+        }
+    receipt = None if full_verify else _read_mount_receipt(receipt_path)
+    receipt_used = receipt is not None and _receipt_binds_mount(
+        receipt,
+        pack_dir=pack_dir,
+        manifest_sha256=manifest_file_sha256,
+        marker_sha256=manifest.index_marker_sha256,
+        identities=identities,
+    )
+    serving_timing.bump_counter(
+        "pack.mount", receipt_used=receipt_used, full_verify=full_verify
+    )
+    if not receipt_used:
+        with serving_timing.timed_step("pack.file_hash"):
+            for name in (*PACK_INDEX_FILENAMES, PACK_MARKER_FILENAME):
+                if _sha256_file(pack_dir / name) != manifest.files[name]:
+                    raise ServingPackIntegrityError(
+                        f"serving pack file hash differs: {name}"
+                    )
+        for name in (
+            PACK_RELATIONSHIPS_FILENAME,
+            PACK_INSTITUTION_CATALOG_FILENAME,
+        ):
+            if _sha256_file(_require_regular_file(pack_dir, name)) != manifest.files[name]:
                 raise ServingPackIntegrityError(
                     f"serving pack file hash differs: {name}"
                 )
 
     with serving_timing.timed_step("pack.relationships_read"):
-        relationships_raw = _read_verified_json(
+        relationships_raw = _read_pack_json(
             pack_dir,
             PACK_RELATIONSHIPS_FILENAME,
             manifest.files[PACK_RELATIONSHIPS_FILENAME],
+            verify_sha256=not receipt_used,
         )
     relationships = _require_mapping(
         relationships_raw, owner=PACK_RELATIONSHIPS_FILENAME
@@ -577,10 +705,11 @@ def open_serving_pack_authority(
     if relationships.get("release_id") != expected_release_id:
         raise ServingPackIntegrityError("serving pack relationships release differs")
 
-    catalog_raw = _read_verified_json(
+    catalog_raw = _read_pack_json(
         pack_dir,
         PACK_INSTITUTION_CATALOG_FILENAME,
         manifest.files[PACK_INSTITUTION_CATALOG_FILENAME],
+        verify_sha256=not receipt_used,
     )
     catalog_envelope = _require_mapping(
         catalog_raw, owner=PACK_INSTITUTION_CATALOG_FILENAME
@@ -867,6 +996,31 @@ def open_serving_pack_authority(
         relationship_projection_request=relationship_request,
         relationship_projection_result=relationship_result,
     )
+    _write_mount_receipt(
+        receipt_path,
+        {
+            "schema_version": _MOUNT_RECEIPT_SCHEMA_VERSION,
+            "generated_at": datetime.now(timezone.utc).isoformat(),
+            "pack_dir": str(pack_dir),
+            "release_id": manifest.release_id,
+            "index_root": str(index_root),
+            "index_target_id": manifest.index_target_id,
+            "index_marker_sha256": manifest.index_marker_sha256,
+            "pack_manifest_sha256": manifest_file_sha256,
+            "verification": "receipt" if receipt_used else "full",
+            "files": identities,
+            "file_sha256": {
+                name: manifest.files[name]
+                for name in (
+                    *PACK_INDEX_FILENAMES,
+                    PACK_MARKER_FILENAME,
+                    PACK_RELATIONSHIPS_FILENAME,
+                    PACK_INSTITUTION_CATALOG_FILENAME,
+                )
+            },
+            "mount_seconds": round(monotonic() - mount_started, 3),
+        },
+    )
     return ServingPackAuthority(
         pack_dir=pack_dir,
         manifest=manifest,
@@ -1132,6 +1286,108 @@ def _create_pack_lexical_lookup_adapter(
     return lexical_lookup
 
 
+_VECTOR_INDEX_CACHE: dict[tuple[str, str, str], "_ServingVectorIndex"] = {}
+_VECTOR_INDEX_LOCK = Lock()
+
+
+@dataclass(frozen=True, slots=True)
+class _ServingVectorIndex:
+    """Process-scoped derived state for one mounted index (serving-index-process-scope T2).
+
+    ``points`` is the snapshot inventory; ``terms_by_point_id`` is the parsed
+    ``embedded_content`` term set each point already paid for on the previous
+    design's every query; ``professor_names`` is the professor display-name
+    authority derived from the lookup documents. Everything is keyed by
+    ``(index_root, marker_sha256, release_id)``, so a re-mounted pack (different
+    marker) or another release never reuses stale rows.
+    """
+
+    key: tuple[str, str, str]
+    points: tuple[Any, ...]
+    terms_by_point_id: dict[str, frozenset[str]]
+    professor_names: dict[str, str]
+
+
+def _vector_index_key(bundle: IsolatedReleaseBundle) -> tuple[str, str, str]:
+    return (
+        str(bundle.index_target.root),
+        bundle.index_target.marker_sha256,
+        bundle.release_id,
+    )
+
+
+def load_serving_vector_index(
+    *,
+    bundle: IsolatedReleaseBundle,
+    snapshot: IsolatedIndexSnapshot,
+) -> _ServingVectorIndex:
+    """Build (once per process per mounted index) the derived vector state.
+
+    The first build pays the JSON parse of every point's ``embedded_content``
+    and the professor display-name authority; every later query and every
+    later session of this process reads the cached rows. A build for another
+    key (other root/marker/release) is independent, and the whole function is
+    fail-closed: an unparseable point raises exactly like the per-query
+    matcher did.
+    """
+
+    key = _vector_index_key(bundle)
+    with _VECTOR_INDEX_LOCK:
+        cached = _VECTOR_INDEX_CACHE.get(key)
+        if cached is not None and cached.points is snapshot.points:
+            serving_timing.bump_counter("vector.index.hit")
+            return cached
+    with serving_timing.timed_step("vector.index_build") as step:
+        step.annotate(points=len(snapshot.points))
+        terms_by_point_id: dict[str, frozenset[str]] = {}
+        for point in snapshot.points:
+            try:
+                content = json.loads(point.embedded_content)
+            except (TypeError, ValueError) as exc:
+                raise iso.IsolatedKnowledgeReadIntegrityError(
+                    "vector point embedded content is not valid JSON"
+                ) from exc
+            terms_by_point_id[point.point_id] = iso._normalized_scalar_values(content)
+        professor_names = iso._professor_vector_display_names(
+            points=snapshot.points,
+            lookup_documents=snapshot.lookup_documents,
+            bundle=bundle,
+        )
+        index = _ServingVectorIndex(
+            key=key,
+            points=snapshot.points,
+            terms_by_point_id=terms_by_point_id,
+            professor_names=professor_names,
+        )
+    with _VECTOR_INDEX_LOCK:
+        _VECTOR_INDEX_CACHE[key] = index
+    return index
+
+
+def _vector_candidate_rank_key(
+    *,
+    point: Any,
+    score: float,
+    target_id: str,
+) -> tuple[float, str, str, str, str]:
+    """The lane-result ordering key, computed straight from a vector point.
+
+    Mirrors the ``RecallCandidate`` sort tuple used below: ``raw_score`` is the
+    similarity score, and every vector candidate carries a ``LocalVectorTrace``
+    whose view is the point's projection view and whose locator is the local
+    projection locator (``canonical-v2-isolated:{target}:{point_id}``). Keys are
+    total (``point_id`` is unique), so ranking before binding keeps the exact
+    order the full list would have produced.
+    """
+    return (
+        -score,
+        point.domain or "",
+        point.canonical_object_id or "",
+        point.projection_view.value,
+        f"canonical-v2-isolated:{target_id}:{point.point_id}",
+    )
+
+
 def _create_pack_vector_recall_adapter(
     *,
     bundle: IsolatedReleaseBundle,
@@ -1266,28 +1522,24 @@ def _create_pack_vector_recall_adapter(
             return RetrievalLaneResult()
 
         snapshot = validated_snapshot()
+        index = load_serving_vector_index(bundle=bundle, snapshot=snapshot)
         with serving_timing.timed_step("vector.points_filter") as step:
             points = tuple(
                 point
-                for point in snapshot.points
+                for point in index.points
                 if iso._matches_vector_request(
                     request=validated_request,
                     point=point,
+                    content_terms=index.terms_by_point_id[point.point_id],
                 )
             )
-            step.annotate(matched=len(points), total=len(snapshot.points))
+            step.annotate(matched=len(points), total=len(index.points))
         manual_points = manual_recall_points.manual_points_for_request(
             provider=manual_recall_provider,
             request=validated_request,
         )
         if not points and not manual_points:
             return RetrievalLaneResult()
-        with serving_timing.timed_step("vector.prof_display"):
-            professor_display_names = iso._professor_vector_display_names(
-                points=points,
-                lookup_documents=snapshot.lookup_documents,
-                bundle=bundle,
-            )
 
         if vectorized_scoring:
             with serving_timing.timed_step("vector.embed_query"):
@@ -1306,8 +1558,24 @@ def _create_pack_vector_recall_adapter(
                 for point_vector in vectors[1:]
             )
         query_embedding_sha256 = _canonical_sha256(query_vector)
+        # Rank first, bind second: the retained lane result is capped at
+        # ``max_candidates`` and the final ordering is total over the rank key
+        # below, so building a full RecallCandidate (evidence item, trace,
+        # claim binding) for every matched point — up to the whole 51k-point
+        # inventory — only to drop all but the cap is pure waste
+        # (serving-index-process-scope T2: 11s/query on the run15 pack).
+        with serving_timing.timed_step("vector.rank") as step:
+            step.annotate(matched=len(points))
+            ranked = sorted(
+                zip(points, similarity_scores, strict=True),
+                key=lambda entry: _vector_candidate_rank_key(
+                    point=entry[0],
+                    score=entry[1],
+                    target_id=bundle.index_target.target_id,
+                ),
+            )[: validated_request.max_candidates]
         with serving_timing.timed_step("vector.candidate_bind") as step:
-            step.annotate(candidates=len(points))
+            step.annotate(candidates=len(ranked))
             candidates = [
                 iso._candidate_from_point(
                     request=validated_request,
@@ -1316,12 +1584,12 @@ def _create_pack_vector_recall_adapter(
                     point=point,
                     display_name=iso._vector_display_name(
                         point,
-                        professor_display_names=professor_display_names,
+                        professor_display_names=index.professor_names,
                     ),
                     query_embedding_sha256=query_embedding_sha256,
                     similarity_score=score,
                 )
-                for point, score in zip(points, similarity_scores, strict=True)
+                for point, score in ranked
             ]
         manual_recall_points.append_manual_candidates(
             provider=manual_recall_provider,
@@ -1359,6 +1627,10 @@ def _create_pack_vector_recall_adapter(
         with vectorized_index_lock:
             if vectorized_index is None:
                 vectorized_index = _load_persisted_index()
+    # serving-index-process-scope T3: pay the derived-state build now, at boot,
+    # so no user turn (and no later session) ever pays it.
+    if cached_snapshot is not None:
+        load_serving_vector_index(bundle=bundle, snapshot=cached_snapshot)
     return vector_recall
 
 

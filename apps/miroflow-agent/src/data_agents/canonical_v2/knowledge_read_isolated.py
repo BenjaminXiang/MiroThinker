@@ -7795,7 +7795,12 @@ def _matches_vector_request(
     *,
     request: LaneRequest,
     point: IndexProjectionPoint,
+    content_terms: frozenset[str] | None = None,
 ) -> bool:
+    # ``content_terms`` lets a caller that already parsed this point's
+    # ``embedded_content`` (the serving pack keeps them in its process-scoped
+    # vector index) reuse the parse; ``None`` parses on the spot exactly as
+    # before.
     if point.projection_scope.value != "public_domain" or point.domain is None:
         return False
     domain = point.domain
@@ -7811,13 +7816,14 @@ def _matches_vector_request(
         and point.canonical_object_id not in constraints.displayed_entity_ids
     ):
         return False
-    try:
-        content = json.loads(point.embedded_content)
-    except (TypeError, ValueError) as exc:
-        raise IsolatedKnowledgeReadIntegrityError(
-            "vector point embedded content is not valid JSON"
-        ) from exc
-    content_terms = _normalized_scalar_values(content)
+    if content_terms is None:
+        try:
+            content = json.loads(point.embedded_content)
+        except (TypeError, ValueError) as exc:
+            raise IsolatedKnowledgeReadIntegrityError(
+                "vector point embedded content is not valid JSON"
+            ) from exc
+        content_terms = _normalized_scalar_values(content)
     return not _has_excluded_term(constraints.excluded_terms, content_terms)
 
 

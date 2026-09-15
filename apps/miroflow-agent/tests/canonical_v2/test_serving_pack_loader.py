@@ -1018,3 +1018,114 @@ def test_pack_consumer_runtime_composition(
             gap_operations=object(),
             supplemental_budget=budget,
         )
+
+
+def test_mount_receipt_full_then_receipt_path(
+    serving_fixture: _PackFixture,
+    pack_copy: Path,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """First mount hashes everything and leaves a receipt; the next mount
+    proves the same identity without re-hashing the artifacts
+    (serving-index-process-scope T4)."""
+
+    receipt_path = tmp_path / "mount-receipt.json"
+    monkeypatch.setenv("CANONICAL_V2_SERVING_RECEIPT_PATH", str(receipt_path))
+    _open_authority(serving_fixture, pack_copy)
+    receipt = json.loads(receipt_path.read_text(encoding="utf-8"))
+    assert receipt["verification"] == "full"
+    assert receipt["pack_dir"] == str(pack_copy)
+    assert receipt["index_marker_sha256"] == serving_fixture.target.marker_sha256
+    assert set(receipt["files"]) == {
+        *pack_loader.PACK_INDEX_FILENAMES,
+        pack_loader.PACK_MARKER_FILENAME,
+    }
+    assert set(receipt["file_sha256"]) == {
+        *pack_loader.PACK_INDEX_FILENAMES,
+        pack_loader.PACK_MARKER_FILENAME,
+        pack_loader.PACK_RELATIONSHIPS_FILENAME,
+        pack_loader.PACK_INSTITUTION_CATALOG_FILENAME,
+    }
+
+    hashed: list[str] = []
+    real_sha256_file = pack_loader._sha256_file
+
+    def counting_sha256_file(path: Path) -> str:
+        hashed.append(Path(path).name)
+        return real_sha256_file(path)
+
+    monkeypatch.setattr(pack_loader, "_sha256_file", counting_sha256_file)
+    _open_authority(serving_fixture, pack_copy)
+    # Only the (11MB-class) manifest needs its byte hash; the 1.7GB index
+    # copies and the multi-GB relationships file are covered by the receipt
+    # identity plus the authority reconstruction this boot still performs.
+    assert hashed == [pack_loader.PACK_MANIFEST_FILENAME]
+
+
+def test_receipt_mount_rejects_truncated_artifact(
+    serving_fixture: _PackFixture,
+    pack_copy: Path,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A truncated artifact copy is refused even when a receipt exists."""
+
+    receipt_path = tmp_path / "mount-receipt.json"
+    monkeypatch.setenv("CANONICAL_V2_SERVING_RECEIPT_PATH", str(receipt_path))
+    _open_authority(serving_fixture, pack_copy)
+    milvus_path = pack_copy / "milvus.db"
+    content = milvus_path.read_bytes()
+    milvus_path.write_bytes(content[: len(content) // 2])
+    with pytest.raises(
+        pack_loader.ServingPackIntegrityError,
+        match="hash differs|missing or unsafe",
+    ):
+        _open_authority(serving_fixture, pack_copy)
+
+
+def test_receipt_mount_rejects_corrupted_first_block(
+    serving_fixture: _PackFixture,
+    pack_copy: Path,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Same-size corruption at the head of an artifact breaks the receipt
+    identity and falls back to full verification, which refuses it."""
+
+    receipt_path = tmp_path / "mount-receipt.json"
+    monkeypatch.setenv("CANONICAL_V2_SERVING_RECEIPT_PATH", str(receipt_path))
+    _open_authority(serving_fixture, pack_copy)
+    lookup_path = pack_copy / "lookup.sqlite3"
+    content = bytearray(lookup_path.read_bytes())
+    content[0] ^= 0xFF
+    lookup_path.write_bytes(bytes(content))
+    with pytest.raises(
+        pack_loader.ServingPackIntegrityError,
+        match="hash differs|lookup|receipt",
+    ):
+        _open_authority(serving_fixture, pack_copy)
+
+
+def test_vector_index_builds_once_per_process(serving_fixture: _PackFixture) -> None:
+    """The derived vector state is process-scoped: a second request for the
+    same mounted index returns the same object instead of rebuilding rows."""
+
+    authority = _open_authority(serving_fixture, serving_fixture.pack_dir)
+    first = pack_loader.load_serving_vector_index(
+        bundle=authority.release_bundle,
+        snapshot=authority.index_snapshot,
+    )
+    second = pack_loader.load_serving_vector_index(
+        bundle=authority.release_bundle,
+        snapshot=authority.index_snapshot,
+    )
+    assert first is second
+    assert set(first.terms_by_point_id) == {
+        point.point_id for point in authority.index_snapshot.points
+    }
+    for point in authority.index_snapshot.points:
+        parsed = json.loads(point.embedded_content)
+        assert first.terms_by_point_id[point.point_id] == (
+            isolated_read._normalized_scalar_values(parsed)
+        )
