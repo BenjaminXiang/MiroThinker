@@ -1,0 +1,124 @@
+# run16 发射 Runbook（数据线重建 → 封印 → 切包）
+
+状态：**待发射**（唯一未达门槛：D1-a 合流）。命令都在对应 worktree 内执行；
+本文件是操作清单，不是证据文件（证据在 `.agents/runs/`）。
+
+## 0. 本次要解决什么
+
+run15 包已在线（18188，2026-09-15 00:40 切换）。run16 把数据线三片——D0-a/D0-b
+清洗、C1 关系重投影、F3 触发器修复——灌进一次全新重建并切包：
+
+- **查得准**：关系层 122 → 7,611 边（C1）；占位族 15,976 → 0（D0-a）。
+- **构建时间**：单次重建 ~20h → ~8h（F3 消掉 12h40m 的触发器全量扫描）。
+
+## 1. 发射门槛（全绿才发射）
+
+| # | 门槛 | 状态 | 证据 |
+|---|---|---|---|
+| 1 | F3 触发器修复合入 + 头版本常量 C2_0014 | ✅ | merge `148bc03f` + `10b646ac` |
+| 2 | D0-a 清洗第一批 | ✅ | merge `4b546cee`（分支 `cfa41ec5`） |
+| 3 | D0-b 清洗第二批 | ✅ | 同前 |
+| 4 | C1 关系重投影 | ✅ | merge `b5af35a9`（分支 `8f737c02`） |
+| 5 | 合并集成定向测试 | ✅ | 6 文件 168 passed；revision 文件 8 passed |
+| 6 | **D1-a 受控技术词表** | 🔧 最后门槛 | agent-44 续跑中；合入见 §2 |
+| 7 | P1 瘦包（服务线） | ✅ 代码就绪 | `fix/slim-serving-pack` `c5c8f58c`；封印时启用 v2 |
+| 8 | 服务线模型同步（D0-a 9 字段必填→可空） | ⏳ 切包前必须 | 不同步则 run16 包 boot 拒载（跨线契约项） |
+
+已知既有红（不阻塞，并入 P12）：`test_knowledge_build_isolated` 12 红（测试侧 mock
+pin 在 C2_0012）、`test_canonical_scope_founder_red` 1 红、`knowledge_build_isolated.py`
+F402 lint（`5078678b` 起既有）。
+
+## 2. 合流（`.worktrees/data-rebuild`，分支 `data/p4-serving-pack-rebuild`）
+
+已完成：D0-a `4b546cee` → C1 `b5af35a9` → F3 `148bc03f` → 头常量修复 `10b646ac`。
+
+- 解析记录：`knowledge_build_isolated.py` 冲突取 C1 侧（`supplemental_rows`；该函数
+  签名已换成 `object_rows_by_id` + `supplemental_rows`，HEAD 侧只是把 if 折成单行）；
+  `openspec/change-ledger.md` 冲突 = 保留双方行。
+- **合流中发现并修复**：F3 加了迁移 C2_0014 但没动 `_EXPECTED_ALEMBIC_REVISION`
+  （仍是 C2_0013）。发射脚本第 2 步 `alembic upgrade head` 会把候选库升到 C2_0014，
+  而 `validate_fresh_targets → _assert_fresh_database` 断言**精确相等**，构建会当场
+  `ValueError` 终止。修复 = 常量升 C2_0014（`10b646ac`）+ 新守卫测试钉住
+  "常量 == 迁移 head"（`tests/canonical_v2/test_canonical_revision.py`）。
+
+最后一步（D1-a）：
+
+```bash
+cd /home/longxiang/MiroThinker/.worktrees/data-rebuild
+git merge --no-edit feat/d1a-tech-vocabulary
+# 冲突处理：OpenSpec / ledger / index → 保留双方行；代码按语义合并
+cd apps/miroflow-agent
+uv run pytest tests/canonical_v2/ -k "tech_vocabulary or publication_cleaning" -q
+```
+
+## 3. 发射重建（脱离会话）
+
+模板：`.agents/runs/full-column-serving-pack-rebuild/build-run15.sh` → 参数副本
+`build-run16.sh`（其它参数一律不改）：
+
+| 参数 | run15 | run16 |
+|---|---|---|
+| `TARGET_DB` | `miroflow_candidate_v2_20260913_r1` | `miroflow_candidate_v2_20260916_r1` |
+| `RUN_ID` | `p4-build-20260913-v1` | `p4-build-20260916-v1` |
+| `STAGING` | `staging-v2` | `staging-v3`（fresh） |
+| `INDEX` | `index-v2` | `index-v3`（fresh） |
+| `ENVELOPE` | `s12a/complete-candidate-build-envelope.json` | `s12a/complete-candidate-build-envelope-run16.json`（**必须换名**：旧文件 8.1GB 已被 run15 占用，脚本对其 fail-closed） |
+| release id | `candidate-v2-20260913-r1` | `candidate-v2-20260916-r1` |
+
+发射（禁止前台；run15 的 A3 死因就是前台被中断杀进程组）：
+
+```bash
+cd /home/longxiang/MiroThinker/.worktrees/data-rebuild
+setsid nohup bash .agents/runs/full-column-serving-pack-rebuild/build-run16.sh \
+  > .agents/runs/full-column-serving-pack-rebuild/build-run16-detached-nohup.log 2>&1 &
+```
+
+监控与里程碑（watchdog + `build-run16.log`）：
+
+- `P4_MERGE_LEDGER` 打印：与 run15 的 `fields_filled` 对账（清洗会改数字，看量级）；
+- **决策批次 COMMIT 应 ≈4 分钟**；若仍是小时级 → F3 未生效，停下查 C2_0014 是否应用；
+- identity 阶段 = F1/F2 插桩数据采集点；信封落地即完成（打印 `envelope_sha256=`）。
+- 长 CPU 段 + 无写出是已知正常（身份解析/信封哈希），判活用 utime/py-spy 栈。
+
+预计 ~8h（run15 实测 ~21h13m − F3 的 12h40m）。
+
+## 4. 封印（pack v2）
+
+模板：`build_run15_serving_pack.sh` → `build_run16_serving_pack.sh`；差异：
+
+- `INDEX_ROOT=index-v3`、`PACK_DIR=/var/tmp/mirothinker-data-v2/serving-pack-run16-sealed`、
+  `ENVELOPE=…-run16.json`、marker sha = index-v3 新值、`RELEASE_ID`/`GENERATOR_RUN_ID` 换 run16；
+- **sealer 必须用 P1 版**（v2 格式）：`.worktrees/slim-serving-pack/.../s12c/build_serving_pack.py`
+  加 `--pack-schema-version v2`；运行树 = 服务线树（sealer 依赖 s11 模块，run15 脚本已注明）；
+- 产出 v2 pack + mount receipt；随后 `smoke_test.py` 冒烟（scratch 端口，不占 18188）。
+
+## 5. 切包窗口（18188）
+
+活线结构（已核对）：user systemd `canonical-v2-backend` → ExecStart
+`.worktrees/canonical-v2-s11-consolidation/deploy/start-canonical-v2.sh` → 读取
+`s12g/serve-18188-command.sh`（单一事实来源）。当前指向 run15 包 +
+`miroflow_candidate_v2_20260913_r1` + index-v2。
+
+1. 回滚资产确认（已存在，不动）：`s12g/serve-18188-command-run15.sh`、
+   `s12g/serving-bundle-run15.json`、`serving-pack-run15-sealed`、index-v2 / staging-v2。
+2. 生成 `s12g/serving-bundle-run16.json`（`generate_run15_serving_bundle.py` 参数副本）。
+3. 生成 `s12g/serve-18188-command-run16.sh` = 现命令的参数副本（DB / staging / index /
+   marker-sha / release-id / bundle / pack 全换 run16 值）。
+4. 切换：`cp serve-18188-command-run16.sh serve-18188-command.sh && systemctl --user restart canonical-v2-backend`。
+5. 验收（全在 18188 上跑）：replay 门 7/7；两个逐字探针（「字节跳动」→ ByteDance Ltd.；
+   「优必选有哪些专利」→ 32 个本地 CN）；国先案例；g17 双轮；TTFT 记录。
+6. **回滚演练**：切回 `serve-18188-command-run15.sh` → restart → 跑探针 → 记录耗时；
+   演练后切回 run16。
+
+## 6. 回滚
+
+- 触发条件：boot 拒载 / replay < 7/7 / 探针失败 / 崩溃循环 / TTFT 明显回退。
+- 命令：§5.6；资产不删（run15 pack、run15 DB、index-v2/staging-v2、bundle-run15）。
+- 根因未定位前不得二次切包。
+
+## 7. 切包后
+
+- 从 run16 信封记录 per-phase 计时（F3 acceptance A1/A2 与 F1/F2 follow-up 的判定输入）。
+- 根仓 `AGENTS.md` §2 的 serving-pack 描述（Milvus Lite）随 v2 生效更新（受保护文件，单独确认）。
+- 既有红灯（isolated 12 / scope 1 / F402）并入 P12 卫生；D0-a 死字段退役（22 个）单独切片；
+  light-lane 残留库清理待拍板。
