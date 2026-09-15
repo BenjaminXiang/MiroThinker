@@ -1,0 +1,251 @@
+{"at": 1789441636.602, "count": 1, "name": "pack.mount_identity", "pid": 410952, "seconds": 0.000484, "thread": "MainThread"}
+{"at": 1789441636.602, "full_verify": false, "name": "pack.mount", "pid": 410952, "receipt_used": false, "seconds": 0.0, "thread": "MainThread"}
+{"at": 1789441638.69, "count": 1, "name": "pack.file_hash", "pid": 410952, "seconds": 2.087572, "thread": "MainThread"}
+{"at": 1789441681.403, "count": 1, "name": "pack.relationships_read", "pid": 410952, "seconds": 38.695304, "thread": "MainThread"}
+{"at": 1789441698.074, "count": 1, "name": "snapshot.lookup_docs", "pid": 410952, "seconds": 16.257076, "thread": "MainThread"}
+{"at": 1789441698.673, "count": 1, "name": "snapshot.milvus_client_open", "pid": 410952, "seconds": 0.572601, "thread": "MainThread"}
+{"at": 1789441698.673, "count": 1, "name": "snapshot.milvus_list_collections", "pid": 410952, "seconds": 0.000524, "thread": "MainThread"}
+{"at": 1789441746.619, "count": 1, "name": "snapshot.milvus_read_points", "pid": 410952, "seconds": 47.945408, "thread": "MainThread"}
+{"at": 1789441746.621, "count": 1, "name": "snapshot.milvus_close", "pid": 410952, "seconds": 8.3e-05, "thread": "MainThread"}
+{"at": 1789441748.761, "count": 1, "name": "snapshot.open", "pid": 410952, "seconds": 67.074224, "thread": "MainThread"}
+{"at": 1789442145.775, "count": 1, "name": "bound_documents.read", "pid": 410952, "root": "/var/tmp/scratch-index-294", "seconds": 6.199432, "thread": "MainThread"}
+{"at": 1789442212.735, "count": 1, "name": "vector.snapshot.open", "pid": 410952, "preopened": true, "seconds": 5.223295, "thread": "MainThread"}
+{"at": 1789442212.735, "name": "vector.snapshot.hit", "pid": 410952, "seconds": 0.0, "thread": "MainThread"}
+{"at": 1789442214.139, "count": 1, "name": "vector.npz_load", "pid": 410952, "points": 51026, "seconds": 1.404012, "thread": "MainThread"}
+{"at": 1789442219.876, "count": 1, "name": "vector.index_build", "pid": 410952, "points": 51026, "seconds": 5.736249, "thread": "MainThread"}
+{"at": 1789442219.876, "count": 1, "name": "lexical.warm_open", "pid": 410952, "seconds": 4.8e-05, "thread": "canonical-v2-lexical-index-warm"}
+{"at": 1789442393.782, "name": "bound_documents.hit", "pid": 410952, "seconds": 0.0, "thread": "ThreadPoolExecutor-0_0"}
+{"at": 1789442393.795, "name": "vector.snapshot.hit", "pid": 410952, "seconds": 0.0, "thread": "ThreadPoolExecutor-0_1"}
+{"at": 1789442393.801, "name": "bound_documents.hit", "pid": 410952, "seconds": 0.0, "thread": "ThreadPoolExecutor-0_2"}
+{"at": 1789442393.802, "name": "vector.index.hit", "pid": 410952, "seconds": 0.0, "thread": "ThreadPoolExecutor-0_1"}
+{"at": 1789442394.336, "count": 1, "matched": 51026, "name": "vector.points_filter", "pid": 410952, "seconds": 0.448, "thread": "ThreadPoolExecutor-0_1", "total": 51026}
+{"at": 1789442394.569, "count": 1, "name": "vector.embed_query", "pid": 410952, "seconds": 0.197232, "thread": "ThreadPoolExecutor-0_1"}
+{"at": 1789442394.668, "count": 1, "name": "vector.score", "pid": 410952, "seconds": 0.05054, "thread": "ThreadPoolExecutor-0_1"}
+{"at": 1789442394.86, "count": 1, "matched": 51026, "name": "vector.rank", "pid": 410952, "seconds": 0.116234, "thread": "ThreadPoolExecutor-0_1"}
+{"at": 1789442395.154, "candidates": 16, "count": 1, "name": "vector.candidate_bind", "pid": 410952, "seconds": 0.231559, "thread": "ThreadPoolExecutor-0_1"}
+{"at": 1789442395.196, "candidates": 16, "count": 1, "name": "vector.sort", "pid": 410952, "seconds": 7e-05, "thread": "ThreadPoolExecutor-0_1"}
+{"at": 1789442404.166, "name": "bound_documents.hit", "pid": 410952, "seconds": 0.0, "thread": "ThreadPoolExecutor-3_0"}
+{"at": 1789442404.167, "name": "vector.snapshot.hit", "pid": 410952, "seconds": 0.0, "thread": "ThreadPoolExecutor-3_1"}
+{"at": 1789442404.173, "name": "bound_documents.hit", "pid": 410952, "seconds": 0.0, "thread": "ThreadPoolExecutor-3_2"}
+{"at": 1789442404.206, "name": "vector.index.hit", "pid": 410952, "seconds": 0.0, "thread": "ThreadPoolExecutor-3_1"}
+{"at": 1789442404.45, "count": 1, "matched": 7086, "name": "vector.points_filter", "pid": 410952, "seconds": 0.178645, "thread": "ThreadPoolExecutor-3_1", "total": 51026}
+{"at": 1789442404.495, "count": 1, "name": "vector.embed_query", "pid": 410952, "seconds": 0.044836, "thread": "ThreadPoolExecutor-3_1"}
+{"at": 1789442404.518, "count": 1, "name": "vector.score", "pid": 410952, "seconds": 0.021202, "thread": "ThreadPoolExecutor-3_1"}
+{"at": 1789442404.545, "count": 1, "matched": 7086, "name": "vector.rank", "pid": 410952, "seconds": 0.017476, "thread": "ThreadPoolExecutor-3_1"}
+{"at": 1789442404.553, "candidates": 16, "count": 1, "name": "vector.candidate_bind", "pid": 410952, "seconds": 0.007361, "thread": "ThreadPoolExecutor-3_1"}
+{"at": 1789442404.553, "candidates": 16, "count": 1, "name": "vector.sort", "pid": 410952, "seconds": 1.8e-05, "thread": "ThreadPoolExecutor-3_1"}
+{"at": 1789442412.194, "name": "bound_documents.hit", "pid": 410952, "seconds": 0.0, "thread": "ThreadPoolExecutor-5_0"}
+{"at": 1789442412.196, "name": "vector.snapshot.hit", "pid": 410952, "seconds": 0.0, "thread": "ThreadPoolExecutor-5_2"}
+{"at": 1789442412.212, "name": "vector.index.hit", "pid": 410952, "seconds": 0.0, "thread": "ThreadPoolExecutor-5_2"}
+{"at": 1789442412.229, "name": "bound_documents.hit", "pid": 410952, "seconds": 0.0, "thread": "ThreadPoolExecutor-5_1"}
+{"at": 1789442412.658, "count": 1, "matched": 51026, "name": "vector.points_filter", "pid": 410952, "seconds": 0.423393, "thread": "ThreadPoolExecutor-5_2", "total": 51026}
+{"at": 1789442412.7, "count": 1, "name": "vector.embed_query", "pid": 410952, "seconds": 0.003549, "thread": "ThreadPoolExecutor-5_2"}
+{"at": 1789442412.77, "count": 1, "name": "vector.score", "pid": 410952, "seconds": 0.052888, "thread": "ThreadPoolExecutor-5_2"}
+{"at": 1789442413.049, "count": 1, "matched": 51026, "name": "vector.rank", "pid": 410952, "seconds": 0.156786, "thread": "ThreadPoolExecutor-5_2"}
+{"at": 1789442413.142, "candidates": 16, "count": 1, "name": "vector.candidate_bind", "pid": 410952, "seconds": 0.080993, "thread": "ThreadPoolExecutor-5_2"}
+{"at": 1789442413.163, "candidates": 16, "count": 1, "name": "vector.sort", "pid": 410952, "seconds": 2.4e-05, "thread": "ThreadPoolExecutor-5_2"}
+{"at": 1789442424.879, "name": "bound_documents.hit", "pid": 410952, "seconds": 0.0, "thread": "ThreadPoolExecutor-6_0"}
+{"at": 1789442424.882, "name": "vector.snapshot.hit", "pid": 410952, "seconds": 0.0, "thread": "ThreadPoolExecutor-6_2"}
+{"at": 1789442424.887, "name": "bound_documents.hit", "pid": 410952, "seconds": 0.0, "thread": "ThreadPoolExecutor-6_1"}
+{"at": 1789442424.908, "name": "vector.index.hit", "pid": 410952, "seconds": 0.0, "thread": "ThreadPoolExecutor-6_2"}
+{"at": 1789442425.227, "count": 1, "matched": 7086, "name": "vector.points_filter", "pid": 410952, "seconds": 0.21309, "thread": "ThreadPoolExecutor-6_2", "total": 51026}
+{"at": 1789442425.428, "count": 1, "name": "vector.embed_query", "pid": 410952, "seconds": 0.183529, "thread": "ThreadPoolExecutor-6_2"}
+{"at": 1789442425.488, "count": 1, "name": "vector.score", "pid": 410952, "seconds": 0.039686, "thread": "ThreadPoolExecutor-6_2"}
+{"at": 1789442425.513, "count": 1, "matched": 7086, "name": "vector.rank", "pid": 410952, "seconds": 0.013812, "thread": "ThreadPoolExecutor-6_2"}
+{"at": 1789442425.624, "candidates": 128, "count": 1, "name": "vector.candidate_bind", "pid": 410952, "seconds": 0.110846, "thread": "ThreadPoolExecutor-6_2"}
+{"at": 1789442425.625, "candidates": 128, "count": 1, "name": "vector.sort", "pid": 410952, "seconds": 8.3e-05, "thread": "ThreadPoolExecutor-6_2"}
+{"at": 1789442506.853, "name": "bound_documents.hit", "pid": 410952, "seconds": 0.0, "thread": "ThreadPoolExecutor-9_0"}
+{"at": 1789442506.855, "name": "vector.snapshot.hit", "pid": 410952, "seconds": 0.0, "thread": "ThreadPoolExecutor-9_2"}
+{"at": 1789442506.862, "name": "bound_documents.hit", "pid": 410952, "seconds": 0.0, "thread": "ThreadPoolExecutor-9_1"}
+{"at": 1789442506.894, "name": "vector.index.hit", "pid": 410952, "seconds": 0.0, "thread": "ThreadPoolExecutor-9_2"}
+{"at": 1789442507.449, "count": 1, "matched": 51026, "name": "vector.points_filter", "pid": 410952, "seconds": 0.448703, "thread": "ThreadPoolExecutor-9_2", "total": 51026}
+{"at": 1789442507.843, "count": 1, "name": "vector.embed_query", "pid": 410952, "seconds": 0.337381, "thread": "ThreadPoolExecutor-9_2"}
+{"at": 1789442507.934, "count": 1, "name": "vector.score", "pid": 410952, "seconds": 0.074625, "thread": "ThreadPoolExecutor-9_2"}
+{"at": 1789442508.213, "count": 1, "matched": 51026, "name": "vector.rank", "pid": 410952, "seconds": 0.141851, "thread": "ThreadPoolExecutor-9_2"}
+{"at": 1789442508.222, "candidates": 16, "count": 1, "name": "vector.candidate_bind", "pid": 410952, "seconds": 0.003791, "thread": "ThreadPoolExecutor-9_2"}
+{"at": 1789442508.237, "candidates": 16, "count": 1, "name": "vector.sort", "pid": 410952, "seconds": 1.9e-05, "thread": "ThreadPoolExecutor-9_2"}
+{"at": 1789442515.081, "name": "bound_documents.hit", "pid": 410952, "seconds": 0.0, "thread": "ThreadPoolExecutor-11_0"}
+{"at": 1789442515.088, "name": "bound_documents.hit", "pid": 410952, "seconds": 0.0, "thread": "ThreadPoolExecutor-11_1"}
+{"at": 1789442515.089, "name": "vector.snapshot.hit", "pid": 410952, "seconds": 0.0, "thread": "ThreadPoolExecutor-11_3"}
+{"at": 1789442515.132, "name": "bound_documents.hit", "pid": 410952, "seconds": 0.0, "thread": "ThreadPoolExecutor-11_2"}
+{"at": 1789442515.164, "name": "vector.index.hit", "pid": 410952, "seconds": 0.0, "thread": "ThreadPoolExecutor-11_3"}
+{"at": 1789442515.328, "count": 1, "matched": 1, "name": "vector.points_filter", "pid": 410952, "seconds": 0.095904, "thread": "ThreadPoolExecutor-11_3", "total": 51026}
+{"at": 1789442515.376, "count": 1, "name": "vector.embed_query", "pid": 410952, "seconds": 0.047459, "thread": "ThreadPoolExecutor-11_3"}
+{"at": 1789442515.398, "count": 1, "name": "vector.score", "pid": 410952, "seconds": 0.02076, "thread": "ThreadPoolExecutor-11_3"}
+{"at": 1789442515.402, "count": 1, "matched": 1, "name": "vector.rank", "pid": 410952, "seconds": 1.8e-05, "thread": "ThreadPoolExecutor-11_3"}
+{"at": 1789442515.404, "candidates": 1, "count": 1, "name": "vector.candidate_bind", "pid": 410952, "seconds": 0.000914, "thread": "ThreadPoolExecutor-11_3"}
+{"at": 1789442515.404, "candidates": 1, "count": 1, "name": "vector.sort", "pid": 410952, "seconds": 5e-06, "thread": "ThreadPoolExecutor-11_3"}
+{"at": 1789442529.241, "name": "bound_documents.hit", "pid": 410952, "seconds": 0.0, "thread": "ThreadPoolExecutor-13_0"}
+{"at": 1789442529.249, "name": "bound_documents.hit", "pid": 410952, "seconds": 0.0, "thread": "ThreadPoolExecutor-13_1"}
+{"at": 1789442529.269, "name": "bound_documents.hit", "pid": 410952, "seconds": 0.0, "thread": "ThreadPoolExecutor-13_2"}
+{"at": 1789442529.307, "name": "vector.snapshot.hit", "pid": 410952, "seconds": 0.0, "thread": "ThreadPoolExecutor-13_3"}
+{"at": 1789442529.391, "name": "vector.index.hit", "pid": 410952, "seconds": 0.0, "thread": "ThreadPoolExecutor-13_3"}
+{"at": 1789442529.485, "count": 1, "matched": 1, "name": "vector.points_filter", "pid": 410952, "seconds": 0.094243, "thread": "ThreadPoolExecutor-13_3", "total": 51026}
+{"at": 1789442529.532, "count": 1, "name": "vector.embed_query", "pid": 410952, "seconds": 0.044731, "thread": "ThreadPoolExecutor-13_3"}
+{"at": 1789442529.553, "count": 1, "name": "vector.score", "pid": 410952, "seconds": 0.020008, "thread": "ThreadPoolExecutor-13_3"}
+{"at": 1789442529.559, "count": 1, "matched": 1, "name": "vector.rank", "pid": 410952, "seconds": 2.6e-05, "thread": "ThreadPoolExecutor-13_3"}
+{"at": 1789442529.56, "candidates": 1, "count": 1, "name": "vector.candidate_bind", "pid": 410952, "seconds": 0.00104, "thread": "ThreadPoolExecutor-13_3"}
+{"at": 1789442529.56, "candidates": 1, "count": 1, "name": "vector.sort", "pid": 410952, "seconds": 8e-06, "thread": "ThreadPoolExecutor-13_3"}
+{"at": 1789442542.93, "name": "bound_documents.hit", "pid": 410952, "seconds": 0.0, "thread": "ThreadPoolExecutor-15_0"}
+{"at": 1789442542.931, "name": "vector.snapshot.hit", "pid": 410952, "seconds": 0.0, "thread": "ThreadPoolExecutor-15_2"}
+{"at": 1789442542.937, "name": "bound_documents.hit", "pid": 410952, "seconds": 0.0, "thread": "ThreadPoolExecutor-15_1"}
+{"at": 1789442542.953, "name": "vector.index.hit", "pid": 410952, "seconds": 0.0, "thread": "ThreadPoolExecutor-15_2"}
+{"at": 1789442543.607, "count": 1, "matched": 51026, "name": "vector.points_filter", "pid": 410952, "seconds": 0.512879, "thread": "ThreadPoolExecutor-15_2", "total": 51026}
+{"at": 1789442543.654, "count": 1, "name": "vector.embed_query", "pid": 410952, "seconds": 0.003628, "thread": "ThreadPoolExecutor-15_2"}
+{"at": 1789442543.758, "count": 1, "name": "vector.score", "pid": 410952, "seconds": 0.076605, "thread": "ThreadPoolExecutor-15_2"}
+{"at": 1789442544.374, "count": 1, "matched": 51026, "name": "vector.rank", "pid": 410952, "seconds": 0.263926, "thread": "ThreadPoolExecutor-15_2"}
+{"at": 1789442544.38, "candidates": 16, "count": 1, "name": "vector.candidate_bind", "pid": 410952, "seconds": 0.004759, "thread": "ThreadPoolExecutor-15_2"}
+{"at": 1789442544.381, "candidates": 16, "count": 1, "name": "vector.sort", "pid": 410952, "seconds": 2.3e-05, "thread": "ThreadPoolExecutor-15_2"}
+{"at": 1789442552.161, "name": "bound_documents.hit", "pid": 410952, "seconds": 0.0, "thread": "ThreadPoolExecutor-16_0"}
+{"at": 1789442552.168, "name": "vector.snapshot.hit", "pid": 410952, "seconds": 0.0, "thread": "ThreadPoolExecutor-16_3"}
+{"at": 1789442552.168, "name": "bound_documents.hit", "pid": 410952, "seconds": 0.0, "thread": "ThreadPoolExecutor-16_1"}
+{"at": 1789442552.191, "name": "vector.index.hit", "pid": 410952, "seconds": 0.0, "thread": "ThreadPoolExecutor-16_3"}
+{"at": 1789442552.218, "name": "bound_documents.hit", "pid": 410952, "seconds": 0.0, "thread": "ThreadPoolExecutor-16_2"}
+{"at": 1789442552.382, "count": 1, "matched": 1, "name": "vector.points_filter", "pid": 410952, "seconds": 0.162892, "thread": "ThreadPoolExecutor-16_3", "total": 51026}
+{"at": 1789442552.439, "count": 1, "name": "vector.embed_query", "pid": 410952, "seconds": 0.050137, "thread": "ThreadPoolExecutor-16_3"}
+{"at": 1789442552.461, "count": 1, "name": "vector.score", "pid": 410952, "seconds": 0.021069, "thread": "ThreadPoolExecutor-16_3"}
+{"at": 1789442552.473, "count": 1, "matched": 1, "name": "vector.rank", "pid": 410952, "seconds": 3.7e-05, "thread": "ThreadPoolExecutor-16_3"}
+{"at": 1789442552.475, "candidates": 1, "count": 1, "name": "vector.candidate_bind", "pid": 410952, "seconds": 0.001241, "thread": "ThreadPoolExecutor-16_3"}
+{"at": 1789442552.475, "candidates": 1, "count": 1, "name": "vector.sort", "pid": 410952, "seconds": 1.2e-05, "thread": "ThreadPoolExecutor-16_3"}
+{"at": 1789442563.882, "name": "bound_documents.hit", "pid": 410952, "seconds": 0.0, "thread": "ThreadPoolExecutor-18_0"}
+{"at": 1789442563.883, "name": "vector.snapshot.hit", "pid": 410952, "seconds": 0.0, "thread": "ThreadPoolExecutor-18_2"}
+{"at": 1789442563.889, "name": "bound_documents.hit", "pid": 410952, "seconds": 0.0, "thread": "ThreadPoolExecutor-18_1"}
+{"at": 1789442563.909, "name": "vector.index.hit", "pid": 410952, "seconds": 0.0, "thread": "ThreadPoolExecutor-18_2"}
+{"at": 1789442564.564, "count": 1, "matched": 51026, "name": "vector.points_filter", "pid": 410952, "seconds": 0.580198, "thread": "ThreadPoolExecutor-18_2", "total": 51026}
+{"at": 1789442564.635, "count": 1, "name": "vector.embed_query", "pid": 410952, "seconds": 0.0036, "thread": "ThreadPoolExecutor-18_2"}
+{"at": 1789442564.897, "count": 1, "name": "vector.score", "pid": 410952, "seconds": 0.093211, "thread": "ThreadPoolExecutor-18_2"}
+{"at": 1789442565.436, "count": 1, "matched": 51026, "name": "vector.rank", "pid": 410952, "seconds": 0.290773, "thread": "ThreadPoolExecutor-18_2"}
+{"at": 1789442565.466, "candidates": 16, "count": 1, "name": "vector.candidate_bind", "pid": 410952, "seconds": 0.008694, "thread": "ThreadPoolExecutor-18_2"}
+{"at": 1789442565.477, "candidates": 16, "count": 1, "name": "vector.sort", "pid": 410952, "seconds": 3.2e-05, "thread": "ThreadPoolExecutor-18_2"}
+{"at": 1789442572.02, "name": "bound_documents.hit", "pid": 410952, "seconds": 0.0, "thread": "ThreadPoolExecutor-19_0"}
+{"at": 1789442572.029, "name": "vector.snapshot.hit", "pid": 410952, "seconds": 0.0, "thread": "ThreadPoolExecutor-19_3"}
+{"at": 1789442572.029, "name": "bound_documents.hit", "pid": 410952, "seconds": 0.0, "thread": "ThreadPoolExecutor-19_1"}
+{"at": 1789442572.073, "name": "vector.index.hit", "pid": 410952, "seconds": 0.0, "thread": "ThreadPoolExecutor-19_3"}
+{"at": 1789442572.082, "name": "bound_documents.hit", "pid": 410952, "seconds": 0.0, "thread": "ThreadPoolExecutor-19_2"}
+{"at": 1789442572.22, "count": 1, "matched": 1, "name": "vector.points_filter", "pid": 410952, "seconds": 0.138309, "thread": "ThreadPoolExecutor-19_3", "total": 51026}
+{"at": 1789442572.223, "count": 1, "name": "vector.embed_query", "pid": 410952, "seconds": 0.0027, "thread": "ThreadPoolExecutor-19_3"}
+{"at": 1789442572.246, "count": 1, "name": "vector.score", "pid": 410952, "seconds": 0.020612, "thread": "ThreadPoolExecutor-19_3"}
+{"at": 1789442572.251, "count": 1, "matched": 1, "name": "vector.rank", "pid": 410952, "seconds": 1.9e-05, "thread": "ThreadPoolExecutor-19_3"}
+{"at": 1789442572.252, "candidates": 1, "count": 1, "name": "vector.candidate_bind", "pid": 410952, "seconds": 0.001087, "thread": "ThreadPoolExecutor-19_3"}
+{"at": 1789442572.252, "candidates": 1, "count": 1, "name": "vector.sort", "pid": 410952, "seconds": 6e-06, "thread": "ThreadPoolExecutor-19_3"}
+{"at": 1789442580.412, "name": "bound_documents.hit", "pid": 410952, "seconds": 0.0, "thread": "ThreadPoolExecutor-20_0"}
+{"at": 1789442580.414, "name": "vector.snapshot.hit", "pid": 410952, "seconds": 0.0, "thread": "ThreadPoolExecutor-20_2"}
+{"at": 1789442580.42, "name": "bound_documents.hit", "pid": 410952, "seconds": 0.0, "thread": "ThreadPoolExecutor-20_1"}
+{"at": 1789442580.471, "name": "vector.index.hit", "pid": 410952, "seconds": 0.0, "thread": "ThreadPoolExecutor-20_2"}
+{"at": 1789442581.044, "count": 1, "matched": 51026, "name": "vector.points_filter", "pid": 410952, "seconds": 0.516209, "thread": "ThreadPoolExecutor-20_2", "total": 51026}
+{"at": 1789442581.12, "count": 1, "name": "vector.embed_query", "pid": 410952, "seconds": 0.003627, "thread": "ThreadPoolExecutor-20_2"}
+{"at": 1789442581.252, "count": 1, "name": "vector.score", "pid": 410952, "seconds": 0.105033, "thread": "ThreadPoolExecutor-20_2"}
+{"at": 1789442581.73, "count": 1, "matched": 51026, "name": "vector.rank", "pid": 410952, "seconds": 0.328363, "thread": "ThreadPoolExecutor-20_2"}
+{"at": 1789442581.776, "candidates": 16, "count": 1, "name": "vector.candidate_bind", "pid": 410952, "seconds": 0.005579, "thread": "ThreadPoolExecutor-20_2"}
+{"at": 1789442581.802, "candidates": 16, "count": 1, "name": "vector.sort", "pid": 410952, "seconds": 4.7e-05, "thread": "ThreadPoolExecutor-20_2"}
+{"at": 1789442589.133, "name": "bound_documents.hit", "pid": 410952, "seconds": 0.0, "thread": "ThreadPoolExecutor-21_0"}
+{"at": 1789442589.135, "name": "vector.snapshot.hit", "pid": 410952, "seconds": 0.0, "thread": "ThreadPoolExecutor-21_3"}
+{"at": 1789442589.141, "name": "bound_documents.hit", "pid": 410952, "seconds": 0.0, "thread": "ThreadPoolExecutor-21_1"}
+{"at": 1789442589.18, "name": "vector.index.hit", "pid": 410952, "seconds": 0.0, "thread": "ThreadPoolExecutor-21_3"}
+{"at": 1789442589.193, "name": "bound_documents.hit", "pid": 410952, "seconds": 0.0, "thread": "ThreadPoolExecutor-21_2"}
+{"at": 1789442589.352, "count": 1, "matched": 1, "name": "vector.points_filter", "pid": 410952, "seconds": 0.158291, "thread": "ThreadPoolExecutor-21_3", "total": 51026}
+{"at": 1789442589.375, "count": 1, "name": "vector.embed_query", "pid": 410952, "seconds": 0.002658, "thread": "ThreadPoolExecutor-21_3"}
+{"at": 1789442589.398, "count": 1, "name": "vector.score", "pid": 410952, "seconds": 0.020946, "thread": "ThreadPoolExecutor-21_3"}
+{"at": 1789442589.402, "count": 1, "matched": 1, "name": "vector.rank", "pid": 410952, "seconds": 1.8e-05, "thread": "ThreadPoolExecutor-21_3"}
+{"at": 1789442589.403, "candidates": 1, "count": 1, "name": "vector.candidate_bind", "pid": 410952, "seconds": 0.000601, "thread": "ThreadPoolExecutor-21_3"}
+{"at": 1789442589.403, "candidates": 1, "count": 1, "name": "vector.sort", "pid": 410952, "seconds": 5e-06, "thread": "ThreadPoolExecutor-21_3"}
+{"at": 1789442596.268, "name": "bound_documents.hit", "pid": 410952, "seconds": 0.0, "thread": "ThreadPoolExecutor-22_0"}
+{"at": 1789442596.275, "name": "bound_documents.hit", "pid": 410952, "seconds": 0.0, "thread": "ThreadPoolExecutor-22_2"}
+{"at": 1789442596.275, "name": "vector.snapshot.hit", "pid": 410952, "seconds": 0.0, "thread": "ThreadPoolExecutor-22_1"}
+{"at": 1789442596.357, "name": "vector.index.hit", "pid": 410952, "seconds": 0.0, "thread": "ThreadPoolExecutor-22_1"}
+{"at": 1789442596.782, "count": 1, "matched": 51026, "name": "vector.points_filter", "pid": 410952, "seconds": 0.371432, "thread": "ThreadPoolExecutor-22_1", "total": 51026}
+{"at": 1789442596.817, "count": 1, "name": "vector.embed_query", "pid": 410952, "seconds": 0.003708, "thread": "ThreadPoolExecutor-22_1"}
+{"at": 1789442596.978, "count": 1, "name": "vector.score", "pid": 410952, "seconds": 0.067061, "thread": "ThreadPoolExecutor-22_1"}
+{"at": 1789442597.309, "count": 1, "matched": 51026, "name": "vector.rank", "pid": 410952, "seconds": 0.156511, "thread": "ThreadPoolExecutor-22_1"}
+{"at": 1789442597.354, "candidates": 16, "count": 1, "name": "vector.candidate_bind", "pid": 410952, "seconds": 0.003772, "thread": "ThreadPoolExecutor-22_1"}
+{"at": 1789442597.421, "candidates": 16, "count": 1, "name": "vector.sort", "pid": 410952, "seconds": 2.7e-05, "thread": "ThreadPoolExecutor-22_1"}
+{"at": 1789442604.288, "name": "bound_documents.hit", "pid": 410952, "seconds": 0.0, "thread": "ThreadPoolExecutor-23_0"}
+{"at": 1789442604.29, "name": "vector.snapshot.hit", "pid": 410952, "seconds": 0.0, "thread": "ThreadPoolExecutor-23_2"}
+{"at": 1789442604.295, "name": "bound_documents.hit", "pid": 410952, "seconds": 0.0, "thread": "ThreadPoolExecutor-23_1"}
+{"at": 1789442604.325, "name": "vector.index.hit", "pid": 410952, "seconds": 0.0, "thread": "ThreadPoolExecutor-23_2"}
+{"at": 1789442604.748, "count": 1, "matched": 51026, "name": "vector.points_filter", "pid": 410952, "seconds": 0.320268, "thread": "ThreadPoolExecutor-23_2", "total": 51026}
+{"at": 1789442604.931, "count": 1, "name": "vector.embed_query", "pid": 410952, "seconds": 0.164311, "thread": "ThreadPoolExecutor-23_2"}
+{"at": 1789442605.082, "count": 1, "name": "vector.score", "pid": 410952, "seconds": 0.074212, "thread": "ThreadPoolExecutor-23_2"}
+{"at": 1789442605.244, "count": 1, "matched": 51026, "name": "vector.rank", "pid": 410952, "seconds": 0.09412, "thread": "ThreadPoolExecutor-23_2"}
+{"at": 1789442605.28, "candidates": 16, "count": 1, "name": "vector.candidate_bind", "pid": 410952, "seconds": 0.029557, "thread": "ThreadPoolExecutor-23_2"}
+{"at": 1789442605.296, "candidates": 16, "count": 1, "name": "vector.sort", "pid": 410952, "seconds": 2e-05, "thread": "ThreadPoolExecutor-23_2"}
+{"at": 1789442627.063, "name": "bound_documents.hit", "pid": 410952, "seconds": 0.0, "thread": "ThreadPoolExecutor-26_0"}
+{"at": 1789442627.065, "name": "vector.snapshot.hit", "pid": 410952, "seconds": 0.0, "thread": "ThreadPoolExecutor-26_1"}
+{"at": 1789442627.07, "name": "bound_documents.hit", "pid": 410952, "seconds": 0.0, "thread": "ThreadPoolExecutor-26_2"}
+{"at": 1789442627.112, "name": "vector.index.hit", "pid": 410952, "seconds": 0.0, "thread": "ThreadPoolExecutor-26_1"}
+{"at": 1789442627.583, "count": 1, "matched": 51026, "name": "vector.points_filter", "pid": 410952, "seconds": 0.355829, "thread": "ThreadPoolExecutor-26_1", "total": 51026}
+{"at": 1789442627.644, "count": 1, "name": "vector.embed_query", "pid": 410952, "seconds": 0.003405, "thread": "ThreadPoolExecutor-26_1"}
+{"at": 1789442627.757, "count": 1, "name": "vector.score", "pid": 410952, "seconds": 0.081287, "thread": "ThreadPoolExecutor-26_1"}
+{"at": 1789442628.077, "count": 1, "matched": 51026, "name": "vector.rank", "pid": 410952, "seconds": 0.191585, "thread": "ThreadPoolExecutor-26_1"}
+{"at": 1789442628.207, "candidates": 16, "count": 1, "name": "vector.candidate_bind", "pid": 410952, "seconds": 0.086127, "thread": "ThreadPoolExecutor-26_1"}
+{"at": 1789442628.207, "candidates": 16, "count": 1, "name": "vector.sort", "pid": 410952, "seconds": 3.2e-05, "thread": "ThreadPoolExecutor-26_1"}
+{"at": 1789442637.371, "name": "bound_documents.hit", "pid": 410952, "seconds": 0.0, "thread": "ThreadPoolExecutor-27_0"}
+{"at": 1789442637.372, "name": "vector.snapshot.hit", "pid": 410952, "seconds": 0.0, "thread": "ThreadPoolExecutor-27_2"}
+{"at": 1789442637.377, "name": "bound_documents.hit", "pid": 410952, "seconds": 0.0, "thread": "ThreadPoolExecutor-27_1"}
+{"at": 1789442637.413, "name": "vector.index.hit", "pid": 410952, "seconds": 0.0, "thread": "ThreadPoolExecutor-27_2"}
+{"at": 1789442637.663, "count": 1, "matched": 7086, "name": "vector.points_filter", "pid": 410952, "seconds": 0.193246, "thread": "ThreadPoolExecutor-27_2", "total": 51026}
+{"at": 1789442637.78, "count": 1, "name": "vector.embed_query", "pid": 410952, "seconds": 0.106267, "thread": "ThreadPoolExecutor-27_2"}
+{"at": 1789442637.801, "count": 1, "name": "vector.score", "pid": 410952, "seconds": 0.020129, "thread": "ThreadPoolExecutor-27_2"}
+{"at": 1789442637.829, "count": 1, "matched": 7086, "name": "vector.rank", "pid": 410952, "seconds": 0.017897, "thread": "ThreadPoolExecutor-27_2"}
+{"at": 1789442637.882, "candidates": 128, "count": 1, "name": "vector.candidate_bind", "pid": 410952, "seconds": 0.053328, "thread": "ThreadPoolExecutor-27_2"}
+{"at": 1789442637.883, "candidates": 128, "count": 1, "name": "vector.sort", "pid": 410952, "seconds": 0.000106, "thread": "ThreadPoolExecutor-27_2"}
+{"at": 1789442644.887, "name": "bound_documents.hit", "pid": 410952, "seconds": 0.0, "thread": "ThreadPoolExecutor-29_0"}
+{"at": 1789442644.889, "name": "vector.snapshot.hit", "pid": 410952, "seconds": 0.0, "thread": "ThreadPoolExecutor-29_1"}
+{"at": 1789442644.894, "name": "bound_documents.hit", "pid": 410952, "seconds": 0.0, "thread": "ThreadPoolExecutor-29_2"}
+{"at": 1789442644.927, "name": "vector.index.hit", "pid": 410952, "seconds": 0.0, "thread": "ThreadPoolExecutor-29_1"}
+{"at": 1789442645.267, "count": 1, "matched": 7086, "name": "vector.points_filter", "pid": 410952, "seconds": 0.200765, "thread": "ThreadPoolExecutor-29_1", "total": 51026}
+{"at": 1789442645.277, "count": 1, "name": "vector.embed_query", "pid": 410952, "seconds": 0.003857, "thread": "ThreadPoolExecutor-29_1"}
+{"at": 1789442645.434, "count": 1, "name": "vector.score", "pid": 410952, "seconds": 0.138263, "thread": "ThreadPoolExecutor-29_1"}
+{"at": 1789442645.561, "count": 1, "matched": 7086, "name": "vector.rank", "pid": 410952, "seconds": 0.015644, "thread": "ThreadPoolExecutor-29_1"}
+{"at": 1789442645.714, "candidates": 128, "count": 1, "name": "vector.candidate_bind", "pid": 410952, "seconds": 0.136936, "thread": "ThreadPoolExecutor-29_1"}
+{"at": 1789442645.715, "candidates": 128, "count": 1, "name": "vector.sort", "pid": 410952, "seconds": 8.4e-05, "thread": "ThreadPoolExecutor-29_1"}
+{"at": 1789442658.489, "name": "bound_documents.hit", "pid": 410952, "seconds": 0.0, "thread": "ThreadPoolExecutor-30_0"}
+{"at": 1789442658.49, "name": "vector.snapshot.hit", "pid": 410952, "seconds": 0.0, "thread": "ThreadPoolExecutor-30_2"}
+{"at": 1789442658.496, "name": "bound_documents.hit", "pid": 410952, "seconds": 0.0, "thread": "ThreadPoolExecutor-30_1"}
+{"at": 1789442658.528, "name": "vector.index.hit", "pid": 410952, "seconds": 0.0, "thread": "ThreadPoolExecutor-30_2"}
+{"at": 1789442658.974, "count": 1, "matched": 7086, "name": "vector.points_filter", "pid": 410952, "seconds": 0.368693, "thread": "ThreadPoolExecutor-30_2", "total": 51026}
+{"at": 1789442658.991, "count": 1, "name": "vector.embed_query", "pid": 410952, "seconds": 0.003574, "thread": "ThreadPoolExecutor-30_2"}
+{"at": 1789442659.111, "count": 1, "name": "vector.score", "pid": 410952, "seconds": 0.0868, "thread": "ThreadPoolExecutor-30_2"}
+{"at": 1789442659.186, "count": 1, "matched": 7086, "name": "vector.rank", "pid": 410952, "seconds": 0.028675, "thread": "ThreadPoolExecutor-30_2"}
+{"at": 1789442659.991, "candidates": 128, "count": 1, "name": "vector.candidate_bind", "pid": 410952, "seconds": 0.761311, "thread": "ThreadPoolExecutor-30_2"}
+{"at": 1789442659.992, "candidates": 128, "count": 1, "name": "vector.sort", "pid": 410952, "seconds": 0.000214, "thread": "ThreadPoolExecutor-30_2"}
+{"at": 1789442663.935, "name": "bound_documents.hit", "pid": 410952, "seconds": 0.0, "thread": "ThreadPoolExecutor-31_0"}
+{"at": 1789442663.935, "name": "vector.snapshot.hit", "pid": 410952, "seconds": 0.0, "thread": "ThreadPoolExecutor-31_2"}
+{"at": 1789442663.941, "name": "bound_documents.hit", "pid": 410952, "seconds": 0.0, "thread": "ThreadPoolExecutor-31_1"}
+{"at": 1789442663.959, "name": "vector.index.hit", "pid": 410952, "seconds": 0.0, "thread": "ThreadPoolExecutor-31_2"}
+{"at": 1789442664.219, "count": 1, "matched": 7086, "name": "vector.points_filter", "pid": 410952, "seconds": 0.173649, "thread": "ThreadPoolExecutor-31_2", "total": 51026}
+{"at": 1789442664.249, "count": 1, "name": "vector.embed_query", "pid": 410952, "seconds": 0.003629, "thread": "ThreadPoolExecutor-31_2"}
+{"at": 1789442664.349, "count": 1, "name": "vector.score", "pid": 410952, "seconds": 0.041722, "thread": "ThreadPoolExecutor-31_2"}
+{"at": 1789442664.412, "count": 1, "matched": 7086, "name": "vector.rank", "pid": 410952, "seconds": 0.016504, "thread": "ThreadPoolExecutor-31_2"}
+{"at": 1789442664.787, "candidates": 128, "count": 1, "name": "vector.candidate_bind", "pid": 410952, "seconds": 0.343081, "thread": "ThreadPoolExecutor-31_2"}
+{"at": 1789442664.788, "candidates": 128, "count": 1, "name": "vector.sort", "pid": 410952, "seconds": 0.000159, "thread": "ThreadPoolExecutor-31_2"}
+{"at": 1789442678.676, "name": "bound_documents.hit", "pid": 410952, "seconds": 0.0, "thread": "ThreadPoolExecutor-32_0"}
+{"at": 1789442678.686, "name": "vector.snapshot.hit", "pid": 410952, "seconds": 0.0, "thread": "ThreadPoolExecutor-32_2"}
+{"at": 1789442678.696, "name": "bound_documents.hit", "pid": 410952, "seconds": 0.0, "thread": "ThreadPoolExecutor-32_1"}
+{"at": 1789442678.702, "name": "vector.index.hit", "pid": 410952, "seconds": 0.0, "thread": "ThreadPoolExecutor-32_2"}
+{"at": 1789442679.015, "count": 1, "matched": 7086, "name": "vector.points_filter", "pid": 410952, "seconds": 0.208535, "thread": "ThreadPoolExecutor-32_2", "total": 51026}
+{"at": 1789442679.04, "count": 1, "name": "vector.embed_query", "pid": 410952, "seconds": 0.003585, "thread": "ThreadPoolExecutor-32_2"}
+{"at": 1789442679.125, "count": 1, "name": "vector.score", "pid": 410952, "seconds": 0.051962, "thread": "ThreadPoolExecutor-32_2"}
+{"at": 1789442679.218, "count": 1, "matched": 7086, "name": "vector.rank", "pid": 410952, "seconds": 0.020227, "thread": "ThreadPoolExecutor-32_2"}
+{"at": 1789442679.876, "candidates": 128, "count": 1, "name": "vector.candidate_bind", "pid": 410952, "seconds": 0.652608, "thread": "ThreadPoolExecutor-32_2"}
+{"at": 1789442679.877, "candidates": 128, "count": 1, "name": "vector.sort", "pid": 410952, "seconds": 0.000163, "thread": "ThreadPoolExecutor-32_2"}
+{"at": 1789442685.477, "name": "bound_documents.hit", "pid": 410952, "seconds": 0.0, "thread": "ThreadPoolExecutor-33_0"}
+{"at": 1789442685.479, "name": "vector.snapshot.hit", "pid": 410952, "seconds": 0.0, "thread": "ThreadPoolExecutor-33_2"}
+{"at": 1789442685.49, "name": "bound_documents.hit", "pid": 410952, "seconds": 0.0, "thread": "ThreadPoolExecutor-33_1"}
+{"at": 1789442685.511, "name": "vector.index.hit", "pid": 410952, "seconds": 0.0, "thread": "ThreadPoolExecutor-33_2"}
+{"at": 1789442685.86, "count": 1, "matched": 7086, "name": "vector.points_filter", "pid": 410952, "seconds": 0.311839, "thread": "ThreadPoolExecutor-33_2", "total": 51026}
+{"at": 1789442685.88, "count": 1, "name": "vector.embed_query", "pid": 410952, "seconds": 0.003635, "thread": "ThreadPoolExecutor-33_2"}
+{"at": 1789442685.975, "count": 1, "name": "vector.score", "pid": 410952, "seconds": 0.053213, "thread": "ThreadPoolExecutor-33_2"}
+{"at": 1789442686.073, "count": 1, "matched": 7086, "name": "vector.rank", "pid": 410952, "seconds": 0.01049, "thread": "ThreadPoolExecutor-33_2"}
+{"at": 1789442686.277, "candidates": 128, "count": 1, "name": "vector.candidate_bind", "pid": 410952, "seconds": 0.196565, "thread": "ThreadPoolExecutor-33_2"}
+{"at": 1789442686.289, "candidates": 128, "count": 1, "name": "vector.sort", "pid": 410952, "seconds": 0.000103, "thread": "ThreadPoolExecutor-33_2"}
+{"at": 1789442708.173, "name": "bound_documents.hit", "pid": 410952, "seconds": 0.0, "thread": "ThreadPoolExecutor-34_0"}
+{"at": 1789442708.174, "name": "vector.snapshot.hit", "pid": 410952, "seconds": 0.0, "thread": "ThreadPoolExecutor-34_2"}
+{"at": 1789442708.18, "name": "bound_documents.hit", "pid": 410952, "seconds": 0.0, "thread": "ThreadPoolExecutor-34_1"}
+{"at": 1789442708.185, "name": "vector.index.hit", "pid": 410952, "seconds": 0.0, "thread": "ThreadPoolExecutor-34_2"}
+{"at": 1789442708.415, "count": 1, "matched": 7086, "name": "vector.points_filter", "pid": 410952, "seconds": 0.16243, "thread": "ThreadPoolExecutor-34_2", "total": 51026}
+{"at": 1789442708.438, "count": 1, "name": "vector.embed_query", "pid": 410952, "seconds": 0.003671, "thread": "ThreadPoolExecutor-34_2"}
+{"at": 1789442708.537, "count": 1, "name": "vector.score", "pid": 410952, "seconds": 0.062231, "thread": "ThreadPoolExecutor-34_2"}
+{"at": 1789442708.586, "count": 1, "matched": 7086, "name": "vector.rank", "pid": 410952, "seconds": 0.028019, "thread": "ThreadPoolExecutor-34_2"}
+{"at": 1789442709.218, "candidates": 128, "count": 1, "name": "vector.candidate_bind", "pid": 410952, "seconds": 0.621291, "thread": "ThreadPoolExecutor-34_2"}
+{"at": 1789442709.218, "candidates": 128, "count": 1, "name": "vector.sort", "pid": 410952, "seconds": 0.000223, "thread": "ThreadPoolExecutor-34_2"}

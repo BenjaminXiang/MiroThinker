@@ -105,7 +105,58 @@ served turn (checked against the scratch log after the probe run).
 
 ## T6 — after numbers, gates, probes
 
-(filled below once the post-fix scratch run + replay gate finish)
+Same scratch instance, same command file, same four sessions (fresh cookie per
+session), post-fix code:
+
+| Session / turn | Query | matched | vector lane before | vector lane after |
+|---|---|---|---|---|
+| S1 turn1 (fresh) | 字节跳动 | 51,026 | 18.54s | **1.41s** |
+| S1 turn2 (same) | 他们公司主要做什么 | 7,086 | 2.79s | **0.39s** |
+| S2 turn1 (fresh) | 字节跳动 | 51,026 | 19.25s | **1.00s** |
+| S3 turn1 (fresh) | 深圳有哪些做具身智能的公司 | 7,086 | ~3.0s | **0.74s** |
+
+Per-step inside the 51k-matched lane (before → after): `points_filter` 5.5–6.0s
+→ 0.21–0.42s; `prof_display` + binding 10.9–11.0s → rank 0.16s + bind 0.08s.
+First-answer wall time on the entity probe: 12.0–12.5s (unchanged web lane +
+answer generation dominate; the 18.5s vector wait is gone). Wall time on the
+category query: 19.5–32.7s, dominated by the web lane and the answer model.
+
+Process-scope counters for the fixed process (`timing-after.jsonl`), n per
+process lifetime:
+
+| Step | n | Meaning |
+|---|---|---|
+| `snapshot.open` / `snapshot.milvus_read_points` | 1 / 1 | index opened once, at boot |
+| `vector.snapshot.open` / `vector.npz_load` / `vector.index_build` | 1 / 1 / 1 | one open + one npz load + one derived-state build |
+| `vector.snapshot.hit` / `vector.index.hit` | 7 / 6 | every later lane call is a cache hit |
+| `bound_documents.read` / `bound_documents.hit` | 1 / 13 | lookup inventory read once |
+| `pack.mount` | 1 | mount, full verification (first mount of this pack) |
+
+Boot delta (T3.2): `vector.index_build` 5.74s + `vector.npz_load` 1.40s +
+`vector.snapshot.open` 5.22s are the added/re-used boot work, all **≪ the
+≈12.5-minute** boot-to-health measured on this pack, and each happens once per
+process instead of once per query.
+
+Mount receipt (T4.2): `/var/tmp/scratch-pack-294.mount-receipt.json`
+(`verification: full`, marker sha, per-file size + first/last-block
+fingerprints, file hashes, `mount_seconds`).
+
+Replay gate: `cd apps/admin-console && python scripts/replay_fix_round1.py
+--base-url http://127.0.0.1:18294 --out-dir …/replay-after` → **7/7 PASS**
+(`replay-after/report.json`, SSE transcripts in `replay-after/`).
+
+Probes (T6.2/T6.3), same probes before/after on the scratch:
+
+| Probe | Before | After |
+|---|---|---|
+| 字节跳动 → citations | `[local-source-a74ef21871fdf692]` (ByteDance Ltd.) | identical (all 3 turns) |
+| 优必选有哪些专利 → local patent citations | 32 ids | **32/32 identical** |
+| 深圳有哪些做具身智能的公司 (web lane) | 6 local ids | 5 local ids |
+
+The category-query difference is run-to-run variance, not a semantic change:
+three repeats on the same fixed process returned 5/5/6 local citations (web
+lane + answer model variance; this query is the known web-variance session
+G7). The two deterministic local probes are byte-identical sets.
 
 ## Deltas / deviations from the frozen contract
 

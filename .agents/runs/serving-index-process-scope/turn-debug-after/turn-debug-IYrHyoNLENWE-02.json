@@ -1,0 +1,170 @@
+{
+  "session_id": "session:chat:IYrHyoNLENWEI7PQ_xSRFa8rWIJg-Slb",
+  "turn_id": "turn:chat:sha256:cf5f52c7d88442f6119f54e2cd1bc790b525742472c4445fc2f1030f67bfc889",
+  "turn_count": 2,
+  "query": "他们公司主要做什么",
+  "planned_displayed_ids": [],
+  "recalled_handles": [
+    {
+      "id": "company-c-9cfce068e49ca7ab648e71ae",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "ByteDance Ltd."
+    },
+    {
+      "id": "web-handle:sha256:c8b37dea5f615ba951a8f09351fd7eef65080ec2019e3e4254cb0573893612fd",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "字节跳动招聘官网|字节跳动社招"
+    },
+    {
+      "id": "web-handle:sha256:68f68c6a3fb5d1e71b34fa6d3412ccc7ca2159a83a805a423f81f8fbea1cc2f3",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "字节跳动 - ByteDance"
+    },
+    {
+      "id": "web-handle:sha256:77e6f06d3932824f451a75266dc572f005d6eaeb36795457c2b2329947a442d8",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "字节跳动"
+    },
+    {
+      "id": "web-handle:sha256:40e66b6b116d0ab92bc9e4546280a3a7a77f1fb2732d91cb6997ba75520d7d64",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "字节跳动- 维基百科，自由的百科全书"
+    },
+    {
+      "id": "web-handle:sha256:5e91127d76cc58240bdb83efe2622f475dced83d8c68a4894886bec2e769a91f",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "内推啦,社招大佬和实习欢迎投递啦_招聘信息_牛客网"
+    },
+    {
+      "id": "web-handle:sha256:fe8e95813207a8d5746024d9ab355f0175c9c767e0d1d059869e5b8286da03f9",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "字节跳动 - 领英"
+    },
+    {
+      "id": "web-handle:sha256:0bab9a25eec2f6afdebcbb1e42cdb6ba7a1da59e7e6992bd9171f0ec26cde693",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "深圳市字节跳动科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:16a04de2918dbe610acbea09b29485cff94ee9fff88eb8910d45c364a16bbcaf",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "天津字节跳动科技有限公司-钉钉企业"
+    },
+    {
+      "id": "company-c-f38c66d141c97426517ee994",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市腾讯计算机系统有限公司"
+    },
+    {
+      "id": "company-c-b6f40a1c22a6fd88f4e0063b",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳酱紫文化传播有限公司"
+    },
+    {
+      "id": "company-c-93469de005891b5ea814505d",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳兔展智能科技有限公司"
+    },
+    {
+      "id": "company-c-41bb2086d4707339c2280d7f",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "淘屏新媒体有限公司"
+    },
+    {
+      "id": "company-c-ec895b6adfa7f8f5ca1b85fa",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳未来互娱科技有限公司"
+    },
+    {
+      "id": "company-c-b286be86102d9241869f25c2",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳蚂蚁空间网络科技有限公司"
+    },
+    {
+      "id": "company-c-3c3190263a6dc994bd264e22",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "众米科技（深圳）有限公司"
+    }
+  ],
+  "evidence_items": {
+    "total": 17,
+    "by_domain": {
+      "company": 17
+    },
+    "by_lane": {
+      "exact": 1,
+      "vector": 8,
+      "web": 8
+    },
+    "by_source_nature": {
+      "current_web": 8,
+      "local": 9
+    },
+    "with_claim_binding": 17
+  },
+  "protected_slots": [],
+  "requested_traversal": null,
+  "admitted_claims": {
+    "total": 4,
+    "by_predicate": {
+      "canonical_projection": 1,
+      "current_web_result": 3
+    },
+    "by_claim_type": {
+      "material_fact": 4
+    },
+    "patent_evidence_claims": 0
+  },
+  "committed_handle_ids": [
+    "company-c-9cfce068e49ca7ab648e71ae",
+    "web-handle:sha256:77e6f06d3932824f451a75266dc572f005d6eaeb36795457c2b2329947a442d8",
+    "web-handle:sha256:0bab9a25eec2f6afdebcbb1e42cdb6ba7a1da59e7e6992bd9171f0ec26cde693"
+  ],
+  "committed_names": [
+    "ByteDance Ltd.",
+    "字节跳动",
+    "深圳市字节跳动科技有限公司"
+  ],
+  "render_mode": "prose_renderer",
+  "response_mode": "answer",
+  "citations": 4,
+  "answer_chars": 407,
+  "lane_timings": [
+    [
+      "structured",
+      0.0
+    ],
+    [
+      "exact",
+      0.062
+    ],
+    [
+      "lexical",
+      0.26
+    ],
+    [
+      "vector",
+      0.387
+    ],
+    [
+      "web",
+      2.626
+    ]
+  ]
+}
