@@ -3,18 +3,14 @@
 RED pinned inside the GREEN: every fixture asserts the raw projection payload
 still carries the placeholder (pre-fix it flowed straight into
 ``content_terms`` / the F1 field-tier buckets), and the scrubbed terms drop
-it. The matcher families and the 140-char cap are locked by design.md §C1-3;
-the census semantics replicate g1_probe_fields.py so the packaging gate's
-counts stay comparable to the run14 read-only census.
+it. The matcher families and the 140-char cap are locked by design.md §C1-3.
+The packaging-side census this module used to carry was deleted in
+``drop-milvus-from-serving-pack`` (design.md §5); its test went with it.
 """
 
 from __future__ import annotations
 
-import hashlib
-import json
-import sqlite3
 from importlib import import_module
-from pathlib import Path
 from typing import Any
 
 
@@ -192,88 +188,3 @@ def test_projection_category_term_buckets_scrub_placeholder_fields() -> None:
     assert "深圳市示例科技有限公司" in product
     assert "ve1b系列产品" in product
     assert not any("未找到" in term for term in product)
-
-
-def test_scan_lookup_index_counts_and_is_read_only(tmp_path: Path) -> None:
-    scrub = _scrub()
-    db_path = tmp_path / "lookup.sqlite3"
-    connection = sqlite3.connect(db_path)
-    with connection:
-        connection.execute(
-            "CREATE TABLE lookup_document ("
-            "document_id TEXT PRIMARY KEY, release_id TEXT NOT NULL, "
-            "projection_id TEXT NOT NULL, canonical_object_id TEXT NOT NULL, "
-            "document_json TEXT NOT NULL) STRICT"
-        )
-        documents = (
-            (
-                "doc:1",
-                "lookup:exact-lookup:company",
-                "company-c-1",
-                {
-                    "name": "公司甲",
-                    "profile_summary": "未找到",
-                    "tech_tags": [{"name": "无"}],
-                    "product_description": "VE1未找到未找到B系列产品",
-                },
-            ),
-            (
-                "doc:2",
-                "lookup:exact-lookup:company",
-                "company-c-2",
-                {
-                    "name": "公司乙",
-                    "industry": {"name": "-"},
-                    "profile_summary": "正规正文",
-                },
-            ),
-            (
-                "doc:3",
-                "lookup:exact-lookup:professor",
-                "professor-p-1",
-                {"name": "教授丙", "paper_summary": "no data available"},
-            ),
-        )
-        for document_id, projection_id, canonical_id, content in documents:
-            connection.execute(
-                "INSERT INTO lookup_document VALUES (?, 'r1', ?, ?, ?)",
-                (
-                    document_id,
-                    projection_id,
-                    canonical_id,
-                    json.dumps(
-                        {"lookup_content": json.dumps(content, ensure_ascii=False)},
-                        ensure_ascii=False,
-                    ),
-                ),
-            )
-    connection.close()
-    before = hashlib.sha256(db_path.read_bytes()).hexdigest()
-
-    report = scrub.scan_lookup_index(db_path)
-
-    assert hashlib.sha256(db_path.read_bytes()).hexdigest() == before
-    assert report["schema_version"] == "canonical-v2-placeholder-scan-report-v1"
-    assert report["documents"] == {
-        "company": 2,
-        "paper": 0,
-        "patent": 0,
-        "professor": 1,
-    }
-    # field-level (g1 classify semantics): company profile_summary + tech_tags
-    # + industry; professor paper_summary
-    assert report["field_placeholder_hits"] == {
-        "company": 3,
-        "paper": 0,
-        "patent": 0,
-        "professor": 1,
-    }
-    assert report["by_field"]["company.profile_summary"] == 1
-    assert report["by_field"]["company.tech_tags"] == 1
-    assert report["by_field"]["company.industry"] == 1
-    # value-level: one exact whole-value 未找到, one glued run
-    assert report["whole_value_weizhaodao_exact"] == 1
-    assert report["glued_runs"] == 1
-    assert report["samples"]["company.product_description#glued"] == [
-        "VE1未找到未找到B系列产品"
-    ]

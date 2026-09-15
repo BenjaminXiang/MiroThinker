@@ -43,6 +43,7 @@
 - [数据正门承接（W3）](./2026-09-14-upload-seeds-log.md) — XLSX 上传导入（域白名单/哈希去重/咨询锁/干跑/serving 侧台账）+ 教授 seed 管理页；触发复用 W2 闸门，无 PG 时 503 且入口隐藏（顺带修掉 W2 闸门的孤儿进程缺陷）
 - [服务期索引装载提速](./2026-09-15-serving-index-load-log.md) — 归因：每查询重算全量派生态（5.1 万点逐个解析+建候选）才是首答慢的真因；进程级缓存+先排序后绑定+挂载收据，实体名首答向量轨 18.5s→亚秒级
 - [Web 轨主题相关性地板](./2026-09-15-web-lane-topical-floor-log.md) — 把与 query 无核心词元重叠、又非主体身份命中的网页从 web 轨召回中滤掉（确定性、不调模型，64 条 0.875ms；开关 CANONICAL_V2_WEB_TOPICAL_FLOOR）
+- [服务包瘦身：milvus.db 退出服务包](./2026-09-15-drop-milvus-from-serving-pack-log.md) — 1.03GB Milvus 无查询消费者却每次启动逐行回读（≈50s 卡在 mvccTs）；点对象改存 release 的 lookup.sqlite3 新增 `index_point` 表，v2 包不含 Milvus 且启动零 pymilvus；旧包(v1)照常可启；index root/pack 各省 850MB；占位符普查（无读者）删除
 
 ## 📜 历史参考（2026 年 4–7 月，主线已由本轮接手）
 

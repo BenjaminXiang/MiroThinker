@@ -16,9 +16,12 @@ Usage (from ``apps/miroflow-agent``)::
         --generator-run-id s12c-serving-pack-20260730-r1
 
 The script is read-only against the index root: it copies (never modifies)
-``lookup.sqlite3``, ``milvus.db``, and the index marker into the pack. It then
-dogfoods the pack through the real loader and refuses to ship a pack whose
-reconstructed authority differs from the envelope in any compared field.
+``lookup.sqlite3``, the index marker, and — for the v1 pack contract —
+``milvus.db`` into the pack. It then dogfoods the pack through the real loader
+and refuses to ship a pack whose reconstructed authority differs from the
+envelope in any compared field. ``--pack-schema-version canonical-v2-serving-pack-v2``
+seals the lookup-only contract (no Milvus file; the points come from the
+``index_point`` table of an already-converted index root).
 """
 
 from __future__ import annotations
@@ -53,12 +56,11 @@ from src.data_agents.canonical_v2 import (  # noqa: E402
     knowledge_read_isolated as isolated_read,
 )
 from src.data_agents.canonical_v2 import (  # noqa: E402
-    placeholder_scrub,
-)
-from src.data_agents.canonical_v2 import (  # noqa: E402
     serving_pack_loader as pack_loader,
 )
 from src.data_agents.canonical_v2.index_projection_isolated import (  # noqa: E402
+    IsolatedIndexTarget,
+    has_lookup_index_points,
     open_manifest_verified_index_snapshot,
 )
 from src.data_agents.canonical_v2.knowledge_build_isolated import (  # noqa: E402
@@ -132,11 +134,57 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--expected-release-id", required=True)
     parser.add_argument("--generator-run-id", required=True)
     parser.add_argument(
+        "--pack-schema-version",
+        choices=(pack_loader.PACK_SCHEMA_VERSION, pack_loader.PACK_SCHEMA_VERSION_V2),
+        default=pack_loader.PACK_SCHEMA_VERSION,
+        help="pack contract to seal: v1 registers milvus.db, v2 does not",
+    )
+    parser.add_argument(
         "--link",
         action="store_true",
         help="hard-link the index artifacts instead of copying them",
     )
     return parser
+
+
+def _rebound_index_target(
+    *,
+    index_root: Path,
+    expected_release_id: str,
+    expected_target_id: str,
+) -> Any:
+    """Bind one v2 seal to the marker of the index root it copies.
+
+    Reads the marker of ``index_root``, refuses any identity drift, and returns
+    the ``IsolatedIndexTarget`` the pack manifest and the dogfood open use.
+    """
+
+    marker_path = index_root / pack_loader.PACK_MARKER_FILENAME
+    if not marker_path.is_file() or marker_path.is_symlink():
+        raise ServingPackBuildError("v2 index root marker is missing or unsafe")
+    marker_bytes = marker_path.read_bytes()
+    try:
+        marker = json.loads(marker_bytes)
+    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise ServingPackBuildError("v2 index root marker is invalid JSON") from exc
+    if marker.get("schema_version") != "canonical-v2-isolated-index-target-v1":
+        raise ServingPackBuildError("v2 index root marker schema differs")
+    if marker.get("root") != str(index_root):
+        raise ServingPackBuildError("v2 index root marker root differs")
+    if marker.get("release_id") != expected_release_id:
+        raise ServingPackBuildError("v2 index root marker release differs")
+    if marker.get("target_id") != expected_target_id:
+        raise ServingPackBuildError("v2 index root marker target differs")
+    forbidden = tuple(Path(value) for value in marker.get("forbidden_milvus_paths") or ())
+    if not forbidden or any(not path.is_absolute() for path in forbidden):
+        raise ServingPackBuildError("v2 index root marker forbidden paths differ")
+    return IsolatedIndexTarget(
+        root=index_root,
+        target_id=expected_target_id,
+        release_id=expected_release_id,
+        forbidden_milvus_paths=forbidden,
+        marker_sha256=_sha256_bytes(marker_bytes),
+    )
 
 
 def _prepare_pack_dir(pack_dir: Path) -> Path:
@@ -165,6 +213,7 @@ def build_serving_pack(
     pack_dir: Path,
     expected_release_id: str,
     generator_run_id: str,
+    pack_schema_version: str = pack_loader.PACK_SCHEMA_VERSION,
     link: bool = False,
 ) -> ServingPackSummary:
     """Materialize and self-verify one serving pack; fail closed on any drift."""
@@ -187,6 +236,7 @@ def build_serving_pack(
         pack_dir=pack_dir,
         expected_release_id=expected_release_id,
         generator_run_id=generator_run_id,
+        pack_schema_version=pack_schema_version,
         link=link,
     )
 
@@ -201,10 +251,20 @@ def build_serving_pack_from_authority(
     pack_dir: Path,
     expected_release_id: str,
     generator_run_id: str,
+    pack_schema_version: str = pack_loader.PACK_SCHEMA_VERSION,
     link: bool = False,
 ) -> ServingPackSummary:
-    """Materialize one serving pack from an in-memory serving authority."""
+    """Materialize one serving pack from an in-memory serving authority.
 
+    ``pack_schema_version`` selects the pack contract: v1 (the default, the
+    Milvus-registered shape) or v2 (lookup-only, no Milvus file, points read
+    from the release lookup store). A v2 seal requires an index root that is
+    already in v2 form; producing one from a v1 root is the migration step
+    (``convert_isolated_index_to_v2``), not a silent conversion here.
+    """
+
+    index_filenames = pack_loader.pack_index_filenames(pack_schema_version)
+    point_store = pack_loader.pack_point_store(pack_schema_version)
     phases: dict[str, float] = {}
     started = monotonic()
 
@@ -230,7 +290,17 @@ def build_serving_pack_from_authority(
 
     target = bundle.index_target
     expected_index_root = Path(os.path.abspath(os.fspath(index_root)))
-    if Path(os.path.abspath(os.fspath(target.root))) != expected_index_root:
+    if pack_schema_version == pack_loader.PACK_SCHEMA_VERSION_V2:
+        # A v2 seal binds the artifacts it actually copies: the envelope's
+        # index target is the build-side (v1) root, while the converted v2 root
+        # is a re-materialization of the same authority, carrying its own marker
+        # whose bytes this seal registers and whose receipt the loader re-checks.
+        target = _rebound_index_target(
+            index_root=expected_index_root,
+            expected_release_id=expected_release_id,
+            expected_target_id=bundle.index_target.target_id,
+        )
+    elif Path(os.path.abspath(os.fspath(target.root))) != expected_index_root:
         raise ServingPackBuildError(
             "index target root differs from the explicit index root"
         )
@@ -238,52 +308,31 @@ def build_serving_pack_from_authority(
         raise ServingPackBuildError("index target id differs")
     embedding_model_id = bundle.index_result.policy_snapshot.embedding_model
 
+    if pack_schema_version == pack_loader.PACK_SCHEMA_VERSION_V2:
+        if not has_lookup_index_points(target.root / "lookup.sqlite3"):
+            raise ServingPackBuildError(
+                "v2 seal requires a converted index root (index_point store); "
+                "run the v1→v2 index migration first"
+            )
+        if (target.root / "milvus.db").exists():
+            raise ServingPackBuildError(
+                "v2 seal requires an index root without milvus.db"
+            )
+
     snapshot = open_manifest_verified_index_snapshot(
         target,
         expected_embedding_model_id=embedding_model_id,
+        point_store=point_store,
     )
     isolated_read._require_snapshot_matches_bundle(snapshot, bundle)
     mark("index_snapshot_verify")
 
-    # C1 batch 0 placeholder gate (close-workbook-gaps, design §C1-4): a
-    # read-only census of the source index (sqlite mode=ro&immutable=1),
-    # written as a side-car report NEXT TO the pack dir — never into the
-    # index (any write would break the manifest/release binding) and never
-    # into the pack (a stray file would also fail the fresh-dir check below
-    # and escape the manifest's fixed file list). First release is
-    # warn-only: counts print, the build never refuses on them.
-    normalized_pack_dir = Path(os.path.abspath(os.fspath(pack_dir)))
-    placeholder_report_path = normalized_pack_dir.parent / (
-        f"{normalized_pack_dir.name}.placeholder-scan-report.json"
-    )
-    try:
-        placeholder_report = placeholder_scrub.scan_lookup_index(
-            target.root / "lookup.sqlite3"
-        )
-        placeholder_report["release_id"] = release_id
-        placeholder_report["generator_run_id"] = generator_run_id
-        _write_json(placeholder_report_path, placeholder_report)
-        placeholder_totals = placeholder_report["field_placeholder_hits"]
-        print(
-            "phase=placeholder_scan"
-            f" report={placeholder_report_path}"
-            f" professor={placeholder_totals.get('professor', 0)}"
-            f" company={placeholder_totals.get('company', 0)}"
-            f" glued={placeholder_report['glued_runs']}"
-            " whole_value_weizhaodao="
-            f"{placeholder_report['whole_value_weizhaodao_exact']}",
-            flush=True,
-        )
-    except Exception as exc:  # warn-only first release (C1 batch 0)
-        print(f"phase=placeholder_scan warning={exc!r}", flush=True)
-    mark("placeholder_scan")
-
     destination = _prepare_pack_dir(pack_dir)
 
     file_sizes: dict[str, int] = {}
-    index_sources = (
-        (target.root / "lookup.sqlite3", pack_loader.PACK_INDEX_FILENAMES[0]),
-        (target.root / "milvus.db", pack_loader.PACK_INDEX_FILENAMES[1]),
+    index_sources = tuple(
+        (target.root / name, name) for name in index_filenames
+    ) + (
         (
             target.root / pack_loader.PACK_MARKER_FILENAME,
             pack_loader.PACK_MARKER_FILENAME,
@@ -374,7 +423,7 @@ def build_serving_pack_from_authority(
         file_hashes[name] = _sha256_bytes((destination / name).read_bytes())
 
     manifest = {
-        "schema_version": pack_loader.PACK_SCHEMA_VERSION,
+        "schema_version": pack_schema_version,
         "pack_id": f"serving-pack:{release_id}",
         "release_id": release_id,
         "index_root": str(target.root),
@@ -430,7 +479,8 @@ def build_serving_pack_from_authority(
     )
     rebuilt = authority.release_bundle
     if (
-        rebuilt.index_result != bundle.index_result
+        authority.manifest.schema_version != pack_schema_version
+        or rebuilt.index_result != bundle.index_result
         or rebuilt.relationship_projection_result
         != bundle.relationship_projection_result
         or authority.index_projection_request.candidate_projection_result
@@ -473,6 +523,7 @@ def main(args: Sequence[str] | None = None) -> int:
             pack_dir=namespace.pack_dir,
             expected_release_id=namespace.expected_release_id,
             generator_run_id=namespace.generator_run_id,
+            pack_schema_version=namespace.pack_schema_version,
             link=namespace.link,
         )
     except ServingPackBuildError as exc:
