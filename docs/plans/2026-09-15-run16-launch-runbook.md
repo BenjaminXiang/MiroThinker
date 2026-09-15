@@ -102,7 +102,7 @@ setsid nohup bash .agents/runs/full-column-serving-pack-rebuild/build-run16.sh \
   > .agents/runs/full-column-serving-pack-rebuild/build-run16-detached-nohup.log 2>&1 &
 ```
 
-监控与里程碑（watchdog + `build-run16.log`）：
+监控与里程碑（`watchdog-run16.log`（`watchdog-run16.sh`，5 分钟一行：pid/state/cpu/wchar/envelope）+ `build-run16.log`）：
 
 - `P4_MERGE_LEDGER` 打印：与 run15 的 `fields_filled` 对账（清洗会改数字，看量级）；
 - **决策批次 COMMIT 应 ≈4 分钟**；若仍是小时级 → F3 未生效，停下查 C2_0014 是否应用；
