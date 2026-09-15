@@ -4126,16 +4126,15 @@ def test_dual_web_lane_drops_off_subject_results_once_floor_is_met() -> None:
     locators = tuple(
         candidate.evidence[0].source_locator for candidate in result.candidates
     )
-    assert len(locators) == 3
+    # The topical floor (web-lane-topical-floor) drops the off-subject URL even
+    # though both providers returned it: dual-channel corroboration is a
+    # keep signal for the subject gate, not a topical one (run15 g5 — the
+    # reported sohu page was admitted exactly this way). See
+    # tests/canonical_v2/test_web_lane_topical_floor.py.
+    assert len(locators) == 2
     assert "https://siat.example/a" not in locators
-    # The off-subject URL both providers returned stays: dual-channel
-    # corroboration counts as a keep signal even without a subject hit.
-    assert shared_url in locators
-    assert set(locators) == {
-        shared_url,
-        "https://sut.example/1",
-        "https://sut.example/2",
-    }
+    assert shared_url not in locators
+    assert set(locators) == {"https://sut.example/1", "https://sut.example/2"}
 
 
 def test_dual_web_lane_backfills_off_subject_results_to_reach_floor() -> None:
@@ -4155,13 +4154,13 @@ def test_dual_web_lane_backfills_off_subject_results_to_reach_floor() -> None:
     locators = tuple(
         candidate.evidence[0].source_locator for candidate in result.candidates
     )
-    # kept (1 subject hit) < FLOOR (3): demoted results backfill in their
-    # original order instead of leaving the lane empty.
-    assert locators == (
-        "https://sut.example/1",
-        "https://siat.example/1",
-        "https://siat.example/2",
-    )
+    # kept (1 subject hit) < FLOOR (3): the subject gate backfills demoted
+    # results in their original order, and the topical floor (this slice) then
+    # removes them — they share no token with the query. The gate's own
+    # backfill is still covered by
+    # tests/canonical_v2/test_knowledge_serving_isolated.py::_gate fixtures and
+    # by test_gate_backfills_in_tier_order_below_floor.
+    assert locators == ("https://sut.example/1",)
 
 
 def test_dual_web_lane_without_bound_entities_keeps_round_robin_order() -> None:
