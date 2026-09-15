@@ -69,12 +69,49 @@
     }
   },
   "edges": {
-    "duplicate_pairs_before": 0,
-    "duplicate_samples": [],
-    "edges_after": 0,
-    "edges_before": 0,
-    "pairs_after": 0,
-    "pairs_before": 0
+    "duplicate_pairs_before": 31,
+    "duplicate_samples": [
+      {
+        "pair": [
+          "professor-c-42a612b871ed044108d02525",
+          "paper-c-52ac827d09930959f635cc51"
+        ],
+        "rows": 2
+      },
+      {
+        "pair": [
+          "professor-c-42a612b871ed044108d02525",
+          "paper-c-66f2ad8f24940024ef460470"
+        ],
+        "rows": 2
+      },
+      {
+        "pair": [
+          "professor-c-42a612b871ed044108d02525",
+          "paper-c-7440dd2a90b23936b1a3ded1"
+        ],
+        "rows": 2
+      },
+      {
+        "pair": [
+          "professor-c-42a612b871ed044108d02525",
+          "paper-c-76da12ce8e79f30afdd01cc1"
+        ],
+        "rows": 2
+      },
+      {
+        "pair": [
+          "professor-c-42a612b871ed044108d02525",
+          "paper-c-fa64b43b1931536a4e8e6ead"
+        ],
+        "rows": 2
+      }
+    ],
+    "edges_after": 10742,
+    "edges_before": 10773,
+    "pairs_after": 10742,
+    "pairs_before": 10742,
+    "skipped": false
   },
   "geography": {
     "after": {

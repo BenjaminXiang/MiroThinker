@@ -145,7 +145,8 @@ Slice: same branch/worktree, commits `791f3787..HEAD`.  Contract:
 
 ## Layer 1 - tests written in this slice
 
-`tests/canonical_v2/test_publication_cleaning_batch2.py`, **27 tests, all pass**:
+`tests/canonical_v2/test_publication_cleaning_batch2.py`, **26 tests, all pass**
+(26 test functions; the cluster table below sums to 26 - see §Review corrections):
 
 | cluster | count | what it locks |
 |---|---|---|
@@ -190,3 +191,40 @@ left intact.
 
 * The quality report inside a real isolated build (see Honesty).
 * run16 rebuild; retrieval effects of venue merging.
+
+## Review corrections (2026-09-15, post-handoff)
+
+Two findings from the owner's review of the D0-b handoff, both corrected here.
+
+### RC-1 - `out2/counts-batch2.json` reported zeros for edges
+
+* **Symptom**: the committed JSON had `edges_before/pairs_before/duplicate_pairs_before/
+  edges_after/pairs_after = 0` while the handoff cited 10,773 -> 10,742 and 31
+  duplicate pairs.
+* **Cause**: not a wrong aggregation key and not "never ran" - the *last* run of
+  the counter used `--skip-relationships` (it was re-run only to refresh the
+  dead-declaration metric) and **overwrote** the JSON the full run had produced.
+  The full run's numbers were real (10,773 / 10,742 / 31) and appear in the handoff
+  verbatim, but they were no longer in the artifact.
+* **Aggravating factor (fixed)**: the script wrote the same zero-valued edge keys
+  when skipping, so a skipped block was indistinguishable from "no duplicates
+  found".  A skipped run now writes `{"skipped": true}` and no counts at all.
+* **Fix + evidence**: full run re-executed against the sealed pack (read-only):
+  `{"skipped": false, "edges_before": 10773, "pairs_before": 10742,
+  "duplicate_pairs_before": 31, "edges_after": 10742, "pairs_after": 10742}`,
+  plus consistency assertions in the verification command chain
+  (`edges_before == 10773`, `duplicate_pairs_before == 31`, venue 5,204 -> 5,031,
+  applicants `{12565, 7614, 4951, 0, 0}`) - all pass.
+
+### RC-2 - test count was overstated (27 vs 26)
+
+* **Symptom**: the handoff and three documents said "27 new batch-2 tests".
+* **Cause**: a header typo.  `test_publication_cleaning_batch2.py` contains **26**
+  test functions (verified by `grep -c '^def test_'` and by pytest:
+  `78 passed` over both cleaning files = 52 batch-1 cases + 26 batch-2 cases);
+  the cluster table in this document already summed to 26.
+* **Fix**: corrected to 26 in `verification.md`, `acceptance.md`, `tasks.md`,
+  the human log and the change-ledger row.  No test was removed.
+
+Neither finding changes a rule, a gate or a measured data number; both were
+evidence-reporting defects and are corrected in the artifacts.

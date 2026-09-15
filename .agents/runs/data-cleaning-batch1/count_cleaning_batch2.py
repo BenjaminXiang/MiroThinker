@@ -189,14 +189,24 @@ def main() -> int:
             ),
             "top_after": merged.most_common(8),
         },
-        "edges": {
-            "edges_before": sum(edges.values()),
-            "pairs_before": len(edges),
-            "duplicate_pairs_before": len({k: v for k, v in edges.items() if v > 1}),
-            "edges_after": len(edges),
-            "pairs_after": len(edges),
-            "duplicate_samples": duplicate_samples,
-        },
+        # ``--skip-relationships`` writes NO edge numbers at all: a zeros block
+        # is indistinguishable from "no duplicates found" (D0-b review finding:
+        # a skipped run overwrote the full run's counts).
+        "edges": (
+            {"skipped": True}
+            if args.skip_relationships
+            else {
+                "skipped": False,
+                "edges_before": sum(edges.values()),
+                "pairs_before": len(edges),
+                "duplicate_pairs_before": len(
+                    {k: v for k, v in edges.items() if v > 1}
+                ),
+                "edges_after": len(edges),
+                "pairs_after": len(edges),
+                "duplicate_samples": duplicate_samples,
+            }
+        ),
         "applicants": dict(applicants_before),
         "geography": {
             "before": dict(geography_before),

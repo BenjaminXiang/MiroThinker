@@ -32,3 +32,6 @@ values in `.agents/runs/data-cleaning-batch1/fixtures/run15-samples.json`
 
 * Counts reconciled against the assessment report; run16 is where the cleaning
   becomes effective (no production data touched).
+* Evidence artifact: `out2/counts-batch2.json` from the **full** run
+  (`--pack-dir <sealed pack>`, relationships pass included).  Do not commit a
+  `--skip-relationships` run over it: that run now writes `{"skipped": true}`.

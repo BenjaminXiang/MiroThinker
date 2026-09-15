@@ -16,7 +16,7 @@
       table (design.md §5).
 - [x] 8. Build quality report written by the isolated materializer (audit +
       quarantine re-derived from source selections).
-- [x] 9. Tests: 27 new batch-2 tests; batch-1 expectations updated where the
+- [x] 9. Tests: 26 new batch-2 tests; batch-1 expectations updated where the
       batch-2 rules supersede them.
 - [x] 10. Replay counter (`count_cleaning_batch2.py`) over the sealed pack,
       emitting `out2/counts-batch2.json`.

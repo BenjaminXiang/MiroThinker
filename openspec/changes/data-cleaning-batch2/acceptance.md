@@ -15,7 +15,7 @@ Baseline pack: `serving-pack-run15-sealed` (read-only; `lookup.sqlite3` +
 | B6 | dead declarations decided field by field | 49 rows in the design table | 27 keep-with-fill-path, 22 retire-pending-catalog-revision; **0 deleted in this slice** (blocker documented) | pass with scope note |
 | B7 | build writes a quality report | file appears with correct content | writer + wiring unit-tested; `publication-quality-report.json` next to the index artifacts, not in the pack | pass with coverage note |
 | B8 | new fail-closed gates | refuse nameless applicant rows, foreign bindings, duplicate edges | unit tests (applicant x2, edge x1) + build de-duplication test | pass |
-| B9 | new tests | all green | 27 batch-2 tests + 52 batch-1 tests | pass |
+| B9 | new tests | all green | 26 batch-2 test functions (26 passed) + batch-1 file (52 cases, 24 functions) | pass |
 | B10 | existing related suites | no unexplained regressions | see verification.md | pass (2 suites pending in the run log) |
 | B11 | no production data touched | zero writes | pack opened read-only; report written only under an index root in tests | pass |
 | B12 | effective from run16 | stated | rules run at build time; run15 pack and 18188 untouched | pass |
