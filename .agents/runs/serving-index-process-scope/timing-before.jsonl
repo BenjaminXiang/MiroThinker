@@ -1,0 +1,10 @@
+{"at": 1789440586.09, "count": 1, "file": "lookup.sqlite3", "name": "pack.file_hash", "pid": 326980, "seconds": 0.797963, "thread": "MainThread"}
+{"at": 1789440587.38, "count": 1, "file": "milvus.db", "name": "pack.file_hash", "pid": 326980, "seconds": 1.290321, "thread": "MainThread"}
+{"at": 1789440587.381, "count": 1, "file": ".canonical-v2-isolated-index-target.json", "name": "pack.file_hash", "pid": 326980, "seconds": 8.3e-05, "thread": "MainThread"}
+{"at": 1789440624.265, "count": 1, "name": "pack.relationships_read", "pid": 326980, "seconds": 36.884484, "thread": "MainThread"}
+{"at": 1789440636.417, "count": 1, "name": "snapshot.lookup_docs", "pid": 326980, "seconds": 11.784365, "thread": "MainThread"}
+{"at": 1789440637.019, "count": 1, "name": "snapshot.milvus_client_open", "pid": 326980, "seconds": 0.576435, "thread": "MainThread"}
+{"at": 1789440637.02, "count": 1, "name": "snapshot.milvus_list_collections", "pid": 326980, "seconds": 0.000961, "thread": "MainThread"}
+{"at": 1789440687.582, "count": 1, "name": "snapshot.milvus_read_points", "pid": 326980, "seconds": 50.561761, "thread": "MainThread"}
+{"at": 1789440687.583, "count": 1, "name": "snapshot.milvus_close", "pid": 326980, "seconds": 6.8e-05, "thread": "MainThread"}
+{"at": 1789440689.047, "count": 1, "name": "snapshot.open", "pid": 326980, "seconds": 64.529623, "thread": "MainThread"}

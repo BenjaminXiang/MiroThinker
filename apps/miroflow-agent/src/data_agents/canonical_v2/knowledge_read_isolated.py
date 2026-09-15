@@ -131,6 +131,7 @@ from .knowledge_read import (
     create_ephemeral_query_planner,
 )
 from . import manual_recall_points
+from . import serving_timing
 from .relationship_projection import (
     CurrentRelationshipProjection,
     RelationshipCandidateOutcome,
@@ -8344,9 +8345,12 @@ def _read_bound_documents(
     with _BOUND_DOCUMENT_CACHE_LOCK:
         cached = _BOUND_DOCUMENT_CACHE.get(cache_key)
         if cached is not None and cached.physical_fingerprint == physical_fingerprint:
+            serving_timing.bump_counter("bound_documents.hit")
             return cached.documents
 
-    documents = read_isolated_lookup_documents(bundle.index_target)
+    with serving_timing.timed_step("bound_documents.read") as step:
+        step.annotate(root=cache_key[0])
+        documents = read_isolated_lookup_documents(bundle.index_target)
     if documents != bundle.index_result.lookup_documents:
         raise IndexProjectionIntegrityError(
             "physical lookup readback differs from the accepted release bundle"

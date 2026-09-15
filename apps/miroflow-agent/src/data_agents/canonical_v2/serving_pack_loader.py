@@ -53,6 +53,7 @@ from pydantic import Field
 
 from . import knowledge_read_isolated as iso
 from . import manual_recall_points
+from . import serving_timing
 from .candidate_projection import (
     CandidateProjectionRequest,
     CandidateProjectionResult,
@@ -555,15 +556,19 @@ def open_serving_pack_authority(
     # index at ``index_root`` is opened separately below; the copies make the
     # pack a complete, distributable artifact and prove it is intact.
     for name in (*PACK_INDEX_FILENAMES, PACK_MARKER_FILENAME):
-        path = _require_regular_file(pack_dir, name)
-        if _sha256_file(path) != manifest.files[name]:
-            raise ServingPackIntegrityError(f"serving pack file hash differs: {name}")
+        with serving_timing.timed_step("pack.file_hash", file=name):
+            path = _require_regular_file(pack_dir, name)
+            if _sha256_file(path) != manifest.files[name]:
+                raise ServingPackIntegrityError(
+                    f"serving pack file hash differs: {name}"
+                )
 
-    relationships_raw = _read_verified_json(
-        pack_dir,
-        PACK_RELATIONSHIPS_FILENAME,
-        manifest.files[PACK_RELATIONSHIPS_FILENAME],
-    )
+    with serving_timing.timed_step("pack.relationships_read"):
+        relationships_raw = _read_verified_json(
+            pack_dir,
+            PACK_RELATIONSHIPS_FILENAME,
+            manifest.files[PACK_RELATIONSHIPS_FILENAME],
+        )
     relationships = _require_mapping(
         relationships_raw, owner=PACK_RELATIONSHIPS_FILENAME
     )
@@ -639,10 +644,11 @@ def open_serving_pack_authority(
         forbidden_milvus_paths=forbidden_paths,
         marker_sha256=manifest.index_marker_sha256,
     )
-    snapshot = open_manifest_verified_index_snapshot(
-        index_target,
-        expected_embedding_model_id=manifest.embedding_model_id,
-    )
+    with serving_timing.timed_step("snapshot.open"):
+        snapshot = open_manifest_verified_index_snapshot(
+            index_target,
+            expected_embedding_model_id=manifest.embedding_model_id,
+        )
 
     index_result = IndexProjectionResult.model_construct(
         release_id=manifest.release_id,
@@ -1025,7 +1031,8 @@ def _warm_indexed_lexical_lane(bundle: IsolatedReleaseBundle) -> None:
 
     def warm() -> None:
         try:
-            iso._indexed_lexical_open(bundle)
+            with serving_timing.timed_step("lexical.warm_open"):
+                iso._indexed_lexical_open(bundle)
         except Exception:  # noqa: BLE001 - warm-up must never fail the boot
             _LOGGER.warning("lexical index warm-up failed", exc_info=True)
 
@@ -1156,19 +1163,22 @@ def _create_pack_vector_recall_adapter(
     def validated_snapshot() -> Any:
         nonlocal cached_snapshot
         if cached_snapshot is not None:
+            serving_timing.bump_counter("vector.snapshot.hit")
             return cached_snapshot
         with snapshot_lock:
             if cached_snapshot is None:
-                snapshot = iso._validated_vector_snapshot(
-                    preopened_snapshot
-                    if preopened_snapshot is not None
-                    else open_manifest_verified_index_snapshot(
-                        bundle.index_target,
-                        expected_embedding_model_id=expected_model_id,
+                with serving_timing.timed_step("vector.snapshot.open") as step:
+                    step.annotate(preopened=preopened_snapshot is not None)
+                    snapshot = iso._validated_vector_snapshot(
+                        preopened_snapshot
+                        if preopened_snapshot is not None
+                        else open_manifest_verified_index_snapshot(
+                            bundle.index_target,
+                            expected_embedding_model_id=expected_model_id,
+                        )
                     )
-                )
-                iso._require_snapshot_matches_bundle(snapshot, bundle)
-                cached_snapshot = snapshot
+                    iso._require_snapshot_matches_bundle(snapshot, bundle)
+                    cached_snapshot = snapshot
         return cached_snapshot
 
     def _load_persisted_index() -> tuple[dict[str, int], Any, Any] | None:
@@ -1177,12 +1187,15 @@ def _create_pack_vector_recall_adapter(
         snapshot = validated_snapshot()
         path = bundle.index_target.root / "vector_matrix.npz"
         try:
-            return iso.load_persisted_vector_matrix(
-                path,
-                points=snapshot.points,
-                expected_embedding_model_id=expected_model_id,
-                dimension=validating_adapter.dimension,
-            )
+            with serving_timing.timed_step("vector.npz_load") as step:
+                result = iso.load_persisted_vector_matrix(
+                    path,
+                    points=snapshot.points,
+                    expected_embedding_model_id=expected_model_id,
+                    dimension=validating_adapter.dimension,
+                )
+                step.annotate(points=len(snapshot.points))
+                return result
         except iso.IndexProjectionIntegrityError as exc:
             raise iso.IsolatedKnowledgeReadIntegrityError(
                 "persisted vector matrix failed integrity validation"
@@ -1227,11 +1240,12 @@ def _create_pack_vector_recall_adapter(
             raise iso.IsolatedKnowledgeReadIntegrityError(
                 "vectorized query has an invalid norm"
             )
-        scores = np.clip((matrix @ query) / (norms * query_norm), -1.0, 1.0)
-        if not np.all(np.isfinite(scores)):
-            raise iso.IsolatedKnowledgeReadIntegrityError(
-                "vectorized recall produced a non-finite score"
-            )
+        with serving_timing.timed_step("vector.score"):
+            scores = np.clip((matrix @ query) / (norms * query_norm), -1.0, 1.0)
+            if not np.all(np.isfinite(scores)):
+                raise iso.IsolatedKnowledgeReadIntegrityError(
+                    "vectorized recall produced a non-finite score"
+                )
         return positions, scores
 
     def vector_recall(request: LaneRequest) -> RetrievalLaneResult:
@@ -1252,28 +1266,32 @@ def _create_pack_vector_recall_adapter(
             return RetrievalLaneResult()
 
         snapshot = validated_snapshot()
-        points = tuple(
-            point
-            for point in snapshot.points
-            if iso._matches_vector_request(
-                request=validated_request,
-                point=point,
+        with serving_timing.timed_step("vector.points_filter") as step:
+            points = tuple(
+                point
+                for point in snapshot.points
+                if iso._matches_vector_request(
+                    request=validated_request,
+                    point=point,
+                )
             )
-        )
+            step.annotate(matched=len(points), total=len(snapshot.points))
         manual_points = manual_recall_points.manual_points_for_request(
             provider=manual_recall_provider,
             request=validated_request,
         )
         if not points and not manual_points:
             return RetrievalLaneResult()
-        professor_display_names = iso._professor_vector_display_names(
-            points=points,
-            lookup_documents=snapshot.lookup_documents,
-            bundle=bundle,
-        )
+        with serving_timing.timed_step("vector.prof_display"):
+            professor_display_names = iso._professor_vector_display_names(
+                points=points,
+                lookup_documents=snapshot.lookup_documents,
+                bundle=bundle,
+            )
 
         if vectorized_scoring:
-            query_vector = validating_adapter.embed_batch((query_topic,))[0]
+            with serving_timing.timed_step("vector.embed_query"):
+                query_vector = validating_adapter.embed_batch((query_topic,))[0]
             positions, scores = vectorized_scores(snapshot, query_vector)
             similarity_scores = tuple(
                 float(scores[positions[point.point_id]]) for point in points
@@ -1288,21 +1306,23 @@ def _create_pack_vector_recall_adapter(
                 for point_vector in vectors[1:]
             )
         query_embedding_sha256 = _canonical_sha256(query_vector)
-        candidates = [
-            iso._candidate_from_point(
-                request=validated_request,
-                bundle=bundle,
-                publication=publication,
-                point=point,
-                display_name=iso._vector_display_name(
-                    point,
-                    professor_display_names=professor_display_names,
-                ),
-                query_embedding_sha256=query_embedding_sha256,
-                similarity_score=score,
-            )
-            for point, score in zip(points, similarity_scores, strict=True)
-        ]
+        with serving_timing.timed_step("vector.candidate_bind") as step:
+            step.annotate(candidates=len(points))
+            candidates = [
+                iso._candidate_from_point(
+                    request=validated_request,
+                    bundle=bundle,
+                    publication=publication,
+                    point=point,
+                    display_name=iso._vector_display_name(
+                        point,
+                        professor_display_names=professor_display_names,
+                    ),
+                    query_embedding_sha256=query_embedding_sha256,
+                    similarity_score=score,
+                )
+                for point, score in zip(points, similarity_scores, strict=True)
+            ]
         manual_recall_points.append_manual_candidates(
             provider=manual_recall_provider,
             request=validated_request,
@@ -1311,20 +1331,22 @@ def _create_pack_vector_recall_adapter(
             embedding_model=expected_model_id,
             candidates=candidates,
         )
-        candidates.sort(
-            key=lambda candidate: (
-                -candidate.raw_score,
-                candidate.domain,
-                candidate.canonical_id or "",
-                candidate.evidence[0].local_projection_trace.projection_view
-                if isinstance(
-                    candidate.evidence[0].local_projection_trace,
-                    iso.LocalVectorTrace,
+        with serving_timing.timed_step("vector.sort") as step:
+            step.annotate(candidates=len(candidates))
+            candidates.sort(
+                key=lambda candidate: (
+                    -candidate.raw_score,
+                    candidate.domain,
+                    candidate.canonical_id or "",
+                    candidate.evidence[0].local_projection_trace.projection_view
+                    if isinstance(
+                        candidate.evidence[0].local_projection_trace,
+                        iso.LocalVectorTrace,
+                    )
+                    else "",
+                    candidate.evidence[0].source_locator,
                 )
-                else "",
-                candidate.evidence[0].source_locator,
             )
-        )
         return RetrievalLaneResult(
             candidates=tuple(candidates[: validated_request.max_candidates])
         )

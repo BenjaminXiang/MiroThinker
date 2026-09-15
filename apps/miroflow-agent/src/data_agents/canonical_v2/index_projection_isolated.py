@@ -18,6 +18,7 @@ import numpy as np
 
 from pydantic import Field, JsonValue, field_validator, model_validator
 
+from . import serving_timing
 from .contracts import ContractModel, NonEmptyStr, Sha256
 from .index_projection import (
     IndexProjectionActualState,
@@ -466,8 +467,9 @@ def _open_verified_index_snapshot(
         raise IndexProjectionIntegrityError(
             "isolated receipt projection identity differs from the marked target"
         )
-    documents = _read_lookup_documents_from_path(lookup_path)
-    lookup_manifests = _read_lookup_manifests_from_path(lookup_path)
+    with serving_timing.timed_step("snapshot.lookup_docs"):
+        documents = _read_lookup_documents_from_path(lookup_path)
+        lookup_manifests = _read_lookup_manifests_from_path(lookup_path)
     if any(document.release_id != target.release_id for document in documents):
         raise IndexProjectionIntegrityError(
             "isolated lookup readback contains a cross-release document"
@@ -490,22 +492,26 @@ def _open_verified_index_snapshot(
         raise IndexProjectionIntegrityError(
             "isolated Milvus store is missing or unsafe"
         )
-    client = _open_milvus_client(milvus_path)
+    with serving_timing.timed_step("snapshot.milvus_client_open"):
+        client = _open_milvus_client(milvus_path)
     try:
-        collections = tuple(sorted(client.list_collections()))
+        with serving_timing.timed_step("snapshot.milvus_list_collections"):
+            collections = tuple(sorted(client.list_collections()))
         if collections != (collection_name,):
             raise IndexProjectionIntegrityError(
                 "isolated target must contain exactly its recorded Milvus collection"
             )
-        points = _read_all_points_with_client(
-            client,
-            collection_name=collection_name,
-            embedding_adapter=embedding_adapter,
-        )
+        with serving_timing.timed_step("snapshot.milvus_read_points"):
+            points = _read_all_points_with_client(
+                client,
+                collection_name=collection_name,
+                embedding_adapter=embedding_adapter,
+            )
     finally:
         close = getattr(client, "close", None)
         if callable(close):
-            close()
+            with serving_timing.timed_step("snapshot.milvus_close"):
+                close()
     return IsolatedIndexSnapshot(
         receipt=receipt,
         points=points,
