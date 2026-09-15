@@ -3,8 +3,8 @@
 =================================== FAILURES ===================================
 _______ test_store_and_c2_0007_downgrade_share_release_first_lock_order ________
 
-target = _Target(database_url='postgresql+psycopg://miroflow@127.0.0.1:55458/miroflow_candidate_v2_pgtest_r1_s5b_eb58db3f', exp...er-fix/.agents/runs/rebuild-canonical-v2-knowledge-platform'), config=<alembic.config.Config object at 0x7f0ff1b3f590>)
-monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f0ff2253320>
+target = _Target(database_url='postgresql+psycopg://miroflow@127.0.0.1:55458/miroflow_candidate_v2_pgtest_r1_s5b_eb58db3f', exp...er-fix/.agents/runs/rebuild-canonical-v2-knowledge-platform'), config=<alembic.config.Config object at 0x7fb97efe4770>)
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7fb97e9ef0e0>
 
     def test_store_and_c2_0007_downgrade_share_release_first_lock_order(
         target: _Target,
@@ -173,7 +173,7 @@ INFO  [alembic.runtime.migration] Running downgrade C2_0011 -> C2_0010, Persist 
 INFO  [alembic.runtime.migration] Running downgrade C2_0011 -> C2_0010, Persist append-only Canonical V2 knowledge-gap operations.
 __ test_missing_parents_are_not_created_and_no_current_projection_is_durable ___
 
-target = _Target(database_url='postgresql+psycopg://miroflow@127.0.0.1:55458/miroflow_candidate_v2_pgtest_r1_s5b_52f4c8df', exp...er-fix/.agents/runs/rebuild-canonical-v2-knowledge-platform'), config=<alembic.config.Config object at 0x7f0ff1e3d070>)
+target = _Target(database_url='postgresql+psycopg://miroflow@127.0.0.1:55458/miroflow_candidate_v2_pgtest_r1_s5b_52f4c8df', exp...er-fix/.agents/runs/rebuild-canonical-v2-knowledge-platform'), config=<alembic.config.Config object at 0x7fb97ed88e30>)
 
     def test_missing_parents_are_not_created_and_no_current_projection_is_durable(
         target: _Target,
@@ -3561,4 +3561,4 @@ PASSED tests/canonical_v2/test_domain_inclusion_assertion_order.py::test_python_
 PASSED tests/canonical_v2/test_domain_inclusion_assertion_order.py::test_reconstructed_order_matches_write_hash
 FAILED tests/canonical_v2/test_canonical_decision_postgres.py::test_store_and_c2_0007_downgrade_share_release_first_lock_order
 FAILED tests/canonical_v2/test_canonical_decision_postgres.py::test_missing_parents_are_not_created_and_no_current_projection_is_durable
-2 failed, 98 passed in 130.51s (0:02:10)
+2 failed, 98 passed in 131.78s (0:02:11)

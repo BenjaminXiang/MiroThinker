@@ -422,9 +422,9 @@ class IdentityResolutionRequest(ContractModel):
         reviewed_source_ids: set[str] = set()
         assertion_ids_by_source: dict[str, set[str]] = {}
         for assertion in self.identity_assertions:
-            assertion_ids_by_source.setdefault(
-                assertion.source_identity_id, set()
-            ).add(assertion.assertion_id)
+            assertion_ids_by_source.setdefault(assertion.source_identity_id, set()).add(
+                assertion.assertion_id
+            )
         for resolution in self.human_review_resolutions:
             case = resolution.review_case
             case_source_ids = set(case.source_identity_ids)
@@ -1776,23 +1776,34 @@ def validate_identity_resolution_result(
         for source in validated_request.source_identities
     }
     source_ids = set(source_by_id)
+    source_position = {
+        source.source_identity_id: index
+        for index, source in enumerate(validated_request.source_identities)
+    }
     assertion_by_id = {
         assertion.assertion_id: assertion
         for assertion in validated_request.identity_assertions
     }
+    assertion_ids_by_source: dict[str, list[str]] = {}
+    for assertion in validated_request.identity_assertions:
+        assertion_ids_by_source.setdefault(assertion.source_identity_id, []).append(
+            assertion.assertion_id
+        )
     verdict_source_ids: set[str] = set()
     for verdict in validated_result.candidate_verdicts:
         current_verdict_source_ids = set(verdict.source_identity_ids)
         component_sources = tuple(
-            source
-            for source in validated_request.source_identities
-            if source.source_identity_id in current_verdict_source_ids
+            source_by_id[source_id]
+            for source_id in sorted(
+                current_verdict_source_ids & source_position.keys(),
+                key=source_position.__getitem__,
+            )
         )
         component_request = _component_request(validated_request, component_sources)
         expected_assertion_ids = {
-            assertion.assertion_id
-            for assertion in validated_request.identity_assertions
-            if assertion.source_identity_id in current_verdict_source_ids
+            assertion_id
+            for source_id in current_verdict_source_ids
+            for assertion_id in assertion_ids_by_source.get(source_id, ())
         }
         if (
             not current_verdict_source_ids <= source_ids

@@ -122,9 +122,19 @@ and replaces three functions.
 
 ## 8. Python side (`canonical_identity_resolution.py`)
 
-See `python-scan-before-after.md`: the assertion tuple is iterated once per
-validation instead of once per source (RED: 5 iterations at 4 sources, 33 at 32;
-GREEN: 1). Grouping in `validate_request` is a single pass
-(`assertion_ids_by_source`), and `_has_evidence_bound_internal_identifier` now
-takes a `(source_id, field_path)` index built once per entry point.
-All 58 identity-resolution contract tests pass.
+See `python-scan-before-after.md` and `bench-identity-validation.txt`:
+
+- iteration counts (RED/GREEN): the assertion tuple is iterated once per
+  validation instead of once per source — **5 iterations at 4 sources / 33 at 32
+  before, 1 after** (new gated test, `test_identity_request_validation_…`);
+- time: `validate_identity_resolution_result` on 500 / 2,000 / 10,000 sources is
+  **1.17× / 1.53× / 1.95×** faster (the removed work is the per-source rescan);
+- same-shape siblings swept: per-verdict re-filtering of all assertions and all
+  sources in `validate_identity_resolution_result` replaced by a pre-built
+  `source_id → assertion_ids` map plus a positional order index (run15: 491
+  verdicts × 620,798 assertions ≈ 3×10⁸ element tests removed; ordering preserved
+  exactly so component hashes are unchanged);
+- `cProfile` after the change shows the residual is pydantic revalidation / JSON
+  encoding / `_require_unique`, not scanning.
+- All 60 identity-resolution contract tests pass (58 pre-existing + 2 new
+  parametrised cases).
