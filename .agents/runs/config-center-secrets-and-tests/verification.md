@@ -95,6 +95,12 @@ disabled_reason=...)` short-circuit with `called` in the result, API wiring for
 `managed_secrets.SECRET_SPECS`, page runtime pills/notes. Behaviour of the serving path
 itself is untouched.
 
+**Suite re-run after the follow-up** (`full-suite-after-followup.txt`): **96 failed / 1250 passed /
+30 skipped / 122 errors** — the `FAILED`/`ERROR` set is **identical** to the baseline
+(`diff` of the sorted lists: no output), and the pass count rose by **+58** = the 38 cases
+from the first slice plus the 19 added here (the 20th difference is the preview-UI case that
+flaked in run 1 and passed this time).
+
 **New tests (this follow-up): 19** — `test_canonical_v2_runtime_sources.py` 13 (disabled
 rerank reporting, frozen-bundle embedding endpoint + local credential, `EMBEDDING_API_KEY`
 ignored, chat-profile LLM incl. profile switch, pinned hosts, env-over-file, pending vs
