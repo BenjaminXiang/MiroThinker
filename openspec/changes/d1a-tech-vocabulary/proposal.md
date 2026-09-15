@@ -31,7 +31,9 @@ can answer "which Shenzhen companies build delivery robots".
 1. **A controlled concept vocabulary** with, per concept, a canonical name, a
    definition and the evidence forms that qualify a company for it - induced by an
    LLM with world knowledge (user rule §8.5), in batches, covering every distinct
-   `tech_tags` value (4,945) and every distinct `industry` value (41).
+   `tech_tags` value (4,945) and every distinct `industry` value (41).  Measured:
+   **447 concepts** (325 technology / 122 industry) from 12 chunked induction calls,
+   a **11x reduction** of the published value space.
 2. **A recorded decision bundle** holding the exact provider transcripts, provider,
    model and prompt version. The build **replays** the bundle instead of calling an
    LLM, so a rebuild reproduces the mapping byte for byte (R21 guard #2).
@@ -39,7 +41,10 @@ can answer "which Shenzhen companies build delivery robots".
    values become vocabulary concept references, at the same seam where D0 cleaning
    happens, so lookup documents *and* vector content inherit the mapping. A value the
    LLM could not decide stays published **verbatim** and is counted as `unmapped` -
-   nothing is guessed and nothing is dropped.
+   nothing is guessed and nothing is dropped.  Measured on the run15 copy:
+   4,945 distinct values -> 4,713 mapped (95.31%) + 232 unmapped, published distinct
+   673, rows 5,485 -> 6,130, tags per company 0.774 -> 0.865, 5,250 companies carry a
+   concept, and no company loses a tag.
 4. **A vocabulary gate and report section**: unique value count, concept count,
    mapping coverage, unmapped count and category-probe support go into
    `publication-quality-report.json`; the build fails when coverage drops below the

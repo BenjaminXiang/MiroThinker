@@ -130,34 +130,69 @@ class TechnicalVocabulary(ContractModel):
     unmapped: tuple[UnmappedTagValue, ...]
     content_sha256: Sha256
 
+    def model_post_init(self, __context: Any) -> None:
+        # Lookups run once per projected company document, so the four scans the
+        # first version did per value (447 concepts x every tag of every company)
+        # are indexed once, here, instead of on the build's hot path.
+        object.__setattr__(
+            self, "_by_id", {concept.concept_id: concept for concept in self.concepts}
+        )
+        object.__setattr__(
+            self,
+            "_by_name",
+            {concept.canonical_name: concept for concept in self.concepts},
+        )
+        object.__setattr__(
+            self,
+            "_concept_ids_by_key",
+            {
+                (mapping.field, mapping.value): mapping.concept_ids
+                for mapping in self.mappings
+            },
+        )
+        object.__setattr__(
+            self,
+            "_unmapped_by_field",
+            {
+                field: tuple(item.value for item in self.unmapped if item.field == field)
+                for field in MAPPED_FIELDS
+            },
+        )
+
+    def concept(self, concept_id: str) -> VocabularyConcept:
+        concept = cast(dict[str, VocabularyConcept], getattr(self, "_by_id", {})).get(
+            concept_id
+        )
+        if concept is None:
+            raise VocabularyIntegrityError(f"unknown vocabulary concept: {concept_id}")
+        return concept
+
     def concept_name(self, concept_id: str) -> str:
-        for concept in self.concepts:
-            if concept.concept_id == concept_id:
-                return concept.canonical_name
-        raise VocabularyIntegrityError(f"unknown vocabulary concept: {concept_id}")
+        return self.concept(concept_id).canonical_name
 
     def concept_names(self, concept_ids: Iterable[str]) -> tuple[str, ...]:
         return tuple(sorted({self.concept_name(item) for item in concept_ids}))
 
     def concept_by_name(self, canonical_name: str) -> VocabularyConcept | None:
-        for concept in self.concepts:
-            if concept.canonical_name == canonical_name:
-                return concept
-        return None
+        return cast(
+            dict[str, VocabularyConcept], getattr(self, "_by_name", {})
+        ).get(canonical_name)
 
     def concept_ids_for(self, field: str, value: str) -> tuple[str, ...]:
         source_field = FIELD_SOURCE_KEY.get(field, field)
-        for mapping in self.mappings:
-            if mapping.field == source_field and mapping.value == value:
-                return mapping.concept_ids
-        return ()
+        return cast(
+            dict[tuple[str, str], tuple[str, ...]],
+            getattr(self, "_concept_ids_by_key", {}),
+        ).get((source_field, value), ())
 
     def is_concept_name(self, value: str) -> bool:
-        return self.concept_by_name(value) is not None
+        return value in cast(dict[str, VocabularyConcept], getattr(self, "_by_name", {}))
 
     def unmapped_values(self, field: str) -> tuple[str, ...]:
         source_field = FIELD_SOURCE_KEY.get(field, field)
-        return tuple(item.value for item in self.unmapped if item.field == source_field)
+        return cast(
+            dict[str, tuple[str, ...]], getattr(self, "_unmapped_by_field", {})
+        ).get(source_field, ())
 
     def as_document(self) -> dict[str, JsonValue]:
         return cast(dict[str, JsonValue], self.model_dump(mode="json"))
