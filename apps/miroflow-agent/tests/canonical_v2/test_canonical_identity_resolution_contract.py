@@ -1732,6 +1732,62 @@ def test_identity_validation_indexes_request_assertions_for_all_decisions(
     assert iteration_count <= 10
 
 
+@pytest.mark.parametrize("source_count", (4, 32))
+def test_identity_request_validation_indexes_assertions_by_source_once(
+    source_count: int,
+) -> None:
+    module = _module()
+    sources = tuple(
+        _source_identity(
+            module,
+            f"evidence-bound-person-{index:02d}",
+            source_system="singleton-fixture",
+            source_key=f"singleton:person:{index:02d}",
+            entity_type="person",
+            normalized_keys={
+                "name_key": f"evidence bound person {index:02d}",
+                "orcid": f"0000-0001-2345-{index:04d}",
+            },
+        )
+        for index in range(source_count)
+    )
+    assertions = tuple(
+        _identity_assertion(
+            module,
+            f"assertion-evidence-bound-person-{index:02d}",
+            source,
+            field_path="identity.orcid",
+            value=f"https://orcid.org/0000-0001-2345-{index:04d}",
+        )
+        for index, source in enumerate(sources)
+    )
+    request = _request(
+        module,
+        source_identities=sources,
+        identity_assertions=assertions,
+        identity_method_version="canonical-identity-resolution-person-v1",
+    )
+    result = module.create_ephemeral_canonical_identity_resolution_engine().resolve(
+        request
+    )
+    assert len(result.identity_decisions) == source_count
+
+    iteration_count = 0
+
+    class CountingAssertions(tuple[Any, ...]):
+        def __iter__(self) -> Any:
+            nonlocal iteration_count
+            iteration_count += 1
+            return super().__iter__()
+
+    instrumented = request.model_copy(
+        update={"identity_assertions": CountingAssertions(request.identity_assertions)}
+    )
+    assert instrumented.validate_request() == instrumented
+    # One grouping pass; the count must not grow with the number of sources.
+    assert iteration_count <= 2
+
+
 def test_identity_resolution_indexes_recall_keys_instead_of_comparing_every_pair(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
