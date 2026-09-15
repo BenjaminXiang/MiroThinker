@@ -86,7 +86,7 @@ Same defect (per-row `EXISTS` on a review-decision table without a supporting
 index): field (41.9 ms/row), relationship (2.09 ms/row), identity (6.08 ms/row,
 9 mounts). Different defect, recorded not fixed:
 `validate_identity_resolution_release` (release-level topology re-derived per
-row, 14 mounts; probe 1.65 s/event, faithfulness unproven — see
+row, 14 mounts, ≈704,760 events; probe 1.65 s/event, faithfulness unproven — see
 `verification.md` §5) and `validate_field_temporal_binding` (1.27 M events ×
 153 µs; index-backed parts already cheap). Not a defect at all:
 `domain_inclusion_decision_assertion`'s owner validator measured 1.67 µs/row on

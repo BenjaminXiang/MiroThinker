@@ -24,7 +24,7 @@ dispatch.
 | 3 | `validate_relationship_human_review_binding`, branch ① | 21,546 | 2,086 µs/row | 26 µs/row | fixed |
 | 4 | `validate_identity_human_review_binding` (9 mounts) | ≈532,000 | 6,083 µs/row | 22 µs/row | fixed |
 | 5 | `validate_field_temporal_binding` (2 mounts) | 1,270,479 | 153 µs/row (≈54 min) | 159 µs/row | same-cost: index already used; residual is the selected-evidence join, not a scan of the decision table |
-| 6 | `validate_identity_resolution_release` (14 mounts) | ≈500,000 | 1,647,000 µs/row | unchanged | **different disease** — release-level topology re-derived per row; see §5 |
+| 6 | `validate_identity_resolution_release` (14 mounts) | ≈704,760 | 1,647,000 µs/row | unchanged | **different disease** — release-level topology re-derived per row; see §5 |
 | 7 | `validate_domain_inclusion_assertion_owner` | 424,440 | 1.67 µs/row | 1.5 µs/row | **not the disease** (already index-backed; the analysis' sibling guess is measured and answered) |
 
 Raw data: `sweep-run15.json` (catalog sweep: 36 deferred row-level mounts on 20
@@ -67,7 +67,7 @@ slice.
 `validate_identity_resolution_release` is mounted on 14 tables and re-validates
 the release-wide identity topology (identity decisions, lineage, memberships,
 output allocations) for **every inserted row**: 1.65 s/event on the run15 copy,
-≈500k events. If that per-event cost held in the real pipeline the identity
+≈704,760 events. If that per-event cost held in the real pipeline the identity
 phase alone would exceed the whole run15 wall clock, and the run15 phase
 timestamps (`identity_resolution_run` 02:28 +0800 → `relationship_projection_run`
 18:55 +0800, with the decision `COMMIT` inside that window) do not leave room for

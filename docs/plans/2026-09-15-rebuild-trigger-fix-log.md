@@ -34,7 +34,7 @@
 | relationship 评审绑定 第①段 | 21,546 | 2,086 µs/行 | 26 µs/行 |
 | identity 评审绑定（9 个挂载表） | ≈53.2 万 | 6,083 µs/行 ⇒ ≈54 min | 22 µs/行 ⇒ ≈12 s |
 | 入域判定 owner 校验 | 424,440 | 1.67 µs/行 | 1.5 µs/行（本就命中索引，**不是**同类病） |
-| `validate_identity_resolution_release`（14 个挂载表） | ≈50 万 | 1,647,000 µs/行 | 未改（**不同病**，见下） |
+| `validate_identity_resolution_release`（14 个挂载表） | ≈70.5 万 | 1,647,000 µs/行 | 未改（**不同病**，见下） |
 | `validate_field_temporal_binding` | 1,270,479 | 153 µs/行 ⇒ ≈54 min | 159 µs/行（索引本就命中，残值来自 selected 证据 join） |
 
 `EXPLAIN ANALYZE`（副本库，同一字面量）：field 判定 **43.061 ms → 0.015 ms**（2870×），
@@ -49,7 +49,7 @@ relationship **4.807 ms → 0.008 ms**，identity **7.717 ms → 0.038 ms**。
 - **入域判定不是同类病**（实测 1.67 µs/行，已有主键索引）——分析文档 §11 的猜测被数据否掉，
   不必改。
 - **`validate_identity_resolution_release` 是另一类病**：它把"整个 release 的身份拓扑"
-  这件事按**行**重推（14 个挂载表、约 50 万次）。副本库探针给 1.65 s/行，按此推算
+  这件事按**行**重推（14 个挂载表、约 70.5 万次）。副本库探针给 1.65 s/行，按此推算
   身份阶段要 20 h 以上——但 run15 分阶段时间戳（`identity_resolution_run` 02:28 →
   `relationship_projection_run` 18:55，中间还夹着 12h40m 的那次 COMMIT）根本装不下，
   所以探针在这里**未被证明可信**（真实插入窗口里数据可能还没铺满）。结论：记为本片
