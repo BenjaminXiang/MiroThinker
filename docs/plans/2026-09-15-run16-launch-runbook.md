@@ -22,7 +22,7 @@ run15 包已在线（18188，2026-09-15 00:40 切换）。run16 把数据线三�
 | 5 | 合并集成定向测试 + C1 重放复跑 | ✅ | 6 文件 168 passed；revision 文件 8 passed；C1 重放与记录**逐字一致**（7,611 边 / 0 缺失；仅抽样列表顺序不同） |
 | 6 | **D1-a 受控技术词表** | 🔧 最后门槛 | agent-44 续跑中；合入见 §2 |
 | 7 | P1 瘦包（服务线） | ✅ 代码就绪 | `fix/slim-serving-pack` `c5c8f58c`；封印时启用 v2 |
-| 8 | 服务线模型同步（D0-a 9 字段必填→可空） | ⏳ 切包前必须 | 不同步则 run16 包 boot 拒载（跨线契约项） |
+| 8 | 服务线模型同步（D0-a 9 字段必填→可空） | 🔧 隔离分支 `feat/serving-model-sync` 实施中 | 已核实会 boot 拒载，见 §2.1 |
 
 已知既有红（不阻塞，并入 P12）：`test_knowledge_build_isolated` 12 红（测试侧 mock
 pin 在 C2_0012）、`test_canonical_scope_founder_red` 1 红、`knowledge_build_isolated.py`
@@ -53,6 +53,24 @@ git merge --no-edit feat/d1a-tech-vocabulary
 cd apps/miroflow-agent
 uv run pytest tests/canonical_v2/ -k "tech_vocabulary or publication_cleaning" -q
 ```
+
+### 2.1 跨线契约：服务线必须先拿到的模型改动（切包前闸）
+
+run16 包会携带 D0-a 的"占位值 → 置空"。以下 9 个字段在数据线已改为可空，
+服务线（`codex/canonical-v2-s12a-ready`）仍是必填：
+
+- CompanyProjection：`profile_summary`、`technology_route_summary`
+- ProfessorProjection：`department`、`email`、`homepage`、`paper_summary`、
+  `patent_summary`、`profile_summary`、`title`
+
+机制（已核实）：`serving_pack_loader.py` 在 boot 时解析 pack 的
+`relationships.json → candidate_projection_result`，对每条投影按模型校验且
+**fail-closed**（`ServingPackIntegrityError`）→ 含 null 的 run16 包会被**拒载**。
+字段注解逐条对比（`model_fields[...].is_required()`）已做：服务线 9/9 required，
+数据线 9/9 optional。
+
+处置：在隔离 worktree `feat/serving-model-sync`（基于服务线分支）同步这 9 个字段 +
+RED/GREEN 测试 + run15 包回载验证；随切包窗口与 P1 一起进入服务线。
 
 ## 3. 发射重建（脱离会话）
 
