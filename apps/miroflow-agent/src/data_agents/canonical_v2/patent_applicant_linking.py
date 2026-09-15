@@ -3,7 +3,7 @@
 Most released patents carry applicant names but no resolved
 ``core_facts.company_ids`` (the s12e relationship audit: 1855 of 1931
 patents).  This module recovers the missing ``patent_has_applicant`` seeds by
-matching applicant name strings against the released companies' names:
+matching applicant name strings against the admitted companies' names:
 
 - exact lane: punctuation/case-insensitive display-name equality, mirroring
   ``knowledge_build_isolated._source_name_key`` semantics;
@@ -19,9 +19,11 @@ reuse it inside ``_typed_relationship_seeds`` without import cycles.
 Integration contract for the build (owner of ``knowledge_build_isolated.py``):
 when a patent row has an empty ``core_facts.company_ids`` list, resolve
 ``core_facts.applicants`` through ``resolve_patent_applicant_links`` against a
-``CompanyNameIndex`` built from the released company rows
+``CompanyNameIndex`` built from the admitted company objects
 (``core_facts.name``/``core_facts.normalized_name`` plus their canonical
-assignments), and route every ``accepted`` resolution through the existing
+assignments — released objects *and* the companies synthesized from
+supplemental batches; see ``_relationship_seed_object_rows``), and route every
+``accepted`` resolution through the existing
 typed-seed path with ``role_id="applicant"``, ``role_owner="target"``,
 ``evidence_kind="patent_applicant_assertion"``,
 ``requested_paths=("company_to_patent", "patent_to_company")``,

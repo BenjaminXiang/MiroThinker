@@ -1,0 +1,57 @@
+PATENT_COMPANY_BINDING_LEDGER {"document_binding_entries": 7614, "document_binding_pairs": 7611, "document_bound_companies": 960, "document_bound_patents": 7042, "seed_lanes": {"resolved_binding": 122}, "seeded_pairs": 122, "typed_seed_types": {"patent_has_applicant": 122}, "unexplained_missing": 1199, "unexplained_missing_sample": [["patent-c-003359381f57b9f89bf16724", "company-c-a6d32b327478ee6295aa9881"], ["patent-c-007076fcda75630d9aca6e91", "company-c-730c920d092e04385b6406e7"], ["patent-c-00a6c01c875e9577e9baf8e2", "company-c-a7bb6035d0fa75276c28f867"], ["patent-c-00de8ba185a33af85cca48ca", "company-c-d6c6694538287d39e0f4e8f7"], ["patent-c-00f2422cc306f31c2dd55ede", "company-c-7f90fb3e1e9dd35e8c6ae54f"]], "unindexed_pairs": 6290}
+PATENT_COMPANY_BINDING_LEDGER {"document_binding_entries": 7614, "document_binding_pairs": 7611, "document_bound_companies": 960, "document_bound_patents": 7042, "seed_lanes": {"resolved_binding": 7611}, "seeded_pairs": 7611, "typed_seed_types": {"patent_has_applicant": 7611}, "unexplained_missing": 0, "unexplained_missing_sample": [], "unindexed_pairs": 0}
+{
+  "admitted_objects": 47072,
+  "document_binding_entries": 7614,
+  "document_binding_pairs": 7611,
+  "document_bound_companies": 960,
+  "document_bound_patents": 7042,
+  "pack": "/var/tmp/mirothinker-data-v2/serving-pack-run15-sealed",
+  "post_fix": {
+    "missing_document_pairs": 0,
+    "missing_sample": [],
+    "patent_has_applicant_edges": 7611,
+    "reconciliation_rejected": false,
+    "seeding_lanes": {
+      "resolved_binding": 7611
+    },
+    "typed_seed_types": {
+      "patent_has_applicant": 7611
+    }
+  },
+  "pre_fix": {
+    "missing_document_pairs": 7489,
+    "missing_sample": [
+      [
+        "patent-c-01246223e3ff3b3c7dbd11db",
+        "company-c-cbb12a9e00413212b7f12f48"
+      ],
+      [
+        "patent-c-71cf5b7bd2ad728260898c8a",
+        "company-c-730c920d092e04385b6406e7"
+      ],
+      [
+        "patent-c-7b43f3fa3e5b490c3b39a587",
+        "company-c-dfc44ce9e280e6bce1f84933"
+      ],
+      [
+        "patent-c-8b85882b3d5c865ffac785db",
+        "company-c-6e89e81d2effdb22b154a621"
+      ],
+      [
+        "patent-c-aaf91b4222fb16e3d83dc38f",
+        "company-c-b99a9782dd8fbff6163f0c38"
+      ]
+    ],
+    "patent_has_applicant_edges": 122,
+    "reconciliation_rejected": true,
+    "seeding_lanes": {
+      "resolved_binding": 122
+    },
+    "typed_seed_types": {
+      "patent_has_applicant": 122
+    }
+  },
+  "relationship_edges_in_pack": 123,
+  "released_objects": 5561
+}

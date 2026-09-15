@@ -1,8 +1,13 @@
-"""admit-unanchored-papers (G3): resolved applicant bindings seed
-patent_has_applicant relationships. RED evidence for the seeds seam —
-the binding merge's canonical ids were invisible to the old seeding paths
-(core_facts.company_ids absent for P4 patents; name resolution only saw
-released companies).
+"""admit-unanchored-papers (G3) + C1: resolved applicant bindings seed
+patent_has_applicant relationships.
+
+The seeds must be built from the **mapped admitted-object universe**
+(``_map_public_authority``'s ``row_by_object``), not from the raw landed rows:
+only the released-objects source lands in released-object payload shape, every
+supplemental batch keeps its native keys (``patent_id`` / ``company_name``) and
+is turned into a released object only by ``_merge_p4_created_rows``.  Indexing
+raw rows cut the run15 relationship layer to 123 of the 7,611 document-layer
+bindings (C1).
 """
 
 from __future__ import annotations
@@ -89,29 +94,38 @@ def _patent_row() -> object:
     )
 
 
+COMPANY_OBJECT_ID = "COMPANY-BOUND-1"
+COMPANY_CANONICAL = "company-c-877827059543f86e22bc9c90"
+
+
+def _mapped_universe() -> dict[str, object]:
+    patent = _patent_row()
+    company = _company_row(COMPANY_OBJECT_ID)
+    return {patent.payload["id"]: patent, COMPANY_OBJECT_ID: company}
+
+
 def test_resolved_binding_seeds_patent_applicant_relationship() -> None:
     # the seed must carry the SOURCE OBJECT id (the relationship authority
     # maps endpoints via source-released-object:{id}); the binding's
     # canonical id is reverse-mapped inside the seeds function.
-    company_object_id = "COMPANY-BOUND-1"
-    company_canonical = "company-c-877827059543f86e22bc9c90"
     seeds = build._typed_relationship_seeds(
-        source_rows=(_patent_row(), _company_row(company_object_id)),
+        object_rows_by_id=_mapped_universe(),
+        supplemental_rows=(),
         canonical_by_source={
             "source-released-object:PATENT-BOUND-1": "patent-c-1",
-            f"source-released-object:{company_object_id}": company_canonical,
+            f"source-released-object:{COMPANY_OBJECT_ID}": COMPANY_CANONICAL,
         },
         canonical_domains={
             "patent-c-1": "patent",
-            company_canonical: "company",
+            COMPANY_CANONICAL: "company",
         },
-        bound_company_ids_by_patent={"PATENT-BOUND-1": (company_canonical,)},
+        bound_company_ids_by_patent={"PATENT-BOUND-1": (COMPANY_CANONICAL,)},
     )
     applicant_seeds = [
         seed
         for seed in seeds
         if seed.relationship_type_id == "patent_has_applicant"
-        and seed.target_object_id == company_object_id
+        and seed.target_object_id == COMPANY_OBJECT_ID
     ]
     assert len(applicant_seeds) == 1
     assert applicant_seeds[0].evidence_metadata["match_kind"] == "resolved_binding"
@@ -119,10 +133,64 @@ def test_resolved_binding_seeds_patent_applicant_relationship() -> None:
 
 def test_without_binding_mapping_no_applicant_seed_for_p4_patent() -> None:
     seeds = build._typed_relationship_seeds(
-        source_rows=(_patent_row(),),
+        object_rows_by_id={"PATENT-BOUND-1": _patent_row()},
+        supplemental_rows=(),
         canonical_by_source={"source-released-object:PATENT-BOUND-1": "patent-c-1"},
         canonical_domains={"patent-c-1": "patent"},
     )
     assert not [
         seed for seed in seeds if seed.relationship_type_id == "patent_has_applicant"
     ]
+
+
+def test_raw_landing_rows_are_not_a_seed_universe() -> None:
+    """C1 RED: the raw supplemental rows must not be treated as objects.
+
+    ``p4-patent-full-v1`` / ``p4-company-full-v1`` rows key their identity as
+    ``patent_id`` / ``company_name``; only the mapped universe carries the
+    synthesized released-object payload.  Before the fix the seeds indexed the
+    raw rows, so this binding produced nothing.
+    """
+    universe = _mapped_universe()
+    binding = {
+        "source-released-object:PATENT-BOUND-1": "patent-c-1",
+        f"source-released-object:{COMPANY_OBJECT_ID}": COMPANY_CANONICAL,
+    }
+    domains = {"patent-c-1": "patent", COMPANY_CANONICAL: "company"}
+
+    # mapped universe → seeded
+    from_universe = build._typed_relationship_seeds(
+        object_rows_by_id=universe,
+        supplemental_rows=(),
+        canonical_by_source=binding,
+        canonical_domains=domains,
+        bound_company_ids_by_patent={"PATENT-BOUND-1": (COMPANY_CANONICAL,)},
+    )
+    # raw rows passed where only the universe belongs → nothing
+    patent = _patent_row()
+    company = _company_row(COMPANY_OBJECT_ID)
+    raw_payload_rows = {
+        patent.payload["id"]: build._ParsedReleasedObject(
+            source_id=patent.source_id,
+            source_batch_id=patent.source_batch_id,
+            record=patent.record,
+            artifact=patent.artifact,
+            payload={"patent_id": patent.payload["id"], "applicants": ["x"]},
+        ),
+        COMPANY_OBJECT_ID: build._ParsedReleasedObject(
+            source_id=company.source_id,
+            source_batch_id=company.source_batch_id,
+            record=company.record,
+            artifact=company.artifact,
+            payload={"company_name": "深圳智赛精密装备有限公司"},
+        ),
+    }
+    from_raw_rows = build._typed_relationship_seeds(
+        object_rows_by_id=raw_payload_rows,
+        supplemental_rows=(),
+        canonical_by_source=binding,
+        canonical_domains=domains,
+        bound_company_ids_by_patent={"PATENT-BOUND-1": (COMPANY_CANONICAL,)},
+    )
+    assert len(from_universe) == 1
+    assert not from_raw_rows
