@@ -35,14 +35,14 @@ sys.path.insert(0, str(APP_ROOT))
 
 from src.data_agents.canonical_v2.tech_vocabulary import (  # noqa: E402
     BUNDLE_SCHEMA_VERSION,
-    INDUCTION_BATCH_ID,
     MAPPING_BATCH_SIZE,
     OUTPUT_SCHEMA_VERSION,
     PROMPT_VERSION,
     VocabularyIntegrityError,
     assert_mapping_arity,
-    induction_sample,
+    induction_batches,
     mapping_batches,
+    merge_induced_concepts,
     parse_concept_drafts,
     parse_mapping_lines,
     render_concept_catalogue,
@@ -61,9 +61,9 @@ DEFAULT_INPUTS = (
 )
 DEFAULT_OUT = REPO_ROOT / ".agents/runs/d1a-tech-vocabulary/out"
 PROVIDER_NAME = "deepseek"
-MAX_CONCEPTS = 200
+MAX_CONCEPTS = 100
 MAX_ATTEMPTS = 3
-MAX_OUTPUT_TOKENS = 16000
+MAX_OUTPUT_TOKENS = 64000
 
 
 class InductionError(RuntimeError):
@@ -250,40 +250,58 @@ def main() -> None:
     )
     print(f"provider={PROVIDER_NAME} model={model} base_url={base_url}", flush=True)
 
-    induction_values = induction_sample(sorted(tech_values))
-    induction_prompt = render_induction_prompt(
-        induction_values, max_concepts=MAX_CONCEPTS
-    )
+    chunks = induction_batches(sorted(tech_values))
     calls: list[dict[str, Any]] = []
 
     if args.phase in ("all", "induct"):
-        calls.append(
-            record_call(
+        induction_jobs = [(f"{index:04d}", chunk) for index, chunk in enumerate(chunks)]
+
+        def run_induction(job: tuple[str, Sequence[str]]) -> dict[str, Any]:
+            index, chunk = job
+            return record_call(
                 provider=provider,
                 cache_dir=cache_dir,
-                call_id=call_id_for("induct", INDUCTION_BATCH_ID),
+                call_id=call_id_for("induct", index),
                 kind="induct",
-                prompt=induction_prompt,
-                input_value_ids=induction_values,
+                prompt=render_induction_prompt(chunk, max_concepts=MAX_CONCEPTS),
+                input_value_ids=chunk,
                 validate=parse_concept_drafts,
             )
-        )
-        concepts = parse_concept_drafts(calls[-1]["raw_output"])
+
+        with ThreadPoolExecutor(
+            max_workers=max(1, min(args.workers, len(chunks)))
+        ) as executor:
+            calls.extend(executor.map(run_induction, induction_jobs))
+        induced = [
+            concept
+            for call in sorted(calls, key=lambda item: item["call_id"])
+            for concept in parse_concept_drafts(call["raw_output"])
+        ]
+        concepts, merged_duplicates, id_collisions = merge_induced_concepts(induced)
     elif args.phase == "map":
-        induct = json.loads(
-            (
-                cache_dir
-                / f"{call_id_for('induct', INDUCTION_BATCH_ID).replace(':', '__')}.json"
-            ).read_text(encoding="utf-8")
-        )
-        calls.append(induct)
-        concepts = parse_concept_drafts(induct["raw_output"])
+        cached: list[dict[str, Any]] = []
+        for index, _chunk in enumerate(chunks):
+            path = cache_dir / (
+                call_id_for("induct", f"{index:04d}").replace(":", "__") + ".json"
+            )
+            cached.append(json.loads(path.read_text(encoding="utf-8")))
+        calls.extend(cached)
+        induced = [
+            concept
+            for call in sorted(cached, key=lambda item: item["call_id"])
+            for concept in parse_concept_drafts(call["raw_output"])
+        ]
+        concepts, merged_duplicates, id_collisions = merge_induced_concepts(induced)
     else:  # pragma: no cover - argparse restricts the value
         raise SystemExit("unreachable phase")
 
     catalogue = render_concept_catalogue(concepts)
     concept_ids = frozenset(concept.concept_id for concept in concepts)
-    print(f"concepts={len(concept_ids)}", flush=True)
+    print(
+        f"concepts={len(concept_ids)} merged_duplicates={merged_duplicates} "
+        f"id_collisions={id_collisions}",
+        flush=True,
+    )
 
     if args.phase in ("all", "map"):
         jobs: list[tuple[str, str, Sequence[str]]] = []
@@ -353,10 +371,9 @@ def assemble_bundle(
     model: str,
     base_url: str,
 ) -> dict[str, Any]:
+    chunks = induction_batches(sorted(all_values["tech_tags"]))
     prompts = {
-        "induct": render_induction_prompt(
-            induction_sample(sorted(all_values["tech_tags"])), max_concepts=MAX_CONCEPTS
-        ),
+        "induct": render_induction_prompt(("<sample>",), max_concepts=MAX_CONCEPTS),
         "map": render_mapping_prompt(
             "tech_tags",
             ["<sample>"],
@@ -383,7 +400,7 @@ def assemble_bundle(
         "source_value_counts": {
             field: len(values) for field, values in sorted(all_values.items())
         },
-        "induction_sample_values": induction_sample(sorted(all_values["tech_tags"])),
+        "induction_chunks": [list(chunk) for chunk in chunks],
         "induction_max_concepts": MAX_CONCEPTS,
         "mapping_batch_size": MAPPING_BATCH_SIZE,
         "calls": [

@@ -1,0 +1,629 @@
+{
+  "lookup_path": "/tmp/d1a-scratch/lookup-run15.sqlite3",
+  "company_documents": 7086,
+  "vocabulary": {
+    "content_sha256": "d41041e447fcb755df1b26faad12509aa90c1a81063a430476dc6dc965d880fe",
+    "bundle_content_sha256": "7f09ac67e82a5bb80d94c2379da626e047339546ca0e0528afd00bd0a81491e9",
+    "concepts_total": 447,
+    "concepts_technology": 325,
+    "concepts_industry": 122,
+    "llm_calls": 63,
+    "provider": "deepseek",
+    "model": "deepseek-v4-pro",
+    "prompt_version": "d1a-tech-vocabulary-prompts-v1"
+  },
+  "tech_tags": {
+    "distinct_values_before": 4945,
+    "rows_before": 5485,
+    "mapped_values": 4713,
+    "unmapped_values": 232,
+    "coverage": 0.953084,
+    "distinct_values_after": 673,
+    "concept_rows_after": 5895,
+    "passthrough_rows_after": 235,
+    "largest_concepts": [
+      {
+        "concept": "home.smart-home",
+        "companies": 189
+      },
+      {
+        "concept": "iot.platform-solution",
+        "companies": 139
+      },
+      {
+        "concept": "robotics.industrial",
+        "companies": 124
+      },
+      {
+        "concept": "ai.general-solution",
+        "companies": 102
+      },
+      {
+        "concept": "chip.ic",
+        "companies": 101
+      },
+      {
+        "concept": "hardware.smart-hardware",
+        "companies": 101
+      },
+      {
+        "concept": "wearable.smart-wearable",
+        "companies": 88
+      },
+      {
+        "concept": "ai.computer-vision",
+        "companies": 84
+      },
+      {
+        "concept": "electronics.component-distribution",
+        "companies": 76
+      },
+      {
+        "concept": "iot.sensor",
+        "companies": 75
+      },
+      {
+        "concept": "home.smart-lock",
+        "companies": 74
+      },
+      {
+        "concept": "robotics.service",
+        "companies": 69
+      }
+    ],
+    "unmapped_published_values": 232
+  },
+  "industry": {
+    "values": 41,
+    "mapped_values": 31,
+    "concepts": [
+      "生态农产品科技服务",
+      "现代农业管理",
+      "智能早教服务",
+      "VR综合服务B2B平台",
+      "智动化行业服务",
+      "自动化生产设备",
+      "自动化检测服务",
+      "汽车电子",
+      "高端音视频集成服务",
+      "动力电池数字工厂",
+      "生物医疗",
+      "通讯产品",
+      "LCD液晶屏",
+      "LED产品",
+      "元器件分销",
+      "建筑工程咨询",
+      "试衣自拍镜与图片社区",
+      "绿植家居健康服务",
+      "护肤品牌",
+      "电子数码跨境电商",
+      "数字化转型服务",
+      "产品设计",
+      "糖尿病健康管理",
+      "LED显示屏",
+      "跨境电商",
+      "在线教育",
+      "考研备考平台",
+      "电机制造",
+      "工业电气产品经销",
+      "电子元器件制造",
+      "电子设备制造",
+      "电子包装材料",
+      "电子元器件代理与销售",
+      "数码产品",
+      "PCBA智能制造",
+      "SMT贴片",
+      "社区电梯广告",
+      "新能源汽车目的地充电运营",
+      "锂电池材料循环再利用",
+      "IT综合服务",
+      "人工智能路演与股权投资数据服务",
+      "金融科技服务",
+      "投资理财",
+      "金融投资与健康农业服务",
+      "智能金融科技",
+      "植物蛋白制品",
+      "机器人制面餐饮",
+      "家具制造",
+      "休闲游戏平台",
+      "先进技术应用推进平台",
+      "硬件创业服务平台",
+      "机房供电设备",
+      "脑健康解决方案",
+      "一体化健康管理解决方案",
+      "整装物联家居",
+      "床垫",
+      "智能家居",
+      "劳务派遣",
+      "人力资源服务",
+      "FPD光电玻璃切割",
+      "LED灯具广告服务",
+      "智慧医院服务",
+      "车联网",
+      "互联网应用服务",
+      "互联网营销服务",
+      "互联网内容与社区",
+      "行业物联网升级服务",
+      "资讯技术服务",
+      "工业照明",
+      "综合物流服务平台",
+      "磁性材料制造",
+      "综合产品制造",
+      "标签制造",
+      "高端精密金属蚀刻",
+      "海洋工程建造",
+      "3C精细构件制造",
+      "超材料与汽车座椅功能件",
+      "新材料产销",
+      "医疗器械精密组件",
+      "医疗设备贸易",
+      "办公用品解决方案",
+      "镜片及面板",
+      "印制线路板辅助材料",
+      "医药终端推广",
+      "精密机电设备",
+      "精密玻璃元器件",
+      "素质教育服务",
+      "房地产综合服务",
+      "新零售派样服务",
+      "一站式零售解决方案",
+      "零售解决方案",
+      "精密射频金属元器件",
+      "机器人产业服务",
+      "开锁服务",
+      "智能安防监控",
+      "安保产品",
+      "公共安防",
+      "智能安防",
+      "芯片代理与方案",
+      "电子元器件分销",
+      "元器件代理",
+      "集成电路制造",
+      "集成电路服务",
+      "集成电路芯片供应",
+      "半导体制造",
+      "芯片回收",
+      "半导体智能制造",
+      "智慧农业技术",
+      "智慧城市平台",
+      "智慧教育解决方案",
+      "智慧能源解决方案",
+      "智慧医疗解决方案",
+      "智慧家居解决方案",
+      "智慧物流解决方案",
+      "智能产品电商平台",
+      "智慧交通解决方案",
+      "软件定制与数据服务",
+      "营销与软件开发服务",
+      "测试解决方案",
+      "进出口贸易服务",
+      "车联网技术服务",
+      "电线电缆制造"
+    ]
+  },
+  "tags_per_company": {
+    "before_mean": 0.774062,
+    "after_mean": 0.865086,
+    "before_companies_without": 1601,
+    "after_companies_without": 1601,
+    "after_companies_with_concepts": 5250,
+    "after_distribution": {
+      "0": 1601,
+      "1": 4844,
+      "2": 637,
+      "3": 4
+    },
+    "after_passthrough_only_companies": 235
+  },
+  "category_probe_support": {
+    "机器人": {
+      "before_tag_fields": 422,
+      "after_tag_fields": 423,
+      "concepts": [
+        "ai.robot-security",
+        "data.marketing-robot",
+        "food.robot-noodle",
+        "legal.legal-robot",
+        "medical.surgical-robot",
+        "robot.education",
+        "robotics.aerial-civil",
+        "robotics.autonomous-driving",
+        "robotics.beverage",
+        "robotics.child-companion",
+        "robotics.companion",
+        "robotics.companion-robot",
+        "robotics.consumer",
+        "robotics.control-system",
+        "robotics.cooking",
+        "robotics.embodied-ai",
+        "robotics.entertainment-competition",
+        "robotics.health-robot",
+        "robotics.home-service",
+        "robotics.humanoid",
+        "robotics.industrial",
+        "robotics.industrial-robot-integration",
+        "robotics.industry-platform",
+        "robotics.logistics-sorting",
+        "robotics.medical",
+        "robotics.micro-robot",
+        "robotics.mobile-robot",
+        "robotics.robot-vision",
+        "robotics.service",
+        "robotics.special-cloud",
+        "robotics.special-robot-communication",
+        "robotics.wall-climbing",
+        "robotics.wireless-charging"
+      ],
+      "concept_names": [
+        "AI安保及物业机器人",
+        "人形机器人",
+        "儿童陪伴机器人",
+        "具身智能机器人",
+        "医疗机器人",
+        "壁面移动机器人",
+        "家庭健康机器人",
+        "家庭服务机器人",
+        "工业机器人",
+        "工业机器人集成应用",
+        "微型智能机器人",
+        "教育机器人",
+        "数据营销机器人",
+        "无人驾驶技术",
+        "服务机器人",
+        "机器人产业服务",
+        "机器人制面餐饮",
+        "机器人控制系统",
+        "机器人无线充电",
+        "机器人视觉",
+        "法律机器人",
+        "消费级机器人",
+        "炒菜机器人",
+        "物流分拣机器人",
+        "特种智能云机器人",
+        "特种机器人智能通信",
+        "移动机器人",
+        "空中作业机器人",
+        "竞技娱乐机器人",
+        "陪伴机器人",
+        "陪护机器人",
+        "饮品制作机器人",
+        "高端手术机器人"
+      ],
+      "companies_via_concepts": 423,
+      "companies_before_literal": 414,
+      "companies_after_literal": 423,
+      "companies_losing_the_literal_string": 23,
+      "concepts_carried_by_before_companies": [
+        {
+          "concept": "工业机器人",
+          "companies": 119
+        },
+        {
+          "concept": "服务机器人",
+          "companies": 68
+        },
+        {
+          "concept": "教育机器人",
+          "companies": 32
+        },
+        {
+          "concept": "家庭服务机器人",
+          "companies": 15
+        },
+        {
+          "concept": "人形机器人",
+          "companies": 15
+        },
+        {
+          "concept": "物流分拣机器人",
+          "companies": 12
+        },
+        {
+          "concept": "机器人控制系统",
+          "companies": 12
+        },
+        {
+          "concept": "炒菜机器人",
+          "companies": 11
+        }
+      ]
+    },
+    "配送机器人": {
+      "before_tag_fields": 1,
+      "after_tag_fields": 0,
+      "concepts": [],
+      "concept_names": [],
+      "companies_via_concepts": 0,
+      "companies_before_literal": 1,
+      "companies_after_literal": 0,
+      "companies_losing_the_literal_string": 1,
+      "concepts_carried_by_before_companies": [
+        {
+          "concept": "物流分拣机器人",
+          "companies": 1
+        }
+      ]
+    },
+    "餐饮机器人": {
+      "before_tag_fields": 1,
+      "after_tag_fields": 0,
+      "concepts": [],
+      "concept_names": [],
+      "companies_via_concepts": 0,
+      "companies_before_literal": 1,
+      "companies_after_literal": 0,
+      "companies_losing_the_literal_string": 1,
+      "concepts_carried_by_before_companies": [
+        {
+          "concept": "炒菜机器人",
+          "companies": 1
+        }
+      ]
+    },
+    "具身智能": {
+      "before_tag_fields": 11,
+      "after_tag_fields": 14,
+      "concepts": [
+        "robotics.embodied-ai"
+      ],
+      "concept_names": [
+        "具身智能机器人"
+      ],
+      "companies_via_concepts": 14,
+      "companies_before_literal": 11,
+      "companies_after_literal": 14,
+      "companies_losing_the_literal_string": 1,
+      "concepts_carried_by_before_companies": [
+        {
+          "concept": "具身智能机器人",
+          "companies": 10
+        },
+        {
+          "concept": "先进技术应用推进平台",
+          "companies": 1
+        }
+      ]
+    },
+    "灵巧手": {
+      "before_tag_fields": 5,
+      "after_tag_fields": 0,
+      "concepts": [],
+      "concept_names": [],
+      "companies_via_concepts": 0,
+      "companies_before_literal": 5,
+      "companies_after_literal": 0,
+      "companies_losing_the_literal_string": 5,
+      "concepts_carried_by_before_companies": [
+        {
+          "concept": "工业机器人",
+          "companies": 3
+        },
+        {
+          "concept": "具身智能机器人",
+          "companies": 1
+        },
+        {
+          "concept": "触觉传感器",
+          "companies": 1
+        }
+      ]
+    },
+    "协作机器人": {
+      "before_tag_fields": 3,
+      "after_tag_fields": 0,
+      "concepts": [],
+      "concept_names": [],
+      "companies_via_concepts": 0,
+      "companies_before_literal": 3,
+      "companies_after_literal": 0,
+      "companies_losing_the_literal_string": 3,
+      "concepts_carried_by_before_companies": [
+        {
+          "concept": "工业机器人",
+          "companies": 3
+        }
+      ]
+    },
+    "工业机器人": {
+      "before_tag_fields": 43,
+      "after_tag_fields": 128,
+      "concepts": [
+        "robotics.industrial",
+        "robotics.industrial-robot-integration"
+      ],
+      "concept_names": [
+        "工业机器人",
+        "工业机器人集成应用"
+      ],
+      "companies_via_concepts": 128,
+      "companies_before_literal": 43,
+      "companies_after_literal": 128,
+      "companies_losing_the_literal_string": 1,
+      "concepts_carried_by_before_companies": [
+        {
+          "concept": "工业机器人",
+          "companies": 41
+        },
+        {
+          "concept": "机器人控制系统",
+          "companies": 3
+        },
+        {
+          "concept": "工业机器人集成应用",
+          "companies": 2
+        },
+        {
+          "concept": "自动化设备",
+          "companies": 2
+        },
+        {
+          "concept": "自动化控制",
+          "companies": 1
+        },
+        {
+          "concept": "数控机床",
+          "companies": 1
+        },
+        {
+          "concept": "自动化生产设备",
+          "companies": 1
+        }
+      ]
+    },
+    "PCB": {
+      "before_tag_fields": 11,
+      "after_tag_fields": 11,
+      "concepts": [
+        "electronics.pcba",
+        "software.pcb-management"
+      ],
+      "concept_names": [
+        "PCBA智能制造",
+        "PCB行业管理软件"
+      ],
+      "companies_via_concepts": 11,
+      "companies_before_literal": 11,
+      "companies_after_literal": 11,
+      "companies_losing_the_literal_string": 6,
+      "concepts_carried_by_before_companies": [
+        {
+          "concept": "印制线路板辅助材料",
+          "companies": 4
+        },
+        {
+          "concept": "PCBA智能制造",
+          "companies": 3
+        },
+        {
+          "concept": "PCB行业管理软件",
+          "companies": 2
+        },
+        {
+          "concept": "集成电路服务",
+          "companies": 1
+        },
+        {
+          "concept": "云计算服务",
+          "companies": 1
+        },
+        {
+          "concept": "智慧工厂软件",
+          "companies": 1
+        }
+      ]
+    },
+    "激光雷达": {
+      "before_tag_fields": 7,
+      "after_tag_fields": 0,
+      "concepts": [],
+      "concept_names": [],
+      "companies_via_concepts": 0,
+      "companies_before_literal": 7,
+      "companies_after_literal": 0,
+      "companies_losing_the_literal_string": 7,
+      "concepts_carried_by_before_companies": [
+        {
+          "concept": "激光扫描传感器模组",
+          "companies": 5
+        },
+        {
+          "concept": "IC芯片",
+          "companies": 1
+        },
+        {
+          "concept": "毫米波雷达",
+          "companies": 1
+        }
+      ]
+    },
+    "传感器": {
+      "before_tag_fields": 121,
+      "after_tag_fields": 151,
+      "concepts": [
+        "ai.biosensor",
+        "automation.components",
+        "chip.cmos-sensor",
+        "energy.hydropower-sensor",
+        "iot.sensor",
+        "optoelectronic-sensor.precision-manufacturing",
+        "optoelectronics.sensor",
+        "sensor.electrical-isolation",
+        "sensor.fiber-optic",
+        "sensor.laser-scanning-module",
+        "sensor.millimeter-wave-radar",
+        "sensor.quartz-resonant-force",
+        "sensor.smart",
+        "sensor.tactile",
+        "sensor.temperature",
+        "sensor.wireless"
+      ],
+      "concept_names": [
+        "CMOS图像传感器芯片",
+        "传感器",
+        "光电传感器",
+        "光纤传感器",
+        "无线传感器",
+        "智能传感器",
+        "毫米波雷达",
+        "水电设备传感器",
+        "温度传感器",
+        "激光扫描传感器模组",
+        "生物传感系统",
+        "电量隔离传感器",
+        "石英谐振式力敏传感器",
+        "精密光电传感器制造",
+        "自动化元器件",
+        "触觉传感器"
+      ],
+      "companies_via_concepts": 173,
+      "companies_before_literal": 121,
+      "companies_after_literal": 151,
+      "companies_losing_the_literal_string": 3,
+      "concepts_carried_by_before_companies": [
+        {
+          "concept": "传感器",
+          "companies": 67
+        },
+        {
+          "concept": "智能传感器",
+          "companies": 16
+        },
+        {
+          "concept": "温度传感器",
+          "companies": 9
+        },
+        {
+          "concept": "光电传感器",
+          "companies": 7
+        },
+        {
+          "concept": "IC芯片",
+          "companies": 4
+        },
+        {
+          "concept": "触觉传感器",
+          "companies": 4
+        },
+        {
+          "concept": "无线传感器",
+          "companies": 4
+        },
+        {
+          "concept": "激光扫描传感器模组",
+          "companies": 4
+        }
+      ]
+    },
+    "送餐": {
+      "before_tag_fields": 0,
+      "after_tag_fields": 0,
+      "concepts": [],
+      "concept_names": [],
+      "companies_via_concepts": 0,
+      "companies_before_literal": 0,
+      "companies_after_literal": 0,
+      "companies_losing_the_literal_string": 0,
+      "concepts_carried_by_before_companies": []
+    }
+  }
+}

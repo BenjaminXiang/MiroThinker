@@ -75,12 +75,23 @@ def main() -> None:
     concept_rows: Counter[str] = Counter()
     unmapped_published: Counter[str] = Counter()
     passthrough_tag_rows = 0
-    for document in documents:
+    before_probe_hits: dict[str, set[int]] = {probe: set() for probe in CATEGORY_PROBES}
+    after_probe_hits: dict[str, set[int]] = {probe: set() for probe in CATEGORY_PROBES}
+    applied_documents: list[dict[str, Any]] = []
+    for index, document in enumerate(documents):
         raw_names = reference_names(document.get(TECH_TAG_FIELD))
+        raw_blob = " ".join(raw_names)
         before_values.update(raw_names)
         before_tags_per_company.append(len(raw_names))
         applied, _unmapped = apply_vocabulary("company", document, vocabulary)
+        applied_documents.append(applied)
         published = reference_names(applied.get(TECH_TAG_FIELD))
+        published_blob = " ".join(published)
+        for probe in CATEGORY_PROBES:
+            if probe in raw_blob:
+                before_probe_hits[probe].add(index)
+            if probe in published_blob:
+                after_probe_hits[probe].add(index)
         after_values.update(published)
         after_tags_per_company.append(len(published))
         concept_names = [item for item in published if vocabulary.is_concept_name(item)]
@@ -105,16 +116,32 @@ def main() -> None:
             )
         )
         matched_names = {vocabulary.concept_name(item) for item in matched}
-        companies = 0
-        if matched_names:
-            for document in documents:
-                applied, _ = apply_vocabulary("company", document, vocabulary)
-                if matched_names & set(reference_names(applied.get(TECH_TAG_FIELD))):
-                    companies += 1
+        companies = sum(
+            1
+            for applied in applied_documents
+            if matched_names & set(reference_names(applied.get(TECH_TAG_FIELD)))
+        )
+        # Where did the probe's own companies go?  A probe whose literal string
+        # disappears from the field keeps its companies; this lists the concepts
+        # they carry instead, so a lexical substitution is visible, not hidden.
+        carried: Counter[str] = Counter()
+        for index in sorted(before_probe_hits[probe]):
+            for name in reference_names(applied_documents[index].get(TECH_TAG_FIELD)):
+                if vocabulary.is_concept_name(name):
+                    carried[name] += 1
         probes[probe] = {
             "concepts": list(matched),
             "concept_names": sorted(matched_names),
             "companies_via_concepts": companies,
+            "companies_before_literal": len(before_probe_hits[probe]),
+            "companies_after_literal": len(after_probe_hits[probe]),
+            "companies_losing_the_literal_string": len(
+                before_probe_hits[probe] - after_probe_hits[probe]
+            ),
+            "concepts_carried_by_before_companies": [
+                {"concept": name, "companies": count}
+                for name, count in carried.most_common(8)
+            ],
         }
 
     after_probe_support = probe_support(
@@ -122,14 +149,10 @@ def main() -> None:
             {
                 TECH_TAG_FIELD: [
                     {"name": name}
-                    for name in reference_names(
-                        apply_vocabulary("company", document, vocabulary)[0].get(
-                            TECH_TAG_FIELD
-                        )
-                    )
+                    for name in reference_names(applied.get(TECH_TAG_FIELD))
                 ]
             }
-            for document in documents
+            for applied in applied_documents
         ],
         CATEGORY_PROBES,
     )
@@ -209,7 +232,7 @@ def main() -> None:
             probe: {
                 "before_tag_fields": before_probe,
                 "after_tag_fields": after_probe_support[probe],
-                "after_concepts": probes[probe],
+                **probes[probe],
             }
             for probe, before_probe in probe_support(documents, CATEGORY_PROBES).items()
         },

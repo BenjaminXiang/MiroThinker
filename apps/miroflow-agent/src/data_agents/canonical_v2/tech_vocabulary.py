@@ -45,6 +45,7 @@ VOCABULARY_QUALITY_SECTION_KEY = "vocabulary"
 
 MAPPING_BATCH_SIZE = 100
 INDUCTION_SAMPLE_SIZE = 600
+INDUCTION_CHUNK_COUNT = 12
 INDUCTION_BATCH_ID = "0000"
 
 TECH_TAG_FIELD = "tech_tags"
@@ -61,6 +62,12 @@ SINGLE_VALUED_FIELDS = frozenset({INDUSTRY_FIELD})
 FIELD_SOURCE_KEY = {INDUSTRY_TAG_FIELD: INDUSTRY_FIELD}
 
 MINIMUM_MAPPED_VALUE_COVERAGE = 0.90
+# The floor gates the technical vocabulary, which is what D1-a controls.  The
+# ``industry`` axis is reported but not gated: its 41 source labels include
+# deliberately non-technical ones (生活服务, 餐饮业, 批发零售, 开采, "-"), the
+# induction refuses to invent concepts for them, and they publish verbatim -
+# which is the intended "no guessing" behaviour, not a low-quality vocabulary.
+GATED_FIELDS = (TECH_TAG_FIELD,)
 UNMAPPED_EXAMPLE_LIMIT = 20
 
 ConceptKind = Literal["technology", "industry"]
@@ -113,6 +120,8 @@ class TechnicalVocabulary(ContractModel):
     model: NonEmptyStr
     bundle_content_sha256: Sha256
     llm_call_count: int = Field(ge=0)
+    induction_merged_duplicates: int = Field(ge=0)
+    induction_id_collisions: int = Field(ge=0)
     prompt_tokens: int = Field(ge=0)
     completion_tokens: int = Field(ge=0)
     source_value_counts: dict[str, int]
@@ -214,6 +223,58 @@ def induction_sample(
     return tuple(ordered[int(index * stride)] for index in range(size))
 
 
+def induction_batches(
+    values: Sequence[str],
+    *,
+    size: int = INDUCTION_SAMPLE_SIZE,
+    chunks: int = INDUCTION_CHUNK_COUNT,
+) -> tuple[tuple[str, ...], ...]:
+    """Split the induction sample into deterministic chunks.
+
+    One call over the whole sample invites an unbounded taxonomy: measured twice,
+    the model answered 500 and 1,337 concepts (both truncated) despite a stated
+    cap.  Chunking bounds each transcript, and the union is merged by the
+    deterministic rule in ``merge_induced_concepts``.
+    """
+    sample = induction_sample(values, size=size)
+    if chunks < 1:
+        raise VocabularyIntegrityError("induction chunks must be at least one")
+    if len(sample) <= chunks:
+        return tuple((value,) for value in sample)
+    step = len(sample) / float(chunks)
+    return tuple(
+        sample[int(index * step) : int((index + 1) * step)] for index in range(chunks)
+    )
+
+
+def merge_induced_concepts(
+    concepts: Iterable[VocabularyConcept],
+) -> tuple[tuple[VocabularyConcept, ...], int, int]:
+    """Union of the induction chunks, merged deterministically.
+
+    * same canonical name in several chunks -> one concept, smallest id wins;
+    * same id with several names -> the id keeps the name that sorts first
+      (measured: 4 such ids out of 453, all near-synonyms); the collision count is
+      reported in the artifact and the quality section for review rather than
+      hidden, because an id must denote exactly one concept at mapping time.
+    """
+    by_name: dict[str, VocabularyConcept] = {}
+    merged_by_name = 0
+    for concept in sorted(concepts, key=lambda item: (item.canonical_name, item.concept_id)):
+        if concept.canonical_name in by_name:
+            merged_by_name += 1
+            continue
+        by_name[concept.canonical_name] = concept
+    by_id: dict[str, VocabularyConcept] = {}
+    id_collisions = 0
+    for concept in sorted(by_name.values(), key=lambda item: (item.concept_id, item.canonical_name)):
+        if concept.concept_id in by_id:
+            id_collisions += 1
+            continue
+        by_id[concept.concept_id] = concept
+    return tuple(by_id.values()), merged_by_name, id_collisions
+
+
 def mapping_batches(
     values: Sequence[str], *, batch_size: int = MAPPING_BATCH_SIZE
 ) -> tuple[tuple[str, ...], ...]:
@@ -236,7 +297,8 @@ def render_induction_prompt(values: Sequence[str], *, max_concepts: int) -> str:
         "下面是一批企业技术标签（企业自述短语，多为“XX研发商/服务商/提供商”），"
         "每行一个 JSON 字符串。\n"
         "请归纳出一套**受控概念词表**：受控概念要足够粗，是用户会直接发问的类目"
-        f"（如“配送机器人”“PCB 制造”），最多 {max_concepts} 个。\n"
+        f"（如“配送机器人”“PCB 制造”）。硬性上限：**输出行数必须 ≤ {max_concepts} 行**，"
+        "样本里类目比这个多时请合并成更粗的概念，宁可粗不可多。\n"
         "每个概念必须包含：id（稳定的英文小写点分层级，如 robotics.delivery-robot）、"
         "name（规范中文名）、definition（一句话定义，说明概念边界）、"
         "evidence（1-3 条“可接受的证据形态”，说明什么样的企业自述足以支撑该概念，"
@@ -422,7 +484,7 @@ _BUNDLE_KEYS = frozenset(
         "pythonhashseed_invariant",
         "prompts",
         "source_value_counts",
-        "induction_sample_values",
+        "induction_chunks",
         "induction_max_concepts",
         "mapping_batch_size",
         "calls",
@@ -549,38 +611,49 @@ def replay_vocabulary_from_bundle(
 
     induction_calls = [call for call in calls if call["kind"] == "induct"]
     mapping_calls = [call for call in calls if call["kind"] == "value_mapping"]
-    if len(induction_calls) != 1:
+    recorded_chunks = document["induction_chunks"]
+    expected_induction_keys = {
+        f"induct:{index:04d}" for index in range(len(recorded_chunks))
+    }
+    recorded_induction_keys = {call["call_id"] for call in induction_calls}
+    if recorded_induction_keys != expected_induction_keys:
         raise VocabularyIntegrityError(
-            "vocabulary bundle must carry exactly one induction call"
+            "vocabulary bundle induction calls do not cover the recorded sample"
         )
-    induction = induction_calls[0]
-    recorded_sample = document["induction_sample_values"]
-    if list(induction["input_value_ids"]) != list(recorded_sample):
-        raise VocabularyIntegrityError(
-            "induction call input differs from the recorded sample"
-        )
-    concepts = parse_concept_drafts(cast(str, induction["raw_output"]))
+    induced: list[VocabularyConcept] = []
+    for call in sorted(induction_calls, key=lambda item: item["call_id"]):
+        index = int(cast(str, call["call_id"]).split(":", 1)[1])
+        if list(call["input_value_ids"]) != list(recorded_chunks[index]):
+            raise VocabularyIntegrityError(
+                "induction call input differs from the recorded sample chunk"
+            )
+        induced.extend(parse_concept_drafts(cast(str, call["raw_output"])))
+    concepts, merged_duplicates, id_collisions = merge_induced_concepts(induced)
     concept_ids = frozenset(concept.concept_id for concept in concepts)
 
     if validate_prompts:
         prompts = cast(dict[str, dict[str, str]], document["prompts"])
-        expected_induction = render_induction_prompt(
-            tuple(recorded_sample), max_concepts=int(document["induction_max_concepts"])
-        )
         expected_mapping = render_mapping_prompt(
             TECH_TAG_FIELD,
             ["<sample>"],
             catalogue=render_concept_catalogue(concepts),
             concept_ids=sorted(concept_ids),
         )
-        for kind, expected in (
-            ("induct", expected_induction),
-            ("map", expected_mapping),
-        ):
-            if prompts[kind]["text"] != expected:
-                raise VocabularyIntegrityError(
-                    f"vocabulary prompt {kind} drifted from the recording"
-                )
+        if prompts["map"]["text"] != expected_mapping:
+            raise VocabularyIntegrityError(
+                "vocabulary prompt map drifted from the recording"
+            )
+        # Both prompt templates are recorded through the same fixed probe input
+        # (mapping: the sentinel value; induction: the sentinel sample), so a
+        # template edit changes the recorded hash regardless of the real batches.
+        expected_induction = render_induction_prompt(
+            ("<sample>",),
+            max_concepts=int(document["induction_max_concepts"]),
+        )
+        if prompts["induct"]["text"] != expected_induction:
+            raise VocabularyIntegrityError(
+                "vocabulary prompt induct drifted from the recording"
+            )
 
     mappings: list[TagConceptMapping] = []
     unmapped: list[UnmappedTagValue] = []
@@ -629,10 +702,10 @@ def replay_vocabulary_from_bundle(
             raise VocabularyIntegrityError(
                 f"vocabulary bundle {field} batches are not in deterministic order"
             )
-    expected_sample = induction_sample(sorted(seen[TECH_TAG_FIELD]))
-    if tuple(recorded_sample) != expected_sample:
+    expected_chunks = induction_batches(sorted(seen[TECH_TAG_FIELD]))
+    if tuple(tuple(chunk) for chunk in recorded_chunks) != expected_chunks:
         raise VocabularyIntegrityError(
-            "induction sample is not the deterministic sample of the recorded values"
+            "induction chunks are not the deterministic chunks of the recorded values"
         )
 
     ordered_mappings = tuple(
@@ -651,6 +724,8 @@ def replay_vocabulary_from_bundle(
         "model": document["model"],
         "bundle_content_sha256": document["content_sha256"],
         "llm_call_count": len(calls),
+        "induction_merged_duplicates": merged_duplicates,
+        "induction_id_collisions": id_collisions,
         "prompt_tokens": int(usage.get("prompt_tokens", 0)),
         "completion_tokens": int(usage.get("completion_tokens", 0)),
         "source_value_counts": dict(document["source_value_counts"]),
@@ -667,7 +742,7 @@ def artifact_document(vocabulary: TechnicalVocabulary) -> dict[str, JsonValue]:
     return vocabulary.as_document()
 
 
-VOCABULARY_ARTIFACT_CONTENT_SHA256 = "PENDING_GENERATION"
+VOCABULARY_ARTIFACT_CONTENT_SHA256 = "d41041e447fcb755df1b26faad12509aa90c1a81063a430476dc6dc965d880fe"
 VOCABULARY_ARTIFACT_PATH = (
     Path(__file__).resolve().parent / "catalogs" / VOCABULARY_ARTIFACT_FILENAME
 )
@@ -824,6 +899,8 @@ def build_vocabulary_quality_section(
         "llm_calls": vocabulary.llm_call_count,
         "prompt_tokens": vocabulary.prompt_tokens,
         "completion_tokens": vocabulary.completion_tokens,
+        "induction_merged_duplicates": vocabulary.induction_merged_duplicates,
+        "induction_id_collisions": vocabulary.induction_id_collisions,
         "concepts": cast(
             JsonValue,
             {
@@ -838,6 +915,7 @@ def build_vocabulary_quality_section(
         ),
         "fields": cast(JsonValue, per_field),
         "minimum_coverage": MINIMUM_MAPPED_VALUE_COVERAGE,
+        "gated_fields": list(GATED_FIELDS),
         "unmapped_examples": cast(
             JsonValue, [item.value for item in vocabulary.unmapped[:unmapped_examples]]
         ),
@@ -880,6 +958,8 @@ def assert_vocabulary_quality(section: Mapping[str, JsonValue]) -> None:
     for field, payload in sorted(fields.items()):
         if not isinstance(payload, dict):
             raise VocabularyQualityError(f"vocabulary field {field} is malformed")
+        if field not in GATED_FIELDS:
+            continue
         coverage = payload.get("coverage")
         if (
             not isinstance(coverage, (int, float))

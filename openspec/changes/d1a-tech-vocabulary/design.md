@@ -75,6 +75,7 @@ consistency:
   "prompt_version": "d1a-tech-vocabulary-prompts-v1",
   "output_schema_version": "d1a-tech-vocabulary-output-v1",
   "prompts": {"<call kind>": {"sha256": "...", "text": "..."}},
+  "induction_chunks": [["<value>", "..."]],
   "calls": [
     {
       "call_id": "map:tech_tags:0007",
@@ -85,21 +86,44 @@ consistency:
       "output_sha256": "..."
     }
   ],
-  "call_count": 51,
+  "call_count": 63,
   "content_sha256": "..."
 }
 ```
+
+### Induction is chunked, and why
+
+One call over the whole sample invites an unbounded taxonomy: the model answered
+**500** and then **1,337** concepts - both truncated mid-line, both rejected by the
+parser - although the prompt stated a cap of 240 and later of 100 per call.  The
+recorded run therefore splits the deterministic sample (600 values) into **12
+chunks of 50** (`induction_batches`), each asking for at most 100 concepts; the
+transcripts stay bounded and all 12 recorded on the first attempt of the chunked
+run.  The measured line count is 465 across chunks.
+
+The union is merged by a deterministic rule (`merge_induced_concepts`):
+
+| shape | rule | measured |
+|---|---|---|
+| same canonical name in several chunks | one concept, smallest id wins | 11 names |
+| same id, different names | the id keeps the name that sorts first; the count is published as `induction_id_collisions` | 4 ids (智能硬件/智能硬件物联网方案, 智能家居/智能家居硬件, 炒菜机器人/烹饪机器人, 智慧零售方案/智能零售系统) |
+
+The four colliding ids are all near-synonyms and the number is an audit field, not
+a hidden correction: a reviewer sees 447 concepts, 11 name merges and 4 id
+collisions in the artifact.
+
+### Fail-closed axes
 
 Replay is fail-closed on every axis that could silently change the mapping:
 
 | failure | detection |
 |---|---|
-| a call is missing / extra for the recorded value set | the batch composition is recomputed from the source values and compared with `input_value_ids` per call id |
+| a call is missing / extra for the recorded value set | the batch composition is recomputed from the source values and compared with `input_value_ids` per call id (mapping) and with `induction_chunks` (induction) |
 | a transcript was edited | `output_sha256` recomputed |
 | a concept in a response is not in the vocabulary | referential check, `VocabularyIntegrityError` |
-| a response is malformed JSONL | parse error, no fallback |
+| a response is malformed JSONL | parse error, no fallback (this is what caught the truncated taxonomies and the CSV header of the first attempt) |
 | the bundle itself was edited | `content_sha256` recomputed over the canonical payload |
-| prompt drifted from the recording | `prompts[kind].sha256` compared with the shipped template |
+| prompt drifted from the recording | `prompts[kind].sha256` compared with the shipped template, re-rendered from a fixed probe input for both templates |
 
 The output format is **JSON Lines, one record per input value**, not a JSON
 array, so a truncated or partially-invalid response is detected per line instead
@@ -166,10 +190,17 @@ call, and asks for one compact JSONL line per value:
 {"v":"<raw value verbatim>","c":["concept.id", ...]}
 ```
 
-Induction is 1 call over a deterministic stratified sample; mapping is
-`ceil(distinct_values / batch)` calls per field. Measured call count is reported
-verbatim in the bundle (`call_count`) and in the quality section - it is an audit
-number, not an estimate.
+Induction is `len(induction_chunks)` calls (12 x 50 sampled values); mapping is
+`ceil(distinct_values / batch)` calls per field (100 values per call). The call
+count is reported verbatim in the bundle (`call_count`), in
+`out/induction-telemetry.json` and in the quality section - it is an audit number,
+not an estimate.
+
+Measured for this recording: **63 recorded calls** (12 induction + 50 `tech_tags`
+mapping + 1 `industry` mapping) plus **3 failed attempts** from the pre-fix
+recording rounds that were re-asked and are *not* in the bundle; the telemetry
+file accounts for both numbers, because a quota report that hides the retries
+would not be honest.
 
 ## 8. Alternatives rejected
 

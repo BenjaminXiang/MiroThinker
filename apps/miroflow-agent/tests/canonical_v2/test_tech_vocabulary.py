@@ -23,6 +23,7 @@ from src.data_agents.canonical_v2.domain_projection import (
 from src.data_agents.canonical_v2.domain_projection_models import CompanyProjection
 from src.data_agents.canonical_v2.tech_vocabulary import (
     BUNDLE_SCHEMA_VERSION,
+    GATED_FIELDS,
     INDUCTION_BATCH_ID,
     MINIMUM_MAPPED_VALUE_COVERAGE,
     OUTPUT_SCHEMA_VERSION,
@@ -36,7 +37,7 @@ from src.data_agents.canonical_v2.tech_vocabulary import (
     assert_vocabulary_quality,
     attach_vocabulary_section,
     build_vocabulary_quality_section,
-    induction_sample,
+    induction_batches,
     load_recorded_vocabulary_bundle,
     mapping_batches,
     parse_concept_drafts,
@@ -150,19 +151,22 @@ def _fixture_bundle(
     concepts_by_id = {concept.concept_id: concept for concept in concepts}
     catalogue = render_concept_catalogue(concepts)
     concept_ids = sorted(concepts_by_id)
-    sample = induction_sample(sorted(tech_values))
+    chunks = induction_batches(sorted(tech_values))
     calls: list[dict[str, Any]] = []
-    induction_output = _jsonl(concept_records)
-    calls.append(
-        {
-            "call_id": f"induct:{INDUCTION_BATCH_ID}",
-            "kind": "induct",
-            "input_value_ids": list(sample),
-            "input_sha256": _canonical_sha256(list(sample)),
-            "raw_output": induction_output,
-            "output_sha256": _sha256(induction_output),
-        }
-    )
+    for chunk_index, chunk in enumerate(chunks):
+        # every chunk proposes the full fixture taxonomy: the merge must collapse
+        # the cross-chunk duplicates deterministically
+        induction_output = _jsonl(concept_records)
+        calls.append(
+            {
+                "call_id": f"induct:{chunk_index:04d}",
+                "kind": "induct",
+                "input_value_ids": list(chunk),
+                "input_sha256": _canonical_sha256(list(chunk)),
+                "raw_output": induction_output,
+                "output_sha256": _sha256(induction_output),
+            }
+        )
     for field, values, mapping in (
         ("tech_tags", tech_values, tech_mapping),
         ("industry", industry_values, industry_mapping),
@@ -187,8 +191,8 @@ def _fixture_bundle(
             )
     prompts = {
         "induct": {
-            "sha256": _sha256(render_induction_prompt(sample, max_concepts=240)),
-            "text": render_induction_prompt(sample, max_concepts=240),
+            "sha256": _sha256(render_induction_prompt(("<sample>",), max_concepts=240)),
+            "text": render_induction_prompt(("<sample>",), max_concepts=240),
         },
         "map": {
             "sha256": _sha256(
@@ -221,7 +225,7 @@ def _fixture_bundle(
             "industry": len(set(industry_values)),
             "tech_tags": len(set(tech_values)),
         },
-        "induction_sample_values": list(sample),
+        "induction_chunks": [list(chunk) for chunk in chunks],
         "induction_max_concepts": 240,
         "mapping_batch_size": batch_size,
         "calls": sorted(calls, key=lambda item: item["call_id"]),
@@ -493,7 +497,7 @@ def test_quality_section_counts_coverage_and_published_values() -> None:
         "coverage": 0.8,
     }
     assert section["concepts"] == {"total": 6, "technology": 4, "industry": 2}
-    assert section["llm_calls"] == 5
+    assert section["llm_calls"] == 9
     assert section["published"]["tech_tags"] == {
         "published_values": 2,
         "concept_names": 1,
@@ -502,6 +506,10 @@ def test_quality_section_counts_coverage_and_published_values() -> None:
     }
     assert section["collection_gap"]["companies_without_tech_tags"] == 1601
     assert section["minimum_coverage"] == MINIMUM_MAPPED_VALUE_COVERAGE
+    assert section["gated_fields"] == list(GATED_FIELDS)
+    # the industry axis is reported but not gated: its undecidable labels stay
+    # published verbatim, which is the documented no-guess behaviour
+    assert section["fields"]["industry"]["coverage"] == 1.0
     assert section["unmapped_examples"] == ["社区收纳系统解决方案提供商"]
 
 
