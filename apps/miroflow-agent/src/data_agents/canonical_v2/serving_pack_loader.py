@@ -669,10 +669,7 @@ def open_serving_pack_authority(
     if (
         index_result.content_sha256 != _canonical_sha256(index_result_payload)
         or index_result.policy_snapshot.embedding_model != manifest.embedding_model_id
-    ) and os.environ.get("SERVING_PACK_SKIP_HASH_VERIFY", "") != "1":
-        # SERVING_PACK_SKIP_HASH_VERIFY=1 bypasses the graph-replay hash
-        # check for development/testing — the pack loads without re-verifying
-        # the build graph (code changes make old packs unverifiable).
+    ):
         raise ServingPackIntegrityError(
             "serving pack index result does not reproduce its recorded hash"
         )
@@ -698,7 +695,7 @@ def open_serving_pack_authority(
         relationship_result.content_sha256
         != manifest.relationship_result_content_sha256
         or relationship_result.release_id != expected_release_id
-    ) and os.environ.get("SERVING_PACK_SKIP_HASH_VERIFY", "") != "1":
+    ):
         raise ServingPackIntegrityError("serving pack relationship result hash differs")
     candidate_result = _parse_model(
         CandidateProjectionResult,
@@ -709,7 +706,7 @@ def open_serving_pack_authority(
         candidate_result.content_sha256
         != manifest.candidate_projection_result_content_sha256
         or candidate_result.release_id != expected_release_id
-    ) and os.environ.get("SERVING_PACK_SKIP_HASH_VERIFY", "") != "1":
+    ):
         raise ServingPackIntegrityError(
             "serving pack candidate projection result hash differs"
         )
@@ -737,9 +734,7 @@ def open_serving_pack_authority(
     observed_request_sha256 = _canonical_sha256(
         relationship_request.model_dump(mode="json")
     )
-    if observed_request_sha256 != manifest.relationship_request_sha256 and (
-        os.environ.get("SERVING_PACK_SKIP_HASH_VERIFY", "") != "1"
-    ):
+    if observed_request_sha256 != manifest.relationship_request_sha256:
         raise ServingPackIntegrityError(
             "serving pack relationship request does not reproduce its recorded hash"
         )
@@ -805,9 +800,7 @@ def open_serving_pack_authority(
     observed_index_request_sha256 = _canonical_sha256(
         index_request.model_dump(mode="json")
     )
-    if observed_index_request_sha256 != manifest.index_projection_request_sha256 and (
-        os.environ.get("SERVING_PACK_SKIP_HASH_VERIFY", "") != "1"
-    ):
+    if observed_index_request_sha256 != manifest.index_projection_request_sha256:
         raise ServingPackIntegrityError(
             "serving pack index projection request does not reproduce its recorded hash"
         )
