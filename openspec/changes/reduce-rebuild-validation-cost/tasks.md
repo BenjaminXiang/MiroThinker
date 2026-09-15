@@ -44,6 +44,14 @@ Human log: `docs/plans/2026-09-15-rebuild-trigger-fix-log.md`.
       phase drop from hours to minutes; per-phase before/after recorded.
       → copy-DB projection only (846,986 × 28.7 µs ≈ 24 s vs measured 12 h 40 m).
       **run16 must record the real per-phase timings** — not done in this slice.
+- [x] 1.7 Merge-integration guard: the C2_0014 migration landed without moving
+      `_EXPECTED_ALEMBIC_REVISION`, so the run16 launcher (`alembic upgrade head`
+      then `validate_fresh_targets` → `_assert_fresh_database`, exact equality)
+      would have aborted the build. Constant bumped to C2_0014 and pinned to the
+      migration head by a new test (data-line merge commit `10b646ac`).
+      → `tests/canonical_v2/test_canonical_revision.py`
+      (`test_build_expected_revision_matches_the_migration_head`, RED before /
+      GREEN after; file 8 passed); verification.md §9.
 
 ## Step 2 — envelope / authority contract (not started)
 

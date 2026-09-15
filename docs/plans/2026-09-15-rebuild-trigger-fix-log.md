@@ -95,3 +95,26 @@ relationship **4.807 ms → 0.008 ms**，identity **7.717 ms → 0.038 ms**。
 - 顺手把 identity / relationship 两族同类逐行扫描压到同一量级（≈54 min → ≈12 s、≈45 s → <1 s）。
 - 留下两条**明确的未做项**：`validate_identity_resolution_release` 的粒度改造、
   `validate_field_temporal_binding` 的残值优化，都要 run16 的管线内计时来定优先级。
+
+## 合流集成（2026-09-15 晚，run16 前置）
+
+**做了什么**：把 F3 与 D0-a/D0-b、C1 一起并入数据线 `data/p4-serving-pack-rebuild`
+（merge `4b546cee` → `b5af35a9` → `148bc03f`），并做了合并集成检查。
+
+**发现（run16 会踩中的坑）**：F3 加了迁移 `C2_0014`，但没有把
+`_EXPECTED_ALEMBIC_REVISION` 从 `C2_0013` 提上去。发射脚本第 2 步是
+`alembic upgrade head`（现在升到 C2_0014），而 `validate_fresh_targets →
+_assert_fresh_database` 要求**精确相等**——run16 会在构建开始前直接 `ValueError`
+（"candidate database migration revision differs from the live single head"）终止。
+C1 冲突同批解析：`knowledge_build_isolated.py` 取 C1 的 `supplemental_rows`
+（函数签名已换成 `object_rows_by_id` + `supplemental_rows`；HEAD 侧只是把 if 折成
+单行），change-ledger 冲突保留双方行。
+
+**怎么验证**：修复提交 `10b646ac`（常量 → C2_0014 + 新守卫测试钉住"常量 == 迁移
+head"：RED 先失败、GREEN 后通过，`test_canonical_revision.py` 8 passed）；合并树里
+6 个定向测试文件 **168 passed**；PG-gated 套件升级到各自 pin 的旧版本（不是 head），
+不受影响；既有红不变（isolated 12 条 mock 在 C2_0012、F402 lint 自 `5078678b` 起既有）。
+
+**影响哪些问题**：解除 run16 的发射阻断（否则第一步就失败）；给迁移头版本加了一条
+长期守卫——以后再加迁移忘了提常量，测试会红。发射清单见
+[run16 发射 Runbook](./2026-09-15-run16-launch-runbook.md)。

@@ -152,3 +152,32 @@ See `python-scan-before-after.md` and `bench-identity-validation.txt`:
   encoding / `_require_unique`, not scanning.
 - All 60 identity-resolution contract tests pass (58 pre-existing + 2 new
   parametrised cases).
+
+## 9. Merge integration + head-pin guard (2026-09-15, data-line merge)
+
+F3 was integrated into the data launch line (`data/p4-serving-pack-rebuild`)
+together with D0-a/D0-b and C1. The integration check found the migration had
+been added **without** moving `_EXPECTED_ALEMBIC_REVISION` (still `C2_0013`).
+
+Why it mattered: the launcher (`build-run15.sh`, template for run16) migrates
+the fresh candidate database with `alembic upgrade head` (now `C2_0014`), and
+`_RealBoundary.validate_fresh_targets` → `_assert_fresh_database` asserts
+**exact equality** with the constant. The run16 build would therefore abort
+with "candidate database migration revision differs from the live single head"
+before doing any work.
+
+Fix + guard (`10b646ac`):
+
+- `_EXPECTED_ALEMBIC_REVISION` `C2_0013` → `C2_0014`;
+- new `tests/canonical_v2/test_canonical_revision.py::test_build_expected_revision_matches_the_migration_head`
+  pins the constant to the loaded migration head — RED before the bump, GREEN
+  after (file 8 passed).
+
+Cross-line checks in the merged tree: 6 targeted files (publication cleaning
+batch2, applicant-binding relationship seeds, patent↔company binding
+reconciliation, identity-resolution contract, patent applicant linking,
+publication cleaning batch1) = **168 passed**; `test_canonical_revision.py` =
+8 passed. The PG-gated suites upgrade to their own pinned revision (not head),
+so the bump does not touch them. Pre-existing red unchanged:
+`test_knowledge_build_isolated.py` fixtures mock `C2_0012` (12-failure class),
+`F402` lint in `knowledge_build_isolated.py` (present since `5078678b`).
