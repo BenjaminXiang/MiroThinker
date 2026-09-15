@@ -53,6 +53,16 @@ Human log: `docs/plans/2026-09-15-rebuild-trigger-fix-log.md`.
       (`test_build_expected_revision_matches_the_migration_head`, RED before /
       GREEN after; file 8 passed); verification.md §9.
 
+- [x] 1.8 Launch-gate coupling: C2_0014 also invalidates the **frozen live-schema
+      catalog expectations** (`_EXPECTED_LIVE_SCHEMA_CATALOG_COUNTS.index`
+      168 → 174, and `_EXPECTED_LIVE_SCHEMA_CATALOG_SHA256`), which
+      `_assert_fresh_database` compares against a freshly migrated candidate
+      database — found when the first run16 launch aborted in preflight. Both
+      values recomputed and proved stable across **two independently migrated
+      scratch databases** (`8a738964…`); updated in the data-line commit that
+      relaunched run16. Lesson: every migration must move all three frozen
+      expectations (revision constant, catalog counts, catalog sha256).
+
 ## Step 2 — envelope / authority contract (not started)
 
 - [ ] 2.1 Decide the split shape (manifest + content-addressed parts + one-time

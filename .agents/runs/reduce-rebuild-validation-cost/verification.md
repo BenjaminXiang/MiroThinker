@@ -181,3 +181,29 @@ publication cleaning batch1) = **168 passed**; `test_canonical_revision.py` =
 so the bump does not touch them. Pre-existing red unchanged:
 `test_knowledge_build_isolated.py` fixtures mock `C2_0012` (12-failure class),
 `F402` lint in `knowledge_build_isolated.py` (present since `5078678b`).
+
+## 10. Second launch blocker: frozen live-schema catalog (2026-09-15, run16)
+
+The first run16 launch aborted in preflight with
+`IsolatedKnowledgeBuildSafetyError` after the revision constant was fixed. The
+chained cause was `_live_schema_catalog_sha256`:
+`expected={'index': 168, ...}`, `observed={'index': 174, ...}` — the six partial
+indexes C2_0014 creates. `_assert_fresh_database` compares a freshly migrated
+candidate database against three frozen expectations, and the migration had
+moved only none of them:
+
+1. `_EXPECTED_ALEMBIC_REVISION` (fixed earlier, §9);
+2. `_EXPECTED_LIVE_SCHEMA_CATALOG_COUNTS` (`index` 168 → 174);
+3. `_EXPECTED_LIVE_SCHEMA_CATALOG_SHA256` (recomputed).
+
+Both new values were produced by re-running the module's own catalog SQL
+(`_LIVE_SCHEMA_CATALOG_SQL` + `_schema_catalog_sha256`) against **two
+independently migrated scratch databases** (`miroflow_candidate_v2_20260916_r1`
+and `miroflow_catalog_probe_tmp`), which returned byte-identical
+`counts` and `sha256=8a73896463c36980290ee5d92dd739ba4cd8e869207da8d5d8bf28bbd05d1c8e`.
+Only `knowledge_build_isolated.py` carries those constants (readers of the
+constant adapt automatically; the s12b resume script compares against it).
+
+Lesson recorded in tasks 1.8: a migration must move **all three** frozen
+expectations, and F3's in-pipeline verification (deferred to run16) is what
+surfaced #2/#3.
