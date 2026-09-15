@@ -1,0 +1,52 @@
+{
+  "_source": "run15 sealed serving pack (/var/tmp/mirothinker-data-v2/serving-pack-run15-sealed/lookup.sqlite3), copied read-only; values are verbatim (truncated where noted)",
+  "glue_damaged": {
+    "identifier": "多参数监护仪（如DM-7未找到未找到C,DM-8未找到未找到C系列）、智能自控手术室、手术吊塔、无影灯、一次性手术包",
+    "version": "基于人工智能技术的半导体器件生产良率预测系统（V1.未找到版）",
+    "version_dot": "蓝图速配VR设计软件（提及版本包括6.未找到、6.2等）",
+    "prefix_glued": "未找到未找到1(光纤收发器),POE-1未找到1A(POE分离器)",
+    "whole_token_glued": "SBC89未找到"
+  },
+  "glue_legit_prose": {
+    "patent_abstract": "本发明公开了连续体机器人的运动规划方法、装置、终端及存储介质，方法包括：以连续体机器人当前位置为根节点构建运动规划树，利用环境及障碍物信息创建目标搜索空间；在目标搜索空间内，随机采样一个节点，并判断该节点有效性和机器人在该采样节点处的避障情况；当避障成功时，计算连续体机器人的配置参数，并将距离该采样点位置最近的树节点作为其父节点，将该采样点加入运动规划树中；在预设的迭代次数范围内或未找到最终目标节点的过程内，重复此过程直到预设迭代次数用尽或找到包含目标终点的规划树，通过路径回溯的方式将节点依次连接得到连续体机器人的运动规划路线。本发明实现了连续体机器人在动态环境中运动时的自主规划和避障功能。",
+    "self_declared_absence": "32个系列、1,500余种规格，涵盖插件型、表面贴装型及片式叠层固态铝电解电容器；具体型号未公开披露，故标记为未找到。"
+  },
+  "no_information_sentence": {
+    "pure": "根据现有信息，未找到该公司产品的具体应用场景信息。",
+    "with_content": "根据现有信息，该公司业务与智能家居领域相关，但未找到其产品的具体应用场景信息。"
+  },
+  "glue_kept_on_run15": {
+    "_note": "the 9 legitimate-prose values the run15 replay kept (see out/kept-legit-prose.jsonl)",
+    "count": 9
+  },
+  "geography": {
+    "company_named_reference": {
+      "reference_id": "source-reference:ee410024807c0467fa930b5ae9b3f3b3c1e4b3b1c8f0e1c2f3a4b5c6d7e8f9a0",
+      "name": "广东省"
+    },
+    "registered_address": "深圳市南山区科技园中区科苑路15号科兴科学园B栋",
+    "registered_address_with_province": "广东省深圳市宝安区西乡街道宝源路2001号",
+    "city_level": "广东省-深圳市",
+    "city_missing_suffix": "广东省-珠海"
+  },
+  "research_directions": {
+    "nav_block": "主讲本科课程： 主讲研究生课程： 教育背景： 工作履历： 主持项目： 代表期刊论文 ： 代表会议论文： 代表专利： 代表著作： 获得荣誉： 主要学术兼职： 上一篇： 没有了 下一篇： 没有了 微信公众号…",
+    "glued_nav_block": "工业软件开发等 主讲本科课程： Android应用程序设计 主讲研究生课程： 智能制造原理与方法 教育背景： 1.哈尔滨工业大学 本科 2.哈尔滨工业大学 硕士 3.哈尔滨工业大学 博士 工作履历： ",
+    "sentence_fragment": "不同取食策略生物的耐热性，仍缺乏系统验证",
+    "truncated_tail": "蛹等）",
+    "too_short": "1",
+    "dated_dump": "2016年《哲学研究》论文（关于沼泽人疑难）",
+    "layout_dump_with_dates": "思想政治教育理论与现代方法 大数据时代大学生爱国主义教育 粤港澳大湾区青年国家认同教育 教学情况： 思想道德与法治 代表性科研成果： 1.守正创新:高校爱国主义教育的基本遵循[J]",
+    "clean_short": "人工智能",
+    "clean_slash": "2D/3D目标检测",
+    "clean_phrase": "车路协同交通控制",
+    "clean_bilingual_long": "基于图神经网络的电路表示学习 (GNN-based Circuit Representation Learning)"
+  },
+  "build_synthesized_placeholders": [
+    "Not supplied by the historical source.",
+    "No dedicated summary was supplied by the historical source.",
+    "No dedicated summary was supplied by the full-column workbook source.",
+    "No dedicated summary was supplied by the backfill source.",
+    "Not supplied by the backfill source."
+  ]
+}

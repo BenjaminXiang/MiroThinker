@@ -5,6 +5,7 @@ import json
 from src.data_agents.canonical_v2 import index_projection
 from src.data_agents.canonical_v2 import knowledge_build_isolated
 from src.data_agents.canonical_v2 import knowledge_serving_isolated
+from src.data_agents.canonical_v2 import publication_cleaning
 from src.data_agents.canonical_v2.domain_projection_models import (
     NamedReference,
     ProfessorProjection,
@@ -15,27 +16,33 @@ _PROFESSOR_MISSING_FIELD_FALLBACK = (
 )
 
 
-def _professor_projection(*, department: str, title: str) -> ProfessorProjection:
+def _professor_projection(
+    *, department: str | None, title: str | None
+) -> ProfessorProjection:
     return ProfessorProjection.model_construct(
         name="张三",
         canonical_name_zh="张三",
         canonical_name_en=None,
         aliases=(),
         institution="清华大学深圳国际研究生院",
-        department=NamedReference(
-            reference_id="department:computer-science",
-            name=department,
+        department=(
+            NamedReference(
+                reference_id="department:computer-science",
+                name=department,
+            )
+            if department is not None
+            else None
         ),
         title=title,
     )
 
 
 def test_public_embedded_content_omits_missing_field_placeholder() -> None:
+    # D0-a: degraded fields are absent from the published projection
+    # (publication_cleaning drops the placeholder), so the embedded content
+    # simply carries no key for them.
     degraded = index_projection._public_embedded_content(
-        _professor_projection(
-            department=_PROFESSOR_MISSING_FIELD_FALLBACK,
-            title=_PROFESSOR_MISSING_FIELD_FALLBACK,
-        ),
+        _professor_projection(department=None, title=None),
         index_projection.ProjectionView.identity,
     )
     assert "Not supplied" not in degraded
@@ -55,14 +62,18 @@ def test_public_embedded_content_omits_missing_field_placeholder() -> None:
 
 
 def test_missing_field_placeholder_constant_matches_build_side() -> None:
-    # knowledge_build_isolated imports both serving and index_projection, so
-    # the consumers pin a private copy instead of importing the constant back
+    # knowledge_build_isolated imports the serving module, so the serving
+    # consumer pins a private copy instead of importing the constant back
     # across the cycle; this contract keeps the copies aligned.
     assert (
         knowledge_serving_isolated._PROFESSOR_MISSING_FIELD_FALLBACK
         == knowledge_build_isolated._PROFESSOR_MISSING_FIELD_FALLBACK
     )
+    # The publication layer owns placeholder recognition: the build's own
+    # fallback must classify as a placeholder family, never as data.
     assert (
-        index_projection._PROFESSOR_MISSING_FIELD_FALLBACK
-        == knowledge_build_isolated._PROFESSOR_MISSING_FIELD_FALLBACK
+        publication_cleaning.placeholder_family(
+            knowledge_build_isolated._PROFESSOR_MISSING_FIELD_FALLBACK
+        )
+        == "prefix"
     )

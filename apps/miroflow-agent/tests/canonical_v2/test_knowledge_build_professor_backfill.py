@@ -861,7 +861,8 @@ def test_backfill_skips_unknown_professor_and_counts() -> None:
     )
 
     projection = public[4].projections[0]
-    assert projection.department.name == module._PROFESSOR_MISSING_FIELD_FALLBACK
+    # D0-a: a demoted field publishes as absent, never as placeholder text.
+    assert projection.department is None
     unmatched = [
         gap
         for gap in public[6]
@@ -894,7 +895,8 @@ def test_backfill_skips_crosswired_professor_name() -> None:
     )
 
     projection = public[4].projections[0]
-    assert projection.department.name == module._PROFESSOR_MISSING_FIELD_FALLBACK
+    # D0-a: a demoted field publishes as absent, never as placeholder text.
+    assert projection.department is None
     crosswired = [
         gap
         for gap in public[6]
@@ -1065,7 +1067,8 @@ def test_backfill_skips_unsupported_and_unprovenanced_fields() -> None:
     # aliases/canonical_name_en are outside the professor projection contract;
     # the unprovenanced department value stays out; only title merges.
     assert projection.title == "副教授"
-    assert projection.department.name == module._PROFESSOR_MISSING_FIELD_FALLBACK
+    # D0-a: a demoted field publishes as absent, never as placeholder text.
+    assert projection.department is None
     skipped = [
         gap
         for gap in public[6]

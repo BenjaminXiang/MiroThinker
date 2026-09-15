@@ -44,6 +44,11 @@ from .internal_reference_projection import (
     TechnologyConceptProjection,
     TechnologyRouteProjection,
 )
+from .publication_cleaning import (
+    PublicationQualityError,
+    assert_publication_quality,
+    audit_lookup_documents,
+)
 from .path_eligibility import (
     PathEligibilityEngine,
     PathEligibilityIntegrityError,
@@ -56,12 +61,6 @@ LOOKUP_PROJECTION_VERSION = "canonical-v2-lookup-projection-v1"
 LOOKUP_SCHEMA_VERSION = "canonical-v2-lookup-schema-v1"
 _VECTOR_PATH = "semantic_recall"
 _LOOKUP_PATH = "exact_lookup"
-# Pinned to knowledge_build_isolated._PROFESSOR_MISSING_FIELD_FALLBACK.  The
-# build module imports this one, so importing the constant back would close
-# an import cycle; a contract test asserts the two values stay equal.
-# Degraded professor fields carrying this placeholder must embed as absent,
-# not as literal source text.
-_PROFESSOR_MISSING_FIELD_FALLBACK = "Not supplied by the historical source."
 
 
 class IndexProjectionIntegrityError(ValueError):
@@ -487,6 +486,15 @@ class IndexProjectionBuilder:
             path_pairs,
             supplementary_by_canonical=validated.supplementary_field_values,
         )
+        # Publication gate (R21/D0-a): the last build stage before the pack is
+        # written refuses to publish placeholder text, glue damage or
+        # research-direction junk, and requires city-level company geography.
+        try:
+            assert_publication_quality(audit_lookup_documents(lookup_documents))
+        except PublicationQualityError as exc:
+            raise IndexProjectionIntegrityError(
+                f"published pack failed the data-cleaning gate: {exc}"
+            ) from exc
         expected_index_projections = build_index_projection_manifests(
             request=validated,
             points=points,
@@ -749,11 +757,11 @@ def _public_embedded_content(
                 "aliases": list(projection.aliases),
                 "institution": projection.institution,
             }
-            # Defaulted placeholders carry no evidence; embed the degraded
-            # fragments as absent rather than as literal source text.
-            if projection.department.name != _PROFESSOR_MISSING_FIELD_FALLBACK:
+            # Placeholder-only fields are already absent from the projection
+            # (publication_cleaning); embed what exists and nothing else.
+            if projection.department is not None:
                 content["department"] = projection.department.name
-            if projection.title != _PROFESSOR_MISSING_FIELD_FALLBACK:
+            if projection.title is not None:
                 content["title"] = projection.title
         elif view is ProjectionView.research:
             content = {
@@ -842,7 +850,9 @@ def _public_embedded_content(
     # profiled professors) sort higher in the answer selector; the flag is
     # internal metadata, never rendered to users as a limitation.
     if isinstance(projection, PaperProjection):
-        content["_quality_tier"] = "anchored" if not supplementary_values else "enriched"
+        content["_quality_tier"] = (
+            "anchored" if not supplementary_values else "enriched"
+        )
     return json.dumps(
         cast(JsonValue, content),
         ensure_ascii=False,
@@ -932,9 +942,7 @@ def _vector_points(
         eligibility_outcome: Literal["admitted", "limited"] = (
             "admitted" if semantic.outcome is PolicyOutcome.admitted else "limited"
         )
-        supp = (supplementary_by_canonical or {}).get(
-            projection.canonical_identity_id
-        )
+        supp = (supplementary_by_canonical or {}).get(projection.canonical_identity_id)
         for view, projection_id in _public_vector_specs(projection):
             content = _public_embedded_content(projection, view, supp)
             points.append(
@@ -1038,9 +1046,7 @@ def _lookup_documents(
         )
         projection_id = _lookup_projection_id(projection.entity_type)
         content = projection.model_dump_json()
-        supp = (supplementary_by_canonical or {}).get(
-            projection.canonical_identity_id
-        )
+        supp = (supplementary_by_canonical or {}).get(projection.canonical_identity_id)
         if supp:
             enriched = json.loads(content)
             enriched["_supplementary"] = supp

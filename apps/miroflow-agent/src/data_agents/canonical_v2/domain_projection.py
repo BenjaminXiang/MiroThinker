@@ -54,6 +54,7 @@ from .domain_projection_models import (
     ProjectionEvidenceReference,
     TypedSubobject,
 )
+from .publication_cleaning import clean_projected_values
 
 
 Projection = (
@@ -783,6 +784,17 @@ class _ProjectionContext:
             projected_values[attribute] = tuple(
                 sorted(typed_values, key=lambda item: item.subobject_id)
             )
+        # D0-a cleaning: placeholders, glue damage, research-direction junk and
+        # province-only geography are resolved once, here, so neither the
+        # published lookup documents nor the vector content can carry them.
+        # The quarantine records are reproduced offline (see design.md):
+        # debt: the build does not yet persist research-directions-quarantine.jsonl
+        # next to the release quality report (D0-b/D1 wiring).
+        projected_values, _quarantined = clean_projected_values(
+            identity.entity_type,
+            projected_values,
+            canonical_identity_id=identity.canonical_identity_id,
+        )
         lineage = tuple(
             FieldProjectionLineage(
                 field_path=item.field_path,
