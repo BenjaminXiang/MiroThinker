@@ -18,8 +18,10 @@ Human log: `docs/plans/2026-09-15-rebuild-trigger-fix-log.md`.
       `(source_id, field_path)`); error messages and fail-closed semantics stay
       byte-identical.
       → `canonical_identity_resolution.py` (`_index_assertions_by_source_and_field`,
-      single-pass `assertion_ids_by_source`); 58 contract tests green; RED/GREEN
-      iteration counts in `python-scan-before-after.md`.
+      single-pass `assertion_ids_by_source`, and the same-shape per-verdict scans in
+      `validate_identity_resolution_result`); 60 contract tests green; RED/GREEN
+      iteration counts and a 1.17×/1.53×/1.95× time benchmark in
+      `python-scan-before-after.md` / `bench-identity-validation.txt`.
 - [x] 1.3 `validate_field_human_review_binding`: release-level guard + the
       expression/partial index; prove the guard is a no-op when reviews exist.
       → C2_0014: guard + `ix_knowledge_canonical_decision_human_review_case` /

@@ -18,9 +18,11 @@
    **每一条拒绝分支的必要条件**，所以结果不变、只是不再做无用功。
 4. **同型清理（pattern-repair）**：同样形态的 relationship / identity 绑定校验一起修；
    逐条实测其余 row 级触发器，把"同病"和"不同病"分开记录（见下）。
-5. **Python 侧两处逐实体全扫描**：`canonical_identity_resolution.py` 的断言集分组
-   改成一次遍历建索引（`validate_request` 的 `assertion_ids_by_source`、
-   `_has_evidence_bound_internal_identifier` 改成查 `(source_id, field_path)` 索引）。
+5. **Python 侧逐实体全扫描**：`canonical_identity_resolution.py` 里断言集被反复重扫的地方改成
+   一次遍历建索引（`validate_request` 的 `assertion_ids_by_source`、
+   `_has_evidence_bound_internal_identifier` 改查 `(source_id, field_path)` 索引、
+   `validate_identity_resolution_result` 里"每个候选 verdict 过滤一遍全量断言/全部 source"的两处
+   改成预建映射 + 位置索引，顺序保持不变所以哈希不变）。
 
 ## 关键实测数字（全部在副本库上）
 
@@ -69,8 +71,10 @@ relationship **4.807 ms → 0.008 ms**，identity **7.717 ms → 0.038 ms**。
 - **迁移可逆**：`alembic upgrade C2_0014` 1.5 s；`downgrade C2_0013` 后
   `check_function_bodies.py` 证明函数体**逐字节回到 C2_0007**（空白归一化后 token 级一致），
   每行代价也回到 40,438 µs；再 upgrade 回守卫版。未改写任何历史迁移。
-- **Python 侧**：新回归测试把断言集遍历次数钉住（RED：4 源 5 次 / 32 源 33 次；GREEN：1 次），
-  identity 合同套件 58 项全绿。
+- **Python 侧**：新回归测试把断言集遍历次数钉住（RED：4 源 5 次 / 32 源 33 次；GREEN：1 次）；
+  `validate_identity_resolution_result` 实测 500/2,000/10,000 源分别为 **1.17× / 1.53× / 1.95×** 提速；
+  改完再 cProfile，残值已是 pydantic 重校验与 JSON 编码（合同自身的 fail-closed 重校验），
+  不再是"逐条重扫"；identity 合同套件 60 项全绿。
 
 ## 影响哪些问题
 
