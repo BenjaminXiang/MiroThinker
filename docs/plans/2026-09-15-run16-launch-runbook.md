@@ -158,5 +158,6 @@ setsid nohup bash .agents/runs/full-column-serving-pack-rebuild/build-run16.sh \
 
 - 从 run16 信封记录 per-phase 计时（F3 acceptance A1/A2 与 F1/F2 follow-up 的判定输入）。
 - 根仓 `AGENTS.md` §2 的 serving-pack 描述（Milvus Lite）随 v2 生效更新（受保护文件，单独确认）。
-- 既有红灯（isolated 12 / scope 1 / F402）并入 P12 卫生；D0-a 死字段退役（22 个）单独切片；
-  light-lane 残留库清理待拍板。
+- 既有红灯（isolated 12 / scope 1 / F402）并入 P12 卫生；另记：`test_knowledge_build_isolated.py`
+  全文件跑在并发负载下需 20+ 分钟（mock 重 + in-process 构建），**不是挂死**，P12 时拆分/标记
+  慢用例；D0-a 死字段退役（22 个）单独切片；light-lane 残留库清理待拍板。
