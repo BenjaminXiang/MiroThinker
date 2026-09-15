@@ -68,6 +68,19 @@ def _synthetic_scripts(
     return ScriptDirectory.from_config(config)
 
 
+def test_build_expected_revision_matches_the_migration_head() -> None:
+    """The isolated build accepts only its exact expected revision at the fresh
+    target, so a migration lands together with the matching constant bump."""
+    build_module = import_module(
+        "src.data_agents.canonical_v2.knowledge_build_isolated"
+    )
+
+    assert (
+        build_module._EXPECTED_ALEMBIC_REVISION
+        == _canonical_scripts().get_current_head()
+    )
+
+
 def test_minimum_revision_accepts_exact_and_known_linear_descendant(
     tmp_path: Path,
 ) -> None:
