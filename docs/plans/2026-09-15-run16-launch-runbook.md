@@ -113,12 +113,17 @@ setsid nohup bash .agents/runs/full-column-serving-pack-rebuild/build-run16.sh \
 
 ## 4. 封印（pack v2）
 
-模板：`build_run15_serving_pack.sh` → `build_run16_serving_pack.sh`；差异：
+**脚本已就绪**：`build_run16_serving_pack.sh`（参数副本 + 三道 fail-closed 闸：pack 目录
+必须全新；index 根/marker 必须存在且 sha 与 `EXPECTED_MARKER_SHA256`（来自
+`build-run16.sh` 打印的 `index marker sha256=`）一致；sealer 必须支持
+`--pack-schema-version`——当前 index-v3 未建故直接 exit 2，已实测）。差异：
 
 - `INDEX_ROOT=index-v3`、`PACK_DIR=/var/tmp/mirothinker-data-v2/serving-pack-run16-sealed`、
-  `ENVELOPE=…-run16.json`、marker sha = index-v3 新值、`RELEASE_ID`/`GENERATOR_RUN_ID` 换 run16；
-- **sealer 必须用 P1 版**（v2 格式）：`.worktrees/slim-serving-pack/.../s12c/build_serving_pack.py`
-  加 `--pack-schema-version v2`；运行树 = 服务线树（sealer 依赖 s11 模块，run15 脚本已注明）；
+  `ENVELOPE=` 固定路径（run16 信封，见 §3）、`RELEASE_ID=candidate-v2-20260916-r1`、
+  `GENERATOR_RUN_ID=p4-pack-20260916-v1`；
+- **sealer 用 P1 版且运行树 = 将服务该包的服务线树**（脚本默认
+  `SERVING_WORKTREE=.worktrees/canonical-v2-s11-consolidation`，即 P1 + 模型同步合入后的
+  服务线；可用环境变量覆盖）；产出 v2 契约包；
 - 产出 v2 pack + mount receipt；随后 `smoke_test.py` 冒烟（scratch 端口，不占 18188）。
 
 ## 5. 切包窗口（18188）
