@@ -242,6 +242,7 @@ config/*
 !config/managed/
 config/managed/*
 !config/managed/settings.example.json
+!config/managed/secrets.example.json
 todos/
 
 # Local full-row evidence from the current Professor dataset cleanup run.

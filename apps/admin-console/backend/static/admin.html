@@ -291,6 +291,33 @@
         </p>
       </section>
 
+      <section class="card" aria-label="密钥与连通性">
+        <header>
+          <h2>连接与密钥（可设置）</h2>
+          <span class="hint" id="secretsPath">—</span>
+        </header>
+        <div id="secretsNotice" class="notice hidden" role="status"></div>
+        <div class="notice" id="restartNotice" role="status"></div>
+        <table id="secretsTable">
+          <thead>
+            <tr>
+              <th>连接</th>
+              <th>当前状态</th>
+              <th>新密钥（写入后不回显）</th>
+              <th>端点 / 模型（可留空）</th>
+              <th>操作</th>
+              <th>测试结果</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+        <p class="footnote">
+          密钥只写不读：页面永远只显示掩码与来源（env / 受管文件 / 旧 key 文件），明文既不回显也不写日志与审计。
+          「测试连通性」用**当前填写但未保存**的值发起一次最小调用（成功/失败 + 延迟），并受服务端限频保护。
+          保存后需**重启服务**才生效（服务启动时读取受管文件，不做热加载）。
+        </p>
+      </section>
+
       <section class="card" aria-label="Provider key 状态">
         <header>
           <h2>Provider / 模型 key 状态</h2>
@@ -325,6 +352,8 @@
       const API = {
         status: "api/canonical-v2/admin/system-status",
         config: "api/canonical-v2/admin/config",
+        secrets: "api/canonical-v2/admin/secrets",
+        connectionTest: "api/canonical-v2/admin/connections/test",
         health: "api/canonical-v2/admin/providers/health-check",
       };
 
@@ -355,6 +384,12 @@
         { path: "extraction_endpoints.rerank_base_url", label: "Rerank Base URL", type: "url" },
         { path: "extraction_endpoints.rerank_model", label: "Rerank 模型名", type: "text" },
         { path: "paths.access_log_retention_days", label: "访问日志保留天数", type: "int", min: 1, max: 3650 },
+        { path: "serving.web_topical_floor", label: "Web 轨主题相关性下限（kill switch）", type: "bool" },
+        { path: "serving.rerank_timeout_seconds", label: "Rerank 超时（秒）", type: "float", min: 0.1, max: 120 },
+        { path: "serving.rerank_max_documents", label: "Rerank 单次最大文档数", type: "int", min: 1, max: 2048 },
+        { path: "serving.mount_receipt_path", label: "挂载收据路径", type: "text" },
+        { path: "serving.turn_debug_dir", label: "轮次调试目录", type: "text" },
+        { path: "serving.full_verify", label: "启动全量校验", type: "bool" },
       ];
 
       let configState = null;
@@ -599,6 +634,9 @@
             const envPill = pill("env 优先", "warn");
             meta.append(" ", envPill);
           }
+          if (field.readonly_reason) {
+            meta.append(" ", pill("只读展示", "warn"), ` ${field.readonly_reason}`);
+          }
           labelNode.append(document.createElement("br"), meta);
 
           const input = document.createElement("input");
@@ -607,8 +645,9 @@
           if (spec.type === "bool") {
             input.type = "checkbox";
             input.checked = Boolean(field.value);
-          } else if (spec.type === "int") {
+          } else if (spec.type === "int" || spec.type === "float") {
             input.type = "number";
+            if (spec.type === "float") input.step = "0.1";
             input.min = String(spec.min);
             input.max = String(spec.max);
             input.value = field.value == null ? "" : String(field.value);
@@ -619,7 +658,9 @@
           }
           if (!field.editable) {
             input.disabled = true;
-            wrapper.title = `该字段被环境变量 ${field.env_var} 覆盖`;
+            wrapper.title = field.readonly_reason
+              ? field.readonly_reason
+              : `该字段被环境变量 ${field.env_var} 覆盖`;
           }
           wrapper.append(labelNode, input);
           form.append(wrapper);
@@ -632,14 +673,14 @@
       }
 
       function collectPatch() {
-        const patch = { collection: { enabled: {} }, extraction_endpoints: {}, paths: {} };
+        const patch = { collection: { enabled: {} }, extraction_endpoints: {}, paths: {}, serving: {} };
         FIELD_SPECS.forEach((spec) => {
           const input = document.getElementById(`f-${spec.path}`);
           if (!input || input.disabled) return;
           let value;
           if (spec.type === "bool") {
             value = input.checked;
-          } else if (spec.type === "int") {
+          } else if (spec.type === "int" || spec.type === "float") {
             if (input.value.trim() === "") return;
             value = Number(input.value);
           } else {
@@ -756,8 +797,261 @@
       el("reloadConfig").addEventListener("click", loadConfig);
       el("healthCheck").addEventListener("click", runHealthCheck);
 
+      // -- credentials + connectivity (R16) ---------------------------------
+
+      let secretsState = null;
+
+      function secretFor(connectionKey) {
+        if (!secretsState) return null;
+        return (secretsState.secrets || []).find((entry) => entry.connection === connectionKey) || null;
+      }
+
+      function connectionInput(connectionKey, kind) {
+        const input = document.querySelector(`[data-secret-input="${connectionKey}"]`);
+        if (!input) return null;
+        return input.value.trim();
+      }
+
+      function endpointInput(connectionKey, suffix) {
+        const input = document.querySelector(`[data-endpoint-input="${connectionKey}:${suffix}"]`);
+        return input ? input.value.trim() : "";
+      }
+
+      function statusCell(entry) {
+        if (!entry) return "—";
+        if (!entry.configured) return "未设置";
+        const source = entry.origin || "—";
+        return `已设置 · ${entry.mask || ""} · 来源 ${source}${entry.applied_to_process_env ? "（本进程已读取）" : ""}`;
+      }
+
+      function renderSecrets(payload) {
+        secretsState = payload;
+        el("secretsPath").textContent = `${payload.path}（${payload.exists ? "已存在" : "尚未创建"}）`;
+        el("restartNotice").textContent = payload.restart_required || "";
+        if (payload.permissions_ok === false) {
+          notice(
+            el("secretsNotice"),
+            "警告：受管密钥文件权限不是 0600，请检查（页面不会回显其内容）",
+            "bad",
+          );
+        }
+        const body = el("secretsTable").querySelector("tbody");
+        body.replaceChildren(
+          ...(payload.connections || []).map((connection) => {
+            const entry = secretFor(connection.key);
+            const tr = document.createElement("tr");
+
+            const nameCell = document.createElement("td");
+            nameCell.textContent = connection.label || connection.key;
+            const nameMeta = document.createElement("div");
+            nameMeta.className = "meta";
+            nameMeta.textContent = connection.requires_key ? "需要密钥" : "密钥可选";
+            nameCell.append(document.createElement("br"), nameMeta);
+
+            const status = document.createElement("td");
+            status.textContent = statusCell(entry);
+            if (entry && entry.configured) {
+              status.append(
+                " ",
+                pill(entry.origin === "managed-file" ? "受管文件" : entry.origin || "未知", "ok"),
+              );
+            }
+
+            const keyCell = document.createElement("td");
+            const keyInput = document.createElement("input");
+            keyInput.type = "password";
+            keyInput.autocomplete = "new-password";
+            keyInput.placeholder = "留空 = 保持现状（清除请点清除）";
+            keyInput.dataset.secretInput = connection.key;
+            keyCell.append(keyInput);
+
+            const endpointCell = document.createElement("td");
+            if (connection.base_url_editable) {
+              const baseInput = document.createElement("input");
+              baseInput.type = "text";
+              baseInput.placeholder = "端点（留空使用当前配置）";
+              baseInput.dataset.endpointInput = `${connection.key}:base_url`;
+              const modelInput = document.createElement("input");
+              modelInput.type = "text";
+              modelInput.placeholder = "模型名（留空使用当前配置）";
+              modelInput.dataset.endpointInput = `${connection.key}:model`;
+              modelInput.style.marginTop = "6px";
+              endpointCell.append(baseInput, modelInput);
+            } else {
+              endpointCell.textContent = "（provider 主机固定，不可改写）";
+            }
+
+            const actions = document.createElement("td");
+            const saveButton = document.createElement("button");
+            saveButton.type = "button";
+            saveButton.textContent = "保存";
+            saveButton.className = "primary";
+            saveButton.addEventListener("click", () => saveSecret(connection.key));
+            const clearButton = document.createElement("button");
+            clearButton.type = "button";
+            clearButton.textContent = "清除";
+            clearButton.style.marginLeft = "6px";
+            clearButton.addEventListener("click", () => clearSecret(connection.key));
+            const testButton = document.createElement("button");
+            testButton.type = "button";
+            testButton.textContent = "测试连通性";
+            testButton.style.marginLeft = "6px";
+            testButton.addEventListener("click", () => testConnection(connection.key, testButton));
+            actions.append(saveButton, clearButton, testButton);
+
+            const resultCell = document.createElement("td");
+            resultCell.dataset.secretResult = connection.key;
+            resultCell.textContent = "未测试";
+
+            tr.append(nameCell, status, keyCell, endpointCell, actions, resultCell);
+            return tr;
+          }),
+        );
+      }
+
+      function resultNode(connectionKey) {
+        return document.querySelector(`[data-secret-result="${connectionKey}"]`);
+      }
+
+      async function loadSecrets() {
+        try {
+          const response = await fetch(API.secrets, { headers: { Accept: "application/json" } });
+          if (!response.ok) {
+            notice(el("secretsNotice"), `密钥状态读取失败：HTTP ${response.status}`, "bad");
+            return;
+          }
+          hideNotice(el("secretsNotice"));
+          renderSecrets(await response.json());
+        } catch (error) {
+          notice(el("secretsNotice"), `密钥状态读取失败：${error}`, "bad");
+        }
+      }
+
+      async function saveSecret(connectionKey) {
+        const value = connectionInput(connectionKey);
+        const node = el("secretsNotice");
+        if (!value) {
+          notice(node, "请先填写新密钥（清除请点「清除」）", "bad");
+          return;
+        }
+        const payload = { values: {} };
+        const entry = secretFor(connectionKey);
+        payload.values[entry ? entry.field : `${connectionKey}.api_key`] = value;
+        try {
+          const response = await fetch(API.secrets, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json", Accept: "application/json" },
+            body: JSON.stringify(payload),
+          });
+          const body = await response.json();
+          if (!response.ok) {
+            notice(node, `保存被拒绝（HTTP ${response.status}）：${describeDetail(body.detail)}`, "bad");
+            return;
+          }
+          notice(node, `已保存：${(body.changed || []).join("、")}。${body.restart_required || ""}`, "ok");
+          await loadSecrets();
+          await saveEndpoints(connectionKey);
+        } catch (error) {
+          notice(node, `保存失败：${error}`, "bad");
+        }
+      }
+
+      async function saveEndpoints(connectionKey) {
+        const baseUrl = endpointInput(connectionKey, "base_url");
+        const model = endpointInput(connectionKey, "model");
+        if (!baseUrl && !model) return;
+        const entry = (secretsState && secretsState.connections || []).find((c) => c.key === connectionKey);
+        if (!entry) return;
+        const patch = { extraction_endpoints: {} };
+        if (baseUrl) {
+          const field = connectionKey === "embedding" ? "embedding_base_url"
+            : connectionKey === "rerank" ? "rerank_base_url" : "llm_base_url";
+          patch.extraction_endpoints[field] = baseUrl;
+        }
+        if (model) {
+          const field = connectionKey === "embedding" ? "embedding_model"
+            : connectionKey === "rerank" ? "rerank_model" : "llm_model";
+          patch.extraction_endpoints[field] = model;
+        }
+        if (!Object.keys(patch.extraction_endpoints).length) return;
+        try {
+          await fetch(API.config, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json", Accept: "application/json" },
+            body: JSON.stringify(patch),
+          });
+          await loadConfig();
+        } catch (error) {
+          notice(el("secretsNotice"), `端点保存失败：${error}`, "bad");
+        }
+      }
+
+      async function clearSecret(connectionKey) {
+        const entry = secretFor(connectionKey);
+        const node = el("secretsNotice");
+        if (!entry) return;
+        if (!window.confirm(`${entry.label}：确认清除受管文件中的密钥？（清除后需重启服务生效）`)) return;
+        const payload = { values: {} };
+        payload.values[entry.field] = null;
+        try {
+          const response = await fetch(API.secrets, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json", Accept: "application/json" },
+            body: JSON.stringify(payload),
+          });
+          const body = await response.json();
+          if (!response.ok) {
+            notice(node, `清除被拒绝（HTTP ${response.status}）：${describeDetail(body.detail)}`, "bad");
+            return;
+          }
+          notice(node, `已清除：${(body.changed || []).join("、")}。${body.restart_required || ""}`, "ok");
+          await loadSecrets();
+        } catch (error) {
+          notice(node, `清除失败：${error}`, "bad");
+        }
+      }
+
+      async function testConnection(connectionKey, button) {
+        const node = resultNode(connectionKey);
+        const body = { connection: connectionKey };
+        const value = connectionInput(connectionKey);
+        if (value) body.api_key = value; // 先测后存：直接用页面上未保存的值
+        const baseUrl = endpointInput(connectionKey, "base_url");
+        const model = endpointInput(connectionKey, "model");
+        if (baseUrl) body.base_url = baseUrl;
+        if (model) body.model = model;
+        button.disabled = true;
+        node.textContent = "测试中…（一次最小调用）";
+        try {
+          const response = await fetch(API.connectionTest, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", Accept: "application/json" },
+            body: JSON.stringify(body),
+          });
+          const payload = await response.json();
+          if (response.status === 429) {
+            const detail = payload.detail || {};
+            node.textContent = `限频：请 ${detail.retry_after_seconds || "稍后"} 秒后再试（服务端已拦截，未发起调用）`;
+            return;
+          }
+          if (!response.ok) {
+            node.textContent = `测试被拒绝（HTTP ${response.status}）：${describeDetail(payload.detail)}`;
+            return;
+          }
+          const verdict = payload.ok ? "成功" : "失败";
+          const status = payload.http_status == null ? "" : ` · HTTP ${payload.http_status}`;
+          const remaining = (payload.rate || {}).remaining;
+          node.textContent = `${verdict} · ${payload.latency_ms} ms${status} · ${payload.detail} · 凭据来源 ${(payload.used || {}).api_key_source || "—"}${remaining == null ? "" : ` · 本分钟剩余 ${remaining} 次`}`;
+        } catch (error) {
+          node.textContent = `测试失败：${error}`;
+        } finally {
+          button.disabled = false;
+        }
+      }
+
       loadStatus();
       loadConfig();
+      loadSecrets();
     </script>
   </body>
 </html>

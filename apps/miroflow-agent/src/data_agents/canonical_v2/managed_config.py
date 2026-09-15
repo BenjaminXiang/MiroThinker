@@ -49,6 +49,31 @@ _FIELD_ENV_VARS: dict[str, str] = {
     "extraction_endpoints.rerank_model": "CANONICAL_V2_RERANK_MODEL",
     "paths.serving_pack_dir": "CANONICAL_V2_SERVING_PACK",
     "paths.access_log_retention_days": "CANONICAL_V2_ACCESS_LOG_RETENTION_DAYS",
+    "serving.web_topical_floor": "CANONICAL_V2_WEB_TOPICAL_FLOOR",
+    "serving.rerank_timeout_seconds": "CANONICAL_V2_RERANK_TIMEOUT_SECONDS",
+    "serving.rerank_max_documents": "CANONICAL_V2_RERANK_MAX_DOCUMENTS",
+    "serving.mount_receipt_path": "CANONICAL_V2_SERVING_RECEIPT_PATH",
+    "serving.turn_debug_dir": "CANONICAL_V2_TURN_DEBUG_DIR",
+    "serving.full_verify": "CANONICAL_V2_SERVING_FULL_VERIFY",
+}
+
+# Public alias: the startup bootstrap projects exactly these fields into the
+# environment, so the mapping is part of this module's contract.
+FIELD_ENV_VARS: dict[str, str] = _FIELD_ENV_VARS
+
+# Displayed on the page but never writable from it. Each entry states why: these
+# are deployment decisions whose value is pinned by the service unit, and a page
+# toggle would let one click change boot cost or scatter forensic artefacts.
+PAGE_READONLY_FIELDS: dict[str, str] = {
+    "serving.mount_receipt_path": (
+        "取证路径：由服务单元钉死；页面改动会让挂载收据散落各处（只读展示）"
+    ),
+    "serving.turn_debug_dir": (
+        "调试目录：开启会把原始轮次转储落盘，必须由部署显式决定（只读展示）"
+    ),
+    "serving.full_verify": (
+        "启动全量校验：开启会把启动从秒级拉到分钟级，必须由服务单元决定（只读展示）"
+    ),
 }
 
 # Credential-shaped names are rejected even if a future schema mistake would
@@ -156,6 +181,38 @@ class PathSettings(BaseModel):
         return text
 
 
+class ServingSettings(BaseModel):
+    """Serving-line switches added after W1 (R16: they belong on the page).
+
+    Page-suitability judgement (design §6): the three tunables below are
+    operator-facing (recall floor / latency budget / cost ceiling). The receipt
+    path, turn-debug directory and full-verify flag are declared here so the page
+    can *display* the effective value and its source, but they are listed in
+    :data:`PAGE_READONLY_FIELDS` and cannot be written from the web surface.
+    """
+
+    model_config = ConfigDict(extra="forbid", frozen=True, validate_default=True)
+
+    web_topical_floor: bool | None = None
+    rerank_timeout_seconds: float | None = Field(default=None, gt=0, le=120)
+    rerank_max_documents: int | None = Field(default=None, gt=0, le=2048)
+    mount_receipt_path: str | None = None
+    turn_debug_dir: str | None = None
+    full_verify: bool | None = None
+
+    @field_validator("mount_receipt_path", "turn_debug_dir")
+    @classmethod
+    def _absolute_path_or_name(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        text = value.strip()
+        if not text:
+            return None
+        if not text.startswith("/"):
+            raise ValueError("serving artifact paths must be absolute")
+        return text
+
+
 class ManagedSettings(BaseModel):
     """The complete, validated managed configuration document."""
 
@@ -167,6 +224,7 @@ class ManagedSettings(BaseModel):
         default_factory=ExtractionEndpoints
     )
     paths: PathSettings = Field(default_factory=PathSettings)
+    serving: ServingSettings = Field(default_factory=ServingSettings)
 
 
 def assert_non_secret_payload(value: object, *, where: str = "settings") -> None:
@@ -187,6 +245,12 @@ def assert_non_secret_payload(value: object, *, where: str = "settings") -> None
     elif isinstance(value, (list, tuple)):
         for index, child in enumerate(value):
             assert_non_secret_payload(child, where=f"{where}[{index}]")
+
+
+def flatten_settings(payload: Mapping[str, Any]) -> dict[str, Any]:
+    """Flatten a settings payload into dotted paths (public helper)."""
+
+    return _flatten(payload)
 
 
 def _flatten(payload: Mapping[str, Any], prefix: str = "") -> dict[str, Any]:
@@ -229,6 +293,7 @@ class EffectiveField:
     source: Literal["env", "file", "default"]
     env_var: str | None
     editable: bool
+    readonly_reason: str | None = None
 
     def as_dict(self) -> dict[str, Any]:
         return {
@@ -237,6 +302,7 @@ class EffectiveField:
             "source": self.source,
             "env_var": self.env_var,
             "editable": self.editable,
+            "readonly_reason": self.readonly_reason,
         }
 
 
@@ -329,7 +395,15 @@ class ManagedSettingsStore:
                 value=effective_values.get(path),
                 source=sources.get(path, "default"),
                 env_var=_FIELD_ENV_VARS.get(path),
-                editable=sources.get(path, "default") != "env",
+                editable=(
+                    sources.get(path, "default") != "env"
+                    and path not in PAGE_READONLY_FIELDS
+                ),
+                readonly_reason=(
+                    PAGE_READONLY_FIELDS.get(path)
+                    if sources.get(path, "default") != "env"
+                    else None
+                ),
             )
             for path in sorted(file_values)
         )
@@ -359,6 +433,14 @@ class ManagedSettingsStore:
             raise ManagedSettingsUnsupportedError(
                 "field is not in the managed settings whitelist: "
                 + ", ".join(unknown)
+            )
+        readonly = sorted(path for path in submitted if path in PAGE_READONLY_FIELDS)
+        if readonly:
+            reasons = "; ".join(
+                f"{path}: {PAGE_READONLY_FIELDS[path]}" for path in readonly
+            )
+            raise ManagedSettingsUnsupportedError(
+                "field is display-only on the admin page: " + reasons
             )
         before = self.raw()
         merged = _deep_merge(before, updates)
@@ -511,16 +593,20 @@ __all__ = [
     "DEFAULT_SETTINGS_FILENAME",
     "EffectiveField",
     "ExtractionEndpoints",
+    "FIELD_ENV_VARS",
     "ManagedSettings",
     "ManagedSettingsError",
     "ManagedSettingsStore",
     "ManagedSettingsUnsupportedError",
+    "PAGE_READONLY_FIELDS",
     "PUBLIC_DOMAINS",
     "PathSettings",
     "SCHEMA_VERSION",
+    "ServingSettings",
     "SETTINGS_PATH_ENV",
     "assert_non_secret_payload",
     "default_repo_root",
     "default_settings_path",
+    "flatten_settings",
     "store_from_environment",
 ]

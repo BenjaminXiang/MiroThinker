@@ -43,6 +43,14 @@ _PROVIDER_ENV = {
     "local_llm": ("LOCAL_LLM_API_KEY", ".sglang_api_key"),
 }
 
+# Providers whose credential is also settable from the admin page (managed
+# secrets file). Resolution for these goes through the same store the page uses.
+_MANAGED_SECRET_FIELDS = {
+    "bocha": "bocha.api_key",
+    "serper": "serper.api_key",
+    "local_llm": "llm.api_key",
+}
+
 
 def _key_roots() -> tuple[Path, ...]:
     here = Path(__file__).resolve()
@@ -57,8 +65,32 @@ def _key_roots() -> tuple[Path, ...]:
 def _provider_report() -> list[dict[str, object]]:
     import os
 
+    from src.data_agents.canonical_v2.managed_runtime import applied_env_names
+    from src.data_agents.canonical_v2.managed_secrets import (
+        ManagedSecretsStore,
+        default_secrets_path,
+    )
+
+    secrets = ManagedSecretsStore(path=default_secrets_path())
+    adopted = applied_env_names(os.environ)
     report: list[dict[str, object]] = []
     for name, (env_var, filename) in _PROVIDER_ENV.items():
+        managed_field = _MANAGED_SECRET_FIELDS.get(name)
+        if managed_field is not None:
+            # Same resolution the admin page reports: env > managed file > key file.
+            material, origin = secrets.resolve_field(
+                managed_field, environ=os.environ, applied_env=adopted
+            )
+            report.append(
+                {
+                    "provider": name,
+                    "configured": bool(material),
+                    "suffix4": material[-4:] if material else None,
+                    "origin": origin,
+                    "adopted_from_managed": env_var in adopted,
+                }
+            )
+            continue
         material = os.environ.get(env_var, "").strip()
         origin = f"env:{env_var}" if material else None
         if not material:

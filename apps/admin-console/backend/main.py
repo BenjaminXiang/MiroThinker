@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 import ipaddress
+import logging
 import os
 from pathlib import Path
 from urllib.parse import urlsplit
@@ -68,6 +69,34 @@ class _CandidateStaticFiles(StaticFiles):
         return full_path, stat_result
 
 
+def _adopt_managed_configuration() -> None:
+    """R16: one startup read of the managed files (never a request-path read).
+
+    Projecting the operator's managed configuration into the environment is what
+    makes "save on the page → restart → effective" true. A missing or unreadable
+    file is a no-op, and an existing environment variable always wins.
+    """
+
+    try:
+        from src.data_agents.canonical_v2.managed_runtime import (
+            apply_managed_runtime_config,
+        )
+
+        receipt = apply_managed_runtime_config()
+    except Exception as exc:  # noqa: BLE001 - a broken managed file must not block boot
+        logging.getLogger(__name__).warning(
+            "managed configuration was not adopted at startup (%s)",
+            type(exc).__name__,
+        )
+        return
+    logging.getLogger(__name__).info(
+        "managed configuration adopted: settings=%d secrets=%d skipped=%d",
+        len(receipt["settings_applied"]),
+        len(receipt["secrets_applied_env"]),
+        len(receipt["settings_skipped_env"]) + len(receipt["secrets_skipped_env"]),
+    )
+
+
 def _create_route_shell(*, include_review: bool) -> FastAPI:
     """Create one fresh route graph, optionally with the isolated review surface."""
 
@@ -77,6 +106,7 @@ def _create_route_shell(*, include_review: bool) -> FastAPI:
         docs_url=None,
         redoc_url=None,
     )
+    shell.router.add_event_handler("startup", _adopt_managed_configuration)
 
     @shell.get("/api/health")
     def health() -> dict[str, str]:

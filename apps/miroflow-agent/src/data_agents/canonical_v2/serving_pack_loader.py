@@ -598,6 +598,13 @@ def open_serving_pack_authority(
     :func:`create_serving_pack_knowledge_read` (the serving bundle loads it).
     """
 
+    # R16: the serving process adopts the operator's managed configuration here —
+    # once, at startup, never on a request path. A managed file that is absent or
+    # unreadable is a no-op, so this cannot fail a boot.
+    from .managed_runtime import apply_managed_runtime_config
+
+    apply_managed_runtime_config()
+
     if not pack_dir.is_absolute():
         raise ServingPackIntegrityError("serving pack directory must be absolute")
     if not pack_dir.is_dir() or pack_dir.is_symlink():
