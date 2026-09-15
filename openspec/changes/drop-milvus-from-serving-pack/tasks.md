@@ -35,13 +35,14 @@ Change id: `drop-milvus-from-serving-pack`. Evidence dir:
 
 ## T3 — verification
 
-- [x] T3.1 Layer ① RED/GREEN: 11 tests in
+- [x] T3.1 Layer ① RED/GREEN: **14 tests** in
       `apps/miroflow-agent/tests/canonical_v2/test_serving_pack_no_milvus.py`
-      (R1–R11 of the verification contract).
-- [x] T3.2 Layer ② regression: `test_serving_pack_loader.py`,
-      `test_placeholder_scrub.py`, `test_fast_boot.py`,
-      `test_knowledge_read_isolated.py`, `test_index_projection_isolated*`
-      suites.
+      covering R1–R11 of the verification contract (three refusal cases needed
+      separate tests; the v1 path got its own negative lock).
+- [x] T3.2 Layer ② regression: 51 passed (`test_serving_pack_no_milvus.py` +
+      `test_serving_pack_loader.py` + `test_placeholder_scrub.py`) and 52 passed
+      (`test_fast_boot.py` + `test_knowledge_read_isolated.py` +
+      `test_index_projection_embedded_content.py`); ruff check clean.
 - [x] T3.3 Layer ③ scratch 18296: v2 index + v2 pack synthesized from copies of
       the run15 artifacts; boot log without any Milvus step; replay 7/7; the two
       verbatim probes; the user case (`web_items=[]`); boot timing against the
