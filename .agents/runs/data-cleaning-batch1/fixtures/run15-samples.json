@@ -48,5 +48,50 @@
     "No dedicated summary was supplied by the full-column workbook source.",
     "No dedicated summary was supplied by the backfill source.",
     "Not supplied by the backfill source."
-  ]
+  ],
+  "batch2": {
+    "_source": "run15 sealed serving pack (lookup.sqlite3 + relationships.json), verbatim",
+    "venue": {
+      "arxiv_qualified": "arXiv (Cornell University)",
+      "arxiv_plain": "arXiv",
+      "plos_upper": "PLoS ONE",
+      "plos_title": "PLOS ONE",
+      "year_suffix": "Neurocomputing (2018)",
+      "proceedings_of_the": "Proceedings of the AAAI Conference on Artificial Intelligence",
+      "proceedings_stripped": "AAAI Conference on Artificial Intelligence (AAAI)",
+      "journal_punct": "Journal of Geophysical Research: Solid Earth",
+      "journal_plain": "Journal of Geophysical Research Solid Earth",
+      "singleton": "Nature Communications"
+    },
+    "geography_dirty": {
+      "separator": "-开曼群岛",
+      "city_without_suffix": "广东省-珠海",
+      "city_without_province": "苏州市",
+      "province_for_suzhou": "中国（江苏）自由贸易试验区苏州片区苏州工业园区九章路69号理想创新大厦办公楼2幢5层506号",
+      "district_like_tail": "广东省-南沙"
+    },
+    "applicants": {
+      "bound_row": {
+        "name": "深圳市杉川机器人有限公司",
+        "company_name": "深圳市杉川机器人有限公司",
+        "canonical_company_id": "company-c-1"
+      },
+      "unbound_row": {
+        "name": "深圳先进技术研究院",
+        "company_name": null,
+        "canonical_company_id": null
+      },
+      "nameless_row": {
+        "name": "",
+        "company_name": null,
+        "canonical_company_id": null
+      },
+      "invalid_row": {
+        "name": "优理奇机器人科技（苏州）有限公司",
+        "company_name": "优理奇机器人科技（苏州）有限公司",
+        "canonical_company_id": "company-c-missing"
+      }
+    },
+    "research_direction_nav_block": "主讲本科课程： 主讲研究生课程： 教育背景： 工作履历： 主持项目： 代表期刊论文 ： 上一篇： 没有了 下一篇： 没有了 微信公众号…"
+  }
 }

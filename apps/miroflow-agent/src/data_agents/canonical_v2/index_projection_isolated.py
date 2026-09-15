@@ -32,6 +32,11 @@ from .index_projection import (
     build_index_projection_manifests,
     build_lookup_projection_manifests,
 )
+from .publication_cleaning import (
+    audit_lookup_documents,
+    compose_publication_quality_report,
+    quarantine_records_from_selections,
+)
 from .rebuild_write_gate import BackupGateReceipt, require_accepted_backup_gate
 
 
@@ -39,6 +44,7 @@ _MARKER_NAME = ".canonical-v2-isolated-index-target.json"
 _MARKER_SCHEMA_VERSION = "canonical-v2-isolated-index-target-v1"
 _MILVUS_FILENAME = "milvus.db"
 _LOOKUP_FILENAME = "lookup.sqlite3"
+_PUBLICATION_QUALITY_REPORT_FILENAME = "publication-quality-report.json"
 _VECTOR_MATRIX_FILENAME = "vector_matrix.npz"
 _VECTOR_MATRIX_SCHEMA_VERSION = "canonical-v2-vector-matrix-v1"
 _POINT_READ_BATCH_SIZE = 128
@@ -329,6 +335,12 @@ class _IsolatedIndexMaterializer:
                 built_at=self._clock(),
             )
             _write_receipt(lookup_path, receipt)
+            _write_publication_quality_report(
+                self._target.root,
+                release_id=self._target.release_id,
+                request=request,
+                documents=read_documents,
+            )
             self._last_receipt = receipt
             return IndexProjectionActualState(
                 index_projections=actual_index,
@@ -659,9 +671,7 @@ def write_persisted_vector_matrix(
     )
     np.savez(
         root / _VECTOR_MATRIX_FILENAME,
-        point_ids=np.asarray(
-            tuple(point.point_id for point in points), dtype=object
-        ),
+        point_ids=np.asarray(tuple(point.point_id for point in points), dtype=object),
         matrix=matrix,
         norms=norms,
         meta=np.asarray(meta, dtype=object),
@@ -722,9 +732,7 @@ def load_persisted_vector_matrix(
         raise IndexProjectionIntegrityError(
             "persisted vector matrix has an invalid norm"
         )
-    positions = {
-        point_id: index for index, point_id in enumerate(point_ids)
-    }
+    positions = {point_id: index for index, point_id in enumerate(point_ids)}
     return positions, matrix, norms
 
 
@@ -779,9 +787,7 @@ def _write_milvus_projection(
                         "embedded_content_sha256": point.embedded_content_sha256,
                         "point_json": point.model_dump_json(),
                     }
-                    for point, vector in zip(
-                        batch_points, batch_vectors, strict=True
-                    )
+                    for point, vector in zip(batch_points, batch_vectors, strict=True)
                 ],
             )
         client.flush(collection_name=collection_name)
@@ -905,16 +911,13 @@ def _validate_physical_point_rows(
                 tuple(float(value) for value in vector)
                 if isinstance(vector, list)
                 and all(
-                    isinstance(value, (int, float))
-                    and math.isfinite(float(value))
+                    isinstance(value, (int, float)) and math.isfinite(float(value))
                     for value in vector
                 )
                 else ()
             )
             actual_norm = math.sqrt(sum(value * value for value in actual_vector))
-            expected_norm = math.sqrt(
-                sum(value * value for value in expected_vector)
-            )
+            expected_norm = math.sqrt(sum(value * value for value in expected_vector))
             cosine_similarity = (
                 sum(
                     actual * expected
@@ -1087,6 +1090,60 @@ def _read_lookup_manifests_from_path(
             )
         manifests.append(manifest)
     return tuple(manifests)
+
+
+def _write_publication_quality_report(
+    root: Path,
+    *,
+    release_id: str,
+    request: IndexProjectionRequest,
+    documents: tuple[LookupProjectionDocument, ...],
+) -> None:
+    """Write the build's data-quality report next to the index artifacts.
+
+    The report is *not* part of the pack: the serving-pack loader binds an exact
+    file registry, and the sealer copies only ``lookup.sqlite3``/``milvus.db``/
+    the marker, so this file stays in the build output and never enters a
+    content hash.  ``quarantine_records`` are re-derived from the request's own
+    source selections with the same pure rules the projection applied.
+    """
+    path = root / _PUBLICATION_QUALITY_REPORT_FILENAME
+    if path.is_symlink():
+        raise IsolatedIndexTargetSafetyError(
+            "publication quality report cannot be a symlink"
+        )
+    report = audit_lookup_documents(
+        documents,
+        released_company_ids=frozenset(
+            projection.canonical_identity_id
+            for projection in request.candidate_projection_result.public_domain_projections
+            if projection.entity_type == "company"
+        ),
+    )
+    domain_request = request.candidate_projection_request.internal_reference_projection_request.public_domain_projection_request
+    domain_by_identity = {
+        identity.canonical_identity_id: identity.entity_type
+        for identity in domain_request.canonical_identities
+    }
+    quarantine = quarantine_records_from_selections(
+        (
+            domain_by_identity[selection.canonical_identity_id],
+            selection.canonical_identity_id,
+            selection.field_path,
+            selection.value,
+        )
+        for selection in domain_request.current_fields
+        if selection.canonical_identity_id in domain_by_identity
+    )
+    payload = compose_publication_quality_report(
+        release_id=release_id,
+        report=report,
+        quarantine=quarantine,
+    )
+    path.write_text(
+        json.dumps(payload, ensure_ascii=False, sort_keys=True, indent=2) + "\n",
+        encoding="utf-8",
+    )
 
 
 def _write_build_metadata(path: Path, *, collection_name: str) -> None:

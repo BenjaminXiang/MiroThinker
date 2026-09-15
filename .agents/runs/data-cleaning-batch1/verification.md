@@ -121,3 +121,72 @@ path.
   serving process and the run15 pack are untouched.
 * Correctness of the 4,885 derived city values beyond rule-level spot checks
   (30-value human sample not taken; the rule is address-local and conservative).
+
+---
+
+# Verification: data-cleaning-batch2 (D0-b)
+
+Slice: same branch/worktree, commits `791f3787..HEAD`.  Contract:
+`verification-contract-batch2.md`.
+
+## Honesty
+
+* Two items are delivered with an explicit scope note rather than fully:
+  **dead-field retirement** (decision table only: retiring a declaration is a
+  content-hash-pinned catalog revision - a release-identity change - so it is
+  escalated, not unilaterally done) and **the end-to-end write of the quality
+  report** (writer + wiring are unit-tested; the full isolated build fixture is
+  a pre-existing failure on this branch).
+* One mechanism was built and then reverted after verification falsified it:
+  excluding retired fields at the publication surface (`model_dump_json(
+  exclude=...)`) breaks `knowledge_read_isolated._read_public_projection`, which
+  requires a published document to equal `projection.model_dump_json()`.
+  Reverted; the constraint is documented in design.md §5.
+
+## Layer 1 - tests written in this slice
+
+`tests/canonical_v2/test_publication_cleaning_batch2.py`, **27 tests, all pass**:
+
+| cluster | count | what it locks |
+|---|---|---|
+| venue key / canonicalisation | 4 | arXiv, PLoS, year suffix, Proceedings family, distinct venues stay apart |
+| venue map | 4 | most-frequent winner, determinism, order independence, singleton untouched, reference rewrite |
+| geography repair | 6 | separator, prefecture suffix, district tail NOT suffixed, province from address, unparsed kept+counted, final form untouched |
+| applicants | 5 | bound/unbound/nameless/invalid counting; unbound-but-named passes the gate; nameless and foreign-binding fail it |
+| dead declarations | 2 | per-domain measurement, partially-declared fields excluded from the metric, measurement never fails the build |
+| quality report | 3 | quarantine re-derived from selections (rule + reference id), payload shape, writer wiring |
+| edge dedup | 2 | smallest-id winner keeps the retained link; uniqueness assertion exists and accepts an empty set |
+
+Updated batch-1 expectations (2): the geography case `广东省-珠海` moved from
+"leave alone" to "city suffix" (it is now repaired), and the gate-wiring test
+follows the renamed audit variable.  No test was weakened: the
+`lookup_content == model_dump_json()` guarantee that blocked the exclusion is
+left intact.
+
+## Layer 2 - pre-existing suites
+
+| command | result |
+|---|---|
+| publication_cleaning (batch1) + batch2 + domain_projection_contract + index_projection_embedded_content + professor_backfill + p4_full_column + serving_pack_loader + knowledge_build_interface + domain_projection_postgres | **160 passed, 11 skipped** |
+| `test_knowledge_build_isolated.py` link-assembly tests (`test_mapper_merges_professor_snapshots_...`, `test_public_authority_records_missing_paper_anchor_...`, `test_patent_applicant_links_*`) | 4 passed |
+| full `test_knowledge_build_isolated.py` | not re-run to completion (900 s cap, same as batch 1); the same 13 pre-existing failures were re-confirmed in batch 1 by a stashed-tree baseline run, and this slice's change to that file is additive (a new helper + one call site) |
+
+## Layer 3 - replay evidence
+
+`count_cleaning_batch2.py --pack-dir <sealed pack> --out out2` (read-only;
+`relationships.json` pass loads the 3.4 GB payload):
+
+| metric | before | after |
+|---|---|---|
+| distinct venue labels | 5,204 | 5,031 (153 groups / 326 labels / 2,684 rows) |
+| `arXiv` label rows | `arXiv (Cornell University)` 418 + `arXiv` 242 | `arXiv` 660 |
+| professor→paper edges / distinct pairs | 10,773 / 10,742 | 10,742 / 10,742 |
+| duplicate pairs | 31 | 0 |
+| applicant rows | 12,565 (7,614 bound, 4,951 unbound, 0 nameless, 0 invalid) | unchanged by design; now gated and reported |
+| dirty geography | 3 | 0 (`开曼群岛`, `广东省-珠海市`, `江苏省-苏州市`) |
+| declared-never-filled fields | 49 (company 10, professor 14, patent 8, paper 17) | 49 measured + 49-row decision table (27 keep / 22 retire-pending) |
+
+## Not verified
+
+* The quality report inside a real isolated build (see Honesty).
+* run16 rebuild; retrieval effects of venue merging.

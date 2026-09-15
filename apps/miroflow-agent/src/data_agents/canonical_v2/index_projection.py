@@ -489,8 +489,16 @@ class IndexProjectionBuilder:
         # Publication gate (R21/D0-a): the last build stage before the pack is
         # written refuses to publish placeholder text, glue damage or
         # research-direction junk, and requires city-level company geography.
+        publication_report = audit_lookup_documents(
+            lookup_documents,
+            released_company_ids=frozenset(
+                projection.canonical_identity_id
+                for projection in candidate_result.public_domain_projections
+                if projection.entity_type == "company"
+            ),
+        )
         try:
-            assert_publication_quality(audit_lookup_documents(lookup_documents))
+            assert_publication_quality(publication_report)
         except PublicationQualityError as exc:
             raise IndexProjectionIntegrityError(
                 f"published pack failed the data-cleaning gate: {exc}"

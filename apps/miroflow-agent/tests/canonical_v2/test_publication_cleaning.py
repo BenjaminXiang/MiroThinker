@@ -193,7 +193,6 @@ def test_city_label_handles_province_and_autonomous_region() -> None:
             FIXTURES["geography"]["city_level"],
             FIXTURES["geography"]["registered_address"],
         ),
-        (FIXTURES["geography"]["city_missing_suffix"], ""),
         (None, FIXTURES["geography"]["registered_address"]),
         ("广东省", ""),
     ],
@@ -515,6 +514,5 @@ def test_index_projection_gate_is_wired_into_the_build() -> None:
     module = import_module("src.data_agents.canonical_v2.index_projection")
     assert module.assert_publication_quality is assert_publication_quality
     source = Path(module.__file__).read_text(encoding="utf-8")
-    assert "assert_publication_quality(audit_lookup_documents(lookup_documents))" in (
-        source
-    )
+    assert "assert_publication_quality(publication_report)" in source
+    assert "publication_report = audit_lookup_documents(" in source
