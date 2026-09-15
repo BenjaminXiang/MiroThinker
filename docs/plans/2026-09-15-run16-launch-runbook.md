@@ -154,8 +154,10 @@ setsid nohup bash .agents/runs/full-column-serving-pack-rebuild/build-run16.sh \
    `EXPECTED_MARKER_SHA256` 环境变量并从包 marker 现算复核、要求包 manifest 为 **v2 契约**
    且身份四项（release/index_root/marker/generator_run）匹配；运行树由 `SERVING_WORKTREE`
    指定——应为合入 P1 + 模型同步后的服务线）。
-3. 生成 `s12g/serve-18188-command-run16.sh` = 现命令的参数副本（DB / staging / index /
-   marker-sha / release-id / bundle / pack 全换 run16 值）。
+3. 生成 `s12g/serve-18188-command-run16.sh`：`prepare_serve_command_run16.py`（**已就绪**：从活
+   命令做 10 处身份替换，逐项校验出现次数、替换后防残留；bundle sha 取 run16 bundle 的
+   `content_sha256`；已用假 bundle 干跑，token 级差异恰好 10 处）。产物先落数据线 run 目录，
+   切包时拷入服务线 `s12g/`。
 4. 切换：`cp serve-18188-command-run16.sh serve-18188-command.sh && systemctl --user restart canonical-v2-backend`。
 5. 验收（全在 18188 上跑）：replay 门 7/7；两个逐字探针（「字节跳动」→ ByteDance Ltd.；
    「优必选有哪些专利」→ 32 个本地 CN）；国先案例；g17 双轮；TTFT 记录。
