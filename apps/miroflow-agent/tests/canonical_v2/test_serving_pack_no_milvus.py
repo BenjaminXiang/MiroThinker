@@ -32,7 +32,6 @@ from src.data_agents.canonical_v2.index_projection import (
 
 
 _REPO_ROOT = Path(__file__).resolve().parents[4]
-_RUN_DIR = _REPO_ROOT / ".agents/runs/drop-milvus-from-serving-pack"
 _PACK_TEST_PATH = Path(__file__).with_name("test_serving_pack_loader.py")
 
 
