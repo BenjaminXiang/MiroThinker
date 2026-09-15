@@ -412,8 +412,6 @@ def clean_projected_values(
         if field_path not in outcome_values:
             continue
         original = outcome_values[field_path]
-        if field_path == "research_directions":
-            continue
         outcome = clean_field_value(original, field_path=field_path)
         if outcome.disposition in (DISPOSITION_GLUE_WITHHELD,):
             quarantined.append(
