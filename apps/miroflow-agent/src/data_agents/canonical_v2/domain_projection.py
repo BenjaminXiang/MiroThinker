@@ -54,6 +54,7 @@ from .domain_projection_models import (
     ProjectionEvidenceReference,
     TypedSubobject,
 )
+from .tech_vocabulary import apply_packaged_vocabulary
 
 
 Projection = (
@@ -783,6 +784,13 @@ class _ProjectionContext:
             projected_values[attribute] = tuple(
                 sorted(typed_values, key=lambda item: item.subobject_id)
             )
+        # D1-a: the free-text tag fields are published as controlled concepts, so
+        # lookup documents and the vector content inherit one vocabulary.  A value
+        # the recorded induction could not decide stays published verbatim - the
+        # mapping never guesses (see tech_vocabulary / the change design).
+        projected_values, _unmapped = apply_packaged_vocabulary(
+            identity.entity_type, projected_values
+        )
         lineage = tuple(
             FieldProjectionLineage(
                 field_path=item.field_path,
