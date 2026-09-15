@@ -30,29 +30,28 @@ ANCHOR = "深圳国际先进技术应用推进中心"
 REPORTED_QUERY = "详细介绍一下 国先中心（深圳）"
 
 # Reported turn items: (title, url, corroborating providers, snippet).
-# Snippets are reconstructed (marked in red-case.md): the diet-camp page is a
-# Shenzhen weight-loss camp listing, the sz.gov.cn page a platform round-up,
-# the 11467 page a company directory entry.
+# Titles/URLs are verbatim from the turn; snippets are the provider text
+# captured from the run15 pack on 2026-09-15 (see red-case.md §real snippets).
 _DIET_CAMP = (
     "多彩深圳——减肥达人训练营深圳国贸营地简介",
-    "https://www.sohu.com/a/redacted-diet-camp",
+    "https://www.sohu.com/a/246190092_149507",
     ("bocha",),
-    "多彩深圳——减肥达人训练营深圳国贸营地简介：营地位于深圳市罗湖区国贸商圈，"
-    "开设封闭式减肥训练、塑形课程与营养配餐，报名可享体验营名额。",
+    "深圳国贸营地简介 深圳国贸营地位于深圳传统商业中心区,紧邻香港特区。"
+    "全新升级训练场地,高端健身品牌PRECOR。",
 )
 _PLATFORM_ROUNDUP = (
     "建重大平台强核心攻关优产业生态深圳新质生产力加速迸发",
-    "https://www.sz.gov.cn/cn/xxgk/zfxxgj/zwdt/content/redacted",
+    "https://www.sz.gov.cn/cn/xxgk/zfxxgj/zwdt/content/post_12160307.html",
     ("bocha", "serper"),
-    "深圳坚持把创新作为城市发展主导战略，加快建设重大科技基础设施与产业创新平台，"
-    "推动新质生产力加速迸发。",
+    "国际先进技术应用推进中心（深圳）依托粤港澳大湾区数字经济研究院建设，"
+    "聚焦人工智能、具身智能、低空经济等重点领域，为技术应用对接场景。",
 )
 _DIRECTORY_PAGE = (
-    "百步先(深圳)信息技术有限公司",
-    "https://www.11467.com/shenzhen/co/redacted.htm",
+    "百步先(深圳〉信息技术有限公司",
+    "https://www.11467.com/shenzhen/co/1049818.htm",
     ("bocha",),
-    "百步先(深圳)信息技术有限公司主营软件开发与信息技术咨询，注册地址位于深圳市"
-    "南山区，经营范围包括计算机系统集成、数据处理服务。",
+    "公司简介 百步先(深圳〉信息技术有限公司,位于中国第一个经济特区,鹏城深圳,"
+    "深圳市罗湖医黄贝街道爱国路3034景园大厦9A,百步先在开业后蓬勃发展。",
 )
 
 
@@ -132,11 +131,9 @@ def _titles(results: tuple[serving._NormalizedWebResult, ...]) -> list[str]:
 
 
 def test_core_tokens_exclude_location_and_frame_words() -> None:
-    assert serving._web_query_core_tokens(REPORTED_QUERY) == (
-        "国先",
-        "先中",
-        "中心",
-    )
+    # 中心 is a generic noun (the diet-camp page matched 国先中心 only through
+    # the 中心 of 商业中心区), so it is not topical evidence either.
+    assert serving._web_query_core_tokens(REPORTED_QUERY) == ("国先", "先中")
 
 
 def test_core_tokens_fail_open_without_topic() -> None:
@@ -151,9 +148,14 @@ def test_reported_case_drops_diet_camp_page() -> None:
     """R1: the reported sohu page shares no core token with the query.
 
     Composed exactly as the lane runs it — subject gate first (which backfills
-    the two tier-5 pages to reach its floor), then the topical floor. The
-    sz.gov.cn round-up is the gate's top-ranked result and is what the
-    non-empty-lane guard retains; the two junk pages go.
+    the tier-5 pages to reach its floor), then the topical floor. The gate's
+    own top-ranked result here is the diet-camp page (two providers
+    corroborate it ⇒ tier 0 by H3), which is the H3 hole the floor exists for.
+
+    The sz.gov.cn round-up also drops: its snippet names the entity in the
+    reordered form 国际先进技术应用推进中心（深圳）, which is neither a query
+    core token nor an identity form. That false drop is a known, reported
+    limitation of this slice — see design.md §"与冻结设计的偏差".
     """
     results = (
         _result(_DIET_CAMP),
@@ -162,11 +164,10 @@ def test_reported_case_drops_diet_camp_page() -> None:
     )
     request = _request()
     gated = serving._apply_web_subject_consistency(results=results, request=request)
-    assert len(gated) == 3, "gate backfills both T5 pages (H2) — the RED fact"
+    assert len(gated) == 3, "gate keeps all three (H2 backfill + H3) — the RED fact"
     kept = _titles(_floor(gated, request))
-    assert kept == [_PLATFORM_ROUNDUP[0]]
     assert "多彩深圳——减肥达人训练营深圳国贸营地简介" not in kept
-    assert "百步先(深圳)信息技术有限公司" not in kept
+    assert "百步先(深圳〉信息技术有限公司" not in kept
 
 
 def test_location_only_overlap_is_not_enough() -> None:
@@ -198,11 +199,15 @@ def test_floor_applies_to_refinement_results() -> None:
     assert _titles(kept) == [topical.title]
 
 
-def test_empty_floor_keeps_top_ranked_result() -> None:
-    """The lane must never empty: WebLane raises 'unavailable' on no results."""
+def test_empty_floor_returns_nothing() -> None:
+    """Everything off-topic ⇒ empty lane; the lane, not the floor, owns it.
+
+    `WebLane.__call__` returns an empty lane result when the providers
+    answered but the gates removed everything — only a provider failure raises
+    (see `_apply_web_topical_floor` call site).
+    """
     results = (_result(_DIET_CAMP), _result(_DIRECTORY_PAGE))
-    kept = _floor(results, _request())
-    assert _titles(kept) == [_DIET_CAMP[0]]
+    assert _floor(results, _request()) == ()
 
 
 # --- exemptions -----------------------------------------------------------

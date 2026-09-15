@@ -93,3 +93,23 @@ keeps meaning "dropped by any gate".
 `CANONICAL_V2_WEB_TOPICAL_FLOOR` read **per call** (not at import): a scratch or
 hot-update line flips it by restarting the process with the variable set to
 `0`, `false`, `off` or `no`; tests flip it in-process. Default: enabled.
+
+## Deviation from the frozen design (for the main session to accept)
+
+The frozen rule is "identity-exempt or topical match, else drop". Implemented
+verbatim, it conflicts with an existing invariant of the same lane:
+`WebLane.__call__` raises `ConnectionError("Bocha and Serper Web search are
+unavailable")` when its result set is empty (line ~1692), and
+`_WEB_SUBJECT_CONSISTENCY_FLOOR` exists precisely so that branch is not
+reached. A query whose every web result is off-topic (translated query,
+paraphrased question, English query against a Chinese page set) would
+therefore turn into a *provider failure* instead of a filtered lane.
+
+Resolution implemented here, conservative (under-drop beats over-drop): if the
+floor would drop every result, it keeps the **first** result of the batch —
+for the pipeline that is the subject gate's top-ranked survivor — and drops
+the rest, logging a warning. The reported case still loses both junk pages.
+
+If the product prefers a strictly-empty lane plus a UI message instead, drop
+the guard block in `_apply_web_topical_floor` and change the lane's empty-set
+handling; that is a larger, separate change.

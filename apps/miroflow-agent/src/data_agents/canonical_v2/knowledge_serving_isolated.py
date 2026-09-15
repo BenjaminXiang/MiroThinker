@@ -960,6 +960,12 @@ _WEB_QUERY_SCAFFOLD_PHRASES = tuple(sorted(
 ))
 _WEB_QUERY_RUN_RE = re.compile(r"[0-9a-z\u3400-\u9fff]+")
 _WEB_QUERY_CJK_RUN_RE = re.compile(r"[\u3400-\u9fff]+")
+# Generic nouns: frequent, topic-free on their own, and therefore not evidence
+# that a page is about the query (the reported turn: 商业中心区 matched 中心).
+_WEB_QUERY_GENERIC_TOKENS = frozenset({
+    "中心", "公司", "企业", "集团", "平台", "机构", "项目", "服务", "产品",
+    "行业", "领域", "市场", "信息", "系统", "情况", "业务", "单位", "部门",
+})
 
 
 def _web_topical_floor_enabled() -> bool:
@@ -972,12 +978,16 @@ def _web_topical_floor_enabled() -> bool:
 
 
 def _web_query_core_tokens(query: str) -> tuple[str, ...]:
-    """Topical tokens of the user query: scaffold and location words removed.
+    """Topical tokens of the user query: scaffold, generic and location words out.
 
     CJK runs are split into character bigrams, latin runs into whole words.
-    Location qualifiers are deleted rather than tokenized, so a page matching
-    only 深圳 is not topical evidence (P3); a query left with no token at all
-    (「介绍一下」) yields ``()`` and the floor fails open (P4).
+    Location qualifiers and generic nouns are deleted rather than tokenized, so
+    a page matching only 深圳 or only 中心 is not topical evidence (P3): the
+    reported turn proved the need for the second list — the weight-loss-camp
+    page matches 国先中心 exclusively through the 中心 of its 商业中心区
+    address line, while sharing nothing topical with the query. A query left
+    with no token at all (「介绍一下」) yields ``()`` and the floor fails open
+    (P4).
     """
     text = query.casefold()
     for phrase in _WEB_QUERY_SCAFFOLD_PHRASES:
@@ -994,10 +1004,11 @@ def _web_query_core_tokens(query: str) -> tuple[str, ...]:
             for word in _WEB_QUERY_CJK_RUN_RE.sub(" ", run).split()
             if len(word) >= 2
         )
+    non_topical = (*_ANCHOR_LOCATION_LEXICON, *_WEB_QUERY_GENERIC_TOKENS)
     return tuple(
         token
         for token in dict.fromkeys(tokens)
-        if not any(token in location for location in _ANCHOR_LOCATION_LEXICON)
+        if not any(token in word for word in non_topical)
     )
 
 
@@ -1046,6 +1057,14 @@ def _apply_web_topical_floor(
     """Drop web results that share no topical token with the user query."""
     if not results or not _web_topical_floor_enabled():
         return results
+    if not _web_result_identity_names(request):
+        # No anchor ⇒ no subject-consistency gate ran either (H1), so there is
+        # no identity/backfill channel to compensate for; an unanchored query
+        # (e.g. 清华的王学谦) legitimately returns pages that name neither the
+        # query words nor a bound entity, and dropping them would lose the
+        # lane's recall. The floor therefore only guards the anchored case it
+        # was written for.
+        return results
     try:
         core_tokens = _web_query_core_tokens(
             str(getattr(request, "original_query", "") or "")
@@ -1067,19 +1086,6 @@ def _apply_web_topical_floor(
                 or (identity_hit is not None and identity_hit(searchable, result))
             ):
                 kept.append(result)
-        if not kept:
-            # The lane must never empty: WebLane raises "web search is
-            # unavailable" for an empty result set, and that branch means
-            # degradation, not "nothing relevant" — the same reason
-            # _WEB_SUBJECT_CONSISTENCY_FLOOR backfills. When no result matches
-            # the query, the gate's own top-ranked result is the least-bad
-            # candidate; the rest are still dropped.
-            _logger.warning(
-                "web topical floor kept no result for %r; retaining the "
-                "top-ranked one to keep the lane non-empty",
-                getattr(request, "original_query", ""),
-            )
-            kept.append(results[0])
         dropped = len(results) - len(kept)
         reporter = current_turn_trace()
         if dropped and reporter is not None:
@@ -1702,6 +1708,14 @@ class _DualWebLaneAdapter:
                         [organic, followup_results]
                     )
         if not organic:
+            if merged:
+                # Providers answered; the gates (subject consistency, topical
+                # floor) removed every result. That is "nothing relevant", not
+                # a channel outage — `_report_web_degradation` already owns the
+                # outage signal from the provider error flags, and reporting a
+                # filtered-empty lane as unavailable would attach a material
+                # `current_web_unavailable` limitation to a healthy search.
+                return RetrievalLaneResult()
             raise ConnectionError("Bocha and Serper Web search are unavailable")
         candidates: list[RecallCandidate] = []
         snapshots: list[WebSnapshotPayload] = []
