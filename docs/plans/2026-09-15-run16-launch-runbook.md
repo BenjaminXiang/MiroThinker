@@ -135,7 +135,11 @@ setsid nohup bash .agents/runs/full-column-serving-pack-rebuild/build-run16.sh \
 
 1. 回滚资产确认（已存在，不动）：`s12g/serve-18188-command-run15.sh`、
    `s12g/serving-bundle-run15.json`、`serving-pack-run15-sealed`、index-v2 / staging-v2。
-2. 生成 `s12g/serving-bundle-run16.json`（`generate_run15_serving_bundle.py` 参数副本）。
+2. 生成 `s12g/serving-bundle-run16.json`：`generate_run16_serving_bundle.py`（**已就绪**：
+   以 `serving-bundle-run15.json` 为源，只换 release/DB/index/envelope/bundle id；要求
+   `EXPECTED_MARKER_SHA256` 环境变量并从包 marker 现算复核、要求包 manifest 为 **v2 契约**
+   且身份四项（release/index_root/marker/generator_run）匹配；运行树由 `SERVING_WORKTREE`
+   指定——应为合入 P1 + 模型同步后的服务线）。
 3. 生成 `s12g/serve-18188-command-run16.sh` = 现命令的参数副本（DB / staging / index /
    marker-sha / release-id / bundle / pack 全换 run16 值）。
 4. 切换：`cp serve-18188-command-run16.sh serve-18188-command.sh && systemctl --user restart canonical-v2-backend`。
