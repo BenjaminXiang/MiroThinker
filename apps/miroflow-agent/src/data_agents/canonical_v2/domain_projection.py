@@ -55,6 +55,7 @@ from .domain_projection_models import (
     TypedSubobject,
 )
 from .publication_cleaning import clean_projected_values, venue_canonical_map
+from .tech_vocabulary import apply_packaged_vocabulary
 
 
 Projection = (
@@ -818,6 +819,15 @@ class _ProjectionContext:
             projected_values,
             canonical_identity_id=identity.canonical_identity_id,
             venue_map=self.venue_map,
+        )
+        # D1-a: the free-text tag fields are published as controlled concepts, so
+        # lookup documents and the vector content inherit one vocabulary.  A value
+        # the recorded induction could not decide stays published verbatim - the
+        # mapping never guesses (see tech_vocabulary / the change design).
+        # Cleaning runs first and only drops absent-shaped values, so the mapping
+        # sees exactly the values it recorded against.
+        projected_values, _unmapped = apply_packaged_vocabulary(
+            identity.entity_type, projected_values
         )
         lineage = tuple(
             FieldProjectionLineage(

@@ -1,0 +1,10 @@
+{
+  "model": "deepseek-v4-pro",
+  "recorded_calls": 63,
+  "provider_attempts_total": 67,
+  "provider_attempts_this_process": 54,
+  "retried_calls": 3,
+  "prompt_tokens": 308200,
+  "completion_tokens": 102493,
+  "notes": "provider_attempts_this_process counts every HTTP call made by this process, including attempts whose transcript failed validation and were re-asked; only the accepted transcript of each call id is recorded in the bundle and replayed by the build."
+}
