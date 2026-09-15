@@ -22,21 +22,21 @@ Status legend: `[ ]` pending, `[x]` done.
 
 ## T2 — repair
 
-- [ ] Pass `row_by_object` from `_map_public_authority` → `_logical_graph` →
+- [x] Pass `row_by_object` from `_map_public_authority` → `_logical_graph` →
       `_relationship_authority`.
-- [ ] `_typed_relationship_seeds(object_rows=…, supplemental_rows=…)`: object
+- [x] `_typed_relationship_seeds(object_rows_by_id=…, supplemental_rows=…)`: object
       universe from the mapped admitted objects; raw rows kept for the
       `professor_company_role` source-purpose lane.
-- [ ] Reconciliation helper + `PATENT_COMPANY_BINDING_LEDGER` line.
-- [ ] `INVARIANT-1` fail-closed check for unseeded document bindings.
-- [ ] Update `patent_applicant_linking.py` module docstring (release-only
+- [x] Reconciliation helper + `PATENT_COMPANY_BINDING_LEDGER` line.
+- [x] `INVARIANT-1` fail-closed check for unseeded document bindings.
+- [x] Update `patent_applicant_linking.py` module docstring (release-only
       universe claim).
-- [ ] Update existing call sites/tests for the new signature.
+- [x] Update existing call sites/tests for the new signature.
 
 ## T3 — verification
 
-- [ ] New unit tests (R1/R2/R3 per `verification-contract.md`).
-- [ ] Replay script over run15 copies: pre-fix vs post-fix counts, classified
+- [x] New unit tests (R1/R2/R3 per `verification-contract.md`).
+- [x] Replay script over run15 copies: pre-fix vs post-fix counts, classified
       difference list.
 - [ ] Existing canonical_v2 suites green.
 - [ ] `verification.md` with layered evidence (new tests / pre-existing suites /
@@ -46,9 +46,9 @@ Status legend: `[ ]` pending, `[x]` done.
 
 ## T4 — docs
 
-- [ ] `docs/plans/2026-09-15-c1-relationship-log.md` (Chinese, human log).
-- [ ] `docs/plans/index.md` one-line entry.
-- [ ] `openspec/change-ledger.md` row.
+- [x] `docs/plans/2026-09-15-c1-relationship-log.md` (Chinese, human log).
+- [x] `docs/plans/index.md` one-line entry.
+- [x] `openspec/change-ledger.md` row.
 
 ## Deferred (not this slice)
 
