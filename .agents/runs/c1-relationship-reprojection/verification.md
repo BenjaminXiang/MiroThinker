@@ -78,7 +78,38 @@ the full causal chain with `file:line` references and the sibling analysis.
 
 ## Regression run
 
-<!-- filled by the slice: command output summary -->
+Command:
+
+```bash
+cd apps/miroflow-agent
+uv run pytest tests/canonical_v2/test_knowledge_build_isolated.py \
+  tests/canonical_v2/test_relationship_projection_contract.py \
+  tests/canonical_v2/test_serving_pack_loader.py \
+  tests/canonical_v2/test_patent_applicant_linking.py \
+  tests/canonical_v2/test_patent_company_binding_reconciliation.py \
+  tests/canonical_v2/test_applicant_binding_relationship_seeds.py \
+  -q -p no:randomly --no-header -o addopts=
+```
+
+Baseline comparison (this worktree detached at `1ee824a7`, same selection narrowed
+to the relationship-related tests):
+
+| revision | selection | result |
+|---|---|---|
+| `1ee824a7` (baseline) | `-k "relationship or applicant or seed or reconcile"` | 14 passed, **1 failed** |
+| `58405450` (slice) | same selection | 14 passed, **1 failed** (same test) |
+
+The single failure in both revisions is
+`test_knowledge_build_isolated.py::test_real_boundary_rejects_nonfresh_database_before_source_read[knowledge.relationship_projection_run]`:
+the test simulates alembic revision `C2_0012` (test line 1734) while
+`knowledge_build_isolated.py:324` declares `_EXPECTED_ALEMBIC_REVISION = "C2_0013"`,
+so `_assert_fresh_database` raises "candidate database migration revision differs
+from the live single head" before the "fresh" error the test matches. It is a
+**pre-existing** mismatch unrelated to this slice (no relationship/seed code on
+that path) and is part of the known pre-existing failure set noted on the
+functional line.
+
+Full-selection result: `REGRESSION_FINAL` (see below).
 
 ## Gaps / not verified in this slice
 
