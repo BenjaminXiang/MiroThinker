@@ -395,14 +395,16 @@ class CompanyProjection(DomainProjectionEnvelope):
     normalized_name: NonEmptyStr
     patent_count: NonNegativeInt | None = None
     product_description: NonEmptyStr | None = None
-    profile_summary: NonEmptyStr
+    # D0-a: placeholder-only values publish as absent (R21), so the two
+    # historically required text fields are optional at the projection level.
+    profile_summary: NonEmptyStr | None = None
     quality_status: QualitySignal
     registered_address: NonEmptyStr | None = None
     registered_capital: Money | None = None
     run_id: NonEmptyStr
     team_description: NonEmptyStr | None = None
     tech_tags: tuple[NamedReference, ...] = ()
-    technology_route_summary: NonEmptyStr
+    technology_route_summary: NonEmptyStr | None = None
     website: NonEmptyStr | None = None
     business_scenarios: tuple[CompanyBusinessScenario, ...] = ()
     capabilities: tuple[CompanyCapability, ...] = ()
@@ -482,11 +484,14 @@ class ProfessorProjection(DomainProjectionEnvelope):
     canonical_name_zh: NonEmptyStr
     citation_count: NonNegativeInt | None = None
     company_roles: tuple[RelationshipProjectionReference, ...] = ()
-    department: NamedReference
-    email: NonEmptyStr
+    # D0-a: placeholder-only values publish as absent (R21); the seven
+    # historically required professor fields are optional at the projection
+    # level.  see openspec/changes/data-cleaning-batch1/design.md
+    department: NamedReference | None = None
+    email: NonEmptyStr | None = None
     evidence: tuple[ProjectionEvidenceReference, ...] = Field(min_length=1)
     h_index: NonNegativeInt | None = None
-    homepage: NonEmptyStr
+    homepage: NonEmptyStr | None = None
     id: NonEmptyStr
     institution: NonEmptyStr
     last_updated: CanonicalDatetime
@@ -495,16 +500,16 @@ class ProfessorProjection(DomainProjectionEnvelope):
     name: NonEmptyStr
     office: NonEmptyStr | None = None
     paper_count: NonNegativeInt | None = None
-    paper_summary: NonEmptyStr
+    paper_summary: NonEmptyStr | None = None
     patent_ids: tuple[NonEmptyStr, ...]
-    patent_summary: NonEmptyStr
+    patent_summary: NonEmptyStr | None = None
     phone: NonEmptyStr | None = None
-    profile_summary: NonEmptyStr
+    profile_summary: NonEmptyStr | None = None
     projects: tuple[ProfessorResearchProject, ...] = ()
     quality_status: QualitySignal
     research_directions: tuple[NamedReference, ...]
     run_id: NonEmptyStr
-    title: NonEmptyStr
+    title: NonEmptyStr | None = None
     affiliation_history: tuple[ProfessorAffiliationHistory, ...] = ()
     contacts: tuple[ProfessorContact, ...] = ()
     education_history: tuple[ProfessorEducationHistory, ...] = ()

@@ -1,0 +1,468 @@
+{
+  "company": {
+    "aliases": [
+      "示例仓"
+    ],
+    "as_of": "2026-09-13T15:31:39.136873Z",
+    "business_scenarios": [],
+    "canonical_identity_id": "company-c-0000000000000000000000",
+    "capabilities": [],
+    "catalog_content_sha256": "26ec3ad046207665051ab7886fcef8fda748f331bddff69de486e90930b3398d",
+    "catalog_schema_version": "canonical-v2-domain-catalog-v1",
+    "catalog_version": "canonical-v2-prd-catalog-2026-07-12",
+    "credit_code": null,
+    "entity_type": "company",
+    "evidence": [
+      {
+        "artifact_ids": [],
+        "assertion_id": "assertion:company-p4:e706ec9295b864c329aa394cb59b9fcfb8c9604ef10b65bc7196aafbe6c39907:aliases",
+        "decision_id": "field-decision:manifest-sha256:52d944bd72561dcb18396eb13e25436ff19705445543ad758dd57cd40a6353db:seed-sha256:e12b8b210dd7abe2ebe264264340263ec9f1b3f228e9026011f75c3bb871c9a5",
+        "field_path": "aliases"
+      },
+      {
+        "artifact_ids": [],
+        "assertion_id": "assertion:company-p4:e706ec9295b864c329aa394cb59b9fcfb8c9604ef10b65bc7196aafbe6c39907:founded_at",
+        "decision_id": "field-decision:manifest-sha256:feaaa6e17ae104c3a5e5debe8ef9f017b367676955b12236c765284adf5a1398:seed-sha256:6fed4756bad2bdc09d4585dfb8439f8956fe45068f5f8322c60b6a42e7a36b5d",
+        "field_path": "founded_at"
+      },
+      {
+        "artifact_ids": [],
+        "assertion_id": "assertion:company-p4:e706ec9295b864c329aa394cb59b9fcfb8c9604ef10b65bc7196aafbe6c39907:geography",
+        "decision_id": "field-decision:manifest-sha256:bf2be53000d8c67eb437f118d057ad7692f634ea6b3b566e1eee97466f75ec8c:seed-sha256:5e9094dcc8c800882f2f2ebfbec69451009466d713b6a948c424b2e7ae2364b8",
+        "field_path": "geography"
+      },
+      {
+        "artifact_ids": [],
+        "assertion_id": "assertion:company-p4:e706ec9295b864c329aa394cb59b9fcfb8c9604ef10b65bc7196aafbe6c39907:industry",
+        "decision_id": "field-decision:manifest-sha256:cec0ec8760ba6556b753035959b6d4518d18cdfb4b493b2c771b8ef299f141ab:seed-sha256:f0fefeb47971f6fc4aec58bb3cae9d335aeb60f48fa5cedc7fe17cec1211ff20",
+        "field_path": "industry"
+      },
+      {
+        "artifact_ids": [],
+        "assertion_id": "assertion:company-p4:e706ec9295b864c329aa394cb59b9fcfb8c9604ef10b65bc7196aafbe6c39907:industry_tags",
+        "decision_id": "field-decision:manifest-sha256:c8b658b251ae9faac6ee1d06249498294934eef9c2df763674cff79133ff0ef3:seed-sha256:5d9e0cb3c3a0c5921df8673d1f67026e4d784cd88873c594fa8d8bb3192e021e",
+        "field_path": "industry_tags"
+      },
+      {
+        "artifact_ids": [],
+        "assertion_id": "assertion:company-p4:e706ec9295b864c329aa394cb59b9fcfb8c9604ef10b65bc7196aafbe6c39907:legal_representative",
+        "decision_id": "field-decision:manifest-sha256:34c264e9f1306fc461b2d3c064e5634bb2290de006c338052101eadabab5b354:seed-sha256:e13063f24048d5d022236d6568bb94552a5945160794da635db5346aacf7de10",
+        "field_path": "legal_representative"
+      },
+      {
+        "artifact_ids": [],
+        "assertion_id": "assertion:company-p4:e706ec9295b864c329aa394cb59b9fcfb8c9604ef10b65bc7196aafbe6c39907:name",
+        "decision_id": "field-decision:manifest-sha256:a3dae9dbaeea88de4c2aa0fff4ae0cefd63088e37799536acd2bded251b17684:seed-sha256:5e6d9ac336da877af7c60f8c33692361f1f4fc33a0979c4605636441313c66be",
+        "field_path": "name"
+      },
+      {
+        "artifact_ids": [],
+        "assertion_id": "assertion:company-p4:e706ec9295b864c329aa394cb59b9fcfb8c9604ef10b65bc7196aafbe6c39907:normalized_name",
+        "decision_id": "field-decision:manifest-sha256:230a48477b3c549e051c23248f69e97d7c6b27bac9cc5f038aac709ec3c847db:seed-sha256:7e7e7d8db62bb33bdf28e6925e88b75538e6de5f16506efb52137bffdef18935",
+        "field_path": "normalized_name"
+      },
+      {
+        "artifact_ids": [],
+        "assertion_id": "assertion:company-p4:e706ec9295b864c329aa394cb59b9fcfb8c9604ef10b65bc7196aafbe6c39907:product_description",
+        "decision_id": "field-decision:manifest-sha256:731dab4f274c7a33a719cb86656db4142dba2d908f797408b3173b7048fd0a43:seed-sha256:ce691bbb65fecebd7d03abbbcf485cbcb8f53d789b2b1d84ce8055bc5694657f",
+        "field_path": "product_description"
+      },
+      {
+        "artifact_ids": [],
+        "assertion_id": "assertion:company-p4:e706ec9295b864c329aa394cb59b9fcfb8c9604ef10b65bc7196aafbe6c39907:profile_summary",
+        "decision_id": "field-decision:manifest-sha256:74a31fb6d7f50238966f08b894e3cb86ef27ee0109710c207d6609023cdcbc0a:seed-sha256:a442d580a569ed6687af79ae1285bbb73a68826c7a508032e235bcb98a0854c6",
+        "field_path": "profile_summary"
+      },
+      {
+        "artifact_ids": [],
+        "assertion_id": "assertion:company-p4:e706ec9295b864c329aa394cb59b9fcfb8c9604ef10b65bc7196aafbe6c39907:registered_address",
+        "decision_id": "field-decision:manifest-sha256:31b5767cd2b830a7c098cbcef73b3dda90825d929ffce83db333e043ef4899a8:seed-sha256:7ce6a80fc55157bdca0819567122bff1e300115bfaca877d591cf1dd145fe836",
+        "field_path": "registered_address"
+      },
+      {
+        "artifact_ids": [],
+        "assertion_id": "assertion:company-p4:e706ec9295b864c329aa394cb59b9fcfb8c9604ef10b65bc7196aafbe6c39907:tech_tags",
+        "decision_id": "field-decision:manifest-sha256:9343e746d4b3a44e14ca59c60624b41dcf53f3afbdcfdcd6e57a13013c11a46d:seed-sha256:711f9e02478776108cb5813ea1d15e62bdcd4b4e73578e387a7fcff4e5edfad5",
+        "field_path": "tech_tags"
+      },
+      {
+        "artifact_ids": [],
+        "assertion_id": "assertion:company-p4:e706ec9295b864c329aa394cb59b9fcfb8c9604ef10b65bc7196aafbe6c39907:technology_route_summary",
+        "decision_id": "field-decision:manifest-sha256:4ff17cff1213de2e773c6cb24bcc2fc5e9291e10b193420d5cddacd5ab79e989:seed-sha256:dd65afe93f52e2c516e2d4b2a4664183b9a0183a23c1fa665fe1e80a7c5c68cf",
+        "field_path": "technology_route_summary"
+      },
+      {
+        "artifact_ids": [],
+        "assertion_id": "assertion:company-p4:e706ec9295b864c329aa394cb59b9fcfb8c9604ef10b65bc7196aafbe6c39907:website",
+        "decision_id": "field-decision:manifest-sha256:1ccb967e97d340f3c16427c1f3338fa910fa95f3fd1c225b0f328b4c6ef633fb:seed-sha256:bd29081816b44aa96e7bd6fa7a616f228c2737810c0f944719c916ef7d8d6e33",
+        "field_path": "website"
+      }
+    ],
+    "field_lineage": [
+      {
+        "decision_id": "field-decision:manifest-sha256:52d944bd72561dcb18396eb13e25436ff19705445543ad758dd57cd40a6353db:seed-sha256:e12b8b210dd7abe2ebe264264340263ec9f1b3f228e9026011f75c3bb871c9a5",
+        "field_path": "aliases",
+        "supporting_assertion_ids": [
+          "assertion:company-p4:e706ec9295b864c329aa394cb59b9fcfb8c9604ef10b65bc7196aafbe6c39907:aliases"
+        ]
+      },
+      {
+        "decision_id": "field-decision:manifest-sha256:feaaa6e17ae104c3a5e5debe8ef9f017b367676955b12236c765284adf5a1398:seed-sha256:6fed4756bad2bdc09d4585dfb8439f8956fe45068f5f8322c60b6a42e7a36b5d",
+        "field_path": "founded_at",
+        "supporting_assertion_ids": [
+          "assertion:company-p4:e706ec9295b864c329aa394cb59b9fcfb8c9604ef10b65bc7196aafbe6c39907:founded_at"
+        ]
+      },
+      {
+        "decision_id": "field-decision:manifest-sha256:bf2be53000d8c67eb437f118d057ad7692f634ea6b3b566e1eee97466f75ec8c:seed-sha256:5e9094dcc8c800882f2f2ebfbec69451009466d713b6a948c424b2e7ae2364b8",
+        "field_path": "geography",
+        "supporting_assertion_ids": [
+          "assertion:company-p4:e706ec9295b864c329aa394cb59b9fcfb8c9604ef10b65bc7196aafbe6c39907:geography"
+        ]
+      },
+      {
+        "decision_id": "field-decision:manifest-sha256:cec0ec8760ba6556b753035959b6d4518d18cdfb4b493b2c771b8ef299f141ab:seed-sha256:f0fefeb47971f6fc4aec58bb3cae9d335aeb60f48fa5cedc7fe17cec1211ff20",
+        "field_path": "industry",
+        "supporting_assertion_ids": [
+          "assertion:company-p4:e706ec9295b864c329aa394cb59b9fcfb8c9604ef10b65bc7196aafbe6c39907:industry"
+        ]
+      },
+      {
+        "decision_id": "field-decision:manifest-sha256:c8b658b251ae9faac6ee1d06249498294934eef9c2df763674cff79133ff0ef3:seed-sha256:5d9e0cb3c3a0c5921df8673d1f67026e4d784cd88873c594fa8d8bb3192e021e",
+        "field_path": "industry_tags",
+        "supporting_assertion_ids": [
+          "assertion:company-p4:e706ec9295b864c329aa394cb59b9fcfb8c9604ef10b65bc7196aafbe6c39907:industry_tags"
+        ]
+      },
+      {
+        "decision_id": "field-decision:manifest-sha256:34c264e9f1306fc461b2d3c064e5634bb2290de006c338052101eadabab5b354:seed-sha256:e13063f24048d5d022236d6568bb94552a5945160794da635db5346aacf7de10",
+        "field_path": "legal_representative",
+        "supporting_assertion_ids": [
+          "assertion:company-p4:e706ec9295b864c329aa394cb59b9fcfb8c9604ef10b65bc7196aafbe6c39907:legal_representative"
+        ]
+      },
+      {
+        "decision_id": "field-decision:manifest-sha256:a3dae9dbaeea88de4c2aa0fff4ae0cefd63088e37799536acd2bded251b17684:seed-sha256:5e6d9ac336da877af7c60f8c33692361f1f4fc33a0979c4605636441313c66be",
+        "field_path": "name",
+        "supporting_assertion_ids": [
+          "assertion:company-p4:e706ec9295b864c329aa394cb59b9fcfb8c9604ef10b65bc7196aafbe6c39907:name"
+        ]
+      },
+      {
+        "decision_id": "field-decision:manifest-sha256:230a48477b3c549e051c23248f69e97d7c6b27bac9cc5f038aac709ec3c847db:seed-sha256:7e7e7d8db62bb33bdf28e6925e88b75538e6de5f16506efb52137bffdef18935",
+        "field_path": "normalized_name",
+        "supporting_assertion_ids": [
+          "assertion:company-p4:e706ec9295b864c329aa394cb59b9fcfb8c9604ef10b65bc7196aafbe6c39907:normalized_name"
+        ]
+      },
+      {
+        "decision_id": "field-decision:manifest-sha256:731dab4f274c7a33a719cb86656db4142dba2d908f797408b3173b7048fd0a43:seed-sha256:ce691bbb65fecebd7d03abbbcf485cbcb8f53d789b2b1d84ce8055bc5694657f",
+        "field_path": "product_description",
+        "supporting_assertion_ids": [
+          "assertion:company-p4:e706ec9295b864c329aa394cb59b9fcfb8c9604ef10b65bc7196aafbe6c39907:product_description"
+        ]
+      },
+      {
+        "decision_id": "field-decision:manifest-sha256:74a31fb6d7f50238966f08b894e3cb86ef27ee0109710c207d6609023cdcbc0a:seed-sha256:a442d580a569ed6687af79ae1285bbb73a68826c7a508032e235bcb98a0854c6",
+        "field_path": "profile_summary",
+        "supporting_assertion_ids": [
+          "assertion:company-p4:e706ec9295b864c329aa394cb59b9fcfb8c9604ef10b65bc7196aafbe6c39907:profile_summary"
+        ]
+      },
+      {
+        "decision_id": "field-decision:manifest-sha256:31b5767cd2b830a7c098cbcef73b3dda90825d929ffce83db333e043ef4899a8:seed-sha256:7ce6a80fc55157bdca0819567122bff1e300115bfaca877d591cf1dd145fe836",
+        "field_path": "registered_address",
+        "supporting_assertion_ids": [
+          "assertion:company-p4:e706ec9295b864c329aa394cb59b9fcfb8c9604ef10b65bc7196aafbe6c39907:registered_address"
+        ]
+      },
+      {
+        "decision_id": "field-decision:manifest-sha256:9343e746d4b3a44e14ca59c60624b41dcf53f3afbdcfdcd6e57a13013c11a46d:seed-sha256:711f9e02478776108cb5813ea1d15e62bdcd4b4e73578e387a7fcff4e5edfad5",
+        "field_path": "tech_tags",
+        "supporting_assertion_ids": [
+          "assertion:company-p4:e706ec9295b864c329aa394cb59b9fcfb8c9604ef10b65bc7196aafbe6c39907:tech_tags"
+        ]
+      },
+      {
+        "decision_id": "field-decision:manifest-sha256:4ff17cff1213de2e773c6cb24bcc2fc5e9291e10b193420d5cddacd5ab79e989:seed-sha256:dd65afe93f52e2c516e2d4b2a4664183b9a0183a23c1fa665fe1e80a7c5c68cf",
+        "field_path": "technology_route_summary",
+        "supporting_assertion_ids": [
+          "assertion:company-p4:e706ec9295b864c329aa394cb59b9fcfb8c9604ef10b65bc7196aafbe6c39907:technology_route_summary"
+        ]
+      },
+      {
+        "decision_id": "field-decision:manifest-sha256:1ccb967e97d340f3c16427c1f3338fa910fa95f3fd1c225b0f328b4c6ef633fb:seed-sha256:bd29081816b44aa96e7bd6fa7a616f228c2737810c0f944719c916ef7d8d6e33",
+        "field_path": "website",
+        "supporting_assertion_ids": [
+          "assertion:company-p4:e706ec9295b864c329aa394cb59b9fcfb8c9604ef10b65bc7196aafbe6c39907:website"
+        ]
+      }
+    ],
+    "financing_events": [],
+    "founded_at": "2011-01-18",
+    "geography": {
+      "name": "广东省",
+      "reference_id": "source-reference:ee410024807c0467fa930b5aef999effeb63c0ccbe89f42ee0b849ee453e9eea"
+    },
+    "id": "company-c-0000000000000000000000",
+    "identity_decision_id": "identity-decision:201c56ddfd1678e10c332982fcc03c11cc91cdb18d0c1468602880bcc92c79d9",
+    "inclusion_decision_id": "domain-inclusion:sha256:3bcfe690d44369c5b151e9e11da946982eb9dd009f5b6147254f25e593b8d85e",
+    "industry": {
+      "name": "物联网",
+      "reference_id": "source-reference:85a15fb2227ae30f0b410ceffc5f9b1e9cddb6b1486b16b92fa32d9d9ab615df"
+    },
+    "industry_tags": [
+      {
+        "name": "物联网",
+        "reference_id": "source-reference:85a15fb2227ae30f0b410ceffc5f9b1e9cddb6b1486b16b92fa32d9d9ab615df"
+      }
+    ],
+    "key_personnel": [],
+    "last_updated": "2026-09-13T15:31:39.136873Z",
+    "latest_public_updates": [],
+    "legal_representative": {
+      "name": "示例代表人",
+      "reference_id": "source-reference:2be6c367024b750a855d1c62b36750a3688371c33dbe92d217caa14ae3c1efbb"
+    },
+    "name": "深圳市示例仓储有限公司",
+    "normalized_name": "深圳市示例仓储有限公司",
+    "patent_count": null,
+    "personnel_education": [],
+    "personnel_work_experience": [],
+    "product_description": "未找到",
+    "products": [],
+    "profile_summary": "未找到",
+    "projection_version": "domain-projection-v1",
+    "quality_status": "partial",
+    "registered_address": "深圳市南山区示例街道示例路1号",
+    "registered_capital": null,
+    "release_id": "candidate-v2-20260913-r1",
+    "run_id": "p4-build-20260913-v1",
+    "team_description": null,
+    "tech_tags": [
+      {
+        "name": "社区收纳系统解决方案提供商",
+        "reference_id": "source-reference:b2a3663d7e8cdcffa6806b2ed450f8309de5796eacfbd383522a31786f0ef229"
+      }
+    ],
+    "technology_route_summary": "示例企业为个人与企业用户提供社区物品寄存服务，支持上门取送与线上管理。",
+    "website": "https://example-storage.example.com/"
+  },
+  "professor": {
+    "affiliation_history": [],
+    "aliases": [],
+    "as_of": "2026-09-13T15:31:39.136873Z",
+    "awards": [],
+    "canonical_identity_id": "professor-c-0000000000000000000000",
+    "canonical_name_en": null,
+    "canonical_name_zh": "示例教授",
+    "catalog_content_sha256": "26ec3ad046207665051ab7886fcef8fda748f331bddff69de486e90930b3398d",
+    "catalog_schema_version": "canonical-v2-domain-catalog-v1",
+    "catalog_version": "canonical-v2-prd-catalog-2026-07-12",
+    "citation_count": null,
+    "company_roles": [],
+    "contacts": [],
+    "department": {
+      "name": "Not supplied by the historical source.",
+      "reference_id": "source-reference:fbbab1142c3a93da37d9b0ff800801c45105cd1378530c70b08154205783a0bf"
+    },
+    "education_history": [],
+    "email": "professor@example-univ.edu.cn",
+    "entity_type": "professor",
+    "evidence": [
+      {
+        "artifact_ids": [],
+        "assertion_id": "assertion:PROF-363064F756E8:canonical_name_zh",
+        "decision_id": "field-decision:manifest-sha256:f0a48ff1d86dc09a44356344cea6c5fa515cc7ddf09a3b98ad96497a238af168:seed-sha256:ec78c9853aaece33a5c4c66b8dcfd4ad9ee1c310962e54fdb98fe2502acd1a08",
+        "field_path": "canonical_name_zh"
+      },
+      {
+        "artifact_ids": [],
+        "assertion_id": "assertion:PROF-363064F756E8:department",
+        "decision_id": "field-decision:manifest-sha256:8197090a1d03d8cdb86a05cb302c0c3d5452137e262429d2412a1fc4c23e70d3:seed-sha256:182d5163040ec14fe6448ac930a0570992a5b767354e8e353b52a5df31a5ea66",
+        "field_path": "department"
+      },
+      {
+        "artifact_ids": [],
+        "assertion_id": "assertion:PROF-363064F756E8:email",
+        "decision_id": "field-decision:manifest-sha256:e9582858aa884692ad068036e067e21ac2c29ac8bf590b94a89a2a958cc8a5d4:seed-sha256:68239abc70938a066e357fd954431c48580c677adc10b4b49dc2e9dcbb81aecc",
+        "field_path": "email"
+      },
+      {
+        "artifact_ids": [],
+        "assertion_id": "assertion:PROF-363064F756E8:homepage",
+        "decision_id": "field-decision:manifest-sha256:7b4f18d1338393460b38758dfdb2c5f823600314876694331259c537dc555ecf:seed-sha256:d130a8523f19adf4007b949f5a49f6d42cce30144c1e7d937127f3a13d3fa215",
+        "field_path": "homepage"
+      },
+      {
+        "artifact_ids": [],
+        "assertion_id": "assertion:PROF-363064F756E8:institution",
+        "decision_id": "field-decision:manifest-sha256:1ebe4973e1617af6c86376d4151771640bb3d4b26fdc8783a42cec199aee825c:seed-sha256:ebc3d8c6c51614ff44fbed0c451ce7dcc4f0a5acac097991596b8852cc378e23",
+        "field_path": "institution"
+      },
+      {
+        "artifact_ids": [],
+        "assertion_id": "assertion:PROF-363064F756E8:name",
+        "decision_id": "field-decision:manifest-sha256:2c5736c4118a44e0653849197447d8f0d2414e25a77f836223b6c4739ab0f09d:seed-sha256:913c009a6c94a5e121c2ad5b369de1e1488f06a5ea7f16d39f5464960838a66a",
+        "field_path": "name"
+      },
+      {
+        "artifact_ids": [],
+        "assertion_id": "assertion:PROF-363064F756E8:paper_summary",
+        "decision_id": "field-decision:manifest-sha256:ca321b1553c0e190294cf443b44e67a66d33425097fb935b26119071f102fc90:seed-sha256:c3af7b6e103484079a3ef5129b6196ec8cc7da4f5b3b5426ed905e5ec76cc0a8",
+        "field_path": "paper_summary"
+      },
+      {
+        "artifact_ids": [],
+        "assertion_id": "assertion:PROF-363064F756E8:patent_ids",
+        "decision_id": "field-decision:manifest-sha256:5ef1691efb30a9c6846b647766947bc7b11c443b8089e28f08c9d3aaf5da0e81:seed-sha256:8793ad68a22a329c2ff5870e13ec4d92f906af0304c8999d367d52d05dbdc678",
+        "field_path": "patent_ids"
+      },
+      {
+        "artifact_ids": [],
+        "assertion_id": "assertion:PROF-363064F756E8:patent_summary",
+        "decision_id": "field-decision:manifest-sha256:4ef4c182e874d7eed6d1783386905b89f6b6f070e81e8ff0b2868c19aea59fd7:seed-sha256:0027a1dab43a9dd753517536e44d1e07bbd60c333bc9f45a88842e5086e9ff72",
+        "field_path": "patent_summary"
+      },
+      {
+        "artifact_ids": [],
+        "assertion_id": "assertion:PROF-363064F756E8:profile_summary",
+        "decision_id": "field-decision:manifest-sha256:639b71e7833d130d2293954b19652c736630dd5457412e39cb19d867b76a68ee:seed-sha256:95ef060342746f0c0532a3ddc8d0a031c3413d1706d11bae87c0960edfde1152",
+        "field_path": "profile_summary"
+      },
+      {
+        "artifact_ids": [],
+        "assertion_id": "assertion:PROF-363064F756E8:research_directions",
+        "decision_id": "field-decision:manifest-sha256:9ba8319256f322ff58b8c66e41d325f164420ad4d96656513a9d45a68e48d60f:seed-sha256:b815c1bcdda5ad997dc6e43267cda3296e1a06897e624a0627bdd9ac47b60bab",
+        "field_path": "research_directions"
+      },
+      {
+        "artifact_ids": [],
+        "assertion_id": "assertion:PROF-363064F756E8:title",
+        "decision_id": "field-decision:manifest-sha256:73359c22ae671b9c5f578aa1d97122311b3e7c6ba1e0c54d7c517543eeaf354b:seed-sha256:f0db9235a45916f9c60ba5deec0911089aaa9fa363ab5181cd349cb78a738424",
+        "field_path": "title"
+      }
+    ],
+    "field_lineage": [
+      {
+        "decision_id": "field-decision:manifest-sha256:f0a48ff1d86dc09a44356344cea6c5fa515cc7ddf09a3b98ad96497a238af168:seed-sha256:ec78c9853aaece33a5c4c66b8dcfd4ad9ee1c310962e54fdb98fe2502acd1a08",
+        "field_path": "canonical_name_zh",
+        "supporting_assertion_ids": [
+          "assertion:PROF-363064F756E8:canonical_name_zh"
+        ]
+      },
+      {
+        "decision_id": "field-decision:manifest-sha256:8197090a1d03d8cdb86a05cb302c0c3d5452137e262429d2412a1fc4c23e70d3:seed-sha256:182d5163040ec14fe6448ac930a0570992a5b767354e8e353b52a5df31a5ea66",
+        "field_path": "department",
+        "supporting_assertion_ids": [
+          "assertion:PROF-363064F756E8:department"
+        ]
+      },
+      {
+        "decision_id": "field-decision:manifest-sha256:e9582858aa884692ad068036e067e21ac2c29ac8bf590b94a89a2a958cc8a5d4:seed-sha256:68239abc70938a066e357fd954431c48580c677adc10b4b49dc2e9dcbb81aecc",
+        "field_path": "email",
+        "supporting_assertion_ids": [
+          "assertion:PROF-363064F756E8:email"
+        ]
+      },
+      {
+        "decision_id": "field-decision:manifest-sha256:7b4f18d1338393460b38758dfdb2c5f823600314876694331259c537dc555ecf:seed-sha256:d130a8523f19adf4007b949f5a49f6d42cce30144c1e7d937127f3a13d3fa215",
+        "field_path": "homepage",
+        "supporting_assertion_ids": [
+          "assertion:PROF-363064F756E8:homepage"
+        ]
+      },
+      {
+        "decision_id": "field-decision:manifest-sha256:1ebe4973e1617af6c86376d4151771640bb3d4b26fdc8783a42cec199aee825c:seed-sha256:ebc3d8c6c51614ff44fbed0c451ce7dcc4f0a5acac097991596b8852cc378e23",
+        "field_path": "institution",
+        "supporting_assertion_ids": [
+          "assertion:PROF-363064F756E8:institution"
+        ]
+      },
+      {
+        "decision_id": "field-decision:manifest-sha256:2c5736c4118a44e0653849197447d8f0d2414e25a77f836223b6c4739ab0f09d:seed-sha256:913c009a6c94a5e121c2ad5b369de1e1488f06a5ea7f16d39f5464960838a66a",
+        "field_path": "name",
+        "supporting_assertion_ids": [
+          "assertion:PROF-363064F756E8:name"
+        ]
+      },
+      {
+        "decision_id": "field-decision:manifest-sha256:ca321b1553c0e190294cf443b44e67a66d33425097fb935b26119071f102fc90:seed-sha256:c3af7b6e103484079a3ef5129b6196ec8cc7da4f5b3b5426ed905e5ec76cc0a8",
+        "field_path": "paper_summary",
+        "supporting_assertion_ids": [
+          "assertion:PROF-363064F756E8:paper_summary"
+        ]
+      },
+      {
+        "decision_id": "field-decision:manifest-sha256:5ef1691efb30a9c6846b647766947bc7b11c443b8089e28f08c9d3aaf5da0e81:seed-sha256:8793ad68a22a329c2ff5870e13ec4d92f906af0304c8999d367d52d05dbdc678",
+        "field_path": "patent_ids",
+        "supporting_assertion_ids": [
+          "assertion:PROF-363064F756E8:patent_ids"
+        ]
+      },
+      {
+        "decision_id": "field-decision:manifest-sha256:4ef4c182e874d7eed6d1783386905b89f6b6f070e81e8ff0b2868c19aea59fd7:seed-sha256:0027a1dab43a9dd753517536e44d1e07bbd60c333bc9f45a88842e5086e9ff72",
+        "field_path": "patent_summary",
+        "supporting_assertion_ids": [
+          "assertion:PROF-363064F756E8:patent_summary"
+        ]
+      },
+      {
+        "decision_id": "field-decision:manifest-sha256:639b71e7833d130d2293954b19652c736630dd5457412e39cb19d867b76a68ee:seed-sha256:95ef060342746f0c0532a3ddc8d0a031c3413d1706d11bae87c0960edfde1152",
+        "field_path": "profile_summary",
+        "supporting_assertion_ids": [
+          "assertion:PROF-363064F756E8:profile_summary"
+        ]
+      },
+      {
+        "decision_id": "field-decision:manifest-sha256:9ba8319256f322ff58b8c66e41d325f164420ad4d96656513a9d45a68e48d60f:seed-sha256:b815c1bcdda5ad997dc6e43267cda3296e1a06897e624a0627bdd9ac47b60bab",
+        "field_path": "research_directions",
+        "supporting_assertion_ids": [
+          "assertion:PROF-363064F756E8:research_directions"
+        ]
+      },
+      {
+        "decision_id": "field-decision:manifest-sha256:73359c22ae671b9c5f578aa1d97122311b3e7c6ba1e0c54d7c517543eeaf354b:seed-sha256:f0db9235a45916f9c60ba5deec0911089aaa9fa363ab5181cd349cb78a738424",
+        "field_path": "title",
+        "supporting_assertion_ids": [
+          "assertion:PROF-363064F756E8:title"
+        ]
+      }
+    ],
+    "h_index": null,
+    "homepage": "https://example-univ.edu.cn/~professor",
+    "id": "professor-c-0000000000000000000000",
+    "identity_decision_id": "identity-decision:c4d2a54718813da00243cb7975ed7e2ae7d413a49872ad968ba30979ca868b00",
+    "inclusion_decision_id": "domain-inclusion:sha256:f450e048b65b37f6d532a9b343e9802ab40597e3fe611c3c438a411950879c67",
+    "institution": "示例大学",
+    "last_updated": "2026-09-13T15:31:39.136873Z",
+    "lifecycle_state": null,
+    "manual_override": null,
+    "metric_snapshots": [],
+    "name": "示例教授",
+    "office": null,
+    "paper_count": null,
+    "paper_summary": "No dedicated summary was supplied by the full-column workbook source.",
+    "patent_ids": [],
+    "patent_summary": "No dedicated summary was supplied by the full-column workbook source.",
+    "phone": null,
+    "profile_summary": "示例教授现任示例大学教师。该教授在深圳科创领域有持续贡献，研究成果具有重要学术价值。",
+    "projection_version": "domain-projection-v1",
+    "projects": [],
+    "quality_status": "partial",
+    "release_id": "candidate-v2-20260913-r1",
+    "research_directions": [],
+    "run_id": "p4-build-20260913-v1",
+    "title": "Not supplied by the historical source.",
+    "work_history": []
+  },
+  "provenance": {
+    "derivation": "Every record key and value shape is preserved from the sealed run15 record; identifying text values are replaced with synthetic stand-ins so the record still round-trips through the typed models. Placeholder strings and opaque decision/assertion hashes are kept verbatim.",
+    "source_pack": "serving-pack-run15-sealed/relationships.json",
+    "source_record_content_sha256": {
+      "company": "dc245ba8a1bbf2c470856817fa62048f4ed068bcca5a182b63ccda1c9699cf12",
+      "professor": "6f5230e0aeb2193decba3d5bd83a40833ce45b1bea24f6705aabb694e1671970"
+    },
+    "source_section": "candidate_projection_result.public_domain_projections"
+  }
+}
