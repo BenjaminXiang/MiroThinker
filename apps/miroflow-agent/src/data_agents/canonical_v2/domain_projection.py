@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from collections import defaultdict
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 from datetime import date as Date, datetime
 import hashlib
 import json
@@ -54,6 +54,7 @@ from .domain_projection_models import (
     ProjectionEvidenceReference,
     TypedSubobject,
 )
+from .publication_cleaning import clean_projected_values, venue_canonical_map
 
 
 Projection = (
@@ -389,6 +390,23 @@ class _EphemeralDomainProjectionBuilder(DomainProjectionBuilder):
         )
 
 
+def _selection_text_values(
+    selections_by_identity: Mapping[str, tuple[CurrentFieldSelection, ...]],
+    field_path: str,
+) -> tuple[str, ...]:
+    """Every source value selected for one field path (labels only)."""
+    values: list[str] = []
+    for selections in selections_by_identity.values():
+        for selection in selections:
+            if selection.field_path != field_path:
+                continue
+            value = selection.value
+            label = value.get("name") if isinstance(value, dict) else value
+            if isinstance(label, str) and label.strip():
+                values.append(label.strip())
+    return tuple(values)
+
+
 class _ProjectionContext:
     def __init__(self, request: DomainProjectionRequest) -> None:
         self.request = request
@@ -428,6 +446,12 @@ class _ProjectionContext:
             identity_id: tuple(sorted(values, key=lambda item: item.field_path))
             for identity_id, values in selections_by_identity.items()
         }
+        # Venue label merging needs the whole selection set (the published label
+        # is the most frequent variant of its group), so the map is computed
+        # once per build from the same source values the projections consume.
+        self.venue_map = venue_canonical_map(
+            _selection_text_values(self.current_by_identity, "venue")
+        )
 
     def _validate_catalog_identity(self) -> None:
         identity = (
@@ -783,6 +807,18 @@ class _ProjectionContext:
             projected_values[attribute] = tuple(
                 sorted(typed_values, key=lambda item: item.subobject_id)
             )
+        # D0-a cleaning: placeholders, glue damage, research-direction junk and
+        # province-only geography are resolved once, here, so neither the
+        # published lookup documents nor the vector content can carry them.
+        # The quarantine records are reproduced offline (see design.md):
+        # debt: the build does not yet persist research-directions-quarantine.jsonl
+        # next to the release quality report (D0-b/D1 wiring).
+        projected_values, _quarantined = clean_projected_values(
+            identity.entity_type,
+            projected_values,
+            canonical_identity_id=identity.canonical_identity_id,
+            venue_map=self.venue_map,
+        )
         lineage = tuple(
             FieldProjectionLineage(
                 field_path=item.field_path,

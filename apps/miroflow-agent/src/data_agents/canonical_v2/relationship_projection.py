@@ -871,6 +871,42 @@ def _current_projection_state(
     return "current", ()
 
 
+def _assert_unique_relationship_edges(
+    current_relationships: Iterable[CurrentRelationshipProjection],
+) -> None:
+    """No published relationship edge may repeat a (type, source, target) triple.
+
+    D0-b item 2: the same attribution pair reached the pack through two link
+    families and published two edges.  The build de-duplicates the link set; this
+    assertion is the fail-closed guard that keeps a future link family from
+    reintroducing duplicate edges unnoticed.
+    """
+    seen: dict[tuple[str, str, str], str] = {}
+    duplicates: list[str] = []
+    for relationship in sorted(
+        current_relationships, key=lambda item: item.canonical_relationship_id
+    ):
+        key = (
+            relationship.relationship_type_id,
+            relationship.source_endpoint.canonical_identity_id or "",
+            relationship.target_endpoint.canonical_identity_id or "",
+        )
+        existing = seen.get(key)
+        if existing is not None:
+            duplicates.append(
+                f"{key[0]} {key[1]} -> {key[2]} ({existing}, "
+                f"{relationship.canonical_relationship_id})"
+            )
+            continue
+        seen[key] = relationship.canonical_relationship_id
+    if duplicates:
+        raise RelationshipProjectionIntegrityError(
+            "relationship projection would publish duplicate edges: "
+            + "; ".join(sorted(duplicates)[:5])
+            + (f" (+{len(duplicates) - 5} more)" if len(duplicates) > 5 else "")
+        )
+
+
 def _projection_registries(
     projections: tuple[DomainProjection, ...],
 ) -> tuple[set[tuple[str, str]], dict[str, tuple[str, str]]]:
@@ -1429,6 +1465,7 @@ class _EphemeralRelationshipProjection(RelationshipProjection):
             scenario_rows,
             canonical_registry,
         )
+        _assert_unique_relationship_edges(current_relationships)
         layer_outcomes = self._project_layer_probes(request.layer_probes)
         provisional = RelationshipProjectionResult.model_validate(
             {
