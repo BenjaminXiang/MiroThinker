@@ -1,0 +1,63 @@
+{
+  "base_url": "http://127.0.0.1:18296",
+  "generated_at": "2026-09-15T18:04:26",
+  "sessions": {
+    "G1_framing": {
+      "turns": [
+        {
+          "query": "介绍一下 国际先进技术应用推进中心（深圳）",
+          "repeat": 1,
+          "sse": "G1_framing_r1_t1.sse",
+          "seconds": 7.9,
+          "query_type": "canonical_v2:A:answer",
+          "answer_head": "国际先进技术应用推进中心（深圳）通常简称“国先中心（深圳）”，是在国家发展改革委和深圳市政府支持指导下设立、由深圳市科技创新局作为业务主管部门、依托粤港澳大湾区数字经济研究院建设的世界级先进技术应用推广平台，注册地在深圳。\n\n它的核心定位是",
+          "failures": []
+        },
+        {
+          "query": "有没有更详细的信息",
+          "repeat": 1,
+          "sse": "G1_framing_r1_t2.sse",
+          "seconds": 7.9,
+          "query_type": "canonical_v2:A:answer",
+          "answer_head": "深圳国际先进技术应用推进中心（也称国先中心（深圳））是在国家发展改革委和深圳市政府支持指导下设立的，业务主管部门为深圳市科技创新局，依托粤港澳大湾区数字经济研究院建设，定位为世界级先进技术应用推广平台。\n\n它的工作重点集中在人工智能、具身智",
+          "failures": []
+        },
+        {
+          "query": "它有哪些布局和进展",
+          "repeat": 1,
+          "sse": "G1_framing_r1_t3.sse",
+          "seconds": 9.7,
+          "query_type": "canonical_v2:A:answer",
+          "answer_head": "深圳国际先进技术应用推进中心（又称国先中心（深圳））是在国家发展改革委、深圳市政府支持指导下设立、由深圳市科技创新局作为业务主管部门、依托粤港澳大湾区数字经济研究院建设的世界级先进技术应用推广平台。\n\n在布局上，该中心聚焦人工智能、具身智能",
+          "failures": []
+        }
+      ],
+      "pass": true
+    },
+    "G4_patents": {
+      "turns": [
+        {
+          "query": "优必选科技怎么样",
+          "repeat": 1,
+          "sse": "G4_patents_r1_t1.sse",
+          "seconds": 10.4,
+          "query_type": "canonical_v2:A:answer",
+          "answer_head": "优必选科技（UBTECH Robotics Inc.，港交所：9880）是一家总部位于深圳南山区的机器人制造商，成立于2012年，专注于人工智能与人形机器人的研发、制造和销售，定位为智能服务机器人领域的领先企业。公司以“让智能机器人走进千家",
+          "failures": []
+        },
+        {
+          "query": "该公司的专利有哪些",
+          "repeat": 1,
+          "sse": "G4_patents_r1_t2.sse",
+          "seconds": 11.9,
+          "query_type": "canonical_v2:A:answer",
+          "answer_head": "深圳市优必选科技股份有限公司的专利布局集中在机器人本体结构、运动控制、导航避障、人机交互以及清洁机器人等方向。以下为其中一批有代表性的专利（含公开号）：\n\n**运动控制与导航避障**\n- 机器人控制方法、装置、机器人及计算机可读存储介质（C",
+          "failures": []
+        }
+      ],
+      "pass": true
+    }
+  },
+  "all_pass": true,
+  "total_failures": 0
+}

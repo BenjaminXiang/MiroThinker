@@ -79,11 +79,11 @@ v1/v2 区分方式：**`manifest.json: schema_version`**（`…-v1` / `…-v2`�
 | 迁移（v1 index → v2 index） | 51,026 点 / 47,068 文档；`lookup.sqlite3` 668.9MB → 896.9MB（+218MB），`milvus.db` 1.078GB 不再产出；**index root −850MB（−24.8%），pack −850MB（−16.5%）** |
 | 权威等价 | v2 pack 的 `index_result_content_sha256` 与 run15/v1 包**逐字相同**（`690946f3…`）——即"sqlite 点集 == Milvus 点集"由启动路径的哈希重建直接证明 |
 | v2 启动日志 | 全文出现 `milvus` **0 次**、无 mvccTs 超时；挂载收据只登记 `lookup.sqlite3` + marker |
-| 挂载耗时（收据） | v2 **289.1s** vs 同机 v1 **345.9s**（全量挂载对照 311.5s → 289.1s），启动阶段省 ≈31–57s |
-| replay 门 | 见下 |
+| 挂载耗时（收据） | 同机对照：v2 启动 **289.1s** vs v1 启动 **340.7s**（全量挂载对照 311.5s → 289.1s）——启动阶段省 ≈52s |
+| replay 门 | **7/7 ALL PASS**（G1–G7；逐轮 7.7–24.8s，落在基线带内） |
 | 两个逐字探针 | `字节跳动` → 答案含 `ByteDance Ltd.`；`优必选有哪些专利` → **32 条本地 CN** |
 | 用户案例 | `详细介绍一下 国先中心（深圳）` → 答案完整、`web_items=[]`（与基线一致） |
-| v1 兼容 | 同一份代码跑 run15 副本包，启动 + replay 冒烟通过 |
+| v1 兼容 | 同一份代码跑 run15 副本包：启动正常（日志仍有 mvccTs 告警＝v1 路径未变），挂载 340.7s，replay 冒烟 G1/G4 **ALL PASS** |
 
 （外呼配额：3 个探针 + replay 7 会话各 1 轮，全部走 web 轨，如实计入。）
 
