@@ -69,8 +69,19 @@ run16 包会携带 D0-a 的"占位值 → 置空"。以下 9 个字段在数据�
 字段注解逐条对比（`model_fields[...].is_required()`）已做：服务线 9/9 required，
 数据线 9/9 optional。
 
-处置：在隔离 worktree `feat/serving-model-sync`（基于服务线分支）同步这 9 个字段 +
-RED/GREEN 测试 + run15 包回载验证；随切包窗口与 P1 一起进入服务线。
+处置：**已完成**（隔离 worktree `feat/serving-model-sync`，基于服务线 `codex/canonical-v2-s12a-ready`）：
+`e9f2e974` 模型对齐（`domain_projection_models.py` 与数据线逐字节一致）+ `eff2a793` 回归测试
+（RED 4 failed/2 passed → GREEN 6 passed；13 文件回归 208 passed/2 skipped，失败集差异仅新 RED）
++ `57877ebc` 证据。**run15 包仍可装载**：两次 scratch 装载 OK（336.1s/333.5s），全包哈希重算
+= run15 manifest 值 `6ad4c090…`（逐字节一致）。
+
+**新增已核实事实（影响封印）**：sealer 解析 `CompleteCandidateBuildEnvelope` 时同样把
+`index_projection_request.candidate_projection_result` 按 `CandidateProjectionResult` 校验
+（`index_projection.py:263-265`）——**封印也会撞这 9 个字段**。所以切包窗口里服务线树必须先
+同时合入 **P1（v2 sealer）与 `feat/serving-model-sync`**，然后才能封印/装载 run16 包。
+已知遗留（证据在案）：`index_projection.py:754` 的 `projection.department.name` 对 None 不安全，
+仅索引物化/信封 replay 路径可达（数据线副本已有守卫，pack 的 boot/查询路径不经过）——
+若服务线将来用 run16 形态投影做索引物化，再修。
 
 ## 3. 发射重建（脱离会话）
 
@@ -116,7 +127,10 @@ setsid nohup bash .agents/runs/full-column-serving-pack-rebuild/build-run16.sh \
 **脚本已就绪**：`build_run16_serving_pack.sh`（参数副本 + 三道 fail-closed 闸：pack 目录
 必须全新；index 根/marker 必须存在且 sha 与 `EXPECTED_MARKER_SHA256`（来自
 `build-run16.sh` 打印的 `index marker sha256=`）一致；sealer 必须支持
-`--pack-schema-version`——当前 index-v3 未建故直接 exit 2，已实测）。差异：
+`--pack-schema-version`——当前 index-v3 未建故直接 exit 2，已实测）。**前置（已核实）**：
+运行封印的服务线树必须先同时合入 **P1（`fix/slim-serving-pack`，提供 v2 sealer）** 与
+**`feat/serving-model-sync`（sealer 的信封解析也会校验那 9 个可空字段，见 §2.1）**。
+差异：
 
 - `INDEX_ROOT=index-v3`、`PACK_DIR=/var/tmp/mirothinker-data-v2/serving-pack-run16-sealed`、
   `ENVELOPE=` 固定路径（run16 信封，见 §3）、`RELEASE_ID=candidate-v2-20260916-r1`、
