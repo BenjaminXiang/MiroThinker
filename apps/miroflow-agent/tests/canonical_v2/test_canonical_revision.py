@@ -236,3 +236,29 @@ def test_c2_0015_relaxes_exactly_the_reviewed_projection_columns() -> None:
         ("professor", "current_projection", "profile_summary"),
         ("professor", "current_projection", "title"),
     )
+
+
+def test_c2_0016_relaxes_exactly_the_reviewed_shape_constraints() -> None:
+    """Pin the migration scope: the two NULL-rejecting named-reference shapes."""
+    from canonical_v2_alembic.versions import (  # type: ignore[import-not-found]
+        C2_0016_relax_optional_named_reference_shapes as migration,
+    )
+
+    assert migration.revision == "C2_0016"
+    assert migration.down_revision == "C2_0015"
+    assert migration.TARGETS == (
+        (
+            "paper",
+            "current_projection",
+            "ck_paper_current_projection_venue_shape",
+            "venue",
+            "knowledge.is_valid_projection_named_reference",
+        ),
+        (
+            "professor",
+            "current_projection",
+            "ck_professor_current_projection_department_shape",
+            "department",
+            "knowledge.is_valid_projection_named_reference",
+        ),
+    )
