@@ -87,3 +87,22 @@ by the full-column workbook source." 等）与被扣下的粘连损坏值。分�
 
 **影响哪些问题**：① 解除 run16 第三次发射的阻断（构建期发布门第一次真实生效，抓到的正是
 "未过清洗的通道"这类缺陷）；② 发布门从此可诊断（失败即点名，不用再花 1.5h 复跑定位）。
+
+### 轮次追加续（2026-09-16 下午）：attempt 4 也是同一道门，但这次门点了名
+
+**发现了什么**：attempt 4（11:01 发射，含补充通道修复）在 14:40 前又被发布门拦下，
+错误消息第一次**点名违规值**：`placeholder values published: 5 (e.g.
+paper.venue.name: 未提供期刊出处 ×4, +1)`。根因＝`_p4_paper_record` 在 P4 论文缺 venue 时
+落一条**兜底 venue 引用**（`_P4_PAPER_VENUE_FALLBACK`），而 `venue` 是唯一不在
+`CLEANED_REFERENCE_FIELDS` 里的引用型字段——venue 合并只做标签归一，从不跑占位分类器。
+（attempt 3 的 5 条就是这 5 条；`3a9f9149` 修掉的是另一条真实泄漏，并让这一轮**可诊断**。）
+
+**怎么验证**：`test_paper_venue_placeholder_reference_is_not_published`（RED→GREEN）＋
+新不变量测试 `test_every_build_fallback_literal_is_recognized_by_the_cleaner`（构建模块里
+每个 `*_FALLBACK` 字面量都必须被占位分类器覆盖，防再犯）；D0-a/D1-a 六套件 **134 passed**；
+修复 `fee2fc85`；**attempt 5（14:45）**发射。
+
+**机制（本轮新增）**：watchdog 升级为**失败报告器**——runner 一消失就落
+`run16-failure-report-<ts>.md`（日志尾 + 产物体征 + triage 清单）；另设 10 分钟 cron
+唤醒会话巡检（运行中/成功/失败/CPU 冻结 四态判定）。本次正是它把"hours-late 发现"变成
+"立即定位"。
