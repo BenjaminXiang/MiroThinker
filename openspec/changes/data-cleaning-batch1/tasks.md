@@ -38,3 +38,13 @@
       schema, dirty geography labels, companies with no geography.
 - [ ] D1: LLM review of `quarantine.jsonl` (177 glue-damaged values) and of the
       retained no-information sentences; wire the side report into the build.
+- [x] D0-a follow-up (2026-09-16, found by run16 launch 3): the publication gate
+      caught a channel the projection seam does not cover —
+      `_supplementary_field_values` (non-selected assertion values that feed the
+      published vector content and lookup documents verbatim) published the
+      build's own fallback sentences and withheld glue damage
+      (`placeholder values published: 5`). The channel now applies the same rule
+      set (`clean_text` + the research-direction rule), and the gate names its
+      offenders (`PublicationQualityReport.*_examples`, diagnostic-only, not in
+      `as_dict`). Evidence: `.agents/runs/data-cleaning-batch1/verification.md`
+      §"run16 attempt 3".

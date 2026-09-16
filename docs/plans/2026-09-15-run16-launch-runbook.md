@@ -122,6 +122,10 @@ setsid nohup bash .agents/runs/full-column-serving-pack-rebuild/build-run16.sh \
 
 预计 ~8h（run15 实测 ~21h13m − F3 的 12h40m）。
 
+**发射历史**：attempt 1/2 死于环境（进程组被回收 / 信封路径处置）；attempt 3（09-15 22:53）
+跑到 09-16 00:32 被 D0-a 发布门拦下（`placeholder values published: 5`，根因＝补充通道未过
+清洗，见 data-cleaning-batch1 日志轮次追加）；修复 `3a9f9149` 后 **attempt 4（09-16 11:01）**发射。
+
 ## 4. 封印（pack v2）
 
 **脚本已就绪**：`build_run16_serving_pack.sh`（参数副本 + 三道 fail-closed 闸：pack 目录
