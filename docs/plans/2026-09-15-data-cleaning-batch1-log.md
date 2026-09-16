@@ -165,3 +165,31 @@ run10 遗留的 /tmp watchdog 把信封构造期（按设计零写盘）误报�
 **后续**：04:34 封印发射（`build_run16_serving_pack.sh`，服务线预合树 `c2d2c246`、marker sha
 `36305daf…` 两道 fail-closed 闸已过）；封印完成 → runbook §5 切包（bundle → 命令文件 → 活线
 fast-forward → restart → replay 7/7 + 逐字探针 + 回滚演练）。
+
+### 轮次追加（2026-09-17 清晨）：封印首跑失败 → 根因＝封印树缺构建线代码 → 两线合流修复 → 重发
+
+**发现了什么**：04:34 从服务线预合树（`c2d2c246`）发射封印，sealer 在信封校验处失败：
+`ValidationError: consumer_handoff.release_bundle — relationship publication authority cannot be replayed exactly`。
+信封的 `IsolatedReleaseBundle` 校验会**重放**关系投影与候选投影（设计内的"一次证明"），而服务线树
+缺构建线的投影代码（C1 修复、D0-a/D0-b 清洗、D1-a 等）→ replay 抛错。run15 能封是因为其信封
+由合流前的旧代码产出。这不是"少一个字段"，是**两棵树不同源**——runbook 原文"封印从预合树跑"
+的前提（服务线树足以重放）不成立。
+
+**怎么修**：做真正的两线合流：新分支 `codex/canonical-v2-run16-serve`（`data/p4-serving-pack-rebuild`
+→ `codex/canonical-v2-run16-ready`，worktree `.worktrees/run16-integration`），12 个冲突
+（6 生产 + 4 测试 + 2 文档），逐项按"**保留服务线基线语义 + 采纳数据线已批准 change**"裁定：
+- 读侧 F1 类目回退保留；数据线 identifier-token 回退**去掉调用点**（函数与单测保留，服务线自身
+  的 PCB 触发机制覆盖该场景），恢复"无触发词不回退"不变量；
+- `_public_citations` 采纳数据线已批准的 `fix-web-citations` + `local-citation-floor`（url-less
+  本地归档卡 + current_web 来源卡），但**保留服务线的哈希公开 id**（内部 canonical id 不外泄）；
+- 服务线标记机（B5.5/GAP-09 重放检测）保留；进度计时器是数据线已禁用的死代码，按服务线；
+- 文档/账本按"保留双方行"。
+合流提交 `4e2a3e0f`，修复提交 `8fc0fa7f`。
+
+**怎么验证**：定向套件——miroflow-agent（serving 合同 + loader + read/serving isolated +
+identifier 单测）：**384 passed**；admin-console（引用卡 + 相关契约）：**146 passed / 1 失败**，
+该失败（s11a 措辞断言）**在数据线父提交上同样失败**（同点同因，既有红，非合流引入）。
+05:20 从合流树发射封印（第 2 次）；封印成功后按 runbook §5 切包（活线 ff 到 `8fc0fa7f`）。
+
+**影响哪些问题**：切包链路从"隐含假设两棵树同码"变成"显式合流一次"；此后 run17+ 的封印应直接
+在合流线上跑（runbook §4/§5 的树引用需同步更新）。
