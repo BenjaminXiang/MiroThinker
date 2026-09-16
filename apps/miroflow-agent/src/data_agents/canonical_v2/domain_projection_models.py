@@ -441,7 +441,10 @@ class PaperProjection(DomainProjectionEnvelope):
     title: NonEmptyStr
     title_zh: NonEmptyStr | None = None
     tldr: NonEmptyStr | None = None
-    venue: NamedReference
+    # D0-a follow-up (2026-09-16): the P4 salvage venue fallback
+    # ("未提供期刊出处") publishes as an absent venue, so the field is optional —
+    # the same pattern as the professor/company fields above.
+    venue: NamedReference | None = None
     year: Year = Field(ge=1000, le=9999)
     full_texts: tuple[PaperFullText, ...] = ()
     identifiers: tuple[PaperIdentifier, ...] = ()

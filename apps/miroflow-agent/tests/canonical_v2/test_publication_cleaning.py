@@ -24,6 +24,7 @@ from src.data_agents.canonical_v2.domain_catalog import (
 from src.data_agents.canonical_v2.domain_projection_models import (
     CompanyProjection,
     NamedReference,
+    PaperProjection,
     ProfessorProjection,
 )
 from src.data_agents.canonical_v2.publication_cleaning import (
@@ -470,6 +471,59 @@ def test_gate_failure_names_its_offenders() -> None:
     with pytest.raises(PublicationQualityError) as excinfo:
         assert_publication_quality(report)
     assert "company.profile_summary: 未找到" in str(excinfo.value)
+
+
+def test_paper_projection_accepts_an_absent_venue() -> None:
+    """A paper whose only venue was a placeholder publishes without a venue."""
+    payload = {
+        "canonical_identity_id": "paper-c-fixture",
+        "identity_decision_id": "identity-decision:fixture",
+        "inclusion_decision_id": "inclusion:fixture",
+        "projection_version": "domain-projection-v1",
+        "catalog_schema_version": CATALOG_SCHEMA_VERSION,
+        "catalog_version": CATALOG_VERSION,
+        "catalog_content_sha256": CATALOG_CONTENT_SHA256,
+        "as_of": "2026-09-15T00:00:00+00:00",
+        "last_updated": "2026-09-15T00:00:00+00:00",
+        "quality_status": "partial",
+        "run_id": "fixture-run",
+        "content_sha256": "0" * 64,
+        "release_id": "candidate-fixture",
+        "field_lineage": [
+            {
+                "field_path": "title",
+                "decision_id": "decision:fixture",
+                "supporting_assertion_ids": ["assertion:fixture"],
+            }
+        ],
+        "evidence": [
+            {
+                "assertion_id": "assertion:fixture",
+                "decision_id": "decision:fixture",
+                "field_path": "title",
+            }
+        ],
+        "id": "paper-c-fixture",
+        "title": "Traceable Knowledge Graphs",
+        "year": 2025,
+        "authors": [
+            {
+                "subobject_id": "paper-author:paper-c-fixture:1",
+                "parent_canonical_identity_id": "paper-c-fixture",
+                "supporting_assertion_ids": ["assertion:fixture"],
+                "decision_ids": ["decision:fixture"],
+                "observed_at": "2026-09-15T00:00:00+00:00",
+                "projection_content_sha256": "0" * 64,
+                "name": "Ada Chen",
+                "author_order": 1,
+            }
+        ],
+        "venue": None,
+    }
+    model = PaperProjection.model_validate(
+        payload, context={"allow_unbound_projection_hash": True}
+    )
+    assert model.venue is None
 
 
 def test_paper_venue_placeholder_reference_is_not_published() -> None:
