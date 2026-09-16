@@ -472,6 +472,39 @@ def test_gate_failure_names_its_offenders() -> None:
     assert "company.profile_summary: 未找到" in str(excinfo.value)
 
 
+def test_paper_venue_placeholder_reference_is_not_published() -> None:
+    """A placeholder venue reference (the P4 salvage fallback) never publishes."""
+    cleaned, _ = clean_projected_values(
+        "paper",
+        {
+            "venue": {
+                "reference_id": source_reference_id("未提供期刊出处"),
+                "name": "未提供期刊出处",
+            }
+        },
+    )
+    assert cleaned.get("venue") is None
+    report = audit_lookup_documents([_Document("paper", {"id": "paper-1", **cleaned})])
+    assert report.placeholder_hits == 0
+
+
+def test_every_build_fallback_literal_is_recognized_by_the_cleaner() -> None:
+    """Every build-side fallback sentence must be placeholder-family text.
+
+    The build writes fallback values into landed records when a source has no
+    value (`_P4_PAPER_VENUE_FALLBACK` and friends); the cleaning rules are what
+    keep them out of the pack, so a new literal must be classified too.
+    """
+    literals = {
+        name: value
+        for name, value in vars(knowledge_build_isolated).items()
+        if name.endswith("_FALLBACK") and isinstance(value, str)
+    }
+    assert literals
+    for name, value in sorted(literals.items()):
+        assert placeholder_family(value) is not None, name
+
+
 def test_gate_refuses_research_direction_junk_and_thin_geography() -> None:
     report = audit_lookup_documents(
         [

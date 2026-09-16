@@ -628,7 +628,7 @@ CLEANED_REFERENCE_FIELDS: dict[str, tuple[str, ...]] = {
         "products",
     ),
     "professor": ("aliases", "department", "office", "canonical_name_en"),
-    "paper": ("keywords", "fields_of_study", "authors"),
+    "paper": ("keywords", "fields_of_study", "authors", "venue"),
     "patent": ("applicants", "inventors", "ipc_codes", "patent_type"),
 }
 
