@@ -357,3 +357,26 @@ Cross-line check (verified, not assumed): the serving line tolerates a newer
 database without carrying the migration — the live service serves a **C2_0013**
 database while its own chain ends at C2_0012 (the revision checks live in
 build-side stores only).  Attempt 7 launched 19:06.
+
+## run16 attempt 7 — the shape CHECKs behind the NOT NULLs (2026-09-16)
+
+Attempt 7 reached persistence again (assertions 627k, decisions 423k were
+written) and died on the paper projection insert:
+
+```
+psycopg.errors.CheckViolation: new row for relation "current_projection"
+violates check constraint "ck_paper_current_projection_venue_shape"
+```
+
+C2_0015 dropped NOT NULL, but the shape constraint still read
+`COALESCE(is_valid_projection_named_reference(venue), false)` — false for NULL.
+
+Fix (data-line `84100331`): **C2_0016** relaxes that constraint and its
+`department` twin to `(X IS NULL) OR COALESCE(...)`.  Sibling-class sweep:
+every other unguarded `COALESCE(is_valid_..., false)` shape constraint across
+the four domain schemas sits on a NOT NULL column (15/15 verified), every
+`*_nonempty` check on the relaxed columns is NULL-tolerant (`btrim(NULL) <> ''`
+is NULL, which a CHECK accepts), and `paper.publication` /
+`professor.affiliation_history` already carry the guarded form.  Frozen catalog
+sha recomputed on two scratch databases (`b9befa25...`); scope pinned by a
+test.  Attempt 8 launched 22:06.

@@ -133,3 +133,15 @@ live-schema 目录 sha 在两个独立迁移的临时库上复算（`08aa5c3f…
 正在跑 **C2_0013** 的库，而它自己的链止于 C2_0012（版本检查只存在于构建侧 store）。
 
 修复 `ca50ae68`；**attempt 7（19:06）**发射。
+
+### 轮次追加（2026-09-16 深夜）：NOT NULL 之后的形状约束（修复后 attempt 8）
+
+**发现了什么**：attempt 7 再次走到落库（断言 62.7 万、决策 42.3 万已写入），在 paper 投影插入处
+倒下：`CheckViolation: ck_paper_current_projection_venue_shape`。C2_0015 只解了 NOT NULL，
+形状约束 `COALESCE(is_valid_..., false)` 对 NULL 判**假**——同一耦合的下半层。
+
+**怎么验证**：C2_0016 把 venue 与 department 两条形状约束改为 `(X IS NULL) OR ...`；
+**同类穷举**：四个域里其余所有"无守卫 COALESCE 形状约束"都落在 NOT NULL 列上（15/15 核实），
+被放宽列上的 `*_nonempty` 检查对 NULL 本来就放行（`btrim(NULL) <> ''` 求值为 NULL，CHECK 通过），
+子对象表（paper.publication / professor.affiliation_history）原本就带 `IS NULL` 守卫。冻结目录
+sha 双库复算（`b9befa25…`）+ 范围测试（10 passed）。修复 `84100331`；**attempt 8（22:06）**发射。
