@@ -64,3 +64,26 @@
 - 未做（留给 D0-b/D1）：venue 合并、边去重、空行清理、死字段 schema、
   `广东省-珠海`/`苏州市`/`-开曼群岛` 3 个脏值、1,595 家完全无地域的公司、
   以及"把 side report 写进构建产物"（当前由离线脚本产出，debt 已记在 design.md）。
+
+---
+
+## 轮次追加（2026-09-16）：run16 第三次发射被发布门拦下 → 补上"补充通道"
+
+**做了什么**：修 `_supplementary_field_values`（补充通道）——它把**非选中断言值**（原文、未过清洗）
+直接喂给发布的向量内容与 lookup 文档；现在该通道与投影缝用**同一套规则**
+（`clean_text` + 研究方向规则）。同时让发布门在失败时**点名违规值**（每类最多 4 条；
+`PublicationQualityReport.*_examples`，仅诊断、不进 `as_dict`）。
+
+**发现了什么**：run16（09-15 22:53 发射）跑到 09-16 00:32 被自家发布门拦下：
+`placeholder values published: 5`。数据侧取证：run16 库四个域的**投影表里逐字符串扫
+`placeholder_family` = 0 命中**（说明投影缝是干净的），5 条只能从补充通道进来——它们正是
+构建自己写的兜底句（`_P4_COMPANY_PROFILE_FALLBACK` = "No dedicated summary was supplied
+by the full-column workbook source." 等）与被扣下的粘连损坏值。分类器早就覆盖这些文案
+（`PLACEHOLDER_PREFIX_VALUES`），只是这些值从没经过它。
+
+**怎么验证**：新测试 `test_supplementary_publication_filter.py`（RED：兜底句与粘连值都被
+发布 → 修复后 GREEN）+ `test_gate_failure_names_its_offenders`；D0-a/D1-a 相关 6 个套件
+**132 passed**；修复提交 `3a9f9149`；随后 run16 第 4 次发射（09-16 11:01）。
+
+**影响哪些问题**：① 解除 run16 第三次发射的阻断（构建期发布门第一次真实生效，抓到的正是
+"未过清洗的通道"这类缺陷）；② 发布门从此可诊断（失败即点名，不用再花 1.5h 复跑定位）。

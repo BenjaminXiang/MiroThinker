@@ -228,3 +228,40 @@ Two findings from the owner's review of the D0-b handoff, both corrected here.
 
 Neither finding changes a rule, a gate or a measured data number; both were
 evidence-reporting defects and are corrected in the artifacts.
+
+## run16 attempt 3 — the gate catches the supplementary channel (2026-09-16)
+
+run16 launched 2026-09-15 22:53 and aborted 2026-09-16 00:32 with
+`IndexProjectionIntegrityError: published pack failed the data-cleaning gate:
+placeholder values published: 5` (chain: `PublicationQualityError` raised by
+`index_projection._lookup_documents`' gate at `index_projection.py:503`).
+
+Root cause (code-grounded): `knowledge_build_isolated._supplementary_field_values`
+collects **non-selected assertion values** and hands them to
+`_lookup_documents` / `_vector_points` as `supplementary_by_canonical`.  That
+channel is fed by raw assertion values and never passes the projection cleaning
+seam (`domain_projection.project_identity`), so the build's own fallback
+sentences — `_P4_COMPANY_PROFILE_FALLBACK = "No dedicated summary was supplied
+by the full-column workbook source."`, `_P4_COMPANY_ROUTE_FALLBACK = "Not
+supplied by the full-column workbook source."` — and withheld glue-damaged
+values reached the pack.  The classifier already covers those literals
+(`PLACEHOLDER_PREFIX_VALUES`); the values simply never met it.
+
+Evidence that the projections were clean: scanning every string in the run16
+database's `company/professor/paper/patent` projection tables with
+`placeholder_family` returns **0 hits** (the seam worked); the offenders can only
+enter through the supplementary channel.
+
+Fix (data-line commit `3a9f9149`):
+
+- `_supplementary_field_values` applies `clean_text` (drop placeholder-family,
+  no-information and glue-withheld values) plus the research-direction rule, so
+  the channel obeys the same single rule set as the seam;
+- `assert_publication_quality` now names up to four offenders per kind
+  (`placeholder_examples`, `glue_examples`, `research_direction_examples` —
+  collected by `audit_projection_payload(..., examples=)`), so the next failure
+  is diagnosable without re-running a multi-hour build;
+- tests: `tests/canonical_v2/test_supplementary_publication_filter.py` (new; RED
+  before the fix: the placeholder sentence and the glue-withheld value were both
+  published; GREEN after) and `test_gate_failure_names_its_offenders`;
+  132 passed across the D0-a/D1-a suites.
