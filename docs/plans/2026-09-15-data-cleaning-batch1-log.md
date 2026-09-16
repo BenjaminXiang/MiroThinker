@@ -145,3 +145,23 @@ live-schema 目录 sha 在两个独立迁移的临时库上复算（`08aa5c3f…
 被放宽列上的 `*_nonempty` 检查对 NULL 本来就放行（`btrim(NULL) <> ''` 求值为 NULL，CHECK 通过），
 子对象表（paper.publication / professor.affiliation_history）原本就带 `IS NULL` 守卫。冻结目录
 sha 双库复算（`b9befa25…`）+ 范围测试（10 passed）。修复 `84100331`；**attempt 8（22:06）**发射。
+
+### 轮次追加（2026-09-17 凌晨）：attempt 8 全程通过 —— run16 构建成功，封印启动
+
+**发现了什么**：attempt 8 首次穿越全部历史死点（paper 投影 24,520、四域投影提交、索引物化
+3.2GB、release_continuity 校验、信封构造与回读），全程无阻断。时间线：22:06 发射 → 02:26
+索引物化完成（lookup 668MB / vector_matrix.npz 1.68GB / milvus.db 1.08GB + 质量报告）→
+02:30 起信封构造（内存峰值 RSS ~90GB，宿主 503GB 余量充足）→ **03:21 信封落盘
+8,303,007,285 B** → 回读校验（读 8.3GB + 解析 + 逐字段比对，~70 分钟）→ 04:31 runner 正常
+退出。
+
+**怎么验证**：footer 四行齐全 —— `candidate_release_id=candidate-v2-20260916-r1`、
+`receipt_sha256=331091a4…`、`handoff_sha256=ee218440…`、`envelope_sha256=a8440bdf…`；无
+Traceback；无新 failure dossier（最近一份仍是 22:00 的 attempt 7）。监控三态留痕：cron 10
+分钟巡检 + run16 专用 watchdog（utime 单调增长 / 信封出现 / 进程退出均被逐次记录）。另：
+run10 遗留的 /tmp watchdog 把信封构造期（按设计零写盘）误报为"自旋"抓栈，反证了相位；
+其一个卡死 py-spy 已清掉。
+
+**后续**：04:34 封印发射（`build_run16_serving_pack.sh`，服务线预合树 `c2d2c246`、marker sha
+`36305daf…` 两道 fail-closed 闸已过）；封印完成 → runbook §5 切包（bundle → 命令文件 → 活线
+fast-forward → restart → replay 7/7 + 逐字探针 + 回滚演练）。
