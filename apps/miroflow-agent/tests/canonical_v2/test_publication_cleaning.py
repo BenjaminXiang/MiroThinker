@@ -462,6 +462,16 @@ def test_gate_refuses_to_publish_placeholder_text() -> None:
         assert_publication_quality(report)
 
 
+def test_gate_failure_names_its_offenders() -> None:
+    report = audit_lookup_documents(
+        [_Document("company", {"id": "c1", "profile_summary": "未找到"})]
+    )
+    assert report.placeholder_examples == ("company.profile_summary: 未找到",)
+    with pytest.raises(PublicationQualityError) as excinfo:
+        assert_publication_quality(report)
+    assert "company.profile_summary: 未找到" in str(excinfo.value)
+
+
 def test_gate_refuses_research_direction_junk_and_thin_geography() -> None:
     report = audit_lookup_documents(
         [

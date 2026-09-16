@@ -819,6 +819,12 @@ class PublicationQualityReport:
     declared_never_filled_fields: Mapping[str, tuple[str, ...]] = field(
         default_factory=dict
     )
+    # Diagnostic samples (not part of the released report contract): the gate
+    # message names its offenders so a failed multi-hour build is diagnosable
+    # without a re-run.
+    placeholder_examples: tuple[str, ...] = ()
+    glue_examples: tuple[str, ...] = ()
+    research_direction_examples: tuple[str, ...] = ()
 
     @property
     def city_level_ratio(self) -> float:
@@ -868,9 +874,16 @@ def _iter_document_strings(value: JsonValue) -> Iterable[tuple[str, str]]:
 
 
 def audit_projection_payload(
-    domain: str, payload: Mapping[str, JsonValue]
+    domain: str,
+    payload: Mapping[str, JsonValue],
+    *,
+    examples: dict[str, list[str]] | None = None,
 ) -> dict[str, int]:
-    """Count cleaning-relevant findings in one published projection payload."""
+    """Count cleaning-relevant findings in one published projection payload.
+
+    ``examples`` (optional) collects up to :data:`EXAMPLE_LIMIT` offenders per
+    kind as ``"domain.field_path: value"`` strings for gate diagnostics.
+    """
     findings = {
         "placeholder_hits": 0,
         "glue_damaged_values": 0,
@@ -878,12 +891,22 @@ def audit_projection_payload(
         "research_direction_entries": 0,
         "research_direction_junk": 0,
     }
+
+    def record(kind: str, field_path: str, text: str) -> None:
+        if examples is None:
+            return
+        bucket = examples.setdefault(kind, [])
+        if len(bucket) < EXAMPLE_LIMIT:
+            bucket.append(f"{domain}.{field_path}: {text[:120]}")
+
     for field_path, text in _iter_document_strings(dict(payload)):
         if placeholder_family(text) is not None:
             findings["placeholder_hits"] += 1
+            record("placeholder", field_path, text)
         elif GLUE_TOKEN in text:
             if glue_damaged(text):
                 findings["glue_damaged_values"] += 1
+                record("glue", field_path, text)
             else:
                 findings["glue_legit_values"] += 1
     if domain == "professor":
@@ -902,6 +925,7 @@ def audit_projection_payload(
                 findings["research_direction_entries"] += 1
                 if research_direction_rule(label) is not None:
                     findings["research_direction_junk"] += 1
+                    record("research_direction", "research_directions", label)
     return findings
 
 
@@ -924,6 +948,7 @@ def audit_lookup_documents(
     domain_counts: dict[str, int] = {}
     applicants = ApplicantAudit(0, 0, 0, 0, 0)
     declared_fields: dict[str, dict[str, list[int]]] = {}
+    examples: dict[str, list[str]] = {}
     for document in documents:
         domain = getattr(document, "domain", None)
         if domain is None:
@@ -934,7 +959,7 @@ def audit_lookup_documents(
         payload = json.loads(content)
         documents_count += 1
         domain_counts[domain] = domain_counts.get(domain, 0) + 1
-        findings = audit_projection_payload(domain, payload)
+        findings = audit_projection_payload(domain, payload, examples=examples)
         for key, value in findings.items():
             totals[key] += value
         if domain == "company":
@@ -982,6 +1007,9 @@ def audit_lookup_documents(
             )
             for domain, per_field in declared_fields.items()
         },
+        placeholder_examples=tuple(examples.get("placeholder", ())),
+        glue_examples=tuple(examples.get("glue", ())),
+        research_direction_examples=tuple(examples.get("research_direction", ())),
         **totals,
     )
 
@@ -989,6 +1017,8 @@ def audit_lookup_documents(
 # Publication gates (design.md): a build may not publish placeholder text, glue
 # damage or research-direction junk, and company geography must reach city level.
 MIN_CITY_LEVEL_GEOGRAPHY_RATIO = 0.90
+# How many offenders a gate failure names per kind.
+EXAMPLE_LIMIT = 8
 
 
 class PublicationQualityError(ValueError):
@@ -1000,14 +1030,28 @@ def assert_publication_quality(
     *,
     min_city_level_ratio: float = MIN_CITY_LEVEL_GEOGRAPHY_RATIO,
 ) -> None:
+    def annotated(count: int, examples: tuple[str, ...]) -> str:
+        if not examples:
+            return str(count)
+        shown = "; ".join(examples[:4])
+        more = "" if len(examples) <= 4 else f"; +{len(examples) - 4} more"
+        return f"{count} (e.g. {shown}{more})"
+
     failures: list[str] = []
     if report.placeholder_hits:
-        failures.append(f"placeholder values published: {report.placeholder_hits}")
+        failures.append(
+            f"placeholder values published: "
+            f"{annotated(report.placeholder_hits, report.placeholder_examples)}"
+        )
     if report.glue_damaged_values:
-        failures.append(f"glue-damaged values published: {report.glue_damaged_values}")
+        failures.append(
+            f"glue-damaged values published: "
+            f"{annotated(report.glue_damaged_values, report.glue_examples)}"
+        )
     if report.research_direction_junk:
         failures.append(
-            f"research-direction junk published: {report.research_direction_junk}"
+            "research-direction junk published: "
+            f"{annotated(report.research_direction_junk, report.research_direction_examples)}"
         )
     if report.geography_total and report.city_level_ratio < min_city_level_ratio:
         failures.append(

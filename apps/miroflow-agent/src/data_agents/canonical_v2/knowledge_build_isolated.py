@@ -163,6 +163,7 @@ from .internal_reference_projection import (
     ReferenceCatalogIdentity,
     create_ephemeral_internal_reference_projection_builder,
 )
+from .publication_cleaning import clean_text, research_direction_rule
 from .knowledge_build import (
     BuildCandidateRequest,
     KnowledgeBuild,
@@ -4132,6 +4133,18 @@ def _supplementary_field_values(
             continue
         value = assertion.value
         if not isinstance(value, str) or not value.strip():
+            continue
+        # D0-a: this channel feeds the published vector content and lookup
+        # documents directly, so it obeys the same single rule set as the
+        # projection seam.  Placeholder-family values (including the build's own
+        # "_PROFESSOR_MISSING_FIELD_FALLBACK"-style sentences), withheld glue
+        # damage and research-direction junk never publish through it either.
+        if clean_text(value).value is None:
+            continue
+        if (
+            assertion.field_path == "research_directions"
+            and research_direction_rule(value.strip()) is not None
+        ):
             continue
         key = (canonical_id, assertion.field_path)
         if key in selected and value.strip() != selected[key]:
