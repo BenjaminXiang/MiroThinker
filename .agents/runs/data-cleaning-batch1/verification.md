@@ -265,3 +265,37 @@ Fix (data-line commit `3a9f9149`):
   before the fix: the placeholder sentence and the glue-withheld value were both
   published; GREEN after) and `test_gate_failure_names_its_offenders`;
   132 passed across the D0-a/D1-a suites.
+
+## run16 attempt 4 — venue reference fallback (2026-09-16)
+
+Attempt 4 (launched 11:01, with the supplementary-channel fix) aborted before
+14:40 at the same gate, but now **naming its offenders** (the diagnostics added
+in `3a9f9149`):
+
+```
+placeholder values published: 5
+  (e.g. paper.venue.name: 未提供期刊出处 ×4, +1 more)
+```
+
+Root cause: `knowledge_build_isolated._p4_paper_record` lands
+`_P4_PAPER_VENUE_FALLBACK = "未提供期刊出处"` as the paper's venue reference when
+the P4 salvage record has no venue.  `venue` was the one reference-shaped field
+missing from `CLEANED_REFERENCE_FIELDS["paper"]` — `canonicalize_venue_reference`
+only normalises labels through the venue map and never runs the placeholder
+classifier, so the fallback reached the documents.  (Attempt 3's five offenders
+were the same five; the fix in `3a9f9149` removed a real but different leak and
+made this round diagnosable.)
+
+Fix (`fee2fc85`): `venue` joins the paper reference-field cleaning list.
+
+- RED/GREEN: `test_paper_venue_placeholder_reference_is_not_published` fails
+  before the fix (the placeholder reference survives `clean_projected_values`)
+  and passes after; 134 passed across the D0-a/D1-a suites.
+- New invariant: `test_every_build_fallback_literal_is_recognized_by_the_cleaner`
+  pins that every `*_FALLBACK` literal in the build module is placeholder-family
+  text, so a future fallback cannot silently miss the classifier.
+
+Detection: the run16 watchdog writes `run16-failure-report-<ts>.md` the moment
+the runner disappears (log tails + artifact state + triage checklist), and a
+10-minute cron wakes the session to triage; the dossier is what made this
+diagnosis immediate instead of another hours-late discovery.
