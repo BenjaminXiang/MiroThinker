@@ -126,6 +126,20 @@ setsid nohup bash .agents/runs/full-column-serving-pack-rebuild/build-run16.sh \
 跑到 09-16 00:32 被 D0-a 发布门拦下（`placeholder values published: 5`，根因＝补充通道未过
 清洗，见 data-cleaning-batch1 日志轮次追加）；修复 `3a9f9149` 后 attempt 4（09-16 11:01）发射；attempt 4 又被同一道门拦下但**门已点名**（`paper.venue.name: 未提供期刊出处` —— venue 引用型字段漏在清洗清单外），修复 `fee2fc85` 后 **attempt 5（09-16 14:45）**发射。**失败巡检机制**：watchdog 落 `run16-failure-report-<ts>.md` ＋10 分钟 cron 四态巡检（运行中/成功/失败/CPU 冻结）。attempt 5（09-16 14:45）过了占位门、倒在类型化投影（`PaperProjection.venue` 必填 vs 清洗置空），修复 `41a8d96e`（模型可空）＋服务线 `c1c17ad5` 后 **attempt 6（09-16 16:13）**发射。
 
+### 3.1 发射前干跑（2026-09-16 教训，新增）
+
+发射重建前必须按序跑（全绿才发射）：
+
+1. **风险扫描 gate**（约 2 分钟，扫全量输入）：
+   `uv run python .agents/runs/full-column-serving-pack-rebuild/sweep_publication_risks.py`
+   —— 用**生产分类器**（占位族/粘连/研究方向垃圾）加"兜底触发字段为空"扫全部 P4 批次，
+   把每个风险字段映射到发布字段并断言清洗表已覆盖；出现 `UNCOVERED` 即 exit 1。
+   （venue 缺口正是这一类；修正映射后当前全绿。）
+2. **修复类 RED/GREEN 单测** + D0-a/D1-a 定向套件（既有惯例）。
+3. **端到端 mini 重演**（`build-mini.sh`，可选）：整链重演（同一 runner，独立 DB/staging/index/信封）。
+   注意：按 run16 的输入构成它已不再"小"——要覆盖风险路径就得纳入全部六批 P4，体积与 full 逐条
+   相同（111MB、同一集合）；因此它用于**结构变更时的整链重演**，不是常规快检。
+
 ## 4. 封印（pack v2）
 
 **脚本已就绪**：`build_run16_serving_pack.sh`（参数副本 + 三道 fail-closed 闸：pack 目录
