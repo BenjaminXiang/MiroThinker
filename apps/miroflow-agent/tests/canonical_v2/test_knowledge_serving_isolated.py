@@ -1059,7 +1059,7 @@ def test_prose_wire_decoder_leading_selection_marker_still_requires_framing(
 @pytest.mark.parametrize(
     ("position", "prefix", "suffix"),
     (
-        ("start", "", "公开后文"),
+        # start omitted: marker-led response is protocol framing, not echo
         ("middle", "公开前文", "公开后文"),
         ("end", "公开前文", ""),
     ),
@@ -1074,6 +1074,9 @@ def test_openai_prose_renderer_redacts_private_marker_in_framed_answer(
     # region is redacted and the answer continues; the selection header was
     # consumed by the classification path upstream and stays intact.
     del position
+    # Contract change (fix-prose-marker-strip): one echoed protocol marker
+    # must cost its own removal, not the whole synthesized answer — the
+    # all-or-nothing raise degraded full answers to raw-candidate dumps.
     answer = f"{prefix}{marker}{suffix}"
     completions = _RecordedProseCompletions(_prose_wire(answer), chunk_width=1)
     renderer = _prose_renderer(completions)
@@ -1649,9 +1652,10 @@ def test_llm_prose_renderer_receives_grounded_public_claims_only() -> None:
     assert "语义覆盖而非逐字匹配" in serialized
     assert "不要逐一列名" in serialized
     # Enumeration contract (2026-08-18 ruling): budgeted representative
-    # list replaces the 求全 directive.
+    # list replaces the 求全 directive; cbd5c3a later reshaped the tail to
+    # a "more exists" hook instead of "代表性清单" phrasing.
     assert "条目预算" in serialized
-    assert "代表性清单" in serialized
+    assert "示意还有更多" in serialized
     assert "另有X、Y暂未能确认" not in serialized
     assert "材料显示" in serialized
     assert "直接绑定具体产品与具体功能" in serialized
@@ -3629,7 +3633,10 @@ def test_dual_web_lane_reuses_request_transport_and_isolates_keepwarm_transport(
     assert observed["query"] == "王学谦"
     kwargs = observed["kwargs"]
     assert isinstance(kwargs, dict)
-    assert kwargs == {"timeout": pytest.approx(0.675)}
+    # Per-provider attempt budgets (fix-web-lane-timeout-and-utf8-truncation):
+    # the observed transport is Serper, whose floor is 4.0 s — the old shared
+    # 0.675 s sat below Serper's measured 1.7–2.8 s latency and starved it.
+    assert kwargs == {"timeout": 4.0}
 
 
 def test_dual_web_lane_deduplicates_url_and_retains_provider_provenance() -> None:

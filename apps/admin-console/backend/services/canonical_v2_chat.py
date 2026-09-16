@@ -391,6 +391,10 @@ _NEGATIVE_CLAIM_MARKERS = (
     "暂无公开",
     "无相关信息",
 )
+# Only a short answer can be a bare negative claim; a longer answer that
+# merely contains a negative fragment keeps its grounded content (mirrors
+# _REFUSAL_ANSWER_MAX_CHARS).
+_OUTAGE_REWRITE_MAX_CHARS = 120
 
 
 def _rewrite_lane_outage_answer_text(
@@ -398,7 +402,16 @@ def _rewrite_lane_outage_answer_text(
     *,
     anchor_name: str | None,
 ) -> str:
-    if not any(marker in answer_text for marker in _NEGATIVE_CLAIM_MARKERS):
+    """Last-resort guard: negative world claims over an outage turn are
+    rewritten — but only when the answer IS essentially that claim. A
+    substantive answer that merely contains a negative fragment keeps its
+    grounded content (2026-08-28 G12/问题14: the wholesale rewrite turned a
+    full local enumeration into a 79-char outage message on a transient
+    web stall)."""
+    stripped = answer_text.strip()
+    if len(stripped) > _OUTAGE_REWRITE_MAX_CHARS:
+        return answer_text
+    if not any(marker in stripped for marker in _NEGATIVE_CLAIM_MARKERS):
         return answer_text
     name = anchor_name or "您关注的主体"
     return (
@@ -1867,6 +1880,22 @@ class CanonicalV2ChatAdapter:
             )
             or normalized_query
         )
+        # Domain carryover (G11T2): a signal-less topic follow-up would fall
+        # back to ALL domains and professor vector noise wins; hand the
+        # planner the prior turn's raw query so it can inherit that turn's
+        # inferred domains. Only meaningful on turn >= 2 with a distinct
+        # prior query.
+        prior_turn_query_value = (
+            None
+            if committed is None
+            else str(getattr(committed.answer, "original_query", "") or "")
+        )
+        prior_turn_query = (
+            prior_turn_query_value
+            if prior_turn_query_value
+            and prior_turn_query_value != normalized_query
+            else None
+        )
         planning_request = QueryPlanningRequest(
             request_id=f"query-request:chat:{turn_id}",
             release_id=self._release_id,
@@ -1880,6 +1909,7 @@ class CanonicalV2ChatAdapter:
                 as_of=observed_as_of,
             ),
             soft_context_subject=soft_context_subject,
+            prior_turn_query=prior_turn_query,
         )
 
         emit("stage", {"name": "planning"})
@@ -1922,11 +1952,13 @@ class CanonicalV2ChatAdapter:
         self._require_release(raw_evidence_set, stage="read")
         evidence_set = _validated_model(raw_evidence_set, EvidenceSet)
         self._require_release(evidence_set, stage="read")
+        # Service-boundary lane view: candidate totals per lane as observed
+        # on the evidence set. The deeper retained/filtered split and web
+        # provider outcomes land with the serving-layer reporting (1.1.3).
+        # Initialized unconditionally: the progress events below read it even
+        # when no trace journal is attached (fail-open tracing contract).
+        lane_totals: dict[str, int] = {}
         if trace is not None:
-            # Service-boundary lane view: candidate totals per lane as observed
-            # on the evidence set. The deeper retained/filtered split and web
-            # provider outcomes land with the serving-layer reporting (1.1.3).
-            lane_totals: dict[str, int] = {}
             for lane_trace in evidence_set.traces:
                 lane_name = getattr(lane_trace, "lane", None)
                 if not isinstance(lane_name, str) or not lane_name:
@@ -1940,6 +1972,25 @@ class CanonicalV2ChatAdapter:
                     trace.record_lane_counts(
                         lane_name, in_=total, retained=total, filtered=0
                     )
+        # Emit per-lane result counts as progress events so the user sees
+        # exactly what was found in each source before the answer starts.
+        _lane_labels: dict[str, str] = {
+            "exact": "精确匹配",
+            "structured": "结构化查询",
+            "lexical": "关键词检索",
+            "vector": "语义检索",
+            "web": "网络搜索",
+        }
+        for lane_name, total in sorted(lane_totals.items()):
+            label = _lane_labels.get(lane_name, lane_name)
+            emit(
+                "progress",
+                {
+                    "detail": f"✓ {label}：{total} 个结果",
+                    "lane": lane_name,
+                    "count": total,
+                },
+            )
         emit(
             "retrieval_done",
             {
@@ -2418,6 +2469,7 @@ class CanonicalV2ChatAdapter:
                 handle_by_evidence_id.setdefault(evidence_id, (handle_id, handle))
         cards: list[ChatCitation] = []
         seen: set[str] = set()
+        emitted_evidence_ids: set[str] = set()
         official_hosts_by_handle_id: dict[str, frozenset[str]] = {}
         for citation in turn_result.citations:
             bound = handle_by_evidence_id.get(citation.evidence_id)
@@ -2480,6 +2532,71 @@ class CanonicalV2ChatAdapter:
                     id=f"official-source-{public_id}",
                     label=handle.display_name,
                     url=official_url,
+                )
+            )
+            emitted_evidence_ids.add(citation.evidence_id)
+        # Stage0-G1 mapping floor: a handle-bound LOCAL citation whose entity
+        # profile lacks a whitelisted official URL field (company website /
+        # professor homepage / paper DOI) still deserves its archive card —
+        # the local knowledge base is the source of record for this answer
+        # (user rule 尽量能指出处). One card per handle, url-less; the chat
+        # page renders those as non-link rows.
+        emitted_handles = {
+            handle_by_evidence_id[citation.evidence_id][0]
+            for citation in turn_result.citations
+            if citation.evidence_id in emitted_evidence_ids
+        }
+        for citation in turn_result.citations:
+            if len(cards) >= 12:
+                break
+            if citation.evidence_id in emitted_evidence_ids:
+                continue
+            bound = handle_by_evidence_id.get(citation.evidence_id)
+            evidence = evidence_by_id.get(citation.evidence_id)
+            if bound is None or evidence is None:
+                continue
+            handle_id, handle = bound
+            if evidence.source_nature == "current_web" or handle.domain not in _PUBLIC_DOMAINS:
+                continue
+            if handle_id in emitted_handles:
+                continue
+            emitted_handles.add(handle_id)
+            cards.append(
+                ChatCitation(
+                    type=handle.domain,
+                    # The archive card cites the entity handle itself —
+                    # stable, and the public citation id stays the handle id.
+                    id=handle_id,
+                    label=handle.display_name,
+                    url=None,
+                )
+            )
+            emitted_evidence_ids.add(citation.evidence_id)
+        # Web evidence behind enumeration/concept answers still deserves its
+        # source card — the user rule is 尽量能指出处. This covers web items
+        # WITH handles too: the bound path above only emits cards for
+        # "official"-authority URLs, so listicle evidence dies there.
+        # Label = the page title head that already leads the evidence snippet.
+        for citation in turn_result.citations:
+            if len(cards) >= 12:
+                break
+            if citation.evidence_id in emitted_evidence_ids:
+                continue
+            evidence = evidence_by_id.get(citation.evidence_id)
+            if evidence is None or evidence.source_nature != "current_web":
+                continue
+            url = _public_url(evidence.source_locator)
+            if url is None or url in seen:
+                continue
+            seen.add(url)
+            head = str(evidence.snippet or "").strip().partition("：")[0][:40]
+            public_id = hashlib.sha256(url.encode("utf-8")).hexdigest()[:16]
+            cards.append(
+                ChatCitation(
+                    type="web",
+                    id=f"web-source-{public_id}",
+                    label=head or "公开网络资料",
+                    url=url,
                 )
             )
         return tuple(cards)

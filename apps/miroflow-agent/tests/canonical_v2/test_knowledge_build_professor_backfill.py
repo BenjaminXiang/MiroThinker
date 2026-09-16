@@ -634,6 +634,12 @@ def test_preflight_admits_manifest_with_backfill_authority(tmp_path: Path) -> No
                 BACKFILL_BATCH_ID,
                 "s12f-company-backfill-v1",
                 "s12f-applicant-binding-v1",
+                "p4-company-full-v1",
+                "p4-patent-full-v1",
+                "p4-paper-salvage-v1",
+                "p4-professor-full-v1",
+                "p4-professor-paper-links-v1",
+                "p4-applicant-binding-full-v1",
             )
         )
     )
@@ -698,6 +704,12 @@ def test_legacy_manifest_without_backfill_authority_is_rejected(
                 BACKFILL_BATCH_ID,
                 "s12f-company-backfill-v1",
                 "s12f-applicant-binding-v1",
+                "p4-company-full-v1",
+                "p4-patent-full-v1",
+                "p4-paper-salvage-v1",
+                "p4-professor-full-v1",
+                "p4-professor-paper-links-v1",
+                "p4-applicant-binding-full-v1",
             )
         )
     )
@@ -849,7 +861,8 @@ def test_backfill_skips_unknown_professor_and_counts() -> None:
     )
 
     projection = public[4].projections[0]
-    assert projection.department.name == module._PROFESSOR_MISSING_FIELD_FALLBACK
+    # D0-a: a demoted field publishes as absent, never as placeholder text.
+    assert projection.department is None
     unmatched = [
         gap
         for gap in public[6]
@@ -882,7 +895,8 @@ def test_backfill_skips_crosswired_professor_name() -> None:
     )
 
     projection = public[4].projections[0]
-    assert projection.department.name == module._PROFESSOR_MISSING_FIELD_FALLBACK
+    # D0-a: a demoted field publishes as absent, never as placeholder text.
+    assert projection.department is None
     crosswired = [
         gap
         for gap in public[6]
@@ -1053,7 +1067,8 @@ def test_backfill_skips_unsupported_and_unprovenanced_fields() -> None:
     # aliases/canonical_name_en are outside the professor projection contract;
     # the unprovenanced department value stays out; only title merges.
     assert projection.title == "副教授"
-    assert projection.department.name == module._PROFESSOR_MISSING_FIELD_FALLBACK
+    # D0-a: a demoted field publishes as absent, never as placeholder text.
+    assert projection.department is None
     skipped = [
         gap
         for gap in public[6]

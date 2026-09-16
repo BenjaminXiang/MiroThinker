@@ -767,6 +767,9 @@ class _PostgresRelationshipProjectionStore(RelationshipProjectionStore):
         request: RelationshipProjectionRequest,
         result: RelationshipProjectionResult,
     ) -> None:
+        from .snapshot_chunks import serialize_snapshot_chunks
+
+        result_chunks = serialize_snapshot_chunks(result.model_dump(mode="json"))
         connection.execute(
             "INSERT INTO knowledge.relationship_projection_run "
             "(release_id, projection_run_id, catalog_schema_version, catalog_version, "
@@ -790,9 +793,27 @@ class _PostgresRelationshipProjectionStore(RelationshipProjectionStore):
                 Jsonb(list(result.retained_artifact_refs)),
                 _canonical_sha256(request.model_dump(mode="json")),
                 result.content_sha256,
-                Jsonb(result.model_dump(mode="json")),
+                (
+                    Jsonb(result_chunks.inline_jsonb)
+                    if result_chunks.inline_jsonb is not None
+                    else None
+                ),
             ),
         )
+        for chunk_index, chunk_b64, chunk_sha256 in result_chunks.chunks:
+            connection.execute(
+                "INSERT INTO knowledge.relationship_projection_run_content_chunk "
+                "(release_id, projection_run_id, role, chunk_index, chunk_b64, "
+                "chunk_sha256) VALUES (%s, %s, %s, %s, %s, %s)",
+                (
+                    result.release_id,
+                    result.projection_run_id,
+                    "result",
+                    chunk_index,
+                    chunk_b64,
+                    chunk_sha256,
+                ),
+            )
 
     @staticmethod
     def _insert_shared_memberships(
@@ -1113,8 +1134,21 @@ class _PostgresRelationshipProjectionStore(RelationshipProjectionStore):
             raise RelationshipProjectionPersistenceError(
                 "relationship projection batch does not exist"
             )
+        from .snapshot_chunks import reassemble_snapshot_chunks
+
+        if row["result_payload"] is None:
+            chunk_rows = connection.execute(
+                "SELECT chunk_index, chunk_b64, chunk_sha256 FROM "
+                "knowledge.relationship_projection_run_content_chunk "
+                "WHERE release_id = %s AND projection_run_id = %s AND "
+                "role = 'result'",
+                (release_id, projection_run_id),
+            ).fetchall()
+            result_payload = reassemble_snapshot_chunks(chunk_rows)
+        else:
+            result_payload = row["result_payload"]
         try:
-            result = RelationshipProjectionResult.model_validate(row["result_payload"])
+            result = RelationshipProjectionResult.model_validate(result_payload)
         except (TypeError, ValueError, ValidationError) as exc:
             raise RelationshipProjectionPersistenceError(
                 "durable relationship result payload is invalid"

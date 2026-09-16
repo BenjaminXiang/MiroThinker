@@ -492,6 +492,16 @@ class DomainInclusionEngine:
             )
             if in_scope and anchor in included_professors and anchor_asserted:
                 decision = context.policy_decision(candidate, PolicyOutcome.admitted)
+            elif in_scope:
+                # admit-unanchored-papers (G4/G6 admission matrix): an
+                # in-scope real paper without a verified Professor anchor
+                # stays reachable, honestly tiered by a visible limitation —
+                # the old rule hard-excluded it (outside_paper_discovery_scope).
+                decision = context.policy_decision(
+                    candidate,
+                    PolicyOutcome.admitted,
+                    limitations=("paper_unanchored",),
+                )
             else:
                 decision = context.policy_decision(
                     candidate,

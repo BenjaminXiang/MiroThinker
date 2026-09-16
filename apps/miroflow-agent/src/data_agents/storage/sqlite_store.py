@@ -20,7 +20,7 @@ class SqliteReleasedObjectStore:
 
     def upsert_released_objects(self, objects: list[ReleasedObject]) -> None:
         with sqlite3.connect(self.db_path) as conn:
-            conn.executemany(
+            conn.cursor().executemany(
                 """
                 INSERT INTO released_objects (
                   id,

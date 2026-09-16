@@ -1,12 +1,12 @@
 {
-  "schema_version": "canonical-v2-openai-compatible-embedding-bundle-v1",
-  "provider": "openai-compatible",
-  "model_id": "Qwen/Qwen3-Embedding-8B",
-  "dimension": 4096,
-  "base_url": "http://100.64.0.27:18005/v1",
   "api_key_source": "local_api_key",
+  "base_url": "http://100.64.0.27:18005/v1",
   "batch_size": 32,
+  "content_sha256": "05473fabc8055e9ce3ebca9d846761cab7cb8c89eb51c96607172c402d1f46db",
+  "dimension": 4096,
   "max_workers": 32,
-  "timeout_seconds": 180,
-  "content_sha256": "05473fabc8055e9ce3ebca9d846761cab7cb8c89eb51c96607172c402d1f46db"
+  "model_id": "Qwen/Qwen3-Embedding-8B",
+  "provider": "openai-compatible",
+  "schema_version": "canonical-v2-openai-compatible-embedding-bundle-v1",
+  "timeout_seconds": 180
 }

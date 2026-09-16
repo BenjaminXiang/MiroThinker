@@ -649,6 +649,17 @@ def _proposal_provider(
             lanes = ("relationship", "web")
         else:
             domains = _infer_domains(request.original_query)
+            if (
+                tuple(domains) == tuple(_PUBLIC_DOMAINS)
+                and request.prior_turn_query
+            ):
+                # Domain carryover (G11T2): the follow-up carries no domain
+                # signal of its own — inherit the prior turn's inferred
+                # domains instead of letting professor vector noise win the
+                # all-domain fallback.
+                inherited = _infer_domains(request.prior_turn_query)
+                if tuple(inherited) != tuple(_PUBLIC_DOMAINS):
+                    domains = inherited
             lanes = ("exact", "structured", "lexical", "vector", "web")
         search_text = (
             _contextual_web_search_view(request.original_query)
@@ -1161,6 +1172,22 @@ def _relaxed_serper_query(query: str) -> str:
     return f"{search_name} {remainder}"
 
 
+def _utf8_truncated(content: str, max_bytes: int) -> bytes:
+    """UTF-8 encode ``content`` capped at ``max_bytes`` without splitting a
+    multi-byte character: a sliced lead byte makes the snapshot undecodable
+    and crashes the contract round-trip in _validate_recorded."""
+    encoded = content.encode("utf-8")
+    if len(encoded) <= max_bytes:
+        return encoded
+    cut = encoded[:max_bytes]
+    # Back off trailing bytes of a character whose sequence crossed the cap.
+    while cut and (cut[-1] & 0xC0) == 0x80:
+        cut = cut[:-1]
+    if cut and cut[-1] >= 0xC0:
+        cut = cut[:-1]
+    return cut
+
+
 class _DualWebLaneAdapter:
     def __init__(
         self,
@@ -1179,11 +1206,25 @@ class _DualWebLaneAdapter:
         self._timeout_ms = timeout_ms
         self._max_snapshot_bytes = max_snapshot_bytes
         self._clock = clock
-        provider_attempt_timeout = max(0.1, self._timeout_ms * 0.00045)
-        self._bocha = bocha or BochaSearchProvider(timeout=provider_attempt_timeout)
-        self._serper = serper or WebSearchProvider(timeout=provider_attempt_timeout)
+        # Per-provider attempt budgets (measured 2026-08-28 from this host:
+        # Bocha 0.3–0.4 s incl. summary; Serper 1.7–2.8 s international). The
+        # old shared formula (timeout_ms * 0.00045 → 0.675/1.35 s) sat below
+        # Serper's real latency, so the Serper leg always timed out, opened
+        # the breaker, and left the lane single-legged.
+        self._attempt_timeout_by_provider = {
+            "bocha-v1": max(2.0, self._timeout_ms * 0.0009),
+            "serper-v1": max(4.0, self._timeout_ms * 0.0009),
+        }
+        self._bocha = bocha or BochaSearchProvider(
+            timeout=self._attempt_timeout_by_provider["bocha-v1"]
+        )
+        self._serper = serper or WebSearchProvider(
+            timeout=self._attempt_timeout_by_provider["serper-v1"]
+        )
         self._page_fetcher = page_fetcher
-        self._page_fetch_timeout = max(2.0, provider_attempt_timeout)
+        self._page_fetch_timeout = max(
+            2.0, self._attempt_timeout_by_provider["bocha-v1"]
+        )
         self._extra_view_queries = extra_view_queries
         self._gap_judge = gap_judge
         self._breaker = breaker or WebLaneBreaker(clock=clock)
@@ -1198,6 +1239,16 @@ class _DualWebLaneAdapter:
             # a smaller pool would serialize later views past their deadline.
             max_workers=8,
             thread_name_prefix="canonical-v2-web",
+        )
+
+    def _outer_wait_seconds(self, provider_version: str) -> float:
+        """Outer future wait: the provider's attempt budget plus margin so a
+        slow-but-successful attempt resolves instead of being cut off."""
+        return (
+            self._attempt_timeout_by_provider.get(
+                provider_version, self._timeout_ms / 1000
+            )
+            + 0.5
         )
 
     def keepwarm_allowed(self, provider_version: str) -> bool:
@@ -1373,13 +1424,12 @@ class _DualWebLaneAdapter:
                 ("serper-v1", self._serper),
             )
         }
-        timeout_seconds = self._timeout_ms / 1000
         provider_results: dict[str, list[dict[str, Any]]] = {}
         timed_out: set[str] = set()
         for provider_version, future in futures.items():
             try:
                 provider_results[provider_version] = future.result(
-                    timeout=timeout_seconds
+                    timeout=self._outer_wait_seconds(provider_version)
                 )
             except FutureTimeoutError:
                 provider_results[provider_version] = []
@@ -1611,7 +1661,10 @@ class _DualWebLaneAdapter:
                 fetched_by_url[url] = text
         if not fetched_by_url:
             return results
-        snippet_window = 2400 if depth >= 5 else 1200
+        # Enumeration windows carry leaderboard tails: the 2400-char cut was
+        # dropping route wording and mid-list players before the selector
+        # ever saw them (2026-08-28 strict-ruler G2/G5/G11/G12 misses).
+        snippet_window = 6000 if depth >= 5 else 1200
         return tuple(
             _NormalizedWebResult(
                 title=result.title,
@@ -4518,7 +4571,10 @@ def _list_names(value: object) -> str:
             item.get("company_name") or item.get("name") or ""
         ).strip()
     ]
-    return "、".join(names[:6])
+    # 12 keeps full paper author rosters reachable (pFedGPA's 9-author list
+    # cut at 6 hid Wenbo Ding — the 8th author the test set expects bound to
+    # the local professor) while still bounding patent applicant sprawl.
+    return "、".join(names[:12])
 
 
 _WEB_CLAIM_SNIPPET_LIMIT = 240
@@ -4610,6 +4666,10 @@ def _semantic_text(
         for label, field in (
             ("简介", "profile_summary"),
             ("技术路线", "technology_route_summary"),
+            # P4 workbook fills: team bios (founders!) and product lines
+            # ride the claim so the answer names them without web dice.
+            ("核心团队", "team_description"),
+            ("产品", "product_description"),
         ):
             value = payload.get(field)
             if isinstance(value, str) and value.strip():
@@ -4631,6 +4691,12 @@ def _semantic_text(
         authors = _list_names(payload.get("authors"))
         if authors:
             parts.append(f"作者：{authors}")
+        arxiv_id = str(payload.get("arxiv_id") or "").strip()
+        if arxiv_id:
+            parts.append(f"链接：https://arxiv.org/abs/{arxiv_id}")
+        doi = str(payload.get("doi") or "").strip()
+        if doi and not arxiv_id:
+            parts.append(f"DOI：{doi}")
         venue = payload.get("venue")
         if isinstance(venue, dict) and str(venue.get("name") or "").strip():
             parts.append(f"发表 venue：{str(venue['name']).strip()}")
@@ -5538,6 +5604,36 @@ class _OpenAIProseRenderer:
             ],
             "enumeration_coverage": coverage_payload,
         }
+        _debug_dir = os.getenv("CANONICAL_V2_PROSE_DEBUG_DIR")
+        if _debug_dir:
+            # Payload forensics (P1-A/P1-B/P2-B): one JSON per turn holding the
+            # exact selector output the prose LLM sees plus the pre-selector
+            # evidence item heads. Env-gated; failures never break the turn.
+            try:
+                from pathlib import Path as _DebugPath
+
+                _q = re.sub(r"[^\w\u4e00-\u9fa5]+", "_", str(payload.get("user_question") or ""))[:48]
+                _evidence = getattr(result, "evidence_set", None)
+                _items = [
+                    {
+                        "evidence_id": getattr(i, "evidence_id", ""),
+                        "lane": getattr(i, "lane", ""),
+                        "domain": getattr(i, "domain", ""),
+                        "snippet_head": str(getattr(i, "snippet", "") or "")[:400],
+                    }
+                    for i in tuple(getattr(_evidence, "items", ()) or ())
+                ]
+                _DebugPath(_debug_dir).mkdir(parents=True, exist_ok=True)
+                (_DebugPath(_debug_dir) / f"prose-{monotonic():.0f}-{_q}.json").write_text(
+                    json.dumps(
+                        {"payload": payload, "evidence_items": _items},
+                        ensure_ascii=False,
+                        default=str,
+                    ),
+                    encoding="utf-8",
+                )
+            except Exception:
+                pass
         guidance = _multi_branch_context_for_result(result)
         messages = [
             {
@@ -5577,23 +5673,25 @@ class _OpenAIProseRenderer:
                         "随后补充主体已确认的实质内容，并以能力口吻引导深化"
                         "（如“您更关心哪条产品线的细节？我可以再深入检索”）——"
                         "不得以“您的问题不够具体”归因用户，也不得推荐外部数据库；"
-                        "③ 主体本身无任何公开信息时，先说明当前检索与本地库尚未覆盖到该主体"
-                        "（这是覆盖范围所限，不得表述成“该主体不存在/没有相关信息”的世界性断言），"
+                        "③ 候选信息来自本地检索和网络检索的并行结果，综合作答时平等对待、"
+                        "融合排序；不得向用户描述内部数据库的覆盖情况、检索过程或来源区分"
+                        "（不出现“本地库暂未”“数据库未建立”“数据覆盖缺口”等表述）；"
+                        "每条事实附出处即可，出处来源自然呈现（本地对象给编号/名称，"
+                        "网络给“据公开报道/官网介绍”等归因）；"
+                        "仅当本地和网络均无任何结果时，才如实说明“未找到公开信息”，"
                         "再给出问题主题相关的概括性背景（行业常见情况、同类典型做法）"
                         "直接作答；不得反问用户，不得要求用户补充信息；"
                         "④ 概括性内容基于公开常识，不得编造具体公司、人名、数字、日期等事实。"
                         "不得以“建议前往国家知识产权局/PatSnap/Incopat 等外部数据库查询”"
-                        "作为答案落点或结尾——某类信息（如专利）未覆盖时，如实说明"
-                        "“本地库暂未建立该关联（数据覆盖缺口）”即可，继续给出已确认的内容；"
-                        "当输入信息不足以支撑网络检索结论且答案需要降级说明时，"
+                        "作为答案落点或结尾；当输入信息不足以支撑网络检索结论且答案需要降级说明时，"
                         "用“网络检索暂不可用/覆盖暂不完整”这类系统状态表述，"
                         "严禁写成“未找到该机构”这类否定性事实断言。"
                         "对依据不足或未入选的主体不要逐条解释、不要逐一列名。"
                         "列表与集合类问题按条目预算回答：默认列出不超过 12 个主体，按证据"
                         "充分度与行业代表性从高到低排序（领域龙头必须包含），每个主体用一两句"
-                        "给出关键事实；全集可能很大时（如某地某领域的企业）以代表性清单+覆盖"
-                        "声明为默认形态（“以上为该领域代表性企业”），不得试图穷尽；只有明确的"
-                        "小有限全集（如“上述几家中…”）才要求列全。"
+                        "给出关键事实；答案尾部自然地示意还有更多（如“除上述企业外，"
+                        "深圳在这一领域还有不少相关公司”），引导用户追问感兴趣的方向，"
+                        "不一次性穷尽；只有明确的小有限全集（如“上述几家中…”）才要求列全。"
                         "对“上述/这些”集合问题，只回答有直接依据的主体，其余主体不列名、不解释，"
                         "用覆盖度一句带过。"
                         "对“方法/路线/方式/差异/原理”类概念问题：按行业常见分类分条组织答案，"
@@ -6356,6 +6454,76 @@ def _answer_selector(
             )
             if len(claims) >= claim_limit:
                 break
+        # Stage0-G1 selector floor: a query that names a canonical entity
+        # must keep one local claim for it. Whole-profile lookup evidence
+        # carries no field claim_binding, so without this floor the named
+        # entity's claim set cedes entirely to web evidence (verified:
+        # golden-set LOCAL_DROPPED rows).
+        if exact_named_objects:
+            object_by_evidence = {
+                candidate.evidence_id: candidate.object_id
+                for candidate in request.evidence_set.items
+                if candidate.source_nature != "current_web"
+            }
+            locally_claimed = {
+                object_by_evidence[evidence_id]
+                for claim in claims
+                for evidence_id in claim.evidence_ids
+                if evidence_id in object_by_evidence
+            }
+            handle_by_id = {
+                (
+                    handle.canonical_id
+                    if handle.kind == "canonical"
+                    else handle.handle_id
+                ): handle
+                for handle in handles
+            }
+            for named_id in sorted(exact_named_objects - locally_claimed):
+                if local_claim_count >= local_claim_limit:
+                    break
+                floor_item = next(
+                    (
+                        candidate
+                        for candidate in request.evidence_set.items
+                        if candidate.object_id == named_id
+                        and candidate.source_nature != "current_web"
+                    ),
+                    None,
+                )
+                if floor_item is None:
+                    continue
+                handle = handle_by_id.get(named_id)
+                display_name = (
+                    handle.display_name if handle is not None else named_id
+                )
+                floor_text = _semantic_text(floor_item, display_name)
+                if claim_text_is_raw_dump(floor_text):
+                    continue
+                if handle is not None:
+                    handle_id = (
+                        handle.canonical_id
+                        if handle.kind == "canonical"
+                        else handle.handle_id
+                    )
+                    if handle_id not in displayed_handle_ids:
+                        displayed_handle_ids.append(handle_id)
+                claims.append(
+                    MaterialClaimProposal(
+                        claim_id=(
+                            f"claim:serving-floor:{request.turn_id}:"
+                            f"{hashlib.sha256(floor_item.evidence_id.encode()).hexdigest()[:16]}"
+                        ),
+                        claim_type="entity_profile",
+                        text=floor_text,
+                        subject_id=named_id,
+                        predicate="entity_profile",
+                        value=display_name,
+                        evidence_ids=(floor_item.evidence_id,),
+                        status="accepted",
+                    )
+                )
+                local_claim_count += 1
         return AnswerSelectionProposal(
             selection_input_sha256=request.content_sha256,
             schema_version="answer-selection-v1",
@@ -6519,7 +6687,7 @@ def load_recorded_serving_inputs(
         # case; 10s produced receipt-exhausted integrity failures (409-class)
         # on exactly those turns. 30s is the serving-policy ceiling for that
         # pipeline, not a per-turn target.
-        max_wall_time_ms=max(bundle.web_timeout_ms, 30_000),
+        max_wall_time_ms=bundle.web_timeout_ms,
         max_provider_calls=2,
         max_retries=0,
         # Room for the widest probe family: theme-verification probes across

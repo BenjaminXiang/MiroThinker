@@ -871,6 +871,42 @@ def _current_projection_state(
     return "current", ()
 
 
+def _assert_unique_relationship_edges(
+    current_relationships: Iterable[CurrentRelationshipProjection],
+) -> None:
+    """No published relationship edge may repeat a (type, source, target) triple.
+
+    D0-b item 2: the same attribution pair reached the pack through two link
+    families and published two edges.  The build de-duplicates the link set; this
+    assertion is the fail-closed guard that keeps a future link family from
+    reintroducing duplicate edges unnoticed.
+    """
+    seen: dict[tuple[str, str, str], str] = {}
+    duplicates: list[str] = []
+    for relationship in sorted(
+        current_relationships, key=lambda item: item.canonical_relationship_id
+    ):
+        key = (
+            relationship.relationship_type_id,
+            relationship.source_endpoint.canonical_identity_id or "",
+            relationship.target_endpoint.canonical_identity_id or "",
+        )
+        existing = seen.get(key)
+        if existing is not None:
+            duplicates.append(
+                f"{key[0]} {key[1]} -> {key[2]} ({existing}, "
+                f"{relationship.canonical_relationship_id})"
+            )
+            continue
+        seen[key] = relationship.canonical_relationship_id
+    if duplicates:
+        raise RelationshipProjectionIntegrityError(
+            "relationship projection would publish duplicate edges: "
+            + "; ".join(sorted(duplicates)[:5])
+            + (f" (+{len(duplicates) - 5} more)" if len(duplicates) > 5 else "")
+        )
+
+
 def _projection_registries(
     projections: tuple[DomainProjection, ...],
 ) -> tuple[set[tuple[str, str]], dict[str, tuple[str, str]]]:
@@ -1112,6 +1148,26 @@ class _EphemeralRelationshipProjection(RelationshipProjection):
         canonical_decisions: list[RelationshipDecision] = []
         typed_decisions: list[TypedRelationshipDecision] = []
         current_relationships: list[CurrentRelationshipProjection] = []
+        # Relationship-evidence indexes built ONCE per batch: the validators
+        # rebuilt the ~132k source-assertion dict (plus anchors/assignments)
+        # PER CANDIDATE — O(candidates x assertions) ~ 2.6e9, the third
+        # quadratic in the run-10 family (2026-08-29).
+        relationship_indexes: dict[str, Any] = {}
+        if internal_request is not None and internal_result is not None:
+            relationship_indexes = {
+                "source_assertions_by_id": {
+                    item.assertion_id: item
+                    for item in internal_request.public_domain_projection_request.source_assertions
+                },
+                "anchors_by_id": {
+                    item.anchor_id: item
+                    for item in internal_result.public_evidence_anchors
+                },
+                "source_to_canonical": {
+                    item.source_identity_id: item.canonical_identity_id
+                    for item in internal_request.public_domain_projection_request.source_identity_assignments
+                },
+            }
 
         for candidate in request.candidates:
             reasons: list[str] = []
@@ -1193,6 +1249,7 @@ class _EphemeralRelationshipProjection(RelationshipProjection):
                     internal_request,
                     validated_internal,
                     reasons,
+                    indexes=relationship_indexes,
                 )
                 self._validate_person_relationship_evidence(
                     candidate,
@@ -1201,6 +1258,7 @@ class _EphemeralRelationshipProjection(RelationshipProjection):
                     internal_request,
                     validated_internal,
                     reasons,
+                    indexes=relationship_indexes,
                 )
 
             decision_input = (
@@ -1407,6 +1465,7 @@ class _EphemeralRelationshipProjection(RelationshipProjection):
             scenario_rows,
             canonical_registry,
         )
+        _assert_unique_relationship_edges(current_relationships)
         layer_outcomes = self._project_layer_probes(request.layer_probes)
         provisional = RelationshipProjectionResult.model_validate(
             {
@@ -1473,6 +1532,7 @@ class _EphemeralRelationshipProjection(RelationshipProjection):
         internal_request: InternalReferenceProjectionRequest | None,
         internal_result: InternalReferenceProjectionResult | None,
         reasons: list[str],
+        indexes: dict[str, Any] | None = None,
     ) -> None:
         expected_source_kind = _PERSON_RELATIONSHIP_SOURCE_KINDS.get(
             relationship_type.relationship_type_id
@@ -1522,10 +1582,11 @@ class _EphemeralRelationshipProjection(RelationshipProjection):
                     for reference in person_projection.references
                 ),
             )
-        anchors_by_id = {
+        idx = indexes or {}
+        anchors_by_id = idx.get("anchors_by_id") or {
             item.anchor_id: item for item in internal_result.public_evidence_anchors
         }
-        source_assertions_by_id = {
+        source_assertions_by_id = idx.get("source_assertions_by_id") or {
             item.assertion_id: item
             for item in internal_request.public_domain_projection_request.source_assertions
         }
@@ -1601,6 +1662,7 @@ class _EphemeralRelationshipProjection(RelationshipProjection):
         internal_request: InternalReferenceProjectionRequest | None,
         internal_result: InternalReferenceProjectionResult | None,
         reasons: list[str],
+        indexes: dict[str, Any] | None = None,
     ) -> None:
         expected_path = _TECHNOLOGY_RELATIONSHIP_SOURCE_PATHS.get(
             relationship_type.relationship_type_id
@@ -1643,11 +1705,12 @@ class _EphemeralRelationshipProjection(RelationshipProjection):
                 True,
             )
             return
-        source_to_canonical = {
+        idx = indexes or {}
+        source_to_canonical = idx.get("source_to_canonical") or {
             item.source_identity_id: item.canonical_identity_id
             for item in internal_request.public_domain_projection_request.source_identity_assignments
         }
-        assertion_by_id = {
+        assertion_by_id = idx.get("source_assertions_by_id") or {
             item.assertion_id: item
             for item in internal_request.public_domain_projection_request.source_assertions
         }

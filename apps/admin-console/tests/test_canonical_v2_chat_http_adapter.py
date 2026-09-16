@@ -36,7 +36,7 @@ SECRET_SENTINEL = "sk-s11a-do-not-expose"
 ACCEPTED_PHYSICAL_OWNER_SHA256 = (
     "de94b45e854dfad5008a85417df1bc6efaa419365e13057b986746a6fd87baea"
 )
-CHAT_SCHEMA_SHA256 = "04584086d12ca5c56e5fd28f702d2fe5f71a20038be84f0dbdcc45524edcbd94"
+CHAT_SCHEMA_SHA256 = "04f4bb9e7be272f5b508e22360759ed6b0b32c59a3ffc18fb2cb9cf057b8f91c"
 CHAT_MODEL_NAMES = (
     "ChatCitation",
     "CandidateOption",
@@ -494,7 +494,14 @@ def test_public_web_citation_requires_same_entity_official_host(
         evidence_by_id={local.evidence_id: local, web.evidence_id: web},
     )
 
-    assert bool(citations) is expected
+    # Contract change (fix-web-citations): non-official web evidence now
+    # emits a web-type source card (user rule 尽量能指出处) instead of no
+    # card at all; official-host matches keep their company card.
+    if expected:
+        assert citations and citations[0].type == "company"
+    else:
+        assert citations and citations[0].type == "web"
+        assert citations[0].url == web_url
     if expected:
         assert citations[0].url == web_url
 
@@ -1657,8 +1664,13 @@ def test_referent_clarification_matrix(
     expected: bool,
 ) -> None:
     service = import_module("backend.services.canonical_v2_chat")
+    # G3 pronoun x anchor-type guard (513858e): the anchor's domain now
+    # matters for personal pronouns. The historical rows mean "a person
+    # anchor binds the referent", so the dummy anchor is professor-typed.
     context = SimpleNamespace(
-        active_anchor=object() if has_anchor else None,
+        active_anchor=(
+            SimpleNamespace(domain="professor") if has_anchor else None
+        ),
         displayed_result_set=object() if has_set else None,
     )
     committed = (
@@ -1669,6 +1681,37 @@ def test_referent_clarification_matrix(
 
     assert (
         service._referent_clarification_needed(query=query, committed=committed)
+        is expected
+    )
+
+
+@pytest.mark.parametrize(
+    ("anchor_domain", "expected"),
+    (
+        ("professor", False),
+        ("company", True),
+        ("paper", True),
+        ("patent", True),
+    ),
+)
+def test_referent_clarification_personal_pronoun_anchor_domain_matrix(
+    anchor_domain: str,
+    expected: bool,
+) -> None:
+    """G3: a personal pronoun only binds a person anchor; organization /
+    paper / patent anchors must clarify instead of free-retrieving."""
+    service = import_module("backend.services.canonical_v2_chat")
+    committed = SimpleNamespace(
+        context_receipt=SimpleNamespace(
+            active_anchor=SimpleNamespace(domain=anchor_domain),
+            displayed_result_set=object(),
+        ),
+    )
+
+    assert (
+        service._referent_clarification_needed(
+            query="他有哪些代表性研究成果", committed=committed
+        )
         is expected
     )
 
@@ -2462,6 +2505,8 @@ def test_s11a_post_chat_uses_release_bound_canonical_v2_without_legacy_sql(
         citation.type in {"professor", "company", "paper", "patent"}
         for citation in first.citations
     )
+    # url=None is a valid local-archive card (Stage0-G1 mapping floor); the
+    # invariant is only that no citation leaks the internal /browse page.
     assert all(
         citation.url is None or "/browse" not in citation.url
         for citation in first.citations

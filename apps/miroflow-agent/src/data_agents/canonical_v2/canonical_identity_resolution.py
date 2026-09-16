@@ -420,14 +420,11 @@ class IdentityResolutionRequest(ContractModel):
                     "canonical identity references an unknown canonical lineage endpoint"
                 )
         reviewed_source_ids: set[str] = set()
-        assertion_ids_by_source = {
-            source_id: {
+        assertion_ids_by_source: dict[str, set[str]] = {}
+        for assertion in self.identity_assertions:
+            assertion_ids_by_source.setdefault(assertion.source_identity_id, set()).add(
                 assertion.assertion_id
-                for assertion in self.identity_assertions
-                if assertion.source_identity_id == source_id
-            }
-            for source_id in source_by_id
-        }
+            )
         for resolution in self.human_review_resolutions:
             case = resolution.review_case
             case_source_ids = set(case.source_identity_ids)
@@ -955,6 +952,9 @@ class IdentityResolutionResult(_IdentityResolutionContent):
         _require_unique(decision_ids, "result identity decision IDs")
         manifest_ids = [value.decision_id for value in self.decision_manifests]
         context_ids = [value.decision_id for value in self.decision_contexts]
+        assertions_by_source_field = _index_assertions_by_source_and_field(
+            self.identity_assertions
+        )
         _require_unique(manifest_ids, "result manifest decision IDs")
         if set(decision_ids) != set(manifest_ids):
             raise ValueError("every identity decision requires exactly one manifest")
@@ -1034,7 +1034,7 @@ class IdentityResolutionResult(_IdentityResolutionContent):
                     if source.source_identity_id not in verdict_source_ids
                     and not _has_evidence_bound_internal_identifier(
                         source=source,
-                        assertions=self.identity_assertions,
+                        assertions_by_source_field=assertions_by_source_field,
                         method_version=self.identity_method_version,
                     )
                 )
@@ -1099,7 +1099,7 @@ class IdentityResolutionResult(_IdentityResolutionContent):
                         or any(
                             not _has_evidence_bound_internal_identifier(
                                 source=source_by_id[source_id],
-                                assertions=self.identity_assertions,
+                                assertions_by_source_field=assertions_by_source_field,
                                 method_version=self.identity_method_version,
                             )
                             for source_id in decision.source_identity_ids
@@ -1776,23 +1776,34 @@ def validate_identity_resolution_result(
         for source in validated_request.source_identities
     }
     source_ids = set(source_by_id)
+    source_position = {
+        source.source_identity_id: index
+        for index, source in enumerate(validated_request.source_identities)
+    }
     assertion_by_id = {
         assertion.assertion_id: assertion
         for assertion in validated_request.identity_assertions
     }
+    assertion_ids_by_source: dict[str, list[str]] = {}
+    for assertion in validated_request.identity_assertions:
+        assertion_ids_by_source.setdefault(assertion.source_identity_id, []).append(
+            assertion.assertion_id
+        )
     verdict_source_ids: set[str] = set()
     for verdict in validated_result.candidate_verdicts:
         current_verdict_source_ids = set(verdict.source_identity_ids)
         component_sources = tuple(
-            source
-            for source in validated_request.source_identities
-            if source.source_identity_id in current_verdict_source_ids
+            source_by_id[source_id]
+            for source_id in sorted(
+                current_verdict_source_ids & source_position.keys(),
+                key=source_position.__getitem__,
+            )
         )
         component_request = _component_request(validated_request, component_sources)
         expected_assertion_ids = {
-            assertion.assertion_id
-            for assertion in validated_request.identity_assertions
-            if assertion.source_identity_id in current_verdict_source_ids
+            assertion_id
+            for source_id in current_verdict_source_ids
+            for assertion_id in assertion_ids_by_source.get(source_id, ())
         }
         if (
             not current_verdict_source_ids <= source_ids
@@ -2411,10 +2422,25 @@ def normalize_identity_key_value(key: str, value: str | None) -> str | None:
     return _normalize_key_value(key, value)
 
 
+def _index_assertions_by_source_and_field(
+    assertions: Iterable[SourceAssertion],
+) -> dict[tuple[str, str], tuple[SourceAssertion, ...]]:
+    """Group assertions once so validators stop rescanning the whole set."""
+
+    grouped: dict[tuple[str, str], list[SourceAssertion]] = {}
+    for assertion in assertions:
+        grouped.setdefault(
+            (assertion.source_identity_id, assertion.field_path), []
+        ).append(assertion)
+    return {key: tuple(value) for key, value in grouped.items()}
+
+
 def _has_evidence_bound_internal_identifier(
     *,
     source: SourceIdentity,
-    assertions: Iterable[SourceAssertion],
+    assertions_by_source_field: Mapping[
+        tuple[str, str], tuple[SourceAssertion, ...]
+    ],
     method_version: str,
 ) -> bool:
     identity_spec = {
@@ -2439,11 +2465,8 @@ def _has_evidence_bound_internal_identifier(
     normalized_identifier = _normalize_key_value(key, source.normalized_keys.get(key))
     if normalized_identifier is None:
         return False
-    identifier_assertions = tuple(
-        assertion
-        for assertion in assertions
-        if assertion.source_identity_id == source.source_identity_id
-        and assertion.field_path == field_path
+    identifier_assertions = assertions_by_source_field.get(
+        (source.source_identity_id, field_path), ()
     )
     return bool(identifier_assertions) and all(
         isinstance(assertion.value, str)
@@ -3265,7 +3288,9 @@ def _singleton_component_result(
         TECHNOLOGY_IDENTITY_METHOD_VERSION,
     } and not _has_evidence_bound_internal_identifier(
         source=source,
-        assertions=request.identity_assertions,
+        assertions_by_source_field=_index_assertions_by_source_and_field(
+            request.identity_assertions
+        ),
         method_version=request.identity_method_version,
     ):
         content = _IdentityResolutionContent(

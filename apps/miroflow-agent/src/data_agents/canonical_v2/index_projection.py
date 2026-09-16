@@ -44,6 +44,11 @@ from .internal_reference_projection import (
     TechnologyConceptProjection,
     TechnologyRouteProjection,
 )
+from .publication_cleaning import (
+    PublicationQualityError,
+    assert_publication_quality,
+    audit_lookup_documents,
+)
 from .path_eligibility import (
     PathEligibilityEngine,
     PathEligibilityIntegrityError,
@@ -56,12 +61,6 @@ LOOKUP_PROJECTION_VERSION = "canonical-v2-lookup-projection-v1"
 LOOKUP_SCHEMA_VERSION = "canonical-v2-lookup-schema-v1"
 _VECTOR_PATH = "semantic_recall"
 _LOOKUP_PATH = "exact_lookup"
-# Pinned to knowledge_build_isolated._PROFESSOR_MISSING_FIELD_FALLBACK.  The
-# build module imports this one, so importing the constant back would close
-# an import cycle; a contract test asserts the two values stay equal.
-# Degraded professor fields carrying this placeholder must embed as absent,
-# not as literal source text.
-_PROFESSOR_MISSING_FIELD_FALLBACK = "Not supplied by the historical source."
 
 
 class IndexProjectionIntegrityError(ValueError):
@@ -487,6 +486,23 @@ class IndexProjectionBuilder:
             path_pairs,
             supplementary_by_canonical=validated.supplementary_field_values,
         )
+        # Publication gate (R21/D0-a): the last build stage before the pack is
+        # written refuses to publish placeholder text, glue damage or
+        # research-direction junk, and requires city-level company geography.
+        publication_report = audit_lookup_documents(
+            lookup_documents,
+            released_company_ids=frozenset(
+                projection.canonical_identity_id
+                for projection in candidate_result.public_domain_projections
+                if projection.entity_type == "company"
+            ),
+        )
+        try:
+            assert_publication_quality(publication_report)
+        except PublicationQualityError as exc:
+            raise IndexProjectionIntegrityError(
+                f"published pack failed the data-cleaning gate: {exc}"
+            ) from exc
         expected_index_projections = build_index_projection_manifests(
             request=validated,
             points=points,
@@ -749,11 +765,11 @@ def _public_embedded_content(
                 "aliases": list(projection.aliases),
                 "institution": projection.institution,
             }
-            # Defaulted placeholders carry no evidence; embed the degraded
-            # fragments as absent rather than as literal source text.
-            if projection.department.name != _PROFESSOR_MISSING_FIELD_FALLBACK:
+            # Placeholder-only fields are already absent from the projection
+            # (publication_cleaning); embed what exists and nothing else.
+            if projection.department is not None:
                 content["department"] = projection.department.name
-            if projection.title != _PROFESSOR_MISSING_FIELD_FALLBACK:
+            if projection.title is not None:
                 content["title"] = projection.title
         elif view is ProjectionView.research:
             content = {

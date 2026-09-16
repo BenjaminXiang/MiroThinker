@@ -67,6 +67,18 @@ _SINGULAR_PRONOUN_PATTERN = re.compile(
     r"(?:^|[\s，,。.；;？?！!那这])[他她它](?:的|是否)?(?!们)"
 )
 
+# Personal pronouns only (他/她) under the same boundary rules — the anchor
+# they bind must be a person; over an organization/paper/patent anchor they
+# clarify instead of free-retrieving (fix-pronoun-anchor-type-guard).
+_PERSONAL_PRONOUN_PATTERN = re.compile(
+    r"(?:^|[\s，,。.；;？?！!那这])[他她](?:的|是否)?(?!们)"
+)
+
+
+def has_personal_pronoun(query: str) -> bool:
+    """Whether the query refers to the anchor with a PERSONAL pronoun."""
+    return bool(_PERSONAL_PRONOUN_PATTERN.search(query))
+
 _LEADING_PRONOUN_PATTERN = re.compile(r"^(?:他|她|它)(?:们)?(?:的)?(?:还|也|就)?")
 
 # Elaboration-led short follow-ups ("具体的论文有哪些", "详细说说"). These only

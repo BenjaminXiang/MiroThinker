@@ -345,6 +345,12 @@ class QueryPlanningRequest(ContractModel):
     # own. Independent of displayed_entity_names/ids (those bind canonical
     # anchors); never set by the planner itself.
     soft_context_subject: str | None = None
+    # Domain carryover: the prior turn's raw query, injected by the chat
+    # layer. A signal-less follow-up ("在真实数据采集路线中有哪些具体方式")
+    # otherwise falls back to ALL domains and professor vector noise wins;
+    # the planner inherits the prior turn's inferred domains instead. Never
+    # set by the planner itself.
+    prior_turn_query: str | None = None
     original_query_sha256: str = Field(default=_ZERO_SHA256, pattern=r"^[0-9a-f]{64}$")
     ambiguity_candidate_manifest_sha256: str = Field(
         default=_ZERO_SHA256,
@@ -674,6 +680,25 @@ class StructuredConstraints(ContractModel):
     displayed_entity_ids: tuple[str, ...] = ()
     geography: tuple[str, ...] = ()
     excluded_terms: tuple[str, ...] = ()
+
+
+# Outer wait floor for the web lane future in the read orchestrator. The
+# lane's real workload (view searches × 2 providers + enumeration
+# refinement + depth-8 page fetches + LLM gap judge) routinely runs 2–40 s;
+# reusing the provider-search budget (timeout_ms, e.g. 1 500 ms) as the
+# whole-lane deadline killed working lanes and dropped all their results
+# (2026-08-28 E2E: G7 missing 优必选, waseda outage wording, while
+# serving-layer traces showed web in=72 retained=72 with zero errors).
+_WEB_LANE_OUTER_WAIT_FLOOR_SECONDS = 20.0
+
+
+def _web_lane_outer_wait_seconds(policy: WebSearchPolicy) -> float | None:
+    """Whole-lane outer wait for the web future. None = lane disabled (no
+    wait applies); otherwise at least the floor, or the policy's own
+    timeout when it is already more generous."""
+    if policy.mode == "disabled":
+        return None
+    return max(policy.timeout_ms / 1_000, _WEB_LANE_OUTER_WAIT_FLOOR_SECONDS)
 
 
 class WebSearchPolicy(ContractModel):
@@ -7663,10 +7688,8 @@ class _EphemeralKnowledgeRead(KnowledgeRead):
                     if lane in outcomes:
                         continue
                     timeout_seconds = (
-                        effective_web_policy.timeout_ms / 1_000
+                        _web_lane_outer_wait_seconds(effective_web_policy)
                         if lane == "web"
-                        and effective_web_policy.mode != "disabled"
-                        and effective_web_policy.timeout_ms > 0
                         else None
                     )
                     try:

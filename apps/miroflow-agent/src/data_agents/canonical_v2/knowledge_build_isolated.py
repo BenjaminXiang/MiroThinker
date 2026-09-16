@@ -9,7 +9,7 @@ stage bytes, retain typed values, and materialize/audit the physical index.
 from __future__ import annotations
 
 from collections import Counter, OrderedDict, defaultdict
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Mapping, Sequence
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
 from datetime import date as Date
@@ -163,6 +163,7 @@ from .internal_reference_projection import (
     ReferenceCatalogIdentity,
     create_ephemeral_internal_reference_projection_builder,
 )
+from .publication_cleaning import clean_text, research_direction_rule
 from .knowledge_build import (
     BuildCandidateRequest,
     KnowledgeBuild,
@@ -321,7 +322,7 @@ _DECODABLE_EMAIL_PATTERN = re.compile(
     r"^[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)*\."
     r"(?:biz|cn|com|edu|gov|info|io|me|net|org)$"
 )
-_EXPECTED_ALEMBIC_REVISION = "C2_0012"
+_EXPECTED_ALEMBIC_REVISION = "C2_0016"
 _OWNER_SCHEMAS = (
     "company",
     "knowledge",
@@ -358,7 +359,8 @@ _EXPECTED_OWNER_TABLES: frozenset[str] = frozenset(
     knowledge.release knowledge.source_assertion knowledge.source_identity
     knowledge.source_identity_record knowledge.typed_relationship_assertion
     knowledge.typed_relationship_decision knowledge.typed_relationship_decision_assertion
-    landing.evidence_artifact landing.ingest_run landing.parser_run landing.source_error
+    knowledge.identity_resolution_run_content_chunk landing.evidence_artifact
+    landing.ingest_run landing.parser_run landing.source_error
     landing.source_record ops.gap_remediation_transition ops.knowledge_gap paper.author
     paper.current_projection paper.enrichment_provenance paper.full_text paper.funding
     paper.identifier paper.publication paper.reference paper.summary patent.applicant
@@ -367,23 +369,29 @@ _EXPECTED_OWNER_TABLES: frozenset[str] = frozenset(
     professor.award professor.contact professor.current_projection
     professor.education_history professor.metric_snapshot professor.research_project
     professor.work_history publish.active_release publish.build_manifest
-    publish.manifest_section
+    publish.manifest_section knowledge.relationship_projection_run_content_chunk
     """.split()
 )
 _EXPECTED_LIVE_SCHEMA_CATALOG_COUNTS = {
-    "column": 1363,
-    "constraint": 1110,
-    "index": 166,
+    "column": 1375,
+    "constraint": 1112,
+    "index": 174,
     "internal_trigger_summary": 1,
-    "relation": 85,
+    "relation": 87,
     "routine": 47,
     "schema": 8,
     "server": 1,
     "trigger": 267,
     "view": 1,
 }
+# Every migration moves these frozen expectations: C2_0014 added the six
+# partial guard indexes (index count 168 -> 174); C2_0015 dropped NOT NULL from
+# the optional projection columns; C2_0016 relaxed two named-reference shape
+# CHECKs (counts unchanged; column and constraint definitions move the catalog
+# hash).  All values were proved stable across two independently migrated
+# scratch databases.
 _EXPECTED_LIVE_SCHEMA_CATALOG_SHA256 = (
-    "a3fc6a1f534e7b81e13223cb18f2be2c246fb7ad82ca4a2bc518e1adfadc69e4"
+    "b9befa25e5395c2535c0a61adeacba0cbf5410b7d867aadc77699aa923c72587"
 )
 _LIBPQ_CONNECTION_ENVIRONMENT_KEYS = frozenset(
     {
@@ -1009,9 +1017,7 @@ _COMPANY_BACKFILL_BATCH_ID = "s12f-company-backfill-v1"
 _COMPANY_BACKFILL_PROFILE_SUMMARY_FALLBACK = (
     "No dedicated summary was supplied by the backfill source."
 )
-_COMPANY_BACKFILL_ROUTE_SUMMARY_FALLBACK = (
-    "Not supplied by the backfill source."
-)
+_COMPANY_BACKFILL_ROUTE_SUMMARY_FALLBACK = "Not supplied by the backfill source."
 
 # S12F applicant-binding authority.  The s12f applicant-resolution pipeline
 # mapped every released patent applicant name to a canonical company
@@ -1024,6 +1030,35 @@ _APPLICANT_BINDING_SOURCE_ID = "inventory:" + _canonical_sha256(
     cast(JsonValue, {"authority": "s12f-applicant-binding-v1"})
 )
 _APPLICANT_BINDING_BATCH_ID = "s12f-applicant-binding-v1"
+
+# P4 full-column rebuild batches (2026-08-19, full-column-serving-pack-rebuild).
+# Same admission pattern as the s12f post-checkpoint batches: payloads are
+# pinned by byte_size/content_sha256 at staging, carry no historical backup
+# lineage, and live in the accepted restore tree's source_backfills directory.
+_P4_COMPANY_FULL_BATCH_ID = "p4-company-full-v1"
+_P4_COMPANY_FULL_SOURCE_ID = "inventory:" + _canonical_sha256(
+    cast(JsonValue, {"authority": "p4-company-full-v1"})
+)
+_P4_PATENT_FULL_BATCH_ID = "p4-patent-full-v1"
+_P4_PATENT_FULL_SOURCE_ID = "inventory:" + _canonical_sha256(
+    cast(JsonValue, {"authority": "p4-patent-full-v1"})
+)
+_P4_PAPER_SALVAGE_BATCH_ID = "p4-paper-salvage-v1"
+_P4_PAPER_SALVAGE_SOURCE_ID = "inventory:" + _canonical_sha256(
+    cast(JsonValue, {"authority": "p4-paper-salvage-v1"})
+)
+_P4_PROFESSOR_FULL_BATCH_ID = "p4-professor-full-v1"
+_P4_PROFESSOR_FULL_SOURCE_ID = "inventory:" + _canonical_sha256(
+    cast(JsonValue, {"authority": "p4-professor-full-v1"})
+)
+_P4_PROFESSOR_PAPER_LINKS_BATCH_ID = "p4-professor-paper-links-v1"
+_P4_PROFESSOR_PAPER_LINKS_SOURCE_ID = "inventory:" + _canonical_sha256(
+    cast(JsonValue, {"authority": "p4-professor-paper-links-v1"})
+)
+_P4_APPLICANT_BINDING_FULL_BATCH_ID = "p4-applicant-binding-full-v1"
+_P4_APPLICANT_BINDING_FULL_SOURCE_ID = "inventory:" + _canonical_sha256(
+    cast(JsonValue, {"authority": "p4-applicant-binding-full-v1"})
+)
 
 _SUPPLEMENTAL_SOURCE_AUTHORITIES = {
     "inventory:f8fea06321bd45af4c88c9654497a8c504defbf56c5eaee1d758e26248ea2bae": (
@@ -1191,6 +1226,102 @@ _SUPPLEMENTAL_SOURCE_AUTHORITIES = {
             parser_options={},
         )
     ),
+    _P4_COMPANY_FULL_SOURCE_ID: (
+        _SupplementalSourceAuthority(
+            filename="p4-company-full-v1.jsonl",
+            byte_size=9010377,
+            content_sha256=(
+                "112ee058013912ea9d5a17aa5b7162e6710cec98eb786405a261c3738991b019"
+            ),
+            backup_manifest_filename=None,
+            backup_manifest_sha256=None,
+            source_member_manifest_sha256=None,
+            source_kind="historical_jsonl",
+            source_batch_id=_P4_COMPANY_FULL_BATCH_ID,
+            parser_name="historical_jsonl",
+            parser_options={},
+        )
+    ),
+    _P4_PATENT_FULL_SOURCE_ID: (
+        _SupplementalSourceAuthority(
+            filename="p4-patent-full-v1.jsonl",
+            byte_size=25530112,
+            content_sha256=(
+                "04536c4f55dc69595d44c629111fd38e9bd0766f4225d04c720e12ead1abf2a6"
+            ),
+            backup_manifest_filename=None,
+            backup_manifest_sha256=None,
+            source_member_manifest_sha256=None,
+            source_kind="historical_jsonl",
+            source_batch_id=_P4_PATENT_FULL_BATCH_ID,
+            parser_name="historical_jsonl",
+            parser_options={},
+        )
+    ),
+    _P4_PAPER_SALVAGE_SOURCE_ID: (
+        _SupplementalSourceAuthority(
+            filename="p4-paper-salvage-v1.jsonl",
+            byte_size=39620884,
+            content_sha256=(
+                "23bed7a3c18b75ca915a5fd67220b96f83fc77e392b6e053dc373507bc23acb3"
+            ),
+            backup_manifest_filename=None,
+            backup_manifest_sha256=None,
+            source_member_manifest_sha256=None,
+            source_kind="historical_jsonl",
+            source_batch_id=_P4_PAPER_SALVAGE_BATCH_ID,
+            parser_name="historical_jsonl",
+            parser_options={},
+        )
+    ),
+    _P4_PROFESSOR_FULL_SOURCE_ID: (
+        _SupplementalSourceAuthority(
+            filename="p4-professor-full-v1.jsonl",
+            byte_size=10080151,
+            content_sha256=(
+                "6d8dd6ed53183d24a15a69d5f0dd523f64512c032b2b5746489ad8d0b538faef"
+            ),
+            backup_manifest_filename=None,
+            backup_manifest_sha256=None,
+            source_member_manifest_sha256=None,
+            source_kind="historical_jsonl",
+            source_batch_id=_P4_PROFESSOR_FULL_BATCH_ID,
+            parser_name="historical_jsonl",
+            parser_options={},
+        )
+    ),
+    _P4_PROFESSOR_PAPER_LINKS_SOURCE_ID: (
+        _SupplementalSourceAuthority(
+            filename="p4-professor-paper-links-v1.jsonl",
+            byte_size=4850870,
+            content_sha256=(
+                "6e1adbd92bd501777314be6e31ce2dae6a5024c7a06dd0e93130278862fd7ef8"
+            ),
+            backup_manifest_filename=None,
+            backup_manifest_sha256=None,
+            source_member_manifest_sha256=None,
+            source_kind="historical_jsonl",
+            source_batch_id=_P4_PROFESSOR_PAPER_LINKS_BATCH_ID,
+            parser_name="historical_jsonl",
+            parser_options={},
+        )
+    ),
+    _P4_APPLICANT_BINDING_FULL_SOURCE_ID: (
+        _SupplementalSourceAuthority(
+            filename="p4-applicant-binding-full-v1.jsonl",
+            byte_size=744528,
+            content_sha256=(
+                "46c7337ab9b15d9c2a15dc235c6f683a73c9db05fbf8cd4673bbe578601d30f5"
+            ),
+            backup_manifest_filename=None,
+            backup_manifest_sha256=None,
+            source_member_manifest_sha256=None,
+            source_kind="historical_jsonl",
+            source_batch_id=_P4_APPLICANT_BINDING_FULL_BATCH_ID,
+            parser_name="historical_jsonl",
+            parser_options={},
+        )
+    ),
 }
 _SUPPLEMENTAL_SOURCE_IDS = frozenset(_SUPPLEMENTAL_SOURCE_AUTHORITIES)
 _SUPPLEMENTAL_SOURCE_PURPOSES = {
@@ -1202,6 +1333,12 @@ _SUPPLEMENTAL_SOURCE_PURPOSES = {
     _PROFESSOR_BACKFILL_SOURCE_ID: "professor_backfill",
     _COMPANY_BACKFILL_SOURCE_ID: "company_backfill",
     _APPLICANT_BINDING_SOURCE_ID: "applicant_binding",
+    _P4_COMPANY_FULL_SOURCE_ID: "company_full",
+    _P4_PATENT_FULL_SOURCE_ID: "patent_full",
+    _P4_PAPER_SALVAGE_SOURCE_ID: "paper_salvage",
+    _P4_PROFESSOR_FULL_SOURCE_ID: "professor_full",
+    _P4_PROFESSOR_PAPER_LINKS_SOURCE_ID: "professor_paper_links",
+    _P4_APPLICANT_BINDING_FULL_SOURCE_ID: "applicant_binding_full",
 }
 
 
@@ -1247,6 +1384,12 @@ _SOURCE_IDS_BY_DISPOSITION: dict[SourceDisposition, frozenset[str]] = {
             "inventory:2d237edecb0f22c141c270f0c9147e3c5a18824025d155f607bb58ef79acc1bb",
             "inventory:306888219094fdee6713d1d21bf2716d8fd1326efaf5a7a4875c08ce3cbc58f5",
             "inventory:3371136d61fe041eb7e7ba087d9ddc37843330b4d39187b355310ba50599d1d2",
+            _P4_COMPANY_FULL_SOURCE_ID,
+            _P4_PATENT_FULL_SOURCE_ID,
+            _P4_PAPER_SALVAGE_SOURCE_ID,
+            _P4_PROFESSOR_FULL_SOURCE_ID,
+            _P4_PROFESSOR_PAPER_LINKS_SOURCE_ID,
+            _P4_APPLICANT_BINDING_FULL_SOURCE_ID,
             "inventory:3bf673d8c10db3fc95558037794443a0b8f4a3994d5ae36ac7c85191440f1cd6",
             "inventory:4384044cb138f62be89edc0f9457065d00f08ce44d8dd9d06e0caefc555c3eef",
             "inventory:573305265d755bf3d85fb60e5e3d33e588838f7d71075d663f5f1b6836bf3ff7",
@@ -1336,7 +1479,10 @@ class SourceBuildManifest(_ContentAddressedModel):
         if inventory_keys != tuple(sorted(set(inventory_keys))):
             raise ValueError("inventory source IDs must be sorted and unique")
         expected_ids = frozenset().union(*_SOURCE_IDS_BY_DISPOSITION.values())
-        if len(self.inventory_entries) != len(expected_ids) or set(inventory_keys) != expected_ids:
+        if (
+            len(self.inventory_entries) != len(expected_ids)
+            or set(inventory_keys) != expected_ids
+        ):
             raise ValueError(
                 "inventory must exactly cover the accepted sources: "
                 f"expected {len(expected_ids)}, got {len(self.inventory_entries)}"
@@ -1344,7 +1490,10 @@ class SourceBuildManifest(_ContentAddressedModel):
         expected_by_disposition = dict(_SOURCE_IDS_BY_DISPOSITION)
         if self.schema_version == "canonical-v2-source-build-manifest-v2":
             expected_by_disposition[SourceDisposition.evidence_input] = frozenset(
-                {*expected_by_disposition[SourceDisposition.evidence_input], *_SUPPLEMENTAL_SOURCE_IDS}
+                {
+                    *expected_by_disposition[SourceDisposition.evidence_input],
+                    *_SUPPLEMENTAL_SOURCE_IDS,
+                }
             )
             expected_by_disposition[SourceDisposition.registered_unprojected] = (
                 expected_by_disposition[SourceDisposition.registered_unprojected]
@@ -1471,7 +1620,9 @@ class SourceBuildManifest(_ContentAddressedModel):
                     or supplemental.parent_source_id != source_id
                     or supplemental.content_path
                     != self.restore_root / authority.restore_member_path
-                    or not _lexically_below(supplemental.content_path, self.restore_root)
+                    or not _lexically_below(
+                        supplemental.content_path, self.restore_root
+                    )
                 ):
                     raise ValueError(
                         "supplemental member differs from fixed accepted authority"
@@ -2439,9 +2590,7 @@ def _source_company_key_personnel(
             invalid.add(member_path)
             continue
         disallowed.update(
-            f"{member_path}.{key}"
-            for key in member
-            if key not in allowed_member_keys
+            f"{member_path}.{key}" for key in member if key not in allowed_member_keys
         )
         name = member.get("name")
         role = member.get("role")
@@ -2713,9 +2862,7 @@ def _selected_fields(payload: dict[str, Any]) -> _SelectedFieldAudit:
         # time so projections and identity keys carry the real address.
         email_value = values["email"]
         if isinstance(email_value, str) and email_value.strip():
-            decoded_email, email_signal = _decode_reversed_professor_email(
-                email_value
-            )
+            decoded_email, email_signal = _decode_reversed_professor_email(email_value)
             values["email"] = decoded_email
             if email_signal is not None:
                 quality_signals.append(email_signal)
@@ -3110,9 +3257,7 @@ def _supplemental_match_indexes(
                 mutable["patent_number"][key].add(object_id)
 
     def freeze(name: str) -> dict[str, frozenset[str]]:
-        return {
-            key: frozenset(value) for key, value in sorted(mutable[name].items())
-        }
+        return {key: frozenset(value) for key, value in sorted(mutable[name].items())}
 
     return _SupplementalMatchIndexes(
         company_ids_by_name=freeze("company"),
@@ -3160,6 +3305,18 @@ def _supplemental_record_object_ids(
         # applicant_binding binds patents by applicant name.  Both are
         # handled entirely by their dedicated merge stages, which attach
         # lineage only for adopted records.
+        matches = frozenset()
+    elif purpose in {
+        "company_full",
+        "patent_full",
+        "paper_salvage",
+        "professor_full",
+        "professor_paper_links",
+        "applicant_binding_full",
+    }:
+        # P4 full-column batches are create/binding lanes handled entirely by
+        # their dedicated merge stages (creation decisions happen inside the
+        # merges where existing-object overlap is resolved conservatively).
         matches = frozenset()
     else:
         professor_key = _identity_lookup_key(payload.get("professor_name"))
@@ -3285,9 +3442,15 @@ def _merge_professor_backfill_rows(
     adopted backfills; the caller attaches source lineage (identity
     source_record_ids and approved-batch scope) exclusively from that set.
     """
-    stats = {"records_seen": 0, "records_merged": 0, "records_unmatched": 0,
-             "fields_merged": 0, "fields_kept_existing": 0,
-             "fields_unsupported": 0, "fields_invalid": 0}
+    stats = {
+        "records_seen": 0,
+        "records_merged": 0,
+        "records_unmatched": 0,
+        "fields_merged": 0,
+        "fields_kept_existing": 0,
+        "fields_unsupported": 0,
+        "fields_invalid": 0,
+    }
     adopted_backfills: list[tuple[str, str]] = []
     assertion_index = {
         assertion.assertion_id: index
@@ -3427,7 +3590,9 @@ def _company_backfill_object_id(company_name: str) -> str:
     return f"company-backfill:{digest}"
 
 
-def _company_backfill_aliases(value: Any, *, path: str) -> tuple[list[str], tuple[str, ...]]:
+def _company_backfill_aliases(
+    value: Any, *, path: str
+) -> tuple[list[str], tuple[str, ...]]:
     if value is None:
         return [], ()
     if not isinstance(value, list):
@@ -3442,7 +3607,9 @@ def _company_backfill_aliases(value: Any, *, path: str) -> tuple[list[str], tupl
     return aliases, tuple(sorted(invalid))
 
 
-def _company_backfill_evidence_urls(value: Any, *, path: str) -> tuple[list[str], tuple[str, ...]]:
+def _company_backfill_evidence_urls(
+    value: Any, *, path: str
+) -> tuple[list[str], tuple[str, ...]]:
     if value is None:
         return [], ()
     if not isinstance(value, list):
@@ -3617,7 +3784,9 @@ def _merge_company_backfill_rows(
         selected: dict[str, JsonValue] = {
             "name": company_name,
             "normalized_name": company_name,
-            "profile_summary": cast(JsonValue, released_payload["summary_fields"]["profile_summary"]),
+            "profile_summary": cast(
+                JsonValue, released_payload["summary_fields"]["profile_summary"]
+            ),
             "technology_route_summary": _COMPANY_BACKFILL_ROUTE_SUMMARY_FALLBACK,
         }
         if aliases:
@@ -3755,7 +3924,10 @@ def _merge_applicant_binding_rows(
     }
     adopted_patents: list[tuple[str, str]] = []
     for item in rows:
-        if _SUPPLEMENTAL_SOURCE_PURPOSES.get(item.source_id) != "applicant_binding":
+        if _SUPPLEMENTAL_SOURCE_PURPOSES.get(item.source_id) not in {
+            "applicant_binding",
+            "applicant_binding_full",
+        }:
             continue
         stats["records_seen"] += 1
         payload = item.payload
@@ -3912,13 +4084,8 @@ def _remap_applicant_binding_canonical_ids(
         return list(field_assertions)
     merged = list(field_assertions)
     for index, assertion in enumerate(merged):
-        patent_id = assertion.source_identity_id.removeprefix(
-            "source-released-object:"
-        )
-        if (
-            patent_id not in bound_patent_ids
-            or assertion.field_path != "applicants"
-        ):
+        patent_id = assertion.source_identity_id.removeprefix("source-released-object:")
+        if patent_id not in bound_patent_ids or assertion.field_path != "applicants":
             continue
         value = assertion.value
         if not isinstance(value, list):
@@ -3948,6 +4115,1011 @@ def _remap_applicant_binding_canonical_ids(
     return merged
 
 
+def _supplementary_field_values(
+    *,
+    identity_result: Any,
+    decision_result: Any,
+) -> dict[str, dict[str, list[str]]]:
+    """Collect non-selected valid assertion values per canonical identity."""
+    canonical_by_source = {
+        assignment.source_identity_id: assignment.canonical_identity_id
+        for assignment in identity_result.source_identity_assignments
+    }
+    selected: dict[tuple[str, str], str] = {}
+    for cf in decision_result.current_fields:
+        if isinstance(cf.value, str) and cf.value.strip():
+            selected[(cf.canonical_identity_id, cf.field_path)] = cf.value.strip()
+    supplementary: dict[str, dict[str, list[str]]] = {}
+    for assertion in decision_result.field_assertions:
+        canonical_id = canonical_by_source.get(assertion.source_identity_id)
+        if canonical_id is None:
+            continue
+        value = assertion.value
+        if not isinstance(value, str) or not value.strip():
+            continue
+        # D0-a: this channel feeds the published vector content and lookup
+        # documents directly, so it obeys the same single rule set as the
+        # projection seam.  Placeholder-family values (including the build's own
+        # "_PROFESSOR_MISSING_FIELD_FALLBACK"-style sentences), withheld glue
+        # damage and research-direction junk never publish through it either.
+        if clean_text(value).value is None:
+            continue
+        if (
+            assertion.field_path == "research_directions"
+            and research_direction_rule(value.strip()) is not None
+        ):
+            continue
+        key = (canonical_id, assertion.field_path)
+        if key in selected and value.strip() != selected[key]:
+            field_supp = supplementary.setdefault(canonical_id, {})
+            values = field_supp.setdefault(assertion.field_path, [])
+            if value.strip() not in values:
+                values.append(value.strip())
+    return supplementary
+
+
+_P4_COMPANY_PROFILE_FALLBACK = (
+    "No dedicated summary was supplied by the full-column workbook source."
+)
+_P4_COMPANY_ROUTE_FALLBACK = "Not supplied by the full-column workbook source."
+# Field-level supplemental merge for overlapping P4 company records: the
+# retained s12 object wins on identity; the P4 workbook only fills fields the
+# retained object leaves empty, and replaces route summaries that are
+# recognizable generated boilerplate (all three formulaic fragments present).
+_P4_COMPANY_FILL_FIELDS = (
+    "team_description",
+    "product_description",
+    "website",
+    "registered_address",
+)
+_P4_COMPANY_ROUTE_BOILERPLATE_MARKERS = (
+    "的技术路线围绕",
+    "当前重点落在",
+    "业务场景集中在",
+)
+
+
+def _p4_company_route_is_generated(value: object) -> bool:
+    if not isinstance(value, str) or not value.strip():
+        return True
+    return all(marker in value for marker in _P4_COMPANY_ROUTE_BOILERPLATE_MARKERS)
+
+
+def _p4_company_field_merge(
+    *,
+    existing: dict[str, JsonValue],
+    fill: Mapping[str, JsonValue],
+    object_id: str,
+    source_record_id: str,
+    run_id: str,
+    observed_at: datetime,
+    assertions: list[SourceAssertion],
+) -> int:
+    """Fill empty retained-company fields from an overlapping P4 record and
+    replace generated route boilerplate with the workbook's real
+    application scenarios. Never overwrites a non-empty real value. Returns
+    the number of fields filled."""
+
+    def assign(field: str, value: object) -> bool:
+        if not isinstance(value, str) or not value.strip():
+            return False
+        current = existing.get(field)
+        if isinstance(current, str) and current.strip():
+            return False
+        existing[field] = value.strip()
+        assertions.append(
+            SourceAssertion(
+                assertion_id=f"assertion:{object_id}:p4fill:{field}",
+                source_record_id=source_record_id,
+                source_identity_id=f"source-released-object:{object_id}",
+                subject_entity_type="company",
+                field_path=field,
+                value=value.strip(),
+                observed_at=observed_at,
+                assertion_run_id=f"assertions:{run_id}",
+            )
+        )
+        return True
+
+    filled = 0
+    for field in _P4_COMPANY_FILL_FIELDS:
+        if assign(field, fill.get(field)):
+            filled += 1
+    route = fill.get("technology_route_summary")
+    if (
+        isinstance(route, str)
+        and route.strip()
+        and route != _P4_COMPANY_ROUTE_FALLBACK
+        and _p4_company_route_is_generated(existing.get("technology_route_summary"))
+    ):
+        # Generated boilerplate is not a real value: replace it outright
+        # (the assign() emptiness guard must not protect it).
+        existing["technology_route_summary"] = route.strip()
+        assertions.append(
+            SourceAssertion(
+                assertion_id=f"assertion:{object_id}:p4fill:technology_route_summary",
+                source_record_id=source_record_id,
+                source_identity_id=f"source-released-object:{object_id}",
+                subject_entity_type="company",
+                field_path="technology_route_summary",
+                value=route.strip(),
+                observed_at=observed_at,
+                assertion_run_id=f"assertions:{run_id}",
+            )
+        )
+        filled += 1
+    fill_aliases = fill.get("aliases")
+    if isinstance(fill_aliases, list) and fill_aliases:
+        # Alias union (run14 alias closure): aliases are a list surface, so
+        # the fill-empty scalar contract does not apply — merge as a set,
+        # normalized, with self-name forms and duplicates excluded. Serving
+        # keeps the ambiguity/fanout guard; this step never invents forms.
+        existing_aliases = existing.get("aliases")
+        merged_aliases = (
+            [
+                alias.strip()
+                for alias in existing_aliases
+                if isinstance(alias, str) and alias.strip()
+            ]
+            if isinstance(existing_aliases, list)
+            else []
+        )
+        blocked = {
+            _company_alias_key(value)
+            for value in (existing.get("name"), existing.get("normalized_name"))
+            if isinstance(value, str) and value.strip()
+        }
+        blocked.update(_company_alias_key(alias) for alias in merged_aliases)
+        added: list[str] = []
+        for value in fill_aliases:
+            if not isinstance(value, str):
+                continue
+            alias = value.strip()
+            key = _company_alias_key(alias)
+            if len(alias) < 2 or key in blocked:
+                continue
+            blocked.add(key)
+            added.append(alias)
+        if added:
+            merged_value = cast(JsonValue, [*merged_aliases, *added])
+            existing["aliases"] = merged_value
+            assertions.append(
+                SourceAssertion(
+                    assertion_id=f"assertion:{object_id}:p4fill:aliases",
+                    source_record_id=source_record_id,
+                    source_identity_id=f"source-released-object:{object_id}",
+                    subject_entity_type="company",
+                    field_path="aliases",
+                    value=merged_value,
+                    observed_at=observed_at,
+                    assertion_run_id=f"assertions:{run_id}",
+                )
+            )
+            filled += 1
+    return filled
+
+
+_P4_PATENT_SUMMARY_FALLBACK = "Not supplied by the full-column patent source."
+_P4_PAPER_VENUE_FALLBACK = "未提供期刊出处"
+_P4_LINK_EVIDENCE_SOURCE = "postgres_salvage_verified_link"
+
+
+def _p4_named_reference(value: Any) -> JsonValue | None:
+    if not isinstance(value, str) or not value.strip():
+        return None
+    reference, _, invalid = _named_reference_audit(value.strip(), path="p4.full_column")
+    if invalid or not isinstance(reference, dict):
+        return None
+    return reference
+
+
+def _p4_named_reference_list(value: Any) -> list[dict[str, JsonValue]] | None:
+    if not isinstance(value, str) or not value.strip():
+        return None
+    reference = _p4_named_reference(value)
+    return [reference] if reference is not None else None
+
+
+def _p4_optional_string(value: Any) -> str | None:
+    if not isinstance(value, str) or not value.strip():
+        return None
+    if value.strip() in {"-", "—", "无", "暂无", "None", "null"}:
+        return None
+    return value.strip()
+
+
+def _company_alias_key(value: str) -> str:
+    return value.strip().casefold()
+
+
+def _p4_company_record(
+    payload: Mapping[str, Any], *, now: datetime
+) -> tuple[str, str, dict[str, Any], dict[str, JsonValue]] | None:
+    name = _p4_optional_string(payload.get("company_name"))
+    if not name:
+        return None
+    project_name = _p4_optional_string(payload.get("project_name"))
+    industry = _p4_named_reference(payload.get("industry"))
+    geography = _p4_named_reference(payload.get("geography"))
+    legal = _p4_named_reference(payload.get("legal_representative"))
+    tech_tags = _p4_named_reference_list(payload.get("business"))
+    founded_date, _ = _source_iso_date_string(
+        payload.get("founded_date"), path="p4.founded_date"
+    )
+    website = _p4_optional_string(payload.get("website"))
+    address = _p4_optional_string(payload.get("registered_address"))
+    team = _p4_optional_string(payload.get("team"))
+    product = _p4_optional_string(payload.get("product_summary"))
+    scenarios = _p4_optional_string(payload.get("application_scenarios"))
+    business = _p4_optional_string(payload.get("business"))
+    profile_summary = product or business or _P4_COMPANY_PROFILE_FALLBACK
+    route_summary = scenarios or _P4_COMPANY_ROUTE_FALLBACK
+    object_id = "company-p4:" + _canonical_sha256(cast(JsonValue, {"name": name}))
+    evidence = [
+        {
+            "source_type": "company_source_workbook",
+            "source_file": "企业总表.xlsx",
+            "fetched_at": now.isoformat(),
+        }
+    ]
+    core: dict[str, Any] = {"name": name, "normalized_name": name}
+    aliases: list[str] = []
+    if project_name is not None:
+        candidate = project_name.strip()
+        if len(candidate) >= 2 and _company_alias_key(candidate) != _company_alias_key(
+            name
+        ):
+            aliases.append(candidate)
+    if aliases:
+        core["aliases"] = aliases
+    if industry is not None:
+        core["industry"] = industry
+        core["industry_tags"] = [industry]
+    if website is not None:
+        core["website"] = website
+    released_payload: dict[str, Any] = {
+        "id": object_id,
+        "object_type": "company",
+        "display_name": name,
+        "core_facts": core,
+        "summary_fields": {
+            "profile_summary": profile_summary,
+            "technology_route_summary": route_summary,
+        },
+        "evidence": evidence,
+        "last_updated": now.isoformat(),
+        "quality_status": "ready",
+    }
+    selected: dict[str, JsonValue] = {
+        "name": name,
+        "normalized_name": name,
+        "profile_summary": profile_summary,
+        "technology_route_summary": route_summary,
+    }
+    if aliases:
+        selected["aliases"] = cast(JsonValue, aliases)
+    if industry is not None:
+        selected["industry"] = industry
+        selected["industry_tags"] = [industry]
+    if geography is not None:
+        selected["geography"] = geography
+    if legal is not None:
+        selected["legal_representative"] = legal
+    if tech_tags:
+        selected["tech_tags"] = tech_tags
+    if founded_date is not None:
+        selected["founded_at"] = founded_date
+    if website is not None:
+        selected["website"] = website
+    if address is not None:
+        selected["registered_address"] = address
+    if team is not None:
+        selected["team_description"] = team
+    if product is not None:
+        selected["product_description"] = product
+    return object_id, "company", released_payload, selected
+
+
+def _p4_patent_record(
+    payload: Mapping[str, Any], *, now: datetime
+) -> tuple[str, str, dict[str, Any], dict[str, JsonValue]] | None:
+    patent_id = payload.get("patent_id")
+    title = _p4_optional_string(payload.get("title"))
+    patent_number = _p4_optional_string(payload.get("patent_number"))
+    if (
+        not isinstance(patent_id, str)
+        or not patent_id.strip()
+        or not title
+        or not patent_number
+    ):
+        return None
+    applicants, invalid_applicants = _source_named_members(
+        payload.get("applicants"), path="p4.applicants", order_field="applicant_order"
+    )
+    inventors, invalid_inventors = _source_named_members(
+        payload.get("inventors"), path="p4.inventors", order_field="inventor_order"
+    )
+    if invalid_applicants or invalid_inventors or not applicants:
+        return None
+    patent_type = _p4_optional_string(payload.get("patent_type"))
+    abstract = _p4_optional_string(payload.get("abstract"))
+    summary_text = _p4_optional_string(payload.get("summary_text"))
+    effect = _p4_optional_string(payload.get("technology_effect"))
+    title_en = _p4_optional_string(payload.get("title_en"))
+    filing_date, _ = _source_iso_date_string(
+        payload.get("filing_date"), path="p4.filing_date"
+    )
+    publication_date, _ = _source_iso_date_string(
+        payload.get("publication_date"), path="p4.publication_date"
+    )
+    grant_date, _ = _source_iso_date_string(
+        payload.get("grant_date"), path="p4.grant_date"
+    )
+    evidence = [
+        {
+            "source_type": "admin_patent_release",
+            "source_file": "11月专利完整版-patent-release/released_objects.jsonl",
+            "fetched_at": now.isoformat(),
+        }
+    ]
+    core: dict[str, Any] = {
+        "title": title,
+        "applicants": applicants,
+        "inventors": inventors,
+        "patent_number": patent_number,
+    }
+    summary: dict[str, Any] = {
+        "summary_text": summary_text or _P4_PATENT_SUMMARY_FALLBACK
+    }
+    if patent_type is not None:
+        core["patent_type"] = patent_type
+    released_payload: dict[str, Any] = {
+        "id": patent_id,
+        "object_type": "patent",
+        "display_name": title,
+        "core_facts": core,
+        "summary_fields": summary,
+        "evidence": evidence,
+        "last_updated": now.isoformat(),
+        "quality_status": "ready",
+    }
+    selected: dict[str, JsonValue] = {
+        "title": title,
+        "applicants": applicants,
+        "inventors": inventors,
+        "patent_number": patent_number,
+        "summary_text": summary_text or _P4_PATENT_SUMMARY_FALLBACK,
+    }
+    if patent_type is not None:
+        selected["patent_type"] = patent_type
+    if abstract is not None:
+        selected["abstract"] = abstract
+    if effect is not None:
+        selected["technology_effect"] = effect
+    if title_en is not None:
+        selected["title_en"] = title_en
+    if filing_date is not None:
+        selected["filing_date"] = filing_date
+    if publication_date is not None:
+        selected["publication_date"] = publication_date
+    if grant_date is not None:
+        selected["grant_date"] = grant_date
+    return patent_id, "patent", released_payload, selected
+
+
+def _p4_paper_record(
+    payload: Mapping[str, Any], *, now: datetime
+) -> tuple[str, str, dict[str, Any], dict[str, JsonValue]] | None:
+    paper_id = payload.get("paper_id")
+    title = _p4_optional_string(payload.get("title"))
+    year = payload.get("year")
+    if (
+        not isinstance(paper_id, str)
+        or not paper_id.strip()
+        or not title
+        or not isinstance(year, int)
+        or isinstance(year, bool)
+        or not 1000 <= year <= 9999
+    ):
+        return None
+    authors, invalid_authors = _source_named_members(
+        payload.get("authors"), path="p4.authors", order_field="author_order"
+    )
+    if invalid_authors or not authors:
+        return None
+    venue_reference = _p4_named_reference(payload.get("venue")) or _p4_named_reference(
+        _P4_PAPER_VENUE_FALLBACK
+    )
+    doi = _p4_optional_string(payload.get("doi"))
+    arxiv_id = _p4_optional_string(payload.get("arxiv_id"))
+    abstract = _p4_optional_string(payload.get("abstract"))
+    summary_zh = _p4_optional_string(payload.get("summary_zh"))
+    citation_count = payload.get("citation_count")
+    evidence = [
+        {
+            "source_type": "postgres_salvage",
+            "source_file": "salvage.paper",
+            "fetched_at": now.isoformat(),
+        }
+    ]
+    core: dict[str, Any] = {
+        "title": title,
+        "authors": authors,
+        "year": year,
+        "venue": venue_reference,
+    }
+    summary: dict[str, Any] = {}
+    if doi is not None:
+        core["doi"] = doi
+    if arxiv_id is not None:
+        core["arxiv_id"] = arxiv_id
+    if abstract is not None:
+        core["abstract"] = abstract
+        summary["summary_text"] = abstract
+    if summary_zh is not None:
+        summary["summary_zh"] = summary_zh
+    released_payload: dict[str, Any] = {
+        "id": paper_id,
+        "object_type": "paper",
+        "display_name": title,
+        "core_facts": core,
+        "summary_fields": summary,
+        "evidence": evidence,
+        "last_updated": now.isoformat(),
+        "quality_status": "ready",
+    }
+    selected: dict[str, JsonValue] = {
+        "title": title,
+        "authors": authors,
+        "year": year,
+        "venue": venue_reference,
+    }
+    if doi is not None:
+        selected["doi"] = doi
+    if arxiv_id is not None:
+        selected["arxiv_id"] = arxiv_id
+    if abstract is not None:
+        selected["abstract"] = abstract
+        selected["summary_text"] = abstract
+    if summary_zh is not None:
+        selected["summary_zh"] = summary_zh
+    if isinstance(citation_count, int) and not isinstance(citation_count, bool):
+        selected["citation_count"] = citation_count
+    return paper_id, "paper", released_payload, selected
+
+
+def _p4_professor_record(
+    payload: Mapping[str, Any], *, now: datetime
+) -> tuple[str, str, dict[str, Any], dict[str, JsonValue]] | None:
+    professor_id = payload.get("professor_id")
+    name = _p4_optional_string(payload.get("name"))
+    institution = _p4_optional_string(payload.get("institution"))
+    if (
+        not isinstance(professor_id, str)
+        or not professor_id.strip()
+        or not name
+        or name in _PROFESSOR_POLLUTION_NAME_LABELS
+        or not institution
+    ):
+        return None
+    department = _p4_named_reference(payload.get("department"))
+    email = _p4_optional_string(payload.get("email"))
+    if email is not None:
+        email, _ = _decode_reversed_professor_email(email)
+    homepage = _p4_optional_string(payload.get("homepage"))
+    if homepage is not None and not homepage.startswith(("http://", "https://")):
+        homepage = None
+    title = _p4_optional_string(payload.get("title"))
+    profile_summary = _p4_optional_string(payload.get("profile_summary"))
+    research_directions, _ = _source_named_references(
+        payload.get("research_directions")
+        if isinstance(payload.get("research_directions"), list)
+        else [],
+        path="p4.research_directions",
+    )
+    patent_ids, invalid_patent_ids = _source_string_list(
+        payload.get("patent_ids"), path="p4.patent_ids"
+    )
+    if invalid_patent_ids:
+        patent_ids = []
+    paper_summary = _P4_COMPANY_PROFILE_FALLBACK
+    patent_summary = _P4_COMPANY_PROFILE_FALLBACK
+    core: dict[str, Any] = {
+        "name": name,
+        "canonical_name_zh": name,
+        "institution": institution,
+        "department": (
+            department
+            if department is not None
+            else _p4_named_reference(_PROFESSOR_MISSING_FIELD_FALLBACK)
+        ),
+        "email": email or _PROFESSOR_MISSING_FIELD_FALLBACK,
+        "homepage": homepage or _PROFESSOR_MISSING_FIELD_FALLBACK,
+        "title": title or _PROFESSOR_MISSING_FIELD_FALLBACK,
+        "paper_summary": paper_summary,
+        "patent_ids": patent_ids,
+        "patent_summary": patent_summary,
+        "research_directions": research_directions,
+    }
+    summary: dict[str, Any] = {
+        "profile_summary": profile_summary or _PROFESSOR_PROFILE_SUMMARY_FALLBACK
+    }
+    released_payload: dict[str, Any] = {
+        "id": professor_id,
+        "object_type": "professor",
+        "display_name": name,
+        "core_facts": core,
+        "summary_fields": summary,
+        "evidence": [
+            {
+                "source_type": "legacy_professor_jsonl",
+                "source_file": "enriched_v2/enriched_v3_merged union",
+                "fetched_at": now.isoformat(),
+            }
+        ],
+        "last_updated": now.isoformat(),
+        "quality_status": "ready",
+    }
+    selected: dict[str, JsonValue] = dict(core)
+    selected["profile_summary"] = summary["profile_summary"]
+    name_en = _p4_optional_string(payload.get("name_en"))
+    if name_en is not None:
+        selected["canonical_name_en"] = name_en
+    h_index = payload.get("h_index")
+    if isinstance(h_index, int) and not isinstance(h_index, bool):
+        selected["h_index"] = h_index
+    citation_count = payload.get("citation_count")
+    if isinstance(citation_count, int) and not isinstance(citation_count, bool):
+        selected["citation_count"] = citation_count
+    paper_count = payload.get("paper_count")
+    if isinstance(paper_count, int) and not isinstance(paper_count, bool):
+        selected["paper_count"] = paper_count
+    return professor_id, "professor", released_payload, selected
+
+
+def _p4_existing_overlap_keys(
+    *,
+    selected_by_object: Mapping[str, Mapping[str, JsonValue]],
+    domain_by_object: Mapping[str, str],
+) -> tuple[dict[str, dict[str, set[str]]], dict[str, str]]:
+    """Overlap indexes per domain for create-or-skip decisions, plus a
+    company name-key -> existing object_id reverse map so overlapping P4
+    records can field-merge into the retained object instead of being
+    silently dropped (2026-08-28: the whole 6514-record P4 company batch
+    was discarded because every record shared a name with a thin s12
+    object)."""
+    company: set[str] = set()
+    patent: set[str] = set()
+    paper_doi: set[str] = set()
+    paper_title: set[str] = set()
+    professor_name_institution: set[str] = set()
+    company_object_by_key: dict[str, str] = {}
+    for object_id, domain in domain_by_object.items():
+        selected = selected_by_object.get(object_id, {})
+        if domain == "company":
+            for value in (selected.get("name"), selected.get("normalized_name")):
+                if (key := _identity_lookup_key(value)) is not None:
+                    company.add(key)
+                    company_object_by_key.setdefault(key, object_id)
+            aliases = selected.get("aliases")
+            if isinstance(aliases, list):
+                for alias in aliases:
+                    if (key := _identity_lookup_key(alias)) is not None:
+                        company.add(key)
+                        company_object_by_key.setdefault(key, object_id)
+        elif domain == "patent":
+            if (key := _identity_lookup_key(selected.get("patent_number"))) is not None:
+                patent.add(key)
+        elif domain == "paper":
+            if (key := _identity_lookup_key(selected.get("doi"))) is not None:
+                paper_doi.add(key)
+            if (key := _identity_lookup_key(selected.get("title"))) is not None:
+                paper_title.add(key)
+        elif domain == "professor":
+            name_key = _identity_lookup_key(selected.get("name"))
+            institution_key = _identity_lookup_key(selected.get("institution"))
+            if name_key is not None:
+                professor_name_institution.add(name_key)
+                if institution_key is not None:
+                    professor_name_institution.add(f"{name_key}|{institution_key}")
+    return (
+        {
+            "company": company,
+            "patent": patent,
+            "paper_doi": paper_doi,
+            "paper_title": paper_title,
+            "professor": professor_name_institution,
+        },
+        company_object_by_key,
+    )
+
+
+_P4_RECORD_BUILDERS = {
+    "company_full": _p4_company_record,
+    "patent_full": _p4_patent_record,
+    "paper_salvage": _p4_paper_record,
+    "professor_full": _p4_professor_record,
+}
+
+
+def _merge_p4_created_rows(
+    *,
+    request: BuildCandidateRequest,
+    rows: tuple[_ParsedReleasedObject, ...],
+    selected_by_object: dict[str, dict[str, JsonValue]],
+    domain_by_object: dict[str, str],
+    row_by_object: dict[str, _ParsedReleasedObject],
+    source_identities: dict[str, SourceIdentity],
+    identity_assertions: list[SourceAssertion],
+    field_assertions: list[SourceAssertion],
+    gaps: list[_RecordedGap],
+    supplemental_domains_by_batch: defaultdict[str, set[str]],
+    now: datetime,
+) -> tuple[
+    list[SourceAssertion],
+    list[SourceAssertion],
+    dict[str, dict[str, int]],
+    tuple[tuple[str, str], ...],
+]:
+    """Admit P4 full-column records as first-class released objects.
+
+    Conservative semantics mirroring the s12f company backfill: a record whose
+    identity overlaps a retained object (company name/alias, patent number,
+    paper doi/title, professor name) is skipped, never merged on top; only
+    genuinely new objects are synthesized and enter identity, decision,
+    inclusion, and projection exactly like released rows.
+    """
+    overlap, company_object_by_key = _p4_existing_overlap_keys(
+        selected_by_object=selected_by_object, domain_by_object=domain_by_object
+    )
+    stats = {
+        purpose: {
+            "records_seen": 0,
+            "records_created": 0,
+            "records_skipped_existing": 0,
+            "records_field_merged": 0,
+            "fields_filled": 0,
+            "records_duplicate": 0,
+            "records_invalid": 0,
+        }
+        for purpose in _P4_RECORD_BUILDERS
+    }
+    # Batch ledger (Stage0 meta-gap): whole-batch silent drops must be loud.
+    representative_records: dict[str, SourceRecord] = {}
+    created_keys: dict[str, set[str]] = {
+        "company": set(),
+        "patent": set(),
+        "paper": set(),
+        "professor": set(),
+    }
+    adopted: list[tuple[str, str]] = []
+    merged_assertions = list(field_assertions)
+    merged_identity_assertions = list(identity_assertions)
+    for item in rows:
+        purpose = _SUPPLEMENTAL_SOURCE_PURPOSES.get(item.source_id)
+        builder = _P4_RECORD_BUILDERS.get(purpose or "")
+        if builder is None:
+            continue
+        current = stats[purpose]
+        current["records_seen"] += 1
+        representative_records.setdefault(purpose or "", item.record)
+        built = builder(item.payload, now=now)
+        if built is None:
+            current["records_invalid"] += 1
+            gaps.append(
+                _gap(
+                    release_id=request.candidate_release_id,
+                    run_id=request.run_id,
+                    record=item.record,
+                    domain="cross_domain",
+                    reason=(
+                        f"p4 full-column record ({purpose}) carries malformed "
+                        "identity fields"
+                    ),
+                    affected_paths=("p4.identity",),
+                    now=now,
+                )
+            )
+            continue
+        object_id, domain, released_payload, selected = built
+        if object_id in selected_by_object:
+            current["records_duplicate"] += 1
+            continue
+        if domain == "company":
+            name_key = _identity_lookup_key(selected.get("name"))
+            if name_key in overlap["company"]:
+                # Field-level supplemental merge (2026-08-28): the retained
+                # object keeps its identity and every non-empty real value;
+                # the P4 workbook fills empty fields and replaces generated
+                # route boilerplate with real application scenarios. The
+                # whole batch used to be silently skipped here — 6514 rich
+                # records discarded because every name overlapped a thin
+                # s12 object.
+                existing_id = company_object_by_key.get(name_key)
+                existing = (
+                    selected_by_object.get(existing_id)
+                    if isinstance(existing_id, str)
+                    else None
+                )
+                if existing is None:
+                    current["records_skipped_existing"] += 1
+                    continue
+                filled = _p4_company_field_merge(
+                    existing=existing,
+                    fill=selected,
+                    object_id=existing_id,
+                    source_record_id=item.record.record_id,
+                    run_id=request.run_id,
+                    observed_at=now,
+                    assertions=merged_assertions,
+                )
+                current["records_field_merged"] += filled > 0
+                current["fields_filled"] += filled
+                if filled:
+                    adopted.append((existing_id, item.record.record_id))
+                    supplemental_domains_by_batch[item.source_batch_id].add(domain)
+                    source = source_identities.get(existing_id)
+                    if source is not None:
+                        source_identities[existing_id] = source.model_copy(
+                            update={
+                                "source_record_ids": tuple(
+                                    sorted(
+                                        {
+                                            *source.source_record_ids,
+                                            item.record.record_id,
+                                        }
+                                    )
+                                )
+                            },
+                            deep=True,
+                        )
+                continue
+            if name_key in created_keys["company"]:
+                current["records_duplicate"] += 1
+                continue
+            created_keys["company"].add(name_key)
+        elif domain == "patent":
+            number_key = _identity_lookup_key(selected.get("patent_number"))
+            if number_key in overlap["patent"]:
+                current["records_skipped_existing"] += 1
+                continue
+            if number_key in created_keys["patent"]:
+                current["records_duplicate"] += 1
+                continue
+            created_keys["patent"].add(number_key)
+        elif domain == "paper":
+            doi_key = _identity_lookup_key(selected.get("doi"))
+            title_key = _identity_lookup_key(selected.get("title"))
+            if doi_key in overlap["paper_doi"] or title_key in overlap["paper_title"]:
+                current["records_skipped_existing"] += 1
+                continue
+            if title_key in created_keys["paper"]:
+                current["records_duplicate"] += 1
+                continue
+            created_keys["paper"].add(title_key)
+        elif domain == "professor":
+            name_key = _identity_lookup_key(selected.get("name"))
+            if name_key in overlap["professor"]:
+                current["records_skipped_existing"] += 1
+                continue
+            if name_key in created_keys["professor"]:
+                current["records_duplicate"] += 1
+                continue
+            created_keys["professor"].add(name_key)
+        synthesized = _ParsedReleasedObject(
+            source_id=item.source_id,
+            source_batch_id=item.source_batch_id,
+            record=item.record,
+            artifact=item.artifact,
+            payload=released_payload,
+        )
+        observed_at = _observed_at(released_payload, now)
+        source_identity_id = f"source-released-object:{object_id}"
+        normalized_keys = _released_object_identity_keys(
+            object_id=object_id,
+            domain=domain,
+            selected=selected,
+            payload=released_payload,
+        )
+        source_identities[object_id] = SourceIdentity(
+            source_identity_id=source_identity_id,
+            source_system="p4-full-column-rebuild",
+            source_key=object_id,
+            entity_type=domain,
+            source_record_ids=(item.record.record_id,),
+            normalized_keys=normalized_keys,
+            first_observed_at=observed_at,
+            last_observed_at=observed_at,
+            state=SourceIdentityState.active,
+        )
+        merged_identity_assertions.extend(
+            SourceAssertion(
+                assertion_id=f"identity-assertion:{object_id}:{key}",
+                source_record_id=item.record.record_id,
+                source_identity_id=source_identity_id,
+                subject_entity_type=domain,
+                field_path=f"identity.{key}",
+                value=value,
+                observed_at=observed_at,
+                assertion_run_id=f"identity-assertions:{request.run_id}",
+            )
+            for key, value in sorted(normalized_keys.items())
+        )
+        selected_by_object[object_id] = selected
+        domain_by_object[object_id] = domain
+        row_by_object[object_id] = synthesized
+        merged_assertions.extend(
+            SourceAssertion(
+                assertion_id=f"assertion:{object_id}:{field_path}",
+                source_record_id=item.record.record_id,
+                source_identity_id=source_identity_id,
+                subject_entity_type=domain,
+                field_path=field_path,
+                value=value,
+                observed_at=observed_at,
+                assertion_run_id=f"assertions:{request.run_id}",
+            )
+            for field_path, value in sorted(selected.items())
+        )
+        current["records_created"] += 1
+        adopted.append((object_id, item.record.record_id))
+        supplemental_domains_by_batch[item.source_batch_id].add(domain)
+    # Batch ledger (Stage0 meta-gap): print the per-purpose in/out counts and
+    # raise a typed gap whenever a non-empty batch contributed nothing — a
+    # whole-batch silent drop must never again hide behind discarded stats
+    # (run 10: p4-paper-salvage 24,101 rows → 0 new papers, unnoticed).
+    print(
+        "P4_MERGE_LEDGER " + json.dumps(stats, ensure_ascii=False, sort_keys=True),
+        flush=True,
+    )
+    for purpose, counts in sorted(stats.items()):
+        if (
+            counts["records_seen"] > 0
+            and counts["records_created"] == 0
+            and counts["records_field_merged"] == 0
+        ):
+            gaps.append(
+                _gap(
+                    release_id=request.candidate_release_id,
+                    run_id=request.run_id,
+                    record=representative_records[purpose],
+                    domain="cross_domain",
+                    reason=(
+                        "p4 supplemental batch contributed zero objects: "
+                        + json.dumps(counts, ensure_ascii=False, sort_keys=True)
+                    ),
+                    affected_paths=("supporting_source.batch_ledger",),
+                    now=now,
+                )
+            )
+    return (
+        merged_assertions,
+        merged_identity_assertions,
+        stats,
+        tuple(adopted),
+    )
+
+
+def _merge_p4_professor_paper_links(
+    *,
+    request: BuildCandidateRequest,
+    rows: tuple[_ParsedReleasedObject, ...],
+    domain_by_object: Mapping[str, str],
+    gaps: list[_RecordedGap],
+    now: datetime,
+) -> tuple[tuple[_ParsedReleasedObject, ...], dict[str, int]]:
+    """Synthesize verified salvage attribution links as released link objects.
+
+    A link survives only when both endpoints exist as retained objects; every
+    unmatched endpoint is recorded as a typed gap (never silently dropped).
+    """
+    stats = {
+        "records_seen": 0,
+        "links_created": 0,
+        "records_unmatched_professor": 0,
+        "records_unmatched_paper": 0,
+    }
+    synthesized: list[_ParsedReleasedObject] = []
+    for item in rows:
+        if _SUPPLEMENTAL_SOURCE_PURPOSES.get(item.source_id) != "professor_paper_links":
+            continue
+        stats["records_seen"] += 1
+        payload = item.payload
+        professor_id = payload.get("professor_id")
+        paper_id = payload.get("paper_id")
+        if (
+            not isinstance(professor_id, str)
+            or not professor_id.strip()
+            or not isinstance(paper_id, str)
+            or not paper_id.strip()
+        ):
+            stats["records_unmatched_professor"] += 1
+            gaps.append(
+                _gap(
+                    release_id=request.candidate_release_id,
+                    run_id=request.run_id,
+                    record=item.record,
+                    domain="cross_domain",
+                    reason="p4 salvage link carries malformed endpoints",
+                    affected_paths=("professor_id", "paper_id"),
+                    now=now,
+                )
+            )
+            continue
+        if domain_by_object.get(professor_id) != "professor":
+            stats["records_unmatched_professor"] += 1
+            gaps.append(
+                _gap(
+                    release_id=request.candidate_release_id,
+                    run_id=request.run_id,
+                    record=item.record,
+                    domain="professor",
+                    reason=(
+                        f"p4 salvage link professor endpoint {professor_id!r} "
+                        "is not a retained professor object"
+                    ),
+                    affected_paths=("core_facts.professor_id",),
+                    now=now,
+                )
+            )
+            continue
+        if domain_by_object.get(paper_id) != "paper":
+            stats["records_unmatched_paper"] += 1
+            gaps.append(
+                _gap(
+                    release_id=request.candidate_release_id,
+                    run_id=request.run_id,
+                    record=item.record,
+                    domain="paper",
+                    reason=(
+                        f"p4 salvage link paper endpoint {paper_id!r} "
+                        "is not a retained paper object"
+                    ),
+                    affected_paths=("core_facts.paper_id",),
+                    now=now,
+                )
+            )
+            continue
+        professor_name = payload.get("professor_name")
+        display = (
+            f"{professor_name} -> {paper_id}"
+            if isinstance(professor_name, str) and professor_name.strip()
+            else f"{professor_id} -> {paper_id}"
+        )
+        link_digest = _canonical_sha256(
+            cast(JsonValue, {"paper_id": paper_id, "professor_id": professor_id})
+        )
+        synthesized.append(
+            _ParsedReleasedObject(
+                source_id=item.source_id,
+                source_batch_id=item.source_batch_id,
+                record=item.record,
+                artifact=item.artifact,
+                payload={
+                    "id": f"p4-professor-paper-link:{link_digest}",
+                    "object_type": "professor_paper_link",
+                    "display_name": display,
+                    "core_facts": {
+                        "professor_id": professor_id,
+                        "paper_id": paper_id,
+                    },
+                    "summary_fields": {},
+                    "evidence": [
+                        {
+                            "source_type": _P4_LINK_EVIDENCE_SOURCE,
+                            "source_file": "salvage.professor_paper_link",
+                            "fetched_at": now.isoformat(),
+                        }
+                    ],
+                    "last_updated": now.isoformat(),
+                    "quality_status": "ready",
+                },
+            )
+        )
+        stats["links_created"] += 1
+    return tuple(synthesized), stats
+
+
 def _professor_author_aliases(selected: Mapping[str, JsonValue]) -> frozenset[str]:
     aliases = {
         key
@@ -3966,6 +5138,31 @@ def _professor_author_aliases(selected: Mapping[str, JsonValue]) -> frozenset[st
         if len(parts) == 2:
             aliases.add("".join(reversed(parts)).casefold())
     return frozenset(aliases)
+
+
+def _dedupe_professor_paper_links(
+    links: Sequence[_ParsedReleasedObject],
+) -> tuple[tuple[_ParsedReleasedObject, ...], tuple[str, ...]]:
+    """One attribution link per (professor, paper) pair.
+
+    The same pair can reach the build through more than one link family (the
+    historical retained links and the P4 salvage batch), which produced two
+    edges for one attribution.  The smallest link id wins, so the retained
+    historical id (``PROF-PAPER-LINK-*``) beats the synthesized
+    ``derived-``/``p4-`` families; the dropped ids are returned for reporting.
+    Endpoint lineage was already attached to the identities before this point,
+    so removing the duplicate link loses no source-record lineage.
+    """
+    kept: dict[tuple[str, str], _ParsedReleasedObject] = {}
+    dropped: list[str] = []
+    for item in sorted(links, key=lambda value: cast(str, value.payload["id"])):
+        core = cast(dict[str, Any], item.payload["core_facts"])
+        key = (cast(str, core["professor_id"]), cast(str, core["paper_id"]))
+        if key in kept:
+            dropped.append(cast(str, item.payload["id"]))
+            continue
+        kept[key] = item
+    return tuple(kept.values()), tuple(dropped)
 
 
 def _derived_professor_paper_links(
@@ -4073,9 +5270,7 @@ def _bind_snapshot_intervals(
                 SourceAssertion.model_validate(
                     {
                         **assertion.model_dump(mode="python"),
-                        "valid_from": TemporalInstantValue(
-                            value=assertion.observed_at
-                        ),
+                        "valid_from": TemporalInstantValue(value=assertion.observed_at),
                         "valid_to": (
                             TemporalInstantValue(value=next_time[assertion.observed_at])
                             if assertion.observed_at in next_time
@@ -4093,7 +5288,8 @@ def _representative_object_ids(
     row_by_object: Mapping[str, _ParsedReleasedObject],
 ) -> dict[str, str]:
     source_by_id = {
-        source.source_identity_id: source for source in identity_result.source_identities
+        source.source_identity_id: source
+        for source in identity_result.source_identities
     }
     representatives: dict[str, str] = {}
     for identity in identity_result.current_canonical_identities:
@@ -4126,12 +5322,11 @@ def _map_public_authority(
     DomainProjectionResult,
     tuple[_ParsedReleasedObject, ...],
     tuple[_RecordedGap, ...],
+    dict[str, _ParsedReleasedObject],
 ]:
     source_rows = rows
     rows = tuple(
-        item
-        for item in source_rows
-        if item.source_id == _RELEASED_OBJECTS_SOURCE_ID
+        item for item in source_rows if item.source_id == _RELEASED_OBJECTS_SOURCE_ID
     )
     supplemental_rows = tuple(
         item for item in source_rows if item.source_id in _SUPPLEMENTAL_SOURCE_IDS
@@ -4459,6 +5654,30 @@ def _map_public_authority(
             )
 
     supplemental_domains_by_batch: defaultdict[str, set[str]] = defaultdict(set)
+
+    # P4 full-column creation runs before supplemental matching so the new
+    # objects participate in the same identity/decision/inclusion graph as
+    # released rows; overlap with retained objects is resolved conservatively
+    # (skip, never overwrite) inside the merge.
+    (
+        field_assertions,
+        identity_assertions,
+        _p4_create_stats,
+        _p4_adopted_creates,
+    ) = _merge_p4_created_rows(
+        request=request,
+        rows=supplemental_rows,
+        selected_by_object=selected_by_object,
+        domain_by_object=domain_by_object,
+        row_by_object=row_by_object,
+        source_identities=source_identities,
+        identity_assertions=identity_assertions,
+        field_assertions=field_assertions,
+        gaps=gaps,
+        supplemental_domains_by_batch=supplemental_domains_by_batch,
+        now=now,
+    )
+
     supplemental_indexes = _supplemental_match_indexes(
         selected_by_object=selected_by_object,
         row_by_object=row_by_object,
@@ -4467,6 +5686,12 @@ def _map_public_authority(
         if _SUPPLEMENTAL_SOURCE_PURPOSES.get(item.source_id) in {
             "company_backfill",
             "applicant_binding",
+            "company_full",
+            "patent_full",
+            "paper_salvage",
+            "professor_full",
+            "professor_paper_links",
+            "applicant_binding_full",
         }:
             # S12F company backfill and applicant binding never match retained
             # objects here: company_backfill creates new companies and
@@ -4652,6 +5877,34 @@ def _map_public_authority(
         valid_links.append(item)
     links = valid_links
 
+    # P4 salvage links: endpoints were validated against the retained graph
+    # inside the merge (professor/paper objects including P4-created ones);
+    # attach the same endpoint lineage the main-lane validation grants.
+    p4_links, _p4_link_stats = _merge_p4_professor_paper_links(
+        request=request,
+        rows=supplemental_rows,
+        domain_by_object=domain_by_object,
+        gaps=gaps,
+        now=now,
+    )
+    for item in p4_links:
+        core = cast(dict[str, Any], item.payload["core_facts"])
+        for endpoint in (
+            cast(str, core["professor_id"]),
+            cast(str, core["paper_id"]),
+        ):
+            assert domain_by_object[endpoint] in {"professor", "paper"}
+            source = source_identities[endpoint]
+            source_identities[endpoint] = source.model_copy(
+                update={
+                    "source_record_ids": tuple(
+                        sorted({*source.source_record_ids, item.record.record_id})
+                    )
+                },
+                deep=True,
+            )
+    links.extend(p4_links)
+
     derived_links = _derived_professor_paper_links(
         source_identities=source_identities,
         selected_by_object=selected_by_object,
@@ -4679,6 +5932,8 @@ def _map_public_authority(
                 deep=True,
             )
     links.extend(derived_links)
+    # D0-b item 2: one edge per (professor, paper) attribution pair.
+    links, _duplicate_link_ids = _dedupe_professor_paper_links(links)
 
     anchor_by_paper: dict[str, tuple[str, _ParsedReleasedObject]] = {}
     for item in sorted(links, key=lambda value: cast(str, value.payload["id"])):
@@ -4703,30 +5958,16 @@ def _map_public_authority(
                 domain="paper",
                 reason=(
                     f"released_objects row {paper_id}: no valid Professor "
-                    "relationship supplies discovery.professor_anchor_identity_id"
+                    "relationship supplies discovery.professor_anchor_identity_id "
+                    "(admitted with paper_unanchored limitation)"
                 ),
                 affected_paths=("discovery.professor_anchor_identity_id",),
                 now=now,
             )
         )
-        source_identities.pop(paper_id)
-        selected_by_object.pop(paper_id)
-        domain_by_object.pop(paper_id)
-        row_by_object.pop(paper_id)
-    if unanchored_paper_ids:
-        removed_source_ids = {
-            f"source-released-object:{paper_id}" for paper_id in unanchored_paper_ids
-        }
-        identity_assertions = [
-            assertion
-            for assertion in identity_assertions
-            if assertion.source_identity_id not in removed_source_ids
-        ]
-        field_assertions = [
-            assertion
-            for assertion in field_assertions
-            if assertion.source_identity_id not in removed_source_ids
-        ]
+        # admit-unanchored-papers (G4/G6): the paper STAYS in the graph —
+        # domain inclusion marks it admitted with the paper_unanchored
+        # limitation; the old gate removed it (with its assertions) entirely.
 
     # Professor backfill merges after derived attribution so backfilled emails
     # never create new author-attribution aliases; it only fills projection
@@ -4805,6 +6046,23 @@ def _map_public_authority(
         gaps=gaps,
         supplemental_domains_by_batch=supplemental_domains_by_batch,
         now=now,
+    )
+    # Batch ledger (Stage0 meta-gap): run 10 produced ZERO patent-applicant
+    # relationships where the Aug-26 pack had 48 companies bound — this
+    # print makes the next run's binding ledger visible in build.log.
+    print(
+        "APPLICANT_BINDING_LEDGER "
+        + json.dumps(
+            _applicant_binding_stats.__dict__
+            if hasattr(_applicant_binding_stats, "__dict__")
+            else dict(_applicant_binding_stats._asdict())
+            if hasattr(_applicant_binding_stats, "_asdict")
+            else repr(_applicant_binding_stats),
+            ensure_ascii=False,
+            sort_keys=True,
+            default=str,
+        ),
+        flush=True,
     )
 
     source_identity_values = tuple(
@@ -4919,8 +6177,7 @@ def _map_public_authority(
                         )
                     ),
                     affected_paths=tuple(
-                        f"core_facts.patent_ids[{index}]"
-                        for index, _ in unresolved
+                        f"core_facts.patent_ids[{index}]" for index, _ in unresolved
                     ),
                     now=now,
                 )
@@ -4947,9 +6204,9 @@ def _map_public_authority(
             canonical_by_source=canonical_by_source,
         )
     )
-    assertions_by_subject_path: defaultdict[
-        tuple[str, str], list[SourceAssertion]
-    ] = defaultdict(list)
+    assertions_by_subject_path: defaultdict[tuple[str, str], list[SourceAssertion]] = (
+        defaultdict(list)
+    )
     for assertion in field_assertions:
         assertions_by_subject_path[
             (canonical_by_source[assertion.source_identity_id], assertion.field_path)
@@ -4958,9 +6215,7 @@ def _map_public_authority(
         FieldAssertionGroup(
             canonical_identity_id=canonical_identity_id,
             field_path=field_path,
-            assertions=tuple(
-                sorted(assertions, key=lambda item: item.assertion_id)
-            ),
+            assertions=tuple(sorted(assertions, key=lambda item: item.assertion_id)),
             policy=field_policy,
         )
         for (canonical_identity_id, field_path), assertions in sorted(
@@ -5087,6 +6342,9 @@ def _map_public_authority(
                     f"source-released-object:{anchor_by_paper[object_id_by_canonical[identity.canonical_identity_id]][0]}"
                 ]
                 if identity.entity_type == "paper"
+                and identity.canonical_identity_id in object_id_by_canonical
+                and object_id_by_canonical[identity.canonical_identity_id]
+                in anchor_by_paper
                 else None
             ),
         )
@@ -5153,6 +6411,11 @@ def _map_public_authority(
         domain_result,
         tuple(sorted(links, key=lambda item: cast(str, item.payload["id"]))),
         tuple(sorted(gaps, key=lambda item: item.result.gap_id)),
+        # The mapped admitted-object universe: released objects plus every
+        # object synthesized from a supplemental batch, each in released-object
+        # payload shape.  Downstream authorities that need "which objects exist"
+        # (not "which raw rows landed") must index this, never `source_rows`.
+        dict(row_by_object),
     )
 
 
@@ -5228,7 +6491,9 @@ def _internal_candidate_authority(
 def _source_name_key(value: Any) -> str | None:
     if not isinstance(value, str) or not value.strip():
         return None
-    normalized = "".join(character for character in value.casefold() if character.isalnum())
+    normalized = "".join(
+        character for character in value.casefold() if character.isalnum()
+    )
     return normalized or None
 
 
@@ -5247,17 +6512,50 @@ def _professor_company_role_id(value: Any) -> str | None:
     return None
 
 
-def _typed_relationship_seeds(
-    *,
-    source_rows: tuple[_ParsedReleasedObject, ...],
-    canonical_by_source: Mapping[str, str],
-    canonical_domains: Mapping[str, str],
-) -> tuple[_TypedRelationshipSeed, ...]:
-    rows_by_object = {
+def _relationship_seed_object_rows(
+    object_rows_by_id: Mapping[str, _ParsedReleasedObject],
+) -> dict[str, _ParsedReleasedObject]:
+    """The admitted-object universe the relationship seeds may resolve against.
+
+    `_map_public_authority`'s `row_by_object` keys every admitted object (the
+    released library plus each object synthesized from a supplemental batch by
+    `_merge_p4_created_rows` / `_merge_company_backfill_rows`) to a
+    released-object-shaped row.  The raw landed `source_rows` are NOT that
+    universe: only the released-objects source is unwrapped to released shape,
+    every supplemental JSONL row keeps its native domain keys (`patent_id`,
+    `company_name`, …) and therefore never matched the old `payload["id"]`
+    filter.  Indexing raw rows silently restricted every seeding lane to 5,561
+    released objects and cut `patent_has_applicant` from 7,611 document
+    bindings to 123 edges in run15.
+    """
+
+    return {
         cast(str, row.payload["id"]): row
-        for row in source_rows
+        for row in object_rows_by_id.values()
         if isinstance(row.payload.get("id"), str)
     }
+
+
+def _typed_relationship_seeds(
+    *,
+    object_rows_by_id: Mapping[str, _ParsedReleasedObject],
+    supplemental_rows: tuple[_ParsedReleasedObject, ...],
+    canonical_by_source: Mapping[str, str],
+    canonical_domains: Mapping[str, str],
+    bound_company_ids_by_patent: Mapping[str, tuple[str, ...]] | None = None,
+) -> tuple[_TypedRelationshipSeed, ...]:
+    rows_by_object = _relationship_seed_object_rows(object_rows_by_id)
+    if bound_company_ids_by_patent is None:
+        bound_company_ids_by_patent = {}
+    # Bound applicants carry CANONICAL company ids; seeds must carry source
+    # OBJECT ids (the relationship authority maps every endpoint through
+    # canonical_by_source["source-released-object:{object_id}"] — a canonical
+    # id inside that prefix is a KeyError there).
+    source_object_by_canonical: dict[str, str] = {}
+    for object_id in rows_by_object:
+        canonical_id = canonical_by_source.get(f"source-released-object:{object_id}")
+        if canonical_id is not None and canonical_id not in source_object_by_canonical:
+            source_object_by_canonical[canonical_id] = object_id
     company_ids_by_name: dict[str, set[str]] = defaultdict(set)
     professor_ids_by_name: dict[str, set[str]] = defaultdict(set)
     company_name_entries: list[CompanyNameEntry] = []
@@ -5340,11 +6638,10 @@ def _typed_relationship_seeds(
             )
         )
 
-    for row in sorted(source_rows, key=lambda item: item.record.record_id):
-        if (
-            _SUPPLEMENTAL_SOURCE_PURPOSES.get(row.source_id)
-            != "professor_company_role"
-        ):
+    # Source-purpose lane: this one reads per-record payloads (not objects), so
+    # it needs the raw landed rows.
+    for row in sorted(supplemental_rows, key=lambda item: item.record.record_id):
+        if _SUPPLEMENTAL_SOURCE_PURPOSES.get(row.source_id) != "professor_company_role":
             continue
         professor_key = _source_name_key(row.payload.get("professor_name"))
         company_key = _source_name_key(row.payload.get("company_name"))
@@ -5417,9 +6714,7 @@ def _typed_relationship_seeds(
                             "company_to_professor",
                             "professor_to_company",
                         ),
-                        catalog_scenario_id=(
-                            "catalog_scenario.professor_company_role"
-                        ),
+                        catalog_scenario_id=("catalog_scenario.professor_company_role"),
                         evidence_metadata={
                             "source_field": f"core_facts.company_roles[{index}]",
                             "source_role": cast(str, role["role"]),
@@ -5427,6 +6722,32 @@ def _typed_relationship_seeds(
                         source_row=row,
                     )
         if source_domain == "patent" and isinstance(core, dict):
+            # Resolved applicant bindings first (highest confidence: the
+            # binding merge resolved them against the full company graph).
+            for bound_canonical_id in bound_company_ids_by_patent.get(object_id, ()):
+                bound_object_id = source_object_by_canonical.get(bound_canonical_id)
+                if bound_object_id is None:
+                    # The bound company did not survive identity resolution
+                    # as a seeded object (merged into another canonical);
+                    # the surviving canonical's object seeds instead.
+                    continue
+                add_seed(
+                    relationship_type_id="patent_has_applicant",
+                    source_object_id=object_id,
+                    source_domain="patent",
+                    target_object_id=bound_object_id,
+                    target_domain="company",
+                    role_id="applicant",
+                    role_owner="target",
+                    evidence_kind="patent_applicant_assertion",
+                    requested_paths=("company_to_patent", "patent_to_company"),
+                    catalog_scenario_id="catalog_scenario.patent_has_applicant",
+                    evidence_metadata={
+                        "source_field": "core_facts.applicants",
+                        "match_kind": "resolved_binding",
+                    },
+                    source_row=row,
+                )
             target_object_ids = core.get("company_ids")
             if not isinstance(target_object_ids, list):
                 target_object_ids = []
@@ -5501,7 +6822,8 @@ def _relationship_authority(
     internal_result: InternalReferenceProjectionResult,
     links: tuple[_ParsedReleasedObject, ...],
     now: datetime,
-    source_rows: tuple[_ParsedReleasedObject, ...] = (),
+    source_rows: tuple[_ParsedReleasedObject, ...],
+    object_rows_by_id: Mapping[str, _ParsedReleasedObject],
 ) -> tuple[RelationshipProjectionRequest, RelationshipProjectionResult]:
     has_internal_references = any(
         (
@@ -5535,10 +6857,37 @@ def _relationship_authority(
         decision.canonical_relationship_id: decision
         for decision in decision_result.relationship_decisions
     }
+    # admit-unanchored-papers (G3): the applicant-binding merge resolved
+    # applicants to canonical company ids inside the patents' `applicants`
+    # field assertions; seed patent_has_applicant directly from those
+    # resolved bindings instead of relying on core_facts.company_ids (absent
+    # for P4 patents) or re-resolving names against released companies.
+    bound_company_ids_by_patent: dict[str, tuple[str, ...]] = {}
+    for assertion in decision_result.field_assertions:
+        if assertion.field_path != "applicants":
+            continue
+        patent_object_id = assertion.source_identity_id.removeprefix(
+            "source-released-object:"
+        )
+        value = assertion.value
+        if not isinstance(value, list):
+            continue
+        bound_ids = tuple(
+            applicant["canonical_company_id"]
+            for applicant in value
+            if isinstance(applicant, dict)
+            and isinstance(applicant.get("canonical_company_id"), str)
+            and applicant["canonical_company_id"].startswith("company-")
+        )
+        if bound_ids:
+            bound_company_ids_by_patent.setdefault(patent_object_id, bound_ids)
+    seed_object_rows = _relationship_seed_object_rows(object_rows_by_id)
     typed_seeds = _typed_relationship_seeds(
-        source_rows=source_rows,
+        object_rows_by_id=object_rows_by_id,
+        supplemental_rows=source_rows,
         canonical_by_source=canonical_by_source,
         canonical_domains=canonical_ids,
+        bound_company_ids_by_patent=bound_company_ids_by_patent,
     )
 
     for item in links:
@@ -5827,13 +7176,122 @@ def _relationship_authority(
     relationship_result = create_ephemeral_relationship_projection().project(
         relationship_request
     )
-    if len(relationship_result.current_relationships) != len(links) + len(typed_seeds) or any(
-        not item.admitted for item in relationship_result.candidate_outcomes
-    ):
+    if len(relationship_result.current_relationships) != len(links) + len(
+        typed_seeds
+    ) or any(not item.admitted for item in relationship_result.candidate_outcomes):
         raise IsolatedKnowledgeBuildError(
             "explicit source relationship projection is incomplete"
         )
+    _reconcile_patent_company_bindings(
+        bound_company_ids_by_patent=bound_company_ids_by_patent,
+        seed_object_rows=seed_object_rows,
+        canonical_by_source=canonical_by_source,
+        typed_seeds=typed_seeds,
+    )
     return relationship_request, relationship_result
+
+
+def _reconcile_patent_company_bindings(
+    *,
+    bound_company_ids_by_patent: Mapping[str, tuple[str, ...]],
+    seed_object_rows: Mapping[str, _ParsedReleasedObject],
+    canonical_by_source: Mapping[str, str],
+    typed_seeds: tuple[_TypedRelationshipSeed, ...],
+) -> None:
+    """Fail closed when a document-layer applicant binding is not projected.
+
+    Two stores describe the same fact: the patents' `applicants` field
+    assertions carry the resolved `canonical_company_id` the serving period
+    reads directly (G3-simple direct scan, the user-ruled authority), while the
+    relationship layer publishes `patent_has_applicant` edges.  The
+    relationship layer is allowed to be a subset of the document layer (a
+    binding whose company never became an admitted object cannot be
+    projected) — but every other difference means the projection silently
+    dropped a fact the pack serves.  run15 shipped exactly that: 123 edges
+    against 7,042 bound patents.
+    """
+
+    def _canonical(object_id: str) -> str | None:
+        return canonical_by_source.get(f"source-released-object:{object_id}")
+
+    indexed_canonical_ids = {
+        canonical_id
+        for object_id in seed_object_rows
+        if (canonical_id := _canonical(object_id)) is not None
+    }
+    document_pairs: set[tuple[str, str]] = set()
+    document_entries = 0
+    bound_patents: set[str] = set()
+    bound_companies: set[str] = set()
+    for patent_object_id, company_canonical_ids in sorted(
+        bound_company_ids_by_patent.items()
+    ):
+        patent_canonical_id = _canonical(patent_object_id)
+        if patent_canonical_id is None:
+            continue
+        for company_canonical_id in company_canonical_ids:
+            document_pairs.add((patent_canonical_id, company_canonical_id))
+            document_entries += 1
+            bound_patents.add(patent_canonical_id)
+            bound_companies.add(company_canonical_id)
+    seeded_pairs = {
+        (
+            canonical_by_source.get(
+                f"source-released-object:{seed.source_object_id}",
+                seed.source_object_id,
+            ),
+            canonical_by_source.get(
+                f"source-released-object:{seed.target_object_id}",
+                seed.target_object_id,
+            ),
+        )
+        for seed in typed_seeds
+        if seed.relationship_type_id == "patent_has_applicant"
+    }
+    unindexed_pairs = {
+        pair for pair in document_pairs if pair[1] not in indexed_canonical_ids
+    }
+    unexplained_missing = sorted(document_pairs - unindexed_pairs - seeded_pairs)
+    seed_lanes: defaultdict[str, int] = defaultdict(int)
+    typed_seed_types: defaultdict[str, int] = defaultdict(int)
+    for seed in typed_seeds:
+        typed_seed_types[seed.relationship_type_id] += 1
+        if seed.relationship_type_id != "patent_has_applicant":
+            continue
+        seed_lanes[
+            str(
+                seed.evidence_metadata.get("match_kind")
+                or seed.evidence_metadata.get("source_field")
+                or "unknown"
+            )
+        ] += 1
+    ledger = {
+        "document_binding_entries": document_entries,
+        "document_binding_pairs": len(document_pairs),
+        "document_bound_patents": len(bound_patents),
+        "document_bound_companies": len(bound_companies),
+        "seeded_pairs": len(seeded_pairs),
+        "seed_lanes": dict(sorted(seed_lanes.items())),
+        "typed_seed_types": dict(sorted(typed_seed_types.items())),
+        "unindexed_pairs": len(unindexed_pairs),
+        "unexplained_missing": len(unexplained_missing),
+        "unexplained_missing_sample": [list(pair) for pair in unexplained_missing[:5]],
+    }
+    print(
+        "PATENT_COMPANY_BINDING_LEDGER "
+        + json.dumps(ledger, ensure_ascii=False, sort_keys=True),
+        flush=True,
+    )
+    if unexplained_missing:
+        raise IsolatedKnowledgeBuildError(
+            "document-layer applicant bindings were not projected as "
+            "patent_has_applicant relationships: "
+            f"{len(unexplained_missing)} of {len(document_pairs)} pairs "
+            f"(unindexed={len(unindexed_pairs)}) sample="
+            + json.dumps(
+                [list(pair) for pair in unexplained_missing[:5]], ensure_ascii=False
+            )
+        )
 
 
 def _release_bundle_relationship_authority(
@@ -5877,6 +7335,7 @@ def _index_authority(
     candidate_request: CandidateProjectionRequest,
     candidate_result: CandidateProjectionResult,
     now: datetime,
+    supplementary_field_values: dict[str, dict[str, list[str]]] | None = None,
 ) -> tuple[
     tuple[PathEligibilityRequest, ...],
     tuple[PathEligibilityResult, ...],
@@ -5939,6 +7398,7 @@ def _index_authority(
         embedding_model=request.model_versions["embedding"],
         internal_auxiliary_policy_version="internal-evidence-anchor-v1",
         build_mode="full",
+        supplementary_field_values=supplementary_field_values or {},
     )
     pure_result = create_ephemeral_index_projection_builder().build(index_request)
     return request_values, result_values, index_request, pure_result
@@ -6583,7 +8043,9 @@ class _OpenAICompatibleEmbeddingAdapter:
             )
             raw_vectors = client.embed_batch(list(batch), model=self.model_id)
             if len(raw_vectors) != len(batch):
-                raise ValueError("release embedding provider returned a different row count")
+                raise ValueError(
+                    "release embedding provider returned a different row count"
+                )
             vectors: list[tuple[float, ...]] = []
             for raw_vector in raw_vectors:
                 vector = tuple(float(value) for value in raw_vector)
@@ -6592,7 +8054,9 @@ class _OpenAICompatibleEmbeddingAdapter:
                     or not all(math.isfinite(value) for value in vector)
                     or not any(value != 0.0 for value in vector)
                 ):
-                    raise ValueError("release embedding provider returned an invalid vector")
+                    raise ValueError(
+                        "release embedding provider returned an invalid vector"
+                    )
                 vectors.append(vector)
             return tuple(vectors)
 
@@ -8093,6 +9557,7 @@ class _IsolatedKnowledgeBuild(KnowledgeBuild):
             domain_result,
             links,
             gaps,
+            object_rows_by_id,
         ) = _map_public_authority(
             request=request,
             rows=rows,
@@ -8121,6 +9586,7 @@ class _IsolatedKnowledgeBuild(KnowledgeBuild):
             links=links,
             now=now,
             source_rows=rows,
+            object_rows_by_id=object_rows_by_id,
         )
         (
             eligibility_requests,
@@ -8132,6 +9598,10 @@ class _IsolatedKnowledgeBuild(KnowledgeBuild):
             candidate_request=candidate_request,
             candidate_result=candidate_result,
             now=now,
+            supplementary_field_values=_supplementary_field_values(
+                identity_result=identity_result,
+                decision_result=decision_result,
+            ),
         )
         return _MappedAuthority(
             identity_request=identity_request,

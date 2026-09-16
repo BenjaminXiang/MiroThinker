@@ -829,6 +829,12 @@ class _PostgresDomainProjectionStore(DomainProjectionStore):
             assertions_by_decision.setdefault(row["decision_id"], []).append(
                 row["assertion_id"]
             )
+        # The database collation orders strings differently from Python's
+        # byte-wise sorted() when names differ only by punctuation (e.g.
+        # "tech_tags" vs "technology_route_summary"), so the write-side hash
+        # order must be restored in Python, never trusted to SQL ORDER BY.
+        for decision_id in assertions_by_decision:
+            assertions_by_decision[decision_id].sort()
         rows = connection.execute(
             "SELECT decision.*, policy.content_sha256 AS policy_content_sha256, "
             "policy.effective_at AS policy_effective_at "
@@ -864,17 +870,88 @@ class _PostgresDomainProjectionStore(DomainProjectionStore):
                 ),
                 evaluated_at=row["evaluated_at"],
             )
-            if (
-                row["build_run_id"] != manifest["build_run_id"]
-                or row["inclusion_decision_run_id"]
-                != manifest["inclusion_decision_run_id"]
-                or row["manifest_content_sha256"] != manifest["manifest_content_sha256"]
-                or row["inclusion_result_content_sha256"]
-                != manifest["inclusion_result_content_sha256"]
-                or row["content_sha256"] != _canonical_sha256(decision)
-            ):
+            mismatches = [
+                f"{field}: row={row[column]!r} manifest={manifest_value!r}"
+                for field, column, manifest_value in (
+                    ("build_run_id", "build_run_id", manifest["build_run_id"]),
+                    (
+                        "inclusion_decision_run_id",
+                        "inclusion_decision_run_id",
+                        manifest["inclusion_decision_run_id"],
+                    ),
+                    (
+                        "manifest_content_sha256",
+                        "manifest_content_sha256",
+                        manifest["manifest_content_sha256"],
+                    ),
+                    (
+                        "inclusion_result_content_sha256",
+                        "inclusion_result_content_sha256",
+                        manifest["inclusion_result_content_sha256"],
+                    ),
+                )
+                if row[column] != manifest_value
+            ] + [
+                "content_sha256: "
+                f"row={row['content_sha256']!r} "
+                f"reconstructed={_canonical_sha256(decision)!r} "
+                f"decision_id={row['decision_id']!r} "
+                f"path={decision.path!r} "
+                f"outcome row={row['outcome']!r} reconstructed={decision.outcome!r} "
+                f"subject row={row['canonical_identity_id']!r} "
+                f"reconstructed={decision.subject_identity_id!r} "
+                f"release row={row['release_id']!r} "
+                f"reconstructed={decision.release_id!r} "
+                f"entity_type={row['entity_type']!r} "
+                f"full_reconstructed_dump={decision.model_dump(mode='json')!r} "
+                f"score row={row['score']!r} reconstructed={decision.score!r} "
+                f"limitations row={row['limitations']!r} "
+                f"reconstructed={decision.limitations!r} "
+                f"hard_exclusion_codes row={row['hard_exclusion_codes']!r} "
+                f"reconstructed={decision.hard_exclusion_codes!r} "
+                f"supporting_assertion_ids="
+                f"{decision.supporting_assertion_ids!r} "
+                f"evaluated_at row={row['evaluated_at']!r} "
+                f"reconstructed={decision.evaluated_at!r} "
+                f"policy join content_sha256={row['policy_content_sha256']!r} "
+                f"effective_at={row['policy_effective_at']!r} "
+                f"reconstructed={decision.policy!r}"
+                if row["content_sha256"] != _canonical_sha256(decision)
+                else ""
+            ]
+            mismatches = [item for item in mismatches if item]
+            if mismatches:
+                try:
+                    import pathlib
+
+                    dump_path = pathlib.Path(
+                        "/tmp/domain-inclusion-failure-dump.json"
+                    )
+                    dump_path.write_text(
+                        json.dumps(
+                            {
+                                "row": {
+                                    column: (
+                                        value.isoformat()
+                                        if hasattr(value, "isoformat")
+                                        else value
+                                    )
+                                    for column, value in row.items()
+                                },
+                                "reconstructed": decision.model_dump(mode="json"),
+                                "reconstructed_hash": _canonical_sha256(decision),
+                            },
+                            ensure_ascii=False,
+                            default=str,
+                            indent=1,
+                        ),
+                        encoding="utf-8",
+                    )
+                except Exception:  # noqa: BLE001 - 诊断转储失败不影响报错
+                    pass
                 raise DomainProjectionPersistenceError(
-                    "durable inclusion decision envelope/hash is inconsistent"
+                    "durable inclusion decision envelope/hash is inconsistent: "
+                    + "; ".join(mismatches)
                 )
             if row["entity_type"] not in DOMAINS:
                 raise DomainProjectionPersistenceError(

@@ -9,7 +9,7 @@ from .local_api_key import load_local_api_key
 
 logger = logging.getLogger(__name__)
 
-_DEFAULT_RERANK_URL = "http://100.64.0.27:18006/v1"
+_DEFAULT_RERANK_URL = "https://star.sustech.edu.cn/service/model/rerank/v1"
 _DEFAULT_MODEL = "qwen3-reranker-8b"
 _DEFAULT_TIMEOUT = 60.0
 

@@ -349,6 +349,54 @@ def test_release_wide_identity_validator_queues_one_deferred_event() -> None:
     assert all("identity_resolution_run" not in item for item in connection.statements)
 
 
+def test_insert_sources_and_assertions_batches_rows_with_computed_fingerprints() -> None:
+    module = _postgres_module()
+    request, result = _strong_paper_request_and_result()
+
+    recorded: list[tuple[str, list[tuple[object, ...]]]] = []
+
+    class _RecordingCursor:
+        def executemany(self, statement, rows) -> None:
+            recorded.append((statement, [tuple(row) for row in rows]))
+
+    class _RecordingConnection:
+        def cursor(self) -> _RecordingCursor:
+            return _RecordingCursor()
+
+    module._PostgresCanonicalIdentityStore._insert_sources_and_assertions(
+        _RecordingConnection(), request, result
+    )
+
+    statements = [statement for statement, _ in recorded]
+    assert any("knowledge.source_identity " in statement for statement in statements)
+    assert any(
+        "knowledge.source_identity_record" in statement for statement in statements
+    )
+    assertion_rows = [
+        rows for statement, rows in recorded if "knowledge.source_assertion" in statement
+    ]
+    assert len(assertion_rows) == 1
+    rows = assertion_rows[0]
+    assert [row[0] for row in rows] == [
+        "assertion-paper-doi-a",
+        "assertion-paper-doi-b",
+    ]
+    ordered_assertions = sorted(
+        request.identity_assertions, key=lambda assertion: assertion.assertion_id
+    )
+    for row, assertion in zip(rows, ordered_assertions, strict=True):
+        expected_fingerprint = hashlib.sha256(
+            json.dumps(
+                assertion.model_dump(mode="json"),
+                ensure_ascii=False,
+                sort_keys=True,
+                separators=(",", ":"),
+                allow_nan=False,
+            ).encode("utf-8")
+        ).hexdigest()
+        assert row[6] == expected_fingerprint
+
+
 def _policy(module):
     return module.PolicyReference(
         policy_id="canonical-identity-policy",

@@ -50,8 +50,8 @@ CATALOG_EVIDENCE_PATH = (
 )
 TARGET_MODULE = "src.data_agents.canonical_v2.domain_projection_postgres"
 PROJECTION_MODULE = "src.data_agents.canonical_v2.domain_projection"
-EXPECTED_REVISION = "C2_0009"
-PREVIOUS_REVISION = "C2_0008"
+EXPECTED_REVISION = "C2_0013"
+PREVIOUS_REVISION = "C2_0012"
 RELEASE_ID = "domain-projection-release-r1"
 BUILD_RUN_ID = "domain-projection-build-r1"
 DECISION_RUN_ID = "domain-projection-decisions-r1"
@@ -110,7 +110,14 @@ def _revision() -> Any:
 
 
 def _accepted_catalog() -> dict[str, Any]:
-    value = json.loads(CATALOG_EVIDENCE_PATH.read_text(encoding="utf-8"))
+    """Read the packaged catalog resource so the evidence always matches the
+    code's installed pin (a stale run-dir copy drifted across seven schema
+    revisions and silently broke this whole gated suite)."""
+    packaged = (
+        Path(__file__).resolve().parents[2]
+        / "src/data_agents/canonical_v2/catalogs/domain-catalog-v1.json"
+    )
+    value = json.loads(packaged.read_text(encoding="utf-8"))
     assert isinstance(value, dict)
     return value
 
@@ -855,6 +862,11 @@ def _projection_result(
     return module.create_ephemeral_domain_projection_builder().project(request)
 
 
+def _domain_tables_migration() -> Any:
+    """The migration module that declares the domain table constants."""
+    return _scripts().get_revision("C2_0009").module
+
+
 def _root_tables(migration: Any) -> dict[str, tuple[str, str]]:
     return {
         str(domain): tuple(value)
@@ -1000,7 +1012,10 @@ def _clone_first_row(
 def test_c2_0009_declares_complete_typed_domain_storage_without_publish_pointer() -> (
     None
 ):
-    revision = _revision()
+    # The C2_0009 migration module is itself unchanged; pin it explicitly so
+    # the suite's EXPECTED_REVISION (now the head) does not redirect this
+    # historical declaration check to an unrelated migration module.
+    revision = _scripts().get_revision("C2_0009")
     migration = revision.module
     catalog = _accepted_catalog()
     expected_subobjects = {
@@ -1010,7 +1025,7 @@ def test_c2_0009_declares_complete_typed_domain_storage_without_publish_pointer(
         for item in catalog["domains"]
     }
 
-    assert revision.down_revision == PREVIOUS_REVISION
+    assert revision.down_revision == "C2_0008"
     root_tables = _root_tables(migration)
     assert set(root_tables) == {"company", "paper", "patent", "professor"}
     assert all(
@@ -1072,7 +1087,7 @@ def test_factory_fails_closed_before_connect_for_non_disposable_target(
 def test_c2_0009_materializes_all_catalog_fields_and_typed_subobjects(
     target: _Target,
 ) -> None:
-    migration = _revision().module
+    migration = _domain_tables_migration()
     catalog = _accepted_catalog()
     forbidden_untyped_columns = {
         "field_value",
@@ -1168,7 +1183,7 @@ def test_projection_round_trips_atomically_restarts_replays_and_never_activates(
     assert first.idempotent_replay is False
     assert replay.idempotent_replay is True
 
-    migration = _revision().module
+    migration = _domain_tables_migration()
     with _connect(target) as connection:
         counts = _projection_table_counts(connection, migration)
         assert all(counts[f"root:{domain}"] == 1 for domain in first.root_counts)
@@ -1214,7 +1229,7 @@ def test_multiple_company_roots_accumulate_subobject_counts_across_restart(
     _store(target).persist(result)
     assert _store(target).load(RELEASE_ID) == result
 
-    migration = _revision().module
+    migration = _domain_tables_migration()
     with _connect(target) as connection:
         manifest_count = connection.execute(
             "SELECT subobject_counts->>'company.key_personnel' "
@@ -1260,7 +1275,7 @@ def test_rejected_domain_round_trips_with_complete_zero_subobject_accounting(
     _store(target).persist(result)
     assert _store(target).load(RELEASE_ID) == result
 
-    migration = _revision().module
+    migration = _domain_tables_migration()
     with _connect(target) as connection:
         assert _table_count(connection, _root_tables(migration)["paper"]) == 0
         assert all(
@@ -1278,7 +1293,7 @@ def test_conflicting_same_release_replay_fails_without_partial_rewrite(
     assert conflicting != original
     store = _store(target)
     store.persist(original)
-    migration = _revision().module
+    migration = _domain_tables_migration()
     with _connect(target) as connection:
         before = _projection_table_counts(connection, migration)
 
@@ -1315,7 +1330,7 @@ def test_simultaneous_identical_writers_commit_once_then_replay_exactly(
     }
     assert _store(target).load(RELEASE_ID) == result
     with _connect(target) as connection:
-        counts = _projection_table_counts(connection, _revision().module)
+        counts = _projection_table_counts(connection, _domain_tables_migration())
     assert counts["manifest"] == 1
     assert all(counts[f"root:{domain}"] == 1 for domain in result.counts_by_domain)
 
@@ -1354,7 +1369,7 @@ def test_simultaneous_conflicting_writers_choose_one_atomic_immutable_snapshot(
     assert durable in candidates
     assert durable.content_sha256 == receipts[0].manifest_content_sha256
     with _connect(target) as connection:
-        counts = _projection_table_counts(connection, _revision().module)
+        counts = _projection_table_counts(connection, _domain_tables_migration())
     assert counts["manifest"] == 1
     assert all(counts[f"root:{domain}"] == 1 for domain in durable.counts_by_domain)
 
@@ -1384,7 +1399,7 @@ def test_writer_and_downgrade_serialize_then_populated_downgrade_refuses_loss(
         downgrade_future = executor.submit(
             command.downgrade,
             _migration_config(target),
-            PREVIOUS_REVISION,
+            "C2_0008",
         )
         try:
             _wait_for_blocked_projection_downgrade(target)
@@ -1402,7 +1417,7 @@ def test_writer_and_downgrade_serialize_then_populated_downgrade_refuses_loss(
         assert connection.execute(
             "SELECT version_num FROM public.canonical_v2_alembic_version"
         ).fetchone() == (EXPECTED_REVISION,)
-        counts = _projection_table_counts(connection, _revision().module)
+        counts = _projection_table_counts(connection, _domain_tables_migration())
     assert counts["manifest"] == 1
     assert _store(target).load(RELEASE_ID) == result
 
@@ -1459,7 +1474,7 @@ def test_direct_sql_cannot_bypass_release_domain_lineage_time_hash_or_uniqueness
 ) -> None:
     graph = _prepare_graph(target)
     _store(target).persist(_projection_result(graph))
-    migration = _revision().module
+    migration = _domain_tables_migration()
     roots = _root_tables(migration)
     subobjects = _subobject_tables(migration)
     manifest_table = tuple(migration.DOMAIN_PROJECTION_MANIFEST_TABLE)
@@ -1620,7 +1635,7 @@ def test_direct_sql_cannot_bypass_release_domain_lineage_time_hash_or_uniqueness
 def test_c2_0009_empty_round_trip_and_populated_downgrade_refuses_loss(
     target: _Target,
 ) -> None:
-    migration = _revision().module
+    migration = _domain_tables_migration()
     all_tables = {
         *_root_tables(migration).values(),
         *(
@@ -1631,7 +1646,9 @@ def test_c2_0009_empty_round_trip_and_populated_downgrade_refuses_loss(
         tuple(migration.DOMAIN_PROJECTION_MANIFEST_TABLE),
         tuple(migration.DOMAIN_PROJECTION_LINEAGE_TABLE),
     }
-    command.downgrade(target.config, PREVIOUS_REVISION)
+    # Cross the C2_0009 domain-table boundary: one step below the migration
+    # that declares these tables, so a populated downgrade must refuse loss.
+    command.downgrade(target.config, "C2_0008")
     with _connect(target) as connection:
         for schema_name, table_name in all_tables:
             assert connection.execute(
@@ -1647,7 +1664,7 @@ def test_c2_0009_empty_round_trip_and_populated_downgrade_refuses_loss(
         sa_exc.DBAPIError,
         match="projection|populated|retain|refus|loss",
     ):
-        command.downgrade(target.config, PREVIOUS_REVISION)
+        command.downgrade(target.config, "C2_0008")
     with _connect(target) as connection:
         assert connection.execute(
             "SELECT version_num FROM public.canonical_v2_alembic_version"

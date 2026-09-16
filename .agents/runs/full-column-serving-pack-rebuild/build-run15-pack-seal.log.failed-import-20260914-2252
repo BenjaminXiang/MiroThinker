@@ -1,0 +1,4 @@
+Traceback (most recent call last):
+  File "/home/longxiang/MiroThinker/.worktrees/canonical-v2-s11-consolidation/.agents/runs/rebuild-canonical-v2-knowledge-platform/s12c/build_serving_pack.py", line 55, in <module>
+    from src.data_agents.canonical_v2 import (  # noqa: E402
+ImportError: cannot import name 'placeholder_scrub' from 'src.data_agents.canonical_v2' (/home/longxiang/MiroThinker/.worktrees/data-rebuild/apps/miroflow-agent/src/data_agents/canonical_v2/__init__.py)

@@ -68,6 +68,19 @@ def _synthetic_scripts(
     return ScriptDirectory.from_config(config)
 
 
+def test_build_expected_revision_matches_the_migration_head() -> None:
+    """The isolated build accepts only its exact expected revision at the fresh
+    target, so a migration lands together with the matching constant bump."""
+    build_module = import_module(
+        "src.data_agents.canonical_v2.knowledge_build_isolated"
+    )
+
+    assert (
+        build_module._EXPECTED_ALEMBIC_REVISION
+        == _canonical_scripts().get_current_head()
+    )
+
+
 def test_minimum_revision_accepts_exact_and_known_linear_descendant(
     tmp_path: Path,
 ) -> None:
@@ -201,3 +214,51 @@ def test_minimum_revision_rejects_a_synthetic_multi_parent_graph(
             current_revision="merge",
             minimum_revision="root",
         )
+
+
+def test_c2_0015_relaxes_exactly_the_reviewed_projection_columns() -> None:
+    """Pin the migration scope: the optional projection fields, nothing else."""
+    from canonical_v2_alembic.versions import (  # type: ignore[import-not-found]
+        C2_0015_relax_optional_projection_columns as migration,
+    )
+
+    assert migration.revision == "C2_0015"
+    assert migration.down_revision == "C2_0014"
+    assert migration.TARGETS == (
+        ("company", "current_projection", "profile_summary"),
+        ("company", "current_projection", "technology_route_summary"),
+        ("paper", "current_projection", "venue"),
+        ("professor", "current_projection", "department"),
+        ("professor", "current_projection", "email"),
+        ("professor", "current_projection", "homepage"),
+        ("professor", "current_projection", "paper_summary"),
+        ("professor", "current_projection", "patent_summary"),
+        ("professor", "current_projection", "profile_summary"),
+        ("professor", "current_projection", "title"),
+    )
+
+
+def test_c2_0016_relaxes_exactly_the_reviewed_shape_constraints() -> None:
+    """Pin the migration scope: the two NULL-rejecting named-reference shapes."""
+    from canonical_v2_alembic.versions import (  # type: ignore[import-not-found]
+        C2_0016_relax_optional_named_reference_shapes as migration,
+    )
+
+    assert migration.revision == "C2_0016"
+    assert migration.down_revision == "C2_0015"
+    assert migration.TARGETS == (
+        (
+            "paper",
+            "current_projection",
+            "ck_paper_current_projection_venue_shape",
+            "venue",
+            "knowledge.is_valid_projection_named_reference",
+        ),
+        (
+            "professor",
+            "current_projection",
+            "ck_professor_current_projection_department_shape",
+            "department",
+            "knowledge.is_valid_projection_named_reference",
+        ),
+    )

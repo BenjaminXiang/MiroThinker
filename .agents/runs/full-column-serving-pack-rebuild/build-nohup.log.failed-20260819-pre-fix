@@ -1,0 +1,27 @@
+target database already prepared
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+Traceback (most recent call last):
+  File "/home/longxiang/MiroThinker/.worktrees/data-rebuild/apps/miroflow-agent/src/data_agents/canonical_v2/knowledge_build_isolated.py", line 8879, in _preflight
+    self._boundary.validate_fresh_targets(target_config=self._targets)
+  File "/home/longxiang/MiroThinker/.worktrees/data-rebuild/apps/miroflow-agent/src/data_agents/canonical_v2/knowledge_build_isolated.py", line 7899, in validate_fresh_targets
+    self._assert_fresh_database()
+  File "/home/longxiang/MiroThinker/.worktrees/data-rebuild/apps/miroflow-agent/src/data_agents/canonical_v2/knowledge_build_isolated.py", line 7949, in _assert_fresh_database
+    raise ValueError("candidate database is not fresh: " + ", ".join(nonempty))
+ValueError: candidate database is not fresh: knowledge.policy, knowledge.relationship_type, knowledge.release, landing.evidence_artifact, landing.ingest_run, landing.parser_run, landing.source_record, publish.build_manifest, publish.manifest_section
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/longxiang/MiroThinker/.worktrees/data-rebuild/.agents/runs/rebuild-canonical-v2-knowledge-platform/s12a/complete_candidate_runner.py", line 1183, in main
+    candidate = builder.build(_build_request(config))
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/longxiang/MiroThinker/.worktrees/data-rebuild/apps/miroflow-agent/src/data_agents/canonical_v2/knowledge_build_isolated.py", line 9463, in build
+    manifest, gate = self._preflight(request)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/longxiang/MiroThinker/.worktrees/data-rebuild/apps/miroflow-agent/src/data_agents/canonical_v2/knowledge_build_isolated.py", line 8882, in _preflight
+    raise IsolatedKnowledgeBuildSafetyError(
+src.data_agents.canonical_v2.knowledge_build_isolated.IsolatedKnowledgeBuildSafetyError: isolated target or accepted backup gate validation failed
+complete candidate runner failed: IsolatedKnowledgeBuildSafetyError

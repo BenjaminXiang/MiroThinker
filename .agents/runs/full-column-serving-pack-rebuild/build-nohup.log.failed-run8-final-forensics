@@ -1,0 +1,63 @@
+stale staging/index roots from a failed run of this build removed
+stale disposable target dropped (owned by a previous run)
+target database created and marked
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade  -> C2_0001, Create the clean Canonical V2 namespace baseline.
+INFO  [alembic.runtime.migration] Running upgrade  -> C2_0001, Create the clean Canonical V2 namespace baseline.
+INFO  [alembic.runtime.migration] Running upgrade C2_0001 -> C2_0002, Create shared evidence, decision, and release storage.
+INFO  [alembic.runtime.migration] Running upgrade C2_0001 -> C2_0002, Create shared evidence, decision, and release storage.
+INFO  [alembic.runtime.migration] Running upgrade C2_0002 -> C2_0003, Harden shared lineage, decision history, and append-only integrity.
+INFO  [alembic.runtime.migration] Running upgrade C2_0002 -> C2_0003, Harden shared lineage, decision history, and append-only integrity.
+INFO  [alembic.runtime.migration] Running upgrade C2_0003 -> C2_0004, Persist complete immutable EvidenceLanding runs.
+INFO  [alembic.runtime.migration] Running upgrade C2_0003 -> C2_0004, Persist complete immutable EvidenceLanding runs.
+INFO  [alembic.runtime.migration] Running upgrade C2_0004 -> C2_0005, Harden canonical decision evidence and append-only constraint outcomes.
+INFO  [alembic.runtime.migration] Running upgrade C2_0004 -> C2_0005, Harden canonical decision evidence and append-only constraint outcomes.
+INFO  [alembic.runtime.migration] Running upgrade C2_0005 -> C2_0006, Persist immutable offline canonical identity resolution projections.
+INFO  [alembic.runtime.migration] Running upgrade C2_0005 -> C2_0006, Persist immutable offline canonical identity resolution projections.
+INFO  [alembic.runtime.migration] Running upgrade C2_0006 -> C2_0007, Bind human review decisions to immutable evidence and reviewer provenance.
+INFO  [alembic.runtime.migration] Running upgrade C2_0006 -> C2_0007, Bind human review decisions to immutable evidence and reviewer provenance.
+INFO  [alembic.runtime.migration] Running upgrade C2_0007 -> C2_0008, Preserve date-only versus instant validity precision.
+INFO  [alembic.runtime.migration] Running upgrade C2_0007 -> C2_0008, Preserve date-only versus instant validity precision.
+INFO  [alembic.runtime.migration] Running upgrade C2_0008 -> C2_0009, Persist typed release-scoped Professor, Company, Paper, and Patent projections.
+INFO  [alembic.runtime.migration] Running upgrade C2_0008 -> C2_0009, Persist typed release-scoped Professor, Company, Paper, and Patent projections.
+INFO  [alembic.runtime.migration] Running upgrade C2_0009 -> C2_0010, Persist typed and current Canonical V2 relationship projections.
+INFO  [alembic.runtime.migration] Running upgrade C2_0009 -> C2_0010, Persist typed and current Canonical V2 relationship projections.
+INFO  [alembic.runtime.migration] Running upgrade C2_0010 -> C2_0011, Persist append-only Canonical V2 knowledge-gap operations.
+INFO  [alembic.runtime.migration] Running upgrade C2_0010 -> C2_0011, Persist append-only Canonical V2 knowledge-gap operations.
+INFO  [alembic.runtime.migration] Running upgrade C2_0011 -> C2_0012, Add company_name to the patent applicant sub-object table.
+INFO  [alembic.runtime.migration] Running upgrade C2_0011 -> C2_0012, Add company_name to the patent applicant sub-object table.
+INFO  [alembic.runtime.migration] Running upgrade C2_0012 -> C2_0013, Chunk oversized run snapshots instead of one jsonb value.
+INFO  [alembic.runtime.migration] Running upgrade C2_0012 -> C2_0013, Chunk oversized run snapshots instead of one jsonb value.
+Traceback (most recent call last):
+  File "/home/longxiang/MiroThinker/.worktrees/data-rebuild/apps/miroflow-agent/src/data_agents/canonical_v2/knowledge_build_isolated.py", line 9237, in _persist_owners
+    readback = persist()
+               ^^^^^^^^^
+  File "/home/longxiang/MiroThinker/.worktrees/data-rebuild/apps/miroflow-agent/src/data_agents/canonical_v2/knowledge_build_isolated.py", line 9220, in <lambda>
+    lambda: self._boundary.persist_domain_projection(
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/longxiang/MiroThinker/.worktrees/data-rebuild/apps/miroflow-agent/src/data_agents/canonical_v2/knowledge_build_isolated.py", line 8431, in persist_domain_projection
+    store.persist(result)
+  File "/home/longxiang/MiroThinker/.worktrees/data-rebuild/apps/miroflow-agent/src/data_agents/canonical_v2/domain_projection_postgres.py", line 1539, in persist
+    durable = self._load_snapshot(connection, validated.release_id)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/longxiang/MiroThinker/.worktrees/data-rebuild/apps/miroflow-agent/src/data_agents/canonical_v2/domain_projection_postgres.py", line 1408, in _load_snapshot
+    cls._load_inclusion_result(connection, manifest)
+  File "/home/longxiang/MiroThinker/.worktrees/data-rebuild/apps/miroflow-agent/src/data_agents/canonical_v2/domain_projection_postgres.py", line 961, in _load_inclusion_result
+    raise DomainProjectionPersistenceError(
+src.data_agents.canonical_v2.domain_projection_postgres.DomainProjectionPersistenceError: durable inclusion decision envelope/hash is inconsistent: content_sha256: row='beb7102ea4804c63dd2e32d0011e09d533036df004484df11a28d40b9ef4a453' reconstructed='a9c677cc7708a47df2c008e69892d153d208c46203544abac9e0e5348e16671c' decision_id='domain-inclusion:sha256:c1acb38b63941c1eba796b1362edc650909bcbe3564fb3f682587babe88a1513' path=None outcome row='admitted' reconstructed=<PolicyOutcome.admitted: 'admitted'> subject row='company-c-0016f96baf79206afb8ff6b1' reconstructed='company-c-0016f96baf79206afb8ff6b1' release row='candidate-v2-20260819-r1' reconstructed='candidate-v2-20260819-r1' entity_type='company' full_reconstructed_dump={'decision_id': 'domain-inclusion:sha256:c1acb38b63941c1eba796b1362edc650909bcbe3564fb3f682587babe88a1513', 'policy': {'policy_id': 'canonical-v2-company-inclusion', 'policy_version': 'company-inclusion-v1', 'policy_kind': 'inclusion', 'content_sha256': '36291a28c690bd760c54698728c102c918d2471b87ab7f936c3557159e4e95d1', 'effective_at': '2026-08-22T02:53:33.617065Z'}, 'subject_identity_id': 'company-c-0016f96baf79206afb8ff6b1', 'release_id': 'candidate-v2-20260819-r1', 'path': None, 'outcome': 'admitted', 'score': None, 'limitations': [], 'hard_exclusion_codes': [], 'supporting_assertion_ids': [], 'evaluated_at': '2026-08-23T02:53:33.617065Z'} score row=None reconstructed=None limitations row=[] reconstructed=() hard_exclusion_codes row=[] reconstructed=() supporting_assertion_ids=() evaluated_at row=datetime.datetime(2026, 8, 23, 2, 53, 33, 617065, tzinfo=datetime.timezone.utc) reconstructed=datetime.datetime(2026, 8, 23, 2, 53, 33, 617065, tzinfo=datetime.timezone.utc) policy join content_sha256='36291a28c690bd760c54698728c102c918d2471b87ab7f936c3557159e4e95d1' effective_at=datetime.datetime(2026, 8, 22, 2, 53, 33, 617065, tzinfo=datetime.timezone.utc) reconstructed=PolicyReference(policy_id='canonical-v2-company-inclusion', policy_version='company-inclusion-v1', policy_kind=<PolicyKind.inclusion: 'inclusion'>, content_sha256='36291a28c690bd760c54698728c102c918d2471b87ab7f936c3557159e4e95d1', effective_at=datetime.datetime(2026, 8, 22, 2, 53, 33, 617065, tzinfo=datetime.timezone.utc))
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/longxiang/MiroThinker/.worktrees/data-rebuild/.agents/runs/rebuild-canonical-v2-knowledge-platform/s12a/complete_candidate_runner.py", line 1183, in main
+    candidate = builder.build(_build_request(config))
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/longxiang/MiroThinker/.worktrees/data-rebuild/apps/miroflow-agent/src/data_agents/canonical_v2/knowledge_build_isolated.py", line 9500, in build
+    self._persist_owners(graph)
+  File "/home/longxiang/MiroThinker/.worktrees/data-rebuild/apps/miroflow-agent/src/data_agents/canonical_v2/knowledge_build_isolated.py", line 9239, in _persist_owners
+    raise IsolatedKnowledgeBuildError(
+src.data_agents.canonical_v2.knowledge_build_isolated.IsolatedKnowledgeBuildError: typed store conflict while persisting domain: durable inclusion decision envelope/hash is inconsistent: content_sha256: row='beb7102ea4804c63dd2e32d0011e09d533036df004484df11a28d40b9ef4a453' reconstructed='a9c677cc7708a47df2c008e69892d153d208c46203544abac9e0e5348e16671c' decision_id='domain-inclusion:sha256:c1acb38b63941c1eba796b1362edc650909bcbe3564fb3f682587babe88a1513' path=None outcome row='admitted' reconstructed=<PolicyOutcome.admitted: 'admitted'> subject row='company-c-0016f96baf79206afb8ff6b1' reconstructed='company-c-0016f96baf79206afb8ff6b1' release row='candidate-v2-20260819-r1' reconstructed='candidate-v2-20260819-r1' entity_type='company' full_reconstructed_dump={'decision_id': 'domain-inclusion:sha256:c1acb38b63941c1eba796b1362edc650909bcbe3564fb3f682587babe88a1513', 'policy': {'policy_id': 'canonical-v2-company-inclusion', 'policy_version': 'company-inclusion-v1', 'policy_kind': 'inclusion', 'content_sha256': '36291a28c690bd760c54698728c102c918d2471b87ab7f936c3557159e4e95d1', 'effective_at': '2026-08-22T02:53:33.617065Z'}, 'subject_identity_id': 'company-c-0016f96baf79206afb8ff6b1', 'release_id': 'candidate-v2-20260819-r1', 'path': None, 'outcome': 'admitted', 'score': None, 'limitations': [], 'hard_exclusion_codes': [], 'supporting_assertion_ids': [], 'evaluated_at': '2026-08-23T02:53:33.617065Z'} score row=None reconstructed=None limitations row=[] reconstructed=() hard_exclusion_codes row=[] reconstructed=() supporting_assertion_ids=() evaluated_at row=datetime.datetime(2026, 8, 23, 2, 53, 33, 617065, tzinfo=datetime.timezone.utc) reconstructed=datetime.datetime(2026, 8, 23, 2, 53, 33, 617065, tzinfo=datetime.timezone.utc) policy join content_sha256='36291a28c690bd760c54698728c102c918d2471b87ab7f936c3557159e4e95d1' effective_at=datetime.datetime(2026, 8, 22, 2, 53, 33, 617065, tzinfo=datetime.timezone.utc) reconstructed=PolicyReference(policy_id='canonical-v2-company-inclusion', policy_version='company-inclusion-v1', policy_kind=<PolicyKind.inclusion: 'inclusion'>, content_sha256='36291a28c690bd760c54698728c102c918d2471b87ab7f936c3557159e4e95d1', effective_at=datetime.datetime(2026, 8, 22, 2, 53, 33, 617065, tzinfo=datetime.timezone.utc))
+complete candidate runner failed: IsolatedKnowledgeBuildError

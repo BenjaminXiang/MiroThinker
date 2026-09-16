@@ -1,0 +1,240 @@
+[
+  {
+    "kind": "company",
+    "qtype": "点名",
+    "query": "深圳市飞象工业科技有限公司",
+    "target": "深圳市飞象工业科技有限公司",
+    "expect": "exact"
+  },
+  {
+    "kind": "company",
+    "qtype": "点名",
+    "query": "新濠天地控股集团有限公司",
+    "target": "新濠天地控股集团有限公司",
+    "expect": "exact"
+  },
+  {
+    "kind": "company",
+    "qtype": "点名",
+    "query": "高宝睡眠科技（深圳）有限公司",
+    "target": "高宝睡眠科技（深圳）有限公司",
+    "expect": "exact"
+  },
+  {
+    "kind": "company",
+    "qtype": "点名",
+    "query": "Future Mobility Corporation Ltd",
+    "target": "Future Mobility Corporation Ltd",
+    "expect": "exact"
+  },
+  {
+    "kind": "company",
+    "qtype": "点名",
+    "query": "ByteDance Ltd.",
+    "target": "ByteDance Ltd.",
+    "expect": "exact"
+  },
+  {
+    "kind": "company",
+    "qtype": "点名",
+    "query": "深圳市新华鹏激光设备有限公司",
+    "target": "深圳市新华鹏激光设备有限公司",
+    "expect": "exact"
+  },
+  {
+    "kind": "company",
+    "qtype": "点名",
+    "query": "字节跳动",
+    "target": "ByteDance Ltd.",
+    "expect": "exact"
+  },
+  {
+    "kind": "professor",
+    "qtype": "点名",
+    "query": "洪子扬",
+    "target": "洪子扬",
+    "expect": "exact"
+  },
+  {
+    "kind": "professor",
+    "qtype": "点名",
+    "query": "金春媛",
+    "target": "金春媛",
+    "expect": "exact"
+  },
+  {
+    "kind": "professor",
+    "qtype": "点名",
+    "query": "刘晓光",
+    "target": "刘晓光",
+    "expect": "exact"
+  },
+  {
+    "kind": "professor",
+    "qtype": "点名",
+    "query": "王恺",
+    "target": "王恺",
+    "expect": "exact"
+  },
+  {
+    "kind": "professor",
+    "qtype": "点名",
+    "query": "徐斌",
+    "target": "徐斌",
+    "expect": "exact"
+  },
+  {
+    "kind": "patent",
+    "qtype": "点名",
+    "query": "CN117180760A",
+    "target": "CN117180760A",
+    "expect": "exact"
+  },
+  {
+    "kind": "patent",
+    "qtype": "点名",
+    "query": "CN222494275U",
+    "target": "CN222494275U",
+    "expect": "exact"
+  },
+  {
+    "kind": "patent",
+    "qtype": "点名",
+    "query": "CN116038707A",
+    "target": "CN116038707A",
+    "expect": "exact"
+  },
+  {
+    "kind": "paper",
+    "qtype": "点名",
+    "query": "High‐Performance [001]c‐Textured PNN‐PZT Relaxor Ferroelectr",
+    "target": "High‐Performance [001]c‐Textured PNN‐PZT Relaxor Ferroelectric Ceramics for Electromechanical Coupling Devices",
+    "expect": "exact"
+  },
+  {
+    "kind": "paper",
+    "qtype": "点名",
+    "query": "Magnetic topological transistor exploiting layer-selective t",
+    "target": "Magnetic topological transistor exploiting layer-selective transport",
+    "expect": "exact"
+  },
+  {
+    "kind": "paper",
+    "qtype": "点名",
+    "query": "Decentralized multiarea robust generation unit and tie-line ",
+    "target": "Decentralized multiarea robust generation unit and tie-line scheduling under wind power uncertainty",
+    "expect": "exact"
+  },
+  {
+    "kind": "paper",
+    "qtype": "点名",
+    "query": "Trend prediction of Stock Industry Index Based on Financial ",
+    "target": "Trend prediction of Stock Industry Index Based on Financial Text",
+    "expect": "exact"
+  },
+  {
+    "kind": "paper",
+    "qtype": "点名-池外",
+    "query": "Mask-Enhanced Autoregressive Prediction: Pay Less Attention ",
+    "target": "Mask-Enhanced Autoregressive Prediction: Pay Less Attention to Learn More",
+    "expect": "exact"
+  },
+  {
+    "kind": "paper",
+    "qtype": "点名-池外",
+    "query": "Crop selection reduces potential heavy metal(loid)s health r",
+    "target": "Crop selection reduces potential heavy metal(loid)s health risk in wastewater contaminated agricultural soils",
+    "expect": "exact"
+  },
+  {
+    "kind": "paper",
+    "qtype": "点名-池外",
+    "query": "Genetic Aberrations in Imatinib-Resistant Dermatofibrosarcom",
+    "target": "Genetic Aberrations in Imatinib-Resistant Dermatofibrosarcoma Protuberans Revealed by Whole Genome Sequencing",
+    "expect": "exact"
+  },
+  {
+    "kind": "paper",
+    "qtype": "点名-池外",
+    "query": "Gradually Enhanced Adversarial Perturbations on Color Pixel ",
+    "target": "Gradually Enhanced Adversarial Perturbations on Color Pixel Vectors for Image Steganography",
+    "expect": "exact"
+  },
+  {
+    "kind": "paper",
+    "qtype": "点名-池外",
+    "query": "Large-Scale Land Cover Mapping with Fine-Grained Classes via",
+    "target": "Large-Scale Land Cover Mapping with Fine-Grained Classes via Class-Aware Semi-Supervised Semantic Segmentation",
+    "expect": "exact"
+  },
+  {
+    "kind": "company",
+    "qtype": "属性",
+    "query": "深圳市银众信息技术有限公司是做什么的",
+    "target": "深圳市银众信息技术有限公司",
+    "expect": "semantic"
+  },
+  {
+    "kind": "company",
+    "qtype": "属性",
+    "query": "深圳未艾教育科技有限公司是做什么的",
+    "target": "深圳未艾教育科技有限公司",
+    "expect": "semantic"
+  },
+  {
+    "kind": "professor",
+    "qtype": "属性",
+    "query": "姬生健的研究方向",
+    "target": "姬生健",
+    "expect": "semantic"
+  },
+  {
+    "kind": "professor",
+    "qtype": "属性",
+    "query": "Yang Jian的研究方向",
+    "target": "Yang Jian",
+    "expect": "semantic"
+  },
+  {
+    "kind": "company",
+    "qtype": "关系",
+    "query": "深圳智赛精密装备有限公司有哪些专利",
+    "target": "深圳智赛精密装备有限公司",
+    "expect": "relationship"
+  },
+  {
+    "kind": "company",
+    "qtype": "关系",
+    "query": "陶世智能科技（深圳）有限公司有哪些专利",
+    "target": "陶世智能科技（深圳）有限公司",
+    "expect": "relationship"
+  },
+  {
+    "kind": "company",
+    "qtype": "关系",
+    "query": "深圳威洛博机器人有限公司有哪些专利",
+    "target": "深圳威洛博机器人有限公司",
+    "expect": "relationship"
+  },
+  {
+    "kind": "professor",
+    "qtype": "关系",
+    "query": "杨贤的论文",
+    "target": "杨贤",
+    "expect": "relationship"
+  },
+  {
+    "kind": "professor",
+    "qtype": "关系",
+    "query": "陈名华的论文",
+    "target": "陈名华",
+    "expect": "relationship"
+  },
+  {
+    "kind": "professor",
+    "qtype": "关系",
+    "query": "邵明文的论文",
+    "target": "邵明文",
+    "expect": "relationship"
+  }
+]

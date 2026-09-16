@@ -1,0 +1,102 @@
+{
+  "pack": {
+    "total_docs": 32941,
+    "by_domain": {
+      "company": 7089,
+      "paper": 10390,
+      "patent": 11504,
+      "professor": 3958
+    },
+    "eligibility_outcomes": {
+      "admitted": 32941
+    }
+  },
+  "scope_gap": {
+    "company": {
+      "pool": 6514,
+      "pack": 7089,
+      "pool_not_in_pack": 0,
+      "coverage": 1.0
+    },
+    "professor": {
+      "pool": 3650,
+      "pack": 3939,
+      "pool_not_in_pack": 2,
+      "coverage": 0.9995
+    },
+    "patent": {
+      "pool": 11408,
+      "pack": 11504,
+      "pool_not_in_pack": 0,
+      "coverage": 1.0
+    },
+    "paper": {
+      "pool": 24058,
+      "pack": 10384,
+      "pool_not_in_pack": 14189,
+      "coverage": 0.4102
+    }
+  },
+  "scope_gap_samples": {
+    "company": [],
+    "professor": [
+      "曾国松",
+      "隋文"
+    ],
+    "patent": [],
+    "paper": [
+      "$\\mathcal {o}^{2}$-ucb: a federated multi-armed bandit mechanism in zero client-owned data network",
+      "$\\text {gpuscan}^{++}$: efficient structural graph clustering on gpus",
+      "$l_1$-regularized stap algorithms with a generalized sidelobe canceler architecture for airborne radar",
+      "$n$ -dimensional discrete cat map generation using laplace expansions",
+      "$u(n)$-invariant kähler metrics with nonnegative quadratic bisectional curvature"
+    ]
+  },
+  "alias": {
+    "company": {
+      "total": 7089,
+      "alias_filled": 342,
+      "en_legal_style": 2,
+      "en_legal_without_any_cjk": 2,
+      "en_no_cjk_samples": [
+        "Future Mobility Corporation Ltd",
+        "ByteDance Ltd."
+      ]
+    },
+    "professor": {
+      "total": 3958,
+      "alias_filled": 0,
+      "name_en_filled": 278
+    }
+  },
+  "bindings": {
+    "applicant_binding_status": {
+      "individual": 52,
+      "institution": 125,
+      "unresolved": 1239,
+      "resolved": 957
+    },
+    "companies_with_resolved_patent_binding": 950,
+    "prof_paper_link_status": {
+      "verified": 18655
+    },
+    "professors_with_any_paper_link": 907,
+    "professors_total": 3652
+  },
+  "field_floor_ratio": {
+    "company": {
+      "business": 0.9991,
+      "product_summary": 0.8715,
+      "industry": 0.9983
+    },
+    "paper": {
+      "abstract": 0.4923,
+      "summary_zh": 0.7471,
+      "doi": 0.9795
+    },
+    "professor": {
+      "research_directions": 0.3699,
+      "institution": 1.0
+    }
+  }
+}

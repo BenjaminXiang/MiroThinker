@@ -1,0 +1,55 @@
+{
+  "admitted_objects": 47072,
+  "document_binding_entries": 7614,
+  "document_binding_pairs": 7611,
+  "document_bound_companies": 960,
+  "document_bound_patents": 7042,
+  "pack": "/var/tmp/mirothinker-data-v2/serving-pack-run15-sealed",
+  "post_fix": {
+    "missing_document_pairs": 0,
+    "missing_sample": [],
+    "patent_has_applicant_edges": 7611,
+    "reconciliation_rejected": false,
+    "seeding_lanes": {
+      "resolved_binding": 7611
+    },
+    "typed_seed_types": {
+      "patent_has_applicant": 7611
+    }
+  },
+  "pre_fix": {
+    "missing_document_pairs": 7489,
+    "missing_sample": [
+      [
+        "patent-c-506a9001c2830a9ff9283b09",
+        "company-c-62565829fae3039e2833633b"
+      ],
+      [
+        "patent-c-7128c5f1423de0f99c46dc26",
+        "company-c-23f9510dd5a06b21f28e567e"
+      ],
+      [
+        "patent-c-93f637cc4bd07038ff956c8e",
+        "company-c-c73130a9ae9ab79125684ce6"
+      ],
+      [
+        "patent-c-c01977dc9544ac5860962e30",
+        "company-c-899a2f807256a08b38d4b61c"
+      ],
+      [
+        "patent-c-faee4932fdd38e15a1b827f6",
+        "company-c-33fda95c854fe4cd4a606572"
+      ]
+    ],
+    "patent_has_applicant_edges": 122,
+    "reconciliation_rejected": true,
+    "seeding_lanes": {
+      "resolved_binding": 122
+    },
+    "typed_seed_types": {
+      "patent_has_applicant": 122
+    }
+  },
+  "relationship_edges_in_pack": 123,
+  "released_objects": 5561
+}

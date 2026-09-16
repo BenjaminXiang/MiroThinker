@@ -1202,7 +1202,8 @@ def main(
         return 0
     except CompleteCandidateRunnerError as exc:
         print(
-            f"complete candidate runner failed: {type(exc).__name__}", file=sys.stderr
+            f"complete candidate runner failed: {type(exc).__name__}: {exc}",
+            file=sys.stderr,
         )
         return 2
     except Exception as exc:
@@ -1210,7 +1211,8 @@ def main(
 
         _traceback.print_exc()
         print(
-            f"complete candidate runner failed: {type(exc).__name__}", file=sys.stderr
+            f"complete candidate runner failed: {type(exc).__name__}: {exc}",
+            file=sys.stderr,
         )
         return 2
 

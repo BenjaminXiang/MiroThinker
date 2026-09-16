@@ -1,0 +1,38 @@
+{
+  "applicant_binding_full": {
+    "byte_size": 744528,
+    "content_sha256": "46c7337ab9b15d9c2a15dc235c6f683a73c9db05fbf8cd4673bbe578601d30f5",
+    "filename": "p4-applicant-binding-full-v1.jsonl",
+    "records": 2373
+  },
+  "company_full": {
+    "byte_size": 9010377,
+    "content_sha256": "112ee058013912ea9d5a17aa5b7162e6710cec98eb786405a261c3738991b019",
+    "filename": "p4-company-full-v1.jsonl",
+    "records": 6514
+  },
+  "paper_salvage": {
+    "byte_size": 39620884,
+    "content_sha256": "23bed7a3c18b75ca915a5fd67220b96f83fc77e392b6e053dc373507bc23acb3",
+    "filename": "p4-paper-salvage-v1.jsonl",
+    "records": 24101
+  },
+  "patent_full": {
+    "byte_size": 25530112,
+    "content_sha256": "04536c4f55dc69595d44c629111fd38e9bd0766f4225d04c720e12ead1abf2a6",
+    "filename": "p4-patent-full-v1.jsonl",
+    "records": 11408
+  },
+  "professor_full": {
+    "byte_size": 10080151,
+    "content_sha256": "6d8dd6ed53183d24a15a69d5f0dd523f64512c032b2b5746489ad8d0b538faef",
+    "filename": "p4-professor-full-v1.jsonl",
+    "records": 3735
+  },
+  "professor_paper_links": {
+    "byte_size": 4850870,
+    "content_sha256": "6e1adbd92bd501777314be6e31ce2dae6a5024c7a06dd0e93130278862fd7ef8",
+    "filename": "p4-professor-paper-links-v1.jsonl",
+    "records": 18655
+  }
+}
