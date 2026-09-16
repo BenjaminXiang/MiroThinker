@@ -193,3 +193,27 @@ identifier 单测）：**384 passed**；admin-console（引用卡 + 相关契约
 
 **影响哪些问题**：切包链路从"隐含假设两棵树同码"变成"显式合流一次"；此后 run17+ 的封印应直接
 在合流线上跑（runbook §4/§5 的树引用需同步更新）。
+
+### 轮次追加（2026-09-17 早）：run16 封印成功 → 18188 切包完成（replay 7/7 + 探针全过 + 回滚演练）
+
+**做了什么**：
+1. **v1→v2 index 迁移**：`convert_index_to_v2.py`（index-v3 → index-v3-v2；51,026 点、lookup 668→896MB、无 milvus.db；源只读）——约 1 分钟。
+2. **封印第 3 次**（06:05 从合流树发射，INDEX_ROOT=index-v3-v2）：**成功**。phases：`envelope_validate 1936.1s` /
+   `index_snapshot_verify 10.3s` / `index_artifacts_copied 1.7s` / `authority_documents_written 168.8s` /
+   `manifest_written 5.5s` / `dogfood_open 312.4s`。pack = lookup 896MB + relationships 3.48GB +
+   manifest 11.1MB + marker + catalog（无 milvus.db）。
+3. **切包**（runbook §5）：bundle（content_sha `0a09aecd…`）→ 命令文件（9 处身份替换全数命中）→
+   活线 ff `5afdb6f6→8fc0fa7f` → 命令文件切换 → restart。**boot 11 分 20 秒**，boot 日志 **"milvus" 0 次**
+   （v2 契约生效）。
+4. **验收（18188 实机）**：replay 门 **7/7 ALL PASS**；探针「字节跳动」→ **ByteDance Ltd.**（TTFT 0.49s /
+   总 7.3s）；「优必选有哪些专利」→ **32 个本地 CN**（TTFT 0.66s / 总 21.6s）；国先案例 → 本地 company 引用
+   （TTFT 0.85s）。
+5. **回滚演练**：切回 run15 命令 → restart（boot 12 分 13 秒）→「字节跳动」探针 PASS（TTFT 0.76s）→
+   切回 run16（07:26 restart）。
+
+**发现了什么（流程固化）**：封印路径上有两个此前未列入 runbook 的手续——① 信封 replay 要求封印树含
+**构建线代码**（→ 两线合流）；② v2 封印要求**已转换的 index root**（→ `convert_index_to_v2.py`）。
+run17+ 应从合流线封印、并用转换后的 root；runbook §4/§5 的树与路径引用已按此更新。
+
+**影响哪些问题**：run16 全链（构建 → 封印 → 切包）闭环；18188 现役 = run16 包（v2 契约）+
+`candidate-v2-20260916_r1` 库 + `index-v3-v2`；回滚资产（run15 命令/pack/index-v2）实测可用。
