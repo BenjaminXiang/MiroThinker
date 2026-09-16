@@ -25,8 +25,14 @@ from typing import Any
 
 import pytest
 from src.data_agents.canonical_v2 import serving_pack_loader as pack_loader
+from src.data_agents.canonical_v2.domain_catalog import (
+    CATALOG_CONTENT_SHA256,
+    CATALOG_SCHEMA_VERSION,
+    CATALOG_VERSION,
+)
 from src.data_agents.canonical_v2.domain_projection_models import (
     CompanyProjection,
+    PaperProjection,
     ProfessorProjection,
 )
 
@@ -47,7 +53,11 @@ D0A_FIELDS = {
     ),
 }
 
-MODELS = {"company": CompanyProjection, "professor": ProfessorProjection}
+MODELS = {
+    "company": CompanyProjection,
+    "paper": PaperProjection,
+    "professor": ProfessorProjection,
+}
 
 
 def _canonical_sha256(value: Any) -> str:
@@ -108,3 +118,66 @@ def test_loader_parse_helper_accepts_null_d0a_fields(domain: str) -> None:
     parsed = pack_loader._parse_model(MODELS[domain], bound, owner=owner)
     for field in D0A_FIELDS[domain]:
         assert getattr(parsed, field) is None
+
+
+def test_paper_venue_null_is_accepted_by_the_serving_model() -> None:
+    """run16 papers without a venue publish `venue: null` (P4 salvage fallback).
+
+    The venue fixture is built inline because the run15-derived fixture above
+    carries only company and professor records; the envelope shape mirrors the
+    data-line test that pins the same contract.
+    """
+    payload = {
+        "canonical_identity_id": "paper-c-fixture",
+        "identity_decision_id": "identity-decision:fixture",
+        "inclusion_decision_id": "inclusion:fixture",
+        "projection_version": "domain-projection-v1",
+        "catalog_schema_version": CATALOG_SCHEMA_VERSION,
+        "catalog_version": CATALOG_VERSION,
+        "catalog_content_sha256": CATALOG_CONTENT_SHA256,
+        "as_of": "2026-09-15T00:00:00+00:00",
+        "last_updated": "2026-09-15T00:00:00+00:00",
+        "quality_status": "partial",
+        "run_id": "fixture-run",
+        "content_sha256": "0" * 64,
+        "release_id": "candidate-fixture",
+        "field_lineage": [
+            {
+                "field_path": "title",
+                "decision_id": "decision:fixture",
+                "supporting_assertion_ids": ["assertion:fixture"],
+            }
+        ],
+        "evidence": [
+            {
+                "assertion_id": "assertion:fixture",
+                "decision_id": "decision:fixture",
+                "field_path": "title",
+            }
+        ],
+        "id": "paper-c-fixture",
+        "title": "Traceable Knowledge Graphs",
+        "year": 2025,
+        "authors": [
+            {
+                "subobject_id": "paper-author:paper-c-fixture:1",
+                "parent_canonical_identity_id": "paper-c-fixture",
+                "supporting_assertion_ids": ["assertion:fixture"],
+                "decision_ids": ["decision:fixture"],
+                "observed_at": "2026-09-15T00:00:00+00:00",
+                "projection_content_sha256": "0" * 64,
+                "name": "Ada Chen",
+                "author_order": 1,
+            }
+        ],
+        "venue": None,
+    }
+    # A synthetic record cannot bind the installed catalog identity, so the
+    # strict pass (and `pack_loader._parse_model`) needs a real run15-derived
+    # paper record; the claim here is the model contract that `venue: null` is
+    # legal.  The loader entry point itself is covered by the run15-derived
+    # company/professor records above and by the switchover pack load.
+    projection = MODELS["paper"].model_validate(
+        payload, context={"allow_unbound_projection_hash": True}
+    )
+    assert projection.venue is None
