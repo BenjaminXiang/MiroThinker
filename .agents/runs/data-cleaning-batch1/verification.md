@@ -299,3 +299,30 @@ Detection: the run16 watchdog writes `run16-failure-report-<ts>.md` the moment
 the runner disappears (log tails + artifact state + triage checklist), and a
 10-minute cron wakes the session to triage; the dossier is what made this
 diagnosis immediate instead of another hours-late discovery.
+
+## run16 attempt 5 — venue cleaning meets the typed projection (2026-09-16)
+
+Attempt 5 (14:45) passed the publication gate's placeholder check and then
+aborted in `domain_projection.project_identity`:
+
+```
+invalid typed paper projection: PaperProjection.venue
+  Input should be a valid dictionary or instance of NamedReference
+  [input_value=None]
+```
+
+This is the direct fallout of `fee2fc85`: cleaning the placeholder venue to
+absent is correct, but `PaperProjection.venue` was still required, so the
+cleaned projection failed typed validation.  (Net effect: the fallback was
+never a legal published value — the model and the gate simply disagreed about
+where to enforce it.)
+
+Fix: `PaperProjection.venue: NamedReference | None = None` (data-line
+`41a8d96e`, the same pattern D0-a used for the professor/company fields),
+pinned by the RED/GREEN test `test_paper_projection_accepts_an_absent_venue`;
+135 passed across the D0-a/D1-a suites.
+
+Serving side: the run16 pack will carry `venue: null`, so the serving model
+takes the same field — `feat/serving-model-sync` `c1c17ad5` (new test
+`test_paper_venue_null_is_accepted_by_the_serving_model`), merged into the
+switchover tree `codex/canonical-v2-run16-ready` (`c2d2c246`, 78 passed).

@@ -124,7 +124,7 @@ setsid nohup bash .agents/runs/full-column-serving-pack-rebuild/build-run16.sh \
 
 **发射历史**：attempt 1/2 死于环境（进程组被回收 / 信封路径处置）；attempt 3（09-15 22:53）
 跑到 09-16 00:32 被 D0-a 发布门拦下（`placeholder values published: 5`，根因＝补充通道未过
-清洗，见 data-cleaning-batch1 日志轮次追加）；修复 `3a9f9149` 后 attempt 4（09-16 11:01）发射；attempt 4 又被同一道门拦下但**门已点名**（`paper.venue.name: 未提供期刊出处` —— venue 引用型字段漏在清洗清单外），修复 `fee2fc85` 后 **attempt 5（09-16 14:45）**发射。**失败巡检机制**：watchdog 落 `run16-failure-report-<ts>.md` ＋10 分钟 cron 四态巡检（运行中/成功/失败/CPU 冻结）。
+清洗，见 data-cleaning-batch1 日志轮次追加）；修复 `3a9f9149` 后 attempt 4（09-16 11:01）发射；attempt 4 又被同一道门拦下但**门已点名**（`paper.venue.name: 未提供期刊出处` —— venue 引用型字段漏在清洗清单外），修复 `fee2fc85` 后 **attempt 5（09-16 14:45）**发射。**失败巡检机制**：watchdog 落 `run16-failure-report-<ts>.md` ＋10 分钟 cron 四态巡检（运行中/成功/失败/CPU 冻结）。attempt 5（09-16 14:45）过了占位门、倒在类型化投影（`PaperProjection.venue` 必填 vs 清洗置空），修复 `41a8d96e`（模型可空）＋服务线 `c1c17ad5` 后 **attempt 6（09-16 16:13）**发射。
 
 ## 4. 封印（pack v2）
 
