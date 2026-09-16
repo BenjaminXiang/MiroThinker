@@ -1,0 +1,179 @@
+{
+  "batches": {
+    "p4-applicant-binding-full-v1": {
+      "fields": {
+        "confidence": {
+          "count": 1416,
+          "covered": null,
+          "published": null
+        },
+        "missing:resolved_company": {
+          "count": 1416,
+          "covered": true,
+          "published": "patent.applicants"
+        },
+        "resolved_company": {
+          "count": 1416,
+          "covered": true,
+          "published": "patent.applicants"
+        }
+      },
+      "records": 2373
+    },
+    "p4-company-full-v1": {
+      "fields": {
+        "application_scenarios": {
+          "count": 1162,
+          "covered": true,
+          "published": "company.technology_route_summary"
+        },
+        "business": {
+          "count": 1,
+          "covered": true,
+          "published": "company.technology_route_summary"
+        },
+        "company_type": {
+          "count": 6,
+          "covered": null,
+          "published": null
+        },
+        "email": {
+          "count": 208,
+          "covered": null,
+          "published": null
+        },
+        "industry": {
+          "count": 1,
+          "covered": true,
+          "published": "company.industry"
+        },
+        "legal_representative": {
+          "count": 1,
+          "covered": null,
+          "published": null
+        },
+        "missing:business": {
+          "count": 6,
+          "covered": true,
+          "published": "company.technology_route_summary"
+        },
+        "missing:product_summary": {
+          "count": 837,
+          "covered": true,
+          "published": "company.product_description"
+        },
+        "phone": {
+          "count": 276,
+          "covered": null,
+          "published": null
+        },
+        "product_features": {
+          "count": 1541,
+          "covered": true,
+          "published": "(unused by the builder)"
+        },
+        "product_summary": {
+          "count": 1257,
+          "covered": true,
+          "published": "company.product_description"
+        },
+        "registered_address": {
+          "count": 4,
+          "covered": null,
+          "published": null
+        },
+        "team": {
+          "count": 986,
+          "covered": true,
+          "published": "company.team_description"
+        },
+        "website": {
+          "count": 1143,
+          "covered": true,
+          "published": "company.website"
+        }
+      },
+      "records": 6514
+    },
+    "p4-paper-salvage-v1": {
+      "fields": {
+        "missing:venue": {
+          "count": 6,
+          "covered": true,
+          "published": "paper.venue"
+        }
+      },
+      "records": 24101
+    },
+    "p4-patent-full-v1": {
+      "fields": {
+        "missing:technology_effect": {
+          "count": 258,
+          "covered": true,
+          "published": "patent.technology_effect"
+        }
+      },
+      "records": 11408
+    },
+    "p4-professor-full-v1": {
+      "fields": {
+        "education_structured": {
+          "count": 11,
+          "covered": null,
+          "published": null
+        },
+        "evaluation_summary": {
+          "count": 2,
+          "covered": null,
+          "published": null
+        },
+        "missing:department": {
+          "count": 1222,
+          "covered": true,
+          "published": "professor.department"
+        },
+        "missing:email": {
+          "count": 1231,
+          "covered": true,
+          "published": "professor.email"
+        },
+        "missing:profile_summary": {
+          "count": 2,
+          "covered": true,
+          "published": "professor.profile_summary"
+        },
+        "missing:title": {
+          "count": 2674,
+          "covered": true,
+          "published": "professor.title"
+        },
+        "profile_summary": {
+          "count": 2,
+          "covered": true,
+          "published": "professor.profile_summary"
+        },
+        "research_directions": {
+          "count": 722,
+          "covered": true,
+          "published": "professor.research_directions"
+        },
+        "top_papers": {
+          "count": 1,
+          "covered": null,
+          "published": null
+        },
+        "work_experience": {
+          "count": 1,
+          "covered": null,
+          "published": null
+        }
+      },
+      "records": 3735
+    },
+    "p4-professor-paper-links-v1": {
+      "fields": {},
+      "records": 18655
+    }
+  },
+  "uncovered": {}
+}
