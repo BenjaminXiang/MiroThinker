@@ -322,7 +322,7 @@ _DECODABLE_EMAIL_PATTERN = re.compile(
     r"^[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)*\."
     r"(?:biz|cn|com|edu|gov|info|io|me|net|org)$"
 )
-_EXPECTED_ALEMBIC_REVISION = "C2_0014"
+_EXPECTED_ALEMBIC_REVISION = "C2_0015"
 _OWNER_SCHEMAS = (
     "company",
     "knowledge",
@@ -384,11 +384,13 @@ _EXPECTED_LIVE_SCHEMA_CATALOG_COUNTS = {
     "trigger": 267,
     "view": 1,
 }
-# C2_0014 adds the six partial guard indexes, so both frozen live-schema
-# expectations moved with the migration (proved stable across two independently
-# migrated scratch databases before the run16 launch).
+# Every migration moves these frozen expectations: C2_0014 added the six
+# partial guard indexes (index count 168 -> 174); C2_0015 dropped NOT NULL from
+# the optional projection columns (counts unchanged, column definitions moved
+# the catalog hash).  Both values were proved stable across two independently
+# migrated scratch databases.
 _EXPECTED_LIVE_SCHEMA_CATALOG_SHA256 = (
-    "8a73896463c36980290ee5d92dd739ba4cd8e869207da8d5d8bf28bbd05d1c8e"
+    "08aa5c3f372d2e215edddad90835d41985e101ba4fc166806d2d10b6cadf46f6"
 )
 _LIBPQ_CONNECTION_ENVIRONMENT_KEYS = frozenset(
     {

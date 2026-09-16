@@ -214,3 +214,25 @@ def test_minimum_revision_rejects_a_synthetic_multi_parent_graph(
             current_revision="merge",
             minimum_revision="root",
         )
+
+
+def test_c2_0015_relaxes_exactly_the_reviewed_projection_columns() -> None:
+    """Pin the migration scope: the optional projection fields, nothing else."""
+    from canonical_v2_alembic.versions import (  # type: ignore[import-not-found]
+        C2_0015_relax_optional_projection_columns as migration,
+    )
+
+    assert migration.revision == "C2_0015"
+    assert migration.down_revision == "C2_0014"
+    assert migration.TARGETS == (
+        ("company", "current_projection", "profile_summary"),
+        ("company", "current_projection", "technology_route_summary"),
+        ("paper", "current_projection", "venue"),
+        ("professor", "current_projection", "department"),
+        ("professor", "current_projection", "email"),
+        ("professor", "current_projection", "homepage"),
+        ("professor", "current_projection", "paper_summary"),
+        ("professor", "current_projection", "patent_summary"),
+        ("professor", "current_projection", "profile_summary"),
+        ("professor", "current_projection", "title"),
+    )
