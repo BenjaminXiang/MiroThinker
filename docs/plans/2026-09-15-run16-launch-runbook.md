@@ -135,7 +135,11 @@ setsid nohup bash .agents/runs/full-column-serving-pack-rebuild/build-run16.sh \
    —— 用**生产分类器**（占位族/粘连/研究方向垃圾）加"兜底触发字段为空"扫全部 P4 批次，
    把每个风险字段映射到发布字段并断言清洗表已覆盖；出现 `UNCOVERED` 即 exit 1。
    （venue 缺口正是这一类；修正映射后当前全绿。）
-2. **修复类 RED/GREEN 单测** + D0-a/D1-a 定向套件（既有惯例）。
+2. **修复类 RED/GREEN 单测** + D0-a/D1-a 定向套件，并跑**模型⇄schema 空值门**
+   （`apps/miroflow-agent/scripts/run_canonical_v2_pg_regression.sh`，秒级）：它断言"默认为 None
+   的模型字段都有可空列、且四个 current_projection 表上没有拒 NULL 的 CHECK"。已用
+   C2_0014 对照证明能逐项点名 attempt 5/6/7 的违规项（company 2 列 / paper venue+约束 /
+   professor 7 列+约束），head 上通过。
 3. **端到端 mini 重演**（`build-mini.sh`，可选）：整链重演（同一 runner，独立 DB/staging/index/信封）。
    注意：按 run16 的输入构成它已不再"小"——要覆盖风险路径就得纳入全部六批 P4，体积与 full 逐条
    相同（111MB、同一集合）；因此它用于**结构变更时的整链重演**，不是常规快检。
