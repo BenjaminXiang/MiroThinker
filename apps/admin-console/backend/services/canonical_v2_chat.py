@@ -2499,30 +2499,7 @@ class CanonicalV2ChatAdapter:
                     evidence,
                     official_hosts=official_hosts,
                 )
-            if official_url is None:
-                # Local knowledge-base evidence (the release's own lookup
-                # projections, traversal/field bindings, and field scans)
-                # carries no official URL whenever the domain has no public
-                # source page — the patent projection never has one; surface
-                # it as a URL-less local card so locally answered turns still
-                # expose their provenance. Web-derived evidence keeps
-                # requiring a validated official public URL.
-                if evidence.source_nature in {"current_web", "supplemental_web"}:
-                    continue
-                local_key = f"local:{handle_id}"
-                if local_key in seen:
-                    continue
-                seen.add(local_key)
-                local_id = hashlib.sha256(local_key.encode("utf-8")).hexdigest()[:16]
-                cards.append(
-                    ChatCitation(
-                        type=handle.domain,
-                        id=f"local-source-{local_id}",
-                        label=handle.display_name,
-                    )
-                )
-                continue
-            if official_url in seen:
+            if official_url is None or official_url in seen:
                 continue
             seen.add(official_url)
             public_id = hashlib.sha256(official_url.encode("utf-8")).hexdigest()[:16]
@@ -2564,9 +2541,11 @@ class CanonicalV2ChatAdapter:
             cards.append(
                 ChatCitation(
                     type=handle.domain,
-                    # The archive card cites the entity handle itself —
-                    # stable, and the public citation id stays the handle id.
-                    id=handle_id,
+                    # Public id stays hashed (the serving line's rule: never
+                    # expose the internal canonical id in a public citation
+                    # id); only the card's stability key is the handle.
+                    id="local-source-"
+                    + hashlib.sha256(f"local:{handle_id}".encode("utf-8")).hexdigest()[:16],
                     label=handle.display_name,
                     url=None,
                 )

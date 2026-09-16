@@ -8654,9 +8654,6 @@ def _matches_lexical_request(
                 domain == "company"
                 and _matches_transposed_company_name(query_phrase, display_terms)
             )
-            or _matches_query_identifier_token(
-                query_phrase, content_terms
-            )
         )
     )
 

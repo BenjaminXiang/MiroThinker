@@ -402,7 +402,11 @@ def test_local_evidence_without_official_url_surfaces_a_lane_independent_card() 
         },
     )
 
-    assert len(citations) == 1
+    # fix-web-citations (P2-B, merged with the data line): non-official web
+    # evidence now also surfaces a web-type source card (user rule 尽量能指出处);
+    # the local item keeps its URL-less local card. Both cards carry hashed
+    # public ids — the internal canonical id never reaches the client.
+    assert len(citations) == 2
     card = citations[0]
     assert card.type == "patent"
     assert card.id.startswith("local-source-")
@@ -410,6 +414,10 @@ def test_local_evidence_without_official_url_surfaces_a_lane_independent_card() 
     assert card.label == "一种机器人的落地控制方法、机器人及终端设备"
     assert "patent-c-0aef2768" not in card.id
     assert "artifact:" not in card.label
+    web_card = citations[1]
+    assert web_card.type == "web"
+    assert web_card.url == "https://patent-news.example/cn117873146a"
+    assert "patent-c-0aef2768" not in web_card.id
 
 
 @pytest.mark.parametrize(
@@ -1636,7 +1644,7 @@ def test_independent_turn_declares_topic_switch_but_referential_turn_does_not() 
         # Type-aware guard (G3): an untyped anchor cannot satisfy a personal
         # pronoun the way a person anchor can — 他/她 over a non-professor
         # anchor clarifies instead of free-retrieving.
-        ("他有哪些代表性研究成果", True, True, True),
+        ("他有哪些代表性研究成果", True, True, False),
         ("这论文的链接是什么", True, True, False),
         ("上述企业有哪些是深圳的", False, True, False),
         ("他有哪些代表性研究成果", False, True, True),
