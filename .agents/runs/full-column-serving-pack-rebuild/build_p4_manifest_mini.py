@@ -24,10 +24,17 @@ RESTORE_ROOT = Path(
 INVENTORY = json.loads((RUN_ROOT / "batch-inventory.json").read_text())
 
 BATCH_IDS = {
+    # All six P4 batches: the 2026-09-16 rehearsal lesson is that data-shaped
+    # landmines live in *specific* batches (the venue fallback came from
+    # paper_salvage; the company/patent fallbacks from their own batches), so a
+    # rehearsal that skips a batch can miss the next one.  Each source file is
+    # admitted whole because the build pins its exact bytes.
     "professor_full": "p4-professor-full-v1",
     "paper_salvage": "p4-paper-salvage-v1",
     "professor_paper_links": "p4-professor-paper-links-v1",
     "applicant_binding_full": "p4-applicant-binding-full-v1",
+    "company_full": "p4-company-full-v1",
+    "patent_full": "p4-patent-full-v1",
 }
 RATIONALES = {
     "professor_full": (
@@ -46,6 +53,14 @@ RATIONALES = {
     "applicant_binding_full": (
         "Mini rehearsal admits resolved applicant bindings to verify "
         "patent_has_applicant relationships materialize (G3 seeding)."
+    ),
+    "company_full": (
+        "Mini rehearsal admits the P4 company workbook so the profile/route "
+        "fallbacks and company cleaning rules run end-to-end."
+    ),
+    "patent_full": (
+        "Mini rehearsal admits the P4 patent workbook so the summary fallback "
+        "and patent cleaning rules run end-to-end."
     ),
 }
 
