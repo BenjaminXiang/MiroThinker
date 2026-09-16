@@ -106,3 +106,15 @@ paper.venue.name: 未提供期刊出处 ×4, +1)`。根因＝`_p4_paper_record` 
 `run16-failure-report-<ts>.md`（日志尾 + 产物体征 + triage 清单）；另设 10 分钟 cron
 唤醒会话巡检（运行中/成功/失败/CPU 冻结 四态判定）。本次正是它把"hours-late 发现"变成
 "立即定位"。
+
+### 轮次追加（2026-09-16 傍晚）：venue 清洗撞上投影模型（修复后 attempt 6）
+
+**发现了什么**：attempt 5 过了占位门，却在**类型化投影**处倒下：
+`PaperProjection.venue input_value=None`——venue 清成"缺省"是对的，但模型里
+`venue` 仍是必填，两者对"兜底值非法"的落点本来就不一致。修复＝把该字段改为可空
+（沿用 D0-a 对教授/公司字段的同一手法）。
+
+**怎么验证**：RED/GREEN `test_paper_projection_accepts_an_absent_venue`；
+D0-a/D1-a 六套件 **135 passed**；服务线同步（run16 包会带 `venue: null`）：
+`feat/serving-model-sync` `c1c17ad5` + 预合树 `c2d2c246`（**78 passed**）。
+修复提交 `41a8d96e`；**attempt 6（16:13）**发射。
