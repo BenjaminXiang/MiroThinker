@@ -326,3 +326,34 @@ Serving side: the run16 pack will carry `venue: null`, so the serving model
 takes the same field — `feat/serving-model-sync` `c1c17ad5` (new test
 `test_paper_venue_null_is_accepted_by_the_serving_model`), merged into the
 switchover tree `codex/canonical-v2-run16-ready` (`c2d2c246`, 78 passed).
+
+## run16 attempt 6 — the model relaxation meets the database (2026-09-16)
+
+Attempt 6 was the **first** attempt to reach the persistence stage (it passed
+the projection seam, the publication gate and the relationship seeding), and
+died there at 19:0x:
+
+```
+psycopg.errors.NotNullViolation: null value in column "technology_route_summary"
+of relation "current_projection" violates not-null constraint
+```
+
+Root cause: D0-a made nine projection fields optional in the typed models and
+the venue follow-up added a tenth, but the PostgreSQL `current_projection`
+columns still carried NOT NULL — the model and the schema disagreed, and only a
+build that reached `_persist_owners` could notice.
+
+Fix (data-line `ca50ae68`): migration **C2_0015** drops NOT NULL for the
+reviewed ten columns (company `profile_summary`/`technology_route_summary`,
+paper `venue`, professor `department`/`email`/`homepage`/`paper_summary`/
+`patent_summary`/`profile_summary`/`title`); `paper.title` and `patent.title`
+stay NOT NULL because no cleaning rule can null them.  The frozen
+live-schema catalog sha256 was recomputed on two independently migrated scratch
+databases (`08aa5c3f372d2e215edddad90835d41985e101ba4fc166806d2d10b6cadf46f6`,
+counts unchanged) and the migration scope is pinned by
+`test_c2_0015_relaxes_exactly_the_reviewed_projection_columns`.
+
+Cross-line check (verified, not assumed): the serving line tolerates a newer
+database without carrying the migration — the live service serves a **C2_0013**
+database while its own chain ends at C2_0012 (the revision checks live in
+build-side stores only).  Attempt 7 launched 19:06.

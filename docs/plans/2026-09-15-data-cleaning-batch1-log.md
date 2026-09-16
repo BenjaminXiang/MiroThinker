@@ -118,3 +118,18 @@ paper.venue.name: 未提供期刊出处 ×4, +1)`。根因＝`_p4_paper_record` 
 D0-a/D1-a 六套件 **135 passed**；服务线同步（run16 包会带 `venue: null`）：
 `feat/serving-model-sync` `c1c17ad5` + 预合树 `c2d2c246`（**78 passed**）。
 修复提交 `41a8d96e`；**attempt 6（16:13）**发射。
+
+### 轮次追加（2026-09-16 晚）：模型放宽撞上数据库 NOT NULL（修复后 attempt 7）
+
+**发现了什么**：attempt 6 **首次走到落库阶段**（越过了投影缝/发布门/关系播种），在
+`_persist_owners` 处倒下：`NotNullViolation: null value in column "technology_route_summary"`——
+D0-a 把 9 个投影字段改成可空、venue 追加为第 10 个，但 **PG 的 `current_projection` 列仍是
+NOT NULL**：模型与库schema对"占位值→缺省"的落点不一致，只有真正落库才暴露。
+
+**怎么验证**：迁移 **C2_0015** 放宽评审过的 10 列（company 2 + paper venue + professor 7；
+`paper.title`/`patent.title` 保持 NOT NULL，因为清洗规则永远不会把它们清空）；冻结的
+live-schema 目录 sha 在两个独立迁移的临时库上复算（`08aa5c3f…`，计数不变）；迁移范围由新
+测试逐列钉住。**跨线核查（已验证非假设）**：服务线能容忍更新的库而无需同步迁移——现役服务
+正在跑 **C2_0013** 的库，而它自己的链止于 C2_0012（版本检查只存在于构建侧 store）。
+
+修复 `ca50ae68`；**attempt 7（19:06）**发射。
