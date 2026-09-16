@@ -50,4 +50,5 @@ uv run pytest \
   tests/canonical_v2/test_canonical_identity_postgres.py \
   tests/canonical_v2/test_domain_projection_postgres.py \
   tests/canonical_v2/test_domain_inclusion_assertion_order.py \
+  tests/canonical_v2/test_projection_schema_nullability.py \
   -q
