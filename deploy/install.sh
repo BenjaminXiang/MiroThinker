@@ -19,8 +19,25 @@ PURGE_LINE="41 3 * * * $DEPLOY_DIR/purge-access-logs.sh >> $DEPLOY_DIR/backup.lo
   echo "$CRON_LINE"
   echo "$PURGE_LINE" ) | crontab -
 
+# 管理台账号库/会话密钥/首启口令都落在服务期状态目录；目录不存在时后端
+# 首启播种会失败（日志里只有一行 warning），所以这里先建好。
+STATE_DIR="${CANONICAL_V2_STATE_DIR:-/var/tmp/mirothinker-canonical-v2-s12f}"
+mkdir -p "$STATE_DIR"
+
 cat <<EOF
 安装完成。
+
+管理台登录（首启播种）：
+  - 首次启动时后端会创建一个 admin 账号，随机口令打印一次到 journalctl：
+      journalctl --user -u $UNIT_NAME | grep 'first-boot administrator'
+  - 同一口令同时写入 0600 文件（服务期状态目录）：
+      $STATE_DIR/admin-initial-password.txt
+  - 登录入口 http://<主机>:18188/main ；首次登录后请在「账号管理」里改密，
+    然后删除上面那个文件（页面会一直提示直到文件被删除）
+  - 账号库 $STATE_DIR/admin-auth.sqlite3 与会话密钥 $STATE_DIR/admin-auth.key
+    都是 0600；备份/回滚都不会删除它们（见 deploy/README.md）
+  - 如需固定首启口令（例如自动化部署）：设 CANONICAL_V2_ADMIN_INITIAL_PASSWORD，
+    或直接预置 CANONICAL_V2_ADMIN_AUTH_DB
 
 注意：18188 当前由手工后台进程占用，切换前请先停掉旧进程，再：
   systemctl --user start $UNIT_NAME

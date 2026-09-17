@@ -39,9 +39,42 @@ Milvus Lite + 本地 serving-pack。对外经 **dbg21（100.64.0.34）的 nginx*
   （`rewrite ^/guoxian(/.*)$ $1 break;` + 裸 `proxy_pass`——不要改回
   `proxy_pass .../;` 形式，长前缀 location 会把路径剥错）
 - 改 dbg21 配置前按该目录惯例先 `cp` 带时间戳的 .bak
-- 4 个管理块各有一行 `proxy_set_header X-Remote-User $remote_user;`
-  （把 basic auth 用户名透传给后端做操作留痕）；公开块用
-  `proxy_set_header X-Remote-User "";` 清掉客户端自带同名头，防伪造
+- 4 个管理块各有一行 `proxy_set_header X-Remote-User $remote_user;`、
+  公开块用 `proxy_set_header X-Remote-User "";` 清掉客户端自带同名头
+  ——**2026-09-17 起后端不再用该头做身份**（留痕取登录用户名，见下节），
+  这两行现在只留作历史兼容，删掉也不影响行为
+
+## 管理台登录与账号播种（add-admin-auth-and-console，2026-09-17）
+
+管理面自带应用级登录后，**后端自己就是那一层门**：dbg21 的 nginx basic auth
+退化为可选的第二层（甲方单机部署没有 nginx 时，唯一门就是它）。
+
+- 入口：`/main`（未登录=登录表单，登录后=同 URL 的仪表盘：状态卡 / 快捷入口 /
+  账号区 / 右上角当前用户 + 退出登录）。六个管理页（`/admin` `/logs` `/browse`
+  `/jobs` `/upload` `/seeds`）与全部 `/api/canonical-v2/*` 管理 API 需要会话：
+  页面未登录 302 → `/main`，API 401 `{"detail":"authentication_required"}`。
+- 公开面不变：`/chat`、`/api/chat*`、`/static/*`、`/api/health`、`/api/auth/login`。
+- 首启播种：账号库为空时创建 `admin` 账号 + 随机 16 位口令，口令打印一次到
+  `journalctl`（`[admin-auth] first-boot administrator ...`）并写入 0600 文件
+  `<状态目录>/admin-initial-password.txt`。幂等：库非空时不再打印/不再改写文件。
+  自动化部署可用 `CANONICAL_V2_ADMIN_INITIAL_PASSWORD` 固定首启口令。
+- 会话：HMAC-SHA256 签名 Cookie `cv2_admin_session`（HttpOnly / SameSite=Lax；
+  请求经 HTTPS 时才带 Secure），载荷含用户名、签发时间、到期时间、口令代次；
+  空闲 1 小时滑动、绝对 12 小时；**改密/重置口令/删号立即让该账号所有旧 Cookie 失效**。
+  密钥 `<状态目录>/admin-auth.key`（0600，首用生成，重启后旧会话仍有效）。
+- 账号与审计：`<状态目录>/admin-auth.sqlite3`（schema `canonical-v2-admin-auth-v1`，
+  scrypt 加盐哈希，明文永不落库；`audit` 表记录登录/登出/账号操作）。
+  写操作（POST/PATCH/PUT/DELETE）要求同源（`Origin` / `Sec-Fetch-Site` 校验，无 CSRF token）；
+  登录 5 次失败锁该「用户名+来源 IP」1 分钟，继续失败翻倍（上限 30 分钟）。
+- 环境变量：`CANONICAL_V2_ADMIN_AUTH_DB`（默认 `<access-logs.sqlite3 同目录>/admin-auth.sqlite3`）、
+  `CANONICAL_V2_ADMIN_AUTH_KEY`、`CANONICAL_V2_ADMIN_INITIAL_PASSWORD`。
+- 首次登录后请改密并删除 `admin-initial-password.txt`（页面会提示到文件消失）。
+- **HTTPS 建议**：应用不内置 TLS。公网/跨网段部署请在前面加一层 HTTPS 终止
+  （nginx/caddy），并透传 `Host` 与 `X-Forwarded-Proto`（后端据此决定 Cookie 的
+  Secure 与同源判定）；纯内网单机可先用 HTTP，但登录口令与会话 Cookie 都是明文传输。
+- 备份：`backup-canonical-v2.sh` 已覆盖状态目录整目录（含账号库/密钥/审计）；
+  回滚只切回启动命令文件 + 重启，账号库与审计**不删**，再上线时继续复用同一批账号。
+
 
 ## 数据编辑（覆盖层，2026-08-10 上线）
 
@@ -53,7 +86,7 @@ API 层做 overlay 合并，无修正库时与上线前逐字节一致。
 - 生效时机：浏览页**立即生效**；chat 回答随**下次构建**生效
   （`GET /api/canonical-v2/admin/corrections/export` 导出 active 记录
   JSONL，作为构建输入）
-- 留痕：operator 取自 `X-Remote-User` 头（即 basic auth 用户名），
+- 留痕：operator 取登录用户名（2026-09-17 前取 `X-Remote-User` 头），
   修改原因必填；纠错保存原值，可撤销（软撤销，历史保留）
 - 字段白名单：仅顶层标量字段可改；溯源/结构字段（field_lineage、
   evidence、*_id 等）返回 422
@@ -140,8 +173,8 @@ systemctl --user start canonical-v2-backend
       恢复副本行数与现网一致，manifest/npz 可解析）
 - [x] 访问日志保留策略（默认 90 天滚动清理，`purge-access-logs.sh`，每日 03:41 cron；
       保留期改由受管配置 `paths.access_log_retention_days` 控制，2026-09-14 W5）
-- [x] 数据编辑覆盖层（2026-08-10：字段纠错 + 手工新增 + 撤销 + 导出，
-      operator 经 nginx X-Remote-User 透传，端到端验证通过）
+- [x] 数据编辑覆盖层（2026-08-10：字段纠错 + 手工新增 + 撤销 + 导出；
+      operator 自 2026-09-17 起改取登录用户名）
 - [x] 人工知识在线召回（2026-08-10：侧车向量并集 + 文档上传两步 UI +
       编辑挂钩 + nginx 20M body，直连/公网双路端到端验证）
 - [ ] `/api/canonical-v2/admin/status` 直连即 500（pre-existing，browse 页顶栏受影响；
