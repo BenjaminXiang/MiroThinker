@@ -103,9 +103,11 @@ def _record_access_turn(
             latency_ms=max(
                 0, round((finished_at - started_at).total_seconds() * 1000)
             ),
-            # nginx auth_basic zone identity; absent for the public zone, which
-            # the store records as the anonymous marker. No IP is read here.
-            user_identity=request.headers.get("X-Remote-User") or "",
+            # The public chat path records the anonymous marker only: the
+            # session gate owns authenticated identity, and a client-supplied
+            # X-Remote-User header must never be recorded as one (2026-09-17
+            # ruling, spec `admin-auth`). No IP is read here.
+            user_identity="",
         )
     )
 

@@ -200,7 +200,10 @@ def _request(*, headers: dict[str, str]) -> Request:
     )
 
 
-def test_record_access_turn_stores_the_remote_user_header(store) -> None:
+def test_record_access_turn_ignores_a_forged_remote_user_header(store) -> None:
+    # 2026-09-17 ruling (spec `admin-auth`): the public chat path records the
+    # anonymous marker; a client-supplied X-Remote-User header is never an
+    # identity.
     started = datetime(2026, 9, 5, 9, 0, 0, tzinfo=UTC)
     _record_access_turn(
         _request(headers={"X-Remote-User": "alice"}),
@@ -213,7 +216,7 @@ def test_record_access_turn_stores_the_remote_user_header(store) -> None:
     )
     detail = store.get_session("session:chat:http")
     assert detail is not None
-    assert detail.turns[0].user_identity == "alice"
+    assert detail.turns[0].user_identity == "anonymous"
 
 
 def test_record_access_turn_without_header_is_anonymous_and_fail_open(store) -> None:
