@@ -158,7 +158,7 @@ def test_public_demo_copy_uses_user_facing_language(
 
 
 def test_public_chat_serves_guoxian_logo_as_jpeg() -> None:
-    client = TestClient(_create_route_shell(include_review=False))
+    client = TestClient(_create_route_shell())
 
     response = client.get("/static/assets/guoxian-logo.jpg")
 
@@ -168,7 +168,7 @@ def test_public_chat_serves_guoxian_logo_as_jpeg() -> None:
 
 
 def test_public_root_enters_chat_without_advertising_internal_browse() -> None:
-    client = TestClient(_create_route_shell(include_review=False))
+    client = TestClient(_create_route_shell())
 
     response = client.get("/", follow_redirects=False)
 
