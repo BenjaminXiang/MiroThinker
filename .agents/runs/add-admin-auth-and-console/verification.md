@@ -232,3 +232,28 @@ $ pgrep -af "uvicorn backend.main:app"          →  (only the grep itself)
   cookie value stays valid until its idle/absolute expiry. Password change,
   password reset, and account deletion do revoke immediately (epoch / missing
   account), and those are the A3 paths.
+
+## 6. Live acceptance on 18188 (parent session, 2026-09-17 22:30–23:13)
+
+Cutover: live tree fast-forward `8fc0fa7f → 301e85dc` + one restart; first boot
+seeded the store (`admin-auth.sqlite3` 0600, `admin-initial-password.txt` 0600),
+boot 22:30:13 → 22:41:23 (**11 min 10 s**), boot log `milvus` count **0**.
+
+| Line | Result (live) |
+|---|---|
+| A1 | six pages `302 Location: /main`; `/api/canonical-v2/admin/system-status` `401` (also with a forged `X-Remote-User`); `/main` `/chat` `/static/nav_auth.js` `/api/health` `200`; `/review` and `/api/review/*` `404` |
+| A2 | login `200`; `me` → `{"username":"admin","role":"admin"}`; `/main` carries `data-admin-user="admin"`; gated page authed `200`; 5 wrong + 6th → `429 {"error":"locked","retry_after_seconds":60}`; after 62 s correct login `200` |
+| A3 | logout (cookie-clearing round trip) → `me` `401`; admin reset → old session `401`, old password refused, new password `200`; delete → session `401`, login refused |
+| A4 | create `201`, delete `200`; deleting the last remaining account → `409` |
+| A5 | two config PATCHes with `X-Remote-User: boss` → `audit.jsonl` records `operator: "admin"` twice; the token `boss` appears nowhere |
+| A6 | public chat probe: 「字节跳动」→ ByteDance Ltd. + local citation (TTFT 3.03 s, total 13.34 s); replay gate **7/7 ALL PASS** (out-dir `replay-after-auth/`) |
+| A7 | rollback: `git reset --hard 8fc0fa7f` + restart → boot ~12 min → `/logs` `/admin` admin-status `200`, `/main` `/api/auth/login` `404` (ungated old state); credential db/key/password file untouched; roll forward `merge --ff-only 301e85dc` + restart → boot ~12 min → gated state back, **the original password file still logs in** and the seeding printed nothing (`initial password` count 0 → idempotent) |
+
+Auth audit table after the battery: `login ok 6 / fail 7 / locked 2`,
+`account_create 2`, `account_delete ok 2 (+1 fail = last-account guard)`,
+`password_reset 1`, `logout 2`; accounts left: `admin` only.
+
+Note (design-consistent): a stateless signed cookie means a *copied* cookie stays
+valid until its window ends; the browser round trip (logout / reset / delete)
+invalidates as specified. The public chat path records the anonymous marker
+(fix `301e85dc`).

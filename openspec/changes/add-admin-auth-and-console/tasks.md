@@ -44,8 +44,8 @@ Status legend: `[ ]` todo · `[x]` done · slice owner is the single active writ
 
 - [x] 5.1 `deploy/` seeding note + HTTPS advice line; `install.sh` prints the
       first-boot password location.
-- [ ] 5.2 OpenSpec change-ledger row; acceptance.md evidence filled.
-- [ ] 5.3 Human plan/log/index updates (both repo trees).
+- [x] 5.2 OpenSpec change-ledger row; acceptance.md evidence filled.
+- [x] 5.3 Human plan/log/index updates (both repo trees).
 
 ## 6. Verification
 
@@ -53,5 +53,5 @@ Status legend: `[ ]` todo · `[x]` done · slice owner is the single active writ
       suite recorded in `.agents/runs/add-admin-auth-and-console/`.
 - [x] 6.2 Scratch-port smoke: login → dashboard → account ops → gate on page +
       API → forged header rejected → logout; stop scratch service.
-- [ ] 6.3 Cutover 18188 (live tree fast-forward + restart) + the seven
+- [x] 6.3 Cutover 18188 (live tree fast-forward + restart) + the seven
       acceptance lines from acceptance.md, including rollback drill.
