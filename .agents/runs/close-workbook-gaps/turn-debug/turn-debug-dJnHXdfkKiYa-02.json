@@ -1,0 +1,87 @@
+{
+  "session_id": "session:chat:dJnHXdfkKiYaIuwqOo7762jT8zeBzPze",
+  "turn_id": "turn:chat:sha256:e6f23ba4dab03a29f5a3e0e0bcee89054cbd49e278432d72e3b9efdede4da2f0",
+  "turn_count": 2,
+  "query": "这个中心的企业培育情况怎么样",
+  "planned_displayed_ids": [
+    "company-c-d4182bdd53fa74cebbfebd6f"
+  ],
+  "recalled_handles": [
+    {
+      "id": "company-c-d4182bdd53fa74cebbfebd6f",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳国际先进技术应用推进中心"
+    }
+  ],
+  "evidence_items": {
+    "total": 11,
+    "by_domain": {
+      "company": 3,
+      "professor": 8
+    },
+    "by_lane": {
+      "exact": 1,
+      "structured": 1,
+      "vector": 1,
+      "web": 8
+    },
+    "by_source_nature": {
+      "current_web": 8,
+      "local": 3
+    },
+    "with_claim_binding": 11
+  },
+  "protected_slots": [
+    {
+      "kind": "displayed_entity_set",
+      "value": "displayed_entity_set",
+      "entity_ids": [
+        "company-c-d4182bdd53fa74cebbfebd6f"
+      ]
+    }
+  ],
+  "requested_traversal": null,
+  "admitted_claims": {
+    "total": 1,
+    "by_predicate": {
+      "canonical_projection": 1
+    },
+    "by_claim_type": {
+      "material_fact": 1
+    },
+    "patent_evidence_claims": 0
+  },
+  "committed_handle_ids": [
+    "company-c-d4182bdd53fa74cebbfebd6f"
+  ],
+  "committed_names": [
+    "深圳国际先进技术应用推进中心"
+  ],
+  "render_mode": "prose_renderer",
+  "response_mode": "answer",
+  "citations": 1,
+  "answer_chars": 331,
+  "lane_timings": [
+    [
+      "structured",
+      0.068
+    ],
+    [
+      "exact",
+      0.173
+    ],
+    [
+      "lexical",
+      0.167
+    ],
+    [
+      "vector",
+      0.13
+    ],
+    [
+      "web",
+      1.902
+    ]
+  ]
+}

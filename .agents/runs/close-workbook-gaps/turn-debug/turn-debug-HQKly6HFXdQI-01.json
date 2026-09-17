@@ -1,0 +1,170 @@
+{
+  "session_id": "session:chat:HQKly6HFXdQIli3CqriiGv2kPuIxgSE2",
+  "turn_id": "turn:chat:sha256:78675b423665c023dd48169f131ff0f9e1edf41b5772834e7d68c0bc57f9b49a",
+  "turn_count": 1,
+  "query": "字节跳动",
+  "planned_displayed_ids": [],
+  "recalled_handles": [
+    {
+      "id": "company-c-80116c6c8b58d8b6c89e2dcc",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "ByteDance Ltd."
+    },
+    {
+      "id": "web-handle:sha256:f81ad27a883d77aa1196e72e51010d7b42fbc0bf8cf37ebfe03e26c913f75a20",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "字节跳动_澎湃新闻-The Paper"
+    },
+    {
+      "id": "company-c-05757592e952971a4c8605ff",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳新言意码科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:d638dfd4d74981c29daaefe8d683f65d1cf5d31e872d72aeae606e573c82c905",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "字节跳动 - ByteDance"
+    },
+    {
+      "id": "company-c-06033b1d823fa51296a83018",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳未来动力有限公司"
+    },
+    {
+      "id": "web-handle:sha256:87d24ab0e36a2f5c8e62eee87058e0ada910606af7feb9ca14eb8750bf6bb08e",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "字节跳动招聘官网｜字节跳动社招"
+    },
+    {
+      "id": "company-c-261897fbdfc0fcbde3d3b3bd",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳极致上下文科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:d2c85c9b47ee533822f0dd1678140bd8e8d969ccbf8f4c0ee3e3f04530e784ac",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "字节跳动"
+    },
+    {
+      "id": "company-c-3cbeae0c33a7f6af62fe47c2",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "忆生科技（深圳）有限公司"
+    },
+    {
+      "id": "web-handle:sha256:a86e05bab6ffe57a676157f2ea2dfb7e20405f58c4d9f6c3681f4597a839343a",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "字节跳动- 维基百科，自由的百科全书"
+    },
+    {
+      "id": "company-c-686d7e4155e9bc74ebacc531",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市心感智影科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:0b871ffa150d7fce53b244a5939e607e4e9863e1fb4c29e1ac873c0ab81f4793",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "字节跳动是什么意思? - 头条问答"
+    },
+    {
+      "id": "company-c-8ec4859c72891798f7299f93",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市布尔量科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:4be81932916c72bd066f37965485e594bd4253364286b498927b28395d69ec7a",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "丰富文化生活 - 字节跳动"
+    },
+    {
+      "id": "company-c-9bf1b08e293fe91b7c54d839",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "千巡科技（深圳）有限公司"
+    },
+    {
+      "id": "web-handle:sha256:08961b0f7ec7d8c8c57f28f83a8f260f047520bb79c3995bec951dc4894449ed",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "字节跳动是什么意思 - 业百科"
+    }
+  ],
+  "evidence_items": {
+    "total": 18,
+    "by_domain": {
+      "company": 10,
+      "professor": 8
+    },
+    "by_lane": {
+      "exact": 1,
+      "lexical": 8,
+      "vector": 1,
+      "web": 8
+    },
+    "by_source_nature": {
+      "current_web": 8,
+      "local": 10
+    },
+    "with_claim_binding": 18
+  },
+  "protected_slots": [],
+  "requested_traversal": null,
+  "admitted_claims": {
+    "total": 7,
+    "by_predicate": {
+      "canonical_projection": 1,
+      "current_web_result": 6
+    },
+    "by_claim_type": {
+      "material_fact": 7
+    },
+    "patent_evidence_claims": 0
+  },
+  "committed_handle_ids": [
+    "company-c-80116c6c8b58d8b6c89e2dcc",
+    "web-handle:sha256:d2c85c9b47ee533822f0dd1678140bd8e8d969ccbf8f4c0ee3e3f04530e784ac"
+  ],
+  "committed_names": [
+    "ByteDance Ltd.",
+    "字节跳动"
+  ],
+  "render_mode": "prose_renderer",
+  "response_mode": "answer",
+  "citations": 7,
+  "answer_chars": 622,
+  "lane_timings": [
+    [
+      "structured",
+      0.0
+    ],
+    [
+      "exact",
+      0.636
+    ],
+    [
+      "vector",
+      1.309
+    ],
+    [
+      "lexical",
+      1.406
+    ],
+    [
+      "web",
+      3.339
+    ]
+  ]
+}
