@@ -59,7 +59,8 @@ SOURCE = S12G / "serving-bundle-run15.json"
 OUTPUT = S12G / "serving-bundle-run16.json"
 RELEASE_ID = "candidate-v2-20260916-r1"
 DATABASE_NAME = "miroflow_candidate_v2_20260916_r1"
-INDEX_ROOT = Path("/var/tmp/mirothinker-data-v2/index-v3")
+# run17+: v2 index root is the sealed source (converted by convert_index_to_v2.py)
+INDEX_ROOT = Path("/var/tmp/mirothinker-data-v2/index-v3-v2")
 ENVELOPE = Path(
     "/home/longxiang/MiroThinker/.worktrees/data-rebuild"
     "/.agents/runs/rebuild-canonical-v2-knowledge-platform"

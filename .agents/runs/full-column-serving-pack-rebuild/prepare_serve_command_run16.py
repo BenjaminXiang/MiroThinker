@@ -69,7 +69,7 @@ def main() -> None:
     substitutions = (
         ("miroflow_candidate_v2_20260913_r1", "miroflow_candidate_v2_20260916_r1", 2),
         ("/var/tmp/mirothinker-data-v2/staging-v2", "/var/tmp/mirothinker-data-v2/staging-v3", 1),
-        ("/var/tmp/mirothinker-data-v2/index-v2", "/var/tmp/mirothinker-data-v2/index-v3", 1),
+        ("/var/tmp/mirothinker-data-v2/index-v2", "/var/tmp/mirothinker-data-v2/index-v3-v2", 1),
         (
             "071b858627559d87be09eb01363e951b1275d513aa7a8cddbd45f423b9bac1e9",
             args.marker_sha,
