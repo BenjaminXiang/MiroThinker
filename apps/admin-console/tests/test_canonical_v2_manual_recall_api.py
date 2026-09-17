@@ -21,6 +21,7 @@ import pytest
 
 from backend.canonical_v2_deps import get_canonical_v2_admin_runtime
 from backend.main import app
+from tests.conftest import authorized_client
 from backend.services.canonical_v2_corrections import CorrectionsStore
 from backend.services.canonical_v2_manual_recall import ManualRecallStore
 
@@ -121,7 +122,7 @@ def corrections_store(tmp_path: Path) -> Iterator[CorrectionsStore]:
 
 @pytest.fixture()
 def client(recall_store: ManualRecallStore) -> TestClient:
-    return TestClient(app, raise_server_exceptions=False)
+    return authorized_client(raise_server_exceptions=False)
 
 
 def _minimal_pdf(text: str) -> bytes:
@@ -275,7 +276,7 @@ def test_confirm_embedding_failure_persists_nothing(
     broken_store = ManualRecallStore(tmp_path / "broken", failing)
     setattr(app.state, _RECALL_STATE, broken_store)
     try:
-        failing_client = TestClient(app, raise_server_exceptions=False)
+        failing_client = authorized_client(raise_server_exceptions=False)
         response = failing_client.post(
             "/api/canonical-v2/admin/company-documents",
             json=_confirm_body(),
@@ -309,7 +310,7 @@ def test_revert_tombstones_document_chunks(
 
 
 def test_mutations_require_store() -> None:
-    bare = TestClient(app, raise_server_exceptions=False)
+    bare = authorized_client(raise_server_exceptions=False)
     assert (
         bare.post(
             "/api/canonical-v2/admin/company-documents",
@@ -331,7 +332,7 @@ def test_record_create_embeds_and_revert_tombstones(
     recall_store: ManualRecallStore,
     corrections_store: CorrectionsStore,
 ) -> None:
-    client = TestClient(app, raise_server_exceptions=False)
+    client = authorized_client(raise_server_exceptions=False)
     created = client.post(
         "/api/canonical-v2/admin/domains/company/records",
         json={
@@ -366,7 +367,7 @@ def test_record_create_embedding_failure_compensates(
     )
     setattr(app.state, _RECALL_STATE, failing_store)
     try:
-        client = TestClient(app, raise_server_exceptions=False)
+        client = authorized_client(raise_server_exceptions=False)
         created = client.post(
             "/api/canonical-v2/admin/domains/company/records",
             json={
@@ -389,7 +390,7 @@ def test_record_create_embedding_failure_compensates(
 def test_record_create_without_sidecar_keeps_prior_behavior(
     corrections_store: CorrectionsStore,
 ) -> None:
-    client = TestClient(app, raise_server_exceptions=False)
+    client = authorized_client(raise_server_exceptions=False)
     created = client.post(
         "/api/canonical-v2/admin/domains/company/records",
         json={

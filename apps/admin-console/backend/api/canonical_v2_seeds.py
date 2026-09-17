@@ -14,6 +14,7 @@ from typing import Any, Literal
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response, status
 from pydantic import BaseModel, Field, model_validator
 
+from backend.services.admin_session import current_operator
 from backend.storage.seeds import (
     Seed,
     SeedCreate,
@@ -42,7 +43,6 @@ import psycopg
 router = APIRouter(prefix="/api/canonical-v2/admin")
 
 _STATE_NAME = "canonical_v2_seed_gate"
-_MAX_OPERATOR_LENGTH = 200
 
 SeedTriggerMode = Literal["full", "sample", "preview"]
 SAMPLE_TASK_ID = "admin-seed-refresh-sample"
@@ -101,10 +101,6 @@ def require_postgres(gate: JobRuntime) -> None:
     if not gate.postgres_status().get("available"):
         raise HTTPException(status_code=503, detail=POSTGRES_UNAVAILABLE)
 
-
-def _operator(request: Request) -> str:
-    raw = request.headers.get("X-Remote-User", "").strip()
-    return raw[:_MAX_OPERATOR_LENGTH] if raw else "anonymous"
 
 
 def _seed_connection() -> Any:
@@ -218,7 +214,7 @@ def trigger_seed_endpoint(
         outcome = gate.trigger(
             task_id,
             params=params,
-            operator=_operator(request),
+            operator=current_operator(request),
             trigger_source=MANUAL_TRIGGER,
         )
     except JobsError as exc:

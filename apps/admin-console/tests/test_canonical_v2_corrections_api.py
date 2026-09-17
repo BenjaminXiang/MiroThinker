@@ -10,6 +10,7 @@ import pytest
 
 from backend.canonical_v2_deps import get_canonical_v2_admin_runtime
 from backend.main import app
+from tests.conftest import authorized_client
 from backend.services.canonical_v2_corrections import CorrectionsStore
 
 
@@ -77,7 +78,7 @@ def store(tmp_path: Path) -> Iterator[CorrectionsStore]:
 
 @pytest.fixture()
 def client(store: CorrectionsStore) -> TestClient:
-    return TestClient(app, raise_server_exceptions=False)
+    return authorized_client(raise_server_exceptions=False)
 
 
 def _correct(client: TestClient, **overrides: Any) -> Any:
@@ -260,7 +261,7 @@ def test_read_paths_unchanged_without_store(tmp_path: Path) -> None:
         delattr(app.state, _STATE_NAME)
     app.dependency_overrides[get_canonical_v2_admin_runtime] = lambda: _FakeRuntime()
     try:
-        bare = TestClient(app, raise_server_exceptions=False)
+        bare = authorized_client(raise_server_exceptions=False)
         detail = bare.get("/api/canonical-v2/admin/domains/company/company-c-abc")
         assert detail.status_code == 200
         assert detail.json() == _DETAIL  # exact previous shape

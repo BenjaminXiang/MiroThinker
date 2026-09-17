@@ -9,6 +9,7 @@ from typing import Any, Mapping
 from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel
 
+from backend.services.admin_session import current_operator
 from backend.services.canonical_v2_admin_status import (
     collect_system_status,
     probe_http,
@@ -42,7 +43,6 @@ router = APIRouter(prefix="/api/canonical-v2/admin")
 
 _STORE_STATE_NAME = "canonical_v2_managed_settings_store"
 _SECRETS_STATE_NAME = "canonical_v2_managed_secrets_store"
-_MAX_OPERATOR_LENGTH = 200
 _RESTART_NOTICE = "修改后需重启服务生效（服务启动时读取受管文件，不做热加载）"
 
 # One limiter per process: the page's test button must not become a provider bill.
@@ -81,12 +81,6 @@ def get_managed_secrets_store(request: Request) -> ManagedSecretsStore:
         return installed
     return ManagedSecretsStore(path=default_secrets_path())
 
-
-def _operator(request: Request) -> str:
-    raw = request.headers.get("X-Remote-User", "").strip()
-    if not raw:
-        return "anonymous"
-    return raw[:_MAX_OPERATOR_LENGTH]
 
 
 def _unprocessable(detail: str) -> HTTPException:
@@ -144,7 +138,7 @@ def patch_admin_config(
     store: ManagedSettingsStore = Depends(get_managed_settings_store),
 ) -> object:
     try:
-        result = store.patch(body, operator=_operator(request))
+        result = store.patch(body, operator=current_operator(request))
     except ManagedSettingsUnsupportedError as exc:
         raise _unprocessable(str(exc)) from exc
     except ManagedSettingsError as exc:
@@ -235,7 +229,7 @@ def patch_admin_secrets(
     if not isinstance(values, Mapping):
         raise _unprocessable("body must be {'values': {<field>: <secret|null>}}")
     try:
-        result = store.patch(values, operator=_operator(request))
+        result = store.patch(values, operator=current_operator(request))
     except ManagedSecretsUnsupportedError as exc:
         raise _unprocessable(str(exc)) from exc
     except ManagedSecretsError as exc:

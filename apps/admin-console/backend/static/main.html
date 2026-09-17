@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>管理台 · 深圳科创数据平台</title>
+    <link rel="stylesheet" href="/static/main.css" />
+  </head>
+  <!-- data-admin-user 由服务端按会话写入：空值=未登录（登录表单），否则=仪表盘 -->
+  <body data-admin-user="" data-admin-role="">
+    <header class="topbar">
+      <div class="topbar-inner">
+        <div class="brand">
+          <strong>深圳科创数据平台</strong>
+          <span>管理台 · Canonical V2</span>
+        </div>
+        <div class="session-box">
+          <span class="session-label">当前用户</span>
+          <span id="admin-user" class="session-user">—</span>
+          <button type="button" id="logout-button" class="ghost-button">退出登录</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="page">
+      <div id="notice" class="notice hidden" role="status"></div>
+
+      <section id="login-form" class="card login-card" aria-label="登录">
+        <header>
+          <h1>管理员登录</h1>
+          <p class="hint">请使用管理员账号登录；连续 5 次口令错误将锁定 1 分钟。</p>
+        </header>
+        <form id="login-submit" action="/api/auth/login" method="post" autocomplete="on">
+          <label for="login-username">用户名</label>
+          <input id="login-username" name="username" type="text" autocomplete="username" required />
+          <label for="login-password">口令</label>
+          <input
+            id="login-password"
+            name="password"
+            type="password"
+            autocomplete="current-password"
+            required
+          />
+          <button type="submit" class="primary-button">登录</button>
+        </form>
+      </section>
+
+      <section id="dashboard" aria-label="仪表盘">
+        <section id="status-card" class="card" aria-label="系统状态">
+          <header>
+            <h2>系统状态</h2>
+            <span class="hint" id="status-generated">加载中…</span>
+          </header>
+          <div id="status-tiles" class="grid"></div>
+        </section>
+
+        <section id="quick-links" class="card" aria-label="快捷入口">
+          <header><h2>快捷入口</h2></header>
+          <nav class="links">
+            <a href="/admin">管理配置</a>
+            <a href="/logs">访问日志</a>
+            <a href="/browse">数据浏览</a>
+            <a href="/jobs">任务运维</a>
+            <a href="/upload">上传导入</a>
+            <a href="/seeds">Seed 管理</a>
+            <a href="/chat">对话</a>
+          </nav>
+        </section>
+
+        <section id="account-area" class="card" aria-label="账号管理">
+          <header>
+            <h2>账号管理</h2>
+            <span class="hint">口令 ≥ 8 位；修改口令后该账号其它会话立即失效。</span>
+          </header>
+          <div class="account-columns">
+            <div>
+              <h3>账号列表</h3>
+              <ul id="account-list" class="account-list"></ul>
+              <form id="account-create" class="inline-form">
+                <label for="account-new-username">新账号</label>
+                <input id="account-new-username" type="text" placeholder="用户名" required />
+                <button type="submit" class="primary-button">创建</button>
+              </form>
+              <p class="hint" id="account-create-result"></p>
+            </div>
+            <div>
+              <h3>修改我的口令</h3>
+              <form id="password-change" class="inline-form">
+                <label for="password-current">当前口令</label>
+                <input id="password-current" type="password" autocomplete="current-password" required />
+                <label for="password-new">新口令</label>
+                <input id="password-new" type="password" autocomplete="new-password" required />
+                <button type="submit" class="primary-button">修改</button>
+              </form>
+            </div>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <script src="/static/main.js" defer></script>
+  </body>
+</html>

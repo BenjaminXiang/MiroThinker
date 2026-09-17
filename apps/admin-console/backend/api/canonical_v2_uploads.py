@@ -14,6 +14,7 @@ from typing import Any
 from fastapi import APIRouter, Depends, File, HTTPException, Query, Request, UploadFile
 from pydantic import BaseModel
 
+from backend.services.admin_session import current_operator
 from src.data_agents.canonical_v2.jobs import JobRunStore, JobRuntime, jobs_database_path
 from src.data_agents.canonical_v2.managed_config import (
     ManagedSettingsStore,
@@ -40,7 +41,6 @@ from src.data_agents.canonical_v2.uploads import (
 router = APIRouter(prefix="/api/canonical-v2/admin/uploads")
 
 _STATE_NAME = "canonical_v2_uploads_runtime"
-_MAX_OPERATOR_LENGTH = 200
 _READ_CHUNK_BYTES = 1024 * 1024
 
 _STATUS_BY_ERROR: tuple[tuple[type[UploadError], int], ...] = (
@@ -150,10 +150,6 @@ def get_upload_runtime(request: Request) -> UploadRuntime:
     return runtime
 
 
-def _operator(request: Request) -> str:
-    raw = request.headers.get("X-Remote-User", "").strip()
-    return raw[:_MAX_OPERATOR_LENGTH] if raw else "anonymous"
-
 
 def _http_error(error: UploadError) -> HTTPException:
     for error_type, status_code in _STATUS_BY_ERROR:
@@ -229,7 +225,7 @@ def upload_domain_file(
             domain=domain,
             filename=file.filename or "",
             content=content,
-            operator=_operator(request),
+            operator=current_operator(request),
             dry_run=dry_run,
         )
     except UploadError as exc:

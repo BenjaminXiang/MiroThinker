@@ -20,6 +20,7 @@ from fastapi import APIRouter, Depends, HTTPException, Path, Query, Request, Res
 from pydantic import BaseModel, Field
 
 from backend.api.canonical_v2_manual_recall import manual_recall_store_from
+from backend.services.admin_session import current_operator
 from backend.canonical_v2_deps import get_canonical_v2_admin_runtime
 from backend.services.canonical_v2_admin import (
     CanonicalV2AdminRuntime,
@@ -109,10 +110,6 @@ def _require_store(request: Request) -> CorrectionsStore:
         )
     return store
 
-
-def _operator(request: Request) -> str:
-    value = request.headers.get("x-remote-user", "").strip()
-    return value or "unknown"
 
 
 def _store_error(exc: CorrectionsStoreError) -> HTTPException:
@@ -264,7 +261,7 @@ def create_field_correction(
                 old_value=old_value,
                 new_value=body.new_value,
                 reason=body.reason,
-                operator=_operator(request),
+                operator=current_operator(request),
                 created_at=runtime.as_of,
             )
         )
@@ -306,7 +303,7 @@ def create_added_record(
             domain=domain,
             payload=payload,
             reason=body.reason,
-            operator=_operator(request),
+            operator=current_operator(request),
             created_at=runtime.as_of,
         )
     except CorrectionsStoreError as exc:
@@ -319,7 +316,7 @@ def create_added_record(
                 domain=domain,
                 manual_object_id=detail.manual_object_id,
                 payload=detail.payload,
-                operator=_operator(request),
+                operator=current_operator(request),
                 reason=body.reason,
             )
         except Exception as exc:  # noqa: BLE001 - embedding backend boundary

@@ -16,6 +16,7 @@ from fastapi.testclient import TestClient
 import pytest
 
 from backend.main import app
+from tests.conftest import TEST_ADMIN_USERNAME, authorized_client
 from src.data_agents.canonical_v2.jobs import (
     JOB_TASKS,
     JobRunStore,
@@ -80,7 +81,7 @@ def jobs_runtime(tmp_path: Path):
         repo_root=tmp_path,
     )
     app.state.__setattr__(_STATE, runtime)
-    with TestClient(app) as client:
+    with authorized_client() as client:
         yield client, runtime
     app.state.__delattr__(_STATE) if hasattr(app.state, _STATE) else None
     runtime.close()
@@ -146,7 +147,7 @@ def test_trigger_is_accepted_and_lands_in_history(jobs_runtime) -> None:
     assert body["status"] == "running"
     row = _wait_for_status(client, "stub-ok", "succeeded")
     assert row["items_processed"] == 2
-    assert row["operator"] == "alice"
+    assert row["operator"] == TEST_ADMIN_USERNAME
     assert row["duration_ms"] is not None
     assert row["trigger_source"] == "manual"
 
@@ -254,7 +255,7 @@ def test_unset_storage_degrades_to_503(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.delenv("CANONICAL_V2_ACCESS_LOG_DB", raising=False)
     if hasattr(app.state, _STATE):
         delattr(app.state, _STATE)
-    with TestClient(app) as client:
+    with authorized_client() as client:
         response = client.get(_PREFIX)
     assert response.status_code == 503
     assert response.json()["detail"] == "jobs_storage_unavailable"

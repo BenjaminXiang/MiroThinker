@@ -12,6 +12,7 @@ import pytest
 
 from backend.api.canonical_v2_admin_config import get_managed_settings_store
 from backend.main import app
+from tests.conftest import TEST_ADMIN_USERNAME, authorized_client
 from src.data_agents.canonical_v2.contracts import (
     GapClass,
     GapSeverity,
@@ -134,7 +135,7 @@ def store(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[ManagedSe
 
 
 def _client() -> TestClient:
-    return TestClient(app, raise_server_exceptions=False)
+    return authorized_client(raise_server_exceptions=False)
 
 
 def test_get_config_reports_defaults_and_sources(store: ManagedSettingsStore) -> None:
@@ -182,21 +183,24 @@ def test_get_patch_get_round_trip(store: ManagedSettingsStore) -> None:
 
     records = store.audit_records()
     assert len(records) == 1
-    assert records[0]["operator"] == "operator-li"
+    # The identity is the signed-in operator, never the X-Remote-User header.
+    assert records[0]["operator"] == TEST_ADMIN_USERNAME
+    assert "operator-li" not in json.dumps(records)
 
     restarted = ManagedSettingsStore(store.path)
     document, _ = restarted.effective()
     assert document.collection.max_llm_calls_per_run == 640
 
 
-def test_patch_anonymous_operator_is_recorded(store: ManagedSettingsStore) -> None:
-    response = _client().patch(
+def test_patch_without_a_session_is_refused(store: ManagedSettingsStore) -> None:
+    response = TestClient(app, raise_server_exceptions=False).patch(
         "/api/canonical-v2/admin/config",
         json={"paths": {"access_log_retention_days": 44}},
     )
 
-    assert response.status_code == 200
-    assert store.audit_records()[0]["operator"] == "anonymous"
+    assert response.status_code == 401
+    assert response.json()["detail"] == "authentication_required"
+    assert store.audit_records() == ()
 
 
 @pytest.mark.parametrize(

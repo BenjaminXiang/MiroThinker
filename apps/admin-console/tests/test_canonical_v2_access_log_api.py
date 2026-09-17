@@ -8,6 +8,7 @@ from fastapi.testclient import TestClient
 import pytest
 
 from backend.main import app
+from tests.conftest import authorized_client
 from backend.services.canonical_v2_access_log import (
     AccessLogStore,
     AccessLogTurnRecord,
@@ -66,7 +67,7 @@ def store(tmp_path: Path) -> Iterator[AccessLogStore]:
 
 @pytest.fixture()
 def client(store: AccessLogStore) -> TestClient:
-    return TestClient(app, raise_server_exceptions=False)
+    return authorized_client(raise_server_exceptions=False)
 
 
 def test_sessions_endpoint_lists_and_filters(client, store) -> None:
@@ -182,7 +183,7 @@ def test_sessions_rejects_invalid_filters(client) -> None:
 
 def test_sessions_returns_503_without_store() -> None:
     assert not hasattr(app.state, _STATE_NAME)
-    client = TestClient(app, raise_server_exceptions=False)
+    client = authorized_client(raise_server_exceptions=False)
     response = client.get("/api/canonical-v2/admin/access-logs/sessions")
     assert response.status_code == 503
     assert response.json()["detail"] == "canonical_v2_access_log_unavailable"

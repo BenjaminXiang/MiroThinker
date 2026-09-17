@@ -13,6 +13,7 @@ from backend.api.canonical_v2_admin_config import (
     get_managed_settings_store,
 )
 from backend.main import app
+from tests.conftest import authorized_client
 from src.data_agents.canonical_v2.managed_config import ManagedSettingsStore
 from src.data_agents.canonical_v2.managed_secrets import ManagedSecretsStore
 from src.data_agents.canonical_v2.managed_runtime import applied_env_names
@@ -144,7 +145,7 @@ def transport(monkeypatch: pytest.MonkeyPatch) -> _RecordingTransport:
 
 
 def _client() -> TestClient:
-    return TestClient(app, raise_server_exceptions=False)
+    return authorized_client(raise_server_exceptions=False)
 
 
 def test_read_endpoint_never_returns_plaintext(

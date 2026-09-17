@@ -70,6 +70,7 @@
       .brand strong { font-size: 1.05rem; letter-spacing: 0.02em; }
       .brand span { font-size: 0.8rem; color: rgba(255, 255, 255, 0.72); }
 
+      .nav-user { font-size: 0.78rem; opacity: 0.82; align-self: center; }
       .nav { display: flex; gap: 8px; flex-wrap: wrap; }
       .nav a {
         color: rgba(255, 255, 255, 0.82);
@@ -181,6 +182,7 @@
           <span>Canonical V2 · 教授采集源 CRUD / 触发 / 运行记录</span>
         </div>
         <nav class="nav">
+          <a href="/main">首页</a>
           <a href="chat">对话</a>
           <a href="browse">数据浏览</a>
           <a href="logs">访问日志</a>
@@ -188,6 +190,8 @@
           <a href="jobs">任务运维</a>
           <a href="upload">上传导入</a>
           <a href="seeds" class="active">Seed 管理</a>
+          <span class="nav-user" id="admin-user"></span>
+          <a href="/main" id="logout-button">退出登录</a>
         </nav>
       </div>
     </header>
@@ -440,5 +444,6 @@
       document.getElementById("refresh").addEventListener("click", loadSeeds);
       loadSeeds();
     </script>
+    <script src="/static/nav_auth.js" defer></script>
   </body>
 </html>

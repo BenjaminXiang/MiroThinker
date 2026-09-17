@@ -23,6 +23,7 @@ import pytest
 from backend.api.canonical_v2_consumers import router as consumers_router  # noqa: F401
 from backend.canonical_v2_deps import get_canonical_v2_admin_runtime
 from backend.main import app
+from tests.conftest import authorized_client
 from src.data_agents.canonical_v2.contracts import (
     GapClass,
     GapSeverity,
@@ -127,7 +128,7 @@ def _admin_runtime(*, gap_operations: Any) -> Any:
 
 def _client_with(runtime: Any) -> TestClient:
     app.dependency_overrides[get_canonical_v2_admin_runtime] = lambda: runtime
-    return TestClient(app, raise_server_exceptions=False)
+    return authorized_client(raise_server_exceptions=False)
 
 
 @pytest.fixture(autouse=True)

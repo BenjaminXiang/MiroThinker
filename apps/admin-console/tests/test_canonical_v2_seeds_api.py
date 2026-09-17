@@ -14,6 +14,8 @@ from typing import Any
 from fastapi.testclient import TestClient
 import pytest
 
+from tests.conftest import authorized_client
+
 from backend.main import _create_canonical_v2_route_shell
 from src.data_agents.canonical_v2.jobs import JobRunStore, JobRuntime
 from src.data_agents.canonical_v2.managed_config import ManagedSettingsStore
@@ -64,9 +66,9 @@ def _seed_client(tmp_path: Path, *, postgres: bool, spawn: Any = None) -> TestCl
         spawn=spawn or _RecordingSpawn(),
         postgres_probe=_StubProbe(postgres),
     )
-    app = _create_canonical_v2_route_shell()
-    app.state.canonical_v2_seed_gate = gate
-    return TestClient(app)
+    shell = _create_canonical_v2_route_shell()
+    shell.state.canonical_v2_seed_gate = gate
+    return authorized_client(shell)
 
 
 def test_without_postgres_every_seed_endpoint_degrades(tmp_path: Path) -> None:

@@ -16,6 +16,7 @@ from typing import Any
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from pydantic import BaseModel, Field
 
+from backend.services.admin_session import current_operator
 from src.data_agents.canonical_v2.jobs import (
     MANUAL_TRIGGER,
     RUN_STATUSES,
@@ -40,7 +41,6 @@ from src.data_agents.canonical_v2.managed_config import (
 router = APIRouter(prefix="/api/canonical-v2/admin/jobs")
 
 _STATE_NAME = "canonical_v2_jobs_runtime"
-_MAX_OPERATOR_LENGTH = 200
 
 _STATUS_BY_ERROR: tuple[tuple[type[JobsError], int], ...] = (
     (JobTaskUnknownError, 404),
@@ -123,12 +123,6 @@ def get_job_runtime(request: Request) -> JobRuntime:
     return runtime
 
 
-def _operator(request: Request) -> str:
-    raw = request.headers.get("X-Remote-User", "").strip()
-    if not raw:
-        return "anonymous"
-    return raw[:_MAX_OPERATOR_LENGTH]
-
 
 def _http_error(error: JobsError) -> HTTPException:
     for error_type, status_code in _STATUS_BY_ERROR:
@@ -191,7 +185,7 @@ def trigger_job(
         outcome = runtime.trigger(
             task_id,
             params=body.params if body is not None else {},
-            operator=_operator(request),
+            operator=current_operator(request),
             trigger_source=MANUAL_TRIGGER,
         )
     except JobsError as exc:
@@ -206,7 +200,7 @@ def reset_job_breaker(
     runtime: JobRuntime = Depends(get_job_runtime),
 ) -> JobBreakerResetResponse:
     try:
-        result = runtime.reset_breaker(task_id, operator=_operator(request))
+        result = runtime.reset_breaker(task_id, operator=current_operator(request))
     except JobsError as exc:
         raise _http_error(exc) from exc
     return JobBreakerResetResponse(**result)

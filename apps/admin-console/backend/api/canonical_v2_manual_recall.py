@@ -16,6 +16,7 @@ from typing import Annotated, Any
 from fastapi import APIRouter, HTTPException, Path, Request, UploadFile
 from pydantic import BaseModel, Field
 
+from backend.services.admin_session import current_operator
 from backend.services.canonical_v2_manual_recall import (
     ManualRecallError,
     ManualRecallStore,
@@ -63,10 +64,6 @@ def _require_store(request: Request) -> ManualRecallStore:
         )
     return store
 
-
-def _operator(request: Request) -> str:
-    value = request.headers.get("x-remote-user", "").strip()
-    return value or "unknown"
 
 
 def _decode_text(data: bytes) -> str:
@@ -146,7 +143,7 @@ def confirm_company_document(
             title=body.title,
             text=body.text,
             reason=body.reason,
-            operator=_operator(request),
+            operator=current_operator(request),
             source_label=body.source_label,
             matched_canonical_id=body.matched_canonical_id or None,
         )

@@ -15,6 +15,8 @@ from typing import Any
 from fastapi.testclient import TestClient
 import pytest
 
+from tests.conftest import authorized_client
+
 from backend.main import _create_canonical_v2_route_shell
 from src.data_agents.canonical_v2.jobs import JobRunStore, JobRuntime, JobTask
 from src.data_agents.canonical_v2.managed_config import ManagedSettingsStore
@@ -102,11 +104,11 @@ def _client(tmp_path: Path, *, postgres: bool) -> tuple[TestClient, UploadRuntim
         repo_root=tmp_path,
         environ={"MIROTHINKER_ADMIN_UPLOAD_DIR": str(scratch / "stage")},
     )
-    app = _create_canonical_v2_route_shell()
-    app.state.canonical_v2_uploads_runtime = runtime
+    shell = _create_canonical_v2_route_shell()
+    shell.state.canonical_v2_uploads_runtime = runtime
     # The seed surface shares the jobs database; give it one so the nav/segments stay consistent.
-    app.state.canonical_v2_seed_gate = gate
-    return TestClient(app), runtime, store
+    shell.state.canonical_v2_seed_gate = gate
+    return authorized_client(shell), runtime, store
 
 
 @pytest.fixture()

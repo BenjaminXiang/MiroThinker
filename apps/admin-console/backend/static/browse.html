@@ -191,6 +191,7 @@
         font-weight: 700;
       }
 
+      .nav-user { color: rgba(255, 255, 255, 0.82); font-size: 0.78rem; align-self: center; }
       .top-actions .nav { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
       .top-actions .nav a {
         color: rgba(255, 255, 255, 0.82);
@@ -436,12 +437,15 @@
           <span class="release-pill" id="release-pill" aria-live="polite">正在连接候选版本…</span>
           <a class="chat-link" href="chat">进入 V2 对话 <span aria-hidden="true">↗</span></a>
           <nav class="nav" aria-label="管理区导航">
+            <a href="/main">首页</a>
             <a href="browse" class="active">数据浏览</a>
             <a href="logs">访问日志</a>
             <a href="admin">管理配置</a>
             <a href="jobs">任务运维</a>
             <a href="upload">上传导入</a>
             <a href="seeds">Seed 管理</a>
+            <span class="nav-user" id="admin-user"></span>
+            <a href="/main" id="logout-button">退出登录</a>
           </nav>
         </div>
       </div>
@@ -1457,5 +1461,6 @@
       loadRoute();
       window.addEventListener("hashchange", loadRoute);
     </script>
+    <script src="/static/nav_auth.js" defer></script>
   </body>
 </html>

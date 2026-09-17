@@ -16,6 +16,7 @@ import pytest
 
 from backend.api.canonical_v2_chat import _record_access_turn
 from backend.main import app
+from tests.conftest import authorized_client
 from backend.services.canonical_v2_access_log import (
     ANONYMOUS_IDENTITY,
     AccessLogStore,
@@ -161,7 +162,7 @@ def store(tmp_path: Path) -> Iterator[AccessLogStore]:
 @pytest.fixture()
 def client(store: AccessLogStore) -> TestClient:
     del store
-    return TestClient(app, raise_server_exceptions=False)
+    return authorized_client(raise_server_exceptions=False)
 
 
 def _session_ids(response) -> list[str]:

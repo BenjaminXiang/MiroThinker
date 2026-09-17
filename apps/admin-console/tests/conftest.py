@@ -4,9 +4,10 @@ import hashlib
 import os
 from pathlib import Path
 import runpy
+import secrets
 import socket
 import sys
-from typing import Any
+from typing import Any, Iterator
 
 import pytest
 from fastapi.testclient import TestClient
@@ -216,8 +217,68 @@ def _promote_candidate_links_for_testing(pg_dsn: str) -> None:
 
 @pytest.fixture()
 def client() -> TestClient:
-    yield TestClient(app)
+    """The suite's default client: a signed-in console operator.
+
+    Every gated surface answers only to a session (add-admin-auth-and-console),
+    so the shared client carries one; tests that need the anonymous view build
+    their own TestClient.
+    """
+
+    yield authorized_client()
     app.dependency_overrides.clear()
+
+
+# --- admin console authentication (add-admin-auth-and-console) --------------
+
+ADMIN_AUTH_DB_ENV = "CANONICAL_V2_ADMIN_AUTH_DB"
+ADMIN_AUTH_KEY_ENV = "CANONICAL_V2_ADMIN_AUTH_KEY"
+ADMIN_INITIAL_PASSWORD_ENV = "CANONICAL_V2_ADMIN_INITIAL_PASSWORD"
+SESSION_COOKIE = "cv2_admin_session"
+TEST_ADMIN_USERNAME = "admin"
+_TEST_ADMIN_PASSWORD = secrets.token_urlsafe(16)
+
+
+@pytest.fixture(scope="session", autouse=True)
+def scratch_admin_auth_state(tmp_path_factory: pytest.TempPathFactory) -> Iterator[Path]:
+    """Keep every test on its own credential store, never the serving one.
+
+    The gated admin surface answers only to a session cookie, so the shared
+    client fixtures sign in as one seeded scratch operator.
+    """
+
+    state = tmp_path_factory.mktemp("admin-auth-state")
+    overrides = {
+        ADMIN_AUTH_DB_ENV: str(state / "admin-auth.sqlite3"),
+        ADMIN_AUTH_KEY_ENV: str(state / "admin-auth.key"),
+        ADMIN_INITIAL_PASSWORD_ENV: _TEST_ADMIN_PASSWORD,
+    }
+    previous = {name: os.environ.get(name) for name in overrides}
+    os.environ.update(overrides)
+    try:
+        from backend.services.admin_auth import AdminAuthStore
+
+        store = AdminAuthStore(state / "admin-auth.sqlite3")
+        store.create_account(TEST_ADMIN_USERNAME, _TEST_ADMIN_PASSWORD)
+        store.close()
+        yield state
+    finally:
+        for name, value in previous.items():
+            if value is None:
+                os.environ.pop(name, None)
+            else:
+                os.environ[name] = value
+
+
+def authorized_client(application: Any = None, **kwargs: Any) -> TestClient:
+    """A TestClient that carries a valid session for the scratch administrator."""
+
+    from backend.services.admin_session import issue_session
+
+    instance = TestClient(app if application is None else application, **kwargs)
+    instance.cookies.set(
+        SESSION_COOKIE, issue_session(TEST_ADMIN_USERNAME)[0], domain="testserver.local", path="/"
+    )
+    return instance
 
 
 @pytest.fixture(scope="session")
