@@ -76,17 +76,37 @@
 - \[x\] F1 Targeted suites green (**132 passed, 1 skipped** admin-console;
   **251 passed** professor subset); full `apps/admin-console` before/after of
   130 failure lines each, `comm` empty in both directions (zero new failures).
-- \[ \] F2 One real `preview` and one `sample` (limit=5) run: the first `preview`
-  attempt was killed by the operator's own 280 s timeout (see the finding below) and
-  the re-run is in flight; `sample` still to run.
+- \[x\] F2 One real `preview` and one `sample` (limit=5) run through the gate's own
+  entry: preview `succeeded` in **7.5 min** (`items_processed: 1`); sample
+  `succeeded` and wrote **professor 5 / professor_affiliation 5 / source_page 9**;
+  the registry view reads `success`. The first preview attempt was killed by the
+  operator's own 280 s timeout and its row had to be released by hand (finding
+  below).
 - \[x\] F3 Evidence under `.agents/runs/connect-collection-line/`; ledger row ticked;
   human log appended; index line updated.
+
+## G · Defect fixed while verifying
+
+- \[x\] G1 `open_pipeline_run` / `close_pipeline_run` used `now()` — Postgres's
+  *transaction start* — so a crawl that writes inside one transaction recorded
+  `finished_at == started_at` (a 7.5-minute crawl logged as 3 ms, and the registry's
+  最近运行 time derived from it). Changed to `clock_timestamp()`; proved on the real
+  database (2 s sleep inside one transaction → delta `0:00:00` before,
+  `0:00:02.002` after) and locked by
+  `tests/storage/test_pipeline_run.py::test_close_records_elapsed_time_not_the_transaction_start`
+  (RED `1 failed, 3 passed` → GREEN `4 passed`).
 
 ## Findings recorded, not fixed here
 
 - A killed crawl leaves its `pipeline_run` row in `running` forever (no heartbeat,
   no timeout finalizer, no stale sweep), so the registry shows that seed as
   "进行中" indefinitely while `/jobs` knows the truth. Candidate slice.
+- A crawl of one seed takes minutes (SUSTech preview: 7.5 min), which is why the
+  gate's 5400 s task timeout and the 20 s per-request fetch timeout matter; a
+  page-level trigger should not be expected to return in seconds.
+- `pipeline_run.seed_id` is a nullable TEXT column and is empty in practice — the
+  seed association lives in `run_scope->>'seed_id'` (as the registry store's SQL
+  assumes); querying the column directly finds nothing.
 - The startup `console_database=` INFO line is invisible under the current process
   logging configuration.
 - The upload commit preflight can still 500 (not 503) when the console database is

@@ -83,3 +83,32 @@
 - 采集链现在有**真实存在的落点**（`miroflow_collection_v1`，38 条花名册就位），C6 的"采集 → 构建 → 切包"有了上游
 - 收掉 W3 遗留：入口隐藏 + 失败可见
 - 新登记缺口：被 kill 的采集留下永久 `running` 行（需要超时/心跳兜底）
+
+---
+
+# 第 3 轮（同日 23:35–23:50）：F2 真跑 + 顺带修掉"运行时长恒为 0"
+
+## 1. 做了什么
+
+- **真跑**（走闸门 spawn 的同一入口 `run_admin_seed_refresh.py`，`DATABASE_URL` 按新注入方式给）：
+  - preview（seed 11 = 南科大）：**7.5 分钟**，`succeeded`，`items_processed: 1`
+  - sample `limit=5`：`succeeded`，`items_processed: 5` → 落库 **professor 5 / professor_affiliation 5 / source_page 9**
+  - registry 视图（`/seeds` 渲染的那份）：`id=11 → success / 15:33:48Z`
+- **修掉一个既有缺陷**：`open/close_pipeline_run` 用 `now()`（Postgres 里是**事务开始时间**），而抓取全程在一个事务里 → `finished_at` 恒等于 `started_at`（7.5 分钟的抓取记成 3 毫秒）。改成 `clock_timestamp()`，并在真库上取证：修复前 2 秒口径差 = `0:00:00`，修复后 = `0:00:02.002`
+- 回归测试 `test_close_records_elapsed_time_not_the_transaction_start`：**RED 1 failed → GREEN 4 passed**（临时库，跑完已删）
+
+## 2. 发现了什么
+
+1. **首次 preview 被我自己的 280s timeout 杀掉**，库里留下一行永久 `running` 的孤儿 run（无心跳/超时兜底）——已手工释放并在 `error_summary` 里写明原因；登记为候选切片。
+2. 采集的**真实耗时在分钟级**（南科大 7.5 分钟；preview 只做发现阶段），页面/闸门的 5400s 上限是必要的。
+3. `pipeline_run.seed_id` 列是 TEXT 且实际为空——seed 关联走的是 `run_scope->>'seed_id'`（store 的 SQL 就是这么写的）；直接查列会查不到。
+
+## 3. 怎么验证
+
+命令与输出都在 `.agents/runs/connect-collection-line/verification.md` 的 "F2" 一节（含修复前后 delta 对照、RED/GREEN 测试输出、落库计数）。
+
+## 4. 影响哪些问题
+
+- F2 完成：**采集链在真实库上端到端跑通并写出数据**（这是"采集流程能否正常运行"的直接答案）
+- `/seeds` 的"最近运行/运行时长"从现在起是真实值
+- 待有会话的只剩页面级点击验收（C3 的 UI 半边）

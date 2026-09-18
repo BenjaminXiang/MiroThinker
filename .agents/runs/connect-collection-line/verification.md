@@ -328,3 +328,54 @@ this seed still needs a live crawl (the parent's F2 preview/sample run).
 5. No f-string / DSN leakage: the importer prints only a configured/not-configured state
    and redacts the DSN from driver messages; the CLI test asserts the password never
    appears on stdout.
+
+## F2 — real runs on the live collection database (`miroflow_collection_v1`)
+
+Run through the same entry the gate spawns (`scripts/run_admin_seed_refresh.py`) with
+`DATABASE_URL` exported exactly as `JobRuntime._execute` now injects it; seed 11 =
+`南方科技大学 / https://www.sustech.edu.cn/zh/letter/`.
+
+| run | mode | wall clock | result | written |
+|---|---|---|---|---|
+| 1st preview | preview | killed by the operator's own 280 s timeout | row left `running` (see finding) | 0 |
+| 2nd preview | preview | 23:26:18 → 23:33:48 (**7.5 min**) | `succeeded`, `items_processed: 1`, `seed_status: success` | 0 (discovery-only by design) |
+| sample | sample, limit 5 | 23:33:48 → (seconds) | `succeeded`, `items_processed: 5` | **professor 5, professor_affiliation 5, source_page 9, homepage_recursion_page_ledger 0** |
+
+Registry view at the end (what `/seeds` renders — `list_seeds`):
+`id=11 → last_run_status='success', last_run_at=2026-09-18T15:33:48Z`.
+
+### Finding fixed while verifying: run durations read as zero
+
+`open_pipeline_run` / `close_pipeline_run` used `now()`, which in Postgres is the
+**transaction start**. A crawl writes everything inside one transaction, so
+`finished_at` was written equal to `started_at` — a 7.5-minute crawl recorded as
+3 ms, and `/seeds`'s 最近运行 time came from that value.
+
+Reproduced on the real database (open a run, sleep 2 s inside one transaction, close):
+
+```
+before:  started 15:34:37.721167  finished 15:34:37.721167  delta 0:00:00
+after:   started 15:34:52.864469  finished 15:34:54.866702  delta 0:00:02.002233
+```
+
+Fix: `clock_timestamp()` in both statements
+(`apps/miroflow-agent/src/data_agents/storage/postgres/pipeline_run.py`).
+Regression test `test_close_records_elapsed_time_not_the_transaction_start`
+(`apps/miroflow-agent/tests/storage/test_pipeline_run.py`), run against a throwaway
+database created + migrated for the purpose (then dropped):
+
+- RED (fix stashed): `1 failed, 3 passed`
+- GREEN: `4 passed in 16.45s`
+
+### Finding recorded, not fixed: a killed crawl leaves a permanent `running` row
+
+The first preview was killed by the operator's timeout; its `pipeline_run` row stayed
+`running` (no heartbeat, no timeout finalizer, no stale sweep in
+`storage/postgres/pipeline_run.py`). The registry would show that seed as
+"进行中" forever while `/jobs` knows the truth. The row was released by hand with an
+explanatory `error_summary` (`operator_killed`). Candidate slice.
+
+### Effective input budget
+
+Sample with `limit 5` wrote 5 profiles; the SUSTech letter page yields a bounded
+roster. Full runs (`full`) have no limit and are gated by the 5400 s task timeout.
