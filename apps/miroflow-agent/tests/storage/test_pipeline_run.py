@@ -1,4 +1,5 @@
 import os
+import time
 
 import pytest
 import psycopg
@@ -82,3 +83,18 @@ def test_close_accepts_error_summary(pg_conn):
     ).fetchone()
     assert row["status"] == "failed"
     assert row["error_summary"]["msg"] == "boom"
+
+
+def test_close_records_elapsed_time_not_the_transaction_start(pg_conn):
+    """A crawl writes inside one transaction, where `now()` freezes at its start."""
+
+    run_id = open_pipeline_run(
+        pg_conn, run_kind="backfill_real", run_scope={"test": "clock"}
+    )
+    time.sleep(0.2)
+    close_pipeline_run(pg_conn, run_id, status="succeeded", items_processed=1)
+    row = pg_conn.execute(
+        "SELECT finished_at - started_at AS elapsed FROM pipeline_run WHERE run_id = %s",
+        (run_id,),
+    ).fetchone()
+    assert row["elapsed"].total_seconds() >= 0.2

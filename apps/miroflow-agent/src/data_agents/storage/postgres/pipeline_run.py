@@ -71,7 +71,7 @@ def open_pipeline_run(
             run_kind, run_scope, seed_id, parent_run_id,
             started_at, status, triggered_by
         )
-        VALUES (%s, %s::jsonb, %s, %s, now(), 'running', %s)
+        VALUES (%s, %s::jsonb, %s, %s, clock_timestamp(), 'running', %s)
         RETURNING run_id
         """,
         (run_kind, scope_json, seed_id, parent_run_id, triggered_by),
@@ -100,7 +100,7 @@ def close_pipeline_run(
     conn.execute(
         """
         UPDATE pipeline_run
-           SET finished_at = now(),
+           SET finished_at = clock_timestamp(),
                status = %s,
                items_processed = COALESCE(%s, items_processed),
                items_failed = COALESCE(%s, items_failed),
