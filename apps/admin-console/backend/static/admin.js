@@ -168,7 +168,6 @@ function buildInput(field) {
     input.placeholder = field.kind === "url" ? "https://…（留空回到默认）" : "留空回到默认";
   }
   input.id = `f-${field.path}`;
-  input.dataset.path = field.path;
   if (!field.editable) {
     input.disabled = true;
     input.title = field.readonly_reason || (field.env_var ? `被环境变量 ${field.env_var} 覆盖` : "只读");
@@ -462,7 +461,6 @@ function renderConnections() {
 function renderConnectionCard(connection) {
   const card = document.createElement("section");
   card.className = "connection";
-  card.dataset.connection = connection.key;
 
   const header = document.createElement("header");
   header.append(text("h3", "", connection.label || connection.key), runtimeBadge(connection));
@@ -477,7 +475,6 @@ function renderConnectionCard(connection) {
   keyInput.type = "password";
   keyInput.autocomplete = "new-password";
   keyInput.placeholder = "新密钥（留空 = 不改动；明文既不回显也不入日志）";
-  keyInput.dataset.secretInput = connection.key;
   keyInput.addEventListener("input", () => {
     const value = keyInput.value.trim();
     if (value) state.keys.set(connection.key, value);
@@ -487,7 +484,6 @@ function renderConnectionCard(connection) {
   const clearButton = document.createElement("button");
   clearButton.type = "button";
   clearButton.textContent = "清除密钥";
-  clearButton.dataset.clearSecret = connection.key;
   clearButton.addEventListener("click", () => clearSecret(connection.key));
   keyRow.append(keyInput, clearButton);
   card.append(keyRow);
@@ -513,7 +509,6 @@ function renderConnectionCard(connection) {
   testButton.type = "button";
   testButton.textContent = "测试连通性";
   testButton.id = `test-${connection.key}`;
-  testButton.dataset.testConnection = connection.key;
   const result = text("span", "result", "未测试");
   result.dataset.connectionResult = connection.key;
   testButton.addEventListener("click", () => testConnection(connection.key, testButton, result));
@@ -522,7 +517,6 @@ function renderConnectionCard(connection) {
   saveButton.className = "primary";
   saveButton.textContent = "保存本卡";
   saveButton.id = `save-${connection.key}`;
-  saveButton.dataset.saveConnection = connection.key;
   saveButton.addEventListener("click", () => saveConnection(connection.key, saveButton));
   actions.append(testButton, saveButton, result);
   card.append(actions);

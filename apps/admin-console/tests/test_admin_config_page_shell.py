@@ -11,7 +11,6 @@ from __future__ import annotations
 
 from fastapi.testclient import TestClient
 
-from backend.main import app
 from tests.conftest import authorized_client
 
 _CARD_IDS = ("card-collection", "card-serving", "card-paths", "card-connections")
@@ -68,7 +67,12 @@ def test_shell_keeps_the_four_cards_and_the_snapshot() -> None:
         assert f'id="{card}"' in page, card
     assert 'id="snapshot"' in page
     assert "只读快照" in page
-    for container in ("collectionFields", "servingFields", "pathsFields", "connectionCards"):
+    for container in (
+        "collectionFields",
+        "servingFields",
+        "pathsFields",
+        "connectionCards",
+    ):
         assert f'id="{container}"' in page, container
     assert "各域新鲜度" in page
     assert 'id="storageRows"' in page
