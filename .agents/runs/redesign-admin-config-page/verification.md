@@ -1,7 +1,8 @@
 # Verification: redesign-admin-config-page
 
 Slice: tasks A1–A4, B1–B8, C1, C2 (C3 — live cutover on 18188 + rollback drill — is
-the parent session's step and is deliberately untouched here).
+the parent session's step; this subagent slice never touched 18188, and the parent
+session's record of C3 is §6 below).
 
 Worktree `/home/longxiang/MiroThinker/.worktrees/admin-config-redesign`, branch
 `feat/admin-config-redesign` off `0af01f33`. All commands ran in
@@ -234,3 +235,41 @@ LISTEN 0 2048  0.0.0.0:18188  users:(("python3",pid=1203385,fd=31))   ← live l
    runtime's documented behaviour), so the scratch smoke displayed masks/origins
    from ambient key files. No value was printed and no scratch write escaped
    `/tmp/admin-config-smoke/`.
+
+## 6. Live cutover + rollback drill on 18188 (C3 — parent session)
+
+Live line: `.worktrees/canonical-v2-s11-consolidation`, branch
+`codex/canonical-v2-s12a-ready`, systemd user unit `canonical-v2-backend`, port 18188,
+serving pack `serving-pack-run16-sealed`. Every restart boots the whole pack before
+`/api/health` answers (10–11.5 min). Probes below are public surfaces only.
+
+| time (+08) | action | serving resumed |
+|---|---|---|
+| 16:27:47 | cutover: ff to `72fa365c` + `systemctl --user restart` | 16:39:10 |
+| 16:40:45 | **rollback**: `git reset --hard 29d54983` + restart | 16:52:08 |
+| 16:53:09 | **recovery**: `git merge --ff-only 72fa365c` + restart | ≈17:03 |
+
+| probe | rollback state (`29d54983`) | recovered state (`72fa365c`) |
+|---|---|---|
+| `GET /static/admin.html` | 200, **1093 lines** | 200, **142 lines** |
+| legacy markers (`FIELD_SPECS\|statusTiles\|providerTable`) | **8** | **0** |
+| cards: 4 × `id="card-*"` (plus banner and the read-only snapshot `<details class="card">`) | **0** | **4 + 2** |
+| `admin.js` / `admin.css` refs in the shell, and both fetched | 0 refs | 2 refs, both **200** |
+| `GET /admin` (login gate) | 302 | 302 |
+| `GET /api/canonical-v2/admin/config` (no session) | 401 | 401 |
+
+Served bytes are the tree's bytes: `sha256(/static/admin.html)` equals
+`sha256(<live tree>/apps/admin-console/backend/static/admin.html)` (`6a5bc8b3…`), and
+the live tree is clean at both ends (`git status --porcelain` empty).
+
+The targeted subset was re-run on the final, post-rebase tip `72fa365c`:
+`85 passed in 2.48s` (the six files listed in §2).
+
+**Honest gap — the credential-gated acceptance lines.** A1/A2/A3/A5 are PATCH-level
+checks and need an authenticated `/admin` session. The operator rotated the password
+on their side (admin-auth store: `password_change ok`, epoch 1→2), so the first-boot
+password file no longer authenticates and the parent session had no usable session
+(two unauthenticated login attempts were refused — `login fail` in the admin audit
+log). Those lines therefore rest on the scratch-18296 evidence in §4 and are marked
+**live-pending**: an operator with a live session should re-run them on 18188.
+Nothing differs between scratch and live — same commit, same bundle, same catalogue.

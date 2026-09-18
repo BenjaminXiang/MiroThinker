@@ -38,8 +38,11 @@
   before/after full-suite failure diff recorded (zero new failures).
 - \[x\] C2 Scratch-port smoke (own port + scratch settings file): every acceptance
   line in acceptance.md demonstrated, transcript recorded.
-- \[ \] C3 Live cutover 18188 (fast-forward + restart) + the acceptance lines on the
-  live page; rollback drill (revert commit + restart). — parent session.
+- \[x\] C3 Live cutover 18188 (fast-forward + restart) + the acceptance lines on the
+  live page; rollback drill (revert commit + restart). — parent session. Public-surface
+  lines verified in both states; the PATCH-level lines are **live-pending** (the
+  operator had rotated the password, so no session was available). Evidence:
+  `verification.md` §6.
 
 ## Deviation notes
 
