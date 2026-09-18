@@ -49,16 +49,55 @@ W3_ADDITIONS = {
 }
 
 
+def test_registry_covers_the_plan_whitelist() -> None:
+    assert {task.task_id for task in JOB_TASKS} == PLAN_WHITELIST | W3_ADDITIONS
+
+
+# The `/jobs` page renders groups, not a flat list, and explains each task with the operator hint.
+# Naming the membership here keeps both halves of that contract exact: a task cannot change group
+# or ship without plain-language copy without changing this test.
+OPERATOR_GROUPS = ("collection", "import", "seed", "ops")
+GROUP_MEMBERSHIP = {
+    "collection": {
+        "company-news-ingest",
+        "company-official-product-capture",
+        "paper-search-backfill",
+        "paper-summary-zh-backfill",
+        "paper-doi-verify",
+        "professor-homepage-rescrape",
+        "professor-homepage-paper-ingest",
+    },
+    "import": {"upload-company-import", "upload-patent-import", "upload-professor-import"},
+    "seed": {"admin-seed-refresh", "admin-seed-refresh-sample"},
+    "ops": {"ops-milvus-backfill", "ops-milvus-backfill-dry-run", "ops-retrieval-validation"},
+}
+
+
+def test_every_task_carries_operator_copy_for_the_page() -> None:
+    for task in JOB_TASKS:
+        assert task.group in OPERATOR_GROUPS, f"{task.task_id} is in group {task.group!r}"
+        assert task.operator_hint.strip(), f"{task.task_id} has no operator hint"
+        # The hint is the sentence the operator reads instead of the script path: it must not
+        # reintroduce the path the page hides behind 技术细节.
+        assert "scripts/" not in task.operator_hint, f"{task.task_id} leaks a script path"
+    assert {task.group for task in JOB_TASKS} == set(OPERATOR_GROUPS)
+    for group, expected in GROUP_MEMBERSHIP.items():
+        assert {task.task_id for task in JOB_TASKS if task.group == group} == expected
+
+
+def test_task_payload_exports_the_operator_columns() -> None:
+    for task in JOB_TASKS:
+        payload = task.as_dict()
+        assert payload["group"] == task.group
+        assert payload["operator_hint"] == task.operator_hint
+
+
 def _first_params(task) -> dict[str, str]:
     values = {name: allowed[0] for name, allowed in task.params.items()}
     # A token parameter is supplied to a stub resolver in the shape tests: the registry is about
     # argv *shape*, while resolving a real token is covered where the declaring system owns it.
     values.update({name: "probe-token" for name in task.token_params})
     return values
-
-
-def test_registry_covers_the_plan_whitelist() -> None:
-    assert {task.task_id for task in JOB_TASKS} == PLAN_WHITELIST | W3_ADDITIONS
 
 
 @pytest.mark.parametrize("task", JOB_TASKS, ids=lambda task: task.task_id)

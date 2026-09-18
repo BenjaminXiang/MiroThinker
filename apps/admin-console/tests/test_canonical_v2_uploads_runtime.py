@@ -58,6 +58,8 @@ def _upload_task(task_id: str, domain: str, resolver) -> JobTask:  # noqa: ANN00
         task_id=task_id,
         label=f"{domain} import",
         description="stub",
+        group="import",
+        operator_hint="桩上传任务，只出现在测试里。",
         domain=domain,
         argv_template=("python3", "-c", "print('stub')", "{upload_id}"),
         cwd_relative=".",

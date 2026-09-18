@@ -12,6 +12,7 @@
         --muted: #62727d;
         --navy-strong: #0d2c41;
         --teal: #168b82;
+        --teal-strong: #0f6f68;
         --teal-soft: #e7f5f2;
         --blue-soft: #edf4f8;
         --amber: #b66916;
@@ -101,6 +102,7 @@
         border-radius: var(--radius);
         box-shadow: var(--shadow);
         padding: 20px 22px;
+        min-width: 0;
       }
 
       .card > header {
@@ -117,6 +119,10 @@
       .card h2 { font-size: 1rem; margin: 0; letter-spacing: 0.02em; }
       .card header .hint { font-size: 0.8rem; color: var(--muted); }
 
+      .lead { margin: 0 0 8px; font-size: 0.9rem; }
+      .rules { margin: 0; padding-left: 20px; font-size: 0.84rem; color: var(--muted); }
+      .rules li { margin-bottom: 2px; }
+
       .pill {
         display: inline-block;
         font-size: 0.74rem;
@@ -124,13 +130,15 @@
         border-radius: 999px;
         border: 1px solid var(--line-strong);
         color: var(--muted);
-        background: var(--surface);
+        background: #f6f8f9;
         margin-right: 4px;
         white-space: nowrap;
       }
       .pill.ok { color: #0d5f57; background: var(--teal-soft); border-color: #a9ded6; }
       .pill.warn { color: #8a5312; background: var(--amber-soft); border-color: #e8c894; }
       .pill.bad { color: #8b2f3b; background: var(--danger-soft); border-color: #e6b7bd; }
+
+      .table-wrap { overflow-x: auto; margin: 0 -6px; padding: 0 6px; }
 
       table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
       th, td { text-align: left; padding: 7px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
@@ -140,19 +148,30 @@
       tr.run-row:hover { background: var(--blue-soft); }
       tr.failed td { background: var(--danger-soft); }
 
-      .dot {
-        display: inline-block;
-        width: 9px;
-        height: 9px;
-        border-radius: 50%;
-        background: #cfd8dc;
-        margin-right: 6px;
-      }
-      .dot.bad { background: var(--danger); box-shadow: 0 0 0 3px rgba(168, 63, 76, 0.16); }
-      .dot.ok { background: var(--teal); }
-      .dot.warn { background: var(--amber); }
+      table.task-table { min-width: 960px; table-layout: fixed; }
+      table.task-table th, table.task-table td { padding: 10px 10px; }
+      .col-status { width: 170px; }
+      .col-when { width: 190px; }
+      .col-actions { width: 296px; }
+
+      .group + .group { margin-top: 22px; }
+      .group > h3 { font-size: 0.95rem; margin: 0 0 2px; letter-spacing: 0.02em; }
+      .group-purpose { font-size: 0.8rem; color: var(--muted); margin: 0 0 10px; }
+
+      .task-name { display: block; font-weight: 600; }
+      .task-hint { display: block; color: var(--muted); font-size: 0.78rem; margin-top: 2px; }
+      .tags { display: block; margin-top: 6px; }
+      .tags .pill:last-child { margin-right: 0; }
+
+      details.tech { margin-top: 8px; }
+      details.tech summary { cursor: pointer; font-size: 0.76rem; color: var(--muted); }
+      details.tech .mono { font-size: 0.74rem; color: var(--muted); word-break: break-all; }
+
+      .when { display: block; color: var(--muted); font-size: 0.74rem; margin-top: 2px; }
+      .empty { padding: 14px 2px; color: var(--muted); font-size: 0.84rem; margin: 0; }
 
       .actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+      a.link { color: var(--teal-strong); font-size: 0.84rem; }
       button {
         cursor: pointer;
         border-radius: 999px;
@@ -160,8 +179,9 @@
         background: #fff;
         padding: 6px 14px;
         font-size: 0.84rem;
+        white-space: nowrap;
       }
-      button.primary { background: var(--teal); border-color: var(--teal); color: #fff; }
+      button.primary { background: var(--teal-strong); border-color: var(--teal-strong); color: #fff; }
       button:disabled { cursor: not-allowed; opacity: 0.55; }
       select {
         padding: 6px 10px;
@@ -204,7 +224,7 @@
       <div class="topbar-inner">
         <div class="brand">
           <strong>任务运维</strong>
-          <span>Canonical V2 · 白名单任务手动触发 / 运行历史 / 失败样例</span>
+          <span>Canonical V2 · 任务节奏 / 手动触发 / 运行历史</span>
         </div>
         <nav class="nav">
           <a href="/main">首页</a>
@@ -224,31 +244,28 @@
     <main>
       <div class="notice hidden" id="banner" role="status"></div>
 
+      <section class="card" aria-label="页面说明">
+        <header>
+          <h2>这个页面做什么</h2>
+        </header>
+        <p class="lead">
+          在这里查看后台任务：看它们各自的节奏和最近一次结果，必要时手动触发一次。
+        </p>
+        <ul class="rules">
+          <li>同一个任务不会重复运行——正在跑的任务再点一次会被拒绝。</li>
+          <li>任务连续失败 2 次会熔断；排查原因后点「复位熔断」，再重新触发。</li>
+          <li>手动触发与周期运行共用同一道闸门：采集开关、配额、采集时间窗都不会被绕过。</li>
+        </ul>
+      </section>
+
       <section class="card" aria-label="任务清单">
         <header>
           <h2>任务清单</h2>
           <span class="hint" id="listHint">加载中…</span>
         </header>
-        <div style="overflow-x: auto">
-          <table>
-            <thead>
-              <tr>
-                <th>任务</th>
-                <th>域</th>
-                <th>节奏（下次运行）</th>
-                <th>闸门</th>
-                <th>最近运行</th>
-                <th>操作</th>
-              </tr>
-            </thead>
-            <tbody id="taskRows">
-              <tr><td colspan="6">加载中…</td></tr>
-            </tbody>
-          </table>
-        </div>
+        <div id="taskGroups"><p class="empty">加载中…</p></div>
         <p class="footnote">
-          节奏写死在任务表里（改节奏走变更流程），页面只读展示；"立即采集"与周期任务共用同一道闸门
-          （防重入锁 / 开关 / 配额 / 熔断），手动触发不绕过任何限制。
+          节奏写死在任务表里（改节奏走变更流程），页面只读展示；「立即运行」与周期运行共用同一道闸门。
         </p>
       </section>
 
@@ -271,7 +288,7 @@
           </label>
           <button id="historyRefresh" type="button">刷新</button>
         </div>
-        <div style="overflow-x: auto; margin-top: 12px">
+        <div class="table-wrap" style="margin-top: 12px">
           <table>
             <thead>
               <tr>
@@ -306,7 +323,7 @@
       const MESSAGES = {
         job_already_running: "该任务正在运行中：防重入锁已拒绝本次触发。",
         job_breaker_open: "该任务连续 2 轮失败已熔断，请排查后点「复位熔断」再触发。",
-        job_postgres_unavailable: "本机没有构建期 PostgreSQL，该任务不可用（已在页面隐藏触发入口）。",
+        job_postgres_unavailable: "本机没有构建期 PostgreSQL，该任务不可用（触发按钮已禁用）。",
         job_unknown_task: "未知任务（不在白名单内）。",
         job_invalid_params: "参数不在白名单允许的取值内，本次未执行。",
         jobs_storage_unavailable: "运行记录存储不可用（未配置 CANONICAL_V2_JOBS_DB）。",
@@ -328,6 +345,41 @@
         outside_window: "窗口外"
       };
       const TRIGGER_TEXT = { manual: "手动", schedule: "周期", operator_reset: "运维复位" };
+      /* 分组标题与一句话说明：页面按 group 渲染，文案与后端 operator_hint 一一对应。 */
+      const GROUPS = [
+        {
+          id: "collection",
+          title: "日常采集",
+          purpose: "按周期把四个数据域的新数据抓回来；一般由系统自动执行，失败时可在本页重跑。"
+        },
+        {
+          id: "import",
+          title: "数据导入",
+          purpose: "上传后的表格由这些任务真正写库；上传页会自动排队，失败时可在此重跑。"
+        },
+        {
+          id: "seed",
+          title: "教授采集源",
+          purpose: "逐条采集源的抓取在「Seed 管理」页操作（那里能选具体学校和名册 URL）。"
+        },
+        {
+          id: "ops",
+          title: "构建与运维",
+          purpose: "数据更新后的索引重建与检索自检；需要构建期数据库。"
+        }
+      ];
+      /* 参数取值的中文说法：命令行的值不变，变的只是操作者看到的那一层。 */
+      const PARAM_LABEL = {
+        domain: { company: "企业", paper: "论文", patent: "专利", professor: "教授" },
+        mode: { preview: "预览", full: "全量" },
+        limit: { "5": "5 条", "20": "20 条", "50": "50 条", "100": "100 条" }
+      };
+      const UNAVAILABLE_TEXT = { postgres_unavailable: "需要构建期数据库" };
+      /* 参数里有一个本页选不出的 token（seed id / upload id）：去签发它的页面操作。 */
+      const TOKEN_PAGE = {
+        seed_id: { href: "/seeds", text: "去 Seed 管理页" },
+        upload_id: { href: "/upload", text: "去上传导入页" }
+      };
 
       let TASKS = [];
 
@@ -354,23 +406,43 @@
         );
       }
 
-      function localTime(value) {
-        if (!value) return "—";
-        const parsed = new Date(value);
-        if (Number.isNaN(parsed.getTime())) return value;
-        return parsed.toLocaleString("zh-CN", { hour12: false });
+      function clip(text, limit) {
+        const value = String(text === null || text === undefined ? "" : text).replace(/\s+/g, " ").trim();
+        return value.length > limit ? value.slice(0, limit) + "…" : value;
       }
 
+      /* ISO（UTC）→ 本地 “YYYY-MM-DD HH:mm”；解析不了就原样显示。 */
+      function when(iso) {
+        if (!iso) return "";
+        const parsed = new Date(iso);
+        if (Number.isNaN(parsed.getTime())) return String(iso);
+        const pad = (value) => String(value).padStart(2, "0");
+        return (
+          parsed.getFullYear() + "-" + pad(parsed.getMonth() + 1) + "-" + pad(parsed.getDate()) +
+          " " + pad(parsed.getHours()) + ":" + pad(parsed.getMinutes())
+        );
+      }
+
+      /* 毫秒 → 操作者读得懂的量级：秒 / 分 / 小时。 */
       function duration(value) {
         if (value === null || value === undefined) return "—";
-        if (value < 1000) return value + " ms";
-        return (value / 1000).toFixed(1) + " s";
+        const seconds = value / 1000;
+        if (seconds < 1) return "不到 1 秒";
+        if (seconds < 60) return (seconds < 10 ? seconds.toFixed(1) : String(Math.round(seconds))) + " 秒";
+        const minutes = seconds / 60;
+        if (minutes < 60) return (minutes < 10 ? minutes.toFixed(1) : String(Math.round(minutes))) + " 分";
+        return (seconds / 3600).toFixed(1) + " 小时";
+      }
+
+      function taskLabel(taskId) {
+        const task = TASKS.filter((candidate) => candidate.task_id === taskId)[0];
+        return task ? task.label : taskId;
       }
 
       function runBadge(run) {
-        if (!run) return '<span class="pill">未运行</span>';
+        if (!run) return '<span class="pill">从未运行</span>';
         const status = run.status;
-        let kind = status === "succeeded" ? "ok" : status === "failed" ? "bad" : "warn";
+        const kind = status === "succeeded" ? "ok" : status === "failed" ? "bad" : "warn";
         let text = STATUS_TEXT[status] || status;
         if (status === "skipped" && run.skip_reason) {
           text += "（" + (SKIP_TEXT[run.skip_reason] || run.skip_reason) + "）";
@@ -378,124 +450,169 @@
         return '<span class="pill ' + kind + '">' + escapeHtml(text) + "</span>";
       }
 
-      function gateBadges(task) {
+      /* 失败原因就地显示：退出码 + stderr 摘要（截断并转义）。 */
+      function failureReason(run) {
+        if (run.status !== "failed") return "";
         const parts = [];
+        if (run.exit_code !== null && run.exit_code !== undefined) {
+          parts.push("exit_code " + escapeHtml(run.exit_code));
+        }
+        const excerpt = clip(run.stderr_excerpt, 160);
+        if (excerpt) parts.push("stderr：" + escapeHtml(excerpt));
+        return parts.length ? '<span class="when">' + parts.join(" · ") + "</span>" : "";
+      }
+
+      function lastRunCell(task) {
+        const last = task.last_run;
+        let kind = "";
+        let text;
+        if (!last) {
+          text = "从未运行";
+        } else {
+          kind = last.status === "succeeded" ? "ok" : last.status === "failed" ? "bad" : "warn";
+          text = STATUS_TEXT[last.status] || last.status;
+          if (last.status === "skipped" && last.skip_reason) {
+            text += "（" + (SKIP_TEXT[last.skip_reason] || last.skip_reason) + "）";
+          }
+          if (last.status === "failed" && task.consecutive_failures >= 1) {
+            text += " · 连续失败 " + task.consecutive_failures + " 次";
+          }
+        }
+        if (task.breaker_open) {
+          kind = "bad";
+          text += " · 已熔断";
+        }
+        return (
+          '<span class="pill' + (kind ? " " + kind : "") + '">' + escapeHtml(text) + "</span>" +
+          (last ? '<span class="when">' + escapeHtml(when(last.started_at)) + "</span>" : "")
+        );
+      }
+
+      function tagPills(task) {
+        const parts = [];
+        const limit =
+          task.quota_limit === null || task.quota_limit === undefined
+            ? ""
+            : "（上限 " + task.quota_limit + "）";
+        if (task.requires_postgres) parts.push('<span class="pill">需构建库</span>');
+        if (task.quota === "web_search") {
+          parts.push('<span class="pill">消耗网络检索配额' + limit + "</span>");
+        }
+        if (task.quota === "llm") {
+          parts.push('<span class="pill">消耗大模型配额' + limit + "</span>");
+        }
+        if (task.window_bound) parts.push('<span class="pill">仅在采集时间窗内运行</span>');
         if (task.collection_gated) {
           parts.push(
             task.switch_enabled === false
-              ? '<span class="pill bad">采集开关：关闭</span>'
-              : '<span class="pill ok">采集开关：开</span>'
+              ? '<span class="pill warn">受采集开关约束（当前已关闭）</span>'
+              : '<span class="pill">受采集开关约束</span>'
           );
         }
-        if (task.quota) {
+        return '<span class="tags">' + parts.join(" ") + "</span>";
+      }
+
+      /* 任务 ID、脚本命令、超时与 cron 只留在折叠区里：操作者默认看不见这层。 */
+      function techDetails(task) {
+        const rows = [
+          "任务 ID：" + task.task_id,
+          "命令：" + task.command_display,
+          "超时：" + task.timeout_seconds + " 秒"
+        ];
+        if (task.schedule_cron) rows.push("cron：" + task.schedule_cron);
+        return (
+          '<details class="tech"><summary>技术细节</summary>' +
+          rows.map((row) => '<div class="mono">' + escapeHtml(row) + "</div>").join("") +
+          "</details>"
+        );
+      }
+
+      function paramPicker(taskId, name, values) {
+        const labels = PARAM_LABEL[name] || {};
+        return (
+          '<select data-param="' + escapeHtml(name) + '" data-task="' + escapeHtml(taskId) + '">' +
+          values
+            .map(
+              (value) =>
+                '<option value="' + escapeHtml(value) + '">' + escapeHtml(labels[value] || value) + "</option>"
+            )
+            .join("") +
+          "</select>"
+        );
+      }
+
+      function actionsCell(task) {
+        const parts = [];
+        const tokenPage = (task.token_params || []).map((name) => TOKEN_PAGE[name])[0];
+        if (task.token_params && task.token_params.length) {
           parts.push(
-            '<span class="pill">配额：' +
-              (task.quota === "web_search" ? "web search" : "LLM") +
-              " ≤ " +
-              (task.quota_limit === null || task.quota_limit === undefined ? "—" : task.quota_limit) +
+            tokenPage
+              ? '<a class="link" href="' + tokenPage.href + '">' + tokenPage.text + "</a>"
+              : '<button type="button" disabled>立即运行</button><span class="hint">需在对应页面操作</span>'
+          );
+        } else if (task.available === false) {
+          Object.entries(task.params || {}).forEach(([name, values]) => {
+            parts.push(paramPicker(task.task_id, name, values));
+          });
+          parts.push('<button type="button" disabled>立即运行</button>');
+          parts.push(
+            '<span class="hint">' +
+              escapeHtml(UNAVAILABLE_TEXT[task.unavailable_reason] || task.unavailable_reason || "本机不可用") +
               "</span>"
           );
-        }
-        if (task.window_bound) parts.push('<span class="pill">夜间窗口</span>');
-        if (task.requires_postgres) {
+        } else {
+          Object.entries(task.params || {}).forEach(([name, values]) => {
+            parts.push(paramPicker(task.task_id, name, values));
+          });
           parts.push(
-            task.available
-              ? '<span class="pill ok">需 PG（可用）</span>'
-              : '<span class="pill bad">需 PG（不可用）</span>'
+            '<button class="primary" type="button" data-run="' + escapeHtml(task.task_id) + '">立即运行</button>'
           );
         }
-        return parts.join(" ");
+        if (task.breaker_open) {
+          parts.push(
+            '<button type="button" data-reset="' + escapeHtml(task.task_id) + '">复位熔断</button>'
+          );
+        }
+        return '<div class="actions">' + parts.join(" ") + "</div>";
       }
 
-      function dotFor(task) {
-        if (task.breaker_open) return '<span class="dot bad" title="已熔断"></span>';
-        const last = task.last_run;
-        if (!last) return '<span class="dot" title="未运行"></span>';
-        if (last.status === "failed") return '<span class="dot bad" title="最近一次失败"></span>';
-        if (last.status === "running") return '<span class="dot warn" title="运行中"></span>';
-        if (last.status === "skipped") return '<span class="dot warn" title="最近一次跳过"></span>';
-        return '<span class="dot ok" title="最近一次成功"></span>';
+      function renderTaskRow(task) {
+        const next = task.next_run_at
+          ? '<span class="when">下次 ' + escapeHtml(when(task.next_run_at)) + "</span>"
+          : "";
+        return (
+          "<tr>" +
+          "<td>" +
+          '<span class="task-name">' + escapeHtml(task.label) + "</span>" +
+          '<span class="task-hint">' + escapeHtml(task.operator_hint) + "</span>" +
+          tagPills(task) +
+          techDetails(task) +
+          "</td>" +
+          "<td>" + lastRunCell(task) + "</td>" +
+          "<td>" + escapeHtml(task.schedule_display) + next + "</td>" +
+          "<td>" + actionsCell(task) + "</td>" +
+          "</tr>"
+        );
       }
 
-      function renderTasks(payload) {
-        TASKS = payload.tasks || [];
-        const body = document.getElementById("taskRows");
+      function renderGroups() {
+        const container = document.getElementById("taskGroups");
         if (!TASKS.length) {
-          body.innerHTML = '<tr><td colspan="6">没有任务</td></tr>';
+          container.innerHTML = '<p class="empty">没有任务</p>';
           return;
         }
-        body.innerHTML = TASKS.map((task) => {
-          const last = task.last_run;
-          const paramPicker = Object.entries(task.params || {})
-            .map(
-              ([name, values]) =>
-                '<select data-param="' +
-                escapeHtml(name) +
-                '" data-task="' +
-                escapeHtml(task.task_id) +
-                '">' +
-                values
-                  .map((value) => '<option value="' + escapeHtml(value) + '">' + escapeHtml(value) + "</option>")
-                  .join("") +
-                "</select>"
-            )
-            .join(" ");
-          const trigger = task.available
-            ? '<button class="primary" type="button" data-run="' +
-              escapeHtml(task.task_id) +
-              '">立即采集</button>'
-            : '<button type="button" disabled title="本机不可用">不可用</button>';
-          const reset = task.breaker_open
-            ? '<button type="button" data-reset="' + escapeHtml(task.task_id) + '">复位熔断</button>'
-            : "";
-          const cadence =
-            escapeHtml(task.schedule_display) +
-            (task.next_run_at ? ' · 下次 ' + escapeHtml(localTime(task.next_run_at)) : "");
+        container.innerHTML = GROUPS.map((group) => {
+          const members = TASKS.filter((task) => task.group === group.id);
+          if (!members.length) return "";
           return (
-            "<tr>" +
-            "<td>" +
-            dotFor(task) +
-            "<strong>" +
-            escapeHtml(task.label) +
-            "</strong>" +
-            '<div class="mono">' +
-            escapeHtml(task.task_id) +
-            "</div>" +
-            '<div class="mono" style="color:var(--muted)">' +
-            escapeHtml(task.command_display) +
-            "</div></td>" +
-            "<td>" +
-            escapeHtml(task.domain || "运维") +
-            "</td>" +
-            "<td>" +
-            cadence +
-            "</td>" +
-            "<td>" +
-            gateBadges(task) +
-            "</td>" +
-            "<td>" +
-            runBadge(last) +
-            (last
-              ? '<div class="mono">' +
-                escapeHtml(localTime(last.started_at)) +
-                " · " +
-                duration(last.duration_ms) +
-                " · 条数 " +
-                (last.items_processed === null || last.items_processed === undefined
-                  ? "—"
-                  : last.items_processed) +
-                "</div>"
-              : "") +
-            (task.breaker_open
-              ? '<div class="mono">连续失败 ' + task.consecutive_failures + " 次</div>"
-              : "") +
-            "</td>" +
-            '<td><div class="actions">' +
-            paramPicker +
-            trigger +
-            reset +
-            "</div></td>" +
-            "</tr>"
+            '<section class="group" aria-label="' + escapeHtml(group.title) + '">' +
+            "<h3>" + escapeHtml(group.title) + "</h3>" +
+            '<p class="group-purpose">' + escapeHtml(group.purpose) + "</p>" +
+            '<div class="table-wrap"><table class="task-table">' +
+            '<colgroup><col /><col class="col-status" /><col class="col-when" /><col class="col-actions" /></colgroup>' +
+            "<thead><tr><th>任务</th><th>最近运行</th><th>节奏（下次运行）</th><th>操作</th></tr></thead>" +
+            "<tbody>" + members.map(renderTaskRow).join("") + "</tbody></table></div>" +
+            "</section>"
           );
         }).join("");
       }
@@ -511,15 +628,16 @@
             /* keep the generic message */
           }
           banner(message(detail), "bad");
-          document.getElementById("taskRows").innerHTML =
-            '<tr><td colspan="6">任务清单不可用</td></tr>';
+          document.getElementById("taskGroups").innerHTML =
+            '<p class="empty">任务清单不可用</p>';
           document.getElementById("listHint").textContent = "不可用";
           return;
         }
         const payload = await response.json();
-        renderTasks(payload);
+        TASKS = payload.tasks || [];
+        renderGroups();
         document.getElementById("listHint").textContent =
-          "共 " + TASKS.length + " 个任务 · 生成于 " + localTime(payload.generated_at);
+          "共 " + TASKS.length + " 个任务 · 生成于 " + when(payload.generated_at);
         if (payload.config && payload.config.available === false) {
           banner("受管配置不可用，触发会被拒绝：" + (payload.config.reason || ""), "bad");
         }
@@ -577,18 +695,22 @@
           body.innerHTML = runs
             .map(
               (run) =>
-                '<tr class="run-row ' +
-                (run.status === "failed" ? "failed" : "") +
+                '<tr class="run-row' +
+                (run.status === "failed" ? " failed" : "") +
                 '" data-run-id="' +
                 escapeHtml(run.run_id) +
                 '">' +
-                "<td>" + escapeHtml(localTime(run.started_at)) + "</td>" +
-                '<td class="mono">' + escapeHtml(run.task_id) + "</td>" +
+                "<td>" + escapeHtml(when(run.started_at) || "—") + "</td>" +
+                '<td title="' + escapeHtml(run.task_id) + '">' + escapeHtml(taskLabel(run.task_id)) + "</td>" +
                 "<td>" + escapeHtml(TRIGGER_TEXT[run.trigger_source] || run.trigger_source) + "</td>" +
                 "<td>" + escapeHtml(run.operator) + "</td>" +
-                "<td>" + runBadge(run) + "</td>" +
-                "<td>" + duration(run.duration_ms) + "</td>" +
-                "<td>" + (run.items_processed === null || run.items_processed === undefined ? "—" : run.items_processed) + "</td>" +
+                "<td>" + runBadge(run) + failureReason(run) + "</td>" +
+                "<td>" + escapeHtml(duration(run.duration_ms)) + "</td>" +
+                "<td>" +
+                (run.items_processed === null || run.items_processed === undefined
+                  ? "—"
+                  : run.items_processed) +
+                "</td>" +
                 '<td><button type="button" data-detail="' + escapeHtml(run.run_id) + '">查看</button></td>' +
                 "</tr>"
             )
@@ -617,7 +739,7 @@
           runBadge(run) +
           '<span class="pill">触发：' + escapeHtml(TRIGGER_TEXT[run.trigger_source] || run.trigger_source) + "</span>" +
           '<span class="pill">操作人：' + escapeHtml(run.operator) + "</span>" +
-          '<span class="pill">耗时：' + duration(run.duration_ms) + "</span>" +
+          '<span class="pill">耗时：' + escapeHtml(duration(run.duration_ms)) + "</span>" +
           '<span class="pill">退出码：' + escapeHtml(run.exit_code === null ? "—" : run.exit_code) + "</span>" +
           '<span class="pill">条数：' + escapeHtml(run.items_processed === null ? "—" : run.items_processed) + "</span>" +
           "</div>" +
@@ -630,20 +752,21 @@
       }
 
       async function trigger(taskId) {
-        const picker = document.querySelector('select[data-task="' + CSS.escape(taskId) + '"]');
         const params = {};
-        if (picker) params[picker.dataset.param] = picker.value;
+        document.querySelectorAll('select[data-task="' + CSS.escape(taskId) + '"]').forEach((picker) => {
+          params[picker.dataset.param] = picker.value;
+        });
         const response = await fetch(API + "/" + encodeURIComponent(taskId) + "/run", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ params })
+          body: JSON.stringify({ params: params })
         });
         const payload = await response.json().catch(() => ({}));
         if (response.ok) {
           banner(
             payload.status === "skipped"
               ? "已记录：本次跳过（" + (SKIP_TEXT[payload.skip_reason] || payload.skip_reason) + "）。"
-              : "已触发：" + taskId + "，运行记录 " + payload.run_id + "。",
+              : "已触发：" + taskLabel(taskId) + "，运行记录 " + payload.run_id + "。",
             payload.status === "skipped" ? "" : "ok"
           );
         } else {
@@ -659,14 +782,14 @@
         });
         const payload = await response.json().catch(() => ({}));
         banner(
-          response.ok ? "熔断已复位：" + taskId : message(payload.detail),
+          response.ok ? "熔断已复位：" + taskLabel(taskId) : message(payload.detail),
           response.ok ? "ok" : "bad"
         );
         await loadTasks();
         await loadHistory();
       }
 
-      document.getElementById("taskRows").addEventListener("click", (event) => {
+      document.getElementById("taskGroups").addEventListener("click", (event) => {
         const target = event.target;
         if (!(target instanceof HTMLElement)) return;
         if (target.dataset.run) trigger(target.dataset.run);

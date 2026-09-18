@@ -81,6 +81,8 @@ def _client(tmp_path: Path, *, postgres: bool) -> tuple[TestClient, UploadRuntim
             task_id=f"upload-{domain}-import",
             label="stub",
             description="stub",
+            group="import",
+            operator_hint="桩上传任务，只出现在测试里。",
             domain=domain,
             argv_template=("python3", "-c", "print('stub')", "{upload_id}"),
             cwd_relative=".",

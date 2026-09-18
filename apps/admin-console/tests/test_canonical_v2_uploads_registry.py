@@ -111,6 +111,8 @@ def test_a_parameter_declared_twice_is_a_configuration_error() -> None:
         task_id="bad-task",
         label="bad",
         description="bad",
+        group="ops",
+        operator_hint="桩任务，只出现在测试里。",
         domain="company",
         argv_template=("echo", "{value}"),
         cwd_relative=".",

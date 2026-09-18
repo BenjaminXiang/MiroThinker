@@ -436,3 +436,145 @@ Evidence (real browser, scratch console on 18297 against `miroflow_collection_v1
 | page tests | 47 passed, 1 skipped (the skip needs a test database) |
 
 Not done: no URL history/audit trail (the change overwrites), no bulk edit.
+
+## jobs page — operator clarity (2026-09-19)
+
+`/jobs` was a flat 15-row table whose 任务 column led with the script path
+(`企业新闻采集（scripts/run_company_news_ingest.py）`), with no grouping and no statement of
+when an operator should press anything. This slice adds the two operator-facing columns to
+the closed white list, locks them with an invariant test, and rewrites the page around them.
+
+### Files changed
+
+| file | lines | what |
+|---|---|---|
+| `apps/miroflow-agent/src/data_agents/canonical_v2/jobs.py` | 158-172 | `JobTask` gains required `group: Literal["collection","import","seed","ops"]` + `operator_hint: str` (docstring states the page contract) |
+| " | 250-257 | `as_dict()` exports `group` and `operator_hint` next to `description` |
+| " | 287-305 | `_collection_task()` takes the hint and stamps `group="collection"` |
+| " | 306-560 | all 15 declarations carry the exact operator copy (7 collection, 3 import, 2 seed, 3 ops) |
+| `apps/admin-console/backend/static/jobs.html` | 1-813 | rewritten task list (see below) |
+| `apps/admin-console/tests/test_canonical_v2_jobs_registry.py` | 56-92 | invariant test: groups in the four allowed values, non-empty hint, no `scripts/` leak, exact id set per group, both keys in `as_dict()` |
+| `apps/admin-console/tests/test_canonical_v2_jobs_api.py` | 132-138, 258-269 | list payload carries `group`/`operator_hint`/`token_params`; page-shell markers |
+| `apps/admin-console/tests/test_canonical_v2_jobs_{runner,uploads_api,uploads_registry,uploads_runtime}.py` | +2 each | stub `JobTask`s pass the now-required fields |
+
+Page landmarks: explainer card `jobs.html:247`, grouped task list `jobs.html:261` (`#taskGroups`),
+运行历史 `jobs.html:272`; `GROUPS` 349, `PARAM_LABEL` 372, `UNAVAILABLE_TEXT`/`TOKEN_PAGE` 377/379,
+`when()` 415, `duration()` 427, `failureReason()` 454, `lastRunCell()` 465, `tagPills()` 491,
+`techDetails()` 516, `actionsCell()` 544, `renderGroups()` 598, `loadHistory()` 684, `trigger()` 754.
+
+### New payload keys
+
+`GET /api/canonical-v2/admin/jobs` → `tasks[]` now also carries:
+
+- `group` — `"collection" | "import" | "seed" | "ops"` (required field, so a task cannot be
+  declared without one)
+- `operator_hint` — one Chinese sentence: what the task does and when an operator would use it
+
+Everything else in the payload is unchanged (`task_id`, `label`, `description`, `domain`,
+`command_display`, `cwd_relative`, `timeout_seconds`, `schedule_cron`, `schedule_display`,
+`params`, `token_params`, `collection_gated`, `quota`, `requires_postgres`, `window_bound`,
+plus the runtime columns `next_run_at`, `switch_enabled`, `quota_limit`, `available`,
+`unavailable_reason`, `last_run`, `failure_flag`, `consecutive_failures`, `breaker_open`,
+`last_success_at`, `last_failure_at`). No endpoint, parameter or response shape changed.
+
+### Verification
+
+Layer ① — new tests this slice (fixture source: the real declared table; page half driven by a
+real `task_views()` payload):
+
+```bash
+cd apps/admin-console && uv run pytest -q -p no:randomly -p no:cacheprovider \
+  tests/test_canonical_v2_jobs_registry.py
+# 47 passed
+```
+
+`test_every_task_carries_operator_copy_for_the_page` and
+`test_task_payload_exports_the_operator_columns` are the new invariant. RED before the catalog
+change (with `jobs.py` restored to HEAD and only the test file updated):
+
+```
+E  AttributeError: 'JobTask' object has no attribute 'group'     (line 78)
+E  KeyError: 'group'                                            (line 91)
+2 failed, 45 deselected
+```
+
+GREEN after: `47 passed`.
+
+Layer ② — pre-existing suites (all pass; the one failure below is pre-existing at HEAD):
+
+```bash
+cd apps/admin-console && uv run pytest -q -p no:randomly -p no:cacheprovider \
+  tests/test_canonical_v2_jobs_api.py tests/test_nav_postgres_gating.py \
+  tests/test_admin_console_shell.py tests/test_admin_gate.py          # 47 passed
+cd apps/admin-console && uv run pytest -q -p no:randomly -p no:cacheprovider \
+  tests/test_canonical_v2_jobs_{registry,api,runner,store}.py \
+  tests/test_canonical_v2_uploads_{api,registry,runtime}.py \
+  tests/test_canonical_v2_seeds_api.py                                # 140 passed, 1 skipped
+cd apps/admin-console && uv run pytest -q -p no:randomly -p no:cacheprovider \
+  tests/test_console_dsn_single_source.py tests/test_seed_background_tasks.py \
+  tests/test_upload_pipeline_trigger.py tests/test_canonical_v2_real_preview_ui.py
+# 1 failed, 248 passed — test_public_chat_uses_guoxian_brand_identity, which also fails at HEAD
+# with the whole slice stashed (chat branding, untouched here)
+uv tool run ruff@0.8.0 check <the eight changed Python files>       # All checks passed
+```
+
+`cd apps/miroflow-agent && uv run pytest tests -k "job_task or jobs_runner"` selects **no tests**
+there (`no tests ran`): the jobs module lives in the agent app but is exercised by the
+admin-console suites above, so that command is a no-op rather than a pass.
+
+Layer ③ — page-level evidence. The page is static HTML/JS with no test harness of its own, so
+its own inline script was executed against a real payload in a DOM stub
+(`.agents/runs/connect-collection-line/jobs-page-harness/`, not part of the app):
+
+```bash
+cd apps/admin-console
+uv run python ../../.agents/runs/connect-collection-line/jobs-page-harness/make_payload.py
+node ../../.agents/runs/connect-collection-line/jobs-page-harness/render_check.cjs
+# OK — all /jobs render assertions passed
+# groups: <h3>日常采集</h3> | <h3>数据导入</h3> | <h3>教授采集源</h3> | <h3>构建与运维</h3>
+# rows per group: 日常采集=8, 数据导入=4, 教授采集源=3, 构建与运维=4   (each count includes its header row)
+# history rows: 7
+```
+
+What those assertions lock: the four group sections render in order with their purpose lines;
+every task shows its label + `operator_hint` and never the raw `description`; ids / command /
+timeout / cron sit inside `<details>`; 成功/失败/跳过（窗口外）/从未运行 badges with local
+`YYYY-MM-DD HH:mm`; `失败 · 连续失败 2 次 · 已熔断`; the five capability tags; three disabled
+`立即运行` buttons each followed by `需要构建期数据库`; two `/seeds` links and three `/upload`
+links with no trigger for token tasks; `需构建库`; Chinese `domain`/`mode`/`limit` option labels;
+history rows with Chinese status, local start times, 秒/分 durations and an escaped truncated
+failure reason (`&lt;img src=x onerror=alert(1)&gt;` never reaches the DOM unescaped); and the
+trigger POST body (`{"params": {"domain": "professor"}}`, `{"params": {}}`) unchanged.
+
+### Deviations from the brief, and why
+
+1. **The three upload tasks point at `/upload`, not `/seeds`.** The brief said "token_params
+   非空的（两条 seed 任务）… /seeds" — but `upload-company|patent|professor-import` carry
+   `token_params=["upload_id"]` too. A blanket `/seeds` link would send an operator importing a
+   patent spreadsheet to the professor-roster page. Routing is therefore keyed on the token
+   name (`seed_id` → `/seeds`, `upload_id` → `/upload`), with a disabled button + `需在对应页面操作`
+   for an unmapped token.
+2. **`mode` / `limit` pickers are currently unreachable.** They are declared only by the two seed
+   tasks, and those render a link instead of a trigger, so the page renders only the `domain`
+   picker today. The Chinese label maps for all three are declared (`jobs.html:372`) for a future
+   non-token task that needs them.
+3. **A failed history row shows `exit_code` inline and the stderr excerpt only when the payload
+   carries one.** `GET /{task_id}/runs` serialises runs with `JobRun.as_dict(include_samples=False)`
+   (`jobs.py:703-719`), which omits `stdout_excerpt` / `stderr_excerpt`; the page copies `/seeds`'
+   `failureReason()` so it renders whichever fields exist. Enabling the excerpt in the list needs
+   one backend change (`as_dict(include_samples=True)` for failed rows in
+   `api/canonical_v2_jobs.py`), which this slice's constraints ("do not touch
+   `apps/admin-console/backend/**` Python") forbid — raised, not worked around. The full excerpt
+   stays one click away in 运行详情, which already fetches it.
+4. **`受采集开关约束` gained a parenthetical when the switch is off** (`受采集开关约束（当前已关闭）`,
+   warn colour). The old page showed 采集开关：关; dropping it entirely would have hidden why a
+   manual trigger is about to be skipped.
+
+### Page values that stay technical (deliberately)
+
+- 运行详情 keeps the raw argv (`命令：uv run python …`), the `summary` JSON blob and the run id —
+  it is the engineering surface, one click behind `查看`.
+- The trigger/breaker banners still print the run id (`运行记录 <uuid>`) — the handle the operator
+  quotes; the task name in them now uses the Chinese label.
+- 技术细节 keeps 任务 ID / 命令 / 超时 / cron, folded per task.
+

@@ -170,7 +170,7 @@ def list_job_runs(
         total=total,
         limit=limit,
         offset=offset,
-        runs=[row.as_dict() for row in runs],
+        runs=[row.as_dict(include_samples=True) for row in runs],
     )
 
 

@@ -40,6 +40,8 @@ def _stub_task(task_id: str, code: str, **overrides) -> JobTask:
         task_id=task_id,
         label="桩任务",
         description="stub",
+        group="ops",
+        operator_hint="桩任务，只出现在测试里。",
         domain="company",
         argv_template=("python3", "-c", code),
         params={},
@@ -129,6 +131,12 @@ def test_list_serves_the_real_declared_table_with_cadence_and_gates(jobs_runtime
     assert news["available"] is True
     assert news["last_run"] is None
     assert news["failure_flag"] is False
+    # The operator-facing columns the page renders instead of the script path.
+    assert news["group"] == "collection"
+    assert news["operator_hint"]
+    seed_task = by_id["admin-seed-refresh"]
+    assert seed_task["group"] == "seed"
+    assert seed_task["token_params"] == ["seed_id"]
     for ops_task_id in ("ops-milvus-backfill", "ops-retrieval-validation"):
         assert by_id[ops_task_id]["available"] is False
         assert by_id[ops_task_id]["requires_postgres"] is True
@@ -248,6 +256,21 @@ def test_jobs_page_is_served(jobs_runtime) -> None:
     assert response.status_code == 200
     assert "任务运维" in response.text
     assert _PREFIX in response.text
+    # The page explains itself and renders the four operator groups from the declared groups;
+    # the script path and the ids live behind 技术细节, so the payload keys must be read.
+    for marker in (
+        "这个页面做什么",
+        "日常采集",
+        "数据导入",
+        "教授采集源",
+        "构建与运维",
+        "operator_hint",
+        "技术细节",
+        "立即运行",
+        "复位熔断",
+        "去 Seed 管理页",
+    ):
+        assert marker in response.text
 
 
 def test_unset_storage_degrades_to_503(monkeypatch: pytest.MonkeyPatch) -> None:

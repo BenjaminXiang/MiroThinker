@@ -158,11 +158,18 @@ def _bounded(text: str | bytes | None, *, limit: int = _EXCERPT_LIMIT) -> str | 
 
 @dataclass(frozen=True, slots=True)
 class JobTask:
-    """One declared task: a fixed command plus the gate metadata that constrains it."""
+    """One declared task: a fixed command plus the gate metadata that constrains it.
+
+    ``group`` and ``operator_hint`` are the operator-facing columns: the page groups tasks by
+    ``group`` and explains each one with the single sentence in ``operator_hint``. A task
+    therefore cannot be mounted on the page without plain-language copy.
+    """
 
     task_id: str
     label: str
     description: str
+    group: Literal["collection", "import", "seed", "ops"]
+    operator_hint: str
     domain: str | None
     argv_template: tuple[str, ...]
     cwd_relative: str
@@ -244,6 +251,8 @@ class JobTask:
             "task_id": self.task_id,
             "label": self.label,
             "description": self.description,
+            "group": self.group,
+            "operator_hint": self.operator_hint,
             "domain": self.domain,
             "command_display": self.command_display,
             "cwd_relative": self.cwd_relative,
@@ -276,11 +285,13 @@ def _resolve_seed_id(token: str) -> str:
 
 
 def _collection_task(task_id: str, label: str, domain: str, cadence: str, display: str,
-                     script: str, quota: str, args: tuple[str, ...] = ()) -> JobTask:
+                     script: str, quota: str, hint: str, args: tuple[str, ...] = ()) -> JobTask:
     return JobTask(
         task_id=task_id,
         label=label,
         description=f"{label}（{script}）",
+        group="collection",
+        operator_hint=hint,
         domain=domain,
         argv_template=("uv", "run", "python", script, *args),
         cwd_relative="apps/miroflow-agent",
@@ -303,6 +314,7 @@ JOB_TASKS: tuple[JobTask, ...] = (
         "每周一 02:00",
         "scripts/run_company_news_ingest.py",
         "web_search",
+        "抓取企业的最新新闻，补充企业动态。会消耗网络检索配额。",
     ),
     _collection_task(
         "company-official-product-capture",
@@ -312,6 +324,7 @@ JOB_TASKS: tuple[JobTask, ...] = (
         "每周一 03:30",
         "scripts/run_company_official_product_capture.py",
         "web_search",
+        "重新抓取企业官网的产品信息，用于更新产品线描述。",
     ),
     _collection_task(
         "paper-search-backfill",
@@ -321,6 +334,7 @@ JOB_TASKS: tuple[JobTask, ...] = (
         "每周三 02:00",
         "scripts/run_paper_search_backfill.py",
         "web_search",
+        "为缺链接或元数据的论文做标题检索补全。",
     ),
     _collection_task(
         "paper-summary-zh-backfill",
@@ -330,6 +344,7 @@ JOB_TASKS: tuple[JobTask, ...] = (
         "每周三 03:30",
         "scripts/run_paper_summary_zh_backfill.py",
         "llm",
+        "为缺中文摘要的论文补写摘要；会调用本地大模型。",
     ),
     _collection_task(
         "paper-doi-verify",
@@ -339,6 +354,7 @@ JOB_TASKS: tuple[JobTask, ...] = (
         "每周三 03:30",
         "scripts/run_paper_doi_verify.py",
         "llm",
+        "校验论文 DOI 是否正确并修正。",
     ),
     _collection_task(
         "professor-homepage-rescrape",
@@ -348,12 +364,15 @@ JOB_TASKS: tuple[JobTask, ...] = (
         "每月 1 日 02:00",
         "scripts/run_profile_bio_rescrape.py",
         "llm",
+        "重新抓取教授个人主页并更新画像；会调用本地大模型。",
         args=("--apply", "--confirm-real-db"),
     ),
     JobTask(
         task_id="professor-homepage-paper-ingest",
         label="教授主页论文增量",
         description="主页论文/专利增量 ingest（断点续跑）",
+        group="collection",
+        operator_hint="从教授主页增量提取论文与专利，支持断点续跑。",
         domain="professor",
         argv_template=(
             "uv",
@@ -374,6 +393,8 @@ JOB_TASKS: tuple[JobTask, ...] = (
         task_id="ops-milvus-backfill",
         label="Milvus 回填",
         description="按域回填域 Milvus（需构建期 PostgreSQL）",
+        group="ops",
+        operator_hint="把最近入库的数据重新写入检索索引；数据更新后要跑一次，检索才看得到新内容。",
         domain=None,
         argv_template=(
             "uv",
@@ -393,6 +414,8 @@ JOB_TASKS: tuple[JobTask, ...] = (
         task_id="ops-milvus-backfill-dry-run",
         label="Milvus 回填（干跑）",
         description="按域回填干跑，不写 Milvus（需构建期 PostgreSQL）",
+        group="ops",
+        operator_hint="上面那件事的预演：只检查不写索引，用来确认影响范围。",
         domain=None,
         argv_template=(
             "uv",
@@ -413,6 +436,8 @@ JOB_TASKS: tuple[JobTask, ...] = (
         task_id="ops-retrieval-validation",
         label="检索验证",
         description="对当前服务入口跑一遍 host e2e 检索验证（需构建期 PostgreSQL）",
+        group="ops",
+        operator_hint="对当前服务跑一遍检索自检，确认检索仍然正常。",
         domain=None,
         argv_template=("bash", "apps/admin-console/scripts/host_e2e_agentic_rag.sh"),
         cwd_relative=".",
@@ -431,6 +456,10 @@ JOB_TASKS: tuple[JobTask, ...] = (
             task_id=f"upload-{domain}-import",
             label=f"{label} XLSX 导入",
             description=f"导入管理区上传的 {label} XLSX（复用旧 upload 链）",
+            group="import",
+            operator_hint=(
+                f"执行「上传导入」页提交的{label}表格；通常上传后自动排队，失败时可在此重跑。"
+            ),
             domain=domain,
             argv_template=(
                 "uv",
@@ -459,6 +488,8 @@ JOB_TASKS: tuple[JobTask, ...] = (
         task_id="admin-seed-refresh",
         label="教授 seed 刷新",
         description="按 seed 触发一次采集（preview / full，不设上限）",
+        group="seed",
+        operator_hint="对一条采集源跑一次完整抓取；在 Seed 管理页逐条操作。",
         domain="professor",
         argv_template=(
             "uv",
@@ -482,6 +513,8 @@ JOB_TASKS: tuple[JobTask, ...] = (
         task_id="admin-seed-refresh-sample",
         label="教授 seed 抽样刷新",
         description="按上限抽样触发一次 seed 采集（sample 必须带上限）",
+        group="seed",
+        operator_hint="对一条采集源只抓固定条数；在 Seed 管理页逐条操作。",
         domain="professor",
         argv_template=(
             "uv",

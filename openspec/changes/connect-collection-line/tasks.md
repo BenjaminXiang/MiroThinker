@@ -96,6 +96,32 @@
   `tests/storage/test_pipeline_run.py::test_close_records_elapsed_time_not_the_transaction_start`
   (RED `1 failed, 3 passed` → GREEN `4 passed`).
 
+## H · `/jobs` operator clarity (round 6)
+
+The page listed 15 tasks flat, with the script path as the primary label and no statement of
+when to press anything. Behaviour-affecting (payload contract + page), implemented on the
+slice contract supplied by the operator.
+
+- \[x\] H1 `JobTask` gains required `group` (`collection | import | seed | ops`) and
+  `operator_hint`; both exported by `as_dict()`, both populated for all 15 declared tasks.
+  → verify: `test_every_task_carries_operator_copy_for_the_page` +
+  `test_task_payload_exports_the_operator_columns` (RED `AttributeError` / `KeyError`
+  before the fields existed → GREEN `47 passed`).
+- \[x\] H2 `/jobs` renders four group sections with their purpose lines, the operator hint
+  per task, a status badge with a local `YYYY-MM-DD HH:mm`, capability tags and the trigger
+  controls; task id / command / timeout / cron move into a per-task `<details>`.
+  → verify: page-shell markers in `test_canonical_v2_jobs_api.py` + the render harness over
+  a real `task_views()` payload
+  (`.agents/runs/connect-collection-line/jobs-page-harness/`).
+- \[x\] H3 Token tasks keep no trigger: `seed_id` → `/seeds`, `upload_id` → `/upload`.
+  (The brief's single `/seeds` link would have sent upload operators to the roster page.)
+- \[x\] H4 运行历史 keeps the filter / refresh / breaker-reset flow and the detail panel;
+  rows show Chinese status, local times, 秒/分 durations and the failure reason inline.
+- \[ \] H5 (not done) the inline failure reason has no stderr to show: the list payload
+  serialises runs with `include_samples=False`. One backend line
+  (`as_dict(include_samples=True)` for failed rows) closes it; the page already renders the
+  excerpt when present.
+
 ## Findings recorded, not fixed here
 
 - A killed crawl leaves its `pipeline_run` row in `running` forever (no heartbeat,
