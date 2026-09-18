@@ -348,16 +348,18 @@ def test_health_check_reports_unconfigured_without_raising(
 
 
 def test_admin_page_is_served() -> None:
+    """The shell links the shared nav and its own assets; the API calls moved to `admin.js`."""
+
     response = _client().get("/admin")
 
     assert response.status_code == 200
     body = response.text
     assert "管理配置中心" in body
-    assert "api/canonical-v2/admin/system-status" in body
-    assert "api/canonical-v2/admin/config" in body
-    assert "api/canonical-v2/admin/providers/health-check" in body
     assert 'href="logs"' in body
-    assert "立即检查" in body
+    assert '<script src="/static/admin.js"' in body
+    assert '<link rel="stylesheet" href="/static/admin.css"' in body
+    assert 'id="card-collection"' in body
+    assert "立即检查" not in body  # the global health button moved into the connection cards
 
 
 def test_logs_page_links_to_admin() -> None:

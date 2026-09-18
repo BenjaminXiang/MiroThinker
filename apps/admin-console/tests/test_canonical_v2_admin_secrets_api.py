@@ -418,14 +418,20 @@ def test_serving_fields_are_in_the_managed_whitelist_with_a_readonly_policy(
 
 
 def test_admin_page_renders_the_credentials_card() -> None:
-    page = _client().get("/admin")
+    """One connection card per connection, built by `admin.js` with the probe inside it."""
+
+    client = _client()
+    page = client.get("/admin")
+    script = client.get("/static/admin.js")
 
     assert page.status_code == 200
-    assert "连接与密钥（可设置）" in page.text
-    assert "测试连通性" in page.text
-    assert "api/canonical-v2/admin/secrets" in page.text
-    assert "api/canonical-v2/admin/connections/test" in page.text
-    assert "重启服务" in page.text
+    assert script.status_code == 200
+    assert "连接与密钥" in page.text
+    assert 'id="connectionCards"' in page.text
+    assert "测试连通性" not in page.text  #每张连接卡的探针按钮由 admin.js 生成
+    assert "api/canonical-v2/admin/secrets" in script.text
+    assert "api/canonical-v2/admin/connections/test" in script.text
+    assert "需重启生效" in script.text
 
 
 def test_disabled_connection_reports_disabled_and_never_calls(

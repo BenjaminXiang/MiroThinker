@@ -6,228 +6,14 @@
     <meta name="color-scheme" content="light" />
     <title>管理配置中心 · Canonical V2</title>
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23143d59'/%3E%3Cpath d='M17 19h8v11l12-11h10L33 32l15 13H37L25 34v11h-8z' fill='white'/%3E%3C/svg%3E" />
-    <style>
-      :root {
-        --ink: #17252f;
-        --muted: #62727d;
-        --navy: #143d59;
-        --navy-strong: #0d2c41;
-        --teal: #168b82;
-        --teal-soft: #e7f5f2;
-        --blue-soft: #edf4f8;
-        --amber: #b66916;
-        --amber-soft: #fff4df;
-        --danger: #a83f4c;
-        --danger-soft: #fff0f2;
-        --surface: #ffffff;
-        --canvas: #f3f6f7;
-        --line: #dce4e7;
-        --line-strong: #c5d2d7;
-        --shadow: 0 18px 42px rgba(24, 55, 70, 0.08);
-        --radius: 18px;
-      }
-
-      * { box-sizing: border-box; }
-
-      body {
-        margin: 0;
-        min-width: 320px;
-        color: var(--ink);
-        background:
-          radial-gradient(circle at 8% 0%, rgba(22, 139, 130, 0.09), transparent 28rem),
-          var(--canvas);
-        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
-          "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
-        line-height: 1.55;
-      }
-
-      button, a, input, select { font: inherit; }
-
-      button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible {
-        outline: 3px solid rgba(22, 139, 130, 0.28);
-        outline-offset: 2px;
-      }
-
-      .topbar {
-        color: #fff;
-        background:
-          linear-gradient(112deg, rgba(255, 255, 255, 0.05), transparent 50%),
-          var(--navy-strong);
-        border-bottom: 1px solid rgba(255, 255, 255, 0.12);
-      }
-
-      .topbar-inner {
-        max-width: 1280px;
-        margin: 0 auto;
-        padding: 18px 24px;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 16px;
-        flex-wrap: wrap;
-      }
-
-      .brand { display: flex; flex-direction: column; gap: 2px; }
-      .brand strong { font-size: 1.05rem; letter-spacing: 0.02em; }
-      .brand span { font-size: 0.8rem; color: rgba(255, 255, 255, 0.72); }
-
-      .nav-user { font-size: 0.78rem; opacity: 0.82; align-self: center; }
-      .nav { display: flex; gap: 8px; flex-wrap: wrap; }
-      .nav a {
-        color: rgba(255, 255, 255, 0.82);
-        text-decoration: none;
-        font-size: 0.86rem;
-        padding: 7px 14px;
-        border-radius: 999px;
-        border: 1px solid transparent;
-      }
-      .nav a:hover { border-color: rgba(255, 255, 255, 0.28); }
-      .nav a.active {
-        color: #fff;
-        background: rgba(255, 255, 255, 0.14);
-        border-color: rgba(255, 255, 255, 0.24);
-      }
-
-      main {
-        max-width: 1280px;
-        margin: 0 auto;
-        padding: 24px;
-        display: grid;
-        gap: 20px;
-      }
-
-      .card {
-        background: var(--surface);
-        border: 1px solid var(--line);
-        border-radius: var(--radius);
-        box-shadow: var(--shadow);
-        padding: 20px 22px;
-      }
-
-      .card > header {
-        display: flex;
-        align-items: baseline;
-        justify-content: space-between;
-        gap: 12px;
-        flex-wrap: wrap;
-        border-bottom: 1px solid var(--line);
-        padding-bottom: 10px;
-        margin-bottom: 14px;
-      }
-
-      .card h2 { font-size: 1rem; margin: 0; letter-spacing: 0.02em; }
-      .card header .hint { font-size: 0.8rem; color: var(--muted); }
-
-      .grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-        gap: 12px;
-      }
-
-      .tile {
-        border: 1px solid var(--line);
-        border-radius: 14px;
-        padding: 12px 14px;
-        background: var(--blue-soft);
-      }
-      .tile .label { font-size: 0.76rem; color: var(--muted); letter-spacing: 0.04em; }
-      .tile .value { font-size: 1.02rem; font-weight: 600; word-break: break-all; }
-      .tile .value.mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.86rem; }
-      .tile .sub { font-size: 0.76rem; color: var(--muted); }
-
-      .pill {
-        display: inline-block;
-        font-size: 0.74rem;
-        padding: 2px 9px;
-        border-radius: 999px;
-        border: 1px solid var(--line-strong);
-        color: var(--muted);
-        background: var(--surface);
-      }
-      .pill.ok { color: #0d5f57; background: var(--teal-soft); border-color: #a9ded6; }
-      .pill.warn { color: #8a5312; background: var(--amber-soft); border-color: #e8c894; }
-      .pill.bad { color: #8b2f3b; background: var(--danger-soft); border-color: #e6b7bd; }
-
-      .rows { display: grid; gap: 8px; }
-      .row {
-        display: grid;
-        grid-template-columns: 220px 1fr;
-        gap: 10px;
-        align-items: center;
-        border-bottom: 1px dashed var(--line);
-        padding-bottom: 8px;
-        font-size: 0.88rem;
-      }
-      .row:last-child { border-bottom: 0; }
-      .row .key { color: var(--muted); }
-
-      table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
-      th, td { text-align: left; padding: 7px 8px; border-bottom: 1px solid var(--line); }
-      th { color: var(--muted); font-weight: 600; }
-      td.mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
-
-      form .field {
-        display: grid;
-        grid-template-columns: 1fr 220px;
-        gap: 10px;
-        align-items: center;
-        padding: 8px 0;
-        border-bottom: 1px dashed var(--line);
-      }
-      form .field:last-of-type { border-bottom: 0; }
-      form .field label { font-size: 0.88rem; }
-      form .field .meta { font-size: 0.74rem; color: var(--muted); }
-      input[type="number"], input[type="text"], select {
-        width: 100%;
-        padding: 7px 10px;
-        border: 1px solid var(--line-strong);
-        border-radius: 10px;
-        background: #fff;
-      }
-      input:disabled { background: #f1f4f5; color: var(--muted); }
-
-      .actions { display: flex; gap: 10px; align-items: center; margin-top: 14px; flex-wrap: wrap; }
-      button {
-        cursor: pointer;
-        border-radius: 999px;
-        border: 1px solid var(--line-strong);
-        background: #fff;
-        padding: 8px 18px;
-      }
-      button.primary { background: var(--teal); border-color: var(--teal); color: #fff; }
-      button:disabled { cursor: not-allowed; opacity: 0.55; }
-
-      .notice {
-        border-radius: 12px;
-        padding: 10px 14px;
-        font-size: 0.86rem;
-        margin-bottom: 12px;
-        border: 1px solid var(--line-strong);
-        background: var(--blue-soft);
-      }
-      .notice.ok { background: var(--teal-soft); border-color: #a9ded6; }
-      .notice.bad { background: var(--danger-soft); border-color: #e6b7bd; }
-      .notice.hidden { display: none; }
-
-      details.raw { margin-top: 12px; }
-      details.raw pre {
-        background: #0d2c41;
-        color: #dbe7ee;
-        padding: 12px;
-        border-radius: 12px;
-        overflow: auto;
-        font-size: 0.76rem;
-        max-height: 320px;
-      }
-      .footnote { font-size: 0.78rem; color: var(--muted); margin-top: 8px; }
-    </style>
+    <link rel="stylesheet" href="/static/admin.css" />
   </head>
   <body>
     <header class="topbar">
       <div class="topbar-inner">
         <div class="brand">
           <strong>管理配置中心</strong>
-          <span>Canonical V2 · 系统状态 / 受管配置 / provider key 状态</span>
+          <span>Canonical V2 · 采集与构建 / 检索与回答 / 存储与保留 / 连接与密钥</span>
         </div>
         <nav class="nav">
           <a href="/main">首页</a>
@@ -245,15 +31,21 @@
     </header>
 
     <main>
-      <section class="card" aria-label="系统状态">
-        <header>
-          <h2>系统状态</h2>
-          <span class="hint" id="statusGenerated">加载中…</span>
-        </header>
-        <div id="statusNotice" class="notice hidden" role="status"></div>
-        <div class="grid" id="statusTiles"></div>
+      <div id="banner" class="banner hidden" role="status">
+        <span id="bannerText"></span>
+        <code id="restartCommand" class="hidden">systemctl --user restart canonical-v2-backend</code>
+        <button type="button" id="copyRestart" class="hidden">复制重启命令</button>
+      </div>
 
-        <h3 style="font-size: 0.9rem; margin: 18px 0 8px">各域新鲜度（pack 构建时间 vs 投影时点）</h3>
+      <section class="card" id="card-collection" aria-label="采集与构建">
+        <header>
+          <h2>采集与构建</h2>
+          <span class="hint" id="collectionHint">加载中…</span>
+        </header>
+        <div id="collectionNotice" class="notice hidden" role="status"></div>
+        <div id="collectionFields"></div>
+
+        <h3 class="subtitle">各域新鲜度（pack 构建时间 vs 投影时点）</h3>
         <table id="freshnessTable">
           <thead>
             <tr>
@@ -262,832 +54,89 @@
               <th>pack 构建时间</th>
               <th>距今</th>
               <th>投影 as_of</th>
-              <th>采集历史</th>
             </tr>
           </thead>
-          <tbody></tbody>
+          <tbody id="freshnessBody"></tbody>
         </table>
+        <div class="rows" id="collectionState"></div>
 
-        <h3 style="font-size: 0.9rem; margin: 18px 0 8px">存储与运维计数</h3>
-        <div class="rows" id="storageRows"></div>
-
-        <details class="raw">
-          <summary>原始 JSON（只读）</summary>
-          <pre id="statusRaw"></pre>
-        </details>
-      </section>
-
-      <section class="card" aria-label="受管配置">
-        <header>
-          <h2>受管配置</h2>
-          <span class="hint" id="configPath">—</span>
-        </header>
-        <div id="configNotice" class="notice hidden" role="status"></div>
-        <form id="configForm" autocomplete="off"></form>
         <div class="actions">
-          <button type="submit" class="primary" form="configForm">保存</button>
-          <button type="button" id="reloadConfig">重新加载</button>
-          <span class="footnote" id="configFootnote"></span>
+          <button type="button" class="primary" id="save-collection" data-save-card="collection">保存本卡</button>
+          <span class="result" id="collectionResult"></span>
         </div>
         <p class="footnote">
-          仅白名单内的非敏感字段可写；密钥、数据库连接串、索引与 pack 路径不在此列。
-          被环境变量覆盖的字段不可编辑，以 env 为准（不制造第二真相源）。
+          采集开关与配额在服务启动/采集调度时读取；被环境变量覆盖的字段不可编辑（env 优先，不制造第二真相源）。
+          保存后需重启服务才生效。
         </p>
       </section>
 
-      <section class="card" aria-label="密钥与连通性">
+      <section class="card" id="card-serving" aria-label="检索与回答">
         <header>
-          <h2>连接与密钥（可设置）</h2>
+          <h2>检索与回答</h2>
+          <span class="hint" id="servingHint">检索/回答运行期开关</span>
+        </header>
+        <div class="rows">
+          <div class="row">
+            <div class="key">Rerank 运行期状态</div>
+            <div>
+              <span id="rerankRuntime"></span>
+              <div class="meta" id="rerankRuntimeNote"></div>
+            </div>
+          </div>
+        </div>
+        <div id="servingFields"></div>
+
+        <div class="actions">
+          <button type="button" id="testRerank">测试 Rerank 连通性</button>
+          <button type="button" class="primary" id="save-serving" data-save-card="serving">保存本卡</button>
+          <span class="result" id="rerankTestResult">未测试</span>
+        </div>
+        <p class="footnote">
+          测试使用页面上「未保存」的端点/模型值发起一次最小调用（成功/失败 + 延迟），受服务端限频保护。
+          其它卡片只展示状态：它们没有主动探针，页面不为此造按钮。
+        </p>
+        <div class="actions"><span class="result" id="servingResult"></span></div>
+      </section>
+
+      <section class="card" id="card-paths" aria-label="存储与保留">
+        <header>
+          <h2>存储与保留</h2>
+          <span class="hint">路径 · 库计数/体积 · 磁盘余量</span>
+        </header>
+        <div id="pathsFields"></div>
+
+        <h3 class="subtitle">库与磁盘</h3>
+        <div class="rows" id="storageRows"></div>
+        <p class="footnote" id="retentionPreview"></p>
+
+        <div class="actions">
+          <button type="button" class="primary" id="save-paths" data-save-card="paths">保存本卡</button>
+          <span class="result" id="pathsResult"></span>
+        </div>
+      </section>
+
+      <section class="card" id="card-connections" aria-label="连接与密钥">
+        <header>
+          <h2>连接与密钥</h2>
           <span class="hint" id="secretsPath">—</span>
         </header>
         <div id="secretsNotice" class="notice hidden" role="status"></div>
-        <div class="notice" id="restartNotice" role="status"></div>
-        <table id="secretsTable">
-          <thead>
-            <tr>
-              <th>连接</th>
-              <th>当前状态</th>
-              <th>新密钥（写入后不回显）</th>
-              <th>端点 / 模型（可留空）</th>
-              <th>操作</th>
-              <th>测试结果</th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
+        <div class="connections" id="connectionCards">等待加载…</div>
         <p class="footnote">
-          密钥只写不读：页面永远只显示掩码与来源（env / 受管文件 / 旧 key 文件），明文既不回显也不写日志与审计。
-          「运行期已启用/未启用」由服务端按**运行期真实解析链**给出（Bocha/Serper 固定主机与旧 key 文件；
-          Embedding 的发布物冻结端点 + 本地凭据；Rerank 需配置 CANONICAL_V2_RERANK_BASE_URL 才启用；LLM 取当前 chat profile）。
-          「测试连通性」用**当前填写但未保存**的值发起一次最小调用（成功/失败 + 延迟），并受服务端限频保护。
-          保存后需**重启服务**才生效（服务启动时读取受管文件，不做热加载）。
+          密钥只写不读：页面只显示掩码与来源（env / 受管文件 / 旧 key 文件），明文既不回显也不写日志与审计。
+          「运行期已启用/未启用」由服务端按运行期真实解析链给出。端点/模型只在端点类连接卡里编辑——
+          一个字段只有一个入口；保存本卡会先写密钥再写端点，并给出合并结果。
         </p>
       </section>
 
-      <section class="card" aria-label="Provider key 状态">
-        <header>
-          <h2>Provider / 模型 key 状态</h2>
-          <span class="hint">只读 · 仅显示是否已配置与尾号 4 位</span>
-        </header>
-        <table id="providerTable">
-          <thead>
-            <tr>
-              <th>Provider</th>
-              <th>已配置</th>
-              <th>尾号</th>
-              <th>来源</th>
-              <th>连通性</th>
-              <th>详情</th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
-        <div class="actions">
-          <button type="button" id="healthCheck" class="primary">立即检查</button>
-          <span class="footnote" id="healthStamp"></span>
-        </div>
-        <p class="footnote">
-          key 明文永不通过页面/接口返回，也不写入日志或审计；检查只做一次最小探测，且不返回响应体。
-        </p>
-      </section>
+      <details class="card snapshot" id="snapshot">
+        <summary>只读快照（原始受管配置 · env 覆盖清单 · 密钥掩码视图）</summary>
+        <div class="rows" id="snapshotRows"></div>
+        <pre id="snapshotRaw"></pre>
+      </details>
     </main>
 
-    <script>
-      "use strict";
-
-      const API = {
-        status: "api/canonical-v2/admin/system-status",
-        config: "api/canonical-v2/admin/config",
-        secrets: "api/canonical-v2/admin/secrets",
-        connectionTest: "api/canonical-v2/admin/connections/test",
-        health: "api/canonical-v2/admin/providers/health-check",
-      };
-
-      const DOMAINS = ["company", "paper", "patent", "professor"];
-      const DOMAIN_LABEL = {
-        company: "企业",
-        paper: "论文",
-        patent: "专利",
-        professor: "教授",
-      };
-
-      // Rendered whitelist mirror. Every entry maps 1:1 to a schema field; the
-      // server remains the authority and rejects anything outside its whitelist.
-      const FIELD_SPECS = [
-        ...DOMAINS.map((domain) => ({
-          path: `collection.enabled.${domain}`,
-          label: `${DOMAIN_LABEL[domain]}采集开关`,
-          type: "bool",
-        })),
-        { path: "collection.max_web_searches_per_run", label: "每轮 web search 配额上限", type: "int", min: 0, max: 10000 },
-        { path: "collection.max_llm_calls_per_run", label: "每轮 LLM 调用上限", type: "int", min: 0, max: 100000 },
-        { path: "collection.window_start_hour_utc", label: "执行窗口起始（UTC 小时）", type: "int", min: 0, max: 23 },
-        { path: "collection.window_end_hour_utc", label: "执行窗口结束（UTC 小时）", type: "int", min: 0, max: 23 },
-        { path: "extraction_endpoints.llm_base_url", label: "采集 LLM Base URL", type: "url" },
-        { path: "extraction_endpoints.llm_model", label: "采集 LLM 模型名", type: "text" },
-        { path: "extraction_endpoints.embedding_base_url", label: "Embedding Base URL", type: "url" },
-        { path: "extraction_endpoints.embedding_model", label: "Embedding 模型名", type: "text" },
-        { path: "extraction_endpoints.rerank_base_url", label: "Rerank Base URL", type: "url" },
-        { path: "extraction_endpoints.rerank_model", label: "Rerank 模型名", type: "text" },
-        { path: "paths.access_log_retention_days", label: "访问日志保留天数", type: "int", min: 1, max: 3650 },
-        { path: "serving.web_topical_floor", label: "Web 轨主题相关性下限（kill switch）", type: "bool" },
-        { path: "serving.rerank_timeout_seconds", label: "Rerank 超时（秒）", type: "float", min: 0.1, max: 120 },
-        { path: "serving.rerank_max_documents", label: "Rerank 单次最大文档数", type: "int", min: 1, max: 2048 },
-        { path: "serving.mount_receipt_path", label: "挂载收据路径", type: "text" },
-        { path: "serving.turn_debug_dir", label: "轮次调试目录", type: "text" },
-        { path: "serving.full_verify", label: "启动全量校验", type: "bool" },
-      ];
-
-      let configState = null;
-
-      function el(id) {
-        return document.getElementById(id);
-      }
-
-      function notice(node, message, kind) {
-        node.textContent = message;
-        node.className = `notice ${kind || ""}`.trim();
-      }
-
-      function hideNotice(node) {
-        node.className = "notice hidden";
-        node.textContent = "";
-      }
-
-      function pill(text, kind) {
-        const span = document.createElement("span");
-        span.className = `pill ${kind || ""}`.trim();
-        span.textContent = text;
-        return span;
-      }
-
-      function humanBytes(value) {
-        if (typeof value !== "number" || !isFinite(value)) return "—";
-        const units = ["B", "KB", "MB", "GB", "TB"];
-        let index = 0;
-        let size = value;
-        while (size >= 1024 && index < units.length - 1) {
-          size /= 1024;
-          index += 1;
-        }
-        return `${size.toFixed(index === 0 ? 0 : 1)} ${units[index]}`;
-      }
-
-      function humanAge(seconds) {
-        if (typeof seconds !== "number" || !isFinite(seconds)) return "—";
-        if (seconds < 60) return `${seconds} 秒`;
-        if (seconds < 3600) return `${Math.floor(seconds / 60)} 分钟`;
-        if (seconds < 86400) return `${(seconds / 3600).toFixed(1)} 小时`;
-        return `${(seconds / 86400).toFixed(1)} 天`;
-      }
-
-      function shortTime(value) {
-        if (!value) return "—";
-        const parsed = new Date(value);
-        if (Number.isNaN(parsed.getTime())) return String(value);
-        return parsed.toLocaleString("zh-CN", { hour12: false });
-      }
-
-      function tile(label, value, sub, mono) {
-        const node = document.createElement("div");
-        node.className = "tile";
-        const labelNode = document.createElement("div");
-        labelNode.className = "label";
-        labelNode.textContent = label;
-        const valueNode = document.createElement("div");
-        valueNode.className = `value${mono ? " mono" : ""}`;
-        valueNode.textContent = value;
-        node.append(labelNode, valueNode);
-        if (sub) {
-          const subNode = document.createElement("div");
-          subNode.className = "sub";
-          subNode.textContent = sub;
-          node.append(subNode);
-        }
-        return node;
-      }
-
-      function row(key, valueNode) {
-        const node = document.createElement("div");
-        node.className = "row";
-        const keyNode = document.createElement("div");
-        keyNode.className = "key";
-        keyNode.textContent = key;
-        const valueCell = document.createElement("div");
-        if (typeof valueNode === "string") {
-          valueCell.textContent = valueNode;
-        } else {
-          valueCell.append(valueNode);
-        }
-        node.append(keyNode, valueCell);
-        return node;
-      }
-
-      async function loadStatus() {
-        try {
-          const response = await fetch(API.status, { headers: { Accept: "application/json" } });
-          if (!response.ok) {
-            notice(el("statusNotice"), `系统状态读取失败：HTTP ${response.status}`, "bad");
-            return;
-          }
-          renderStatus(await response.json());
-        } catch (error) {
-          notice(el("statusNotice"), `系统状态读取失败：${error}`, "bad");
-        }
-      }
-
-      function renderStatus(data) {
-        hideNotice(el("statusNotice"));
-        el("statusGenerated").textContent = `生成于 ${shortTime(data.generated_at)}`;
-
-        const pack = data.pack || {};
-        const marker = data.index_marker || {};
-        const disk = data.disk || {};
-        const tiles = [
-          tile("serving pack release", pack.release_id || "—", pack.build_run_id || "", true),
-          tile("pack 生成时间", shortTime(pack.generated_at), pack.pack_id || ""),
-          tile("pack 构建时间", shortTime(pack.build_created_at), pack.manifest_version || ""),
-          tile(
-            "index marker 校验",
-            marker.state === "ok" ? "通过" : "未通过",
-            marker.state === "ok" ? `期望 ${String(marker.expected_sha256 || "").slice(0, 12)}…` : marker.reason || "",
-          ),
-          tile("manifest sha256", String(pack.manifest_sha256 || "—").slice(0, 16) + "…", pack.source || "", true),
-        ];
-        const tilesNode = el("statusTiles");
-        tilesNode.replaceChildren(...tiles);
-
-        const freshness = data.freshness || {};
-        const perDomain = freshness.per_domain || {};
-        const body = el("freshnessTable").querySelector("tbody");
-        body.replaceChildren(
-          ...DOMAINS.map((domain) => {
-            const entry = perDomain[domain] || {};
-            const history = (freshness.collection_history || {}).state;
-            const tr = document.createElement("tr");
-            const cells = [
-              DOMAIN_LABEL[domain],
-              entry.record_count ?? "—",
-              shortTime(entry.pack_build_at),
-              humanAge(entry.pack_build_age_seconds),
-              shortTime(entry.projection_as_of),
-              history === "ok" ? "可读" : "不可用（构建期库不可达）",
-            ];
-            cells.forEach((value, index) => {
-              const td = document.createElement("td");
-              td.textContent = String(value);
-              if (index === 1) td.className = "mono";
-              tr.append(td);
-            });
-            return tr;
-          }),
-        );
-
-        const operations = data.operations || {};
-        const storage = data.storage || {};
-        const config = data.config || {};
-        const rows = el("storageRows");
-        const addRow = (key, node) => rows.append(row(key, node));
-        rows.replaceChildren();
-
-        addRow("受管配置文件", `${config.path || "—"}（${config.exists ? "已存在" : "尚未创建"}）`);
-        addRow("access-log 保留天数", String(operations.access_log_retention_days ?? "—"));
-
-        const accessLog = operations.access_log || {};
-        addRow(
-          "访问日志",
-          typeof accessLog.sessions === "number"
-            ? `会话 ${accessLog.sessions} · 轮次 ${accessLog.turns} · 最近 ${shortTime(accessLog.latest_at)}`
-            : `不可用：${accessLog.reason || "未知"}`,
-        );
-        const corrections = operations.corrections || {};
-        addRow(
-          "字段纠错",
-          typeof corrections.active === "number"
-            ? `生效 ${corrections.active} · 已撤销 ${corrections.reverted} · 手工新增 ${corrections.added_records} · 最近 ${shortTime(corrections.latest_at)}`
-            : `不可用：${corrections.reason || "未知"}`,
-        );
-        const manual = operations.manual_recall || {};
-        addRow(
-          "人工召回侧车",
-          typeof manual.entry_count === "number"
-            ? `条目 ${manual.entry_count}${manual.active_points != null ? ` · 生效点 ${manual.active_points}` : ""}`
-            : `不可用：${manual.reason || "未知"}`,
-        );
-
-        const sources = storage.sources || {};
-        ["lookup", "corrections", "access_log"].forEach((key) => {
-          const entry = sources[key] || {};
-          if (entry.state === "ok") {
-            const tableSummary = Object.entries(entry.tables || {})
-              .map(([name, count]) => `${name}=${count}`)
-              .join(" · ");
-            addRow(
-              `SQLite ${key}`,
-              `${humanBytes(entry.bytes)} · quick_check=${entry.quick_check} · ${tableSummary}`,
-            );
-          } else {
-            addRow(`SQLite ${key}`, `不可用：${entry.reason || "未知"}`);
-          }
-        });
-        (disk.volumes || []).forEach((volume) => {
-          if (volume.state === "ok") {
-            addRow(
-              `磁盘 ${volume.path}`,
-              `剩余 ${humanBytes(volume.free_bytes)} / 共 ${humanBytes(volume.total_bytes)}（已用 ${volume.used_percent}%）`,
-            );
-          } else {
-            addRow(`磁盘 ${volume.path}`, "不可用");
-          }
-        });
-
-        el("statusRaw").textContent = JSON.stringify(data, null, 2);
-      }
-
-      function specFor(path) {
-        return FIELD_SPECS.find((spec) => spec.path === path);
-      }
-
-      function valueAt(document_, path) {
-        return path.split(".").reduce((node, part) => (node == null ? undefined : node[part]), document_);
-      }
-
-      function renderConfig(payload) {
-        configState = payload;
-        el("configPath").textContent = `${payload.path}（${payload.exists ? "已存在" : "使用默认值，尚未落盘"}）`;
-        const form = el("configForm");
-        form.replaceChildren();
-        const fieldIndex = new Map((payload.fields || []).map((field) => [field.path, field]));
-
-        FIELD_SPECS.forEach((spec) => {
-          const field = fieldIndex.get(spec.path);
-          if (!field) return; // non-whitelisted on this server build: never rendered
-          const wrapper = document.createElement("div");
-          wrapper.className = "field";
-
-          const labelNode = document.createElement("label");
-          labelNode.htmlFor = `f-${spec.path}`;
-          labelNode.textContent = spec.label;
-          const meta = document.createElement("div");
-          meta.className = "meta";
-          meta.textContent =
-            field.source === "env"
-              ? `由 env 覆盖（${field.env_var}）`
-              : field.source === "file"
-                ? "来自受管配置文件"
-                : "默认值";
-          if (field.source === "env") {
-            const envPill = pill("env 优先", "warn");
-            meta.append(" ", envPill);
-          }
-          if (field.readonly_reason) {
-            meta.append(" ", pill("只读展示", "warn"), ` ${field.readonly_reason}`);
-          }
-          labelNode.append(document.createElement("br"), meta);
-
-          const input = document.createElement("input");
-          input.id = `f-${spec.path}`;
-          input.dataset.path = spec.path;
-          if (spec.type === "bool") {
-            input.type = "checkbox";
-            input.checked = Boolean(field.value);
-          } else if (spec.type === "int" || spec.type === "float") {
-            input.type = "number";
-            if (spec.type === "float") input.step = "0.1";
-            input.min = String(spec.min);
-            input.max = String(spec.max);
-            input.value = field.value == null ? "" : String(field.value);
-          } else {
-            input.type = "text";
-            input.placeholder = spec.type === "url" ? "https://…（留空使用默认）" : "留空使用默认";
-            input.value = field.value == null ? "" : String(field.value);
-          }
-          if (!field.editable) {
-            input.disabled = true;
-            wrapper.title = field.readonly_reason
-              ? field.readonly_reason
-              : `该字段被环境变量 ${field.env_var} 覆盖`;
-          }
-          wrapper.append(labelNode, input);
-          form.append(wrapper);
-        });
-
-        el("configFootnote").textContent =
-          (payload.fields || []).filter((field) => field.source === "env").length
-            ? "存在被 env 覆盖的字段，页面不可修改"
-            : "";
-      }
-
-      function collectPatch() {
-        const patch = { collection: { enabled: {} }, extraction_endpoints: {}, paths: {}, serving: {} };
-        FIELD_SPECS.forEach((spec) => {
-          const input = document.getElementById(`f-${spec.path}`);
-          if (!input || input.disabled) return;
-          let value;
-          if (spec.type === "bool") {
-            value = input.checked;
-          } else if (spec.type === "int" || spec.type === "float") {
-            if (input.value.trim() === "") return;
-            value = Number(input.value);
-          } else {
-            const text = input.value.trim();
-            value = text === "" ? null : text;
-          }
-          const parts = spec.path.split(".");
-          let cursor = patch;
-          for (let index = 0; index < parts.length - 1; index += 1) {
-            cursor[parts[index]] = cursor[parts[index]] || {};
-            cursor = cursor[parts[index]];
-          }
-          cursor[parts[parts.length - 1]] = value;
-        });
-        return patch;
-      }
-
-      async function saveConfig(event) {
-        event.preventDefault();
-        const node = el("configNotice");
-        try {
-          const response = await fetch(API.config, {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json", Accept: "application/json" },
-            body: JSON.stringify(collectPatch()),
-          });
-          const payload = await response.json();
-          if (!response.ok) {
-            notice(node, `保存被拒绝（HTTP ${response.status}）：${describeDetail(payload.detail)}`, "bad");
-            return;
-          }
-          notice(
-            node,
-            payload.changed && payload.changed.length
-              ? `已保存：${payload.changed.join("、")}`
-              : "没有字段发生变化",
-            "ok",
-          );
-          await loadConfig();
-        } catch (error) {
-          notice(node, `保存失败：${error}`, "bad");
-        }
-      }
-
-      function describeDetail(detail) {
-        if (detail == null) return "未提供原因";
-        if (typeof detail === "string") return detail;
-        if (Array.isArray(detail)) {
-          return detail
-            .map((item) => (item && item.msg ? `${(item.loc || []).join(".")}: ${item.msg}` : JSON.stringify(item)))
-            .join("；");
-        }
-        return JSON.stringify(detail);
-      }
-
-      async function loadConfig() {
-        try {
-          const response = await fetch(API.config, { headers: { Accept: "application/json" } });
-          if (!response.ok) {
-            notice(el("configNotice"), `配置读取失败：HTTP ${response.status}`, "bad");
-            return;
-          }
-          hideNotice(el("configNotice"));
-          renderConfig(await response.json());
-        } catch (error) {
-          notice(el("configNotice"), `配置读取失败：${error}`, "bad");
-        }
-      }
-
-      async function runHealthCheck() {
-        const button = el("healthCheck");
-        button.disabled = true;
-        el("healthStamp").textContent = "检查中…";
-        try {
-          const response = await fetch(API.health, {
-            method: "POST",
-            headers: { Accept: "application/json" },
-          });
-          const payload = await response.json();
-          if (!response.ok) {
-            el("healthStamp").textContent = `检查失败：HTTP ${response.status}`;
-            return;
-          }
-          const body = el("providerTable").querySelector("tbody");
-          body.replaceChildren(
-            ...(payload.providers || []).map((provider) => {
-              const tr = document.createElement("tr");
-              const cells = [
-                provider.label || provider.key,
-                provider.configured ? "是" : "否",
-                provider.suffix4 || "—",
-                provider.origin || "—",
-                provider.reachable === true ? "可达" : provider.reachable === false ? "不可达" : "未检查",
-                provider.detail || "—",
-              ];
-              cells.forEach((value, index) => {
-                const td = document.createElement("td");
-                td.textContent = String(value);
-                if (index === 2 || index === 3) td.className = "mono";
-                tr.append(td);
-              });
-              return tr;
-            }),
-          );
-          el("healthStamp").textContent = `检查于 ${shortTime(payload.generated_at)}`;
-        } catch (error) {
-          el("healthStamp").textContent = `检查失败：${error}`;
-        } finally {
-          button.disabled = false;
-        }
-      }
-
-      el("configForm").addEventListener("submit", saveConfig);
-      el("reloadConfig").addEventListener("click", loadConfig);
-      el("healthCheck").addEventListener("click", runHealthCheck);
-
-      // -- credentials + connectivity (R16) ---------------------------------
-
-      let secretsState = null;
-
-      function secretFor(connectionKey) {
-        if (!secretsState) return null;
-        return (secretsState.secrets || []).find((entry) => entry.connection === connectionKey) || null;
-      }
-
-      function connectionInput(connectionKey, kind) {
-        const input = document.querySelector(`[data-secret-input="${connectionKey}"]`);
-        if (!input) return null;
-        return input.value.trim();
-      }
-
-      function endpointInput(connectionKey, suffix) {
-        const input = document.querySelector(`[data-endpoint-input="${connectionKey}:${suffix}"]`);
-        return input ? input.value.trim() : "";
-      }
-
-      function statusCell(entry) {
-        if (!entry) return "—";
-        if (!entry.configured) return "未设置";
-        const source = entry.origin || "—";
-        return `已设置 · ${entry.mask || ""} · 来源 ${source}${entry.applied_to_process_env ? "（本进程已读取）" : ""}`;
-      }
-
-      function runtimeCell(connection) {
-        const runtime = connection.runtime;
-        const node = document.createElement("div");
-        node.className = "meta";
-        if (!runtime) {
-          node.textContent = "运行期状态未知（服务端未返回）";
-          return node;
-        }
-        node.append(pill(runtime.enabled ? "运行期已启用" : "运行期未启用", runtime.enabled ? "ok" : "warn"), " ");
-        node.append(runtime.runtime_note || "");
-        if (runtime.pending_restart) {
-          node.append(" ", pill("待重启生效", "warn"));
-        }
-        return node;
-      }
-
-      function renderSecrets(payload) {
-        secretsState = payload;
-        el("secretsPath").textContent = `${payload.path}（${payload.exists ? "已存在" : "尚未创建"}）`;
-        el("restartNotice").textContent = payload.restart_required || "";
-        if (payload.permissions_ok === false) {
-          notice(
-            el("secretsNotice"),
-            "警告：受管密钥文件权限不是 0600，请检查（页面不会回显其内容）",
-            "bad",
-          );
-        }
-        const body = el("secretsTable").querySelector("tbody");
-        body.replaceChildren(
-          ...(payload.connections || []).map((connection) => {
-            const entry = secretFor(connection.key);
-            const tr = document.createElement("tr");
-
-            const nameCell = document.createElement("td");
-            nameCell.textContent = connection.label || connection.key;
-            const nameMeta = document.createElement("div");
-            nameMeta.className = "meta";
-            nameMeta.textContent = connection.requires_key ? "需要密钥" : "密钥可选";
-            nameCell.append(document.createElement("br"), nameMeta);
-
-            const status = document.createElement("td");
-            status.textContent = statusCell(entry);
-            if (entry && entry.configured) {
-              status.append(
-                " ",
-                pill(entry.origin === "managed-file" ? "受管文件" : entry.origin || "未知", "ok"),
-              );
-            }
-            status.append(document.createElement("br"), runtimeCell(connection));
-
-            const keyCell = document.createElement("td");
-            const keyInput = document.createElement("input");
-            keyInput.type = "password";
-            keyInput.autocomplete = "new-password";
-            keyInput.placeholder = "留空 = 保持现状（清除请点清除）";
-            keyInput.dataset.secretInput = connection.key;
-            keyCell.append(keyInput);
-
-            const endpointCell = document.createElement("td");
-            const runtime = connection.runtime || {};
-            if (connection.base_url_editable) {
-              const baseInput = document.createElement("input");
-              baseInput.type = "text";
-              baseInput.placeholder = runtime.base_url
-                ? `运行期端点：${runtime.base_url}`
-                : "端点（留空 = 用运行期值）";
-              baseInput.dataset.endpointInput = `${connection.key}:base_url`;
-              const modelInput = document.createElement("input");
-              modelInput.type = "text";
-              modelInput.placeholder = runtime.model
-                ? `运行期模型：${runtime.model}`
-                : "模型名（留空 = 用运行期值）";
-              modelInput.dataset.endpointInput = `${connection.key}:model`;
-              modelInput.style.marginTop = "6px";
-              endpointCell.append(baseInput, modelInput);
-            } else {
-              const pinned = document.createElement("div");
-              pinned.className = "meta";
-              pinned.textContent = runtime.base_url
-                ? `运行期端点固定：${runtime.base_url}`
-                : "运行期端点由代码/发布物固定，不可改写";
-              endpointCell.append(pinned);
-            }
-
-            const actions = document.createElement("td");
-            const saveButton = document.createElement("button");
-            saveButton.type = "button";
-            saveButton.textContent = "保存";
-            saveButton.className = "primary";
-            saveButton.addEventListener("click", () => saveSecret(connection.key));
-            const clearButton = document.createElement("button");
-            clearButton.type = "button";
-            clearButton.textContent = "清除";
-            clearButton.style.marginLeft = "6px";
-            clearButton.addEventListener("click", () => clearSecret(connection.key));
-            const testButton = document.createElement("button");
-            testButton.type = "button";
-            testButton.textContent = "测试连通性";
-            testButton.style.marginLeft = "6px";
-            testButton.addEventListener("click", () => testConnection(connection.key, testButton));
-            actions.append(saveButton, clearButton, testButton);
-
-            const resultCell = document.createElement("td");
-            resultCell.dataset.secretResult = connection.key;
-            resultCell.textContent = "未测试";
-
-            tr.append(nameCell, status, keyCell, endpointCell, actions, resultCell);
-            return tr;
-          }),
-        );
-      }
-
-      function resultNode(connectionKey) {
-        return document.querySelector(`[data-secret-result="${connectionKey}"]`);
-      }
-
-      async function loadSecrets() {
-        try {
-          const response = await fetch(API.secrets, { headers: { Accept: "application/json" } });
-          if (!response.ok) {
-            notice(el("secretsNotice"), `密钥状态读取失败：HTTP ${response.status}`, "bad");
-            return;
-          }
-          hideNotice(el("secretsNotice"));
-          renderSecrets(await response.json());
-        } catch (error) {
-          notice(el("secretsNotice"), `密钥状态读取失败：${error}`, "bad");
-        }
-      }
-
-      async function saveSecret(connectionKey) {
-        const value = connectionInput(connectionKey);
-        const node = el("secretsNotice");
-        if (!value) {
-          notice(node, "请先填写新密钥（清除请点「清除」）", "bad");
-          return;
-        }
-        const payload = { values: {} };
-        const entry = secretFor(connectionKey);
-        payload.values[entry ? entry.field : `${connectionKey}.api_key`] = value;
-        try {
-          const response = await fetch(API.secrets, {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json", Accept: "application/json" },
-            body: JSON.stringify(payload),
-          });
-          const body = await response.json();
-          if (!response.ok) {
-            notice(node, `保存被拒绝（HTTP ${response.status}）：${describeDetail(body.detail)}`, "bad");
-            return;
-          }
-          notice(node, `已保存：${(body.changed || []).join("、")}。${body.restart_required || ""}`, "ok");
-          await loadSecrets();
-          await saveEndpoints(connectionKey);
-        } catch (error) {
-          notice(node, `保存失败：${error}`, "bad");
-        }
-      }
-
-      async function saveEndpoints(connectionKey) {
-        const baseUrl = endpointInput(connectionKey, "base_url");
-        const model = endpointInput(connectionKey, "model");
-        if (!baseUrl && !model) return;
-        const entry = (secretsState && secretsState.connections || []).find((c) => c.key === connectionKey);
-        if (!entry) return;
-        const patch = { extraction_endpoints: {} };
-        if (baseUrl) {
-          const field = connectionKey === "embedding" ? "embedding_base_url"
-            : connectionKey === "rerank" ? "rerank_base_url" : "llm_base_url";
-          patch.extraction_endpoints[field] = baseUrl;
-        }
-        if (model) {
-          const field = connectionKey === "embedding" ? "embedding_model"
-            : connectionKey === "rerank" ? "rerank_model" : "llm_model";
-          patch.extraction_endpoints[field] = model;
-        }
-        if (!Object.keys(patch.extraction_endpoints).length) return;
-        try {
-          await fetch(API.config, {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json", Accept: "application/json" },
-            body: JSON.stringify(patch),
-          });
-          await loadConfig();
-        } catch (error) {
-          notice(el("secretsNotice"), `端点保存失败：${error}`, "bad");
-        }
-      }
-
-      async function clearSecret(connectionKey) {
-        const entry = secretFor(connectionKey);
-        const node = el("secretsNotice");
-        if (!entry) return;
-        if (!window.confirm(`${entry.label}：确认清除受管文件中的密钥？（清除后需重启服务生效）`)) return;
-        const payload = { values: {} };
-        payload.values[entry.field] = null;
-        try {
-          const response = await fetch(API.secrets, {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json", Accept: "application/json" },
-            body: JSON.stringify(payload),
-          });
-          const body = await response.json();
-          if (!response.ok) {
-            notice(node, `清除被拒绝（HTTP ${response.status}）：${describeDetail(body.detail)}`, "bad");
-            return;
-          }
-          notice(node, `已清除：${(body.changed || []).join("、")}。${body.restart_required || ""}`, "ok");
-          await loadSecrets();
-        } catch (error) {
-          notice(node, `清除失败：${error}`, "bad");
-        }
-      }
-
-      async function testConnection(connectionKey, button) {
-        const node = resultNode(connectionKey);
-        const body = { connection: connectionKey };
-        const value = connectionInput(connectionKey);
-        if (value) body.api_key = value; // 先测后存：直接用页面上未保存的值
-        const baseUrl = endpointInput(connectionKey, "base_url");
-        const model = endpointInput(connectionKey, "model");
-        if (baseUrl) body.base_url = baseUrl;
-        if (model) body.model = model;
-        button.disabled = true;
-        node.textContent = "测试中…（一次最小调用）";
-        try {
-          const response = await fetch(API.connectionTest, {
-            method: "POST",
-            headers: { "Content-Type": "application/json", Accept: "application/json" },
-            body: JSON.stringify(body),
-          });
-          const payload = await response.json();
-          if (response.status === 429) {
-            const detail = payload.detail || {};
-            node.textContent = `限频：请 ${detail.retry_after_seconds || "稍后"} 秒后再试（服务端已拦截，未发起调用）`;
-            return;
-          }
-          if (!response.ok) {
-            node.textContent = `测试被拒绝（HTTP ${response.status}）：${describeDetail(payload.detail)}`;
-            return;
-          }
-          const verdict = payload.ok ? "成功" : "失败";
-          const status = payload.http_status == null ? "" : ` · HTTP ${payload.http_status}`;
-          const remaining = (payload.rate || {}).remaining;
-          const called = payload.called === false ? "（未发起调用）" : "";
-          const runtimeNote = (payload.runtime || {}).enabled === false ? " · 运行期未启用" : "";
-          node.textContent = `${verdict}${called} · ${payload.latency_ms} ms${status} · ${payload.detail} · 凭据来源 ${(payload.used || {}).api_key_source || "—"}${runtimeNote}${remaining == null ? "" : ` · 本分钟剩余 ${remaining} 次`}`;
-        } catch (error) {
-          node.textContent = `测试失败：${error}`;
-        } finally {
-          button.disabled = false;
-        }
-      }
-
-      loadStatus();
-      loadConfig();
-      loadSecrets();
-    </script>
+    <script src="/static/admin.js" defer></script>
     <script src="/static/nav_auth.js" defer></script>
   </body>
 </html>
