@@ -272,6 +272,8 @@
       };
 
       const ERROR_TEXT = {
+        console_database_not_configured:
+          "控制台没有配置数据库（DATABASE_URL）：seed 管理不可用。",
         seeds_require_postgres: "本机没有构建期 PostgreSQL，seed 管理不可用。",
         seed_url_already_exists: "该名册 URL 已存在。",
         job_already_running: "该 seed 的刷新任务正在运行，闸门已拒绝重入。",
@@ -287,6 +289,31 @@
 
       function pill(text, kind) {
         return '<span class="pill' + (kind ? " " + kind : "") + '">' + text + "</span>";
+      }
+
+      function escapeHtml(text) {
+        return String(text == null ? "" : text).replace(/[&<>"']/g, function (character) {
+          return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[character];
+        });
+      }
+
+      function clip(text, limit) {
+        const value = String(text == null ? "" : text).replace(/\s+/g, " ").trim();
+        return value.length > limit ? value.slice(0, limit) + "…" : value;
+      }
+
+      /* Why a run failed, inline under its status pill. `exit_code` and
+         `stderr_excerpt` came later than the other run fields: absent ones are
+         simply not rendered. */
+      function failureReason(run) {
+        if (run.status !== "failed" && run.status !== "failure") return "";
+        const parts = [];
+        if (run.exit_code !== null && run.exit_code !== undefined) {
+          parts.push("exit_code " + escapeHtml(run.exit_code));
+        }
+        const excerpt = clip(run.stderr_excerpt, 160);
+        if (excerpt) parts.push("stderr：" + escapeHtml(excerpt));
+        return parts.length ? "<br /><span class='footnote'>" + parts.join(" · ") + "</span>" : "";
       }
 
       function describeError(payload, status) {
@@ -406,7 +433,7 @@
               "<td>" + run.task_id + "</td>" +
               "<td>" + (summary.trigger_mode || "—") + "</td>" +
               "<td>" + pill(run.status, run.status === "succeeded" ? "ok" :
-                run.status === "failed" ? "bad" : "warn") + "</td>" +
+                run.status === "failed" ? "bad" : "warn") + failureReason(run) + "</td>" +
               "<td>" + run.trigger_source + "</td>" +
               "<td>" + run.operator + "</td>" +
               "<td>" + run.started_at + "</td></tr>"

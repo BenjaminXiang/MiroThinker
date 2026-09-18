@@ -61,8 +61,8 @@
             <a href="/logs">访问日志</a>
             <a href="/browse">数据浏览</a>
             <a href="/jobs">任务运维</a>
-            <a href="/upload">上传导入</a>
-            <a href="/seeds">Seed 管理</a>
+            <a href="/upload" data-requires-postgres>上传导入</a>
+            <a href="/seeds" data-requires-postgres>Seed 管理</a>
             <a href="/chat">对话</a>
           </nav>
         </section>
@@ -99,5 +99,6 @@
     </main>
 
     <script src="/static/main.js" defer></script>
+    <script src="/static/nav_auth.js" defer></script>
   </body>
 </html>

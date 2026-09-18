@@ -240,13 +240,14 @@
           <input type="file" id="file" accept=".xlsx" />
           <label><input type="checkbox" id="dryRun" /> 干跑（只解析不写入）</label>
           <button class="primary" id="submit" type="button">上传</button>
+          <button id="dryRunSubmit" type="button" hidden>干跑</button>
         </div>
         <p class="footnote">
           同内容同域重复上传会被去重（409，返回首次上传编号）；提交后的导入与其它任务共用同一道闸门
           （防重入锁 / 开关 / 配额 / 熔断），不绕过任何限制。干跑只做解析，不写库、不排富化、不消耗配额。
         </p>
         <p class="footnote" id="degrated" hidden>
-          本机没有构建期 PostgreSQL，提交导入不可用（已在页面隐藏）；干跑仍可用，上传记录仍可查看。
+          本机没有构建期 PostgreSQL：提交导入不可用（上传按钮已隐藏）；干跑（单独按钮）与上传记录仍可用。
         </p>
       </section>
 
@@ -375,11 +376,13 @@
       }
 
       function renderPostgres(postgres) {
-        const available = postgres && postgres.available;
+        const available = !!(postgres && postgres.available);
         document.getElementById("pgHint").textContent = available
           ? "构建期 PostgreSQL 可用：可提交导入。"
-          : "构建期 PostgreSQL 不可用：仅干跑与台账可读。";
-        document.getElementById("degrated").hidden = !!available;
+          : "构建期 PostgreSQL 不可用：提交入口已隐藏，仅干跑与台账可读。";
+        document.getElementById("degrated").hidden = available;
+        document.getElementById("submit").hidden = !available;
+        document.getElementById("dryRunSubmit").hidden = available;
         dryRunBox.checked = !available;
       }
 
@@ -473,7 +476,7 @@
       document.getElementById("refresh").addEventListener("click", loadList);
       document.getElementById("filterDomain").addEventListener("change", loadList);
 
-      document.getElementById("submit").addEventListener("click", async function () {
+      async function commit(forceDryRun) {
         const fileInput = document.getElementById("file");
         if (!fileInput.files.length) {
           say("请先选择 .xlsx 文件。", "bad");
@@ -482,7 +485,7 @@
         const domain = document.getElementById("domain").value;
         const body = new FormData();
         body.append("file", fileInput.files[0]);
-        const dryRun = dryRunBox.checked ? "?dry_run=true" : "";
+        const dryRun = forceDryRun || dryRunBox.checked ? "?dry_run=true" : "";
         try {
           const response = await fetch(API + "/" + encodeURIComponent(domain) + dryRun, {
             method: "POST",
@@ -500,6 +503,13 @@
         } catch (error) {
           say("上传失败：" + error, "bad");
         }
+      }
+
+      document.getElementById("submit").addEventListener("click", function () {
+        commit(false);
+      });
+      document.getElementById("dryRunSubmit").addEventListener("click", function () {
+        commit(true);
       });
 
       loadList();
