@@ -73,7 +73,7 @@ slice (`uv run pytest -q -p no:randomly -p no:cacheprovider`):
 | run | result |
 |---|---|
 | before (commit `0af01f33`) | `25 failed, 1316 passed, 30 skipped, 105 errors in 191.27s` |
-| after (commit `2acb5f7a` + slice-A/bugfix) | `25 failed, 1346 passed, 30 skipped, 105 errors in 182.79s` |
+| after (frozen slice tip `3cef4563`) | `25 failed, 1346 passed, 30 skipped, 105 errors in 183.30s` |
 
 The 30 extra passes are exactly the 30 new tests. The failure sets are
 byte-identical:
