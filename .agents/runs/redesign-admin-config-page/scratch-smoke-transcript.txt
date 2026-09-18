@@ -1,0 +1,76 @@
+
+### clean slate · 打开 /admin（scratch settings/secrets，端口 18296）
+"管理配置中心 · Canonical V2 | banner=banner hidden"
+
+### A6 · 卡片 1/3 自带展示；没有独立状态块，也不与 /main 重复
+"{\"card1_freshness_rows\":4,\"card1_state_rows\":3,\"card3_storage_rows\":6,\"retention_preview\":\"保留期预览：保留最近 90 天，访问日志早于 2026-06-20 的部分会被清理\",\"standalone_status_block\":0}"
+
+### A4 · 端点字段只存在于连接卡（配置表单不再渲染 extraction_endpoints.*）
+"{\"collection\":8,\"serving\":6,\"paths\":2,\"connections\":\"bocha=0,serper=0,rerank=2,embedding=2,llm=2\"}"
+
+### A5 · 测试（未保存值）：rerank 端点 http://127.0.0.1:9，先测不存
+"banner=1 项未保存"
+✓ Done
+"连接卡内结果: 失败 · 2 ms · 传输失败（URLError） · 凭据来源 local-key:legacy-file:.sglang_api_key · 运行期未启用 · 本分钟剩余 5 次"
+  未保存值不得落盘 → settings.json: (missing)
+✓ Done
+"卡片 2 结果（同一个未保存值）: 失败 · 0 ms · 传输失败（URLError） · 凭据来源 local-key:legacy-file:.sglang_api_key · 运行期未启用 · 本分钟剩余 5 次"
+
+### A5 · 保存本卡（rerank 连接卡：密钥留空 + 端点写入受管文件）
+✓ Done
+"端点/模型已保存 extraction_endpoints.rerank_base_url。systemctl --user restart canonical-v2-backend 后生效 | banner=已保存的改动需重启生效 | 重启命令可见=true"
+  settings.json: {"extraction_endpoints": {"rerank_base_url": "http://127.0.0.1:9"}}
+
+### A3 · bool 三态 serving.web_topical_floor：默认 → 启用（写入 true）
+"{\"select\":\"true\",\"banner\":\"1 项未保存 · 已保存的改动需重启生效\"}"
+✓ Done
+"已保存 1 项：serving.web_topical_floor。systemctl --user restart canonical-v2-backend 后生效"
+  settings.json: {"extraction_endpoints": {"rerank_base_url": "http://127.0.0.1:9"}, "serving": {"web_topical_floor": true}}
+  serving.web_topical_floor → value=True source=file
+
+### A3 · 启用 → 默认（清除 override，键离开文件）
+✓ Done
+"已保存 1 项：serving.web_topical_floor。systemctl --user restart canonical-v2-backend 后生效"
+  settings.json: {"extraction_endpoints": {"rerank_base_url": "http://127.0.0.1:9"}}
+  serving.web_topical_floor → value=None source=default
+
+### A3 · 嵌套 bool collection.enabled.company：默认 → 停用 → 默认
+✓ Done
+  settings.json: {"collection": {"enabled": {"company": false}}, "extraction_endpoints": {"rerank_base_url": "http://127.0.0.1:9"}}
+  collection.enabled.company → value=False source=file
+✓ Done
+  settings.json: {"extraction_endpoints": {"rerank_base_url": "http://127.0.0.1:9"}}
+  collection.enabled.company → value=True source=default
+
+### A2 · 保存只写脏键（card 3 保留天数 45，rerank 端点未保存保持脏）
+"banner=1 项未保存 · 已保存的改动需重启生效"
+✓ Done
+  settings.json: {"extraction_endpoints": {"rerank_base_url": "http://127.0.0.1:9"}, "paths": {"access_log_retention_days": 45}}
+
+### A2 · 清回默认（留空 → 显式 null → 键离开文件）
+✓ Done
+  settings.json: {"paths": {"access_log_retention_days": 45}}
+  extraction_endpoints.rerank_base_url → value=None source=default
+
+### A2 · 幂等：同一改动重复保存 = no-op（不写文件、不写审计）
+  settings.json: {"paths": {"access_log_retention_days": 45}}
+  audit lines: 7
+✓ Done
+"重复保存结果: 没有改动（只提交本卡修改过的字段）"
+  settings.json: {"paths": {"access_log_retention_days": 45}}
+  audit lines after re-send: 7
+
+### A2 · 保留天数保存为 45（重启前的受管文件内容）
+"banner=已保存的改动需重启生效"
+✓ Done
+  settings.json: {"paths": {"access_log_retention_days": 45}}
+
+### 保存 → 重启生效：重启后该值由进程从受管文件接管（env 覆盖徽章），服务行为随之改变
+  before restart settings.json: {"paths": {"access_log_retention_days": 45}}
+restarted on 18296 (pid 1157067)
+    at <anonymous>:1:239
+
+### 页面无 JS 错误 · 连接卡数量 · 端口确认
+"5 connection cards, page errors: 0"
+LISTEN 0      2048             127.0.0.1:18296      0.0.0.0:*    users:(("python3",pid=1157067,fd=17))       
+LISTEN 0      2048               0.0.0.0:18188      0.0.0.0:*    users:(("python3",pid=1203385,fd=31))       

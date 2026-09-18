@@ -17,3 +17,9 @@ Regression guards: the admin-auth gate behaviour (302/401) is untouched; the
 existing config API contracts (`/config`, `/secrets`, `connections/test`) keep
 their request/response shapes for anything unchanged; full-suite failure diff
 shows zero new failures.
+
+> Status 2026-09-18 (slice session): A1–A6 were demonstrated on the scratch port
+> **18296** with scratch settings/secrets files — transcript and per-line evidence
+> in `.agents/runs/redesign-admin-config-page/verification.md` §4 (including the
+> save → restart → env-adopted evidence). A7 and the live-page re-run on 18188
+> belong to the cutover step (C3) and are still open.
