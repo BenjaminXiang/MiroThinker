@@ -1139,7 +1139,7 @@ class JobLock:
 class PostgresProbe:
     """Cached, fail-soft availability probe for the build-time PostgreSQL."""
 
-    ENV_ORDER = ("CANONICAL_V2_DATABASE_URL", "DATABASE_URL", "DATABASE_URL_TEST")
+    ENV_ORDER = ("DATABASE_URL", "DATABASE_URL_TEST")
 
     def __init__(
         self,
@@ -1161,7 +1161,14 @@ class PostgresProbe:
         self._source: str | None = None
         self._checked_at: str | None = None
 
-    def _dsn(self) -> tuple[str | None, str | None]:
+    def resolved_dsn(self) -> tuple[str | None, str | None]:
+        """Return ``(source_name, dsn)`` under this probe's own acceptance order.
+
+        Shared by the probe and by the gate's child-environment injection, so
+        "probe says available" and "the spawned child gets a database" cannot
+        disagree.
+        """
+
         for name in self.ENV_ORDER:
             value = self._environ.get(name, "").strip()
             if value:
@@ -1173,7 +1180,7 @@ class PostgresProbe:
             now_monotonic = time.monotonic()
             if self._cached is not None and (now_monotonic - self._monotonic) < self._ttl:
                 return self._cached
-            source, dsn = self._dsn()
+            source, dsn = self.resolved_dsn()
             self._source = source
             self._checked_at = self._clock().isoformat()
             self._monotonic = now_monotonic
@@ -1308,6 +1315,7 @@ class JobRuntime:
         clock: Callable[[], datetime] | None = None,
         spawn: Callable[..., Any] | None = None,
         postgres_probe: PostgresProbe | None = None,
+        console_dsn: str | None = None,
     ) -> None:
         self.store = store
         self._settings = settings_store
@@ -1328,8 +1336,22 @@ class JobRuntime:
         self._clock = clock or (lambda: datetime.now(UTC))
         self._spawn = spawn or _spawn_subprocess
         self._probe = postgres_probe or PostgresProbe(self._environ)
+        self._console_dsn = console_dsn
         self._threads: list[threading.Thread] = []
         self._threads_lock = threading.Lock()
+
+    def _default_console_dsn(self) -> str | None:
+        """The console database this gate hands to its children.
+
+        An explicitly injected value (resolved by the console at startup) wins;
+        otherwise the probe's own resolution is used, so the gate and its probe
+        can never disagree about which database the children should read.
+        """
+
+        if self._console_dsn is not None:
+            return self._console_dsn
+        _, dsn = self._probe.resolved_dsn()
+        return dsn
 
     # -- introspection ----------------------------------------------------------------------
 
@@ -1589,6 +1611,12 @@ class JobRuntime:
         env[QUOTA_LLM_ENV] = str(quota_limits.get("llm", 0))
         env[JOB_TASK_ID_ENV] = task.task_id
         env[JOB_RUN_ID_ENV] = run_id
+        console_dsn = self._default_console_dsn()
+        if console_dsn:
+            # The child resolves its own database from the environment; without
+            # this key an unresolved console leaves the key absent and the child
+            # fails fast, exactly as before.
+            env["DATABASE_URL"] = console_dsn
         cwd = str(self._repo_root / task.cwd_relative)
         status, exit_code = "succeeded", 0
         stdout: str | bytes | None = ""

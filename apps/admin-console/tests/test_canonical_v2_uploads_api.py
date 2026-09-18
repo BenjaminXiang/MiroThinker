@@ -40,6 +40,9 @@ class _StubProbe:
     def available(self) -> bool:
         return self._available
 
+    def resolved_dsn(self) -> tuple[str | None, str | None]:
+        return None, None
+
     def describe(self) -> dict[str, Any]:
         return {"available": self._available, "source": None, "checked_at": None}
 

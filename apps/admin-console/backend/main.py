@@ -36,6 +36,7 @@ from backend.canonical_v2_deps import (
     get_canonical_v2_gap_operations,
     get_knowledge_gap_operations,
 )
+from backend.deps import resolve_console_dsn
 from backend.services.admin_auth import store_from_environment
 from backend.services.admin_gate import AdminSessionGate
 from backend.services.canonical_v2_admin import (
@@ -90,6 +91,22 @@ def _seed_admin_credentials() -> None:
         )
 
 
+def _resolve_console_database(app: FastAPI) -> str | None:
+    """Resolve the console database once, carry it on the app, and log only its state.
+
+    Both factories in this module build through `_create_route_shell`, so this is
+    the one place the value is read; every console surface reads it from
+    ``app.state`` afterwards. The DSN itself is never logged.
+    """
+
+    console_dsn = resolve_console_dsn()
+    app.state.console_dsn = console_dsn
+    logging.getLogger(__name__).info(
+        "console_database=%s", "configured" if console_dsn else "unconfigured"
+    )
+    return console_dsn
+
+
 def _create_route_shell() -> FastAPI:
     """Create one fresh route graph for the isolated Canonical V2 shell."""
 
@@ -102,6 +119,7 @@ def _create_route_shell() -> FastAPI:
     shell.add_middleware(AdminSessionGate)
     shell.router.add_event_handler("startup", _adopt_managed_configuration)
     shell.router.add_event_handler("startup", _seed_admin_credentials)
+    _resolve_console_database(shell)
 
     @shell.get("/api/health")
     def health() -> dict[str, str]:

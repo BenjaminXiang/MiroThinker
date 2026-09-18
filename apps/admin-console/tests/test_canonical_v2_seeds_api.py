@@ -33,6 +33,9 @@ class _StubProbe:
     def available(self) -> bool:
         return self._available
 
+    def resolved_dsn(self) -> tuple[str | None, str | None]:
+        return None, None
+
     def describe(self) -> dict[str, Any]:
         return {"available": self._available, "source": None, "checked_at": None}
 
@@ -71,7 +74,12 @@ def _seed_client(tmp_path: Path, *, postgres: bool, spawn: Any = None) -> TestCl
     return authorized_client(shell)
 
 
-def test_without_postgres_every_seed_endpoint_degrades(tmp_path: Path) -> None:
+def test_without_postgres_every_seed_endpoint_degrades(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # Degradation *with a configured database* is the reachability case: the
+    # missing-configuration case answers console_database_not_configured.
+    monkeypatch.setenv("DATABASE_URL", "postgresql://configured/unreachable")
     http = _seed_client(tmp_path, postgres=False)
     assert http.get("/api/health").status_code == 200
     assert http.get(_PREFIX).status_code == 503
@@ -113,7 +121,9 @@ def test_trigger_goes_through_the_declared_task(tmp_path: Path, monkeypatch) -> 
 
     spawn = _RecordingSpawn()
     http = _seed_client(tmp_path, postgres=True, spawn=spawn)
-    monkeypatch.setattr(canonical_v2_seeds, "_seed_exists", lambda seed_id: seed_id == 7)
+    monkeypatch.setattr(
+        canonical_v2_seeds, "_seed_exists", lambda seed_id, request: seed_id == 7
+    )
     gate = http.app.state.canonical_v2_seed_gate
 
     assert http.post(f"{_PREFIX}/7/trigger", json={"mode": "preview"}).status_code == 202
@@ -144,6 +154,30 @@ def test_trigger_goes_through_the_declared_task(tmp_path: Path, monkeypatch) -> 
         assert task.argv_template[0] == "uv"
         assert task.cwd_relative == "apps/miroflow-agent"
         assert task.collection_gated is True
+
+
+def test_seed_runs_carry_the_outcome_fields(tmp_path: Path, monkeypatch) -> None:
+    """E3 — one run tells the page *why* it failed; missing fields degrade to null."""
+
+    from backend.api import canonical_v2_seeds
+
+    http = _seed_client(tmp_path, postgres=True)
+    monkeypatch.setattr(
+        canonical_v2_seeds, "_seed_exists", lambda seed_id, request: seed_id == 7
+    )
+    gate = http.app.state.canonical_v2_seed_gate
+
+    assert http.post(f"{_PREFIX}/7/trigger", json={"mode": "preview"}).status_code == 202
+    gate.wait_for_idle(timeout=10)
+
+    listed = http.get(f"{_PREFIX}/7/runs")
+    assert listed.status_code == 200
+    payload = listed.json()
+    assert payload["total"] >= 1
+    for run in payload["runs"]:
+        assert run["status"] == "succeeded"
+        assert run["exit_code"] == 0
+        assert run["stderr_excerpt"] == ""
 
 
 @pytest.mark.skipif(

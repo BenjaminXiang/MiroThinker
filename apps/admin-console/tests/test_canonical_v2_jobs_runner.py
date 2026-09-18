@@ -103,7 +103,9 @@ class _Spawn:
 def runtime_factory(tmp_path: Path):
     created: list[JobRuntime] = []
 
-    def build(*, tasks=None, settings=None, spawn=None, environ=None, probe=None) -> JobRuntime:
+    def build(
+        *, tasks=None, settings=None, spawn=None, environ=None, probe=None, console_dsn=None
+    ) -> JobRuntime:
         store = JobRunStore(tmp_path / "jobs.sqlite3")
         runtime = JobRuntime(
             store=store,
@@ -114,6 +116,7 @@ def runtime_factory(tmp_path: Path):
             repo_root=tmp_path,
             spawn=spawn or _Spawn(),
             postgres_probe=probe,
+            console_dsn=console_dsn,
         )
         created.append(runtime)
         return runtime
@@ -375,7 +378,7 @@ def test_pg_required_task_available_with_a_reachable_postgres(runtime_factory) -
         return connection
 
     probe = PostgresProbe(
-        environ={"CANONICAL_V2_DATABASE_URL": "postgresql://example/db"}, connect=connect
+        environ={"DATABASE_URL": "postgresql://example/db"}, connect=connect
     )
     pg_task = _task("ops-task", collection_gated=False, quota=None, requires_postgres=True)
     runtime = runtime_factory(tasks=(pg_task,), spawn=_Spawn(), probe=probe)
@@ -446,6 +449,40 @@ def test_child_environment_is_never_persisted(runtime_factory, tmp_path: Path) -
     assert SENTINEL_ENV_VALUE not in str(row.as_dict(include_samples=True))
     assert database_path.read_bytes().find(SENTINEL_ENV_VALUE.encode()) == -1
     assert redact_secrets(f"api_key={SENTINEL_ENV_VALUE}") == "api_key=[redacted]"
+
+
+def test_a_resolved_console_dsn_reaches_the_child_as_database_url(
+    runtime_factory,
+) -> None:
+    spawn = _Spawn()
+    runtime = runtime_factory(spawn=spawn, environ={"DATABASE_URL": "postgresql://resolved/db"})
+    runtime.trigger("stub-task")
+    runtime.wait_for_idle(timeout=10)
+    assert spawn.calls[0]["env"]["DATABASE_URL"] == "postgresql://resolved/db"
+
+
+def test_the_test_name_stands_in_when_database_url_is_absent(runtime_factory) -> None:
+    spawn = _Spawn()
+    runtime = runtime_factory(spawn=spawn, environ={"DATABASE_URL_TEST": "postgresql://test/db"})
+    runtime.trigger("stub-task")
+    runtime.wait_for_idle(timeout=10)
+    assert spawn.calls[0]["env"]["DATABASE_URL"] == "postgresql://test/db"
+
+
+def test_no_resolved_dsn_sets_no_database_url_key(runtime_factory) -> None:
+    spawn = _Spawn()
+    runtime = runtime_factory(spawn=spawn, environ={})
+    runtime.trigger("stub-task")
+    runtime.wait_for_idle(timeout=10)
+    assert "DATABASE_URL" not in spawn.calls[0]["env"]
+
+
+def test_an_explicit_console_dsn_wins_over_the_probe_environment(runtime_factory) -> None:
+    spawn = _Spawn()
+    runtime = runtime_factory(spawn=spawn, console_dsn="postgresql://startup/db")
+    runtime.trigger("stub-task")
+    runtime.wait_for_idle(timeout=10)
+    assert spawn.calls[0]["env"]["DATABASE_URL"] == "postgresql://startup/db"
 
 
 def test_a_timed_out_spawn_leaves_no_grandchild_behind() -> None:

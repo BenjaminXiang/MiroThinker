@@ -16,7 +16,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile
 from pydantic import BaseModel
 from psycopg.types.json import Jsonb
 
-from backend.deps import get_pg_conn
+from backend.deps import get_pg_conn, resolve_console_dsn
 from src.data_agents.company.enrichment_batch import (
     create_enrichment_batch,
     record_batch_runner_started,
@@ -1253,7 +1253,7 @@ def _run_patent_upload_pipeline(
 def _resolve_upload_dsn() -> str:
     from src.data_agents.storage.postgres.connection import resolve_dsn
 
-    raw = os.environ.get("DATABASE_URL") or os.environ.get("DATABASE_URL_TEST")
+    raw = resolve_console_dsn()
     return resolve_dsn(raw)
 
 

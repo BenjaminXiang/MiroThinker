@@ -22,6 +22,7 @@ import sqlite3
 from typing import Any
 from urllib.parse import urlsplit
 
+from backend.deps import resolve_console_dsn
 from src.data_agents.canonical_v2.managed_config import (
     PUBLIC_DOMAINS,
     ManagedSettingsStore,
@@ -505,14 +506,14 @@ def collect_freshness(
         }
         for domain in PUBLIC_DOMAINS
     }
-    database_url = environ.get("CANONICAL_V2_DATABASE_URL", "").strip()
+    database_url = resolve_console_dsn(environ)
     if database_url:
         collection_history: dict[str, Any] = unavailable(
             "build-time pipeline_run history is not readable from this process",
         )
     else:
         collection_history = unavailable(
-            "CANONICAL_V2_DATABASE_URL is not set: the build-time pipeline_run "
+            "DATABASE_URL is not set: the build-time pipeline_run "
             "history lives in the build/release database, not on the serving host",
         )
     return ok(

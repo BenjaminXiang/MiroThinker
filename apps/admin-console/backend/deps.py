@@ -2,6 +2,9 @@
 
 Environment variables:
 - `DATABASE_URL` / `DATABASE_URL_TEST`: Postgres DSN for app runtime and tests.
+  `resolve_console_dsn()` is the single reader of these two names for the whole
+  console — every console surface (seeds, uploads, freshness, the jobs gate)
+  goes through it or through the value it resolved at start.
 - `CHAT_USE_RETRIEVAL_SERVICE`: chat retrieval flag. Defaults on; accepts
   truthy `1/true/yes/on` and falsy `0/false/no/off` values.
 - `CHAT_E_WEB_FALLBACK_THRESHOLD`: paper-retrieval confidence threshold for
@@ -17,6 +20,7 @@ from __future__ import annotations
 import logging
 import os
 import warnings
+from collections.abc import Mapping
 from functools import lru_cache
 from typing import Any, Iterator
 
@@ -31,6 +35,24 @@ from src.data_agents.service.retrieval import RetrievalService
 _DEFAULT_CHAT_E_WEB_FALLBACK_THRESHOLD = 0.5
 
 logger = logging.getLogger(__name__)
+
+
+def resolve_console_dsn(environ: Mapping[str, str] | None = None) -> str | None:
+    """Return the console/collection database DSN, or ``None`` when unconfigured.
+
+    The single reader of `DATABASE_URL` (then `DATABASE_URL_TEST`, which lets
+    pytest isolate from real data) for the console process. A blank or
+    whitespace-only value counts as unset. `CANONICAL_V2_DATABASE_URL` is a
+    different database — the serving target of the V2 operations surface — and
+    is deliberately not accepted here.
+    """
+
+    values = os.environ if environ is None else environ
+    for name in ("DATABASE_URL", "DATABASE_URL_TEST"):
+        value = (values.get(name) or "").strip()
+        if value:
+            return value
+    return None
 
 
 def chat_use_retrieval_service() -> bool:
@@ -64,8 +86,7 @@ def chat_e_web_fallback_threshold() -> float:
 def get_pg_pool() -> Any:
     from src.data_agents.storage.postgres.connection import open_pool
 
-    # DATABASE_URL_TEST lets pytest isolate from real data; production reads DATABASE_URL.
-    dsn = os.environ.get("DATABASE_URL") or os.environ.get("DATABASE_URL_TEST")
+    dsn = resolve_console_dsn()
     if not dsn:
         raise RuntimeError(
             "DATABASE_URL (or DATABASE_URL_TEST) must be set before starting the admin console."

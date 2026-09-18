@@ -232,6 +232,9 @@ def test_system_status_reports_degradable_blocks(
     monkeypatch.delenv("CANONICAL_V2_SERVING_PACK", raising=False)
     monkeypatch.delenv("CANONICAL_V2_INDEX_ROOT", raising=False)
     monkeypatch.delenv("CANONICAL_V2_DATABASE_URL", raising=False)
+    # The freshness block reads the console database (DATABASE_URL) now; a locally
+    # set test name would defeat the unconfigured case this test locks.
+    monkeypatch.delenv("DATABASE_URL_TEST", raising=False)
 
     response = _client().get("/api/canonical-v2/admin/system-status")
 

@@ -14,6 +14,7 @@ from typing import Any, Literal
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response, status
 from pydantic import BaseModel, Field, model_validator
 
+from backend.deps import resolve_console_dsn
 from backend.services.admin_session import current_operator
 from backend.storage.seeds import (
     Seed,
@@ -53,6 +54,7 @@ REFRESH_TASK_MODES: dict[str, str] = {
 }
 SAMPLE_LIMITS: tuple[str, ...] = ("5", "20", "50", "100")
 POSTGRES_UNAVAILABLE = "seeds_require_postgres"
+CONSOLE_DATABASE_NOT_CONFIGURED = "console_database_not_configured"
 
 
 class SeedTriggerRequest(BaseModel):
@@ -90,6 +92,7 @@ def get_seed_gate(request: Request) -> JobRuntime:
             settings_store=ManagedSettingsStore(path=default_settings_path(values)),
             environ=values,
             lock_dir=jobs_database_path(values).parent / "locks",
+            console_dsn=getattr(request.app.state, "console_dsn", None),
         )
     except (JobsStorageUnavailableError, OSError) as exc:
         raise HTTPException(status_code=503, detail="jobs_storage_unavailable") from exc
@@ -97,27 +100,34 @@ def get_seed_gate(request: Request) -> JobRuntime:
     return runtime
 
 
-def require_postgres(gate: JobRuntime) -> None:
-    if not gate.postgres_status().get("available"):
-        raise HTTPException(status_code=503, detail=POSTGRES_UNAVAILABLE)
+def _console_dsn(request: Request) -> str | None:
+    """The console database this app resolved at start (resolver as fallback)."""
+
+    resolved = getattr(request.app.state, "console_dsn", None)
+    return resolved or resolve_console_dsn()
 
 
+def require_postgres(request: Request, gate: JobRuntime) -> None:
+    status = gate.postgres_status()
+    if status.get("available"):
+        return
+    if not _console_dsn(request) and status.get("source") is None:
+        raise HTTPException(status_code=503, detail=CONSOLE_DATABASE_NOT_CONFIGURED)
+    raise HTTPException(status_code=503, detail=POSTGRES_UNAVAILABLE)
 
-def _seed_connection() -> Any:
+
+def _seed_connection(request: Request) -> Any:
     from src.data_agents.storage.postgres.connection import connect
 
-    raw = os.environ.get("DATABASE_URL") or os.environ.get("DATABASE_URL_TEST")
-    from src.data_agents.storage.postgres.connection import resolve_dsn
-
-    return connect(resolve_dsn(raw))
+    return connect(_console_dsn(request))
 
 
-def _seed_exists(seed_id: int) -> bool:
-    return _with_seed_connection(lambda conn: get_seed(conn, seed_id)) is not None
+def _seed_exists(seed_id: int, request: Request) -> bool:
+    return _with_seed_connection(request, lambda conn: get_seed(conn, seed_id)) is not None
 
 
-def _with_seed_connection(work: Any) -> Any:
-    conn = _seed_connection()
+def _with_seed_connection(request: Request, work: Any) -> Any:
+    conn = _seed_connection(request)
     enter = getattr(conn, "__enter__", None)
     if callable(enter):
         with conn as live:
@@ -131,15 +141,19 @@ def _with_seed_connection(work: Any) -> Any:
 
 
 @router.get("/seeds", response_model=list[Seed])
-def list_seeds_endpoint(gate: JobRuntime = Depends(get_seed_gate)) -> list[Seed]:
-    require_postgres(gate)
-    return _with_seed_connection(list_seeds)
+def list_seeds_endpoint(
+    request: Request, gate: JobRuntime = Depends(get_seed_gate)
+) -> list[Seed]:
+    require_postgres(request, gate)
+    return _with_seed_connection(request, list_seeds)
 
 
 @router.get("/seeds/{seed_id}", response_model=Seed)
-def get_seed_endpoint(seed_id: int, gate: JobRuntime = Depends(get_seed_gate)) -> Seed:
-    require_postgres(gate)
-    seed = _with_seed_connection(lambda conn: get_seed(conn, seed_id))
+def get_seed_endpoint(
+    seed_id: int, request: Request, gate: JobRuntime = Depends(get_seed_gate)
+) -> Seed:
+    require_postgres(request, gate)
+    seed = _with_seed_connection(request, lambda conn: get_seed(conn, seed_id))
     if seed is None:
         raise HTTPException(status_code=404, detail=f"seed {seed_id} not found")
     return seed
@@ -147,11 +161,11 @@ def get_seed_endpoint(seed_id: int, gate: JobRuntime = Depends(get_seed_gate)) -
 
 @router.post("/seeds", response_model=Seed, status_code=status.HTTP_201_CREATED)
 def create_seed_endpoint(
-    payload: SeedCreate, gate: JobRuntime = Depends(get_seed_gate)
+    payload: SeedCreate, request: Request, gate: JobRuntime = Depends(get_seed_gate)
 ) -> Seed:
-    require_postgres(gate)
+    require_postgres(request, gate)
     try:
-        return _with_seed_connection(lambda conn: create_seed(conn, payload))
+        return _with_seed_connection(request, lambda conn: create_seed(conn, payload))
     except psycopg.errors.UniqueViolation:
         raise HTTPException(
             status_code=409,
@@ -161,11 +175,14 @@ def create_seed_endpoint(
 
 @router.put("/seeds/{seed_id}", response_model=Seed)
 def update_seed_endpoint(
-    seed_id: int, payload: SeedUpdate, gate: JobRuntime = Depends(get_seed_gate)
+    seed_id: int,
+    payload: SeedUpdate,
+    request: Request,
+    gate: JobRuntime = Depends(get_seed_gate),
 ) -> Seed:
-    require_postgres(gate)
+    require_postgres(request, gate)
     try:
-        seed = _with_seed_connection(lambda conn: update_seed(conn, seed_id, payload))
+        seed = _with_seed_connection(request, lambda conn: update_seed(conn, seed_id, payload))
     except psycopg.errors.UniqueViolation:
         raise HTTPException(
             status_code=409,
@@ -179,9 +196,11 @@ def update_seed_endpoint(
 @router.delete(
     "/seeds/{seed_id}", status_code=status.HTTP_204_NO_CONTENT, response_class=Response
 )
-def delete_seed_endpoint(seed_id: int, gate: JobRuntime = Depends(get_seed_gate)) -> Response:
-    require_postgres(gate)
-    deleted = _with_seed_connection(lambda conn: delete_seed(conn, seed_id))
+def delete_seed_endpoint(
+    seed_id: int, request: Request, gate: JobRuntime = Depends(get_seed_gate)
+) -> Response:
+    require_postgres(request, gate)
+    deleted = _with_seed_connection(request, lambda conn: delete_seed(conn, seed_id))
     if not deleted:
         raise HTTPException(status_code=404, detail=f"seed {seed_id} not found")
     return Response(status_code=status.HTTP_204_NO_CONTENT)
@@ -198,8 +217,8 @@ def trigger_seed_endpoint(
     payload: SeedTriggerRequest | None = None,
     gate: JobRuntime = Depends(get_seed_gate),
 ) -> SeedTriggerResponse:
-    require_postgres(gate)
-    if not _seed_exists(seed_id):
+    require_postgres(request, gate)
+    if not _seed_exists(seed_id, request):
         raise HTTPException(status_code=404, detail=f"seed {seed_id} not found")
     body = payload or SeedTriggerRequest()
     task_id = REFRESH_TASK_MODES[body.mode]
@@ -235,17 +254,22 @@ def trigger_seed_endpoint(
 @router.get("/seeds/{seed_id}/runs")
 def list_seed_runs(
     seed_id: int,
+    request: Request,
     limit: int = Query(default=20, ge=1, le=200),
     gate: JobRuntime = Depends(get_seed_gate),
 ) -> dict[str, Any]:
-    """Run polling for one seed: the refresh runs this seed started, newest first."""
+    """Run polling for one seed: the refresh runs this seed started, newest first.
 
-    require_postgres(gate)
+    Each item carries the outcome fields the page needs to name a failure reason
+    (`status` / `exit_code` / `stderr_excerpt`, straight from the run row).
+    """
+
+    require_postgres(request, gate)
     collected: list[dict[str, Any]] = []
     for task_id in sorted(set(REFRESH_TASK_MODES.values())):
         for run in gate.history(task_id, limit=limit):
             if _command_targets_seed(run.command, seed_id):
-                collected.append(run.as_dict())
+                collected.append(run.as_dict(include_samples=True))
     collected.sort(key=lambda item: str(item.get("started_at") or ""), reverse=True)
     return {"seed_id": seed_id, "total": len(collected), "runs": collected[:limit]}
 
