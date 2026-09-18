@@ -379,3 +379,35 @@ explanatory `error_summary` (`operator_killed`). Candidate slice.
 
 Sample with `limit 5` wrote 5 profiles; the SUSTech letter page yields a bounded
 roster. Full runs (`full`) have no limit and are gated by the 5400 s task timeout.
+
+## Round 4 — `/seeds` page: Chinese actions and layout (2026-09-19)
+
+Driven by the operator's report ("操作列要中文、排版有点乱"). Verified in a real
+browser: scratch instance on port 18297 (own auth store, `DATABASE_URL` pointing at
+`miroflow_collection_v1`, 38 real rows), measured through CDP rather than by eye.
+
+| metric | before | after |
+|---|---|---|
+| URL cells ellipsized @1440 | 5–7 / 38 | **3 / 38** |
+| URL cell width @1024 | 153 px (38/38 ellipsized) | **308 px (10/38)** |
+| page-level horizontal scroll @1024 | present (table stretched the grid) | **none** (wrapper scrolls 927 → 1092) |
+| row heights | ragged (rows without a department were shorter) | **66 px × 38 rows** |
+| action buttons per row | wrapped on some rows | **one line, all 38 rows** |
+| click 运行记录 | no visible reaction (panel sits ~3000 px down) | **panel scrolled into view** (scrollY 0 → 1977) |
+| page tests | — | **52 passed** (shell / gating / upload page included) |
+
+Changes: Chinese action labels with title hints and a confirm on 抽样抓取; fixed table
+layout with an explicit `min-width` and `.card { min-width: 0 }`; the 编号 column
+folded into the school cell as a `#id` chip (the list is school-ordered, so a
+standalone id column read as a scrambled sequence); neutral pill for 未运行 with no
+empty timestamp; local `YYYY-MM-DD HH:mm` times; banner and run panel scroll into
+view on action; primary button darkened to `#0f6f68` (white-on-teal was 4.16:1,
+below AA).
+
+Test-pinned strings preserved: `failureReason(run)`, `exit_code`, `stderr_excerpt`,
+`escapeHtml`, `clip(run.stderr_excerpt, 160)`, `console_database_not_configured`,
+`DATABASE_URL`.
+
+Deliberately not done: the nav label `Seed 管理` stays (six pages share it and a test
+pins it); `list_seeds` still orders by `(school, department, id)` — changing it needs
+a service restart, and the page-level fix addressed the symptom.
