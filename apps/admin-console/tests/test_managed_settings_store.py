@@ -111,7 +111,9 @@ def test_secret_shaped_key_in_a_preexisting_file_is_ignored(tmp_path: Path) -> N
     assert "leaked" not in json.dumps(document.model_dump(mode="json"))
 
 
-def test_atomic_write_leaves_no_residue(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_atomic_write_leaves_no_residue(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     store = _store(tmp_path)
     replacements: list[tuple[str, str]] = []
     real_replace = os.replace
@@ -133,7 +135,9 @@ def test_atomic_write_leaves_no_residue(tmp_path: Path, monkeypatch: pytest.Monk
         "audit.jsonl",
         "settings.json",
     ]
-    assert json.loads(store.path.read_text())["paths"]["access_log_retention_days"] == 30
+    assert (
+        json.loads(store.path.read_text())["paths"]["access_log_retention_days"] == 30
+    )
 
 
 def test_audit_records_before_after_and_operator(tmp_path: Path) -> None:
@@ -215,8 +219,7 @@ def test_env_overrides_file(tmp_path: Path) -> None:
     assert document.extraction_endpoints.llm_model == "env-model"
     assert by_path["extraction_endpoints.llm_model"].source == "env"
     assert (
-        by_path["extraction_endpoints.llm_base_url"].value
-        == "https://env.example/v1"
+        by_path["extraction_endpoints.llm_base_url"].value == "https://env.example/v1"
     )
 
 
@@ -227,7 +230,9 @@ def test_env_value_of_the_wrong_type_is_rejected(tmp_path: Path) -> None:
         store.effective()
 
 
-def test_validation_failures_are_bounded_and_do_not_touch_the_file(tmp_path: Path) -> None:
+def test_validation_failures_are_bounded_and_do_not_touch_the_file(
+    tmp_path: Path,
+) -> None:
     store = _store(tmp_path)
     store.patch({"collection": {"window_start_hour_utc": 20}}, operator="a")
     before = store.path.read_bytes()
@@ -268,7 +273,9 @@ def test_restart_reads_the_patched_value(tmp_path: Path) -> None:
     assert document.collection.max_llm_calls_per_run == 321
 
 
-def test_settings_path_env_override(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+def test_settings_path_env_override(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
     from src.data_agents.canonical_v2.managed_config import default_settings_path
 
     target = tmp_path / "elsewhere" / "settings.json"
@@ -285,3 +292,164 @@ def test_committed_template_matches_the_schema() -> None:
     document = ManagedSettings.model_validate(payload)
 
     assert document.schema_version == 1
+
+
+# --- three-state saves (redesign-admin-config-page R3/R4) --------------------
+
+
+def test_null_clears_a_bool_override_back_to_the_default(tmp_path: Path) -> None:
+    store = _store(tmp_path)
+    store.patch({"serving": {"web_topical_floor": True}}, operator="ops")
+    assert json.loads(store.path.read_text(encoding="utf-8")) == {
+        "serving": {"web_topical_floor": True}
+    }
+
+    result = store.patch({"serving": {"web_topical_floor": None}}, operator="ops")
+
+    assert result["changed"] == ["serving.web_topical_floor"]
+    assert result["audit_written"] is True
+    document, fields = store.effective()
+    by_path = {field.path: field for field in fields}
+    assert document.serving.web_topical_floor is None
+    assert by_path["serving.web_topical_floor"].source == "default"
+    assert json.loads(store.path.read_text(encoding="utf-8")) == {}
+    assert store.audit_records()[-1]["changed"] == ["serving.web_topical_floor"]
+
+
+def test_null_clears_text_and_non_nullable_numeric_overrides(tmp_path: Path) -> None:
+    store = _store(tmp_path)
+    store.patch(
+        {
+            "extraction_endpoints": {"llm_base_url": "https://llm.example/v1"},
+            "paths": {"access_log_retention_days": 30},
+        },
+        operator="ops",
+    )
+
+    result = store.patch(
+        {
+            "extraction_endpoints": {"llm_base_url": None},
+            "paths": {"access_log_retention_days": None},
+        },
+        operator="ops",
+    )
+
+    assert result["changed"] == [
+        "extraction_endpoints.llm_base_url",
+        "paths.access_log_retention_days",
+    ]
+    document, fields = store.effective()
+    by_path = {field.path: field for field in fields}
+    assert document.extraction_endpoints.llm_base_url is None
+    assert document.paths.access_log_retention_days == 90
+    assert by_path["extraction_endpoints.llm_base_url"].source == "default"
+    assert by_path["paths.access_log_retention_days"].source == "default"
+    assert json.loads(store.path.read_text(encoding="utf-8")) == {}
+
+
+def test_null_clears_one_domain_toggle_and_keeps_the_others(tmp_path: Path) -> None:
+    store = _store(tmp_path)
+    store.patch(
+        {"collection": {"enabled": {"company": False, "paper": False}}}, operator="ops"
+    )
+
+    store.patch({"collection": {"enabled": {"company": None}}}, operator="ops")
+
+    document, fields = store.effective()
+    by_path = {field.path: field for field in fields}
+    assert document.collection.enabled == {
+        "company": True,
+        "paper": False,
+        "patent": True,
+        "professor": True,
+    }
+    assert json.loads(store.path.read_text(encoding="utf-8")) == {
+        "collection": {"enabled": {"paper": False}}
+    }
+    assert by_path["collection.enabled.company"].source == "default"
+    assert by_path["collection.enabled.paper"].source == "file"
+
+
+def test_clearing_a_field_that_has_no_override_is_a_no_op(tmp_path: Path) -> None:
+    store = _store(tmp_path)
+
+    result = store.patch({"serving": {"web_topical_floor": None}}, operator="ops")
+
+    assert result["changed"] == []
+    assert result["audit_written"] is False
+    assert store.exists() is False
+    assert store.audit_records() == ()
+
+
+def test_diff_patch_writes_only_the_changed_keys(tmp_path: Path) -> None:
+    store = _store(tmp_path)
+
+    store.patch(
+        {
+            "collection": {"max_llm_calls_per_run": 750},
+            "paths": {"access_log_retention_days": 30},
+        },
+        operator="ops",
+    )
+
+    assert json.loads(store.path.read_text(encoding="utf-8")) == {
+        "collection": {"max_llm_calls_per_run": 750},
+        "paths": {"access_log_retention_days": 30},
+    }
+    # The resolved view still fills in every untouched default.
+    assert store.raw()["collection"]["max_web_searches_per_run"] == 200
+    assert store.raw()["serving"]["full_verify"] is None
+
+    store.patch({"serving": {"rerank_max_documents": 40}}, operator="ops")
+
+    assert json.loads(store.path.read_text(encoding="utf-8")) == {
+        "collection": {"max_llm_calls_per_run": 750},
+        "paths": {"access_log_retention_days": 30},
+        "serving": {"rerank_max_documents": 40},
+    }
+
+
+def test_resending_the_same_patch_writes_nothing(tmp_path: Path) -> None:
+    store = _store(tmp_path)
+    body = {
+        "collection": {"max_llm_calls_per_run": 750},
+        "paths": {"access_log_retention_days": 30},
+    }
+    store.patch(body, operator="ops")
+    before = store.path.read_bytes()
+    audit_before = store.audit_records()
+
+    result = store.patch(body, operator="ops")
+
+    assert result["changed"] == []
+    assert result["audit_written"] is False
+    assert store.path.read_bytes() == before
+    assert store.audit_records() == audit_before
+
+
+def test_patch_preserves_an_operators_hand_written_file(tmp_path: Path) -> None:
+    path = tmp_path / "managed" / "settings.json"
+    path.parent.mkdir(parents=True)
+    path.write_text(json.dumps({"paths": {"serving_pack_dir": "/srv/pack"}}))
+
+    ManagedSettingsStore(path).patch(
+        {"paths": {"access_log_retention_days": 30}}, operator="ops"
+    )
+
+    assert json.loads(path.read_text(encoding="utf-8")) == {
+        "paths": {"serving_pack_dir": "/srv/pack", "access_log_retention_days": 30}
+    }
+
+
+def test_a_corrupt_file_is_replaced_by_the_patch_alone(tmp_path: Path) -> None:
+    path = tmp_path / "managed" / "settings.json"
+    path.parent.mkdir(parents=True)
+    path.write_text("{ not json")
+
+    ManagedSettingsStore(path).patch(
+        {"paths": {"access_log_retention_days": 30}}, operator="ops"
+    )
+
+    assert json.loads(path.read_text(encoding="utf-8")) == {
+        "paths": {"access_log_retention_days": 30}
+    }

@@ -24,7 +24,14 @@ import tempfile
 from typing import Any, Literal
 from urllib.parse import urlsplit
 
-from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator, model_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    ValidationError,
+    field_validator,
+    model_validator,
+)
 
 
 DEFAULT_SETTINGS_DIRNAME = "config/managed"
@@ -103,7 +110,9 @@ class ManagedSettingsUnsupportedError(ManagedSettingsError):
 class CollectionSettings(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True, validate_default=True)
 
-    enabled: dict[str, bool] = Field(default_factory=lambda: {d: True for d in PUBLIC_DOMAINS})
+    enabled: dict[str, bool] = Field(
+        default_factory=lambda: {d: True for d in PUBLIC_DOMAINS}
+    )
     max_web_searches_per_run: int = Field(default=200, ge=0, le=10_000)
     max_llm_calls_per_run: int = Field(default=500, ge=0, le=100_000)
     window_start_hour_utc: int = Field(default=17, ge=0, le=23)
@@ -286,6 +295,248 @@ def _coerce(raw: str, template: Any) -> Any:
     return text
 
 
+# Presentation of one managed setting: the only place that knows how a field is
+# labelled, bounded and grouped. The page renders from this catalogue (through
+# ``EffectiveField.as_dict()``) and holds no field list of its own.
+_DOMAIN_LABELS: dict[str, str] = {
+    "company": "企业",
+    "paper": "论文",
+    "patent": "专利",
+    "professor": "教授",
+}
+
+
+@dataclass(frozen=True, slots=True)
+class FieldSpec:
+    """One catalogue row. ``default`` is derived from the schema, never typed.
+
+    ``connection`` names the connection card a row belongs to and ``test_arg``
+    the ``connections/test`` request argument it supplies — together they are why
+    the page can render and probe endpoint fields without knowing any field name.
+    """
+
+    path: str
+    label: str
+    kind: Literal["bool", "int", "float", "text", "url"]
+    group: str
+    order: int
+    consumer: str
+    min: float | None = None
+    max: float | None = None
+    step: float | None = None
+    connection: str | None = None
+    test_arg: Literal["base_url", "model"] | None = None
+
+    @property
+    def default(self) -> Any:
+        return _DEFAULT_VALUES[self.path]
+
+
+FIELD_CATALOG: dict[str, FieldSpec] = {
+    "schema_version": FieldSpec(
+        path="schema_version",
+        label="受管配置 schema 版本",
+        kind="int",
+        group="meta",
+        order=0,
+        consumer="服务启动：受管配置 schema 版本",
+        min=1,
+        max=SCHEMA_VERSION,
+        step=1,
+    ),
+    **{
+        f"collection.enabled.{domain}": FieldSpec(
+            path=f"collection.enabled.{domain}",
+            label=f"{_DOMAIN_LABELS[domain]}采集开关",
+            kind="bool",
+            group="collection",
+            order=10 + index,
+            consumer="采集与构建调度：域开关",
+        )
+        for index, domain in enumerate(PUBLIC_DOMAINS)
+    },
+    "collection.max_web_searches_per_run": FieldSpec(
+        path="collection.max_web_searches_per_run",
+        label="每轮 web search 配额上限",
+        kind="int",
+        group="collection",
+        order=20,
+        consumer="采集与构建调度：每轮 web 检索配额",
+        min=0,
+        max=10_000,
+        step=1,
+    ),
+    "collection.max_llm_calls_per_run": FieldSpec(
+        path="collection.max_llm_calls_per_run",
+        label="每轮 LLM 调用上限",
+        kind="int",
+        group="collection",
+        order=21,
+        consumer="采集与构建调度：每轮 LLM 调用上限",
+        min=0,
+        max=100_000,
+        step=1,
+    ),
+    "collection.window_start_hour_utc": FieldSpec(
+        path="collection.window_start_hour_utc",
+        label="执行窗口起始（UTC 小时）",
+        kind="int",
+        group="collection",
+        order=22,
+        consumer="采集与构建调度：执行窗口起始",
+        min=0,
+        max=23,
+        step=1,
+    ),
+    "collection.window_end_hour_utc": FieldSpec(
+        path="collection.window_end_hour_utc",
+        label="执行窗口结束（UTC 小时）",
+        kind="int",
+        group="collection",
+        order=23,
+        consumer="采集与构建调度：执行窗口结束",
+        min=0,
+        max=23,
+        step=1,
+    ),
+    "extraction_endpoints.llm_base_url": FieldSpec(
+        path="extraction_endpoints.llm_base_url",
+        label="采集 LLM Base URL",
+        kind="url",
+        group="endpoints",
+        order=10,
+        consumer="采集与构建：LLM 端点",
+        connection="llm",
+        test_arg="base_url",
+    ),
+    "extraction_endpoints.llm_model": FieldSpec(
+        path="extraction_endpoints.llm_model",
+        label="采集 LLM 模型名",
+        kind="text",
+        group="endpoints",
+        order=11,
+        consumer="采集与构建：LLM 模型",
+        connection="llm",
+        test_arg="model",
+    ),
+    "extraction_endpoints.embedding_base_url": FieldSpec(
+        path="extraction_endpoints.embedding_base_url",
+        label="Embedding Base URL",
+        kind="url",
+        group="endpoints",
+        order=20,
+        consumer="采集与构建：Embedding 端点",
+        connection="embedding",
+        test_arg="base_url",
+    ),
+    "extraction_endpoints.embedding_model": FieldSpec(
+        path="extraction_endpoints.embedding_model",
+        label="Embedding 模型名",
+        kind="text",
+        group="endpoints",
+        order=21,
+        consumer="采集与构建：Embedding 模型",
+        connection="embedding",
+        test_arg="model",
+    ),
+    "extraction_endpoints.rerank_base_url": FieldSpec(
+        path="extraction_endpoints.rerank_base_url",
+        label="Rerank Base URL",
+        kind="url",
+        group="endpoints",
+        order=30,
+        consumer="检索与回答：rerank 客户端端点（未配置则 rerank 不启用）",
+        connection="rerank",
+        test_arg="base_url",
+    ),
+    "extraction_endpoints.rerank_model": FieldSpec(
+        path="extraction_endpoints.rerank_model",
+        label="Rerank 模型名",
+        kind="text",
+        group="endpoints",
+        order=31,
+        consumer="检索与回答：rerank 客户端模型",
+        connection="rerank",
+        test_arg="model",
+    ),
+    "paths.serving_pack_dir": FieldSpec(
+        path="paths.serving_pack_dir",
+        label="serving pack 目录",
+        kind="text",
+        group="paths",
+        order=10,
+        consumer="服务启动：serving pack 目录",
+    ),
+    "paths.access_log_retention_days": FieldSpec(
+        path="paths.access_log_retention_days",
+        label="访问日志保留天数",
+        kind="int",
+        group="paths",
+        order=20,
+        consumer="访问日志清理与保留",
+        min=1,
+        max=3650,
+        step=1,
+    ),
+    "serving.web_topical_floor": FieldSpec(
+        path="serving.web_topical_floor",
+        label="Web 轨主题相关性下限（kill switch）",
+        kind="bool",
+        group="serving",
+        order=10,
+        consumer="检索与回答：Web 轨相关度下限",
+    ),
+    "serving.rerank_timeout_seconds": FieldSpec(
+        path="serving.rerank_timeout_seconds",
+        label="Rerank 超时（秒）",
+        kind="float",
+        group="serving",
+        order=20,
+        consumer="检索与回答：rerank 超时预算",
+        min=0.1,
+        max=120,
+        step=0.1,
+    ),
+    "serving.rerank_max_documents": FieldSpec(
+        path="serving.rerank_max_documents",
+        label="Rerank 单次最大文档数",
+        kind="int",
+        group="serving",
+        order=21,
+        consumer="检索与回答：rerank 单次文档上限",
+        min=1,
+        max=2048,
+        step=1,
+    ),
+    "serving.mount_receipt_path": FieldSpec(
+        path="serving.mount_receipt_path",
+        label="挂载收据路径",
+        kind="text",
+        group="serving",
+        order=30,
+        consumer="服务启动：挂载收据路径（只读展示）",
+    ),
+    "serving.turn_debug_dir": FieldSpec(
+        path="serving.turn_debug_dir",
+        label="轮次调试目录",
+        kind="text",
+        group="serving",
+        order=31,
+        consumer="服务启动：轮次转储目录（只读展示）",
+    ),
+    "serving.full_verify": FieldSpec(
+        path="serving.full_verify",
+        label="启动全量校验",
+        kind="bool",
+        group="serving",
+        order=32,
+        consumer="服务启动：全量校验（只读展示）",
+    ),
+}
+
+_DEFAULT_VALUES: dict[str, Any] = _flatten(ManagedSettings().model_dump(mode="json"))
+
+
 @dataclass(frozen=True, slots=True)
 class EffectiveField:
     path: str
@@ -296,6 +547,7 @@ class EffectiveField:
     readonly_reason: str | None = None
 
     def as_dict(self) -> dict[str, Any]:
+        spec = FIELD_CATALOG[self.path]
         return {
             "path": self.path,
             "value": self.value,
@@ -303,6 +555,17 @@ class EffectiveField:
             "env_var": self.env_var,
             "editable": self.editable,
             "readonly_reason": self.readonly_reason,
+            "label": spec.label,
+            "kind": spec.kind,
+            "group": spec.group,
+            "order": spec.order,
+            "consumer": spec.consumer,
+            "min": spec.min,
+            "max": spec.max,
+            "step": spec.step,
+            "connection": spec.connection,
+            "test_arg": spec.test_arg,
+            "default": spec.default,
         }
 
 
@@ -380,9 +643,7 @@ class ManagedSettingsStore:
                 ) from None
             sources[path] = "env"
         try:
-            effective_document = ManagedSettings.model_validate(
-                _unflatten(resolved)
-            )
+            effective_document = ManagedSettings.model_validate(_unflatten(resolved))
         except ValidationError as exc:
             raise ManagedSettingsError(
                 "effective configuration is invalid once environment overrides "
@@ -421,7 +682,15 @@ class ManagedSettingsStore:
         *,
         operator: str | None = None,
     ) -> dict[str, Any]:
-        """Validate, atomically persist, and audit one whitelist-only patch."""
+        """Validate, atomically persist, and audit one whitelist-only patch.
+
+        Only the operator-written keys live in the file: the patch is merged onto
+        the overrides already on disk, an explicit ``None`` removes an override
+        (the three-state "回到默认" gesture), and a patch that moves nothing is a
+        no-write/no-audit no-op. The audit record still carries the resolved
+        before/after documents, so a reader sees the whole picture rather than a
+        diff against invisible defaults.
+        """
 
         if not isinstance(updates, Mapping) or not updates:
             raise ManagedSettingsError("patch body must be a non-empty object")
@@ -431,8 +700,7 @@ class ManagedSettingsStore:
         unknown = sorted(set(submitted) - allowed)
         if unknown:
             raise ManagedSettingsUnsupportedError(
-                "field is not in the managed settings whitelist: "
-                + ", ".join(unknown)
+                "field is not in the managed settings whitelist: " + ", ".join(unknown)
             )
         readonly = sorted(path for path in submitted if path in PAGE_READONLY_FIELDS)
         if readonly:
@@ -442,10 +710,65 @@ class ManagedSettingsStore:
             raise ManagedSettingsUnsupportedError(
                 "field is display-only on the admin page: " + reasons
             )
-        before = self.raw()
-        merged = _deep_merge(before, updates)
+        stored_before = self._stored_overrides()
+        stored_after = _apply_overrides(stored_before, updates)
+        document = self._validated_document(stored_after)
+        before_flat = _flatten(stored_before)
+        after_flat = _flatten(stored_after)
+        changed = sorted(
+            path
+            for path in set(before_flat) | set(after_flat)
+            if before_flat.get(path) != after_flat.get(path)
+        )
+        if not changed:
+            return {
+                "settings": document.model_dump(mode="json"),
+                "changed": [],
+                "audit_written": False,
+            }
+        before_document = self._validated_document(stored_before)
+        self._atomic_write(stored_after)
+        self._append_audit(
+            {
+                "action": "patch",
+                "operator": (operator or "anonymous").strip() or "anonymous",
+                "before": before_document.model_dump(mode="json"),
+                "after": document.model_dump(mode="json"),
+                "changed": changed,
+            }
+        )
+        return {
+            "settings": document.model_dump(mode="json"),
+            "changed": changed,
+            "audit_written": True,
+        }
+
+    def _stored_overrides(self) -> dict[str, Any]:
+        """The operator-written keys on disk; ``{}`` when absent or unusable.
+
+        A file that no longer validates (hand-edited, or carrying credential-shaped
+        keys) is treated as unusable exactly like today's ``raw()`` fallback: the
+        patch then starts from defaults instead of persisting broken content.
+        """
+
         try:
-            document = ManagedSettings.model_validate(merged)
+            payload = json.loads(self._path.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            return {}
+        if not isinstance(payload, Mapping):
+            return {}
+        candidate = {str(key): value for key, value in payload.items()}
+        try:
+            assert_non_secret_payload(candidate)
+            self._validated_document(candidate)
+        except ManagedSettingsError:
+            return {}
+        return candidate
+
+    def _validated_document(self, overrides: Mapping[str, Any]) -> ManagedSettings:
+        merged = _deep_merge(ManagedSettings().model_dump(mode="json"), overrides)
+        try:
+            return ManagedSettings.model_validate(merged)
         except ValidationError as exc:
             raise ManagedSettingsError(
                 "managed settings validation failed: "
@@ -454,31 +777,6 @@ class ManagedSettingsStore:
                     for error in exc.errors()
                 )
             ) from exc
-        serialized = document.model_dump(mode="json")
-        before_flat = _flatten(before)
-        after_flat = _flatten(serialized)
-        changed = sorted(
-            path
-            for path in after_flat
-            if before_flat.get(path) != after_flat.get(path)
-        )
-        if not changed:
-            return {
-                "settings": serialized,
-                "changed": [],
-                "audit_written": False,
-            }
-        self._atomic_write(serialized)
-        self._append_audit(
-            {
-                "action": "patch",
-                "operator": (operator or "anonymous").strip() or "anonymous",
-                "before": before,
-                "after": serialized,
-                "changed": changed,
-            }
-        )
-        return {"settings": serialized, "changed": changed, "audit_written": True}
 
     def _atomic_write(self, document: Mapping[str, Any]) -> None:
         self._path.parent.mkdir(parents=True, exist_ok=True)
@@ -549,6 +847,36 @@ def _deep_merge(base: Mapping[str, Any], overlay: Mapping[str, Any]) -> dict[str
     return merged
 
 
+def _apply_overrides(
+    base: Mapping[str, Any], overlay: Mapping[str, Any]
+) -> dict[str, Any]:
+    """Merge one patch onto the stored overrides; an explicit ``None`` removes.
+
+    A branch that empties out is dropped too, so clearing the last override of a
+    group leaves no empty shell behind in the file. An empty mapping in the patch
+    is not a deletion: it carries no instruction.
+    """
+
+    merged: dict[str, Any] = {key: value for key, value in base.items()}
+    for key, value in overlay.items():
+        if isinstance(value, Mapping):
+            if not value:
+                continue
+            existing = merged.get(key)
+            child = _apply_overrides(
+                existing if isinstance(existing, Mapping) else {}, value
+            )
+            if child:
+                merged[key] = child
+            else:
+                merged.pop(key, None)
+        elif value is None:
+            merged.pop(key, None)
+        else:
+            merged[key] = value
+    return merged
+
+
 def _unflatten(flat: Mapping[str, Any]) -> dict[str, Any]:
     document: dict[str, Any] = {}
     for path, value in flat.items():
@@ -593,7 +921,9 @@ __all__ = [
     "DEFAULT_SETTINGS_FILENAME",
     "EffectiveField",
     "ExtractionEndpoints",
+    "FIELD_CATALOG",
     "FIELD_ENV_VARS",
+    "FieldSpec",
     "ManagedSettings",
     "ManagedSettingsError",
     "ManagedSettingsStore",
