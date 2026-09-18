@@ -62,6 +62,17 @@ adapter registry, page behaviour):
    its button is hidden while showing it.
 7. **Failure visibility.** `GET /api/canonical-v2/admin/seeds/{id}/runs` carries
    `status` / `exit_code` / `stderr_excerpt`, and `/seeds` renders the reason inline.
+8. **The registry is editable in place.** Each `/seeds` row has 修改: school,
+   department and roster URL are edited inline and saved through the existing
+   `PUT /seeds/{id}` — school sites reorganise, and the alternative (delete +
+   recreate) would lose the id and its run history.
+9. **The jobs page speaks to operators.** The task catalog carries `group` and
+   `operator_hint` (plain-language "what it does / when to use it") and an invariant
+   test forbids a task without them; `/jobs` groups the 15 tasks by purpose, shows
+   Chinese statuses, plain-language tags and either 立即运行 with Chinese parameter
+   selects or a link to the page that owns the task (seed → `/seeds`, upload →
+   `/upload`), moving ids/commands/cron into a collapsed 技术细节. The run list also
+   serialises run samples so a failed row shows its reason inline.
 
 ## What stays the same
 
