@@ -18,8 +18,14 @@ existing config API contracts (`/config`, `/secrets`, `connections/test`) keep
 their request/response shapes for anything unchanged; full-suite failure diff
 shows zero new failures.
 
-> Status 2026-09-18 (slice session): A1–A6 were demonstrated on the scratch port
-> **18296** with scratch settings/secrets files — transcript and per-line evidence
-> in `.agents/runs/redesign-admin-config-page/verification.md` §4 (including the
-> save → restart → env-adopted evidence). A7 and the live-page re-run on 18188
-> belong to the cutover step (C3) and are still open.
+> Status 2026-09-18 (parent session, after C3): A1–A6 were demonstrated on the
+> scratch port **18296** with scratch settings/secrets files — transcript and
+> per-line evidence in `.agents/runs/redesign-admin-config-page/verification.md`
+> §4 (including the save → restart → env-adopted evidence). **A7 is done** and the
+> public-surface half of A6 plus the gate regression were re-run on live 18188
+> (§6): rollback (`reset --hard 29d54983`) served the old 1093-line page, recovery
+> (`merge --ff-only 72fa365c`) served the 142-line shell, `/admin` 302 and the
+> unauthenticated `/config` 401 in both states. The PATCH-level lines A1/A2/A3/A5
+> remain **live-pending**: demonstrated on scratch, but they need an authenticated
+> live session, and the operator had rotated the password, so the parent session
+> had none.
