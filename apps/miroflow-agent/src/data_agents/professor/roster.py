@@ -1542,6 +1542,13 @@ def _matches_sztu_teacher_family(source_url: str) -> bool:
     )
 
 
+def _matches_pkusz_szdw_hub(source_url: str) -> bool:
+    parsed = urlparse(source_url)
+    hostname = (parsed.hostname or "").lower()
+    path = parsed.path.rstrip("/").lower()
+    return hostname == "www.pkusz.edu.cn" and path == "/szdw.htm"
+
+
 def _matches_uestc_yjsjy_mentor_roster(source_url: str) -> bool:
     parsed = urlparse(source_url)
     hostname = (parsed.hostname or "").lower()
@@ -2421,6 +2428,29 @@ def _extract_sysu_am_teacher_adapter_entries(
     )
 
 
+def _extract_pkusz_szdw_hub_adapter_entries(
+    html: str,
+    institution: str,
+    department: str | None,
+    source_url: str,
+) -> list[DiscoveredProfessorSeed]:
+    """Reuse the pkusz profile path; the school hub itself yields no direct entries.
+
+    `www.pkusz.edu.cn/szdw.htm` is the school navigation hub: its college links are followed
+    by `extract_roster_page_links` (the `div.szdw_jsdw .szdw_bd a` / 教师队伍 branch) and the
+    college rosters route through `_is_pkusz_teacher_page` + `_extract_pkusz_profile_links`.
+    Handing the page to `_extract_site_specific_html_profile_links` keeps that one dispatch in
+    charge — for the hub URL it answers no entries, exactly as before this adapter existed.
+    """
+    soup = BeautifulSoup(html, "html.parser")
+    return _build_discovered_professor_seeds(
+        _extract_site_specific_html_profile_links(soup, source_url),
+        institution=institution,
+        department=department,
+        source_url=source_url,
+    )
+
+
 _SCHOOL_ROSTER_ADAPTERS: tuple[SchoolRosterAdapter, ...] = (
     SchoolRosterAdapter(
         name="sustech-roster",
@@ -2461,6 +2491,11 @@ _SCHOOL_ROSTER_ADAPTERS: tuple[SchoolRosterAdapter, ...] = (
         name="sztu-teacher-family",
         matcher=_matches_sztu_teacher_family,
         extractor=_extract_sztu_teacher_adapter_entries,
+    ),
+    SchoolRosterAdapter(
+        name="pkusz-szdw-hub",
+        matcher=_matches_pkusz_szdw_hub,
+        extractor=_extract_pkusz_szdw_hub_adapter_entries,
     ),
     SchoolRosterAdapter(
         name="uestc-yjsjy-mentor-roster",
