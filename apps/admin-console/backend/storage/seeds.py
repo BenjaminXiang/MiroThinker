@@ -16,13 +16,24 @@ from pydantic import BaseModel, Field, HttpUrl, field_validator
 
 logger = logging.getLogger(__name__)
 
+# A run still marked `running` past this many hours is a killed run, not live work: the
+# longest declared task timeout is 5400 s (1.5 h), so 6 h leaves a wide margin. The rule is
+# presentation only — the registry reports `interrupted` while the pipeline_run row keeps
+# its own status.
+STALLED_RUN_AFTER_HOURS = 6
+
 # MUST stay in sync with V022_professor_seed.PROFESSOR_SEED_LAST_RUN_STATUSES.
 # Phase A only writes `never_run`; the other four values come into use during
 # Phase B (pipeline integration).
+#
+# `interrupted` is not one of the column's five values (the CHECK constraint would refuse
+# it): `_SELECT_COLUMNS` derives it at read time from a stale `running` row, so the
+# read-side type carries one value more than the column and VALID_LAST_RUN_STATUSES does not.
 SeedLastRunStatus = Literal[
     "success",
     "failure",
     "in_progress",
+    "interrupted",
     "never_run",
     "adapter_missing",
 ]
@@ -134,7 +145,7 @@ _RETURNING_COLUMNS = (
     "id, school, department, seed_url, last_run_at, last_run_status, "
     "created_at, updated_at"
 )
-_SELECT_COLUMNS = """
+_SELECT_COLUMNS = f"""
     id,
     school,
     department,
@@ -158,7 +169,12 @@ _SELECT_COLUMNS = """
             SELECT CASE latest_pr.status
                        WHEN 'failed' THEN 'failure'
                        WHEN 'succeeded' THEN 'success'
-                       WHEN 'running' THEN 'in_progress'
+                       WHEN 'running' THEN CASE
+                           WHEN COALESCE(latest_pr.started_at, latest_pr.created_at)
+                                < now() - interval '{STALLED_RUN_AFTER_HOURS} hours'
+                               THEN 'interrupted'
+                           ELSE 'in_progress'
+                       END
                    END
               FROM pipeline_run latest_pr
              WHERE latest_pr.run_scope->>'domain' = 'professor'

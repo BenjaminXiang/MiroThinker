@@ -33,6 +33,10 @@ MODES = {
     "timeout": "modelsTimeout",
     "unreachable": "modelsUnreachable",
 }
+# How `POST /connections/test` answers per connection, so one 「全部测试」 run shows
+# mixed outcomes (`stub_server.py PORT test:rerank=fail test:serper=rate_limited`).
+# Default = a plain 200; `fail` = a reachable endpoint with a rejected credential.
+TEST_MODE: dict[str, str] = {}
 
 
 def _request_url(base: str, fallback: str) -> str:
@@ -122,14 +126,28 @@ class Handler(BaseHTTPRequestHandler):
             return self._json(payload)
         if route.endswith("/admin/connections/test"):
             body = self._read_body()
+            key = str(body.get("connection") or "")
+            mode = TEST_MODE.get(key, "ok")
+            if mode == "rate_limited":
+                return self._json(
+                    {
+                        "detail": {
+                            "error": "rate_limited",
+                            "connection": key,
+                            "retry_after_seconds": 43,
+                        }
+                    },
+                    status=429,
+                )
+            ok = mode != "fail"
             return self._json(
                 {
-                    "connection": body.get("connection"),
-                    "label": body.get("connection"),
-                    "ok": True,
+                    "connection": key,
+                    "label": key,
+                    "ok": ok,
                     "latency_ms": 63,
-                    "http_status": 200,
-                    "detail": "HTTP 200",
+                    "http_status": 200 if ok else 401,
+                    "detail": "HTTP 200" if ok else "HTTP 401：端点可达，凭据被拒绝",
                     "called": True,
                     "runtime": {"enabled": True},
                     "used": {
@@ -173,10 +191,14 @@ def main() -> int:
     port = int(sys.argv[1]) if len(sys.argv) > 1 else 18321
     for argument in sys.argv[2:]:
         key, _, mode = argument.partition("=")
-        MODELS_MODE[key] = mode or "ok"
+        if key.startswith("test:"):
+            TEST_MODE[key[len("test:") :]] = mode or "ok"
+        else:
+            MODELS_MODE[key] = mode or "ok"
     server = ThreadingHTTPServer(("127.0.0.1", port), Handler)
     print(
-        f"stub serving /admin on http://127.0.0.1:{port} modes={MODELS_MODE} (ctrl-c to stop)",
+        f"stub serving /admin on http://127.0.0.1:{port} "
+        f"models={MODELS_MODE} test={TEST_MODE} (ctrl-c to stop)",
         flush=True,
     )
     server.serve_forever()

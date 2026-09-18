@@ -14,6 +14,7 @@ from typing import Any
 from fastapi import APIRouter, Depends, File, HTTPException, Query, Request, UploadFile
 from pydantic import BaseModel
 
+from backend.deps import resolve_console_dsn
 from backend.services.admin_session import current_operator
 from src.data_agents.canonical_v2.jobs import JobRunStore, JobRuntime, jobs_database_path
 from src.data_agents.canonical_v2.managed_config import (
@@ -42,6 +43,7 @@ router = APIRouter(prefix="/api/canonical-v2/admin/uploads")
 
 _STATE_NAME = "canonical_v2_uploads_runtime"
 _READ_CHUNK_BYTES = 1024 * 1024
+CONSOLE_DATABASE_NOT_CONFIGURED = "console_database_not_configured"
 
 _STATUS_BY_ERROR: tuple[tuple[type[UploadError], int], ...] = (
     (UploadNotFoundError, 404),
@@ -150,6 +152,29 @@ def get_upload_runtime(request: Request) -> UploadRuntime:
     return runtime
 
 
+def _console_dsn(request: Request) -> str | None:
+    """The console database this app resolved at start (resolver as fallback)."""
+
+    resolved = getattr(request.app.state, "console_dsn", None)
+    return resolved or resolve_console_dsn()
+
+
+def require_console_database(request: Request, runtime: UploadRuntime) -> None:
+    """A commit needs the console database before `runtime.register` can preflight it.
+
+    `register`'s preflight calls the legacy chain's `_resolve_upload_dsn()` outside any
+    fail-soft wrapper, so with the console unconfigured the resolver's RuntimeError would
+    surface as a 500. The missing configuration answers the same stable 503 as the seeds
+    surface (`canonical_v2_seeds.require_postgres`); a database that is configured but
+    unreachable keeps this surface's own code, which is the refusal `register` raises.
+    """
+
+    if _console_dsn(request) is not None:
+        return
+    if runtime.postgres_status().get("source") is None:
+        raise HTTPException(status_code=503, detail=CONSOLE_DATABASE_NOT_CONFIGURED)
+    raise HTTPException(status_code=503, detail=UploadRequiresPostgresError.code)
+
 
 def _http_error(error: UploadError) -> HTTPException:
     for error_type, status_code in _STATUS_BY_ERROR:
@@ -219,6 +244,8 @@ def upload_domain_file(
     runtime: UploadRuntime = Depends(get_upload_runtime),
 ) -> dict[str, Any]:
     limit = max_upload_bytes(dict(os.environ))
+    if not dry_run:
+        require_console_database(request, runtime)
     try:
         content = _read_bounded(file, limit=limit)
         admission = runtime.register(
@@ -240,5 +267,6 @@ def upload_domain_file(
 __all__ = [
     "build_upload_runtime",
     "get_upload_runtime",
+    "require_console_database",
     "router",
 ]

@@ -238,6 +238,40 @@ function findButton(node, label) {
   return descendants(node).find((child) => child.textContent === label) || null;
 }
 
+// -- 全部测试 helpers --------------------------------------------------------
+
+// One ok probe response, shaped like `POST /connections/test` (route overrides for the
+// aggregate scenarios need a real body, not a hand-written partial one).
+function okTestRoute(latency = 12) {
+  return (call) => {
+    const body = JSON.parse(call.body);
+    return {
+      body: {
+        connection: body.connection,
+        ok: true,
+        latency_ms: latency,
+        http_status: 200,
+        detail: "HTTP 200",
+        called: true,
+        runtime: { enabled: true },
+        used: { api_key_source: "managed-file" },
+        rate: { per_minute_limit: 6, min_interval_seconds: 1, remaining: 5 },
+      },
+    };
+  };
+}
+
+// The per-role result lines the aggregate run leaves on the card ("label value").
+function summaryLines(document) {
+  return descendants(findById(document, "allTestsPanel"))
+    .filter((node) => node.className === "row")
+    .map((node) => textOf(node).replace(/\s+/g, " ").trim());
+}
+
+function wait(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 // -- page boot ---------------------------------------------------------------
 
 function bootPage(routes) {
@@ -822,6 +856,116 @@ async function saveAndTestScenario() {
   console.log("OK — save ≠ test, per-role writes, keys stay write-only");
 }
 
+async function allRolesProbeScenario() {
+  const bodies = [];
+  const startedAt = [];
+  const page = bootPage(
+    defaultRoutes({
+      "api/canonical-v2/admin/connections/test": (call) => {
+        const body = JSON.parse(call.body);
+        bodies.push(body);
+        startedAt.push(Date.now());
+        const index = bodies.length;
+        if (index === 4) {
+          // 重排模型: endpoint reachable, credential rejected — a real failure line
+          return {
+            body: {
+              connection: "rerank",
+              ok: false,
+              latency_ms: 12,
+              http_status: 401,
+              detail: "HTTP 401：端点可达，凭据被拒绝",
+              called: true,
+              runtime: { enabled: true },
+              used: { api_key_source: "none" },
+              rate: { per_minute_limit: 6, min_interval_seconds: 1, remaining: 2 },
+            },
+          };
+        }
+        if (index === 6) {
+          // the shared 6/min budget is already spent (e.g. a model-list fetch)
+          return {
+            body: {
+              detail: {
+                error: "rate_limited",
+                connection: "serper",
+                retry_after_seconds: 43,
+              },
+            },
+            status: 429,
+          };
+        }
+        return okTestRoute(12 + index)(call);
+      },
+    }),
+  );
+  await settle();
+
+  const button = findById(page.document, "test-all-roles");
+  const status = findById(page.document, "allTestsStatus");
+  assert.ok(button, "the aggregate control is script-built into the card header");
+  assert.ok(
+    HTML.includes('id="allTestsPanel" hidden'),
+    "the summary panel ships hidden and is revealed by the run",
+  );
+  assert.equal(textOf(status), "", "no status before the run");
+
+  button.click();
+  await wait(200);
+  assert.equal(button.disabled, true, "disabled while running");
+  assert.ok(textOf(status).startsWith("测试中"), `progress while running: ${textOf(status)}`);
+
+  await wait(7000);
+  assert.equal(button.disabled, false, "usable again after the run (never left disabled)");
+  assert.equal(
+    textOf(status),
+    "测试完成：可用 4 · 不可用 1 · 未测 1",
+    `run summary: ${textOf(status)}`,
+  );
+  assert.deepEqual(
+    summaryLines(page.document),
+    [
+      "对话模型 可用（13 ms）",
+      "采集模型 可用（14 ms）",
+      "嵌入模型 可用（15 ms）",
+      "重排模型 不可用：HTTP 401：端点可达，凭据被拒绝（请求 http://127.0.0.1:9000/v1/rerank）",
+      "Web 搜索（Bocha） 可用（17 ms）",
+      "Web 搜索（Serper） 未测：限频：请 43 秒后再试（服务端已拦截，未发起调用）",
+    ],
+    `one compact line per role: ${summaryLines(page.document).join(" | ")}`,
+  );
+  assert.deepEqual(
+    bodies,
+    [
+      { connection: "llm", base_url: savedProfile.base_url, model: savedProfile.model },
+      {
+        connection: "llm",
+        base_url: fieldByPath("extraction_endpoints.llm_base_url").value,
+        model: fieldByPath("extraction_endpoints.llm_model").value,
+      },
+      { connection: "embedding" },
+      {
+        connection: "rerank",
+        base_url: fieldByPath("extraction_endpoints.rerank_base_url").value,
+        model: fieldByPath("extraction_endpoints.rerank_model").value,
+      },
+      { connection: "bocha" },
+      { connection: "serper" },
+    ],
+    "each role posts its own body (the same one its single-role button builds)",
+  );
+  assert.equal(bodies.length, 6, "six probes: llm twice, then embedding, rerank, bocha, serper");
+  for (let index = 1; index < startedAt.length; index += 1) {
+    assert.ok(
+      startedAt[index] - startedAt[index - 1] >= 1000,
+      `probe ${index + 1} must start ≥1 s after probe ${index} (server min_interval_seconds=1), ` +
+        `measured ${startedAt[index] - startedAt[index - 1]} ms`,
+    );
+  }
+
+  console.log("OK — 全部测试: six sequential probes, per-role lines, 429 and skip copy");
+}
+
 async function degradedPresetScenario() {
   // the presets endpoint is not live: the role blocks still render
   const emptyRerank = JSON.parse(JSON.stringify(CONFIG));
@@ -849,18 +993,76 @@ async function degradedPresetScenario() {
   );
   assert.ok(embeddingEffective.includes("运行期解析"), "fallback origin is named");
 
-  // empty endpoint ⇒ the page must refuse locally instead of calling out
+  // An empty *field* is not "no endpoint": the card falls back to the runtime-resolved
+  // endpoint it already displays (round 9), so the fetch goes out against that one.
+  const runtimeRerank = connectionByKey("rerank").runtime.base_url;
   const callsBefore = page.apiCalls.length;
   findById(page.document, "role-rerank-fetch").click();
+  await settle();
+  const rerankCall = page.apiCalls
+    .slice(callsBefore)
+    .find((call) => call.url.endsWith("/rerank/models"));
+  assert.ok(rerankCall, "an empty field still uses the runtime endpoint instead of refusing");
+  assert.deepEqual(
+    JSON.parse(rerankCall.body),
+    { connection: "rerank", base_url: runtimeRerank },
+    "the fetch posts the runtime-resolved endpoint the card displays",
+  );
+
+  // Neither a field nor a runtime endpoint ⇒ the page refuses locally, and the
+  // aggregate run reports that role as skipped (not as a failure).
+  const noRuntimeEndpoint = JSON.parse(JSON.stringify(SECRETS));
+  noRuntimeEndpoint.connections = noRuntimeEndpoint.connections.map((connection) =>
+    connection.key === "rerank"
+      ? { ...connection, runtime: { ...connection.runtime, enabled: false, base_url: null } }
+      : connection,
+  );
+  const bare = bootPage(
+    defaultRoutes({
+      "api/canonical-v2/admin/config": { body: emptyRerank },
+      "api/canonical-v2/admin/secrets": { body: noRuntimeEndpoint },
+      "api/canonical-v2/admin/connections/test": okTestRoute(),
+    }),
+  );
+  await settle();
+  const bareBefore = bare.apiCalls.length;
+  findById(bare.document, "role-rerank-fetch").click();
   await settle(30);
   assert.equal(
-    page.apiCalls.length,
-    callsBefore,
+    bare.apiCalls.length,
+    bareBefore,
     "with no usable endpoint the page reports locally instead of calling",
   );
   assert.ok(
-    textOf(findById(page.document, "role-rerank-models-result")).includes("还没有可用端点"),
+    textOf(findById(bare.document, "role-rerank-models-result")).includes("还没有可用端点"),
     "the local refusal names the missing endpoint",
+  );
+
+  findById(bare.document, "test-all-roles").click();
+  await new Promise((resolve) => setTimeout(resolve, 7000));
+  const bareLines = summaryLines(bare.document);
+  assert.deepEqual(
+    bareLines,
+    [
+      "对话模型 可用（12 ms）",
+      "采集模型 可用（12 ms）",
+      "嵌入模型 可用（12 ms）",
+      "重排模型 未配置端点，已跳过",
+      "Web 搜索（Bocha） 可用（12 ms）",
+      "Web 搜索（Serper） 可用（12 ms）",
+    ],
+    `a role without an endpoint is skipped, not failed: ${bareLines.join(" | ")}`,
+  );
+  assert.ok(
+    textOf(bare.document.getElementById("allTestsStatus")).includes("跳过 1"),
+    "the run summary counts the skipped role separately",
+  );
+  assert.equal(
+    bare.apiCalls.filter(
+      (call) => call.url.endsWith("/connections/test") && JSON.parse(call.body).connection === "rerank",
+    ).length,
+    0,
+    "the skipped role is never probed",
   );
 
   console.log("OK — a missing presets endpoint degrades without breaking the page");
@@ -874,6 +1076,7 @@ async function degradedPresetScenario() {
   await roleBlocksScenario();
   await modelPickerScenario();
   await saveAndTestScenario();
+  await allRolesProbeScenario();
   await degradedPresetScenario();
   console.log("OK — all /admin 模型与连接 render assertions passed");
 })().catch((error) => {

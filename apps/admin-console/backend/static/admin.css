@@ -112,6 +112,7 @@ main {
 
 .card h2 { font-size: 1rem; margin: 0; letter-spacing: 0.02em; }
 .card header .hint { font-size: 0.8rem; color: var(--muted); }
+.card header .card-tools { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .card .subtitle { font-size: 0.9rem; margin: 18px 0 8px; }
 
 /* -- 生效横幅 --------------------------------------------------------------- */
@@ -240,6 +241,11 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
 /* -- 角色块（模型与连接） --------------------------------------------------- */
 
 .roles { display: grid; gap: 14px; margin-top: 14px; }
+
+/* 「全部测试」的逐角色结果行：复用 .rows/.row，跑起来后留在卡上。
+   .rows 的 display: grid 会盖住 [hidden]，所以隐藏要单独写一条。 */
+.alltests { margin-bottom: 12px; }
+.alltests[hidden] { display: none; }
 
 .role {
   min-width: 0;

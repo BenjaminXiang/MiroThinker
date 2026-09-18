@@ -769,6 +769,7 @@ export type SeedLastRunStatus =
   | "success"
   | "failure"
   | "in_progress"
+  | "interrupted"
   | "never_run"
   | "adapter_missing";
 export type SeedFailureClass =

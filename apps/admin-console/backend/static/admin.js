@@ -393,8 +393,6 @@ function renderServing() {
   if (badge) badge.replaceChildren(runtimeBadge(rerank));
   const note = el("rerankRuntimeNote");
   if (note) note.textContent = rerank ? (rerank.runtime || {}).runtime_note || "" : "服务端未返回 rerank 连接";
-  const button = el("testRerank");
-  if (button) button.disabled = !rerank;
 }
 
 // -- 卡片 3：存储与保留 ------------------------------------------------------
@@ -474,6 +472,18 @@ const MODEL_ERROR_TEXT = {
   not_supported: "该端点没有 /v1/models，请直接手填模型 ID",
   bad_response: "返回内容无法解析",
 };
+// 卡片头的「全部测试」：一个按钮把每个角色的连接各探一次。服务端按连接 + 按客户端
+// 限频（6 次/分钟，且相邻两次 ≥1 秒），所以只能串行并留出间隔：并发会让后几个探针
+// 直接吃 429。web 角色有两个提供方，各算一次，共 6 次。
+const ALL_TEST_GAP_MS = 1200;
+const ALL_TEST_ROLES = [
+  { connection: "llm", label: "对话模型", role: "chat" },
+  { connection: "llm", label: "采集模型", role: "collection" },
+  { connection: "embedding", label: "嵌入模型", role: "embedding" },
+  { connection: "rerank", label: "重排模型", role: "rerank" },
+  { connection: "bocha", label: "Web 搜索（Bocha）" },
+  { connection: "serper", label: "Web 搜索（Serper）" },
+];
 
 // 角色 → 连接。fields 是该角色自己渲染的目录字段（connection 名）；keyRow 表示
 // 「写密钥」的入口在这个角色里——同一个连接只在一个角色里给密钥入口；
@@ -1327,38 +1337,141 @@ async function testConnection(connectionKey, button, resultNode, body) {
   button.disabled = true;
   if (node) node.textContent = "测试中…（一次最小调用）";
   try {
-    const response = await fetch(API.connectionTest, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", Accept: "application/json" },
-      body: JSON.stringify(body || connectionTestBody(connectionKey)),
-    });
-    const payload = await response.json();
-    if (!node) return;
-    if (response.status === 429) {
-      const detail = payload.detail || {};
-      node.textContent = `限频：请 ${detail.retry_after_seconds || "稍后"} 秒后再试（服务端已拦截，未发起调用）`;
-      return;
-    }
-    if (!response.ok) {
-      node.textContent = `测试被拒绝（HTTP ${response.status}）：${describeDetail(payload.detail)}`;
-      return;
-    }
-    const remaining = (payload.rate || {}).remaining;
-    node.textContent = [
-      payload.ok ? "成功" : "失败",
-      payload.called === false ? "（未发起调用）" : "",
-      `· ${payload.latency_ms} ms`,
-      payload.http_status === null || payload.http_status === undefined ? "" : `· HTTP ${payload.http_status}`,
-      `· ${payload.detail}`,
-      `· 凭据来源 ${(payload.used || {}).api_key_source || "—"}`,
-      (payload.runtime || {}).enabled === false ? "· 运行期未启用" : "",
-      remaining === null || remaining === undefined ? "" : `· 本分钟剩余 ${remaining} 次`,
-      "· 测试不改配置，保存才写文件",
-    ]
-      .filter(Boolean)
-      .join(" ");
+    const { response, payload } = await probeConnection(connectionKey, body);
+    if (node) node.textContent = describeConnectionTest(response, payload).text;
   } catch (error) {
     if (node) node.textContent = `测试失败：${error}`;
+  } finally {
+    button.disabled = false;
+  }
+}
+
+// 单点测试与「全部测试」共用一个请求与一份结果映射：措辞只在这里决定，
+// 两条路径不会对同一次失败给出两种说法。
+async function probeConnection(connectionKey, body) {
+  const response = await fetch(API.connectionTest, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Accept: "application/json" },
+    body: JSON.stringify(body || connectionTestBody(connectionKey)),
+  });
+  return { response, payload: await response.json() };
+}
+
+function describeConnectionTest(response, payload) {
+  if (response.status === 429) {
+    const detail = payload.detail || {};
+    return {
+      state: "untested",
+      text: `限频：请 ${detail.retry_after_seconds || "稍后"} 秒后再试（服务端已拦截，未发起调用）`,
+    };
+  }
+  if (!response.ok) {
+    return {
+      state: "untested",
+      text: `测试被拒绝（HTTP ${response.status}）：${describeDetail(payload.detail)}`,
+    };
+  }
+  const remaining = (payload.rate || {}).remaining;
+  const text = [
+    payload.ok ? "成功" : "失败",
+    payload.called === false ? "（未发起调用）" : "",
+    `· ${payload.latency_ms} ms`,
+    payload.http_status === null || payload.http_status === undefined ? "" : `· HTTP ${payload.http_status}`,
+    `· ${payload.detail}`,
+    `· 凭据来源 ${(payload.used || {}).api_key_source || "—"}`,
+    (payload.runtime || {}).enabled === false ? "· 运行期未启用" : "",
+    remaining === null || remaining === undefined ? "" : `· 本分钟剩余 ${remaining} 次`,
+    "· 测试不改配置，保存才写文件",
+  ]
+    .filter(Boolean)
+    .join(" ");
+  return {
+    state: payload.ok ? "ok" : "fail",
+    latency_ms: payload.latency_ms,
+    detail: payload.detail,
+    text,
+  };
+}
+
+function delay(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function attachAllTests() {
+  const host = el("allTestsControls");
+  if (!host) return;
+  const button = document.createElement("button");
+  button.type = "button";
+  button.textContent = "全部测试";
+  button.id = "test-all-roles";
+  const status = text("span", "result", "");
+  status.id = "allTestsStatus";
+  button.addEventListener("click", () => runAllConnectionTests(button, status));
+  host.replaceChildren(button, status);
+}
+
+// 端点与请求体都取该角色自己的那一套（未保存的值优先，缺的由服务端按运行期解析）；
+// web 没有目录字段，就是它自己那条连接。
+function allTestEndpoint(entry) {
+  return entry.role ? roleBaseUrl(entry.role) : pinnedBaseUrl(entry.connection);
+}
+
+function allTestBody(entry) {
+  return entry.role ? roleTestBody(entry.role) : connectionTestBody(entry.connection);
+}
+
+// 一个角色 → 一行结果。没有端点就不发请求（与「拉取模型列表」同一条本地判断）：
+// 这是「未配置」而不是「不可用」，不该在汇总里冒充失败。
+async function probeRoleConnection(entry) {
+  if (!allTestEndpoint(entry)) return { state: "skipped", text: "未配置端点，已跳过" };
+  const url = entry.role ? roleTestUrl(entry.role) : pinnedBaseUrl(entry.connection);
+  let outcome;
+  try {
+    const { response, payload } = await probeConnection(entry.connection, allTestBody(entry));
+    outcome = describeConnectionTest(response, payload);
+  } catch (error) {
+    outcome = { state: "untested", text: `测试失败：${error}` };
+  }
+  if (outcome.state === "ok") return { state: "ok", text: `可用（${outcome.latency_ms} ms）` };
+  if (outcome.state === "fail") {
+    return { state: "fail", text: `不可用：${outcome.detail}（请求 ${url || "—"}）` };
+  }
+  return { state: "untested", text: `未测：${outcome.text}` };
+}
+
+async function runAllConnectionTests(button, status) {
+  const panel = el("allTestsPanel");
+  const lines = [];
+  const counts = { ok: 0, fail: 0, untested: 0, skipped: 0 };
+  button.disabled = true;
+  if (panel) {
+    panel.hidden = false;
+    panel.replaceChildren();
+  }
+  try {
+    for (let index = 0; index < ALL_TEST_ROLES.length; index += 1) {
+      const entry = ALL_TEST_ROLES[index];
+      if (status) status.textContent = `测试中 ${index + 1}/${ALL_TEST_ROLES.length}…`;
+      // 串行 + 间隔：服务端要求同一连接相邻两次 ≥1 秒，且与本机其它探针共享窗口。
+      if (index) await delay(ALL_TEST_GAP_MS);
+      const result = await probeRoleConnection(entry);
+      counts[result.state] += 1;
+      lines.push(row(entry.label, result.text));
+      if (panel) panel.replaceChildren(...lines);
+    }
+    if (status) {
+      status.textContent = `测试完成：${[
+        ["可用", counts.ok],
+        ["不可用", counts.fail],
+        ["未测", counts.untested],
+        ["跳过", counts.skipped],
+      ]
+        .filter((entry) => entry[1])
+        .map((entry) => `${entry[0]} ${entry[1]}`)
+        .join(" · ")}`;
+    }
+  } catch (error) {
+    if (status) status.textContent = `全部测试中断：${error}`;
   } finally {
     button.disabled = false;
   }
@@ -1548,13 +1661,7 @@ function attachHandlers() {
   document.querySelectorAll("[data-save-card]").forEach((button) => {
     button.addEventListener("click", () => saveCard(button.dataset.saveCard, button));
   });
-  const rerankButton = el("testRerank");
-  if (rerankButton) {
-    rerankButton.addEventListener("click", () => {
-      const connection = connectionByKind("rerank");
-      if (connection) testConnection(connection.key, rerankButton, el("rerankTestResult"));
-    });
-  }
+  attachAllTests();
   const copyButton = el("copyRestart");
   if (copyButton) {
     copyButton.addEventListener("click", async () => {

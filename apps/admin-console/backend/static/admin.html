@@ -89,12 +89,10 @@
         <div id="servingFields"></div>
 
         <div class="actions">
-          <button type="button" id="testRerank">测试 Rerank 连通性</button>
           <button type="button" class="primary" id="save-serving" data-save-card="serving">保存本卡</button>
-          <span class="result" id="rerankTestResult">未测试</span>
         </div>
         <p class="footnote">
-          测试使用页面上「未保存」的端点/模型值发起一次最小调用（成功/失败 + 延迟），受服务端限频保护。
+          Rerank 连通性测试已移到「模型与连接 › 重排模型」：那边用页面上「未保存」的端点/模型值发起一次最小调用（成功/失败 + 延迟），同样受服务端限频保护。
           其它卡片只展示状态：它们没有主动探针，页面不为此造按钮。
         </p>
         <div class="actions"><span class="result" id="servingResult"></span></div>
@@ -120,9 +118,13 @@
       <section class="card" id="card-models" aria-label="模型与连接">
         <header>
           <h2>模型与连接</h2>
-          <span class="hint" id="secretsPath">—</span>
+          <span class="card-tools">
+            <span class="hint" id="secretsPath">—</span>
+            <span id="allTestsControls"></span>
+          </span>
         </header>
         <div id="secretsNotice" class="notice hidden" role="status"></div>
+        <div class="rows alltests" id="allTestsPanel" hidden></div>
         <p class="footnote">
           按「角色」配置，而不是按文件：每块先说清现在生效的是什么、来自哪里，再给出该角色能改的字段和动作。
           同一个字段只有一个入口；预设/档位只是填值，不能绕开下面的字段。
@@ -183,7 +185,8 @@
           密钥只写不读：页面只显示掩码与来源（env / 受管文件 / 旧 key 文件），明文既不回显也不写日志与审计。
           「运行期已启用/未启用」由服务端按运行期真实解析链给出。
           「保存 ≠ 测试」：保存只把值写进受管文件，测试是当场发起一次最小调用；两者都要重启服务才在运行期生效。
-          「拉取模型列表」与「测试连通性」共用服务端限频（同一连接 6 次/分钟），点太快会被拒并提示等待秒数。
+          「拉取模型列表」「测试连通性」「全部测试」共用服务端限频（同一连接 6 次/分钟），点太快会被拒并提示等待秒数；
+          「全部测试」按顺序逐个探针，不并发。
         </p>
       </section>
 

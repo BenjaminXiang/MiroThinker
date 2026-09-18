@@ -92,3 +92,10 @@ def test_seeds_page_explains_the_unconfigured_database_code() -> None:
 
     assert "console_database_not_configured" in page
     assert "DATABASE_URL" in page
+
+
+def test_seeds_page_maps_the_interrupted_status() -> None:
+    page = _text("/seeds")
+
+    assert "已中断" in page
+    assert "interrupted" in page

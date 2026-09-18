@@ -226,3 +226,100 @@ def test_seed_crud_round_trip(tmp_path: Path) -> None:
     deleted = http.delete(f"{_PREFIX}/{seed_id}")
     assert deleted.status_code == 204
     assert http.get(f"{_PREFIX}/{seed_id}").status_code == 404
+
+
+def _insert_running_run(pg_dsn: str, *, seed_id: int, age: str) -> str:
+    """One `running` roster_crawl run for this seed, back-dated by `age` (a Postgres interval)."""
+
+    import psycopg
+
+    from src.data_agents.storage.postgres.pipeline_run import open_pipeline_run
+
+    with psycopg.connect(pg_dsn) as conn:
+        run_id = open_pipeline_run(
+            conn,
+            run_kind="roster_crawl",
+            run_scope={
+                "source": "admin-console-test",
+                "domain": "professor",
+                "action": "single_seed_run",
+                "seed_id": str(seed_id),
+            },
+            triggered_by="admin-console-test",
+        )
+        conn.execute(
+            """
+            UPDATE pipeline_run
+               SET started_at = now() - %s::interval, created_at = now() - %s::interval
+             WHERE run_id = %s
+            """,
+            (age, age, run_id),
+        )
+        conn.commit()
+    return str(run_id)
+
+
+@pytest.mark.skipif(
+    not (os.environ.get("DATABASE_URL_TEST") or os.environ.get("DATABASE_URL")),
+    reason="No test database configured (DATABASE_URL_TEST); skipping the interrupted-run integration",
+)
+def test_a_killed_run_reads_as_interrupted_not_in_progress(tmp_path: Path) -> None:
+    """A `running` row past the stall window is a killed run, and the registry says so.
+
+    The presentation rule only: the row keeps its own status, the registry reports
+    `interrupted` instead of "进行中" (see the 2026-09-19 collection-line log).
+    """
+
+    import psycopg
+
+    from src.data_agents.canonical_v2.jobs import PostgresProbe
+    from src.data_agents.storage.postgres.connection import resolve_dsn
+    from src.data_agents.storage.postgres.pipeline_run import close_pipeline_run
+
+    database_url = os.environ.get("DATABASE_URL_TEST") or os.environ.get("DATABASE_URL", "")
+    if "miroflow_real" in database_url:
+        pytest.skip("refusing to run against a real-data database")
+    pg_dsn = resolve_dsn(database_url)
+
+    http = _seed_client(tmp_path, postgres=False)
+    http.app.state.canonical_v2_seed_gate._probe = PostgresProbe(  # noqa: SLF001
+        {"DATABASE_URL_TEST": database_url}
+    )
+
+    unique_url = f"{_SEED_URL}?interrupted={os.getpid()}"
+    created = http.post(
+        _PREFIX, json={"school": "中断态测试大学", "department": "测试学院", "seed_url": unique_url}
+    )
+    assert created.status_code == 201, created.text
+    seed_id = created.json()["id"]
+
+    run_ids: list[str] = []
+    try:
+        run_ids.append(_insert_running_run(pg_dsn, seed_id=seed_id, age="7 hours"))
+        stale = http.get(f"{_PREFIX}/{seed_id}")
+        assert stale.status_code == 200, stale.text
+        assert stale.json()["last_run_status"] == "interrupted"
+
+        listed = http.get(_PREFIX)
+        assert listed.status_code == 200
+        assert [
+            row["last_run_status"] for row in listed.json() if row["id"] == seed_id
+        ] == ["interrupted"]
+
+        live_run = _insert_running_run(pg_dsn, seed_id=seed_id, age="1 minute")
+        run_ids.append(live_run)
+        live = http.get(f"{_PREFIX}/{seed_id}")
+        assert live.json()["last_run_status"] == "in_progress"
+
+        # A terminal status is never re-read as interrupted, however old the run is.
+        with psycopg.connect(pg_dsn) as conn:
+            close_pipeline_run(conn, live_run, status="failed")
+            conn.commit()
+        finished = http.get(f"{_PREFIX}/{seed_id}")
+        assert finished.json()["last_run_status"] == "failure"
+    finally:
+        with psycopg.connect(pg_dsn) as conn:
+            for run_id in run_ids:
+                conn.execute("DELETE FROM pipeline_run WHERE run_id = %s", (run_id,))
+            conn.execute("DELETE FROM professor_seed WHERE id = %s", (seed_id,))
+            conn.commit()

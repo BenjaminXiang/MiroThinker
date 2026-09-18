@@ -170,3 +170,91 @@ def test_saving_and_testing_are_separate_and_say_so() -> None:
     assert "保存 ≠ 测试" in _SCRIPT
     assert "测试不改配置，保存才写文件" in _SCRIPT
     assert "保存 ≠ 测试" in _PAGE
+
+
+# -- Round 10: card 2's duplicate probe removed, 「全部测试」 added --------------
+# The card header keeps one aggregate control (script-built, like every other probe);
+# it walks the roles sequentially because the server rate-limits per connection and
+# per client (6/min, ≥1 s between two calls), so a parallel burst would 429 itself.
+
+ALL_TEST_PROBES = (
+    ("llm", "对话模型"),
+    ("llm", "采集模型"),
+    ("embedding", "嵌入模型"),
+    ("rerank", "重排模型"),
+    ("bocha", "Web 搜索（Bocha）"),
+    ("serper", "Web 搜索（Serper）"),
+)
+
+
+def _block(start: str, end: str) -> str:
+    return _SCRIPT[_SCRIPT.index(start) : _SCRIPT.index(end)]
+
+
+def test_the_aggregate_probe_covers_every_connection_the_server_can_test() -> None:
+    roles = _literal("const ALL_TEST_ROLES = [", closing="\n];")
+    probes = tuple(re.findall(r'connection:\s*"(\w+)",\s*label:\s*"([^"]+)"', roles))
+
+    assert probes == ALL_TEST_PROBES
+    # Every testable connection is probed, and no connection is invented: web has two
+    # providers, llm backs two roles.
+    assert {connection for connection, _ in probes} == set(SPEC_BY_KEY)
+
+
+def test_the_aggregate_run_is_sequential_and_spaced_for_the_rate_limits() -> None:
+    gap = int(re.search(r"const ALL_TEST_GAP_MS = (\d+);", _SCRIPT).group(1))
+    body = _block("async function runAllConnectionTests(", "// 「保存本卡」")
+
+    assert gap >= 1000  # the server's min_interval_seconds for one connection
+    assert "Promise.all" not in body
+    assert body.index("await delay(ALL_TEST_GAP_MS)") < body.index("await probeRoleConnection(")
+    assert "测试中 ${index + 1}/${ALL_TEST_ROLES.length}…" in body
+    # never stuck disabled, even when a probe throws
+    assert "finally" in body
+    assert "button.disabled = false" in body[body.index("} finally {") :]
+
+
+def test_the_aggregate_control_is_script_built_in_the_card_header() -> None:
+    assert 'id="allTestsControls"' in _PAGE
+    assert 'id="allTestsPanel"' in _PAGE
+    assert ">全部测试<" not in _PAGE  # the shell holds no probe control
+    assert 'button.textContent = "全部测试"' in _SCRIPT
+    assert 'button.id = "test-all-roles"' in _SCRIPT
+
+
+def test_a_role_without_an_endpoint_is_skipped_not_reported_as_a_failure() -> None:
+    body = _block("async function probeRoleConnection(", "async function runAllConnectionTests(")
+
+    assert "未配置端点，已跳过" in body
+    assert body.index("allTestEndpoint(entry)") < body.index("await probeConnection(")
+    assert body.index("未配置端点，已跳过") < body.index("await probeConnection(")
+    # one row per role, rendered with the card's own row renderer
+    assert "row(entry.label, result.text)" in _SCRIPT
+
+
+def test_the_aggregate_lines_reuse_the_single_probe_wording() -> None:
+    single = _block("async function testConnection(", "// 「保存本卡」")
+    aggregate = _block("async function probeRoleConnection(", "async function runAllConnectionTests(")
+
+    assert _SCRIPT.count("function describeConnectionTest(") == 1
+    assert "describeConnectionTest(response, payload).text" in single
+    assert "outcome = describeConnectionTest(response, payload);" in aggregate
+    assert _SCRIPT.count("await probeConnection(") == 2
+    # compact per-role shapes; the failure keeps the server's own reason and the URL
+    assert "`可用（${outcome.latency_ms} ms）`" in aggregate
+    assert "`不可用：${outcome.detail}（请求 ${url || \"—\"}）`" in aggregate
+    assert "`未测：${outcome.text}`" in aggregate
+
+
+def test_card_two_no_longer_carries_a_second_rerank_probe() -> None:
+    serving = _PAGE[_PAGE.index('id="card-serving"') : _PAGE.index('id="card-paths"')]
+
+    assert 'id="testRerank"' not in _PAGE
+    assert "测试 Rerank 连通性" not in serving
+    assert "Rerank 连通性测试已移到「模型与连接 › 重排模型」" in serving
+    assert "el(\"testRerank\")" not in _SCRIPT
+    assert "rerankTestResult" not in _SCRIPT
+    # the connectivity test itself moved, it was not dropped: the role block still probes
+    assert "testButton.id = `role-${roleId}-test`" in _SCRIPT
+    rerank_actions = _block('roleActions("rerank"', "function renderWebRole(")
+    assert "test: true" in rerank_actions

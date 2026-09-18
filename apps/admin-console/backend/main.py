@@ -101,9 +101,12 @@ def _resolve_console_database(app: FastAPI) -> str | None:
 
     console_dsn = resolve_console_dsn()
     app.state.console_dsn = console_dsn
-    logging.getLogger(__name__).info(
-        "console_database=%s", "configured" if console_dsn else "unconfigured"
-    )
+    state = "configured" if console_dsn else "unconfigured"
+    logging.getLogger(__name__).info("console_database=%s", state)
+    # The serving process's logging configuration does not surface this logger, and the
+    # state is the first thing an operator reading the boot log needs (the first-boot
+    # admin password is announced the same way). The state only — never the DSN.
+    print(f"[canonical-v2] console_database={state}", flush=True)
     return console_dsn
 
 

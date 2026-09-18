@@ -154,3 +154,60 @@ two embedding paths missing from `PAGE_READONLY_FIELDS`.
 - `GET /connections/presets` is read-only but still session-gated; it is not a public
   provider list.
 - The preset base URLs are generic examples; none of them is reachable-checked here.
+
+## Round 10 (2026-09-19) — `/admin` page batch: dedupe the rerank probe + 「全部测试」
+
+Appended before any production-code edit by this slice (AGENTS.md §4). Page half only
+(`admin.html` / `admin.js` / `admin.css`, the two marker suites and the render harness);
+no backend Python, no service restart, 18188 untouched.
+
+### RED artifacts
+
+1. `apps/admin-console/tests/test_admin_model_roles_page.py` (extended — markers over the
+   shipped assets plus the real `CONNECTIONS` table):
+   - the aggregate probe table covers exactly the connections the server can test: six
+     probes (llm ×2, embedding, rerank, bocha, serper), in this order, labels included —
+     a connection can neither be dropped nor probed twice by accident;
+   - the run is sequential (`Promise.all` absent), spaced by a constant ≥ the server's
+     `min_interval_seconds`, and prints `测试中 n/6…`;
+   - the button is re-enabled in `finally` (never stuck after an error);
+   - a role without an endpoint is skipped locally (「未配置端点，已跳过」) *before* any
+     request is built;
+   - the aggregate line and the single-role button share one response→wording mapping;
+   - card 2 carries no rerank probe and points at the role block, while the 重排模型 block
+     keeps its own 测试 (the connectivity coverage is moved, not deleted).
+2. `apps/admin-console/tests/test_admin_config_page_shell.py` (updated):
+   - `id="testRerank"` is gone, replaced by the pointer assertion;
+   - the aggregate control is script-built (`>全部测试<` must not be in the shell, like
+     every other probe control).
+
+Captured RED: `5 failed, 79 passed` (the five new/extended markers; the aggregate symbols
+do not exist at HEAD) — full command and output in `verification.md` §Round 10.
+
+### GREEN evidence required
+
+- Layer ①: the two suites above (markers) — fixture = the shipped static files and the real
+  backend connection table, no network.
+- Layer ②: `test_admin_config_page_shell.py`, `test_admin_config_single_channel.py`,
+  `test_canonical_v2_admin_secrets_api.py`, `test_nav_postgres_gating.py`,
+  `test_admin_model_roles_page.py` — zero new failures.
+- Layer ③: the render harness `model-roles-harness/render_check.cjs` runs admin.js in the DOM
+  stub against the real fixtures: the aggregate run issues six sequential requests with
+  measured spacing ≥ 1000 ms, renders one line per role, reports 429 and skipped roles, and
+  leaves the button usable. (The harness is not CI; it is the behaviour evidence.)
+
+### Pre-existing defect found while preparing this slice
+
+`degradedPresetScenario` in the harness still asserts "an empty endpoint field ⇒ no
+outbound call", which round 9 deliberately changed (`roleBaseUrl` falls back to the
+runtime-effective endpoint shown on the card). The scenario is red at HEAD
+(`5 !== 4`); it is corrected here to the shipped contract, and a *true* no-endpoint case
+(field empty **and** runtime endpoint empty) is added for the skip line.
+
+### What will NOT be claimed
+
+- No real-browser pass (no scratch console started: the slice forbids restarts) and no live
+  check on 18188 — the page ships with the next hot update.
+- 对话模型 and 采集模型 share the `llm` connection: six probes consume the client's whole
+  6/min budget, so a run started right after a model-list fetch renders 限频 lines for its
+  tail. That is reported to the operator, not hidden.

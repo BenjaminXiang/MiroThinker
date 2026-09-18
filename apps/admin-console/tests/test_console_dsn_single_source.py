@@ -10,6 +10,7 @@ Fixture-driven: no live state directory is read or written, and no database is c
 from __future__ import annotations
 
 import json
+import logging
 from pathlib import Path
 
 import pytest
@@ -100,3 +101,32 @@ def test_a_missing_configuration_is_a_stable_503_never_a_500(
     for response in (http.get(_PREFIX), http.get(f"{_PREFIX}/1/runs")):
         assert response.status_code == 503, response.text
         assert response.json()["detail"] == "console_database_not_configured"
+
+
+@pytest.mark.parametrize("configured", [True, False])
+def test_the_boot_announcement_states_the_console_database_never_its_dsn(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+    caplog: pytest.LogCaptureFixture,
+    configured: bool,
+) -> None:
+    """The serving process owns the logging configuration, so the state is printed too.
+
+    Same reasoning as the first-boot admin password: a line the operator cannot see in the
+    boot log is a line that does not exist. The state only — never the DSN (or a credential).
+    """
+
+    _clear_console_env(monkeypatch)
+    if configured:
+        monkeypatch.setenv("DATABASE_URL", "postgresql://operator:hunter2@db.internal/miroflow")
+
+    state = "configured" if configured else "unconfigured"
+    with caplog.at_level(logging.INFO, logger="backend.main"):
+        shell = _create_canonical_v2_route_shell()
+
+    assert (shell.state.console_dsn is not None) is configured
+    assert f"console_database={state}" in caplog.text
+    printed = capsys.readouterr().out
+    assert f"[canonical-v2] console_database={state}" in printed
+    assert "hunter2" not in printed
+    assert "db.internal" not in printed

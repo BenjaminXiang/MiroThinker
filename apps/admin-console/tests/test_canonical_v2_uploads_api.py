@@ -72,7 +72,9 @@ def _resolver(store: UploadStore):
     return resolve
 
 
-def _client(tmp_path: Path, *, postgres: bool) -> tuple[TestClient, UploadRuntime, UploadStore]:
+def _client(
+    tmp_path: Path, *, postgres: bool, preflight: Any = None
+) -> tuple[TestClient, UploadRuntime, UploadStore]:
     scratch = tmp_path / "scratch"
     scratch.mkdir(parents=True, exist_ok=True)
     store = UploadStore(scratch / "uploads.sqlite3")
@@ -108,6 +110,7 @@ def _client(tmp_path: Path, *, postgres: bool) -> tuple[TestClient, UploadRuntim
         gate=gate,
         repo_root=tmp_path,
         environ={"MIROTHINKER_ADMIN_UPLOAD_DIR": str(scratch / "stage")},
+        preflight=preflight,
     )
     shell = _create_canonical_v2_route_shell()
     shell.state.canonical_v2_uploads_runtime = runtime
@@ -117,7 +120,11 @@ def _client(tmp_path: Path, *, postgres: bool) -> tuple[TestClient, UploadRuntim
 
 
 @pytest.fixture()
-def client(tmp_path: Path):
+def client(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+    # A commit needs a configured console database before anything else; the admission
+    # cases are about the upload rules, not about an unconfigured console (that shape is
+    # the dedicated case below).
+    monkeypatch.setenv("DATABASE_URL", "postgresql://configured/unreachable")
     client, runtime, store = _client(tmp_path, postgres=True)
     yield client, runtime, store
     runtime.gate.close()
@@ -204,7 +211,10 @@ def test_unknown_domain_filter_is_refused(client) -> None:
     assert http.get(_PREFIX, params={"domain": "paper"}).status_code == 422
 
 
-def test_degradation_without_postgres(tmp_path: Path) -> None:
+def test_degradation_without_postgres(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    # Degradation *with a configured database* is the reachability case: the
+    # missing-configuration case answers console_database_not_configured.
+    monkeypatch.setenv("DATABASE_URL", "postgresql://configured/unreachable")
     http, _, store = _client(tmp_path, postgres=False)
     try:
         response = _post(http, "company")
@@ -216,6 +226,49 @@ def test_degradation_without_postgres(tmp_path: Path) -> None:
         dry_run = _post(http, "company", dry_run="true")
         assert dry_run.status_code == 202
         assert dry_run.json()["upload"]["dry_run"] is True
+    finally:
+        pass
+
+
+def _clear_console_env(monkeypatch: pytest.MonkeyPatch) -> None:
+    for name in ("DATABASE_URL", "DATABASE_URL_TEST", "CANONICAL_V2_DATABASE_URL"):
+        monkeypatch.delenv(name, raising=False)
+
+
+@pytest.mark.parametrize("only_serving_name", [True, False])
+def test_a_commit_without_a_configured_console_database_is_a_stable_503(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, only_serving_name: bool
+) -> None:
+    """The preflight that used to raise (a 500) answers the seeds surface's code instead.
+
+    The production preflight — the one that calls `backend.api.upload._resolve_upload_dsn()`
+    outside any fail-soft wrapper — is wired here, and the gate's probe reports the database
+    as available: the two views disagreeing is the shape that raised.
+    """
+
+    from backend.api import canonical_v2_uploads
+
+    _clear_console_env(monkeypatch)
+    if only_serving_name:
+        monkeypatch.setenv("CANONICAL_V2_DATABASE_URL", "postgresql://serving/db")
+
+    http, _, store = _client(
+        tmp_path, postgres=True, preflight=canonical_v2_uploads._postgres_preflight
+    )
+    try:
+        response = _post(http, "company")
+        assert response.status_code == 503, response.text
+        assert response.json()["detail"] == "console_database_not_configured"
+        assert store.total() == 0
+
+        # The read paths and the dry run never needed the console database.
+        assert http.get(_PREFIX).status_code == 200
+        assert http.get("/api/health").status_code == 200
+        dry_run = _post(http, "company", dry_run="true")
+        assert dry_run.status_code == 202, dry_run.text
+        upload_id = dry_run.json()["upload"]["upload_id"]
+        assert dry_run.json()["upload"]["dry_run"] is True
+        assert http.get(f"{_PREFIX}/{upload_id}").status_code == 200
     finally:
         pass
 

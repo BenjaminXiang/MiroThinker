@@ -41,6 +41,7 @@ const STATUS_LABELS: Record<SeedLastRunStatus, string> = {
   success: "成功",
   failure: "失败",
   in_progress: "运行中",
+  interrupted: "已中断",
   never_run: "未运行",
   adapter_missing: "缺 adapter",
 };

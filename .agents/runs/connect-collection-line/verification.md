@@ -971,3 +971,294 @@ duplicate: `+ [ 'collectionState' ] - []`).
    `page.apiCalls.length` unchanged).
 8. The card footnote tells the operator that 拉取模型列表 and 测试连通性 share the server's
    6/min window (their note 7); a 429 shows 请 N 秒后再试 for both controls.
+
+## 后续批次（页面）— 去重 + 全部测试
+
+Round 10 (2026-09-19)。范围：`/admin` 一个页面批次 —— 卡片 2 里那条重复的 rerank 探针去重，
+「模型与连接」卡头新增一个串行的「全部测试」。只动静态资源 + 两个标记套件 + 渲染 harness；
+未改后端 Python、未重启服务、未碰 18188。
+
+### 1. 改了什么（文件 · 行）
+
+| 文件 | 改动 |
+|---|---|
+| `apps/admin-console/backend/static/admin.html:92-97` | 卡片 2 的「测试 Rerank 连通性」按钮与 `rerankTestResult` 结果节点删除；换成一句指向角色块的弱化提示「Rerank 连通性测试已移到「模型与连接 › 重排模型」：…」（原 footnote 里描述该测试的那句并入同一行，其余字段/徽章/保存不动） |
+| `apps/admin-console/backend/static/admin.html:120-127` | 卡片头右侧改为 `.card-tools`（`secretsPath` + `allTestsControls`），卡头下加结果容器 `<div class="rows alltests" id="allTestsPanel" hidden>` |
+| `apps/admin-console/backend/static/admin.html:188-189` | 卡尾 footnote 补一句：三种控件共用服务端限频，「全部测试」按顺序逐个探针、不并发 |
+| `apps/admin-console/backend/static/admin.js:478-487` | `ALL_TEST_GAP_MS = 1200`、`ALL_TEST_ROLES`（6 个探针：llm×2 / embedding / rerank / bocha / serper） |
+| `apps/admin-console/backend/static/admin.js:1335-1394` | `testConnection` 拆出共用件：`probeConnection`（一次请求）+ `describeConnectionTest`（响应→措辞，单一映射）；单点按钮的行为与措辞逐字不变 |
+| `apps/admin-console/backend/static/admin.js:1396-1476` | `delay`、`attachAllTests`（卡头按钮 `#test-all-roles` + 进度节点 `#allTestsStatus`）、`allTestEndpoint`/`allTestBody`、`probeRoleConnection`（跳过 / 可用 / 不可用 / 未测 四态）、`runAllConnectionTests`（串行 + 间隔 + `finally` 复位） |
+| `apps/admin-console/backend/static/admin.js:1664` | `attachHandlers()` 里改为挂「全部测试」；删掉卡片 2 的旧接线与 `renderServing()` 里已死的 `testRerank` 分支 |
+| `apps/admin-console/backend/static/admin.css:115,243-247` | `.card header .card-tools`（卡头右侧工具行）、`.alltests` / `.alltests[hidden]`（`.rows` 的 `display:grid` 会盖住 `[hidden]`，单独一条） |
+| `apps/admin-console/tests/test_admin_model_roles_page.py:175-261` | 新标记 6 条（覆盖表、串行+间隔、脚本内建控件、跳过、措辞共用、卡片 2 去重） |
+| `apps/admin-console/tests/test_admin_config_page_shell.py:121,223` | 旧 `id="testRerank"` 断言 → 指针文案；探针控件必须脚本内建：新增 `>全部测试<` 不在 shell |
+| `.agents/runs/connect-collection-line/model-roles-harness/render_check.cjs:245-273,859-981` | 新场景 `allRolesProbeScenario`（6 次串行、实测间隔、逐行结果、429、按钮复位）与 `okTestRoute`/`summaryLines`/`wait` 助手 |
+| `.agents/runs/connect-collection-line/model-roles-harness/render_check.cjs:1020-1070` | 修正失效断言：空字段 ≠ 无端点（round 9 的 `roleBaseUrl` 运行期回退），另加**真**无端点页以覆盖「未配置端点，已跳过」 |
+| `.agents/runs/connect-collection-line/model-roles-harness/stub_server.py:36-39,125-160,190-201` | 真浏览器用的 `test:<connection>=ok\|fail\|rate_limited` 模式（默认不变） |
+
+### 2. 汇总行的确切形状
+
+`#allTestsPanel` 里每个角色一行（复用 `.rows/.row`，标签在 220px 的 `.key` 列）：
+
+```text
+对话模型            可用（63 ms）
+采集模型            可用（63 ms）
+嵌入模型            可用（63 ms）
+重排模型            不可用：HTTP 401：端点可达，凭据被拒绝（请求 http://127.0.0.1:9000/v1/rerank）
+Web 搜索（Bocha）   可用（63 ms）
+Web 搜索（Serper）  未测：限频：请 43 秒后再试（服务端已拦截，未发起调用）
+```
+
+- 可用：`` `${label} 可用（${latency_ms} ms）` ``。
+- 不可用：`` `${label} 不可用：${payload.detail}（请求 ${url}）` `` —— 原因用服务端自己的 `detail`，
+  与单点测试同一份措辞映射（`describeConnectionTest`）；URL 用页面已展示的测试地址。
+- 未测（429 / HTTP 拒绝 / 异常）：`` `${label} 未测：${映射出来的整句}` ``，即单点按钮那一句原文。
+- 跳过：`${label} 未配置端点，已跳过`（本地拦截，不发请求；与「拉取模型列表」同一条判断）。
+- 运行中：按钮 disabled，`#allTestsStatus` 显示 `测试中 2/6…`；结束显示
+  `测试完成：可用 4 · 不可用 1 · 未测 1`（为 0 的类目不出现）；`finally` 里复位，出错也不留在 disabled。
+
+### 3. 验证
+
+**① 本片新增测试（6 条标记 + 2 个 harness 场景 + 1 次真浏览器实测）** — fixture = 仓库里真实静态
+资源 + 真实 `canonical_v2_connection_tests.CONNECTIONS` 表 + `fixtures.json`（真 payload）+ 真浏览器：
+
+| 检查 | 结果 |
+|---|---|
+| RED（改动前，本片测试 + 更新后的 shell 断言） | `7 failed, 49 passed in 1.71s`（5 条新标记因 `const ALL_TEST_ROLES = [` 不存在而 `ValueError: substring not found`；卡片 2 去重与指针两条失败） |
+| GREEN（brief 指定的定向套件） | `56 passed in 1.28s` |
+| harness `render_check.cjs` | 6 行 OK，exit 0（含新场景；此前 `degradedPresetScenario` 在 HEAD 上是红的 `5 !== 4`，本片修正为 shipped 契约后转绿） |
+| ruff（改动/新增的 Python） | `All checks passed!` |
+
+**② 既有回归套件** — brief 的定向命令：
+`uv run pytest -q -p no:randomly -p no:cacheprovider tests/test_admin_model_roles_page.py
+tests/test_admin_config_page_shell.py tests/test_admin_config_single_channel.py
+tests/test_canonical_v2_admin_secrets_api.py tests/test_nav_postgres_gating.py` → **56 passed**。
+（本 worktree 同一时刻有另一个 agent 在改 uploads/seeds/DSN 的后端文件，与本片文件无交集；
+上述套件只覆盖本片。）
+
+**③ 行为证据（harness + 真浏览器）** — 浏览器实测用 scratch 静态+接口桩
+（`stub_server.py 18322`，仅监听环回，`test:rerank=fail test:serper=rate_limited`，用完即杀；
+18188 未动、未重启任何服务）：
+
+| 观测 | 值 |
+|---|---|
+| 跑之前的卡头 | `#allTestsPanel` `hidden` 且 `display: none`（`0` 行）；按钮在 `#card-models > header` 内、贴右边缘（`hr.right - r.right = 0`） |
+| 运行中（点后 ~0.9 s） | `disabled=true`，状态 `测试中 2/6…`，已有 1 行 `对话模型 可用（63 ms）`（截图 `admin-all-tests-running.png`） |
+| 结束后 | `disabled=false`，状态 `测试完成：可用 4 · 不可用 1 · 未测 1`，6 行如上（截图 `admin-all-tests.png`） |
+| 串行间隔（`performance.getEntriesByType('resource')`） | 6 次 `POST …/connections/test` 起点 `13029, 14242, 15447, 16654, 17860, 19065`，相邻间隔 `1213/1205/1207/1206/1205 ms` —— 全部 ≥ 服务端 `min_interval_seconds=1` |
+| 卡片 2 | 只剩「保存本卡」一个按钮，`#testRerank` 为 `null`；footnote 即上面那句指针文案 |
+| 布局 | 卡片宽 1232 px、面板 1186 px 且在卡内；6 行各 31 px 单行；`scrollWidth - clientWidth = 0`（无横向滚动） |
+
+### 4. 未做 / 不适用
+
+- **没有在活线上验收**：本片约束不重启服务、不碰 18188；线上看到的仍是旧页面，直到下一次热更新。
+- 真浏览器那一轮只跑了 `rerank=fail` + `serper=rate_limited`（有端点）；「未配置端点，已跳过」
+  那条只在 DOM harness 里取证（同一 `row()` 渲染路径，CSS 与其它行完全一致）。
+- 对话模型与采集模型共用 `llm`：6 次探针正好用满客户端 6 次/分钟的窗口，紧接着拉过模型列表再点
+  「全部测试」，尾部几行会显示「未测：限频…」——如实报出，不掩盖。
+- 人类侧文档（`docs/plans/` 第 10 轮日志 + 索引）不在本片范围内，由主线补。
+
+## 后续批次 — 中断态 / 上传 503 / 启动行
+
+Three small backend fixes from `openspec/changes/connect-collection-line/tasks.md`
+("Findings recorded, not fixed here"). No schema change, no data mutation, no service
+restart, no `backend/static/**`, no crawler module, no new dependency. Not committed.
+
+### 1. A killed crawl no longer reads as "进行中" forever
+
+The registry's display status is derived: `apps/admin-console/backend/storage/seeds.py`
+`_SELECT_COLUMNS` maps the newest matching `pipeline_run` row to the seed's
+`last_run_status` (`failed→failure`, `succeeded→success`, `running→in_progress`, else
+`professor_seed.last_run_status`). A run killed by the gate timeout, a host restart or an
+operator SIGTERM stays `running` forever, so that seed showed "进行中" indefinitely.
+
+**Status string the page must map: `interrupted` (已中断).** Payload paths: `GET
+/api/canonical-v2/admin/seeds` (list), `GET /api/canonical-v2/admin/seeds/{id}`, both as
+`last_run_status`. `interrupted` is a **read-side value only** — it is never written to
+`professor_seed.last_run_status`, so the page must treat it as a terminal state (no
+"重新爬取" needed to clear it, and the trigger path keeps working because
+`claim_seed_for_trigger` reads the *column*, which still says `in_progress`).
+
+| File | Line | Change |
+|---|---|---|
+| `apps/admin-console/backend/storage/seeds.py` | 19–23 | `STALLED_RUN_AFTER_HOURS = 6` with the rationale (longest declared task timeout 5400 s) |
+| " | 29–41 | read-side type now carries `interrupted`; comment states why the write-side tuple does not |
+| " | 148, 169–178 | `_SELECT_COLUMNS` is an f-string; the `running` branch becomes `COALESCE(started_at, created_at) < now() - interval '6 hours' → 'interrupted'`, else `'in_progress'`; every other mapping untouched |
+| `apps/admin-console/tests/test_seed_storage_models.py` | 59, 71, 76, 97 | new no-DB locks (see below); the 51–56 assertions updated to the new SQL shape |
+| `apps/admin-console/tests/test_canonical_v2_seeds_api.py` | 231 (`_insert_running_run`), 266 (case) | Postgres-backed end-to-end case |
+
+`VALID_LAST_RUN_STATUSES`: **not** extended, and deliberately so. A repo-wide search
+(incl. ignored files) finds the tuple only at its own definition — nothing imports it, so
+it validates neither reads nor writes. It mirrors
+`V022_professor_seed.PROFESSOR_SEED_LAST_RUN_STATUSES`, i.e. the column's CHECK
+constraint, and the constraint refuses `interrupted` (verified against a real database):
+
+```
+constraint: CHECK ((last_run_status = ANY (ARRAY['success','failure','in_progress','never_run','adapter_missing'])))
+column accepts 'interrupted': no (CheckViolation)
+column accepts 'in_progress': yes
+VALID_LAST_RUN_STATUSES: ('success', 'failure', 'in_progress', 'never_run', 'adapter_missing')
+```
+
+What *did* need the value is the Pydantic API-response type (`SeedLastRunStatus`), which
+`Seed.model_validate` applies to every row the endpoints return — without it the first
+`interrupted` row would fail validation and the endpoint would 500. Locked by
+`test_seed_accepts_the_derived_interrupted_status`.
+
+**Runs list is left alone, as instructed.** `GET /api/canonical-v2/admin/seeds/{seed_id}/runs`
+(`backend/api/canonical_v2_seeds.py:254-274`) builds each item from
+`gate.history(task_id)` → `JobRun.as_dict(include_samples=True)`, i.e. the **jobs ledger**
+(`jobs.sqlite3`), not `pipeline_run`. It is a different ledger with its own status
+vocabulary (the runner's own rows), so no second rule was invented there.
+
+### 2. The uploads precheck answers the stable 503 instead of raising
+
+`runtime.register`'s preflight is `backend/api/canonical_v2_uploads.py:_postgres_preflight`,
+which calls `backend/api/upload.py:_resolve_upload_dsn()` → `resolve_dsn(None)` **outside
+any fail-soft wrapper**: with the console unconfigured that is a `RuntimeError`, i.e. a 500
+(the sibling `_batch_progress` is the fail-soft one and was left exactly as it was).
+
+| File | Line | Change |
+|---|---|---|
+| `apps/admin-console/backend/api/canonical_v2_uploads.py` | 17, 46 | `resolve_console_dsn` import; `CONSOLE_DATABASE_NOT_CONFIGURED` constant (same string as the seeds surface) |
+| " | 155, 162–176 | `_console_dsn(request)` + `require_console_database(request, runtime)` — the `require_postgres` decision table: unconfigured **and** the probe found no source → `console_database_not_configured`; unconfigured but the probe has a source → this surface's own `upload_requires_postgres`; configured → return |
+| " | 247–249 | the guard runs on commits only (`if not dry_run:`), before `runtime.register` |
+| " | 270 | exported in `__all__` |
+| `apps/admin-console/tests/test_canonical_v2_uploads_api.py` | 76, 113 (`_client(..., preflight=)`), 239 (`_clear_console_env`), 239–271 (new cases), 214 (degradation case declares a configured database) | see below |
+
+Decision detail worth the reviewer's eye: the guard sits **before** `register`, so on an
+unconfigured console a malformed payload answers 503 rather than 400/413/422. That is the
+seeds surface's own precedence (its guard precedes id-existence checks: `GET /seeds/1`
+answers 503, not 404) and it is what makes the *code* consistent across gated surfaces;
+"console has no database" is a stronger statement than "that row/domain does not exist".
+With a configured database nothing changed at all — the shape cases still answer
+400/413/422, verified by the existing cases (they now declare a configured database, with
+the reason in a comment, exactly as the seeds suite does).
+
+### 3. The startup line is visible in the boot log
+
+| File | Line | Change |
+|---|---|---|
+| `apps/admin-console/backend/main.py` | 104–109 | `state` hoisted; the `logging.info("console_database=%s", state)` call is **kept** and one `print(f"[canonical-v2] console_database={state}", flush=True)` is added — the shape `admin_auth.seed_initial_admin` uses for the first-boot password |
+| `apps/admin-console/tests/test_console_dsn_single_source.py` | 107–137 | captures both channels for both states |
+
+Announced state only: the test asserts the DSN's user/password/host (`hunter2`,
+`db.internal`) never reach stdout, and the line never carries a credential.
+
+### Verification (layered)
+
+**① New tests this slice — 9 cases, fixture source stated per cluster.**
+
+| Cluster | Cases | Fixture |
+|---|---|---|
+| `tests/test_seed_storage_models.py` | `test_a_stale_running_run_is_reported_as_interrupted` (SQL derives the value, threshold is the constant, judged by `COALESCE(started_at, created_at)`), `test_the_stall_threshold_is_wider_than_every_declared_task_timeout` (6 h > 5400 s, read from the real task table), `test_seed_accepts_the_derived_interrupted_status` (the response model cannot 500 on it), `test_interrupted_is_not_a_column_value` (write-side tuple stays the five column values) | constructed values + the real `JOB_TASKS_BY_ID` table; no database |
+| `tests/test_canonical_v2_seeds_api.py` | `test_a_killed_run_reads_as_interrupted_not_in_progress` — inserts a `running` `pipeline_run` 7 h old → registry says `interrupted` (detail + list); a fresh one → `in_progress`; closed as `failed` → `failure` | **real Postgres** (see below), rows written through the production `open_pipeline_run` / `close_pipeline_run` so the fixture cannot drift from the writer |
+| `tests/test_canonical_v2_uploads_api.py` | `test_a_commit_without_a_configured_console_database_is_a_stable_503` (parametrised over both unconfigured shapes, with the **production** preflight wired and the probe reporting the database available — the exact shape that raised) + dry-run 202 / list 200 / detail 200 in the same case | constructed scenario, stub probe + recording spawn; the production preflight callback is imported, not re-implemented |
+| `tests/test_console_dsn_single_source.py` | `test_the_boot_announcement_states_the_console_database_never_its_dsn` (parametrised configured/unconfigured; `capsys` + `caplog`) | constructed scenario |
+
+**② Pre-existing regression suites** (the brief's command list, run unmodified):
+
+```bash
+cd apps/admin-console && uv run pytest -q -p no:randomly -p no:cacheprovider \
+  tests/test_canonical_v2_seeds_api.py tests/test_canonical_v2_uploads_api.py \
+  tests/test_canonical_v2_uploads_runtime.py tests/test_managed_runtime_bootstrap.py
+# → 42 passed, 2 skipped   (the two skips are the DATABASE_URL_TEST-gated cases)
+```
+
+With the two extended files added:
+
+```bash
+cd apps/admin-console && uv run pytest -q -p no:randomly -p no:cacheprovider \
+  tests/test_canonical_v2_seeds_api.py tests/test_canonical_v2_uploads_api.py \
+  tests/test_canonical_v2_uploads_runtime.py tests/test_managed_runtime_bootstrap.py \
+  tests/test_console_dsn_single_source.py tests/test_seed_storage_models.py
+# without a test database → 57 passed, 2 skipped
+# with the throwaway database → 59 passed   (both gated cases now execute)
+```
+
+Adjacent suites that touch the changed code paths (not in the brief's list, run because
+they read the changed SQL / the widened type):
+`tests/test_migration_v022.py tests/test_seeds_api.py tests/test_seed_cron.py
+tests/test_import_professor_seeds.py tests/test_admin_console_shell.py
+tests/test_nav_postgres_gating.py` → **31 passed, 31 skipped**. The skips are the
+`postgres_data_ready` fixture, which cannot run in this worktree at all: it needs
+`ALEMBIC_DATABASE_URL` / `ALEMBIC_EXPECTED_DATABASE` / `ALEMBIC_TARGET_KIND` (the
+fail-closed destructive-target contract) **and** `docs/专辑项目导出1768807339.xlsx`, which
+does not exist here — pre-existing, unrelated to this slice (same errors with the slice
+stashed: setup fails inside `conftest.postgres_data_ready` before any changed code runs).
+
+Lint: `uv tool run ruff@0.8.0 check` on all seven touched files → `All checks passed!`.
+`ruff format --check` reports the same four files before and after the change (they are
+format-dirty at HEAD); a formatted copy diff confirms none of the new lines is the
+offender, so no reformatting was done (it would only add unrelated churn).
+
+**③ Real-database evidence (the throwaway-database procedure, reproducible).**
+
+`test_a_killed_run_reads_as_interrupted_not_in_progress` needs a *disposable* database
+(it writes `pipeline_run` rows). Created + marked + migrated for the run, dropped after
+(nothing else was touched; `miroflow_collection_v1` was never connected to):
+
+```bash
+# 1. create + mark (marker = the fail-closed destructive-target identity)
+CREATE DATABASE miroflow_collection_line_fixbatch;
+COMMENT ON DATABASE miroflow_collection_line_fixbatch
+  IS 'miroflow:destructive-target:v1:disposable:miroflow_collection_line_fixbatch';
+# 2. migrate
+ALEMBIC_DATABASE_URL=postgresql://miroflow@127.0.0.1:55458/miroflow_collection_line_fixbatch \
+ALEMBIC_EXPECTED_DATABASE=miroflow_collection_line_fixbatch ALEMBIC_TARGET_KIND=disposable \
+  uv run python -c 'from alembic import command; from alembic.config import Config; command.upgrade(Config("alembic.ini"), "head")'
+# 3. run the tests, 4. DROP DATABASE … WITH (FORCE)
+```
+
+RED → GREEN on the real database (production code restored to HEAD for the RED run only):
+
+```
+# RED (old CASE restored)
+E           AssertionError: assert 'in_progress' == 'interrupted'
+E             - interrupted
+E             + in_progress
+tests/test_canonical_v2_seeds_api.py:301
+FAILED tests/test_seed_storage_models.py::test_a_stale_running_run_is_reported_as_interrupted
+FAILED tests/test_canonical_v2_seeds_api.py::test_a_killed_run_reads_as_interrupted_not_in_progress
+2 failed, 12 passed
+# GREEN (fix in place) → 14 passed
+```
+
+RED → GREEN for the 503 (the flagged call site, `backend/api/upload.py:1257`) and for the
+boot line (both production edits reverted for the RED run):
+
+```
+# RED
+E           RuntimeError: DATABASE_URL is required. Example: postgresql+psycopg://user:pass@localhost:5432/miroflow
+../miroflow-agent/src/data_agents/storage/postgres/connection.py:44: RuntimeError
+backend/api/upload.py:1257: in _resolve_upload_dsn
+4 failed in 1.40s
+# GREEN → 4 passed in 0.45s
+```
+
+Incidental confirmation of fix 3 inside pytest's captured stdout of the RED run above:
+`[canonical-v2] console_database=configured`.
+
+### Notes for the parent / not verified
+
+1. **Page side (not mine).** `backend/static/seeds.html` must map the new value; the
+   string is `interrupted`. The React SPA (`frontend/src/api.ts:768`
+   `SeedLastRunStatus` union, `frontend/src/pages/Seeds.tsx:40` `STATUS_LABELS`) does
+   **not** know it either — it renders `undefined` for an unknown status. Left untouched
+   (out of scope here); it needs the same one-line addition if that surface is still
+   served anywhere.
+2. **`COALESCE(started_at, created_at)`** is kept for symmetry with the `last_run_at`
+   sub-select, but it is currently unreachable: `pipeline_run.started_at` is `NOT NULL`
+   (verified against the real schema). A stale row is therefore always judged by its
+   start time.
+3. **Residual inconsistency, deliberately not papered over:** an unconfigured console
+   with a *real* probe answers the stable code only on the commit path, which is what was
+   asked; the read paths never needed the DSN, the dry run still works, and the detail
+   path stays fail-soft. If the page should also see `console_database_not_configured`
+   from `GET /uploads` (`uploads.postgres.available=false` today), that is a further
+   decision, not a bug.
+4. **The guard's 3-line `_console_dsn` mirrors `canonical_v2_seeds._console_dsn`.** Sharing
+   it would mean either a private cross-module import or a move into `backend/deps.py`;
+   both are wider than this slice, so the mirror is local and named after the model.
+5. **Human docs (`docs/plans/` log + index) were not touched** — per the brief this batch
+   appends evidence only; the round log/index entry stays with the main line.

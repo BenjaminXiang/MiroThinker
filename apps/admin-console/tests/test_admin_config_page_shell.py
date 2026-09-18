@@ -116,7 +116,9 @@ def test_assets_carry_the_page_contracts() -> None:
     for call in _API_CALLS:
         assert call in script, call
     assert "密钥只写不读" in page
-    assert 'id="testRerank"' in page
+    # card 2's own rerank probe is gone (its 重排模型 block owns the one test now);
+    # what stays behind is the pointer, not a second control.
+    assert "Rerank 连通性测试已移到「模型与连接 › 重排模型」" in page
 
 
 def test_banner_semantics_are_present_in_the_page_script() -> None:
@@ -218,6 +220,7 @@ def test_the_probe_buttons_stay_script_built() -> None:
     # no probe control may be in the shell: the script builds them from the payload.
     assert ">测试连通性<" not in page
     assert ">拉取模型列表<" not in page
+    assert ">全部测试<" not in page
     # The role copy that must travel with each control, however, is script-side.
     script = _script()
     assert "保存 ≠ 测试" in script
