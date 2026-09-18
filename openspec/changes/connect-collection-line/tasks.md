@@ -122,6 +122,45 @@ slice contract supplied by the operator.
   (`as_dict(include_samples=True)` for failed rows) closes it; the page already renders the
   excerpt when present.
 
+## I · Model configuration on `/admin` (roles, presets, model discovery)
+
+- \[ \] I1 The connection card becomes 模型与连接 organised by role (对话模型 /
+  采集模型 / 嵌入模型 / 重排模型 / Web 搜索), each showing the runtime-effective value,
+  its origin and the actions that apply.
+- \[ \] I2 `GET /api/canonical-v2/admin/connections/presets` — a small generic provider
+  table (本地 OpenAI 兼容 / DeepSeek / 阿里云百炼兼容模式 / OpenAI / 硅基流动 / 自定义)
+  with default base URLs, docs links and whether a key is needed, plus the chat-profile
+  list and the current selection. No deployment-specific hosts baked in.
+  → **backend done** (`canonical_v2_admin_config.py:416-446`,
+  `canonical_v2_connection_tests.py:140-248`); verify: 5 route tests in
+  `tests/test_canonical_v2_model_discovery_api.py`. Page half = I1.
+- \[ \] I3 `POST /api/canonical-v2/admin/connections/{key}/models` — probe
+  `{base_url}/v1/models` with the *unsaved* form values (same body as
+  `connections/test`, same rate limit), returning the id list, the exact request URL
+  and elapsed ms, or a structured error (unauthorized / unreachable / not_supported /
+  timeout). Stores nothing.
+  → **backend done** (`canonical_v2_admin_config.py:448-493`,
+  `canonical_v2_connection_tests.py:461-627`; 3 s timeout, 512 KB read, 500-id cap,
+  `body_excerpt` redaction); verify: 11 route tests incl. all five error codes and the
+  key-never-echoed case. Page half = I1.
+- \[ \] I4 对话模型 becomes a profile picker: a new catalogue row
+  (`serving.chat_llm_profile` → `CHAT_LLM_PROFILE`) so the choice travels the existing
+  save→restart path, with the profile's model/base_url shown before saving.
+  → **backend done** (`managed_config.py:59,228,505-512,745,913-941`; unknown names are
+  refused on save — the check sits on the write path, not in the schema, because the
+  schema also validates env-overridden documents the serving line tolerates); verify:
+  2 catalogue tests + 1 bootstrap test. Page half = I1.
+- \[ \] I5 嵌入模型 is labelled as the frozen serving-index value (page read-only, with
+  the rebuild consequence spelled out); the collection-side override is shown
+  separately and labelled as not affecting the serving index.
+  → **backend done** (both rows in `PAGE_READONLY_FIELDS`, `managed_config.py:86-96`,
+  reasons spell out the frozen bundle *and* that no runtime code reads the projected
+  variables); verify: `test_the_frozen_embedding_rows_are_display_only`. Page copy = I1.
+- \[ \] I6 Tests: route tests for the two new endpoints, a page-shell test for the role
+  card, and an invariant that every role renders the runtime-effective value.
+  → route tests **done** (20 in `tests/test_canonical_v2_model_discovery_api.py`);
+  the page-shell test and the role invariant belong to the page half.
+
 ## Findings recorded, not fixed here
 
 - A killed crawl leaves its `pipeline_run` row in `running` forever (no heartbeat,

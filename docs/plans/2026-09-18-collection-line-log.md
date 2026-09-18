@@ -256,3 +256,155 @@ scratch 实例（18297，独立认证、指向 `miroflow_collection_v1`，38 条
 
 - 「运行详情」面板仍显示原始 argv / JSON / run id（有意：那是排查用的技术面）
 - 触发成功横幅里仍带 run id（操作者需要引用它；任务名已换中文）
+
+---
+
+# 第 8 轮：`/admin` 模型配置（后端半片，2026-09-19）
+
+> 本轮分两片：**后端半片**（本文件，子代理）与**页面半片**（`admin.html/js/css`，另一子代理，另行记录）。
+> OpenSpec change：`connect-collection-line`（I1–I6）。代理侧证据：`.agents/runs/connect-collection-line/verification.md`
+> 的「I (backend) — presets + model discovery」。
+
+## 1. 做了什么
+
+按 LobeChat / Open WebUI / Dify 那种「选预设 → 贴 key → 拉模型列表 → 选一个 → 测试 → 保存（重启生效）」的
+操作路径，补齐后端缺的三件事：
+
+- **`GET /api/canonical-v2/admin/connections/presets`（只读、不外呼）**：一份**通用**预设表
+  （本机 OpenAI 兼容 / DeepSeek / 阿里云百炼兼容模式 / OpenAI / 硅基流动 / 自定义），带默认 base_url、
+  文档链接、是否需要 key；再带上服务线**可切换的对话档位表**（名字 / 模型 / base_url / 凭据变量 / 中文标签）
+  与**本进程当前用的档位**（`CHAT_LLM_PROFILE` 解析结果），以及嵌入模型那个**发布包冻结值**。
+  预设表里**没有任何本部署的主机**（这是代码，不是配置）。
+- **`POST /api/canonical-v2/admin/connections/{key}/models`**：用页面上的**未保存**值（缺省回落到运行期生效值，
+  与 `/connections/test` 同一条解析链）GET `{base_url}/v1/models`，返回排序去重的 id 列表、**实际请求 URL**、
+  耗时；失败一律**结构化 200**（`unauthorized` / `unreachable` / `timeout` / `not_supported` / `bad_response`，
+  带 HTTP 状态、请求 URL、耗时、200 字截断的 body 摘要），**永远不会 500**；3 秒超时（比连通性测试的 5 秒短）、
+  最多读 512 KB、最多回 500 条；与测试按钮**共用同一个限频器**；key 只走 `Authorization` 头，
+  上游 body 若把它回显出来会被替换成 `[redacted]`，不做任何存储或日志。
+  **此端点不需要控制台数据库**（不读采集 DSN），因此没有 Postgres 的安装也能用模型选择器。
+- **`serving.chat_llm_profile` 进受管目录**（→ `CHAT_LLM_PROFILE`）：对话模型档位从此是页面上的一个字段，
+  走既有的「保存 → 重启生效」通道。**写错档位名会被拒绝**（见下面第 2 节的取舍），不会静默落到默认档。
+- **两个嵌入端点字段改为只读展示**（`extraction_endpoints.embedding_base_url` / `embedding_model`）：
+  这两行原来在页面上可编辑，实际改不动任何东西。
+
+## 2. 发现了什么
+
+1. **这两个嵌入字段不只是"被冻结"，而是没有任何读者。** 全仓 grep：`CANONICAL_V2_EMBEDDING_BASE_URL` /
+   `CANONICAL_V2_EMBEDDING_MODEL` 只出现在受管配置的 `_FIELD_ENV_VARS` 映射里（和历史运行产物），
+   **运行期没有任何代码读它们**；服务线的嵌入权威是发布包里的 content-addressed bundle
+   （`load_content_addressed_embedding_adapter()`：base_url / 模型名 / 维度 / 校验和与冻结值不符即拒绝加载），
+   控制台自己那条检索向量链用的是 `EmbeddingClient()` 的硬编码默认值（也不看环境变量）。
+   也就是说：在页面上保存它们 = 往环境里投两个没人读的变量，行为一点不变 —— 比"被冻结"更值得说明。
+   只读理由因此写成**两件事**：发布包冻结（改它要重建全部向量）+ **没有运行期读者**（保存不会改变任何行为），
+   并指出采集/构建侧的真覆盖是**脚本级**的 `EMBEDDING_BASE_URL`（不进受管配置）。
+2. **清单里写着「采集/构建侧另有覆盖」，但那个覆盖不是这两个字段。** 采集脚本读的是**没有前缀**的
+   `EMBEDDING_BASE_URL` / `EMBEDDING_API_KEY`（`run_batch_reprocess_v3.py` 等），与受管配置无通路。
+   文案按这个事实写，页面别把两者混在一张卡里。
+3. **档位名的严格校验只能放在写路径，不能放进 schema。** 若把"必须是已知档位"写成 pydantic 校验，
+   它会连带校验**环境覆盖后的生效文档**与**手改的文件**：一个过期的 `CHAT_LLM_PROFILE` 环境变量会让
+   `/config` 每次读都 503（服务线本身是容忍未知档名、回落到默认档的），手改文件里一个坏值还会让
+   `_file_owned_values` 判定整份文件无效、**把操作者所有设置一起丢掉**。所以校验放在
+   `ManagedSettingsStore.patch()`（保存动作所在处），拒绝信息带上原值与可选档位，且**原子**（整笔 patch 不落盘）。
+4. **活线上这个新字段会显示为 env 锁定。** 服务单元设了 `CHAT_LLM_PROFILE=deepseekv4flash`，
+   按既有「env > 文件」规则，页面会显示 `source: env` / 不可编辑 —— 与其他被单元钉死的字段一致。
+   要让页面能改，得先让服务单元不再设它；保存→重启这条链路本身已有测试证明。
+
+## 3. 怎么验证
+
+| 检查 | 结果 |
+|---|---|
+| 新增路由测试（I2 形状 + I3 成功/五种失败/密钥不外泄/限频/无数据库/真环回端点） | **20 passed**（`tests/test_canonical_v2_model_discovery_api.py`） |
+| 目录行 + 投影 + 只读嵌入行（I4/I5） | 目录 +3、启动投影 +1，**40 passed**（三个文件一起跑） |
+| 改前 RED | `AttributeError: … has no attribute 'get_json'`（16 errors）+ `field is not in the managed settings whitelist: serving.chat_llm_profile` 与缺只读行（6 failed） |
+| 定向回归（配置 API / 密钥 API / 连接测试 / 单入口 / runtime sources / 受管存储） | **133 passed，全绿**（见下：两个页面外壳测试中途被页面半片的改动打破，页面半片随后同步了它们） |
+| `ruff check` / `ruff format --check` | 改动文件全干净（`deps.py`、`canonical_v2_query_interpreter.py` 的 5 个 F401 是既有） |
+
+（**过程记录**）两个页面外壳测试 `test_admin_page_renders_the_credentials_card` 与
+`test_shell_keeps_the_four_cards_and_the_snapshot` 中途失败过：它们断言的是
+`backend/static/admin.html` 里的 `连接与密钥` / `id="card-connections"`，而**页面半片当时正在重写该文件**
+（该文件 01:39–01:42 被改；本片 `git diff` 对 static 目录零改动，984 行全属页面半片）。页面半片随后
+同步了这两个测试（01:45），最后一次运行**全绿**：本片没有绕过、也没有削弱任何断言。
+
+## 4. 未做 / 交接
+
+- 页面渲染（角色卡、预设表、模型下拉、只读行样式）与页面外壳测试的同步属**页面半片**（I1/I6）；
+  本片未改任何 `backend/static/**` 文件，也未重启服务、未跑全量套件。
+- 「拉模型列表」按钮与「测试连通性」按钮**共用 6 次/分钟的限频窗口**（同连接同客户端），
+  页面提示要按这个写：连续点两下会被 429 并给出 `Retry-After`。
+- 页面对"base_url 为空"应在本地拦下（后端在完全没有端点时回 `unreachable` + 空 `request_url`，不发请求）。
+
+---
+
+# 第 8 轮：`/admin` 模型配置（页面半片，2026-09-19）
+
+> 与上一节同一轮、同一 OpenSpec change（`connect-collection-line`，I1–I6）：上一节是**后端半片**，
+> 本节是**页面半片**（`admin.html` / `admin.js` / `admin.css`）。代理侧证据：
+> `.agents/runs/connect-collection-line/verification.md` 的「I (page) — 模型与连接」。
+> 后端半片交付的接口已在本工作区落地，下面所有数据都来自真接口，不是手抄的形状。
+
+## 1. 做了什么
+
+`/admin` 的第四张卡 `连接与密钥` → **`模型与连接`**：不再按"文件/连接"平铺，而是按**角色**分五块，
+每块先说清「现在生效的是什么、来自哪里」，再给该角色能改的字段和动作：
+
+1. **对话模型（回答与改写用它）**：**档位下拉**（来自真接口的档位表，共 7 个档）+ 该档位的模型/端点静态展示
+   + 只写密钥（档位自己的凭据变量）+ 测试 + 请求 URL 预览（**不给「拉模型列表」**：模型 id 由档位决定，
+   这一块没有任何字段能接住选中的 id，列表只会是噪音）。关键的一行是
+   **「档位（保存值）」与「档位（运行期）」并列**：活线现在跑 `gemma4`，受管文件里刚选了
+   `deepseekv4flash`，页面直接写「本进程仍跑 gemma4；重启后切到 deepseekv4flash」——这正是"保存 ≠ 生效"。
+2. **采集模型（摘要与富化用它）**：`extraction_endpoints.llm_base_url/llm_model` 两个目录字段 + 提供方预设
+   + 拉模型列表 + 测试（连接 `llm`，与旧卡一致）+ 端点/模型的来源药丸。
+3. **嵌入模型（检索向量用它）**：**只读**（服务线冻结值 + 后端给的只读理由 + 固定警示行
+   「服务线索引由发布包冻结：改它需要重建全部向量」）；采集侧覆盖收进折叠的
+   「高级：采集侧覆盖」，并写明「只影响后续采集/构建，不改服务线索引」+ 服务端的只读原因。
+4. **重排模型**：`rerank_base_url/rerank_model` + 预设 + 拉模型列表 + 测试（连接 `rerank`）+ 密钥 + 运行期说明。
+5. **Web 搜索**：Bocha / Serper 两块，provider 固定主机只读展示，密钥只写，测试与保存照旧。
+
+交互细节（都按简报要求做）：拉模型列表用**页面上未保存的值**、有内联转圈、**3 秒客户端护栏**；
+≤200 个模型渲染成下拉（含「手填模型 ID」一等公民），>200 渲染成过滤框 + `<datalist>`；
+失败一律显示中文映射 + **请求 URL** + 耗时 + 服务端脱敏后的响应片段；测试按钮旁**先**显示
+「测试将请求：<完整 URL>」；保存与测试分离，文案明说「保存 ≠ 测试；重启后生效」并复用顶部横幅。
+密钥只在一个角色里有入口（`llm`→对话模型、`rerank`→重排、`embedding`→嵌入、web 各自），
+明文既不回显也不出现在任何渲染文本里。
+
+## 2. 发现了什么
+
+1. **浏览器实测抓到一处真缺陷（已修，并加了防线）。** 角色块的状态徽章原本复用了 `collectionState` 这个 id，
+   而**第一张卡（采集与构建）早就占了同一个 id**。`getElementById` 取第一个，于是角色块把自己的徽章写进了
+   第一张卡的"各域状态"行里（第一张卡的内容被覆盖），自己的位置反而是空的。DOM 桩当时发现不了，是因为桩
+   的 id 查找取的是"最后一个"——与浏览器相反。修法：角色状态节点统一改成 `role-<id>-state`；三道防线
+   同时落地：页面外壳测试禁止**任何重复 id**、禁止 `el()` 引用壳里不存在的 id，DOM 桩改成与浏览器一致的
+   "第一个匹配"，并断言每个角色的状态节点都有内容。回退该 id 可复现 RED（`+ [ 'collectionState' ] - []`）。
+2. **后端只读理由比简报更狠，页面照实呈现。** 简报让写「改它要重建索引」，后端查明这两个嵌入字段
+   **根本没有运行期读者**（保存它们不改变任何行为）。页面把后端原文放进「只读原因」行，
+   折叠区里保留简报要求的「只影响后续采集/构建，不改服务线索引」并指向那句原文——两个说法不冲突、不互相掩盖。
+3. **请求 URL 预览必须自己算一次，且要和服务端一致。** 简报要求"测试前"就能看到将要请求的地址，
+   而服务端的 `request_url` 只在调用之后才有。于是页面复刻了服务端 `_join` 规则与三条路径
+   （`/chat/completions`、`/v1/rerank`、`/v1/embeddings`），并用两条测试锁住不许漂移：
+   pytest 直接 import 服务端常量比对；渲染校验用**服务端真实产出的 `request_url`** 与页面推算比对。
+4. **活线上新档位字段会显示为 env 锁定**（服务单元设了 `CHAT_LLM_PROFILE`）：页面此时禁用下拉并写明
+   「被环境变量 CHAT_LLM_PROFILE 覆盖」，而不是假装能存。
+5. **空端点不该白跑一趟**（后端半片提的）：页面在本地就拦下——没有可用端点时提示
+   「还没有可用端点：先填 Base URL（或选一个预设/档位）」，不发请求。
+
+## 3. 怎么验证
+
+| 检查 | 结果 |
+|---|---|
+| 新不变量测试 `tests/test_admin_model_roles_page.py`（10 个：每个角色都有生效值块 / 每个后端连接只属于一个角色 / 预览路径 = 服务端常量 / 未保存值 / 200 分档 / 五种失败文案 / 3 秒 AbortController / 密钥不进文本 / 嵌入只读 / 保存≠测试） | **10 passed** |
+| 页面外壳测试（五块角色按序、每块的容器、**禁止重复 id**、`el()` 引用必须存在、嵌入警示行、探针按钮由脚本生成） | 通过（`tests/test_admin_config_page_shell.py` 15 个） |
+| 定向回归（配置 API / 密钥 API / 连接测试 / 单入口 / 门控 / 目录 / 模型发现 / 管理门禁） | **128 passed**（含后端半片新增的 `test_canonical_v2_model_discovery_api.py`） |
+| DOM 渲染校验（`.agents/runs/connect-collection-line/model-roles-harness/render_check.cjs`，4 个场景） | **全部通过**：角色块从 payload 渲染、下拉/过滤框分档、失败与超时文案、按角色的保存体、密钥不外显、预设接口 404 时降级 |
+| 夹具来源（不是手抄） | `dump_fixtures.py` 用真处理器 in-process 跑出 `/config`、`/secrets`、`/connections/presets`（临时受管文件 + 清空环境凭据变量 + 假 key 走真 store 写入），模型列表用真 `fetch_model_list()`（3 条成功 / 500 条截断 / 401 脱敏 / 读超时 / 端口关闭） |
+| **真浏览器实测**（scratch 静态+接口桩 18321，只监听环回，用完即杀；未动 18188、未重启服务） | 五块按序；第一张卡状态行完好；对话下拉 = 真实 7 个档位；「本进程仍跑 gemma4；重启后切到 deepseekv4flash」；`测试将请求：https://api.deepseek.com/chat/completions`；采集预览 `…/chat/completions`；嵌入冻结值 + 折叠高级块（两个覆盖输入框 disabled）；对话块**无**拉列表按钮、采集块拉列表 → 3 条下拉、选中即填入且出现「未保存」；超大模式 → 过滤框 + 500 项 datalist + 截断提示；401 模式 → 「密钥被拒绝（401/403）· HTTP 401 · 请求 <url> · 0 ms · 响应片段：{…[redacted]}」；挂起 3.5 秒模式 → **3102 ms 时**「3 秒内没有响应（页面在 3 秒后放弃等待）」且按钮恢复；输入假 key 后 `document.body.innerText` 里查不到它；卡片内无元素溢出、整页无横向滚动 |
+| 截图 | `.agents/runs/connect-collection-line/model-roles-harness/admin-models-card.png` |
+
+## 4. 未做 / 交接
+
+- **没有在活线上验收**（本片约束：不重启服务、不碰 18188）：线上看到的仍是旧页面，直到下一次热更新；
+  页面级验收（有会话时）留待上线窗口。
+- 第二张卡里那个「测试 Rerank 连通性」按钮**保留未并**（它测的是运行期状态，角色块里的测的是未保存值）；
+  两块测试按钮共用服务端 6 次/分钟限频，页面已写明。要合并成一处时顺手清理。
+- 采集模型块**不给密钥输入**：采集 LLM 的凭据就是对话档位那一份（`llm.api_key`），
+  写两处等于两个入口；若将来后端给采集 LLM 单开连接键，那块应补上行并删掉指针文案。
+- 预设表里「自定义端点」没有默认地址：选中后页面提示「直接手填 Base URL」。

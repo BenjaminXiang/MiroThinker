@@ -418,7 +418,7 @@ def test_serving_fields_are_in_the_managed_whitelist_with_a_readonly_policy(
 
 
 def test_admin_page_renders_the_credentials_card() -> None:
-    """One connection card per connection, built by `admin.js` with the probe inside it."""
+    """Five role blocks, built by `admin.js` with the probe inside each of them."""
 
     client = _client()
     page = client.get("/admin")
@@ -426,9 +426,9 @@ def test_admin_page_renders_the_credentials_card() -> None:
 
     assert page.status_code == 200
     assert script.status_code == 200
-    assert "连接与密钥" in page.text
-    assert 'id="connectionCards"' in page.text
-    assert "测试连通性" not in page.text  #每张连接卡的探针按钮由 admin.js 生成
+    assert "模型与连接" in page.text
+    assert 'id="roleBlocks"' in page.text
+    assert ">测试连通性<" not in page.text  #每块角色里的探针按钮由 admin.js 生成
     assert "api/canonical-v2/admin/secrets" in script.text
     assert "api/canonical-v2/admin/connections/test" in script.text
     assert "需重启生效" in script.text

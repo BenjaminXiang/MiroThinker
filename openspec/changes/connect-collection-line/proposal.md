@@ -66,7 +66,18 @@ adapter registry, page behaviour):
    department and roster URL are edited inline and saved through the existing
    `PUT /seeds/{id}` — school sites reorganise, and the alternative (delete +
    recreate) would lose the id and its run history.
-9. **The jobs page speaks to operators.** The task catalog carries `group` and
+9. **The config page speaks in model roles.** `/admin`'s connection card becomes
+   模型与连接, organised the way every comparable product (LobeChat, Open WebUI,
+   LibreChat, Dify, Cherry Studio) organises it — by *role* rather than by storage
+   location: 对话模型 / 采集模型 / 嵌入模型 / 重排模型 / Web 搜索. Each role gets a
+   provider preset table (display name + default base URL + docs link + whether a key
+   is needed), a **fetch model list** action that probes `{base_url}/v1/models` with
+   the *unsaved* form values and lets the operator pick (with manual id entry as a
+   first-class fallback), the resolved request URL shown before testing, and the
+   existing "save ≠ test, restart to apply" semantics. 嵌入模型 is presented as a
+   **服务于检索索引的冻结值**（页面只读 + 说明"改它要重建索引"），with the
+   collection-side override shown separately and labelled as such.
+10. **The jobs page speaks to operators.** The task catalog carries `group` and
    `operator_hint` (plain-language "what it does / when to use it") and an invariant
    test forbids a task without them; `/jobs` groups the 15 tasks by purpose, shows
    Chinese statuses, plain-language tags and either 立即运行 with Chinese parameter

@@ -14,6 +14,11 @@ plus latency. Three properties make that safe:
 3. **No credential, no upstream body.** The result carries a status, a latency
    and a sanitized reason. Response bodies are discarded, and the key is never
    echoed, logged or returned.
+
+The same module owns the two other page-facing tables that must not drift from
+the runtime: the generic provider preset list (what an operator can pick *before*
+typing a key — I2) and the bounded model-list fetch that lets them pick a model id
+from the endpoint (I3). Neither table contains a host of this deployment.
 """
 
 from __future__ import annotations
@@ -31,6 +36,15 @@ from urllib.parse import urlsplit
 
 DEFAULT_TIMEOUT_SECONDS = 5.0
 PING_TEXT = "ping"
+
+# The model list is a convenience for the operator, not a proof of life, so it
+# gets a shorter budget than the connectivity probe: one slow endpoint must not
+# hold the page's "获取模型列表" button for the probe's full timeout.
+MODEL_LIST_TIMEOUT_SECONDS = 3.0
+MODEL_LIST_PATH = "/v1/models"
+MODEL_LIST_MAX_BYTES = 512 * 1024
+MODEL_LIST_MAX_MODELS = 500
+MODEL_LIST_EXCERPT_CHARS = 200
 
 _RERANK_PATH = "/v1/rerank"
 _EMBEDDING_PATH = "/v1/embeddings"
@@ -117,6 +131,121 @@ CONNECTIONS: tuple[ConnectionSpec, ...] = (
 )
 
 SPEC_BY_KEY: dict[str, ConnectionSpec] = {spec.key: spec for spec in CONNECTIONS}
+
+
+# -- provider presets (I2: pick a provider before typing a key) --------------
+
+
+@dataclass(frozen=True, slots=True)
+class ProviderPreset:
+    """One provider an operator can start from.
+
+    ``base_url`` is an *example* endpoint and never a host of this deployment: a
+    preset list is shipped code, so baking one installation's gateway into it
+    would hand every other installation a URL it cannot reach — and would leak
+    where this one runs. ``needs_key`` describes the provider's usual shape; a
+    self-hosted OpenAI-compatible server may still require (or ignore) a key.
+    """
+
+    id: str
+    label: str
+    base_url: str
+    needs_key: bool
+    docs_url: str | None = None
+    note: str | None = None
+
+    def as_dict(self) -> dict[str, Any]:
+        return {
+            "id": self.id,
+            "label": self.label,
+            "base_url": self.base_url,
+            "needs_key": self.needs_key,
+            "docs_url": self.docs_url,
+            "note": self.note,
+        }
+
+
+PROVIDER_PRESETS: tuple[ProviderPreset, ...] = (
+    ProviderPreset(
+        id="local-openai",
+        label="本机 OpenAI 兼容服务（vLLM / SGLang）",
+        base_url="http://127.0.0.1:8000/v1",
+        needs_key=True,
+        note="把主机与端口换成你自己的服务；本机部署常见端口见下",
+    ),
+    ProviderPreset(
+        id="deepseek",
+        label="DeepSeek",
+        base_url="https://api.deepseek.com/v1",
+        needs_key=True,
+        docs_url="https://platform.deepseek.com/api-docs/",
+    ),
+    ProviderPreset(
+        id="dashscope",
+        label="阿里云百炼（OpenAI 兼容模式）",
+        base_url="https://dashscope.aliyuncs.com/compatible-mode/v1",
+        needs_key=True,
+        docs_url="https://help.aliyun.com/zh/model-studio/",
+    ),
+    ProviderPreset(
+        id="openai",
+        label="OpenAI",
+        base_url="https://api.openai.com/v1",
+        needs_key=True,
+        docs_url="https://platform.openai.com/docs/api-reference",
+    ),
+    ProviderPreset(
+        id="siliconflow",
+        label="硅基流动 SiliconFlow",
+        base_url="https://api.siliconflow.cn/v1",
+        needs_key=True,
+        docs_url="https://docs.siliconflow.cn/",
+    ),
+    ProviderPreset(
+        id="custom",
+        label="自定义端点",
+        base_url="",
+        needs_key=True,
+        note="直接填完整 base_url（含 /v1）",
+    ),
+)
+
+
+# Pretty labels for the profile picker. A profile added to ``_LLM_PROFILES``
+# without a label here still renders (the name is used), so the table can lag the
+# profile list without hiding a choice from the operator.
+_LLM_PROFILE_LABELS: dict[str, str] = {
+    "gemma4": "本地 qwen3.6-35b-a3b（gemma4）",
+    "qwen35": "本地 qwen3.5-35b-a3b（qwen35）",
+    "mirothinker": "MiroThinker 1.7 235B（mirothinker）",
+    "ark": "火山方舟 Ark / 豆包",
+    "deepseekv4flash": "DeepSeek V4 Flash",
+    "deepseekv4lite": "DeepSeek V4 Lite",
+    "deepseekv4pro": "DeepSeek V4 Pro",
+}
+
+
+def llm_profile_options() -> list[dict[str, Any]]:
+    """Every chat profile the serving line can be switched to, with its endpoint.
+
+    Read from the same table the serving process resolves through
+    ``CHAT_LLM_PROFILE``, and from each profile's **local** endpoint — that is the
+    one ``chat_llm_profile()`` (and therefore the answer/rewrite path) uses. The
+    import is deferred so this module stays importable without the agent app.
+    """
+
+    from src.data_agents.professor.llm_profiles import _LLM_PROFILES
+
+    return [
+        {
+            "name": name,
+            "model": profile.local.model,
+            "base_url": profile.local.base_url,
+            "key_env": profile.local.api_key_env,
+            "label": _LLM_PROFILE_LABELS.get(name, name),
+        }
+        for name, profile in sorted(_LLM_PROFILES.items())
+    ]
 
 
 class UnsafeEndpointError(ValueError):
@@ -329,6 +458,175 @@ def test_connection(
     }
 
 
+# -- model list (I3: pick a model id from the endpoint) ----------------------
+
+ModelListTransport = Callable[..., tuple[int, bytes]]
+
+
+def get_json(
+    url: str, *, headers: Mapping[str, str], timeout: float, max_bytes: int
+) -> tuple[int, bytes]:
+    """One bounded GET; the body is read only up to ``max_bytes``.
+
+    Redirects follow urllib's default policy — a gateway that redirects once is
+    normal, and an operator-typed endpoint is not a trust boundary we can settle
+    by refusing them. The body is never logged and never trusted beyond the model
+    ids parsed out of it.
+    """
+
+    request = urllib_request.Request(url, headers=dict(headers), method="GET")
+    try:
+        with urllib_request.urlopen(request, timeout=timeout) as response:
+            return int(response.status), response.read(max_bytes)
+    except urllib_error.HTTPError as exc:
+        try:
+            payload = exc.read(max_bytes)
+        except OSError:
+            payload = b""
+        finally:
+            exc.close()
+        return int(exc.code), payload
+
+
+def _model_ids(payload: Any) -> list[str]:
+    """Sorted, de-duplicated ids from an OpenAI-compatible model list body.
+
+    ``data`` is the OpenAI shape (``{"object": "list", "data": [{"id": …}]}``) and
+    ``models`` the older/other one; anything else — HTML, an error envelope, an
+    empty list — yields no ids and is reported as an unusable response.
+    """
+
+    entries: Sequence[Any] | None = None
+    if isinstance(payload, Mapping):
+        for field in ("data", "models"):
+            candidate = payload.get(field)
+            if isinstance(candidate, Sequence) and not isinstance(
+                candidate, (str, bytes)
+            ):
+                entries = candidate
+                break
+    if entries is None:
+        return []
+    ids: list[str] = []
+    for entry in entries:
+        if isinstance(entry, Mapping):
+            raw = entry.get("id") or entry.get("name")
+        else:
+            raw = entry
+        text = str(raw).strip() if raw is not None else ""
+        if text:
+            ids.append(text)
+    return sorted(set(ids))
+
+
+def _body_excerpt(body: bytes | str | None, *, secret: str = "") -> str | None:
+    """A short one-line excerpt with any echoed credential removed.
+
+    An upstream body is not a trusted place: a misconfigured proxy can echo the
+    Authorization header back, so the resolved key is redacted before the excerpt
+    is returned to the page.
+    """
+
+    if not body:
+        return None
+    text = body.decode("utf-8", "replace") if isinstance(body, bytes) else str(body)
+    if secret:
+        text = text.replace(secret, "[redacted]")
+    collapsed = " ".join(text.split())
+    return collapsed[:MODEL_LIST_EXCERPT_CHARS] or None
+
+
+def _model_failure(
+    error: str,
+    status: int | None,
+    url: str,
+    started: float,
+    body: bytes = b"",
+    secret: str = "",
+) -> dict[str, Any]:
+    return {
+        "ok": False,
+        "error": error,
+        "status": status,
+        "request_url": url,
+        "elapsed_ms": int((monotonic() - started) * 1000),
+        "body_excerpt": _body_excerpt(body, secret=secret),
+    }
+
+
+def fetch_model_list(
+    *,
+    base_url: str | None,
+    api_key: str = "",
+    transport: ModelListTransport | None = None,
+    timeout: float = MODEL_LIST_TIMEOUT_SECONDS,
+    max_models: int = MODEL_LIST_MAX_MODELS,
+) -> dict[str, Any]:
+    """One bounded ``GET {base_url}/v1/models``, as an id list or as a reason.
+
+    Every outcome carries the exact ``request_url`` and the elapsed milliseconds,
+    so the page can show what it called before it reports what came back. An
+    endpoint that already ends in ``/v1`` is honoured (the shared :func:`_join`),
+    the credential travels in the ``Authorization`` header only, and the result is
+    a value — a failure is never an exception the caller has to catch.
+    """
+
+    secret = api_key.strip()
+    started = monotonic()
+    if not base_url:
+        # Nothing to call (e.g. rerank without CANONICAL_V2_RERANK_BASE_URL): the
+        # honest answer is an unreachable endpoint, and it costs no request.
+        return _model_failure("unreachable", None, "", started)
+    url = _join(base_url, MODEL_LIST_PATH)
+    headers = {"Accept": "application/json"}
+    if secret:
+        headers["Authorization"] = f"Bearer {secret}"
+    caller = transport or get_json
+    try:
+        status, body = caller(
+            url, headers=headers, timeout=timeout, max_bytes=MODEL_LIST_MAX_BYTES
+        )
+    except TimeoutError:
+        return _model_failure("timeout", None, url, started)
+    except urllib_error.URLError as exc:
+        # urllib wraps a connect timeout in URLError, and raises a bare
+        # TimeoutError when the timeout happens while reading.
+        timed_out = isinstance(getattr(exc, "reason", None), TimeoutError)
+        return _model_failure(
+            "timeout" if timed_out else "unreachable", None, url, started
+        )
+    except Exception:  # noqa: BLE001 - any transport failure is a result
+        return _model_failure("unreachable", None, url, started)
+
+    status = int(status)
+    if status in {401, 403}:
+        return _model_failure("unauthorized", status, url, started, body, secret)
+    if status == 404:
+        return _model_failure("not_supported", status, url, started, body, secret)
+    if not 200 <= status < 300:
+        # Reachable, but the answer is not a model list (a 5xx, or a request the
+        # endpoint rejected): the page shows the status with the body excerpt.
+        return _model_failure("bad_response", status, url, started, body, secret)
+    try:
+        payload = json.loads(body.decode("utf-8", "replace"))
+    except ValueError:
+        return _model_failure("bad_response", status, url, started, body, secret)
+    ids = _model_ids(payload)
+    if not ids:
+        return _model_failure("bad_response", status, url, started, body, secret)
+    selected = ids[:max_models]
+    result: dict[str, Any] = {
+        "ok": True,
+        "models": [{"id": model_id} for model_id in selected],
+        "count": len(selected),
+        "request_url": url,
+        "elapsed_ms": int((monotonic() - started) * 1000),
+    }
+    if len(ids) > len(selected):
+        result["truncated"] = True
+    return result
+
+
 # -- rate limiting -----------------------------------------------------------
 
 
@@ -402,14 +700,24 @@ class ConnectionTestRateLimiter:
 __all__ = [
     "CONNECTIONS",
     "DEFAULT_TIMEOUT_SECONDS",
+    "MODEL_LIST_MAX_BYTES",
+    "MODEL_LIST_MAX_MODELS",
+    "MODEL_LIST_PATH",
+    "MODEL_LIST_TIMEOUT_SECONDS",
     "PING_TEXT",
+    "PROVIDER_PRESETS",
     "SPEC_BY_KEY",
     "ConnectionSpec",
     "ConnectionTestRateLimiter",
+    "ModelListTransport",
+    "ProviderPreset",
     "RateDecision",
     "Transport",
     "UnsafeEndpointError",
     "build_request",
+    "fetch_model_list",
+    "get_json",
+    "llm_profile_options",
     "normalize_base_url",
     "post_json",
     "test_connection",

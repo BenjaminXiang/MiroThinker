@@ -1,0 +1,2356 @@
+{
+  "config": {
+    "path": "/tmp/tmp_8oj2ton/managed/settings.json",
+    "exists": true,
+    "schema_version": 1,
+    "settings": {
+      "schema_version": 1,
+      "collection": {
+        "enabled": {
+          "company": true,
+          "paper": true,
+          "patent": true,
+          "professor": true
+        },
+        "max_web_searches_per_run": 200,
+        "max_llm_calls_per_run": 500,
+        "window_start_hour_utc": 17,
+        "window_end_hour_utc": 22
+      },
+      "extraction_endpoints": {
+        "llm_base_url": "http://127.0.0.1:8000/v1",
+        "llm_model": "qwen3.6-35b-a3b",
+        "embedding_base_url": null,
+        "embedding_model": null,
+        "rerank_base_url": "http://127.0.0.1:9000/v1",
+        "rerank_model": "qwen3-reranker-8b"
+      },
+      "paths": {
+        "serving_pack_dir": null,
+        "access_log_retention_days": 90
+      },
+      "serving": {
+        "chat_llm_profile": "deepseekv4flash",
+        "web_topical_floor": null,
+        "rerank_timeout_seconds": null,
+        "rerank_max_documents": null,
+        "mount_receipt_path": null,
+        "turn_debug_dir": null,
+        "full_verify": null
+      }
+    },
+    "fields": [
+      {
+        "path": "collection.enabled.company",
+        "value": true,
+        "source": "default",
+        "env_var": null,
+        "editable": true,
+        "readonly_reason": null,
+        "label": "企业采集开关",
+        "kind": "bool",
+        "group": "collection",
+        "order": 10,
+        "consumer": "采集与构建调度：域开关",
+        "min": null,
+        "max": null,
+        "step": null,
+        "connection": null,
+        "test_arg": null,
+        "default": true
+      },
+      {
+        "path": "collection.enabled.paper",
+        "value": true,
+        "source": "default",
+        "env_var": null,
+        "editable": true,
+        "readonly_reason": null,
+        "label": "论文采集开关",
+        "kind": "bool",
+        "group": "collection",
+        "order": 11,
+        "consumer": "采集与构建调度：域开关",
+        "min": null,
+        "max": null,
+        "step": null,
+        "connection": null,
+        "test_arg": null,
+        "default": true
+      },
+      {
+        "path": "collection.enabled.patent",
+        "value": true,
+        "source": "default",
+        "env_var": null,
+        "editable": true,
+        "readonly_reason": null,
+        "label": "专利采集开关",
+        "kind": "bool",
+        "group": "collection",
+        "order": 12,
+        "consumer": "采集与构建调度：域开关",
+        "min": null,
+        "max": null,
+        "step": null,
+        "connection": null,
+        "test_arg": null,
+        "default": true
+      },
+      {
+        "path": "collection.enabled.professor",
+        "value": true,
+        "source": "default",
+        "env_var": null,
+        "editable": true,
+        "readonly_reason": null,
+        "label": "教授采集开关",
+        "kind": "bool",
+        "group": "collection",
+        "order": 13,
+        "consumer": "采集与构建调度：域开关",
+        "min": null,
+        "max": null,
+        "step": null,
+        "connection": null,
+        "test_arg": null,
+        "default": true
+      },
+      {
+        "path": "collection.max_llm_calls_per_run",
+        "value": 500,
+        "source": "default",
+        "env_var": null,
+        "editable": true,
+        "readonly_reason": null,
+        "label": "每轮 LLM 调用上限",
+        "kind": "int",
+        "group": "collection",
+        "order": 21,
+        "consumer": "采集与构建调度：每轮 LLM 调用上限",
+        "min": 0,
+        "max": 100000,
+        "step": 1,
+        "connection": null,
+        "test_arg": null,
+        "default": 500
+      },
+      {
+        "path": "collection.max_web_searches_per_run",
+        "value": 200,
+        "source": "default",
+        "env_var": "WEB_LANE_DAILY_QUOTA",
+        "editable": true,
+        "readonly_reason": null,
+        "label": "每轮 web search 配额上限",
+        "kind": "int",
+        "group": "collection",
+        "order": 20,
+        "consumer": "采集与构建调度：每轮 web 检索配额",
+        "min": 0,
+        "max": 10000,
+        "step": 1,
+        "connection": null,
+        "test_arg": null,
+        "default": 200
+      },
+      {
+        "path": "collection.window_end_hour_utc",
+        "value": 22,
+        "source": "default",
+        "env_var": "CANONICAL_V2_COLLECTION_WINDOW_END_HOUR_UTC",
+        "editable": true,
+        "readonly_reason": null,
+        "label": "执行窗口结束（UTC 小时）",
+        "kind": "int",
+        "group": "collection",
+        "order": 23,
+        "consumer": "采集与构建调度：执行窗口结束",
+        "min": 0,
+        "max": 23,
+        "step": 1,
+        "connection": null,
+        "test_arg": null,
+        "default": 22
+      },
+      {
+        "path": "collection.window_start_hour_utc",
+        "value": 17,
+        "source": "default",
+        "env_var": "CANONICAL_V2_COLLECTION_WINDOW_START_HOUR_UTC",
+        "editable": true,
+        "readonly_reason": null,
+        "label": "执行窗口起始（UTC 小时）",
+        "kind": "int",
+        "group": "collection",
+        "order": 22,
+        "consumer": "采集与构建调度：执行窗口起始",
+        "min": 0,
+        "max": 23,
+        "step": 1,
+        "connection": null,
+        "test_arg": null,
+        "default": 17
+      },
+      {
+        "path": "extraction_endpoints.embedding_base_url",
+        "value": null,
+        "source": "default",
+        "env_var": "CANONICAL_V2_EMBEDDING_BASE_URL",
+        "editable": false,
+        "readonly_reason": "服务线向量由发布包冻结：发布包的 embedding bundle 必须等于钉死的 base_url（含校验和，不符即拒绝加载），改它需要重建全部向量；这两个受管字段没有运行期读者，保存它不会改变任何行为（采集/构建侧另有脚本级覆盖 EMBEDDING_BASE_URL，不经受管配置）（只读展示）",
+        "label": "Embedding Base URL",
+        "kind": "url",
+        "group": "endpoints",
+        "order": 20,
+        "consumer": "采集与构建：Embedding 端点",
+        "min": null,
+        "max": null,
+        "step": null,
+        "connection": "embedding",
+        "test_arg": "base_url",
+        "default": null
+      },
+      {
+        "path": "extraction_endpoints.embedding_model",
+        "value": null,
+        "source": "default",
+        "env_var": "CANONICAL_V2_EMBEDDING_MODEL",
+        "editable": false,
+        "readonly_reason": "服务线向量由发布包冻结：模型名来自发布包 embedding bundle（与发布包不符即拒绝加载），改它需要重建全部向量；这两个受管字段没有运行期读者，保存它不会改变任何行为（采集/构建侧另有覆盖，不经受管配置）（只读展示）",
+        "label": "Embedding 模型名",
+        "kind": "text",
+        "group": "endpoints",
+        "order": 21,
+        "consumer": "采集与构建：Embedding 模型",
+        "min": null,
+        "max": null,
+        "step": null,
+        "connection": "embedding",
+        "test_arg": "model",
+        "default": null
+      },
+      {
+        "path": "extraction_endpoints.llm_base_url",
+        "value": "http://127.0.0.1:8000/v1",
+        "source": "file",
+        "env_var": "LOCAL_LLM_BASE_URL",
+        "editable": true,
+        "readonly_reason": null,
+        "label": "采集 LLM Base URL",
+        "kind": "url",
+        "group": "endpoints",
+        "order": 10,
+        "consumer": "采集与构建：LLM 端点",
+        "min": null,
+        "max": null,
+        "step": null,
+        "connection": "llm",
+        "test_arg": "base_url",
+        "default": null
+      },
+      {
+        "path": "extraction_endpoints.llm_model",
+        "value": "qwen3.6-35b-a3b",
+        "source": "file",
+        "env_var": "LOCAL_LLM_MODEL",
+        "editable": true,
+        "readonly_reason": null,
+        "label": "采集 LLM 模型名",
+        "kind": "text",
+        "group": "endpoints",
+        "order": 11,
+        "consumer": "采集与构建：LLM 模型",
+        "min": null,
+        "max": null,
+        "step": null,
+        "connection": "llm",
+        "test_arg": "model",
+        "default": null
+      },
+      {
+        "path": "extraction_endpoints.rerank_base_url",
+        "value": "http://127.0.0.1:9000/v1",
+        "source": "file",
+        "env_var": "CANONICAL_V2_RERANK_BASE_URL",
+        "editable": true,
+        "readonly_reason": null,
+        "label": "Rerank Base URL",
+        "kind": "url",
+        "group": "endpoints",
+        "order": 30,
+        "consumer": "检索与回答：rerank 客户端端点（未配置则 rerank 不启用）",
+        "min": null,
+        "max": null,
+        "step": null,
+        "connection": "rerank",
+        "test_arg": "base_url",
+        "default": null
+      },
+      {
+        "path": "extraction_endpoints.rerank_model",
+        "value": "qwen3-reranker-8b",
+        "source": "file",
+        "env_var": "CANONICAL_V2_RERANK_MODEL",
+        "editable": true,
+        "readonly_reason": null,
+        "label": "Rerank 模型名",
+        "kind": "text",
+        "group": "endpoints",
+        "order": 31,
+        "consumer": "检索与回答：rerank 客户端模型",
+        "min": null,
+        "max": null,
+        "step": null,
+        "connection": "rerank",
+        "test_arg": "model",
+        "default": null
+      },
+      {
+        "path": "paths.access_log_retention_days",
+        "value": 90,
+        "source": "default",
+        "env_var": "CANONICAL_V2_ACCESS_LOG_RETENTION_DAYS",
+        "editable": true,
+        "readonly_reason": null,
+        "label": "访问日志保留天数",
+        "kind": "int",
+        "group": "paths",
+        "order": 20,
+        "consumer": "访问日志清理与保留",
+        "min": 1,
+        "max": 3650,
+        "step": 1,
+        "connection": null,
+        "test_arg": null,
+        "default": 90
+      },
+      {
+        "path": "paths.serving_pack_dir",
+        "value": null,
+        "source": "default",
+        "env_var": "CANONICAL_V2_SERVING_PACK",
+        "editable": true,
+        "readonly_reason": null,
+        "label": "serving pack 目录",
+        "kind": "text",
+        "group": "paths",
+        "order": 10,
+        "consumer": "服务启动：serving pack 目录",
+        "min": null,
+        "max": null,
+        "step": null,
+        "connection": null,
+        "test_arg": null,
+        "default": null
+      },
+      {
+        "path": "schema_version",
+        "value": 1,
+        "source": "default",
+        "env_var": null,
+        "editable": true,
+        "readonly_reason": null,
+        "label": "受管配置 schema 版本",
+        "kind": "int",
+        "group": "meta",
+        "order": 0,
+        "consumer": "服务启动：受管配置 schema 版本",
+        "min": 1,
+        "max": 1,
+        "step": 1,
+        "connection": null,
+        "test_arg": null,
+        "default": 1
+      },
+      {
+        "path": "serving.chat_llm_profile",
+        "value": "deepseekv4flash",
+        "source": "file",
+        "env_var": "CHAT_LLM_PROFILE",
+        "editable": true,
+        "readonly_reason": null,
+        "label": "对话模型档位",
+        "kind": "text",
+        "group": "serving",
+        "order": 12,
+        "consumer": "知识服务/对话模型档位",
+        "min": null,
+        "max": null,
+        "step": null,
+        "connection": null,
+        "test_arg": null,
+        "default": null
+      },
+      {
+        "path": "serving.full_verify",
+        "value": null,
+        "source": "default",
+        "env_var": "CANONICAL_V2_SERVING_FULL_VERIFY",
+        "editable": false,
+        "readonly_reason": "启动全量校验：开启会把启动从秒级拉到分钟级，必须由服务单元决定（只读展示）",
+        "label": "启动全量校验",
+        "kind": "bool",
+        "group": "serving",
+        "order": 32,
+        "consumer": "服务启动：全量校验（只读展示）",
+        "min": null,
+        "max": null,
+        "step": null,
+        "connection": null,
+        "test_arg": null,
+        "default": null
+      },
+      {
+        "path": "serving.mount_receipt_path",
+        "value": null,
+        "source": "default",
+        "env_var": "CANONICAL_V2_SERVING_RECEIPT_PATH",
+        "editable": false,
+        "readonly_reason": "取证路径：由服务单元钉死；页面改动会让挂载收据散落各处（只读展示）",
+        "label": "挂载收据路径",
+        "kind": "text",
+        "group": "serving",
+        "order": 30,
+        "consumer": "服务启动：挂载收据路径（只读展示）",
+        "min": null,
+        "max": null,
+        "step": null,
+        "connection": null,
+        "test_arg": null,
+        "default": null
+      },
+      {
+        "path": "serving.rerank_max_documents",
+        "value": null,
+        "source": "default",
+        "env_var": "CANONICAL_V2_RERANK_MAX_DOCUMENTS",
+        "editable": true,
+        "readonly_reason": null,
+        "label": "Rerank 单次最大文档数",
+        "kind": "int",
+        "group": "serving",
+        "order": 21,
+        "consumer": "检索与回答：rerank 单次文档上限",
+        "min": 1,
+        "max": 2048,
+        "step": 1,
+        "connection": null,
+        "test_arg": null,
+        "default": null
+      },
+      {
+        "path": "serving.rerank_timeout_seconds",
+        "value": null,
+        "source": "default",
+        "env_var": "CANONICAL_V2_RERANK_TIMEOUT_SECONDS",
+        "editable": true,
+        "readonly_reason": null,
+        "label": "Rerank 超时（秒）",
+        "kind": "float",
+        "group": "serving",
+        "order": 20,
+        "consumer": "检索与回答：rerank 超时预算",
+        "min": 0.1,
+        "max": 120,
+        "step": 0.1,
+        "connection": null,
+        "test_arg": null,
+        "default": null
+      },
+      {
+        "path": "serving.turn_debug_dir",
+        "value": null,
+        "source": "default",
+        "env_var": "CANONICAL_V2_TURN_DEBUG_DIR",
+        "editable": false,
+        "readonly_reason": "调试目录：开启会把原始轮次转储落盘，必须由部署显式决定（只读展示）",
+        "label": "轮次调试目录",
+        "kind": "text",
+        "group": "serving",
+        "order": 31,
+        "consumer": "服务启动：轮次转储目录（只读展示）",
+        "min": null,
+        "max": null,
+        "step": null,
+        "connection": null,
+        "test_arg": null,
+        "default": null
+      },
+      {
+        "path": "serving.web_topical_floor",
+        "value": null,
+        "source": "default",
+        "env_var": "CANONICAL_V2_WEB_TOPICAL_FLOOR",
+        "editable": true,
+        "readonly_reason": null,
+        "label": "Web 轨主题相关性下限（kill switch）",
+        "kind": "bool",
+        "group": "serving",
+        "order": 10,
+        "consumer": "检索与回答：Web 轨相关度下限",
+        "min": null,
+        "max": null,
+        "step": null,
+        "connection": null,
+        "test_arg": null,
+        "default": null
+      }
+    ],
+    "env_vars": {
+      "collection.max_web_searches_per_run": "WEB_LANE_DAILY_QUOTA",
+      "collection.window_end_hour_utc": "CANONICAL_V2_COLLECTION_WINDOW_END_HOUR_UTC",
+      "collection.window_start_hour_utc": "CANONICAL_V2_COLLECTION_WINDOW_START_HOUR_UTC",
+      "extraction_endpoints.embedding_base_url": "CANONICAL_V2_EMBEDDING_BASE_URL",
+      "extraction_endpoints.embedding_model": "CANONICAL_V2_EMBEDDING_MODEL",
+      "extraction_endpoints.llm_base_url": "LOCAL_LLM_BASE_URL",
+      "extraction_endpoints.llm_model": "LOCAL_LLM_MODEL",
+      "extraction_endpoints.rerank_base_url": "CANONICAL_V2_RERANK_BASE_URL",
+      "extraction_endpoints.rerank_model": "CANONICAL_V2_RERANK_MODEL",
+      "paths.access_log_retention_days": "CANONICAL_V2_ACCESS_LOG_RETENTION_DAYS",
+      "paths.serving_pack_dir": "CANONICAL_V2_SERVING_PACK",
+      "serving.chat_llm_profile": "CHAT_LLM_PROFILE",
+      "serving.full_verify": "CANONICAL_V2_SERVING_FULL_VERIFY",
+      "serving.mount_receipt_path": "CANONICAL_V2_SERVING_RECEIPT_PATH",
+      "serving.rerank_max_documents": "CANONICAL_V2_RERANK_MAX_DOCUMENTS",
+      "serving.rerank_timeout_seconds": "CANONICAL_V2_RERANK_TIMEOUT_SECONDS",
+      "serving.turn_debug_dir": "CANONICAL_V2_TURN_DEBUG_DIR",
+      "serving.web_topical_floor": "CANONICAL_V2_WEB_TOPICAL_FLOOR"
+    }
+  },
+  "secrets": {
+    "path": "/tmp/tmp_8oj2ton/managed/secrets.json",
+    "exists": true,
+    "permissions_ok": true,
+    "restart_required": "修改后需重启服务生效（服务启动时读取受管文件，不做热加载）",
+    "secrets": [
+      {
+        "field": "bocha.api_key",
+        "connection": "bocha",
+        "label": "Bocha 博查 Web 搜索",
+        "env_var": "BOCHA_API_KEY",
+        "configured": true,
+        "mask": "sk-…0000",
+        "suffix4": "0000",
+        "origin": "managed-file",
+        "applied_to_process_env": false,
+        "legacy_files": [
+          ".bocha_api_key"
+        ]
+      },
+      {
+        "field": "serper.api_key",
+        "connection": "serper",
+        "label": "Serper Web 搜索",
+        "env_var": "SERPER_API_KEY",
+        "configured": false,
+        "mask": null,
+        "suffix4": null,
+        "origin": null,
+        "applied_to_process_env": false,
+        "legacy_files": [
+          ".serper_api_key"
+        ]
+      },
+      {
+        "field": "rerank.api_key",
+        "connection": "rerank",
+        "label": "Rerank 模型端点",
+        "env_var": "CANONICAL_V2_RERANK_API_KEY",
+        "configured": false,
+        "mask": null,
+        "suffix4": null,
+        "origin": null,
+        "applied_to_process_env": false,
+        "legacy_files": []
+      },
+      {
+        "field": "embedding.api_key",
+        "connection": "embedding",
+        "label": "Embedding 模型端点",
+        "env_var": "SGLANG_API_KEY",
+        "configured": true,
+        "mask": "sk-…0000",
+        "suffix4": "0000",
+        "origin": "managed-file",
+        "applied_to_process_env": false,
+        "legacy_files": [
+          ".sglang_api_key"
+        ]
+      },
+      {
+        "field": "llm.api_key",
+        "connection": "llm",
+        "label": "LLM 档位（chat profile）",
+        "env_var": "API_KEY",
+        "configured": true,
+        "mask": "sk-…0000",
+        "suffix4": "0000",
+        "origin": "managed-file",
+        "applied_to_process_env": false,
+        "legacy_files": []
+      }
+    ],
+    "connections": [
+      {
+        "key": "bocha",
+        "label": "Bocha 博查 Web 搜索",
+        "kind": "web_search",
+        "secret_field": "bocha.api_key",
+        "requires_key": true,
+        "base_url_editable": false,
+        "runtime": {
+          "key": "bocha",
+          "label": "Bocha 博查 Web 搜索",
+          "kind": "web_search",
+          "enabled": true,
+          "base_url": "https://api.bochaai.com/v1/web-search",
+          "model": null,
+          "api_key_origin": "legacy-file:.bocha_api_key",
+          "endpoint_origin": "pinned-provider-host",
+          "runtime_note": "运行期使用 provider 固定主机（https://api.bochaai.com/v1/web-search）；凭据来源 legacy-file:.bocha_api_key；受管文件已保存新值，重启服务后生效",
+          "pending_restart": true
+        }
+      },
+      {
+        "key": "serper",
+        "label": "Serper Web 搜索",
+        "kind": "web_search",
+        "secret_field": "serper.api_key",
+        "requires_key": true,
+        "base_url_editable": false,
+        "runtime": {
+          "key": "serper",
+          "label": "Serper Web 搜索",
+          "kind": "web_search",
+          "enabled": true,
+          "base_url": "https://google.serper.dev/search",
+          "model": null,
+          "api_key_origin": "legacy-file:.serper_api_key",
+          "endpoint_origin": "pinned-provider-host",
+          "runtime_note": "运行期使用 provider 固定主机（https://google.serper.dev/search）；凭据来源 legacy-file:.serper_api_key",
+          "pending_restart": false
+        }
+      },
+      {
+        "key": "rerank",
+        "label": "Rerank 模型端点",
+        "kind": "rerank",
+        "secret_field": "rerank.api_key",
+        "requires_key": false,
+        "base_url_editable": true,
+        "runtime": {
+          "key": "rerank",
+          "label": "Rerank 模型端点",
+          "kind": "rerank",
+          "enabled": true,
+          "base_url": "http://127.0.0.1:9000/v1",
+          "model": "qwen3-reranker-8b",
+          "api_key_origin": "local-key:legacy-file:.sglang_api_key",
+          "endpoint_origin": "managed-file",
+          "runtime_note": "运行期已启用 rerank（base_url 来源 managed-file）；凭据来源 local-key:legacy-file:.sglang_api_key",
+          "pending_restart": false
+        }
+      },
+      {
+        "key": "embedding",
+        "label": "Embedding 模型端点",
+        "kind": "embedding",
+        "secret_field": "embedding.api_key",
+        "requires_key": false,
+        "base_url_editable": false,
+        "runtime": {
+          "key": "embedding",
+          "label": "Embedding 模型端点",
+          "kind": "embedding",
+          "enabled": true,
+          "base_url": "http://100.64.0.27:18005/v1",
+          "model": "Qwen/Qwen3-Embedding-8B",
+          "api_key_origin": "legacy-file:.sglang_api_key",
+          "endpoint_origin": "release-bundle-frozen",
+          "runtime_note": "运行期 base_url 由 release embedding bundle 冻结（http://100.64.0.27:18005/v1）；凭据来源 legacy-file:.sglang_api_key；受管文件已保存新值，重启服务后生效",
+          "pending_restart": true
+        }
+      },
+      {
+        "key": "llm",
+        "label": "LLM 档位",
+        "kind": "llm",
+        "secret_field": "llm.api_key",
+        "requires_key": false,
+        "base_url_editable": true,
+        "runtime": {
+          "key": "llm",
+          "label": "LLM 档位（gemma4）",
+          "kind": "llm",
+          "enabled": true,
+          "base_url": "https://star.sustech.edu.cn/service/model/qwen36/v1",
+          "model": "qwen3.6-35b-a3b",
+          "api_key_origin": "legacy-file:.sglang_api_key",
+          "endpoint_origin": "chat-profile:gemma4",
+          "runtime_note": "运行期使用 chat profile gemma4（CHAT_LLM_PROFILE）；base_url https://star.sustech.edu.cn/service/model/qwen36/v1；凭据来源 legacy-file:.sglang_api_key；受管文件已保存新值，重启服务后生效",
+          "pending_restart": true
+        }
+      }
+    ]
+  },
+  "presets": {
+    "presets": [
+      {
+        "id": "local-openai",
+        "label": "本机 OpenAI 兼容服务（vLLM / SGLang）",
+        "base_url": "http://127.0.0.1:8000/v1",
+        "needs_key": true,
+        "docs_url": null,
+        "note": "把主机与端口换成你自己的服务；本机部署常见端口见下"
+      },
+      {
+        "id": "deepseek",
+        "label": "DeepSeek",
+        "base_url": "https://api.deepseek.com/v1",
+        "needs_key": true,
+        "docs_url": "https://platform.deepseek.com/api-docs/",
+        "note": null
+      },
+      {
+        "id": "dashscope",
+        "label": "阿里云百炼（OpenAI 兼容模式）",
+        "base_url": "https://dashscope.aliyuncs.com/compatible-mode/v1",
+        "needs_key": true,
+        "docs_url": "https://help.aliyun.com/zh/model-studio/",
+        "note": null
+      },
+      {
+        "id": "openai",
+        "label": "OpenAI",
+        "base_url": "https://api.openai.com/v1",
+        "needs_key": true,
+        "docs_url": "https://platform.openai.com/docs/api-reference",
+        "note": null
+      },
+      {
+        "id": "siliconflow",
+        "label": "硅基流动 SiliconFlow",
+        "base_url": "https://api.siliconflow.cn/v1",
+        "needs_key": true,
+        "docs_url": "https://docs.siliconflow.cn/",
+        "note": null
+      },
+      {
+        "id": "custom",
+        "label": "自定义端点",
+        "base_url": "",
+        "needs_key": true,
+        "docs_url": null,
+        "note": "直接填完整 base_url（含 /v1）"
+      }
+    ],
+    "llm_profiles": [
+      {
+        "name": "ark",
+        "model": "qwen3.6-35b-a3b",
+        "base_url": "https://star.sustech.edu.cn/service/model/qwen36/v1",
+        "key_env": "API_KEY",
+        "label": "火山方舟 Ark / 豆包"
+      },
+      {
+        "name": "deepseekv4flash",
+        "model": "deepseek-v4-flash",
+        "base_url": "https://api.deepseek.com",
+        "key_env": "DEEPSEEK_API_KEY",
+        "label": "DeepSeek V4 Flash"
+      },
+      {
+        "name": "deepseekv4lite",
+        "model": "deepseek-v4-lite",
+        "base_url": "https://api.deepseek.com",
+        "key_env": "DEEPSEEK_API_KEY",
+        "label": "DeepSeek V4 Lite"
+      },
+      {
+        "name": "deepseekv4pro",
+        "model": "deepseek-v4-pro",
+        "base_url": "https://api.deepseek.com",
+        "key_env": "DEEPSEEK_API_KEY",
+        "label": "DeepSeek V4 Pro"
+      },
+      {
+        "name": "gemma4",
+        "model": "qwen3.6-35b-a3b",
+        "base_url": "https://star.sustech.edu.cn/service/model/qwen36/v1",
+        "key_env": "API_KEY",
+        "label": "本地 qwen3.6-35b-a3b（gemma4）"
+      },
+      {
+        "name": "mirothinker",
+        "model": "mirothinker-1.7-235b-fp8",
+        "base_url": "https://star.sustech.edu.cn/service/model/mirothinker/v1",
+        "key_env": "API_KEY",
+        "label": "MiroThinker 1.7 235B（mirothinker）"
+      },
+      {
+        "name": "qwen35",
+        "model": "qwen3.5-35b-a3b",
+        "base_url": "https://star.sustech.edu.cn/service/model/qwen35/v1",
+        "key_env": "API_KEY",
+        "label": "本地 qwen3.5-35b-a3b（qwen35）"
+      }
+    ],
+    "chat_profile": "gemma4",
+    "embedding_frozen": {
+      "base_url": "http://100.64.0.27:18005/v1",
+      "model": "Qwen/Qwen3-Embedding-8B",
+      "note": "服务线向量由发布包冻结：发布包的 embedding bundle 必须等于钉死的 base_url（含校验和，不符即拒绝加载），改它需要重建全部向量；这两个受管字段没有运行期读者，保存它不会改变任何行为（采集/构建侧另有脚本级覆盖 EMBEDDING_BASE_URL，不经受管配置）（只读展示）"
+    }
+  },
+  "modelsOk": {
+    "ok": true,
+    "models": [
+      {
+        "id": "deepseek-v4-flash"
+      },
+      {
+        "id": "qwen3.6-35b-a3b"
+      },
+      {
+        "id": "qwen3.6-plus"
+      }
+    ],
+    "count": 3,
+    "request_url": "http://127.0.0.1:8000/v1/models",
+    "elapsed_ms": 0
+  },
+  "modelsMany": {
+    "ok": true,
+    "models": [
+      {
+        "id": "model-000"
+      },
+      {
+        "id": "model-001"
+      },
+      {
+        "id": "model-002"
+      },
+      {
+        "id": "model-003"
+      },
+      {
+        "id": "model-004"
+      },
+      {
+        "id": "model-005"
+      },
+      {
+        "id": "model-006"
+      },
+      {
+        "id": "model-007"
+      },
+      {
+        "id": "model-008"
+      },
+      {
+        "id": "model-009"
+      },
+      {
+        "id": "model-010"
+      },
+      {
+        "id": "model-011"
+      },
+      {
+        "id": "model-012"
+      },
+      {
+        "id": "model-013"
+      },
+      {
+        "id": "model-014"
+      },
+      {
+        "id": "model-015"
+      },
+      {
+        "id": "model-016"
+      },
+      {
+        "id": "model-017"
+      },
+      {
+        "id": "model-018"
+      },
+      {
+        "id": "model-019"
+      },
+      {
+        "id": "model-020"
+      },
+      {
+        "id": "model-021"
+      },
+      {
+        "id": "model-022"
+      },
+      {
+        "id": "model-023"
+      },
+      {
+        "id": "model-024"
+      },
+      {
+        "id": "model-025"
+      },
+      {
+        "id": "model-026"
+      },
+      {
+        "id": "model-027"
+      },
+      {
+        "id": "model-028"
+      },
+      {
+        "id": "model-029"
+      },
+      {
+        "id": "model-030"
+      },
+      {
+        "id": "model-031"
+      },
+      {
+        "id": "model-032"
+      },
+      {
+        "id": "model-033"
+      },
+      {
+        "id": "model-034"
+      },
+      {
+        "id": "model-035"
+      },
+      {
+        "id": "model-036"
+      },
+      {
+        "id": "model-037"
+      },
+      {
+        "id": "model-038"
+      },
+      {
+        "id": "model-039"
+      },
+      {
+        "id": "model-040"
+      },
+      {
+        "id": "model-041"
+      },
+      {
+        "id": "model-042"
+      },
+      {
+        "id": "model-043"
+      },
+      {
+        "id": "model-044"
+      },
+      {
+        "id": "model-045"
+      },
+      {
+        "id": "model-046"
+      },
+      {
+        "id": "model-047"
+      },
+      {
+        "id": "model-048"
+      },
+      {
+        "id": "model-049"
+      },
+      {
+        "id": "model-050"
+      },
+      {
+        "id": "model-051"
+      },
+      {
+        "id": "model-052"
+      },
+      {
+        "id": "model-053"
+      },
+      {
+        "id": "model-054"
+      },
+      {
+        "id": "model-055"
+      },
+      {
+        "id": "model-056"
+      },
+      {
+        "id": "model-057"
+      },
+      {
+        "id": "model-058"
+      },
+      {
+        "id": "model-059"
+      },
+      {
+        "id": "model-060"
+      },
+      {
+        "id": "model-061"
+      },
+      {
+        "id": "model-062"
+      },
+      {
+        "id": "model-063"
+      },
+      {
+        "id": "model-064"
+      },
+      {
+        "id": "model-065"
+      },
+      {
+        "id": "model-066"
+      },
+      {
+        "id": "model-067"
+      },
+      {
+        "id": "model-068"
+      },
+      {
+        "id": "model-069"
+      },
+      {
+        "id": "model-070"
+      },
+      {
+        "id": "model-071"
+      },
+      {
+        "id": "model-072"
+      },
+      {
+        "id": "model-073"
+      },
+      {
+        "id": "model-074"
+      },
+      {
+        "id": "model-075"
+      },
+      {
+        "id": "model-076"
+      },
+      {
+        "id": "model-077"
+      },
+      {
+        "id": "model-078"
+      },
+      {
+        "id": "model-079"
+      },
+      {
+        "id": "model-080"
+      },
+      {
+        "id": "model-081"
+      },
+      {
+        "id": "model-082"
+      },
+      {
+        "id": "model-083"
+      },
+      {
+        "id": "model-084"
+      },
+      {
+        "id": "model-085"
+      },
+      {
+        "id": "model-086"
+      },
+      {
+        "id": "model-087"
+      },
+      {
+        "id": "model-088"
+      },
+      {
+        "id": "model-089"
+      },
+      {
+        "id": "model-090"
+      },
+      {
+        "id": "model-091"
+      },
+      {
+        "id": "model-092"
+      },
+      {
+        "id": "model-093"
+      },
+      {
+        "id": "model-094"
+      },
+      {
+        "id": "model-095"
+      },
+      {
+        "id": "model-096"
+      },
+      {
+        "id": "model-097"
+      },
+      {
+        "id": "model-098"
+      },
+      {
+        "id": "model-099"
+      },
+      {
+        "id": "model-100"
+      },
+      {
+        "id": "model-101"
+      },
+      {
+        "id": "model-102"
+      },
+      {
+        "id": "model-103"
+      },
+      {
+        "id": "model-104"
+      },
+      {
+        "id": "model-105"
+      },
+      {
+        "id": "model-106"
+      },
+      {
+        "id": "model-107"
+      },
+      {
+        "id": "model-108"
+      },
+      {
+        "id": "model-109"
+      },
+      {
+        "id": "model-110"
+      },
+      {
+        "id": "model-111"
+      },
+      {
+        "id": "model-112"
+      },
+      {
+        "id": "model-113"
+      },
+      {
+        "id": "model-114"
+      },
+      {
+        "id": "model-115"
+      },
+      {
+        "id": "model-116"
+      },
+      {
+        "id": "model-117"
+      },
+      {
+        "id": "model-118"
+      },
+      {
+        "id": "model-119"
+      },
+      {
+        "id": "model-120"
+      },
+      {
+        "id": "model-121"
+      },
+      {
+        "id": "model-122"
+      },
+      {
+        "id": "model-123"
+      },
+      {
+        "id": "model-124"
+      },
+      {
+        "id": "model-125"
+      },
+      {
+        "id": "model-126"
+      },
+      {
+        "id": "model-127"
+      },
+      {
+        "id": "model-128"
+      },
+      {
+        "id": "model-129"
+      },
+      {
+        "id": "model-130"
+      },
+      {
+        "id": "model-131"
+      },
+      {
+        "id": "model-132"
+      },
+      {
+        "id": "model-133"
+      },
+      {
+        "id": "model-134"
+      },
+      {
+        "id": "model-135"
+      },
+      {
+        "id": "model-136"
+      },
+      {
+        "id": "model-137"
+      },
+      {
+        "id": "model-138"
+      },
+      {
+        "id": "model-139"
+      },
+      {
+        "id": "model-140"
+      },
+      {
+        "id": "model-141"
+      },
+      {
+        "id": "model-142"
+      },
+      {
+        "id": "model-143"
+      },
+      {
+        "id": "model-144"
+      },
+      {
+        "id": "model-145"
+      },
+      {
+        "id": "model-146"
+      },
+      {
+        "id": "model-147"
+      },
+      {
+        "id": "model-148"
+      },
+      {
+        "id": "model-149"
+      },
+      {
+        "id": "model-150"
+      },
+      {
+        "id": "model-151"
+      },
+      {
+        "id": "model-152"
+      },
+      {
+        "id": "model-153"
+      },
+      {
+        "id": "model-154"
+      },
+      {
+        "id": "model-155"
+      },
+      {
+        "id": "model-156"
+      },
+      {
+        "id": "model-157"
+      },
+      {
+        "id": "model-158"
+      },
+      {
+        "id": "model-159"
+      },
+      {
+        "id": "model-160"
+      },
+      {
+        "id": "model-161"
+      },
+      {
+        "id": "model-162"
+      },
+      {
+        "id": "model-163"
+      },
+      {
+        "id": "model-164"
+      },
+      {
+        "id": "model-165"
+      },
+      {
+        "id": "model-166"
+      },
+      {
+        "id": "model-167"
+      },
+      {
+        "id": "model-168"
+      },
+      {
+        "id": "model-169"
+      },
+      {
+        "id": "model-170"
+      },
+      {
+        "id": "model-171"
+      },
+      {
+        "id": "model-172"
+      },
+      {
+        "id": "model-173"
+      },
+      {
+        "id": "model-174"
+      },
+      {
+        "id": "model-175"
+      },
+      {
+        "id": "model-176"
+      },
+      {
+        "id": "model-177"
+      },
+      {
+        "id": "model-178"
+      },
+      {
+        "id": "model-179"
+      },
+      {
+        "id": "model-180"
+      },
+      {
+        "id": "model-181"
+      },
+      {
+        "id": "model-182"
+      },
+      {
+        "id": "model-183"
+      },
+      {
+        "id": "model-184"
+      },
+      {
+        "id": "model-185"
+      },
+      {
+        "id": "model-186"
+      },
+      {
+        "id": "model-187"
+      },
+      {
+        "id": "model-188"
+      },
+      {
+        "id": "model-189"
+      },
+      {
+        "id": "model-190"
+      },
+      {
+        "id": "model-191"
+      },
+      {
+        "id": "model-192"
+      },
+      {
+        "id": "model-193"
+      },
+      {
+        "id": "model-194"
+      },
+      {
+        "id": "model-195"
+      },
+      {
+        "id": "model-196"
+      },
+      {
+        "id": "model-197"
+      },
+      {
+        "id": "model-198"
+      },
+      {
+        "id": "model-199"
+      },
+      {
+        "id": "model-200"
+      },
+      {
+        "id": "model-201"
+      },
+      {
+        "id": "model-202"
+      },
+      {
+        "id": "model-203"
+      },
+      {
+        "id": "model-204"
+      },
+      {
+        "id": "model-205"
+      },
+      {
+        "id": "model-206"
+      },
+      {
+        "id": "model-207"
+      },
+      {
+        "id": "model-208"
+      },
+      {
+        "id": "model-209"
+      },
+      {
+        "id": "model-210"
+      },
+      {
+        "id": "model-211"
+      },
+      {
+        "id": "model-212"
+      },
+      {
+        "id": "model-213"
+      },
+      {
+        "id": "model-214"
+      },
+      {
+        "id": "model-215"
+      },
+      {
+        "id": "model-216"
+      },
+      {
+        "id": "model-217"
+      },
+      {
+        "id": "model-218"
+      },
+      {
+        "id": "model-219"
+      },
+      {
+        "id": "model-220"
+      },
+      {
+        "id": "model-221"
+      },
+      {
+        "id": "model-222"
+      },
+      {
+        "id": "model-223"
+      },
+      {
+        "id": "model-224"
+      },
+      {
+        "id": "model-225"
+      },
+      {
+        "id": "model-226"
+      },
+      {
+        "id": "model-227"
+      },
+      {
+        "id": "model-228"
+      },
+      {
+        "id": "model-229"
+      },
+      {
+        "id": "model-230"
+      },
+      {
+        "id": "model-231"
+      },
+      {
+        "id": "model-232"
+      },
+      {
+        "id": "model-233"
+      },
+      {
+        "id": "model-234"
+      },
+      {
+        "id": "model-235"
+      },
+      {
+        "id": "model-236"
+      },
+      {
+        "id": "model-237"
+      },
+      {
+        "id": "model-238"
+      },
+      {
+        "id": "model-239"
+      },
+      {
+        "id": "model-240"
+      },
+      {
+        "id": "model-241"
+      },
+      {
+        "id": "model-242"
+      },
+      {
+        "id": "model-243"
+      },
+      {
+        "id": "model-244"
+      },
+      {
+        "id": "model-245"
+      },
+      {
+        "id": "model-246"
+      },
+      {
+        "id": "model-247"
+      },
+      {
+        "id": "model-248"
+      },
+      {
+        "id": "model-249"
+      },
+      {
+        "id": "model-250"
+      },
+      {
+        "id": "model-251"
+      },
+      {
+        "id": "model-252"
+      },
+      {
+        "id": "model-253"
+      },
+      {
+        "id": "model-254"
+      },
+      {
+        "id": "model-255"
+      },
+      {
+        "id": "model-256"
+      },
+      {
+        "id": "model-257"
+      },
+      {
+        "id": "model-258"
+      },
+      {
+        "id": "model-259"
+      },
+      {
+        "id": "model-260"
+      },
+      {
+        "id": "model-261"
+      },
+      {
+        "id": "model-262"
+      },
+      {
+        "id": "model-263"
+      },
+      {
+        "id": "model-264"
+      },
+      {
+        "id": "model-265"
+      },
+      {
+        "id": "model-266"
+      },
+      {
+        "id": "model-267"
+      },
+      {
+        "id": "model-268"
+      },
+      {
+        "id": "model-269"
+      },
+      {
+        "id": "model-270"
+      },
+      {
+        "id": "model-271"
+      },
+      {
+        "id": "model-272"
+      },
+      {
+        "id": "model-273"
+      },
+      {
+        "id": "model-274"
+      },
+      {
+        "id": "model-275"
+      },
+      {
+        "id": "model-276"
+      },
+      {
+        "id": "model-277"
+      },
+      {
+        "id": "model-278"
+      },
+      {
+        "id": "model-279"
+      },
+      {
+        "id": "model-280"
+      },
+      {
+        "id": "model-281"
+      },
+      {
+        "id": "model-282"
+      },
+      {
+        "id": "model-283"
+      },
+      {
+        "id": "model-284"
+      },
+      {
+        "id": "model-285"
+      },
+      {
+        "id": "model-286"
+      },
+      {
+        "id": "model-287"
+      },
+      {
+        "id": "model-288"
+      },
+      {
+        "id": "model-289"
+      },
+      {
+        "id": "model-290"
+      },
+      {
+        "id": "model-291"
+      },
+      {
+        "id": "model-292"
+      },
+      {
+        "id": "model-293"
+      },
+      {
+        "id": "model-294"
+      },
+      {
+        "id": "model-295"
+      },
+      {
+        "id": "model-296"
+      },
+      {
+        "id": "model-297"
+      },
+      {
+        "id": "model-298"
+      },
+      {
+        "id": "model-299"
+      },
+      {
+        "id": "model-300"
+      },
+      {
+        "id": "model-301"
+      },
+      {
+        "id": "model-302"
+      },
+      {
+        "id": "model-303"
+      },
+      {
+        "id": "model-304"
+      },
+      {
+        "id": "model-305"
+      },
+      {
+        "id": "model-306"
+      },
+      {
+        "id": "model-307"
+      },
+      {
+        "id": "model-308"
+      },
+      {
+        "id": "model-309"
+      },
+      {
+        "id": "model-310"
+      },
+      {
+        "id": "model-311"
+      },
+      {
+        "id": "model-312"
+      },
+      {
+        "id": "model-313"
+      },
+      {
+        "id": "model-314"
+      },
+      {
+        "id": "model-315"
+      },
+      {
+        "id": "model-316"
+      },
+      {
+        "id": "model-317"
+      },
+      {
+        "id": "model-318"
+      },
+      {
+        "id": "model-319"
+      },
+      {
+        "id": "model-320"
+      },
+      {
+        "id": "model-321"
+      },
+      {
+        "id": "model-322"
+      },
+      {
+        "id": "model-323"
+      },
+      {
+        "id": "model-324"
+      },
+      {
+        "id": "model-325"
+      },
+      {
+        "id": "model-326"
+      },
+      {
+        "id": "model-327"
+      },
+      {
+        "id": "model-328"
+      },
+      {
+        "id": "model-329"
+      },
+      {
+        "id": "model-330"
+      },
+      {
+        "id": "model-331"
+      },
+      {
+        "id": "model-332"
+      },
+      {
+        "id": "model-333"
+      },
+      {
+        "id": "model-334"
+      },
+      {
+        "id": "model-335"
+      },
+      {
+        "id": "model-336"
+      },
+      {
+        "id": "model-337"
+      },
+      {
+        "id": "model-338"
+      },
+      {
+        "id": "model-339"
+      },
+      {
+        "id": "model-340"
+      },
+      {
+        "id": "model-341"
+      },
+      {
+        "id": "model-342"
+      },
+      {
+        "id": "model-343"
+      },
+      {
+        "id": "model-344"
+      },
+      {
+        "id": "model-345"
+      },
+      {
+        "id": "model-346"
+      },
+      {
+        "id": "model-347"
+      },
+      {
+        "id": "model-348"
+      },
+      {
+        "id": "model-349"
+      },
+      {
+        "id": "model-350"
+      },
+      {
+        "id": "model-351"
+      },
+      {
+        "id": "model-352"
+      },
+      {
+        "id": "model-353"
+      },
+      {
+        "id": "model-354"
+      },
+      {
+        "id": "model-355"
+      },
+      {
+        "id": "model-356"
+      },
+      {
+        "id": "model-357"
+      },
+      {
+        "id": "model-358"
+      },
+      {
+        "id": "model-359"
+      },
+      {
+        "id": "model-360"
+      },
+      {
+        "id": "model-361"
+      },
+      {
+        "id": "model-362"
+      },
+      {
+        "id": "model-363"
+      },
+      {
+        "id": "model-364"
+      },
+      {
+        "id": "model-365"
+      },
+      {
+        "id": "model-366"
+      },
+      {
+        "id": "model-367"
+      },
+      {
+        "id": "model-368"
+      },
+      {
+        "id": "model-369"
+      },
+      {
+        "id": "model-370"
+      },
+      {
+        "id": "model-371"
+      },
+      {
+        "id": "model-372"
+      },
+      {
+        "id": "model-373"
+      },
+      {
+        "id": "model-374"
+      },
+      {
+        "id": "model-375"
+      },
+      {
+        "id": "model-376"
+      },
+      {
+        "id": "model-377"
+      },
+      {
+        "id": "model-378"
+      },
+      {
+        "id": "model-379"
+      },
+      {
+        "id": "model-380"
+      },
+      {
+        "id": "model-381"
+      },
+      {
+        "id": "model-382"
+      },
+      {
+        "id": "model-383"
+      },
+      {
+        "id": "model-384"
+      },
+      {
+        "id": "model-385"
+      },
+      {
+        "id": "model-386"
+      },
+      {
+        "id": "model-387"
+      },
+      {
+        "id": "model-388"
+      },
+      {
+        "id": "model-389"
+      },
+      {
+        "id": "model-390"
+      },
+      {
+        "id": "model-391"
+      },
+      {
+        "id": "model-392"
+      },
+      {
+        "id": "model-393"
+      },
+      {
+        "id": "model-394"
+      },
+      {
+        "id": "model-395"
+      },
+      {
+        "id": "model-396"
+      },
+      {
+        "id": "model-397"
+      },
+      {
+        "id": "model-398"
+      },
+      {
+        "id": "model-399"
+      },
+      {
+        "id": "model-400"
+      },
+      {
+        "id": "model-401"
+      },
+      {
+        "id": "model-402"
+      },
+      {
+        "id": "model-403"
+      },
+      {
+        "id": "model-404"
+      },
+      {
+        "id": "model-405"
+      },
+      {
+        "id": "model-406"
+      },
+      {
+        "id": "model-407"
+      },
+      {
+        "id": "model-408"
+      },
+      {
+        "id": "model-409"
+      },
+      {
+        "id": "model-410"
+      },
+      {
+        "id": "model-411"
+      },
+      {
+        "id": "model-412"
+      },
+      {
+        "id": "model-413"
+      },
+      {
+        "id": "model-414"
+      },
+      {
+        "id": "model-415"
+      },
+      {
+        "id": "model-416"
+      },
+      {
+        "id": "model-417"
+      },
+      {
+        "id": "model-418"
+      },
+      {
+        "id": "model-419"
+      },
+      {
+        "id": "model-420"
+      },
+      {
+        "id": "model-421"
+      },
+      {
+        "id": "model-422"
+      },
+      {
+        "id": "model-423"
+      },
+      {
+        "id": "model-424"
+      },
+      {
+        "id": "model-425"
+      },
+      {
+        "id": "model-426"
+      },
+      {
+        "id": "model-427"
+      },
+      {
+        "id": "model-428"
+      },
+      {
+        "id": "model-429"
+      },
+      {
+        "id": "model-430"
+      },
+      {
+        "id": "model-431"
+      },
+      {
+        "id": "model-432"
+      },
+      {
+        "id": "model-433"
+      },
+      {
+        "id": "model-434"
+      },
+      {
+        "id": "model-435"
+      },
+      {
+        "id": "model-436"
+      },
+      {
+        "id": "model-437"
+      },
+      {
+        "id": "model-438"
+      },
+      {
+        "id": "model-439"
+      },
+      {
+        "id": "model-440"
+      },
+      {
+        "id": "model-441"
+      },
+      {
+        "id": "model-442"
+      },
+      {
+        "id": "model-443"
+      },
+      {
+        "id": "model-444"
+      },
+      {
+        "id": "model-445"
+      },
+      {
+        "id": "model-446"
+      },
+      {
+        "id": "model-447"
+      },
+      {
+        "id": "model-448"
+      },
+      {
+        "id": "model-449"
+      },
+      {
+        "id": "model-450"
+      },
+      {
+        "id": "model-451"
+      },
+      {
+        "id": "model-452"
+      },
+      {
+        "id": "model-453"
+      },
+      {
+        "id": "model-454"
+      },
+      {
+        "id": "model-455"
+      },
+      {
+        "id": "model-456"
+      },
+      {
+        "id": "model-457"
+      },
+      {
+        "id": "model-458"
+      },
+      {
+        "id": "model-459"
+      },
+      {
+        "id": "model-460"
+      },
+      {
+        "id": "model-461"
+      },
+      {
+        "id": "model-462"
+      },
+      {
+        "id": "model-463"
+      },
+      {
+        "id": "model-464"
+      },
+      {
+        "id": "model-465"
+      },
+      {
+        "id": "model-466"
+      },
+      {
+        "id": "model-467"
+      },
+      {
+        "id": "model-468"
+      },
+      {
+        "id": "model-469"
+      },
+      {
+        "id": "model-470"
+      },
+      {
+        "id": "model-471"
+      },
+      {
+        "id": "model-472"
+      },
+      {
+        "id": "model-473"
+      },
+      {
+        "id": "model-474"
+      },
+      {
+        "id": "model-475"
+      },
+      {
+        "id": "model-476"
+      },
+      {
+        "id": "model-477"
+      },
+      {
+        "id": "model-478"
+      },
+      {
+        "id": "model-479"
+      },
+      {
+        "id": "model-480"
+      },
+      {
+        "id": "model-481"
+      },
+      {
+        "id": "model-482"
+      },
+      {
+        "id": "model-483"
+      },
+      {
+        "id": "model-484"
+      },
+      {
+        "id": "model-485"
+      },
+      {
+        "id": "model-486"
+      },
+      {
+        "id": "model-487"
+      },
+      {
+        "id": "model-488"
+      },
+      {
+        "id": "model-489"
+      },
+      {
+        "id": "model-490"
+      },
+      {
+        "id": "model-491"
+      },
+      {
+        "id": "model-492"
+      },
+      {
+        "id": "model-493"
+      },
+      {
+        "id": "model-494"
+      },
+      {
+        "id": "model-495"
+      },
+      {
+        "id": "model-496"
+      },
+      {
+        "id": "model-497"
+      },
+      {
+        "id": "model-498"
+      },
+      {
+        "id": "model-499"
+      }
+    ],
+    "count": 500,
+    "request_url": "http://127.0.0.1:9000/v1/models",
+    "elapsed_ms": 0,
+    "truncated": true
+  },
+  "modelsUnauthorized": {
+    "ok": false,
+    "error": "unauthorized",
+    "status": 401,
+    "request_url": "http://127.0.0.1:9000/v1/models",
+    "elapsed_ms": 0,
+    "body_excerpt": "{\"error\":\"invalid api key: [redacted]\"}"
+  },
+  "modelsTimeout": {
+    "ok": false,
+    "error": "timeout",
+    "status": null,
+    "request_url": "http://127.0.0.1:9000/v1/models",
+    "elapsed_ms": 0,
+    "body_excerpt": null
+  },
+  "modelsUnreachable": {
+    "ok": false,
+    "error": "unreachable",
+    "status": null,
+    "request_url": "http://127.0.0.1:9/v1/models",
+    "elapsed_ms": 2,
+    "body_excerpt": null
+  }
+}

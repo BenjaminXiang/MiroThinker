@@ -578,3 +578,396 @@ trigger POST body (`{"params": {"domain": "professor"}}`, `{"params": {}}`) unch
   quotes; the task name in them now uses the Chinese label.
 - 技术细节 keeps 任务 ID / 命令 / 超时 / cron, folded per task.
 
+
+## I (backend) — presets + model discovery
+
+Backend half of the `/admin` model-config slice (I2/I3/I4/I5). No static page file touched
+(`backend/static/**` is the sibling page agent's; it was being rewritten while these tests
+ran — see "not mine" below). No service restart, no live state directory, no outbound call
+in any test.
+
+### Files and line refs (worktree HEAD + this slice)
+
+| File | What changed |
+|---|---|
+| `apps/admin-console/backend/services/canonical_v2_connection_tests.py` | `MODEL_LIST_*` bounds + `MODEL_LIST_TIMEOUT_SECONDS = 3.0` (43–50); `ProviderPreset` (140) + `PROVIDER_PRESETS` (168–215) + `_LLM_PROFILE_LABELS` (217) + `llm_profile_options()` (228–248); `get_json()` bounded GET (466–489); `_model_ids()` (491–520); `_body_excerpt()` with key redaction (522–537); `_model_failure()` (539–555); `fetch_model_list()` (557–627); `__all__` |
+| `apps/admin-console/backend/api/canonical_v2_admin_config.py` | `GET /connections/presets` (416–446); `POST /connections/{key}/models` (448–493); imports (18–38) |
+| `apps/miroflow-agent/src/data_agents/canonical_v2/managed_config.py` | `serving.chat_llm_profile` → `CHAT_LLM_PROFILE` in `_FIELD_ENV_VARS` (59); two `PAGE_READONLY_FIELDS` rows (86–96) + updated header comment (72–75); `ExtractionEndpoints` docstring (154–164); `ServingSettings.chat_llm_profile` (228); `FIELD_CATALOG` row order 12 (505–512); `_validate_chat_llm_profile_choice()` called from `patch()` (745) and defined (913–941) |
+| `apps/admin-console/tests/test_canonical_v2_model_discovery_api.py` | new: 20 tests (I2/I3) |
+| `apps/admin-console/tests/test_managed_config_catalogue.py` | +3 tests (I4/I5) |
+| `apps/admin-console/tests/test_managed_runtime_bootstrap.py` | +1 test (`CHAT_LLM_PROFILE` projection) |
+
+### Response shapes as implemented
+
+`GET /api/canonical-v2/admin/connections/presets` (200, session-gated, no outbound call):
+
+```json
+{"presets": [{"id": "local-openai", "label": "本机 OpenAI 兼容服务（vLLM / SGLang）",
+              "base_url": "http://127.0.0.1:8000/v1", "needs_key": true,
+              "docs_url": null, "note": "把主机与端口换成你自己的服务；本机部署常见端口见下"},
+             {"id": "deepseek", ...}, {"id": "dashscope", ...}, {"id": "openai", ...},
+             {"id": "siliconflow", ...}, {"id": "custom", "base_url": "", ...}],
+ "llm_profiles": [{"name": "deepseekv4flash", "model": "deepseek-v4-flash",
+                   "base_url": "https://api.deepseek.com", "key_env": "DEEPSEEK_API_KEY",
+                   "label": "DeepSeek V4 Flash"}, ... 7 rows, sorted by name],
+ "chat_profile": "deepseekv4flash",
+ "embedding_frozen": {"base_url": "http://100.64.0.27:18005/v1", "model": "Qwen/Qwen3-Embedding-8B",
+                      "note": "服务线向量由发布包冻结：…（只读展示）"}}
+```
+
+`embedding_frozen.note` is the *same* string as
+`PAGE_READONLY_FIELDS["extraction_endpoints.embedding_base_url"]` (one source of copy for
+both the field row and the role card). `chat_profile` is what `chat_llm_profile(os.environ)`
+resolves in **this process** (so the page can show the running selection, aliases normalised).
+`llm_profiles[*]` uses each profile's **local** endpoint — the one the answer/rewrite path uses.
+
+`POST /api/canonical-v2/admin/connections/{key}/models`, body `{"base_url"?: str, "api_key"?: str}`
+(unsaved values allowed, resolved through the same `_resolve_connection_request` as
+`/connections/test`, nothing stored):
+
+```json
+// 200 success (one bounded GET to {base_url}/v1/models, 3 s timeout, ≤512 KB read)
+{"connection": "llm", "ok": true, "models": [{"id": "a-model"}, {"id": "b-model"}],
+ "count": 2, "request_url": "http://127.0.0.1:18006/v1/models", "elapsed_ms": 0}
+// + "truncated": true only when the 500-id cap cut the list
+
+// 200 failure (never a 5xx): status present iff there was an HTTP response
+{"connection": "llm", "ok": false, "error": "unauthorized", "status": 401,
+ "request_url": "http://127.0.0.1:18006/v1/models", "elapsed_ms": 4,
+ "body_excerpt": "{\"error\":\"invalid api key\"}"}
+
+// 429 (same limiter/scopes as /connections/test) and 422 (unknown key / unsafe endpoint)
+{"detail": {"error": "rate_limited", "connection": "llm", "retry_after_seconds": 1}}
+```
+
+Error mapping: 401/403 → `unauthorized`; 404 → `not_supported`; other non-2xx → `bad_response`
+(status included); connection error → `unreachable`; timeout (bare `TimeoutError` or
+`URLError(reason=TimeoutError)`) → `timeout`; unparseable/empty body → `bad_response`;
+**no endpoint resolved at all → `unreachable` with `request_url: ""`, `status: null`, no call**
+(the honest report for e.g. rerank without `CANONICAL_V2_RERANK_BASE_URL`; the page should
+refuse an empty base URL itself before calling).
+
+Secrecy: the key travels only in `Authorization: Bearer`; `body_excerpt` is clipped to 200
+chars, single-lined, and any echoed copy of the resolved key is replaced with `[redacted]`;
+no handler logs anything.
+
+### Test command and result
+
+```bash
+cd apps/admin-console && uv run pytest -q -p no:randomly -p no:cacheprovider \
+  tests/test_canonical_v2_admin_config_api.py tests/test_managed_config_catalogue.py \
+  tests/test_managed_runtime_bootstrap.py tests/test_canonical_v2_model_discovery_api.py \
+  tests/test_canonical_v2_connection_tests.py tests/test_canonical_v2_admin_secrets_api.py \
+  tests/test_admin_config_single_channel.py tests/test_canonical_v2_runtime_sources.py \
+  tests/test_managed_settings_store.py
+# 133 passed
+```
+
+Layer ① (new, this slice): `tests/test_canonical_v2_model_discovery_api.py` **20 passed**
+(preset table shape + no deployment host; profile table == `_LLM_PROFILES[*].local`;
+`chat_profile`; 401 for both routes without a session; success sorting/dedupe/`_join`;
+500-cap + `truncated`; 9 parametrised failure shapes; key-never-echoed incl. upstream echo;
+runtime-default fallback through the managed settings file; unsafe endpoint 422 with zero
+calls; 429 rate limit; works with no console DSN; and **one un-stubbed test** against a
+loopback `ThreadingHTTPServer` on 127.0.0.1 — real `urllib` GET, real JSON, real 401, real
+key redaction, so `get_json()` itself is exercised and not only its stub). Layer ①:
+`test_managed_config_catalogue.py` +3 and `test_managed_runtime_bootstrap.py` +1
+**passed** (catalogue row + `CHAT_LLM_PROFILE` projection + unknown-name refusal + the two
+display-only embedding rows). The three suites together: **40 passed** (`-q`:
+`tests/test_canonical_v2_model_discovery_api.py tests/test_managed_config_catalogue.py
+tests/test_managed_runtime_bootstrap.py`).
+
+RED before the production edits: `AttributeError: … has no attribute 'get_json'` (16 errors)
++ `ManagedSettingsUnsupportedError: field is not in the managed settings whitelist:
+serving.chat_llm_profile` and the missing `PAGE_READONLY_FIELDS` keys (6 failed) → `6 failed,
+17 passed, 16 errors`.
+
+Layer ② (pre-existing, re-run here): the seven earlier suites in that command are all green;
+the command's total is **133 passed** (final run, zero failures) — including
+`test_canonical_v2_admin_config_api.py`, `test_canonical_v2_connection_tests.py`,
+`test_admin_config_single_channel.py`, `test_canonical_v2_runtime_sources.py`,
+`test_managed_settings_store.py`.
+
+**Note on the two page-shell tests** (`test_admin_page_renders_the_credentials_card`,
+`test_shell_keeps_the_four_cards_and_the_snapshot`): mid-run they failed, because they assert
+markers of `backend/static/admin.html` ("连接与密钥", `id="card-connections"`) that the **page
+agent's in-flight rewrite** had removed (their file changed at 01:39–01:42; this slice touches
+no static file — `git diff --stat` shows all 984 static lines coming from them). The page agent
+then updated both tests (01:45:47/01:45:51) and the final run is fully green. Nothing here was
+worked around or weakened.
+
+`ruff check` / `ruff format --check` clean on every file touched here (the 5 `F401`s reported
+for `apps/admin-console/backend` are in `deps.py` / `canonical_v2_query_interpreter.py`,
+untouched and already recorded as pre-existing).
+
+### I5 — what the embedding fields really are (read before writing the copy)
+
+- The **serving** line loads its embedding authority from the release bundle:
+  `load_content_addressed_embedding_adapter()` (`knowledge_build_isolated.py:8155-8210`)
+  compares the bundle against a frozen document (`base_url "http://100.64.0.27:18005/v1"`,
+  `model_id "Qwen/Qwen3-Embedding-8B"`, dimension, `content_sha256`) and raises
+  `release embedding bundle differs from frozen authority` on any difference; the serving
+  bundle check is repeated at load (`knowledge_serving_isolated.py:6594`).
+- **Nothing reads `CANONICAL_V2_EMBEDDING_BASE_URL` / `CANONICAL_V2_EMBEDDING_MODEL`.** A
+  repo-wide grep finds them only in `managed_config.py:53-54` (`_FIELD_ENV_VARS`) and in
+  historical run artifacts — so today the page's two "editable" embedding fields are worse
+  than frozen: saving them projects two variables no code reads, and behaviour does not
+  change at all. (`apps/admin-console/backend/deps.py:130` builds
+  `EmbeddingClient(api_key=load_local_api_key())`, whose base URL/模型 are the class defaults
+  in `company/vectorizer.py:22-23` — also env-independent.)
+- The collection/build lane's real override is the **unprefixed** `EMBEDDING_BASE_URL` /
+  `EMBEDDING_API_KEY`, read by scripts (`scripts/run_batch_reprocess_v3.py:160-163` and the
+  professor e2e scripts), and is not part of the managed file.
+
+Copy chosen (both rows in `PAGE_READONLY_FIELDS`, `managed_config.py:86-96`) — the frozen-bundle
+sentence plus the "no runtime reader" fact, which is the part the operator would otherwise
+have no way to learn:
+
+> 服务线向量由发布包冻结：发布包的 embedding bundle 必须等于钉死的 base_url
+> （含校验和，不符即拒绝加载），改它需要重建全部向量；这两个受管字段没有运行期读者，
+> 保存它不会改变任何行为（采集/构建侧另有脚本级覆盖 EMBEDDING_BASE_URL，不经受管配置）（只读展示）
+
+> 服务线向量由发布包冻结：模型名来自发布包 embedding bundle（与发布包不符即拒绝加载），
+> 改它需要重建全部向量；这两个受管字段没有运行期读者，保存它不会改变任何行为
+> （采集/构建侧另有覆盖，不经受管配置）（只读展示）
+
+### I4 — validation placement (deliberate deviation, stated)
+
+The strict name check lives on the **write path** (`ManagedSettingsStore.patch`, via
+`_validate_chat_llm_profile_choice`), not in the pydantic schema. Reason: the schema also
+validates the *effective* document (environment overrides) and hand-edited files, and the
+serving line deliberately tolerates an unknown `CHAT_LLM_PROFILE` (it falls back to its
+default profile). A schema validator would therefore turn one stale environment variable into
+a 503 on every admin read, and would make a single bad key in a hand-edited file drop the
+whole file's settings at boot (`managed_runtime._file_owned_values` validates the payload).
+Save-time rejection is where the operator's decision is made, and it is atomic: the patch is
+refused before anything is written. The refusal names the value and lists the available
+profiles.
+
+Live-line note for the page: the service unit sets `CHAT_LLM_PROFILE=deepseekv4flash`
+(`deploy/README.md:19`, the serve command), so on this installation the new row shows
+`source: "env"`, `editable: false` — exactly like every other env-pinned field. It becomes
+page-writable once the unit stops setting it; the save→restart path is proven by the new
+bootstrap test.
+
+### What the page agent must know
+
+1. `GET …/connections/presets` is session-gated (401 without a cookie) and makes **no**
+   outbound call — safe to load with the page.
+2. `POST …/connections/{key}/models` takes the same body as `/connections/test`
+   (`base_url`, `api_key`; `model` is accepted and ignored) and is rate-limited **together with**
+   the test button (same per-connection + per-client window, 6/min, 1 s interval). A 429 body is
+   `{"detail": {"error": "rate_limited", …}}` with a `Retry-After` header.
+3. Failure responses are **200** with `ok: false` + `error` + `status` + `request_url` +
+   `elapsed_ms` + `body_excerpt`; only a bad request (unknown `key`, unsafe `base_url`,
+   non-string `api_key`) is 422, and only the limiter is 429. Never a 5xx.
+4. `truncated: true` appears **only** when the list was cut at 500 ids; treat it as optional.
+5. `request_url` is always present on a probe outcome, so the page can show "will call /
+   called …" without rebuilding the URL itself (do not duplicate `_join`'s `/v1` rule).
+6. `serving.chat_llm_profile` is a plain `text` catalogue row (no `connection`, no `test_arg`);
+   the choice list comes from `llm_profiles` in the presets payload, and `chat_profile` says
+   what the running process uses today.
+7. The two `extraction_endpoints.embedding_*` rows now come back `editable: false` with a
+   `readonly_reason`; a PATCH touching them is 422 with `display-only` and the reason
+   (`config/patch` is atomic — nothing else in the same patch is written either).
+
+---
+
+## I (page) — 模型与连接
+
+The connection card became five role blocks, driven by the payloads the backend agent
+shipped in the same worktree. Implemented and verified after their endpoints landed, so
+every fixture below is a **real** payload (no hand-copied shapes) — except the three
+transports listed at the end.
+
+### Files and line refs
+
+| File | What |
+|---|---|
+| `apps/admin-console/backend/static/admin.html:120-187` | `card-models` shell: five `<section class="role" data-role="…">` in the required order (chat 132, collection 142, embedding 152, rerank 163, web 173), each with a `role-<id>-state` badge, `<id>Effective` rows container, `<id>Body`, `<id>Actions`; the embedding warning line at `:157`; the 保存 ≠ 测试 footnote at `:182-186` |
+| `apps/admin-console/backend/static/admin.js:453-1425` | the whole card: role table `ROLES` (`:480`), `ROLE_PROFILE_FIELD` (`:459`), `MODEL_PICKER_LIMIT`/`MODELS_TIMEOUT_MS` (`:460-461`), `TEST_PATH_BY_KIND` (`:465`), `MODEL_ERROR_TEXT` (`:470`), `joinUrl` (`:501`), `embeddingFrozen` (`:569`), `keyStatusRow` (`:590`), `renderRoleUrlPreviews` (`:661`), `renderRoles` (`:710`), per-role renderers (`:732`, `:839`, `:884`, `:922`, `:957`), `presetRow` (`:1020`), `fetchRow` (`:1073`), `fetchModels` (`:1098`), `describeModelOutcome` (`:1141`), `renderModelPicker` (`:1182`), `roleActions` (`:1242`), `roleTestBody` (`:1284`), `saveRoleBlock` (`:1357`), `loadPresets` (`:1593`) |
+| `apps/admin-console/backend/static/admin.css:93, 205, 207, 242-330` | `.card { min-width: 0 }`, `.row .value`, `.table-wrap`, the role block / preset row / key row / picker / spinner / warnline / `details.advanced` styles — same variables, no framework |
+| `apps/admin-console/tests/test_admin_model_roles_page.py` (new, 10 tests) | the invariants |
+| `apps/admin-console/tests/test_admin_config_page_shell.py:144-221` | shell markers for the five roles, per-role containers, duplicate-id guard, `el()` lookup guard, the embedding consequence line, "probe buttons stay script-built" |
+| `apps/admin-console/tests/test_canonical_v2_admin_secrets_api.py:419-433` | the old card marker updated (`模型与连接` + `roleBlocks`) |
+| `.agents/runs/connect-collection-line/model-roles-harness/` | `dump_fixtures.py` (real payloads), `fixtures.json`, `render_check.cjs` (DOM harness), `stub_server.py` (scratch static+API stub), `admin-models-card.png` (screenshot) |
+
+### What each role block renders
+
+1. **对话模型（回答与改写用它）** — a 档位 `<select>` built from `presets.llm_profiles`
+   (options labelled `label（name）`; the catalogue value is added when it is not in the list),
+   the selected profile's model + base_url as static text beside it, a write-only key row
+   (`llm.api_key`, and the profile's `key_env` named in the effective rows), the **runtime**
+   profile row (`presets.chat_profile`) next to the **saved** one with 「本进程仍跑 X；重启后切到 Y」,
+   测试连通性, and the request-URL preview. 保存 writes
+   `serving.chat_llm_profile` through the existing `PATCH /config`; when `CHAT_LLM_PROFILE` is
+   set in the environment (the live unit does — the backend agent's note 6) the field comes
+   back `editable: false` and the page disables the select and prints the env-override reason
+   instead of pretending it can save. **No 拉取模型列表 here** (deviation 6 below): the profile
+   owns the model id and no field in this role could receive a picked one.
+2. **采集模型（摘要与富化用它）** — the `llm` connection's catalogue fields
+   (`extraction_endpoints.llm_base_url` / `llm_model`), the provider preset dropdown (fills
+   base_url, never bypasses the field), 拉取模型列表, 测试, URL preview, and a **read-only**
+   credential line pointing at the chat block: the collection LLM's key is the profile's own
+   (`llm.api_key`), so that block owns the single key entry (报告里说明的那一处选择).
+   **Chosen connection key for its 测试/拉取: `llm`** — the same key the old card used for
+   these fields (`FIELD_CATALOG[*].connection == "llm"`); there is no separate collection-LLM
+   connection in the server's `CONNECTIONS`.
+3. **嵌入模型（检索向量用它）** — read-only: base_url/model from `presets.embedding_frozen`
+   (falling back to the `embedding` connection row that `/secrets` resolves from the release
+   bundle, labelled as such), the fixed warning line, the server's `readonly_reason` when the
+   catalogue carries one, a key row (the key *is* writable), 测试连通性 (`embedding`, no
+   overrides — the frozen endpoint is what the runtime uses), and the collection-side override
+   (`extraction_endpoints.embedding_*`) only inside `<details>` 「高级：采集侧覆盖」 with the
+   note 「只影响后续采集/构建，不改服务线索引」 plus the server's reason. No preset dropdown and
+   no model list (nothing to pick for a frozen value).
+4. **重排模型** — `extraction_endpoints.rerank_base_url` / `rerank_model` + preset + 拉取 +
+   手填 + 测试 (connection `rerank`) + key row (`rerank.api_key`) + the runtime enabled/note rows.
+5. **Web 搜索** — one sub-block per `kind == "web_search"` connection (Bocha / Serper): the
+   pinned provider host as read-only text, mask/origin, write-only key row, 测试, 保存本卡
+   (writes only the key), URL preview. Base URL stays non-editable.
+
+Cross-cutting: every field still comes from `/config`'s catalogue (the single-channel guard
+`test_the_page_holds_no_endpoint_field_knowledge` stays green — no `extraction_endpoints.*`
+literal is in the page), per-field dirty tracking + the three-state save are unchanged, and
+each block's 保存本卡 submits only that block's own dirty paths.
+
+### 拉取模型列表 — behaviour on success / failure / oversize
+
+- Request: `POST connections/{key}/models` with **the values on screen** — `base_url` from the
+  role's base_url field (or the selected profile / frozen value) and `api_key` from the key box
+  *of that block* only. The chat block sends the selected profile's `base_url` + `model` to the
+  probe; a block that does not own the key row never sends one (so saving/serving one role
+  cannot flush another role's half-typed key).
+- Inline spinner (`role-<id>-spinner`) + disabled button while in flight; a **3 s client guard**
+  (`AbortController`) fires first if the endpoint hangs, reporting
+  「3 秒内没有响应（页面在 3 秒后放弃等待） · 请求 <url>」，and the button returns to normal.
+- Success: 「拉取到 N 个模型 · HTTP 耗时 X ms · 请求 <request_url>」 (+「服务端只返回了前面一部分」
+  when `truncated`). ≤ 200 ids render as a `<select>` (`从 N 个模型里选一个…` + every id +
+  「手填模型 ID（保留上面输入框里的值）」); more than 200 render a filter `<input list>` over a
+  `<datalist>` carrying every id. Picking (or typing a known id into the filter) writes the
+  role's model field through the same widget as manual typing, so it is marked 未保存 and saves
+  through the normal 保存本卡.
+- Failure: the code maps 1:1 to the server's error codes and always carries the URL and the
+  elapsed ms — unauthorized → 「密钥被拒绝（401/403）」；unreachable → 「连不上该地址」；
+  timeout → 「3 秒内没有响应」；not_supported → 「该端点没有 /v1/models，请直接手填模型 ID」；
+  bad_response → 「返回内容无法解析」. HTTP status and the server's redacted `body_excerpt` are
+  appended when present; a 429 shows the limiter copy; no picker is rendered.
+
+### Request-URL derivation (报告要求说明)
+
+The preview mirrors the server's own builder instead of guessing:
+
+- test paths — `TEST_PATH_BY_KIND` (`admin.js:465`) is `llm → /chat/completions`,
+  `rerank → /v1/rerank`, `embedding → /v1/embeddings`, taken from
+  `backend/services/canonical_v2_connection_tests.py` `_CHAT_PATH` / `_RERANK_PATH` /
+  `_EMBEDDING_PATH`, and locked by `test_the_preview_paths_are_the_ones_the_server_posts_to`
+  (imports those constants and compares them to the page's table).
+- join rule — `joinUrl` (`admin.js:501`) re-implements `_join` (`…/v1` bases are not doubled,
+  a base already ending in the path is used as-is). The harness asserts page-vs-server parity
+  against a `request_url` the live server produced (`render_check.cjs`, "the page's preview must
+  equal the URL the server called").
+- model list — `{base_url}/v1/models` per the I3 contract; the page shows its own derivation
+  *before* the call (「模型列表将请求：…（页面推算；服务端会在结果里给出 request_url）」) and the
+  server's `request_url` afterwards, which is authoritative.
+- web search — the pinned provider host from the connection row (the runtime posts to it; the
+  page cannot and must not move it).
+- chat — the **selected** profile's `base_url` (so 「测试」 tests what the operator is about to
+  save, not what the process runs today; the runtime row above still reports the running profile).
+
+### 3 s guard / 保存 ≠ 测试
+
+保存 writes the managed file (secrets first, then the config patch) and its result line always
+ends with 「保存 ≠ 测试；重启后生效：systemctl --user restart canonical-v2-backend」; the test
+result ends with 「测试不改配置，保存才写文件」. The restart banner above the cards is reused
+(dirty count + 已保存的改动需重启生效 + copy button) and the card footnote repeats the separation.
+
+### Verification
+
+**① New tests this slice (31 assertions-bearing tests / 12 pytest cases + 4 harness
+scenarios + 1 browser pass), fixture source = real payloads unless stated:**
+
+| Cluster | What it locks | Fixture |
+|---|---|---|
+| `tests/test_admin_model_roles_page.py` (10) | every value role has an effective-rows block; every backend connection is reachable from exactly one role; preview paths equal the server's constants + `/v1/models`; the model probe sends unsaved values; picker shape switches at 200 with 手填 in both; the five error codes and their Chinese copy; the 3 s AbortController guard; no `state.keys` write into text; the embedding read-only contract; 保存 ≠ 测试 copy | shipped static files + the real `canonical_v2_connection_tests` constants |
+| `tests/test_admin_config_page_shell.py` (7 new/updated) | five role titles in order; per-role containers; **no duplicate ids**; every literal `el("…")` exists in the shell; the embedding consequence line; no probe control in the shell (`>测试连通性<` / `>拉取模型列表<` absent — the labels may appear in prose); API calls present in the script | real route graph + shipped assets |
+| `render_check.cjs` (4 scenarios) | role blocks render from the payloads (state badges land in their own block, card 1's rows survive); picker select ≤ 200 / datalist > 200 with the real 500-id truncation; failure copy with URL + status + `[redacted]` excerpt; the 3 s guard; per-role save bodies; a typed key never rendered; a 404 presets endpoint degrades; an empty endpoint is refused locally without a call | `fixtures.json` |
+
+**② Pre-existing regression suites** — `uv run pytest -q -p no:randomly -p no:cacheprovider
+tests/test_admin_config_page_shell.py tests/test_admin_config_single_channel.py
+tests/test_canonical_v2_admin_config_api.py tests/test_canonical_v2_admin_secrets_api.py
+tests/test_nav_postgres_gating.py tests/test_admin_model_roles_page.py
+tests/test_canonical_v2_model_discovery_api.py tests/test_managed_config_catalogue.py
+tests/test_canonical_v2_connection_tests.py tests/test_admin_gate.py
+tests/test_admin_console_shell.py` → **138 passed** (includes the backend agent's new
+`test_canonical_v2_model_discovery_api.py`). `/admin`'s own four cards, the banner, the snapshot,
+the three-state gesture and the per-card saves are untouched by this slice.
+
+**③ Behaviour evidence (no browser → browser):**
+
+- `node …/model-roles-harness/render_check.cjs` → four `OK` lines (see above). Fixtures produced
+  by `uv run python …/dump_fixtures.py`: real `GET /config`, `GET /secrets`,
+  `GET /connections/presets` through the live handlers in-process (temp managed stores, ambient
+  credential variables removed, fake keys written through the real store) plus real
+  `fetch_model_list()` outputs (3-id success, 500-id truncation, 401 with the credential
+  redacted, read timeout, closed port).
+- **Real Chromium pass** against a scratch static+API stub (`stub_server.py 18321`, loopback
+  only, killed afterwards; 18188 untouched, no service restarted): five blocks in order with
+  their state badges; card 1's rows intact; chat select options = the 7 real profiles; the
+  saved-vs-running profile row («本进程仍跑 gemma4；重启后切到 deepseekv4flash»);
+  `测试将请求：https://api.deepseek.com/chat/completions`; collection preview
+  `http://127.0.0.1:8000/v1/chat/completions`; embedding frozen rows + collapsed 高级 details with
+  both override inputs disabled; 拉取模型列表 on the 采集模型 block (`llm`) → `<select>` of 3 + 手填,
+  picking `deepseek-v4-flash` filled the field and turned on 未保存 (the 对话模型 block offers no
+  list: the profile owns the model id); on the oversize mode → filter +
+  `<datalist>` of 500 with the truncation note; on `unauthorized` →
+  「密钥被拒绝（401/403） · HTTP 401 · 请求 http://127.0.0.1:9000/v1/models · 0 ms · 响应片段：{"error":"invalid api key: [redacted]"}」;
+  on the 3.5 s-hang mode → 「3 秒内没有响应（页面在 3 秒后放弃等待） · 请求 http://127.0.0.1:9000/v1/models」
+  at 3102 ms with the spinner cleared; a typed key never appeared in `document.body.innerText`;
+  no element inside the card overflows it and the document has no horizontal scroll
+  (`scrollWidth == clientWidth` at 1425 px, card 1232 px wide, role blocks on `--blue-soft`,
+  warning line on `--amber-soft`, `details` collapsed). Screenshot:
+  `model-roles-harness/admin-models-card.png`.
+
+### Defect found and fixed while verifying (RED → GREEN)
+
+The first browser pass showed the collection role's state pill landing in **card 1**: the role
+block reused `id="collectionState"`, which card 1 already owns (`admin.html:63`). `getElementById`
+returns the first match, so the role wrote into another card's rows and its own badge stayed
+empty. Fixed by moving every role status node to `role-<id>-state`; three guards now exist:
+`test_the_shell_has_no_duplicate_element_ids`, `test_every_id_the_script_looks_up_exists_in_the_shell`,
+and the harness's `duplicateShellIds` check (the harness's `getElementById` now reproduces the
+browser's first-wins rule, so the DOM stub catches it too — RED verified by restoring the
+duplicate: `+ [ 'collectionState' ] - []`).
+
+### Deviations / what the backend agent must know
+
+1. The page **does** re-derive the models URL for the pre-flight preview (their note 5 asked not
+   to). The brief requires showing the final request URL *before* testing, and a call has to
+   happen before a server-side `request_url` exists; the derivation is one small function,
+   parity-tested against a real server `request_url`, and the server's value is shown as
+   authoritative after every call. If they prefer no duplication, the endpoint would have to
+   expose the URL for a *not* performed request (e.g. `GET …/connections/{key}/models-url`).
+2. `truncated` is treated as optional (their note 4) — the note only appears when the field is true.
+3. The chat 测试 uses the **selected** profile's base_url + model + the typed key, not the
+   runtime profile: 测试 must be able to fail *before* saving (`/connections/test` accepts
+   `base_url`/`model`, and the resolved key is the profile's own variable — an unsaved switch
+   therefore reports 401 until the new profile's key is saved or provided). The runtime profile
+   is still displayed above, with the pending-switch sentence.
+4. The write-only key lives in exactly one block (`llm` → 对话模型, `rerank` → 重排模型,
+   `embedding` → 嵌入模型, web → their own sub-blocks). 采集模型 deliberately has no key input
+   (its credential is the profile's) — if the collection LLM ever gets its own connection key,
+   that block should gain the row and the pointer line should go.
+5. Untouched by this slice: card 2's 测试 Rerank 连通性 button still exists beside the new
+   重排模型 block's probe; card 2's is the runtime-state probe, the block's uses the unsaved
+   values. Worth folding into one button when someone next touches card 2.
+6. The 对话模型 block has **no** model list: the profile owns the model id and the role has no
+   field to pick into, so a picker there would have no destination. A model list that is only
+   informational would be noise; the collection/rerank blocks keep it, and the chat block can
+   gain it the day a "model" field exists for the chat role.
+7. The page refuses locally when a role has no usable endpoint (their note 8): the result line
+   says 「还没有可用端点：先填 Base URL（或选一个预设/档位），再拉取模型列表。」 and no request is
+   made — locked by the harness's degraded scenario (config served with an empty rerank base_url,
+   `page.apiCalls.length` unchanged).
+8. The card footnote tells the operator that 拉取模型列表 and 测试连通性 share the server's
+   6/min window (their note 7); a 429 shows 请 N 秒后再试 for both controls.

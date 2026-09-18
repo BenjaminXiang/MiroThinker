@@ -19,8 +19,12 @@ from backend.main import app
 from tests.conftest import authorized_client
 from src.data_agents.canonical_v2.managed_config import (
     FIELD_CATALOG,
+    FIELD_ENV_VARS,
+    PAGE_READONLY_FIELDS,
     ManagedSettings,
+    ManagedSettingsError,
     ManagedSettingsStore,
+    ManagedSettingsUnsupportedError,
     flatten_settings,
 )
 
@@ -176,3 +180,87 @@ def test_payload_stays_free_of_credential_material(
     payload: dict[str, Any] = _client().get("/api/canonical-v2/admin/config").json()
 
     assert "api_key" not in json.dumps(payload).casefold()
+
+
+# -- I4: the chat profile becomes a catalogue field --------------------------
+
+
+def test_chat_profile_row_travels_the_save_and_boot_path(tmp_path: Path) -> None:
+    """One text row, projected as `CHAT_LLM_PROFILE`, editable from the page."""
+
+    spec = FIELD_CATALOG["serving.chat_llm_profile"]
+
+    assert spec.path == "serving.chat_llm_profile"
+    assert spec.kind == "text"
+    assert spec.group == "serving"
+    assert spec.label.strip()
+    assert spec.consumer.strip()
+    assert spec.connection is None
+    assert spec.test_arg is None
+    assert FIELD_ENV_VARS["serving.chat_llm_profile"] == "CHAT_LLM_PROFILE"
+
+    store = ManagedSettingsStore(tmp_path / "managed" / "settings.json", environ={})
+    _, fields = store.effective()
+    row = next(field for field in fields if field.path == "serving.chat_llm_profile")
+
+    assert row.env_var == "CHAT_LLM_PROFILE"
+    assert row.editable is True
+    assert row.value is None
+    assert row.source == "default"
+
+
+def test_chat_profile_rejects_an_unknown_name_on_save(tmp_path: Path) -> None:
+    """A typo must fail loudly instead of silently falling back at runtime."""
+
+    store = ManagedSettingsStore(tmp_path / "managed" / "settings.json", environ={})
+
+    with pytest.raises(ManagedSettingsError) as refusal:
+        store.patch({"serving": {"chat_llm_profile": "no-such-profile"}})
+
+    assert "no-such-profile" in str(refusal.value)
+    assert "deepseekv4flash" in str(refusal.value), "the refusal lists the choices"
+    assert store.exists() is False
+
+    for value in ("deepseekv4flash", "deepseek-v4-pro", "deepseek"):
+        result = store.patch({"serving": {"chat_llm_profile": value}})
+        assert result["changed"] == ["serving.chat_llm_profile"], value
+
+    document, _ = store.effective()
+    assert document.serving.chat_llm_profile == "deepseek"
+
+
+# -- I5: the frozen embedding rows are display-only --------------------------
+
+
+def test_the_frozen_embedding_rows_are_display_only(tmp_path: Path) -> None:
+    """The serving index freezes the embedding endpoint; the page only shows it."""
+
+    paths = (
+        "extraction_endpoints.embedding_base_url",
+        "extraction_endpoints.embedding_model",
+    )
+    for path in paths:
+        reason = PAGE_READONLY_FIELDS[path]
+        assert reason.strip(), path
+        assert "冻结" in reason, path
+
+    store = ManagedSettingsStore(tmp_path / "managed" / "settings.json", environ={})
+    _, fields = store.effective()
+    rows = {field.path: field for field in fields}
+    for path in paths:
+        assert rows[path].editable is False, path
+        assert rows[path].readonly_reason, path
+
+    with pytest.raises(ManagedSettingsUnsupportedError) as refusal:
+        store.patch(
+            {
+                "extraction_endpoints": {
+                    "embedding_base_url": "http://127.0.0.1:18005/v1",
+                    "embedding_model": "Qwen/Qwen3-Embedding-8B",
+                }
+            }
+        )
+
+    assert "display-only" in str(refusal.value)
+    assert "冻结" in str(refusal.value)
+    assert store.exists() is False

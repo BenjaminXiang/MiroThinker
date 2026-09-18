@@ -15,16 +15,24 @@ from backend.services.canonical_v2_admin_status import (
     probe_http,
     provider_status,
 )
-from backend.services.canonical_v2_runtime_sources import resolve_connections
+from backend.services.canonical_v2_runtime_sources import (
+    chat_llm_profile,
+    resolve_connections,
+    resolve_embedding,
+)
 from backend.services.canonical_v2_connection_tests import (
     CONNECTIONS,
+    PROVIDER_PRESETS,
     SPEC_BY_KEY,
     ConnectionTestRateLimiter,
     UnsafeEndpointError,
+    fetch_model_list,
+    llm_profile_options,
     normalize_base_url,
     test_connection,
 )
 from src.data_agents.canonical_v2.managed_config import (
+    PAGE_READONLY_FIELDS,
     ManagedSettingsError,
     ManagedSettingsStore,
     ManagedSettingsUnsupportedError,
@@ -400,6 +408,88 @@ def test_admin_connection(
         },
         "restart_required": _RESTART_NOTICE if runtime.pending_restart else None,
     }
+
+
+# -- model configuration (I2/I3: provider presets + model discovery) ---------
+
+
+@router.get("/connections/presets")
+def get_connection_presets() -> object:
+    """The provider presets and chat profiles the model-config page renders.
+
+    Read-only and deployment-agnostic: the preset table is static code
+    (:data:`~backend.services.canonical_v2_connection_tests.PROVIDER_PRESETS`), so
+    no customer host is baked into any installation; the profile list comes from
+    the same table the serving line resolves through ``CHAT_LLM_PROFILE``, with
+    each profile's *local* endpoint (the one the answer/rewrite path uses);
+    ``chat_profile`` is what a process with this environment would actually run;
+    and ``embedding_frozen`` reports the value the release bundle freezes. No
+    outbound call is made and nothing is read from the collection database.
+    """
+
+    environ = dict(os.environ)
+    embedding = resolve_embedding(environ=environ, secrets_store=None)
+    return {
+        "presets": [preset.as_dict() for preset in PROVIDER_PRESETS],
+        "llm_profiles": llm_profile_options(),
+        "chat_profile": chat_llm_profile(environ).profile,
+        "embedding_frozen": (
+            {
+                "base_url": embedding.base_url,
+                "model": embedding.model,
+                "note": PAGE_READONLY_FIELDS["extraction_endpoints.embedding_base_url"],
+            }
+            if embedding.base_url
+            else None
+        ),
+    }
+
+
+@router.post("/connections/{key}/models")
+def list_connection_models(
+    key: str,
+    request: Request,
+    body: dict[str, Any],
+    settings_store: ManagedSettingsStore = Depends(get_managed_settings_store),
+    secrets_store: ManagedSecretsStore = Depends(get_managed_secrets_store),
+) -> object:
+    """Fetch one connection's model list from ``{base_url}/v1/models``.
+
+    Needs **no console database**: nothing on this path reads the collection DSN,
+    so the model picker keeps working on an installation whose console has no
+    Postgres at all — the only dependency is the model endpoint itself. The body
+    takes the same unsaved ``base_url`` / ``api_key`` as ``/connections/test`` and
+    resolves its defaults the same way (request value, then the runtime-effective
+    endpoint and credential); nothing is stored. One bounded GET with a 3 s
+    timeout, the same rate limiter as the connection test, and a structured
+    result for every outcome — including a failed one, which is never a 5xx. The
+    credential is never logged or echoed back (an upstream body that repeats it is
+    redacted before it becomes an excerpt).
+    """
+
+    resolved = _resolve_connection_request(
+        request,
+        {**body, "connection": key},
+        settings_store=settings_store,
+        secrets_store=secrets_store,
+    )
+    spec = resolved["spec"]
+    client = request.client.host if request.client is not None else "unknown"
+    decision = _TEST_LIMITER.check([f"conn:{spec.key}", f"client:{client}"])
+    if not decision.allowed:
+        raise HTTPException(
+            status_code=429,
+            detail={
+                "error": "rate_limited",
+                "connection": spec.key,
+                "retry_after_seconds": decision.retry_after_seconds,
+            },
+            headers={"Retry-After": str(decision.retry_after_seconds)},
+        )
+    result = fetch_model_list(
+        base_url=resolved["base_url"], api_key=resolved["api_key"]
+    )
+    return {"connection": spec.key, **result}
 
 
 __all__ = [

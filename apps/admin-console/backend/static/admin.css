@@ -91,6 +91,7 @@ main {
 }
 
 .card {
+  min-width: 0;
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--radius);
@@ -201,6 +202,9 @@ main {
 }
 .row:last-child { border-bottom: 0; }
 .row .key { color: var(--muted); }
+.row .value { min-width: 0; overflow-wrap: anywhere; }
+
+.table-wrap { overflow-x: auto; margin: 0 -6px; padding: 0 6px; }
 
 table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
 th, td { text-align: left; padding: 7px 8px; border-bottom: 1px solid var(--line); }
@@ -233,35 +237,97 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
 .footnote { font-size: 0.78rem; color: var(--muted); margin-top: 8px; }
 .result { font-size: 0.8rem; color: var(--muted); }
 
-/* -- 连接卡 ---------------------------------------------------------------- */
+/* -- 角色块（模型与连接） --------------------------------------------------- */
 
-.connections { display: grid; gap: 14px; }
+.roles { display: grid; gap: 14px; margin-top: 14px; }
 
-.connection {
+.role {
+  min-width: 0;
   border: 1px solid var(--line);
   border-radius: 14px;
   padding: 14px 16px;
   background: var(--blue-soft);
 }
-.connection > header {
+.role > header {
   display: flex;
   align-items: center;
   gap: 8px;
   flex-wrap: wrap;
-  margin-bottom: 4px;
+  margin-bottom: 6px;
 }
-.connection h3 { font-size: 0.95rem; margin: 0; }
-.connection .meta { font-size: 0.78rem; color: var(--muted); margin: 4px 0 8px; }
-.connection .keyrow {
+.role h3 { font-size: 0.95rem; margin: 0; }
+.role .role-state { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.role .meta { font-size: 0.78rem; color: var(--muted); margin: 4px 0 8px; }
+.role .rows { margin-bottom: 10px; }
+.role .field { border-bottom: 1px dashed var(--line-strong); }
+.role .field:last-of-type { border-bottom: 0; }
+.role .roleline {
   display: flex;
   gap: 8px;
   align-items: center;
   flex-wrap: wrap;
-  margin-bottom: 8px;
+  margin: 6px 0;
+  font-size: 0.86rem;
 }
-.connection .keyrow input { flex: 1 1 220px; padding: 7px 10px; border: 1px solid var(--line-strong); border-radius: 10px; }
-.connection .field { border-bottom: 1px dashed var(--line-strong); }
-.connection .field:last-of-type { border-bottom: 0; }
+.role .roleline > label { color: var(--muted); font-size: 0.86rem; }
+.role .roleline select,
+.role .roleline input[type="text"] { padding: 7px 10px; border: 1px solid var(--line-strong); border-radius: 10px; background: #fff; }
+.role .keyrow { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 8px; }
+.role .keyrow input { flex: 1 1 220px; padding: 7px 10px; border: 1px solid var(--line-strong); border-radius: 10px; }
+.role .model-picker { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin: 4px 0 8px; font-size: 0.82rem; color: var(--muted); }
+.role .model-picker[hidden] { display: none; }
+.role .model-picker select,
+.role .model-picker input { padding: 6px 10px; border: 1px solid var(--line-strong); border-radius: 10px; background: #fff; }
+.role .model-picker select { max-width: 100%; }
+.role .url-preview { font-size: 0.78rem; color: var(--muted); overflow-wrap: anywhere; }
+.role .url-preview code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 1px 6px;
+}
+.role .spinner {
+  display: inline-block;
+  width: 13px;
+  height: 13px;
+  border: 2px solid var(--line-strong);
+  border-top-color: var(--teal);
+  border-radius: 50%;
+  animation: role-spin 0.7s linear infinite;
+}
+.role .spinner.hidden { display: none; }
+@keyframes role-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .role .spinner { animation-duration: 2.4s; } }
+
+.warnline {
+  font-size: 0.82rem;
+  color: #8a5312;
+  background: var(--amber-soft);
+  border: 1px solid #e8c894;
+  border-radius: 12px;
+  padding: 8px 12px;
+  margin: 4px 0 10px;
+}
+
+details.advanced {
+  border-top: 1px dashed var(--line-strong);
+  margin-top: 8px;
+  padding-top: 8px;
+}
+details.advanced > summary { cursor: pointer; font-size: 0.84rem; color: var(--muted); }
+details.advanced .note { font-size: 0.8rem; color: var(--muted); margin: 8px 0 4px; }
+
+.subconn {
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 10px 12px;
+  background: var(--surface);
+  margin-bottom: 10px;
+}
+.subconn > header { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 4px; }
+.subconn h4 { font-size: 0.9rem; margin: 0; }
 
 /* -- 只读快照 -------------------------------------------------------------- */
 

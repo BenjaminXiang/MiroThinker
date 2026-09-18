@@ -133,3 +133,28 @@ def test_bootstrap_is_the_only_reader_no_hot_path(tmp_path: Path) -> None:
 
     assert live["DEEPSEEK_API_KEY"] == _FAKE_KEY
     assert "API_KEY" not in live
+
+
+def test_bootstrap_projects_the_chat_profile_choice(tmp_path: Path) -> None:
+    """I4: the profile the page saves reaches `CHAT_LLM_PROFILE` at boot."""
+
+    settings, secrets = _stores(tmp_path)
+    settings.patch({"serving": {"chat_llm_profile": "gemma4"}}, operator="ops")
+    environ: dict[str, str] = {}
+
+    receipt = apply_managed_runtime_config(
+        environ=environ, settings_store=settings, secrets_store=secrets
+    )
+
+    assert environ["CHAT_LLM_PROFILE"] == "gemma4"
+    assert receipt["settings_applied"] == ("serving.chat_llm_profile",)
+
+    # The service unit stays the authority: an existing value is never replaced.
+    live = {"CHAT_LLM_PROFILE": "deepseekv4flash"}
+    receipt = apply_managed_runtime_config(
+        environ=live, settings_store=settings, secrets_store=secrets
+    )
+
+    assert live["CHAT_LLM_PROFILE"] == "deepseekv4flash"
+    assert receipt["settings_applied"] == ()
+    assert receipt["settings_skipped_env"] == ("CHAT_LLM_PROFILE",)

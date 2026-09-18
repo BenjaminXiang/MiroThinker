@@ -13,7 +13,7 @@
       <div class="topbar-inner">
         <div class="brand">
           <strong>管理配置中心</strong>
-          <span>Canonical V2 · 采集与构建 / 检索与回答 / 存储与保留 / 连接与密钥</span>
+          <span>Canonical V2 · 采集与构建 / 检索与回答 / 存储与保留 / 模型与连接</span>
         </div>
         <nav class="nav">
           <a href="/main">首页</a>
@@ -46,18 +46,20 @@
         <div id="collectionFields"></div>
 
         <h3 class="subtitle">各域新鲜度（pack 构建时间 vs 投影时点）</h3>
-        <table id="freshnessTable">
-          <thead>
-            <tr>
-              <th>域</th>
-              <th>记录数</th>
-              <th>pack 构建时间</th>
-              <th>距今</th>
-              <th>投影 as_of</th>
-            </tr>
-          </thead>
-          <tbody id="freshnessBody"></tbody>
-        </table>
+        <div class="table-wrap">
+          <table id="freshnessTable">
+            <thead>
+              <tr>
+                <th>域</th>
+                <th>记录数</th>
+                <th>pack 构建时间</th>
+                <th>距今</th>
+                <th>投影 as_of</th>
+              </tr>
+            </thead>
+            <tbody id="freshnessBody"></tbody>
+          </table>
+        </div>
         <div class="rows" id="collectionState"></div>
 
         <div class="actions">
@@ -115,17 +117,73 @@
         </div>
       </section>
 
-      <section class="card" id="card-connections" aria-label="连接与密钥">
+      <section class="card" id="card-models" aria-label="模型与连接">
         <header>
-          <h2>连接与密钥</h2>
+          <h2>模型与连接</h2>
           <span class="hint" id="secretsPath">—</span>
         </header>
         <div id="secretsNotice" class="notice hidden" role="status"></div>
-        <div class="connections" id="connectionCards">等待加载…</div>
+        <p class="footnote">
+          按「角色」配置，而不是按文件：每块先说清现在生效的是什么、来自哪里，再给出该角色能改的字段和动作。
+          同一个字段只有一个入口；预设/档位只是填值，不能绕开下面的字段。
+        </p>
+
+        <div class="roles" id="roleBlocks">
+          <section class="role" id="role-chat" data-role="chat" aria-label="对话模型">
+            <header>
+              <h3>对话模型（回答与改写用它）</h3>
+              <span class="role-state" id="role-chat-state"></span>
+            </header>
+            <div class="rows" id="chatEffective"></div>
+            <div id="chatBody"></div>
+            <div class="actions" id="chatActions"></div>
+          </section>
+
+          <section class="role" id="role-collection" data-role="collection" aria-label="采集模型">
+            <header>
+              <h3>采集模型（摘要与富化用它）</h3>
+              <span class="role-state" id="role-collection-state"></span>
+            </header>
+            <div class="rows" id="collectionEffective"></div>
+            <div id="collectionBody"></div>
+            <div class="actions" id="collectionActions"></div>
+          </section>
+
+          <section class="role" id="role-embedding" data-role="embedding" aria-label="嵌入模型">
+            <header>
+              <h3>嵌入模型（检索向量用它）</h3>
+              <span class="role-state" id="role-embedding-state"></span>
+            </header>
+            <p class="warnline">服务线索引由发布包冻结：改它需要重建全部向量</p>
+            <div class="rows" id="embeddingEffective"></div>
+            <div id="embeddingBody"></div>
+            <div class="actions" id="embeddingActions"></div>
+          </section>
+
+          <section class="role" id="role-rerank" data-role="rerank" aria-label="重排模型">
+            <header>
+              <h3>重排模型</h3>
+              <span class="role-state" id="role-rerank-state"></span>
+            </header>
+            <div class="rows" id="rerankEffective"></div>
+            <div id="rerankBody"></div>
+            <div class="actions" id="rerankActions"></div>
+          </section>
+
+          <section class="role" id="role-web" data-role="web" aria-label="Web 搜索">
+            <header>
+              <h3>Web 搜索</h3>
+              <span class="role-state" id="role-web-state"></span>
+            </header>
+            <div id="webBody">等待加载…</div>
+          </section>
+        </div>
+
         <p class="footnote">
           密钥只写不读：页面只显示掩码与来源（env / 受管文件 / 旧 key 文件），明文既不回显也不写日志与审计。
-          「运行期已启用/未启用」由服务端按运行期真实解析链给出。端点/模型只在端点类连接卡里编辑——
-          一个字段只有一个入口；保存本卡会先写密钥再写端点，并给出合并结果。
+          「运行期已启用/未启用」由服务端按运行期真实解析链给出。
+          「保存 ≠ 测试」：保存只把值写进受管文件，测试是当场发起一次最小调用；两者都要重启服务才在运行期生效。
+          「拉取模型列表」与「测试连通性」共用服务端限频（同一连接 6 次/分钟），点太快会被拒并提示等待秒数。
         </p>
       </section>
 

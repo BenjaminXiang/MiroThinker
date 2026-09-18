@@ -56,6 +56,7 @@ _FIELD_ENV_VARS: dict[str, str] = {
     "extraction_endpoints.rerank_model": "CANONICAL_V2_RERANK_MODEL",
     "paths.serving_pack_dir": "CANONICAL_V2_SERVING_PACK",
     "paths.access_log_retention_days": "CANONICAL_V2_ACCESS_LOG_RETENTION_DAYS",
+    "serving.chat_llm_profile": "CHAT_LLM_PROFILE",
     "serving.web_topical_floor": "CANONICAL_V2_WEB_TOPICAL_FLOOR",
     "serving.rerank_timeout_seconds": "CANONICAL_V2_RERANK_TIMEOUT_SECONDS",
     "serving.rerank_max_documents": "CANONICAL_V2_RERANK_MAX_DOCUMENTS",
@@ -68,9 +69,10 @@ _FIELD_ENV_VARS: dict[str, str] = {
 # environment, so the mapping is part of this module's contract.
 FIELD_ENV_VARS: dict[str, str] = _FIELD_ENV_VARS
 
-# Displayed on the page but never writable from it. Each entry states why: these
-# are deployment decisions whose value is pinned by the service unit, and a page
-# toggle would let one click change boot cost or scatter forensic artefacts.
+# Displayed on the page but never writable from it. Each entry states why: either
+# the value is pinned by the service unit (a page toggle would let one click change
+# boot cost or scatter forensic artefacts), or it belongs to the frozen release
+# bundle (a real change would require rebuilding the serving index).
 PAGE_READONLY_FIELDS: dict[str, str] = {
     "serving.mount_receipt_path": (
         "取证路径：由服务单元钉死；页面改动会让挂载收据散落各处（只读展示）"
@@ -80,6 +82,17 @@ PAGE_READONLY_FIELDS: dict[str, str] = {
     ),
     "serving.full_verify": (
         "启动全量校验：开启会把启动从秒级拉到分钟级，必须由服务单元决定（只读展示）"
+    ),
+    "extraction_endpoints.embedding_base_url": (
+        "服务线向量由发布包冻结：发布包的 embedding bundle 必须等于钉死的 base_url"
+        "（含校验和，不符即拒绝加载），改它需要重建全部向量；这两个受管字段没有运行期读者，"
+        "保存它不会改变任何行为（采集/构建侧另有脚本级覆盖 EMBEDDING_BASE_URL，不经受管配置）"
+        "（只读展示）"
+    ),
+    "extraction_endpoints.embedding_model": (
+        "服务线向量由发布包冻结：模型名来自发布包 embedding bundle（与发布包不符即拒绝加载），"
+        "改它需要重建全部向量；这两个受管字段没有运行期读者，保存它不会改变任何行为"
+        "（采集/构建侧另有覆盖，不经受管配置）（只读展示）"
     ),
 }
 
@@ -140,7 +153,15 @@ class CollectionSettings(BaseModel):
 
 
 class ExtractionEndpoints(BaseModel):
-    """Collection-time endpoints. Credentials are env/key-file owned, never here."""
+    """Collection-time endpoints. Credentials are env/key-file owned, never here.
+
+    ``embedding_base_url`` / ``embedding_model`` live in this group but are listed
+    in :data:`PAGE_READONLY_FIELDS`: the serving line resolves its embedding
+    endpoint from the frozen release bundle, and no runtime code reads the two
+    variables these fields project — a page edit would change nothing while
+    looking like it did. The collection/build scripts have their own
+    (unmanaged) ``EMBEDDING_BASE_URL`` override.
+    """
 
     model_config = ConfigDict(extra="forbid", frozen=True, validate_default=True)
 
@@ -194,14 +215,17 @@ class ServingSettings(BaseModel):
     """Serving-line switches added after W1 (R16: they belong on the page).
 
     Page-suitability judgement (design §6): the three tunables below are
-    operator-facing (recall floor / latency budget / cost ceiling). The receipt
-    path, turn-debug directory and full-verify flag are declared here so the page
-    can *display* the effective value and its source, but they are listed in
-    :data:`PAGE_READONLY_FIELDS` and cannot be written from the web surface.
+    operator-facing (recall floor / latency budget / cost ceiling).
+    ``chat_llm_profile`` is the profile the answer/rewrite paths resolve through
+    ``CHAT_LLM_PROFILE``. The receipt path, turn-debug directory and full-verify
+    flag are declared here so the page can *display* the effective value and its
+    source, but they are listed in :data:`PAGE_READONLY_FIELDS` and cannot be
+    written from the web surface.
     """
 
     model_config = ConfigDict(extra="forbid", frozen=True, validate_default=True)
 
+    chat_llm_profile: str | None = Field(default=None, max_length=200)
     web_topical_floor: bool | None = None
     rerank_timeout_seconds: float | None = Field(default=None, gt=0, le=120)
     rerank_max_documents: int | None = Field(default=None, gt=0, le=2048)
@@ -478,6 +502,14 @@ FIELD_CATALOG: dict[str, FieldSpec] = {
         max=3650,
         step=1,
     ),
+    "serving.chat_llm_profile": FieldSpec(
+        path="serving.chat_llm_profile",
+        label="对话模型档位",
+        kind="text",
+        group="serving",
+        order=12,
+        consumer="知识服务/对话模型档位",
+    ),
     "serving.web_topical_floor": FieldSpec(
         path="serving.web_topical_floor",
         label="Web 轨主题相关性下限（kill switch）",
@@ -710,6 +742,7 @@ class ManagedSettingsStore:
             raise ManagedSettingsUnsupportedError(
                 "field is display-only on the admin page: " + reasons
             )
+        _validate_chat_llm_profile_choice(submitted)
         stored_before = self._stored_overrides()
         stored_after = _apply_overrides(stored_before, updates)
         document = self._validated_document(stored_after)
@@ -875,6 +908,36 @@ def _apply_overrides(
         else:
             merged[key] = value
     return merged
+
+
+def _validate_chat_llm_profile_choice(flat_updates: Mapping[str, Any]) -> None:
+    """Refuse a saved profile name the serving line would silently replace.
+
+    ``serving.chat_llm_profile`` is free text in the schema on purpose: the schema
+    also validates the effective document (environment overrides included) and
+    hand-edited files, and there an unknown name is tolerated — the serving line
+    falls back to its default profile and keeps answering. A *save* is a different
+    act: it is the operator's decision, and quietly landing on the fallback is
+    exactly the lie this file exists to remove. So the name is resolved strictly
+    here, on the write path, and the refusal lists the choices.
+    """
+
+    value = flat_updates.get("serving.chat_llm_profile")
+    if not isinstance(value, str) or not value.strip():
+        return
+    from ..professor.llm_profiles import (
+        list_professor_llm_profile_names,
+        resolve_professor_llm_profile_name,
+    )
+
+    text = value.strip()
+    try:
+        resolve_professor_llm_profile_name(profile_name=text, strict=True)
+    except ValueError:
+        raise ManagedSettingsError(
+            f"serving.chat_llm_profile is not a known LLM profile: {text!r}; "
+            "available profiles: " + ", ".join(list_professor_llm_profile_names())
+        ) from None
 
 
 def _unflatten(flat: Mapping[str, Any]) -> dict[str, Any]:
