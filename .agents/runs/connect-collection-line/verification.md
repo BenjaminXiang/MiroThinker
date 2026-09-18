@@ -411,3 +411,28 @@ Test-pinned strings preserved: `failureReason(run)`, `exit_code`, `stderr_excerp
 Deliberately not done: the nav label `Seed 管理` stays (six pages share it and a test
 pins it); `list_seeds` still orders by `(school, department, id)` — changing it needs
 a service restart, and the page-level fix addressed the symptom.
+
+## Round 5 — inline edit of a seed's school / department / roster URL (2026-09-19)
+
+Motivation from the operator: school sites reorganise, so a roster URL cannot be
+assumed stable; previously the only way to change one was delete + create, which
+loses the id and its run history.
+
+Implementation: 修改 turns the row into inputs (school / department / URL) with
+保存 / 取消; the URL field is focused and selected on entry; Enter saves, Escape
+cancels; a scheme-less URL gets `https://`; saves go through the existing
+`PUT /api/canonical-v2/admin/seeds/{id}`; a duplicate URL (409) shows
+该名册 URL 已存在 and the row stays editable.
+
+Evidence (real browser, scratch console on 18297 against `miroflow_collection_v1`,
+38 real rows):
+
+| path | result |
+|---|---|
+| click 修改 | row switches to inputs, prefilled, URL focused+selected, hint 回车保存 · Esc 取消 |
+| edit URL → 保存 | banner 已更新采集源 30，下次触发生效；database row changed (`seed_url` + `updated_at`) |
+| save a URL that already exists | banner 该名册 URL 已存在；row kept in edit mode |
+| restore the original URL → 保存 | database restored; table still 38 rows |
+| page tests | 47 passed, 1 skipped (the skip needs a test database) |
+
+Not done: no URL history/audit trail (the change overwrites), no bulk edit.
