@@ -12,6 +12,7 @@
         --muted: #62727d;
         --navy-strong: #0d2c41;
         --teal: #168b82;
+        --teal-strong: #0f6f68;
         --teal-soft: #e7f5f2;
         --blue-soft: #edf4f8;
         --amber: #b66916;
@@ -101,6 +102,8 @@
         border-radius: var(--radius);
         box-shadow: var(--shadow);
         padding: 20px 22px;
+        scroll-margin-top: 16px;
+        min-width: 0;
       }
 
       .card > header {
@@ -124,20 +127,74 @@
         border-radius: 999px;
         border: 1px solid var(--line-strong);
         color: var(--muted);
-        background: var(--surface);
-        margin-right: 4px;
+        background: #f6f8f9;
         white-space: nowrap;
       }
       .pill.ok { color: #0d5f57; background: var(--teal-soft); border-color: #a9ded6; }
       .pill.warn { color: #8a5312; background: var(--amber-soft); border-color: #e8c894; }
       .pill.bad { color: #8b2f3b; background: var(--danger-soft); border-color: #e6b7bd; }
 
-      table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
-      th, td { text-align: left; padding: 7px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
-      th { color: var(--muted); font-weight: 600; white-space: nowrap; }
-      td.mono, .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.8rem; }
+      .table-wrap { overflow-x: auto; margin: 0 -6px; padding: 0 6px; }
 
-      .actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+      table {
+        width: 100%;
+        min-width: 1080px;
+        border-collapse: collapse;
+        font-size: 0.85rem;
+        table-layout: fixed;
+      }
+      th, td {
+        text-align: left;
+        padding: 10px 10px;
+        border-bottom: 1px solid var(--line);
+        vertical-align: middle;
+      }
+      th {
+        color: var(--muted);
+        font-weight: 600;
+        font-size: 0.78rem;
+        white-space: nowrap;
+        letter-spacing: 0.02em;
+        background: #f8fafb;
+      }
+      tbody tr:hover { background: #fafcfc; }
+      td.mono, .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.8rem; }
+      .muted { color: var(--muted); }
+      .small { font-size: 0.76rem; }
+      .nowrap { white-space: nowrap; }
+
+      .col-school { width: 25%; }
+      .col-when { width: 142px; }
+      .col-actions { width: 340px; }
+
+      .school-name { display: block; font-weight: 600; }
+      .school-dept { display: block; color: var(--muted); font-size: 0.78rem; }
+      .row-id {
+        display: inline-block;
+        margin-left: 6px;
+        padding: 0 6px;
+        border-radius: 6px;
+        background: #eef2f4;
+        color: var(--muted);
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 0.72rem;
+        font-weight: 400;
+        vertical-align: 1px;
+      }
+
+      .url {
+        display: block;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 0.78rem;
+      }
+
+      .when { display: block; color: var(--muted); font-size: 0.74rem; margin-top: 2px; }
+
+      .actions { display: flex; gap: 6px; align-items: center; flex-wrap: nowrap; }
+
       button {
         cursor: pointer;
         border-radius: 999px;
@@ -145,15 +202,19 @@
         background: #fff;
         padding: 6px 14px;
         font-size: 0.84rem;
+        white-space: nowrap;
       }
-      button.primary { background: var(--teal); border-color: var(--teal); color: #fff; }
+      button.primary { background: var(--teal-strong); border-color: var(--teal-strong); color: #fff; }
       button.danger { color: var(--danger); border-color: #e6b7bd; }
+      button.mini { padding: 5px 11px; font-size: 0.78rem; }
       button:disabled { cursor: not-allowed; opacity: 0.55; }
+
       select, input {
-        padding: 6px 10px;
+        padding: 7px 10px;
         border: 1px solid var(--line-strong);
         border-radius: 10px;
         background: #fff;
+        width: 100%;
       }
 
       .notice {
@@ -163,14 +224,19 @@
         margin-bottom: 12px;
         border: 1px solid var(--line-strong);
         background: var(--blue-soft);
+        scroll-margin-top: 16px;
       }
       .notice.ok { background: var(--teal-soft); border-color: #a9ded6; }
       .notice.bad { background: var(--danger-soft); border-color: #e6b7bd; }
       .notice.hidden { display: none; }
 
-      .toolbar { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
-      .grid-form { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
-      .footnote { font-size: 0.78rem; color: var(--muted); margin-top: 8px; }
+      .toolbar { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 10px; }
+      .grid-form { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+      .field { display: flex; flex-direction: column; gap: 4px; }
+      .field > span { font-size: 0.78rem; color: var(--muted); }
+      .form-actions { margin-top: 14px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+      .footnote { font-size: 0.78rem; color: var(--muted); margin: 8px 0 0; }
+      .empty { padding: 18px 10px; color: var(--muted); font-size: 0.84rem; }
       .hidden { display: none !important; }
     </style>
   </head>
@@ -179,7 +245,7 @@
       <div class="topbar-inner">
         <div class="brand">
           <strong>Seed 管理</strong>
-          <span>Canonical V2 · 教授采集源 CRUD / 触发 / 运行记录</span>
+          <span>Canonical V2 · 教授采集源管理 / 触发抓取 / 运行记录</span>
         </div>
         <nav class="nav">
           <a href="/main">首页</a>
@@ -199,36 +265,52 @@
     <main>
       <div class="notice hidden" id="banner" role="status"></div>
 
-      <section class="card" aria-label="新增 seed" id="createCard">
+      <section class="card" aria-label="新增采集源" id="createCard">
         <header>
-          <h2>新增 seed</h2>
-          <span class="hint" id="pgHint">正在探测构建期 PostgreSQL…</span>
+          <h2>新增采集源</h2>
+          <span class="hint" id="pgHint">正在探测采集库…</span>
         </header>
         <div class="grid-form">
-          <label>学校 <input id="newSchool" type="text" maxlength="200" /></label>
-          <label>院系（可空） <input id="newDepartment" type="text" maxlength="200" /></label>
-          <label>名册 URL <input id="newUrl" type="url" /></label>
-          <div class="actions"><button class="primary" id="createBtn" type="button">创建</button></div>
+          <label class="field">
+            <span>学校</span>
+            <input id="newSchool" type="text" maxlength="200" placeholder="例如：南方科技大学" />
+          </label>
+          <label class="field">
+            <span>院系（可空）</span>
+            <input id="newDepartment" type="text" maxlength="200" placeholder="例如：计算机科学与工程系" />
+          </label>
+          <label class="field">
+            <span>名册 URL</span>
+            <input id="newUrl" type="url" placeholder="https://…/szdw.htm" />
+          </label>
         </div>
-        <p class="footnote">
-          触发抓取只走闸门：preview（默认，最轻）/ sample（必须带上限）/ full（不带上限）。
-          页面不提供 full 之外的放大口径，full 亦受闸门与采集开关约束。
-        </p>
+        <div class="form-actions">
+          <button class="primary" id="createBtn" type="button">新增采集源</button>
+          <span class="footnote" style="margin: 0">学校与名册 URL 必填；URL 需命中已注册的学校适配器，否则触发时会记为「缺少适配器」。</span>
+        </div>
       </section>
 
-      <section class="card" aria-label="seed 清单">
+      <section class="card" aria-label="采集源清单">
         <header>
-          <h2>seed 清单</h2>
+          <h2>采集源清单</h2>
           <span class="hint" id="listHint">加载中…</span>
         </header>
         <div class="toolbar">
-          <button id="refresh" type="button">刷新</button>
+          <button id="refresh" type="button" class="mini">刷新</button>
+          <span class="footnote" style="margin: 0">
+            按学校排序；触发抓取走闸门：预览 = 只跑发现阶段（不写画像）；抽样 = 抓取上限 20 条画像。
+          </span>
         </div>
-        <div style="overflow-x: auto">
+        <div class="table-wrap">
           <table>
+            <colgroup>
+              <col class="col-school" />
+              <col />
+              <col class="col-when" />
+              <col class="col-actions" />
+            </colgroup>
             <thead>
               <tr>
-                <th>ID</th>
                 <th>学校 / 院系</th>
                 <th>名册 URL</th>
                 <th>最近运行</th>
@@ -236,19 +318,19 @@
               </tr>
             </thead>
             <tbody id="seedRows">
-              <tr><td colspan="5">加载中…</td></tr>
+              <tr><td colspan="4" class="empty">加载中…</td></tr>
             </tbody>
           </table>
         </div>
         <p class="footnote" id="degraded" hidden>
-          本机没有构建期 PostgreSQL，seed 清单与触发不可用（页面入口已隐藏）。
+          控制台没有可用的采集库（DATABASE_URL），采集源清单与触发不可用。
         </p>
       </section>
 
-      <section class="card" aria-label="运行记录">
+      <section class="card" aria-label="运行记录" id="runsCard">
         <header>
           <h2>运行记录</h2>
-          <span class="hint" id="runHint">选择一条 seed 查看刷新记录</span>
+          <span class="hint" id="runHint">选择一条采集源查看刷新记录</span>
         </header>
         <div id="runBody"><p class="footnote">尚未选择。</p></div>
       </section>
@@ -260,6 +342,7 @@
       const rows = document.getElementById("seedRows");
       const runBody = document.getElementById("runBody");
       const runHint = document.getElementById("runHint");
+      const runsCard = document.getElementById("runsCard");
       const createCard = document.getElementById("createCard");
       const createBtn = document.getElementById("createBtn");
 
@@ -269,6 +352,36 @@
         in_progress: "进行中",
         never_run: "未运行",
         adapter_missing: "缺少适配器",
+      };
+
+      /* 未运行是中性状态：不打警告色，也不显示空时间。 */
+      const RUN_KIND = {
+        success: "ok",
+        failure: "bad",
+        adapter_missing: "bad",
+        in_progress: "warn",
+        never_run: "",
+      };
+
+      const RUN_STATUS_LABEL = {
+        succeeded: "成功",
+        failed: "失败",
+        running: "进行中",
+        queued: "排队中",
+        skipped: "已跳过",
+      };
+
+      const MODE_LABEL = {
+        preview: "预览",
+        sample: "抽样",
+        full: "全量",
+      };
+
+      const TRIGGER_LABEL = {
+        manual: "手动",
+        schedule: "定时",
+        scheduled: "定时",
+        admin: "管理台",
       };
 
       const ERROR_TEXT = {
@@ -285,6 +398,7 @@
       function say(text, kind) {
         banner.className = "notice" + (kind ? " " + kind : "");
         banner.textContent = text;
+        banner.scrollIntoView({ block: "nearest", behavior: "smooth" });
       }
 
       function pill(text, kind) {
@@ -300,6 +414,18 @@
       function clip(text, limit) {
         const value = String(text == null ? "" : text).replace(/\s+/g, " ").trim();
         return value.length > limit ? value.slice(0, limit) + "…" : value;
+      }
+
+      /* ISO（UTC）→ 本地 “YYYY-MM-DD HH:mm”；解析不了就原样显示。 */
+      function when(iso) {
+        if (!iso) return "";
+        const parsed = new Date(iso);
+        if (isNaN(parsed.getTime())) return String(iso);
+        const pad = function (value) { return String(value).padStart(2, "0"); };
+        return (
+          parsed.getFullYear() + "-" + pad(parsed.getMonth() + 1) + "-" + pad(parsed.getDate()) +
+          " " + pad(parsed.getHours()) + ":" + pad(parsed.getMinutes())
+        );
       }
 
       /* Why a run failed, inline under its status pill. `exit_code` and
@@ -328,8 +454,8 @@
         createCard.hidden = unavailable;
         document.getElementById("degraded").hidden = !unavailable;
         document.getElementById("pgHint").textContent = unavailable
-          ? "构建期 PostgreSQL 不可用：入口已隐藏。"
-          : "构建期 PostgreSQL 可用。";
+          ? "采集库不可用：新增入口已隐藏。"
+          : "采集库可用。";
       }
 
       async function loadSeeds() {
@@ -338,38 +464,48 @@
           const payload = await response.json();
           if (response.status === 503) {
             setDegraded(true);
-            rows.innerHTML = '<tr><td colspan="5">seed 管理不可用（无构建期 PostgreSQL）。</td></tr>';
+            rows.innerHTML = '<tr><td colspan="4" class="empty">采集源清单不可用（无可用采集库）。</td></tr>';
             return;
           }
           setDegraded(false);
           renderSeeds(payload || []);
         } catch (error) {
-          rows.innerHTML = '<tr><td colspan="5">读取失败：' + error + "</td></tr>";
+          rows.innerHTML = '<tr><td colspan="4" class="empty">读取失败：' + error + "</td></tr>";
         }
       }
 
       function renderSeeds(seeds) {
         document.getElementById("listHint").textContent = "共 " + seeds.length + " 条";
         if (!seeds.length) {
-          rows.innerHTML = '<tr><td colspan="5">暂无 seed。</td></tr>';
+          rows.innerHTML = '<tr><td colspan="4" class="empty">暂无采集源，可在上方新增。</td></tr>';
           return;
         }
         rows.innerHTML = seeds
           .map(function (seed) {
             const status = seed.last_run_status || "never_run";
-            const kind = status === "success" ? "ok" : status === "failure" ? "bad" : "warn";
+            const stamp = when(seed.last_run_at);
             return (
               "<tr>" +
-              '<td class="mono">' + seed.id + "</td>" +
-              "<td>" + seed.school + (seed.department ? " / " + seed.department : "") + "</td>" +
-              '<td class="mono">' + seed.seed_url + "</td>" +
-              "<td>" + pill(RUN_LABEL[status] || status, kind) + "<br /><span class='footnote'>" +
-              (seed.last_run_at || "—") + "</span></td>" +
+              "<td>" +
+              '<span class="school-name">' + escapeHtml(seed.school) +
+              '<span class="row-id" title="采集源编号">#' + seed.id + "</span></span>" +
+              (seed.department
+                ? '<span class="school-dept">' + escapeHtml(seed.department) + "</span>"
+                : "") +
+              "</td>" +
+              '<td><span class="url" title="' + escapeHtml(seed.seed_url) + '">' +
+              escapeHtml(seed.seed_url) + "</span></td>" +
+              "<td>" + pill(RUN_LABEL[status] || status, RUN_KIND[status] || "") +
+              (stamp ? '<span class="when">' + stamp + "</span>" : "") + "</td>" +
               '<td><div class="actions">' +
-              '<button data-action="preview" data-id="' + seed.id + '">preview</button>' +
-              '<button data-action="sample" data-id="' + seed.id + '">sample(20)</button>' +
-              '<button data-action="runs" data-id="' + seed.id + '">运行记录</button>' +
-              '<button class="danger" data-action="delete" data-id="' + seed.id + '">删除</button>' +
+              '<button class="mini" data-action="preview" data-id="' + seed.id +
+              '" title="只跑发现阶段，不写画像">预览抓取</button>' +
+              '<button class="mini" data-action="sample" data-id="' + seed.id +
+              '" title="抓取上限 20 条画像">抽样抓取</button>' +
+              '<button class="mini" data-action="runs" data-id="' + seed.id +
+              '">运行记录</button>' +
+              '<button class="mini danger" data-action="delete" data-id="' + seed.id +
+              '">删除</button>' +
               "</div></td></tr>"
             );
           })
@@ -387,12 +523,15 @@
           return;
         }
         if (action === "delete") {
-          if (!window.confirm("删除 seed " + seedId + "？")) return;
+          if (!window.confirm("删除采集源 " + seedId + "？该操作不影响已采集的数据。")) return;
           const response = await fetch(API + "/seeds/" + seedId, { method: "DELETE" });
-          say(response.ok ? "已删除 seed " + seedId + "。" : "删除失败（HTTP " + response.status + "）。",
+          say(response.ok ? "已删除采集源 " + seedId + "。" : "删除失败（HTTP " + response.status + "）。",
               response.ok ? "ok" : "bad");
           loadSeeds();
           return;
+        }
+        if (action === "sample") {
+          if (!window.confirm("对采集源 " + seedId + " 触发抽样抓取（上限 20 条画像）？会真实访问学校网站。")) return;
         }
         const body = action === "sample" ? { mode: "sample", limit: 20 } : { mode: "preview" };
         const response = await fetch(API + "/seeds/" + seedId + "/trigger", {
@@ -411,34 +550,41 @@
       }
 
       async function loadRuns(seedId) {
-        runHint.textContent = "seed " + seedId;
+        runHint.textContent = "采集源 " + seedId;
+        runsCard.scrollIntoView({ block: "start", behavior: "smooth" });
         const response = await fetch(API + "/seeds/" + seedId + "/runs");
         const payload = await response.json().catch(function () { return {}; });
         if (!response.ok) {
-          runBody.innerHTML = "<p>" + describeError(payload, response.status) + "</p>";
+          runBody.innerHTML = "<p class='footnote'>" + describeError(payload, response.status) + "</p>";
           return;
         }
         const runs = payload.runs || [];
         if (!runs.length) {
-          runBody.innerHTML = "<p class='footnote'>该 seed 还没有通过本面触发的运行记录。</p>";
+          runBody.innerHTML = "<p class='footnote'>该采集源还没有通过本面触发的运行记录。</p>";
           return;
         }
         runBody.innerHTML =
-          "<table><thead><tr><th>运行</th><th>任务</th><th>模式</th><th>状态</th>" +
+          '<div class="table-wrap"><table><colgroup><col style="width:78px" /><col />' +
+          '<col style="width:70px" /><col style="width:150px" /><col style="width:70px" />' +
+          '<col style="width:110px" /><col style="width:132px" /></colgroup>' +
+          "<thead><tr><th>运行</th><th>任务</th><th>模式</th><th>状态</th>" +
           "<th>触发</th><th>操作人</th><th>开始</th></tr></thead><tbody>" +
           runs.map(function (run) {
             const summary = (run.summary && run.summary.job_summary) || {};
+            const status = run.status || "";
+            const statusKind = status === "succeeded" ? "ok" : status === "failed" ? "bad" : "warn";
+            const mode = summary.trigger_mode || "";
+            const trigger = run.trigger_source || "";
             return (
-              "<tr><td class='mono'>" + run.run_id.slice(0, 8) + "…</td>" +
-              "<td>" + run.task_id + "</td>" +
-              "<td>" + (summary.trigger_mode || "—") + "</td>" +
-              "<td>" + pill(run.status, run.status === "succeeded" ? "ok" :
-                run.status === "failed" ? "bad" : "warn") + failureReason(run) + "</td>" +
-              "<td>" + run.trigger_source + "</td>" +
-              "<td>" + run.operator + "</td>" +
-              "<td>" + run.started_at + "</td></tr>"
+              "<tr><td class='mono muted nowrap'>" + escapeHtml(String(run.run_id).slice(0, 8)) + "…</td>" +
+              "<td class='small'>" + escapeHtml(run.task_id) + "</td>" +
+              "<td class='nowrap'>" + escapeHtml(MODE_LABEL[mode] || mode || "—") + "</td>" +
+              "<td>" + pill(RUN_STATUS_LABEL[status] || status, statusKind) + failureReason(run) + "</td>" +
+              "<td class='nowrap'>" + escapeHtml(TRIGGER_LABEL[trigger] || trigger) + "</td>" +
+              "<td class='small nowrap'>" + escapeHtml(run.operator) + "</td>" +
+              "<td class='when' style='margin-top:0'>" + (when(run.started_at) || "—") + "</td></tr>"
             );
-          }).join("") + "</tbody></table>";
+          }).join("") + "</tbody></table></div>";
       }
 
       createBtn.addEventListener("click", async function () {
@@ -458,7 +604,7 @@
         });
         const result = await response.json().catch(function () { return {}; });
         if (response.ok) {
-          say("已创建 seed " + result.id + "。", "ok");
+          say("已新增采集源 " + result.id + "。", "ok");
           document.getElementById("newSchool").value = "";
           document.getElementById("newDepartment").value = "";
           document.getElementById("newUrl").value = "";
