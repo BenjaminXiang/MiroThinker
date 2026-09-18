@@ -158,6 +158,7 @@
         background: #f8fafb;
       }
       tbody tr:hover { background: #fafcfc; }
+      tr.editing { background: #f2faf8; }
       td.mono, .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.8rem; }
       .muted { color: var(--muted); }
       .small { font-size: 0.76rem; }
@@ -216,6 +217,9 @@
         background: #fff;
         width: 100%;
       }
+      .edit-stack { display: flex; flex-direction: column; gap: 6px; }
+      .edit-url { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.78rem; }
+      .edit-hint { display: block; font-size: 0.72rem; color: var(--muted); margin-top: 4px; }
 
       .notice {
         border-radius: 12px;
@@ -298,7 +302,7 @@
         <div class="toolbar">
           <button id="refresh" type="button" class="mini">刷新</button>
           <span class="footnote" style="margin: 0">
-            按学校排序；触发抓取走闸门：预览 = 只跑发现阶段（不写画像）；抽样 = 抓取上限 20 条画像。
+            按学校排序；触发抓取走闸门：预览 = 只跑发现阶段（不写画像）；抽样 = 抓取上限 20 条画像。学校改了名册 URL 后，用「修改」就地更新。
           </span>
         </div>
         <div class="table-wrap">
@@ -345,6 +349,10 @@
       const runsCard = document.getElementById("runsCard");
       const createCard = document.getElementById("createCard");
       const createBtn = document.getElementById("createBtn");
+
+      let lastSeeds = [];
+      let editingId = null;
+      let saving = false;
 
       const RUN_LABEL = {
         success: "成功",
@@ -428,6 +436,13 @@
         );
       }
 
+      /* 名册 URL 一律要求显式协议，免得后端按 HttpUrl 校验时给一个难懂的 422。 */
+      function normalizeUrl(value) {
+        const trimmed = String(value == null ? "" : value).trim();
+        if (!trimmed) return "";
+        return /^https?:\/\//i.test(trimmed) ? trimmed : "https://" + trimmed;
+      }
+
       /* Why a run failed, inline under its status pill. `exit_code` and
          `stderr_excerpt` came later than the other run fields: absent ones are
          simply not rendered. */
@@ -458,6 +473,15 @@
           : "采集库可用。";
       }
 
+      function statusCell(seed) {
+        const status = seed.last_run_status || "never_run";
+        const stamp = when(seed.last_run_at);
+        return (
+          pill(RUN_LABEL[status] || status, RUN_KIND[status] || "") +
+          (stamp ? '<span class="when">' + stamp + "</span>" : "")
+        );
+      }
+
       async function loadSeeds() {
         try {
           const response = await fetch(API + "/seeds");
@@ -468,73 +492,128 @@
             return;
           }
           setDegraded(false);
-          renderSeeds(payload || []);
+          lastSeeds = payload || [];
+          renderSeeds();
         } catch (error) {
           rows.innerHTML = '<tr><td colspan="4" class="empty">读取失败：' + error + "</td></tr>";
         }
       }
 
-      function renderSeeds(seeds) {
+      function renderSeeds() {
+        const seeds = lastSeeds;
         document.getElementById("listHint").textContent = "共 " + seeds.length + " 条";
         if (!seeds.length) {
           rows.innerHTML = '<tr><td colspan="4" class="empty">暂无采集源，可在上方新增。</td></tr>';
           return;
         }
-        rows.innerHTML = seeds
-          .map(function (seed) {
-            const status = seed.last_run_status || "never_run";
-            const stamp = when(seed.last_run_at);
-            return (
-              "<tr>" +
-              "<td>" +
-              '<span class="school-name">' + escapeHtml(seed.school) +
-              '<span class="row-id" title="采集源编号">#' + seed.id + "</span></span>" +
-              (seed.department
-                ? '<span class="school-dept">' + escapeHtml(seed.department) + "</span>"
-                : "") +
-              "</td>" +
-              '<td><span class="url" title="' + escapeHtml(seed.seed_url) + '">' +
-              escapeHtml(seed.seed_url) + "</span></td>" +
-              "<td>" + pill(RUN_LABEL[status] || status, RUN_KIND[status] || "") +
-              (stamp ? '<span class="when">' + stamp + "</span>" : "") + "</td>" +
-              '<td><div class="actions">' +
-              '<button class="mini" data-action="preview" data-id="' + seed.id +
-              '" title="只跑发现阶段，不写画像">预览抓取</button>' +
-              '<button class="mini" data-action="sample" data-id="' + seed.id +
-              '" title="抓取上限 20 条画像">抽样抓取</button>' +
-              '<button class="mini" data-action="runs" data-id="' + seed.id +
-              '">运行记录</button>' +
-              '<button class="mini danger" data-action="delete" data-id="' + seed.id +
-              '">删除</button>' +
-              "</div></td></tr>"
-            );
-          })
-          .join("");
+        rows.innerHTML = seeds.map(renderRow).join("");
         Array.prototype.forEach.call(rows.querySelectorAll("button[data-action]"), function (button) {
           button.addEventListener("click", function () {
             handleAction(button.dataset.action, button.dataset.id);
           });
         });
+        if (editingId !== null) {
+          const row = rows.querySelector("tr.editing");
+          if (row) {
+            const urlInput = row.querySelector(".edit-url");
+            if (urlInput) {
+              urlInput.focus();
+              urlInput.select();
+            }
+            row.addEventListener("keydown", function (event) {
+              if (event.key === "Enter") {
+                event.preventDefault();
+                saveSeed(editingId);
+              } else if (event.key === "Escape") {
+                event.preventDefault();
+                editingId = null;
+                renderSeeds();
+              }
+            });
+          }
+        }
+      }
+
+      function renderRow(seed) {
+        if (seed.id === editingId) {
+          return (
+            '<tr class="editing">' +
+            '<td><div class="edit-stack">' +
+            '<input class="edit-school" maxlength="200" value="' + escapeHtml(seed.school) +
+            '" aria-label="学校" placeholder="学校" />' +
+            '<input class="edit-dept" maxlength="200" value="' + escapeHtml(seed.department || "") +
+            '" aria-label="院系" placeholder="院系（可空）" />' +
+            "</div></td>" +
+            '<td><input class="edit-url" type="url" value="' + escapeHtml(seed.seed_url) +
+            '" aria-label="名册 URL" />' +
+            '<span class="edit-hint">回车保存 · Esc 取消</span></td>' +
+            "<td>" + statusCell(seed) + "</td>" +
+            '<td><div class="actions">' +
+            '<button class="mini primary" data-action="save" data-id="' + seed.id + '">保存</button>' +
+            '<button class="mini" data-action="cancel" data-id="' + seed.id + '">取消</button>' +
+            "</div></td></tr>"
+          );
+        }
+        return (
+          "<tr>" +
+          "<td>" +
+          '<span class="school-name">' + escapeHtml(seed.school) +
+          '<span class="row-id" title="采集源编号">#' + seed.id + "</span></span>" +
+          (seed.department
+            ? '<span class="school-dept">' + escapeHtml(seed.department) + "</span>"
+            : "") +
+          "</td>" +
+          '<td><span class="url" title="' + escapeHtml(seed.seed_url) + '">' +
+          escapeHtml(seed.seed_url) + "</span></td>" +
+          "<td>" + statusCell(seed) + "</td>" +
+          '<td><div class="actions">' +
+          '<button class="mini" data-action="preview" data-id="' + seed.id +
+          '" title="只跑发现阶段，不写画像">预览抓取</button>' +
+          '<button class="mini" data-action="sample" data-id="' + seed.id +
+          '" title="抓取上限 20 条画像">抽样抓取</button>' +
+          '<button class="mini" data-action="edit" data-id="' + seed.id +
+          '" title="修改学校 / 院系 / 名册 URL">修改</button>' +
+          '<button class="mini" data-action="runs" data-id="' + seed.id +
+          '">运行记录</button>' +
+          '<button class="mini danger" data-action="delete" data-id="' + seed.id +
+          '">删除</button>' +
+          "</div></td></tr>"
+        );
       }
 
       async function handleAction(action, seedId) {
+        const id = Number(seedId);
+        if (action === "edit") {
+          editingId = id;
+          renderSeeds();
+          return;
+        }
+        if (action === "cancel") {
+          editingId = null;
+          renderSeeds();
+          return;
+        }
+        if (action === "save") {
+          await saveSeed(id);
+          return;
+        }
         if (action === "runs") {
-          loadRuns(seedId);
+          loadRuns(id);
           return;
         }
         if (action === "delete") {
-          if (!window.confirm("删除采集源 " + seedId + "？该操作不影响已采集的数据。")) return;
-          const response = await fetch(API + "/seeds/" + seedId, { method: "DELETE" });
-          say(response.ok ? "已删除采集源 " + seedId + "。" : "删除失败（HTTP " + response.status + "）。",
+          if (!window.confirm("删除采集源 " + id + "？该操作不影响已采集的数据。")) return;
+          const response = await fetch(API + "/seeds/" + id, { method: "DELETE" });
+          say(response.ok ? "已删除采集源 " + id + "。" : "删除失败（HTTP " + response.status + "）。",
               response.ok ? "ok" : "bad");
           loadSeeds();
           return;
         }
         if (action === "sample") {
-          if (!window.confirm("对采集源 " + seedId + " 触发抽样抓取（上限 20 条画像）？会真实访问学校网站。")) return;
+          if (!window.confirm("对采集源 " + id + " 触发抽样抓取（上限 20 条画像）？会真实访问学校网站。")) return;
         }
         const body = action === "sample" ? { mode: "sample", limit: 20 } : { mode: "preview" };
-        const response = await fetch(API + "/seeds/" + seedId + "/trigger", {
+        const response = await fetch(API + "/seeds/" + id + "/trigger", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(body),
@@ -542,11 +621,43 @@
         const payload = await response.json().catch(function () { return {}; });
         if (response.ok) {
           say("已触发（" + payload.task_id + "），运行 " + payload.run_id + " 已入闸门。", "ok");
-          loadRuns(seedId);
+          loadRuns(id);
         } else {
           say(describeError(payload, response.status), "bad");
         }
         loadSeeds();
+      }
+
+      /* 就地改学校 / 院系 / 名册 URL（PUT /seeds/{id}）。URL 重复时后端回 409。 */
+      async function saveSeed(seedId) {
+        if (saving) return;
+        const row = rows.querySelector("tr.editing");
+        if (!row) return;
+        const school = row.querySelector(".edit-school").value.trim();
+        const department = row.querySelector(".edit-dept").value.trim() || null;
+        const seedUrl = normalizeUrl(row.querySelector(".edit-url").value);
+        if (!school || !seedUrl) {
+          say("学校和名册 URL 必填。", "bad");
+          return;
+        }
+        saving = true;
+        try {
+          const response = await fetch(API + "/seeds/" + seedId, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ school: school, department: department, seed_url: seedUrl }),
+          });
+          const payload = await response.json().catch(function () { return {}; });
+          if (response.ok) {
+            editingId = null;
+            say("已更新采集源 " + seedId + "，下次触发生效。", "ok");
+            loadSeeds();
+          } else {
+            say(describeError(payload, response.status), "bad");
+          }
+        } finally {
+          saving = false;
+        }
       }
 
       async function loadRuns(seedId) {
@@ -591,7 +702,7 @@
         const payload = {
           school: document.getElementById("newSchool").value.trim(),
           department: document.getElementById("newDepartment").value.trim() || null,
-          seed_url: document.getElementById("newUrl").value.trim(),
+          seed_url: normalizeUrl(document.getElementById("newUrl").value),
         };
         if (!payload.school || !payload.seed_url) {
           say("学校和名册 URL 必填。", "bad");
