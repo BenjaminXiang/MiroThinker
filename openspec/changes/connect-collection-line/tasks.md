@@ -2,63 +2,93 @@
 
 ## A · Console DSN contract (single source)
 
-- \[ \] A1 `backend/deps.py`: `resolve_console_dsn()` — the only reader of
+- \[x\] A1 `backend/deps.py`: `resolve_console_dsn()` — the only reader of
   `DATABASE_URL` / `DATABASE_URL_TEST`; returns `str | None`; blank strings count as
   unset. → verify: unit tests for both names, precedence, blank handling.
-- \[ \] A2 `backend/main.py`: resolve once at start, carry on `app.state`, hand the
+- \[x\] A2 `backend/main.py`: resolve once at start, carry on `app.state`, hand the
   value to the jobs gate; log configured/not-configured (never the DSN itself).
-  → verify: app test for both states.
-- \[ \] A3 Repoint the reachable readers at the resolved value:
+  → verify: app test for both states. **Note:** the line is emitted at INFO on the
+  `backend.main` logger, which the current process logging configuration does not
+  surface; the wiring is proved instead by `/proc/<pid>/environ` plus a real call of
+  `_resolve_console_database()` and of `PostgresProbe.describe()`
+  (`available: True, source: DATABASE_URL`).
+- \[x\] A3 Repoint the reachable readers at the resolved value:
   `canonical_v2_seeds._seed_connection`, the uploads precheck path
   (`canonical_v2_uploads` → `upload._resolve_upload_dsn`), and
   `canonical_v2_admin_status`'s build-database freshness text. → verify: with only
   `CANONICAL_V2_DATABASE_URL` set, the console reports its database unavailable and
-  gated endpoints answer a stable 503 (never 500).
-- \[ \] A4 `PostgresProbe.ENV_ORDER` drops `CANONICAL_V2_DATABASE_URL` and gains
+  gated endpoints answer a stable 503 `console_database_not_configured` (never 500).
+- \[x\] A4 `PostgresProbe.ENV_ORDER` drops `CANONICAL_V2_DATABASE_URL` and gains
   `resolved_dsn()`; probe and injection share it. → verify: probe tests for the two
   accepted names and the now-ignored one.
 
 ## B · Gate injects the DSN into spawned jobs
 
-- \[ \] B1 `JobRuntime._execute` injects `DATABASE_URL` (when resolved) into the child
+- \[x\] B1 `JobRuntime._execute` injects `DATABASE_URL` (when resolved) into the child
   env beside the four existing keys. → verify: runner test asserts the key, its
   absence when unresolved, and keeps the existing "env is never persisted" assertion
   green.
 
 ## C · Provisioning and wiring (this deployment)
 
-- \[ \] C1 Create `miroflow_collection_v1` with the destructive-target marker; apply
+- \[x\] C1 Create `miroflow_collection_v1` with the destructive-target marker; apply
   alembic to head (`V042`); verify the five key tables and a real `list_seeds` read.
-  → verify: commands + observed output in the run evidence.
-- \[ \] C2 systemd drop-in `database-url.conf` carrying the console DSN;
-  `daemon-reload`; restart; wait for `/api/health`. → verify: boot log + health 200.
-- \[ \] C3 Live-line verification: `/seeds` 200 with an empty list; create → update →
-  delete a real seed; `/jobs` shows the run; `/upload` precheck green.
+  → verify: dry run on a throwaway database first (43 revisions, 0.8 s, 42 tables),
+  then the keeper database; offline CRUD rehearsal through the console store and the
+  crawler's `_load_seed`.
+- \[x\] C2 systemd drop-in `database-url.conf` carrying the console DSN;
+  `daemon-reload`; restart; wait for `/api/health`. → verify: boot 660 s, health 200,
+  `DATABASE_URL` present in the serving process environment, public faces unchanged
+  (`/chat` 200, gates 302).
+- \[ \] C3 Live-line verification **page half pending a session**: the no-session half
+  passed (probe available, new page markers served). Still to run with an
+  authenticated operator: `/seeds` 200 with the imported registry, create → update →
+  delete, trigger, `/jobs` run visibility.
 
 ## D · Roster import and adapter coverage
 
-- \[ \] D1 `apps/admin-console/scripts/import_professor_seeds.py` (idempotent,
+- \[x\] D1 `apps/admin-console/scripts/import_professor_seeds.py` (idempotent,
   dry-run default, `--apply` to write): parse with `parse_roster_seed_markdown()`,
   skip by `seed_url` via `get_seed_by_url`, report created/skipped/unresolved.
-  → verify: unit tests against a temporary schema + a dry run over the local corpus.
-- \[ \] D2 pkusz registry matcher with a test; corrected URLs for the two wrong-shaped
-  SZTU entries in the roster sources; re-run the classifier → 39/39 resolve.
+  → verify: 10 unit tests (stub registry, no database) + a real dry run
+  (50 parsed → 39 distinct → would_create 38) and a real `--apply` (38 rows, second
+  run creates 0).
+- \[ \] D2 pkusz registry matcher with a test (done: `pkusz-szdw-hub`, 5 tests) and
+  corrected SZTU URLs. **38 of 39 resolve** — the `nmne.sztu.edu.cn`
+  `picturers.jsp` entry has no `/szdw…` URL on its host (all such paths 404) and the
+  `sztu-teacher-family` matcher is deliberately narrow, so it is skipped by the
+  importer and recorded here rather than papered over by a broad matcher.
 
 ## E · Entry honesty and failure visibility
 
-- \[ \] E1 `nav_auth.js` hides `[data-requires-postgres]` entries when the console
-  database is unconfigured; `main.html` marks `/seeds` and `/upload`.
-  → verify: page-shell test.
-- \[ \] E2 `/upload` button and copy agree in the degraded state.
-- \[ \] E3 `GET /api/canonical-v2/admin/seeds/{id}/runs` carries `status`,
-  `exit_code`, `stderr_excerpt`; `seeds.html` renders the reason for a failed row.
+- \[x\] E1 `nav_auth.js` hides `[data-requires-postgres]` entries when the console
+  database is available=false; `main.html` marks `/seeds` and `/upload` (and now
+  loads the shared script). → verify: page-shell tests + fail-open cases.
+- \[x\] E2 `/upload` commit control and copy agree in the degraded state; dry-run
+  stays reachable because the backend still admits it.
+- \[x\] E3 `GET /api/canonical-v2/admin/seeds/{id}/runs` carries `status`,
+  `exit_code`, `stderr_excerpt`; `seeds.html` renders the reason for a failed row
+  (escaped + truncated) and explains `console_database_not_configured`.
   → verify: API test + page-shell test.
 
 ## F · Verification
 
-- \[ \] F1 Targeted suites green; full `apps/admin-console` before/after with zero new
-  failures.
-- \[ \] F2 One real `preview` and one `sample` (limit=5) run on the live line; quota
-  actually spent reported.
-- \[ \] F3 Evidence under `.agents/runs/connect-collection-line/`; ledger row ticked;
+- \[x\] F1 Targeted suites green (**132 passed, 1 skipped** admin-console;
+  **251 passed** professor subset); full `apps/admin-console` before/after of
+  130 failure lines each, `comm` empty in both directions (zero new failures).
+- \[ \] F2 One real `preview` and one `sample` (limit=5) run: the first `preview`
+  attempt was killed by the operator's own 280 s timeout (see the finding below) and
+  the re-run is in flight; `sample` still to run.
+- \[x\] F3 Evidence under `.agents/runs/connect-collection-line/`; ledger row ticked;
   human log appended; index line updated.
+
+## Findings recorded, not fixed here
+
+- A killed crawl leaves its `pipeline_run` row in `running` forever (no heartbeat,
+  no timeout finalizer, no stale sweep), so the registry shows that seed as
+  "进行中" indefinitely while `/jobs` knows the truth. Candidate slice.
+- The startup `console_database=` INFO line is invisible under the current process
+  logging configuration.
+- The upload commit preflight can still 500 (not 503) when the console database is
+  unconfigured on a path that does not pass the gate; unchanged from before.
+- `backend/deps.py` carries two pre-existing ruff F401s (present at HEAD).
