@@ -2048,9 +2048,9 @@ def _assert_static_and_import_quarantine(
     browse_path = _REPO_ROOT / "apps/admin-console/backend/static/browse.html"
     browse = browse_path.read_text(encoding="utf-8")
     for path in (
-        "/api/canonical-v2/admin/status",
-        "/api/canonical-v2/admin/domains/",
-        "/api/canonical-v2/operations/gaps",
+        "api/canonical-v2/admin/status",
+        "api/canonical-v2/admin/domains/",
+        "api/canonical-v2/admin/chat-gaps",
     ):
         assert path in browse
     for marker in (
@@ -2062,12 +2062,14 @@ def _assert_static_and_import_quarantine(
         "进入 V2 对话",
     ):
         assert marker in browse
-    api_literals = set(re.findall(r"/api/[A-Za-z0-9_{}./:-]+", browse))
+    api_literals = set(re.findall(r"api/[A-Za-z0-9_{}./:-]+", browse))
     assert api_literals == {
-        "/api/canonical-v2/admin/status",
-        "/api/canonical-v2/admin/domains/",
-        "/api/canonical-v2/operations/gaps",
-    }
+        "api/canonical-v2/admin/status",
+        "api/canonical-v2/admin/domains/",
+        "api/canonical-v2/admin/chat-gaps",
+        "api/canonical-v2/admin/corrections",
+        "api/canonical-v2/admin/company-documents",
+    }, sorted(api_literals)
     assert any(token in browse for token in ("textContent", "createTextNode"))
     for forbidden in (
         "/api/data/",

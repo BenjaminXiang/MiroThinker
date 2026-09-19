@@ -851,3 +851,92 @@ pack 模式的装配注入的是**内存版 gap feedback**（只有 `record`/`ap
 - **`#gaps` 直接落地会读两次台账**（概览瓦片一次、页签一次）：多一次小读换"概览不空转"，保留。
 - **活线工作区的 `AGENTS.md` 比仓库根旧**（缺"动手前检查"和"编码纪律"两节）。这是文档漂移，
   不属本片范围，仅记录。
+
+---
+
+# 第 18 轮（2026-09-20 凌晨）：登记小项收口 —— 重排来源、SPA 中断态、一条死守卫
+
+## 1. 做了什么（三件）
+
+### ① 重排端点的"来源"不再谎报环境变量
+
+`/admin` 的「模型与连接」卡里，重排那一块会自相矛盾：**生效端点**那行来自受管字段（来源标
+「受管文件」），而下面**运行期说明**那行写着 `base_url 来源 env:CANONICAL_V2_RERANK_BASE_URL` ——
+同一张卡上两个说法。
+
+根因不是"写错了字符串"，而是**投影被当成了外部钉死**：启动引导会把受管文件里的
+`extraction_endpoints.rerank_base_url` 投影进 `CANONICAL_V2_RERANK_BASE_URL`，并把这个投影记在
+`APPLIED_ENV_VAR` 里；而 `resolve_rerank` 只看"这个变量在不在环境里"，不看"它是谁放进去的"。
+同一个文件里**凭证**那一侧早就分得清（`_first_env` 会报 `managed-file(env:…)`），只有 URL 这一侧漏了。
+
+修法：让 URL 与凭证走同一条判断（`applied_env_names(environ)`），顺手把它复用给同一函数里的
+凭证解析，不再重复调用。
+
+**验证**：新增 1 条测试（`test_a_projected_rerank_endpoint_is_not_reported_as_a_bare_environment_variable`），
+同时锁两种情况——被投影的报 `managed-file(env:CANONICAL_V2_RERANK_BASE_URL)`、真·外部变量仍报
+`env:CANONICAL_V2_RERANK_BASE_URL`。**RED 取证**：把生产文件换回 HEAD 版本，该测试以
+`assert 'env:…' == 'managed-file(env:…)'` 失败；换回后 14 passed。
+
+### ② SPA 的「已中断」终于有筛选位和统计位
+
+`SeedLastRunStatus` 里的 `interrupted` 有中文标签、有行内色、也被计数，但**既没有筛选按钮也没有统计格**，
+只能从「全部」里找。补齐：筛选按钮 `已中断 N`、统计格 `已中断`，并给它一个独立色
+`--seed-interrupted: #8a2d54`（深梅红：与 `failure` 的纯红在**色相、饱和度、明度**三处同时分开，
+白底对比度 8.13:1）。
+
+顺带两处**不得不动**：表头网格原本写死 5 列（`repeat(5, auto)`），加一格会掉到孤行，改 6 列；
+行内状态标签原本复用 `error`（纯红），与新的梅红按钮/统计不一致，改为同一个梅红——否则同一个状态
+在同一页上有两种颜色。
+
+**验证**：新增 `Seeds.test.tsx`（3 条：按钮存在且带对色类、点它真的只剩中断行、每个被计数的状态都有自己的统计格）。
+**RED 取证**：把 `Seeds.tsx` 暂存回改前版本，同一文件 2 条全失败
+（`Unable to find role="button", name: "已中断 1"`）；单独移除 `never_run` 统计格时第 3 条失败（1 failed | 2 passed），
+放回后 3 passed。`npx tsc -b` 通过、`npm test` 6 文件 22 条全过、`npm run build` 通过。
+
+**同类一并修**：`never_run` 是同一个缺陷类的兄弟——它有筛选按钮，但同样**没有统计格**。既然定位到一个类，
+就一起补齐（统计格 `未运行` + `.seed-sum-never` 规则 + 表头改 7 列），不留"下一轮再说"。
+
+### ③ 一条"看起来在守卫、其实早就不跑"的静态页守卫，换成活的
+
+`test_canonical_v2_consumer_migration.py:2045` 的 `_assert_static_and_import_quarantine` 里有一组
+"静态页面只能调用白名单接口"的断言——但它挂在 `:735` 一条早就失败的断言后面（工厂签名多了一个可选参数
+就判不过），**从来没跑到**。而且它自己的钉子也烂了：6 处已过期（`Canonical V2 科创知识平台`、
+`Canonical V2 智能检索`、`renderTrace(view.bubble, trace)`、`继续检索针对性证据` 四个标记在页面上
+已不存在，接口字面量还是绝对路径写法，而页面早改成相对路径），后面还串着 3 个"冻结文件哈希"。
+
+**没有**去救那条死测试（它是一条链式冻结哈希，重钉等于重写一份迁移契约，属于另一个决定），
+而是：把那条断言里**今天仍然成立**的部分，写成一条**可达**的守卫
+（`test_the_static_pages_only_call_their_own_v2_surfaces`）：`/browse` 与 `/chat` 的接口字面量集合
+逐字锁定，其余静态页不得出现 `legacy` 接口前缀、`canonical_writer`、`Milvus`，`/browse` 不得用 innerHTML。
+
+**验证**：新守卫与既有套件 16 passed；跑之前先探针确认它真的会挡（`chat.html` 的 innerHTML 检查过严，
+随即收窄到 `/browse`——那条注释里提到 innerHTML 但声明不使用，是实测出来的差异，不是猜的）。
+
+## 2. 发现（登记，本轮不改）
+
+- **`never_run` 的统计格**：已在本轮一并修（见 ① ②），不留。
+- **`test_s11b_candidate_app_exposes_only_release_bound_v2_consumers` 是一条死测试**：实测它的失败链是
+  ① 工厂 arity 断言（`:735`）→ ② `test_canonical_v2_chat_http_adapter.py` 的冻结哈希（期望
+  `71e04271…`，实际 `5ac1d4a1…`）→ ③ SPA 文件数量与整树哈希（`len == 22`）。它携带的真正有价值的
+  守卫是**导入隔离**（子进程验证候选应用不得导入 legacy 模块）；现在等于没有守卫在跑。两条路：
+  （a）重钉全部哈希让它复活；（b）**砍掉冻结页/哈希那半边、把导入隔离单独做成一条活测试**。
+  建议 (b)——(a) 属于"为了证明而证明"，正是要消除的那类。
+- 本轮不改活线状态：唯一面向用户的改动是重排那段说明文字，而活线上重排**本来就没配**（受管文件里
+  `rerank_base_url: null`、进程环境也没有该变量），现在重启一次要付 11 分钟停机却看不到任何差别。
+  代码进活线工作区，等下一次真实重启一起生效。
+
+## 3. 怎么验证
+
+| 层 | 命令 | 结果 |
+|---|---|---|
+| ① 新测试（后端） | `pytest tests/test_canonical_v2_runtime_sources.py` | **14 passed**；RED 已取证（回退生产文件后 1 failed，报 `env:` vs `managed-file(env:`） |
+| ① 新测试（守卫） | `pytest tests/test_canonical_v2_operations_api.py` | **16 passed**（含新守卫） |
+| ① 新测试（SPA） | `npx tsc -b` / `npm test` / `npm run build` | 退出 0 / **6 文件 22 条全过** / 构建成功；`Seeds.test.tsx` 的 RED 已取证（含单独移除 `never_run` 统计格的那一条） |
+| ② 既有回归 | 9 个套件（运行时来源、operations、预览壳、管理台壳、配置页壳、模型角色页、密钥库、密钥接口、模型发现） | **1 failed, 326 passed** —— 唯一失败是既有的「国先 vs 科创」品牌断言（与本轮无关，`git show HEAD:` 逐字核对过） |
+| linter | `ruff check`（4 个改动 py 文件） | All checks passed! |
+
+## 4. 影响哪些问题
+
+- 「配置页里同一张卡两种说法」：修掉。
+- 「SPA 的 interrupted 缺筛选/统计位」：修掉（登记项清零），并顺带发现 `never_run` 同类缺格。
+- 「顺手账本卫生 · 死断言」：从"记录在案的死断言"升级为"活守卫 + 一条待决的死测试"。

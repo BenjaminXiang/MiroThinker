@@ -337,8 +337,18 @@ def resolve_rerank(
         ENV_MODEL,
     )
 
+    applied = applied_env_names(environ)
     base_url = environ.get(ENV_BASE_URL, "").strip()
-    endpoint_origin: str | None = f"env:{ENV_BASE_URL}" if base_url else None
+    endpoint_origin: str | None = None
+    if base_url:
+        # The bootstrap projects the managed file's rerank_base_url into exactly
+        # this variable, so a bare "env:" would tell the operator someone pinned
+        # an environment variable — when it is the value they typed on this page.
+        endpoint_origin = (
+            f"managed-file(env:{ENV_BASE_URL})"
+            if ENV_BASE_URL in applied
+            else f"env:{ENV_BASE_URL}"
+        )
     if not base_url and settings_store is not None:
         managed_base, managed_origin = _managed_setting(
             settings_store, "extraction_endpoints.rerank_base_url"
@@ -346,9 +356,7 @@ def resolve_rerank(
         base_url, endpoint_origin = managed_base, managed_origin
     model = environ.get(ENV_MODEL, "").strip() or DEFAULT_MODEL
     roots = tuple(key_file_roots) if key_file_roots is not None else _key_file_roots()
-    value, origin = _first_env(
-        environ, (ENV_API_KEY,), applied_env=applied_env_names(environ)
-    )
+    value, origin = _first_env(environ, (ENV_API_KEY,), applied_env=applied)
     if not value:
         key_file = environ.get(ENV_API_KEY_FILE, "").strip()
         if key_file:

@@ -107,6 +107,45 @@ def test_rerank_reports_its_endpoint_when_configured(
     assert rerank.base_url == "http://127.0.0.1:28099"
 
 
+def test_a_projected_rerank_endpoint_is_not_reported_as_a_bare_environment_variable(
+    tmp_path: Path, fixture_root: Path
+) -> None:
+    """The operator set it on the page; the environment is only how it got here.
+
+    Bootstrap projects ``extraction_endpoints.rerank_base_url`` into
+    ``CANONICAL_V2_RERANK_BASE_URL`` and records the projection in
+    ``APPLIED_ENV_VAR`` (managed_config.py:78). Reporting that as ``env:`` would
+    read as someone else's pin, and hide the field the operator can actually edit.
+    """
+
+    from src.data_agents.canonical_v2.managed_runtime import APPLIED_ENV_VAR
+
+    resolved, settings, secrets = _resolve(tmp_path, fixture_root, {})
+    settings.patch(
+        {"extraction_endpoints": {"rerank_base_url": "http://127.0.0.1:28099"}},
+        operator="ops",
+    )
+    projected = resolve_connections(
+        environ={
+            "CANONICAL_V2_RERANK_BASE_URL": "http://127.0.0.1:28099",
+            APPLIED_ENV_VAR: "CANONICAL_V2_RERANK_BASE_URL",
+        },
+        settings_store=settings,
+        secrets_store=secrets,
+        key_file_roots=(fixture_root,),
+    )["rerank"]
+    pinned = resolve_connections(
+        environ={"CANONICAL_V2_RERANK_BASE_URL": "http://127.0.0.1:28099"},
+        settings_store=settings,
+        secrets_store=secrets,
+        key_file_roots=(fixture_root,),
+    )["rerank"]
+
+    assert projected.endpoint_origin == "managed-file(env:CANONICAL_V2_RERANK_BASE_URL)"
+    assert "来源 managed-file(env:CANONICAL_V2_RERANK_BASE_URL)" in projected.runtime_note
+    assert pinned.endpoint_origin == "env:CANONICAL_V2_RERANK_BASE_URL"
+
+
 def test_embedding_uses_the_frozen_bundle_endpoint_and_the_local_credential(
     tmp_path: Path, fixture_root: Path
 ) -> None:

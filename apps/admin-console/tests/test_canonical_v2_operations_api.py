@@ -4,6 +4,7 @@ from datetime import UTC, datetime
 from importlib import import_module
 import os
 from pathlib import Path
+import re
 import subprocess
 import sys
 import textwrap
@@ -281,3 +282,51 @@ def test_canonical_v2_operations_api_is_bounded_read_only_and_quarantined(
     assert 'const gapsPath = "api/canonical-v2/admin/chat-gaps";' in page.text
     assert "operations/gaps" not in page.text
     assert "esc(JSON.stringify" in page.text
+
+
+def test_the_static_pages_only_call_their_own_v2_surfaces() -> None:
+    """A live guard where the s11b quarantine helper no longer runs.
+
+    ``test_canonical_v2_consumer_migration._assert_static_and_import_quarantine``
+    carries the same intent, but it sits behind a stale factory-arity assertion
+    (``:735``) that has failed since the factory gained an optional second
+    parameter, and four of its page pins have rotted since. A guard that never
+    runs is not a guard, so this one is reachable: it locks what the two pages the
+    public actually loads may call.
+    """
+
+    static_dir = Path(__file__).resolve().parents[1] / "backend" / "static"
+    expected = {
+        "browse.html": {
+            "api/canonical-v2/admin/status",
+            "api/canonical-v2/admin/domains/",
+            "api/canonical-v2/admin/chat-gaps",
+            "api/canonical-v2/admin/corrections",
+            "api/canonical-v2/admin/company-documents",
+        },
+        "chat.html": {"api/chat/stream", "api/chat/feedback"},
+    }
+    for name, literals in expected.items():
+        page = (static_dir / name).read_text(encoding="utf-8")
+        found = set(re.findall(r'"(/?api/[A-Za-z0-9_{}./:-]+)"', page))
+        assert found == literals, (name, sorted(found))
+
+    legacy = (
+        "/api/data/",
+        "/api/seeds/",
+        "/api/pipeline",
+        "/api/upload",
+        "/api/review",
+        "/api/batch",
+        "/api/admin_professor",
+        "canonical_writer",
+        "Milvus",
+    )
+    for name in (*expected, "main.html", "admin.html", "seeds.html", "jobs.html", "logs.html"):
+        page = (static_dir / name).read_text(encoding="utf-8")
+        for forbidden in legacy:
+            assert forbidden not in page, (name, forbidden)
+    # chat.html mentions innerHTML only in comments that say it is not used, so the
+    # blanket check stays on the page the fossil applied it to.
+    browse = (static_dir / "browse.html").read_text(encoding="utf-8")
+    assert re.search(r"(?:inner|outer)\s*HTML", browse, re.IGNORECASE) is None

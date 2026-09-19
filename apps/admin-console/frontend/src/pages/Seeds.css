@@ -13,6 +13,7 @@
   --seed-success: #1ea34c;
   --seed-failure: #e02020;
   --seed-progress: #d99000;
+  --seed-interrupted: #8a2d54;
   --seed-never: #7a7a7a;
   --seed-missing: #e85a16;
   --seed-font-mono: "IBM Plex Mono", "JetBrains Mono", ui-monospace, monospace;
@@ -73,7 +74,7 @@
 
 .seed-head-summary {
   display: grid;
-  grid-template-columns: repeat(5, auto);
+  grid-template-columns: repeat(7, auto);
   gap: 16px 22px;
   align-items: end;
 }
@@ -112,8 +113,14 @@
 .seed-sum-progress .seed-sum-n {
   color: var(--seed-progress);
 }
+.seed-sum-interrupted .seed-sum-n {
+  color: var(--seed-interrupted);
+}
 .seed-sum-missing .seed-sum-n {
   color: var(--seed-missing);
+}
+.seed-sum-never .seed-sum-n {
+  color: var(--seed-never);
 }
 
 /* === TOOLBAR ============================================================ */
@@ -184,6 +191,10 @@
 .seed-pill-progress.seed-pill-active {
   background: var(--seed-progress);
   border-color: var(--seed-progress);
+}
+.seed-pill-interrupted.seed-pill-active {
+  background: var(--seed-interrupted);
+  border-color: var(--seed-interrupted);
 }
 .seed-pill-never.seed-pill-active {
   background: var(--seed-never);

@@ -248,6 +248,31 @@ still needs fixing), so all three hops are connected to one console-owned ledger
   the page. Evidence: round-17 log §6 +
   `.agents/runs/connect-collection-line/live-browse-gaps.png`.
 
+## K · Small registered items, closed (round 18)
+
+- \[x\] K1 The rerank connection no longer reports a projected endpoint as a bare
+  environment variable: `resolve_rerank` now consults `applied_env_names()` the way
+  the credential path in the same function already did, so the managed file's
+  `rerank_base_url` reads `managed-file(env:CANONICAL_V2_RERANK_BASE_URL)` while a
+  genuinely external pin still reads `env:…`. A real pin still reads `env:…`.
+  → verify: 1 new test, RED captured against HEAD (`env:` vs `managed-file(env:`).
+- \[x\] K2 The SPA `/seeds` page gives `interrupted` its pill and summary stat, and
+  its own tone (`--seed-interrupted: #8a2d54`) — separated from `--seed-failure` on
+  hue, saturation and lightness at once; the row tag uses the same tone, the header
+  grid grew to 7 columns, and the sibling `never_run` (same defect class: counted
+  but no cell) was fixed in the same pass.
+  → verify: new `src/pages/Seeds.test.tsx` (3 tests), RED captured twice — once with
+  `Seeds.tsx` reverted, once with only the `never_run` cell removed; `tsc -b`,
+  `npm test` (6 files / 22 tests) and `npm run build` pass.
+- \[x\] K3 A live replacement for the frozen static-page guard:
+  `test_the_static_pages_only_call_their_own_v2_surfaces` locks the API literals of
+  `/browse` and `/chat` and bars the legacy prefixes from every static page.
+  The s11b helper that used to assert this has been unreachable for several
+  releases and 6 of its pins have rotted — recorded under "Findings", not "repaired".
+- \[x\] K4 The stale `operations/gaps` literal inside that helper now names the real
+  page literals, so the helper would be correct if it is ever revived (it is not
+  on its own — see the finding).
+
 ## Findings recorded, not fixed here
 
 - A killed crawl leaves its `pipeline_run` row in `running` forever (no heartbeat,

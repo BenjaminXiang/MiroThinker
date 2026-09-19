@@ -58,7 +58,9 @@ const STATUS_TAG_COLOR: Record<SeedLastRunStatus, string> = {
   success: "success",
   failure: "error",
   in_progress: "processing",
-  interrupted: "error",
+  // Same token as the pill and the stat (Seeds.css --seed-interrupted): an
+  // interrupted run is stopped, not failed, so it must not read as the failure red.
+  interrupted: "#8a2d54",
   never_run: "default",
   adapter_missing: "orange",
 };
@@ -395,6 +397,7 @@ export default function Seeds() {
     { key: "success", label: `success ${counts.success}`, tone: "success" },
     { key: "failure", label: `failure ${counts.failure}`, tone: "failure" },
     { key: "in_progress", label: `运行中 ${counts.in_progress}`, tone: "progress" },
+    { key: "interrupted", label: `已中断 ${counts.interrupted}`, tone: "interrupted" },
     { key: "never_run", label: `未运行 ${counts.never_run}`, tone: "never" },
     {
       key: "adapter_missing",
@@ -422,6 +425,8 @@ export default function Seeds() {
           <SummaryStat n={counts.success} l="success" tone="success" />
           <SummaryStat n={counts.failure} l="failure" tone="failure" />
           <SummaryStat n={counts.in_progress} l="in progress" tone="progress" />
+          <SummaryStat n={counts.interrupted} l="已中断" tone="interrupted" />
+          <SummaryStat n={counts.never_run} l="未运行" tone="never" />
           <SummaryStat n={counts.adapter_missing} l="adapter 缺失" tone="missing" />
         </div>
       </header>
