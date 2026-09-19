@@ -533,6 +533,7 @@
       const statusPath = "api/canonical-v2/admin/status";
       const domainPath = "api/canonical-v2/admin/domains/";
       const gapsPath = "api/canonical-v2/operations/gaps";
+      const gapsUnavailableText = "本机未启用知识缺口（未配置 V2 运行库）";
       const correctionsPath = "api/canonical-v2/admin/corrections";
       const companyDocsPath = "api/canonical-v2/admin/company-documents";
       const nameFields = { company: "name", professor: "name", paper: "title", patent: "title" };
@@ -684,7 +685,11 @@
 
       async function fetchJson(path) {
         const response = await fetch(path, { headers: { Accept: "application/json" } });
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        if (!response.ok) {
+          const failure = new Error(`HTTP ${response.status}`);
+          failure.status = response.status;
+          throw failure;
+        }
         return response.json();
       }
 
@@ -1134,6 +1139,10 @@
           itemList.replaceChildren(...(items.length ? items.map(gapCard) : [stateBox("empty", "当前版本没有知识缺口记录")]));
           if (requestedId) await loadGapDetail(requestedId);
         } catch (error) {
+          if (error?.status === 503) {
+            itemList.replaceChildren(stateBox("empty", gapsUnavailableText));
+            return;
+          }
           itemList.replaceChildren(stateBox("error", `知识缺口加载失败 · ${errorText(error)}`));
         }
       }
@@ -1169,6 +1178,10 @@
           );
           inspector.replaceChildren(card);
         } catch (error) {
+          if (error?.status === 503) {
+            inspector.replaceChildren(stateBox("empty", gapsUnavailableText));
+            return;
+          }
           inspector.replaceChildren(stateBox("error", `缺口详情加载失败 · ${errorText(error)}`));
         }
       }

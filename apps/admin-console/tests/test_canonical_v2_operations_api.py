@@ -2,8 +2,10 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 from importlib import import_module
+import json
 import os
 from pathlib import Path
+import re
 import subprocess
 import sys
 import textwrap
@@ -278,3 +280,104 @@ def test_canonical_v2_operations_api_is_bounded_read_only_and_quarantined(
     assert "V2 Gaps" in page.text
     assert 'const gapsPath = "api/canonical-v2/operations/gaps";' in page.text
     assert "esc(JSON.stringify" in page.text
+
+
+def _script_section(source: str, start: str, end: str) -> str:
+    start_index = source.index(start)
+    return source[start_index : source.index(end, start_index)]
+
+
+def test_browse_gaps_503_renders_a_neutral_state(client: TestClient) -> None:
+    """A missing gap capability is not a load failure: the page says so neutrally."""
+
+    page = client.get("/browse")
+    assert page.status_code == 200
+    script = re.findall(r"<script>(.*?)</script>", page.text, flags=re.DOTALL)[-1]
+    declaration = re.search(r'const gapsUnavailableText = "[^"]+";', script)
+    assert declaration is not None
+    assert "本机未启用知识缺口（未配置 V2 运行库）" in declaration.group(0)
+    gaps_path = re.search(r'const gapsPath = "[^"]+";', script)
+    assert gaps_path is not None
+
+    harness = f"""
+{gaps_path.group(0)}
+{declaration.group(0)}
+
+let selectedId = null;
+const rendered = {{ list: [], inspector: [] }};
+const target = (key) => ({{ replaceChildren: (...children) => {{ rendered[key] = children; }} }});
+const itemList = target("list");
+const inspector = target("inspector");
+const listTitle = {{ textContent: "" }};
+const listCaption = {{ textContent: "" }};
+const listCount = {{ textContent: "" }};
+const listPager = {{ hidden: false }};
+function setActiveTab() {{}}
+function inspectorPrompt() {{}}
+function updateSelectedCard() {{}}
+function create(tag, className, text) {{
+  return {{ tag, className: className || "", textContent: text === undefined || text === null ? "" : String(text) }};
+}}
+const gapCard = (gap) => ({{ gap }});
+{_script_section(script, "function errorText(", "function displayName(")}
+{_script_section(script, "function stateBox(", "function renderMetrics(")}
+{_script_section(script, "async function fetchJson(", "async function postJson(")}
+{_script_section(script, "async function loadGaps(", "async function loadGapDetail(")}
+{_script_section(script, "async function loadGapDetail(", "function routeFromHash(")}
+
+let mode = "503";
+globalThis.fetch = async () => {{
+  if (mode === "200") return {{ ok: true, status: 200, json: async () => ({{ items: [{{ gap_id: "gap:one" }}], total: 1 }}) }};
+  if (mode === "empty") return {{ ok: true, status: 200, json: async () => ({{ items: [], total: 0 }}) }};
+  return {{ ok: false, status: Number(mode), json: async () => ({{ detail: "Canonical V2 operations are unavailable" }}) }};
+}};
+
+(async () => {{
+  await loadGaps();
+  const unavailable = rendered.list[0];
+  mode = "500";
+  await loadGaps();
+  const failed = rendered.list[0];
+  mode = "200";
+  await loadGaps();
+  const listed = rendered.list[0];
+  mode = "empty";
+  await loadGaps();
+  const empty = rendered.list[0];
+  mode = "503";
+  await loadGapDetail("gap:one");
+  const detail = rendered.inspector[0];
+  console.log(JSON.stringify({{
+    unavailable: {{ className: unavailable.className, text: unavailable.textContent }},
+    failed: {{ className: failed.className, text: failed.textContent }},
+    listed: listed.gap.gap_id,
+    empty: {{ className: empty.className, text: empty.textContent }},
+    detail: {{ className: detail.className, text: detail.textContent }},
+    expected: gapsUnavailableText,
+  }}));
+}})();
+"""
+    completed = subprocess.run(
+        ["node", "-"],
+        input=harness,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    assert completed.returncode == 0, completed.stderr
+    payload = json.loads(completed.stdout)
+    assert payload == {
+        "unavailable": {
+            "className": "empty",
+            "text": "本机未启用知识缺口（未配置 V2 运行库）",
+        },
+        "failed": {"className": "error", "text": "知识缺口加载失败 · HTTP 500"},
+        "listed": "gap:one",
+        "empty": {"className": "empty", "text": "当前版本没有知识缺口记录"},
+        "detail": {
+            "className": "empty",
+            "text": "本机未启用知识缺口（未配置 V2 运行库）",
+        },
+        "expected": "本机未启用知识缺口（未配置 V2 运行库）",
+    }
+    assert "Canonical V2 operations are unavailable" not in json.dumps(payload)

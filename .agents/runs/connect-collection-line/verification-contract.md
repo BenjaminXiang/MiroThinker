@@ -311,3 +311,57 @@ the dedupe RED is the two above (`2 failed, 30 passed`).
   update.
 - Human docs (`docs/plans/` round log + index) and OpenSpec `tasks.md` / `acceptance.md`
   are not touched by this batch.
+
+## 后续批次 — `/operations/gaps` 的 500 (2026-09-19)
+
+Appended before this batch's edits (AGENTS.md §4). Second occurrence of one defect class
+(see `## RED artifacts` here and the earlier admin-status repair).
+
+```
+Reported symptom:    GET /api/canonical-v2/operations/gaps → 500
+                     AttributeError: '_EphemeralKnowledgeGapFeedback' object has no
+                     attribute 'list_for_admin' (live, 2026-09-19 23:34)
+Expected invariant:  an endpoint that needs an administrator capability the injected
+                     operations object does not implement answers its module's 503
+                     ("Canonical V2 operations are unavailable"), never an unhandled
+                     AttributeError; a capable object's real errors stay visible
+Likely defect class: L3 (missing boundary guard) + C1 (test-matrix gap: the guard added
+                     for the admin status surface was not swept across sibling call sites)
+Why systemic:        the two call sites were written in the same module as the guarded
+                     one; the fix landed on the surface where the first traceback pointed
+Search plan:         every `list_for_admin` / `get_for_admin` call site in
+                     `apps/admin-console` (the administrator-only interface on the
+                     injected object)
+Proposed fix level:  Level 3 — one shared guard in `backend/api/canonical_v2_operations.py`,
+                     used by both endpoints, matching `canonical_v2_admin._gap_summary`
+Regression test plan: ephemeral-shaped mirror → 503 on both endpoints; Postgres-shaped
+                     mirror → 200/404; exploding mirror → 500 (guard must not swallow)
+Out of scope:        the live line (needs a service restart), any other static page, any
+                     other backend module, the human/OpenSpec docs (main line owns them)
+```
+
+### RED artifacts (must fail before the change)
+
+1. `tests/test_canonical_v2_admin_status_repair.py::test_gaps_degrade_without_administrator_capability`
+   (both endpoints) — today 500 (AttributeError escapes the endpoint).
+2. `tests/test_canonical_v2_operations_api.py::test_browse_gaps_503_renders_a_neutral_state`
+   — today the page renders the red `知识缺口加载失败 · HTTP 503` box.
+
+### GREEN evidence required
+
+- Layer ①: the two markers above plus
+  `...::test_gaps_keep_pages_and_404_when_capable` and
+  `...::test_gaps_keep_capable_object_errors_visible` (the guard must not hide real errors).
+- Layer ②: `tests/test_canonical_v2_admin_status_repair.py` +
+  `tests/test_canonical_v2_operations_api.py` — zero failures. (`test_canonical_v2_consumers_api.py`
+  named in the brief does not exist on this branch.)
+- Layer ③: not available offline — the fix reaches the live line only after a restart; the
+  brief forbids restarting.
+
+### What will NOT be claimed
+
+- No live 18188 verdict: line 47 is hit only by the running process, so the 500→503 change is
+  verified by `TestClient` against the same dependency wiring (`main.py:248-250` overrides
+  `get_knowledge_gap_operations` with the candidate runtime's `gap_operations`).
+- Human docs (`docs/plans/` round log + index) and OpenSpec `tasks.md` / `acceptance.md`
+  are not touched by this batch; the main line owns the round entry.

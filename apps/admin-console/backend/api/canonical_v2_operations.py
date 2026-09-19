@@ -21,6 +21,25 @@ from src.data_agents.canonical_v2.knowledge_gap_postgres import (
 router = APIRouter(prefix="/api/canonical-v2/operations")
 
 
+def _administrator_method(operations: Any, method_name: str) -> Any:
+    """Return the administrator method, or answer 503 when it is absent.
+
+    The candidate composition installs the ephemeral in-process gap feedback in
+    pack mode, which only implements ``record``/``apply_remediation``. Calling
+    ``list_for_admin`` on it raised ``AttributeError`` and made this surface
+    answer 500 on the live service (2026-09-19 traceback). A missing capability
+    belongs to the same 503 bucket as an unconfigured or unreachable target; a
+    capable object's own failures stay visible through the handlers below.
+    """
+
+    method = getattr(operations, method_name, None)
+    if not callable(method):
+        raise HTTPException(
+            status_code=503, detail="Canonical V2 operations are unavailable"
+        )
+    return method
+
+
 @router.get("/gaps", response_model=GapAdminPage)
 def list_knowledge_gaps(
     statuses: Annotated[list[GapStatus] | None, Query()] = None,
@@ -43,8 +62,9 @@ def list_knowledge_gaps(
         limit=limit,
         offset=offset,
     )
+    lister = _administrator_method(operations, "list_for_admin")
     try:
-        return operations.list_for_admin(query)
+        return lister(query)
     except KnowledgeGapIntegrityError as exc:
         raise HTTPException(
             status_code=500, detail="Canonical V2 gap data failed validation"
@@ -60,8 +80,9 @@ def get_knowledge_gap(
     gap_id: str,
     operations: Any = Depends(get_knowledge_gap_operations),
 ) -> GapAdminDetail:
+    getter = _administrator_method(operations, "get_for_admin")
     try:
-        detail = operations.get_for_admin(gap_id)
+        detail = getter(gap_id)
     except KnowledgeGapIntegrityError as exc:
         raise HTTPException(
             status_code=500, detail="Canonical V2 gap data failed validation"

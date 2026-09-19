@@ -1946,3 +1946,142 @@ status: resolved | professors: 16 | pages fetched: 9
 3–8 页没有 fixture，桩里返回第 1 页的 HTML，所以 "16 人" 只证明**派发与去重**，不是 3–8 页的真实人数。
 按真页结构（每页 8 张卡片）与分页器自己声明的 8 页推算，**全量约 64 人**——导入后这条种子会从
 "8 人（只有第 1 页）"变成"整张名册"，前提是运行不被 `sample` 的 `--limit` 截断（画像阶段的预算仍是既有设计，本批未改）。
+
+---
+
+## 后续批次 — /operations/gaps 的 500
+
+**线上事实（2026-09-19 23:34，未复现于本次会话——本次不重启服务）**：
+
+```
+GET /api/canonical-v2/operations/gaps → 500
+  backend/api/canonical_v2_operations.py:47 list_knowledge_gaps
+  AttributeError: '_EphemeralKnowledgeGapFeedback' object has no attribute 'list_for_admin'
+```
+
+**缺陷类**：L3（缺边界守卫）+ C1（同一条守卫 2026-09-13 只加在了 `_gap_summary` 一处，
+两个兄弟端点漏扫）。**这是同一缺陷类的第二次出现**，所以按"修类"而不是"修这一处"处理：
+先扫全包的"管理员接口"调用点，再在共享位置加守卫。
+
+### 1. 同类扫一遍（apps/admin-console，只扫注入对象上的管理员接口）
+
+`create_postgres_knowledge_gap_operations` 返回的 `PostgresKnowledgeGapOperations` 比基类
+`KnowledgeGapFeedback`（`knowledge_gap_feedback.py:290` `record` / `:294` `apply_remediation`）
+多出的方法只有两个：`list_for_admin`（`knowledge_gap_postgres.py:520`）、
+`get_for_admin`（`:597`）。全包调用点如下：
+
+| 位置 | 调用 | 现状 |
+|---|---|---|
+| `backend/api/canonical_v2_operations.py:47 → 65` | `operations.list_for_admin(query)` | **本次修**：先 `_administrator_method(...)` 取能力，缺 → 503 |
+| `backend/api/canonical_v2_operations.py:64 → 83` | `operations.get_for_admin(gap_id)` | **本次修**：同上；真缺失仍 404 |
+| `backend/services/canonical_v2_admin.py:746` | `getattr(self.gap_operations, "list_for_admin", None)` | 已有守卫（2026-09-13 那次）→ 返回 `{"state": "unavailable", ...}` 标记 |
+| `backend/services/canonical_v2_admin.py:1094` | `self.gap_operations.record(signal)` | 不是管理员接口：`record` 属基类，两种形态都实现 → 无需守卫 |
+
+其余命中全是测试里的镜像对象（`tests/test_canonical_v2_operations_api.py:75/83`、
+`tests/test_canonical_v2_admin_config_api.py:43`、`tests/test_canonical_v2_consumer_migration.py:183/197`），
+不是生产调用点。SPA（`frontend/src/`）不碰这个面（`grep operations/gaps frontend/src` 空），
+静态页只有 `browse.html` 一处。修后复查：`grep -rn "list_for_admin\|get_for_admin" backend/` 只剩
+上面"已守卫 / 已修"的四处（另两条是 docstring）。
+
+### 2. 守卫形状（与 `_gap_summary` 同形，共享一处）
+
+```python
+# backend/api/canonical_v2_operations.py:24-40
+def _administrator_method(operations: Any, method_name: str) -> Any:
+    method = getattr(operations, method_name, None)
+    if not callable(method):
+        raise HTTPException(
+            status_code=503, detail="Canonical V2 operations are unavailable"
+        )
+    return method
+```
+
+- 两个端点各一行取能力（`:65` / `:83`），随后照旧进原来的 `try`——**能力存在时一个字节的行为都没变**：
+  `KnowledgeGapIntegrityError → 500`、`Configuration/Persistence → 503`、其它异常照旧冒泡 500。
+- 没发明新状态码：503 的 detail 与模块既有两条 `KnowledgeGap*` 映射**逐字相同**
+  （"Canonical V2 operations are unavailable"）。
+
+### 3. RED → GREEN
+
+RED（改前，本次实际跑过。用与端点同一个依赖 + 同样只实现 `record`/`apply_remediation` 的对象）：
+
+```
+/api/canonical-v2/operations/gaps        -> AttributeError '_Ephemeral' object has no attribute 'list_for_admin'
+/api/canonical-v2/operations/gaps/gap:x  -> AttributeError '_Ephemeral' object has no attribute 'get_for_admin'
+```
+
+（对应回归测试在改前是 `2 failed, 7 passed`：两条 503 断言拿到的是 `assert 500 == 503`。）
+
+GREEN（改后）：
+
+| 注入对象 | GET /gaps | GET /gaps/{id} |
+|---|---|---|
+| 只有 `record`/`apply_remediation`（pack 模式真形态） | **503** `{"detail": "Canonical V2 operations are unavailable"}` | **503** 同上 |
+| Postgres 形态（`list_for_admin` + `get_for_admin`） | 200（`total=1`） | 存在 → 200；不存在 → **404** `{"detail": "Canonical V2 gap not found"}` |
+| Postgres 形态但抛 `KnowledgeGapIntegrityError` | 500 `gap data failed validation`（既有测试，未变） | 同左 |
+| Postgres 形态但抛 `Configuration/PersistenceError` | 503 `operations are unavailable`（既有测试，未变） | 同左 |
+| 能力存在但抛 `RuntimeError` | **500**（守卫不吃真错误） | **500** |
+| 根本没注入（四项 env 缺） | 503 `Canonical V2 operations are not configured`（依赖层，既有，未变） | 同左 |
+
+最后两行是"不许把可用的对象也一起降级"的负向证据：**只有"能力缺失"才降级**。
+
+### 4. 页面（`browse.html`）：503 现在是中性空态，不是红框
+
+- `browse.html:536` 新增 `const gapsUnavailableText = "本机未启用知识缺口（未配置 V2 运行库）";`
+- `browse.html:686-694` `fetchJson` 把状态码带到错误对象上（`failure.status = response.status`），
+  文案仍是原来的 `HTTP <code>`；页面其它 fetch 的可见行为不变（没人读 `.status`）。
+- `browse.html:1142`（列表）与 `:1181`（详情）各加同样两行：`error?.status === 503` →
+  `stateBox("empty", gapsUnavailableText)` 并返回。**HTTP detail 从不落到页面上**
+  （`fetchJson` 不解析响应体，中性态也只显示固定文案）。
+
+同一脚本在 node 桩环境里跑出三种结果的差别（`tests/test_canonical_v2_operations_api.py::test_browse_gaps_503_renders_a_neutral_state`
+用**服务端返回的页面原文**抽函数段 + 抽常量，fetch 桩依次给 503 / 500 / 200 / 200-空 / 详情 503）：
+
+| 输入 | 列表区渲染 |
+|---|---|
+| 503 | `empty` / 本机未启用知识缺口（未配置 V2 运行库） |
+| 500 | `error` / 知识缺口加载失败 · HTTP 500（红色框保留，只有 503 变中性） |
+| 200 有数据 | 正常渲染卡片（`gap:one`） |
+| 200 空 | `empty` / 当前版本没有知识缺口记录（与"未启用"区分开） |
+| 详情 503 | inspector 区 `empty` / 本机未启用知识缺口（未配置 V2 运行库） |
+
+HEAD 对照（本次实际跑过，同一 node 桩、同一输入）：改前页面把 503 渲染成
+`[["loading","正在加载知识缺口"],["error","知识缺口加载失败 · HTTP 503"]]` —— 红框 + 裸 `HTTP 503`。
+
+**影响面复检**：改后 `browse.html` 的 `/api/...` 字面量与 HEAD **完全相同**（都是空集——页面用相对路径），
+禁用词（`Milvus` / `insertAdjacentHTML` / `innerHTML` 等）一个没引入；
+`tests/test_canonical_v2_real_preview_ui.py -k browse` 11 passed（含 `node --check` 的 JS 解析用例）。
+
+> 顺带发现（**未修，超出本批范围**）：`tests/test_canonical_v2_consumer_migration.py:2044`
+> `_assert_static_and_import_quarantine` 里对 `browse.html` 的断言是死代码——它的调用者
+> `test_s11b_...` 在更早的 `:734` 就失败（HEAD 同样失败，见下），而那些 `/api/...` 断言在 HEAD 上也不成立
+> （页面字面量不带前导斜杠）。属既有问题，本批只如实记录。
+
+### 5. 命令与结果（本次实际跑过）
+
+| 层 | 命令 | 结果 |
+|---|---|---|
+| ① 本批新测试（7 条，backend 端点；含 pack 形态 503、可用形态 200/404、真错误 500、真聚合装配链） | `uv run pytest -q -p no:randomly -p no:cacheprovider tests/test_canonical_v2_admin_status_repair.py` | **11 passed**（该文件改前 4 条） |
+| ① 本批新测试（1 条，页面 node 桩） | `… tests/test_canonical_v2_operations_api.py` | **2 passed**（该文件改前 1 条） |
+| ② 指定回归（两个文件一起，父指令里的 `tests/test_canonical_v2_consumers_api.py` 在本分支**不存在**） | `uv run pytest -q -p no:randomly -p no:cacheprovider tests/test_canonical_v2_admin_status_repair.py tests/test_canonical_v2_operations_api.py` | **13 passed** |
+| ② 页面影响面 | `uv run pytest -q -p no:randomly -p no:cacheprovider tests/test_canonical_v2_real_preview_ui.py -k browse` | **11 passed, 209 deselected** |
+| linter | `uv run ruff check` + `uv run ruff format --check`（三个改动 Python 文件） | `All checks passed!` / `3 files already formatted` |
+| ③ 活线 | 未做：不重启服务（父指令禁止） | 见下"未做" |
+
+**既有失败（与本批无关，已核对）**：
+`tests/test_canonical_v2_consumer_migration.py -k s11b_candidate_app_exposes_only_release_bound_v2_consumers`
+失败在 `:734 _has_keyword_only_runtime_parameter(create_canonical_v2_candidate_app)` —— 断言的是
+`backend/main.py` 的工厂签名，本批没碰 `main.py`；把两个被改的生产文件临时还原成 HEAD 版本后
+**失败一字不差**（随后按 sha256 校验还原成功），确认是既有失败，不是本批引入。
+
+### 6. 未做 / 风险（诚实记录）
+
+- **活线未验证**：修复要下次重启才生效（本批不动 18188、不重启）。离线取到的等价证据是
+  `test_gaps_degrade_through_the_candidate_aggregate_wiring`：它按 `main.py:248-250` 的真实接线
+  （`get_knowledge_gap_operations → get_canonical_v2_gap_operations → 聚合的 gap_operations` 成员，
+  经 `require_canonical_v2_consumer_runtime` 校验）把 pack 形态对象喂给两个端点，得到 503。
+- **同类残余风险**：这条守卫是按"方法名"取的（`getattr(..., name, None)`），所以**将来给
+  `PostgresKnowledgeGapOperations` 再加管理员方法时，新端点仍需自己调用 `_administrator_method`**。
+  没有做成"能力协议基类"或启动期校验——那会改动注入契约（`canonical_v2_deps` / 聚合类型），
+  超出本批范围，且线上缺的正是"进程里只有 ephemeral 形态"这一事实的显式化。
+- 本批不触碰 `docs/plans/`（轮日志 + index）与 OpenSpec 工件：沿用本分支近几批的做法，由主线统一写。
