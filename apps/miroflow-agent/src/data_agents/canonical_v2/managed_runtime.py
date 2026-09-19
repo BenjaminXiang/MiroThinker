@@ -13,10 +13,11 @@ request, and it never wins against the environment:
 * the return value is a receipt of paths, field names and counts — never a value;
 * any unreadable file is a no-op, so a broken managed file cannot fail a boot.
 
-The environment variable :data:`APPLIED_ENV_VAR` records which variables this
-process adopted from the managed files. It carries names only, and it is what
-lets the admin page distinguish "set by the environment" from "set by the managed
-file" without ever reading a credential back.
+The environment variable :data:`APPLIED_ENV_VAR` (defined in :mod:`managed_config`,
+where the field resolution reads it back) records which variables this process
+adopted from the managed files. It carries names only, and it is what lets the
+admin page distinguish "set by the environment" from "set by the managed file"
+without ever reading a credential back.
 """
 
 from __future__ import annotations
@@ -29,8 +30,10 @@ from typing import Any
 
 from .managed_config import (
     _FIELD_ENV_VARS,
+    APPLIED_ENV_VAR,
     ManagedSettings,
     ManagedSettingsStore,
+    applied_env_names,
     assert_non_secret_payload,
     default_settings_path,
     flatten_settings,
@@ -38,18 +41,6 @@ from .managed_config import (
 from .managed_secrets import ManagedSecretsStore, default_secrets_path
 
 _LOGGER = logging.getLogger(__name__)
-
-APPLIED_ENV_VAR = "CANONICAL_V2_MANAGED_ENV_APPLIED"
-
-
-def applied_env_names(environ: Mapping[str, str] | None = None) -> frozenset[str]:
-    """Names of the environment variables this process adopted from managed files."""
-
-    values = os.environ if environ is None else environ
-    raw = values.get(APPLIED_ENV_VAR, "").strip()
-    if not raw:
-        return frozenset()
-    return frozenset(part.strip() for part in raw.split(",") if part.strip())
 
 
 def _record_applied(names: frozenset[str], environ: MutableMapping[str, str]) -> None:

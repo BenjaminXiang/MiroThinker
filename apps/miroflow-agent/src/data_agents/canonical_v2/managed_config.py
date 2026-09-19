@@ -8,7 +8,10 @@ defaults — never to an error.
 
 Precedence is ``env > file > default`` for every field that already has an
 environment variable, so this file can never become a second source of truth for
-a behavior the environment pins. Every read reports which source won.
+a behavior the environment pins. Every read reports which source won — and since
+the startup bootstrap projects the file's own values into the environment, a
+variable this process adopted from the file is reported as the file (see
+:data:`APPLIED_ENV_VAR`), so a saved field stays editable across restarts.
 """
 
 from __future__ import annotations
@@ -39,6 +42,24 @@ DEFAULT_SETTINGS_FILENAME = "settings.json"
 DEFAULT_AUDIT_FILENAME = "audit.jsonl"
 SETTINGS_PATH_ENV = "CANONICAL_V2_MANAGED_SETTINGS"
 SCHEMA_VERSION = 1
+
+# The startup bootstrap (`managed_runtime.apply_managed_runtime_config`) records
+# here — names only, never values — which variables it projected from the managed
+# files. Reading it is what separates "this process adopted the file's value" from
+# "someone pinned this variable externally": the former is still the operator's
+# own setting and must stay editable on the page, the latter stays read-only.
+APPLIED_ENV_VAR = "CANONICAL_V2_MANAGED_ENV_APPLIED"
+
+
+def applied_env_names(environ: Mapping[str, str] | None = None) -> frozenset[str]:
+    """Names of the environment variables this process adopted from managed files."""
+
+    values = os.environ if environ is None else environ
+    raw = values.get(APPLIED_ENV_VAR, "").strip()
+    if not raw:
+        return frozenset()
+    return frozenset(part.strip() for part in raw.split(",") if part.strip())
+
 
 PUBLIC_DOMAINS: tuple[str, ...] = ("company", "paper", "patent", "professor")
 
@@ -654,12 +675,20 @@ class ManagedSettingsStore:
             return ManagedSettings().model_dump(mode="json")
 
     def effective(self) -> tuple[ManagedSettings, tuple[EffectiveField, ...]]:
-        """Resolve ``env > file > default`` and report the winning source."""
+        """Resolve ``env > file > default`` and report the winning source.
+
+        A variable the startup bootstrap projected from this file resolves the same
+        way (the environment still holds the winning value) but is reported as
+        ``file``: the value's origin is the managed document, so the page must keep
+        offering the field. Only a variable the projection did not set is an
+        external pin and stays read-only.
+        """
 
         document = ManagedSettings.model_validate(self.raw())
         file_values = _flatten(document.model_dump(mode="json"))
         resolved: dict[str, Any] = dict(file_values)
         sources: dict[str, Literal["env", "file", "default"]] = {}
+        projected = applied_env_names(self._environ)
         defaults = _flatten(ManagedSettings().model_dump(mode="json"))
         for path, value in file_values.items():
             sources[path] = "default" if value == defaults.get(path) else "file"
@@ -673,7 +702,7 @@ class ManagedSettingsStore:
                 raise ManagedSettingsError(
                     f"environment variable {env_var} does not match the type of {path}"
                 ) from None
-            sources[path] = "env"
+            sources[path] = "file" if env_var in projected else "env"
         try:
             effective_document = ManagedSettings.model_validate(_unflatten(resolved))
         except ValidationError as exc:
@@ -978,6 +1007,7 @@ def store_from_environment(
 
 
 __all__ = [
+    "APPLIED_ENV_VAR",
     "CollectionSettings",
     "DEFAULT_AUDIT_FILENAME",
     "DEFAULT_SETTINGS_DIRNAME",
@@ -997,6 +1027,7 @@ __all__ = [
     "SCHEMA_VERSION",
     "ServingSettings",
     "SETTINGS_PATH_ENV",
+    "applied_env_names",
     "assert_non_secret_payload",
     "default_repo_root",
     "default_settings_path",

@@ -158,3 +158,50 @@ def test_bootstrap_projects_the_chat_profile_choice(tmp_path: Path) -> None:
     assert live["CHAT_LLM_PROFILE"] == "deepseekv4flash"
     assert receipt["settings_applied"] == ()
     assert receipt["settings_skipped_env"] == ("CHAT_LLM_PROFILE",)
+
+
+def test_a_projected_field_stays_editable_for_the_page(tmp_path: Path) -> None:
+    """The marker separates our own projection from an external pin.
+
+    Without this, the first boot after a save would report the field as
+    "env 覆盖" and the page would disable it forever.
+    """
+
+    settings, secrets = _stores(tmp_path)
+    settings.patch({"collection": {"max_web_searches_per_run": 7}}, operator="ops")
+    environ: dict[str, str] = {}
+
+    apply_managed_runtime_config(
+        environ=environ, settings_store=settings, secrets_store=secrets
+    )
+
+    assert environ["WEB_LANE_DAILY_QUOTA"] == "7"
+    assert "WEB_LANE_DAILY_QUOTA" in applied_env_names(environ)
+
+    _, fields = ManagedSettingsStore(settings.path, environ=environ).effective()
+    row = {field.path: field for field in fields}["collection.max_web_searches_per_run"]
+
+    assert row.value == 7
+    assert row.source == "file"
+    assert row.editable is True
+
+
+def test_an_external_pin_survives_the_boot_projection(tmp_path: Path) -> None:
+    settings, secrets = _stores(tmp_path)
+    settings.patch({"collection": {"max_web_searches_per_run": 7}}, operator="ops")
+    environ = {"WEB_LANE_DAILY_QUOTA": "55"}
+
+    receipt = apply_managed_runtime_config(
+        environ=environ, settings_store=settings, secrets_store=secrets
+    )
+
+    assert environ["WEB_LANE_DAILY_QUOTA"] == "55"
+    assert "WEB_LANE_DAILY_QUOTA" in receipt["settings_skipped_env"]
+    assert "WEB_LANE_DAILY_QUOTA" not in applied_env_names(environ)
+
+    _, fields = ManagedSettingsStore(settings.path, environ=environ).effective()
+    row = {field.path: field for field in fields}["collection.max_web_searches_per_run"]
+
+    assert row.value == 55
+    assert row.source == "env"
+    assert row.editable is False

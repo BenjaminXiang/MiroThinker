@@ -7,6 +7,8 @@ from pathlib import Path
 import pytest
 
 from src.data_agents.canonical_v2.managed_config import (
+    APPLIED_ENV_VAR,
+    PAGE_READONLY_FIELDS,
     ManagedSettings,
     ManagedSettingsError,
     ManagedSettingsStore,
@@ -228,6 +230,103 @@ def test_env_value_of_the_wrong_type_is_rejected(tmp_path: Path) -> None:
 
     with pytest.raises(ManagedSettingsError):
         store.effective()
+
+
+# --- our own projection vs an external pin (the saved field stays editable) --
+
+
+def _row(fields, path: str):  # noqa: ANN001, ANN202 - one-liner test helper
+    return {field.path: field for field in fields}[path]
+
+
+def test_a_projected_env_variable_is_reported_as_the_file_and_stays_editable(
+    tmp_path: Path,
+) -> None:
+    """`apply_managed_runtime_config` writes the file's values into the env at boot.
+
+    The value still resolves from the environment (unchanged), but the field's
+    origin is the managed file — the format the page may keep saving.
+    """
+
+    store = _store(
+        tmp_path,
+        WEB_LANE_DAILY_QUOTA="99",
+        **{APPLIED_ENV_VAR: "WEB_LANE_DAILY_QUOTA"},
+    )
+    store.patch({"collection": {"max_web_searches_per_run": 7}}, operator="ops")
+
+    document, fields = store.effective()
+    row = _row(fields, "collection.max_web_searches_per_run")
+
+    assert document.collection.max_web_searches_per_run == 99
+    assert row.value == 99
+    assert row.source == "file"
+    assert row.editable is True
+    assert row.env_var == "WEB_LANE_DAILY_QUOTA"
+    assert row.readonly_reason is None
+
+
+def test_an_env_variable_the_boot_did_not_set_is_an_external_pin(
+    tmp_path: Path,
+) -> None:
+    """The systemd/serve-command environment stays read-only, as it always was."""
+
+    store = _store(
+        tmp_path,
+        WEB_LANE_DAILY_QUOTA="99",
+        CANONICAL_V2_SERVING_FULL_VERIFY="1",
+    )
+    store.patch({"collection": {"max_web_searches_per_run": 7}}, operator="ops")
+
+    document, fields = store.effective()
+
+    assert document.collection.max_web_searches_per_run == 99
+    row = _row(fields, "collection.max_web_searches_per_run")
+    assert row.value == 99
+    assert row.source == "env"
+    assert row.editable is False
+    pinned = _row(fields, "serving.full_verify")
+    assert pinned.source == "env"
+    assert pinned.editable is False
+    assert pinned.readonly_reason is None
+
+
+def test_an_unset_env_variable_keeps_file_and_default_sources(
+    tmp_path: Path,
+) -> None:
+    store = _store(tmp_path, **{APPLIED_ENV_VAR: "WEB_LANE_DAILY_QUOTA"})
+    store.patch({"collection": {"max_web_searches_per_run": 7}}, operator="ops")
+
+    document, fields = store.effective()
+
+    assert document.collection.max_web_searches_per_run == 7
+    file_row = _row(fields, "collection.max_web_searches_per_run")
+    assert file_row.source == "file"
+    assert file_row.editable is True
+    default_row = _row(fields, "collection.max_llm_calls_per_run")
+    assert default_row.source == "default"
+    assert default_row.editable is True
+
+
+def test_a_projected_page_readonly_field_keeps_its_reason(tmp_path: Path) -> None:
+    path = tmp_path / "managed" / "settings.json"
+    path.parent.mkdir(parents=True)
+    path.write_text(json.dumps({"serving": {"full_verify": True}}))
+    store = ManagedSettingsStore(
+        path,
+        environ={
+            "CANONICAL_V2_SERVING_FULL_VERIFY": "1",
+            APPLIED_ENV_VAR: "CANONICAL_V2_SERVING_FULL_VERIFY",
+        },
+    )
+
+    document, fields = store.effective()
+    row = _row(fields, "serving.full_verify")
+
+    assert document.serving.full_verify is True
+    assert row.source == "file"
+    assert row.editable is False
+    assert row.readonly_reason == PAGE_READONLY_FIELDS["serving.full_verify"]
 
 
 def test_validation_failures_are_bounded_and_do_not_touch_the_file(

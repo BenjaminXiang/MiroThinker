@@ -387,3 +387,29 @@ def test_config_endpoint_reports_env_override_source(
     assert entry["value"] == 55
     assert entry["source"] == "env"
     assert entry["editable"] is False
+
+
+def test_config_endpoint_keeps_a_projected_value_editable(
+    store: ManagedSettingsStore, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The value the boot projection wrote into the env is still the file's own.
+
+    This is the live-page shape: `apply_managed_runtime_config` set the variable
+    from the file it also recorded in the applied marker, so the page must keep
+    the row writable instead of locking it as "env 覆盖".
+    """
+
+    monkeypatch.setenv("WEB_LANE_DAILY_QUOTA", "55")
+    monkeypatch.setenv("CANONICAL_V2_MANAGED_ENV_APPLIED", "WEB_LANE_DAILY_QUOTA")
+    instance = ManagedSettingsStore(store.path, environ=dict(os.environ))
+    app.dependency_overrides[get_managed_settings_store] = lambda: instance
+
+    response = _client().get("/api/canonical-v2/admin/config")
+
+    assert response.status_code == 200
+    by_path = {field["path"]: field for field in response.json()["fields"]}
+    entry = by_path["collection.max_web_searches_per_run"]
+    assert entry["value"] == 55  # resolution unchanged: the environment still wins
+    assert entry["source"] == "file"
+    assert entry["editable"] is True
+    assert entry["env_var"] == "WEB_LANE_DAILY_QUOTA"
