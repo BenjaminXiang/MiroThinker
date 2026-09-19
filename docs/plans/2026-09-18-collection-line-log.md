@@ -702,3 +702,52 @@ scratch 实例指向本机模型服务（rerank `100.64.0.27:18006`、LLM `:1231
 - 配置页从"一次性"变成"可反复修改"——这是 todo 第 6 项的**真正前提**，也解释了此前"保存成功后字段变灰"的现象
 - 采集源 39 条全部可抓，其中 nmne 那条从"抓 8 人"变成"抓整张名册（约 64 人）"
 - 剩余待办只剩**体验确认**（页面级验收我已自测：201/202/200/204 + 库内核对）
+
+---
+
+# 第 16 轮（2026-09-19 深夜）：知识缺口 500 —— 同类缺陷的第二例
+
+## 1. 症状与根因（你报的）
+
+`/browse`（数据浏览）的「知识缺口 / V2 Gaps」报 500。日志里的真凶：
+
+```
+GET /api/canonical-v2/operations/gaps → 500
+  backend/api/canonical_v2_operations.py:47 list_knowledge_gaps
+  AttributeError: '_EphemeralKnowledgeGapFeedback' object has no attribute 'list_for_admin'
+```
+
+pack 模式的装配注入的是**内存版 gap feedback**（只有 `record`/`apply_remediation`），而这两个端点按 Postgres 版的管理接口调用（`list_for_admin`/`get_for_admin`）——方法不存在 → 500。
+
+**关键判断：这是同一个缺陷类的第二次出现。** 2026-09-13 在 `/admin/status` 上修过一模一样的问题（还留了回归测试与 traceback 注释），当时**漏掉了这两个端点**。所以按 pattern-repair 处理，先做兄弟点扫描再改。
+
+## 2. 兄弟点扫描（改前做、改后复核）
+
+管理版独有接口 = 比基类多出的两个方法：`list_for_admin`、`get_for_admin`。全仓调用点：
+
+| 位置 | 调用 | 状态 |
+|---|---|---|
+| `api/canonical_v2_operations.py:47` | `list_for_admin` | **未守卫 → 本次修** |
+| `api/canonical_v2_operations.py:64` | `get_for_admin` | **未守卫 → 本次修** |
+| `services/canonical_v2_admin.py:746` | `getattr(..., "list_for_admin", None)` | 2026-09-13 已守卫 |
+| `services/canonical_v2_admin.py:1094` | `record(...)` | 基类方法，两种实现都有 → 无需动 |
+
+## 3. 修法
+
+- 端点改用与 status 面**同一形状**的守卫（`getattr(..., None)` + `callable`），缺失时回该模块既有的 **503 `Canonical V2 operations are unavailable`**（不新造状态码）；真实校验错误仍是 500，能力齐备时 200/404 行为不变
+- `/browse` 页面：该情形渲染为**中性态**「本机未启用知识缺口（未配置 V2 运行库）」，不再是红字"加载失败"；500 仍按失败渲染
+
+## 4. 怎么验证
+
+| 检查 | 结果 |
+|---|---|
+| 新增测试 | **8 条**（7 条后端，其中 1 条走**真实装配路径** `main.py:248-250`；1 条页面 node harness） |
+| RED→GREEN | 修前两个端点都 `AttributeError`、页面渲染 `知识缺口加载失败 · HTTP 503`；修后 **13 passed**（基线 5） |
+| 页面影响面 | `test_canonical_v2_real_preview_ui.py -k browse` → 11 passed |
+| 线上 | 活线 ff 到 `88973fff` → **23:46:45 重启**；`/browse` 的中性态标记已上线；`/chat` 200、门禁 302/401 不变 |
+| 诚实说明 | 该端点需登录，我无法在线上直接触发；你下次打开 `/browse` 时我从访问日志确认它变成 **503**（而不是 500） |
+
+## 5. 残留（记录，不在本片）
+
+- 守卫是**按方法名**解析的：以后 Postgres 版再加管理方法，新端点要自己记得加守卫。彻底做法是把"管理接口"声明成协议/能力（deps 或聚合层），本片没做
+- 顺带发现：`test_canonical_v2_consumer_migration.py:734` 有一条**既有失败**（断言 `main.py` 工厂签名），与本片无关（回退生产文件后同样失败）
