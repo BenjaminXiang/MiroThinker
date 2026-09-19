@@ -121,6 +121,20 @@ def test_assets_carry_the_page_contracts() -> None:
     assert "Rerank 连通性测试已移到「模型与连接 › 重排模型」" in page
 
 
+def test_card_two_carries_no_second_copy_of_the_rerank_runtime_state() -> None:
+    """后续批次: the runtime badge/note card 2 used to render are the role block's
+    facts. The shell holds the pointer line, not the nodes."""
+
+    page = _page()
+    serving = page[page.index('id="card-serving"') : page.index('id="card-paths"')]
+
+    assert 'id="rerankRuntime"' not in page
+    assert 'id="rerankRuntimeNote"' not in page
+    assert "Rerank 的运行期状态" in serving
+    assert "「模型与连接 › 重排模型」" in serving
+    assert 'id="servingFields"' in serving
+
+
 def test_banner_semantics_are_present_in_the_page_script() -> None:
     script = _script()
 

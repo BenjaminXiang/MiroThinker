@@ -438,6 +438,24 @@ async function roleBlocksScenario() {
     textOf(findById(page.document, "servingFields")).indexOf(fieldByPath(PROFILE_FIELD).label) < 0,
     "the profile field is not rendered a second time in card 2",
   );
+  // 后续批次: card 2 points at the role block instead of copying the runtime facts.
+  const servingCard = HTML.slice(
+    HTML.indexOf('id="card-serving"'),
+    HTML.indexOf('id="card-paths"'),
+  );
+  assert.ok(
+    !findById(page.document, "rerankRuntime"),
+    "card 2 no longer renders the rerank runtime badge: its role block owns it",
+  );
+  assert.ok(
+    servingCard.includes("Rerank 的运行期状态") &&
+      servingCard.includes("「模型与连接 › 重排模型」"),
+    "card 2 names where the rerank runtime facts live",
+  );
+  assert.ok(
+    textOf(findById(page.document, "role-rerank-state")).includes("运行期"),
+    "the rerank role still renders the runtime state (delegated, not dropped)",
+  );
 
   // 3. collection role: catalogue fields + preset + key pointer + fetch, no second key input
   const collectionBody = findById(page.document, "collectionBody");

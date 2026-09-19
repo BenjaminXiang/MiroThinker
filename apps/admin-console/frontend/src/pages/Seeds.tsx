@@ -58,6 +58,7 @@ const STATUS_TAG_COLOR: Record<SeedLastRunStatus, string> = {
   success: "success",
   failure: "error",
   in_progress: "processing",
+  interrupted: "error",
   never_run: "default",
   adapter_missing: "orange",
 };
@@ -121,6 +122,7 @@ export default function Seeds() {
       success: 0,
       failure: 0,
       in_progress: 0,
+      interrupted: 0,
       never_run: 0,
       adapter_missing: 0,
     };

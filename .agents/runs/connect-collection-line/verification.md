@@ -1543,3 +1543,344 @@ agent-browser open http://127.0.0.1:18326/seeds      # 1440×900 与 1024×800 �
 
 **验收限制**：线上 18188 需要操作者口令，本次验收在 scratch 实例上完成；它与线上是同一
 commit、同一页面文件，且指向同一个采集库。18188 自身的登录门禁此前已用 302/401 覆盖。
+
+## 后续批次 — 文件投影的 env 必须仍可编辑
+
+### 1. 缺陷与修法（before / after）
+
+判定在 `apps/miroflow-agent/src/data_agents/canonical_v2/managed_config.py` 的
+`ManagedSettingsStore.effective()`；`source` 同时决定 `editable` 与 `readonly_reason`。
+
+```python
+# before（HEAD）：只要环境变量有值就算 env 覆盖
+sources[path] = "env"
+editable = sources.get(path, "default") != "env" and path not in PAGE_READONLY_FIELDS
+```
+
+启动投影 `managed_runtime.apply_managed_runtime_config()` 会把受管文件里「与默认值不同」的字段
+写进**本进程环境**（`managed_runtime.py:128-138`），并把变量名记进
+`CANONICAL_V2_MANAGED_ENV_APPLIED`（`managed_runtime.py:49,150-152`）。于是**只要保存过的字段
+被下一次重启应用，它就报成 "env 覆盖"、`editable=False`** —— 页面上再也改不回去
+（`backend/static/admin.js` 的 `sourceText()` 按 `source` 渲染，字段卡片按 `field.editable`
+禁用输入框）。这也正是 `serving.chat_llm_profile`（I4）原先没法做成可编辑的原因。
+
+```python
+# after
+projected = applied_env_names(self._environ)                 # managed_config.py:691
+sources[path] = "file" if env_var in projected else "env"    # managed_config.py:705
+```
+
+- **解析语义不变**：`resolved[path] = _coerce(raw, ...)` 一行未动，值仍来自环境；
+- 名字在 marker 里 ⇒ `source="file"`、`editable=True`（值来自我们投影的受管文件）；
+- 名字不在 marker 里（systemd / serve 命令环境的外部钉死）⇒ 仍是 `source="env"`、
+  `editable=False`；
+- `PAGE_READONLY_FIELDS` 行照旧 `editable=False` 并带原文 `readonly_reason`（投影不豁免）。
+
+常量搬家（避免 `managed_config → managed_runtime` 的 import 环）：`APPLIED_ENV_VAR =
+"CANONICAL_V2_MANAGED_ENV_APPLIED"` 与 `applied_env_names()` 现定义于
+`managed_config.py:51,54`（`managed_config.py:1010,1030` 进 `__all__`）；
+`managed_runtime.py:33` 从 `managed_config` 导入并继续在 `__all__`（`managed_runtime.py:173`）
+导出，字符串与公开名一字未改，故 `from ...managed_runtime import APPLIED_ENV_VAR,
+applied_env_names` 的全部既有调用点（`backend/api/canonical_v2_admin_config.py:41`、
+`backend/services/canonical_v2_runtime_sources.py:37`、`scripts/settings_status.py:68`、
+各测试）无需改动。
+
+### 2. RED → GREEN
+
+RED ①（改动前，导入即失败）：
+
+```
+cd apps/admin-console && uv run pytest -q -p no:randomly -p no:cacheprovider \
+  tests/test_managed_settings_store.py tests/test_managed_runtime_bootstrap.py
+→ ERROR tests/test_managed_settings_store.py
+  ImportError: cannot import name 'APPLIED_ENV_VAR' from
+  'src.data_agents.canonical_v2.managed_config'
+```
+
+RED ②（改动前，行为；scratch 文件写 7 + 手写 marker，即线上重启后的进程环境形状）：
+
+```
+BEFORE  value: 7 source: env editable: False     ← 保存过的字段被锁死
+```
+
+GREEN（改动后，走真 boot 投影 `apply_managed_runtime_config` 再解析）：
+
+```
+boot env: {'WEB_LANE_DAILY_QUOTA': '7'}
+AFTER   value: 7 source: file editable: True
+```
+
+### 3. 新测试（layer ①，7 条）
+
+| 文件:行 | 锁住的行为 |
+|---|---|
+| `tests/test_managed_settings_store.py:242` | env 有值 + 名字在 marker → 值取 env（99，文件里是 7）、`source="file"`、`editable=True`、`env_var` 不变 |
+| `tests/test_managed_settings_store.py:269` | env 有值但不在 marker（外部钉死）→ `source="env"`、`editable=False`；只读字段被钉死时 `readonly_reason is None`（老行为） |
+| `tests/test_managed_settings_store.py:294` | env 未设置 → `file` / `default` 来源与可编辑性不变 |
+| `tests/test_managed_settings_store.py:311` | `PAGE_READONLY_FIELDS` 行在投影下仍 `editable=False` 且 reason 是原表原文 |
+| `tests/test_managed_runtime_bootstrap.py:163` | 端到端：页面保存 → boot 投影 → 同一 env 的 store 报 `file`/可编辑；并断言 marker 含被应用的变量名、env 里是该值 |
+| `tests/test_managed_runtime_bootstrap.py:189` | 端到端外部钉死：投影跳过该变量、marker 不含它 → `env`/不可编辑（`settings_skipped_env` 命中） |
+| `tests/test_canonical_v2_admin_config_api.py:392` | API 载荷层：投影环境下 `GET /api/canonical-v2/admin/config` 的该行 `source="file"`、`editable=True` |
+
+fixture 来源：临时目录里的 scratch 受管文件（`tmp_path`）+ 构造的环境字典；不读活线、
+不写 `config/managed/`、不启服务。
+
+### 4. 命令与结果
+
+必需列表（brief 指定）：
+
+```
+cd apps/admin-console && uv run pytest -q -p no:randomly -p no:cacheprovider \
+  tests/test_managed_settings_store.py tests/test_managed_config_catalogue.py \
+  tests/test_managed_runtime_bootstrap.py tests/test_canonical_v2_admin_config_api.py \
+  tests/test_admin_config_single_channel.py
+→ 80 passed in 1.27s   (exit 0)
+```
+
+相邻受影响面（brief 未要求；它们读同一份 `source` / 同一 marker）：
+
+```
+tests/test_managed_secrets_store.py tests/test_canonical_v2_admin_secrets_api.py \
+tests/test_canonical_v2_runtime_sources.py tests/test_admin_model_roles_page.py \
+tests/test_canonical_v2_model_discovery_api.py
+→ 78 passed in 1.97s   (exit 0)
+```
+
+`uv tool run ruff@0.8.0 check` 对 5 个改动文件：`All checks passed!`；
+`ruff format --check` 对本次涉及的 4 个文件 clean（`test_canonical_v2_admin_config_api.py`
+的格式漂移在 HEAD 上就存在——已用 `git show HEAD:<file>` 复核——本次只在文件末尾追加，没有
+顺手格式化无关行）。
+
+### 5. 页面侧
+
+**不需要**认新的 source 字符串：`admin.js` 的 `sourceText(field)` 与字段卡片只区分
+`env` / `file` / `default` 三态，本片没有新增取值；投影字段的展示从「env 覆盖：CHAT_LLM_PROFILE」
+变成「受管文件」，输入框恢复可写。本片未改 `backend/static/**`。
+
+两处随语义变化（正确，无需改代码，此处仅备案）：
+
+1. 只读快照里「env 覆盖字段」一行（`admin.js` 的 `renderSnapshot()`，约 1590 行）此后只列真正
+   的外部钉死变量；文件投影的字段不再出现在那一行。
+2. `backend/services/canonical_v2_runtime_sources.py:443-459` 的 `_managed_setting()` 把
+   `source == "file"` 报成 `managed-file`。它只在 `CANONICAL_V2_RERANK_BASE_URL` **未设置**时
+   才被调用，而投影恰好会设置该变量，所以 rerank 卡片的 `endpoint_origin` 仍是
+   `env:CANONICAL_V2_RERANK_BASE_URL`（该串由 `environ.get()` 直接拼出，
+   `canonical_v2_runtime_sources.py:340-341`，与本次规则无关）。若希望那一行也显示
+   「受管文件已投影」，需在该处一并读 `applied_env_names()` —— 展示口径的后续项，本片没做。
+
+### 6. 未做 / 风险
+
+- 未提交、未重启服务、未碰 18188、未碰活线 `config/managed/*`、未碰 `backend/static/**`。
+- 本 worktree 有**另一个 agent 在并发写**（本片开始时 `git status` 只有 `Seeds.tsx`，结束时
+  `admin.js` / `admin.html` / `test_admin_config_page_shell.py` / `roster.py` 等也在改动中）。
+  本片只改 5 个文件且与那些文件无交集；§4 的结果是在本片文件定稿后单次运行得到的，页面侧若继续
+  改 `admin.js`，需重跑 §4 的必需列表。
+- OpenSpec：`openspec/changes/connect-collection-line/` 的 tasks/acceptance 里**没有**这条
+  「文件投影的 env 仍可编辑」的条目（I4 的可编辑性依赖它）；补条目与勾选留给主线，本片只落证据。
+
+## 后续批次 — SPA 构建 + 文案去重
+
+两个同批小尾巴：① React SPA 在 `interrupted` 之后仍要能编译/构建；② `/admin` 卡片 2 还剩一份「重排
+运行期」的重复。只动 `frontend/src/pages/Seeds.tsx`、`backend/static/admin.html`、`backend/static/admin.js`
+和两个页面套件 + 页面 harness；不提交、不重启、不碰 18188、不改后端 Python。
+
+### 1. SPA：`interrupted` 之后还能不能编译
+
+包管理器按 lockfile 判断：`frontend/package-lock.json` 存在、没有 `pnpm-lock.yaml` → **npm**（node
+v24.13.0 / npm 11.6.2；`node_modules` 原本缺失，registry 可达 HTTP 200）。用 `npm ci`（不改 lockfile；
+`node_modules` 与 `dist` 都在 `.gitignore`）。
+
+| 命令 | 结果 |
+|---|---|
+| `npx tsc -b`（改前） | **RED**：`TS2741` ×2 —— `Seeds.tsx(57,7)`（`STATUS_TAG_COLOR` 缺 `interrupted`）、`Seeds.tsx(120,11)`（计数表缺 `interrupted`） |
+| 改动 | `Seeds.tsx:61` 加 `interrupted: "error"`；`Seeds.tsx:125` 加 `interrupted: 0`（标签「已中断」上一批已写在 `:44`，union 在 `api.ts:772`） |
+| `npx tsc -b`（改后） | exit 0 |
+| `npm run build`（`tsc -b && vite build`） | exit 0，`✓ built in 7.22s`；唯一告警是既有的 chunk >500 kB（与本次无关） |
+| `npx vitest run --environment jsdom` | 5 个文件 19 条全过（SPA 自己没有 Seeds 用例） |
+
+颜色取 `"error"` 是为了和活页 `seeds.html:389` 的 `interrupted: "bad"` 对齐（同一档语义）。**没做**：
+工具栏没有「已中断」过滤 pill、汇总统计也没有这一格 —— 这两处不是类型错误，属产品取舍，留给主线。
+
+### 2. `/admin` 卡片 2 与「重排模型」块还重复什么
+
+改前的重复（同一份 `/secrets` 运行期数据，说了两遍）：
+
+| 信息 | 卡片 2（改前） | 重排模型块 |
+|---|---|---|
+| 运行期徽章 已启用/未启用 | `admin.html:84` `#rerankRuntime` | `role-rerank-state`（`renderRoleState("rerank", [runtimeBadge(connectionByKey("rerank"))])`） |
+| 待重启生效 pill | 同上 | 同上 |
+| 运行期说明 `runtime_note`（如「未启用：未配置 CANONICAL_V2_RERANK_BASE_URL」） | `admin.html:85` `#rerankRuntimeNote` | 生效区「运行期说明」行 |
+| 连接缺失时的回退文案 | 「运行期状态未知」+「服务端未返回 rerank 连接」 | 同一个徽章回退（「运行期状态未知」） |
+
+**只有角色块有**（不算重复）：生效端点 / 生效模型+来源 / 凭据来源（key 状态行）/ 档位 / 拉取模型列表 /
+测试连通性。**只有卡片 2 有**：`serving` 组字段（rerank 超时、单次文档上限、Web 轨下限，及三条只读服务字段）。
+
+改动（最小去重：卡片 2 留自己的字段与保存，其余只留指针）：
+
+- `admin.html:80-82`：原来的 `.rows`（badge + note）换成一行灰字指针
+  「Rerank 的运行期状态（已启用/未启用、待重启）与生效端点/模型在「模型与连接 › 重排模型」——本卡不重复：这里只改检索与回答自己的字段。」
+  ——与上一轮「测试已移到…」同一手法：指路，不复制。`#servingFields`、保存按钮、原有 footnote 全部保留。
+- `admin.js`：删掉 `renderServing()` 与只被它用的 `connectionByKind()`（含「卡片 2」那一节的注释头）；
+  `runtimeBadge()` 移到角色块的运行期辅助函数旁（现在 `admin.js:502`）；`renderAll()` 与 `loadSecrets()`
+  两处调用点去掉 `renderServing()`。被删的 DOM id 与 `el("…")` 查找同步消失（套件里有「脚本 lookup 的 id
+  必须在壳里」的守卫）。
+- 套件：`test_admin_model_roles_page.py` 新增
+  `test_card_two_delegates_the_rerank_runtime_state_instead_of_copying_it`（卡片 2 无节点、有指针、保留 `servingFields`）
+  与 `test_the_rerank_role_block_keeps_the_runtime_facts_card_two_gave_up`（徽章/生效端点/生效模型/运行期说明
+  仍在角色块——「移交」不是「删除」）；`test_admin_config_page_shell.py` 新增
+  `test_card_two_carries_no_second_copy_of_the_rerank_runtime_state`。
+- harness：`model-roles-harness/render_check.cjs` 在既有的「第二个真相源」断言（profile 字段不在卡片 2）
+  旁加三条：卡片 2 不再有 `rerankRuntime` 节点、卡片 2 含指针、`role-rerank-state` 仍被填满。
+
+RED 记录：只改套件、未动页面时 `2 failed, 30 passed`（先前一次是 `3 failed`，多出来的一条是测试自己写死的
+源码形状 `row("生效端点"` —— 源码里这个行标题是跨行写的，改对断言后才是干净的 RED）。
+
+### 3. 验证（本次实际跑过的命令）
+
+| 命令 | 结果 |
+|---|---|
+| `cd apps/admin-console && uv run pytest -q -p no:randomly -p no:cacheprovider tests/test_admin_config_page_shell.py tests/test_admin_model_roles_page.py tests/test_admin_config_single_channel.py tests/test_nav_postgres_gating.py` | **53 passed**（改前基线 50 passed，本批新增 3 条） |
+| `node ../../.agents/runs/connect-collection-line/model-roles-harness/render_check.cjs` | exit 0，六个场景全 OK（含新增断言） |
+| `node --check backend/static/admin.js` | OK（语法） |
+| `cd apps/admin-console/frontend && npx tsc -b && npm run build` | exit 0 / exit 0（见 §1 表） |
+| `cd apps/admin-console/frontend && npx vitest run --environment jsdom` | 19 passed（5 files） |
+
+### 4. 未做 / 留给主线
+
+- SPA 的「已中断」过滤 pill 与汇总统计格（产品取舍，见 §1）。
+- 人类侧文档（`docs/plans/2026-09-18-collection-line-log.md` 新一轮 + 索引）与 OpenSpec
+  `tasks.md`/`acceptance.md` 未动 —— 本片只追加 agent 侧证据。
+- 活线 18188 未动，静态页随下一次热更新上线；没有真浏览器复验（本片约束不重启服务）。
+- 本批与同 worktree 的另一片（nmne SZTU adapter）并行：文件不相交（本片只碰上文列出的页面/前端/套件/harness），
+  但 `verification-contract.md` 与 `verification.md` 是共享文件，两边都只做 **append**。
+
+## 后续批次 — nmne SZTU 名册
+
+（2026-09-19 · 关闭 39 条花名册里最后一条：`https://nmne.sztu.edu.cn/picturers.jsp?urltype=tree.TreeTempUrl&wbtreeid=1004`）
+
+### 1. 这一页到底是什么（真实抓取，8 次单页 GET，无递归）
+
+`GET …/picturers.jsp?urltype=tree.TreeTempUrl&wbtreeid=1004` → **HTTP 200**，22 231 B，
+`<TITLE>师资队伍-深圳技术大学-新材料与新能源</TITLE>`。它不是新闻页、不是纯图片页、也不需要 JS：
+
+```html
+<DIV class="list_right">
+  <DIV><a href="info/1033/1594.htm" target=_blank title="阮双琛" class="jbox">
+        <img src="/__local/…png" />
+        <div class="ptitnr">
+          <div class="ptitle">阮双琛</div>
+          <div class="pzw">讲席教授 深圳技术大学创校校长</div>
+          <div class="pnr">阮双琛教授于2004年在天津大学获博士学位…</div>
+        </div></a>
+  …（每页 8 张同样的卡片）
+```
+
+- 卡片模板 = `a.jbox[href]` + `div.ptitle`（姓名）/`div.pzw`（职称）/`div.pnr`（简介）——**姓名与职称都在静态 HTML 里**；
+- 分页：`?a237185t=8&a237185p=2&a237185c=8&urltype=tree.TreeTempUrl&wbtreeid=1004`（页脚 2/3/4/5/8/下页/尾页 ⇒ 8 页 × 8 人）；
+- 站点导航里的兄弟栏目同属这份名册，逐个抓过一次以确认哪一页是真名册、并确定 `wbtreeid` 白名单：
+
+| wbtreeid | 栏目 | 卡片数 | 说明 |
+|---|---|---|---|
+| 1004 | 师资队伍（=语料 URL） | 8（共 8 页） | 与 1033 同一列表（两页 diff 只有 title/`loc`/`_jsq_`） |
+| 1033 | 教授序列 | 8（共 8 页） | 同上 |
+| 1034 | 教辅序列 | 8（共 2 页） | 同模板 |
+| 1035 | 客座教授 | 8（共 2 页） | 同模板 |
+| 1036 | 行政序列 | 8（1 页） | 同模板 |
+| 1351 | 专职研究员 | 3（1 页） | 同模板 |
+| 1352 | 博士后 | 4（1 页） | 同模板 |
+
+落盘的是语料那一页：`tests/data_agents/professor/fixtures/sztu/nmne_picturers_1004.html`
+（逐字节保存，只把 CRLF 归一成 LF；其余六个栏目页不落盘）。
+
+### 2. 决定：加窄适配器 `sztu-nmne-picturers-roster`
+
+页面上是 8 条可消费的教师条目（人名 + 个人页链接），所以**加**适配器，而不是把语料行改成别的 URL：
+
+| 改动 | 位置 |
+|---|---|
+| 常量：host / path / 已验证的 `wbtreeid` 白名单 | `roster.py:266-270` |
+| matcher：`hostname == "nmne.sztu.edu.cn"` **且** `path.rstrip("/") == "/picturers.jsp"` **且** query 里 `wbtreeid ∈ {1004,1033,1034,1035,1036,1351,1352}` | `roster.py:1550-1572`（`_is_sztu_nmne_picturers_roster_url` + `_matches_sztu_nmne_picturers_roster`） |
+| extractor：`a.jbox[href]` 卡片 + `div.ptitle`（回退到 `a[title]`），复用 `_normalize_profile_url` / `_extract_candidate_person_name` / `_is_likely_professor_name` / `_dedupe_candidate_links` / `_build_discovered_professor_seeds` | `roster.py:2088-2128` |
+| 注册 | `_SCHOOL_ROSTER_ADAPTERS`（`roster.py:2569`，紧挨 `sztu-teacher-family`） |
+
+`resolve_seed_adapter_name()` 不用改：它已经走 `find_matching_school_adapter(source_url, _SCHOOL_ROSTER_ADAPTERS)`。
+
+窄在哪里：host 必须**等于** `nmne.sztu.edu.cn`（不是 `endswith sztu.edu.cn`），path 必须**等于** `/picturers.jsp`，
+`wbtreeid` 必须在**实测过的**七个栏目里 —— `ai.sztu.edu.cn/szdw/jytd/jxjs.htm`（仍归 `sztu-teacher-family`）、
+`nmne.sztu.edu.cn/xygk.htm`、个人页 `info/…`、`wbtreeid=2001`、裸 `/picturers.jsp`、别的 host 的
+`picturers.jsp` 都**不**匹配（矩阵见新套件）。
+
+没有扩 `sztu-teacher-family`：那是 `/szdw…` 的 matcher，把 CMS 路径塞进去会变成"任意 SZTU 路径"。
+设计 §6 当初写的是"**改数据**（用该学院的 `/szdw` 列表 URL）"，前提是那个 URL 存在——上一批已经用 404
+否掉了它；本批按实测把这条改成它自己的窄适配器（design.md §6 已附修订说明）。
+
+### 3. 测试（本次实际跑过）
+
+```bash
+cd apps/miroflow-agent && uv run pytest -q -p no:randomly -p no:cacheprovider \
+  tests/data_agents/professor/test_sztu_nmne_picturers_adapter.py
+```
+→ **18 passed**（RED 先记：`9 failed, 8 passed`，失在 matcher/`resolve_seed_adapter_name`）
+
+| 锁定 | 用例 |
+|---|---|
+| matcher 接受语料 URL / 分页 URL / 七个已验证栏目（各一条参数化） | `test_nmne_picturers_seed_resolves_to_the_registered_adapter`、`..._accepts_the_cms_pagination_url`、`..._accepts_the_verified_cms_columns[7]` |
+| matcher 放行近邻 URL（含 `ai.sztu…/szdw/jytd/jxjs.htm` 仍解析成 `sztu-teacher-family`） | `test_nmne_picturers_matcher_leaves_nearby_sztu_urls_alone[7]` |
+| extractor 从 fixture 出 8 条（姓名 + 绝对个人页 URL + institution/department/source_url） | `test_nmne_picturers_adapter_extractor_reads_the_roster_cards` |
+| 同一条路径经公开入口 `extract_roster_entries` 仍然只出这 8 条 | `test_nmne_picturers_seed_page_entries_through_the_public_extractor` |
+| 注册表里该名字唯一 | 第一条用例的第三条断言 |
+
+fixture 来源 = 语料 URL 的真实 HTML（不是构造场景）；`..._seed_page_entries_through_the_public_extractor`
+在改动前就是绿的（通用链路本来就能读出这 8 条），RED 由 adapter 路径那条承担。
+
+```bash
+cd apps/miroflow-agent && uv run pytest -q -p no:randomly -p no:cacheprovider \
+  tests/data_agents/professor -k "adapter or roster or pkusz or sztu"
+```
+→ **292 passed**
+
+```bash
+cd apps/admin-console && uv run pytest -q -p no:randomly -p no:cacheprovider \
+  tests/test_import_professor_seeds.py
+```
+→ **10 passed**（其中被本批改写的期望：nmne 行由 `skipped_unresolved` 变 `would_create` + `sztu-nmne-picturers-roster`；
+`--include-unresolved` 的语义改用一条真正无适配器的 URL 单独锁定，`render_report` 的 unresolved 分支仍有用例覆盖）
+
+被本批推翻的旧断言（同一 commit 内改掉，没有留着让套件两边打架）：
+`test_pkusz_adapters.py::test_legacy_sztu_picturers_url_stays_unresolved`
+（它锁的是设计 §6 的"改数据"决定）→ 改名 `..._resolves_to_its_own_narrow_adapter`。
+
+Lint：`uv tool run ruff@0.8.0 check` 四个改动文件 → `All checks passed!`；
+`ruff format` 只对新套件生效（`roster.py` 在 HEAD 就不是 format-clean，与本批无关的格式差异未动）。
+
+### 4. 语料分类（只读，dry-run，无 `--apply`）
+
+```bash
+cd apps/admin-console && uv run python scripts/import_professor_seeds.py \
+  --dsn postgresql://miroflow@127.0.0.1:55458/miroflow_collection_v1
+```
+
+```
+would_create       sztu-nmne-picturers-roster 深圳技术大学 / 新材料与新能源学院  https://nmne.sztu.edu.cn/picturers.jsp?urltype=tree.TreeTempUrl&wbtreeid=1004
+…
+parsed entries: 50 (11 duplicate URL(s) folded)
+distinct urls: 39
+created: 0 | would_create: 1 | skipped_existing: 38 | skipped_unresolved: 0
+dry-run: nothing written (pass --apply to create the missing rows)
+```
+
+**39 distinct / 39 可解析 / 0 unresolved**（此前 38/39）。38 条是上一批已入库的行，所以本次 `would_create`
+只有 nmne 这一条——它在库里的落库（`--apply`）留给主线，本片按约束不写库。
+
+### 5. 未做 / 已知边界（诚实记录）
+
+- **没有真抓这一所学院**：本片只做了 8 次单页 GET 来确认结构，没有跑 crawl。
+- **从这条种子出发，爬虫只会拿到第 1 页的 8 个人**（该学院名册共 8 页 ≈ 64 人）：
+  实测 `extract_roster_page_links(fixture, seed_url)` 只返回 1 条（`wbtreeid=1033`，与 1004 是同一列表），
+  没有分页链接；且 `_should_continue_after_roster_entries(...)` 对这条种子返回 **False**（是否继续的判据在
+  `discovery.py:1415` 只认 `/szdw/`、`/szdw2022/`、`/xygk/szdw/`），所以第 1 页取到条目后直接 `continue`，
+  连候选页都不派发。要覆盖全量需要两处小改动（`roster.py` 出分页链接 + `discovery.py` 认 `/picturers.jsp`
+  为续爬种子），**本片没做**——它超出"让这条 URL 能解析"的片范围，留给主线决定。
+- **同 worktree 的另一片并行**：本片只碰 `roster.py`、两个 professor 测试文件、admin-console 的
+  `test_import_professor_seeds.py`、新增 fixture 与本节证据；`verification.md`/`verification-contract.md`
+  与本批一样只做 append。

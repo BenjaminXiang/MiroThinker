@@ -368,33 +368,6 @@ function renderCollection() {
   }
 }
 
-// -- 卡片 2：检索与回答 ------------------------------------------------------
-
-function connectionByKind(kind) {
-  const connections = (state.secrets && state.secrets.connections) || [];
-  return connections.find((connection) => connection.kind === kind) || null;
-}
-
-function runtimeBadge(connection) {
-  const wrapper = document.createElement("span");
-  if (!connection) {
-    wrapper.append(pill("运行期状态未知", "warn"));
-    return wrapper;
-  }
-  const runtime = connection.runtime || {};
-  wrapper.append(pill(runtime.enabled ? "运行期已启用" : "运行期未启用", runtime.enabled ? "ok" : "warn"));
-  if (runtime.pending_restart) wrapper.append(" ", pill("待重启生效", "warn"));
-  return wrapper;
-}
-
-function renderServing() {
-  const rerank = connectionByKind("rerank");
-  const badge = el("rerankRuntime");
-  if (badge) badge.replaceChildren(runtimeBadge(rerank));
-  const note = el("rerankRuntimeNote");
-  if (note) note.textContent = rerank ? (rerank.runtime || {}).runtime_note || "" : "服务端未返回 rerank 连接";
-}
-
 // -- 卡片 3：存储与保留 ------------------------------------------------------
 
 function renderStorage() {
@@ -524,6 +497,18 @@ function connectionByKey(connectionKey) {
 function runtimeOf(connectionKey) {
   const connection = connectionByKey(connectionKey);
   return connection ? connection.runtime || {} : {};
+}
+
+function runtimeBadge(connection) {
+  const wrapper = document.createElement("span");
+  if (!connection) {
+    wrapper.append(pill("运行期状态未知", "warn"));
+    return wrapper;
+  }
+  const runtime = connection.runtime || {};
+  wrapper.append(pill(runtime.enabled ? "运行期已启用" : "运行期未启用", runtime.enabled ? "ok" : "warn"));
+  if (runtime.pending_restart) wrapper.append(" ", pill("待重启生效", "warn"));
+  return wrapper;
 }
 
 function roleFields(roleId) {
@@ -1652,7 +1637,6 @@ function renderAll() {
   renderFields();
   renderCollection();
   renderStorage();
-  renderServing();
   renderRoles();
   renderSnapshot();
 }
@@ -1698,7 +1682,6 @@ async function loadSecrets() {
       return;
     }
     state.secrets = await response.json();
-    renderServing();
     renderRoles();
     renderSnapshot();
   } catch (error) {

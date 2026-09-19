@@ -258,3 +258,35 @@ def test_card_two_no_longer_carries_a_second_rerank_probe() -> None:
     assert "testButton.id = `role-${roleId}-test`" in _SCRIPT
     rerank_actions = _block('roleActions("rerank"', "function renderWebRole(")
     assert "test: true" in rerank_actions
+
+
+# -- 后续批次: card 2 delegates the rerank runtime facts ----------------------
+# What is in effect for rerank (runtime badge, endpoint, model, runtime note) is one
+# fact with one home — the role block. Card 2 keeps the fields it owns and points.
+
+
+def test_card_two_delegates_the_rerank_runtime_state_instead_of_copying_it() -> None:
+    serving = _PAGE[_PAGE.index('id="card-serving"') : _PAGE.index('id="card-paths"')]
+
+    assert 'id="rerankRuntime"' not in _PAGE
+    assert 'id="rerankRuntimeNote"' not in _PAGE
+    assert 'el("rerankRuntime")' not in _SCRIPT
+    assert 'el("rerankRuntimeNote")' not in _SCRIPT
+    assert "function renderServing(" not in _SCRIPT
+    assert "renderServing()" not in _SCRIPT
+    # pointing, not copying: the card names where the runtime facts live
+    assert "Rerank 的运行期状态" in serving
+    assert "「模型与连接 › 重排模型」" in serving
+    # the card keeps the controls it owns
+    assert 'id="servingFields"' in serving
+
+
+def test_the_rerank_role_block_keeps_the_runtime_facts_card_two_gave_up() -> None:
+    """Delegated is not deleted: the badge, the effective rows and the note stay."""
+
+    role = _block("function renderRerankRole(", "function renderWebRole(")
+
+    assert 'renderRoleState("rerank", [runtimeBadge(connectionByKey("rerank"))])' in role
+    assert '"生效端点"' in role
+    assert '"生效模型"' in role
+    assert "运行期说明" in role

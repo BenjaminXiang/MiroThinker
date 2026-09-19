@@ -211,3 +211,103 @@ runtime-effective endpoint shown on the card). The scenario is red at HEAD
 - 对话模型 and 采集模型 share the `llm` connection: six probes consume the client's whole
   6/min budget, so a run started right after a model-list fetch renders 限频 lines for its
   tail. That is reported to the operator, not hidden.
+
+## 后续批次 (2026-09-19) — nmne SZTU legacy roster adapter
+
+Appended before production-code edits; same TDD boundary (AGENTS.md §4).
+
+### Contract
+
+- `https://nmne.sztu.edu.cn/picturers.jsp?urltype=tree.TreeTempUrl&wbtreeid=1004` is the
+  college's 师资队伍 list (8 teacher cards per page, 8 pages) — one live GET, saved verbatim
+  (line endings normalised) as
+  `apps/miroflow-agent/tests/data_agents/professor/fixtures/sztu/nmne_picturers_1004.html`.
+- `resolve_seed_adapter_name()` returns the new adapter name for that seed, and the matcher
+  accepts only the verified host + `/picturers.jsp` + the verified `wbtreeid` set
+  (1004 / 1033 / 1034 / 1035 / 1036 / 1351 / 1352).
+- The extractor reads the roster from the CMS card template (`a.jbox` + `div.ptitle`) and
+  reuses `_build_discovered_professor_seeds` — no second parser.
+
+### RED artifacts
+
+`apps/miroflow-agent/tests/data_agents/professor/test_sztu_nmne_picturers_adapter.py`
+- matcher accepts the corpus URL and its pagination URL (`?a237185t=8&a237185p=2&…&wbtreeid=1004`),
+  rejects `ai.sztu.edu.cn/szdw/jytd/jxjs.htm`, `nmne.sztu.edu.cn/xygk.htm`, the same page
+  with an unverified `wbtreeid`, and the bare path with no `wbtreeid`;
+- extractor returns the fixture's 8 teacher entries (name + absolute profile URL) and
+  produces nothing on a non-roster SZTU page;
+- `resolve_seed_adapter_name()` resolves the corpus seed URL.
+- Superseded assertion to flip: `test_pkusz_adapters.py::test_legacy_sztu_picturers_url_stays_unresolved`
+  — it locked design §6's "fix the data" decision, which the live page falsified.
+- Superseded expectations to update: `apps/admin-console/tests/test_import_professor_seeds.py`
+  (the nmne URL is no longer `skipped_unresolved`).
+
+### GREEN evidence required
+
+- Layer ①: the new suite + the flipped pkusz assertion + the admin-console importer suite.
+- Layer ②: `cd apps/miroflow-agent && uv run pytest -q -p no:randomly -p no:cacheprovider
+  tests/data_agents/professor -k "adapter or roster or pkusz or sztu"` — all green.
+- Layer ③: `apps/admin-console/scripts/import_professor_seeds.py --dsn …` (dry-run, no
+  `--apply`) over the real corpus → 39 distinct urls, 0 unresolved.
+
+### What will NOT be claimed
+
+- No live crawl of the college. The seed page yields its 8 entries, but the crawl stops
+  there: `extract_roster_page_links` finds no pagination link and
+  `_should_continue_after_roster_entries` has no `/picturers.jsp` case, so the other 7 pages
+  of the same list are not reached. Recorded as a follow-up, not fixed here.
+- Only page 1 of the corpus URL is kept as a fixture; the sibling column pages
+  (1004/1033/1034/1035/1036/1351/1352) were fetched once each to pick the matcher set and
+  are not fixtures.
+
+## 后续批次 — SPA 构建 + 文案去重 (2026-09-19)
+
+Appended before this batch's page/frontend edits (AGENTS.md §4). Two independent
+follow-ups: the React SPA must still type check and build after `interrupted` landed, and
+`/admin` card 2 must stop holding a second copy of the rerank runtime facts.
+
+### 1. SPA (`apps/admin-console/frontend/`)
+
+Contract: `SeedLastRunStatus` gained `interrupted` (`frontend/src/api.ts:772`) and its
+label map (`Seeds.tsx:44`), but the two other `Record<SeedLastRunStatus, …>` tables were
+missed. Fix = add the missing key to both tables; the union and the label map stay exactly
+as the earlier batch wrote them; nothing else in the SPA changes.
+
+RED artifact: `npx tsc -b` at HEAD → `TS2741` ×2 — `Seeds.tsx(57,7)` (`STATUS_TAG_COLOR`)
+and `Seeds.tsx(120,11)` (the counts record).
+
+### 2. `/admin` card 2 ↔ 重排模型 role block (page)
+
+Contract: what rerank is *in effect* has one home — the 重排模型 role block. Card 2 keeps
+the fields it owns (`serving.rerank_timeout_seconds`, `serving.rerank_max_documents`,
+`serving.web_topical_floor`) and replaces its runtime row with a muted pointer; the runtime
+badge, the pending-restart pill and `runtime_note` are not rendered twice.
+
+RED artifacts (new markers):
+1. `tests/test_admin_config_page_shell.py::test_card_two_carries_no_second_copy_of_the_rerank_runtime_state`
+2. `tests/test_admin_model_roles_page.py::test_card_two_delegates_the_rerank_runtime_state_instead_of_copying_it`
+3. `...::test_the_rerank_role_block_keeps_the_runtime_facts_card_two_gave_up`
+
+Captured RED with only the page untouched: `3 failed, 29 passed`; after correcting the
+third test's source-shape literal (the row title is written across lines in `admin.js`),
+the dedupe RED is the two above (`2 failed, 30 passed`).
+
+### GREEN evidence required
+
+- Layer ①: the three markers above plus the page-shell marker; the SPA's own evidence is
+  `tsc -b` + `vite build` + its `vitest` suite (there is no Seeds unit test to extend).
+- Layer ②: the brief's four suites — `test_admin_config_page_shell.py`,
+  `test_admin_model_roles_page.py`, `test_admin_config_single_channel.py`,
+  `test_nav_postgres_gating.py` — zero failures.
+- Layer ③: `model-roles-harness/render_check.cjs` — the shell renders with no card-2
+  runtime node, the pointer is inside card 2, and the rerank role still fills its state node.
+
+### What will NOT be claimed
+
+- No `已中断` filter pill and no summary-stat cell in the SPA: the new status is counted and
+  labelled (type-correct), but the toolbar has no pill for it — a product decision left to
+  the main line.
+- No real-browser pass and no live 18188 check: the static page ships with the next hot
+  update.
+- Human docs (`docs/plans/` round log + index) and OpenSpec `tasks.md` / `acceptance.md`
+  are not touched by this batch.
