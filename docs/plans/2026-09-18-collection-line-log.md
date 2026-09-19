@@ -751,3 +751,103 @@ pack 模式的装配注入的是**内存版 gap feedback**（只有 `record`/`ap
 
 - 守卫是**按方法名**解析的：以后 Postgres 版再加管理方法，新端点要自己记得加守卫。彻底做法是把"管理接口"声明成协议/能力（deps 或聚合层），本片没做
 - 顺带发现：`test_canonical_v2_consumer_migration.py:734` 有一条**既有失败**（断言 `main.py` 工厂签名），与本片无关（回退生产文件后同样失败）
+
+---
+
+# 第 17 轮（2026-09-20 凌晨）：知识缺口接通 —— 一路断三跳的链路补齐
+
+## 1. 你报的问题与我的判定
+
+你报：「`/browse` 的知识缺口面板报 500，如果没有用就下线，有用就修到可用。」
+
+先回答"有没有用"：**有用，且它是需求侧的输入**。用户反馈是"系统该往哪补数据/补检索"的唯一
+真实信号源，本地知识库要周期性更新、要泛化到测试集之外，靠的就是它。所以本片的结论是修，不是下线。
+
+## 2. 根因：这条链不是坏了，是从未接通过
+
+一条反馈要走三跳，三跳全是断的：
+
+| 跳 | 应有 | 实际 | 证据 |
+|---|---|---|---|
+| ① 用户能反馈 | `/chat` 上有反馈控件 | **没有**。公开的 `/chat`（静态页，活线上跑的就是它）没有任何反馈入口；React SPA 里有「反馈」按钮，但 SPA 根本没挂载（活线 `/app` 404） | `frontend/src/pages/Chat.tsx` 有控件、`backend/static/chat.html` 没有；`/app` → 404 |
+| ② 反馈能留下 | 落到一个能读的库 | **落进内存**。记录点是 `_EphemeralKnowledgeGapFeedback`，重启即丢 | 活线进程重启 11 分钟，反馈活不过一次重启 |
+| ③ 管理台能读 | `/browse` 读到这些反馈 | **读的是另一套东西**。`/api/canonical-v2/operations/gaps` 要构建线的 PG 表（`ops.knowledge_gap` / `knowledge.release` / `publish.manifest_section`），**alembic 链里根本没有这些表** | 这就是那个 **500** 的根：能力缺失被当成失败渲染 |
+
+上一轮把 500 兜成了中性态（不再红框报错），但只是让"没数据"看起来体面一点——面板依然**结构上
+不可能有数据**。本轮把三跳都接上。
+
+## 3. 修法：一个 SQLite 台账，两端接上去
+
+不去补 PG 那套构建线表（那些表面向构建期评审流程，不是给运营读的）。落一个新台账，与控制台
+其它台账（access-logs / corrections）**同目录、同形状**：
+
+- **写**：`services/canonical_v2_admin.py` 的反馈路径，在把信号交给 `gap_operations` 之后**再抄一份**
+  进台账。抄写失败只记一行 warning —— **绝不**影响用户看到的反馈结果（fail-open）。
+- **读**：`GET /api/canonical-v2/admin/chat-gaps`，走 `AdminSessionGate`（匿名 401）；**空台账
+  返回 200 + 空列表**，绝不 503。
+- **幂等**：`signal_id` 本来就是内容寻址（`gap-signal:chat-feedback:sha256:…`），重复反馈天然只留一行，
+  没有第二套去重规则。
+- **页面**：`/browse` 的「知识缺口」页签改读台账（中文类型标签、短标识、本地时间、按类型计数），
+  死掉的构建线详情视图与 503 分支一并删除；`/chat` 补上缺失的写出入口。
+
+## 4. 主线复核抓出的真缺陷（这一条值得记）
+
+两个子代理**各自都"绿"了**，但合并后我把应用真实路由表列出来核对，发现页面把反馈发到了
+**一个不存在的路径**：
+
+```
+页面发的：      api/canonical-v2/chat/feedback   ← 不存在，且落在管理门禁前缀里（匿名 401）
+真实的路由：    POST /api/chat/feedback          ← chat 路由器的 prefix 是 /api，不是 /api/canonical-v2
+```
+
+为什么两边的证据都没抓到：页面批的浏览器验收打的是**自己起的桩服务端**（桩对任何路径都回 200），
+后端批只验了自己那条**读**端点。**桩测试验证不了"路径是否真实存在"**——这类断言的正确锚点是
+应用自己的路由表。
+
+已修：页面字面量 + 锁死该字面量的行为测试 + harness，三处一起翻正，并把这条写进证据。
+
+## 5. 怎么验证
+
+| 层 | 检查 | 结果 |
+|---|---|---|
+| ① 新测试 | 台账存储 7 条 + 读端点 10 条 | **17 passed**（RED 已取证：去掉生产文件后 `ModuleNotFoundError` / `assert 0 == 1`） |
+| ① 新测试 | `/browse` 页签 2 条（壳 + DOM harness）、`/chat` 行为 7 条 | 壳测试 **13 passed**（改前 11）；node 行为套件 **94 条 / 93 过 / 1 既有失败** |
+| ① RED 取证 | 把 `browse.html` 临时还原成上一版再跑新测试 | **2 failed**，文件按 sha256 原样还原 |
+| ② 既有回归 | 预览壳 + operations + 管理台壳 + 两个新套件 | **1 failed, 249 passed** —— 唯一失败是既有的「国先 vs 科创」品牌断言（`git show HEAD:` 逐字核对过，与本片无关） |
+| linter | `ruff check`（7 个改动 py 文件） | All checks passed! |
+| ③ 活线 | 本片需要重启才生效（下面单独记） | 见第 6 节 |
+
+## 6. 活线与真机验收
+
+活线 ff 到本片两个 commit（`ab04cf53` 代码 + `5d704cc4` 文档），**01:15:58 重启**，
+**680 秒后健康**（01:27:09）。逐条真机验收：
+
+| # | 验收点 | 结果 |
+|---|---|---|
+| 1 | 公开面不变 | `/chat` **200**、`/main` 200、`/browse` `/admin` **302**（登录门）；匿名调新读端点 → **401** `authentication_required` |
+| 2 | 新代码真的在跑 | `/chat` 里 `feedback-toggle` 出现 4 处、`/static/browse.html` 里 `chat-gaps` 出现 1 处 |
+| 3 | **写入**（真浏览器） | 打开 `/chat` → 问「深圳有哪些做激光雷达的公司」→ 回答渲染 → 点「反馈」→ 填备注 → 提交 → 按钮变 **已反馈（不可再点）**、无错误气泡 |
+| 4 | 台账落盘 | `/var/tmp/mirothinker-canonical-v2-s12f/chat-gaps.sqlite3`（0600）出现 **1 行**：`release_id=candidate-v2-20260916-r1`、`feedback_type=incorrect_answer`、备注原文、session/turn/query/answer 四个标识齐全 |
+| 5 | **读取**（带会话） | `GET /api/canonical-v2/admin/chat-gaps` → `total:1`、`counts:{incorrect_answer:1}`、`items` 一条；`feedback_type=evidence_gap` → `items` 空但 `total/counts` 仍是全台账；`limit=0` → **422** |
+| 6 | **页面**（真浏览器 + 会话） | `/browse#gaps`：概览瓦片显示 **1**、页签标题「共 1 条反馈 · 回答不对 1」、卡片「回答不对 / 主线真机验收：验证反馈链路 / a0a2d6fd / 时间 2026-09-20 01:27 / 会话 k52cN-ht / 轮次 8f70b988」。截图存 `.agents/runs/connect-collection-line/live-browse-gaps.png` |
+| 7 | 死面确认消失 | 页面本次只请求 `admin/status`、`admin/chat-gaps`（×2：瓦片 + 页签）、`auth/me`——**不再请求 `operations/gaps`** |
+| 8 | **你报的 500 有据可查** | 服务日志里那条请求的原文：`GET /api/canonical-v2/operations/gaps HTTP/1.1" 500`（另有一条匿名 `401`）。现在这条路径已从页面彻底摘除 |
+
+说明两点：
+
+- 第 5/6 步用的是**控制台自己的会话机制**签出来的管理员会话（与测试套件 `authorized_client`
+  同一入口），没有绕开门禁：匿名仍然是 401。
+- 台账里那条是**本片自己写的验收记录**（备注就写着"主线真机验收：验证反馈链路"）。
+  留着它就是"面板有数"的活证据；不想要的话删掉即可：
+  `sqlite3 /var/tmp/mirothinker-canonical-v2-s12f/chat-gaps.sqlite3 "delete from chat_gap"`
+
+## 7. 残留（记录，不在本片）
+
+- **锚点问题**：`tests/test_canonical_v2_consumer_migration.py` 里 `_assert_static_and_import_quarantine`
+  仍把 `operations/gaps` 当作 `/browse` 的字面量之一；该断言在上一版就不可达（其调用者更早失败），
+  本片如实记录、未改。
+- **澄清型轮次也显示反馈入口**：入口是按"每轮回答"统一挂的。用户对"理解错了"同样有反馈诉求，
+  所以选择统一；若产品要求只在有答案时出现，需产品决定。
+- **`#gaps` 直接落地会读两次台账**（概览瓦片一次、页签一次）：多一次小读换"概览不空转"，保留。
+- **活线工作区的 `AGENTS.md` 比仓库根旧**（缺"动手前检查"和"编码纪律"两节）。这是文档漂移，
+  不属本片范围，仅记录。
