@@ -1405,3 +1405,122 @@ POST body 由 harness 第 7 段锁定 `{"params": {"domain": "professor"}}` / `{
 - **没有在活线（18188）上看到新页面**：本片约束不重启服务，线上仍是旧页面，直到下一次热更新。
 - **人类侧文档（`docs/plans/` 第 11 轮日志 + 索引）与 OpenSpec `tasks.md`/`acceptance.md` 未动**，
   按本片范围只追加本证据；round log / index / 勾选留给主线。
+
+## 后续批次（页面）— 抓取动作白话化
+
+Round 12 (2026-09-19)。范围：`/seeds` 一个页面批次 —— 行首两个触发按钮改成结果语言
+（「检查名册」/「开始抓取」），抓取条数收成表头上一处「抓取范围」选择器（前 20 / 前 50 / 前 100 条 /
+全部），确认与横幅一律白话，并把「全部」从不可达变成可达；未改后端 Python（除测试）、未加依赖、
+未重启服务、未碰 18188、未提交。
+
+### 1. 改了什么（文件 · 行）
+
+| 文件 | 改动 |
+|---|---|
+| `apps/admin-console/backend/static/seeds.html:237-246` | CSS：`.toolbar label.scope`（行内标签 + 下拉对齐）与 `.toolbar label.scope select`（`width: auto; min-width: 112px`，不再吃满 100%） |
+| " `:311-325` | 工具栏：`刷新` 右边加「抓取范围」`<select id="scopeSelect">`（四个选项，`sample:20` 默认）；脚注那句模式术语换成「「检查名册」只验证能不能解析，不写入数据；「开始抓取」按上面选的抓取范围真实抓取并写入（同样受系统安全限制）。」 |
+| " `:409-414` | 新增 `SCOPE_OPTIONS`：选项值 → `{ label, banner, body }` 三件套，四组 body 就是接口唯一承认的四组 |
+| " `:598-601` | 行内按钮：`data-action="preview"`/`"sample"` → `"check"`/`"collect"`，标签「检查名册」「开始抓取」，title 换成两句白话（顺带补上「约 1 分钟」「会真实访问学校网站」） |
+| " `:640-674` | `handleAction`：两条触发分支；抽出 `seedById()` 与 `trigger(seedId, body, label)`（POST + 横幅 + 重载运行记录/清单）。`修改 / 运行记录 / 删除`、就地编辑保存、删除确认、降级分支、`loadRuns()` 的 scrollIntoView 全部未动 |
+| `apps/admin-console/tests/test_nav_postgres_gating.py:103-188` | 新增 6 条页面锁（见 §3 ①）；文件顶部加 `import re` |
+| `.agents/runs/connect-collection-line/seeds-page-harness/render_check.cjs` | 新增（node stdlib + `vm`，无依赖）：把页面自己的内联脚本放进 DOM 桩里跑，按真实点击驱动 `handleAction`，锁住五个动作的请求体、确认文案、取消不写、失败原因、行内按钮顺序 |
+| `.agents/runs/connect-collection-line/seeds-page-harness/stub_server.py` | 新增（stdlib、仅环回）：shipped `seeds.html` + 四条仿真采集源，供真浏览器实测 |
+| `.agents/runs/connect-collection-line/seeds-page-harness/seeds-actions-1440.png` / `-1024.png` | 真浏览器截图（1440 / 1024） |
+
+未动：任何端点、任何 task_id、任何 argv/params/gate 字段；`MODE_LABEL`（运行记录「模式」列，见 §4）；
+`nav_auth.js` 与其它静态页。
+
+### 2. 五个动作的确切请求体（真浏览器内点出来，桩服务端日志原文）
+
+| 界面动作 | 确认（`window.confirm`，原文） | `POST /api/canonical-v2/admin/seeds/{id}/trigger` body | 成功横幅 |
+|---|---|---|---|
+| 「检查名册」 | 无 | `{"mode": "preview"}` | `已开始：深圳大学 · 检查名册` |
+| 范围=前 20 条 + 「开始抓取」 | `确认抓取「哈尔滨工业大学（深圳）」的前 20 条教授主页？会真实访问学校网站。` | `{"mode": "sample", "limit": 20}` | `已开始：<学校> · 抓取前 20 条` |
+| 范围=前 50 条 + 「开始抓取」 | 同上句式，`前 50 条` | `{"mode": "sample", "limit": 50}` | `已开始：<学校> · 抓取前 50 条` |
+| 范围=前 100 条 + 「开始抓取」 | `确认抓取「南方科技大学」的前 100 条教授主页？会真实访问学校网站。` | `{"mode": "sample", "limit": 100}` | `已开始：南方科技大学 · 抓取前 100 条` |
+| 范围=全部 + 「开始抓取」 | `确认抓取「清华大学深圳国际研究生院」的全部教授主页？会真实访问学校网站。` ⏎ `全部抓取可能耗时较长（上千条时可能超过任务上限）。` | `{"mode": "full"}` | `已开始：清华大学深圳国际研究生院 · 全部抓取` |
+
+桩服务端的原始记录（`/tmp/seeds-stub.log`）：
+
+```text
+trigger #1: /api/canonical-v2/admin/seeds/18/trigger {'mode': 'full'}
+trigger #2: /api/canonical-v2/admin/seeds/30/trigger {'mode': 'sample', 'limit': 100}
+trigger #3: /api/canonical-v2/admin/seeds/31/trigger {'mode': 'preview'}
+```
+
+取消确认后桩服务端日志里**没有任何** trigger 行 ——「开始抓取」不确认就绝不写。
+
+### 3. 验证
+
+**① 本片新增的测试** — fixture：真静态页（`authorized_client` 走真路由图）+ 页面自己的内联脚本。
+
+| 测试 | 锁住什么 |
+|---|---|
+| `test_seeds_page_offers_the_two_outcome_actions` | 两个新标签 + 两条 title 原文 |
+| `test_seeds_page_scope_selector_carries_the_legal_combinations_only` | `<select id="scopeSelect">` 的存在、「抓取范围」标签就在它前面、四个选项的 value↔文案逐字与顺序、第一项默认 |
+| `test_seeds_page_scope_options_map_to_the_documented_request_bodies` | 五组 body 原文都在页面上，且 `limit:` 只出现 20/50/100（不许第五种组合） |
+| `test_seeds_page_never_writes_without_the_confirm` | 确认文案三段原文 + 全部抓取的耗时提醒 + `if (!window.confirm(message)) return;` 位于触发调用之前 |
+| `test_seeds_page_drops_the_internal_mode_vocabulary` | `预览抓取 / 抽样抓取 / 触发抓取走闸门 / 预览 = 只跑发现阶段 / 抽样 = 抓取上限 20 条画像 / data-action="preview" / data-action="sample"` 全部不在页面里 |
+| harness `render_check.cjs`（7 组断言） | 每行五个按钮及其顺序、四个选项的 value/文案/默认、五个动作的 body 与横幅、取消不发请求、第二行的确认报自己的学校、503 时横幅仍是 `控制台没有配置数据库（DATABASE_URL）：seed 管理不可用。` |
+
+```bash
+cd apps/admin-console
+uv run pytest -q -p no:randomly -p no:cacheprovider tests/test_nav_postgres_gating.py
+# 新增 6 条打 HEAD 页面（git show HEAD:… > seeds.html）：
+#   5 failed, 10 passed in 0.27s   ← RED（新页面恢复后 15 passed）
+node ../../.agents/runs/connect-collection-line/seeds-page-harness/render_check.cjs
+# HEAD 页面：FAILED: Expected values … （行内按钮仍是 预览抓取|抽样抓取…）
+# 本片页面：OK — all /seeds render assertions passed
+#   buttons per row: 检查名册 | 开始抓取 | 修改 | 运行记录 | 删除
+#   scopes: 前 20 条 → sample:20 | 前 50 条 → sample:50 | 前 100 条 → sample:100 | 全部 → full
+#   bodies: {"mode":"preview"} {"mode":"sample","limit":20} {"mode":"sample","limit":50}
+#           {"mode":"sample","limit":100} {"mode":"full"} {"mode":"full"} {"mode":"preview"}
+```
+
+**② 既有回归套件**（brief 指定的定向命令，两个生产/测试文件保持本片版本）：
+
+```bash
+cd apps/admin-console && uv run pytest -q -p no:randomly -p no:cacheprovider \
+  tests/test_nav_postgres_gating.py tests/test_admin_console_shell.py \
+  tests/test_canonical_v2_seeds_api.py tests/test_canonical_v2_admin_secrets_api.py
+# 44 passed, 2 skipped in 2.16s
+uv tool run ruff@0.8.0 check tests/test_nav_postgres_gating.py      # All checks passed!
+uv tool run ruff@0.8.0 format --check tests/test_nav_postgres_gating.py  # 1 file already formatted
+```
+
+保留的既有断言全部仍在：`failureReason(run)`、`exit_code`、`stderr_excerpt`、`escapeHtml`、
+`clip(run.stderr_excerpt, 160)`、`console_database_not_configured`、`DATABASE_URL`、`已中断`、
+就地编辑标记、`/api/canonical-v2/admin/seeds/{id}/trigger` 的 body 语义（`test_canonical_v2_seeds_api.py`
+的 `{"mode": "preview"}` / `{"mode": "sample", "limit": 20}` 用例未改也未破）。
+
+**③ 页面级证据（真浏览器，桩服务端 + 真页面）**：
+
+```bash
+cd apps/admin-console && uv run python ../../.agents/runs/connect-collection-line/seeds-page-harness/stub_server.py 18326
+agent-browser open http://127.0.0.1:18326/seeds      # 1440×900 与 1024×800 两个视口
+```
+
+- 行内五个按钮**全在一行**：`oneLine: true`、五个按钮 `getBoundingClientRect().top` 只有一个值、
+  行高 66px（与 Round 4 的测量一致）；`.actions` 的 `scrollWidth 344 / clientWidth 320`
+  在改前（HEAD 页面）与改后**逐值相同** —— 本片没有让行变宽（剩下的 13px 溢出是既有现象，
+  见 §4）。
+- 页面级横向滚动 `documentElement.scrollWidth - clientWidth = 0`（1440 与 1024 均是）；
+  1024 下仍是表格容器自己滚（`wrapOverflowX 173`），与 Round 4 的设计一致。
+- 真浏览器点的三跳：`检查名册`（无对话框→直接 POST）、`全部`+`开始抓取`（确认里带耗时提醒→
+  接受→POST）、`前 100 条`+`开始抓取`（接受→POST），横幅与 §2 表格逐字一致；
+  点「开始抓取」后 `dialog dismiss` → 桩日志无 trigger 行。
+- 点「运行记录」：面板刷新（`runHint=采集源 31`、2 行历史、失败行显示
+  `exit_code 1 · stderr：TimeoutError: …`，即 `clip(…, 160)` + `failureReason` 路径未变）。
+
+### 4. 未做 / 留给主线
+
+- **运行记录表的「模式」列仍显示 预览 / 抽样 / 全量**（`seeds.html:402-406` 的 `MODE_LABEL`，
+  键就是接口的三个 mode 值）。brief 第 4 条点名的字符串（`预览抓取 / 抽样抓取 / 触发抓取走闸门`…）
+  已从页面上消失，但这一列仍是同一类词汇；brief 第 5 条要求「运行记录面板保持原样」，
+  所以没有动它 —— 若要一并白话化（例如 preview→「检查名册」、full→「全部抓取」），
+  是一行映射的改动，请主线定夺。
+- **活线 18188 上没有看到新页面**：本片不重启服务，线上仍是旧页面，直到下一次热更新。
+- **没有真“抓一次”**（会真实访问学校网站、且本片约束不动活线）：请求体的正确性由真浏览器 +
+  桩服务端日志与 node harness 锁定，真运行留给热更新后的验收。
+- **人类侧文档（`docs/plans/` 第 12 轮日志 + 索引）与 OpenSpec `tasks.md`/`acceptance.md` 未动**，
+  按本片范围只追加本证据；round log / index / 勾选留给主线。

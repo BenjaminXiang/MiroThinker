@@ -235,6 +235,15 @@
       .notice.hidden { display: none; }
 
       .toolbar { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 10px; }
+      .toolbar label.scope {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.8rem;
+        color: var(--muted);
+        white-space: nowrap;
+      }
+      .toolbar label.scope select { width: auto; min-width: 112px; padding: 5px 8px; font-size: 0.82rem; }
       .grid-form { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
       .field { display: flex; flex-direction: column; gap: 4px; }
       .field > span { font-size: 0.78rem; color: var(--muted); }
@@ -301,8 +310,17 @@
         </header>
         <div class="toolbar">
           <button id="refresh" type="button" class="mini">刷新</button>
+          <label class="scope">
+            抓取范围
+            <select id="scopeSelect" aria-label="抓取范围">
+              <option value="sample:20" selected>前 20 条</option>
+              <option value="sample:50">前 50 条</option>
+              <option value="sample:100">前 100 条</option>
+              <option value="full">全部</option>
+            </select>
+          </label>
           <span class="footnote" style="margin: 0">
-            按学校排序；触发抓取走闸门：预览 = 只跑发现阶段（不写画像）；抽样 = 抓取上限 20 条画像。学校改了名册 URL 后，用「修改」就地更新。
+            按学校排序；「检查名册」只验证能不能解析，不写入数据；「开始抓取」按上面选的抓取范围真实抓取并写入（同样受系统安全限制）。学校改了名册 URL 后，用「修改」就地更新。
           </span>
         </div>
         <div class="table-wrap">
@@ -381,10 +399,22 @@
         skipped: "已跳过",
       };
 
-      const MODE_LABEL = {
-        preview: "预览",
-        sample: "抽样",
-        full: "全量",
+      /* 运行记录里的「模式」也用操作者的语言：检查名册 / 抓取（带上限时写明条数）/ 全部抓取。 */
+      function modeText(run, summary) {
+        const mode = summary.trigger_mode || "";
+        const limit = summary.limit;
+        if (mode === "preview") return "检查名册";
+        if (mode === "sample") return limit ? "抓取 前 " + limit + " 条" : "抓取（限量）";
+        if (mode === "full") return "全部抓取";
+        return mode || "—";
+      }
+
+      /* 四个选项 = 触发接口唯一承认的四组参数：前 20/50/100 条带上限，全部不带。 */
+      const SCOPE_OPTIONS = {
+        "sample:20": { label: "前 20 条", banner: "抓取前 20 条", body: { mode: "sample", limit: 20 } },
+        "sample:50": { label: "前 50 条", banner: "抓取前 50 条", body: { mode: "sample", limit: 50 } },
+        "sample:100": { label: "前 100 条", banner: "抓取前 100 条", body: { mode: "sample", limit: 100 } },
+        full: { label: "全部", banner: "全部抓取", body: { mode: "full" } },
       };
 
       const TRIGGER_LABEL = {
@@ -569,10 +599,10 @@
           escapeHtml(seed.seed_url) + "</span></td>" +
           "<td>" + statusCell(seed) + "</td>" +
           '<td><div class="actions">' +
-          '<button class="mini" data-action="preview" data-id="' + seed.id +
-          '" title="只跑发现阶段，不写画像">预览抓取</button>' +
-          '<button class="mini" data-action="sample" data-id="' + seed.id +
-          '" title="抓取上限 20 条画像">抽样抓取</button>' +
+          '<button class="mini" data-action="check" data-id="' + seed.id +
+          '" title="只访问名册页确认能不能解析，不写入任何数据（约 1 分钟）">检查名册</button>' +
+          '<button class="mini" data-action="collect" data-id="' + seed.id +
+          '" title="抓取该名册下的教授主页并写入数据（会真实访问学校网站）">开始抓取</button>' +
           '<button class="mini" data-action="edit" data-id="' + seed.id +
           '" title="修改学校 / 院系 / 名册 URL">修改</button>' +
           '<button class="mini" data-action="runs" data-id="' + seed.id +
@@ -611,19 +641,36 @@
           loadSeeds();
           return;
         }
-        if (action === "sample") {
-          if (!window.confirm("对采集源 " + id + " 触发抽样抓取（上限 20 条画像）？会真实访问学校网站。")) return;
+        if (action === "check") {
+          await trigger(id, { mode: "preview" }, "检查名册");
+          return;
         }
-        const body = action === "sample" ? { mode: "sample", limit: 20 } : { mode: "preview" };
-        const response = await fetch(API + "/seeds/" + id + "/trigger", {
+        if (action === "collect") {
+          const scope = SCOPE_OPTIONS[document.getElementById("scopeSelect").value];
+          let message = "确认抓取「" + seedById(id).school + "」的" + scope.label +
+            "教授主页？会真实访问学校网站。";
+          if (scope.body.mode === "full") {
+            message += "\n全部抓取可能耗时较长（上千条时可能超过任务上限）。";
+          }
+          if (!window.confirm(message)) return;
+          await trigger(id, scope.body, scope.banner);
+        }
+      }
+
+      function seedById(seedId) {
+        return lastSeeds.filter(function (seed) { return seed.id === seedId; })[0];
+      }
+
+      async function trigger(seedId, body, label) {
+        const response = await fetch(API + "/seeds/" + seedId + "/trigger", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(body),
         });
         const payload = await response.json().catch(function () { return {}; });
         if (response.ok) {
-          say("已触发（" + payload.task_id + "），运行 " + payload.run_id + " 已入闸门。", "ok");
-          loadRuns(id);
+          say("已开始：" + seedById(seedId).school + " · " + label, "ok");
+          loadRuns(seedId);
         } else {
           say(describeError(payload, response.status), "bad");
         }
@@ -686,12 +733,11 @@
             const summary = (run.summary && run.summary.job_summary) || {};
             const status = run.status || "";
             const statusKind = status === "succeeded" ? "ok" : status === "failed" ? "bad" : "warn";
-            const mode = summary.trigger_mode || "";
             const trigger = run.trigger_source || "";
             return (
               "<tr><td class='mono muted nowrap'>" + escapeHtml(String(run.run_id).slice(0, 8)) + "…</td>" +
               "<td class='small'>" + escapeHtml(run.task_id) + "</td>" +
-              "<td class='nowrap'>" + escapeHtml(MODE_LABEL[mode] || mode || "—") + "</td>" +
+              "<td class='nowrap'>" + escapeHtml(modeText(run, summary)) + "</td>" +
               "<td>" + pill(RUN_STATUS_LABEL[status] || status, statusKind) + failureReason(run) + "</td>" +
               "<td class='nowrap'>" + escapeHtml(TRIGGER_LABEL[trigger] || trigger) + "</td>" +
               "<td class='small nowrap'>" + escapeHtml(run.operator) + "</td>" +
