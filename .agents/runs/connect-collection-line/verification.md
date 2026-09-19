@@ -1524,3 +1524,22 @@ agent-browser open http://127.0.0.1:18326/seeds      # 1440×900 与 1024×800 �
   桩服务端日志与 node harness 锁定，真运行留给热更新后的验收。
 - **人类侧文档（`docs/plans/` 第 12 轮日志 + 索引）与 OpenSpec `tasks.md`/`acceptance.md` 未动**，
   按本片范围只追加本证据；round log / index / 勾选留给主线。
+
+## 页面级验收（/seeds 四条路径，真浏览器 + 真库）
+
+在本机 scratch 实例（端口 18297，独立认证库，`DATABASE_URL` 指向线上同一个采集库
+`miroflow_collection_v1`；与线上同一 commit、同一页面文件）用 Chromium 逐条执行：
+
+| 步骤 | 界面结果 | 服务端状态码 | 库内核对 |
+|---|---|---|---|
+| 新增（验收测试学院 / 页面验收 / icoc.sztu.edu.cn…yjy.htm） | 横幅「已新增采集源 43。」列表 39 条 | `POST /seeds → 201` | `professor_seed` id=43 存在 |
+| 检查名册（触发） | 横幅「已开始：验收测试学院 · 检查名册」；运行记录面板出现一行（进行中 / 手动 / admin / 23:00） | `POST /seeds/43/trigger → 202`、`GET /seeds/43/runs → 200` | `pipeline_run` 出现 `run_scope.seed_id=43`、`trigger_mode=preview` |
+| 修改（改院系） | 横幅「已更新采集源 43，下次触发生效。」 | `PUT /seeds/43 → 200` | department 变为「页面验收（改）」 |
+| 删除 | 横幅「已删除采集源 43。」列表回到 38 条 | `DELETE /seeds/43 → 204` | id=43 残留 0，总数回到 38 |
+
+**顺带确认的行为**：删除采集源**不会取消已在跑的任务**——该 preview 在删除后仍跑完并记为
+`succeeded`（run `d84729ef…`）。对 preview 无害；对正在写数据的 sample/full 来说，删除后
+的运行仍会把画像写入域库，只是 registry 行没了。记为已知行为（不是缺陷，但值得写进 runbook）。
+
+**验收限制**：线上 18188 需要操作者口令，本次验收在 scratch 实例上完成；它与线上是同一
+commit、同一页面文件，且指向同一个采集库。18188 自身的登录门禁此前已用 302/401 覆盖。
