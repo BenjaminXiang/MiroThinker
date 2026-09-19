@@ -85,6 +85,29 @@ historical seeds:
 Broadening the matcher to swallow arbitrary SZTU paths would match non-roster pages;
 the registry stays pattern-based and narrow.
 
+**Revision (2026-09-19) — the `nmne` bullet above is superseded.** One live GET
+(HTTP 200, 22 KB, `<TITLE>师资队伍…`) showed `picturers.jsp?…wbtreeid=1004` *is* the
+college's roster: 8 static `a.jbox` + `div.ptitle` teacher cards per page over 8 pages,
+with the sibling columns 1033 (教授序列) / 1034 / 1035 / 1036 / 1351 / 1352 using the
+same template. The "fix the data" route assumed a `/szdw…` list URL that does not exist
+(every such path on that host answers 404 — the previous round's finding). The seed now
+has its own adapter `sztu-nmne-picturers-roster` whose matcher stays narrow in the way
+this section requires: host **equals** `nmne.sztu.edu.cn`, path **equals**
+`/picturers.jsp`, and `wbtreeid` in the seven verified column ids — no arbitrary SZTU
+path is swallowed (`ai.sztu.edu.cn/szdw/jytd/jxjs.htm` still resolves to
+`sztu-teacher-family`). Evidence: `.agents/runs/connect-collection-line/verification.md`
+§后续批次; tasks D2 revision.
+
+**Revision 2 (2026-09-19, same batch) — the seed reaches its whole list.** The adapter
+also emits the CMS pager's pages as roster page links (filling the page range the pager
+itself advertises, because the live window hides middle pages), and
+`_should_continue_after_roster_entries` gained one narrow `/picturers.jsp` case that
+reuses this section's matcher predicate instead of re-declaring the host/column set in
+`discovery.py`; the `/szdw…` continuation rules are untouched. Measured offline through
+the real loop: 9 page fetches (the seed plus pages 2-8 and one `?…p=1` back-link spelling),
+16 distinct people from the two live page fixtures — the whole list (~64) rather than the
+first page's 8, which were never dropped (they always reached profile fetching).
+
 ## 7. Why entry hiding now
 
 `add-admin-upload-seeds` wrote "degrade to 503 with hidden page entries" and

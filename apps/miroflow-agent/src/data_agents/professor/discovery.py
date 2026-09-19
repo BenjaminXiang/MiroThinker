@@ -23,6 +23,7 @@ from .name_selection import is_obvious_non_person_name, is_same_person_name_vari
 from .profile import extract_professor_profile
 from .models import DiscoveredProfessorSeed, ProfessorRosterSeed
 from .roster import (
+    _is_sztu_nmne_picturers_roster_url,
     extract_cuhk_markdown_profile_links,
     extract_cuhk_profile_links,
     extract_roster_entries,
@@ -1385,6 +1386,8 @@ def _should_continue_after_roster_entries(
     html: str,
 ) -> bool:
     if _is_szu_cpoe_teacherfeature_discovery_url(current_url):
+        return bool(extract_roster_page_links(html, current_url))
+    if _is_sztu_nmne_picturers_roster_url(current_url):
         return bool(extract_roster_page_links(html, current_url))
     if current_depth != 0 or current_url != seed_url:
         return False

@@ -81,8 +81,14 @@ def test_corrected_sztu_roster_urls_resolve_to_sztu_teacher_family() -> None:
         assert resolve_seed_adapter_name(seed) == "sztu-teacher-family", url
 
 
-def test_legacy_sztu_picturers_url_stays_unresolved() -> None:
-    """The legacy CMS listing path is deliberately outside the narrow SZTU matcher."""
+def test_legacy_sztu_picturers_url_resolves_to_its_own_narrow_adapter() -> None:
+    """The legacy CMS listing lives behind `picturers.jsp`, not behind the `/szdw` matcher.
+
+    Design §6 first assumed a `/szdw…` list URL existed for this college; the live page
+    disproved it (every `/szdw…` path answers 404) and the roster is served from the CMS
+    column id — so the URL gets its own host-pinned adapter
+    (`test_sztu_nmne_picturers_adapter.py` holds the accept/reject matrix).
+    """
     seed = ProfessorRosterSeed(
         institution="深圳技术大学",
         department="新材料与新能源学院",
@@ -92,4 +98,4 @@ def test_legacy_sztu_picturers_url_stays_unresolved() -> None:
         ),
     )
 
-    assert resolve_seed_adapter_name(seed) is None
+    assert resolve_seed_adapter_name(seed) == "sztu-nmne-picturers-roster"

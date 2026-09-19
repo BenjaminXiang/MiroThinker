@@ -53,11 +53,36 @@
   → verify: 10 unit tests (stub registry, no database) + a real dry run
   (50 parsed → 39 distinct → would_create 38) and a real `--apply` (38 rows, second
   run creates 0).
-- \[ \] D2 pkusz registry matcher with a test (done: `pkusz-szdw-hub`, 5 tests) and
+- \[x\] D2 pkusz registry matcher with a test (done: `pkusz-szdw-hub`, 5 tests) and
   corrected SZTU URLs. **38 of 39 resolve** — the `nmne.sztu.edu.cn`
   `picturers.jsp` entry has no `/szdw…` URL on its host (all such paths 404) and the
   `sztu-teacher-family` matcher is deliberately narrow, so it is skipped by the
   importer and recorded here rather than papered over by a broad matcher.
+  → **Revision (2026-09-19): the last seed is closed — 39 of 39 resolve.** One live GET
+  showed `picturers.jsp?…wbtreeid=1004` *is* the college's 师资队伍 list (8 static
+  `a.jbox` + `div.ptitle` teacher cards per page, 8 pages; the sibling columns
+  1033/1034/1035/1036/1351/1352 are the same template), so the entry got its own
+  host-pinned adapter `sztu-nmne-picturers-roster` (host `nmne.sztu.edu.cn` + path
+  `/picturers.jsp` + verified `wbtreeid` set) instead of the "fix the data" route this
+  line first recorded — that route assumed a `/szdw…` list URL that does not exist.
+  → verify: `test_sztu_nmne_picturers_adapter.py` (18 cases, fixture = the live page),
+  the flipped assertion in `test_pkusz_adapters.py`, the importer suite (10 passed) and
+  the dry run over the real corpus: `distinct urls: 39 … skipped_unresolved: 0`.
+  Known boundary: the crawl still stops after the seed page's 8 entries (no pagination
+  link is discovered and `_should_continue_after_roster_entries` has no `/picturers.jsp`
+  case) — recorded in `.agents/runs/connect-collection-line/verification.md` §后续批次,
+  not fixed here.
+  → **Revision 2 (2026-09-19, same batch): that boundary is closed too.** The seed page's
+  pager is now turned into page links (`roster.py` nmne pagination helpers, filling the
+  page range the pager itself advertises — the live window only shows 2/3/4/5/8, so 6/7
+  are filled from an observed link's query template) and `_should_continue_after_roster_entries`
+  gained one narrow `/picturers.jsp` case reusing the same matcher predicate (`discovery.py`).
+  → verify: 10 new cases in the same suite (pager extraction from the live fixtures,
+  continuation predicate accept/reject, an offline end-to-end run of `discover_professor_seeds`
+  over the real loop), `302 passed` on the professor subset, `28 passed` on the adapter suite.
+  Correction to the note above: the 8 page-1 entries were never dropped — the `continue`
+  skipped *page dispatch*, not the entries (they reach profile fetching); the fix turns
+  "8 people" into the whole ~64-person list.
 
 ## E · Entry honesty and failure visibility
 

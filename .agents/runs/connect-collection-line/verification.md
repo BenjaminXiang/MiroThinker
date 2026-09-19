@@ -1884,3 +1884,65 @@ dry-run: nothing written (pass --apply to create the missing rows)
 - **同 worktree 的另一片并行**：本片只碰 `roster.py`、两个 professor 测试文件、admin-console 的
   `test_import_professor_seeds.py`、新增 fixture 与本节证据；`verification.md`/`verification-contract.md`
   与本批一样只做 append。
+
+### 6. 分页与续爬接通（同一批的补片，2026-09-19）
+
+**先纠正上一节那句"这条种子目前只取到第 1 页 8 人"**——方向对，但要把"谁被丢了"说准：
+
+```python
+# discovery.py:1213-1243（真循环，节选）
+entries = extract_roster_entries(html=html, institution=..., department=..., source_url=current.url)
+if entries and not prioritize_seed_fallback:
+    discovered.extend(entries)                     # ← 这 8 个人先被收下
+    if not _should_continue_after_roster_entries(...):
+        continue                                   # ← 被丢的是"候选页派发"，不是条目
+```
+
+- 8 个人**没有被丢**：种子状态 `resolved`、`discovered_professor_count=8`，并进入
+  `pipeline.py:87-124` 的画像抓取（`discovered_professors` → `ordered_professors` → profile jobs）。
+- 被丢的是**页面派发**：种子页的分页/栏目链接从不入队，第 2–8 页永远不会被访问。
+- 离线复现（真循环 + 桩抓取，内容用真 fixture）：**抓 1 页、得 8 人**。所以改前是 **8 of ~64**，
+  不是 "0 of 64"；人物画像抓得动，缺的是后面 7 页的人。
+
+**做了什么**（两处，窄度与 matcher 相同）：
+
+| 改动 | 位置 |
+|---|---|
+| 分页链接：识别同一主机/路径/白名单 `wbtreeid` 的分页器链接，并**补齐分页器自己声明过的页号区间**——真页第 1 页的窗口只显示 2/3/4/5/8，中间的 6/7 会被窗口藏住，所以按观测到的分页链 href 当模板、只改页码补 6/7（与 `_extract_szu_cpoe_teacherfeature_pagination_links` 用 `totalpage` 枚举同一个手法） | `roster.py:1050-1120`（`_extract_sztu_nmne_picturers_pagination_links` / `_sztu_nmne_picturers_pager_href_for_page` / `_sztu_nmne_picturers_page_number`） |
+| 挂钩（与既有的栏目链接合并返回，不删旧行为） | `roster.py:620-627`（`_extract_site_specific_hub_links` 的 sztu 分支） |
+| 续爬：名册页取到条目后继续派发候选页；判据直接复用 roster 里的 matcher 谓词，**不在 discovery 里重抄一份白名单**，`/szdw…` 的处理一行没动 | `discovery.py:1390-1391`（新分支）+ `discovery.py:26`（导入谓词） |
+
+**随之改变的边界（诚实记录）**：
+
+- 第 1 页原先顺带发现的"教授序列 `wbtreeid=1033`"链接不再发出：实测它与 1004 是**同一张列表**
+  （卡片逐人相同，分页器只差 `wbtreeid` 列号），跟着爬只是拿重复的人在 32 页预算里占一格。
+- 第 2 页的分页器把"首页/上页"写成 `?…p=1`，它与种子 URL（不带页码）是**两个 URL**，因此会被多抓一次
+  （内容与第 1 页相同、条目去重）。代价 1 页，换来的是"窗口藏起来的中间页也能走到"。
+- 页号区间只到分页器自己声明的最后一页（第 1 页的尾部链接 = 8），不猜更大的页号。
+
+**验证（本次实际跑过）**：
+
+| 命令 | 结果 |
+|---|---|
+| `cd apps/miroflow-agent && uv run pytest -q -p no:randomly -p no:cacheprovider tests/data_agents/professor/test_sztu_nmne_picturers_adapter.py` | **28 passed**（新增 10 条；实现前 RED = `5 failed, 22 passed`） |
+| `… tests/data_agents/professor -k "adapter or roster or pkusz or sztu"` | **302 passed** |
+| `… tests/data_agents/professor`（全目录，本片改了共享的 `discovery.py`） | **1 failed / 1747 passed / 4 skipped / 1 xfailed** |
+| `uv tool run ruff@0.8.0 check` 三个改动文件 | `All checks passed!` |
+
+唯一失败 `test_homepage_publications_shenzhen_cms.py::test_swyxgcxy_prefetched_sample_still_extracts_papers`
+与本批无关：它读 `logs/data_agents/paper/homepage_ingest_runs/2026-05-09/PROF-2E2F7D86A756.html`，
+该未跟踪产物只存在于主 checkout（`logs/` 在 .gitignore 里），本 worktree 没有；本批没碰这条路径。
+
+**端到端（离线、真循环、桩抓取；第 1、2 页用真 fixture）**：
+
+```
+status: resolved | professors: 16 | pages fetched: 9
+   …?urltype=tree.TreeTempUrl&wbtreeid=1004      ← 种子（= 第 1 页）
+   …?a237185t=8&a237185p=2…&wbtreeid=1004        ← 第 2 页（真 fixture，8 个与第 1 页不重复的人）
+   …p=3 / p=4 / p=5 / p=6 / p=7 / p=8            ← 全部到达（6/7 是补齐出来的）
+   …p=1                                          ← 第 2 页"首页/上页"的拼法（第 1 页的另一个 URL，去重后无新增）
+```
+
+3–8 页没有 fixture，桩里返回第 1 页的 HTML，所以 "16 人" 只证明**派发与去重**，不是 3–8 页的真实人数。
+按真页结构（每页 8 张卡片）与分页器自己声明的 8 页推算，**全量约 64 人**——导入后这条种子会从
+"8 人（只有第 1 页）"变成"整张名册"，前提是运行不被 `sample` 的 `--limit` 截断（画像阶段的预算仍是既有设计，本批未改）。

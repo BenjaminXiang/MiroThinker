@@ -263,6 +263,12 @@ _SZTU_SCOPED_TEACHER_CATEGORY_PATHS: dict[str, set[str]] = {
         "/szdw/jytd/bsh.htm",
     },
 }
+_SZTU_NMNE_PICTURERS_ROSTER_HOST = "nmne.sztu.edu.cn"
+_SZTU_NMNE_PICTURERS_ROSTER_PATH = "/picturers.jsp"
+_SZTU_NMNE_PICTURERS_ROSTER_WBTREEIDS = frozenset(
+    {"1004", "1033", "1034", "1035", "1036", "1351", "1352"}
+)
+_SZTU_NMNE_PICTURERS_PAGE_PARAM_RE = re.compile(r"^a\d+p$")
 _SUAT_TEACHER_CATEGORY_LABELS = {
     "讲席教授",
     "杰出教授",
@@ -612,7 +618,12 @@ def _extract_site_specific_hub_links(
             return ceie_links
         return _extract_links_from_selectors(soup, ("ul.l18-q h4 a",))
     if hostname.endswith("sztu.edu.cn"):
-        return _extract_sztu_teacher_category_links(soup, source_url)
+        return _dedupe_candidate_links(
+            [
+                *_extract_sztu_nmne_picturers_pagination_links(soup, source_url),
+                *_extract_sztu_teacher_category_links(soup, source_url),
+            ]
+        )
     if hostname.endswith("suat-sz.edu.cn"):
         return _extract_suat_teacher_category_links(soup, source_url)
     if hostname.endswith("suit-sz.edu.cn"):
@@ -1034,6 +1045,77 @@ def _extract_sztu_scoped_teacher_category_links(
             continue
         links.append((href, label))
     return links
+
+
+def _extract_sztu_nmne_picturers_pagination_links(
+    soup: BeautifulSoup,
+    source_url: str,
+) -> list[tuple[str, str]]:
+    """The CMS pager of the nmne roster: same page, the list's `a…p` counter bumped.
+
+    The pager only renders a window of pages plus first/last (page 1 shows 2/3/4/5/8,
+    the middle pages show other subsets), so the pages the current window hides would never
+    be reached by walking link by link. The adapter therefore also fills the gap up to the
+    last page the pager itself advertises, reusing one observed pager link as the query
+    template (only its page counter changes) — the same "enumerate the declared page range"
+    shape as `_extract_szu_cpoe_teacherfeature_pagination_links`.
+    """
+    if not _is_sztu_nmne_picturers_roster_url(source_url):
+        return []
+    current_page = _sztu_nmne_picturers_page_number(source_url)
+    observed: dict[int, str] = {}
+    for anchor in soup.find_all("a", href=True):
+        if not isinstance(anchor, Tag):
+            continue
+        href = str(anchor.get("href", "")).strip()
+        if not href or not _is_navigable_href(href):
+            continue
+        absolute_url = _normalize_profile_url(source_url, href)
+        if not _is_sztu_nmne_picturers_roster_url(absolute_url):
+            continue
+        page_number = _sztu_nmne_picturers_page_number(absolute_url)
+        if page_number is None:
+            continue
+        observed.setdefault(page_number, href)
+    if not observed:
+        return []
+
+    template_page = min(observed)
+    template_href = observed[template_page]
+    by_page: dict[int, str] = dict(observed)
+    for page_number in range(2, max(observed) + 1):
+        by_page.setdefault(
+            page_number,
+            _sztu_nmne_picturers_pager_href_for_page(
+                template_href, from_page=template_page, to_page=page_number
+            ),
+        )
+    by_page.pop(current_page, None)
+    return [(by_page[page], f"page-{page}") for page in sorted(by_page)]
+
+
+def _sztu_nmne_picturers_pager_href_for_page(
+    href: str, *, from_page: int, to_page: int
+) -> str:
+    parsed = urlparse(href)
+    params = [
+        (
+            key,
+            str(to_page)
+            if _SZTU_NMNE_PICTURERS_PAGE_PARAM_RE.match(key.lower())
+            and value == str(from_page)
+            else value,
+        )
+        for key, value in parse_qsl(parsed.query, keep_blank_values=True)
+    ]
+    return urlunparse(parsed._replace(query=urlencode(params)))
+
+
+def _sztu_nmne_picturers_page_number(source_url: str) -> int | None:
+    for key, value in parse_qsl(urlparse(source_url).query, keep_blank_values=True):
+        if _SZTU_NMNE_PICTURERS_PAGE_PARAM_RE.match(key.lower()) and value.isdigit():
+            return int(value)
+    return None
 
 
 def _extract_suat_teacher_category_links(
@@ -1540,6 +1622,30 @@ def _matches_sztu_teacher_family(source_url: str) -> bool:
     return hostname.endswith("sztu.edu.cn") and any(
         token in path for token in ("/szdw", "/szdw2022", "/xygk/szdw")
     )
+
+
+def _is_sztu_nmne_picturers_roster_url(source_url: str) -> bool:
+    """The legacy CMS roster of 深圳技术大学 新材料与新能源学院.
+
+    The college has no `/szdw…` roster URL (every such path answers 404); its 师资队伍
+    lists are served from `picturers.jsp` and paginated through the `wbtreeid` column id,
+    so the match is pinned to the verified column ids of that one host.
+    """
+    parsed = urlparse(source_url)
+    hostname = (parsed.hostname or "").lower()
+    path = parsed.path.rstrip("/").lower()
+    if hostname != _SZTU_NMNE_PICTURERS_ROSTER_HOST:
+        return False
+    if path != _SZTU_NMNE_PICTURERS_ROSTER_PATH:
+        return False
+    return any(
+        key.lower() == "wbtreeid" and value in _SZTU_NMNE_PICTURERS_ROSTER_WBTREEIDS
+        for key, value in parse_qsl(parsed.query, keep_blank_values=True)
+    )
+
+
+def _matches_sztu_nmne_picturers_roster(source_url: str) -> bool:
+    return _is_sztu_nmne_picturers_roster_url(source_url)
 
 
 def _matches_pkusz_szdw_hub(source_url: str) -> bool:
@@ -2056,6 +2162,50 @@ def _szu_csse_card_research_directions(lines: list[str]) -> list[str]:
     return directions
 
 
+def _extract_sztu_nmne_picturers_adapter_entries(
+    html: str,
+    institution: str,
+    department: str | None,
+    source_url: str,
+) -> list[DiscoveredProfessorSeed]:
+    """Read the legacy CMS listing: one `a.jbox` card per teacher, name in `div.ptitle`."""
+    soup = BeautifulSoup(html, "html.parser")
+    return _build_discovered_professor_seeds(
+        _extract_sztu_nmne_picturers_card_links(soup, source_url),
+        institution=institution,
+        department=department,
+        source_url=source_url,
+    )
+
+
+def _extract_sztu_nmne_picturers_card_links(
+    soup: BeautifulSoup,
+    source_url: str,
+) -> list[tuple[str, str]]:
+    current_host = (urlparse(source_url).hostname or "").lower()
+    links: list[tuple[str, str]] = []
+    for anchor in soup.select("a.jbox[href]"):
+        if not isinstance(anchor, Tag):
+            continue
+        href = str(anchor.get("href", "")).strip()
+        if not href:
+            continue
+        absolute_url = _normalize_profile_url(source_url, href)
+        if (urlparse(absolute_url).hostname or "").lower() != current_host:
+            continue
+        name_node = anchor.select_one("div.ptitle")
+        label = (
+            name_node.get_text(" ", strip=True)
+            if isinstance(name_node, Tag)
+            else str(anchor.get("title", "")).strip()
+        )
+        name = _extract_candidate_person_name(label)
+        if not name or not _is_likely_professor_name(name):
+            continue
+        links.append((href, name))
+    return _dedupe_candidate_links(links)
+
+
 def _extract_sztu_teacher_adapter_entries(
     html: str,
     institution: str,
@@ -2491,6 +2641,11 @@ _SCHOOL_ROSTER_ADAPTERS: tuple[SchoolRosterAdapter, ...] = (
         name="sztu-teacher-family",
         matcher=_matches_sztu_teacher_family,
         extractor=_extract_sztu_teacher_adapter_entries,
+    ),
+    SchoolRosterAdapter(
+        name="sztu-nmne-picturers-roster",
+        matcher=_matches_sztu_nmne_picturers_roster,
+        extractor=_extract_sztu_nmne_picturers_adapter_entries,
     ),
     SchoolRosterAdapter(
         name="pkusz-szdw-hub",

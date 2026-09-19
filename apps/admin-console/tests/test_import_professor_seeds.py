@@ -98,7 +98,7 @@ def test_plan_classifies_every_distinct_url_and_reads_school_department(
     assert _statuses(report) == {
         "https://ai.sztu.edu.cn/szdw/jytd/js.htm": "would_create",
         "https://nmne.sztu.edu.cn/picturers.jsp?urltype=tree.TreeTempUrl&wbtreeid=1004": (
-            "skipped_unresolved"
+            "would_create"
         ),
         "https://www.pkusz.edu.cn/szdw.htm": "would_create",
         "https://www.sustech.edu.cn/zh/letter/": "skipped_existing",
@@ -111,6 +111,13 @@ def test_plan_classifies_every_distinct_url_and_reads_school_department(
     )
     assert sztu_row.adapter_name == "sztu-teacher-family"
     assert rows["https://www.pkusz.edu.cn/szdw.htm"].adapter_name == "pkusz-szdw-hub"
+    assert (
+        rows[
+            "https://nmne.sztu.edu.cn/picturers.jsp?"
+            "urltype=tree.TreeTempUrl&wbtreeid=1004"
+        ].adapter_name
+        == "sztu-nmne-picturers-roster"
+    )
 
 
 def test_dry_run_never_writes_even_with_include_unresolved(seeds_dir: Path) -> None:
@@ -147,33 +154,51 @@ def test_apply_creates_only_missing_rows_and_is_idempotent(seeds_dir: Path) -> N
     assert [str(payload.seed_url) for payload in registry.created] == [
         "https://www.sustech.edu.cn/zh/letter/",
         "https://ai.sztu.edu.cn/szdw/jytd/js.htm",
+        "https://nmne.sztu.edu.cn/picturers.jsp?urltype=tree.TreeTempUrl&wbtreeid=1004",
     ]
     assert _statuses(first)["https://www.pkusz.edu.cn/szdw.htm"] == "skipped_existing"
-    assert set(_statuses(second).values()) == {"skipped_existing", "skipped_unresolved"}
+    assert set(_statuses(second).values()) == {"skipped_existing"}
 
 
-def test_include_unresolved_writes_the_unresolved_rows(seeds_dir: Path) -> None:
+def test_include_unresolved_decides_whether_unrouted_rows_are_written(
+    tmp_path: Path,
+) -> None:
+    directory = tmp_path / "e2e_seeds"
+    directory.mkdir()
+    (directory / "unknown.md").write_text(
+        "示例大学 师资队伍 https://example.com/teacher/list.htm\n", encoding="utf-8"
+    )
+
+    planned = run_import(
+        seeds_dir=directory,
+        registry=StubRegistry(),
+        apply=False,
+        include_unresolved=False,
+    )
+    planned_text = render_report(planned, seeds_dir=directory, registry_configured=True)
+
+    assert _statuses(planned) == {
+        "https://example.com/teacher/list.htm": "skipped_unresolved"
+    }
+    assert "unresolved urls (no registered adapter):" in planned_text
+    assert "  - https://example.com/teacher/list.htm" in planned_text
+    assert "pass --include-unresolved to register them anyway" in planned_text
+
     registry = StubRegistry()
-
-    report = run_import(
-        seeds_dir=seeds_dir,
+    applied = run_import(
+        seeds_dir=directory,
         registry=registry,
         apply=True,
         include_unresolved=True,
     )
 
-    assert [str(payload.seed_url) for payload in registry.created] == list(
-        _statuses(report)
-    )
-    assert (
-        _statuses(report)[
-            "https://nmne.sztu.edu.cn/picturers.jsp?urltype=tree.TreeTempUrl&wbtreeid=1004"
-        ]
-        == "created"
-    )
+    assert [str(payload.seed_url) for payload in registry.created] == [
+        "https://example.com/teacher/list.htm"
+    ]
+    assert _statuses(applied) == {"https://example.com/teacher/list.htm": "created"}
 
 
-def test_render_report_counts_states_and_names_unresolved_urls(seeds_dir: Path) -> None:
+def test_render_report_counts_states_for_the_routed_corpus(seeds_dir: Path) -> None:
     report = run_import(
         seeds_dir=seeds_dir,
         registry=StubRegistry({"https://www.sustech.edu.cn/zh/letter/"}),
@@ -186,10 +211,11 @@ def test_render_report_counts_states_and_names_unresolved_urls(seeds_dir: Path) 
     assert "parsed entries: 5 (1 duplicate URL(s) folded)" in text
     assert "distinct urls: 4" in text
     assert (
-        "created: 0 | would_create: 2 | skipped_existing: 1 | skipped_unresolved: 1"
+        "created: 0 | would_create: 3 | skipped_existing: 1 | skipped_unresolved: 0"
         in text
     )
-    assert "  - https://nmne.sztu.edu.cn/picturers.jsp?urltype=tree" in text
+    assert "sztu-nmne-picturers-roster" in text
+    assert "unresolved urls (no registered adapter):" not in text
     assert "dry-run: nothing written" in text
 
 
@@ -224,7 +250,7 @@ def test_cli_writes_only_with_apply_and_never_echoes_the_dsn(
     dry_run_output = capsys.readouterr()
     assert "dry-run: nothing written" in dry_run_output.out
     assert "secret" not in dry_run_output.out
-    assert "unresolved urls (no registered adapter)" in dry_run_output.out
+    assert "sztu-nmne-picturers-roster" in dry_run_output.out
     assert connection.closed is True
 
     assert main(["--seeds-dir", str(seeds_dir), "--dsn", DSN, "--apply"]) == 0
@@ -232,6 +258,7 @@ def test_cli_writes_only_with_apply_and_never_echoes_the_dsn(
         "https://www.sustech.edu.cn/zh/letter/",
         "https://www.pkusz.edu.cn/szdw.htm",
         "https://ai.sztu.edu.cn/szdw/jytd/js.htm",
+        "https://nmne.sztu.edu.cn/picturers.jsp?urltype=tree.TreeTempUrl&wbtreeid=1004",
     ]
 
     assert main(["--seeds-dir", str(seeds_dir), "--dsn", DSN, "--apply"]) == 0
@@ -239,6 +266,7 @@ def test_cli_writes_only_with_apply_and_never_echoes_the_dsn(
         "https://www.sustech.edu.cn/zh/letter/",
         "https://www.pkusz.edu.cn/szdw.htm",
         "https://ai.sztu.edu.cn/szdw/jytd/js.htm",
+        "https://nmne.sztu.edu.cn/picturers.jsp?urltype=tree.TreeTempUrl&wbtreeid=1004",
     ]
 
 
