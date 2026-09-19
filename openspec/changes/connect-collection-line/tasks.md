@@ -186,6 +186,60 @@ slice contract supplied by the operator.
   → route tests **done** (20 in `tests/test_canonical_v2_model_discovery_api.py`);
   the page-shell test and the role invariant belong to the page half.
 
+## J · The knowledge-gap loop, connected end to end (round 17)
+
+The operator-facing 知识缺口 panel could never hold a row: the only writer
+(`/chat`) had no feedback control on the shipped static page, the record landed in
+an in-process ephemeral object, and the reader asked Postgres for gap schemas this
+deployment does not have — which is where the reported 500 came from. The loop is
+worth keeping (a user report is the only real signal about what data or retrieval
+still needs fixing), so all three hops are connected to one console-owned ledger.
+
+- \[x\] J1 A durable ledger: `backend/storage/chat_gaps.py`, table
+  `chat_gap(signal_id PK, session_id, turn_id, release_id, feedback_type, note,
+  query_trace_id, answer_trace_id, observed_at, recorded_at)`, created 0600 and
+  symlink/hardlink-refusing, WAL + `busy_timeout=30000`. Path resolves
+  `CANONICAL_V2_CHAT_GAPS_DB` → the sibling `CANONICAL_V2_JOBS_DB` /
+  `CANONICAL_V2_ACCESS_LOG_DB` directory → the state dir the credential store
+  already uses; resolution never raises. `record()` is idempotent on the
+  content-addressed `signal_id` — no second deduplication rule.
+  → verify: 7 store tests (`tests/test_canonical_v2_chat_gaps_store.py`).
+- \[x\] J2 The read surface: `GET /api/canonical-v2/admin/chat-gaps` (behind
+  `AdminSessionGate`, prefix `/api/canonical-v2/admin`), `items` filtered and
+  limited, `total`/`counts` describing the whole ledger, `limit` outside 1..200 →
+  422, **an empty ledger is 200 with an empty page, never 503**.
+  → verify: 10 route tests (`tests/test_canonical_v2_chat_gaps_api.py`), incl. the
+  anonymously-401 and unusable-state-dir-503 cases.
+- \[x\] J3 The write hop: `CanonicalV2AdminRuntime.record_chat_feedback` copies the
+  filed signal into the ledger **after** `gap_operations.record`, fail-open — a
+  ledger failure is a `logger.warning`, and the caller's answer to the user is
+  unchanged. The ephemeral `gap_operations` call stays (the build line still owns it).
+  → verify: ledger-row assertion with both production files reverted → `assert 0 == 1`.
+- \[x\] J4 `/browse` reads the ledger: the tab renders Chinese type labels, short
+  ids, local times and per-type counts; the build-line gap detail view, the
+  `503 → neutral empty state` branch and their orphaned CSS/helpers are deleted.
+  → verify: 2 page tests (shell + DOM harness) + the harness's own RED on the
+  previous page; dead literals asserted absent.
+- \[x\] J5 `/chat` gains the missing writer: one 反馈 per answered turn, optional
+  note, `sending`/`sent` states, `409` reads 「本次会话已过期，无法反馈」, and the closed
+  note row occupies no height.
+  → verify: 7 behaviour tests in `tests/chat_ui_behavior_test.mjs` plus a real
+  browser driving a stub server.
+- \[x\] J6 Defect found while reviewing the two halves together: the page posted to
+  `api/canonical-v2/chat/feedback`, which **does not exist** and sits behind the
+  admin gate (anonymous → 401); the real route is `POST /api/chat/feedback` (the
+  chat router's prefix is `/api`). Neither half's evidence could catch it — the
+  page half drove a stub server that answers any path, the backend half only
+  verified its read route. Fixed in `chat.html`, the behaviour test that had
+  locked the wrong literal, and the harness.
+  → verify: enumerating the app's own route table
+  (`from backend.main import app` → only `POST /api/chat/feedback`).
+- \[x\] J7 Tests cannot write the operator's ledger: `tests/conftest.py` pins
+  `CANONICAL_V2_CHAT_GAPS_DB` into a session-scoped scratch directory.
+- \[~\] J8 Live acceptance on 18188 (restart → `/chat` feedback → the row shows in
+  `/browse#gaps`): the restart shipped the slice; the operator-visible round trip
+  is recorded in the round-17 log.
+
 ## Findings recorded, not fixed here
 
 - A killed crawl leaves its `pipeline_run` row in `running` forever (no heartbeat,

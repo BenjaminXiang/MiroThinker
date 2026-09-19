@@ -12,6 +12,7 @@ Demonstrated on the live 18188 after the drop-in restart; evidence in
 | A5 | Failures are visible | a deliberately failing trigger shows status, exit code and stderr excerpt on `/seeds` |
 | A6 | Entries are honest | with no console DSN the nav hides `/seeds` and `/upload`; with one it shows them |
 | A7 | No regression | `/chat` 200 and the admin gates (302 unauthenticated, 401 for the APIs) unchanged; admin-console full-suite failure set unchanged |
+| A8 | The gap loop closes (round 17) | on the live line: a feedback filed from `/chat` produces one row in `chat-gaps.sqlite3` and shows in `/browse#gaps`; the read route answers 401 anonymously and 200 with an empty list when the ledger is empty |
 
 Regression guards: the serving line's database argument and the V2 operations surface
 (`CANONICAL_V2_DATABASE_URL`) keep their current meaning; `pipeline` /
