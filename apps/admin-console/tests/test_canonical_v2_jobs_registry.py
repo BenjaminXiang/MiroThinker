@@ -92,6 +92,35 @@ def test_task_payload_exports_the_operator_columns() -> None:
         assert payload["operator_hint"] == task.operator_hint
 
 
+# The three ops tasks are the ones an operator only touches after importing data: their names and
+# hints must say what to do and when, without the build vocabulary (Milvus / 构建期 / 干跑 / 配额)
+# the operator does not read anywhere else on the page.
+OPS_OPERATOR_COPY = {
+    "ops-milvus-backfill-dry-run": (
+        "更新检索索引 · 预演",
+        "只统计将要更新多少内容，不真正写入。正式更新前先跑它，确认影响范围。",
+    ),
+    "ops-milvus-backfill": (
+        "更新检索索引",
+        "把新入库的数据写进检索索引——做完这一步，用户才能检索到新内容。",
+    ),
+    "ops-retrieval-validation": (
+        "检索自检",
+        "对当前服务跑一遍检索自检，确认更新之后检索仍然正常。",
+    ),
+}
+BUILD_VOCABULARY = ("Milvus", "构建期", "干跑", "配额", "闸门")
+
+
+def test_ops_tasks_speak_the_operators_language() -> None:
+    assert {task.task_id for task in JOB_TASKS if task.group == "ops"} == set(OPS_OPERATOR_COPY)
+    for task_id, (label, hint) in OPS_OPERATOR_COPY.items():
+        task = get_job_task(task_id)
+        assert (task.label, task.operator_hint) == (label, hint)
+        for term in BUILD_VOCABULARY:
+            assert term not in task.label + task.operator_hint, f"{task_id} keeps {term!r}"
+
+
 def _first_params(task) -> dict[str, str]:
     values = {name: allowed[0] for name, allowed in task.params.items()}
     # A token parameter is supplied to a stub resolver in the shape tests: the registry is about

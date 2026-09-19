@@ -263,7 +263,6 @@ def test_jobs_page_is_served(jobs_runtime) -> None:
         "日常采集",
         "数据导入",
         "教授采集源",
-        "构建与运维",
         "operator_hint",
         "技术细节",
         "立即运行",
@@ -271,6 +270,44 @@ def test_jobs_page_is_served(jobs_runtime) -> None:
         "去 Seed 管理页",
     ):
         assert marker in response.text
+
+
+def test_jobs_page_folds_the_build_group_away(jobs_runtime) -> None:
+    """The three engineering actions live in a collapsed 高级操作 block, not flat in the list."""
+
+    client, _ = jobs_runtime
+    response = client.get("/jobs")
+    assert response.status_code == 200
+    document = response.text
+
+    for marker in (
+        # the collapsed group: summary line + the one-line status it carries
+        '<details class="group-advanced"><summary>',
+        "高级操作：数据更新与检索自检（一般不需要手动执行）",
+        "最近一次：尚未运行",
+        # plain-language purpose and step guide
+        "你导入了新数据或刚跑完采集后，用下面三步让检索能看到新内容，并确认检索正常。",
+        "建议顺序：① 预演（看影响范围）→ ② 更新检索索引 → ③ 检索自检。耗时从几十秒到几分钟不等。",
+        # the reason that replaces the 需构建库 tag while the task is unavailable
+        "当前不可用：需要本机数据库",
+        # tags in plain words, and the column / footer the operator reads
+        "会消耗网络检索额度",
+        "会消耗大模型调用额度",
+        "仅在允许的时间段运行",
+        "受采集开关控制",
+        "<th>运行安排</th>",
+        "运行安排由系统固定，页面只能查看；手动执行与自动执行受同样的安全限制："
+        "同一任务不会重复运行，连续失败会自动暂停。",
+    ):
+        assert marker in document, marker
+    # the old engineering wording is gone from the page
+    for gone in ("构建与运维", "需构建库", "需要构建期数据库", "节奏（下次运行）", "从未运行"):
+        assert gone not in document, gone
+    # the three labels the collapsed group renders come from the declared table
+    labels = {task["task_id"]: task["label"] for task in client.get(_PREFIX).json()["tasks"]}
+    assert labels["ops-milvus-backfill-dry-run"] == "更新检索索引 · 预演"
+    assert labels["ops-milvus-backfill"] == "更新检索索引"
+    assert labels["ops-retrieval-validation"] == "检索自检"
 
 
 def test_unset_storage_degrades_to_503(monkeypatch: pytest.MonkeyPatch) -> None:

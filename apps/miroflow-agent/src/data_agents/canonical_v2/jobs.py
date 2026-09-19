@@ -391,10 +391,10 @@ JOB_TASKS: tuple[JobTask, ...] = (
     ),
     JobTask(
         task_id="ops-milvus-backfill",
-        label="Milvus 回填",
+        label="更新检索索引",
         description="按域回填域 Milvus（需构建期 PostgreSQL）",
         group="ops",
-        operator_hint="把最近入库的数据重新写入检索索引；数据更新后要跑一次，检索才看得到新内容。",
+        operator_hint="把新入库的数据写进检索索引——做完这一步，用户才能检索到新内容。",
         domain=None,
         argv_template=(
             "uv",
@@ -412,10 +412,10 @@ JOB_TASKS: tuple[JobTask, ...] = (
     ),
     JobTask(
         task_id="ops-milvus-backfill-dry-run",
-        label="Milvus 回填（干跑）",
+        label="更新检索索引 · 预演",
         description="按域回填干跑，不写 Milvus（需构建期 PostgreSQL）",
         group="ops",
-        operator_hint="上面那件事的预演：只检查不写索引，用来确认影响范围。",
+        operator_hint="只统计将要更新多少内容，不真正写入。正式更新前先跑它，确认影响范围。",
         domain=None,
         argv_template=(
             "uv",
@@ -434,10 +434,10 @@ JOB_TASKS: tuple[JobTask, ...] = (
     ),
     JobTask(
         task_id="ops-retrieval-validation",
-        label="检索验证",
+        label="检索自检",
         description="对当前服务入口跑一遍 host e2e 检索验证（需构建期 PostgreSQL）",
         group="ops",
-        operator_hint="对当前服务跑一遍检索自检，确认检索仍然正常。",
+        operator_hint="对当前服务跑一遍检索自检，确认更新之后检索仍然正常。",
         domain=None,
         argv_template=("bash", "apps/admin-console/scripts/host_e2e_agentic_rag.sh"),
         cwd_relative=".",

@@ -158,6 +158,16 @@
       .group > h3 { font-size: 0.95rem; margin: 0 0 2px; letter-spacing: 0.02em; }
       .group-purpose { font-size: 0.8rem; color: var(--muted); margin: 0 0 10px; }
 
+      /* 高级操作（ops 组）：默认折叠，标题行就是那一句总结，状态跟在后面。 */
+      details.group-advanced summary {
+        cursor: pointer;
+        font-size: 0.95rem;
+        font-weight: 600;
+        letter-spacing: 0.02em;
+      }
+      details.group-advanced[open] summary { margin-bottom: 8px; }
+      details.group-advanced summary .when { display: inline; margin: 0 0 0 8px; font-weight: 400; }
+
       .task-name { display: block; font-weight: 600; }
       .task-hint { display: block; color: var(--muted); font-size: 0.78rem; margin-top: 2px; }
       .tags { display: block; margin-top: 6px; }
@@ -249,12 +259,12 @@
           <h2>这个页面做什么</h2>
         </header>
         <p class="lead">
-          在这里查看后台任务：看它们各自的节奏和最近一次结果，必要时手动触发一次。
+          在这里查看后台任务：看它们多久跑一次、最近一次结果如何，必要时手动跑一次。
         </p>
         <ul class="rules">
           <li>同一个任务不会重复运行——正在跑的任务再点一次会被拒绝。</li>
-          <li>任务连续失败 2 次会熔断；排查原因后点「复位熔断」，再重新触发。</li>
-          <li>手动触发与周期运行共用同一道闸门：采集开关、配额、采集时间窗都不会被绕过。</li>
+          <li>任务连续失败 2 次会暂停；排查原因后点「复位熔断」，再重新触发。</li>
+          <li>手动执行与自动执行受同样的安全限制：不会越过采集开关、调用额度和允许的时间段。</li>
         </ul>
       </section>
 
@@ -265,7 +275,7 @@
         </header>
         <div id="taskGroups"><p class="empty">加载中…</p></div>
         <p class="footnote">
-          节奏写死在任务表里（改节奏走变更流程），页面只读展示；「立即运行」与周期运行共用同一道闸门。
+          运行安排由系统固定，页面只能查看；手动执行与自动执行受同样的安全限制：同一任务不会重复运行，连续失败会自动暂停。
         </p>
       </section>
 
@@ -345,7 +355,8 @@
         outside_window: "窗口外"
       };
       const TRIGGER_TEXT = { manual: "手动", schedule: "周期", operator_reset: "运维复位" };
-      /* 分组标题与一句话说明：页面按 group 渲染，文案与后端 operator_hint 一一对应。 */
+      /* 分组标题与一句话说明：页面按 group 渲染，文案与后端 operator_hint 一一对应。
+         最后一组是「高级操作」：默认折叠，操作者可展开再动手。 */
       const GROUPS = [
         {
           id: "collection",
@@ -364,8 +375,10 @@
         },
         {
           id: "ops",
-          title: "构建与运维",
-          purpose: "数据更新后的索引重建与检索自检；需要构建期数据库。"
+          collapsed: true,
+          title: "高级操作：数据更新与检索自检（一般不需要手动执行）",
+          purpose: "你导入了新数据或刚跑完采集后，用下面三步让检索能看到新内容，并确认检索正常。",
+          guide: "建议顺序：① 预演（看影响范围）→ ② 更新检索索引 → ③ 检索自检。耗时从几十秒到几分钟不等。"
         }
       ];
       /* 参数取值的中文说法：命令行的值不变，变的只是操作者看到的那一层。 */
@@ -374,7 +387,9 @@
         mode: { preview: "预览", full: "全量" },
         limit: { "5": "5 条", "20": "20 条", "50": "50 条", "100": "100 条" }
       };
-      const UNAVAILABLE_TEXT = { postgres_unavailable: "需要构建期数据库" };
+      const UNAVAILABLE_TEXT = { postgres_unavailable: "当前不可用：需要本机数据库" };
+      /* 无周期任务后端下发 schedule_display「手动触发」：对操作者说「人工触发」。 */
+      const SCHEDULE_TEXT = { "手动触发": "人工触发" };
       /* 参数里有一个本页选不出的 token（seed id / upload id）：去签发它的页面操作。 */
       const TOKEN_PAGE = {
         seed_id: { href: "/seeds", text: "去 Seed 管理页" },
@@ -440,7 +455,7 @@
       }
 
       function runBadge(run) {
-        if (!run) return '<span class="pill">从未运行</span>';
+        if (!run) return '<span class="pill">尚未运行</span>';
         const status = run.status;
         const kind = status === "succeeded" ? "ok" : status === "failed" ? "bad" : "warn";
         let text = STATUS_TEXT[status] || status;
@@ -467,7 +482,7 @@
         let kind = "";
         let text;
         if (!last) {
-          text = "从未运行";
+          text = "尚未运行";
         } else {
           kind = last.status === "succeeded" ? "ok" : last.status === "failed" ? "bad" : "warn";
           text = STATUS_TEXT[last.status] || last.status;
@@ -488,25 +503,26 @@
         );
       }
 
+      /* 能力标签（所有分组共用）：额度会花多少、什么时候能跑、受哪道开关控制。
+         需要本机数据库这一条不在这里——它只在按钮禁用时作为原因出现。 */
       function tagPills(task) {
         const parts = [];
         const limit =
           task.quota_limit === null || task.quota_limit === undefined
             ? ""
-            : "（上限 " + task.quota_limit + "）";
-        if (task.requires_postgres) parts.push('<span class="pill">需构建库</span>');
+            : "（本轮上限 " + task.quota_limit + "）";
         if (task.quota === "web_search") {
-          parts.push('<span class="pill">消耗网络检索配额' + limit + "</span>");
+          parts.push('<span class="pill">会消耗网络检索额度' + limit + "</span>");
         }
         if (task.quota === "llm") {
-          parts.push('<span class="pill">消耗大模型配额' + limit + "</span>");
+          parts.push('<span class="pill">会消耗大模型调用额度' + limit + "</span>");
         }
-        if (task.window_bound) parts.push('<span class="pill">仅在采集时间窗内运行</span>');
+        if (task.window_bound) parts.push('<span class="pill">仅在允许的时间段运行</span>');
         if (task.collection_gated) {
           parts.push(
             task.switch_enabled === false
-              ? '<span class="pill warn">受采集开关约束（当前已关闭）</span>'
-              : '<span class="pill">受采集开关约束</span>'
+              ? '<span class="pill warn">受采集开关控制（当前已关闭）</span>'
+              : '<span class="pill">受采集开关控制</span>'
           );
         }
         return '<span class="tags">' + parts.join(" ") + "</span>";
@@ -576,6 +592,12 @@
         return '<div class="actions">' + parts.join(" ") + "</div>";
       }
 
+      /* 无周期任务的下发值是「手动触发」，页面统一说「人工触发」。 */
+      function scheduleText(task) {
+        const value = task.schedule_display || "";
+        return SCHEDULE_TEXT[value] || value;
+      }
+
       function renderTaskRow(task) {
         const next = task.next_run_at
           ? '<span class="when">下次 ' + escapeHtml(when(task.next_run_at)) + "</span>"
@@ -589,9 +611,47 @@
           techDetails(task) +
           "</td>" +
           "<td>" + lastRunCell(task) + "</td>" +
-          "<td>" + escapeHtml(task.schedule_display) + next + "</td>" +
+          "<td>" + escapeHtml(scheduleText(task)) + next + "</td>" +
           "<td>" + actionsCell(task) + "</td>" +
           "</tr>"
+        );
+      }
+
+      /* 折叠分组的摘要行：这一组里最近跑过的一次是哪一件、结果如何、什么时候。 */
+      function groupStatusLine(members) {
+        const last = members
+          .map((task) => task.last_run)
+          .filter((run) => run)
+          .sort((left, right) => (left.started_at < right.started_at ? 1 : -1))[0];
+        if (!last) return "最近一次：尚未运行";
+        let text = STATUS_TEXT[last.status] || last.status;
+        if (last.status === "skipped" && last.skip_reason) {
+          text += "（" + (SKIP_TEXT[last.skip_reason] || last.skip_reason) + "）";
+        }
+        return (
+          "最近一次：" + taskLabel(last.task_id) + " " + text + " " + when(last.started_at)
+        );
+      }
+
+      /* 前三个分组直接展开；ops 是「高级操作」，折叠起来，摘要行带一句状态。 */
+      function groupSection(group) {
+        const members = TASKS.filter((task) => task.group === group.id);
+        if (!members.length) return "";
+        const body =
+          '<p class="group-purpose">' + escapeHtml(group.purpose) + "</p>" +
+          (group.guide ? '<p class="group-purpose">' + escapeHtml(group.guide) + "</p>" : "") +
+          '<div class="table-wrap"><table class="task-table">' +
+          '<colgroup><col /><col class="col-status" /><col class="col-when" /><col class="col-actions" /></colgroup>' +
+          "<thead><tr><th>任务</th><th>最近运行</th><th>运行安排</th><th>操作</th></tr></thead>" +
+          "<tbody>" + members.map(renderTaskRow).join("") + "</tbody></table></div>";
+        return (
+          '<section class="group" aria-label="' + escapeHtml(group.title) + '">' +
+          (group.collapsed
+            ? '<details class="group-advanced"><summary>' + escapeHtml(group.title) +
+              '<span class="when">' + escapeHtml(groupStatusLine(members)) + "</span></summary>" +
+              body + "</details>"
+            : "<h3>" + escapeHtml(group.title) + "</h3>" + body) +
+          "</section>"
         );
       }
 
@@ -601,20 +661,7 @@
           container.innerHTML = '<p class="empty">没有任务</p>';
           return;
         }
-        container.innerHTML = GROUPS.map((group) => {
-          const members = TASKS.filter((task) => task.group === group.id);
-          if (!members.length) return "";
-          return (
-            '<section class="group" aria-label="' + escapeHtml(group.title) + '">' +
-            "<h3>" + escapeHtml(group.title) + "</h3>" +
-            '<p class="group-purpose">' + escapeHtml(group.purpose) + "</p>" +
-            '<div class="table-wrap"><table class="task-table">' +
-            '<colgroup><col /><col class="col-status" /><col class="col-when" /><col class="col-actions" /></colgroup>' +
-            "<thead><tr><th>任务</th><th>最近运行</th><th>节奏（下次运行）</th><th>操作</th></tr></thead>" +
-            "<tbody>" + members.map(renderTaskRow).join("") + "</tbody></table></div>" +
-            "</section>"
-          );
-        }).join("");
+        container.innerHTML = GROUPS.map(groupSection).join("");
       }
 
       async function loadTasks() {

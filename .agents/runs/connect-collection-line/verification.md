@@ -1262,3 +1262,146 @@ Incidental confirmation of fix 3 inside pytest's captured stdout of the RED run 
    both are wider than this slice, so the mirror is local and named after the model.
 5. **Human docs (`docs/plans/` log + index) were not touched** — per the brief this batch
    appends evidence only; the round log/index entry stays with the main line.
+
+## 后续批次（页面）— 构建与运维的甲方语言
+
+Round 11 (2026-09-19)。范围：`/jobs` 一个页面批次 —— 把 ops 组的三条工程任务收进默认折叠的
+「高级操作」块，把页面上的构建期词汇换成甲方运维看得懂的说法。只动 `jobs.py` 的 label/hint
+（三条 ops 任务）、静态页 `jobs.html`、两个标记套件、渲染 harness；未改后端 Python 其它文件、
+未加依赖、未重启服务、未碰 18188、未提交。
+
+### 1. 改了什么（文件 · 行）
+
+| 文件 | 改动 |
+|---|---|
+| `apps/miroflow-agent/src/data_agents/canonical_v2/jobs.py:394,397` | `ops-milvus-backfill` → label「更新检索索引」，hint「把新入库的数据写进检索索引——做完这一步，用户才能检索到新内容。」 |
+| " `:415,418` | `ops-milvus-backfill-dry-run` → 「更新检索索引 · 预演」/「只统计将要更新多少内容，不真正写入。正式更新前先跑它，确认影响范围。」 |
+| " `:437,440` | `ops-retrieval-validation` → 「检索自检」/「对当前服务跑一遍检索自检，确认更新之后检索仍然正常。」 |
+| `apps/admin-console/backend/static/jobs.html:161-169` | CSS：`details.group-advanced` 的 summary 字号/字重、展开时的间距、状态那段 `.when` 收进同一行 |
+| " `:278` | 页脚换成「运行安排由系统固定，页面只能查看；手动执行与自动执行受同样的安全限制：同一任务不会重复运行，连续失败会自动暂停。」 |
+| " `:379-381` | `GROUPS.ops` 加 `collapsed: true`；标题换成 summary 文案，purpose 换成大白话，新增 `guide` 三步顺序 |
+| " `:390,392` | `UNAVAILABLE_TEXT.postgres_unavailable` →「当前不可用：需要本机数据库」；新增 `SCHEDULE_TEXT {"手动触发": "人工触发"}` |
+| " `:458,485` | 「从未运行」→「尚未运行」（`runBadge` 空跑分支 + `lastRunCell`） |
+| " `:508-531` | `tagPills()`：不再画 `requires_postgres` 标签；额度/时间窗/开关四种标签改词 |
+| " `:596-598,611` | `scheduleText()`：下发值 `手动触发` 在页面上显示为「人工触发」 |
+| " `:621-634` | `groupStatusLine()`：折叠组的摘要状态行（`最近一次：…`） |
+| " `:637-656` | `groupSection()`：前三个分组照旧 `<h3>` 展开，ops 组渲染成 `<details class="group-advanced">`（默认不 open），表头「节奏（下次运行）」→「运行安排」（`:645`），`renderGroups()` 收敛成 `GROUPS.map(groupSection)`（`:658-665`） |
+| `apps/admin-console/tests/test_canonical_v2_jobs_registry.py:95-124` | 新增 `test_ops_tasks_speak_the_operators_language`：三条 ops 的 label/hint 逐字相等 + 不得出现 `Milvus / 构建期 / 干跑 / 配额 / 闸门` |
+| `apps/admin-console/tests/test_canonical_v2_jobs_api.py:275-311` | 新增 `test_jobs_page_folds_the_build_group_away`：折叠块标记、摘要、三步指南、大白话标签、新页脚、「当前不可用：需要本机数据库」、三条新 label，以及旧词（构建与运维 / 需构建库 / 需要构建期数据库 / 节奏（下次运行）/ 从未运行）全部不再出现 |
+| ".py 同上 `:253-273` | `test_jobs_page_is_served` 的标记表去掉「构建与运维」（该词已不在页面上） |
+| `.agents/runs/connect-collection-line/jobs-page-harness/render_check.cjs` | 断言改写：3 个 `<h3>` + 折叠块、摘要状态、大白话标签、禁用的「立即运行」+ 新原因；新增 4b 场景（available 的 PG 任务不画任何标签、摘要行跟随最新一次运行）；末行输出改为 3 组 + 高级操作 |
+| `.agents/runs/connect-collection-line/jobs-page-harness/stub_server.py` | 新增（stdlib、仅环回）：把 shipped `jobs.html` + 真 `task_views()` payload 供真浏览器看，用于本片实测 |
+| `.agents/runs/connect-collection-line/jobs-page-harness/jobs-advanced-collapsed.png` / `-open.png` | 真浏览器截图（折叠 / 展开） |
+
+未动：`as_dict()` 的字段、任何 task_id、任何 argv/params/gate 字段、任何端点、任何 POST body。
+`requires_postgres` 仍在 payload 里（页面不再为它画标签，只在按钮禁用时用它当原因）。
+
+### 2. 操作者现在看到的确切字符串（真浏览器 `innerText`，非源码转述）
+
+折叠状态（首屏）：
+
+```text
+▸ 高级操作：数据更新与检索自检（一般不需要手动执行） 最近一次：尚未运行
+```
+
+展开后（三行任务，取自真浏览器）：
+
+```text
+任务                最近运行      运行安排    操作
+更新检索索引        尚未运行      人工触发    [企业 ▾] 立即运行（禁用） 当前不可用：需要本机数据库
+把新入库的数据写进检索索引——做完这一步，用户才能检索到新内容。
+[会消耗大模型调用额度（本轮上限 500）]  [技术细节]
+
+更新检索索引 · 预演  尚未运行      人工触发    [企业 ▾] 立即运行（禁用） 当前不可用：需要本机数据库
+只统计将要更新多少内容，不真正写入。正式更新前先跑它，确认影响范围。
+
+检索自检            尚未运行      人工触发    立即运行（禁用） 当前不可用：需要本机数据库
+对当前服务跑一遍检索自检，确认更新之后检索仍然正常。
+
+你导入了新数据或刚跑完采集后，用下面三步让检索能看到新内容，并确认检索正常。
+建议顺序：① 预演（看影响范围）→ ② 更新检索索引 → ③ 检索自检。耗时从几十秒到几分钟不等。
+```
+
+其它分组（同一套标签，真浏览器读到的企业新闻采集行）：
+
+```text
+[会消耗网络检索额度（本轮上限 200）] [仅在允许的时间段运行] [受采集开关控制]
+页脚：运行安排由系统固定，页面只能查看；手动执行与自动执行受同样的安全限制：同一任务不会重复运行，连续失败会自动暂停。
+```
+
+`listHint` 仍是「共 15 个任务 · 生成于 …」；`技术细节`（任务 ID / 命令 / 超时 / cron）逐任务保留；
+摘要行在有运行记录时形如「最近一次：更新检索索引 成功 2026-09-19 03:10」（DOM harness 里用一条
+`ops-milvus-backfill` 的成功 run 取证；真浏览器那一轮 ops 三条都没有运行记录，所以显示「尚未运行」）。
+
+### 3. 验证
+
+**① 本片新增/改写的测试** — fixture：真 `JOB_TASKS` 表 + 真静态页 + 真 `task_views()` payload。
+
+| 命令 | 结果 |
+|---|---|
+| 新增两条（`test_ops_tasks_speak_the_operators_language`、`test_jobs_page_folds_the_build_group_away`）对 HEAD 生产代码（`git restore --source=HEAD --worktree` 两个生产文件、测试保持新版） | **RED：`2 failed in 0.23s`** — `AssertionError: assert ('Milvus 回填（干…' == ('更新检索索引 · 预演…')`；`AssertionError: <details class="group-advanced"><summary>` in … |
+| 同一对测试、恢复本片代码 | **GREEN：`2 passed`** |
+| harness 对 HEAD 页面（payload/断言为新版） | **RED：`FAILED: the three everyday groups keep their heading — 4 !== 3`** |
+| harness 对本片页面 | **GREEN：`OK — all /jobs render assertions passed`（exit 0）** |
+
+**② 既有回归套件**（brief 指定的定向命令 + jobs 家族同批）：
+
+```bash
+cd apps/admin-console && uv run pytest -q -p no:randomly -p no:cacheprovider \
+  tests/test_canonical_v2_jobs_registry.py tests/test_canonical_v2_jobs_api.py \
+  tests/test_canonical_v2_jobs_runner.py tests/test_canonical_v2_jobs_store.py \
+  tests/test_nav_postgres_gating.py tests/test_admin_console_shell.py
+# 117 passed in 5.61s
+uv tool run ruff@0.8.0 check <jobs.py + 两个测试 + stub_server.py>   # All checks passed!
+cd apps/miroflow-agent && uv run python -c "from src.data_agents.canonical_v2.jobs import JOB_TASKS; …"
+# 直接打印三条 ops 的新 label/hint（agent 侧 venv 自证可导入，秒级返回）
+```
+
+`cd apps/miroflow-agent && uv run pytest tests -k "job_task or jobs or registry"` **在本 app 里选不到
+任何测试**（`apps/miroflow-agent/tests` 无一处引用 jobs 注册表；该命令在收集阶段阻塞 7+ 分钟后仍
+0% CPU，已停掉）——与 round 6 的记录一致：这个模块住在 agent app，但由 admin-console 套件行使。
+
+**③ 页面级证据（harness + 真浏览器）**：
+
+```bash
+cd apps/admin-console
+uv run python ../../.agents/runs/connect-collection-line/jobs-page-harness/make_payload.py
+node ../../.agents/runs/connect-collection-line/jobs-page-harness/render_check.cjs
+# OK — all /jobs render assertions passed
+# groups: <h3>日常采集</h3> | <h3>数据导入</h3> | <h3>教授采集源</h3> | <summary>高级操作…</summary>
+# rows per group: 日常采集=8, 数据导入=4, 教授采集源=3, 高级操作=4
+# history rows: 7
+# 4b 场景追加：available 的 ops-retrieval-validation 行既无标签也无原因、出现可点按钮；给
+# ops-milvus-backfill 喂一条成功 run 后摘要变成「最近一次：更新检索索引 成功 2026-…」
+```
+
+真浏览器（scratch 静态 + 桩接口 `stub_server.py`，**127.0.0.1:18325 仅环回，用完即杀**；18188 未动、
+未重启任何服务）：
+
+```bash
+cd apps/admin-console && uv run python ../../.agents/runs/.../jobs-page-harness/stub_server.py 18325
+agent-browser open http://127.0.0.1:18325/jobs
+# collapsed: true（页面里 <details open> 计数 0）
+# summary: 高级操作：数据更新与检索自检（一般不需要手动执行）最近一次：尚未运行
+# h3s: 日常采集 | 数据导入 | 教授采集源      header: 任务 | 最近运行 | 运行安排 | 操作
+# 摘要行与状态同一行（间距 8px）、::marker display=inline（三角保留）、
+# documentElement.scrollWidth - clientWidth = 0（无横向滚动）
+# 截图：jobs-advanced-collapsed.png / jobs-advanced-open.png
+```
+
+未做的检查：没有点「立即运行」真跑一条任务（ops 三条都因本机无库而禁用；collection 任务的
+POST body 由 harness 第 7 段锁定 `{"params": {"domain": "professor"}}` / `{"params": {}}`）。
+
+### 4. 未做 / 留给主线
+
+- **页首说明卡没动**（`jobs.html:252,257` 仍写「看它们各自的节奏…」「手动触发与周期运行共用同一道
+  闸门：采集开关、配额、采集时间窗都不会被绕过」）。brief 只点名页脚那一句，卡片的「闸门/配额」
+  属于同一次投诉的词汇，但不在本片范围内 —— 记在这里，别让它成为漏网之词。
+- **`schedule_display` 的 API 值没改**（`jobs.py:178` 默认仍是「手动触发」）：本片是页面批次，
+  改词在 `scheduleText()` 一层完成；payload 兼容性不受影响。
+- **ops 三条的 `description` 仍带「Milvus / 构建期 / 干跑」**（`jobs.py:395,416,438`，brief 只许改
+  label/hint）。页面从不渲染 `description`（harness 断言它的原文不出现在页面上），但它是 API
+  可见字段，若要让接口也脱敏需另开一条。
+- **没有在活线（18188）上看到新页面**：本片约束不重启服务，线上仍是旧页面，直到下一次热更新。
+- **人类侧文档（`docs/plans/` 第 11 轮日志 + 索引）与 OpenSpec `tasks.md`/`acceptance.md` 未动**，
+  按本片范围只追加本证据；round log / index / 勾选留给主线。
