@@ -236,9 +236,17 @@ still needs fixing), so all three hops are connected to one console-owned ledger
   (`from backend.main import app` → only `POST /api/chat/feedback`).
 - \[x\] J7 Tests cannot write the operator's ledger: `tests/conftest.py` pins
   `CANONICAL_V2_CHAT_GAPS_DB` into a session-scoped scratch directory.
-- \[~\] J8 Live acceptance on 18188 (restart → `/chat` feedback → the row shows in
-  `/browse#gaps`): the restart shipped the slice; the operator-visible round trip
-  is recorded in the round-17 log.
+- \[x\] J8 Live acceptance on 18188 (restart → `/chat` feedback → the row shows in
+  `/browse#gaps`): restart 01:15:58, healthy after 680 s. A real browser filed one
+  feedback from `/chat` (button goes 已反馈, no error), `chat-gaps.sqlite3` holds
+  the one row with its note and all four trace ids, the read route answers
+  `total: 1` with a working `feedback_type` filter and `limit=0 → 422`, and
+  `/browse#gaps` renders the tile 「1」 with the card. The page requested
+  `admin/status`, `admin/chat-gaps` and `auth/me` — never `operations/gaps`
+  again. The reported failure is in the service log as
+  `GET /api/canonical-v2/operations/gaps HTTP/1.1" 500`; that path is gone from
+  the page. Evidence: round-17 log §6 +
+  `.agents/runs/connect-collection-line/live-browse-gaps.png`.
 
 ## Findings recorded, not fixed here
 
