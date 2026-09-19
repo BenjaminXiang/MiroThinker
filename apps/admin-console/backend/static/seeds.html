@@ -552,19 +552,31 @@
               urlInput.focus();
               urlInput.select();
             }
-            row.addEventListener("keydown", function (event) {
-              if (event.key === "Enter") {
-                event.preventDefault();
-                saveSeed(editingId);
-              } else if (event.key === "Escape") {
-                event.preventDefault();
-                editingId = null;
-                renderSeeds();
-              }
-            });
           }
         }
       }
+
+      /* 编辑态的键盘收起：监听挂在 document 上，而不是那一行。
+         行级监听只在焦点留在行内时有效——点过别处、浏览器自动填充下拉吃掉按键、
+         或焦点回到页面空白，Esc 就"不生效"了（真机反馈过这一点）。 */
+      document.addEventListener("keydown", function (event) {
+        if (editingId === null) return;
+        if (event.key === "Escape") {
+          event.preventDefault();
+          editingId = null;
+          renderSeeds();
+          return;
+        }
+        if (event.key === "Enter") {
+          const target = event.target;
+          const inEditingRow =
+            target && target.closest && target.closest("tr.editing") !== null;
+          if (inEditingRow) {
+            event.preventDefault();
+            saveSeed(editingId);
+          }
+        }
+      });
 
       function renderRow(seed) {
         if (seed.id === editingId) {

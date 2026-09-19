@@ -182,6 +182,15 @@ def test_seeds_page_maps_the_interrupted_status() -> None:
     assert "interrupted" in page
 
 
+def test_inline_edit_escape_is_bound_at_the_document() -> None:
+    """行级监听只在焦点留在行内时有效：点过别处 Esc 就不生效（真机反馈过）。"""
+
+    page = _text("/seeds")
+
+    assert 'document.addEventListener("keydown"' in page
+    assert 'row.addEventListener("keydown"' not in page
+
+
 def test_seed_run_history_speaks_the_operator_language() -> None:
     page = _text("/seeds")
 
