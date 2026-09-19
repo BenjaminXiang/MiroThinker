@@ -7,12 +7,17 @@ from dataclasses import dataclass
 from datetime import datetime
 import hashlib
 import json
+import logging
 from typing import Any, Literal, cast
 
 from pydantic import ValidationError
 
-from backend.services.canonical_v2_chat import CanonicalV2ChatAdapter
+from backend.services.canonical_v2_chat import (
+    CanonicalV2ChatAdapter,
+    ChatFeedbackCheckpoint,
+)
 from backend.services.canonical_v2_turn_trace import TurnTraceJournalStore
+from backend.storage.chat_gaps import open_chat_gap_store
 from src.data_agents.canonical_v2.candidate_projection import (
     CandidateProjectionResult,
     compose_candidate_projections,
@@ -51,6 +56,8 @@ from src.data_agents.canonical_v2.relationship_projection import (
     RelationshipProjectionResult,
 )
 
+
+logger = logging.getLogger(__name__)
 
 PublicDomain = Literal["company", "paper", "patent", "professor"]
 
@@ -1091,7 +1098,57 @@ class CanonicalV2AdminRuntime:
             evidence_ids=checkpoint.evidence_ids,
             observed_at=checkpoint.observed_at,
         )
-        return self.gap_operations.record(signal)
+        filed = self.gap_operations.record(signal)
+        self._record_chat_gap(
+            signal,
+            checkpoint,
+            feedback_type=feedback_type,
+            note=note,
+        )
+        return filed
+
+    def _record_chat_gap(
+        self,
+        signal: GapSignal,
+        checkpoint: ChatFeedbackCheckpoint,
+        *,
+        feedback_type: str,
+        note: str | None,
+    ) -> None:
+        """Copy the filed signal into the console's durable ledger.
+
+        The ephemeral composition loses recorded signals at the next restart and
+        this deployment has no Postgres gap schemas for the build-line read
+        surface, so the ledger is the only durable record of what a user
+        reported. It is a copy, never a gate: the caller's answer to the user
+        stays exactly what ``gap_operations.record`` produced, whatever happens
+        here.
+        """
+
+        try:
+            store = open_chat_gap_store()
+            try:
+                store.record(
+                    {
+                        "signal_id": signal.signal_id,
+                        "session_id": checkpoint.session_id,
+                        "turn_id": checkpoint.turn_id,
+                        "release_id": signal.release_id,
+                        "feedback_type": feedback_type,
+                        "note": note,
+                        "query_trace_id": checkpoint.query_trace_id,
+                        "answer_trace_id": checkpoint.answer_trace_id,
+                        "observed_at": checkpoint.observed_at,
+                    }
+                )
+            finally:
+                store.close()
+        except Exception as exc:  # noqa: BLE001 - fail-open: never break feedback
+            logger.warning(
+                "canonical v2 chat gap ledger write failed: %s: %s",
+                type(exc).__name__,
+                exc,
+            )
 
 
 @dataclass(frozen=True, slots=True)

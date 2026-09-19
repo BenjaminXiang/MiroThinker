@@ -3057,3 +3057,207 @@ test("process disclosure renders no web block without web items", async () => {
   assert.equal(descendantsWithClass(harness.renderedMessages, "process-web").length, 0);
   assert.equal(descendantsWithClass(harness.renderedMessages, "process-web-link").length, 0);
 });
+
+/* 反馈控制：每条回答下面那一个「反馈」入口（served /chat，公开页）。
+ *
+ * Fixture source: chat.html 自己的内联脚本 + 构造语料（一条刚回答完的 turn）与桩 fetch；
+ * 断言的是页面发出的真实请求体与状态机，不依赖后端。
+ */
+
+function createFeedbackHarness(options = {}) {
+  const renderStart = script.indexOf("function continuationText(option)");
+  const renderEnd = script.indexOf("function renderProcess(", renderStart);
+  assert.ok(
+    renderStart >= 0 && renderEnd > renderStart,
+    "production answer renderer seam must exist",
+  );
+  assert.ok(
+    script.indexOf("function renderFeedbackControl(") > renderStart
+      && script.indexOf("function renderFeedbackControl(") < renderEnd,
+    "the feedback control must live in the answer renderer seam",
+  );
+
+  const fetchCalls = [];
+  const errorMessages = [];
+  const context = vm.createContext({
+    document,
+    messages: document.createElement("main"),
+    fetch: async (url, request) => {
+      fetchCalls.push({
+        url: String(url),
+        method: request.method,
+        body: JSON.parse(request.body),
+      });
+      if (options.failure) throw options.failure;
+      const status = options.status === undefined ? 200 : options.status;
+      return {
+        ok: status >= 200 && status < 300,
+        status,
+        json: async () => options.payload || {},
+      };
+    },
+    renderError: (detail) => errorMessages.push(String(detail)),
+    notifyContentUpdate() {},
+    maintainFollowingScroll() {},
+  });
+  vm.runInContext(
+    `${script.slice(seamStart, seamEnd)}\n` +
+      `${script.slice(renderStart, renderEnd)}\n` +
+      "globalThis.__feedbackSeam = { renderAssistant };",
+    context,
+    { filename: chatPath.pathname },
+  );
+
+  const bubble = document.createElement("div");
+  function render(answer = {}) {
+    context.__feedbackSeam.renderAssistant(
+      { query_type: "B_company_topic_search", answer_text: "共找到 6 个企业。", citations: [], ...answer },
+      "深圳哪些公司做激光雷达",
+      { row: document.createElement("article"), bubble },
+    );
+  }
+
+  return { bubble, fetchCalls, errorMessages, render };
+}
+
+const settleFeedback = async () => {
+  for (let index = 0; index < 8; index += 1) {
+    await new Promise((resolve) => setImmediate(resolve));
+  }
+};
+
+function feedbackParts(bubble) {
+  const pick = (name) => descendantsWithClass(bubble, name)[0] || null;
+  return {
+    toggle: pick("feedback-toggle"),
+    form: pick("feedback-form"),
+    note: pick("feedback-note"),
+    submit: pick("feedback-submit"),
+    cancel: pick("feedback-cancel"),
+  };
+}
+
+async function openAndSubmit(harness, noteValue) {
+  const parts = feedbackParts(harness.bubble);
+  parts.toggle.dispatchEvent({ type: "click" });
+  parts.note.value = noteValue;
+  parts.submit.dispatchEvent({ type: "click" });
+  await settleFeedback();
+  return parts;
+}
+
+test("the /chat page talks to the v2 feedback endpoint and no other feedback path", () => {
+  assert.match(script, /"api\/chat\/feedback"/);
+  assert.doesNotMatch(script, /"api\/canonical-v2\/chat\/feedback"/);
+  assert.match(script, /feedback_type:\s*"incorrect_answer"/);
+});
+
+test("the feedback control stays closed until it is opened and reserves no space", () => {
+  assert.match(productionCssRule(".feedback-row"), /(?:^|;)\s*display\s*:\s*flex\s*(?:;|$)/);
+  assert.match(
+    productionCssRule(".feedback-form[hidden]"),
+    /(?:^|;)\s*display\s*:\s*none\s*(?:;|$)/,
+  );
+
+  const harness = createFeedbackHarness();
+  harness.render();
+  const { toggle, form } = feedbackParts(harness.bubble);
+  assert.ok(toggle, "the answered turn carries a 反馈 control");
+  assert.equal(toggle.textContent, "反馈");
+  assert.equal(toggle.disabled, false);
+  assert.equal(form.hidden, true, "the note row is hidden while idle");
+  assert.equal(harness.fetchCalls.length, 0, "nothing is sent before the user acts");
+});
+
+test("submitting the feedback posts the answered turn once and greys the control", async () => {
+  const harness = createFeedbackHarness();
+  harness.render();
+  const { toggle, form } = feedbackParts(harness.bubble);
+  toggle.dispatchEvent({ type: "click" });
+  assert.equal(form.hidden, false, "the control opens the note row");
+  assert.equal(toggle.hidden, true, "the opener yields to the row");
+
+  const { submit, cancel, note } = feedbackParts(harness.bubble);
+  note.value = "  结果里有不相关企业  ";
+  submit.dispatchEvent({ type: "click" });
+  assert.equal(submit.disabled, true, "a submit in flight cannot be repeated");
+  assert.equal(cancel.disabled, true, "the row cannot be cancelled mid-flight");
+  await settleFeedback();
+
+  assert.deepEqual(harness.fetchCalls, [{
+    url: "api/chat/feedback",
+    method: "POST",
+    body: {
+      query: "深圳哪些公司做激光雷达",
+      query_type: "B_company_topic_search",
+      answer_text: "共找到 6 个企业。",
+      feedback_type: "incorrect_answer",
+      note: "结果里有不相关企业",
+    },
+  }]);
+  assert.deepEqual(harness.errorMessages, []);
+  assert.equal(toggle.textContent, "已反馈");
+  assert.equal(toggle.disabled, true, "a filed feedback cannot be filed twice");
+  assert.equal(toggle.hidden, false);
+  assert.equal(form.hidden, true);
+});
+
+test("an empty note is posted as a null note, not as an empty string", async () => {
+  const harness = createFeedbackHarness();
+  harness.render();
+  await openAndSubmit(harness, "   ");
+  assert.equal(harness.fetchCalls.length, 1);
+  assert.equal(harness.fetchCalls[0].body.note, null);
+  assert.equal(harness.fetchCalls[0].body.feedback_type, "incorrect_answer");
+});
+
+test("cancelling the note row sends nothing and restores the opener", async () => {
+  const harness = createFeedbackHarness();
+  harness.render();
+  const parts = feedbackParts(harness.bubble);
+  parts.toggle.dispatchEvent({ type: "click" });
+  parts.cancel.dispatchEvent({ type: "click" });
+  await settleFeedback();
+
+  assert.deepEqual(harness.fetchCalls, []);
+  assert.equal(parts.form.hidden, true);
+  assert.equal(parts.toggle.hidden, false);
+  assert.equal(parts.toggle.disabled, false);
+});
+
+test("a 409 on the feedback post reads as an expired session, not as a machine code", async () => {
+  const harness = createFeedbackHarness({
+    status: 409,
+    payload: { detail: "canonical_v2_feedback_checkpoint_required" },
+  });
+  harness.render();
+  const parts = await openAndSubmit(harness, "结果里有不相关企业");
+
+  assert.deepEqual(harness.errorMessages, ["本次会话已过期，无法反馈"]);
+  assert.equal(harness.errorMessages.join(" ").includes("canonical_v2"), false);
+  // 失败后停在备注行：提交可重试、取消可退回，不会卡在"提交中"。
+  assert.equal(parts.form.hidden, false, "the note row stays open for a retry");
+  assert.equal(parts.submit.disabled, false, "the submit is armed again");
+  assert.equal(parts.submit.textContent, "提交");
+  assert.equal(parts.note.value, "结果里有不相关企业", "the typed note survives the failure");
+  parts.cancel.dispatchEvent({ type: "click" });
+  assert.equal(parts.toggle.hidden, false, "cancel brings the opener back");
+  assert.equal(parts.toggle.disabled, false);
+  assert.equal(parts.toggle.textContent, "反馈");
+});
+
+test("a failed feedback post keeps a short Chinese message and stays retryable", async () => {
+  const harness = createFeedbackHarness({ status: 500 });
+  harness.render();
+  const parts = await openAndSubmit(harness, "结果里有不相关企业");
+
+  assert.deepEqual(harness.errorMessages, ["反馈提交失败（HTTP 500）"]);
+  assert.equal(parts.submit.disabled, false);
+  assert.equal(parts.submit.textContent, "提交");
+  assert.equal(parts.form.hidden, false);
+
+  const networkHarness = createFeedbackHarness({ failure: new Error("offline") });
+  networkHarness.render();
+  await openAndSubmit(networkHarness, "");
+  assert.deepEqual(networkHarness.errorMessages, ["反馈提交失败，请稍后再试"]);
+});

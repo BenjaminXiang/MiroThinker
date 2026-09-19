@@ -19,6 +19,7 @@ from backend.api.canonical_v2_admin_config import (
     router as canonical_v2_admin_config_router,
 )
 from backend.api.canonical_v2_chat import router as canonical_v2_chat_router
+from backend.api.canonical_v2_chat_gaps import router as canonical_v2_chat_gaps_router
 from backend.api.canonical_v2_consumers import router as canonical_v2_consumers_router
 from backend.api.canonical_v2_corrections import (
     router as canonical_v2_corrections_router,
@@ -139,6 +140,7 @@ def _create_route_shell() -> FastAPI:
     shell.include_router(canonical_v2_jobs_router)
     shell.include_router(canonical_v2_uploads_router)
     shell.include_router(canonical_v2_seeds_router)
+    shell.include_router(canonical_v2_chat_gaps_router)
 
     @shell.api_route("/api/{path:path}", methods=list(_REJECT_METHODS))
     def reject_unknown_api(path: str) -> None:

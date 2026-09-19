@@ -71,6 +71,7 @@ _KNOWN_API_ROUTES = frozenset(
         ("GET", "/api/canonical-v2/operations/gaps"),
         ("GET", "/api/canonical-v2/operations/gaps/{gap_id}"),
         ("GET", "/api/canonical-v2/admin/status"),
+        ("GET", "/api/canonical-v2/admin/chat-gaps"),
         ("GET", "/api/canonical-v2/admin/domains/{domain}"),
         ("GET", "/api/canonical-v2/admin/domains/{domain}/facets/{field}"),
         ("GET", "/api/canonical-v2/admin/domains/{domain}/export"),

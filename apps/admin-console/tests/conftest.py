@@ -269,6 +269,30 @@ def scratch_admin_auth_state(tmp_path_factory: pytest.TempPathFactory) -> Iterat
                 os.environ[name] = value
 
 
+CHAT_GAPS_DB_ENV = "CANONICAL_V2_CHAT_GAPS_DB"
+
+
+@pytest.fixture(scope="session", autouse=True)
+def scratch_chat_gap_ledger(tmp_path_factory: pytest.TempPathFactory) -> Iterator[Path]:
+    """Keep the chat-gap ledger in a scratch file, never the serving one.
+
+    The feedback path writes this ledger copy fail-open, so without a scratch
+    path a test that files feedback with a composed runtime would fall through
+    to the deployment's own state directory.
+    """
+
+    state = tmp_path_factory.mktemp("chat-gap-ledger")
+    previous = os.environ.get(CHAT_GAPS_DB_ENV)
+    os.environ[CHAT_GAPS_DB_ENV] = str(state / "chat-gaps.sqlite3")
+    try:
+        yield state
+    finally:
+        if previous is None:
+            os.environ.pop(CHAT_GAPS_DB_ENV, None)
+        else:
+            os.environ[CHAT_GAPS_DB_ENV] = previous
+
+
 def authorized_client(application: Any = None, **kwargs: Any) -> TestClient:
     """A TestClient that carries a valid session for the scratch administrator."""
 

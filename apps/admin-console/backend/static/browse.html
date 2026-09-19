@@ -231,7 +231,7 @@
       .pane-header h3 { margin: 0; font-size: 17px; }
       .pane-header p { margin: 3px 0 0; color: var(--muted); font-size: 12px; }
 
-      .count-badge, .status-badge, .type-badge, .quality-badge {
+      .count-badge, .type-badge, .quality-badge {
         display: inline-flex;
         align-items: center;
         min-height: 24px;
@@ -244,7 +244,6 @@
       .count-badge { color: var(--navy); background: var(--blue-soft); }
       .type-badge { color: var(--navy); background: #e8f0f5; }
       .quality-badge { color: #126e67; background: var(--teal-soft); }
-      .status-badge { color: var(--amber); background: var(--amber-soft); }
 
       .item-list { display: grid; gap: 10px; }
 
@@ -266,6 +265,13 @@
         border-color: #75b9b2;
         box-shadow: 0 10px 24px rgba(24, 70, 78, 0.08);
         transform: translateY(-1px);
+      }
+
+      .feedback-card { cursor: default; }
+      .feedback-card:hover {
+        border-color: var(--line);
+        box-shadow: none;
+        transform: none;
       }
 
       .card-top { display: flex; align-items: center; gap: 7px; }
@@ -316,19 +322,6 @@
       .data-row { display: grid; grid-template-columns: 116px minmax(0, 1fr); gap: 10px; font-size: 12px; }
       .data-row dt { color: var(--muted); }
       .data-row dd { margin: 0; }
-
-      .token-list { display: flex; flex-wrap: wrap; gap: 6px; }
-      .token {
-        max-width: 100%;
-        padding: 4px 8px;
-        overflow: hidden;
-        color: #39505d;
-        background: #f0f4f6;
-        border-radius: 7px;
-        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-        font-size: 10px;
-        text-overflow: ellipsis;
-      }
 
       .primary-action {
         width: 100%;
@@ -517,7 +510,7 @@
       <section class="transparency" aria-label="平台说明">
         <article class="notice-card">
           <h3>可追溯展示</h3>
-          <p>条目、关联与知识缺口均绑定当前发布版本；页面只呈现接口返回的证据标识和字段血缘。</p>
+          <p>条目与关联绑定当前发布版本；知识缺口页签读取用户反馈台账。页面只呈现接口返回的证据标识和字段血缘。</p>
         </article>
         <article class="notice-card">
           <h3>覆盖层编辑</h3>
@@ -532,8 +525,12 @@
     <script>
       const statusPath = "api/canonical-v2/admin/status";
       const domainPath = "api/canonical-v2/admin/domains/";
-      const gapsPath = "api/canonical-v2/operations/gaps";
-      const gapsUnavailableText = "本机未启用知识缺口（未配置 V2 运行库）";
+      const gapsPath = "api/canonical-v2/admin/chat-gaps";
+      const gapsEmptyText = "还没有用户反馈。用户在对话页点「反馈」后，会记录到这里。";
+      const feedbackTypeLabels = Object.freeze({
+        incorrect_answer: "回答不对",
+        evidence_gap: "证据不足",
+      });
       const correctionsPath = "api/canonical-v2/admin/corrections";
       const companyDocsPath = "api/canonical-v2/admin/company-documents";
       const nameFields = { company: "name", professor: "name", paper: "title", patent: "title" };
@@ -568,11 +565,6 @@
         research_directions: "研究方向",
         quality_status: "质量状态",
         status: "状态",
-        severity: "严重度",
-        demand_count: "需求次数",
-        affected_domains: "涉及数据域",
-        affected_paths: "涉及路径",
-        observed_symptom: "观察到的问题",
       };
       const factFields = {
         company: ["industry", "geography", "founded_at", "profile_summary"],
@@ -616,6 +608,7 @@
 
       let activeView = "company";
       let selectedId = null;
+      let gapMetricValue = null;
 
       function create(tag, className, text) {
         const element = document.createElement(tag);
@@ -683,13 +676,39 @@
         return Number.isNaN(parsed.getTime()) ? String(value) : parsed.toLocaleString("zh-CN", { hour12: false });
       }
 
+      function feedbackTime(value) {
+        if (!value) return "";
+        const parsed = new Date(value);
+        if (Number.isNaN(parsed.getTime())) return String(value);
+        const pad = (number) => String(number).padStart(2, "0");
+        return `${parsed.getFullYear()}-${pad(parsed.getMonth() + 1)}-${pad(parsed.getDate())} `
+          + `${pad(parsed.getHours())}:${pad(parsed.getMinutes())}`;
+      }
+
+      function shortId(value) {
+        const text = String(value ?? "").trim();
+        if (!text) return "";
+        const tail = text.includes(":") ? text.slice(text.lastIndexOf(":") + 1) : text;
+        return tail.length > 8 ? tail.slice(0, 8) : tail;
+      }
+
+      function feedbackTypeText(value) {
+        const key = String(value ?? "");
+        return feedbackTypeLabels[key] || key || "未记录类型";
+      }
+
+      function feedbackSummaryText(total, counts) {
+        const table = counts && typeof counts === "object" ? counts : {};
+        const known = Object.keys(feedbackTypeLabels);
+        const keys = known.filter((key) => table[key] > 0)
+          .concat(Object.keys(table).filter((key) => !known.includes(key) && table[key] > 0));
+        const head = `共 ${total} 条反馈`;
+        return keys.length ? `${head} · ${keys.map((key) => `${feedbackTypeText(key)} ${table[key]}`).join(" · ")}` : head;
+      }
+
       async function fetchJson(path) {
         const response = await fetch(path, { headers: { Accept: "application/json" } });
-        if (!response.ok) {
-          const failure = new Error(`HTTP ${response.status}`);
-          failure.status = response.status;
-          throw failure;
-        }
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
         return response.json();
       }
 
@@ -741,12 +760,23 @@
           return card;
         });
         const gapCard = create("article", "metric-card accent");
+        const gapValue = create("strong", "metric-value", "—");
+        gapMetricValue = gapValue;
         gapCard.append(
           create("span", "metric-label", "知识缺口"),
-          create("strong", "metric-value", status.gap_summary?.total ?? 0),
-          create("span", "metric-caption", "当前版本相关记录"),
+          gapValue,
+          create("span", "metric-caption", "用户反馈条数"),
         );
         summaryGrid.replaceChildren(...cards, gapCard);
+      }
+
+      async function loadGapCount() {
+        try {
+          const page = await fetchJson(gapsPath);
+          if (gapMetricValue) gapMetricValue.textContent = String(page.total ?? 0);
+        } catch {
+          // 反馈台账不可用时概览保留 “—”，不把整块概览打成错误态。
+        }
       }
 
       async function loadStatus() {
@@ -757,6 +787,7 @@
           releasePill.title = "当前页面已绑定只读候选版本";
           asOf.textContent = `数据时间点：${formatTime(status.as_of)}`;
           renderMetrics(status);
+          loadGapCount();
         } catch (error) {
           // 版本概览依赖候选运行时；不可用时整块移除，不留报错占位。
           document.getElementById("overview-section")?.remove();
@@ -906,17 +937,6 @@
           rows.append(row);
         }
         return rows;
-      }
-
-      function tokenList(values) {
-        const holder = create("div", "token-list");
-        for (const value of values || []) {
-          const token = create("span", "token", value);
-          token.title = String(value);
-          holder.append(token);
-        }
-        if (!holder.childElementCount) holder.append(create("span", "canonical-id", "未返回标识"));
-        return holder;
       }
 
       function inspectorSection(title, content) {
@@ -1106,83 +1126,49 @@
         }
       }
 
-      function gapCard(gap) {
-        const card = create("a", "item-card");
-        const targetHash = `#gaps/${encodeURIComponent(gap.gap_id)}`;
-        card.href = targetHash;
-        card.dataset.id = gap.gap_id;
-        card.setAttribute("aria-label", `查看知识缺口 ${gap.gap_id}`);
+      function gapCard(item) {
+        const card = create("article", "item-card feedback-card");
         const top = create("div", "card-top");
-        top.append(
-          create("span", "status-badge", readable(gap.status || "待处理")),
-          create("span", "type-badge", readable(gap.severity || gap.gap_class || "缺口")),
-        );
-        card.append(top, create("div", "card-title", gap.observed_symptom || "知识缺口"), create("div", "canonical-id", gap.gap_id || "—"));
-        addFactList(card, gap, ["affected_domains", "affected_paths", "demand_count"]);
+        top.append(create("span", "type-badge", feedbackTypeText(item.feedback_type)));
+        card.append(top);
+        const note = String(item.note ?? "").trim();
+        if (note) card.append(create("div", "card-title", note));
+        card.append(create("div", "canonical-id", shortId(item.signal_id) || "—"));
+        const facts = create("dl", "facts");
+        for (const [label, value] of [
+          ["时间", feedbackTime(item.recorded_at || item.observed_at)],
+          ["会话", shortId(item.session_id)],
+          ["轮次", shortId(item.turn_id)],
+        ]) {
+          if (!value) continue;
+          const row = create("div", "fact");
+          row.append(create("dt", "", label), create("dd", "", value));
+          facts.append(row);
+        }
+        if (facts.childElementCount) card.append(facts);
         return card;
       }
 
-      async function loadGaps(requestedId = null) {
+      async function loadGaps() {
         setActiveTab("gaps");
         selectedId = null;
         listTitle.textContent = "知识缺口";
-        listCaption.textContent = "正在读取类型化运营记录…";
+        listCaption.textContent = "正在读取用户反馈…";
         listCount.textContent = "—";
         listPager.hidden = true;
-        itemList.replaceChildren(stateBox("loading", "正在加载知识缺口"));
-        inspectorPrompt("请选择一个知识缺口，查看证据和处理历史。");
+        itemList.replaceChildren(stateBox("loading", "正在加载用户反馈"));
+        inspectorPrompt("反馈台账没有详情视图：条目本身已包含反馈类型、备注与发生时间。");
         try {
           const page = await fetchJson(gapsPath);
           const items = Array.isArray(page.items) ? page.items : [];
-          listCaption.textContent = "按严重度、需求次数和更新时间排列";
-          listCount.textContent = `${page.total ?? items.length} 条`;
-          itemList.replaceChildren(...(items.length ? items.map(gapCard) : [stateBox("empty", "当前版本没有知识缺口记录")]));
-          if (requestedId) await loadGapDetail(requestedId);
+          const total = page.total ?? items.length;
+          if (gapMetricValue) gapMetricValue.textContent = String(total);
+          listCaption.textContent = feedbackSummaryText(total, page.counts);
+          listCount.textContent = `${total} 条`;
+          itemList.replaceChildren(...(items.length ? items.map(gapCard) : [stateBox("empty", gapsEmptyText)]));
         } catch (error) {
-          if (error?.status === 503) {
-            itemList.replaceChildren(stateBox("empty", gapsUnavailableText));
-            return;
-          }
-          itemList.replaceChildren(stateBox("error", `知识缺口加载失败 · ${errorText(error)}`));
-        }
-      }
-
-      async function loadGapDetail(id) {
-        selectedId = id;
-        updateSelectedCard(id);
-        inspector.replaceChildren(stateBox("loading", "正在读取缺口证据"));
-        try {
-          const response = await fetchJson(gapsPath + "/" + encodeURIComponent(id));
-          const gap = response.gap || {};
-          const card = create("article", "inspector-card");
-          const top = create("div", "card-top");
-          top.append(create("span", "status-badge", readable(gap.status || "待处理")), create("span", "type-badge", readable(gap.severity || gap.gap_class || "缺口")));
-          card.append(
-            top,
-            create("h3", "inspector-title", gap.observed_symptom || "知识缺口"),
-            create("div", "canonical-id", gap.gap_id || id),
-            inspectorSection("缺口信息", dataRows([
-              ["分类", gap.gap_class],
-              ["涉及数据域", gap.affected_domains],
-              ["涉及路径", gap.affected_paths],
-              ["需求次数", gap.demand_count],
-              ["更新时间", formatTime(gap.updated_at)],
-            ])),
-            inspectorSection("证据标识", tokenList(gap.evidence_ids || [])),
-            inspectorSection("处理记录", dataRows([
-              ["状态变更", `${response.transitions?.length || 0} 条`],
-              ["本地字段断言", `${response.field_assertions?.length || 0} 条`],
-              ["本地关系断言", `${response.relationship_assertions?.length || 0} 条`],
-              ["未解析证据", response.unresolved_evidence_ids || []],
-            ])),
-          );
-          inspector.replaceChildren(card);
-        } catch (error) {
-          if (error?.status === 503) {
-            inspector.replaceChildren(stateBox("empty", gapsUnavailableText));
-            return;
-          }
-          inspector.replaceChildren(stateBox("error", `缺口详情加载失败 · ${errorText(error)}`));
+          listCaption.textContent = "用户反馈暂不可用";
+          itemList.replaceChildren(stateBox("error", `用户反馈加载失败 · ${errorText(error)}`));
         }
       }
 
@@ -1198,7 +1184,7 @@
 
       function loadRoute() {
         const route = routeFromHash();
-        if (route.view === "gaps") loadGaps(route.id);
+        if (route.view === "gaps") loadGaps();
         else loadDomain(route.view, route.id);
       }
 

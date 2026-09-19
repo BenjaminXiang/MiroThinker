@@ -365,3 +365,129 @@ Out of scope:        the live line (needs a service restart), any other static p
   `get_knowledge_gap_operations` with the candidate runtime's `gap_operations`).
 - Human docs (`docs/plans/` round log + index) and OpenSpec `tasks.md` / `acceptance.md`
   are not touched by this batch; the main line owns the round entry.
+
+## 后续批次 — 知识缺口台账（后端）(2026-09-20)
+
+Appended before production-code edits (AGENTS.md §4). The demand-side half of the
+knowledge-gap loop is write-only on this deployment: the feedback endpoint's
+`gap_operations` is the in-process ephemeral object, so a filed `GapSignal` is lost
+on restart, and the read surface (`/api/canonical-v2/operations/gaps`) needs the
+build-line Postgres schemas this deployment does not have.
+
+### Contract
+
+- `apps/admin-console/backend/storage/chat_gaps.py` — one SQLite ledger
+  (`chat-gaps.sqlite3`), resolved from the environment in this order:
+  `CANONICAL_V2_CHAT_GAPS_DB` (this ledger's own override, the shape every
+  sibling ledger has) → parent of `CANONICAL_V2_JOBS_DB` → parent of
+  `CANONICAL_V2_ACCESS_LOG_DB` → `admin_auth.DEFAULT_STATE_DIR` (same state
+  directory as every other console ledger). No Postgres, no new dependency,
+  WAL + `busy_timeout` like its siblings.
+- Table `chat_gap(signal_id PK, session_id, turn_id, release_id, feedback_type,
+  note, query_trace_id, answer_trace_id, observed_at, recorded_at)`.
+- API: `record(entry) -> bool` (True only when a row was inserted; the runtime's
+  content-addressed `signal_id` makes a repeat a no-op), `list_recent(limit,
+  feedback_type)`, `counts_by_type()`, `total()`.
+- Write path stays after `gap_operations.record(signal)` and never changes what the
+  feedback endpoint answers: a ledger failure is logged and swallowed.
+- Read surface `GET /api/canonical-v2/admin/chat-gaps` (rides the already-gated
+  `/api/canonical-v2` prefix), `limit` 1..200 default 50, optional `feedback_type`,
+  answer `{"items": [...], "total": N, "counts": {...}}`; no Postgres involved, and
+  an empty (or not-yet-created) ledger is a 200 with an empty list.
+
+### RED artifacts (must fail before the change)
+
+1. `apps/admin-console/tests/test_canonical_v2_chat_gaps_store.py` (new) —
+   `ModuleNotFoundError`: `backend.storage.chat_gaps` does not exist at HEAD.
+2. `apps/admin-console/tests/test_canonical_v2_chat_gaps_api.py` (new) —
+   `404` for `GET /api/canonical-v2/admin/chat-gaps` (route does not exist), and the
+   two write-path tests fail because no ledger row is ever written.
+3. `apps/admin-console/tests/test_canonical_v2_consumer_migration.py` —
+   `_KNOWN_API_ROUTES` gains the new route (the shell's route-set assertion).
+
+### GREEN evidence required
+
+- Layer ①: the two new suites, fixture = `tmp_path` SQLite only (never the serving
+  state directory): store (insert → list → counts → total, idempotent second
+  `record()` returns False, `feedback_type` filter, newest-first, path precedence)
+  and HTTP (empty ledger with no console DSN configured, row shape, filter, limit
+  bounds 0 / 201 → 422, 401 without a session, filed feedback lands in the ledger,
+  broken ledger leaves the HTTP result unchanged).
+- Layer ②: `test_canonical_v2_admin_status_repair.py`, `test_canonical_v2_operations_api.py`,
+  `test_admin_gate.py`, `test_canonical_v2_access_log_api.py` — zero new failures.
+- Layer ③: none possible — the endpoint ships with the next hot update; this slice
+  does not restart services and does not touch 18188 or the live state files.
+
+### What will NOT be claimed
+
+- No live `/browse` panel proof: the page half is the sibling agent's; this slice
+  fixes the backend shape (`total` is the whole-ledger count, `counts` the per-type
+  breakdown, so `sum(counts.values()) == total` holds regardless of the filter).
+- The ledger is a copy, not a replacement: `gap_operations.record()` semantics and
+  the build-line Postgres path are untouched, and no `signal_id` is ever deduped
+  against the build database.
+
+## 后续批次 — 知识缺口台账（页面）(2026-09-20)
+
+Appended before production-code edits (AGENTS.md §4). The page half of the same loop the
+backend batch above opens: `/browse`'s 「V2 Gaps / 知识缺口」 tab still reads the build-line
+surface (`api/canonical-v2/operations/gaps`), which this deployment can never answer, and the
+served `/chat` page has no way to file the feedback that would ever put a row in the ledger —
+so the tab is a dead reader and the write path has no door.
+
+### Contract
+
+- `/browse` (`apps/admin-console/backend/static/browse.html`): the gaps tab reads
+  `api/canonical-v2/admin/chat-gaps` (no query params beyond the default limit) and nothing
+  else; the operations path, `gapsUnavailableText` and the gap-detail view are deleted. Per
+  item: feedback type in Chinese (`incorrect_answer`→「回答不对」, `evidence_gap`→「证据不足」,
+  anything else verbatim), the note when present, local time `YYYY-MM-DD HH:mm`
+  (`recorded_at`, falling back to `observed_at`) and short session/turn markers (≤8 chars of
+  the id's last `:`-separated segment — never a full uuid). Above the list: 「共 N 条反馈」 plus
+  the per-type breakdown from `counts`. Empty ledger: 「还没有用户反馈。用户在对话页点「反馈」后，
+  会记录到这里。」 The header summary tile labelled 知识缺口 reads the ledger's `total`, `—`
+  until it answers.
+- `/chat` (`apps/admin-console/backend/static/chat.html`): after an answer, one inline
+  「反馈」 control opens a one-line optional note + 提交 / 取消 and POSTs
+  `api/canonical-v2/chat/feedback` with `query` (the turn's query), `query_type`
+  (`data.query_type`, `"unknown"` when the payload carries none), `answer_text` (the rendered,
+  sanitized answer), `feedback_type: "incorrect_answer"` and `note` (trimmed, `null` when
+  empty, ≤1000 chars). States idle → open → sending (提交 disabled) → 已反馈 (button greyed,
+  no second POST). Failures go through the page's `renderError`; a 409 reads
+  「本次会话已过期，无法反馈」, never the machine code.
+
+### RED artifacts (must fail before the change)
+
+1. `.agents/runs/connect-collection-line/gaps-ledger-harness/render_check.cjs` (new) — runs
+   `/browse`'s own inline script in a DOM stub with a stubbed ledger payload; at HEAD it fails
+   because the page fetches the operations path and renders build-surface cards.
+2. `apps/admin-console/tests/test_canonical_v2_real_preview_ui.py` (extended) —
+   `test_browse_gaps_tab_reads_the_feedback_ledger` runs the same harness assertions inline;
+   RED at HEAD (no `chat-gaps` literal in the page).
+3. `apps/admin-console/tests/test_canonical_v2_operations_api.py` — the page assertions in
+   `test_canonical_v2_operations_api_is_bounded_read_only_and_quarantined` name the operations
+   path; RED after the page moves (the assertion is updated to name the ledger instead), and
+   `test_browse_gaps_503_renders_a_neutral_state` is deleted with the code it locks.
+4. `apps/admin-console/tests/chat_ui_behavior_test.mjs` (extended) — feedback control markers,
+   POST body, sent state, 409 copy; RED at HEAD (no control exists).
+
+### GREEN evidence required
+
+- Layer ①: the four artifacts above.
+- Layer ②: `tests/test_canonical_v2_real_preview_ui.py -k browse` (11 pre-existing, all pass),
+  `tests/test_canonical_v2_operations_api.py`, `node --test tests/chat_ui_behavior_test.mjs`
+  (86/87 at HEAD: the `科创` vs `国先` brand assertion is a pre-existing failure and must not
+  change).
+- Layer ③: none possible — this slice ships with the next hot update; no restart, no 18188.
+
+### What will NOT be claimed
+
+- No live-page proof: the ledger endpoint is the sibling batch's and is not deployed; the
+  page is verified against the contract payload in a DOM stub.
+- The `/chat` note is not an evidence path: `answer_text` / `query` travel for shape only —
+  the endpoint's own record call uses the session, the type and the note.
+- `tests/test_canonical_v2_consumer_migration.py::_assert_static_and_import_quarantine` still
+  names the operations path for `/browse`; that assertion is already unreachable (its caller
+  fails at `:734` at HEAD) and stays untouched, recorded as pre-existing.
+- Human docs (`docs/plans/`) and OpenSpec `tasks.md` / `acceptance.md` are not touched by this
+  batch; the main line owns the round entry.

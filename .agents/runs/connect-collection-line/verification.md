@@ -2085,3 +2085,305 @@ HEAD 对照（本次实际跑过，同一 node 桩、同一输入）：改前页
   没有做成"能力协议基类"或启动期校验——那会改动注入契约（`canonical_v2_deps` / 聚合类型），
   超出本批范围，且线上缺的正是"进程里只有 ephemeral 形态"这一事实的显式化。
 - 本批不触碰 `docs/plans/`（轮日志 + index）与 OpenSpec 工件：沿用本分支近几批的做法，由主线统一写。
+
+## 后续批次 — 知识缺口台账（后端）(2026-09-20)
+
+本批解决"反馈是个只写黑洞"：用户反馈在 pack 形态下写进进程内的 ephemeral `gap_operations`
+（重启即丢），而构建线的读面（`/api/canonical-v2/operations/gaps`）要 Postgres gap schema，
+本机没有。于是：**一份小型持久台账（SQLite）+ 一个读端点**，不依赖 Postgres。
+契约见 `verification-contract.md` 同名小节（生产改动前追加）。
+
+### 1. 写了什么（file:line）
+
+| 文件 | 位置 | 作用 |
+|---|---|---|
+| `backend/storage/chat_gaps.py`（新） | `:25` `DB_FILENAME="chat-gaps.sqlite3"`；`:26` `DB_PATH_ENV`；`:32` `DEFAULT_STATE_DIR`；`:35-48` 建表 DDL；`:57` `chat_gaps_database_path()`；`:91` `_prepare_ledger_file()`；`:114` `ChatGapStore`；`:139` `record()`；`:171` `list_recent()`；`:194` `counts_by_type()`；`:207` `total()`；`:219` `open_chat_gap_store()` | 台账本体，只用 stdlib（`sqlite3`/`os`/`pathlib`/`threading`），无新依赖 |
+| `backend/api/canonical_v2_chat_gaps.py`（新） | `:21` 前缀；`:47` `@router.get("/chat-gaps")`；`:26/:39` 响应模型；`:59` 台账打不开时的 503 | 读端点，每次请求现开现关（无进程级缓存，路径永远跟当前环境一致） |
+| `backend/services/canonical_v2_admin.py` | `:1101` `filed = self.gap_operations.record(signal)` 后接 `:1102-1107` 台账调用；`:1110-1151` `_record_chat_gap()`；`:60` logger | 写路径。`gap_operations.record` 的调用与返回语义一字未动 |
+| `backend/main.py` | `:22` import、`:143` `include_router` | 注册路由（挂在已鉴权的 `/api/canonical-v2` 前缀下） |
+| `tests/conftest.py` | `:272-293` `scratch_chat_gap_ledger` | **本批新增的测试隔离**（见 §6 第一坑）：session 级把 `CANONICAL_V2_CHAT_GAPS_DB` 钉到临时目录，任何用例都不可能写进线上 state 目录 |
+| `tests/test_canonical_v2_consumer_migration.py` | `:74` | `_KNOWN_API_ROUTES` 增加新路由（该测试死代码段，见 §5 注） |
+
+### 2. 台账路径解析（与其它台账同一个 state 目录）
+
+顺序：`CANONICAL_V2_CHAT_GAPS_DB`（本台账自己的显式覆盖，与
+`CANONICAL_V2_ADMIN_AUTH_DB` / `CANONICAL_V2_JOBS_DB` / `CANONICAL_V2_UPLOADS_DB` 同形）→
+`CANONICAL_V2_JOBS_DB` 所在目录 → `CANONICAL_V2_ACCESS_LOG_DB` 所在目录 →
+`/var/tmp/mirothinker-canonical-v2-s12f`（`admin_auth.py:36` 的 `DEFAULT_STATE_DIR`）。
+与 `jobs_database_path`（`apps/miroflow-agent/src/data_agents/canonical_v2/jobs.py:1725`）、
+`uploads_database_path`（`uploads.py:350`）、`admin_auth.default_db_path`（`:130`）同构。
+三点刻意差别：
+- **多了自己的显式覆盖**：jobs/uploads 的第一顺位就是它们各自的 env，本台账同样有
+  （`CANONICAL_V2_CHAT_GAPS_DB`）——否则测试进程只能靠改 `CANONICAL_V2_JOBS_DB` 来隔离，
+  既改别人的配置语义，又挡不住"两个环境变量都没配"时落进线上目录（见 §6 第一坑）；
+- **不抛异常**（jobs/uploads 在两者都没配时抛）：读端点在没有配置的机器上必须还能回 200 空表，
+  所以退回默认 state 目录而不是报错；
+- **父目录不存在时 `mkdir(parents=True, exist_ok=True)`**（`chat_gaps.py:97`）：文件本身仍按
+  `admin_auth.prepare_private_file` 的规矩建（`O_CREAT|O_EXCL|O_NOFOLLOW`、0600、
+  拒绝软链/硬链，`:91-111`）。
+线上该目录已存在（`jobs.sqlite3`、`access-logs.sqlite3`、`corrections.sqlite3` 都在里面），
+所以实际落地是 `/var/tmp/mirothinker-canonical-v2-s12f/chat-gaps.sqlite3`。
+
+### 3. 表与端点（逐字）
+
+```sql
+CREATE TABLE IF NOT EXISTS chat_gap (
+    signal_id TEXT PRIMARY KEY, session_id TEXT NOT NULL, turn_id TEXT NOT NULL,
+    release_id TEXT NOT NULL, feedback_type TEXT NOT NULL, note TEXT,
+    query_trace_id TEXT, answer_trace_id TEXT,
+    observed_at TEXT NOT NULL, recorded_at TEXT NOT NULL
+);
+-- + chat_gap_recorded_at / chat_gap_feedback_type 两个索引；WAL + synchronous=NORMAL + busy_timeout=30000
+```
+
+`record(entry) -> bool`：`INSERT ... ON CONFLICT (signal_id) DO NOTHING`，`rowcount == 1` 才算 True。
+`signal_id` 是运行时按内容算的 `gap-signal:chat-feedback:sha256:…`，同一反馈重复提交 = 0 行、返回 False。
+`recorded_at` 缺省取 `datetime.now(UTC)`，可由调用方给定（测试用）。
+`list_recent(limit=50, feedback_type=None)`：`ORDER BY recorded_at DESC, signal_id DESC`（并列也有确定序）。
+
+`GET /api/canonical-v2/admin/chat-gaps?limit=1`（真实响应原文，tmp 台账两行；session 齐全）：
+
+```json
+{"items":[{"signal_id":"gap-signal:chat-feedback:sha256:aaaa1111","session_id":"session:chat:1c7","turn_id":"turn:chat:1c7:1","release_id":"candidate-v2-20260919-r1","feedback_type":"evidence_gap","note":null,"query_trace_id":"query:chat:1c7:1","answer_trace_id":"answer:chat:1c7:1","observed_at":"2026-09-20T04:05:06+00:00","recorded_at":"2026-09-20T04:05:06+00:00"}],"total":2,"counts":{"evidence_gap":1,"incorrect_answer":1}}
+```
+
+**语义（页面要用对）**：`items` 受 `feedback_type`/`limit` 影响；`total` 与 `counts` 是**整本台账**的
+数字，与过滤无关（所以 `sum(counts.values()) == total` 永远成立）。`limit` 越界（0 或 201）→ 422；
+无 session → 401；空台账（文件还没建过）→ `{"items":[],"total":0,"counts":{}}` 200。
+
+### 4. 写入路径与失败隔离
+
+- 台账写入在 `gap_operations.record(signal)` **之后**、`return` 之前；`record` 抛异常时（今天的
+  409/500 语义）不会留下台账行，这是刻意保持的调用顺序（父指令要求）。
+- 台账失败**绝不影响用户反馈**：`_record_chat_gap` 内 `except Exception` 只 `logger.warning`
+  （`canonical_v2_admin.py:1146-1151`，与本仓既有 fail-open 写法一致，如 `turn_trace.py:345`）。
+- 失败用例实测：把 `CANONICAL_V2_JOBS_DB` 指到一个"父路径是文件"的位置 → 台账建不出来，HTTP 响应
+  与健康台账时**逐字节相同**（`test_a_broken_ledger_leaves_the_feedback_response_unchanged`）。
+
+### 5. 命令与结果（本次实际跑过）
+
+| 层 | 命令 | 结果 |
+|---|---|---|
+| RED（改前） | `uv run pytest -q -p no:randomly -p no:cacheprovider tests/test_canonical_v2_chat_gaps_store.py tests/test_canonical_v2_chat_gaps_api.py` | 两个模块 **collection error**：`ModuleNotFoundError: No module named 'backend.storage.chat_gaps'` |
+| RED（只回退 `main.py` 到 HEAD，保留写路径） | 同上 `tests/test_canonical_v2_chat_gaps_api.py` | **6 failed, 4 passed**：六个读面用例全部 `404 {"detail":"canonical_v2_route_not_found"}`（`401` 那条本来就过：gate 与路由无关） |
+| RED（再回退 `canonical_v2_admin.py` 到 HEAD） | 同上整文件（另跑 `-k "filed or twice or broken"` 只截写路径三条） | **8 failed, 2 passed** = 上面 6 条 404 + 写路径 2 条 `assert 0 == 1`（台账里一行都没有）；`-k` 子集读数即 **2 failed**。两次回退前先存副本，恢复后 `sha256sum -c` 全 OK |
+| ① 本批新测试 | `uv run pytest -q -p no:randomly -p no:cacheprovider tests/test_canonical_v2_chat_gaps_store.py tests/test_canonical_v2_chat_gaps_api.py` | **17 passed**（store 7 + 端点/写路径 10；fixture 全是 `tmp_path` SQLite，从不碰线上 state 目录） |
+| ① 顺序无关复跑 | 同上，正反两个文件顺序各跑一次 + 不带 `-p no:randomly` 跑两次 | **17 passed / 17 passed** |
+| ② 指定回归 | `… tests/test_canonical_v2_chat_gaps_store.py tests/test_canonical_v2_chat_gaps_api.py tests/test_canonical_v2_admin_status_repair.py tests/test_admin_gate.py tests/test_canonical_v2_access_log_api.py tests/test_admin_console_shell.py tests/test_nav_postgres_gating.py tests/test_review_removed.py tests/test_console_dsn_single_source.py tests/test_canonical_v2_admin_config_api.py` | **117 passed** |
+| ② 邻近面 | `… tests/test_canonical_v2_chat_http_adapter.py` | **1 failed, 150 passed** —— 唯一失败是既有文案漂移（见下） |
+| linter | `ruff@0.8.0 check`（本批 7 个文件）/ `ruff@0.8.0 format --check`（本批新文件 + `main.py`） | `All checks passed!` / `5 files already formatted` |
+| 隔离检查 | 上述批次跑完后 `ls /var/tmp/mirothinker-canonical-v2-s12f/ \| grep chat-gap` | 无输出（线上 state 目录里没有本台账文件；本次所有测试都落在 `tmp_path`） |
+| ② 最终合并复跑（本批全部 11 个相关文件一次跑完，最终产物状态） | `uv run pytest -q -p no:randomly -p no:cacheprovider tests/test_canonical_v2_chat_gaps_store.py tests/test_canonical_v2_chat_gaps_api.py tests/test_canonical_v2_admin_status_repair.py tests/test_admin_gate.py tests/test_canonical_v2_access_log_api.py tests/test_admin_console_shell.py tests/test_nav_postgres_gating.py tests/test_review_removed.py tests/test_console_dsn_single_source.py tests/test_canonical_v2_admin_config_api.py tests/test_canonical_v2_chat_http_adapter.py` | **1 failed, 251 passed** —— 唯一失败即下面第 1 条既有文案漂移；跑完后线上 state 目录仍无本台账文件 |
+
+**既有失败（与本批无关，逐条核对）**：
+1. `test_canonical_v2_chat_http_adapter.py::test_s11a_post_chat_uses_release_bound_canonical_v2_without_legacy_sql`
+   —— 断言文案 `暂未能确认问题中的…` 在**全部生产代码里都不存在**（HEAD 同样不存在），只活在测试与历史
+   `.sse` 录像里；把 `main.py` + `canonical_v2_admin.py` 临时回退到 HEAD 重跑，**失败信息一字不差**
+   （副本恢复后 sha256 校验通过）。即 round 6 记录的那条既有 chat-branding 失败。
+2. `test_canonical_v2_operations_api.py` 的 2 条（`test_browse_gaps_503_renders_a_neutral_state`、
+   `test_canonical_v2_operations_api_is_bounded_read_only_and_quarantined`）**不是本批的**：
+   本批只跑过它们一次（`2 failed, 33 passed`），失败读数都指向 `browse.html` 的内容断言
+   （`const gapsUnavailableText = …`、`const gapsPath = "api/canonical-v2/operations/gaps";`），
+   而 `git status` 显示 `browse.html` 正被**并行的页面 agent 改着**（`M`，工作区 0 处
+   `gapsUnavailableText`、HEAD 有 3 处，mtime 就在我这次运行前几十秒；它的 diff 已把
+   `gapsPath` 指向本批新端点 `api/canonical-v2/admin/chat-gaps`）。
+   不改动它的文件，用 `git show HEAD:…browse.html` 复制到临时目录并把 `main._STATIC_DIR` 指过去，
+   直接调用这两条测试函数：**两条都 PASS**（脚本 `/tmp/gaps-redcheck/head_page_check.py`）。
+   即这两条红是页面 agent 在飞的改动，不是后端台账引入的。
+3. `test_canonical_v2_consumer_migration.py -k s11b_candidate_app_exposes_only_release_bound_v2_consumers`
+   仍在 `:735 _has_keyword_only_runtime_parameter(...)` 失败（round 16 已记录的既有失败），
+   所以本批给 `_KNOWN_API_ROUTES` 加的那行今天**不可达**，只是让该契约不缺项。
+
+### 6. 未做 / 风险（诚实记录）
+
+- **顺手堵掉的一个坑（超出父指令字面、但同属"别碰线上"这条硬约束）**：`test_canonical_v2_consumer_migration.py`
+  里有 3 处 `POST /api/chat/feedback` 配真 runtime（`:1367/:1946/:1963`，都在
+  `_assert_release_bound_vertical` 里）。它们今天跑不到（`test_s11b_…` 在 `:735` 就红），但一旦那条既有失败
+  被修好，写路径就会**fall through 到线上 state 目录**去建 `chat-gaps.sqlite3` 写进测试垃圾行。
+  所以本批加了 `CANONICAL_V2_CHAT_GAPS_DB` 显式覆盖（与其它台账同形），并在 `tests/conftest.py:272-293`
+  加了一个 session 级 autouse fixture 把它钉在临时目录。若主线认为这超出本批范围，回退这两处即可
+  （台账仍然只在"没配任何路径"时落到默认 state 目录）。实测：跑完 §5 的 117 条用例后，线上 state 目录里
+  没有任何 `chat-gap*` 文件。
+- **活线未验证**：本批不重启、不碰 18188、不碰线上 state 文件。`chat-gaps.sqlite3` 要下次重启后
+  第一次有人反馈（或第一次有人读）才会落到线上目录；离线证据是 `TestClient` 走真实 `main.py` 路由图。
+- **首次读会建文件**：读端点走同一套"没文件就建"的逻辑，所以线上第一次 GET 会在 state 目录里创建一个
+  空台账（0600）。这是为了让"没配 Postgres 也必须能回 200 空表"成立，不是副作用泄漏。
+- **`feedback_type` 是自由文本**（`ChatFeedbackRequest.feedback_type: str`, 最长 80 字，默认
+  `incorrect_answer`），不是闭集合。页面若做中文标签映射，必须能容忍未知值（页面现在的
+  `feedbackTypeLabels` 只有两条），否则新类型会显示成空。
+- **台账是副本不是替代**：没有和构建库做 `signal_id` 去重，也不回写 `gap_operations`；跨库同一信号
+  会各存一份（台账这一份是幂等的）。
+- **单进程直连 SQLite**：每请求开一次连接（无缓存 store），换来"路径永远跟当前环境一致 + 测试互不污染"；
+  按运维面板的访问量级（单人点击）可以忽略。真要做成缓存 store，得像 `jobs.py:112-123` 那样挂
+  `app.state`，代价是跨测试复用旧路径。
+- 本批不触碰 `docs/plans/`（轮日志 + index）与 OpenSpec 工件：沿用本分支近几批做法，由主线统一写。
+
+### 7. 页面 agent 需要知道的（接口契约）
+
+- 路径：`GET api/canonical-v2/admin/chat-gaps`（页面里用相对路径，与同页其它 `*Path` 常量一致）。
+- 参数：`limit`（1..200，默认 50）、`feedback_type`（可选，等值过滤）。
+- 字段：`items[].signal_id / session_id / turn_id / release_id / feedback_type / note /
+  query_trace_id / answer_trace_id / observed_at / recorded_at`；`note` 与两个 trace id 可能是 `null`。
+- 计数：`total` 与 `counts` 是整本台账的数（挂"共 N 条"用 `total`，做类型分布用 `counts`），
+  `items.length` 才受 `limit` 限制。
+- 空态：`{"items":[],"total":0,"counts":{}}`（200，不是 503）；只有 state 目录真的不可用才 503
+  `{"detail":"chat_gap_ledger_unavailable"}`。
+
+## 后续批次 — 知识缺口台账（页面）
+
+承接同批的后端台账（`GET /api/canonical-v2/admin/chat-gaps`）：页面的两半是**读**（`/browse`
+的知识缺口页签）和**写**（`/chat` 的反馈入口）。此前页签读的是 build-line 的
+`operations/gaps`（本机永远答不出来），而公开对话页**根本没有反馈入口**——写的那个人不存在，
+读的那个人读的是死面。
+
+### 1. 文件与行号（本批改动）
+
+| 文件 | 行 | 改了什么 |
+|---|---|---|
+| `apps/admin-console/backend/static/browse.html` | `:528` | `gapsPath = "api/canonical-v2/admin/chat-gaps"`（不再是 operations 面） |
+| | `:529-533` | 空态文案 + `feedbackTypeLabels`（`incorrect_answer`→回答不对、`evidence_gap`→证据不足） |
+| | `:679-707` | `feedbackTime`（本地 `YYYY-MM-DD HH:mm`）/ `shortId`（取最后一个 `:` 段的前 8 位）/ `feedbackTypeText` / `feedbackSummaryText` |
+| | `:764-770` | 知识缺口 metric 卡片改读台账 `total`，加载中显示 `—`，caption 改「用户反馈条数」 |
+| | `:773-781` | `loadGapCount()`：概览处的台账读数（失败保留 `—`，不把概览打成错误态） |
+| | `:1129-1150` | `gapCard` 改为 `<article class="item-card feedback-card">`：类型徽章（中文）+ 备注（有才显示）+ 短 signal id + 事实行（时间 / 会话 / 轮次），**不再是链接**（没有详情可点） |
+| | `:1152-1170` | `loadGaps()`：摘要行 = `共 N 条反馈 · 回答不对 2 · 证据不足 1`，空态 / 加载 / 错误三态 |
+| | `:270-275` | `.feedback-card`（静态卡片：去掉 `cursor:pointer` 与 hover 抬升） |
+| | 删除 | `gapsUnavailableText`、`loadGapDetail`、`tokenList`、两处 `error?.status === 503` 分支、`fetchJson` 的 `failure.status`、只给缺口用的 `fieldLabels`（severity/demand_count/affected_domains/affected_paths/observed_symptom）、随之变孤儿的 `.status-badge` / `.token-list` / `.token` CSS |
+| | `:524-527` | 「可追溯展示」通知卡文案（知识缺口不再"绑定当前发布版本"） |
+| `apps/admin-console/backend/static/chat.html` | `:462-490` | `.feedback-row` / `.feedback-toggle` / `.feedback-form` / `.feedback-form[hidden]` / `.feedback-note` / `.feedback-submit` / `.feedback-cancel` |
+| | `:1621` | `renderAssistant` 末尾调用（每条回答一个入口） |
+| | `:1624-1699` | `renderFeedbackControl`：idle → open → sending → sent 四态与提交逻辑 |
+| `apps/admin-console/tests/test_canonical_v2_real_preview_ui.py` | `:5619`、`:5698` | 两条新测试（页签读台账 + DOM harness 跑渲染），新增 `import os` |
+| `apps/admin-console/tests/test_canonical_v2_operations_api.py` | `:280-285` | 页面断言改为「读台账、不读 operations」；删掉随代码一起消失的 `test_browse_gaps_503_renders_a_neutral_state` 与 `_script_section`（随之删掉两个不再使用的 import） |
+| `apps/admin-console/tests/chat_ui_behavior_test.mjs` | `:3149-3263` | 7 条新行为测试（端点字面量 / 关闭态与 CSS / POST 体与 sent 态 / 空备注为 null / 取消不发请求 / 409 文案 / 500 与断网文案） |
+| `.agents/runs/connect-collection-line/gaps-ledger-harness/` | — | `render_check.cjs`（DOM 桩）、`stub_server.py`（真浏览器用桩）、`browse-gaps-ledger.png` |
+| `.agents/runs/connect-collection-line/chat-feedback-harness/` | — | `render_check.cjs`、`chat-feedback-409.png` |
+
+### 2. 页签现在渲染什么（node 桩 + 真浏览器两处一致）
+
+桩数据 3 条（`incorrect_answer` 带备注 / `evidence_gap` 无备注 / 一个未知类型带备注）：
+
+- 摘要行：`共 3 条反馈 · 回答不对 2 · 证据不足 1`（`list-caption`，`counts` 来自台账，
+  已知类型排在未知类型前）；`list-count` = `3 条`。
+- 卡片：`回答不对` 徽章 + 备注标题 + `9c1f4e7a`（短 signal id）+ 事实行
+  `时间 2026-09-20 14:30 / 会话 4f1c9a2e / 轮次 8b7d1234`。
+  第 2 张只有 `证据不足` + 会话/轮次（无备注）；第 3 张类型原样显示
+  `unreadable_vendor_code`。**没有任何整串 uuid / 完整 trace id 出现在页面上**
+  （harness 逐条断言 6 个原始 id 都不在渲染文本里）。
+- 概览瓦片：`知识缺口 3`（`用户反馈条数`），不再是死面的 91。
+- 空态：`还没有用户反馈。用户在对话页点「反馈」后，会记录到这里。`
+- 加载态：`正在加载用户反馈`；失败态：`用户反馈加载失败 · HTTP <code>`（红框保留）。
+- 详情面板：`反馈台账没有详情视图：条目本身已包含反馈类型、备注与发生时间。`（卡片不再是链接）。
+- 真浏览器另测：企业 ⇄ 知识缺口 页签来回切换正常（搜索框/分页器在缺口页签隐藏），
+  其它页签未动。
+
+### 3. `/chat` 反馈入口（真浏览器 + 桩服务端日志）
+
+状态机：`idle`（「反馈」，备注行 `hidden`）→ 点击展开（备注输入框 + 提交 / 取消，入口让位）→
+`sending`（提交禁用、显示"提交中"，取消与输入框同时禁用）→ `sent`（按钮变灰显示「已反馈」，
+不可再点，备注行收起）。空备注发 `null`；取消不发请求并还原入口。
+
+真浏览器（`agent-browser` + 18327 桩）点出来的 POST 原文（桩服务端逐字记录）：
+
+```json
+{"query": "深圳哪些公司做激光雷达", "query_type": "B_company_topic_search", "answer_text": "共找到 6 个企业：不止技术、华力创科学等。", "feedback_type": "incorrect_answer", "note": "结果里有不相关企业"}
+```
+
+- `query` = 这一轮的原始提问；`query_type` = 回答 payload 里的 `query_type`（缺失时 `"unknown"`）；
+  `answer_text` = 页面实际渲染的安全文本（服务端字段上限 8000 字符，超长截断后在代码里有注释）；
+  `note` = 去空格后的备注（空 → `null`）。
+- 409（清掉 cookie 后提交）：页面出错误气泡 `本次会话已过期，无法反馈`（**不含** `canonical_v2_...`
+  机器码），备注行留在展开态可重试/取消。
+- 500 / 断网：`反馈提交失败（HTTP 500）` / `反馈提交失败，请稍后再试`。
+- 布局不动：同一次页面会话里，第 1 条回答后与第 2 条回答（+2 个入口）后
+  `.composer` 的 `top` 都是 `469.703125`（入口只活在滚动消息流内，`.shell` 网格不变）；
+  关闭的备注行 `display:none`（CSS 规则由测试锁定）。
+
+### 4. 命令与结果（本次实际跑过）
+
+| 层 | 命令 | 结果 |
+|---|---|---|
+| ① 新测试（browse 2 条，页面壳 + harness） | `uv run pytest -q -p no:randomly -p no:cacheprovider tests/test_canonical_v2_real_preview_ui.py -k browse` | **13 passed**（改前 11 条） |
+| ① 新测试 RED 取证 | 把 `browse.html` 临时还原成 HEAD 后跑上面 2 条 | **2 failed**（随后按 sha256 校验还原成功：`7e94ff08…`） |
+| ① 新测试（chat 7 条，行为套件） | `node --test tests/chat_ui_behavior_test.mjs` | **94 tests / 93 pass / 1 fail**（改前 87/86/1，同一既有失败） |
+| ① 新测试 RED 取证 | 实现 `/chat` 之前跑同一命令 | 7 条新测试全 fail（"production feedback control seam must exist" 等） |
+| ① DOM harness（browse） | `node ../../.agents/runs/connect-collection-line/gaps-ledger-harness/render_check.cjs` | `OK — all /browse gaps-tab render assertions passed`；HEAD 页上 RED 为 `one ledger read on boot 0 !== 1` |
+| ① DOM harness（chat） | `node ../../.agents/runs/connect-collection-line/chat-feedback-harness/render_check.cjs` | `OK — all /chat feedback assertions passed`（打印四态 + POST 原文 + 409/500 文案） |
+| ② 静态页壳回归 | `uv run pytest -q -p no:randomly -p no:cacheprovider tests/test_canonical_v2_real_preview_ui.py tests/test_canonical_v2_operations_api.py tests/test_admin_console_shell.py` | **1 failed, 232 passed** —— 唯一失败是既有的 `test_public_chat_uses_guoxian_brand_identity`（HEAD 的 chat.html `<title>` 就是「深圳科创知识平台」，`git show HEAD:` 核对过；本批没碰品牌） |
+| ② bot 行为套件 | `node --test tests/chat_ui_behavior_test.mjs`（同上） | 唯一失败是既有 `production messageShell preserves avatar identities and logo fallback`（`科创` !== `国先`，HEAD 同样失败） |
+| linter | `uv run ruff check`（两个改动测试文件） | `All checks passed!` |
+| 格式化 | `uv run ruff format --check` | 本批新增代码块已符合格式；该文件在 HEAD 就有既有格式漂移（对 HEAD 版本跑同样报 `Would reformat`），未做连带的整体重排 |
+| ③ 活线 | 未做：不重启服务、不碰 18188（父指令禁止） | 见下"未做" |
+
+**同一批的旁证（只读，不属本批代码）**：后端台账路由已在工作区里（sibling 批），用
+`TestClient` + 临时状态目录核对过页面要吃的形状：
+`GET /api/canonical-v2/admin/chat-gaps` → `200 {"items": [], "total": 0, "counts": {}}`（空台账）、
+匿名 → `401`（走 `AdminSessionGate`）、`limit=0/201` → `422`。页面的字段假设与这条实现一致。
+
+### 5. 未做 / 风险（诚实记录）
+
+- **无活线验证**：台账路由与页面都要下次热更新才上线；本批不动 18188、不重启。等价证据是
+  DOM 桩（契约 payload）+ 真浏览器桩服务端 + 上面那条对真实路由的 `TestClient` 核对。
+- **`#gaps` 直接落地时会读两次台账**（概览瓦片一次、页签一次，都是裸路径）。选择保留：
+  瓦片要在页面加载时就有数，多一次小读换取"概览不空转"，且页签读到的 total 会回写瓦片。
+- **`/browse` 的 503 中性态分支随死面一起删除**：台账面不需要 Postgres，它的失败（403/500/503）
+  都按红框错误显示，不再有"能力缺失"的伪装。若将来要区分，需另立中性态。
+- **`tests/test_canonical_v2_consumer_migration.py:2044`** 的 `_assert_static_and_import_quarantine`
+  仍把 `operations/gaps` 当作 `/browse` 的字面量之一；该断言在 HEAD 就不可达（其调用者
+  `test_s11b_…` 在 `:734` 先失败），本批如实记录、未改。
+- **澄清型轮次也会显示反馈入口**（`renderAssistant` 统一挂载）。选择：入口位置统一、可预期；
+  用户对"理解错了"同样有反馈诉求。若产品要求只在有答案时出现，需产品决定。
+- 本批不触碰 `docs/plans/`（轮日志 + index）与 OpenSpec `tasks.md` / `acceptance.md`：
+  沿用本分支近几批的做法，由主线统一写。
+
+## 主线复核（2026-09-20）— 两个批次的合并审查与一处真缺陷
+
+### 1. 审出来的缺陷：页面的反馈端点写错了（已修）
+
+两个批次各自"绿"的证据都没覆盖到这条：页面批的浏览器验收打的是自己起的桩服务端（桩对
+任何路径都回 200），后端批只验了自己那条读端点。合并后我把应用的真实路由表列出来核对，
+发现对不上：
+
+```
+GET  /api/canonical-v2/admin/chat-gaps     ← 新读端点（前缀 /api/canonical-v2/admin）
+POST /api/chat/feedback                    ← 真正的写端点（canonical_v2_chat.py 的
+                                             router prefix 是 "/api"，不是 "/api/canonical-v2"）
+```
+
+页面发的是 `api/canonical-v2/chat/feedback`——这个路径**不存在**，而且它落在
+`AdminSessionGate.GATED_API_PREFIX = "/api/canonical-v2"` 里，匿名用户会先吃 401，
+公开对话页的反馈永远发不出去。修法是把字面量改回真实端点（相对路径 `api/chat/feedback`
+在 `/chat` 上解析为 `/api/chat/feedback`），并把锁死这个错字面量的三处一起翻正：
+
+| 文件 | 改动 |
+|---|---|
+| `apps/admin-console/backend/static/chat.html:1662` | `api/canonical-v2/chat/feedback` → `api/chat/feedback` |
+| `apps/admin-console/tests/chat_ui_behavior_test.mjs:3150-3151,3188` | 断言翻转：正例改成真端点、反例改成那个不存在的前缀；POST 原文同步 |
+| `.agents/runs/connect-collection-line/chat-feedback-harness/render_check.cjs:257` | 同一字面量 |
+
+复核命令（本次实际跑过）：
+
+| 命令 | 结果 |
+|---|---|
+| `.venv/bin/python -c "from backend.main import app; …枚举含 chat/feedback 的路由…"` | 只有 `POST /api/chat/feedback`；无任何 `/api/canonical-v2/chat/*` |
+| `node --test tests/chat_ui_behavior_test.mjs` | **94 tests / 93 pass / 1 fail**（唯一失败是既有的 `国先` vs `科创` 品牌断言，与 `git show HEAD:` 逐字一致） |
+| `node .../chat-feedback-harness/render_check.cjs` | OK；打印 `POST api/chat/feedback {…}` |
+| `node .../gaps-ledger-harness/render_check.cjs` | OK；打印两次读（概览瓦片 + 页签）与三张卡片 |
+| `.venv/bin/python -m pytest -q -p no:randomly -p no:cacheprovider tests/test_canonical_v2_real_preview_ui.py tests/test_canonical_v2_operations_api.py tests/test_admin_console_shell.py tests/test_canonical_v2_chat_gaps_{store,api}.py` | **1 failed, 249 passed**——唯一失败同上（既有品牌断言） |
+| `ruff check`（7 个改动 py 文件） | All checks passed! |
+
+### 2. 复核确认无误的点（不再重复验）
+
+- 读端点走 `AdminSessionGate`（前缀 `/api/canonical-v2`）→ 匿名 401、有会话 200；空台账 200 + 空列表。
+- 台账落点：本机 env 有 `CANONICAL_V2_ACCESS_LOG_DB=/var/tmp/mirothinker-canonical-v2-s12f/access-logs.sqlite3`，
+  没有 `CANONICAL_V2_JOBS_DB`，所以解析到 `/var/tmp/mirothinker-canonical-v2-s12f/chat-gaps.sqlite3`
+  （与 corrections / access-logs 同目录）。重启后第一次写入才会出现该文件。
+- 写入失败隔离：`_record_chat_gap` 兜住一切异常只记 warning，用户看到的仍是 `gap_operations.record` 的返回值。
+- `tests/conftest.py` 的会话级 fixture 把 `CANONICAL_V2_CHAT_GAPS_DB` 钉到 tmp，测试不会写进活线台账。
+- 删除的东西没有留下孤儿引用：`_script_section` / `import json` / `import re` 在该测试文件里已无使用者
+  （`json.dumps` 只活在 quarantine 子进程字符串里，那段自己 import）。
+
+### 3. 仍未验的部分（下一步在活线上做）
+
+页面批记录的"无活线验证"仍然成立：上面所有证据都是桩 + TestClient 层面的。真机验收
+（`/chat` 提问 → 点反馈 → `/browse#gaps` 出现该条）需要在重启后的 18188 上做，见 round-17 日志。

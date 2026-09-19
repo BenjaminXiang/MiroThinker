@@ -4,6 +4,7 @@ import ast
 import builtins
 import importlib.util
 import json
+import os
 from pathlib import Path
 import re
 import subprocess
@@ -5614,3 +5615,115 @@ console.log(JSON.stringify(paths));
         "api/canonical-v2/admin/domains/company?q=%E6%9C%BA%E5%99%A8%E4%BA%BA&limit=25&offset=50",
         'api/canonical-v2/admin/domains/paper?q=a%22b%26c&limit=25&offset=50',
     ]
+
+
+def test_browse_gaps_tab_reads_the_feedback_ledger(browse_script: str) -> None:
+    """The 知识缺口 tab reads the durable feedback ledger, not the build-line surface.
+
+    Fixture source: the shipped page itself. The mapping / summary / time helpers run in a
+    node stub; the card renderer's inputs are asserted against the ledger contract's fields.
+    """
+
+    assert 'const gapsPath = "api/canonical-v2/admin/chat-gaps";' in browse_script
+    assert (
+        'const gapsEmptyText = "还没有用户反馈。用户在对话页点「反馈」后，会记录到这里。";'
+        in browse_script
+    )
+    for dead in (
+        "operations/gaps",
+        "gapsUnavailableText",
+        "loadGapDetail",
+        "gap_summary",
+        "tokenList",
+    ):
+        assert dead not in browse_script, dead
+
+    card = _section(browse_script, "function gapCard(", "async function loadGaps(")
+    assert "feedbackTypeText(item.feedback_type)" in card
+    assert "feedbackTime(item.recorded_at || item.observed_at)" in card
+    assert "shortId(item.session_id)" in card
+    assert "shortId(item.turn_id)" in card
+    assert 'create("a", "item-card")' not in card, "there is no detail view to link to"
+
+    load_gaps = _section(
+        browse_script, "async function loadGaps(", "function routeFromHash("
+    )
+    assert 'stateBox("empty", gapsEmptyText)' in load_gaps
+    assert "feedbackSummaryText(total, page.counts)" in load_gaps
+    assert "error?.status" not in load_gaps, (
+        "the 503 special case died with the build surface"
+    )
+
+    render_metrics = _section(
+        browse_script, "function renderMetrics(", "async function loadGapCount("
+    )
+    assert "status.gap_summary" not in render_metrics
+    assert '"—"' in render_metrics
+
+    mapping = _section(
+        browse_script, "const feedbackTypeLabels", "const correctionsPath"
+    )
+    helpers = _section(
+        browse_script, "function feedbackTime", "async function fetchJson("
+    )
+    harness = f"""
+{mapping}
+{helpers}
+console.log(JSON.stringify({{
+  labels: ["incorrect_answer", "evidence_gap", "vendor_code", null].map(feedbackTypeText),
+  summary: feedbackSummaryText(3, {{incorrect_answer: 2, evidence_gap: 1}}),
+  ordered: feedbackSummaryText(3, {{vendor_code: 1, evidence_gap: 1, incorrect_answer: 1}}),
+  zeroes: feedbackSummaryText(2, {{incorrect_answer: 2, evidence_gap: 0}}),
+  empty: feedbackSummaryText(0, {{}}),
+  stamp: feedbackTime(new Date(2026, 8, 20, 14, 30).toISOString()),
+  noStamp: feedbackTime(null),
+  shortSignal: shortId("gap-signal:chat-feedback:sha256:9c1f4e7a2b8d5f3019"),
+  shortTurn: shortId("turn:log:8b7d1234c5e6f7a8"),
+  unknown: shortId(null),
+}}));
+"""
+    completed = subprocess.run(
+        ["node", "-"],
+        input=harness,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    assert completed.returncode == 0, completed.stderr
+    assert json.loads(completed.stdout) == {
+        "labels": ["回答不对", "证据不足", "vendor_code", "未记录类型"],
+        "summary": "共 3 条反馈 · 回答不对 2 · 证据不足 1",
+        "ordered": "共 3 条反馈 · 回答不对 1 · 证据不足 1 · vendor_code 1",
+        "zeroes": "共 2 条反馈 · 回答不对 2",
+        "empty": "共 0 条反馈",
+        "stamp": "2026-09-20 14:30",
+        "noStamp": "",
+        "shortSignal": "9c1f4e7a",
+        "shortTurn": "8b7d1234",
+        "unknown": "",
+    }
+
+
+def test_browse_gaps_tab_render_harness_covers_the_ledger_states() -> None:
+    """The DOM harness renders the shipped page against a stubbed ledger payload."""
+
+    harness = (
+        _REPO_ROOT
+        / ".agents/runs/connect-collection-line/gaps-ledger-harness/render_check.cjs"
+    )
+    completed = subprocess.run(
+        ["node", str(harness)],
+        cwd=_REPO_ROOT / "apps/admin-console",
+        env={**os.environ, "GAPS_HARNESS_REPO": str(_REPO_ROOT)},
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    assert completed.returncode == 0, completed.stderr
+    assert "all /browse gaps-tab render assertions passed" in completed.stdout
+    assert "api/canonical-v2/admin/chat-gaps" in completed.stdout
+    assert "共 3 条反馈 · 回答不对 2 · 证据不足 1" in completed.stdout
+    assert (
+        "还没有用户反馈。用户在对话页点「反馈」后，会记录到这里。" in completed.stdout
+    )
+    assert "operations/gaps" not in completed.stdout
