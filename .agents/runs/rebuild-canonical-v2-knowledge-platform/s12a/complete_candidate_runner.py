@@ -795,8 +795,11 @@ def _compose_pack_consumer_runtime(
             sorted(published.verification_evidence_ids)
         ),
         manifest_sha256=bundle.manifest.manifest_sha256,
-        index_projection_request_sha256=_canonical_sha256(
-            index_request.model_dump(mode="json")
+        # Receipt, not a recomputation: open_serving_pack_authority proved the
+        # reconstructed index request reproduces this value, and the measured
+        # dump is byte-identical (2026-09-20).
+        index_projection_request_sha256=(
+            authority.manifest.index_projection_request_sha256
         ),
         index_projection_result_sha256=bundle.index_result.content_sha256,
         candidate_projection_result_sha256=candidate.content_sha256,

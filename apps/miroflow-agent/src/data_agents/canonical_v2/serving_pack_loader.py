@@ -1814,9 +1814,11 @@ def create_serving_pack_query_planner(
             sorted(validated_publication.verification_evidence_ids)
         ),
         manifest_sha256=bundle.manifest.manifest_sha256,
-        index_projection_request_sha256=_canonical_sha256(
-            index_request.model_dump(mode="json")
-        ),
+        # The receipt, not a recomputation: open_serving_pack_authority already
+        # proved the reconstructed index request reproduces this exact value
+        # from relationships.json, and the dump that proved it is byte-identical
+        # to the one this line used to re-derive (measured, 2026-09-20).
+        index_projection_request_sha256=authority.manifest.index_projection_request_sha256,
         index_projection_result_sha256=bundle.index_result.content_sha256,
         candidate_projection_result_sha256=candidate_result.content_sha256,
         internal_reference_projection_result_sha256=internal_result.content_sha256,
@@ -1962,8 +1964,11 @@ def create_serving_pack_knowledge_read(
         relationship_request=relationship_request,
         relationship_result=relationship_result,
         candidate_result=candidate_result,
-        relationship_request_content_sha256=iso._canonical_sha256(
-            relationship_request.model_dump(mode="json")
+        # Receipt, not a recomputation: this is the same value
+        # open_serving_pack_authority proved when it reconstructed the
+        # relationship request, and the measured dump is byte-identical.
+        relationship_request_content_sha256=(
+            authority.manifest.relationship_request_sha256
         ),
     )
 
