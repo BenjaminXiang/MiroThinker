@@ -1038,3 +1038,80 @@ backend.main ──► canonical_v2_admin_status.py:25 ──► backend.deps �
   遗留模块 61 → 0，导入耗时 2.61 s → 1.66 s）。**注意：这不是启动变快**，见 §4。
 - 「启动 690 秒」：本轮**没有**改善，但把它从"导入问题"排除了出去，并给出下一步该查哪一段。
 - 「冻结式证明」：又清掉一处（157 + 19 行），保留了其中唯一还有意义的部分。
+
+---
+
+# 第 20 轮（2026-09-20）：启动提速第一刀 —— 同一个事实别算第四遍
+
+> 承接：启动归因（71% 是"序列化+算哈希"）→ 读者审计（同一对哈希算了 4 遍，前三遍的
+> 唯一读者是"拿去跟第四遍比"）。本轮做审计里的 **B**：三处改为**读收据**。
+
+## 1. 做了什么
+
+三处启动期重算，改成读 pack manifest 已经带着的值：
+
+| # | 站点 | 改前 | 改后 |
+|---|---|---|---|
+| B1 | `serving_pack_loader.py:1821`（query planner） | `_canonical_sha256(index_request.model_dump(mode="json"))` | `authority.manifest.index_projection_request_sha256` |
+| B2 | `serving_pack_loader.py:1971`（knowledge_read） | `iso._canonical_sha256(relationship_request.model_dump(mode="json"))` | `authority.manifest.relationship_request_sha256` |
+| B3 | `complete_candidate_runner.py:802`（consumer runtime） | 同上（第三遍） | 同上（收据） |
+
+**动之前先证明相等**（不能假设）：写探针打开**真实封印包**，把"每个将被取消的计算"与
+manifest 收据逐条对比——包括**两种 dump 变体**（`exclude_unset=True/False`），因为两个调用点
+用的表达式与 loader 自己那条校验用的**不是同一个**。结果 **8/8 EQUAL**。
+
+**没动的**：pack 的按文件哈希 + `serving_pack_loader.py:921/:1002` 两条"复现其记录哈希"的校验。
+换句话说：**删掉的是"重放"，不是"校验"**（R8 规则②：一处一次，下游只验据不重放）。
+
+## 2. 发现
+
+- **契约测试第一时间拦下一个错**：我一开始写的是 `bundle.manifest.index_projection_request_sha256`，
+  但 `IsolatedReleaseBundle.manifest` 是 `BuildManifest`（**没有**这个字段）——收据在
+  `ServingPackAuthority.manifest`（`ServingPackManifest`）上。两个 manifest 是两个类型，
+  名字像但契约不同。这条是 `test_serving_pack_loader.py` 抓出来的，不是我看出来的。
+- 顺带学到一条**别把三棵树混着比**的教训：我第一次判"某条测试是不是我改坏的"，是在
+  **另一个 worktree** 上跑的，得出"改前通过、改后失败"。换到**同一棵树的 stash 对照**后真相是：
+  那条失败来自**活线工作区自己的 `config/managed/settings.json`**（把 `chat_llm_profile`
+  钉成 `deepseekv4flash`，测试期望 `gemma4`），与本次改动无关，**改前改后同样失败**。
+
+## 3. 怎么验证
+
+| 层 | 检查 | 结果 |
+|---|---|---|
+| ① 等价性 | 真实封印包探针 | **8/8 EQUAL**（含不带 `exclude_unset` 的那种 dump） |
+| ① 契约测试 | pack loader + knowledge_read_isolated + knowledge_serving_isolated | **357 passed / 1 failed**，唯一失败已证明是活线工作区自身配置（stash 对照同失败） |
+| ③ 机制级 | py-spy 25 Hz，同协议 scratch 启动，逐站点样本数 | 三处站点 **7.2%/6.6%/6.8% → 0.0%/0.0%/0.0%（精确 0 样本）**；未动的两条校验**绝对样本数不变**（7,205 → 7,158） |
+| ③ 墙钟 | 同协议 start→首次 200 | **642 s → 450 s（−192 s，−30%）** |
+| ③ 活线 | 重启 + 面检查 + replay | 见 §4 |
+
+诚实说明：改后那次运行的 **page cache 更热**（4.1 GB 包之前已被读过几次），所以墙钟差值
+是**上界**；承载性证据是**样本级归因**（与缓存无关）。
+
+## 4. 活线
+
+活线 ff 到本片后**重启：14:53:36 → 15:00:56 健康 = 440 秒**（本片之前两次重启分别是
+**690 s / 680 s**）。
+
+分相看得更清楚（journal 时间戳）：
+
+| 相位 | 本片之前 | 本片之后 |
+|---|---|---|
+| 启动 → `console_database=configured`（console 导入） | +4.2 s | +3.4 s |
+| → `candidate_release_id=…`（**pack authority 装载**） | +279 s | +278 s |
+| → `fast_boot=0` + uvicorn running（**装配**） | **+392 s** | **+154 s** |
+| → 首次 200 | +680 s | +440 s |
+
+**省下的全部在"装配"这一段**（392 s → 154 s，−238 s），pack authority 相位分毫未动——
+与 profile 的站点归因完全一致。
+
+面检查：`/chat` `/main` **200**，`/browse` `/seeds` `/jobs` `/logs` `/admin` **302**（登录门），
+知识缺口台账 1 行仍在。**replay 门 7/7 全绿**，TTFT 1.0–23.6 s（G1–G7 全部 PASS）。
+
+## 5. 影响哪些问题
+
+- **G10（启动 12min11s）/ G27（切包窗口 ~13min，周更要求 ≤3–4min）**：本轮砍掉约 1/4–1/3，
+  方向确认可用；剩余大头已定位。
+- **R11/P2（版本绑定替代全模型重哈希）**：B 是它的读侧落地；写侧（把"重放"换成"版本绑定"）
+  仍是 A。
+- **A 的规模被本轮实测刷新**：`open_serving_pack_authority` 现在占剩余 451 s 的 **63.5% ≈ 288 s**
+  （比审计里按"自耗时"估的 12.7% 大得多，因为它包含整段请求重建）。这是下一刀的目标。

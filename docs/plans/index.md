@@ -122,6 +122,8 @@ web 挤出本地（最高频，纯代码线）→ G3 企业↔专利关系类型
   离线真循环实测抓到整张名册的 9 个页面 URL、第 1+2 页给出 16 个互不重复的真实姓名——
   导入后这条种子从"8 人"变成"整张名册（≈64 人）"，不再是只吃第一页。
 
+- [启动提速第一刀：同一个事实不再算第四遍（2026-09-20）](./2026-09-18-collection-line-log.md) — 按读者审计的 B 项落地：query planner / knowledge_read / consumer runtime 三处**改为读 pack manifest 的收据**，不再各自 `model_dump` 重算同一个哈希（它们算出来的值，唯一读者就是"拿去跟别人算的比"）。动手前先用探针在**真实封印包**上证明**8/8 逐字节相等**（含两种 dump 变体）；两条"复现其记录哈希"的校验**原样保留**——删的是重放，不是校验。实测：三处站点 py-spy 样本 **7.2%/6.6%/6.8% → 精确 0**，未动的校验绝对样本数不变；同协议启动 **642 s → 450 s（−30%）**。契约测试当场拦下一个错（收据在 `ServingPackAuthority.manifest`，不是 `bundle.manifest`）。活线已上线。执行明细见 [日志](./2026-09-18-collection-line-log.md) 第 20 轮。
+
 - [启动期哈希读者审计：同一个事实被重算 4 次（2026-09-20）](./2026-09-20-boot-hash-reader-audit.md) — 把启动期每个哈希按"谁在读它"逐条问过：`open_serving_pack_authority` 的两处重算（12.7%）**唯一读者是它自己的比较语句**——handoff 真正携带的值是从 manifest 读的；planner / knowledge_read / consumer_runtime 三处（20.6%）**又把同一对哈希重算了三遍**，只为存进 binding 让下游与另一份重算值互比。裁定：A 换成解析器/模式版本绑定（≈88 s）、B 改为读 manifest 收据不重算（≈142 s），两者都不改对外语义；`_ContentModel` 构造期自哈希（21 子类 / 317 读者）是**真身份机制**，只能惰性化、须单独立项。附三条改坏风险与顺序建议。
 
 - [启动成本归因：690 秒里 71% 在"序列化 + 算哈希"（2026-09-20）](./2026-09-20-boot-cost-attribution.md) — 第 19 轮把 1,400 个模块搬出服务进程后重启**没有变快**（690s vs 680s），于是不再猜：scratch 实例（18199，同码同参同包、状态目录隔离）上跑 py-spy 25 Hz 采样 800 秒，**71.4% 的样本落在"pydantic 模型 dump → JSON 编码 → sha256"**（其中 dump+编码 62.6%、算哈希 8.8%），从第 100 秒起每个百秒窗口都是 70–83% 这一件事 ≈ **490 秒**；四个入口是 `open_serving_pack_authority` / `create_serving_pack_knowledge_read` / `create_serving_pack_query_planner` / `_compose_pack_consumer_runtime`。同批否掉三个假设：导入只占 1.66 s、文件哈希 0%、JSON 解析 4.8%。这给 R11/P2"版本绑定替代全模型重哈希"补上了实测规模，也说明 P3 的"惰性"比"换存储格式"更关键。执行明细见 [日志](./2026-09-18-collection-line-log.md) 第 19 轮。
