@@ -273,6 +273,41 @@ still needs fixing), so all three hops are connected to one console-owned ledger
   page literals, so the helper would be correct if it is ever revived (it is not
   on its own — see the finding).
 
+## L · The dead migration test, split (round 19)
+
+`test_s11b_candidate_app_exposes_only_release_bound_v2_consumers` had not run for
+several releases. Probing it showed maintenance cannot revive it: past the stale
+arity pin, a frozen test-file hash, a frozen SPA tree digest and two stale route
+tables, it fails on a rule that forbids `upload`/`seed`/`batch`/`edit` in an API
+path — surfaces the product deliberately added. Its premise (a read-only,
+release-bound-only candidate app) is gone.
+
+- \[x\] L1 The frozen-page/hash half and its host helper
+  (`_assert_static_and_import_quarantine`, 157 lines) plus the orphan it left
+  (`_path_hash_digest`, 19 lines) are deleted. The static-page side already has a
+  live replacement (K3).
+- \[x\] L2 The import quarantine — the one part still true — is extracted verbatim
+  into `tests/test_canonical_v2_candidate_import_quarantine.py`, where it runs: a
+  subprocess installs a meta-path blocker, imports `backend.main`, builds the
+  candidate app, asserts the factory refuses anything but the accepted aggregate,
+  and asserts every reject method is answered by the one catch-all (no
+  `/{path:path}`, no `/assets`, no docs/openapi/redoc).
+  → verify: passes; restoring `from backend.deps import resolve_console_dsn` in
+  `main.py` makes it fail with `forbidden S11B import attempted: backend.deps`.
+- \[x\] L3 Extracting it exposed the reason it could not pass: three live routers
+  and the app shell imported `resolve_console_dsn` **out of `backend.deps`**, whose
+  import list is the pre-canonical retrieval stack — `RetrievalService`, the
+  provider clients, the professor vectorizer and, through `milvus_collections`,
+  `pymilvus`. Measured cost: `import backend.main` pulled 2,262 modules, 61 of them
+  legacy; it now pulls 860 and none.
+  → fix: the function moves to the leaf module `backend/console_dsn.py` (no project
+  imports; stated in its header), `backend/deps.py` re-exports it for its own
+  factories and the unmounted legacy routers, and the three live routers plus
+  `main.py` point at the new home.
+  → verify: full suite 25 failed / 1481 passed / 31 skipped / 105 errors with the
+  failure list byte-identical to the pre-change baseline (130 names, `comm` empty
+  both ways); 105 more tests pass than at that baseline.
+
 ## Findings recorded, not fixed here
 
 - A killed crawl leaves its `pipeline_run` row in `running` forever (no heartbeat,
