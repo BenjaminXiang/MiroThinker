@@ -1,0 +1,87 @@
+{
+  "session_id": "session:chat:zrH9PyTJhsvftzBVSfGdp_C_mL32jjhN",
+  "turn_id": "turn:chat:sha256:7f039d411cb8feabb9b1d1bfff7a1dba2cb19bb101bb94ff54bc6d4c1ef3e200",
+  "turn_count": 2,
+  "query": "有没有更详细的信息",
+  "planned_displayed_ids": [
+    "company-c-d4182bdd53fa74cebbfebd6f"
+  ],
+  "recalled_handles": [
+    {
+      "id": "company-c-d4182bdd53fa74cebbfebd6f",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳国际先进技术应用推进中心"
+    }
+  ],
+  "evidence_items": {
+    "total": 10,
+    "by_domain": {
+      "company": 3,
+      "professor": 7
+    },
+    "by_lane": {
+      "exact": 1,
+      "structured": 1,
+      "vector": 1,
+      "web": 7
+    },
+    "by_source_nature": {
+      "current_web": 7,
+      "local": 3
+    },
+    "with_claim_binding": 10
+  },
+  "protected_slots": [
+    {
+      "kind": "displayed_entity_set",
+      "value": "displayed_entity_set",
+      "entity_ids": [
+        "company-c-d4182bdd53fa74cebbfebd6f"
+      ]
+    }
+  ],
+  "requested_traversal": null,
+  "admitted_claims": {
+    "total": 1,
+    "by_predicate": {
+      "canonical_projection": 1
+    },
+    "by_claim_type": {
+      "material_fact": 1
+    },
+    "patent_evidence_claims": 0
+  },
+  "committed_handle_ids": [
+    "company-c-d4182bdd53fa74cebbfebd6f"
+  ],
+  "committed_names": [
+    "深圳国际先进技术应用推进中心"
+  ],
+  "render_mode": "prose_renderer",
+  "response_mode": "answer",
+  "citations": 1,
+  "answer_chars": 576,
+  "lane_timings": [
+    [
+      "lexical",
+      0.067
+    ],
+    [
+      "structured",
+      0.154
+    ],
+    [
+      "exact",
+      0.263
+    ],
+    [
+      "vector",
+      0.311
+    ],
+    [
+      "web",
+      2.716
+    ]
+  ]
+}

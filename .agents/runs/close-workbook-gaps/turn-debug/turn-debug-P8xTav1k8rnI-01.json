@@ -1,0 +1,984 @@
+{
+  "session_id": "session:chat:P8xTav1k8rnIDT6ECwGZ36PIq3mKGvOD",
+  "turn_id": "turn:chat:sha256:9a68cae31f4c2d17903f6296ea335cb012c604af7a3883ebd61a29565f00a1bb",
+  "turn_count": 1,
+  "query": "深圳有哪些做具身智能的公司",
+  "planned_displayed_ids": [],
+  "recalled_handles": [
+    {
+      "id": "company-c-357443c430848d5ad08e8586",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市智拓欣扬科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:0b71fd50c25159eba3605bec5b18e115afd7da8ada02b8eb37eb5d4b02fcf8d2",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "会员-智能可穿戴设备 深圳市智能穿戴产业联合会/深智联FSW官方网站"
+    },
+    {
+      "id": "company-c-a07e1c7792562e465987386e",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市格松科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:011e3ac86552537e0db79cd9e1d4f03d5a8baac1634304d82779a0d0704c11eb",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "会员-智能可穿戴设备 深圳市智能穿戴产业联合会/深智联FSW官方网站"
+    },
+    {
+      "id": "company-c-ace6ad4af61eefea6cf23f5a",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市探真智能科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:c6e3b3db1b7dc7bdd82f324ab1082a8694e2214785687f24be927e4fee27b204",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "深圳具身智能公司排名（排行榜） - 职友集"
+    },
+    {
+      "id": "company-c-f109cf2f316a34852e8a348e",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市诺因智能有限公司"
+    },
+    {
+      "id": "web-handle:sha256:6fe6545456ee116b3aa20ed1cc1e0e0f186b9f2065416b7322033534c3d61439",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "深圳工业机器人崛起:人工智能推动高端制造革命_智能化_技术_领域"
+    },
+    {
+      "id": "company-c-f31f9fc41b549604aedcb396",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "源升智能机器人（深圳）有限公司"
+    },
+    {
+      "id": "web-handle:sha256:8fcc5c74f54570a5df5df5de4e67d7982d3ba834187492fe64630fb356a58f53",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "具身智能“交付元年”，深圳多家本体企业“爆单” - OFweek人工智能网"
+    },
+    {
+      "id": "company-c-f5bd442f1a327e07351c8c1e",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳墨奇智能技术有限公司"
+    },
+    {
+      "id": "web-handle:sha256:6db7b37f9affa2293739982c31a3cac428e6b2e39897b825f217ba0a91ea7710",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "2025年中国具身智能行业市场前景预测研究报告(简版)-中商情报网"
+    },
+    {
+      "id": "company-c-bc95fc88fa4d572dd37ff3f9",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "乐聚智能（深圳）股份有限公司"
+    },
+    {
+      "id": "web-handle:sha256:24aeae20347ab481466392c56a1ddc8d91ee006519fc914d3fd4009b2b053e56",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "深圳70+人形机器人产业链企业一览"
+    },
+    {
+      "id": "company-c-e96fee29affa0500443cbbc5",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳玉树智能机器人有限公司"
+    },
+    {
+      "id": "web-handle:sha256:48539e6b3d4c4062d71d03afd9e359f9dafccf0826ac6709b1e9bc670e7db627",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "2024 年 11 月 15 日"
+    },
+    {
+      "id": "company-c-613cbba47fa68b197f0ed124",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市维兴顺科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:555aef9475be37b6decc54bbd5cdbbab4a9cf7224d684f074693125e1c89bc78",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "深圳机器人企业数量全国居首"
+    },
+    {
+      "id": "company-c-9b8deba5a1693d63a0e19c4e",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市未来天使机器人有限公司"
+    },
+    {
+      "id": "web-handle:sha256:f2c0cab53d33c3adb2ea8d7b18cc71354a2bf03c161585a8aca8b62706714dfe",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "深圳智能产业新布局:打造具身智能基座与垂直领域大模型_应用_技术_机器人"
+    },
+    {
+      "id": "company-c-1bceffe5b1ce48e8daef7036",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "乐聚（深圳）机器人技术有限公司"
+    },
+    {
+      "id": "web-handle:sha256:f9156d251036ceb04913aa03f1d9c5ba3872da211374469026cd21a85edd6b74",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "深圳市科技创新局关于印发《深圳市具身智能机器人技术创新与产业 ..."
+    },
+    {
+      "id": "company-c-332686c23caa9e079bc67f95",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市优必选科技股份有限公司"
+    },
+    {
+      "id": "web-handle:sha256:88ba26e918d65e6f20fd7294553f487a2aac382f8ef77a0282f108080c842c6e",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "深圳将前瞻布局具身智能未来产业_中国经济网——国家经济门户"
+    },
+    {
+      "id": "company-c-06033b1d823fa51296a83018",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳未来动力有限公司"
+    },
+    {
+      "id": "web-handle:sha256:e5b5976dd58d01af609f1021072d3fd754c508e510f62f24fb8db5c056cd934d",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "全产业链布局深圳竞逐具身智能赛道 - 中国证券报"
+    },
+    {
+      "id": "company-c-2265942fdedc6230368f2b59",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市宙斯机器人有限公司"
+    },
+    {
+      "id": "web-handle:sha256:fc0e1e748c0152f2e9fc71cf6a4c766caad62b5d12b7b75fce6c1d2c12573804",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "深圳推进具身智能与自动驾驶技术革新，打造AI先锋城市"
+    },
+    {
+      "id": "company-c-495a56086c454e63ede2b218",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市矩阵动力科技开发有限公司"
+    },
+    {
+      "id": "web-handle:sha256:b91884ada6fb2c206488d42d621047972466e965752203932dac149bf893804d",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "2025深圳具身智能机器人产业：从技术热潮到应用落地"
+    },
+    {
+      "id": "company-c-5fb00538ec6f9f0ed8a12cf2",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "斯坦德机器人（无锡）股份有限公司"
+    },
+    {
+      "id": "web-handle:sha256:15a2a8b47bb152baeac1d969f439ea9151db930838eb15797c0e830e986806a5",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "深圳在人形机器人、工业具身智能领域当前布局特征与未来发展方向分析(2026年)_中研普华_中研网"
+    },
+    {
+      "id": "company-c-7be0b7509aae9e7729b7c59b",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "前海兰博智能科技（深圳）有限公司"
+    },
+    {
+      "id": "web-handle:sha256:00082f5f61d12d164ffcf6b749407163c10bfc3eb9bd5bdb3f61e0a01417fa8c",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "深圳努力打造全球具身智能科技创新和产业发展高地"
+    },
+    {
+      "id": "company-c-998a354968bcceaee9f08412",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市女娲机器人科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:110d8feb4eb5f7690ecb024518cb712aaafd62f17f88e88e46fe2913183a3b14",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "南方都市报·奥一网"
+    },
+    {
+      "id": "company-c-c253ad5406297930755b5a77",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "引力（深圳）智能机器人有限公司"
+    },
+    {
+      "id": "web-handle:sha256:cc78186d343130eb681ad07cf0c5f3d426ddf37a0c2bc046c9aacfe718d822a4",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "深圳将前瞻布局具身智能未来产业机器人优必选深圳市世界人工智能大会_网易订阅"
+    },
+    {
+      "id": "company-c-f2c18a161945de7c165b38a4",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市信利康电子有限公司"
+    },
+    {
+      "id": "web-handle:sha256:43061e5b16047c5b747f538b090a7aae4ed5a458a1bed55076e8516148ceb5c6",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "深圳发布具身智能机器人行动计划，机器人概念股早盘拉升 - 第一财经"
+    },
+    {
+      "id": "company-c-793f61e0535f3319ddac893f",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "戴盟（深圳）机器人科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:79dd1da712adbbb8d9daba1198e31365511a8911bc3705e5398a9d62fc1b0389",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "华为（深圳）全球具身智能产业创新中心正式运营"
+    },
+    {
+      "id": "company-c-00a32440abc16d0605f55199",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市赛元微电子股份有限公司"
+    },
+    {
+      "id": "web-handle:sha256:3c0a8d3f933eda4be7808ba06962981600c6d5e2e9a35e1858cae6ff344b1006",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "深圳具身智能，商业化提速！ - 21经济网 - 21财经"
+    },
+    {
+      "id": "company-c-1402d7728cc074d43bfbb807",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市鹏诚新能源科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:b71513f22a53d880e5de1c255d722b3d2f8cdcf11f3a3a3826c883d1f5c51412",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "「深圳智能」深圳智能公司黄页 - 第14页-顺企网"
+    },
+    {
+      "id": "company-c-2386b7ffe696e0da54625960",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳国创具身智能机器人有限公司"
+    },
+    {
+      "id": "web-handle:sha256:cceb387f101db27408e0aecb01f205bc3b336426940d62a8df8dbc1cb946b3d4",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "深圳国创具身智能机器人有限公司 - 百度百科"
+    },
+    {
+      "id": "company-c-313a9e342680a7461ef0c809",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳佰维存储科技股份有限公司"
+    },
+    {
+      "id": "web-handle:sha256:4c281c015b978cb258db8c4b84fe03424bbc1361be23795357ae11acfa7cc867",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "华为(深圳)全球具身智能产业创新中心正式运营_禾川_企业_兆威"
+    },
+    {
+      "id": "company-c-3658b06b6061412f768b71fd",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市优联智能控股有限公司"
+    },
+    {
+      "id": "web-handle:sha256:10d597cbd7ce6218e2d1f4bff166a658b044d0f51649a95e9a731644e4c1a455",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "深圳市智能时代科技有限公司介绍及软件下载"
+    },
+    {
+      "id": "company-c-4eca37bd90424fbc41df0dff",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市世纪云芯科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:7ae57c382891fd8065afa3470f73e5a8d35f0e92b354709c93a5e3dd5bcf2b19",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "深圳有哪些机器人公司？汇总和梳理-EDN 电子技术设计"
+    },
+    {
+      "id": "company-c-7dd3d83289066af21f60a30e",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市凯曼达科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:f2f1ce3858fe46b2080cd4008468beb147043bbea322108d4f5122106c396c97",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "「智能深圳」智能深圳公司黄页 - 顺企网"
+    },
+    {
+      "id": "company-c-8e39db6d3c0bae0f194f6ec3",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市巨龙创视科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:ef62d3953f7494f79acdf1357cde9aeb02816170f11fd85f6d24a709f7fd9787",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "深圳体检厂家-深圳体检厂家、公司、企业 - 阿里巴巴公司黄页"
+    },
+    {
+      "id": "company-c-9aadb6fd74383227cded507e",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳奥嘟比科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:68b8fe622366a74806c20273c6de706b15ae2c25afbbbfa4b7ff85642f35e378",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "「具身智能股东」深圳市具身智能技术发展有限公司 - 企查查"
+    },
+    {
+      "id": "company-c-a2d2cd8fc26e9cd12969b92d",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市视鑫数码有限公司"
+    },
+    {
+      "id": "web-handle:sha256:9fac70b40a19fcd7a8cbb1444e198c193ce942d72e34f90cbf35a505bea87f89",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "深圳市具身智能制造装备集团有限公司_【工商信息_信用信息_纳税人识别号_地址_电话_怎么样】-企查猫(企业查询宝)"
+    },
+    {
+      "id": "company-c-b7ffcab753603cdc337b98fc",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳创达云睿智能科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:5dfac2a23c9c4138b138a9d69c1649390793dbbe6f4a6562c9dd27140e9bd2f7",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "深圳市具身智能制造装备集团有限公司 - 天眼查"
+    },
+    {
+      "id": "company-c-c8515e3a989e47709fce309a",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "广东鹏行智能有限公司"
+    },
+    {
+      "id": "web-handle:sha256:272568a8e9cb6057f04951015798785e833701bcd5b75b53c02cb6589518931e",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "具身智能产业科技(深圳)有限公司_【工商信息_信用信息_纳税人识别号_地址_电话_怎么样】-企查猫(企业查询宝)"
+    },
+    {
+      "id": "company-c-cce3c6b99cf198e389c61b62",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市汇金智能科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:cdf92ef968eac904870ea9ddaf7906eb455b1bd2d963ebd4a20721f9c6dd0b3e",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "具身智能助力工业升级,深圳打造智能制造新高地_应用_技术_机器人"
+    },
+    {
+      "id": "company-c-cce5588401371e2213e4bd5d",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市微明星网络科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:0ddeffd9f187973a5d03a14eaa608db23b8f7662f4ceab4f4383ea862db30a0f",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "具身智能中心  深圳市人工智能与机器人研究院"
+    },
+    {
+      "id": "company-c-d95dad1fe4db7d7b47687d1d",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳跃瓦创新科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:d9afb501f474be35dde979d9f246b3b8c09c49db31158027d8b4f8abc8f6d4b7",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "深圳市具身智能制造装备集团有限公司 - 企查查"
+    },
+    {
+      "id": "company-c-fb0218f79d867f6de5115448",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市轻生活科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:0b749a3d1310173cfcfb4dcce7524145e6058ba3c5162b8e29e4210ada5ec5b0",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "七家深企上榜中国人工智能科技企业五十强 - 深圳政府在线"
+    },
+    {
+      "id": "company-c-0360209124e96b392c40d83f",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "跨维（深圳）智能数字科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:28b40df5dc73e4adc7b7baafcc40dd0b13488c0eaa65d012cc167a50d590b1b1",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "深圳抢占工业机器人制高点,具身智能引领新型制造潮流_应用_技术_新城市"
+    },
+    {
+      "id": "company-c-06c473d02cb8e5c56cada1a5",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳地瓜机器人有限公司"
+    },
+    {
+      "id": "web-handle:sha256:d1bba1cddbd0ab362e99f3f87dd4e604c025e274a1458a154829c4c5ea1e573f",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "深圳70+人形机器人产业链企业一览 - 会议报名"
+    },
+    {
+      "id": "company-c-3de41df8638e87b9122b826c",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳揽月动力科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:c35ecdb4226f0dd2c56776512ee9668b6bdcd620506a2ae713ed65b74476eaaa",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "全球人形机器人百强名单发布 7家深圳企业上榜"
+    },
+    {
+      "id": "company-c-4f83028611ae95fd146d48b3",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "广东具身风暴机器人有限公司"
+    },
+    {
+      "id": "web-handle:sha256:1e52a9e1b2c893450df9166371d235ec7043a37912d50315d103175163cafb98",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "全球人形机器人百强名单发布：深圳企业引领科技潮流！中国_产业"
+    },
+    {
+      "id": "company-c-6653c37a9dbdfb6a8ec8e5a2",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市泰科智能机器人有限公司"
+    },
+    {
+      "id": "web-handle:sha256:5e81aff467c465d21ab78089b15fcc42087d92c6cff1dd1e2a446c0ab15b9249",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "深圳奔向人形机器人第一城"
+    },
+    {
+      "id": "company-c-001d51bf2e79bd11c24125e6",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市星盘科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:e60ab500fbb7b62c9caad27d1c3f974dded320c8f78e36b5d1d19555fa5e4855",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "浙江人形机器人创新中心在深圳成立新公司 注册资本1000万"
+    },
+    {
+      "id": "company-c-00375f870cd11ca65fab653a",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市成像通科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:7d25021a462c3b3a7aa51d9f207971e51a9e8035742a3849cc2141f6940b605c",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "深圳人形机器人产业聚势成群 - 新华网"
+    },
+    {
+      "id": "company-c-006770b7e4782a3876c14800",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市万世科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:4d5c81f9dedf7ac0ad34a4dd8a186d863eca37cbd88b79b03d1e71c58110289f",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "人形机器人创新中心在深圳成立子公司"
+    },
+    {
+      "id": "company-c-00a3ae2ba55e045982f3b701",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市爱罗尔环保家具有限公司"
+    },
+    {
+      "id": "web-handle:sha256:97e667efab22e8dc4016f7a993d312ca3d43367a0b241a80f77fe1d0f47cfb81",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "国内40家人形机器人企业盘点 - 艾邦高分子"
+    },
+    {
+      "id": "company-c-012800bf6b2d13b27107a24d",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市易鑫磊科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:f06ff23e3b0a033053d26965d0e001934bdedacc4453eceb57ab4b47671081f2",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "深圳人形机器人企业的龙头(2025/3/17) - 南方财富网"
+    },
+    {
+      "id": "company-c-01429f0edb264412e1af8464",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市英特莱实业股份有限公司"
+    },
+    {
+      "id": "web-handle:sha256:fe2a2b79f00cf8768d10bae2d54ac8a0f98bcd5d991bff7790bd34dfc88726f9",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "宇树科技落子深圳"
+    },
+    {
+      "id": "company-c-01597a837fb61640ef22a755",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市泰利科科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:0b6256519cfbdbdd69104861a9af3e5c3d1cd4052ab59ad0661641e4a08447e0",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "深圳人形机器人公司排名（排行榜） - 职友集"
+    },
+    {
+      "id": "company-c-018519c75ab587fbade26f6c",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市奇普乐芯片技术有限公司"
+    },
+    {
+      "id": "web-handle:sha256:46a9a7a65922e459acfdba156812c060dbc58a82f48ce068e856f59bf5c6de02",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "人形机器人创新中心在深圳成立子公司_银行频道_证券之星"
+    },
+    {
+      "id": "company-c-01862cc37d4932997d2fc3c2",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳新生智能科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:639d6ecbf32e5e0d2d229ef2a52e02fb7f3ef7e426c6406b5baa51a36a90983c",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "深圳有哪些机器人公司？汇总和梳理 - 知乎专栏"
+    },
+    {
+      "id": "company-c-01b06858f895fcf408355bff",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳凯将智能家居有限公司"
+    },
+    {
+      "id": "web-handle:sha256:748630eebd080b9eba19c06274c2f7e397ab4e1dd047e3a76bc5d82690a783dc",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "宇树科技落子深圳"
+    },
+    {
+      "id": "company-c-023ba054ec7a2d1d3a03318a",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳博凡科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:4b136287e37542a5727d6ab45f1ac4d065052ed86f18adb4b03fbf993b420c7f",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "深圳数百台全尺寸工业人形机器人正式开启量产交付 - YouTube"
+    },
+    {
+      "id": "company-c-0274bcf945308219aa659ac1",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市鑫飞精密设备有限公司"
+    },
+    {
+      "id": "web-handle:sha256:065524bcf8d12e1cfe4e5767e044060a33f0cea24ff957577aeeedb8d1b8a092",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "摩根士丹利详解全球人形机器人100强,深圳这些企业上榜"
+    },
+    {
+      "id": "company-c-0278e3417c77793b257cf5c0",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市脑库思维科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:0ecbc46e4e3516570d9d8e32e4b24ca02fda43489d95e98933e3c1c844e142b2",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "深圳机器人十大“尖子生”，你认识几个？欢迎补充"
+    },
+    {
+      "id": "company-c-02874e6a581c1102b8acecb9",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市硕亚科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:df4d40bb3730c7f6a1225281e0528040e5208e3c0bf3a84e633b535bbc93f9a9",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "全球人形机器人100强，深圳这些企业上榜！"
+    },
+    {
+      "id": "company-c-029bdc009dc9cfb51ac3a329",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市信驰达科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:e722135c356ddfe6c52d76fdef3f8b522c67cd6819c93bca7adaa9eda6e9ae3c",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "推荐给朋友: 深圳有哪些机器人公司?汇总和梳理 - OFweek仪器仪表网"
+    },
+    {
+      "id": "company-c-02afdd7ae4dbb52c961a4f5f",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市欧灵科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:498430d537424f4881176a320cf284a1b939bde7cb3938f268a9696416c84c45",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "摩根士丹利近日报告:全球100家人形机器人 深圳上榜7家!机器人_新浪财经_新浪网"
+    },
+    {
+      "id": "company-c-0313f4957f1c234ba0d6c6f3",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳闻善科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:155e3e33ef3cc746e17ffc54ffcc5375a27eaf85ddafe987018ff7ec323fcea9",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "杭州压力下,深圳打响具身智能机器人防御战 - 今日头条"
+    },
+    {
+      "id": "company-c-039abdd9d54142199cdc398f",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市好捷华科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:10386e9444fcd40fdca27a5fbd7af464b5c63553d3e89a9c90615d6a1e6c0fa0",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "杭州压力下,深圳打响具身智能机器人防御战 _ 东方财富网"
+    },
+    {
+      "id": "company-c-03a77ac01a4c2da3654fe53e",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市旭昇光电工程有限公司"
+    },
+    {
+      "id": "web-handle:sha256:9e41340f26f6efea84e50cefb1bb08702ead0bcc71340b96fbde8b71144a5eee",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "深圳将前瞻布局具身智能未来产业"
+    },
+    {
+      "id": "company-c-03d3a8431e02f8622d39648f",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市正星特网络有限公司"
+    },
+    {
+      "id": "web-handle:sha256:1a37b2a78c4c63897baf9f0af00cfbe386023f740e11c828b04ef798df42f5b4",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "深圳加速布局具身智能机器人产业生态圈_报告网"
+    },
+    {
+      "id": "company-c-03ed021d156be14794ac2099",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市博纬智能识别科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:ffd95623b5ef01e6d7228bbc818152349f055f4fc92c3e2059c20a93ef64f5c6",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "全网最完整!华为具身智能(机器人)概念股(全部16家) 深圳大族机器人( 大族激光 、 大族数控 )浙江禾川人形机器人( 禾川科技 )广东 拓斯达 科技..."
+    },
+    {
+      "id": "company-c-04efa7c82510453369e3c952",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳万丁科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:1b1a472f3be172008a3a0fd8549a16c7cdeff34e2a03b87cf40864289ae83f52",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "具身智能机器人产业分类及中国企业百强榜单"
+    }
+  ],
+  "evidence_items": {
+    "total": 140,
+    "by_domain": {
+      "company": 140
+    },
+    "by_lane": {
+      "lexical": 64,
+      "vector": 12,
+      "web": 64
+    },
+    "by_source_nature": {
+      "current_web": 64,
+      "local": 76
+    },
+    "with_claim_binding": 140
+  },
+  "protected_slots": [
+    {
+      "kind": "geography",
+      "value": "深圳",
+      "entity_ids": []
+    }
+  ],
+  "requested_traversal": null,
+  "admitted_claims": {
+    "total": 16,
+    "by_predicate": {
+      "canonical_projection": 15,
+      "geography": 1
+    },
+    "by_claim_type": {
+      "material_fact": 16
+    },
+    "patent_evidence_claims": 0
+  },
+  "committed_handle_ids": [
+    "company-c-357443c430848d5ad08e8586",
+    "company-c-a07e1c7792562e465987386e",
+    "company-c-ace6ad4af61eefea6cf23f5a",
+    "company-c-f109cf2f316a34852e8a348e",
+    "company-c-f31f9fc41b549604aedcb396",
+    "company-c-f5bd442f1a327e07351c8c1e",
+    "company-c-bc95fc88fa4d572dd37ff3f9",
+    "company-c-e96fee29affa0500443cbbc5",
+    "company-c-1bceffe5b1ce48e8daef7036",
+    "company-c-332686c23caa9e079bc67f95",
+    "company-c-06033b1d823fa51296a83018",
+    "company-c-5fb00538ec6f9f0ed8a12cf2",
+    "web-handle:sha256:cceb387f101db27408e0aecb01f205bc3b336426940d62a8df8dbc1cb946b3d4",
+    "company-c-793f61e0535f3319ddac893f",
+    "company-c-2386b7ffe696e0da54625960",
+    "company-c-3658b06b6061412f768b71fd",
+    "web-handle:sha256:6fe6545456ee116b3aa20ed1cc1e0e0f186b9f2065416b7322033534c3d61439",
+    "web-handle:sha256:8fcc5c74f54570a5df5df5de4e67d7982d3ba834187492fe64630fb356a58f53",
+    "web-handle:sha256:555aef9475be37b6decc54bbd5cdbbab4a9cf7224d684f074693125e1c89bc78",
+    "web-handle:sha256:f2c0cab53d33c3adb2ea8d7b18cc71354a2bf03c161585a8aca8b62706714dfe",
+    "company-c-613cbba47fa68b197f0ed124",
+    "company-c-9b8deba5a1693d63a0e19c4e",
+    "company-c-2265942fdedc6230368f2b59",
+    "company-c-495a56086c454e63ede2b218",
+    "company-c-7be0b7509aae9e7729b7c59b",
+    "company-c-998a354968bcceaee9f08412",
+    "company-c-c253ad5406297930755b5a77",
+    "company-c-f2c18a161945de7c165b38a4",
+    "company-c-00a32440abc16d0605f55199",
+    "company-c-1402d7728cc074d43bfbb807",
+    "web-handle:sha256:9fac70b40a19fcd7a8cbb1444e198c193ce942d72e34f90cbf35a505bea87f89",
+    "web-handle:sha256:5dfac2a23c9c4138b138a9d69c1649390793dbbe6f4a6562c9dd27140e9bd2f7",
+    "company-c-313a9e342680a7461ef0c809",
+    "company-c-4eca37bd90424fbc41df0dff",
+    "company-c-7dd3d83289066af21f60a30e",
+    "company-c-8e39db6d3c0bae0f194f6ec3",
+    "company-c-9aadb6fd74383227cded507e",
+    "company-c-a2d2cd8fc26e9cd12969b92d",
+    "company-c-b7ffcab753603cdc337b98fc",
+    "company-c-c8515e3a989e47709fce309a",
+    "company-c-cce3c6b99cf198e389c61b62",
+    "company-c-cce5588401371e2213e4bd5d",
+    "company-c-d95dad1fe4db7d7b47687d1d",
+    "company-c-fb0218f79d867f6de5115448",
+    "company-c-0360209124e96b392c40d83f",
+    "company-c-06c473d02cb8e5c56cada1a5",
+    "company-c-3de41df8638e87b9122b826c",
+    "company-c-4f83028611ae95fd146d48b3",
+    "company-c-6653c37a9dbdfb6a8ec8e5a2",
+    "company-c-001d51bf2e79bd11c24125e6",
+    "company-c-00375f870cd11ca65fab653a",
+    "company-c-006770b7e4782a3876c14800",
+    "company-c-00a3ae2ba55e045982f3b701",
+    "company-c-012800bf6b2d13b27107a24d",
+    "company-c-01429f0edb264412e1af8464",
+    "company-c-01597a837fb61640ef22a755",
+    "company-c-018519c75ab587fbade26f6c",
+    "company-c-01862cc37d4932997d2fc3c2",
+    "company-c-01b06858f895fcf408355bff",
+    "company-c-023ba054ec7a2d1d3a03318a",
+    "company-c-0274bcf945308219aa659ac1",
+    "company-c-0278e3417c77793b257cf5c0",
+    "company-c-02874e6a581c1102b8acecb9",
+    "company-c-029bdc009dc9cfb51ac3a329",
+    "company-c-02afdd7ae4dbb52c961a4f5f",
+    "company-c-0313f4957f1c234ba0d6c6f3",
+    "company-c-039abdd9d54142199cdc398f",
+    "company-c-03a77ac01a4c2da3654fe53e",
+    "company-c-03d3a8431e02f8622d39648f",
+    "company-c-03ed021d156be14794ac2099",
+    "company-c-04efa7c82510453369e3c952"
+  ],
+  "committed_names": [
+    "深圳市智拓欣扬科技有限公司",
+    "深圳市格松科技有限公司",
+    "深圳市探真智能科技有限公司",
+    "深圳市诺因智能有限公司",
+    "源升智能机器人（深圳）有限公司",
+    "深圳墨奇智能技术有限公司",
+    "乐聚智能（深圳）股份有限公司",
+    "深圳玉树智能机器人有限公司",
+    "乐聚（深圳）机器人技术有限公司",
+    "深圳市优必选科技股份有限公司",
+    "深圳未来动力有限公司",
+    "斯坦德机器人（无锡）股份有限公司",
+    "深圳国创具身智能机器人有限公司 - 百度百科",
+    "戴盟（深圳）机器人科技有限公司",
+    "深圳国创具身智能机器人有限公司",
+    "深圳市优联智能控股有限公司",
+    "深圳工业机器人崛起:人工智能推动高端制造革命_智能化_技术_领域",
+    "具身智能“交付元年”，深圳多家本体企业“爆单” - OFweek人工智能网",
+    "深圳机器人企业数量全国居首",
+    "深圳智能产业新布局:打造具身智能基座与垂直领域大模型_应用_技术_机器人",
+    "深圳市维兴顺科技有限公司",
+    "深圳市未来天使机器人有限公司",
+    "深圳市宙斯机器人有限公司",
+    "深圳市矩阵动力科技开发有限公司",
+    "前海兰博智能科技（深圳）有限公司",
+    "深圳市女娲机器人科技有限公司",
+    "引力（深圳）智能机器人有限公司",
+    "深圳市信利康电子有限公司",
+    "深圳市赛元微电子股份有限公司",
+    "深圳市鹏诚新能源科技有限公司",
+    "深圳市具身智能制造装备集团有限公司_【工商信息_信用信息_纳税人识别号_地址_电话_怎么样】-企查猫(企业查询宝)",
+    "深圳市具身智能制造装备集团有限公司 - 天眼查",
+    "深圳佰维存储科技股份有限公司",
+    "深圳市世纪云芯科技有限公司",
+    "深圳市凯曼达科技有限公司",
+    "深圳市巨龙创视科技有限公司",
+    "深圳奥嘟比科技有限公司",
+    "深圳市视鑫数码有限公司",
+    "深圳创达云睿智能科技有限公司",
+    "广东鹏行智能有限公司",
+    "深圳市汇金智能科技有限公司",
+    "深圳市微明星网络科技有限公司",
+    "深圳跃瓦创新科技有限公司",
+    "深圳市轻生活科技有限公司",
+    "跨维（深圳）智能数字科技有限公司",
+    "深圳地瓜机器人有限公司",
+    "深圳揽月动力科技有限公司",
+    "广东具身风暴机器人有限公司",
+    "深圳市泰科智能机器人有限公司",
+    "深圳市星盘科技有限公司",
+    "深圳市成像通科技有限公司",
+    "深圳市万世科技有限公司",
+    "深圳市爱罗尔环保家具有限公司",
+    "深圳市易鑫磊科技有限公司",
+    "深圳市英特莱实业股份有限公司",
+    "深圳市泰利科科技有限公司",
+    "深圳市奇普乐芯片技术有限公司",
+    "深圳新生智能科技有限公司",
+    "深圳凯将智能家居有限公司",
+    "深圳博凡科技有限公司",
+    "深圳市鑫飞精密设备有限公司",
+    "深圳市脑库思维科技有限公司",
+    "深圳市硕亚科技有限公司",
+    "深圳市信驰达科技有限公司",
+    "深圳市欧灵科技有限公司",
+    "深圳闻善科技有限公司",
+    "深圳市好捷华科技有限公司",
+    "深圳市旭昇光电工程有限公司",
+    "深圳市正星特网络有限公司",
+    "深圳市博纬智能识别科技有限公司",
+    "深圳万丁科技有限公司"
+  ],
+  "render_mode": "prose_renderer",
+  "response_mode": "answer",
+  "citations": 16,
+  "answer_chars": 2016,
+  "lane_timings": [
+    [
+      "structured",
+      0.0
+    ],
+    [
+      "exact",
+      0.173
+    ],
+    [
+      "lexical",
+      0.636
+    ],
+    [
+      "vector",
+      0.704
+    ],
+    [
+      "web",
+      7.362
+    ]
+  ]
+}
