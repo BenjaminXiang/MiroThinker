@@ -457,6 +457,11 @@ def build_serving_pack_from_authority(
             candidate_request.internal_reference_projection_result.content_sha256
         ),
         "institution_catalog_content_sha256": institution_catalog.content_sha256,
+        # The receipt that lets a later boot skip re-deriving the two request
+        # hashes: the digest of the reading code as it is right now, so an equal
+        # digest at boot time means the reconstruction is a replay. The seal
+        # itself still proves the reconstruction (see the dogfood open below).
+        "reader_contract_sha256": pack_loader.reader_contract_digest(),
         "files": file_hashes,
     }
     file_sizes[pack_loader.PACK_MANIFEST_FILENAME] = _write_json(
@@ -476,6 +481,9 @@ def build_serving_pack_from_authority(
         expected_index_marker_sha256=target.marker_sha256,
         expected_forbidden_milvus_path=forbidden[0],
         embedding_adapter=_ManifestEmbeddingStub(model_id=embedding_model_id),
+        # The seal is the earliest layer: it must still prove that the reading
+        # code reproduces the hashes it is about to record a digest for.
+        verify_reconstruction=True,
     )
     rebuilt = authority.release_bundle
     if (

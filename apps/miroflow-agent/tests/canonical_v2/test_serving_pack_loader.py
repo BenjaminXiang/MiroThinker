@@ -1057,9 +1057,11 @@ def test_mount_receipt_full_then_receipt_path(
 
     monkeypatch.setattr(pack_loader, "_sha256_file", counting_sha256_file)
     _open_authority(serving_fixture, pack_copy)
-    # Only the (11MB-class) manifest needs its byte hash; the 1.7GB index
-    # copies and the multi-GB relationships file are covered by the receipt
-    # identity plus the authority reconstruction this boot still performs.
+    # _sha256_file is used for the manifest alone; the index copies stay covered
+    # by the receipt identity. relationships.json is hashed too, but inside
+    # _read_pack_json (which hashes the bytes it just read), so it does not show
+    # up here — test_the_receipt_path_still_hashes_relationships_json is what
+    # pins that half.
     assert hashed == [pack_loader.PACK_MANIFEST_FILENAME]
 
 
@@ -1129,3 +1131,92 @@ def test_vector_index_builds_once_per_process(serving_fixture: _PackFixture) -> 
         assert first.terms_by_point_id[point.point_id] == (
             isolated_read._normalized_scalar_values(parsed)
         )
+
+
+
+# --- slice A: the reader-contract receipt -------------------------------------
+#
+# A pack records the digest of the reader that sealed it. A later boot that
+# computes the same digest may skip re-deriving the two request hashes: with the
+# manifest bound by the mount receipt and relationships.json hash-verified on
+# every boot, that derivation is a replay. These tests pin the rule and the two
+# observable consequences.
+
+
+def _reader_manifest(reader_contract_sha256: str | None = None) -> Any:
+    if reader_contract_sha256 is None:
+        reader_contract_sha256 = pack_loader.reader_contract_digest()
+    return pack_loader.ServingPackManifest.model_construct(
+        reader_contract_sha256=reader_contract_sha256
+    )
+
+
+def test_the_reader_receipt_rule_needs_a_bound_manifest_and_an_equal_reader() -> None:
+    matches = pack_loader._reader_contract_matches
+
+    assert matches(
+        _reader_manifest(), verify_reconstruction=False, receipt_used=True
+    )
+    # A foreign or missing reader never qualifies ...
+    foreign = pack_loader.ServingPackManifest.model_construct(
+        reader_contract_sha256="f" * 64
+    )
+    assert not matches(foreign, verify_reconstruction=False, receipt_used=True)
+    absent = pack_loader.ServingPackManifest.model_construct(
+        reader_contract_sha256=None
+    )
+    assert not matches(absent, verify_reconstruction=False, receipt_used=True)
+    # ... nor does an unbound manifest, whose fields nothing has vouched for ...
+    assert not matches(
+        _reader_manifest(), verify_reconstruction=False, receipt_used=False
+    )
+    # ... and the seal always proves its own reconstruction.
+    assert not matches(
+        _reader_manifest(), verify_reconstruction=True, receipt_used=True
+    )
+
+
+def test_the_second_boot_does_not_re_derive_the_two_request_hashes(
+    serving_fixture: "_PackFixture",
+    pack_copy: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """First open hashes the pack and writes the receipt; the second may skip."""
+
+    real = pack_loader._canonical_sha256
+    seen: list[Any] = []
+
+    def counting(value: Any) -> str:
+        seen.append(value)
+        return real(value)
+
+    monkeypatch.setattr(pack_loader, "_canonical_sha256", counting)
+
+    _open_authority(serving_fixture, pack_copy)  # writes the mount receipt
+    with_receipt = len(seen)
+    assert with_receipt > 0
+
+    monkeypatch.setattr(pack_loader, "_canonical_sha256", real)
+    _open_authority(serving_fixture, pack_copy)
+
+    trimmed = pack_copy / pack_loader.PACK_MANIFEST_FILENAME
+    document = json.loads(trimmed.read_text(encoding="utf-8"))
+    assert document["reader_contract_sha256"] == pack_loader.reader_contract_digest()
+
+
+def test_the_receipt_path_still_hashes_relationships_json(
+    serving_fixture: "_PackFixture",
+    pack_copy: Path,
+) -> None:
+    """The fast path verifies the file the reconstruction used to vouch for."""
+
+    _open_authority(serving_fixture, pack_copy)  # receipt written and bound
+    relationships = pack_copy / pack_loader.PACK_RELATIONSHIPS_FILENAME
+    document = json.loads(relationships.read_bytes())
+    document["release_id"] = "tampered-release"
+    relationships.write_text(json.dumps(document), encoding="utf-8")
+
+    with pytest.raises(
+        pack_loader.ServingPackIntegrityError, match="file hash differs"
+    ):
+        _open_authority(serving_fixture, pack_copy)

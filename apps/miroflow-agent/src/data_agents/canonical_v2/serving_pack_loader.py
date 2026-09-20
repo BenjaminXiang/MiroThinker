@@ -44,11 +44,13 @@ generator-recorded canonical SHA-256, so any drift refuses the boot.
 
 from __future__ import annotations
 
+from functools import lru_cache
 import hashlib
 import json
 import logging
 import math
 import os
+import sys
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
@@ -58,6 +60,7 @@ from time import monotonic
 from typing import Any, Literal, cast
 
 import numpy as np
+import pydantic
 from pydantic import Field
 
 from . import knowledge_read_isolated as iso
@@ -147,6 +150,7 @@ PACK_INDEX_FILENAMES_V2 = ("lookup.sqlite3",)
 PACK_MARKER_FILENAME = ".canonical-v2-isolated-index-target.json"
 
 _HASH_CHUNK_BYTES = 8 * 1024 * 1024
+_PACKAGE_DIR = Path(__file__).resolve().parent
 
 
 def pack_index_filenames(schema_version: str) -> tuple[str, ...]:
@@ -205,6 +209,11 @@ class ServingPackManifest(ContractModel):
         pattern=r"^[0-9a-f]{64}$"
     )
     institution_catalog_content_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    # Identity of the reader that sealed this pack (serving_pack_loader
+    # .reader_contract_digest). Optional: every pack sealed before this field
+    # existed lacks it, and a missing value means "unknown reader" — the boot
+    # then re-derives the two request hashes instead of trusting the seal.
+    reader_contract_sha256: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
     files: dict[str, str]
 
 
@@ -244,6 +253,62 @@ def _sha256_file(path: Path) -> str:
     return digest.hexdigest()
 
 
+@lru_cache(maxsize=1)
+def reader_contract_digest() -> str:
+    """Identity of the code that reconstructs a pack's object graph.
+
+    ``open_serving_pack_authority`` reconstructs the relationship and index
+    requests from ``relationships.json`` and, historically, re-derived their
+    canonical hashes to prove the reconstruction reproduces what the seal
+    recorded (≈137 s of a 440 s boot, measured). That proof only has content when
+    the reading code may differ from the sealing code, and it is exactly this
+    digest that decides that: a pack records the digest of the reader that sealed
+    it, so an equal digest means the reconstruction is a replay and the dumped
+    comparison proves nothing new. A different digest — any edit to this package,
+    to pydantic, or to the interpreter — falls back to running it.
+
+    The scope is deliberately the whole ``canonical_v2`` package plus the two
+    things outside it that can change what a dump looks like. A narrower scope
+    would need someone to remember to widen it.
+    """
+
+    digest = hashlib.sha256()
+    digest.update(f"python={sys.version_info[:3]}\n".encode())
+    digest.update(f"pydantic={pydantic.VERSION}\n".encode())
+    for path in sorted(_PACKAGE_DIR.glob("*.py")):
+        digest.update(path.name.encode("utf-8"))
+        digest.update(path.read_bytes())
+    return digest.hexdigest()
+
+
+def _reader_contract_matches(
+    manifest: ServingPackManifest,
+    *,
+    verify_reconstruction: bool,
+    receipt_used: bool,
+) -> bool:
+    """May this boot trust the seal's reconstruction instead of replaying it?
+
+    Three conditions, all necessary:
+
+    * ``receipt_used`` — the mount receipt binds this exact manifest file, so the
+      fields below are the sealed ones. Without it the manifest is unverified and
+      nothing written in it may excuse a check (this is the case a tampered
+      manifest hits, and then the reconstruction runs and refuses).
+    * the pack names a reader (``None`` on every pack sealed before the field
+      existed, which answers no), and
+    * that reader is this code — same package, same pydantic, same interpreter.
+
+    ``verify_reconstruction`` answers no unconditionally, which is how the seal
+    keeps proving the reconstruction it is about to record a digest for.
+    """
+
+    if verify_reconstruction or not receipt_used:
+        return False
+    recorded = manifest.reader_contract_sha256
+    return bool(recorded) and recorded == reader_contract_digest()
+
+
 def _require_regular_file(pack_dir: Path, name: str) -> Path:
     path = pack_dir / name
     if not path.is_file() or path.is_symlink():
@@ -267,9 +332,12 @@ def _read_pack_json(
     """Read one pack JSON document; ``verify_sha256=False`` is the receipt path.
 
     Skipping the byte hash is only allowed for a file whose identity a
-    verified mount receipt already pins (size + first/last-block fingerprint),
-    and whose content is additionally bound by the reconstructed authority
-    hashes this loader checks afterwards.
+    verified mount receipt already pins (size + first/last-block fingerprint).
+    The two JSON documents additionally bind their content one way or the
+    other, and never neither: the institution catalog through the authority's
+    own checks, relationships.json either through this hash or through the
+    reconstructed authority hashes — this hash is what runs instead when the
+    pack records the reader digest and the reconstruction is therefore skipped.
     """
 
     path = _require_regular_file(pack_dir, name)
@@ -625,6 +693,7 @@ def open_serving_pack_authority(
     expected_index_marker_sha256: str,
     expected_forbidden_milvus_path: Path,
     embedding_adapter: EmbeddingAdapter | None = None,
+    verify_reconstruction: bool = False,
 ) -> ServingPackAuthority:
     """Verify one serving pack and rebuild its release authority, fail closed.
 
@@ -634,6 +703,12 @@ def open_serving_pack_authority(
     When ``embedding_adapter`` is supplied its model identity is bound here;
     otherwise the adapter binds later in
     :func:`create_serving_pack_knowledge_read` (the serving bundle loads it).
+
+    ``verify_reconstruction`` forces the two request-hash reconstructions even
+    when the pack records this reader's digest. The seal passes it: the seal is
+    the earliest layer, so it is the seal that has to prove the reconstruction
+    reproduces what it recorded, and every consumer after it may verify the
+    receipt instead of replaying the proof (R8 rule ②).
     """
 
     # R16: the serving process adopts the operator's managed configuration here —
@@ -720,6 +795,11 @@ def open_serving_pack_authority(
     serving_timing.bump_counter(
         "pack.mount", receipt_used=receipt_used, full_verify=full_verify
     )
+    skip_reconstruction = _reader_contract_matches(
+        manifest,
+        verify_reconstruction=verify_reconstruction,
+        receipt_used=receipt_used,
+    )
     if not receipt_used:
         with serving_timing.timed_step("pack.file_hash"):
             for name in (*index_filenames, PACK_MARKER_FILENAME):
@@ -737,11 +817,17 @@ def open_serving_pack_authority(
                 )
 
     with serving_timing.timed_step("pack.relationships_read"):
+        # The hash runs whenever the receipt did not already check the files,
+        # and additionally whenever it is what lets the reconstruction below be
+        # skipped: the bytes of this one file then carry the proof that the
+        # reconstruction used to carry (~14 s against the ~137 s it displaces),
+        # and without it the receipt path would verify this file contents by
+        # nothing at all.
         relationships_raw = _read_pack_json(
             pack_dir,
             PACK_RELATIONSHIPS_FILENAME,
             manifest.files[PACK_RELATIONSHIPS_FILENAME],
-            verify_sha256=not receipt_used,
+            verify_sha256=(not receipt_used) or skip_reconstruction,
         )
     relationships = _require_mapping(
         relationships_raw, owner=PACK_RELATIONSHIPS_FILENAME
@@ -915,13 +1001,14 @@ def open_serving_pack_authority(
         internal_request=internal_request,
         internal_result=internal_result,
     )
-    observed_request_sha256 = _canonical_sha256(
-        relationship_request.model_dump(mode="json")
-    )
-    if observed_request_sha256 != manifest.relationship_request_sha256:
-        raise ServingPackIntegrityError(
-            "serving pack relationship request does not reproduce its recorded hash"
+    if not skip_reconstruction:
+        observed_request_sha256 = _canonical_sha256(
+            relationship_request.model_dump(mode="json")
         )
+        if observed_request_sha256 != manifest.relationship_request_sha256:
+            raise ServingPackIntegrityError(
+                "serving pack relationship request does not reproduce its recorded hash"
+            )
 
     candidate_request_scalars = _require_mapping(
         relationships.get("candidate_projection_request_scalars"),
@@ -996,13 +1083,14 @@ def open_serving_pack_authority(
     # from a multi-value envelope carry it and reproduce the envelope hash.
     # Every other field above is passed explicitly, so exclude_unset changes
     # nothing else.
-    observed_index_request_sha256 = _canonical_sha256(
-        index_request.model_dump(mode="json", exclude_unset=True)
-    )
-    if observed_index_request_sha256 != manifest.index_projection_request_sha256:
-        raise ServingPackIntegrityError(
-            "serving pack index projection request does not reproduce its recorded hash"
+    if not skip_reconstruction:
+        observed_index_request_sha256 = _canonical_sha256(
+            index_request.model_dump(mode="json", exclude_unset=True)
         )
+        if observed_index_request_sha256 != manifest.index_projection_request_sha256:
+            raise ServingPackIntegrityError(
+                "serving pack index projection request does not reproduce its recorded hash"
+            )
     if (
         candidate_request.release_id != expected_release_id
         or candidate_result.release_id != expected_release_id
