@@ -22,7 +22,7 @@ import sqlite3
 from typing import Any
 from urllib.parse import urlsplit
 
-from backend.deps import resolve_console_dsn
+from backend.console_dsn import resolve_console_dsn
 from src.data_agents.canonical_v2.managed_config import (
     PUBLIC_DOMAINS,
     ManagedSettingsStore,

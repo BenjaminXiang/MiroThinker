@@ -37,7 +37,7 @@ from backend.canonical_v2_deps import (
     get_canonical_v2_gap_operations,
     get_knowledge_gap_operations,
 )
-from backend.deps import resolve_console_dsn
+from backend.console_dsn import resolve_console_dsn
 from backend.services.admin_auth import store_from_environment
 from backend.services.admin_gate import AdminSessionGate
 from backend.services.canonical_v2_admin import (

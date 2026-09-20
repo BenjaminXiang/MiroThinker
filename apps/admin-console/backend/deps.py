@@ -24,6 +24,7 @@ from collections.abc import Mapping
 from functools import lru_cache
 from typing import Any, Iterator
 
+from backend.console_dsn import resolve_console_dsn as _resolve_console_dsn
 from src.data_agents.professor.vectorizer import EmbeddingClient
 from src.data_agents.providers.bocha_search import BochaSearchProvider
 from src.data_agents.providers.composite_web_search import CompositeWebSearchProvider
@@ -40,19 +41,13 @@ logger = logging.getLogger(__name__)
 def resolve_console_dsn(environ: Mapping[str, str] | None = None) -> str | None:
     """Return the console/collection database DSN, or ``None`` when unconfigured.
 
-    The single reader of `DATABASE_URL` (then `DATABASE_URL_TEST`, which lets
-    pytest isolate from real data) for the console process. A blank or
-    whitespace-only value counts as unset. `CANONICAL_V2_DATABASE_URL` is a
-    different database — the serving target of the V2 operations surface — and
-    is deliberately not accepted here.
+    Re-exported for the callers that already live in this module's import graph.
+    The implementation belongs to ``backend/console_dsn`` — the app shell and three
+    routers need it and must not import this module to get it, because importing
+    this module drags in the pre-canonical retrieval stack.
     """
 
-    values = os.environ if environ is None else environ
-    for name in ("DATABASE_URL", "DATABASE_URL_TEST"):
-        value = (values.get(name) or "").strip()
-        if value:
-            return value
-    return None
+    return _resolve_console_dsn(environ)
 
 
 def chat_use_retrieval_service() -> bool:

@@ -14,7 +14,7 @@ from typing import Any
 from fastapi import APIRouter, Depends, File, HTTPException, Query, Request, UploadFile
 from pydantic import BaseModel
 
-from backend.deps import resolve_console_dsn
+from backend.console_dsn import resolve_console_dsn
 from backend.services.admin_session import current_operator
 from src.data_agents.canonical_v2.jobs import JobRunStore, JobRuntime, jobs_database_path
 from src.data_agents.canonical_v2.managed_config import (

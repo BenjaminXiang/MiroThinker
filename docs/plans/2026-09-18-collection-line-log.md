@@ -940,3 +940,79 @@ pack 模式的装配注入的是**内存版 gap feedback**（只有 `record`/`ap
 - 「配置页里同一张卡两种说法」：修掉。
 - 「SPA 的 interrupted 缺筛选/统计位」：修掉（登记项清零），并顺带发现 `never_run` 同类缺格。
 - 「顺手账本卫生 · 死断言」：从"记录在案的死断言"升级为"活守卫 + 一条待决的死测试"。
+
+---
+
+# 第 19 轮（2026-09-20）：拆掉那条死测试 —— 顺手把 61 个遗留模块赶出服务进程
+
+## 1. 为什么拆、怎么拆
+
+上一轮登记的判断题是：`test_s11b_candidate_app_exposes_only_release_bound_v2_consumers`
+（2000 行、包含"导入隔离"这条有价值的守卫）已经很久没跑过了，是重钉哈希还是拆开。裁定：**拆**。
+
+拆之前先把它"能不能靠维护复活"探到底（每一步都实测）：
+
+| 步 | 卡在哪 | 性质 |
+|---|---|---|
+| 1 | 工厂 arity：`len(parameters) == 1`，而工厂多了一个可选关键字参数 `idle_keepwarm_cycle` | 陈旧的等值钉子 |
+| 2 | `test_canonical_v2_chat_http_adapter.py` 的冻结 sha256（期望 `71e04271…`，实际 `5ac1d4a1…`） | 陈旧的"冻结文件"钉子 |
+| 3 | SPA 整树文件数（`== 22`）与整树哈希 | 陈旧的"冻结目录"钉子 |
+| 4 | `_KNOWN_API_ROUTES` 13 行 vs 实际 **60** 行；`_STATIC_ROUTES` 4 行 vs 实际 **10** 行 | 陈旧的路由表 |
+| 5 | **`_assert_candidate_route_contract` 禁止接口路径里出现 `edit/upload/seed/batch/…`** —— 而产品后来**故意**加了 `/admin/uploads/*`、`/admin/seeds/*`、`/admin/config` 这些运营写入面 | **前提已被产品推翻** |
+
+到第 5 步结论就清楚了：**这不是"钉子旧了"，是产品契约变了**——候选应用早已不是"只读、只暴露 release-bound 消费方"，
+它现在就是整个控制台。靠重钉哈希救不回来，重钉只会把一条错误的前提固化下来。
+
+所以按裁定执行两件事：**把导入隔离抽成一条独立的活测试**；**把冻结页/哈希那半边连同它所在的那个函数一起删掉**
+（`_assert_static_and_import_quarantine` 共 157 行 + 它调用点，以及因此变成孤儿的 `_path_hash_digest` 19 行）。
+静态页那一侧的守卫上一轮已经有活替身（`test_the_static_pages_only_call_their_own_v2_surfaces`），不留空档。
+
+## 2. 抽出来的那一刻就炸出一个真问题
+
+把导入隔离原样搬进 `tests/test_canonical_v2_candidate_import_quarantine.py` 并跑起来，它**立刻失败**：
+
+```
+File "backend/services/canonical_v2_admin_status.py", line 25, in <module>
+    from backend.deps import resolve_console_dsn
+  File "<string>", line 44, in find_spec
+ImportError: forbidden S11B import attempted: backend.deps
+```
+
+即：**服务进程（候选应用）现在会导入被明令隔离的 `backend.deps`**。顺着查下去，链条只有三跳：
+
+```
+backend.main ──► canonical_v2_admin_status.py:25 ──► backend.deps ──► src.data_agents.service.retrieval
+（以及 canonical_v2_uploads.py:17、canonical_v2_seeds.py:17）        + providers + professor.vectorizer
+                                                                     └► storage.milvus_collections ──► pymilvus
+```
+
+也就是说：**三个活路由和一个应用外壳，为了拿一个纯函数 `resolve_console_dsn()`（读两个环境变量、返回字符串），
+把整条 pre-canonical 检索栈和 pymilvus 一起拖进了每一个进程**——包括 18188 的服务进程。
+
+实测这个代价：
+
+| 指标 | 改前 | 改后 |
+|---|---|---|
+| `import backend.main` 拉起的模块数 | **2,262** | **860** |
+| 其中遗留线模块（pymilvus / RetrievalService / vectorizer / milvus_collections / 未挂载的 legacy 路由） | **61** | **0** |
+
+修法是把这一个纯函数搬到叶子模块 `backend/console_dsn.py`（该模块**不允许**有任何项目内导入，这一点写在文件头），
+`backend/deps.py` 保留同名再导出（它自己的工厂还在用，方向变成 deps→console_dsn），再把三个活路由与应用外壳
+指向新家。`backend/api/upload.py` 等**未挂载**的遗留路由仍然从 deps 取——它们本来就要 `get_pg_conn`，不在服务面上。
+
+## 3. 怎么验证
+
+| 层 | 命令 | 结果 |
+|---|---|---|
+| ① 新测试（导入隔离，活） | `pytest tests/test_canonical_v2_candidate_import_quarantine.py` | **1 passed**（子进程里装了 meta-path 拦截器，`import backend.main` + 建候选应用 + 断言工厂拒绝错误 runtime + 断言所有 reject 方法都由同一条兜底路由应答、无 `/{path:path}`、无 `/assets`、无 docs/openapi/redoc） |
+| ① RED 取证 | 把 `main.py` 那一行导入改回 `backend.deps` 再跑同一条 | **1 failed**，报 `forbidden S11B import attempted: backend.deps`；改回后 1 passed |
+| ② 既有回归（定向） | DSN 单一来源 + 导入隔离 + operations + 状态修复 + uploads + seeds + 运行时来源 + 管理台壳 | **63 passed, 2 skipped** |
+| ② 既有回归（全量，`--tb=no`） | `pytest tests/` | **25 failed, 1481 passed, 31 skipped, 105 errors**；失败名单与改前基线**逐行相同（130 条，`comm` 双向为空）**，通过数 1376 → **1481** |
+| linter | `ruff check`（8 个改动文件） | 只剩 `backend/deps.py` 两条**改前就有**的 F401（HEAD 上同样报）；我这次删除造成的孤儿（`os` 导入）已一并清掉 |
+
+## 4. 影响哪些问题
+
+- 「一条死守卫」：不再是"记录在案的死断言"——导入隔离现在**真的在跑**，且真的会挡（RED 已取证）。
+- 「遗留耦合」：服务进程不再导入 pre-canonical 检索栈与 pymilvus（61 → 0 个模块，总模块数 −62%）。
+  这对 680 秒的启动是有直接意义的量级（下一次重启实测）。
+- 「冻结式证明」：又清掉一处（157 + 19 行），保留了其中唯一还有意义的部分。

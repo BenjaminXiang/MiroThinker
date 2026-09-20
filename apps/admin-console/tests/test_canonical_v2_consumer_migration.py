@@ -11,7 +11,6 @@ import importlib
 from importlib import util
 import inspect
 import json
-import os
 from pathlib import Path
 import re
 import subprocess
@@ -1987,25 +1986,6 @@ def _assert_effect_order_and_atomicity(
     assert gaps.status_code == 200
 
 
-def _path_hash_digest(paths: list[Path]) -> str:
-    value = [
-        {
-            "path": path.relative_to(_REPO_ROOT).as_posix(),
-            "sha256": hashlib.sha256(path.read_bytes()).hexdigest(),
-        }
-        for path in sorted(paths)
-    ]
-    return hashlib.sha256(
-        json.dumps(
-            value,
-            ensure_ascii=False,
-            sort_keys=True,
-            separators=(",", ":"),
-            allow_nan=False,
-        ).encode("utf-8")
-    ).hexdigest()
-
-
 def test_s9j_static_chat_uses_typed_public_copy() -> None:
     chat_path = _REPO_ROOT / "apps/admin-console/backend/static/chat.html"
     chat = chat_path.read_text(encoding="utf-8")
@@ -2042,163 +2022,6 @@ console.log(JSON.stringify([
     assert json.loads(completed.stdout) == ["继续检索针对性证据", "缩小范围"]
 
 
-def _assert_static_and_import_quarantine(
-    candidate: Any, probes: dict[str, Any]
-) -> None:
-    browse_path = _REPO_ROOT / "apps/admin-console/backend/static/browse.html"
-    browse = browse_path.read_text(encoding="utf-8")
-    for path in (
-        "api/canonical-v2/admin/status",
-        "api/canonical-v2/admin/domains/",
-        "api/canonical-v2/admin/chat-gaps",
-    ):
-        assert path in browse
-    for marker in (
-        "Canonical V2 科创知识平台",
-        "版本概览",
-        "数据目录",
-        "证据与限制",
-        "查看关联",
-        "进入 V2 对话",
-    ):
-        assert marker in browse
-    api_literals = set(re.findall(r"api/[A-Za-z0-9_{}./:-]+", browse))
-    assert api_literals == {
-        "api/canonical-v2/admin/status",
-        "api/canonical-v2/admin/domains/",
-        "api/canonical-v2/admin/chat-gaps",
-        "api/canonical-v2/admin/corrections",
-        "api/canonical-v2/admin/company-documents",
-    }, sorted(api_literals)
-    assert any(token in browse for token in ("textContent", "createTextNode"))
-    for forbidden in (
-        "/api/data/",
-        "/api/seeds/",
-        "/api/pipeline",
-        "/api/upload",
-        "insertAdjacentHTML",
-        "promote",
-        "Milvus",
-        "canonical_writer",
-    ):
-        assert forbidden not in browse
-    assert re.search(r"(?:inner|outer)\s*HTML", browse, re.IGNORECASE) is None
-
-    chat_path = _REPO_ROOT / "apps/admin-console/backend/static/chat.html"
-    chat = chat_path.read_text(encoding="utf-8")
-    for marker in (
-        "Canonical V2 智能检索",
-        "safePublicText(data.answer_text)",
-        "limitationText(limitation)",
-        "continuationText(option)",
-        "renderTrace(view.bubble, trace)",
-        "继续检索针对性证据",
-        "缺少支持证据",
-        "证据存在冲突",
-    ):
-        assert marker in chat
-    for forbidden_fixture in (
-        "Robotics Co",
-        "陈艾达",
-        "Evidence-bound robotics",
-    ):
-        assert forbidden_fixture not in chat
-
-    react_files = list((_REPO_ROOT / "apps/admin-console/frontend/src").rglob("*"))
-    react_files = [path for path in react_files if path.is_file()]
-    assert len(react_files) == 22
-    assert _path_hash_digest(react_files) == (
-        "99abf5922399cd8bf20990934fa251c2a246da300fd4af3af384e6a9478ead77"
-    )
-    assert not any(
-        getattr(route, "path", None) in {"/{path:path}", "/assets"}
-        for route in candidate.routes
-    )
-
-    script = r"""
-import importlib.abc
-import json
-import sys
-
-forbidden = (
-    "backend.api.chat",
-    "backend.deps",
-    "backend.api.admin_professor",
-    "backend.api.batch",
-    "backend.api.data",
-    "backend.api.domains",
-    "backend.api.pipeline",
-    "backend.api.review",
-    "backend.api.seeds",
-    "backend.api.upload",
-    "src.data_agents.canonical",
-    "src.data_agents.company.canonical_import",
-    "src.data_agents.company.release",
-    "src.data_agents.company.vectorizer",
-    "src.data_agents.professor.canonical_writer",
-    "src.data_agents.professor.release",
-    "src.data_agents.professor.vectorizer",
-    "src.data_agents.paper.canonical_writer",
-    "src.data_agents.paper.identity_status_writer",
-    "src.data_agents.paper.quality_promotion",
-    "src.data_agents.paper.release",
-    "src.data_agents.patent.canonical_writer",
-    "src.data_agents.patent.quality_promotion",
-    "src.data_agents.patent.release",
-    "src.data_agents.patent.vectorizer",
-    "src.data_agents.service.retrieval",
-    "src.data_agents.service.search_service",
-    "src.data_agents.publish",
-    "src.data_agents.paper.milvus_backfill",
-    "src.data_agents.storage.milvus_collections",
-    "src.data_agents.storage.milvus_store",
-    "pymilvus",
-)
-
-class Blocker(importlib.abc.MetaPathFinder):
-    def find_spec(self, fullname, path=None, target=None):
-        if any(fullname == name or fullname.startswith(name + ".") for name in forbidden):
-            raise ImportError("forbidden S11B import attempted: " + fullname)
-        return None
-
-sys.meta_path.insert(0, Blocker())
-import backend.main
-shell = backend.main._create_canonical_v2_route_shell()
-assert not hasattr(shell.state, "canonical_v2_consumer_runtime")
-try:
-    backend.main.create_canonical_v2_candidate_app(runtime=object())
-except (TypeError, ValueError):
-    pass
-else:
-    raise AssertionError("candidate factory accepted a wrong runtime")
-loaded = sorted(
-    name for name in sys.modules
-    if any(name == prefix or name.startswith(prefix + ".") for prefix in forbidden)
-)
-assert not loaded, loaded
-print(json.dumps(sorted((method, route.path) for route in shell.routes for method in (getattr(route, "methods", None) or {"MOUNT"}))))
-"""
-    env = {
-        **os.environ,
-        "PYTHONPATH": os.pathsep.join(
-            (
-                str(_REPO_ROOT / "apps/admin-console"),
-                str(_REPO_ROOT / "apps/miroflow-agent"),
-            )
-        ),
-    }
-    imported = subprocess.run(
-        [sys.executable, "-c", script],
-        cwd=_REPO_ROOT / "apps/admin-console",
-        env=env,
-        check=False,
-        capture_output=True,
-        text=True,
-    )
-    assert imported.returncode == 0, imported.stdout + imported.stderr
-    for key in ("legacy", "sql", "provider"):
-        assert probes["effects"][key] == 0
-
 
 def test_s11b_candidate_app_exposes_only_release_bound_v2_consumers(
     request: pytest.FixtureRequest,
@@ -2221,7 +2044,6 @@ def test_s11b_candidate_app_exposes_only_release_bound_v2_consumers(
     _assert_release_bound_vertical(client, runtime, scenario, probes)
     _assert_admin_input_contract(client, runtime, probes)
     _assert_effect_order_and_atomicity(seam, scenario, probes)
-    _assert_static_and_import_quarantine(candidate, probes)
     assert request.node.nodeid.endswith(
         "test_s11b_candidate_app_exposes_only_release_bound_v2_consumers"
     )

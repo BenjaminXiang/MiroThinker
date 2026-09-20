@@ -14,7 +14,7 @@ from typing import Any, Literal
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response, status
 from pydantic import BaseModel, Field, model_validator
 
-from backend.deps import resolve_console_dsn
+from backend.console_dsn import resolve_console_dsn
 from backend.services.admin_session import current_operator
 from backend.storage.seeds import (
     Seed,
