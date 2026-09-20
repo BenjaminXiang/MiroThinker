@@ -486,6 +486,10 @@ def reseal_serving_pack(
             internal_result.content_sha256
         ),
         "institution_catalog_content_sha256": institution_catalog.content_sha256,
+        # This seal recomputes the two request hashes with its own code, so it can
+        # honestly record that reader as the one that produced them: a later boot
+        # running the same code may then skip re-deriving them (slice A).
+        "reader_contract_sha256": pack_loader.reader_contract_digest(),
         "files": file_hashes,
     }
     pack_loader.ServingPackManifest.model_validate(manifest)
@@ -512,6 +516,9 @@ def reseal_serving_pack(
         expected_index_marker_sha256=marker_sha256,
         expected_forbidden_milvus_path=forbidden_paths[0],
         embedding_adapter=_ManifestEmbeddingStub(model_id=embedding_model_id),
+        # The seal is the earliest layer: it must still prove the reconstruction
+        # it is about to record a reader digest for.
+        verify_reconstruction=True,
     )
     mark("dogfood_open")
 
