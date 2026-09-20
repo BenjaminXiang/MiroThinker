@@ -74,6 +74,38 @@ Human log: `docs/plans/2026-09-15-rebuild-trigger-fix-log.md`.
 - [ ] 2.4 Measure `phase=envelope_validate` (today 2071s) and the runner readback
       after the change.
 
+## Step 2b — the read side: read the receipt, do not recompute (slice B, round 20)
+
+Boot-cost attribution (docs/plans/2026-09-20-boot-cost-attribution.md) measured 71%
+of a 690 s boot as pydantic dump + JSON encode + sha256, and the reader audit
+(docs/plans/2026-09-20-boot-hash-reader-audit.md) showed the same pair of hashes
+recomputed four times with only the comparison itself as a reader, while the
+handoff already carries `authority.manifest.*` (runner:1023/1026).
+
+- [x] 2b.1 Equivalence, measured: a probe opened the real sealed pack and proved
+      every value slice B stops computing byte-equal to its manifest receipt —
+      including the dump WITHOUT `exclude_unset` that the planner and the receiver
+      used, which is not the expression the loader's own check verifies.
+      → 8/8 rows EQUAL (probe + output in `.agents/runs/reduce-rebuild-validation-cost/`).
+- [x] 2b.2 `create_serving_pack_query_planner` and `_compose_pack_consumer_runtime`
+      read `authority.manifest.index_projection_request_sha256`.
+      → the receipt lives on `ServingPackAuthority.manifest` (`ServingPackManifest`);
+      `bundle.manifest` is a `BuildManifest` and has no such field — caught by
+      `test_serving_pack_loader.py` on the first attempt.
+- [x] 2b.3 `create_serving_pack_knowledge_read` reads
+      `authority.manifest.relationship_request_sha256`.
+- [x] 2b.4 The checks that make the receipts trustworthy stay untouched: per-file
+      hashes plus the two "reproduce its recorded hash" comparisons at
+      `serving_pack_loader.py:921/:1002`.
+- [x] 2b.5 Contract tests: `test_serving_pack_loader` + `test_knowledge_read_isolated`
+      + `test_knowledge_serving_isolated` → 357 passed, 1 failed, the failure being
+      this deployment worktree's own `config/managed/settings.json` pinning
+      `chat_llm_profile` (reproduced with the change stashed).
+- [x] 2b.6 Boot measurement, same protocol before/after (scratch 18199, same argv,
+      isolated state dirs, py-spy 25 Hz): duration start→first 200 and per-site
+      sample shares.
+      → before 610 s (watcher) / 706.9 s of samples; after: see verification.md §2b.
+
 ## Follow-ups opened by step 1 (not in this slice)
 
 - [ ] F1 `validate_identity_resolution_release` re-derives release-level identity

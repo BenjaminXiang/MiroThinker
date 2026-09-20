@@ -1,0 +1,20 @@
+BEFORE (boot2, 17,672 samples = 707 s)
+   7.2%   1268  serving_pack_loader.py:1818      (planner, B1)
+   6.6%   1168  serving_pack_loader.py:1966      (knowledge_read, B2)
+   6.8%   1200  complete_candidate_runner.py:799 (consumer runtime, B3)
+  40.8%   7205  serving_pack_loader.py:919/:1000 (the checks — untouched)
+
+AFTER (boot3, 11,273 samples = 451 s)
+   0.0%      0  serving_pack_loader.py:1818      (planner, B1)
+   0.0%      0  serving_pack_loader.py:1966      (knowledge_read, B2)
+   0.0%      0  complete_candidate_runner.py:799 (consumer runtime, B3)
+  63.5%   7158  serving_pack_loader.py:919/:1000 (the checks — untouched)
+
+Wall clock, same protocol (scratch 18199, same argv, isolated state dirs, py-spy 25 Hz):
+   before: launch 10:42:52 -> healthy 10:53:34 = 642 s
+   after:  launch 14:39:31 -> healthy 14:47:01 = 450 s   (-192 s, -30%)
+
+The three sites are exactly zero; the untouched checks are unchanged in absolute
+terms (7,205 -> 7,158 samples), so the drop is the removed work and not a
+measurement artefact. Caveat recorded: the pack was warmer in the after run, but
+the sample-level attribution is cache-independent.

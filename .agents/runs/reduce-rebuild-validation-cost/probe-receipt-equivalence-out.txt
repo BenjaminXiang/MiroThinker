@@ -1,0 +1,10 @@
+EQUAL     B1/B3 index_projection_request_sha256  [dump WITHOUT exclude_unset — as the two call sites compute it]
+EQUAL            index_projection_request_sha256  [dump WITH exclude_unset — as the loader own check computes it]
+EQUAL     B2    relationship_request_sha256  [bundle.relationship_projection_request]
+EQUAL            candidate_projection_result.content_sha256
+EQUAL            internal_reference_projection_result.content_sha256
+EQUAL            index_result.content_sha256
+EQUAL            institution_catalog.content_sha256
+EQUAL            manifest_sha256 (self-binding check, _validate_manifest_hash)
+
+ALL EQUAL (8 rows)
