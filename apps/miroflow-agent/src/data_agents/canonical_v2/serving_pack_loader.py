@@ -480,6 +480,20 @@ def _validated_published_release(
     return validated
 
 
+# The pack's projection graph is parsed with its recorded per-object hashes left
+# unbound, because by the time this loader returns it has vouched for those bytes
+# one way or the other: either it hashed relationships.json, or the reconstruction
+# replay below reproduced the request hashes that cover the whole graph — a
+# mismatch in either raises, so the optimism here is always confirmed before a
+# caller sees the authority. Re-deriving the ~180k sub-object and projection
+# hashes this covers costs tens of seconds to re-prove what the seal proved
+# (measured 2026-09-20). The other ~221k such validations come from the isolated
+# read re-validating projections out of the lookup store
+# (knowledge_read_isolated._validated_public_projection, ~:8399); vouching for
+# that file is a separate decision and is not claimed here.
+_PACK_VALIDATION_CONTEXT = {"allow_unbound_projection_hash": True}
+
+
 def _parse_models(
     model_type: type[Any],
     values: object,
@@ -490,7 +504,9 @@ def _parse_models(
     parsed: list[Any] = []
     for index, item in enumerate(items):
         try:
-            parsed.append(model_type.model_validate(item))
+            parsed.append(
+                model_type.model_validate(item, context=_PACK_VALIDATION_CONTEXT)
+            )
         except ValueError as exc:
             raise ServingPackIntegrityError(
                 f"serving pack {owner}[{index}] failed typed validation"
@@ -500,7 +516,7 @@ def _parse_models(
 
 def _parse_model(model_type: type[Any], value: object, *, owner: str) -> Any:
     try:
-        return model_type.model_validate(value)
+        return model_type.model_validate(value, context=_PACK_VALIDATION_CONTEXT)
     except ValueError as exc:
         raise ServingPackIntegrityError(
             f"serving pack {owner} failed typed validation"
