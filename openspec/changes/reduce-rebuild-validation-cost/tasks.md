@@ -106,6 +106,37 @@ handoff already carries `authority.manifest.*` (runner:1023/1026).
       sample shares.
       → before 610 s (watcher) / 706.9 s of samples; after: see verification.md §2b.
 
+## Step 2a — the read side: the seal names its reader (slice A, round 21)
+
+Boot re-derived two request hashes to prove the reconstruction reproduces what the
+seal recorded: 137 s of a 440 s boot, and only meaningful when the reading code may
+differ from the sealing code. So the pack now records which reader sealed it.
+
+- [x] 2a.1 Manifest field `reader_contract_sha256` (optional; every existing pack
+      parses as `None` = "unknown reader").
+- [x] 2a.2 The identity is **derived, not hand-maintained**:
+      `reader_contract_digest()` folds the whole `canonical_v2` package plus the
+      interpreter and pydantic versions, ~6 ms for 55 files / 8.8 MB. Any edit that
+      can change a dump — including a pydantic upgrade — invalidates the receipt.
+- [x] 2a.3 The skip needs all three: the mount receipt binds this manifest, the
+      pack names a reader, and that reader is this code. `verify_reconstruction=True`
+      (the seal's own dogfood open) refuses unconditionally, because the seal is the
+      earliest layer and must prove what it is about to record a digest for.
+- [x] 2a.4 When the replay is skipped, relationships.json is hashed instead
+      (~14 s against the ~137 s it displaces). The receipt path previously hashed no
+      file at all and relied on the reconstruction to vouch for this one, so the fast
+      path becomes stronger than before rather than weaker.
+- [x] 2a.5 The seal writes the digest (`s12c/build_serving_pack.py`) and keeps
+      proving its own reconstruction.
+- [x] 2a.6 Tests: the rule table; a second boot that re-derives exactly two fewer
+      times; a receipt path that still refuses a tampered relationships.json; the
+      pre-existing tamper test now exercises the "unbound manifest" arm.
+      → `test_serving_pack_loader.py` 31 passed.
+- [ ] 2a.7 Measure on a pack that carries the digest (the next seal): expect
+      `open_serving_pack_authority` to drop from ~286 s to ~150 s on the live line.
+      Today's pack records nothing, and the live boot is unchanged (291 s in-process
+      against 295 s before; live restart measured in the round-21 log).
+
 ## Follow-ups opened by step 1 (not in this slice)
 
 - [ ] F1 `validate_identity_resolution_release` re-derives release-level identity
