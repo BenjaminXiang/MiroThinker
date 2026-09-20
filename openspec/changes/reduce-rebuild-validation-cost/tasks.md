@@ -137,6 +137,28 @@ differ from the sealing code. So the pack now records which reader sealed it.
       Today's pack records nothing, and the live boot is unchanged (291 s in-process
       against 295 s before; live restart measured in the round-21 log).
 
+## Step 2c — the object grain: stop re-deriving the projection graph's hashes (slice C, round 22)
+
+Instrumented count of self-hashing validator calls during one boot: **401,449**,
+every one re-checking a value the sealed pack already carries (PaperAuthor 308k,
+PaperProjection 48k, Company 14k, PatentApplicant 12.5k, Patent 11.5k, Professor 4k).
+
+- [x] 2c.1 The loader parses the pack's projection graph with
+      `allow_unbound_projection_hash` — an existing validation context the build
+      path already uses — because it has vouched for those bytes by the time it
+      returns (relationships.json hashed, or the reconstruction reproduced the
+      request hashes that cover the graph; either mismatch raises).
+- [x] 2c.2 Covered 180k of the 401k; measured 450 s → 421 s on a clean scratch boot,
+      reproduced instrumented and uninstrumented.
+- [x] 2c.3 The three suites stay at 360 passed / 1 failed (this worktree's own
+      `config/managed/settings.json` pinning `chat_llm_profile`); every tamper test
+      in `test_serving_pack_loader.py` still green.
+- [ ] 2c.4 **C2, located but not done**: the remaining ~221k validations come from
+      `knowledge_read_isolated._validated_public_projection` (:8399) re-validating
+      projections out of the lookup store. That means vouching for `lookup.sqlite3`
+      (855 MB; today only the receipt's size/first-and-last-block fingerprint), which
+      is a separate decision — named in the comment, not claimed by 2c.
+
 ## Follow-ups opened by step 1 (not in this slice)
 
 - [ ] F1 `validate_identity_resolution_release` re-derives release-level identity
