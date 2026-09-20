@@ -203,8 +203,12 @@ def reseal_serving_pack(
     source_manifest = pack_loader.ServingPackManifest.model_validate_json(
         (source_pack / pack_loader.PACK_MANIFEST_FILENAME).read_bytes()
     )
-    if source_manifest.schema_version != pack_loader.PACK_SCHEMA_VERSION:
+    if source_manifest.schema_version not in (
+        pack_loader.PACK_SCHEMA_VERSION,
+        pack_loader.PACK_SCHEMA_VERSION_V2,
+    ):
         raise ServingPackResealError("source pack schema version differs")
+    source_schema_version = source_manifest.schema_version
     release_id = source_manifest.release_id
 
     marker_bytes = (index_root / pack_loader.PACK_MARKER_FILENAME).read_bytes()
@@ -259,7 +263,7 @@ def reseal_serving_pack(
     file_sizes: dict[str, int] = {}
     file_hashes: dict[str, str] = {}
     for name in (
-        *pack_loader.PACK_INDEX_FILENAMES,
+        *pack_loader.pack_index_filenames(source_schema_version),
         pack_loader.PACK_MARKER_FILENAME,
         pack_loader.PACK_RELATIONSHIPS_FILENAME,
         pack_loader.PACK_INSTITUTION_CATALOG_FILENAME,
@@ -461,7 +465,7 @@ def reseal_serving_pack(
         raise ServingPackResealError("institution catalog release differs")
 
     manifest: dict[str, Any] = {
-        "schema_version": pack_loader.PACK_SCHEMA_VERSION,
+        "schema_version": source_schema_version,
         "pack_id": source_manifest.pack_id,
         "release_id": release_id,
         "index_root": str(index_root),
