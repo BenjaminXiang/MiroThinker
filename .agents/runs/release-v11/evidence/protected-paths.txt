@@ -20,3 +20,8 @@ drwxrwxr-x 38 longxiang longxiang       4096 Sep 21 22:26 ..
 -rw-rw-r--  1 longxiang longxiang 3477354956 Sep 21 22:12 relationships.json
 -- disk
 /dev/nvme0n1p2  1.8T  758G  912G  46% /
+
+-- post-run live probe, 2026-09-21T22:27:49+08:00
+GET /api/health -> 200
+GET /chat -> 200
+ 519941    20:16:57 18052964 /home/longxiang/MiroThinker/.worktrees/canonical-v2-s11-conso
