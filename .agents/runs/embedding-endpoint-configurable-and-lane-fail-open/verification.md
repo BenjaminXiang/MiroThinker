@@ -132,3 +132,122 @@ env unset → bundle (phase 2).
   that file is missing.** Next best command (≈30–40 min, both sides):
   `uv run pytest tests/canonical_v2/test_knowledge_build_isolated.py -q` in this
   worktree and in a `36df47b8` worktree, then `comm` the failure sets.
+
+---
+
+# Round 2 (2026-09-21): the wait-cap row, the identity check, and the build-suite comparison
+
+Commits: `c9340cfb` (#2), `ce3c0b3f` (#3), plus this evidence commit. Same
+worktree/branch as above; the live service on 18188 was not touched (up 17h34m
+at the start of this round).
+
+## ⑤ The `test_knowledge_build_isolated.py` comparison (the round-1 gap)
+
+The file has 143 tests, two of which are extremely slow
+(`test_unrecoverable_or_quarantined_input_records_typed_gap_without_placeholder_fact`
+takes **543.74 s / 9 min** on its own — measured in isolation, and it *passes*).
+That is why the earlier 25-minute budgets never finished the file: it was not
+stuck, it was slow.
+
+Two runs, one per side (`-v --tb=no -rf`, scratch worktree
+`/var/tmp/embedlane-base2` at `36df47b8` for "before"), interrupted at the same
+point after ~14.5 minutes so both sides cover exactly the same 128 tests:
+
+| Side | Result | Failure ids |
+|---|---|---|
+| before (base `36df47b8`) | **14 failed, 114 passed in 878.12 s** | 14 (see below) |
+| after (`fix/embedding-lane-f1f2`) | **14 failed, 114 passed in 873.65 s** | 14 — **identical set** (`diff` empty) |
+
+The 14 pre-existing failures are the Postgres/boundary fixtures of this box:
+`test_real_boundary_rejects_nonfresh_database_before_source_read[…]` (9
+parameters), `test_real_boundary_rejects_live_schema_fingerprint_drift_before_row_probe`,
+`test_four_domain_mapper_normalizes_restored_source_shapes`,
+`test_customer_company_patent_relationship_unions_direct_applicant_scan`,
+`test_complete_build_uses_verified_copies_landing_authority_projections_registry_index_and_verify`.
+Both sides fail them identically, including the two slow ones.
+
+Tail (tests 129–143, the ones the interrupted runs never reached) is run as an
+explicit selection on both sides; results appended below when the runs finish.
+
+## ⑥ #2 — the wait cap is a managed row
+
+`serving.vector_lane_timeout_seconds` — default 8.0, bounds 0.1–120, env
+`CANONICAL_V2_VECTOR_LANE_TIMEOUT_SECONDS`, one row in `FIELD_CATALOG`
+(order 22, group `serving`), projected at startup by `managed_runtime` and read
+in exactly one place (`knowledge_read._vector_lane_outer_wait_seconds`, whose
+default constant is pinned to the schema default by a test).
+
+New tests: `apps/admin-console/tests/test_vector_lane_timeout_knob.py` — **12
+passed** (catalogue row + bounds + default; the single-reader invariant; save →
+projection → reader round-trip; default-equal value stays a no-op; service-unit
+env wins; 0 / negative / 121 / 1000 refused with the path in the message; the
+page payload row; a save through the PATCH route).
+
+Regression: the whole managed-config surface re-run green (catalogue, settings
+store, runtime bootstrap, single channel, page shell, model roles, admin config
+API, admin secrets API) — **138 passed**, and the full admin suite comparison in
+§⑦.
+
+## ⑦ #3 — the identity check, calibrated on real data
+
+Raw results: `probe/identity-calibration.json` (produced by
+`probe_embedding_identity_calibration.py`, which drives the production
+`verify_embedding_identity` against three endpoints). Cosines:
+
+| Endpoint under test | Arm | Measured cosine | Threshold | Verdict |
+|---|---|---|---|---|
+| real `100.64.0.27:18005/v1` vs its own index | `index` | **0.999933** (798 sampled rows, sample max = the target) | 0.99 | pass |
+| local gateway forwarding to the real endpoint, reference = recorded address | `reference` | **1.000000** | 0.999 | pass |
+| dim-4096 token-hash space, reference = recorded address | `reference` | **-0.007435** | 0.999 | fail |
+| dim-4096 token-hash space vs the index | `index` | **0.004543** (sample max 0.038052) | 0.99 | fail |
+
+Noise on the accept side: 15/15 pairs of repeated live calls measured exactly
+1.0; one cold-start pair measured 0.9999676 (the first request after boot). The
+thresholds sit ~1000× above every rejected value and below every accepted one.
+
+**What the wrong-space endpoint actually was.** No second embedding *model* is
+reachable from this box — `GET /v1/models` on 18005 lists only
+`Qwen/Qwen3-Embedding-8B`, on 18006 only `qwen3-reranker-8b` (read with the
+repository key, never printed). So the wrong-space stand-in is a local
+OpenAI-compatible server that answers 200 with 4096-element vectors from the
+repository's own token-hash embedding algorithm
+(`index_projection_isolated.RecordedEmbeddingAdapter`,
+`canonical-v2-token-hash-l2-v1`). It is a *different vector source with the right
+dimension and protocol* — exactly the shape of the failure the check exists to
+catch — but it is not a real second model, so the calibration cannot rule out
+that some *other* real model lands closer than 0.99 to this index's vectors.
+Given the measured separation (≈0.99 vs ≈0.005) that would need a model whose
+vectors are nearly collinear with Qwen3-8B's for the probe document; the check
+re-tests against the record endpoint first when one exists, which is the arm
+that would catch that case.
+
+**Cost per click** (measured): index arm 1.37 s wall, peak RSS 174 MB (the row
+reader seeks inside `vector_matrix.npz`, so the 1.68 GB matrix is never
+materialized); reference arm 64 ms. Both arms are read-only and touch no bundle,
+pack or index file.
+
+**What the operator sees.** The page sends `identity_check: true` for the
+embedding connection and renders the verdict as part of the connection-test line:
+`· 向量身份通过（索引比对，cos=0.999933）与索引同源：…`, or, on a failure,
+`· 向量身份不通过（对照端点，cos=-0.007435）该端点与索引记录的端点不在同一嵌入空间…：
+不要切换到这个端点，换来的排序会整体失真`. A probe that cannot run renders
+`· 向量身份未校验（未跑）未校验：未配置服务包目录（CANONICAL_V2_SERVING_PACK）…` and
+never a pass.
+
+New tests: `apps/admin-console/tests/test_embedding_identity_probe.py` — **17
+passed** (matrix row reader pinned against `np.load`; arm reference pass/fail/
+dimension-change; arm index pass/fail/dimension-change; no-assets → not verified;
+unreachable reference → index arm; a raising embedder never escapes; the real
+HTTP embedder against a loopback endpoint; the route: verdict present, absent
+without the flag, absent for other connections, skipped after a failed transport
+check; the page asks for the check and renders the verdict).
+
+## ⑧ Regression, round 2
+
+| Run | Result |
+|---|---|
+| admin-console **full suite, after** (round 2) | **25 failed, 105 errors, 1519 passed, 31 skipped** (222 s) |
+| admin-console **full suite, before** (base `36df47b8`) | 25 failed, 105 errors, 1481 passed, 31 skipped |
+| failure-id diff | **130 entries on both sides, zero differences**; +38 passes = round-1 and round-2 tests |
+| managed-config surface (11 files) | 138 passed |
+| new files (knob + identity) | 29 passed |

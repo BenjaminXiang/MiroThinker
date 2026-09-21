@@ -20,3 +20,20 @@
 - Making the endpoint hot-reloadable without a restart.
 - Any change to the serving pack, the embedding bundle, the index or Postgres.
 - Multi-host / multi-provider embedding fallback (single effective address only).
+
+## Round 2 acceptance criteria
+
+| # | Criterion | Evidence required | Status |
+|---|---|---|---|
+| AC10 | The vector-lane wait is a catalogue row with the serving default and explicit bounds; it round-trips page → managed file → startup environment → the single reader; invalid values are refused with the field named | `apps/admin-console/tests/test_vector_lane_timeout_knob.py` (12 tests) | **passed** |
+| AC11 | The embedding connection test measures endpoint identity and reports arm + cosine + threshold + an actionable verdict; a probe that cannot run reports "not verified" | `apps/admin-console/tests/test_embedding_identity_probe.py` (17 tests) + `probe/identity-calibration.json` | **passed** |
+| AC12 | The verdict separates the index's own space from a dim-4096 endpoint in another space | calibration: 1.000000 / 0.999933 accepted vs -0.007435 / 0.004543 rejected | **passed** |
+| AC13 | The embedding card asks for the check and shows the verdict | page assertions in the same test file | **passed** |
+
+### Not accepted by round 2
+
+- Resealing the bundle or storing an identity digest inside it (out of the
+  question for the delivered v1; the probe reads only what already exists).
+- Re-enabling `_validate_release_bound_vector_evidence` (a serving-time
+  comparison is a separate decision with its own latency cost).
+- Automatic re-indexing when an operator switches to a different space.

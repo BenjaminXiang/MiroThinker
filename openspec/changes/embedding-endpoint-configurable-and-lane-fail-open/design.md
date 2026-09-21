@@ -124,3 +124,59 @@ Each fix is independently revertable: F1's breaker/cap are additive (a revert
 restores "attempt every turn, no cap"), F2's resolution is a one-line precedence
 (a revert restores "bundle address always wins"). Neither touches persisted data,
 the bundle, or the index, so rollback is `git revert` plus a restart.
+
+## Round 2 decisions
+
+### D6 — the wait cap is a catalogue default, not another "unset means code"
+
+`serving.vector_lane_timeout_seconds` carries `default=8.0` in the schema (unlike
+`rerank_timeout_seconds`, whose default is `None` with the code owning the
+number). Reason: this knob has exactly one meaningful default and the page must
+be able to show "the serving line waits 8 s", not a blank. The two places that
+name 8.0 — the schema default and
+`knowledge_read._VECTOR_LANE_OUTER_WAIT_DEFAULT_SECONDS` — are pinned to each
+other by a test
+(`apps/admin-console/tests/test_vector_lane_timeout_knob.py::test_the_row_exists_with_bounds_and_the_serving_default`),
+so neither can drift. Bounds `0.1 .. 120`: a zero/negative cap would remove the
+protection the cap exists for, and anything above the client's own timeout is
+not a cap. A file value equal to the default is not projected into the
+environment (the managed-runtime rule for "differs from the default"), which
+keeps the reader's fallback the single source for the unset case.
+
+### D7 — the identity probe is an explicit extra step, not part of the one call
+
+`test_connection` documents "exactly one bounded call per invocation" and its
+tests assert `len(transport.calls) == 1`. The identity probe needs two calls (or
+one call plus a pack read), so it lives beside that contract, not inside it: the
+request carries `identity_check: true` (the embedding card always sends it),
+and the route composes the verdict into the same response. Consequences worth
+naming: the transport check can stay hermetic in every existing test, the probe
+can be exercised with an injected embedder, and a caller that only wants to know
+"does this address answer" still gets exactly one call.
+
+### D8 — arms, thresholds and why the row read is done by hand
+
+* **reference** (`cosine ≥ 0.999`): the strongest cheap signal when the recorded
+  endpoint is still reachable — the same model served from two addresses returns
+  the same vector. Measured: 1.000000 through a forwarding gateway, and 15/15
+  pairs exactly 1.0 on the live endpoint (one cold-start pair 0.9999676).
+* **index** (`cosine ≥ 0.99`): the fallback that is correct at a customer site
+  that has left the school network. Query = a document's verbatim
+  `embedded_content` (deterministic: `ORDER BY point_id`, 200–1200 chars), target
+  = the vector the index stored for that document. Measured 0.999933.
+  A wrong space measured 0.004543 (arm index) and -0.007435 (arm reference), so
+  the thresholds sit ~1000× above the rejected values and just below the
+  accepted ones.
+* The parent's phrasing for the index arm was "the nearest neighbour is that same
+  document". The full matrix is 1.68 GB and `np.load` materializes it (measured
+  1.6 GB RSS — this code runs inside the serving process, so that is not
+  acceptable per click). The `.npz` members are uncompressed, so one row can be
+  read by seeking to `header + i*row_bytes` in `matrix.npy`; the probe reads the
+  target row plus a strided 798-row sample (~26 MB, 0.04 s) and requires both
+  `cosine ≥ 0.99` and "no sampled row beats the target". The first version of the
+  reader forgot the header offset and produced a *plausible-looking* wrong row
+  (norms ≈ 1, ~0.02 cosine against the right vector), which is why the reader is
+  pinned against `np.load` in a test.
+* A probe that cannot measure (no pack configured, unreachable reference, silent
+  endpoint) reports `passed = null` with the reason — never a pass. The route
+  wraps the call so an advisory check can never turn into a 5xx.

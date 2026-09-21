@@ -69,3 +69,18 @@
 
 - [x] 4.1 Log-ready Chinese summary handed to the parent (parent owns
   `docs/plans/`) (`verify`: final report section).
+
+## 5. Round 2 (2026-09-21)
+
+- [x] 5.1 Managed row `serving.vector_lane_timeout_seconds` (default 8, bounds
+  0.1–120) + env projection + one reader (`verify`: catalogue/round-trip/bounds
+  tests, 12 green).
+- [x] 5.2 Embedding identity probe: reference arm + index arm, thresholds
+  calibrated on live data (`.agents/runs/…/probe/identity-calibration.json`)
+  (`verify`: 17 green tests + calibration run).
+- [x] 5.3 Route wiring behind `identity_check` and page rendering of the verdict
+  (`verify`: route tests + page assertions).
+- [x] 5.4 Base-vs-branch comparison of `tests/canonical_v2/test_knowledge_build_isolated.py`
+  (`verify`: failure-id `comm` in `verification.md` §⑤).
+- [x] 5.5 Regression: admin-console full suite before/after, failure sets
+  compared (`verify`: `verification.md` §②).

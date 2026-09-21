@@ -87,6 +87,34 @@ admin config surface, `admin-config-console`).
 4. **Boring.** No new abstraction layer; the existing managed-config plumbing
    (`_FIELD_ENV_VARS` → `apply_managed_runtime_config`) is the only mechanism.
 
+### Round 2 (2026-09-21, same change)
+
+Two follow-ups the first round left open, both in the same two capabilities:
+
+**F1 follow-up — the wait cap becomes a managed row.** The vector lane's outer
+wait was an environment variable only, so an operator could neither see nor set
+it from the page. It is now `serving.vector_lane_timeout_seconds` (default 8 s,
+bounds 0.1–120) in the field catalogue, projected to
+`CANONICAL_V2_VECTOR_LANE_TIMEOUT_SECONDS` at startup, and still read by exactly
+one place (`knowledge_read._vector_lane_outer_wait_seconds`). Out-of-bounds
+saves are refused with the field path in the message; a value equal to the
+default stays a no-op, so the reader keeps the single fallback.
+
+**F3 — the identity of the endpoint is checked where the operator switches it.**
+F2 made the address configurable; nothing then stopped an operator from pointing
+it at a host that answers 200 with 4096 floats from a *different* model — every
+transport check passes and the whole index silently ranks through another space
+(the comparison that would have caught it is disabled in
+`knowledge_read_isolated._validate_release_bound_vector_evidence`). The
+embedding card's connection test now measures identity: either against the
+address the bundle records (same probe string both sides, cosine ≥ 0.999) or,
+when that reference is unreachable, against the index itself (a document's
+verbatim `embedded_content`, embedded with the configured endpoint, compared
+with the vector the index stored for it — cosine ≥ 0.99, plus a sampled
+nearest-neighbour check). The response carries the arm, the cosine, the
+threshold and an actionable verdict; the page shows it next to the other
+connection-test lines.
+
 ## Out of scope / invariants
 
 - **No serving-pack, bundle or index change.** `run16-readerbound` and its
@@ -113,4 +141,7 @@ requirements).
   `/api/chat/stream` with `CANONICAL_V2_EMBEDDING_BASE_URL` pointed at a
   black-hole address, then with the real endpoint — raw SSE frames, trace lines
   and wall-clock recorded in `.agents/runs/embedding-endpoint-configurable-and-lane-fail-open/verification.md`.
+- Round 2 evidence: the managed-knob tests (`.agents/runs/embedding-endpoint-configurable-and-lane-fail-open/verification.md`
+  §④) and the identity calibration (`probe/identity-calibration.json`: same space
+  1.000000 / 0.999933, a dim-4096 token-hash endpoint -0.007435 / 0.004543).
 - Human-readable log (parent-owned): `docs/plans/` — this change does not write there.

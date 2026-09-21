@@ -150,3 +150,76 @@ invalidate the whole vector index.
 - WHEN the embedding row is rendered
 - THEN the address row is editable, the model row is not, and neither claims the
   address is frozen.
+
+## ADDED (round 2) — Requirement: the vector lane's wait is operator-visible configuration
+
+`serving.vector_lane_timeout_seconds` (managed settings, projected to
+`CANONICAL_V2_VECTOR_LANE_TIMEOUT_SECONDS`) MUST be the operator-facing form of
+the vector lane's outer wait.
+
+- Default 8 s; values MUST be `> 0` and `<= 120`; an out-of-bounds save MUST be
+  refused with the field path named in the message.
+- The serving path MUST resolve the wait in exactly one place, with the
+  environment value winning over the default, and an unparsable or non-positive
+  environment value falling back to the default (never to "no cap").
+- A managed value equal to the default MUST NOT be projected into the
+  environment.
+
+### Scenario: an operator tightens the wait
+
+- GIVEN the operator saves 12.5 s on the page
+- WHEN the service restarts
+- THEN the environment carries `12.5` and the vector lane waits at most 12.5 s
+- AND the page shows the row as editable with its bounds.
+
+### Scenario: an absurd value
+
+- GIVEN a save of 0, a negative number, or 121 s
+- WHEN the page submits it
+- THEN the write is refused and the message names
+  `serving.vector_lane_timeout_seconds`.
+
+## ADDED (round 2) — Requirement: the embedding connection test verifies endpoint identity
+
+Because the embedding address is operator-configurable, the admin connection
+test for the embedding connection MUST be able to answer "is this endpoint in
+the same embedding space as the index?" — a wrong space fails every transport
+check while silently corrupting every ranking.
+
+- The check MUST run on request (`identity_check`), and MUST NOT add calls to the
+  default single-call connection test.
+- **Reference arm**: the same fixed probe string embedded at the recorded
+  (bundle) address and at the configured address; cosine ≥ 0.999 ⇒ same space.
+- **Index arm** (fallback when the reference is unavailable, or when the
+  configured address *is* the recorded one): one deterministic document's
+  verbatim `embedded_content` from the mounted serving pack, embedded with the
+  configured endpoint, compared against the vector the index already stored for
+  that document; cosine ≥ 0.99 plus "the document is its own nearest neighbour"
+  over a bounded sample of the persisted matrix.
+- The response MUST name the arm that ran, the measured cosine, the threshold and
+  a verdict. A failure MUST say the endpoint is not in the index's space and that
+  it must not be switched to; a check that could not run MUST report "not
+  verified" (`passed = null`) and MUST NOT report a pass.
+- The probe MUST NOT modify the embedding bundle, the serving pack or the index,
+  and MUST NOT echo the credential or an upstream response body.
+- The embedding card MUST request the check and display the verdict.
+
+### Scenario: a different model behind the same protocol
+
+- GIVEN an endpoint that answers 200 with 4096-element vectors from another space
+- WHEN the embedding card's test runs
+- THEN the verdict is "not the same space", the cosine is reported, and the
+  message tells the operator not to switch.
+
+### Scenario: the same model at a new address
+
+- GIVEN the configured endpoint serves the same model as the bundle records
+- WHEN the embedding card's test runs
+- THEN the reference arm passes with a cosine at least 0.999.
+
+### Scenario: no reference endpoint, index deployed
+
+- GIVEN the recorded endpoint is unreachable and the serving pack is mounted
+- WHEN the embedding card's test runs
+- THEN the index arm runs and passes only if the endpoint reproduces the index's
+  stored vector for the probe document.
