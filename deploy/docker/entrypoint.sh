@@ -82,9 +82,13 @@ if [[ "${MIROTHINKER_SKIP_PREFLIGHT:-0}" != "1" ]]; then
     rm -f "${DATA_ROOT}/.entrypoint-write-probe"
     log "服务包父目录可写：本次启动会写 ${PACK_DIR}.mount-receipt.json（下次启动走 receipt 快路径）"
   else
-    log "注意：${DATA_ROOT} 不可写 —— 服务仍会正常启动，但无法写 mount-receipt，"
-    log "      每次启动都会重新全量哈希服务包与索引。要拿到 receipt 快路径："
-    log "      把该目录改成可写，或指定 CANONICAL_V2_SERVING_RECEIPT_PATH 到可写路径。"
+    log "注意：${DATA_ROOT} 不可写（例如只读挂载）—— 服务会正常启动，健康检查照过；"
+    if [[ -n "${CANONICAL_V2_SERVING_RECEIPT_PATH:-}" ]]; then
+      log "      已指定 CANONICAL_V2_SERVING_RECEIPT_PATH=${CANONICAL_V2_SERVING_RECEIPT_PATH}，receipt 快路径不受影响。"
+    else
+      log "      未指定 CANONICAL_V2_SERVING_RECEIPT_PATH ⇒ 写 receipt 失败，每次启动都会重新全量哈希"
+      log "      服务包与索引（本机实测多花约 4 s/次）。要拿回快路径：让该目录可写，或指定该变量。"
+    fi
   fi
 fi
 
@@ -94,6 +98,36 @@ if [[ ! -d "$MANUAL_RECALL_DIR" ]]; then
     && log "已创建 $MANUAL_RECALL_DIR" \
     || log "注意：$MANUAL_RECALL_DIR 不存在且创建失败（数据根只读），手工召回道将不可用"
 fi
+
+# --- 6. 采集库（PostgreSQL）DSN + 幂等迁移 -----------------------------------
+# 顺序与语义（有意为之）：
+#   * DSN 优先用显式 DATABASE_URL；否则由 POSTGRES_*（compose 的 env_file: secrets/postgres.env）组装；
+#   * 组装好的 DSN 只经 shell 变量传递，**从不打印**（migrate.py 出错时也只打掩码）；
+#   * 迁移**有界**（默认 120 s）且失败只降级：PG 不可用 ≠ 服务不可用（/chat 不依赖 PG，
+#     采集面本来就设计成 503 + 导航隐藏）。
+MIGRATE=/usr/local/bin/mirothinker-migrate
+if [[ -z "${DATABASE_URL:-}" && -n "${POSTGRES_USER:-}" && -n "${POSTGRES_PASSWORD:-}" ]]; then
+  if assembled="$("$MIGRATE" --print-dsn 2>/dev/null)" && [[ -n "$assembled" ]]; then
+    DATABASE_URL="$assembled"
+    export MIROTHINKER_DSN_ORIGIN="POSTGRES_*（compose env_file）"
+    log "采集库 DSN 由 POSTGRES_* 组装：user=${POSTGRES_USER} host=${POSTGRES_HOST:-db} db=${POSTGRES_DB:-miroflow_collection_v1}"
+  fi
+fi
+if [[ -n "${DATABASE_URL:-}" ]]; then
+  export DATABASE_URL
+  migrate_log="/tmp/mirothinker-migrate.log"
+  if "$MIGRATE" --wait "${MIROTHINKER_MIGRATE_WAIT_SECONDS:-120}" >"$migrate_log" 2>&1; then
+    log "采集库迁移就绪：$(tail -n 1 "$migrate_log")"
+  else
+    log "注意：采集库迁移未完成 —— 服务照常启动（/chat 不受影响），采集面（/seeds /upload /jobs）将 503。"
+    sed 's/^/  [migrate] /' "$migrate_log" | head -n 20
+  fi
+  unset migrate_log assembled
+else
+  log "采集库未配置（无 DATABASE_URL，也没有 POSTGRES_USER/POSTGRES_PASSWORD）"
+  log "      ⇒ 采集面保持现状：503 + 导航隐藏（这是设计行为，不是故障）"
+fi
+unset MIGRATE
 
 log "预检通过，交给冻结生产启动脚本：$START_SCRIPT"
 exec "$START_SCRIPT"

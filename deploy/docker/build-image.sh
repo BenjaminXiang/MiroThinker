@@ -26,8 +26,21 @@ TAR_PATH="${KIT_DIR}/${TAR_NAME}.tar"
 
 command -v docker >/dev/null || { echo "缺少 docker" >&2; exit 1; }
 docker info >/dev/null 2>&1 || { echo "docker info 失败（权限或 daemon 未起）" >&2; exit 1; }
+command -v uv >/dev/null || { echo "缺少 uv（构建机需要它来准备托管 CPython 3.12.12）" >&2; exit 1; }
 
+# 冻结契约：镜像里的解释器必须是**封印服务包时用的那个补丁版本**（3.12.12），
+# 否则 serving_pack_loader.reader_contract_digest() 与包里的摘要不符，
+# 每次启动会重放整张对象图的 reconstruction（实测 +190 s）。
+# 这里复用构建机上 uv 已装好的那一份（python-build-standalone 直连只有 ~17 KB/s）。
 mkdir -p "$KIT_DIR"
+managed_python_root="$(uv python dir 2>/dev/null)"
+managed_python="${managed_python_root}/cpython-3.12.12-linux-x86_64-gnu"
+if [[ ! -x "${managed_python}/bin/python3.12" ]]; then
+  echo "构建机缺少托管 CPython 3.12.12：${managed_python}" >&2
+  echo "先执行：uv python install 3.12.12（本机网络约 17 KB/s，33 MB ≈ 33 分钟，一次即可）" >&2
+  exit 1
+fi
+echo "== 托管 CPython：$("${managed_python}/bin/python3.12" -V 2>&1) @ ${managed_python} =="
 
 echo "== 构建 $TAG（context=$REPO_ROOT）=="
 # --network=host：本机的容器出网是白名单制（ash 只放行 apt 镜像 / CDN / 模型服务），
@@ -36,6 +49,7 @@ started="$(date +%s)"
 docker buildx build \
   --load \
   --network=host \
+  --build-context managed_python="${managed_python}" \
   --file "${REPO_ROOT}/deploy/docker/Dockerfile" \
   --tag "$TAG" \
   "$REPO_ROOT"

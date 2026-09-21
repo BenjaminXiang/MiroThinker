@@ -161,7 +161,7 @@ export MIROTHINKER_UID=1004 MIROTHINKER_GID=1004
 export MIROTHINKER_HOST_PORT=18188        # 甲方反代指到这个端口
 
 docker compose up -d
-docker compose logs -f app                # 启动相位（≈291 s），看到 uvicorn 起来即完成
+docker compose logs -f app                # 启动相位（实测 479–486 s），看到 uvicorn 起来即完成
 ```
 
 判断「起没起来」：
@@ -171,11 +171,105 @@ docker compose logs -f app                # 启动相位（≈291 s），看到 
 - 容器内 `curl -s http://127.0.0.1:18188/api/health` 返回 `{"status":"ok"}`；
 - 首次启动日志里会出现 `candidate_release_id=…`、`serving_pack=/var/tmp/…`、
   包/索引的校验行；任何 integrity/release 不匹配都会**fail-closed 并点名**，不需要猜。
+- 采集库那一行在更前面：`[entrypoint] 采集库迁移就绪：{…}` 与
+  `[canonical-v2] console_database=configured`（没有这一行就是没配 PG，采集面会 503）。
+
+---
+
+## 4.1 采集库（PostgreSQL）也在栈里
+
+第二轮起，栈里多了 `db` 服务（官方 `postgres:16`，库名固定 **`miroflow_collection_v1`**）。
+它带来的是采集面：`/seeds`、`/upload`、`/jobs` 与 `/admin` 的新鲜度面板。
+
+**为什么是 postgres:16 而不是 17**：迁移集（`apps/miroflow-agent/alembic`，43 个版本、head V042、
+42 张表）只用到 `pgcrypto`（V001 的 `gen_random_uuid()`），16 与 17 都够；
+选 16 是因为与现网/构建环境同版本（`postgres:16` 已在镜像清单里，现场不必再拉），少一个变量。
+**不需要 pgvector**（迁移里没有任何 `vector` 类型；V029 里的 “vector” 只是注释文字）。
+
+### 4.1.1 凭据与 DSN
+
+| 项 | 位置 |
+|---|---|
+| 用户/口令 | `secrets/postgres.env`（0600，**不入 git**；模板 `secrets.example/postgres.env`） |
+| 库名 | `miroflow_collection_v1`（钉在 compose 里，不随凭据文件漂移） |
+| app 侧 DSN | 入口脚本从 `POSTGRES_*` 组装 → `postgresql://<user>:<pw>@db:5432/miroflow_collection_v1`，也可用显式 `DATABASE_URL` 覆盖 |
+
+**为什么不用 compose 插值拼 DSN**：`env_file` 只把变量塞进容器，不参与 compose 的 `${…}` 插值；
+如果靠插值，忘记 `--env-file` 就会拼出「空口令」的 DSN，报错还很难看出来。
+现在的做法是「凭据只进容器、DSN 在容器入口组装」，所以**普通 `docker compose up -d` 就够**，
+不需要额外命令行参数；没放凭据文件时 compose 会直接报 `env file … not found`（fail-loud）。
+
+`DATABASE_URL` 是控制台/采集线的**唯一** DSN（`apps/admin-console/backend/console_dsn.py`；
+`DATABASE_URL_TEST` 只是回退）。**不要**设 `CANONICAL_V2_DATABASE_URL` ——
+那是 V2 运维面的另一个库，且要求 `CANONICAL_V2_EXPECTED_DATABASE` /
+`CANONICAL_V2_TARGET_KIND` / `CANONICAL_V2_BACKUP_GATE_ROOT` 三个伴随变量、
+语义是「可破坏目标」；把它指到采集库等于让运维面把采集库当候选库用。
+
+### 4.1.2 迁移是幂等的（每次启动都会跑一次）
+
+```bash
+docker compose exec -T app mirothinker-migrate --status     # 只报告：版本 + 表数
+docker compose exec -T app mirothinker-migrate              # 等待 + 标记 + alembic upgrade head
+```
+
+入口脚本在 exec 服务之前调它，**有界**（`MIROTHINKER_MIGRATE_WAIT_SECONDS`，默认 120 s）
+且**失败只降级**：PG 不可用不影响 `/chat`（采集面本来就是 503 + 导航隐藏）。
+实测：首次（空库）`{"revision_before": "", "revision": "V042", "tables": 42}`；
+第二次 `{"revision_before": "V042", "revision": "V042"}` ⇒ 幂等。
+
+迁移合同是 fail-closed 的（`alembic/env.py` → `resolve_destructive_database_target`）：
+只认 `ALEMBIC_DATABASE_URL` + `ALEMBIC_EXPECTED_DATABASE` + `ALEMBIC_TARGET_KIND`，
+并且连接后要用 `shobj_description()` 读回**库身份标记**才肯迁移。
+`mirothinker-migrate` 会先幂等地写这个标记：
+
+```sql
+COMMENT ON DATABASE miroflow_collection_v1
+  IS 'miroflow:destructive-target:v1:disposable:miroflow_collection_v1';
+```
+
+> ⚠️ 注意 `disposable` 这个词：迁移合同**只允许** `disposable` / `isolated-candidate`
+> 两种目标类型（`database_target.py:25`），没有「生产库」这一档。所以客户现场的采集库
+> 也只能标成 `disposable`。语义上别扭，但这是现网代码的既成契约 —— 别把 `COMMENT` 上的
+> `disposable` 误读成「这个库可以随便删」，它只是迁移器的准入令牌。
+
+### 4.1.3 pgdata、备份与恢复
+
+- pgdata 用**具名卷** `mirothinker-pgdata`（`docker volume`），不进镜像层；
+  用卷而不是 bind mount 的原因：官方镜像的入口脚本要自己 chown 数据目录，
+  用宿主目录就得先 `sudo chown 999:999 <dir>`（可做，但多一步且容易忘，症状见 §8）。
+- **逻辑备份（推荐）**：
+
+```bash
+# 备份：pg_dump 从 db 容器里出（不需要把 5432 暴露到宿主）
+docker compose exec -T db sh -lc 'pg_dump -U "$POSTGRES_USER" -d miroflow_collection_v1 \
+  --no-owner --no-acl' | gzip > /srv/mirothinker/backup/miroflow_collection_v1-$(date +%F).sql.gz
+# 恢复（先建一个空库再灌；不要直接覆盖生产库）
+docker compose exec -T db sh -lc 'psql -q -U "$POSTGRES_USER" -d postgres \
+  -c "DROP DATABASE IF EXISTS miroflow_collection_v1_restore" \
+  -c "CREATE DATABASE miroflow_collection_v1_restore"'
+gunzip -c /srv/mirothinker/backup/…sql.gz | docker compose exec -T db sh -lc \
+  'psql -q -U "$POSTGRES_USER" -d miroflow_collection_v1_restore'
+```
+
+- **物理备份**：`docker run --rm -v mirothinker-pgdata:/data -v /srv/mirothinker/backup:/backup alpine tar czf /backup/pgdata-$(date +%F).tgz -C /data .`
+  （最快，但只能整体还原到同版本 PG）。
+- 实测（本机）：`pg_dump` 114 871 B；restore 到 scratch 库后**42 张表的行数逐表一致**，
+  `professor_seed=2 / pipeline_run=3 / alembic=V042`，`pipeline_run` 的 run_id+status 摘要 md5 相同。
+- 备份路径建议：`/srv/mirothinker/backup/`（与数据根同级，纳入磁盘告警）。
+
+### 4.1.4 不装 PG / PG 坏了
+
+- **不装**：栈是「都进容器」，所以默认就有 PG。要退回「不装 PG」的旧形态：
+  用 override 去掉 `db` 服务与 `POSTGRES_*`/`env_file`，或直接只起 `docker compose up -d app`
+  并把 `DATABASE_URL`、`POSTGRES_USER`、`POSTGRES_PASSWORD` 都不给 ⇒ 采集面回到
+  「503 + 导航隐藏」，`/chat` 不受影响（这是设计行为，不是故障）。
+- **PG 坏了**：入口的迁移有界等待超时后只打警告并继续启动；
+  `console_database` 仍是 `configured`，采集面接口返回 503 `postgres_unavailable`。
+  修好 db 后重启 app 容器即可（`docker compose up -d --force-recreate app`）。
 
 ---
 
 ## 5. 首启口令与改密
-
 ```bash
 # 首启口令文件在状态目录（宿主机直接可见，因为它是挂进来的）
 cat ${MIROTHINKER_STATE_DIR}/admin-initial-password.txt
@@ -213,22 +307,22 @@ docker compose exec -T app bash -lc 'cp /tmp/accept/report.json /opt/mirothinker
 > ⇒ **验收前必须先做交付计划 P3 的 `/admin` 配置（chat LLM 选档 + 密钥）**，
 > 否则门会红，但红的是配置不是容器。
 
-> **为什么不是文档里那条 `cd apps/admin-console && uv run python scripts/replay_fix_round1.py`？**
-> 那条要求 `apps/admin-console` 自己的 venv（它有自己的 `uv.lock` 和 dev 组，约 1.3 GB）。
-> 镜像为了体积只带了根 workspace 的 `.venv`（服务启动用的就是它），所以在
-> `apps/admin-console` 下 `uv run` 会试图**联网同步**那个 venv 并失败：
-> `requested data wasn't found in the cache for: … pytest-9.0.3-…whl`。
-> `mirothinker-replay` 做的就是同一件事——同一个脚本、同样的参数、同一套验收断言——
-> 只是用镜像内已同步的 `.venv` 直接跑。等价写法（已实测离线可用）：
+> **镜像里三份 pyproject、只有一个 venv**：镜像为体积只带根 workspace 的 `.venv`
+> （服务启动用的就是它），并统一设 `UV_NO_SYNC=1` ⇒ 容器内任何目录下的
+> `uv run` 都直接复用这个已固化环境，**不会**试着联网同步第二个 venv。
+> 所以文档里那条原始命令在容器内也能跑（实测）：
 >
 > ```bash
 > docker compose exec -T app bash -lc \
->   'cd /opt/mirothinker && uv run --frozen python apps/admin-console/scripts/replay_fix_round1.py \
+>   'cd apps/admin-console && uv run python scripts/replay_fix_round1.py \
 >      --base-url http://127.0.0.1:18188 --out-dir /tmp/accept'
 > ```
 >
-> 确实需要那条原始命令时（例如要在现场跑 console 的 pytest）：把 admin-console 的 venv
-> 也在构建期同步进镜像（`UV_PROJECT_ENVIRONMENT` 之外单独建），代价约 +1.3 GB。
+> 推荐仍用 `mirothinker-replay`（等价、更短、且不依赖 cwd）。作业门里有同样的场景：
+> 采集作业的 argv 是 `cd apps/miroflow-agent && uv run python scripts/…`，
+> 没有 `UV_NO_SYNC=1` 时会去装该项目的 dev 组（`inline-snapshot` 等）并失败
+> —— 这也是这个变量必须留在镜像里的原因（实测：设之前 preview 作业 `adapter_missing`
+> 之外还会撞 uv 报错，设之后作业正常跑通）。
 
 ---
 
@@ -259,6 +353,10 @@ docker compose exec -T app bash -lc 'cp /tmp/accept/report.json /opt/mirothinker
 | OOM / 被 kill（exit 137） | 宿主机内存 <64 GB，或 `MIROTHINKER_MEM_LIMIT` 调得太小（实测稳态 17.3 GiB，启动峰值更高）；先看 `dmesg -T \| tail` 与 `docker inspect -f '{{.State.OOMKilled}}'` |
 | 网页抓取质量变差但服务正常 | Chromium 起不来（降级为 httpx+BS4，**静默降级**）。自检：`docker compose exec app /opt/mirothinker/.venv/bin/python -c "from playwright.sync_api import sync_playwright;p=sync_playwright().start();print(p.chromium.executable_path);p.stop()"` |
 | `/admin` 改完配置，重建容器后没了 | 受管配置目录没挂（`MIROTHINKER_MANAGED_DIR`）。它是 `/opt/mirothinker/config/managed` 的挂载点，**必须在挂载清单里** |
+| `env file … not found: ./secrets/postgres.env` | 采集库凭据文件没放。`cp secrets.example/postgres.env secrets/postgres.env` + 填口令（模板见 §4.1.1） |
+| db 容器起不来，日志 `initdb: error: could not change permissions of directory "/var/lib/postgresql/data"` | 用了 **bind mount** 做 pgdata 但宿主目录属主不是 uid 999。要么改用默认的具名卷，要么 `sudo chown -R 999:999 <pgdata 目录>` |
+| 采集面 503 `postgres_unavailable`，但 `console_database=configured` | DSN 有、连不上：看 `docker compose ps db` 是否 healthy；`docker compose logs db`；`docker compose exec -T app mirothinker-migrate --status` |
+| 采集作业跑不起来，日志里是 uv 的 `Failed to download …` | 镜像丢了 `UV_NO_SYNC=1`（三份 pyproject 的 dev 组差异会让 `uv run` 想联网）。见 §12.2 |
 | 视频/日志目录越来越大 | `docker compose logs` 已限 50 MB×5；`logs/debug` 缓存挂到了宿主机，可定期清 |
 
 ---
@@ -300,6 +398,9 @@ docker compose exec -T app bash -lc 'cp /tmp/accept/report.json /opt/mirothinker
 | `no-new-privileges`/seccomp 类加固误伤 Chromium | 部分加固策略会让浏览器起不来，表现为静默降级 | 用 `mirothinker-verify` 的 Chromium 自检行 |
 | 时间/时区漂移 | 容器内 TZ 固定 `Asia/Shanghai`，与宿主机不一致时日志时间戳会对不上 | 需要时在 compose 里覆盖 `TZ` |
 | 两次启动共用同一数据根（误操作） | 两个容器同时挂同一数据根/状态目录 → SQLite 争用、mount-receipt 互相覆盖 | 单实例部署；状态目录只挂给一个容器 |
+| **采集库也进了栈** | 新增 `db` 容器 + 具名卷：多一份要备份的数据（pgdata），多一个启动依赖顺序，多一处凭据文件（`secrets/postgres.env`） | §4.1 的备份/恢复与故障处置；`db` 挂了只影响采集面（`/chat` 不受影响） |
+| **建库顺序与迁移耦合** | 首次启动时 app 会等 PG（有界 120 s）再迁移；PG 起得慢只是让 app 晚一点进入启动相位，超时则降级（采集面 503） | 观察 `[entrypoint] 采集库迁移…` 行；必要时调 `MIROTHINKER_MIGRATE_WAIT_SECONDS` |
+| **pgdata 属主** | 用具名卷时官方镜像自己 chown；改成 bind mount 就得先 `chown 999:999`，否则 initdb 直接失败 | §8 对照表 |
 
 ---
 

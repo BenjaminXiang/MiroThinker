@@ -17,3 +17,6 @@ __pycache__
 .uv-tools
 .worktrees
 .gstack
+
+# 交付凭据（模板在 deploy/docker/secrets.example/，真值绝不进镜像/仓库）
+deploy/docker/secrets/

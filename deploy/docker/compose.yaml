@@ -6,23 +6,64 @@
 # 只要挂到这些目标路径上。
 #
 # 常用：
-#   docker compose -f deploy/docker/compose.yaml up -d          # 起
+#   docker compose -f deploy/docker/compose.yaml up -d          # 起（app + db）
 #   docker compose -f deploy/docker/compose.yaml logs -f app    # 看启动相位
 #   docker compose -f deploy/docker/compose.yaml exec app mirothinker-verify  # 验收
-#   docker compose -f deploy/docker/compose.yaml down           # 停（数据不受影响）
+#   docker compose -f deploy/docker/compose.yaml exec app mirothinker-migrate --status  # 采集库版本
+#   docker compose -f deploy/docker/compose.yaml down           # 停（数据/库不受影响）
 #
 # 全部可用环境变量（或在同目录 .env 里写）：
 #   MIROTHINKER_HOST_PORT    发布端口           默认 18188（容器内固定 18188）
 #   MIROTHINKER_DATA_ROOT    宿主机数据根        默认 /var/tmp/mirothinker-data-v2
 #   MIROTHINKER_STATE_DIR    宿主机状态目录      默认 /var/tmp/mirothinker-canonical-v2-s12f
-#   MIROTHINKER_SECRETS_DIR  宿主机密钥目录      默认 ./secrets（4 个密钥文件）
+#   MIROTHINKER_SECRETS_DIR  宿主机密钥目录      默认 ./secrets（4 个密钥文件 + postgres.env）
 #   MIROTHINKER_MANAGED_DIR  宿主机受管配置目录  默认 ./state/config-managed
 #   MIROTHINKER_UID / _GID   运行身份            默认 1000:1000（见 README「uid / 权限」）
 #   MIROTHINKER_MEM_LIMIT    内存上限            默认 40g（实测稳态 RSS ≈17.3 GiB）
+#   MIROTHINKER_PG_IMAGE     采集库镜像          默认 postgres:16
+#   MIROTHINKER_PG_ENV_FILE  采集库凭据文件      默认 ./secrets/postgres.env
+#   MIROTHINKER_PG_VOLUME    采集库数据卷名      默认 mirothinker-pgdata（具名卷）
+#
+# 采集库（PostgreSQL）在 2026-09-21 的第二轮里进了栈：
+#   * **不对宿主发布端口**（只在 compose 网络内可达）；应急直连的注释行见 db.ports；
+#   * 库名固定 miroflow_collection_v1；用户/口令来自 secrets/postgres.env（不入 git）；
+#   * pgdata 用具名卷（宿主上 docker volume 管理），备份用 pg_dump，路径见 README；
+#   * app 的采集 DSN 由入口脚本从 POSTGRES_* 组装（或显式 DATABASE_URL 覆盖），
+#     并在启动前跑一次**幂等**迁移（有界等待，失败只降级不阻断启动）。
 
 name: mirothinker-serving
 
 services:
+  db:
+    image: ${MIROTHINKER_PG_IMAGE:-postgres:16}
+    restart: unless-stopped
+    stop_grace_period: 30s
+    # 凭据只从文件读，compose 全程不做插值 ⇒ 忘记传 --env-file 也不会拼出空口令的 DSN
+    env_file:
+      - ${MIROTHINKER_PG_ENV_FILE:-./secrets/postgres.env}
+    environment:
+      # 库名是交付常量（冻结在 compose 里），不随凭据文件漂移
+      POSTGRES_DB: miroflow_collection_v1
+    volumes:
+      - type: volume
+        source: mirothinker-pgdata
+        target: /var/lib/postgresql/data
+    healthcheck:
+      # 容器内有 POSTGRES_USER，用 $$ 转义交给容器内 shell 展开（不经过 compose 插值）
+      test: ["CMD-SHELL", "pg_isready -q -t 5 -U \"$$POSTGRES_USER\" -d miroflow_collection_v1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+    # 应急直连（默认关闭）：现场排查时临时打开，只绑本机，别对公网暴露
+    # ports:
+    #   - "127.0.0.1:5432:5432"
+    logging:
+      driver: json-file
+      options:
+        max-size: "50m"
+        max-file: "5"
+
   app:
     image: ${MIROTHINKER_IMAGE:-mirothinker-serving:v1}
     # 非 root 运行，uid/gid 必须 = 数据属主（详见 README「uid / 权限」）
@@ -32,10 +73,27 @@ services:
     # 容器内固定 18188（冻结命令文件把端口钉死）；宿主机端口可改
     ports:
       - "${MIROTHINKER_HOST_PORT:-18188}:18188"
+    # 只做**启动顺序**，不做健康门：PG 挂了 app 也必须能起（/chat 不依赖采集库，
+    # 采集面本来就是 503 + 导航隐藏）。等 PG 由入口脚本的有界等待负责。
+    depends_on:
+      db:
+        condition: service_started
+    # 采集库凭据（POSTGRES_USER/POSTGRES_PASSWORD）——入口脚本用它组装 DSN。
+    # 同一个文件，两个容器都读；文件不入 git（example 随交付件给）。
+    env_file:
+      - ${MIROTHINKER_PG_ENV_FILE:-./secrets/postgres.env}
     environment:
       # 上游是本地模型服务时无需代理；明确关掉继承自宿主/环境里的代理变量
       NO_PROXY: "127.0.0.1,localhost"
       no_proxy: "127.0.0.1,localhost"
+      # 采集库地址（凭据由 env_file 提供；DSN 由入口脚本组装，见 README「PG」）
+      POSTGRES_HOST: db
+      POSTGRES_PORT: "5432"
+      POSTGRES_DB: miroflow_collection_v1
+      # 启动相位计时（可选，默认空=关闭）：设成仓库内可写路径（如
+      # /opt/mirothinker/logs/boot-timing.jsonl）后，服务每个相位追加一行 JSON，
+      # 用于和裸机路径逐相位对比。空值等价于未设置（服务侧会 strip 后当 None）。
+      CANONICAL_V2_SERVING_TIMING_PATH: "${MIROTHINKER_TIMING_PATH:-}"
     # ---- 数据面（不进镜像，按冻结绝对路径挂载）--------------------------------
     # 服务包父目录可写 → 首启写 <pack>.mount-receipt.json；只读挂载不会失败，
     # 但每次启动都会重新全量哈希（见 README「只读挂载」）。
@@ -86,15 +144,23 @@ services:
     # Chromium 渲染需要更大的 /dev/shm（默认 64 MB 会导致页面渲染失败/降级）
     shm_size: "1gb"
     # ---- 健康检查 --------------------------------------------------------------
-    # 端口在启动相位跑完（≈291 s）后才 bind，所以 start_period 必须 > 291 s。
+    # 端口在启动相位跑完才 bind（实测 486 s；无 receipt 全量校验时同量级），
+    # 再加采集库迁移的有界等待（默认最多 120 s）⇒ start_period 取 720 s。
     healthcheck:
       test: ["CMD-SHELL", "curl -fsS --max-time 10 http://127.0.0.1:18188/api/health || exit 1"]
       interval: 30s
       timeout: 15s
       retries: 5
-      start_period: 420s
+      start_period: 720s
     logging:
       driver: json-file
       options:
         max-size: "50m"
         max-file: "5"
+
+volumes:
+  # 采集库数据（pgdata）。具名卷 = 不需要在宿主机上 chown 999:999（官方镜像的
+  # 入口脚本会自己把数据目录初始化成 postgres 用户），也保证了 pgdata 不进镜像层。
+  # 备份/迁移见 README「PG · 备份与恢复」。
+  mirothinker-pgdata:
+    name: ${MIROTHINKER_PG_VOLUME:-mirothinker-pgdata}
