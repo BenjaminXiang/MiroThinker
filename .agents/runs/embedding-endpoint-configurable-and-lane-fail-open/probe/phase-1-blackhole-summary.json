@@ -1,0 +1,58 @@
+{
+  "sse_event_names": [
+    "answer",
+    "done",
+    "plan_done",
+    "progress",
+    "retrieval_done",
+    "stage"
+  ],
+  "error_events": [],
+  "done_events": 1,
+  "planned_lanes": [
+    "exact",
+    "structured",
+    "lexical",
+    "vector",
+    "web"
+  ],
+  "vector_progress": [
+    {
+      "detail": "✓ 语义检索：0 个结果",
+      "lane": "vector",
+      "count": 0
+    }
+  ],
+  "retrieval_lane_rows": [
+    {
+      "lane": "exact",
+      "status": "succeeded",
+      "candidates": 0
+    },
+    {
+      "lane": "structured",
+      "status": "succeeded",
+      "candidates": 0
+    },
+    {
+      "lane": "lexical",
+      "status": "succeeded",
+      "candidates": 128
+    },
+    {
+      "lane": "vector",
+      "status": "unavailable",
+      "candidates": 0
+    },
+    {
+      "lane": "web",
+      "status": "succeeded",
+      "candidates": 18
+    },
+    {
+      "lane": "supplemental",
+      "status": "succeeded",
+      "candidates": 6
+    }
+  ]
+}
