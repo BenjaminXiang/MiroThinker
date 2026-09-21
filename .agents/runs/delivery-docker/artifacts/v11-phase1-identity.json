@@ -1,0 +1,88 @@
+{
+  "login_status": 200,
+  "baseline": {
+    "status": 200,
+    "body": {
+      "connection": "embedding",
+      "label": "Embedding 模型端点",
+      "ok": true,
+      "latency_ms": 28,
+      "http_status": 200,
+      "detail": "HTTP 200",
+      "called": true,
+      "runtime": {
+        "key": "embedding",
+        "label": "Embedding 模型端点",
+        "kind": "embedding",
+        "enabled": true,
+        "base_url": "http://100.64.0.27:18005/v1",
+        "model": "Qwen/Qwen3-Embedding-8B",
+        "api_key_origin": "legacy-file:.sglang_api_key",
+        "endpoint_origin": "release-bundle-default",
+        "runtime_note": "运行期 base_url http://100.64.0.27:18005/v1（来源 release-bundle-default；未设置受管地址时回落到发布包记录的地址）；凭据来源 legacy-file:.sglang_api_key",
+        "pending_restart": false
+      },
+      "used": {
+        "api_key_source": "legacy-file:.sglang_api_key",
+        "effective_api_key_source": "legacy-file:.sglang_api_key",
+        "endpoint_source": "release-bundle-default",
+        "base_url": null,
+        "model": "Qwen/Qwen3-Embedding-8B"
+      },
+      "rate": {
+        "per_minute_limit": 6,
+        "min_interval_seconds": 1.0,
+        "remaining": 5
+      },
+      "identity": null,
+      "restart_required": null
+    }
+  },
+  "identity": {
+    "status": 200,
+    "body": {
+      "connection": "embedding",
+      "label": "Embedding 模型端点",
+      "ok": true,
+      "latency_ms": 27,
+      "http_status": 200,
+      "detail": "HTTP 200",
+      "called": true,
+      "runtime": {
+        "key": "embedding",
+        "label": "Embedding 模型端点",
+        "kind": "embedding",
+        "enabled": true,
+        "base_url": "http://100.64.0.27:18005/v1",
+        "model": "Qwen/Qwen3-Embedding-8B",
+        "api_key_origin": "legacy-file:.sglang_api_key",
+        "endpoint_origin": "release-bundle-default",
+        "runtime_note": "运行期 base_url http://100.64.0.27:18005/v1（来源 release-bundle-default；未设置受管地址时回落到发布包记录的地址）；凭据来源 legacy-file:.sglang_api_key",
+        "pending_restart": false
+      },
+      "used": {
+        "api_key_source": "legacy-file:.sglang_api_key",
+        "effective_api_key_source": "legacy-file:.sglang_api_key",
+        "endpoint_source": "release-bundle-default",
+        "base_url": null,
+        "model": "Qwen/Qwen3-Embedding-8B"
+      },
+      "rate": {
+        "per_minute_limit": 6,
+        "min_interval_seconds": 1.0,
+        "remaining": 4
+      },
+      "identity": {
+        "arm": null,
+        "passed": null,
+        "cosine": null,
+        "threshold": null,
+        "detail": "未校验：未配置服务包目录（CANONICAL_V2_SERVING_PACK），无法做索引比对",
+        "checks": {
+          "reference_error": null
+        }
+      },
+      "restart_required": null
+    }
+  }
+}

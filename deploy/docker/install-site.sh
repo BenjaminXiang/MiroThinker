@@ -30,9 +30,12 @@ DO_UP=1
 PORT="${MIROTHINKER_SITE_PORT:-}"
 HEALTH_TIMEOUT="${MIROTHINKER_SITE_HEALTH_TIMEOUT:-900}"
 PG_VOLUME="${MIROTHINKER_SITE_PG_VOLUME:-mirothinker-pgdata}"
-IMAGE_TGZ="mirothinker-serving-v1.tar.gz"
-DATA_TGZ="serving-data-v1.tar.gz"
-IMAGE_TAG="mirothinker-serving:v1"
+CMD_OVERRIDE_NAME="${MIROTHINKER_CMD_NAME:-serve-command-v11.sh}"
+ENTRYPOINT_OVERRIDE_NAME="${MIROTHINKER_ENTRYPOINT_NAME:-entrypoint-v11.sh}"
+# 交付物文件名与镜像 tag 由交付包自证（kit-manifest.txt），避免把 v1/v1.1 写死
+IMAGE_TGZ="${MIROTHINKER_IMAGE_TGZ_NAME:-}"
+DATA_TGZ="${MIROTHINKER_DATA_TGZ_NAME:-}"
+IMAGE_TAG="${MIROTHINKER_IMAGE_TAG:-}"
 
 # 冻结的容器内路径（仅供打印/对照；改它们等于改交付契约）
 CONTAINER_DATA_ROOT="/var/tmp/mirothinker-data-v2"
@@ -101,6 +104,39 @@ rewrite_paths() {
 
 human_elapsed() { printf '%dm%02ds' $(($1 / 60)) $(($1 % 60)); }
 
+# 覆盖件检查（--dry-run 也跑）：这两份文件缺失/不可执行 ⇒ 容器 exit 78 或服务错包，
+# 是最该在"动任何东西之前"发现的问题。
+check_overrides() {
+  if [[ -s "${BUNDLE_DIR}/${CMD_OVERRIDE_NAME}" ]]; then
+    if grep -q -- "--serving-pack .*serving-pack-run16-v11" "${BUNDLE_DIR}/${CMD_OVERRIDE_NAME}"; then
+      ok "命令文件覆盖件在位且指向 serving-pack-run16-v11（v1.1 服务包）"
+    else
+      warn "命令文件覆盖件存在但没指向 serving-pack-run16-v11：请用 v1.1 的交付包"
+    fi
+  else
+    warn "缺命令文件覆盖件 ${CMD_OVERRIDE_NAME}：将服务镜像内默认的服务包（可能是旧包）"
+  fi
+  # 入口覆盖件：镜像内那份入口脚本的预检把服务包路径写死成旧包名，新数据面下会 exit 78。
+  # 覆盖件必须**可执行**（bind mount 保留宿主权限，容器内 uid 非 root）。
+  if [[ -s "${BUNDLE_DIR}/${ENTRYPOINT_OVERRIDE_NAME}" ]]; then
+    if ! grep -F -q -- 'PACK_DIR="${DATA_ROOT}/serving-pack-run16-v11"' "${BUNDLE_DIR}/${ENTRYPOINT_OVERRIDE_NAME}"; then
+      warn "入口覆盖件存在但预检路径不是 serving-pack-run16-v11：请用 v1.1 的交付包"
+    elif [[ ! -x "${BUNDLE_DIR}/${ENTRYPOINT_OVERRIDE_NAME}" ]]; then
+      if [[ "$DRY_RUN" == "1" ]]; then
+        fail "入口覆盖件不可执行（容器内会 exec 失败）：chmod 0755 ${BUNDLE_DIR}/${ENTRYPOINT_OVERRIDE_NAME}"
+      elif chmod 0755 "${BUNDLE_DIR}/${ENTRYPOINT_OVERRIDE_NAME}" 2>/dev/null; then
+        ok "入口覆盖件在位（权限已补成 0755）"
+      else
+        fail "入口覆盖件不可执行（容器内会 exec 失败）：chmod 0755 ${BUNDLE_DIR}/${ENTRYPOINT_OVERRIDE_NAME}"
+      fi
+    else
+      ok "入口覆盖件在位且可执行（预检路径 serving-pack-run16-v11）"
+    fi
+  else
+    warn "缺入口覆盖件 ${ENTRYPOINT_OVERRIDE_NAME}：容器预检会因找不到旧服务包而 exit 78（新数据面下起不来）"
+  fi
+}
+
 # ==============================================================================
 step "0. 前置：身份 / 目录 / 参数"
 printf '  运行身份: uid=%s（%s）\n' "$(id -u)" "$(id -un 2>/dev/null || echo '?')"
@@ -111,6 +147,17 @@ printf '            端口 %s（容器内固定 18188）\n' "$PORT"
 if [[ "$SITE_ROOT" == "" && "$(id -u)" != "0" ]]; then
   warn "未以 root 运行：能装（若当前用户在 docker 组）但状态目录/数据目录属主可能不对；建议 sudo"
 fi
+if [[ -z "$IMAGE_TGZ" ]]; then
+  IMAGE_TGZ="$(cd "$BUNDLE_DIR" && ls -1 mirothinker-serving-*.tar.gz 2>/dev/null | head -1)"
+fi
+if [[ -z "$DATA_TGZ" ]]; then
+  DATA_TGZ="$(cd "$BUNDLE_DIR" && ls -1 serving-data-*.tar.gz 2>/dev/null | head -1)"
+fi
+if [[ -z "$IMAGE_TAG" && -s "${BUNDLE_DIR}/kit-manifest.txt" ]]; then
+  IMAGE_TAG="$(awk -F': ' '/^image_tag:/ {print $2}' "${BUNDLE_DIR}/kit-manifest.txt" | head -1)"
+fi
+IMAGE_TAG="${IMAGE_TAG:-mirothinker-serving:v1}"
+printf '  交付物:   镜像 %s（tag %s） / 数据 %s\n' "${IMAGE_TGZ:-<缺失>}" "$IMAGE_TAG" "${DATA_TGZ:-<缺失>}"
 for f in "${BUNDLE_DIR}/${IMAGE_TGZ}" "${BUNDLE_DIR}/${DATA_TGZ}" \
          "${BUNDLE_DIR}/compose.yaml" "${BUNDLE_DIR}/checksums.sha256"; do
   [[ -e "$f" ]] || die 10 "交付包缺少文件：$f（是不是只拷了一部分？）"
@@ -288,6 +335,7 @@ owner_gid="$(stat -c '%g' "${DATA_ROOT}/index-v3-v2" 2>/dev/null || stat -c '%g'
 if [[ "$DRY_RUN" == "1" ]]; then
   printf '  [dry-run] 会写 %s（uid:gid=%s:%s，端口 %s，路径见上）\n' "$ENV_FILE" "$owner_uid" "$owner_gid" "$PORT"
   printf '  [dry-run] 会生成 %s（随机口令，0600），并检查 secrets/ 下 4 个密钥\n' "$PG_ENV_FILE"
+  check_overrides
 else
   cat > "$ENV_FILE" <<ENVEOF
 # 由 install-site.sh 生成（$(date -Is)）。改完重跑 installer 或 docker compose up -d 生效。
@@ -301,12 +349,15 @@ MIROTHINKER_GID=${owner_gid}
 MIROTHINKER_HOST_PORT=${PORT}
 MIROTHINKER_PG_ENV_FILE=${PG_ENV_FILE}
 MIROTHINKER_PG_VOLUME=${PG_VOLUME}
-MIROTHINKER_IMAGE=mirothinker-serving:v1
+MIROTHINKER_IMAGE=${IMAGE_TAG}
+MIROTHINKER_COMMAND_FILE=${BUNDLE_DIR}/${CMD_OVERRIDE_NAME}
+MIROTHINKER_ENTRYPOINT_FILE=${BUNDLE_DIR}/${ENTRYPOINT_OVERRIDE_NAME}
 ENVEOF
   chmod 600 "$ENV_FILE"
   ok "写入 ${ENV_FILE}（uid:gid=${owner_uid}:${owner_gid} 取自数据属主；端口 ${PORT}）"
 
   mkdir -p "$SECRETS_DIR" "$MANAGED_DIR" "${BUNDLE_DIR}/state/logs" 2>/dev/null
+  check_overrides
   # 预置受管配置（端点/档位/采集窗口，非机密）——已存在则不动，避免覆盖现场在页面上的改动
   if [[ ! -s "${MANAGED_DIR}/settings.json" && -s "${BUNDLE_DIR}/state/config-managed/settings.json" ]]; then
     cp "${BUNDLE_DIR}/state/config-managed/settings.json" "${MANAGED_DIR}/settings.json"

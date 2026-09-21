@@ -88,7 +88,7 @@ sudo ./install-site.sh --dry-run    # 先只看检查结果，不落地任何改
 
 | 项目 | 现场要不要改 | 说明 |
 |---|---|---|
-| **嵌入端点** | **不能改**（只读展示） | 地址/模型/维度由冻结发布包决定（`http://100.64.0.27:18005/v1`，`Qwen/Qwen3-Embedding-8B`，4096 维）。点"测试"会真的发一次请求，成功显示 200 + 维度。**换模型必须我方重建索引**，现场改动无效（页面会明确标注"只读"） |
+| **嵌入端点** | **不能改**（只读展示） | 地址/模型/维度由冻结发布包决定（`http://100.64.0.27:18005/v1`，`Qwen/Qwen3-Embedding-8B`，4096 维）。点"测试"会真的发一次请求：显示 200 + 维度，并给出**向量身份校验**结论（同一空间 cos ≥0.999/0.99 通过；未通过说明这个端点与索引不在同一向量空间）。**换模型必须我方重建索引**，现场改动无效（页面会明确标注"只读"） |
 | **chat LLM 档位** | 一般不用改 | 已预置 `deepseekv4flash`（= DeepSeek 的 `deepseek-v4-flash`）。**你只需要 `.deepseek_api_key`**；换上 key 重启后档位即生效。若要换档位，选一档 → 点"测试" → 重启 |
 | Bocha / Serper | 不用改 | 地址由提供方钉死，只需 key |
 | Rerank 端点 | 不用配 | 默认关闭；配了才启用 |
@@ -102,7 +102,7 @@ sudo ./install-site.sh --dry-run    # 先只看检查结果，不落地任何改
 
 | 不要动 | 为什么 | 动了会看到什么（原文样式） |
 |---|---|---|
-| 交付包里的 `serving-data-v1.tar.gz` 内容、落位后的 `manifest.json` | 服务包与索引根的哈希被三处逐字符比对 | 启动 fail-closed：日志出现 `serving pack file hash differs: <文件名>` 或 `serving pack release differs`，进程退出码 2 |
+| 交付包里的数据面压缩包（`serving-data-v*.tar.gz`）内容、落位后的 `manifest.json` | 服务包与索引根的哈希被三处逐字符比对 | 启动 fail-closed：日志出现 `serving pack file hash differs: <文件名>` 或 `serving pack release differs`，进程退出码 2 |
 | 数据根路径 `/var/tmp/mirothinker-data-v2/…`、索引根 `index-v3-v2` | `manifest.json`、索引 marker、发布 bundle 三处写死了绝对路径 | `serving bundle index target differs` / `isolated target marker is missing or unsafe` |
 | `compose.yaml` 里的挂载目标与 `user:`（uid/gid） | 容器内路径是冻结契约；uid 必须等于数据属主 | `PermissionError: [Errno 13] Permission denied: …/manifest.json`（**看着像崩溃，其实是权限**） |
 | 冻结的启动命令文件（`--serving-pack`、`--index-root`、门禁目录等参数） | 与发布包的封印结果一一对应 | `serving pack index marker differs` / `complete candidate runner failed: RunnerConfigurationError: …` |

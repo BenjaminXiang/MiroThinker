@@ -1,0 +1,5 @@
+  …已等 1m02s（Up About a minute (health: starting)）
+  …已等 2m02s（Up 2 minutes (health: starting)）
+  …已等 3m02s（Up 3 minutes (health: starting)）
+  …已等 4m03s（Up 4 minutes (health: starting)）
+boot=288s（其中 compose up 2s；health http://127.0.0.1:18296/api/health）

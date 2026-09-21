@@ -94,6 +94,12 @@ services:
       # /opt/mirothinker/logs/boot-timing.jsonl）后，服务每个相位追加一行 JSON，
       # 用于和裸机路径逐相位对比。空值等价于未设置（服务侧会 strip 后当 None）。
       CANONICAL_V2_SERVING_TIMING_PATH: "${MIROTHINKER_TIMING_PATH:-}"
+      # 轮次追踪日志（turn trace）根目录：代码默认是**相对路径** var/turn-trace，
+      # 容器里 cwd 不可写 ⇒ 每一轮都打
+      #   「Canonical V2 turn trace write failed: PermissionError: [Errno 13] … 'var'」
+      # （fail-open，不影响回答，但管理面的轮次追踪页与排障工具是空的）。
+      # 指到已挂载的 logs 目录（宿主 <bundle>/state/logs/turn-trace，随包可查/可清）。
+      TURN_TRACE_DIR: "${MIROTHINKER_TURN_TRACE_DIR:-/opt/mirothinker/logs/turn-trace}"
     # ---- 数据面（不进镜像，按冻结绝对路径挂载）--------------------------------
     # 服务包父目录可写 → 首启写 <pack>.mount-receipt.json；只读挂载不会失败，
     # 但每次启动都会重新全量哈希（见 README「只读挂载」）。
@@ -146,6 +152,25 @@ services:
         read_only: true
         # 源文件缺失时**不要**让 docker 自动建一个同名目录（那会让"后补 key"变成
         # 无法覆盖的目录，实测踩过）；由 install-site.sh 预置空占位文件。
+        bind:
+          create_host_path: false
+      # 冻结命令文件覆盖（交付包提供）：v1.1 的服务包名与镜像内那份只差一个 token，
+      # 覆盖后 --serving-pack 指向 serving-pack-run16-v11。源文件缺失 ⇒ compose 直接报错
+      # （create_host_path:false，避免又建出一个同名目录）。
+      - type: bind
+        source: ${MIROTHINKER_COMMAND_FILE:-./serve-command-v11.sh}
+        target: /opt/mirothinker/.agents/runs/rebuild-canonical-v2-knowledge-platform/s12g/serve-18188-command.sh
+        read_only: true
+        bind:
+          create_host_path: false
+      # 入口脚本覆盖（交付包提供）：镜像里那份的预检把服务包路径写死成
+      # serving-pack-run16-readerbound，新数据面下会直接 exit 78（实测：
+      # 「预检失败：缺少 …/serving-pack-run16-readerbound」）。覆盖件与镜像内那份
+      # 只差这一个 token，预检与 uid/权限诊断逻辑一字未改。
+      - type: bind
+        source: ${MIROTHINKER_ENTRYPOINT_FILE:-./entrypoint-v11.sh}
+        target: /usr/local/bin/mirothinker-entrypoint
+        read_only: true
         bind:
           create_host_path: false
       # 可选：服务包 mount-receipt 换到可写路径（数据根只读时用）

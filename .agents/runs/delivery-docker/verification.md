@@ -715,3 +715,142 @@ RESULT: ALL PASS
 ```
 
 ⇒ 「只填 key」成立：**6/7 → 7/7 的唯一变量是一个密钥文件**（`.deepseek_api_key`）+ 一次重建容器。
+
+---
+
+# 轮次 v1.1 容器交付重建 + 演练（2026-09-21 22:12 → 23:08，分支 `delivery/docker`）
+
+对象：`release/v1.1`（worktree `.worktrees/release-v11`，head `82dc8f61`）+ 新服务包
+`serving-pack-run16-v11`（4.28 GB，manifest.json sha256 `588fdd9e…`）+ 索引根 `index-v3-v2`（未变）。
+全程不碰活线 18188（pid 519941）、不碰真实数据根/状态目录、无 sudo、演练端口 18296、scratch 根。
+
+## 1. 镜像（Deliverable 1）
+
+命令（在 release-v11 树里跑它自己的脚本，未改该树）：
+
+```bash
+MIROTHINKER_DOCKER_KIT_DIR=/var/tmp/mirothinker-docker-kit-v11 \
+  ./deploy/docker/build-image.sh mirothinker-serving:v1.1
+```
+
+| 项 | 值 |
+|---|---|
+| tag / image_id | `mirothinker-serving:v1.1` / `sha256:04c3cfcd465f3c1a5a55a545c8e28bacbe189e2a43445ea3fec1662d447dc042` |
+| 镜像大小 | 6 822 195 624 B（6.4 GB；v1 是 5.17 GB） |
+| `build_seconds` | **144**（v1 同脚本 ≈ 4–5 min） |
+| tar | `mirothinker-serving-v1.1.tar` 6 951 186 432 B，sha256 `28df2655cf4bdbda…` |
+| tar.gz | `mirothinker-serving-v1.1.tar.gz` 2 162 962 373 B，sha256 `f842f6de955466d0…` |
+| 构建上下文 | 托管 CPython 3.12.12（--build-context managed_python=…） |
+
+## 2. 数据面（Deliverable 2）
+
+新脚本 `deploy/docker/build-data-face-kit.sh`（pigz，可 `--pack/--version/--out-dir` 参数化）：
+
+| 产物 | 大小 | sha256 |
+|---|---|---|
+| `serving-data-v1.1.tar.gz` | 1 481 979 537 B | `beb9449dea88b5164ec78f198b6faf4e84ce21d424ffeb13fe9b0cb875d14ada` |
+| 内含 | `serving-pack-run16-v11/`（5 文件）+ `index-v3-v2/`（3 文件）= tar 里 **10 条目**，**无** `*.mount-receipt.json` | — |
+| 打包耗时 | **9 s**（pigz 多线程，页缓存热） | — |
+
+校验清单（BM-kit 形态，`/var/tmp/mirothinker-delivery-kit-v1.1/`）：`checksums.sha256` **10 条**
+（8 个数据文件绝对路径 + 2 个 bundles 相对路径，与 v1 同格式）、`sizes.tsv` 8 条、`bundles/` 2 个发布 bundle
+（与 v1 同一 sha256 ⇒ 两个发布 bundle 未重封，与之前的结论一致）。
+
+## 3. v1.1 专属接线（Deliverable 3）—— 实测变成**三处**，不是两处
+
+| # | 位置 | 处理 | 证据 |
+|---|---|---|---|
+| 1 | 冻结命令文件（镜像内 `/opt/mirothinker/.agents/runs/…/serve-18188-command.sh`）写死旧包名 | 交付包生成 `serve-command-v11.sh`（sed 只换 1 个 token，构建期断言"只差这一个 token"+"--serving-pack 指向新包"），compose 只读 bind 覆盖 | 容器内 `cmdline` 实测：`--serving-pack /var/tmp/mirothinker-data-v2/serving-pack-run16-v11` |
+| 2 | 受管配置 `paths.serving_pack_dir` → `CANONICAL_V2_SERVING_PACK` | 预置 `state/config-managed/settings.json` 里写新包路径 | 身份校验 detail 从「未校验」变成 `arm=index`（见 §5） |
+| **3** | **镜像内入口脚本 `/usr/local/bin/mirothinker-entrypoint` 预检把包路径写死旧名** | 交付包生成 `entrypoint-v11.sh`（同 token、同审计断言、mode 0755），compose 只读 bind 覆盖 | **无覆盖件时容器直接 exit 78**：`[entrypoint] 预检失败：缺少 …/serving-pack-run16-readerbound`（实测复现 1 次）；带覆盖件后 `预检通过，交给冻结生产启动脚本` |
+
+第 3 处是本轮新发现：任务契约里只写了"服务包路径（compose/命令/安装器 env）"两处，
+但镜像入口脚本的**预检**也写死了旧包名 ⇒ 不覆盖则新数据面下容器起不来（不是慢，是死）。
+在镜像里全盘 grep `serving-pack-run16-readerbound` 的命中里，只有入口脚本与冻结命令文件是**启动路径**上的
+（其余是 `.agents/runs` 证据文件、README、build-image.sh 等非执行物）。
+
+## 4. 演练（Deliverable 4/5）：scratch 根 + 端口 18296 + 无 sudo
+
+`MIROTHINKER_SITE_ROOT=/var/tmp/mirothinker-site-install-rehearsal-v11/site-root`、
+`MIROTHINKER_SITE_PG_VOLUME=mirothinker-pgdata-v11`、`MIROTHINKER_SITE_FORCE_LOAD=1`（强制走 docker load）。
+
+### 4.1 安装各步耗时（原始数字）
+
+| 步骤 | 实测 | 上轮 v1 对照 |
+|---|---|---|
+| 两个压缩包 sha256 | **21 s** | 19 s |
+| 解包数据面 | **44 s** | 44 s |
+| 10 件交付物校验（4.4 GB） | **41 s** | 40 s |
+| `docker load`（2.16 GB gz） | **30 s** | 23 s |
+| 起服务→健康（**冷**，首装、无 receipt） | **433 s**（7m13s） | 459 s |
+| 起服务→健康（**热**，有 receipt，`--force-recreate`） | **288 s**（4m48s） | 276–289 s |
+| `mirothinker-verify` | 全通（24 ok / 2 warn / 0 FAIL） | 全通 |
+
+2 warn = 「交付包里没有预置受管配置」（本相刻意移走）+「密钥不是 0600」（secrets/ 是指向本机
+664 文件的符号链接；正式交付包要求 0600，安装器已告警）。
+
+### 4.2 冷启 433 s 归因（本轮新证据：容器内相位计时 `CANONICAL_V2_SERVING_TIMING_PATH`）
+
+容器 StartedAt 22:42:09.9 → uvicorn 22:49:20.4（430.5 s），健康 433 s。相位表（13 行，和 94.4 s）：
+
+```
+22:42:17 pack.mount_identity 0.00 / pack.mount 0.00 / pack.file_hash 1.11
+22:43:00 pack.relationships_read 37.47
+22:43:16 snapshot.lookup_docs 16.06 / lookup_points 1.94 / snapshot.open 19.49
+22:46:52 bound_documents.read 6.43     ← 前一个 205.5 s 的空档（未插桩）
+22:47:58 vector.snapshot.open 4.90 / npz_load 1.35 / index_build 5.65 / lexical.warm_open
+```
+
+空档合计 ≈ 267 s（205.5 s + 61.7 s）+ 相位 94.4 s + 入口/迁移 8 s + 收尾 75 s ≈ 433 s。
+**205 s 那一块就是"无 mount-receipt 的首次全量校验/索引投影"**：它同时刷出 **47 087 行**
+`PydanticSerializationUnexpectedValue(Expected PathEligibilityRequest …)` 警告，收尾时间戳与
+`<pack>.mount-receipt.json` 的 `generated_at`（22:46:43）吻合。
+
+⇒ 第二相（receipt 已在）同一块从 205 s 塌成 60 s，警告从 47 087 行降到 **266 行**，boot 288 s。
+**结论**：任务里"v1.1 冷启 ≈276 s"是**重启/热**口径；**首次安装**在冷数据面上是 433 s（v1 459 s），
+主导因素 = 首装无 receipt 的全量校验+索引投影（≈205 s，占 47%），不是镜像或数据变了。
+
+### 4.3 身份校验（Deliverable 3 的判据）
+
+`POST /api/canonical-v2/admin/connections/test {"connection":"embedding","identity_check":true}`：
+
+| 相 | 受管配置 | 结果（原始） |
+|---|---|---|
+| 1 | 空（settings.json 移走） | `identity.arm=null, detail="未校验：未配置服务包目录（CANONICAL_V2_SERVING_PACK），无法做索引比对"` |
+| 2 | 预置（含新包路径） | **`arm="index", passed=true, cosine=0.999933, threshold=0.99`**，`detail="与索引同源：索引文档自比 cos=0.9999（阈值 0.99，抽样 798 行最近邻亦为本文档）"`，`checks={"point_id":"index-point:sha256:00004b00…","dimension":4096,"sample_rows":798,"latency_ms":930}` |
+
+⇒ 跑的是 **index 臂**（读 `<pack>/lookup.sqlite3` 的 index_point + 索引根 `vector_matrix.npz`），
+不是 reference 臂，也不是"未校验"。
+
+### 4.4 replay 门
+
+| 相 | 结果 | 原始 |
+|---|---|---|
+| 1（空受管配置，密钥齐） | **6/7**，FAIL 在 `G1_framing`（第 3 轮 `['subject not in first sentence: 国际先进技术应用推进中心']`） | `artifacts/v11-replay-phase1.txt` |
+| 2（预置配置 + 密钥） | **7/7 ALL PASS** | `artifacts/v11-replay-phase2.txt` |
+
+配套：`/api/chat/stream` 同一问，相 1 `degraded_template=true`（1026 字），相 2 `degraded_template=false`（545 字）。
+
+### 4.5 其他
+
+* **pg_dump/restore**（便宜，做了）：42 张表 → dump 14 391 B gz（0.23 s）→ 建 `restore_check` 恢复 → **42 张表** → 删库。
+* **turn-trace**：容器里每轮都报 `Canonical V2 turn trace write failed: PermissionError: [Errno 13] … 'var'`
+  （代码默认相对路径 `var/turn-trace`，容器 cwd 不可写；v1 时代同样存在）。本轮在 compose 里给了
+  `TURN_TRACE_DIR=/opt/mirothinker/logs/turn-trace`（= 已挂载的 logs 目录）⇒ 相 2 该错误 **0 次**，
+  宿主 `state/logs/turn-trace/{2026-09-21.jsonl,web_lane.sqlite3}` 正常落盘，管理面轮次追踪页可读。
+* **收尾**：`docker compose down -v` 拆干净（容器/网络/`mirothinker-pgdata-v11` 卷全删）；
+  活线 pid 519941 存活、`/chat` 200、`/api/health` 200；真实数据根与状态目录演练期无写入
+  （v11 包目录 mtime 22:12、真实状态目录 mtime 02:15，早于演练窗口 22:36–23:08）。
+
+## 5. 改动文件（本 worktree，`delivery/docker`）
+
+| 文件 | 改动 |
+|---|---|
+| `deploy/docker/build-data-face-kit.sh` | 新增：数据面 tar（pigz）+ sha256 + 10 条校验清单 + sizes.tsv + bundles |
+| `deploy/docker/build-site-bundle.sh` | 版本参数化（tar 名/镜像 tag/版本号自推导）；compose 取**交付源树**那份；**两份**覆盖件生成 + 审计断言（来源 token 计数、只差 token、目标路径、可执行位）；README-FIRST/BUNDLE-MANIFEST 写入数据面/覆盖件/版本，首启耗时说明可注入 |
+| `deploy/docker/compose.yaml` | 新增只读 bind：命令文件覆盖 + **入口脚本覆盖**；新增 `TURN_TRACE_DIR` |
+| `deploy/docker/install-site.sh` | 交付物名/镜像 tag 自识别（kit-manifest `image_tag:`）；.env 写 `MIROTHINKER_COMMAND_FILE`/`MIROTHINKER_ENTRYPOINT_FILE`；覆盖件在位/可执行检查 |
+| `deploy/docker/site-config/managed-settings.json` | `paths.serving_pack_dir` → 新包 |
+| `deploy/docker/CONFIG-GUIDE.md` | 措辞版本无关化 + 嵌入测试含向量身份校验结论 |
+| `.agents/runs/delivery-docker/identity_probe.py` | 新增：身份校验探针（含 429 退避重试） |
+| `.agents/runs/delivery-docker/boot_timed.sh` | 新增：计时重启（与 installer step 7 同口径） |
