@@ -212,10 +212,7 @@ def _flash_adapter(gateway: _Gateway, **overrides: Any) -> Any:
 # --- the wire shape ----------------------------------------------------------
 
 
-def test_native_client_sends_texts_and_restores_input_order(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    monkeypatch.setenv(GATEWAY_KEY_ENV, "local-stand-in-key")
+def test_native_client_sends_texts_and_restores_input_order() -> None:
     with _gateway(_positional_echo) as gateway:
         client = DashScopeTextEmbeddingClient(
             base_url=gateway.base_url,
@@ -418,6 +415,30 @@ def test_flash_adapter_rejects_a_zero_vector(
         adapter = _flash_adapter(gateway)
         with pytest.raises(ValueError, match="invalid vector"):
             adapter.embed_batch(("text-0", "text-1"))
+
+
+def test_flash_adapter_lets_a_transport_failure_stay_a_builtin(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A dead provider degrades the lane; it must not look like a bad release."""
+
+    monkeypatch.setenv(GATEWAY_KEY_ENV, "local-stand-in-key")
+    with _gateway(
+        lambda call, body: (
+            200,
+            _native_body([(0, _text_vector("text-0"))]),
+            "application/json",
+            2.0,
+        )
+    ) as gateway:
+        adapter = _flash_adapter(gateway, timeout_seconds=1)
+        with pytest.raises(TimeoutError):
+            adapter.embed_batch(("text-0",))
+
+    with _gateway(lambda call, body: (503, b"{}", "application/json", 0.0)) as gateway:
+        adapter = _flash_adapter(gateway)
+        with pytest.raises(ConnectionError):
+            adapter.embed_batch(("text-0",))
 
 
 # --- the new identity --------------------------------------------------------
