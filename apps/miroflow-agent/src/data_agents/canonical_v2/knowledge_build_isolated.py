@@ -271,14 +271,24 @@ _QWEN_EMBEDDING_BUNDLE_SHA256 = (
 )
 _QWEN_EMBEDDING_DIMENSION = 4096
 #: The v2 candidate: ``qwen3.7-text-embedding-flash`` on the MaaS gateway, which
-#: speaks DashScope's native embeddings shape and answers with 1024 dimensions.
-#: Its vectors live in a *different* space from the Qwen3-8B pair above
-#: (measured cosine ≈ -0.03 after Matryoshka truncation), so the two are
-#: separate authorities: an index built with one may never be read with the
-#: other. Nothing selects this pair yet — it is prepared here so the rebuild can
-#: be planned, not so the live line can move.
+#: answers with 1024 dimensions and is reachable in two wire shapes. Its vectors
+#: live in a *different* space from the Qwen3-8B pair above (measured cosine
+#: ≈ -0.03 after Matryoshka truncation), so the two are separate authorities: an
+#: index built with one may never be read with the other. Nothing selects these
+#: pairs yet — they are prepared here so the rebuild can be planned, not so the
+#: live line can move.
+#:
+#: The gateway's two routes are **not** the same pipeline (same text, both
+#: routes: cosine 0.808–0.920), so exactly one route may be used for both the
+#: rebuild and serving; both variants are frozen here rather than one, so the
+#: choice stays a bundle choice instead of a code change. The compatible route
+#: is the recommended one (OpenAI shape, no new client), the native route the
+#: fallback if that route's shape ever changes.
 _QWEN_FLASH_EMBEDDING_BUNDLE_SHA256 = (
     "cdddcdfd998e6c9e6147f735fd71370f209045636f3b2f3efa15e7e73a8e96ad"
+)
+_QWEN_FLASH_OPENAI_COMPAT_EMBEDDING_BUNDLE_SHA256 = (
+    "45e458552e7031c6ca50b2ab5af225fbc5197a60c2d402b7b8b4e1fe3535029c"
 )
 _QWEN_FLASH_EMBEDDING_DIMENSION = 1024
 _ACCEPTED_EMBEDDING_AUTHORITIES = frozenset(
@@ -287,6 +297,10 @@ _ACCEPTED_EMBEDDING_AUTHORITIES = frozenset(
         (_QWEN_EMBEDDING_BUNDLE_SHA256, _QWEN_EMBEDDING_DIMENSION),
         (
             _QWEN_FLASH_EMBEDDING_BUNDLE_SHA256,
+            _QWEN_FLASH_EMBEDDING_DIMENSION,
+        ),
+        (
+            _QWEN_FLASH_OPENAI_COMPAT_EMBEDDING_BUNDLE_SHA256,
             _QWEN_FLASH_EMBEDDING_DIMENSION,
         ),
     }
@@ -8114,6 +8128,22 @@ class _OpenAICompatibleEmbeddingAdapter(_BatchingEmbeddingAdapter):
 
 
 @dataclass(slots=True)
+class _GatewayOpenAICompatibleEmbeddingAdapter(_OpenAICompatibleEmbeddingAdapter):
+    """The same OpenAI wire shape, reading the *gateway's* credential slot.
+
+    The v2 candidate on the gateway's compatible route is byte-compatible with
+    the live client, so it needs no new client — but it must not inherit the
+    live endpoint's key: ``load_local_api_key`` would hand a third-party host the
+    self-hosted endpoint's credential. Which slot a bundle may read is part of
+    its frozen identity, and this class exists so the loader can bind the
+    candidate bundle to the gateway slot alone.
+    """
+
+    def _resolve_api_key(self) -> str:
+        return _load_gateway_embedding_api_key()
+
+
+@dataclass(slots=True)
 class _DashScopeNativeEmbeddingAdapter(_BatchingEmbeddingAdapter):
     def _resolve_api_key(self) -> str:
         return _load_gateway_embedding_api_key()
@@ -8227,6 +8257,46 @@ def _load_gateway_embedding_api_key() -> str:
     return os.environ.get(_GATEWAY_EMBEDDING_API_KEY_ENV, "").strip()
 
 
+#: Every openai-compatible authority the loader accepts: the frozen document and
+#: the adapter that reads *its* credential slot. Two bundles can share a wire
+#: shape and still not share a slot — the live endpoint's key lives in
+#: ``load_local_api_key``'s slot, the third-party gateway's in
+#: ``CANONICAL_V2_EMBEDDING_API_KEY`` — so the match is field for field and the
+#: adapter follows from the document, never from the caller.
+_OPENAI_COMPATIBLE_EMBEDDING_AUTHORITIES: tuple[tuple[dict[str, Any], Any], ...] = (
+    (
+        {
+            "schema_version": "canonical-v2-openai-compatible-embedding-bundle-v1",
+            "provider": "openai-compatible",
+            "model_id": "Qwen/Qwen3-Embedding-8B",
+            "dimension": _QWEN_EMBEDDING_DIMENSION,
+            "base_url": "http://100.64.0.27:18005/v1",
+            "api_key_source": "local_api_key",
+            "batch_size": 32,
+            "max_workers": 32,
+            "timeout_seconds": 180,
+            "content_sha256": _QWEN_EMBEDDING_BUNDLE_SHA256,
+        },
+        _OpenAICompatibleEmbeddingAdapter,
+    ),
+    (
+        {
+            "schema_version": "canonical-v2-openai-compatible-embedding-bundle-v1",
+            "provider": "openai-compatible",
+            "model_id": "qwen3.7-text-embedding-flash",
+            "dimension": _QWEN_FLASH_EMBEDDING_DIMENSION,
+            "base_url": "https://maas.qianwenaiapi.com/compatible-mode/v1",
+            "api_key_source": _GATEWAY_EMBEDDING_API_KEY_SOURCE,
+            "batch_size": 32,
+            "max_workers": 32,
+            "timeout_seconds": 180,
+            "content_sha256": _QWEN_FLASH_OPENAI_COMPAT_EMBEDDING_BUNDLE_SHA256,
+        },
+        _GatewayOpenAICompatibleEmbeddingAdapter,
+    ),
+)
+
+
 def _load_dashscope_native_embedding_adapter(path: Path) -> _EmbeddingAdapter:
     """Load the v2 candidate authority: DashScope-native shape, 1024 dimensions."""
 
@@ -8312,29 +8382,19 @@ def load_content_addressed_embedding_adapter(path: Path) -> _EmbeddingAdapter:
             }
         ),
     )
-    expected = {
-        "schema_version": "canonical-v2-openai-compatible-embedding-bundle-v1",
-        "provider": "openai-compatible",
-        "model_id": "Qwen/Qwen3-Embedding-8B",
-        "dimension": _QWEN_EMBEDDING_DIMENSION,
-        "base_url": "http://100.64.0.27:18005/v1",
-        "api_key_source": "local_api_key",
-        "batch_size": 32,
-        "max_workers": 32,
-        "timeout_seconds": 180,
-        "content_sha256": _QWEN_EMBEDDING_BUNDLE_SHA256,
-    }
-    if document != expected:
-        raise ValueError("release embedding bundle differs from frozen authority")
-    return _OpenAICompatibleEmbeddingAdapter(
-        model_id=cast(str, document["model_id"]),
-        dimension=cast(int, document["dimension"]),
-        authority_sha256=cast(str, document["content_sha256"]),
-        base_url=cast(str, document["base_url"]),
-        batch_size=cast(int, document["batch_size"]),
-        max_workers=cast(int, document["max_workers"]),
-        timeout_seconds=cast(int, document["timeout_seconds"]),
-    )
+    for expected, adapter_type in _OPENAI_COMPATIBLE_EMBEDDING_AUTHORITIES:
+        if document != expected:
+            continue
+        return adapter_type(
+            model_id=cast(str, document["model_id"]),
+            dimension=cast(int, document["dimension"]),
+            authority_sha256=cast(str, document["content_sha256"]),
+            base_url=cast(str, document["base_url"]),
+            batch_size=cast(int, document["batch_size"]),
+            max_workers=cast(int, document["max_workers"]),
+            timeout_seconds=cast(int, document["timeout_seconds"]),
+        )
+    raise ValueError("release embedding bundle differs from frozen authority")
 
 
 @dataclass(frozen=True, slots=True)

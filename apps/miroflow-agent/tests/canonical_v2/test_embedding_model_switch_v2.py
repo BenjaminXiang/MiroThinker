@@ -40,10 +40,12 @@ BUILD_MODULE = "src.data_agents.canonical_v2.knowledge_build_isolated"
 READ_MODULE = "src.data_agents.canonical_v2.knowledge_read_isolated"
 
 _REPO_ROOT = Path(__file__).resolve().parents[4]
+_BUNDLE_DIR = _REPO_ROOT / ".agents/runs/embedding-model-switch-v2"
 CANDIDATE_BUNDLE_PATH = (
-    _REPO_ROOT
-    / ".agents/runs/embedding-model-switch-v2"
-    / "qwen3.7-text-embedding-flash-embedding-bundle-v1.json"
+    _BUNDLE_DIR / "qwen3.7-text-embedding-flash-embedding-bundle-v1.json"
+)
+CANDIDATE_COMPAT_BUNDLE_PATH = (
+    _BUNDLE_DIR / "qwen3.7-text-embedding-flash-embedding-bundle-v1-openai-compat.json"
 )
 
 CANDIDATE_MODEL_ID = "qwen3.7-text-embedding-flash"
@@ -53,8 +55,33 @@ LIVE_DIMENSION = 4096
 CANDIDATE_BUNDLE_SHA256 = (
     "cdddcdfd998e6c9e6147f735fd71370f209045636f3b2f3efa15e7e73a8e96ad"
 )
+CANDIDATE_COMPAT_BUNDLE_SHA256 = (
+    "45e458552e7031c6ca50b2ab5af225fbc5197a60c2d402b7b8b4e1fe3535029c"
+)
 GATEWAY_KEY_ENV = "CANONICAL_V2_EMBEDDING_API_KEY"
 NATIVE_PATH = "/api/v1/services/embeddings/text-embedding/text-embedding"
+GATEWAY_COMPAT_BASE_URL = "https://maas.qianwenaiapi.com/compatible-mode/v1"
+
+#: Both candidate variants are one model in two wire shapes: the native route
+#: (needs the adapter) and the gateway's OpenAI-compatible route (needs none).
+#: Exactly one of them may be used for both the rebuild and serving — the two
+#: routes do not agree (measured cosine 0.808–0.920 on the same text).
+CANDIDATE_BUNDLES = (
+    pytest.param(
+        CANDIDATE_BUNDLE_PATH,
+        CANDIDATE_BUNDLE_SHA256,
+        "_QWEN_FLASH_EMBEDDING_BUNDLE_SHA256",
+        "_DashScopeNativeEmbeddingAdapter",
+        id="dashscope-native",
+    ),
+    pytest.param(
+        CANDIDATE_COMPAT_BUNDLE_PATH,
+        CANDIDATE_COMPAT_BUNDLE_SHA256,
+        "_QWEN_FLASH_OPENAI_COMPAT_EMBEDDING_BUNDLE_SHA256",
+        "_GatewayOpenAICompatibleEmbeddingAdapter",
+        id="openai-compatible",
+    ),
+)
 
 
 def _canonical_hash(value: object) -> str:
@@ -444,22 +471,59 @@ def test_flash_adapter_lets_a_transport_failure_stay_a_builtin(
 # --- the new identity --------------------------------------------------------
 
 
-def test_candidate_bundle_is_self_hashed_and_frozen() -> None:
+@pytest.mark.parametrize(
+    ("bundle_path", "bundle_sha256", "constant_name", "adapter_class"),
+    CANDIDATE_BUNDLES,
+)
+def test_candidate_bundle_is_self_hashed_and_frozen(
+    bundle_path: Path,
+    bundle_sha256: str,
+    constant_name: str,
+    adapter_class: str,
+) -> None:
     module = _build_module()
-    document = json.loads(CANDIDATE_BUNDLE_PATH.read_bytes())
+    document = json.loads(bundle_path.read_bytes())
     payload = {key: value for key, value in document.items() if key != "content_sha256"}
 
     assert document["content_sha256"] == _canonical_hash(payload)
-    assert document["content_sha256"] == CANDIDATE_BUNDLE_SHA256
-    assert document["content_sha256"] == module._QWEN_FLASH_EMBEDDING_BUNDLE_SHA256
+    assert document["content_sha256"] == bundle_sha256
+    assert document["content_sha256"] == getattr(module, constant_name)
     assert document["dimension"] == CANDIDATE_DIMENSION
     assert module._QWEN_FLASH_EMBEDDING_DIMENSION == CANDIDATE_DIMENSION
+    assert document["api_key_source"] == f"env:{GATEWAY_KEY_ENV}"
 
-    adapter = module.load_content_addressed_embedding_adapter(CANDIDATE_BUNDLE_PATH)
-    assert type(adapter).__name__ == "_DashScopeNativeEmbeddingAdapter"
+    adapter = module.load_content_addressed_embedding_adapter(bundle_path)
+    assert type(adapter).__name__ == adapter_class
     assert adapter.model_id == CANDIDATE_MODEL_ID
     assert adapter.dimension == CANDIDATE_DIMENSION
-    assert adapter.authority_sha256 == CANDIDATE_BUNDLE_SHA256
+    assert adapter.authority_sha256 == bundle_sha256
+
+
+def test_the_two_candidate_routes_are_distinct_authorities() -> None:
+    """Same model, two routes: separate bundles, because the routes differ.
+
+    The compatible and native routes answer the same text with cosines of
+    0.808–0.920 (measured), so they are not one authority: an index built
+    through one route may only be served through that route, and each variant
+    keeps its own frozen hash and address.
+    """
+
+    module = _build_module()
+    native = json.loads(CANDIDATE_BUNDLE_PATH.read_bytes())
+    compat = json.loads(CANDIDATE_COMPAT_BUNDLE_PATH.read_bytes())
+
+    assert native["model_id"] == compat["model_id"] == CANDIDATE_MODEL_ID
+    assert native["dimension"] == compat["dimension"] == CANDIDATE_DIMENSION
+    assert native["provider"] == "dashscope-native"
+    assert compat["provider"] == "openai-compatible"
+    assert native["base_url"] == "https://maas.qianwenaiapi.com/api/v1"
+    assert compat["base_url"] == GATEWAY_COMPAT_BASE_URL
+    assert native["content_sha256"] != compat["content_sha256"]
+    # Both are usable, and both are run through the same credential slot.
+    assert native["api_key_source"] == compat["api_key_source"]
+    accepted = module._ACCEPTED_EMBEDDING_AUTHORITIES
+    assert (CANDIDATE_BUNDLE_SHA256, CANDIDATE_DIMENSION) in accepted
+    assert (CANDIDATE_COMPAT_BUNDLE_SHA256, CANDIDATE_DIMENSION) in accepted
 
 
 def test_the_authority_pair_is_atomic_across_the_two_spaces() -> None:
@@ -468,54 +532,76 @@ def test_the_authority_pair_is_atomic_across_the_two_spaces() -> None:
     module = _build_module()
     accepted = module._ACCEPTED_EMBEDDING_AUTHORITIES
 
-    assert (CANDIDATE_BUNDLE_SHA256, CANDIDATE_DIMENSION) in accepted
+    for candidate in (CANDIDATE_BUNDLE_SHA256, CANDIDATE_COMPAT_BUNDLE_SHA256):
+        assert (candidate, CANDIDATE_DIMENSION) in accepted
+        # The candidate's hash with the live dimension is absent — the pair is a
+        # unit, whichever route the candidate takes.
+        assert (candidate, LIVE_DIMENSION) not in accepted
     assert (module._QWEN_EMBEDDING_BUNDLE_SHA256, LIVE_DIMENSION) in accepted
-    # The candidate's hash with the live dimension, and the live hash with the
-    # candidate's dimension, are both absent — the pair is a unit.
-    assert (CANDIDATE_BUNDLE_SHA256, LIVE_DIMENSION) not in accepted
     assert (module._QWEN_EMBEDDING_BUNDLE_SHA256, CANDIDATE_DIMENSION) not in accepted
 
 
 @pytest.mark.parametrize(
-    ("mutation", "expected"),
+    ("bundle_path", "mutation", "expected"),
     [
-        ("dimension", "frozen authority"),
-        ("model_id", "frozen authority"),
-        ("base_url", "frozen authority"),
-        ("api_key_source", "frozen authority"),
-        ("provider_and_schema", "frozen authority"),
-        ("provider", "not a known embedding provider"),
-        ("provider_without_schema", "version differs"),
-        ("schema_version", "version differs"),
+        (CANDIDATE_BUNDLE_PATH, "dimension", "frozen authority"),
+        (CANDIDATE_BUNDLE_PATH, "model_id", "frozen authority"),
+        (CANDIDATE_BUNDLE_PATH, "base_url", "frozen authority"),
+        (CANDIDATE_BUNDLE_PATH, "api_key_source", "frozen authority"),
+        (CANDIDATE_BUNDLE_PATH, "provider_and_schema", "frozen authority"),
+        (CANDIDATE_BUNDLE_PATH, "provider", "not a known embedding provider"),
+        (CANDIDATE_BUNDLE_PATH, "provider_without_schema", "version differs"),
+        (CANDIDATE_BUNDLE_PATH, "schema_version", "version differs"),
+        # The compatible variant: same gates, and the ones that matter for the
+        # zero-code route — the candidate must not be loadable through the live
+        # authority, nor through the live credential slot.
+        (CANDIDATE_COMPAT_BUNDLE_PATH, "dimension", "frozen authority"),
+        (CANDIDATE_COMPAT_BUNDLE_PATH, "model_id", "frozen authority"),
+        (CANDIDATE_COMPAT_BUNDLE_PATH, "base_url", "frozen authority"),
+        (CANDIDATE_COMPAT_BUNDLE_PATH, "base_url_to_native", "frozen authority"),
+        (CANDIDATE_COMPAT_BUNDLE_PATH, "api_key_source", "frozen authority"),
+        (CANDIDATE_COMPAT_BUNDLE_PATH, "provider_and_schema", "frozen authority"),
+        (CANDIDATE_COMPAT_BUNDLE_PATH, "provider", "not a known embedding provider"),
+        (CANDIDATE_COMPAT_BUNDLE_PATH, "schema_version", "version differs"),
     ],
 )
 def test_candidate_bundle_mutations_are_refused(
     tmp_path: Path,
+    bundle_path: Path,
     mutation: str,
     expected: str,
 ) -> None:
     module = _build_module()
-    document = json.loads(CANDIDATE_BUNDLE_PATH.read_bytes())
+    document = json.loads(bundle_path.read_bytes())
     if mutation == "dimension":
         document["dimension"] = LIVE_DIMENSION
     elif mutation == "model_id":
         document["model_id"] = LIVE_MODEL_ID
     elif mutation == "base_url":
         document["base_url"] = "http://100.64.0.27:18005/v1"
+    elif mutation == "base_url_to_native":
+        document["base_url"] = "https://maas.qianwenaiapi.com/api/v1"
     elif mutation == "api_key_source":
         document["api_key_source"] = "local_api_key"
     elif mutation == "provider_and_schema":
-        document["provider"] = "openai-compatible"
-        document["schema_version"] = (
-            "canonical-v2-openai-compatible-embedding-bundle-v1"
+        document["provider"] = (
+            "dashscope-native"
+            if document["provider"] == "openai-compatible"
+            else "openai-compatible"
         )
+        document["schema_version"] = {
+            "dashscope-native": "canonical-v2-dashscope-native-embedding-bundle-v1",
+            "openai-compatible": ("canonical-v2-openai-compatible-embedding-bundle-v1"),
+        }[document["provider"]]
     elif mutation == "provider":
         document["provider"] = "some-other-gateway"
     elif mutation == "provider_without_schema":
         document["provider"] = "openai-compatible"
     elif mutation == "schema_version":
         document["schema_version"] = (
-            "canonical-v2-openai-compatible-embedding-bundle-v1"
+            "canonical-v2-dashscope-native-embedding-bundle-v1"
+            if document["provider"] == "openai-compatible"
+            else "canonical-v2-openai-compatible-embedding-bundle-v1"
         )
     document.pop("content_sha256")
     document["content_sha256"] = _canonical_hash(document)
@@ -526,11 +612,16 @@ def test_candidate_bundle_mutations_are_refused(
         module.load_content_addressed_embedding_adapter(path)
 
 
-def test_candidate_bundle_cannot_be_reloaded_against_the_local_provider() -> None:
+@pytest.mark.parametrize(
+    "bundle_path", [CANDIDATE_BUNDLE_PATH, CANDIDATE_COMPAT_BUNDLE_PATH]
+)
+def test_candidate_bundle_cannot_be_reloaded_against_the_local_provider(
+    bundle_path: Path,
+) -> None:
     """The two identities are not interchangeable in either direction."""
 
     module = _build_module()
-    adapter = module.load_content_addressed_embedding_adapter(CANDIDATE_BUNDLE_PATH)
+    adapter = module.load_content_addressed_embedding_adapter(bundle_path)
     read_module = import_module(READ_MODULE)
 
     with pytest.raises(
@@ -541,6 +632,48 @@ def test_candidate_bundle_cannot_be_reloaded_against_the_local_provider() -> Non
             adapter,
             expected_model_id=LIVE_MODEL_ID,
         )
+
+
+def test_the_compatible_candidate_reads_the_gateway_slot_only(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Zero-code route, same credential rule: the local key must not travel.
+
+    The compatible variant reuses the live OpenAI client, so the only thing that
+    separates it from the live authority is the slot it reads — and that has to
+    hold through the loader, not by convention.
+    """
+
+    module = _build_module()
+    calls: list[tuple[str, str, str]] = []
+
+    class _RecordingClient:
+        def __init__(self, *, base_url: str, api_key: str, timeout: float) -> None:
+            calls.append((base_url, api_key, str(timeout)))
+
+        def embed_batch(self, texts: list[str], *, model: str) -> list[list[float]]:
+            assert model == CANDIDATE_MODEL_ID
+            return [[1.0] * CANDIDATE_DIMENSION for _ in texts]
+
+    monkeypatch.setattr(module, "_OpenAIEmbeddingClient", _RecordingClient)
+    monkeypatch.setenv("SGLANG_API_KEY", "local-endpoint-key")
+    monkeypatch.setenv("API_KEY", "local-endpoint-key")
+    monkeypatch.delenv(GATEWAY_KEY_ENV, raising=False)
+
+    adapter = module.load_content_addressed_embedding_adapter(
+        CANDIDATE_COMPAT_BUNDLE_PATH
+    )
+    assert type(adapter).__name__ == "_GatewayOpenAICompatibleEmbeddingAdapter"
+    with pytest.raises(ValueError, match="credential is unavailable"):
+        adapter.embed_batch(("text-0",))
+    assert calls == []
+
+    monkeypatch.setenv(GATEWAY_KEY_ENV, "gateway-slot-key")
+    vectors = adapter.embed_batch(("text-0",))
+    assert len(vectors) == 1 and len(vectors[0]) == CANDIDATE_DIMENSION
+    assert [call[:2] for call in calls] == [
+        (GATEWAY_COMPAT_BASE_URL, "gateway-slot-key")
+    ]
 
 
 def test_the_live_bundle_still_loads_to_the_openai_provider(

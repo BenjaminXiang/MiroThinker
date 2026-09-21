@@ -1,0 +1,12 @@
+{
+  "api_key_source": "env:CANONICAL_V2_EMBEDDING_API_KEY",
+  "base_url": "https://maas.qianwenaiapi.com/compatible-mode/v1",
+  "batch_size": 32,
+  "content_sha256": "45e458552e7031c6ca50b2ab5af225fbc5197a60c2d402b7b8b4e1fe3535029c",
+  "dimension": 1024,
+  "max_workers": 32,
+  "model_id": "qwen3.7-text-embedding-flash",
+  "provider": "openai-compatible",
+  "schema_version": "canonical-v2-openai-compatible-embedding-bundle-v1",
+  "timeout_seconds": 180
+}

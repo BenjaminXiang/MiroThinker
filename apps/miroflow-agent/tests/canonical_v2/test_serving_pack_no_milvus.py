@@ -34,11 +34,7 @@ from src.data_agents.canonical_v2.index_projection import (
 
 _REPO_ROOT = Path(__file__).resolve().parents[4]
 _PACK_TEST_PATH = Path(__file__).with_name("test_serving_pack_loader.py")
-CANDIDATE_EMBEDDING_BUNDLE_PATH = (
-    _REPO_ROOT
-    / ".agents/runs/embedding-model-switch-v2"
-    / "qwen3.7-text-embedding-flash-embedding-bundle-v1.json"
-)
+CANDIDATE_EMBEDDING_BUNDLE_DIR = _REPO_ROOT / ".agents/runs/embedding-model-switch-v2"
 
 
 def _load_module(name: str, path: Path) -> Any:
@@ -381,20 +377,30 @@ def test_v2_npz_anchor_rejects_extra_and_missing_points(worlds: _Fixture) -> Non
 # --- the embedding identity pair ---------------------------------------------
 
 
-def test_v2_index_refuses_the_candidate_embedding_identity(worlds: _Fixture) -> None:
+@pytest.mark.parametrize(
+    "bundle_name",
+    [
+        "qwen3.7-text-embedding-flash-embedding-bundle-v1.json",
+        "qwen3.7-text-embedding-flash-embedding-bundle-v1-openai-compat.json",
+    ],
+)
+def test_v2_index_refuses_the_candidate_embedding_identity(
+    worlds: _Fixture,
+    bundle_name: str,
+) -> None:
     """A bundle's (model, dimension) pair must match the index that ships with it.
 
     The v2 candidate (``qwen3.7-text-embedding-flash``, 1024 dimensions) is a
-    different vector space from the released one, so binding its adapter to this
-    index has to fail closed at both layers: the pack binding refuses the
-    adapter, and the persisted matrix refuses an identity it was not written
-    with — including a matching model with the wrong dimension, which is exactly
-    the shape a "new bundle, old index" mistake takes.
+    different vector space from the released one, on either of its routes, so
+    binding its adapter to this index has to fail closed at both layers: the pack
+    binding refuses the adapter, and the persisted matrix refuses an identity it
+    was not written with — including a matching model with the wrong dimension,
+    which is exactly the shape a "new bundle, old index" mistake takes.
     """
 
     snapshot = _open(worlds, worlds.v2_pack).index_snapshot
     candidate = build_module.load_content_addressed_embedding_adapter(
-        CANDIDATE_EMBEDDING_BUNDLE_PATH
+        CANDIDATE_EMBEDDING_BUNDLE_DIR / bundle_name
     )
     assert candidate.model_id != worlds.adapter.model_id
     assert candidate.dimension != worlds.adapter.dimension
