@@ -442,3 +442,40 @@ docker compose exec -T app mirothinker-migrate --status
 前提是**镜像解释器 = 封印该包的解释器补丁版本（当前 3.12.12）**；不满足时会静默多花 ≈190 s
 （不会报错、不会拒载，只是"变慢"）—— 这是本切片发现的最有价值的一条交付契约，
 两条交付路径都要钉住解释器版本。
+
+## Task A · 最终镜像（`b4efc4bd`）上的快速确认
+
+目的：证明**最终镜像**（解释器改成 3.12.12 + pyc 预编译后）与上一轮验收镜像在采集面上行为一致；
+本轮**没有再触发采集**（沿用既有的 run 行）。命令与原始输出：
+
+```bash
+# 起栈（compose：app + postgres:16，端口 18298，pgdata 具名卷 mirothinker-pgdata-rehearsal）
+.agents/runs/delivery-docker/rehearse-pg.sh up
+python3 .agents/runs/delivery-docker/pg_confirm.py 18298 /var/tmp/mirothinker-docker-state-v1 \
+        /var/tmp/mirothinker-docker-logs/pg-confirm-final.json
+```
+
+```
+迁移（本次启动）：{"head": "V042", "revision": "V042", "revision_before": "V042", "tables": 42, "waited_seconds": 0.075}
+[canonical-v2] console_database=configured
+登录 200（admin/admin）；页面 /seeds /upload /jobs /admin 全 200
+4 个 admin API 全 200；uploads.postgres = {"available": true, "source": "DATABASE_URL"}
+既有 preview run（job run e9fbc5ce…）= succeeded，444 275 ms（/jobs 能看到这一跑）
+/admin 面板：state=ok、freshness=ok、collection.enabled={company,paper,patent,professor}
+pg_dump 116 484 B → 灌进 miroflow_collection_restorecheck → ALL 42 TABLES MATCH
+  非空表：alembic_version=1、professor_seed=3、pipeline_run=4、pipeline_issue=2
+```
+
+### preview 触发与配额账（如实记录）
+
+| # | 触发时间 | seed | 结果 | 花费 |
+|---|---|---|---|---|
+| 1 | 17:03 | 1 · `sz.gov.cn` | `failed`，1.2 s，`adapter_missing`（无匹配 school adapter） | 0（未抓取） |
+| 2 | 17:06 | 2 · `sustech.edu.cn/zh/letter` | **`succeeded`，443 s**，`diagnostic_profile_count=995`、`written_profile_count=0` | 996 次页面抓取（995 画像 + 1 名录页）；Bocha/Serper 无可读计数器 |
+| 3 | 18:41 | 4 · `szu.edu.cn/szdw` | `failed`，≈1 s，`parser_low_quality: no_professor_entries_found` | 0（页面未解析出条目） |
+| 4 | （本轮确认） | — | **未触发** | 0 |
+
+> 第 3 次是**驱动脚本自己的**问题：18:37 那轮 `rehearse-pg.sh up` 在健康后会再跑一遍
+> `pg_acceptance.py`，它按候选列表新建 seed 并触发一次 preview；该脚本没有"已有 seed 就跳过"
+> 的守卫（`pg_confirm.py` 才是本轮用的只读确认脚本）。**这是本切片的一个已知粗糙点**，
+> 建议下一步给 `pg_acceptance.py` 加 `--no-trigger` 或复用已有 seed。
