@@ -87,8 +87,14 @@
 | `/var/tmp/mirothinker-data-v2/index-v3-v2/` | 索引根 | 实体文件 |
 | `/var/tmp/mirothinker-canonical-v2-s12f/` | 状态目录（账号库/会话密钥/首启口令/访问日志/更正） | **目录必须先存在**；不存在时只有一行 warning，管理面直接不可用 |
 | `/var/tmp/mirothinker-data-v2/manual-recall-v1` | 手工召回道 | 空目录即可 |
-| `<data-rebuild 树>/…/s12a/` | 门禁根目录（`s12a/` 必须存在） | **空目录即可**（信封文件服务期从不打开） |
-| 命令文件里其余路径 | 解析期要求存在 | 随 85→11 清理大幅减少（P0-3）；未清理则用空目录/空文件占位 |
+| `<data-rebuild 树>/…/s12a/` | 门禁根目录：`s12a/` 必须存在，且 `--envelope-output` 必须等于 `<gate-root>/s12a/complete-candidate-build-envelope.json` | **空目录即可**（信封文件服务期从不打开） |
+| **发布 bundle 副本里的 `envelope_path`** | 与上面那条路径**逐字符比对**，启动前必须处理 | 两条路：**(a) 把这串路径在目标机/镜像里建出来**（容器形态天然满足）；**(b) 改 bundle 副本的 `envelope_path` + 重算 `content_sha256` + 同步 `--recorded-serving-bundle-sha256` + 刷新 `checksums.sha256`**。**这是现场最容易漏的一步** |
+| 命令文件里其余路径 | 解析期要求存在（`--source-manifest`、`--candidate-staging-root`、`--recorded-decision-bundle` 只要求"是互不相同的字符串"） | 随 85→11 清理大幅减少（P0-6）；未清理则用空目录/空文件占位 |
+| **端口** | runner 只认 `18188`，除非通过 `s12e` 包装脚本启动 | 现场换端口必须走包装脚本，否则起不来 |
+
+> **已实跑验证（2026-09-21 演练）**：按现场步骤（scratch 代码根 + scratch 状态目录 + 端口 18299）完整拉起——`uv sync --frozen` 7.9 s（强制冷缓存，247 包）、启动 **291.0 s**、RSS 17.3 GiB、
+> 冒烟「优必选科技有哪些专利」首字 **1.64 s**、12 条本地专利引用、无 error、replay 门 **G1–G7 全 PASS**（19 轮 / 4 m 59 s）、`preflight.sh` **53 PASS / 0 FAIL / 3 WARN**。
+> 明细：`.agents/runs/delivery-kit-rehearsal/verification.md`。
 
 > 打包时生成 `site-paths.txt`（逐条列出 + 就地检查命令），现场按它创建与核对；
 > 上面表格以 F1/F2 回归后的实测为准。

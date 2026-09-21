@@ -68,3 +68,34 @@ SSE `event: error` → 页面红字。同一轮里其余五条道全健康，但
 **未完成 / 待验证**：F1+F2 的实现片仍在飞（独立 worktree，OpenSpec + 验证合同先行）；演练不覆盖"不同数据根路径"（路径冻结，本机不可模拟）与甲方自身的网络/系统差异。
 
 **影响哪些问题**：R17 迁移交付进入执行态；"能否部署"的判定从"需要先改代码"变为"按交付方案执行，F2 在切阿里云前补齐"。
+
+## 第 3 轮 · 2026-09-21 · 交付件打包 + 本机"模拟甲方"演练通过（裸机路径）
+
+**做了什么**：`deploy/build-delivery-kit.sh`（打包器）+ `deploy/preflight.sh`（现场自检）落地；把 `code.tar` 解到 scratch 代码根、`uv sync`、拿真实服务包在 **scratch 端口 18299 + scratch 状态目录**完整拉起一遍，跑冒烟与 replay 门，跑 preflight，停服。**18188 全程未被触碰**（演练后仍 200，pid 519941 未重启）。
+
+**实测数字**（证据：`.agents/runs/delivery-kit-rehearsal/verification.md` + 同目录原始产物）：
+
+| 环节 | 结果 |
+|---|---|
+| 打包 | 56 s 冷跑 / 15 s 复跑；`code.tar` 429 MB（4,677 项），sha256 已记录 |
+| 解包 | 0.46 s |
+| `uv sync --frozen` | **1.3 s**（热缓存）/ **7.9 s**（强制冷缓存，247 包） |
+| 启动 | **291.0 s**（走收据路径） |
+| 内存 | RSS 17.24 GiB（跑 19 轮后 17.34 GiB；活线对照 17.33 GiB） |
+| 冒烟 | 「优必选科技有哪些专利」HTTP 200、**首字 1.64 s**、总 30.51 s、**12 条本地专利引用**、无 `event: error` |
+| 管理面 | 登录 200 → `/api/auth/me` 200 → `/admin` 200（`admin-auth.key` 首次登录时惰性创建） |
+| replay 门 | **G1–G7 全 PASS**（19 轮，均 15.7 s，总 4 m 59 s） |
+| preflight | `failures=0 warnings=3` → READY（53 PASS）；服务在跑时能正确 FAIL 并点名端口持有者 |
+
+**新发现（6 条，已写进交付方案 §4）**：
+
+1. **发布 bundle 副本里冻着我们的 `envelope_path`**——现场要么把这条路径树建出来（容器形态天然满足），要么改 bundle 副本并重算哈希（`content_sha256` + `--recorded-serving-bundle-sha256` + 刷新 `checksums.sha256`）。**这是现场最容易漏、且启动会 fail-closed 的一步。**
+2. `--envelope-output` 必须等于 `<gate-root>/s12a/complete-candidate-build-envelope.json`，且 `s12a/` 必须存在（空目录即可）。
+3. **端口不是自由的**：runner 只认 18188，除非走 `s12e` 包装脚本（现场换端口靠它）。
+4. chat 档位在 `config/managed/settings.json`（决定端点与密钥文件名），不在命令文件里；密钥文件沿代码根向上找。
+5. `apps/admin-console` 会**另建一个 venv**（216 包）——容器形态应预先同步，否则现场跑 replay 门要联网。
+6. **每次启动都会重写挂载收据**（包的父目录必须长期可写）；日志被 `PydanticSerializationUnexpectedValue` 刷屏（**8 分钟 4.7 万行**）——运维需按此规划日志空间，且值得单独立一个"日志降噪"小项。
+
+**未证明（诚实记录）**：不同数据根路径（路径冻结，本机无法模拟）、现场 OS/网络/文件系统差异、冷页缓存下的启动耗时、Chromium 抓取质量、PostgreSQL 相关页面（本机没装 PG）、密钥交付渠道、以及"85→11 清理后仍能启动"。
+
+**影响哪些问题**：R17 迁移交付有了**第一个端到端证据**（不是"按文档应该能跑"，而是"按现场步骤真跑通了"）；v1 冻结（`delivery-v1`）的交付件从此可复核（kit + checksums + preflight + 演练记录）。
