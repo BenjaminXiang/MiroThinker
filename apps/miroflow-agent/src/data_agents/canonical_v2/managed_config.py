@@ -81,6 +81,9 @@ _FIELD_ENV_VARS: dict[str, str] = {
     "serving.web_topical_floor": "CANONICAL_V2_WEB_TOPICAL_FLOOR",
     "serving.rerank_timeout_seconds": "CANONICAL_V2_RERANK_TIMEOUT_SECONDS",
     "serving.rerank_max_documents": "CANONICAL_V2_RERANK_MAX_DOCUMENTS",
+    "serving.vector_lane_timeout_seconds": (
+        "CANONICAL_V2_VECTOR_LANE_TIMEOUT_SECONDS"
+    ),
     "serving.mount_receipt_path": "CANONICAL_V2_SERVING_RECEIPT_PATH",
     "serving.turn_debug_dir": "CANONICAL_V2_TURN_DEBUG_DIR",
     "serving.full_verify": "CANONICAL_V2_SERVING_FULL_VERIFY",
@@ -230,13 +233,19 @@ class PathSettings(BaseModel):
 class ServingSettings(BaseModel):
     """Serving-line switches added after W1 (R16: they belong on the page).
 
-    Page-suitability judgement (design §6): the three tunables below are
-    operator-facing (recall floor / latency budget / cost ceiling).
-    ``chat_llm_profile`` is the profile the answer/rewrite paths resolve through
-    ``CHAT_LLM_PROFILE``. The receipt path, turn-debug directory and full-verify
-    flag are declared here so the page can *display* the effective value and its
-    source, but they are listed in :data:`PAGE_READONLY_FIELDS` and cannot be
-    written from the web surface.
+    Page-suitability judgement (design §6): the four tunables below are
+    operator-facing (recall floor / latency budget / cost ceiling / the vector
+    lane's wait). ``chat_llm_profile`` is the profile the answer/rewrite paths
+    resolve through ``CHAT_LLM_PROFILE``. The receipt path, turn-debug directory
+    and full-verify flag are declared here so the page can *display* the
+    effective value and its source, but they are listed in
+    :data:`PAGE_READONLY_FIELDS` and cannot be written from the web surface.
+
+    ``vector_lane_timeout_seconds`` has a *real* default (8 s) rather than the
+    "unset means the code default" shape of the other tunables: the page must be
+    able to show the number the serving line would actually wait, and the code
+    default it mirrors is pinned by a test
+    (``knowledge_read._VECTOR_LANE_OUTER_WAIT_DEFAULT_SECONDS``).
     """
 
     model_config = ConfigDict(extra="forbid", frozen=True, validate_default=True)
@@ -245,6 +254,7 @@ class ServingSettings(BaseModel):
     web_topical_floor: bool | None = None
     rerank_timeout_seconds: float | None = Field(default=None, gt=0, le=120)
     rerank_max_documents: int | None = Field(default=None, gt=0, le=2048)
+    vector_lane_timeout_seconds: float = Field(default=8.0, gt=0, le=120)
     mount_receipt_path: str | None = None
     turn_debug_dir: str | None = None
     full_verify: bool | None = None
@@ -555,6 +565,17 @@ FIELD_CATALOG: dict[str, FieldSpec] = {
         min=1,
         max=2048,
         step=1,
+    ),
+    "serving.vector_lane_timeout_seconds": FieldSpec(
+        path="serving.vector_lane_timeout_seconds",
+        label="向量轨等待上限（秒）",
+        kind="float",
+        group="serving",
+        order=22,
+        consumer="检索与回答：向量轨（embedding）外层等待上限；超时只降级该轨，不中断回答",
+        min=0.1,
+        max=120,
+        step=0.1,
     ),
     "serving.mount_receipt_path": FieldSpec(
         path="serving.mount_receipt_path",

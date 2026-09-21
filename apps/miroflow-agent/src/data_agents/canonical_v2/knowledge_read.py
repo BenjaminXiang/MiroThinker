@@ -704,19 +704,29 @@ def _web_lane_outer_wait_seconds(policy: WebSearchPolicy) -> float | None:
 #: Whole-lane outer wait for the vector future. The lane's provider is one
 #: remote embedding endpoint; without a cap a black-holed route holds the turn
 #: until the client's own timeout.
+#:
+#: This is the only place the serving path turns the knob into a number. The
+#: managed field ``serving.vector_lane_timeout_seconds`` is projected into
+#: ``CANONICAL_V2_VECTOR_LANE_TIMEOUT_SECONDS`` at startup and lands here; the
+#: catalogue's default must equal this constant (pinned by
+#: ``tests/canonical_v2/test_embedding_lane_fail_open.py``).
 _VECTOR_LANE_OUTER_WAIT_DEFAULT_SECONDS = 8.0
+
+_VECTOR_LANE_TIMEOUT_ENV = "CANONICAL_V2_VECTOR_LANE_TIMEOUT_SECONDS"
 
 
 def _vector_lane_outer_wait_seconds() -> float:
     """The vector lane's whole-lane budget (seconds).
 
-    Operator-tunable through ``CANONICAL_V2_VECTOR_LANE_TIMEOUT_SECONDS`` (the
-    managed-config naming convention; the same variable name is used by the
-    service unit). An unparsable or non-positive value falls back to the
-    default — a broken knob must not remove the cap.
+    Operator-tunable through the managed field
+    ``serving.vector_lane_timeout_seconds`` →
+    ``CANONICAL_V2_VECTOR_LANE_TIMEOUT_SECONDS`` (projected at startup by
+    ``managed_runtime``), or set directly by the service unit. An unparsable or
+    non-positive value falls back to the default — a broken knob must not remove
+    the cap.
     """
 
-    raw = os.environ.get("CANONICAL_V2_VECTOR_LANE_TIMEOUT_SECONDS", "").strip()
+    raw = os.environ.get(_VECTOR_LANE_TIMEOUT_ENV, "").strip()
     if not raw:
         return _VECTOR_LANE_OUTER_WAIT_DEFAULT_SECONDS
     try:
