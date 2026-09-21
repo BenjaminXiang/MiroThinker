@@ -854,3 +854,35 @@ MIROTHINKER_DOCKER_KIT_DIR=/var/tmp/mirothinker-docker-kit-v11 \
 | `deploy/docker/CONFIG-GUIDE.md` | 措辞版本无关化 + 嵌入测试含向量身份校验结论 |
 | `.agents/runs/delivery-docker/identity_probe.py` | 新增：身份校验探针（含 429 退避重试） |
 | `.agents/runs/delivery-docker/boot_timed.sh` | 新增：计时重启（与 installer step 7 同口径） |
+
+## 6. 复核：用**最终交付包本体**再走一遍（2026-09-21 23:11 → 23:28）
+
+把 `/var/tmp/mirothinker-site-bundle-v11/`（就是要发给运营者的那份）用 `cp -al` 硬链接复制到
+`…/rehearsal-v11/bundle-final/`（大文件同一 inode，`mirothinker-serving-v1.1.tar.gz` 两边都是
+inode 27001302），只额外加 4 个密钥符号链接（operator 的输入），其余**一字未改**：
+新的 scratch 根 `site-root-final`、新 PG 卷 `mirothinker-pgdata-v11b`、端口 18296、无 sudo、
+`MIROTHINKER_SITE_FORCE_LOAD=1`。目的：消掉"演练包与最终包差一次 install-site.sh 重构"的疑虑。
+
+| 步骤 | 实测 | 与首轮演练 |
+|---|---|---|
+| 交付包 sha256 | 21 s（两个包都一致） | 同 |
+| 解包数据面 | 44 s | 同 |
+| 10 件交付物校验 | 41 s | 同 |
+| `docker load` | 30 s（`04c3cfcd465f…`） | 同 |
+| 覆盖件检查（installer 打印） | `[ok] 命令文件覆盖件在位且指向 serving-pack-run16-v11` / `[ok] 入口覆盖件在位且可执行` | 同 |
+| 起服务→健康（冷，无 receipt） | **503 s**（8m23s） | 433 s（首轮） |
+| `mirothinker-verify` | 全通（25 ok / 1 warn / 0 FAIL；唯一 warn = 密钥非 0600） | 全通 |
+| 身份校验（预置配置） | **arm=index, passed=true, cosine=0.999933, thr 0.99**（`artifacts/v11-final-identity.json`） | 同 |
+| replay 门 | **7/7 ALL PASS**（`artifacts/v11-final-replay.txt`） | 同 |
+| turn-trace 失败数 | **0** | 0 |
+| 收尾 | `docker compose down -v` 拆净；活线 519941 存活、/chat 200、18296 已停 | 同 |
+
+**冷启两个样本 433 s / 503 s**（同包、同机、背靠背）：差异全在"无 receipt 的首次全量校验/索引投影"
+那一块（205 s → 243 s）与几个冷读相位（relationships 37.5→40.9 s、lookup_docs 16.1→23.6 s），
+即机器负载/页缓存方差，不是流程变化。**热重启 288 s**（首轮实测）。
+⇒ 对外口径：首次安装 7–8.5 分钟（数据面冷 + 首次全量校验），此后重启 ≈5 分钟；
+README-FIRST 里目前写的是首轮那组（7 分 13 秒/4 分 48 秒）。
+
+第二轮以后 `install-site.sh` 只差一次重构（把两个覆盖件检查抽成 `check_overrides()`，
+并让 `--dry-run` 也跑它），差异见 `artifacts/v11-install-site-diff-rehearsed-vs-final.patch`
+（62 行 ± ，全是函数抽取 + dry-run 调用）；最终包本体这一轮的 dry-run 与全装都过了。

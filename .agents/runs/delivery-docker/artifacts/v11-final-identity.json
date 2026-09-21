@@ -1,0 +1,93 @@
+{
+  "login_status": 200,
+  "baseline": {
+    "status": 200,
+    "body": {
+      "connection": "embedding",
+      "label": "Embedding 模型端点",
+      "ok": true,
+      "latency_ms": 30,
+      "http_status": 200,
+      "detail": "HTTP 200",
+      "called": true,
+      "runtime": {
+        "key": "embedding",
+        "label": "Embedding 模型端点",
+        "kind": "embedding",
+        "enabled": true,
+        "base_url": "http://100.64.0.27:18005/v1",
+        "model": "Qwen/Qwen3-Embedding-8B",
+        "api_key_origin": "legacy-file:.sglang_api_key",
+        "endpoint_origin": "managed-file(env:CANONICAL_V2_EMBEDDING_BASE_URL)",
+        "runtime_note": "运行期 base_url http://100.64.0.27:18005/v1（来源 managed-file(env:CANONICAL_V2_EMBEDDING_BASE_URL)；未设置受管地址时回落到发布包记录的地址）；凭据来源 legacy-file:.sglang_api_key",
+        "pending_restart": false
+      },
+      "used": {
+        "api_key_source": "legacy-file:.sglang_api_key",
+        "effective_api_key_source": "legacy-file:.sglang_api_key",
+        "endpoint_source": "managed-file(env:CANONICAL_V2_EMBEDDING_BASE_URL)",
+        "base_url": null,
+        "model": "Qwen/Qwen3-Embedding-8B"
+      },
+      "rate": {
+        "per_minute_limit": 6,
+        "min_interval_seconds": 1.0,
+        "remaining": 5
+      },
+      "identity": null,
+      "restart_required": null
+    }
+  },
+  "identity": {
+    "status": 200,
+    "body": {
+      "connection": "embedding",
+      "label": "Embedding 模型端点",
+      "ok": true,
+      "latency_ms": 26,
+      "http_status": 200,
+      "detail": "HTTP 200",
+      "called": true,
+      "runtime": {
+        "key": "embedding",
+        "label": "Embedding 模型端点",
+        "kind": "embedding",
+        "enabled": true,
+        "base_url": "http://100.64.0.27:18005/v1",
+        "model": "Qwen/Qwen3-Embedding-8B",
+        "api_key_origin": "legacy-file:.sglang_api_key",
+        "endpoint_origin": "managed-file(env:CANONICAL_V2_EMBEDDING_BASE_URL)",
+        "runtime_note": "运行期 base_url http://100.64.0.27:18005/v1（来源 managed-file(env:CANONICAL_V2_EMBEDDING_BASE_URL)；未设置受管地址时回落到发布包记录的地址）；凭据来源 legacy-file:.sglang_api_key",
+        "pending_restart": false
+      },
+      "used": {
+        "api_key_source": "legacy-file:.sglang_api_key",
+        "effective_api_key_source": "legacy-file:.sglang_api_key",
+        "endpoint_source": "managed-file(env:CANONICAL_V2_EMBEDDING_BASE_URL)",
+        "base_url": null,
+        "model": "Qwen/Qwen3-Embedding-8B"
+      },
+      "rate": {
+        "per_minute_limit": 6,
+        "min_interval_seconds": 1.0,
+        "remaining": 5
+      },
+      "identity": {
+        "arm": "index",
+        "passed": true,
+        "cosine": 0.999933,
+        "threshold": 0.99,
+        "detail": "与索引同源：索引文档自比 cos=0.9999（阈值 0.99，抽样 798 行最近邻亦为本文档）",
+        "checks": {
+          "point_id": "index-point:sha256:00004b004504c4e2cca961c9d149819e84580589215d69933bcd8c830e6c4c83",
+          "dimension": 4096,
+          "sample_rows": 798,
+          "sample_max_cosine": 0.999933,
+          "document_chars": 493,
+          "latency_ms": 906
+        }
+      },
+      "restart_required": null
+    }
+  }
+}

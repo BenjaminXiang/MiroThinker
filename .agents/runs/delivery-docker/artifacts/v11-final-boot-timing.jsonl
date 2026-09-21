@@ -1,0 +1,178 @@
+{"at": 1790003628.487, "count": 1, "name": "pack.mount_identity", "pid": 27, "seconds": 0.000343, "thread": "MainThread"}
+{"at": 1790003628.487, "full_verify": false, "name": "pack.mount", "pid": 27, "receipt_used": false, "seconds": 0.0, "thread": "MainThread"}
+{"at": 1790003629.605, "count": 1, "name": "pack.file_hash", "pid": 27, "seconds": 1.117818, "thread": "MainThread"}
+{"at": 1790003674.849, "count": 1, "name": "pack.relationships_read", "pid": 27, "seconds": 40.85443, "thread": "MainThread"}
+{"at": 1790003698.833, "count": 1, "name": "snapshot.lookup_docs", "pid": 27, "seconds": 23.599778, "thread": "MainThread"}
+{"at": 1790003700.845, "count": 1, "name": "snapshot.lookup_points", "pid": 27, "seconds": 1.986328, "thread": "MainThread"}
+{"at": 1790003702.209, "count": 1, "name": "snapshot.open", "pid": 27, "seconds": 27.098314, "thread": "MainThread"}
+{"at": 1790003953.324, "count": 1, "name": "bound_documents.read", "pid": 27, "root": "/var/tmp/mirothinker-data-v2/index-v3-v2", "seconds": 7.805705, "thread": "MainThread"}
+{"at": 1790004023.273, "count": 1, "name": "vector.snapshot.open", "pid": 27, "preopened": true, "seconds": 5.328835, "thread": "MainThread"}
+{"at": 1790004023.273, "name": "vector.snapshot.hit", "pid": 27, "seconds": 0.0, "thread": "MainThread"}
+{"at": 1790004024.862, "count": 1, "name": "vector.npz_load", "pid": 27, "points": 51026, "seconds": 1.588513, "thread": "MainThread"}
+{"at": 1790004030.627, "count": 1, "name": "vector.index_build", "pid": 27, "points": 51026, "seconds": 5.765142, "thread": "MainThread"}
+{"at": 1790004030.628, "count": 1, "name": "lexical.warm_open", "pid": 27, "seconds": 7.5e-05, "thread": "canonical-v2-lexical-index-warm"}
+{"at": 1790004164.641, "name": "bound_documents.hit", "pid": 27, "seconds": 0.0, "thread": "ThreadPoolExecutor-0_0"}
+{"at": 1790004164.653, "name": "vector.snapshot.hit", "pid": 27, "seconds": 0.0, "thread": "ThreadPoolExecutor-0_2"}
+{"at": 1790004164.664, "name": "bound_documents.hit", "pid": 27, "seconds": 0.0, "thread": "ThreadPoolExecutor-0_1"}
+{"at": 1790004164.676, "name": "vector.index.hit", "pid": 27, "seconds": 0.0, "thread": "ThreadPoolExecutor-0_2"}
+{"at": 1790004165.536, "count": 1, "matched": 51026, "name": "vector.points_filter", "pid": 27, "seconds": 0.730384, "thread": "ThreadPoolExecutor-0_2", "total": 51026}
+{"at": 1790004166.077, "count": 1, "name": "vector.embed_query", "pid": 27, "seconds": 0.489534, "thread": "ThreadPoolExecutor-0_2"}
+{"at": 1790004166.311, "count": 1, "name": "vector.score", "pid": 27, "seconds": 0.069426, "thread": "ThreadPoolExecutor-0_2"}
+{"at": 1790004166.521, "count": 1, "matched": 51026, "name": "vector.rank", "pid": 27, "seconds": 0.113006, "thread": "ThreadPoolExecutor-0_2"}
+{"at": 1790004166.547, "candidates": 16, "count": 1, "name": "vector.candidate_bind", "pid": 27, "seconds": 0.00436, "thread": "ThreadPoolExecutor-0_2"}
+{"at": 1790004166.577, "candidates": 16, "count": 1, "name": "vector.sort", "pid": 27, "seconds": 3.4e-05, "thread": "ThreadPoolExecutor-0_2"}
+{"at": 1790004170.987, "name": "bound_documents.hit", "pid": 27, "seconds": 0.0, "thread": "ThreadPoolExecutor-3_0"}
+{"at": 1790004170.992, "name": "bound_documents.hit", "pid": 27, "seconds": 0.0, "thread": "ThreadPoolExecutor-3_1"}
+{"at": 1790004170.998, "name": "vector.snapshot.hit", "pid": 27, "seconds": 0.0, "thread": "ThreadPoolExecutor-3_3"}
+{"at": 1790004171.019, "name": "bound_documents.hit", "pid": 27, "seconds": 0.0, "thread": "ThreadPoolExecutor-3_2"}
+{"at": 1790004171.066, "name": "vector.index.hit", "pid": 27, "seconds": 0.0, "thread": "ThreadPoolExecutor-3_3"}
+{"at": 1790004171.18, "count": 1, "matched": 1, "name": "vector.points_filter", "pid": 27, "seconds": 0.07782, "thread": "ThreadPoolExecutor-3_3", "total": 51026}
+{"at": 1790004171.222, "count": 1, "name": "vector.embed_query", "pid": 27, "seconds": 0.041104, "thread": "ThreadPoolExecutor-3_3"}
+{"at": 1790004171.244, "count": 1, "name": "vector.score", "pid": 27, "seconds": 0.022021, "thread": "ThreadPoolExecutor-3_3"}
+{"at": 1790004171.249, "count": 1, "matched": 1, "name": "vector.rank", "pid": 27, "seconds": 2.7e-05, "thread": "ThreadPoolExecutor-3_3"}
+{"at": 1790004171.25, "candidates": 1, "count": 1, "name": "vector.candidate_bind", "pid": 27, "seconds": 0.000907, "thread": "ThreadPoolExecutor-3_3"}
+{"at": 1790004171.251, "candidates": 1, "count": 1, "name": "vector.sort", "pid": 27, "seconds": 6e-06, "thread": "ThreadPoolExecutor-3_3"}
+{"at": 1790004178.03, "name": "bound_documents.hit", "pid": 27, "seconds": 0.0, "thread": "ThreadPoolExecutor-5_0"}
+{"at": 1790004178.032, "name": "vector.snapshot.hit", "pid": 27, "seconds": 0.0, "thread": "ThreadPoolExecutor-5_3"}
+{"at": 1790004178.043, "name": "bound_documents.hit", "pid": 27, "seconds": 0.0, "thread": "ThreadPoolExecutor-5_1"}
+{"at": 1790004178.093, "name": "vector.index.hit", "pid": 27, "seconds": 0.0, "thread": "ThreadPoolExecutor-5_3"}
+{"at": 1790004178.121, "name": "bound_documents.hit", "pid": 27, "seconds": 0.0, "thread": "ThreadPoolExecutor-5_2"}
+{"at": 1790004178.258, "count": 1, "matched": 1, "name": "vector.points_filter", "pid": 27, "seconds": 0.117688, "thread": "ThreadPoolExecutor-5_3", "total": 51026}
+{"at": 1790004178.342, "count": 1, "name": "vector.embed_query", "pid": 27, "seconds": 0.053096, "thread": "ThreadPoolExecutor-5_3"}
+{"at": 1790004178.366, "count": 1, "name": "vector.score", "pid": 27, "seconds": 0.022674, "thread": "ThreadPoolExecutor-5_3"}
+{"at": 1790004178.37, "count": 1, "matched": 1, "name": "vector.rank", "pid": 27, "seconds": 2.2e-05, "thread": "ThreadPoolExecutor-5_3"}
+{"at": 1790004178.371, "candidates": 1, "count": 1, "name": "vector.candidate_bind", "pid": 27, "seconds": 0.000897, "thread": "ThreadPoolExecutor-5_3"}
+{"at": 1790004178.372, "candidates": 1, "count": 1, "name": "vector.sort", "pid": 27, "seconds": 6e-06, "thread": "ThreadPoolExecutor-5_3"}
+{"at": 1790004185.156, "name": "bound_documents.hit", "pid": 27, "seconds": 0.0, "thread": "ThreadPoolExecutor-7_0"}
+{"at": 1790004185.157, "name": "vector.snapshot.hit", "pid": 27, "seconds": 0.0, "thread": "ThreadPoolExecutor-7_2"}
+{"at": 1790004185.179, "name": "bound_documents.hit", "pid": 27, "seconds": 0.0, "thread": "ThreadPoolExecutor-7_1"}
+{"at": 1790004185.179, "name": "vector.index.hit", "pid": 27, "seconds": 0.0, "thread": "ThreadPoolExecutor-7_2"}
+{"at": 1790004185.782, "count": 1, "matched": 51026, "name": "vector.points_filter", "pid": 27, "seconds": 0.533119, "thread": "ThreadPoolExecutor-7_2", "total": 51026}
+{"at": 1790004185.855, "count": 1, "name": "vector.embed_query", "pid": 27, "seconds": 0.003682, "thread": "ThreadPoolExecutor-7_2"}
+{"at": 1790004186.012, "count": 1, "name": "vector.score", "pid": 27, "seconds": 0.057712, "thread": "ThreadPoolExecutor-7_2"}
+{"at": 1790004186.53, "count": 1, "matched": 51026, "name": "vector.rank", "pid": 27, "seconds": 0.341561, "thread": "ThreadPoolExecutor-7_2"}
+{"at": 1790004187.0, "candidates": 16, "count": 1, "name": "vector.candidate_bind", "pid": 27, "seconds": 0.405017, "thread": "ThreadPoolExecutor-7_2"}
+{"at": 1790004187.0, "candidates": 16, "count": 1, "name": "vector.sort", "pid": 27, "seconds": 4e-05, "thread": "ThreadPoolExecutor-7_2"}
+{"at": 1790004191.722, "name": "bound_documents.hit", "pid": 27, "seconds": 0.0, "thread": "ThreadPoolExecutor-8_0"}
+{"at": 1790004191.729, "name": "bound_documents.hit", "pid": 27, "seconds": 0.0, "thread": "ThreadPoolExecutor-8_1"}
+{"at": 1790004191.735, "name": "vector.snapshot.hit", "pid": 27, "seconds": 0.0, "thread": "ThreadPoolExecutor-8_3"}
+{"at": 1790004191.795, "name": "bound_documents.hit", "pid": 27, "seconds": 0.0, "thread": "ThreadPoolExecutor-8_2"}
+{"at": 1790004191.837, "name": "vector.index.hit", "pid": 27, "seconds": 0.0, "thread": "ThreadPoolExecutor-8_3"}
+{"at": 1790004191.995, "count": 1, "matched": 1, "name": "vector.points_filter", "pid": 27, "seconds": 0.103633, "thread": "ThreadPoolExecutor-8_3", "total": 51026}
+{"at": 1790004192.044, "count": 1, "name": "vector.embed_query", "pid": 27, "seconds": 0.048473, "thread": "ThreadPoolExecutor-8_3"}
+{"at": 1790004192.067, "count": 1, "name": "vector.score", "pid": 27, "seconds": 0.021877, "thread": "ThreadPoolExecutor-8_3"}
+{"at": 1790004192.072, "count": 1, "matched": 1, "name": "vector.rank", "pid": 27, "seconds": 2.5e-05, "thread": "ThreadPoolExecutor-8_3"}
+{"at": 1790004192.073, "candidates": 1, "count": 1, "name": "vector.candidate_bind", "pid": 27, "seconds": 0.000923, "thread": "ThreadPoolExecutor-8_3"}
+{"at": 1790004192.073, "candidates": 1, "count": 1, "name": "vector.sort", "pid": 27, "seconds": 6e-06, "thread": "ThreadPoolExecutor-8_3"}
+{"at": 1790004207.636, "name": "vector.snapshot.hit", "pid": 27, "seconds": 0.0, "thread": "ThreadPoolExecutor-10_1"}
+{"at": 1790004207.636, "name": "bound_documents.hit", "pid": 27, "seconds": 0.0, "thread": "ThreadPoolExecutor-10_0"}
+{"at": 1790004207.637, "name": "vector.index.hit", "pid": 27, "seconds": 0.0, "thread": "ThreadPoolExecutor-10_1"}
+{"at": 1790004207.675, "name": "bound_documents.hit", "pid": 27, "seconds": 0.0, "thread": "ThreadPoolExecutor-10_2"}
+{"at": 1790004208.174, "count": 1, "matched": 51026, "name": "vector.points_filter", "pid": 27, "seconds": 0.487799, "thread": "ThreadPoolExecutor-10_1", "total": 51026}
+{"at": 1790004208.212, "count": 1, "name": "vector.embed_query", "pid": 27, "seconds": 0.003609, "thread": "ThreadPoolExecutor-10_1"}
+{"at": 1790004208.349, "count": 1, "name": "vector.score", "pid": 27, "seconds": 0.115255, "thread": "ThreadPoolExecutor-10_1"}
+{"at": 1790004208.773, "count": 1, "matched": 51026, "name": "vector.rank", "pid": 27, "seconds": 0.316509, "thread": "ThreadPoolExecutor-10_1"}
+{"at": 1790004208.79, "candidates": 16, "count": 1, "name": "vector.candidate_bind", "pid": 27, "seconds": 0.006608, "thread": "ThreadPoolExecutor-10_1"}
+{"at": 1790004208.836, "candidates": 16, "count": 1, "name": "vector.sort", "pid": 27, "seconds": 3.5e-05, "thread": "ThreadPoolExecutor-10_1"}
+{"at": 1790004213.269, "name": "bound_documents.hit", "pid": 27, "seconds": 0.0, "thread": "ThreadPoolExecutor-11_1"}
+{"at": 1790004213.271, "name": "vector.snapshot.hit", "pid": 27, "seconds": 0.0, "thread": "ThreadPoolExecutor-11_3"}
+{"at": 1790004213.282, "name": "bound_documents.hit", "pid": 27, "seconds": 0.0, "thread": "ThreadPoolExecutor-11_0"}
+{"at": 1790004213.304, "name": "vector.index.hit", "pid": 27, "seconds": 0.0, "thread": "ThreadPoolExecutor-11_3"}
+{"at": 1790004213.31, "name": "bound_documents.hit", "pid": 27, "seconds": 0.0, "thread": "ThreadPoolExecutor-11_2"}
+{"at": 1790004213.433, "count": 1, "matched": 1, "name": "vector.points_filter", "pid": 27, "seconds": 0.106932, "thread": "ThreadPoolExecutor-11_3", "total": 51026}
+{"at": 1790004213.464, "count": 1, "name": "vector.embed_query", "pid": 27, "seconds": 0.00286, "thread": "ThreadPoolExecutor-11_3"}
+{"at": 1790004213.519, "count": 1, "name": "vector.score", "pid": 27, "seconds": 0.036728, "thread": "ThreadPoolExecutor-11_3"}
+{"at": 1790004213.531, "count": 1, "matched": 1, "name": "vector.rank", "pid": 27, "seconds": 3.1e-05, "thread": "ThreadPoolExecutor-11_3"}
+{"at": 1790004213.533, "candidates": 1, "count": 1, "name": "vector.candidate_bind", "pid": 27, "seconds": 0.00123, "thread": "ThreadPoolExecutor-11_3"}
+{"at": 1790004213.533, "candidates": 1, "count": 1, "name": "vector.sort", "pid": 27, "seconds": 1e-05, "thread": "ThreadPoolExecutor-11_3"}
+{"at": 1790004228.208, "name": "bound_documents.hit", "pid": 27, "seconds": 0.0, "thread": "ThreadPoolExecutor-12_0"}
+{"at": 1790004228.21, "name": "vector.snapshot.hit", "pid": 27, "seconds": 0.0, "thread": "ThreadPoolExecutor-12_2"}
+{"at": 1790004228.215, "name": "bound_documents.hit", "pid": 27, "seconds": 0.0, "thread": "ThreadPoolExecutor-12_1"}
+{"at": 1790004228.226, "name": "vector.index.hit", "pid": 27, "seconds": 0.0, "thread": "ThreadPoolExecutor-12_2"}
+{"at": 1790004228.839, "count": 1, "matched": 51026, "name": "vector.points_filter", "pid": 27, "seconds": 0.462449, "thread": "ThreadPoolExecutor-12_2", "total": 51026}
+{"at": 1790004228.86, "count": 1, "name": "vector.embed_query", "pid": 27, "seconds": 0.003598, "thread": "ThreadPoolExecutor-12_2"}
+{"at": 1790004229.006, "count": 1, "name": "vector.score", "pid": 27, "seconds": 0.108903, "thread": "ThreadPoolExecutor-12_2"}
+{"at": 1790004229.428, "count": 1, "matched": 51026, "name": "vector.rank", "pid": 27, "seconds": 0.126515, "thread": "ThreadPoolExecutor-12_2"}
+{"at": 1790004229.453, "candidates": 16, "count": 1, "name": "vector.candidate_bind", "pid": 27, "seconds": 0.003842, "thread": "ThreadPoolExecutor-12_2"}
+{"at": 1790004229.463, "candidates": 16, "count": 1, "name": "vector.sort", "pid": 27, "seconds": 2.3e-05, "thread": "ThreadPoolExecutor-12_2"}
+{"at": 1790004233.99, "name": "bound_documents.hit", "pid": 27, "seconds": 0.0, "thread": "ThreadPoolExecutor-13_0"}
+{"at": 1790004234.002, "name": "bound_documents.hit", "pid": 27, "seconds": 0.0, "thread": "ThreadPoolExecutor-13_1"}
+{"at": 1790004234.008, "name": "vector.snapshot.hit", "pid": 27, "seconds": 0.0, "thread": "ThreadPoolExecutor-13_3"}
+{"at": 1790004234.042, "name": "bound_documents.hit", "pid": 27, "seconds": 0.0, "thread": "ThreadPoolExecutor-13_2"}
+{"at": 1790004234.07, "name": "vector.index.hit", "pid": 27, "seconds": 0.0, "thread": "ThreadPoolExecutor-13_3"}
+{"at": 1790004234.232, "count": 1, "matched": 1, "name": "vector.points_filter", "pid": 27, "seconds": 0.108108, "thread": "ThreadPoolExecutor-13_3", "total": 51026}
+{"at": 1790004234.242, "count": 1, "name": "vector.embed_query", "pid": 27, "seconds": 0.002594, "thread": "ThreadPoolExecutor-13_3"}
+{"at": 1790004234.265, "count": 1, "name": "vector.score", "pid": 27, "seconds": 0.021864, "thread": "ThreadPoolExecutor-13_3"}
+{"at": 1790004234.27, "count": 1, "matched": 1, "name": "vector.rank", "pid": 27, "seconds": 2.2e-05, "thread": "ThreadPoolExecutor-13_3"}
+{"at": 1790004234.271, "candidates": 1, "count": 1, "name": "vector.candidate_bind", "pid": 27, "seconds": 0.001029, "thread": "ThreadPoolExecutor-13_3"}
+{"at": 1790004234.271, "candidates": 1, "count": 1, "name": "vector.sort", "pid": 27, "seconds": 6e-06, "thread": "ThreadPoolExecutor-13_3"}
+{"at": 1790004247.538, "name": "bound_documents.hit", "pid": 27, "seconds": 0.0, "thread": "ThreadPoolExecutor-14_0"}
+{"at": 1790004247.54, "name": "vector.snapshot.hit", "pid": 27, "seconds": 0.0, "thread": "ThreadPoolExecutor-14_1"}
+{"at": 1790004247.57, "name": "vector.index.hit", "pid": 27, "seconds": 0.0, "thread": "ThreadPoolExecutor-14_1"}
+{"at": 1790004247.585, "name": "bound_documents.hit", "pid": 27, "seconds": 0.0, "thread": "ThreadPoolExecutor-14_2"}
+{"at": 1790004248.18, "count": 1, "matched": 51026, "name": "vector.points_filter", "pid": 27, "seconds": 0.584196, "thread": "ThreadPoolExecutor-14_1", "total": 51026}
+{"at": 1790004248.215, "count": 1, "name": "vector.embed_query", "pid": 27, "seconds": 0.003628, "thread": "ThreadPoolExecutor-14_1"}
+{"at": 1790004248.366, "count": 1, "name": "vector.score", "pid": 27, "seconds": 0.091966, "thread": "ThreadPoolExecutor-14_1"}
+{"at": 1790004248.789, "count": 1, "matched": 51026, "name": "vector.rank", "pid": 27, "seconds": 0.277997, "thread": "ThreadPoolExecutor-14_1"}
+{"at": 1790004248.81, "candidates": 16, "count": 1, "name": "vector.candidate_bind", "pid": 27, "seconds": 0.005375, "thread": "ThreadPoolExecutor-14_1"}
+{"at": 1790004248.831, "candidates": 16, "count": 1, "name": "vector.sort", "pid": 27, "seconds": 3e-05, "thread": "ThreadPoolExecutor-14_1"}
+{"at": 1790004253.821, "name": "bound_documents.hit", "pid": 27, "seconds": 0.0, "thread": "ThreadPoolExecutor-15_0"}
+{"at": 1790004253.823, "name": "vector.snapshot.hit", "pid": 27, "seconds": 0.0, "thread": "ThreadPoolExecutor-15_1"}
+{"at": 1790004253.828, "name": "bound_documents.hit", "pid": 27, "seconds": 0.0, "thread": "ThreadPoolExecutor-15_2"}
+{"at": 1790004253.862, "name": "vector.index.hit", "pid": 27, "seconds": 0.0, "thread": "ThreadPoolExecutor-15_1"}
+{"at": 1790004254.466, "count": 1, "matched": 51026, "name": "vector.points_filter", "pid": 27, "seconds": 0.541392, "thread": "ThreadPoolExecutor-15_1", "total": 51026}
+{"at": 1790004254.681, "count": 1, "name": "vector.embed_query", "pid": 27, "seconds": 0.192737, "thread": "ThreadPoolExecutor-15_1"}
+{"at": 1790004254.813, "count": 1, "name": "vector.score", "pid": 27, "seconds": 0.095314, "thread": "ThreadPoolExecutor-15_1"}
+{"at": 1790004254.986, "count": 1, "matched": 51026, "name": "vector.rank", "pid": 27, "seconds": 0.104093, "thread": "ThreadPoolExecutor-15_1"}
+{"at": 1790004255.006, "candidates": 16, "count": 1, "name": "vector.candidate_bind", "pid": 27, "seconds": 0.004391, "thread": "ThreadPoolExecutor-15_1"}
+{"at": 1790004255.021, "candidates": 16, "count": 1, "name": "vector.sort", "pid": 27, "seconds": 2.5e-05, "thread": "ThreadPoolExecutor-15_1"}
+{"at": 1790004278.12, "name": "bound_documents.hit", "pid": 27, "seconds": 0.0, "thread": "ThreadPoolExecutor-18_0"}
+{"at": 1790004278.121, "name": "vector.snapshot.hit", "pid": 27, "seconds": 0.0, "thread": "ThreadPoolExecutor-18_1"}
+{"at": 1790004278.132, "name": "vector.index.hit", "pid": 27, "seconds": 0.0, "thread": "ThreadPoolExecutor-18_1"}
+{"at": 1790004278.161, "name": "bound_documents.hit", "pid": 27, "seconds": 0.0, "thread": "ThreadPoolExecutor-18_2"}
+{"at": 1790004278.735, "count": 1, "matched": 51026, "name": "vector.points_filter", "pid": 27, "seconds": 0.578964, "thread": "ThreadPoolExecutor-18_1", "total": 51026}
+{"at": 1790004278.752, "count": 1, "name": "vector.embed_query", "pid": 27, "seconds": 0.0012, "thread": "ThreadPoolExecutor-18_1"}
+{"at": 1790004278.922, "count": 1, "name": "vector.score", "pid": 27, "seconds": 0.104301, "thread": "ThreadPoolExecutor-18_1"}
+{"at": 1790004279.241, "count": 1, "matched": 51026, "name": "vector.rank", "pid": 27, "seconds": 0.216194, "thread": "ThreadPoolExecutor-18_1"}
+{"at": 1790004279.405, "candidates": 16, "count": 1, "name": "vector.candidate_bind", "pid": 27, "seconds": 0.148077, "thread": "ThreadPoolExecutor-18_1"}
+{"at": 1790004279.405, "candidates": 16, "count": 1, "name": "vector.sort", "pid": 27, "seconds": 4.4e-05, "thread": "ThreadPoolExecutor-18_1"}
+{"at": 1790004285.259, "name": "bound_documents.hit", "pid": 27, "seconds": 0.0, "thread": "ThreadPoolExecutor-19_0"}
+{"at": 1790004285.26, "name": "vector.snapshot.hit", "pid": 27, "seconds": 0.0, "thread": "ThreadPoolExecutor-19_2"}
+{"at": 1790004285.265, "name": "bound_documents.hit", "pid": 27, "seconds": 0.0, "thread": "ThreadPoolExecutor-19_1"}
+{"at": 1790004285.275, "name": "vector.index.hit", "pid": 27, "seconds": 0.0, "thread": "ThreadPoolExecutor-19_2"}
+{"at": 1790004285.51, "count": 1, "matched": 7086, "name": "vector.points_filter", "pid": 27, "seconds": 0.145314, "thread": "ThreadPoolExecutor-19_2", "total": 51026}
+{"at": 1790004285.606, "count": 1, "name": "vector.embed_query", "pid": 27, "seconds": 0.047277, "thread": "ThreadPoolExecutor-19_2"}
+{"at": 1790004285.637, "count": 1, "name": "vector.score", "pid": 27, "seconds": 0.030229, "thread": "ThreadPoolExecutor-19_2"}
+{"at": 1790004285.664, "count": 1, "matched": 7086, "name": "vector.rank", "pid": 27, "seconds": 0.016796, "thread": "ThreadPoolExecutor-19_2"}
+{"at": 1790004285.718, "candidates": 128, "count": 1, "name": "vector.candidate_bind", "pid": 27, "seconds": 0.054584, "thread": "ThreadPoolExecutor-19_2"}
+{"at": 1790004285.719, "candidates": 128, "count": 1, "name": "vector.sort", "pid": 27, "seconds": 0.00011, "thread": "ThreadPoolExecutor-19_2"}
+{"at": 1790004306.994, "name": "bound_documents.hit", "pid": 27, "seconds": 0.0, "thread": "ThreadPoolExecutor-21_0"}
+{"at": 1790004306.995, "name": "vector.snapshot.hit", "pid": 27, "seconds": 0.0, "thread": "ThreadPoolExecutor-21_2"}
+{"at": 1790004307.016, "name": "bound_documents.hit", "pid": 27, "seconds": 0.0, "thread": "ThreadPoolExecutor-21_1"}
+{"at": 1790004307.043, "name": "vector.index.hit", "pid": 27, "seconds": 0.0, "thread": "ThreadPoolExecutor-21_2"}
+{"at": 1790004307.186, "count": 1, "matched": 7086, "name": "vector.points_filter", "pid": 27, "seconds": 0.095523, "thread": "ThreadPoolExecutor-21_2", "total": 51026}
+{"at": 1790004307.423, "count": 1, "name": "vector.embed_query", "pid": 27, "seconds": 0.199795, "thread": "ThreadPoolExecutor-21_2"}
+{"at": 1790004307.529, "count": 1, "name": "vector.score", "pid": 27, "seconds": 0.06068, "thread": "ThreadPoolExecutor-21_2"}
+{"at": 1790004307.597, "count": 1, "matched": 7086, "name": "vector.rank", "pid": 27, "seconds": 0.010546, "thread": "ThreadPoolExecutor-21_2"}
+{"at": 1790004307.748, "candidates": 128, "count": 1, "name": "vector.candidate_bind", "pid": 27, "seconds": 0.130362, "thread": "ThreadPoolExecutor-21_2"}
+{"at": 1790004307.748, "candidates": 128, "count": 1, "name": "vector.sort", "pid": 27, "seconds": 0.00016, "thread": "ThreadPoolExecutor-21_2"}
+{"at": 1790004327.888, "name": "vector.snapshot.hit", "pid": 27, "seconds": 0.0, "thread": "ThreadPoolExecutor-23_1"}
+{"at": 1790004327.888, "name": "bound_documents.hit", "pid": 27, "seconds": 0.0, "thread": "ThreadPoolExecutor-23_0"}
+{"at": 1790004327.89, "name": "vector.index.hit", "pid": 27, "seconds": 0.0, "thread": "ThreadPoolExecutor-23_1"}
+{"at": 1790004327.915, "name": "bound_documents.hit", "pid": 27, "seconds": 0.0, "thread": "ThreadPoolExecutor-23_2"}
+{"at": 1790004328.063, "count": 1, "matched": 7086, "name": "vector.points_filter", "pid": 27, "seconds": 0.111923, "thread": "ThreadPoolExecutor-23_1", "total": 51026}
+{"at": 1790004328.091, "count": 1, "name": "vector.embed_query", "pid": 27, "seconds": 0.001289, "thread": "ThreadPoolExecutor-23_1"}
+{"at": 1790004328.156, "count": 1, "name": "vector.score", "pid": 27, "seconds": 0.041982, "thread": "ThreadPoolExecutor-23_1"}
+{"at": 1790004328.263, "count": 1, "matched": 7086, "name": "vector.rank", "pid": 27, "seconds": 0.039449, "thread": "ThreadPoolExecutor-23_1"}
+{"at": 1790004328.715, "candidates": 128, "count": 1, "name": "vector.candidate_bind", "pid": 27, "seconds": 0.441873, "thread": "ThreadPoolExecutor-23_1"}
+{"at": 1790004328.716, "candidates": 128, "count": 1, "name": "vector.sort", "pid": 27, "seconds": 0.000169, "thread": "ThreadPoolExecutor-23_1"}
+{"at": 1790004340.652, "name": "vector.snapshot.hit", "pid": 27, "seconds": 0.0, "thread": "ThreadPoolExecutor-24_1"}
+{"at": 1790004340.652, "name": "bound_documents.hit", "pid": 27, "seconds": 0.0, "thread": "ThreadPoolExecutor-24_0"}
+{"at": 1790004340.653, "name": "vector.index.hit", "pid": 27, "seconds": 0.0, "thread": "ThreadPoolExecutor-24_1"}
+{"at": 1790004340.67, "name": "bound_documents.hit", "pid": 27, "seconds": 0.0, "thread": "ThreadPoolExecutor-24_2"}
+{"at": 1790004341.006, "count": 1, "matched": 7086, "name": "vector.points_filter", "pid": 27, "seconds": 0.320651, "thread": "ThreadPoolExecutor-24_1", "total": 51026}
+{"at": 1790004341.056, "count": 1, "name": "vector.embed_query", "pid": 27, "seconds": 0.002987, "thread": "ThreadPoolExecutor-24_1"}
+{"at": 1790004341.134, "count": 1, "name": "vector.score", "pid": 27, "seconds": 0.062631, "thread": "ThreadPoolExecutor-24_1"}
+{"at": 1790004341.228, "count": 1, "matched": 7086, "name": "vector.rank", "pid": 27, "seconds": 0.026299, "thread": "ThreadPoolExecutor-24_1"}
+{"at": 1790004341.367, "candidates": 128, "count": 1, "name": "vector.candidate_bind", "pid": 27, "seconds": 0.12904, "thread": "ThreadPoolExecutor-24_1"}
+{"at": 1790004341.368, "candidates": 128, "count": 1, "name": "vector.sort", "pid": 27, "seconds": 0.00014, "thread": "ThreadPoolExecutor-24_1"}
