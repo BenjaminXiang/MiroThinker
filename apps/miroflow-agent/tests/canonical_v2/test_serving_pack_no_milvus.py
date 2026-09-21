@@ -24,6 +24,7 @@ from typing import Any
 import pytest
 
 from src.data_agents.canonical_v2 import index_projection_isolated as iso
+from src.data_agents.canonical_v2 import knowledge_build_isolated as build_module
 from src.data_agents.canonical_v2 import serving_pack_loader as pack_loader
 from src.data_agents.canonical_v2 import placeholder_scrub
 from src.data_agents.canonical_v2.index_projection import (
@@ -33,6 +34,11 @@ from src.data_agents.canonical_v2.index_projection import (
 
 _REPO_ROOT = Path(__file__).resolve().parents[4]
 _PACK_TEST_PATH = Path(__file__).with_name("test_serving_pack_loader.py")
+CANDIDATE_EMBEDDING_BUNDLE_PATH = (
+    _REPO_ROOT
+    / ".agents/runs/embedding-model-switch-v2"
+    / "qwen3.7-text-embedding-flash-embedding-bundle-v1.json"
+)
 
 
 def _load_module(name: str, path: Path) -> Any:
@@ -369,6 +375,59 @@ def test_v2_npz_anchor_rejects_extra_and_missing_points(worlds: _Fixture) -> Non
             points=snapshot.points,
             expected_embedding_model_id=worlds.adapter.model_id,
             dimension=worlds.adapter.dimension,
+        )
+
+
+# --- the embedding identity pair ---------------------------------------------
+
+
+def test_v2_index_refuses_the_candidate_embedding_identity(worlds: _Fixture) -> None:
+    """A bundle's (model, dimension) pair must match the index that ships with it.
+
+    The v2 candidate (``qwen3.7-text-embedding-flash``, 1024 dimensions) is a
+    different vector space from the released one, so binding its adapter to this
+    index has to fail closed at both layers: the pack binding refuses the
+    adapter, and the persisted matrix refuses an identity it was not written
+    with — including a matching model with the wrong dimension, which is exactly
+    the shape a "new bundle, old index" mistake takes.
+    """
+
+    snapshot = _open(worlds, worlds.v2_pack).index_snapshot
+    candidate = build_module.load_content_addressed_embedding_adapter(
+        CANDIDATE_EMBEDDING_BUNDLE_PATH
+    )
+    assert candidate.model_id != worlds.adapter.model_id
+    assert candidate.dimension != worlds.adapter.dimension
+    marker_sha256 = json.loads((worlds.v2_pack / "manifest.json").read_bytes())[
+        "index_marker_sha256"
+    ]
+
+    with pytest.raises(
+        pack_loader.ServingPackIntegrityError,
+        match="embedding model differs",
+    ):
+        pack_loader.open_serving_pack_authority(
+            pack_dir=worlds.v2_pack,
+            expected_release_id=worlds.release_id,
+            expected_index_marker_sha256=marker_sha256,
+            expected_forbidden_milvus_path=worlds.target.forbidden_milvus_paths[0],
+            embedding_adapter=candidate,
+        )
+
+    source = worlds.v2_index / "vector_matrix.npz"
+    with pytest.raises(IndexProjectionIntegrityError):
+        iso.load_persisted_vector_matrix(
+            source,
+            points=snapshot.points,
+            expected_embedding_model_id=candidate.model_id,
+            dimension=candidate.dimension,
+        )
+    with pytest.raises(IndexProjectionIntegrityError):
+        iso.load_persisted_vector_matrix(
+            source,
+            points=snapshot.points,
+            expected_embedding_model_id=worlds.adapter.model_id,
+            dimension=candidate.dimension,
         )
 
 

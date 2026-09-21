@@ -1,0 +1,12 @@
+{
+  "api_key_source": "env:CANONICAL_V2_EMBEDDING_API_KEY",
+  "base_url": "https://maas.qianwenaiapi.com/api/v1",
+  "batch_size": 32,
+  "content_sha256": "cdddcdfd998e6c9e6147f735fd71370f209045636f3b2f3efa15e7e73a8e96ad",
+  "dimension": 1024,
+  "max_workers": 32,
+  "model_id": "qwen3.7-text-embedding-flash",
+  "provider": "dashscope-native",
+  "schema_version": "canonical-v2-dashscope-native-embedding-bundle-v1",
+  "timeout_seconds": 180
+}

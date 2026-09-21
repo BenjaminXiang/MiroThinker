@@ -46,6 +46,9 @@ from src.data_agents.contracts import ReleasedObject as HistoricalReleasedObject
 from src.data_agents.company.vectorizer import (
     EmbeddingClient as _OpenAIEmbeddingClient,
 )
+from src.data_agents.providers.dashscope_embeddings import (
+    DashScopeTextEmbeddingClient as _DashScopeTextEmbeddingClient,
+)
 from src.data_agents.providers.local_api_key import load_local_api_key
 from src.data_agents.storage.database_target import (
     DatabaseTargetSafetyError,
@@ -267,10 +270,25 @@ _QWEN_EMBEDDING_BUNDLE_SHA256 = (
     "05473fabc8055e9ce3ebca9d846761cab7cb8c89eb51c96607172c402d1f46db"
 )
 _QWEN_EMBEDDING_DIMENSION = 4096
+#: The v2 candidate: ``qwen3.7-text-embedding-flash`` on the MaaS gateway, which
+#: speaks DashScope's native embeddings shape and answers with 1024 dimensions.
+#: Its vectors live in a *different* space from the Qwen3-8B pair above
+#: (measured cosine ≈ -0.03 after Matryoshka truncation), so the two are
+#: separate authorities: an index built with one may never be read with the
+#: other. Nothing selects this pair yet — it is prepared here so the rebuild can
+#: be planned, not so the live line can move.
+_QWEN_FLASH_EMBEDDING_BUNDLE_SHA256 = (
+    "cdddcdfd998e6c9e6147f735fd71370f209045636f3b2f3efa15e7e73a8e96ad"
+)
+_QWEN_FLASH_EMBEDDING_DIMENSION = 1024
 _ACCEPTED_EMBEDDING_AUTHORITIES = frozenset(
     {
         (_RECORDED_EMBEDDING_BUNDLE_SHA256, _RECORDED_EMBEDDING_DIMENSION),
         (_QWEN_EMBEDDING_BUNDLE_SHA256, _QWEN_EMBEDDING_DIMENSION),
+        (
+            _QWEN_FLASH_EMBEDDING_BUNDLE_SHA256,
+            _QWEN_FLASH_EMBEDDING_DIMENSION,
+        ),
     }
 )
 _EXPECTED_OBJECT_COUNTS = {
@@ -7964,7 +7982,16 @@ class _BoundEmbeddingAdapter(RecordedEmbeddingAdapter):
 
 
 @dataclass(slots=True)
-class _OpenAICompatibleEmbeddingAdapter:
+class _BatchingEmbeddingAdapter:
+    """Batching, caching and vector validation shared by the HTTP providers.
+
+    A provider subclass supplies two hooks: which credential slot it reads and
+    which client speaks its wire shape. Everything else — the de-duplicated
+    cache, the per-batch thread pool, and the "an answer we cannot use fails
+    closed" vector validation — is provider-independent, so the two providers
+    cannot drift apart on it.
+    """
+
     model_id: str
     dimension: int
     authority_sha256: str
@@ -8027,7 +8054,7 @@ class _OpenAICompatibleEmbeddingAdapter:
         self,
         texts: tuple[str, ...],
     ) -> tuple[tuple[float, ...], ...]:
-        api_key = load_local_api_key()
+        api_key = self._resolve_api_key()
         if not api_key:
             raise ValueError("release embedding credential is unavailable")
         batches = tuple(
@@ -8036,11 +8063,7 @@ class _OpenAICompatibleEmbeddingAdapter:
         )
 
         def embed_one(batch: tuple[str, ...]) -> tuple[tuple[float, ...], ...]:
-            client = _OpenAIEmbeddingClient(
-                base_url=self.base_url,
-                api_key=api_key,
-                timeout=float(self.timeout_seconds),
-            )
+            client = self._provider_client(api_key)
             raw_vectors = client.embed_batch(list(batch), model=self.model_id)
             if len(raw_vectors) != len(batch):
                 raise ValueError(
@@ -8065,6 +8088,42 @@ class _OpenAICompatibleEmbeddingAdapter:
         ) as executor:
             parts = tuple(executor.map(embed_one, batches))
         return tuple(vector for part in parts for vector in part)
+
+    def _resolve_api_key(self) -> str:
+        """The credential for this provider's endpoint, or "" when unconfigured."""
+
+        raise NotImplementedError
+
+    def _provider_client(self, api_key: str) -> Any:
+        """One HTTP client speaking this provider's request/response shape."""
+
+        raise NotImplementedError
+
+
+@dataclass(slots=True)
+class _OpenAICompatibleEmbeddingAdapter(_BatchingEmbeddingAdapter):
+    def _resolve_api_key(self) -> str:
+        return load_local_api_key()
+
+    def _provider_client(self, api_key: str) -> Any:
+        return _OpenAIEmbeddingClient(
+            base_url=self.base_url,
+            api_key=api_key,
+            timeout=float(self.timeout_seconds),
+        )
+
+
+@dataclass(slots=True)
+class _DashScopeNativeEmbeddingAdapter(_BatchingEmbeddingAdapter):
+    def _resolve_api_key(self) -> str:
+        return _load_gateway_embedding_api_key()
+
+    def _provider_client(self, api_key: str) -> Any:
+        return _DashScopeTextEmbeddingClient(
+            base_url=self.base_url,
+            api_key=api_key,
+            timeout=float(self.timeout_seconds),
+        )
 
 
 def load_recorded_decision_adapter(path: Path) -> _DecisionAdapter:
@@ -8152,6 +8211,68 @@ def load_recorded_embedding_adapter(path: Path) -> _EmbeddingAdapter:
     )
 
 
+#: The candidate gateway's credential slot. Deliberately *not* the local
+#: endpoint's slot (``load_local_api_key``: API_KEY → OPENAI_API_KEY →
+#: SGLANG_API_KEY → ``.sglang_api_key``): that one holds the self-hosted
+#: embedding server's key, and a bundle pointing at a third-party host must
+#: never be handed it. The bundle records this source name, so which slot a
+#: bundle may read is part of its frozen identity.
+_GATEWAY_EMBEDDING_API_KEY_ENV = "CANONICAL_V2_EMBEDDING_API_KEY"
+_GATEWAY_EMBEDDING_API_KEY_SOURCE = f"env:{_GATEWAY_EMBEDDING_API_KEY_ENV}"
+
+
+def _load_gateway_embedding_api_key() -> str:
+    """The third-party gateway's key, or "" when the operator has not set it."""
+
+    return os.environ.get(_GATEWAY_EMBEDDING_API_KEY_ENV, "").strip()
+
+
+def _load_dashscope_native_embedding_adapter(path: Path) -> _EmbeddingAdapter:
+    """Load the v2 candidate authority: DashScope-native shape, 1024 dimensions."""
+
+    document = _load_recorded_bundle(
+        path,
+        schema_version="canonical-v2-dashscope-native-embedding-bundle-v1",
+        exact_keys=frozenset(
+            {
+                "schema_version",
+                "provider",
+                "model_id",
+                "dimension",
+                "base_url",
+                "api_key_source",
+                "batch_size",
+                "max_workers",
+                "timeout_seconds",
+                "content_sha256",
+            }
+        ),
+    )
+    expected = {
+        "schema_version": "canonical-v2-dashscope-native-embedding-bundle-v1",
+        "provider": "dashscope-native",
+        "model_id": "qwen3.7-text-embedding-flash",
+        "dimension": _QWEN_FLASH_EMBEDDING_DIMENSION,
+        "base_url": "https://maas.qianwenaiapi.com/api/v1",
+        "api_key_source": _GATEWAY_EMBEDDING_API_KEY_SOURCE,
+        "batch_size": 32,
+        "max_workers": 32,
+        "timeout_seconds": 180,
+        "content_sha256": _QWEN_FLASH_EMBEDDING_BUNDLE_SHA256,
+    }
+    if document != expected:
+        raise ValueError("candidate embedding bundle differs from frozen authority")
+    return _DashScopeNativeEmbeddingAdapter(
+        model_id=cast(str, document["model_id"]),
+        dimension=cast(int, document["dimension"]),
+        authority_sha256=cast(str, document["content_sha256"]),
+        base_url=cast(str, document["base_url"]),
+        batch_size=cast(int, document["batch_size"]),
+        max_workers=cast(int, document["max_workers"]),
+        timeout_seconds=cast(int, document["timeout_seconds"]),
+    )
+
+
 def load_content_addressed_embedding_adapter(path: Path) -> _EmbeddingAdapter:
     """Load one frozen build/serving embedding authority without retaining secrets."""
 
@@ -8164,6 +8285,14 @@ def load_content_addressed_embedding_adapter(path: Path) -> _EmbeddingAdapter:
         raise ValueError("content-addressed embedding bundle schema differs")
     if raw.get("schema_version") == "canonical-v2-recorded-embedding-bundle-v1":
         return load_recorded_embedding_adapter(path)
+    # The bundle's ``provider`` field selects the wire shape, and each provider's
+    # loader below validates its own schema version plus its frozen identity
+    # (model, dimension, address, credential slot, content hash). A bundle cannot
+    # claim one provider and carry another's identity.
+    if raw.get("provider") == "dashscope-native":
+        return _load_dashscope_native_embedding_adapter(path)
+    if raw.get("provider") != "openai-compatible":
+        raise ValueError("embedding bundle provider is not a known embedding provider")
 
     document = _load_recorded_bundle(
         path,
