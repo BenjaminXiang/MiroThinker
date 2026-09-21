@@ -497,3 +497,489 @@ SSE `event: error` → 页面红字。同一轮里其余五条道全健康，但
 **已启动**：从 switch-line 按 runbook 步 0–5 启动构建（detached、原生路由、batch 20），并盯 30–45 分钟的两个"窗口杀手"（每批 400 / 向量审计假失败）。
 
 **新增遗留（不阻塞本次）**：① 管理页的**身份校验卡验不了原生路由**（只讲 OpenAI 形状 → 对 `/api/v1` 得 404 → 显示"未校验"，**从不假通过**）；要补就把 DashScope 客户端接进那张卡。② 服务方若把上限收紧到 **低于** 20，需再次重冻。③ 若哪天启用兼容孪生端点，查询会**丢掉**这两个参数（且向量不同源）——"只用一条路由"仍是硬规则。
+
+## 第 19 轮 · 2026-09-22 · 构建确证在跑（两个窗口杀手用证据排除、`src` 树陷阱记档）；遗留"车道超时纳管"核对为已关闭
+
+**做了什么**：不看子代理的转述，独立核对构建进程本身（cmdline / environ / 启动脚本 / bundle / 日志 / 取样器）；把用户点名的遗留项逐条**拿到代码里**核对，而不是核对计划文本。
+
+**发现**：
+
+1. **`src` 树陷阱（第一次发射 12 秒即死）** — 报错 `TypeError: load_content_addressed_embedding_adapter() got an unexpected keyword argument 'role'`。根因：部署 venv 把 `src` 以 editable 装在**活线树**上（`_editable_impl_miroflow_agent.pth` → `/home/longxiang/MiroThinker/apps/miroflow-agent`），而**脚本方式启动时 `sys.path[0]` 是脚本目录不是 cwd** ⇒ 构建进程 import 的是活线树的 `canonical_v2`（没有 `role` 参数、没有候选身份）。修法：启动器导出 `PYTHONPATH=<switch-line>/apps/miroflow-agent`（PYTHONPATH 排在 `.pth` 之前），已实测生效。
+   **切换时必须带上（第 12 步）**：现役 18188 是 cwd=自己的树、无 PYTHONPATH 启动的；切换后的 serve 命令若不把 cwd/PYTHONPATH 钉到 switch-line，就会**用旧树的代码服务新包**。
+
+2. **窗口杀手一（每批 400）已排掉，且验的是构建自己的代码路径**：`build-embedding-path-probe.json` — document 角色、batch 20、20 篇（最长 15,078 字符、合计 171,111 字符）→ **20 行 × 1024 维、1.605 s**（0.0802 s/篇），authority 哈希与冻结值一致。**不是 curl 探针**。
+
+3. **窗口杀手二（向量审计假失败）已排掉**：从 `/proc/2077915/environ` 读到 PYTHONPATH 确实钉在 switch-line，再读那棵树的常量 `index_projection_isolated.py:76` → `_MIN_VECTOR_COSINE_SIMILARITY = 0.99`（活线树仍 0.999）。实测重复噪声最小 0.998002 ⇒ 余量 4 倍跨度。
+
+4. **构建的阶段钟就是它自己的打印**：`P4_MERGE_LEDGER` → `APPLICANT_BINDING_LEDGER`（两行已打出）→ 下一个是 `PATENT_COMPANY_BINDING_LEDGER` → 之后才进嵌入阶段 → 最后 `envelope_sha256=`。所以**"日志不动"不等于卡住**（合并/绑定阶段本身不打行）；判活看 PID 的 CPU 时间与取样器。
+
+5. **遗留"车道超时纳管"核对结论：已在 switch-line 关闭**（迁移计划 §3.1 那一行已过期）。整条链现在闭合：
+   - `providers/dashscope_embeddings.py:93-102`：`httpx.TimeoutException` → 内置 `TimeoutError`；`(httpx.HTTPError, OSError)` / `JSONDecodeError` → 内置 `ConnectionError`；
+   - `knowledge_read_isolated.py:328-333`：传输类异常**原样上抛**，其余才包成完整性错误；
+   - `knowledge_read.py` `_invoke_lane`：恰好 catch 这两个内置类型 → 记 `timeout` / `connection_failure`，车道降级而非整轮死；
+   - `knowledge_read.py:713`：向量道整道预算 **8.0 s**（受管字段 `serving.vector_lane_timeout_seconds` 可调，坏值回落到默认，不会被"坏旋钮"取消上限）；
+   - `canonical_v2/embedding_lane_resilience.py`：进程级熔断器，车道读与 keep-warm 共用。
+
+6. **kb_isolated 基线对比现状（agent-79 在跑）**：`test_knowledge_build_isolated.py + test_serving_pack_no_milvus.py` 共 **159 项**，跑到第 **128** 项时已有 **14 个 F**，第 **129** 项（`test_unrecoverable_or_quarantined_input_records_typed_gap_without_placeholder_fact`，一个"在测试内跑完整构建"的集成项）**转到 100% CPU 不再前进**（20 分钟以上）。日志 `/tmp/switch-line-canonical-v2-tests.log`。**它不在封印路径上**（runbook 步 1–12 无 pytest 门），不阻塞构建；但"14 个失败是既有还是本次引入"必须有答案。
+
+**怎么验证**：`/proc/2077915/environ` + cmdline（进程真的在用 switch-line 的代码树）；bundle 逐字段（provider / model / dim / batch / query 侧参数 / `content_sha256 67927ea0…`，文件 sha256 `35104c06…`）；`build-embedding-path-probe.json`；两棵树 `index_projection_isolated.py` 常量对比；httpx 异常 MRO 实测（**确认不是内置类型**，故"钩子永响"的判断成立）；F1 五处逐行。
+
+**影响哪些问题**：① 切换命令多一条硬要求（钉代码树）；② 遗留清单划掉一项（车道超时纳管）；③ "kb_isolated 套件不可作为快速红绿门"入账，其失败归因待基线对比。
+
+**并行结构（本回合）**：三条线同时跑 — 构建（PID 2077915，99% CPU，日志零 400 零 traceback，内存 7.8 GB / 503 GB 非约束）+ 身份探针（agent-80）+ 首启日志刷屏（agent-81）。三片都必须**在封印前**合入：任何 `canonical_v2/*.py` 改动若不重新封印，会让每次启动多花 137–190 s。
+
+## 第 20 轮 · 2026-09-22 · 容器线开张（关最后 4 项）；首启刷屏修复完成（含一个额外发现的功能缺陷）；构建交班与 45 分钟取证
+
+**一、容器交付线开张（用户指令：现在就把这条线开起来）**
+
+把"4 项未验证"设计成**一次连贯演练**，而不是四次互不相干的操作——因为 4 项的合体恰好就是甲方的真实动作路径（我们打包 → 他们下载 → 上传到自己的机器 → 跑脚本 → 在页面填 key）：
+
+| 命题 | 判据（要可观察，不接受"从语义推断"） |
+|---|---|
+| ① `--force-recreate` 反向实验 | 必须有一个**可观察结果**证明"换 key 后只 `restart` 不够"——不接受仅凭 inode 语义推理 |
+| ② 管理页手填 key 真提交 | 浏览器里真的登录 `/main`、真的在 `/admin` 填并保存、真的点一次"测试" |
+| ③ 真 root（sudo）安装 | 本机 `sudo` 免密可用；上次演练是**无 sudo** 的 |
+| ④ 跨文件系统传送链路 | `/var/tmp`（`/`，剩 881 GB）与 `/home`（`sda1`，剩 1.3 TB）**就是两个文件系统**，可就地真做：传送 → `sha256sum -c` → **从传送后的副本**安装 |
+
+**边界（写进派工简报，违反即失败）**：不许碰活线 18188；不许碰构建 PID 2077915 与其 `staging-v4/index-v4`；不许碰 18297 上别人的 scratch（pid 1335614）；演练端口用 **18298**；site root 新开、不复用上次的 `/var/tmp/mirothinker-delivery-rehearsal`；不跑 `docker system prune`；不回显密钥。
+
+**用的交付件（都在盘上，不重建）**：容器 kit `/var/tmp/mirothinker-docker-kit-v11/`（`mirothinker-serving-v1.1.tar.gz` 2.16 GB / `sha256 f842f6de…`；镜像已 load，image id `sha256:04c3cfcd465f…` 与 `kit-manifest.txt` 一致）；数据面 `/var/tmp/mirothinker-data-face-xfer/serving-data-v1.1.tar.gz` 1.48 GB；站点包与 bundles `/var/tmp/mirothinker-delivery-kit-v1.1/`。安装器 `deploy/docker/install-site.sh` 自带 `MIROTHINKER_SITE_ROOT` 前缀 ⇒ 可在不碰真实路径的前提下排练。
+
+**关于"改不改交付件"的判断**：v2 会重打镜像与数据面，所以**手改 v1.1 产物没有意义**；值得改的只有脚本/文档里的**机制缺陷**（`install-site.sh`/`compose.yaml`/`README.md`/`entrypoint.sh`），改了随 v2 重打自动带上。
+
+**二、首启刷屏修复完成（分支 `v2/boot-log-noise`，`513b9e65` + `4d7fa03a`）**
+
+根因：`serving_pack_loader.py:1060-1065`（修前）把 `relationships.json` 里的 `public_path_eligibility_requests` **以原始 dict 挂进**一个声明为 `tuple[PathEligibilityRequest, ...]` 的字段；pydantic 容忍但**每次 dump 对每个元素告警一次**，47,068 条 ⇒ 一行约 4.7 万行的告警。有两条 boot 路径会 dump 该字段（无收据的全量校验 `serving_pack_loader.py:1104`，以及**每次启动都会走的** `knowledge_read_isolated.py:984`）。修法＝用加载器已有的 `_parse_models` 挂成声明类型（与兄弟字段 `public_path_eligibility_results` 同款处置），不是全局静音。
+
+**额外发现（比刷屏本身更重要）**：同一处原始挂载**还是个功能缺陷**——`knowledge_read_isolated.py:4093-4098`（教授→论文道）会调 `PathEligibilityEngine().evaluate(path_request)`，而 `path_eligibility.py:516-519` **拒绝任何不是 `PathEligibilityRequest` 的对象**。所以修复前那条道拿到的是 dict，是被拒的形状。
+
+证据：真实日志 before（`/var/tmp/mirothinker-docker-logs/container-rw2-timed.log` 47,413 行、其中 47,360 行含该告警）；fixture 前后对照（同一代码路径 4 条请求：修前 4 条 PE 告警 → 修后 0）；dump 载荷**逐字节相等**；新测试 1 条 + 既有套件 32/35/49/1 全绿。
+
+**它自己承认的残余风险（已授权它去验）**：类型化之后，任何一条校验不过的生产请求会**让新包 fail-closed 拒绝启动**（修前能启动）。它没能在真包上验（读 3.5 GB 会与构建抢 I/O）——**已授权续跑**：拿真包 `serving-pack-run16-readerbound/relationships.json`（3,477,354,956 B，单 JSON，顶层键 `public_path_eligibility_requests` ≈ 47,068 条）逐条 `model_validate`，并给出往返逐字节相等性的不一致条数与形状，以及峰值 RSS/墙钟/对构建的影响对照。**这是"这个修复能不能在封印前合入"的直接判据。**
+
+**三、构建交班与 45 分钟取证**
+
+| 时刻 | 已跑 | CPU | RSS | 日志 | 末行 |
+|---|---|---|---|---|---|
+| 00:12 | 1:34 | 93% | 2.3 GB | 796 B | `P4_MERGE_LEDGER` |
+| 00:20 | 9:35 | 98.8% | 3.8 GB | 1050 B | `APPLICANT_BINDING_LEDGER` |
+| 00:56 | 44:50 | 99.7% | 11.8 GB | 1050 B | 同上 |
+
+仍在**恢复/合并阶段**，`ss` 显示零 socket ⇒ **尚未发出任何一次网关调用**（所以 batch-20 的证明还没被真实负载检验过，下一阶段才是）。阶段钟：`P4_MERGE_LEDGER` → `APPLICANT_BINDING_LEDGER`（已出）→ 下一个 `PATENT_COMPANY_BINDING_LEDGER` → 嵌入阶段 → 最后 `envelope_sha256=`。
+
+**交班隐患已处理**：原采样器带 `timeout 3900`（65 分钟）会自己退出 ⇒ 已重新挂一个 `timeout 30000`（8.3 小时）的采样器，整夜有记录。
+
+**四、一处重要更正**：kb_isolated 那 14 个失败**不是本次引入**。归因是**环境相关**——`*_nonfresh_database_*` 家族指向 Postgres **5432**，而本机构建道是 **55458**，它们断言"非新库应拒绝"，而代码答的是另一件事（candidate 迁移版本与活线单 head 不一致）。另外我先看到的"进度线更差"是**两次并发运行互相污染**所致。它不在封印路径上（runbook 步 1–12 无 pytest 门）。
+
+**它另外标出的 4 个后段风险（记录备查）**：① 嵌入段任何传输错误都会中止整段（无 checkpoint、无重试）⇒ 只能重来；② 0.99 是**逐点**比较、覆盖约 51k 点，单个病态点仍可能掉出；③ 切换的 `src` 陷阱是**最高风险的静默失败**（新包 + 旧树代码）；④ 步 7 的转换脚本必须取自 switch-line 的 `.worktrees/drop-milvus-from-serving-pack/convert_index_to_v2.py`，禁止从构建树取。
+
+## 第 21 轮 · 2026-09-22 · 抓到两条静默陷阱（路由标签被写反、`src` 树由谁决定）+ 切换命令校验器与草案 + 两个打击"只填 key"承诺的阻塞项
+
+本轮是"不等构建、把后段会踩的坑提前排掉"的产物。**两条陷阱都不会报错，只会静默降质或静默换树**——正是最该在窗口前解决的类型。
+
+**一、陷阱 A：runbook 把两条嵌入路由的标签写反了（会静默丢 B 方案 + 跨空间检索）**
+
+runbook §0 原文把 **compat 孪生**标成 `(chosen route)`、**native** 标成 `(fallback)`，而第 12 步的表把服务侧指向 `$BUNDLE_COMPAT`。**这与 2026-09-22 的拍板相反**：选 B 的全部理由就是 `text_type`/`instruct` **只有原生接口支持**，而正在跑的构建用的正是 native。两处注释里的哈希（`45e45855…`/`cdddcdfd…`）也是上一轮冻结前的旧值（batch 25 那次；现已重冻为 batch 20）。
+
+实测身份（本轮核过）：
+
+| bundle | provider | dim | batch | query 侧参数 | content_sha256 | 文件 sha256 |
+|---|---|---|---|---|---|---|
+| native（**构建实际在用**） | `dashscope-native` | 1024 | 20 | `text_type=query` + `instruct` | `67927ea0…` | `35104c06…` |
+| compat 孪生 | `openai-compatible` | 1024 | 20 | **均为 None** | `d5ff0ffb…` | `d7d2f57f…` |
+
+**为什么是静默的**：两条路由**不是同一个向量空间**（同文本跨路由余弦上界 **0.9594**，而同路由重复是 1.0）。若构建用 native 嵌入文档、服务用 compat 嵌入查询，查询向量就落在与文档不同的子空间里——**没有任何报错，只是召回质量下降**，而召回门是对着 4096 维旧基线比的，信号本身是混的。
+
+**已修**：§0 的两行重写（标签对调 + 新哈希 + 写明"构建与服务必须指名同一个 bundle"的理由），第 12 步表里 `--recorded-embedding-bundle` 改为 **`$BUNDLE_NATIVE`**。
+
+**二、陷阱 B：`src` 到底由谁决定——三种启动形态实测**
+
+现役 18188 用 `uv run python <自己 worktree 的 launcher>`，**它用的是那个 worktree 自己的 venv**（`candidate-v2-s11-consolidation/.venv`，其 editable 安装指向**它自己那棵树**）⇒ 树是被 venv 钉住的。而 switch-line **没有 `.venv`**。所以"照抄现役命令、只改路径"这条路是错的：`uv run` 会在现场**同步一个新解释器**（要联网，且 reader 指纹很可能不同 ⇒ 每次启动从 ~120 s 快路径掉到 ~285 s 重放路径）。
+
+实测（判决性，同一台机同一分钟）：
+
+| 启动形态 | `import src.data_agents.canonical_v2` 解析到 |
+|---|---|
+| 主 venv，无 `PYTHONPATH` | `/home/longxiang/MiroThinker/apps/miroflow-agent/...`（**主仓树**） |
+| 主 venv，`PYTHONPATH=<switch>/apps/miroflow-agent` | `<switch-line>/apps/miroflow-agent/...` ✅ |
+| `uv run`（cwd=switch-line，无 `.venv`） | 会现场同步——不可用于切换 |
+
+三套解释器核对：主 venv **3.12.12 + pydantic 2.12.5**；现役线的 venv **3.12.12 + pydantic 2.12.5**；switch-line 无 venv。⇒ **切换应采用"主 venv + PYTHONPATH"**：它既钉住树，又**就是封印用的那个解释器**，reader 指纹因此与封印一致。已写进 runbook 第 12 步的新表行（含实测与理由）。
+
+**三、切换命令：校验器 + 草案**
+
+- **校验器** `…/embedding-model-switch-v2/check-cutover-command.sh`：把上面两条陷阱变成**可以判红的检查**——树是否被显式钉住、有没有残留现役树/现役包/现役索引、嵌入 bundle 是不是 native（出现 `-openai-compat` 直接 FAIL）、密钥是否注入、两处 64-hex 是否已填、新的身份三件套是否就位。
+  - 对**现役命令文件**跑：**3 ok / 11 fail**（正确识别为切换前形态）。
+  - 对草案跑：**12 ok / 2 fail**，且 2 个 FAIL **恰好是故意留的两处占位符**（step 7 的索引 marker、step 10 的 bundle sha）——证明占位符不会被静默放行。
+- **草案** `…/s12g/serve-18188-command-fembed.DRAFT.sh`：由现役命令文件逐处替换生成，**每次替换都过了 token 级 diff 复核**（启动形态、库名、staging、index、marker、release/run id、模型 id、嵌入 bundle、服务 bundle 及其 sha、serving-pack）。**尚未安装**，两处占位符待 step 7/10 填。
+
+**四、构建守护补齐**
+
+嵌入段**没有检查点也没有重试**：任何一次传输错误都会让 8 小时白跑。原 2 分钟采样器只记"最后一行"，错误后面若还有输出就会被翻过去。已加一个**只读新增字节**的报警看门狗（45 秒一轮）：命中致命签名（`Traceback`/`TimeoutError`/`ConnectionError`/vector audit 等）就写 `/var/tmp/fembed-BUILD-ALERT`，命中可疑签名写报警日志。已确认在安静期**零误报**。另：原采样器带 `timeout 3900` 会自行退出，已重挂 `timeout 30000`。
+
+**五、agent-80 交回：身份探针支持双形态（含两处交付阻塞）**
+
+- 形态选择**问地址、不问配置**：先讲 OpenAI 兼容形态，**只有 404/405（该路由不存在）**才改讲 DashScope 原生形态；401/403/500/超时/维度变化一律**算作该路由自己的回答**，绝不换路由重试。理由写得好：管理台**不持有 bundle**，任何"声明"都会变成第二个权威，且与地址不符时会去校验**另一条**路由。
+- 角色贯通到线上：索引臂 → `document`（不发 `text_type`）、参考臂 → `query`（发 `text_type="query"`）。**实测两角色相差 0.90083**，远低于两道 0.99 地坪 ⇒ **猜错角色会"判一个健康端点不合格"，而不是把错误藏起来**。
+- 它还必须顺手修**连通性测试**（否则身份修复在页面上毫无体现：同一处也只会讲兼容形态，对原生前缀返回 404 → 直接跳过身份校验）。
+- 新增测试 12 条；两个被改文件 41 → 51 passed；导入它们的另 8 个 admin 套件 178 passed；全量 25 failed / 1564 passed / 31 skipped / 105 errors —— 与既有的环境性红集**逐项对上**（switch 线自己记的是 "130 entries (25 failed, 105 errors)"）。另有一次多出一个未复现的 flake，如实记录。
+- **两条交付阻塞项（已派它去修）**：① `resolve_embedding` 仍写死 `Qwen/Qwen3-Embedding-8B`，网关对**两条路由都**回 404 `Model not exist` ⇒ 页面连接卡不可能变绿；② 管理页把 `embedding.api_key` 写进 `SGLANG_API_KEY`，而 bundle 读 `CANONICAL_V2_EMBEDDING_API_KEY` ⇒ **页面填的 key 服务进程可能读不到**。这两条直接打击我们对甲方"**只填一个 key**"的承诺（`docs/plans/2026-09-21-customer-site-delivery-plan.md`、`deploy/docker/CONFIG-GUIDE.md`），所以列为本轮阻塞项，并要求它先钉死"这个固定值被**哪个进程**读、要不要重新封印"再动手。
+
+## 第 22 轮 · 2026-09-22 · 判定"修复能不能在封印前合入"（结论：能，且信封不含代码树指纹）；同一 `src` 陷阱的**第三处**在封印器上被判决
+
+**一、为什么必须先回答这个问题**
+
+agent-81 的首启刷屏修复与 agent-80 的身份探针修复都在**别的分支**上，而正在跑的 8 小时构建 import 的是 switch-line 那棵树。我原以为"构建跑完再合入"是安全的，但有个未经证实的假设：**如果信封记录了构建时的代码树指纹，封印时会重新比对，那么构建之后再合入就会让封印失败**——那"等构建结束再合"就是错的，得改成重新跑一次构建。所以先把这个假设验掉。
+
+**二、答案：信封里没有代码树指纹 ⇒ 构建后合入安全**
+
+| 事实 | 证据 |
+|---|---|
+| `reader_contract_sha256` 由**封印器**写入（不是构建） | `build_serving_pack.py:464`：`"reader_contract_sha256": pack_loader.reader_contract_digest()` |
+| 它的定义 = `sha256(python 版本 + pydantic 版本 + canonical_v2 包里每个 *.py)` | `serving_pack_loader.py:257-281`（`_PACKAGE_DIR.glob("*.py")`，整个包） |
+| 信封与构建模块里**没有任何**代码树/代码身份字段 | 对 `complete_candidate_runner.py` 与 `knowledge_build_isolated.py` grep `code_tree\|code_identity\|source_tree\|tree_sha\|reader_contract` → 零命中 |
+| 该指纹只决定"快路径还是重放"，不决定对错 | `_reader_contract_matches()`：三个条件全满足才跳过重放（收据已用 + 包记录了 reader + 与当前代码相同）；`verify_reconstruction=True` 时无条件重放（封印自己就是这样证明重建的） |
+
+⇒ **合并窗口＝构建结束之后、封印（步 8）之前**。不必重跑构建。步 9 的 `mount_seconds` 是要盯的经验值（~120 s 一类＝指纹相符；~285 s＝不符）。
+
+**三、判决：同一个 `src` 陷阱的第三处——封印器**
+
+runbook 步 8 原文只要求"从 switch line、用部署解释器跑"。**这不够**。封印器的 `_bootstrap_src()`（`build_serving_pack.py:44-53`）是**先试着普通 import**、只有 `ModuleNotFoundError` 才回退到"自己所在那棵树"：
+
+```python
+try:
+    import_module("src.data_agents.canonical_v2.serving_pack_loader")   # 主 venv 的 .pth 让这一句成功
+except ModuleNotFoundError:
+    agent_root = Path(__file__).resolve().parents[4] / "apps/miroflow-agent"   # 于是这条永远不走
+```
+
+而主 venv 的 `_editable_impl_miroflow_agent.pth` 指向**主仓检出**（`/home/longxiang/MiroThinker/apps/miroflow-agent`），**主仓当前在一条落后的分支上**。实测（本轮，两条并列）：
+
+| 形态 | 封印器绑到的树 | 有 `reader_contract_digest` 吗 |
+|---|---|---|
+| 无 `PYTHONPATH` | `/home/longxiang/MiroThinker/apps/miroflow-agent/...`（**主仓**） | **没有** ⇒ `pack_loader.reader_contract_digest()` 会 `AttributeError` |
+| `PYTHONPATH=$SWITCH_LINE/apps/miroflow-agent` | `<switch-line>/apps/miroflow-agent/...` ✅ | 有 ✅ |
+
+⇒ **照步 8 原文跑会崩**（而且是在写 manifest 那一刻崩，不是启动时——白等 40 分钟的校验相位）。已修步 8：加 `PYTHONPATH` 钉法 + 一条**跑封印之前先证明绑对了树**的前置命令（打印 `__file__` 与 digest，并要求把该 digest 记下来，供步 9 的 `mount_seconds` 与后续比对）。同一段里写明：**服务侧命令必须用同一个钉法**，因为指纹覆盖整个包，封印与启动必须 import 同一棵树。
+
+**三处同一陷阱的现状**：构建启动器 ✅（`PYTHONPATH` 已加，实测生效）、服务侧切换命令 ✅（草案里已含，校验器判它）、**封印器 ✅（本轮修）**。
+
+**四、agent-81 的真包校验：反例为零（它自己承认的风险已关闭）**
+
+它上一轮承认的残余风险是"类型化之后，任何一条校验不过的生产请求会让新包 fail-closed 拒绝启动"。现在的答案（真包 `relationships.json` 3,477,354,956 B）：
+
+- **47,068/47,068 全部通过**，`failures=0`，耗时 **2.3 s**（49.5 µs/条，实测而非外推）；
+- **往返逐字节全等**：`exclude_unset` 与不带两种 dump 各 **47,068/47,068 identical、0 mismatched** ⇒ `index_projection_request_sha256` 的复现是**必然**，不是"大概能对上"；
+- 代价量化：启动只多 ~2.3 s，换来每次 dump 少 ~47k 行（≈7 MB）告警；
+- **构建未受干扰**：全程"CPU 时间增量/墙钟增量"恒为 **1.000**（含读包那一格），`/proc/2077915/io` 在整个读包期间读数**一个字节没动**（它现在是纯 CPU 阶段），构建 RSS 钉住不变；唯一副作用是 3.5 GB 进了页缓存。
+- 未闭合的仍如实列出：真包的端到端启动（禁区）、docker 日志里第三条 255 条 PE 的 warning 来源未定位、每次 dump 残留 11–15 条非 PE 条目是 loader 有意保留的 raw 子树。
+
+**五、我自己的复核（不采信转述）**
+
+- 在它的 worktree 上**自己跑**新测试：修后 `1 passed`；
+- **自己造 RED**：把源文件切回修前版本（`ac4b404` 那版）再跑 → `1 failed`，失败信息正是 "the reconstruction mounted raw JSON where PathEligibilityRequest was declared" + 那条 `PydanticSerializationUnexpectedValue` 断言；
+- 还原后复跑 → `1 passed`；`git status` 干净、HEAD 未变（还原命令第一次因 cwd 变化失效，随即用绝对路径还原并确认干净）。
+
+⇒ 满足"**修复＝一条修前红、修后绿的复现测试**"的验收标准。
+
+## 第 23 轮 · 2026-09-22 · 两个交付阻塞项已修（含承重声明复核）；**并坐实一个更严重的洞：走一键安装的甲方在 v2 上拿不到嵌入凭据**
+
+**一、agent-80 第二轮：两个阻塞项都修了**
+
+| 阻塞项 | 修法 | 关键判断 |
+|---|---|---|
+| 连接卡写死 `Qwen/Qwen3-Embedding-8B`（网关两条路由都回 404） | 模型身份改为**从已挂载包里的记录**解析（`_recorded_embedding_model`，fail-open），写死值只作"无包时"回落；**页面仍然不能改它**，只是换了来源 | 只动 admin-console ⇒ **不动** `reader_contract_sha256` |
+| 管理页的 key 落进 `SGLANG_API_KEY`，而候选 bundle 读 `CANONICAL_V2_EMBEDDING_API_KEY` | 页面一个字段同时占**两个槽位**（记录行 + 候选 bundle 声明的 `api_key_source`），沿用既有"环境优先 / 收据只记名字"规则 | 动 `canonical_v2/managed_secrets.py` ⇒ **动指纹，必须在封印前合入** |
+
+**修在写侧、不是读侧**，理由它写得很对：放宽读侧会让**第三方 bundle 拿到自建端点的 key** —— 正是 `knowledge_build_isolated` 存在要守的不变量。有一条测试专门钉住这个不对称。
+
+**承重声明我自己复核过（不采信转述）**：
+
+- 摘要范围：`git diff --name-only ac44b404..v2/admin-identity-native` 里落在 `canonical_v2/` 包路径下的**只有 `managed_secrets.py`** 一个（另一个 `canonical_v2/` 路径是 `apps/miroflow-agent/tests/...`，不在包内、不参与摘要）⇒ 与它的说法一致。
+- `resolve_embedding` 的调用点**全在 `apps/admin-console/**`**（`canonical_v2_admin_config.py:476`、`canonical_v2_runtime_sources.py:513`）；canonical_v2 包里那个名字相近的 `resolve_embedding_base_url` 是**地址**解析、不是模型身份 ⇒ "服务进程不碰这个写死值"成立。
+- 它主动纠正了一处自己的错误：凭据提交信息里引的 `c260d054…` 是 `ruff format` 重排之前的中间值，文档里已换成正确的一对（`4ab79cdf…` → `4e24e12c…`）。
+
+**测试纪律**：先取 RED（agent 侧 4 failed/1 passed、console 侧 6 failed/75 passed），再 GREEN（新增 13 条；console 四个被改文件 81 passed、触及面 11 个文件 177 passed）；全量 console 套件 **25 failed / 1575 passed / 31 skipped / 105 errors**，且 25 个失败 id 与上一轮记录的既有环境性红集 **逐字节相同（diff 为空）**。
+
+**实测（6 次真调用）**：页面写 → 启动投影 → 两个读者都对上（`['SGLANG_API_KEY','CANONICAL_V2_EMBEDDING_API_KEY']`，收据只记名字）；卡片实测 `ok true / 200 / 448 ms`、`provider=dashscope-native`、`role=document`、`cosine 0.998833`（阈值 0.99）。
+
+**二、它没闭合的那一项，我自己复核后认为比它说的更严重**
+
+它写的是："**docker/文件路线还半开着**：`deploy/docker/compose.yaml` 把 `secrets/.sglang_api_key` 当**文件**挂进去，而候选读者只认环境变量，所以现场把 key 放成文件**永远到不了候选槽位**。"
+
+我把整条链读完了，它说轻了：
+
+| 环节 | 事实 |
+|---|---|
+| 候选路由的凭据读取 | `knowledge_build_isolated._load_gateway_embedding_api_key()` = `os.environ.get(_GATEWAY_EMBEDDING_API_KEY_ENV, "").strip()` ⇒ **只认环境变量**（该函数的 docstring 甚至明写"两条 bundle 可以同一个线形状却**不共享槽位**：活线端点的 key 在 `load_local_api_key` 的槽位，第三方网关的在环境变量槽位"） |
+| 一键安装器让甲方放什么 | `install-site.sh:222` 写 `${SECRETS_DIR}/.sglang_api_key`；`:412/451/465` 明确要求 4 个**文件**：`.deepseek_api_key` `.bocha_api_key` `.serper_api_key` `.sglang_api_key` |
+| 容器里谁把文件变成环境变量 | `entrypoint.sh` 里 `SGLANG_API_KEY` / `CANONICAL_V2_EMBEDDING_API_KEY` **一个都没有**（grep 零命中）——文件路线靠 `load_local_api_key` 直接读文件，而那属于**v1 槽位** |
+
+⇒ **结论：走一键安装（也就是甲方真正会用的那条路）的现场，切到 v2 之后候选嵌入路由拿不到任何凭据。** 而 F1 那个"向量道 fail-open"会让它**不报错地**降级——用户看到答案照出，只是语义检索那条道死了。这是"静默降质"里最难查的一种，且**正好落在我们要交付的形态上**。
+
+**已有的一半**：agent-80 这轮补的是**页面路线**（管理页填 key → 两个槽位都写）。**缺的一半**是**部署路线**（一个挂载的 key 文件 → 两个环境变量名），两侧要对称。
+
+**修法与验收计划（已定，等容器线腾出手就做）**：
+
+1. 在 `deploy/docker/entrypoint.sh` 里按"一个文件喂两个名字"的对称规则出口候选槽位（未显式设置时才由文件推导；v1 槽位保持原样不退）；
+2. **机制级验收（今天就能做，用 agent-82 正跑着的那个 v1.1 容器）**：只放文件、不设环境变量 → 容器里 `env` 必须能看到候选槽位；
+3. **端到端验收（v2 重打镜像后的冷装演练）**：只给文件，v2 包挂上后向量道必须真能用；
+4. 边界：不许把 key 明文写进日志/审计；不改"环境优先"的既有语义。
+
+**为什么不在它的工作区直接改**：容器线正在跑那 4 项演练（同一个 slice 只能有一个写入者），改完也没法当场验；等它收工再动，顺带用它的容器验第 2 步。
+
+## 第 24 轮 · 2026-09-22 · 容器线 4 项全部关掉（含一次**实测推翻我们自己写的"必须"**）；顺带发现 **v1.1 现货包在 sudo 下根本装不完**
+
+**一、四项命题逐条结论（全部通过，且都是可观察证据）**
+
+| 命题 | 结论 |
+|---|---|
+| ① `--force-recreate` 反向实验 | **通过，但实测推翻了原推断**：`restart` 就够，`--force-recreate` **不是必须**；真正咬人的是**属主**（见下） |
+| ② 管理页手填 key 真提交 | **通过**（`agent-browser` 0.26.0 真登录 → 真填 → 真保存 → 真点测试；后端落盘 + 审计只有字段名与后 4 位；**"下次启动生效"也验了**：来源由 `legacy-file:.deepseek_api_key` 变成 `managed-file(env:DEEPSEEK_API_KEY)`） |
+| ③ 真 root（sudo）安装 | **通过**（修完 3 个 root 专属缺陷之后）——**但现货包在 sudo 下装不完**，见第二节 |
+| ④ 跨文件系统传送 | **通过**（`/var/tmp`(nvme) → `/home`(sda1) 真字节拷贝 3.4 GB；两个大归档 sha256 **MATCH**；`BUNDLE-MANIFEST.txt` 17 条 file 行 **17/17 OK**；**从传送后的副本**完成 `docker load`、解包、10 件校验、起服、验收） |
+
+**①的反转值得单独记**：原文档写"换 key 只 `restart` 不够（bind 绑的是 inode），指南直接给 `--force-recreate`"。实测三路观测（宿主 inode/hash、容器内字节、页面连接测试）：
+
+- 用文档原文命令换掉 key（确实换 inode）后**不重启** → 容器内仍是旧字节；
+- `docker compose restart app`（281 s）后 → 容器**已改挂新文件**，表现为 `Permission denied`（新文件是 `root:root 0600`），连接测试 `ok:false / HTTP 401 / api_key_source=none` ⇒ **restart 后已按新文件工作**；
+- `mv` 换 inode + `--force-recreate` → 同样 401（recreate 能做，但不是必要条件）；
+- 复原：`chown 1004:1004` + **只 restart** → 容器 hash == 宿主 hash、`ok:true/200`。
+
+⇒ **原文案的机制是错的，且漏掉了真因**：`sudo install -m 600` 让 key 文件变成 root 属主，uid 1004 的容器**读不到** ⇒ 现场表现为"换了 key 没生效"。已改 `CONFIG-GUIDE` §3/§6，并要求把"**换 key 后重跑安装器或 chown**"写进 `README-FIRST`（甲方最易踩这一条）。
+
+**二、新缺陷 8 条（D1–D8），已修 5 条——其中 3 条让甲方根本装不上**
+
+现货 v1.1 包在 sudo 下的真实失败链（这是"幸好还没上传"的那类发现）：
+
+1. **exit 11** — ① 交付包**没有 `secrets/` 目录**，而文档第一条命令就写 `… secrets/.deepseek_api_key` ⇒ `No such file or directory`；② 固定的 `/tmp/mirothinker-checksums.out` 属主是别人，root 打不开，**报错却伪装成"校验失败"**；
+2. 手工 `mkdir secrets` 后再跑 → **exit 13** — ③ 状态目录 `root:root 0700` ⇒ 容器入口 **exit 78**、`restarts=12` 崩循环；
+3. 修好后：首启 **≈455 s**（冷数据面、无 receipt）→ `/api/health` 200；**幂等重跑 exit 0、25 ok / 0 warn / 0 FAIL、109 s、`mirothinker-verify` 全通**；此后三次重启稳定 **281 s**；属主终态全归 1004:1004（容器内 `key_readable=yes state_writable=yes`），`.env` 归操作者 ⇒ 非 sudo 的 `docker compose` 也能用；`--no-up` 新分支实测 exit 0 且不动运行中的容器。
+
+| # | 缺陷 | 状态 |
+|---|---|---|
+| D3 | 真 root 安装**不归一属主**（状态目录/数据根/密钥/受管/日志）⇒ 容器 exit 78；密钥读不到 ⇒ 凭据静默"缺失" | 已修 |
+| D7 | 文档"换 key 必须 `--force-recreate`"**与实测不符**，真因是属主 | 已修文档 |
+| D1 | 交付包**没有 `secrets/` 目录**，而文档第一条命令就写它 | 已修（出包建目录 + README） |
+| D4 | 固定 `/tmp` 输出文件 ⇒ root/非 root 混用 `exit 11`，报错伪装成校验失败 | 已修（mktemp + trap） |
+| D2 | `.sha256` 写**打包机绝对路径** ⇒ 甲方 `sha256sum -c` 报"文件不存在"；**在打包机上则误校验另一个文件** | 已修 |
+| D5 | `--no-up` 是空操作（用法行公开写着它） | 已修 |
+| D8 | `/admin` 保存提示给的是**裸机**的 `systemctl --user restart …`（容器里没有） | 仅报告 |
+| D6 | entrypoint 在 root 场景建议 `user: "0:0"`（把容器跑成 root，方向反了） | 仅报告 → **本轮已派修** |
+
+全部都是**机制**修复（随 v2 重打自动带上），没有手改 v1.1 现货产物。
+
+**三、并行推进**：已把上一轮我发现的**文件路线凭据洞**派给容器线（同一个工作区、同一个 running 容器可复核）：让"一个挂载的 key 文件喂两个环境变量名"，与已完成的页面路线对称；机制级验收用现成容器做，**端到端（v2 冷装时"只给文件 → 向量道可用"）明确留给 v2 验收**，不许假装验过。D6 同批修；D8 不在该批。
+
+**四、它自己如实记录的**
+
+`ab.sh` 早期把命令行也打进日志，导致 scratch 实例首启口令泄露到该目录日志 ⇒ **已就地脱敏，并已在浏览器里改密**（旧口令 401 / 新口令 200）。**未验**：本轮没跑 replay 门 7/7（验收对象是容器交付机制而非问答质量；容器内 `mirothinker-verify` 已通过）；"清除密钥"确认弹窗没点；`--fast` / `--accept-degraded-keys` 分支没跑；"跨机器"只做到**同机跨文件系统 + 传送后副本**，没有真·下载/上传链路。活线 18188（health 200）与 8 小时构建**全程未动**。
+
+**五、给 v2 重打的验收建议（采纳）**：出包后跑"**新链路三连**"——跨 fs 传送 → `sha256sum -c *.sha256`（两个都应 OK）→ `sudo ./install-site.sh`，并把 `ok/warn/FAIL` 与 boot 秒数写进人类文档；`.sha256` 出包后统一自检格式（相对文件名、无打包机路径）；可选把 `--no-up`/`--dry-run` 纳入出包自检。
+
+## 第 25 轮 · 2026-09-22 · 召回门 scratch 命令提前备好（从切换草案派生，两者不可能再分叉）
+
+**动机**：runbook 步 11 要求门的启动命令"就是切换将要安装的那条命令"（同一个 launcher、同一个新包、同一个新索引根、同一个新嵌入 bundle），只换端口/状态路径/加门的 flag。这正是又一个"容易把树或包搞错"的地方——所以不等窗口，现在就派生好并过校验器。
+
+**产物**：`…/s12g/serve-fembed-gate-18296-command.sh`，**从已复核的切换草案 `serve-18188-command-fembed.DRAFT.sh` 派生**。与草案的**全部**差异（token 级 diff 逐条复核，只有这四处）：
+
+| 项 | 草案（切换用） | 门命令 |
+|---|---|---|
+| 端口 | 18188 | 18296 |
+| `CANONICAL_V2_ACCESS_LOG_DB` | 活线状态目录 | `/var/tmp/fembed-296/logs/access-logs.sqlite3` |
+| `CANONICAL_V2_CORRECTIONS_DB` | 活线状态目录 | `/var/tmp/fembed-296/corrections.sqlite3` |
+| 门 flag | — | `CANONICAL_V2_TURN_DEBUG_DIR=/var/tmp/fembed-296/turn-debug`、`TURN_TRACE_DIR=/var/tmp/fembed-296/turn-trace` |
+
+`CANONICAL_V2_MANUAL_RECALL_DIR` 有意不改（共享只读的手动召回目录，与既有门模板一致）。18296 端口当时空闲。
+
+**校验器对两者都给 12 ok / 2 fail**，且 2 个 FAIL **各自只落在那两处故意留的占位符上**（step 7 的索引 marker、step 10 的 bundle sha）——从**切换命令**与**门命令**两个方向独立确认了同一件事。**两处占位符在窗口里一次性填两个文件**，所以门与切换命令的身份字段不可能分叉。
+
+**一处自查**：第一次派生的 `sed` 用了行首锚点 `^CHAT_CONTEXTUAL_INTERPRETATION=on`，但那个变量在行中不在行首 ⇒ 两个门 flag **没插进去**。是**token 级 diff 把它抓出来的**（我要求每次替换都必须过 diff 复核，这次立刻兑现了价值）；改用带断言的插入后 diff 恰好只剩上面四处。
+
+**未做**：命令文件**尚未安装**（切换前不动 `serve-18188-command.sh`）；两处占位符仍空；门本身要等新包存在才能跑。
+
+## 第 26 轮 · 2026-09-22 · 文件路线在容器边界接通；它报的 R1 经我核实**比它说的更宽**（预置里有两个 v1 遗留值）
+
+**一、投影规则与优先级（这是本轮最该记住的一条）**
+
+> **一个 key 文件喂两个槽位；显式环境变量 > 管理页受管凭据 > key 文件。**
+
+三档的顺序是有理由的，不是随手排的：**如果入口脚本抢先钉死候选槽位**，那么管理页换的 key 在候选槽位**反而失效**（服务侧"已存在即跳过"）—— 所以只在"前两档都没有"时才由文件推导。v1 槽位 `SGLANG_API_KEY` 保持"按文件直读"不变。
+
+**二、容器边界验收（原始输出，只有名字与是否为空）**
+
+```
+[entrypoint]   环境槽位 SGLANG_API_KEY=空
+[entrypoint]   环境槽位 OPENAI_API_KEY=空
+[entrypoint]   环境槽位 API_KEY=空
+[entrypoint]   环境槽位 CANONICAL_V2_EMBEDDING_API_KEY=已设置
+[entrypoint]   key 文件 /opt/mirothinker/.sglang_api_key=已设置（v1 槽位按文件直读，不需要环境变量）
+收据 exit=0
+
+# 运行中的服务进程自己的环境（pid 26 = …serve_s12e_port）
+  进程环境 CANONICAL_V2_EMBEDDING_API_KEY=已设置      ← 投影真的进到服务进程
+```
+
+收据机制本身值得记：`MIROTHINKER_ENTRYPOINT_ENV_RECEIPT=1` **由子进程打印、只有真正 export 的变量才出现**，打印后退出不启动服务 —— 所以"已设置"这句话不是断言而是可观察事实。RED 也是行为级的：改前同一 stub 子进程打印 `CANONICAL_V2_EMBEDDING_API_KEY=<空>`（文件在位、v1 槽位可读），改后同一命令打印已设置。新增 5 条测试，含"显式环境变量优先"与"三档全空 ⇒ exit 0 + 如实诊断（不崩）"。
+
+**三、一件差点让证据落空的事（它自己发现的）**
+
+仓库 `.gitignore:60` 有 `*.log`，全仓被跟踪的 `.log` 数为 **0** ⇒ **上一轮与这一轮的 raw 证据日志此前根本没进 git**，而文档指向的是未跟踪文件。已全部改为 `.txt` 并被跟踪（58 个证据文件在库）。**这属于"写着有证据、其实不在库里"的隐患**，值得单独记一笔。
+
+**四、R1/R2：我核实后认为比它说的更宽**
+
+它报的是"受管 `embedding_base_url` 覆盖 bundle 记录的网关地址，而预置值还是自建端点 `http://100.64.0.27:18005/v1`"。我去读了那份预置，`extraction_endpoints` 里有**两个** v1 时代的遗留值：
+
+| 预置字段 | 值 | 投成的环境变量（`canonical_v2/managed_config.py:74-75`） |
+|---|---|---|
+| `embedding_base_url` | `http://100.64.0.27:18005/v1`（自建，甲方现场几乎肯定不可达） | `CANONICAL_V2_EMBEDDING_BASE_URL` |
+| `embedding_model` | `Qwen/Qwen3-Embedding-8B`（旧 4096 维模型；网关对它回 404，且**与 1024 维索引不是同一向量空间**） | `CANONICAL_V2_EMBEDDING_MODEL` |
+
+地址那条的影响已被它读代码确认（`knowledge_build_isolated.py:8328-8345`，两处适配器构造都走 `resolve_embedding_base_url`）；**模型那条的影响我要求它查清**（是否会进到候选适配器、还是只影响采集/旧向量化那条线）。**若不处理，v2 包原样带上这份预置，现场会"拿着网关的 key 去打自建地址"** —— 又是一类不报错的错配。
+
+设计前提（F2 原话）：**冻身份，不冻地址**。所以地址本来就是留给操作者改的字段，bundle 也已记录网关地址为默认 ⇒ 我倾向让这两个键在交付预置里**缺席**（bundle 记录值生效，"只填 key"开箱即用；要自建仍可在管理页改）。已派它：先给带行号的事实结论 → 改预置（并确认改的是**源文件**、出包时会带上）→ 重写 `CONFIG-GUIDE §4` 那段自相矛盾的措辞 → 把其它 v1 遗留值**列出来由我判断**，不扩大改动面。
+
+**五、没有退步（证据，不是断言）**
+
+v1 槽位：改动前后同一条探针**逐字一致**（`ok:true / HTTP 200 / api_key_source=legacy-file:.sglang_api_key`）。"环境优先"：新增测试钉住走"已显式设置"分支且不出现文件分支日志（它诚实标注这是在**分支级别**钉的，没有打印值比对）。页面路线：仍是 `managed-file(env:DEEPSEEK_API_KEY)`、`ok:true/200`；并新增一档测试钉住"受管凭据存在时入口不抢候选槽位"。边界：活线 health=200、构建仍在跑、18297 未被触碰、本轮提交里真凭据命中数为 0（证据里的 `sk-fake-…` 全是临时假值）。
+
+**六、端到端判据已写死，留给 v2**
+
+`02-v2-handoff.md` 里五条，可直接照抄：① 只放 4 个 key 文件、不设环境变量跑 `install-site.sh` → exit 0；② 收据显示候选槽位已设置；③ 服务进程 `/proc/<pid>/environ` 里有该变量；④ **候选道真打一次 query embedding → HTTP 200 且维度 = bundle 的 dimension（1024）**；⑤ 该站点的有效端点必须是候选网关地址。
+
+## 第 27 轮 · 2026-09-22 · 后段三条命令的前检：封印/转换完全对得上；**第 10 步的生成器有两处会静默产出错值**
+
+**动机**：后段窗口（步 6–12）里"参数不对就白等 40 分钟"的地方，现在都能只读地检一遍。不等构建，先把命令与 CLI 对平。
+
+**一、前检结果**
+
+| 命令 | 结果 |
+|---|---|
+| 步 8 封印器 `build_serving_pack.py` | CLI 完全匹配：`--envelope --index-root --pack-dir --expected-release-id --generator-run-id [--pack-schema-version {canonical-v2-serving-pack-v1,canonical-v2-serving-pack-v2}] [--link]`。runbook 里"sealer must accept `--pack-schema-version`"这条前置**成立** ✅ |
+| 步 7 转换器 `convert_index_to_v2.py` | 在 switch-line 里存在（2511 B），CLI = `--source-root --dest-root`，与 runbook 一致 ✅ |
+| 步 10 bundle 生成器 `generate_run16_serving_bundle.py` | 存在，但**两处默认值是陷阱**，见下 ❌ |
+
+**二、第 10 步的两处陷阱（都会静默产出错值，不报错）**
+
+1. **`INDEX_ROOT` 常量是构建形，而 run16 bundle 实际记的是服务形。** 生成器常量写的是 `/var/tmp/mirothinker-data-v2/index-v3`，但我去读 run16 真正产出的 bundle：`index_root = /var/tmp/mirothinker-data-v2/index-v3-v2`，**与现役 serve 命令的 `--index-root` 一致**。也就是说那次实际跑的时候这个常量被改过，而**签入的副本保留的是默认值** ⇒ 照默认跑会记录错的索引根。
+   我原本按"构建形"猜，是**数据纠正了我**——这正是"读产物而不是读脚本"的价值。已写明：必须设成 `$INDEX_V2`（`index-v4-v2`）。
+2. **`embedding_model_id` 生成器根本不赋值。** 该字段是 schema 必填，值**从 SOURCE 继承** ⇒ 会留着 `Qwen/Qwen3-Embedding-8B`（旧 4096 维模型）。修法不是改常量，而是**往 `payload.update({...})` 那个 dict 里加一项**——runbook 原文写"edit ONLY the identities + embedding_model_id"，容易让人以为改常量就够。
+   **严重度我量过**：今天**没有任何地方比对这个字段**（所有交叉校验用的是**清单的**或**适配器的** model id：`serving_pack_loader.py:756/927/957`、`index_projection_isolated.py:460/511/778` 等）⇒ 它是**卫生问题、不是启动拒绝**。但我不会把它说成无害：交付件里记着一个旧模型 id，是**后来的人会相信的那种错值**。
+
+**三、已修**：runbook 第 10 步重写——完整编辑清单（含 `SOURCE` 要从 run15 换成 **run16**、`ENVELOPE` 用**本线**的、`PACK_DIR`/`PACK_GENERATOR_RUN_ID`、`INDEX_ROOT = $INDEX_V2`）+ 明确要求在 `payload.update` 里**加** `embedding_model_id` + 保留 `EXPECTED_MARKER_SHA256`；并加了一条**产出后读回确认两个陷阱字段**的命令（`index_root` 必须是 `index-v4-v2`、`embedding_model_id` 必须是 `qwen3.7-text-embedding-flash`），免得后面任何步骤依赖一个没验过的 bundle。
+
+**四、本轮不改的东西**：不改生成器本身（它是 run15→run16 的历史脚本，改它等于改历史；fembed 走"复制一份再编辑"的既有做法），只把**编辑清单**与**读回验证**写死。
+
+## 第 28 轮 · 2026-09-22 · 预置的 v1 遗留值修完（含一条**我得更正自己的判断**）；又列出 7 条遗留、其中 2 条已派修
+
+**一、先更正我自己（上一轮我把话说过头了）**
+
+我上一轮写"两个 v1 遗留值**都会盖住** bundle 的记录"。实测只对了一半：
+
+| 字段 | 有运行期读者吗 | 后果 |
+|---|---|---|
+| `extraction_endpoints.embedding_base_url` → `CANONICAL_V2_EMBEDDING_BASE_URL` | **有**，且 `resolve_embedding_base_url(recorded)` = **`override or recorded`**（覆盖语义） | **会**顶掉候选 bundle 记录的网关地址 ⇒ **容器实测复现**：修复前 `endpoint_origin: managed-file(env:CANONICAL_V2_EMBEDDING_BASE_URL)`、`base_url=100.64.0.27` |
+| `extraction_endpoints.embedding_model` → `CANONICAL_V2_EMBEDDING_MODEL` | **零个运行期读者**（镜像内全部命中 = 一处映射 + 一处测试的 scrub 列表） | **不会**进候选请求；只会让页面显示 v1 的 4096 维身份 |
+
+模型那条的结论也有旁证：候选/自有适配器的模型一律来自 bundle（`model_id=document["model_id"]`）。**所以它是"页面误导"，不是"请求打错"。** 我把两者并列说成同等严重，是过头了。
+
+**二、修法：两个键都**缺席**（不是填新值）**
+
+理由（F2 的原话是"**冻身份，不冻地址**"）：bundle 已把网关地址记录为默认 ⇒ 缺席＝"默认用 bundle 记录的地址"，**"只填 key"开箱即用**；要换入口是操作者**在页面上显式写**的决定，不该由交付预置替他拍板 —— 而 v1.1 预置恰恰踩了这个坑。
+
+出包路径也核对了：`build-site-bundle.sh:224` 是把 `site-config/managed-settings.json` 这份**源文件** place 成 `<包>/state/config-managed/settings.json`，测试里钉住了这一点（防"改了副本"）。
+
+**判决性证据（本轮就做到，不必等 v2）**——用**镜像内的交付代码 + 服务自己的解释器**跑真投影 + 真 `resolve_embedding_base_url`，输入候选 bundle 的记录地址：
+
+```
+旧预置（已备份 .pre-r1-fix）  生效地址 = http://100.64.0.27:18005/v1          ← v1 预置覆盖（bug 复现）
+旧预置 贡献的 embedding 字段  = ['extraction_endpoints.embedding_base_url', '…embedding_model']
+新预置（本轮交付件）        生效地址 = https://maas.qianwenaiapi.com/api/v1  ← 网关地址，来自 bundle ✓
+新预置 贡献的 embedding 字段  = ['（预置里没有 embedding 字段）']
+```
+
+运行期同一实例换预置 + restart（281 s）后：`endpoint_origin` 由 `managed-file(env:CANONICAL_V2_EMBEDDING_BASE_URL)` → **`release-bundle-default`**，连接测试仍 `ok:true / HTTP 200`（v1 槽位无回归）；管理面视图 `embedding_base_url → value=None/source=default/editable=True`、`embedding_model → value=None/source=default/editable=False`。新增 5 条测试（RED 3 failed/1 passed/1 skipped → GREEN 4 passed/1 skipped；那条 skip 是"v2 合并后才成立"的条件用例，理由写在 skip 里）。
+
+**三、`CONFIG-GUIDE §4` 重写（R2）**
+
+标题"唯一一处配置"→"还会用到的配置"；嵌入端点的措辞改为"**地址可改；身份（模型 + 维度）不可改**"——地址不填就用发布包记录的地址，要换入口（自建/网关/代理）在页面改地址 → 点测试 → 重启；模型 id 与维度是**冻结身份**，索引就是用这个身份建的，换了就不是同一个向量空间，必须我方重建索引并出新数据面包。并写明**交付预置为什么不预置嵌入地址/模型**。
+
+**四、它列出的 7 条其它 v1 遗留值（只列不改），我已按优先级处理**
+
+| # | 内容 | 我的处置 |
+|---|---|---|
+| **L1** | 预置里 `paths.serving_pack_dir = …/serving-pack-run16-v11`；`CANONICAL_V2_SERVING_PACK` **有读者**（pack loader、admin 状态/身份页） | **已派修**。这一条有两种后果：受管设置**赢** ⇒ v2 可能**加载 v1.1 的包**（阻塞级）；CLI **赢** ⇒ 只是页面显示错。**这个"若"必须变成带行号的事实**，并给一条能判红的检查 |
+| **L2** | `install-site.sh:233` 探针写死 `"model":"Qwen/Qwen3-Embedding-8B"` ⇒ v2 站点拿旧模型 id 打网关 ⇒ 404/维度 0 ⇒ **`[warn] 嵌入端点探针未过`** | **已派修**。这是甲方**会直接看到并来问我们**的东西，方向还是"明明配好了却报黄灯"，最耗支持成本 ⇒ 按 `verify.sh` 的读法从随包 bundle 取 |
+| L3 | `verify.sh` 只有**打印文字**写"维度 4096"（断言实际是 bundle 驱动的 ✓） | 未改（文案，非断言） |
+| L4 | 包名写死在多处（`entrypoint.sh:23`、三个 build 脚本、install-site 等），已有 env 覆盖 + "只差一个 token"断言 | 保留（v2 换包名时要同步的一组点） |
+| L5 | 文档里写死的数字/名字（`100.64.0.27:18005`、"4096"、v1 包名、commit）对 v1.1 正确、v2 要随包更新 | 只做**出包自检**（打包时报出不一致），**不改文档里成百处文字** |
+| **L6** | admin-console 的 `resolve_embedding` 仍硬编码旧模型 id ⇒ v2 页面卡片仍显示 v1 身份 | **无需重复修**：`v2/admin-identity-native` 分支已改成"从已挂载包的记录解析"（有测试），保留原样避免冲突 |
+| L7 | Dockerfile/entrypoint 冻结的代码副本与发布包之间没有包名/模型一致性自检 | 保留（只靠"读者摘要/解释器补丁"那套兜底） |
+
+**五、未验（如实）**：真候选路由 + 真网关的端到端（本轮容器是 v1.1 发布包，镜像内 `dashscope` / `_GATEWAY_EMBEDDING_KEY_ENV` 均零命中）⇒ 留给 v2 冷装（判据在 `02-v2-handoff.md`）。边界未动：活线 health=200、构建仍在跑、18297 未碰、本轮提交真凭据命中数为 0。
+
+## 第 29 轮 · 2026-09-22 · 召回门判定逻辑**免费**预标定：同配置两次运行判 REVIEW 而非 FAIL —— 噪声带与"唯一可信指标"都定下来了
+
+**动机**：后段窗口里最大的"早上 6 点才发现"风险之一，是**判定逻辑本身**把噪声当失败（或者反过来、把真失败吞掉）。这件事不必等新包——**用两件已冻结的产物就能免费验**：`baseline.json` 与 `control.json` 是**同一配置的两次独立运行**，判它们**必须不是 FAIL**。
+
+**做法**：`cd <recall worktree>/apps/admin-console && uv run python scripts/eval_recall_canonical_v2.py --diff baseline.json control.json`。（第一次我在主仓跑，主仓的 admin-console 里没有这个脚本——门属于 recall worktree 的工程，这在 runbook 里本就写明。）
+
+**结果**：**VERDICT: REVIEW（exit 2）／0 fail-level／3 review-level** ⇒ 判定逻辑**不会对着噪声喊 FAIL** ✅
+
+| 读数 | 两次运行 | 我的解读 |
+|---|---|---|
+| `cases` / `expected entities` / `answer entity hits` / `cases all-hit (answer)` | 37 / 37 / **31 对 31** / **20 对 20** | 答案层核心指标**完全一致** |
+| `candidate-layer hits` | **22 对 29（+7）** | **候选层噪声带 ≈7** —— 所以"有标注实体的候选＋答案同时消失"这种 FAIL 判定，必须**明显越出这个带**才有意义 |
+| `citation local / web` | 239/80 对 228/128 | 引用计数**摆动极大**，**不能**用它判成败 |
+| `wall seconds` | 698.7 对 489.8 | 墙钟同样是噪声（那次 baseline 有 2 次 web 超时） |
+| `vector median (all / shared / testset / probes)` | **61.0 / 61.0 / 61.0 / 72.0 —— 四个切片逐字相同** | **唯一零噪声的指标**；硬 FAIL 应当建立在它上面（规则：掉 >30% ⇒ FAIL） |
+
+**3 个 REVIEW 项的形状也拿到了**（这正是"好切换"下该看到的）：全是 `rule1(concept) q15t1`（生成式模型生成 / 物理仿真引擎生成 / 基于规则生成），`ANSWER hit->miss`，并**自带成因标注 `[web timeouts=2]`** —— 是概念类**措辞**漂移，不是实体丢失。
+
+**已写进 runbook 第 11 步**（作为"判 verdict 之前先读这段"的预标定）：REVIEW 是好切换的**预期形状**、别拿引用计数/墙钟判、候选层用 ±7 的噪声带来读、硬 FAIL 只认 `vector median`。这样窗口里不会把好消息当坏消息，也不会把噪声当 FAIL。
+
+**方法上记一笔**：这一轮**没有发起任何新运行、没有消耗配额**——用的是已冻结的两件产物 + 一次只读的判定命令。凡是"判定逻辑可信吗"这类问题，都该先找有没有免费的自洽检查（同一配置的两次运行就是天然的自检对）。
+
+## 第 30 轮 · 2026-09-22 · **v2 出包的集成缺口**：镜像装的是"构建时那棵树"的代码；合并集与顺序定死；镜像账本让 `mirothinker-verify` 会**
+
+这一轮是"v2 该怎么打"的问题，属于典型的"不问就没人问"的类型。
+
+**一、镜像装的是哪棵树的代码：答案就是"你在哪棵树里跑打包脚本"**
+
+| 环节 | 事实 |
+|---|---|
+| `build-image.sh:22` | `REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"` ⇒ **脚本所在那棵树** |
+| 同脚本 `:53-55` | 把 `$REPO_ROOT` 作为 docker **构建上下文** |
+| `Dockerfile:83-86` | `WORKDIR /opt/mirothinker` + **`COPY . /opt/mirothinker/`** ⇒ 整个上下文进镜像 |
+
+⇒ **从哪棵树打，镜像里就是哪棵树的代码。**
+
+**二、缺口本身**：`delivery/docker`（交付工具线）**不包含** `ac44b404`（v2 原生路由）——它缺的正是那 6 个 v2 路由/车道文件：`embedding_lane_resilience.py`、`index_projection_isolated.py`、`knowledge_build_isolated.py`、`knowledge_read.py`、`knowledge_read_isolated.py`、`managed_config.py`。**若从它直接打 v2 镜像，就会把 v2 的数据面配上 v1.1 时代的服务代码。** 必须在**两线合并后**的树上打包。
+
+**三、合并集与顺序（都按正确的比较框架算过）**
+
+| 分支 | 相对**它的**基线改了 | 其中 `canonical_v2` 包内 `.py` | 必须在封印前？ |
+|---|---|---|---|
+| `v2/boot-log-noise`（agent-81） | 2 个文件（base `ac44b404`） | **1**（`serving_pack_loader.py`） | **是**（动 reader 摘要） |
+| `v2/admin-identity-native`（agent-80） | 18 个文件（base `ac44b404`） | **1**（`managed_secrets.py`） | **是** |
+| `delivery/docker`（agent-82） | 100 个文件（base `a0cd5c13`，与 switch-line 的 merge base） | **0** | **否**（摘要中立）——但**必须在打镜像前** |
+
+**冲突风险：按构造成零。** switch-line 与 `delivery/docker` 自共同基线的改动文件**交集为 0**；两个 agent 分支相对各自基线 `ac44b404` **互不相交**，且它们在**共同继承**的 `.agents/runs/embedding-endpoint-configurable-and-lane-fail-open/*` 上**内容逐字相同**（`git diff` 为空）⇒ 不会出现 add/add 冲突。
+
+**四、方法陷阱（我先踩了一次，记下来免得别人再踩）**
+
+我第一次用 `git diff ac44b404..delivery/docker` 去数"它改了几个 canonical_v2 文件"，得到 **6** —— 那是**错的框架**：`ac44b404` **不是** `delivery/docker` 的祖先，那个 diff 是**两边的对称差**，列出的 6 个文件其实是 switch-line 有、而它没有的（也就是上表点名的 6 个）。用**正确的共同基线** `a0cd5c13` 再算，答案是 **0**。**做这种"要不要重封"的判断时，先确认两边共享哪个祖先**——框架错了，结论会正好反过来。
+
+**五、镜像里的"冻结账本"会让一键验收报红（已派修）**
+
+| 环节 | 事实 |
+|---|---|
+| `Dockerfile:143-146` | 把 `deploy/docker/ledger/s12c/qwen-embedding-bundle-v1.json` COPY 到冻结绝对路径 |
+| 那份账本 | **v1 的**：`Qwen/Qwen3-Embedding-8B`、**4096**、`openai-compatible`、`base_url=http://100.64.0.27:18005/v1` |
+| 谁读它 | `verify.sh:12` = 容器内 **`mirothinker-verify`**，也就是**我们交给甲方的一键验收** |
+| 它断言什么 | 向 `{base_url}/embeddings` POST（兼容形状），要求 `status==200` **且** `dims == bundle.dimension`；不符则 `[FAIL]` + `SystemExit(1)` ⇒ `FAILED=1` ⇒ **验收判红** |
+| v2 站点实际用的是 | 候选网关的**原生路由**：`qwen3.7-text-embedding-flash`、**1024 维**、`https://maas.qianwenaiapi.com/api/v1` |
+
+⇒ v2 镜像原样重打：现场那个自建地址不可达 ⇒ `[FAIL] 嵌入端点不可达`；就算可达也是维度不符 ⇒ **FAILED=1**。**我们自己的验收会在一个装对了的站点上报红**，而甲方唯一的判断依据就是它——这比"假黄灯"严重（那是 warn，这是 fail）。已派修，要求：**镜像那条"问地址、只有 404/405 才改讲原生形状"的既有规则**（`canonical_v2_embedding_identity.py`），别自己发明第二套；期望身份**从站点真正在用的 bundle 取**，不再写死；并给一条**能判红**的检查（假 bundle 制造不一致 ⇒ 必须红）。
+
+**六、范围外的判断（不改）**：`deploy/docker/ledger/s12a/recorded-decision-bundle-v1.json` 是决策账本，与嵌入身份无关，本轮不动；v1.1 镜像（已打好）继续带 v1 账本，两者不冲突——前提是**按发布打镜像**这个前提成立，已要求核实。
