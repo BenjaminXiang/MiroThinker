@@ -1,12 +1,14 @@
 {
   "api_key_source": "env:CANONICAL_V2_EMBEDDING_API_KEY",
   "base_url": "https://maas.qianwenaiapi.com/api/v1",
-  "batch_size": 25,
-  "content_sha256": "81a536916053106114aa4c70ff43983bf6a12c8ecb0b5c562b43f9f02409b46a",
+  "batch_size": 20,
+  "content_sha256": "67927ea060ec3036927376c7059aaa7d3140c33160b9be440556a19cd8d64ef3",
   "dimension": 1024,
   "max_workers": 32,
   "model_id": "qwen3.7-text-embedding-flash",
   "provider": "dashscope-native",
+  "query_instruct": "Given a Chinese-language query about Shenzhen technology companies, professors, research papers or patents, retrieve the relevant records",
+  "query_text_type": "query",
   "schema_version": "canonical-v2-dashscope-native-embedding-bundle-v1",
   "timeout_seconds": 180
 }

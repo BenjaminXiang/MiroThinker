@@ -57,17 +57,30 @@ CANDIDATE_DIMENSION = 1024
 LIVE_MODEL_ID = "Qwen/Qwen3-Embedding-8B"
 LIVE_DIMENSION = 4096
 CANDIDATE_BUNDLE_SHA256 = (
-    "81a536916053106114aa4c70ff43983bf6a12c8ecb0b5c562b43f9f02409b46a"
+    "67927ea060ec3036927376c7059aaa7d3140c33160b9be440556a19cd8d64ef3"
 )
 CANDIDATE_COMPAT_BUNDLE_SHA256 = (
-    "2db8f03b255e138a13081566c6196db06d7af1a8a83c12cec2cbfaea00b22e3d"
+    "d5ff0ffb52bdaa70a5103fb9747fa7f320547f21dd8e7b6e3a5ce6bd05a2baf4"
 )
 GATEWAY_KEY_ENV = "CANONICAL_V2_EMBEDDING_API_KEY"
 NATIVE_PATH = "/api/v1/services/embeddings/text-embedding/text-embedding"
 GATEWAY_COMPAT_BASE_URL = "https://maas.qianwenaiapi.com/compatible-mode/v1"
-#: Both routes refuse a batch larger than this (measured 2026-09-21: 25 → 200,
-#: 26 → HTTP 400 "batch size is invalid, it should not be larger than 25").
-GATEWAY_MAX_BATCH = 25
+#: The model family's *documented* batch cap — what both bundles declare. The
+#: gateway currently accepts more (measured 2026-09-21: 25 → 200, 26 → HTTP 400
+#: "batch size is invalid, it should not be larger than 25: input.contents"), but
+#: a provider that tightens to its documented value would turn a declared 25 into
+#: a 400 on every vector-lane call, and F1 turns a 4xx into lane degradation —
+#: silent recall loss rather than an error. The rebuild is bound by tokens, not
+#: requests, so the smaller batch costs no real time.
+DOCUMENTED_MAX_BATCH = 20
+#: What this gateway accepted when measured (see the docstring above).
+MEASURED_GATEWAY_CEILING = 25
+#: The route's query-side treatment, frozen in the native bundle: the build must
+#: never send these (it embeds documents), the serving query lane always does.
+QUERY_INSTRUCT = (
+    "Given a Chinese-language query about Shenzhen technology companies, "
+    "professors, research papers or patents, retrieve the relevant records"
+)
 
 #: Both candidate variants are one model in two wire shapes: the native route
 #: (needs the adapter) and the gateway's OpenAI-compatible route (needs none).
@@ -248,6 +261,9 @@ def _flash_adapter(gateway: _Gateway, **overrides: Any) -> Any:
         "batch_size": 2,
         "max_workers": 2,
         "timeout_seconds": 5,
+        "role": module.EMBEDDING_ROLE_DOCUMENT,
+        "query_text_type": module.EMBEDDING_ROLE_QUERY,
+        "query_instruct": QUERY_INSTRUCT,
         # F1's lane breaker is process-scoped: a test that provokes transport
         # failures must not leave the shared breaker open for the next one.
         "breaker": EmbeddingLaneBreaker(),
@@ -614,6 +630,96 @@ def test_f1_lane_breaker_sees_the_gateway_client_failures(
         assert len(gateway.calls) == 2
 
 
+# --- the query side of the native route ---------------------------------------
+#
+# One authority, two roles: the route answers a *query* differently from a
+# *document* (DashScope's ``text_type``, qualified by ``instruct``), and only the
+# query role may carry that treatment. The role is a constructor argument, so
+# neither role can reach the other's wire shape by accident.
+
+
+def test_the_document_role_adapter_cannot_emit_query_shaped_params(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The build embeds documents: its requests stay on the route's default.
+
+    ``instruct`` is the vendor's way of pairing a short query with long records.
+    A document-role adapter that sent it would embed all 51,026 points as if they
+    were queries, and no check downstream could see the difference.
+    """
+
+    monkeypatch.setenv(GATEWAY_KEY_ENV, "local-stand-in-key")
+    with _gateway(_answered_echo) as gateway:
+        adapter = _flash_adapter(gateway, role="document")
+        adapter.embed_batch(("text-0", "text-1"))
+
+    _path, body, _headers = gateway.calls[0]
+    assert body == {
+        "model": CANDIDATE_MODEL_ID,
+        "input": {"texts": ["text-0", "text-1"]},
+    }
+
+
+def test_the_query_role_adapter_sends_the_frozen_query_treatment(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv(GATEWAY_KEY_ENV, "local-stand-in-key")
+    with _gateway(_answered_echo) as gateway:
+        adapter = _flash_adapter(gateway, role="query")
+        adapter.embed_batch(("text-7",))
+
+    _path, body, _headers = gateway.calls[0]
+    assert body["text_type"] == "query"
+    assert body["instruct"] == QUERY_INSTRUCT
+    assert body["input"]["texts"] == ["text-7"]
+
+
+def test_the_native_bundle_carries_the_query_treatment() -> None:
+    """The treatment is frozen in the bundle, not hardcoded in the adapter."""
+
+    native = json.loads(CANDIDATE_BUNDLE_PATH.read_bytes())
+    compat = json.loads(CANDIDATE_COMPAT_BUNDLE_PATH.read_bytes())
+
+    assert native["query_text_type"] == "query"
+    assert native["query_instruct"] == QUERY_INSTRUCT
+    # The OpenAI shape has no role dimension, so the fallback twin declares none:
+    # its two roles answer identically and it can serve a query lane unchanged.
+    assert "query_text_type" not in compat
+    assert "query_instruct" not in compat
+
+
+def test_a_native_bundle_that_demotes_its_query_role_is_refused(
+    tmp_path: Path,
+) -> None:
+    """``query_text_type`` is part of the frozen identity, not a free field."""
+
+    module = _build_module()
+    document = json.loads(CANDIDATE_BUNDLE_PATH.read_bytes())
+    document["query_text_type"] = "document"
+    document.pop("content_sha256")
+    document["content_sha256"] = _canonical_hash(document)
+    path = tmp_path / "demoted-query-role-embedding-bundle.json"
+    path.write_text(json.dumps(document), encoding="utf-8")
+
+    with pytest.raises(ValueError, match="differs from frozen authority"):
+        module.load_content_addressed_embedding_adapter(path, role="query")
+
+
+def test_the_role_travels_from_the_loader_to_the_adapter() -> None:
+    module = _build_module()
+
+    for role in (module.EMBEDDING_ROLE_QUERY, module.EMBEDDING_ROLE_DOCUMENT):
+        adapter = module.load_content_addressed_embedding_adapter(
+            CANDIDATE_BUNDLE_PATH, role=role
+        )
+        assert adapter.role == role
+
+    with pytest.raises(ValueError, match="role is not known"):
+        module.load_content_addressed_embedding_adapter(
+            CANDIDATE_BUNDLE_PATH, role="either"
+        )
+
+
 # --- the new identity --------------------------------------------------------
 
 
@@ -638,30 +744,36 @@ def test_candidate_bundle_is_self_hashed_and_frozen(
     assert module._QWEN_FLASH_EMBEDDING_DIMENSION == CANDIDATE_DIMENSION
     assert document["api_key_source"] == f"env:{GATEWAY_KEY_ENV}"
 
-    adapter = module.load_content_addressed_embedding_adapter(bundle_path)
+    adapter = module.load_content_addressed_embedding_adapter(
+        bundle_path, role="document"
+    )
     assert type(adapter).__name__ == adapter_class
     assert adapter.model_id == CANDIDATE_MODEL_ID
     assert adapter.dimension == CANDIDATE_DIMENSION
     assert adapter.authority_sha256 == bundle_sha256
 
 
-def test_the_candidate_bundles_stay_within_the_route_batch_cap() -> None:
-    """The gateway refuses batches above 25 on **both** routes (measured 2026-09-21).
+def test_the_candidate_bundles_declare_the_documented_batch_cap() -> None:
+    """Both bundles declare the family's documented cap, not today's measured one.
 
-    Measured directly: batch 25 → 200 on both routes, batch 26 → HTTP 400
-    ``batch size is invalid, it should not be larger than 25: input.contents``.
-    A bundle declaring 32 would fail the rebuild's very first batch — and on the
-    serving path the F1 contract turns a 4xx into lane degradation, i.e. silent
-    recall loss rather than an error. 25 is also the throughput-optimal choice:
-    tokens (not requests) bound the rebuild, so a smaller round number would only
-    add requests.
+    The vendor's table documents ``batch_size`` 20 for this model family; this
+    gateway accepted 25 when measured (2026-09-21: 25 → 200, 26 → HTTP 400
+    ``batch size is invalid, it should not be larger than 25: input.contents``).
+    Declaring 20 keeps the value the customer's procurement rests on: if the
+    provider later tightens to its documented cap, a declared 25 would make every
+    vector-lane call a 400, and F1 turns a 4xx into lane degradation — silent
+    recall loss rather than an error. The rebuild is bound by tokens (1M TPM),
+    not by requests: ≈2,550 calls at 20 versus ≈2,040 at 25, same token volume.
     """
 
     for bundle_path in (CANDIDATE_BUNDLE_PATH, CANDIDATE_COMPAT_BUNDLE_PATH):
         document = json.loads(bundle_path.read_bytes())
-        assert document["batch_size"] == GATEWAY_MAX_BATCH == 25, document["batch_size"]
-        adapter = _build_module().load_content_addressed_embedding_adapter(bundle_path)
-        assert adapter.batch_size == 25
+        assert document["batch_size"] == DOCUMENTED_MAX_BATCH
+        assert document["batch_size"] <= MEASURED_GATEWAY_CEILING
+        adapter = _build_module().load_content_addressed_embedding_adapter(
+            bundle_path, role="document"
+        )
+        assert adapter.batch_size == DOCUMENTED_MAX_BATCH
 
     # The live authority keeps its own value: this cap is the gateway's, not a
     # policy change for the self-hosted endpoint.
@@ -709,6 +821,26 @@ def test_the_authority_pair_is_atomic_across_the_two_spaces() -> None:
         assert (candidate, LIVE_DIMENSION) not in accepted
     assert (module._QWEN_EMBEDDING_BUNDLE_SHA256, LIVE_DIMENSION) in accepted
     assert (module._QWEN_EMBEDDING_BUNDLE_SHA256, CANDIDATE_DIMENSION) not in accepted
+
+
+_NATIVE_ONLY_KEYS = ("query_text_type", "query_instruct")
+
+
+def _reshape_for_provider(document: dict[str, Any]) -> None:
+    """Give *document* the key shape of the provider it now claims.
+
+    The two provider schemas are exact-key schemas, and the native one carries
+    the query-side treatment. A mutation that flips the provider without
+    reshaping the keys would fail on the schema check instead of on the identity
+    check this test is about.
+    """
+
+    if document["provider"] == "dashscope-native":
+        document.setdefault("query_text_type", "query")
+        document.setdefault("query_instruct", QUERY_INSTRUCT)
+    else:
+        for key in _NATIVE_ONLY_KEYS:
+            document.pop(key, None)
 
 
 @pytest.mark.parametrize(
@@ -763,10 +895,12 @@ def test_candidate_bundle_mutations_are_refused(
             "dashscope-native": "canonical-v2-dashscope-native-embedding-bundle-v1",
             "openai-compatible": ("canonical-v2-openai-compatible-embedding-bundle-v1"),
         }[document["provider"]]
+        _reshape_for_provider(document)
     elif mutation == "provider":
         document["provider"] = "some-other-gateway"
     elif mutation == "provider_without_schema":
         document["provider"] = "openai-compatible"
+        _reshape_for_provider(document)
     elif mutation == "schema_version":
         document["schema_version"] = (
             "canonical-v2-dashscope-native-embedding-bundle-v1"
@@ -779,7 +913,7 @@ def test_candidate_bundle_mutations_are_refused(
     path.write_text(json.dumps(document), encoding="utf-8")
 
     with pytest.raises(ValueError, match=expected):
-        module.load_content_addressed_embedding_adapter(path)
+        module.load_content_addressed_embedding_adapter(path, role="document")
 
 
 @pytest.mark.parametrize(
@@ -791,7 +925,9 @@ def test_candidate_bundle_cannot_be_reloaded_against_the_local_provider(
     """The two identities are not interchangeable in either direction."""
 
     module = _build_module()
-    adapter = module.load_content_addressed_embedding_adapter(bundle_path)
+    adapter = module.load_content_addressed_embedding_adapter(
+        bundle_path, role="document"
+    )
     read_module = import_module(READ_MODULE)
 
     with pytest.raises(
@@ -831,7 +967,7 @@ def test_the_compatible_candidate_reads_the_gateway_slot_only(
     monkeypatch.delenv(GATEWAY_KEY_ENV, raising=False)
 
     adapter = module.load_content_addressed_embedding_adapter(
-        CANDIDATE_COMPAT_BUNDLE_PATH
+        CANDIDATE_COMPAT_BUNDLE_PATH, role="document"
     )
     assert type(adapter).__name__ == "_GatewayOpenAICompatibleEmbeddingAdapter"
     with pytest.raises(ValueError, match="credential is unavailable"):
@@ -869,7 +1005,7 @@ def test_f2_address_override_applies_to_the_candidate_bundles(
 
     monkeypatch.delenv("CANONICAL_V2_EMBEDDING_BASE_URL", raising=False)
     assert (
-        module.load_content_addressed_embedding_adapter(bundle_path).base_url
+        module.load_content_addressed_embedding_adapter(bundle_path, role="document").base_url
         == recorded
     )
 
@@ -877,7 +1013,7 @@ def test_f2_address_override_applies_to_the_candidate_bundles(
         "CANONICAL_V2_EMBEDDING_BASE_URL", "http://127.0.0.1:9/alternate/v1"
     )
     assert (
-        module.load_content_addressed_embedding_adapter(bundle_path).base_url
+        module.load_content_addressed_embedding_adapter(bundle_path, role="document").base_url
         == "http://127.0.0.1:9/alternate/v1"
     )
 
@@ -908,7 +1044,7 @@ def test_the_live_bundle_still_loads_to_the_openai_provider(
         lambda **kwargs: pytest.fail("the loader must not call the provider"),
     )
     adapter = module.load_content_addressed_embedding_adapter(
-        _write_bundle(live, "live-embedding-bundle.json", tmp_path)
+        _write_bundle(live, "live-embedding-bundle.json", tmp_path), role="document"
     )
     assert type(adapter).__name__ == "_OpenAICompatibleEmbeddingAdapter"
     assert adapter.model_id == LIVE_MODEL_ID
@@ -931,7 +1067,7 @@ def test_an_unknown_provider_is_refused(tmp_path: Path) -> None:
     path.write_text(json.dumps(document), encoding="utf-8")
 
     with pytest.raises(ValueError, match="not a known embedding provider"):
-        module.load_content_addressed_embedding_adapter(path)
+        module.load_content_addressed_embedding_adapter(path, role="document")
 
 
 # --- the rebuild audit's cosine floor (Task C.1) -----------------------------

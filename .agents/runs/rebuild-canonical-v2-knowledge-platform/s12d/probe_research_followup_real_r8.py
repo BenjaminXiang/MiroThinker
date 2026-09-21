@@ -71,7 +71,7 @@ def main() -> int:
         expected_index_root=INDEX_ROOT,
         expected_envelope_path=ENVELOPE_PATH,
         embedding_adapter=build_module.load_content_addressed_embedding_adapter(
-            EMBEDDING_BUNDLE_PATH
+            EMBEDDING_BUNDLE_PATH, role="query"
         ),
         prose_renderer=lambda result: "probe",
     )

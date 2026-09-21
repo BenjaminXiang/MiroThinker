@@ -1,0 +1,872 @@
+diff --git a/apps/miroflow-agent/src/data_agents/canonical_v2/knowledge_build_isolated.py b/apps/miroflow-agent/src/data_agents/canonical_v2/knowledge_build_isolated.py
+--- a/apps/miroflow-agent/src/data_agents/canonical_v2/knowledge_build_isolated.py
++++ b/apps/miroflow-agent/src/data_agents/canonical_v2/knowledge_build_isolated.py
+@@ -27,6 +27,7 @@
+ import secrets
+ from threading import Condition
+ from typing import Any, Literal, Protocol, cast
++from urllib.parse import urlsplit
+ 
+ import psycopg
+ from psycopg import sql
+@@ -42,9 +43,16 @@
+ )
+ from sqlalchemy.engine import make_url
+ 
++from src.data_agents.canonical_v2.embedding_lane_resilience import (
++    BREAKER_FAILURE_THRESHOLD,
++    embedding_lane_breaker,
++)
+ from src.data_agents.contracts import ReleasedObject as HistoricalReleasedObject
+ from src.data_agents.company.vectorizer import (
+     EmbeddingClient as _OpenAIEmbeddingClient,
++)
++from src.data_agents.providers.dashscope_embeddings import (
++    DashScopeTextEmbeddingClient as _DashScopeTextEmbeddingClient,
+ )
+ from src.data_agents.providers.local_api_key import load_local_api_key
+ from src.data_agents.storage.database_target import (
+@@ -267,10 +275,47 @@
+     "05473fabc8055e9ce3ebca9d846761cab7cb8c89eb51c96607172c402d1f46db"
+ )
+ _QWEN_EMBEDDING_DIMENSION = 4096
++#: The v2 candidate: ``qwen3.7-text-embedding-flash`` on the MaaS gateway, which
++#: answers with 1024 dimensions and is reachable in two wire shapes. Its vectors
++#: live in a *different* space from the Qwen3-8B pair above (measured cosine
++#: ≈ -0.03 after Matryoshka truncation), so the two are separate authorities: an
++#: index built with one may never be read with the other. Nothing selects these
++#: pairs yet — they are prepared here so the rebuild can be planned, not so the
++#: live line can move.
++#:
++#: The gateway's two routes are **not** the same pipeline (same text, both
++#: routes: cosine 0.808–0.920), so exactly one route may be used for both the
++#: rebuild and serving; both variants are frozen here rather than one, so the
++#: choice stays a bundle choice instead of a code change. The switch ships the
++#: **native** variant: it carries the route's ``text_type``/``instruct``
++#: query-side treatment (frozen in the bundle, sent only by a query-role
++#: adapter), which the OpenAI shape cannot express; the compatible variant stays
++#: as the fallback twin, where both roles answer identically.
++#:
++#: Both bundles declare ``batch_size`` 20 — the model family's *documented* cap,
++#: below the 25 this gateway currently accepts, so a provider that tightens to
++#: its documented value degrades nothing (a 400 on the vector lane would be
++#: turned into lane degradation by F1, i.e. silent recall loss). The rebuild is
++#: bound by tokens, not by requests, so the smaller batch costs no real time.
++_QWEN_FLASH_EMBEDDING_BUNDLE_SHA256 = (
++    "67927ea060ec3036927376c7059aaa7d3140c33160b9be440556a19cd8d64ef3"
++)
++_QWEN_FLASH_OPENAI_COMPAT_EMBEDDING_BUNDLE_SHA256 = (
++    "d5ff0ffb52bdaa70a5103fb9747fa7f320547f21dd8e7b6e3a5ce6bd05a2baf4"
++)
++_QWEN_FLASH_EMBEDDING_DIMENSION = 1024
+ _ACCEPTED_EMBEDDING_AUTHORITIES = frozenset(
+     {
+         (_RECORDED_EMBEDDING_BUNDLE_SHA256, _RECORDED_EMBEDDING_DIMENSION),
+         (_QWEN_EMBEDDING_BUNDLE_SHA256, _QWEN_EMBEDDING_DIMENSION),
++        (
++            _QWEN_FLASH_EMBEDDING_BUNDLE_SHA256,
++            _QWEN_FLASH_EMBEDDING_DIMENSION,
++        ),
++        (
++            _QWEN_FLASH_OPENAI_COMPAT_EMBEDDING_BUNDLE_SHA256,
++            _QWEN_FLASH_EMBEDDING_DIMENSION,
++        ),
+     }
+ )
+ _EXPECTED_OBJECT_COUNTS = {
+@@ -7963,8 +8008,34 @@
+     authority_sha256: Sha256
+ 
+ 
++#: One retrieval has two sides and one authority can answer each of them with a
++#: different vector (DashScope's ``text_type``): ``query`` is a short question,
++#: ``document`` a record. The role is fixed when the adapter is constructed —
++#: never inferred from the text — because a document embedded through the query
++#: role (or the reverse) is a silent space shift, not an error any check sees.
++EMBEDDING_ROLE_QUERY = "query"
++EMBEDDING_ROLE_DOCUMENT = "document"
++_EMBEDDING_ROLES = frozenset({EMBEDDING_ROLE_QUERY, EMBEDDING_ROLE_DOCUMENT})
++
++
+ @dataclass(slots=True)
+-class _OpenAICompatibleEmbeddingAdapter:
++class _BatchingEmbeddingAdapter:
++    """Batching, caching and vector validation shared by the HTTP providers.
++
++    A provider subclass supplies two hooks: which credential slot it reads and
++    which client speaks its wire shape. Everything else — the de-duplicated
++    cache, the per-batch thread pool, and the "an answer we cannot use fails
++    closed" vector validation — is provider-independent, so the two providers
++    cannot drift apart on it.
++
++    ``role`` is which side of the retrieval the caller is embedding for, and it
++    is a constructor argument rather than something read off the text: one
++    authority answers differently by role (DashScope's ``text_type``), so a
++    document must never be embedded through a query-role adapter nor the other
++    way round. Only the native provider has a role dimension on the wire; the
++    OpenAI-compatible shape has none, so its two roles answer identically.
++    """
++
+     model_id: str
+     dimension: int
+     authority_sha256: str
+@@ -7972,6 +8043,8 @@
+     batch_size: int
+     max_workers: int
+     timeout_seconds: int
++    role: str
++    breaker: Any = field(default_factory=embedding_lane_breaker, repr=False)
+     _cache: OrderedDict[str, tuple[float, ...]] = field(
+         default_factory=OrderedDict,
+         init=False,
+@@ -7981,6 +8054,10 @@
+     _condition: Condition = field(default_factory=Condition, init=False, repr=False)
+ 
+     _MAX_CACHE_ENTRIES = 16_384
++
++    def __post_init__(self) -> None:
++        if self.role not in _EMBEDDING_ROLES:
++            raise ValueError(f"embedding adapter role is not known: {self.role!r}")
+ 
+     def embed_batch(
+         self,
+@@ -7988,6 +8065,18 @@
+     ) -> tuple[tuple[float, ...], ...]:
+         if not texts:
+             return ()
++
++        # Both consumers of this adapter reach the embedding provider here: the
++        # vector lane's read and the serving keep-warm cycle. The breaker is
++        # consulted before the cache probe so an open breaker costs no provider
++        # call at all, and every transport outcome is recorded for both.
++        allowed, state = self.breaker.attempt_allowed()
++        if not allowed:
++            raise ConnectionError(
++                "embedding endpoint is skipped: vector lane breaker is "
++                f"{state} after {BREAKER_FAILURE_THRESHOLD} consecutive transport "
++                "failures"
++            )
+ 
+         while True:
+             with self._condition:
+@@ -8004,10 +8093,19 @@
+ 
+         try:
+             vectors = self._embed_uncached(missing)
+-        except Exception:
++        except Exception as exc:
+             with self._condition:
+                 self._inflight_texts.difference_update(missing)
+                 self._condition.notify_all()
++            if isinstance(exc, (TimeoutError, ConnectionError)):
++                self.breaker.record(
++                    ok=False,
++                    reason=(
++                        "timeout"
++                        if isinstance(exc, TimeoutError)
++                        else "connection_failure"
++                    ),
++                )
+             raise
+ 
+         with self._condition:
+@@ -8021,13 +8119,14 @@
+                     del self._cache[text]
+             self._inflight_texts.difference_update(missing)
+             self._condition.notify_all()
++            self.breaker.record(ok=True)
+             return tuple(self._cache[text] for text in texts)
+ 
+     def _embed_uncached(
+         self,
+         texts: tuple[str, ...],
+     ) -> tuple[tuple[float, ...], ...]:
+-        api_key = load_local_api_key()
++        api_key = self._resolve_api_key()
+         if not api_key:
+             raise ValueError("release embedding credential is unavailable")
+         batches = tuple(
+@@ -8036,11 +8135,7 @@
+         )
+ 
+         def embed_one(batch: tuple[str, ...]) -> tuple[tuple[float, ...], ...]:
+-            client = _OpenAIEmbeddingClient(
+-                base_url=self.base_url,
+-                api_key=api_key,
+-                timeout=float(self.timeout_seconds),
+-            )
++            client = self._provider_client(api_key)
+             raw_vectors = client.embed_batch(list(batch), model=self.model_id)
+             if len(raw_vectors) != len(batch):
+                 raise ValueError(
+@@ -8065,6 +8160,76 @@
+         ) as executor:
+             parts = tuple(executor.map(embed_one, batches))
+         return tuple(vector for part in parts for vector in part)
++
++    def _resolve_api_key(self) -> str:
++        """The credential for this provider's endpoint, or "" when unconfigured."""
++
++        raise NotImplementedError
++
++    def _provider_client(self, api_key: str) -> Any:
++        """One HTTP client speaking this provider's request/response shape."""
++
++        raise NotImplementedError
++
++
++@dataclass(slots=True)
++class _OpenAICompatibleEmbeddingAdapter(_BatchingEmbeddingAdapter):
++    def _resolve_api_key(self) -> str:
++        return load_local_api_key()
++
++    def _provider_client(self, api_key: str) -> Any:
++        return _OpenAIEmbeddingClient(
++            base_url=self.base_url,
++            api_key=api_key,
++            timeout=float(self.timeout_seconds),
++        )
++
++
++@dataclass(slots=True)
++class _GatewayOpenAICompatibleEmbeddingAdapter(_OpenAICompatibleEmbeddingAdapter):
++    """The same OpenAI wire shape, reading the *gateway's* credential slot.
++
++    The v2 candidate on the gateway's compatible route is byte-compatible with
++    the live client, so it needs no new client — but it must not inherit the
++    live endpoint's key: ``load_local_api_key`` would hand a third-party host the
++    self-hosted endpoint's credential. Which slot a bundle may read is part of
++    its frozen identity, and this class exists so the loader can bind the
++    candidate bundle to the gateway slot alone.
++    """
++
++    def _resolve_api_key(self) -> str:
++        return _load_gateway_embedding_api_key()
++
++
++@dataclass(slots=True)
++class _DashScopeNativeEmbeddingAdapter(_BatchingEmbeddingAdapter):
++    """The DashScope-native authority, role-aware on the wire.
++
++    ``query_text_type``/``query_instruct`` are the bundle's frozen query-side
++    treatment (the vendor's documented way to pair a short query with long
++    documents). They are sent **only** by a query-role adapter: a document-role
++    adapter passes neither, so it cannot reach the query side of the route even
++    by accident. The defaults exist for direct construction; the loader always
++    passes the bundle's validated values.
++    """
++
++    query_text_type: str = EMBEDDING_ROLE_QUERY
++    query_instruct: str = ""
++
++    def _resolve_api_key(self) -> str:
++        return _load_gateway_embedding_api_key()
++
++    def _provider_client(self, api_key: str) -> Any:
++        query_side = self.role == EMBEDDING_ROLE_QUERY
++        return _DashScopeTextEmbeddingClient(
++            base_url=self.base_url,
++            api_key=api_key,
++            timeout=float(self.timeout_seconds),
++            text_type=self.query_text_type if query_side else None,
++            instruct=(
++                self.query_instruct if query_side and self.query_instruct else None
++            ),
++        )
+ 
+ 
+ def load_recorded_decision_adapter(path: Path) -> _DecisionAdapter:
+@@ -8152,9 +8317,189 @@
+     )
+ 
+ 
+-def load_content_addressed_embedding_adapter(path: Path) -> _EmbeddingAdapter:
+-    """Load one frozen build/serving embedding authority without retaining secrets."""
+-
++#: The managed setting ``extraction_endpoints.embedding_base_url`` projected
++#: into the process environment at startup (``managed_config._FIELD_ENV_VARS``
++#: + ``managed_runtime.apply_managed_runtime_config``), or set directly by the
++#: service unit. It is the *only* way the embedding address moves: the bundle
++#: stays frozen on disk.
++EMBEDDING_BASE_URL_ENV = "CANONICAL_V2_EMBEDDING_BASE_URL"
++
++
++def resolve_embedding_base_url(recorded: str) -> str:
++    """The effective embedding base URL: the operator's setting over the bundle.
++
++    Precedence is environment (managed setting, applied at startup) → the address
++    recorded in the embedding bundle. Either way the result has to be a non-empty
++    ``http(s)`` URL: a typo must fail the boot loudly rather than degrade a lane
++    into a permanent "unreachable" state.
++    """
++
++    override = os.environ.get(EMBEDDING_BASE_URL_ENV, "").strip()
++    effective = override or (recorded or "").strip()
++    parts = urlsplit(effective)
++    if not effective or parts.scheme not in {"http", "https"} or not parts.netloc:
++        raise ValueError(
++            "effective embedding base_url must be a non-empty http(s) URL "
++            f"(configured through {EMBEDDING_BASE_URL_ENV} or the embedding bundle)"
++        )
++    return effective
++
++
++#: The candidate gateway's credential slot. Deliberately *not* the local
++#: endpoint's slot (``load_local_api_key``: API_KEY → OPENAI_API_KEY →
++#: SGLANG_API_KEY → ``.sglang_api_key``): that one holds the self-hosted
++#: embedding server's key, and a bundle pointing at a third-party host must
++#: never be handed it. The bundle records this source name, so which slot a
++#: bundle may read is part of its frozen identity.
++_GATEWAY_EMBEDDING_API_KEY_ENV = "CANONICAL_V2_EMBEDDING_API_KEY"
++_GATEWAY_EMBEDDING_API_KEY_SOURCE = f"env:{_GATEWAY_EMBEDDING_API_KEY_ENV}"
++
++
++def _load_gateway_embedding_api_key() -> str:
++    """The third-party gateway's key, or "" when the operator has not set it."""
++
++    return os.environ.get(_GATEWAY_EMBEDDING_API_KEY_ENV, "").strip()
++
++
++def _matches_frozen_authority(
++    document: dict[str, Any], expected: dict[str, Any]
++) -> bool:
++    """F2's rule: every recorded field is the identity **except the address**.
++
++    ``resolve_embedding_base_url`` makes the effective address operational (the
++    managed setting, or the bundle's recorded value when the setting is unset),
++    so ``base_url`` is outside the comparison on both sides.  The recorded
++    address is still pinned by the content hash — ``_load_recorded_bundle``
++    recomputes it over every field including ``base_url`` — so a bundle cannot
++    point somewhere else without also being a different authority.
++    """
++
++    return {key: value for key, value in document.items() if key != "base_url"} == {
++        key: value for key, value in expected.items() if key != "base_url"
++    }
++
++
++#: Every openai-compatible authority the loader accepts: the frozen document and
++#: the adapter that reads *its* credential slot. Two bundles can share a wire
++#: shape and still not share a slot — the live endpoint's key lives in
++#: ``load_local_api_key``'s slot, the third-party gateway's in
++#: ``CANONICAL_V2_EMBEDDING_API_KEY`` — so the match is field for field (bar the
++#: address, see :func:`_matches_frozen_authority`) and the adapter follows from
++#: the document, never from the caller.
++_OPENAI_COMPATIBLE_EMBEDDING_AUTHORITIES: tuple[tuple[dict[str, Any], Any], ...] = (
++    (
++        {
++            "schema_version": "canonical-v2-openai-compatible-embedding-bundle-v1",
++            "provider": "openai-compatible",
++            "model_id": "Qwen/Qwen3-Embedding-8B",
++            "dimension": _QWEN_EMBEDDING_DIMENSION,
++            "base_url": "http://100.64.0.27:18005/v1",
++            "api_key_source": "local_api_key",
++            "batch_size": 32,
++            "max_workers": 32,
++            "timeout_seconds": 180,
++            "content_sha256": _QWEN_EMBEDDING_BUNDLE_SHA256,
++        },
++        _OpenAICompatibleEmbeddingAdapter,
++    ),
++    (
++        {
++            "schema_version": "canonical-v2-openai-compatible-embedding-bundle-v1",
++            "provider": "openai-compatible",
++            "model_id": "qwen3.7-text-embedding-flash",
++            "dimension": _QWEN_FLASH_EMBEDDING_DIMENSION,
++            "base_url": "https://maas.qianwenaiapi.com/compatible-mode/v1",
++            "api_key_source": _GATEWAY_EMBEDDING_API_KEY_SOURCE,
++            "batch_size": 20,
++            "max_workers": 32,
++            "timeout_seconds": 180,
++            "content_sha256": _QWEN_FLASH_OPENAI_COMPAT_EMBEDDING_BUNDLE_SHA256,
++        },
++        _GatewayOpenAICompatibleEmbeddingAdapter,
++    ),
++)
++
++
++def _load_dashscope_native_embedding_adapter(
++    path: Path, *, role: str
++) -> _EmbeddingAdapter:
++    """Load the v2 candidate authority: DashScope-native shape, 1024 dimensions."""
++
++    document = _load_recorded_bundle(
++        path,
++        schema_version="canonical-v2-dashscope-native-embedding-bundle-v1",
++        exact_keys=frozenset(
++            {
++                "schema_version",
++                "provider",
++                "model_id",
++                "dimension",
++                "base_url",
++                "api_key_source",
++                "batch_size",
++                "max_workers",
++                "timeout_seconds",
++                "query_text_type",
++                "query_instruct",
++                "content_sha256",
++            }
++        ),
++    )
++    expected = {
++        "schema_version": "canonical-v2-dashscope-native-embedding-bundle-v1",
++        "provider": "dashscope-native",
++        "model_id": "qwen3.7-text-embedding-flash",
++        "dimension": _QWEN_FLASH_EMBEDDING_DIMENSION,
++        "base_url": "https://maas.qianwenaiapi.com/api/v1",
++        "api_key_source": _GATEWAY_EMBEDDING_API_KEY_SOURCE,
++        "batch_size": 20,
++        "max_workers": 32,
++        "timeout_seconds": 180,
++        # The route's query side, frozen here (not merely carried): which
++        # ``text_type`` the query role must use and the instruction pairing it
++        # with our documents. Pinned to "query" so a bundle cannot declare the
++        # document type for its query role — that would embed every query as a
++        # record and no check downstream would see it.
++        "query_text_type": EMBEDDING_ROLE_QUERY,
++        "query_instruct": (
++            "Given a Chinese-language query about Shenzhen technology companies, "
++            "professors, research papers or patents, retrieve the relevant records"
++        ),
++        "content_sha256": _QWEN_FLASH_EMBEDDING_BUNDLE_SHA256,
++    }
++    # Same rule as the openai-compatible branch: the frozen identity is the model,
++    # the dimension, the credential slot and the content hash, and the recorded
++    # address is pinned by the hash rather than by the comparison.
++    if not _matches_frozen_authority(document, expected):
++        raise ValueError("candidate embedding bundle differs from frozen authority")
++    return _DashScopeNativeEmbeddingAdapter(
++        model_id=cast(str, document["model_id"]),
++        dimension=cast(int, document["dimension"]),
++        authority_sha256=cast(str, document["content_sha256"]),
++        base_url=resolve_embedding_base_url(cast(str, document["base_url"])),
++        batch_size=cast(int, document["batch_size"]),
++        max_workers=cast(int, document["max_workers"]),
++        timeout_seconds=cast(int, document["timeout_seconds"]),
++        role=role,
++        query_text_type=cast(str, document["query_text_type"]),
++        query_instruct=cast(str, document["query_instruct"]),
++    )
++
++
++def load_content_addressed_embedding_adapter(
++    path: Path, *, role: str
++) -> _EmbeddingAdapter:
++    """Load one frozen build/serving embedding authority without retaining secrets.
++
++    ``role`` is the side of the retrieval the caller embeds for, and it is
++    required rather than defaulted: on the native provider the two roles put
++    different parameters on the wire, so a default would silently pick one of two
++    different vector layouts (the build always passes ``document``, the serving
++    query lane ``query``).
++    """
++
++    if role not in _EMBEDDING_ROLES:
++        raise ValueError(f"embedding adapter role is not known: {role!r}")
+     _require_unlinked_regular_source(path)
+     try:
+         raw = json.loads(_read_stable_unlinked_regular_file(path))
+@@ -8164,6 +8509,14 @@
+         raise ValueError("content-addressed embedding bundle schema differs")
+     if raw.get("schema_version") == "canonical-v2-recorded-embedding-bundle-v1":
+         return load_recorded_embedding_adapter(path)
++    # The bundle's ``provider`` field selects the wire shape, and each provider's
++    # loader below validates its own schema version plus its frozen identity
++    # (model, dimension, address, credential slot, content hash). A bundle cannot
++    # claim one provider and carry another's identity.
++    if raw.get("provider") == "dashscope-native":
++        return _load_dashscope_native_embedding_adapter(path, role=role)
++    if raw.get("provider") != "openai-compatible":
++        raise ValueError("embedding bundle provider is not a known embedding provider")
+ 
+     document = _load_recorded_bundle(
+         path,
+@@ -8183,29 +8536,33 @@
+             }
+         ),
+     )
+-    expected = {
+-        "schema_version": "canonical-v2-openai-compatible-embedding-bundle-v1",
+-        "provider": "openai-compatible",
+-        "model_id": "Qwen/Qwen3-Embedding-8B",
+-        "dimension": _QWEN_EMBEDDING_DIMENSION,
+-        "base_url": "http://100.64.0.27:18005/v1",
+-        "api_key_source": "local_api_key",
+-        "batch_size": 32,
+-        "max_workers": 32,
+-        "timeout_seconds": 180,
+-        "content_sha256": _QWEN_EMBEDDING_BUNDLE_SHA256,
+-    }
+-    if document != expected:
+-        raise ValueError("release embedding bundle differs from frozen authority")
+-    return _OpenAICompatibleEmbeddingAdapter(
+-        model_id=cast(str, document["model_id"]),
+-        dimension=cast(int, document["dimension"]),
+-        authority_sha256=cast(str, document["content_sha256"]),
+-        base_url=cast(str, document["base_url"]),
+-        batch_size=cast(int, document["batch_size"]),
+-        max_workers=cast(int, document["max_workers"]),
+-        timeout_seconds=cast(int, document["timeout_seconds"]),
+-    )
++    # The frozen identity is the model, its dimension, the credential slot and the
++    # content hash — not the host serving it (see
++    # :func:`_matches_frozen_authority`).  ``base_url`` is deliberately outside the
++    # comparison: the effective address is an operational parameter resolved at
++    # :func:`resolve_embedding_base_url`, so an operator can point the lane at a
++    # customer-site endpoint.  The bundle file itself is untouched, and the
++    # content hash still pins every recorded field (including the recorded
++    # address) for as long as the bundle is used as the fallback.
++    #
++    # Both roles are accepted here: this wire shape carries no role dimension, so
++    # its two roles answer with the same vector and the fallback twin can serve a
++    # query lane unchanged. ``role`` only changes the request on the native
++    # branch above.
++    for expected, adapter_type in _OPENAI_COMPATIBLE_EMBEDDING_AUTHORITIES:
++        if not _matches_frozen_authority(document, expected):
++            continue
++        return adapter_type(
++            model_id=cast(str, document["model_id"]),
++            dimension=cast(int, document["dimension"]),
++            authority_sha256=cast(str, document["content_sha256"]),
++            base_url=resolve_embedding_base_url(cast(str, document["base_url"])),
++            batch_size=cast(int, document["batch_size"]),
++            max_workers=cast(int, document["max_workers"]),
++            timeout_seconds=cast(int, document["timeout_seconds"]),
++            role=role,
++        )
++    raise ValueError("release embedding bundle differs from frozen authority")
+ 
+ 
+ @dataclass(frozen=True, slots=True)
+@@ -10113,5 +10470,6 @@
+     "load_recorded_decision_adapter",
+     "load_content_addressed_embedding_adapter",
+     "load_recorded_embedding_adapter",
++    "resolve_embedding_base_url",
+     "load_recorded_serving_inputs",
+ ]
+diff --git a/apps/miroflow-agent/src/data_agents/providers/dashscope_embeddings.py b/apps/miroflow-agent/src/data_agents/providers/dashscope_embeddings.py
+new file mode 100644
+--- /dev/null
++++ b/apps/miroflow-agent/src/data_agents/providers/dashscope_embeddings.py
+@@ -0,0 +1,149 @@
++# SPDX-FileCopyrightText: 2026 MiroThinker Contributors
++# SPDX-License-Identifier: Apache-2.0
++"""DashScope-native text-embedding client (Alibaba's own shape, not OpenAI's).
++
++DashScope's native embeddings route is not the OpenAI one: the request carries
++``input: {texts: [...]}`` and the answer arrives under
++``output.embeddings[].{text_index, embedding}``. The v2 candidate serving model
++(``qwen3.7-text-embedding-flash`` on the MaaS gateway) is addressed only through
++this shape, so the build/serving embedding authority needs a second HTTP client
++beside the OpenAI-compatible one.
++
++Transport failures are normalized here exactly as
++``company.vectorizer.EmbeddingClient`` does for the OpenAI shape — a provider
++that is *unreachable* becomes ``TimeoutError``/``ConnectionError``, the builtins
++the lane-level fail-open hook understands. An *answer we cannot use* (a wrong
++``text_index`` set, an empty vector) stays a validation failure and fails
++closed.
++"""
++
++from __future__ import annotations
++
++import json
++from typing import Any
++
++import httpx
++
++#: Appended to the bundle's ``base_url``. The bundle records the versioned
++#: prefix (``https://maas.qianwenaiapi.com/api/v1``), the way the OpenAI bundle
++#: records ``.../v1`` and the client appends ``/embeddings``.
++_TEXT_EMBEDDINGS_PATH = "/services/embeddings/text-embedding/text-embedding"
++
++
++class DashScopeTextEmbeddingClient:
++    """One DashScope-native ``text-embedding`` call per ``embed_batch``.
++
++    ``text_type``/``instruct`` are the route's query-side knobs and are absent by
++    default: an absent ``text_type`` is the route's ``document`` role, which is
++    what a rebuild must use. Only a caller holding a *query* role passes them
++    (the serving lane), and it passes the values the frozen bundle records.
++    """
++
++    def __init__(
++        self,
++        *,
++        base_url: str,
++        api_key: str = "",
++        timeout: float = 60.0,
++        text_type: str | None = None,
++        instruct: str | None = None,
++    ) -> None:
++        if instruct is not None and text_type is None:
++            raise ValueError("instruct needs the text_type it qualifies")
++        self.base_url = base_url.rstrip("/")
++        self.api_key = api_key
++        self.timeout = timeout
++        self.text_type = text_type
++        self.instruct = instruct
++
++    def embed_batch(
++        self,
++        texts: list[str],
++        *,
++        model: str,
++    ) -> list[list[float]]:
++        """Embed ``texts`` in one call, returning vectors in input order.
++
++        ``dimension`` is deliberately not sent: the candidate model answers 1024
++        dimensions by default and rejects an unsupported ``dimension`` with HTTP
++        400 (measured 2026-09-21), so the declared dimension is enforced on the
++        response instead — a silent dimension change then fails closed rather
++        than mixing vector spaces.
++        """
++
++        if not texts:
++            return []
++        headers: dict[str, str] = {"Content-Type": "application/json"}
++        if self.api_key:
++            headers["Authorization"] = f"Bearer {self.api_key}"
++        payload: dict[str, Any] = {"model": model, "input": {"texts": texts}}
++        if self.text_type is not None:
++            payload["text_type"] = self.text_type
++        if self.instruct is not None:
++            payload["instruct"] = self.instruct
++        try:
++            with httpx.Client(trust_env=False, timeout=self.timeout) as client:
++                response = client.post(
++                    f"{self.base_url}{_TEXT_EMBEDDINGS_PATH}",
++                    json=payload,
++                    headers=headers,
++                )
++            response.raise_for_status()
++            data = response.json()
++        except httpx.TimeoutException as exc:
++            raise TimeoutError(
++                f"embedding endpoint {self.base_url} did not answer in time"
++            ) from exc
++        except (httpx.HTTPError, OSError) as exc:
++            raise ConnectionError(
++                f"embedding endpoint {self.base_url} is unreachable"
++            ) from exc
++        except json.JSONDecodeError as exc:
++            raise ConnectionError(
++                f"embedding endpoint {self.base_url} answered with a non-JSON body"
++            ) from exc
++        return _ordered_embeddings(data, expected=len(texts))
++
++
++#: Where a row states its input position. DashScope's documentation names it
++#: ``text_index``; the MaaS gateway's native route answers ``index`` (measured
++#: live 2026-09-21: rows carry ``['embedding', 'index', 'type']``). Both are
++#: accepted, and the row is placed by whichever one it carries.
++_ROW_INDEX_KEYS = ("text_index", "index")
++
++
++def _ordered_embeddings(document: Any, *, expected: int) -> list[list[float]]:
++    """Read ``output.embeddings`` and restore input order through the row index.
++
++    Neither DashScope nor the gateway promises the answer order, so every row is
++    placed back at the index it names; a set that is not exactly ``0..n-1`` is a
++    validation failure, never a silent misalignment of text and vector.
++    """
++
++    output = document.get("output") if isinstance(document, dict) else None
++    rows = output.get("embeddings") if isinstance(output, dict) else None
++    if not isinstance(rows, list) or len(rows) != expected:
++        raise ValueError("embedding provider returned a different row count")
++    ordered: dict[int, list[float]] = {}
++    for row in rows:
++        text_index = None
++        if isinstance(row, dict):
++            for key in _ROW_INDEX_KEYS:
++                value = row.get(key)
++                if isinstance(value, int) and not isinstance(value, bool):
++                    text_index = value
++                    break
++        if text_index is None:
++            raise ValueError("embedding provider returned a malformed embedding row")
++        if text_index in ordered or not 0 <= text_index < expected:
++            raise ValueError(
++                "embedding provider returned a non-permutation text_index set"
++            )
++        embedding = row.get("embedding")
++        if not isinstance(embedding, list) or not embedding:
++            raise ValueError("embedding provider returned an empty embedding")
++        ordered[text_index] = embedding
++    return [ordered[index] for index in range(expected)]
++
++
++__all__ = ["DashScopeTextEmbeddingClient"]
+diff --git a/apps/miroflow-agent/src/data_agents/canonical_v2/embedding_lane_resilience.py b/apps/miroflow-agent/src/data_agents/canonical_v2/embedding_lane_resilience.py
+new file mode 100644
+--- /dev/null
++++ b/apps/miroflow-agent/src/data_agents/canonical_v2/embedding_lane_resilience.py
+@@ -0,0 +1,136 @@
++"""Embedding (vector) lane resilience: a short consecutive-failure breaker.
++
++One provider, one lane: the vector lane depends on a single remote embedding
++endpoint. When that endpoint is unreachable from the serving host — a customer
++site behind a firewall the school network cannot reach — the lane fails on every
++turn, and each attempt costs a full connect/read wait.
++
++This breaker converts "fail on every turn" into "fail twice, then stay out of
++the way until the window closes". State lives in the process, shared by the two
++consumers of the same embedding adapter:
++
++* the vector lane reads, which must report the lane as unavailable instead of
++  killing the turn, and its outer wait expiry (``note_lane_timeout``) counts as
++  one more transport failure;
++* the provider keep-warm cycle, which must not pay for a provider it knows is
++  down.
++
++Only *transport* failures count. Integrity failures of the embedding result stay
++where they are (``_ValidatingEmbeddingAdapter``), because a wrong-dimension or
++non-finite vector is not a reason to stop asking the provider.
++"""
++
++from __future__ import annotations
++
++from datetime import UTC, datetime
++import threading
++from typing import Any
++
++#: Consecutive transport failures that open the breaker. Two is enough to tell a
++#: dead endpoint from a single lost packet, and small enough that a customer box
++#: stops paying the lane's wait after two turns.
++BREAKER_FAILURE_THRESHOLD = 2
++#: How long the lane stays out. Long enough to cover an operator restart of the
++#: embedding server, short enough that the lane comes back on its own.
++BREAKER_WINDOW_SECONDS = 300.0
++
++
++class EmbeddingLaneBreaker:
++    """Consecutive-failure breaker for the embedding endpoint (one lane)."""
++
++    def __init__(
++        self,
++        *,
++        failure_threshold: int = BREAKER_FAILURE_THRESHOLD,
++        window_seconds: float = BREAKER_WINDOW_SECONDS,
++        clock: Any = None,
++    ) -> None:
++        self._failure_threshold = max(1, int(failure_threshold))
++        self._window_seconds = max(0.0, float(window_seconds))
++        self._clock: Any = clock or (lambda: datetime.now(UTC))
++        self._lock = threading.Lock()
++        self._state = "closed"
++        self._failures = 0
++        self._opened_at: Any = None
++        self._reason: str | None = None
++
++    def state(self, lane: str = "vector") -> str:
++        with self._lock:
++            return self._state
++
++    def reason(self, lane: str = "vector") -> str | None:
++        with self._lock:
++            return self._reason
++
++    def attempt_allowed(self, lane: str = "vector") -> tuple[bool, str]:
++        """May a real provider call be issued now? Returns (allowed, state)."""
++
++        with self._lock:
++            if self._state != "open":
++                return True, self._state
++            opened_at = self._opened_at
++            elapsed = (
++                (self._clock() - opened_at).total_seconds()
++                if opened_at is not None
++                else 0.0
++            )
++            if elapsed >= self._window_seconds:
++                self._state = "probe"
++                return True, "probe"
++            return False, "open"
++
++    def record(
++        self, lane: str = "vector", *, ok: bool, reason: str | None = None
++    ) -> str:
++        """Record one attempt outcome; returns the state after recording."""
++
++        with self._lock:
++            if ok:
++                self._failures = 0
++                self._state = "closed"
++                self._opened_at = None
++                self._reason = None
++                return self._state
++            self._failures += 1
++            if reason:
++                self._reason = reason
++            if self._state == "probe" or self._failures >= self._failure_threshold:
++                self._state = "open"
++                self._opened_at = self._clock()
++            return self._state
++
++    def note_lane_timeout(self, lane: str = "vector") -> None:
++        """The lane's outer wait expired: the provider did not answer in budget.
++
++        The abandoned call records its own failure when it finally returns; this
++        keeps the count tied to what a user actually waited for, so a black-holed
++        route opens the breaker after two turns instead of two times the
++        provider's own (much longer) request timeout.
++        """
++
++        self.record(reason="timeout", ok=False)
++
++
++_BREAKER = EmbeddingLaneBreaker()
++
++
++def embedding_lane_breaker() -> EmbeddingLaneBreaker:
++    """The process-scoped breaker shared by the lane read and the keep-warm."""
++
++    return _BREAKER
++
++
++def reset_embedding_lane_breaker() -> None:
++    """Replace the process-scoped breaker (tests, and a fresh scratch boot)."""
++
++    global _BREAKER
++    _BREAKER = EmbeddingLaneBreaker()
++
++
++__all__ = [
++    "BREAKER_FAILURE_THRESHOLD",
++    "BREAKER_WINDOW_SECONDS",
++    "EmbeddingLaneBreaker",
++    "embedding_lane_breaker",
++    "reset_embedding_lane_breaker",
++]
+diff --git a/.agents/runs/rebuild-canonical-v2-knowledge-platform/s12a/complete_candidate_runner.py b/.agents/runs/rebuild-canonical-v2-knowledge-platform/s12a/complete_candidate_runner.py
+--- a/.agents/runs/rebuild-canonical-v2-knowledge-platform/s12a/complete_candidate_runner.py
++++ b/.agents/runs/rebuild-canonical-v2-knowledge-platform/s12a/complete_candidate_runner.py
+@@ -926,7 +926,11 @@
+                 value.accepted_original_milvus_record_sha256
+             ),
+             decision_adapter=load_decisions(value.recorded_decision_bundle),
+-            embedding_adapter=load_embeddings(value.recorded_embedding_bundle),
++            # The build embeds documents, so it takes the document role: on the
++            # native route that is the one that sends no query-side parameters.
++            embedding_adapter=load_embeddings(
++                value.recorded_embedding_bundle, role="document"
++            ),
+             envelope_sink=file_sink_type(value.envelope_output),
+             clock=lambda: datetime.now(timezone.utc),
+         )
+@@ -979,7 +983,9 @@
+             expected_database=value.expected_database,
+             expected_index_root=value.index_root,
+             expected_envelope_path=value.envelope_output,
+-            embedding_adapter=load_embeddings(value.recorded_embedding_bundle),
++            embedding_adapter=load_embeddings(
++                value.recorded_embedding_bundle, role="query"
++            ),
+             page_fetcher=page_fetch_module.create_tiered_page_fetcher(),
+         )
+ 

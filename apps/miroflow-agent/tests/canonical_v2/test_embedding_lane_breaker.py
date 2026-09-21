@@ -146,6 +146,7 @@ def _adapter(base_url: str, breaker: Any) -> Any:
         batch_size=4,
         max_workers=2,
         timeout_seconds=2,
+        role="document",
         breaker=breaker,
     )
 

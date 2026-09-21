@@ -29,6 +29,20 @@ connection test. The probe is an *identity* check, never a ranking check:
 Both arms are read-only, never touch the bundle (adding a field there would
 change ``content_sha256`` and force a re-seal) and never echo the credential or
 an upstream body.
+
+**Each arm declares the retrieval side it embeds for.** One authority answers a
+*query* differently from a *document* (the native route's ``text_type``), so the
+role is a property of the caller and never of the text: the index arm re-embeds a
+document the build already embedded, and the reference arm probes the query side
+the serving lane runs. Handing the wrong role to a role-aware endpoint would make
+a healthy endpoint read as a different space.
+
+Known ceiling: the default HTTP client below speaks the **OpenAI-compatible**
+shape only, so a DashScope-native endpoint answers it with HTTP 404 and the card
+reports 未校验 rather than a verdict (never a false failure). The native shape has
+to be added here before the switched endpoint can be validated from the page; the
+client for it already exists at ``src.data_agents.providers.dashscope_embeddings``
+and this app imports from that tree elsewhere.
 """
 
 from __future__ import annotations
@@ -46,6 +60,12 @@ import urllib.error
 import urllib.request
 
 EMBEDDINGS_PATH = "/embeddings"
+
+#: The retrieval side a call embeds for. Part of the probe's own contract: the
+#: index arm compares a stored *document* vector, the reference arm probes the
+#: *query* side the serving lane will run through the configured endpoint.
+ROLE_QUERY = "query"
+ROLE_DOCUMENT = "document"
 
 #: One fixed string, used for both arms. Mixed script and a rare token so a
 #: tokenizer difference shifts the vector instead of hiding in a near-duplicate.
@@ -137,9 +157,24 @@ def _cosine(left: Sequence[float], right: Sequence[float]) -> float:
 
 
 def _post_embeddings(
-    base_url: str, text: str, *, api_key: str, model: str, timeout: float
+    base_url: str,
+    text: str,
+    *,
+    api_key: str,
+    model: str,
+    timeout: float,
+    role: str,
 ) -> tuple[float, ...]:
-    """One bounded POST. The body is parsed here and never returned to a caller."""
+    """One bounded POST. The body is parsed here and never returned to a caller.
+
+    ``role`` is accepted and ignored: this client speaks the OpenAI-compatible
+    shape, which carries no role dimension, so both roles answer with the same
+    vector (the same is true of the compatible embedding authority in the serving
+    line). A role-aware route needs the native client — see the module docstring's
+    known ceiling.
+    """
+
+    del role
 
     headers = {"Content-Type": "application/json"}
     if api_key:
@@ -186,9 +221,12 @@ def _embed(
     api_key: str,
     model: str,
     timeout: float,
+    role: str,
 ) -> tuple[float, ...]:
     caller = embedder or _post_embeddings
-    return caller(base_url, text, api_key=api_key, model=model, timeout=timeout)
+    return caller(
+        base_url, text, api_key=api_key, model=model, timeout=timeout, role=role
+    )
 
 
 def _recorded_base_url() -> str:
@@ -319,6 +357,7 @@ def _index_arm(
         api_key=api_key,
         model=model,
         timeout=timeout,
+        role=ROLE_DOCUMENT,
     )
     if len(vector) != len(read_row(target_index)):
         raise EmbeddingIdentityUnavailable("端点向量维度与索引矩阵不一致")
@@ -397,6 +436,7 @@ def _reference_arm(
         api_key=api_key,
         model=model,
         timeout=timeout,
+        role=ROLE_QUERY,
     )
     configured = _embed(
         embedder,
@@ -405,6 +445,7 @@ def _reference_arm(
         api_key=api_key,
         model=model,
         timeout=timeout,
+        role=ROLE_QUERY,
     )
     if len(reference) != len(configured):
         raise EmbeddingIdentityUnavailable(

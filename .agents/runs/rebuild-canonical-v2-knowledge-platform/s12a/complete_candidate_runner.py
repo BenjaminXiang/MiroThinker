@@ -929,7 +929,11 @@ def _production_dependencies(config: RunnerConfig) -> RunnerDependencies:
                 value.accepted_original_milvus_record_sha256
             ),
             decision_adapter=load_decisions(value.recorded_decision_bundle),
-            embedding_adapter=load_embeddings(value.recorded_embedding_bundle),
+            # The build embeds documents, so it takes the document role: on the
+            # native route that is the one that sends no query-side parameters.
+            embedding_adapter=load_embeddings(
+                value.recorded_embedding_bundle, role="document"
+            ),
             envelope_sink=file_sink_type(value.envelope_output),
             clock=lambda: datetime.now(timezone.utc),
         )
@@ -982,7 +986,9 @@ def _production_dependencies(config: RunnerConfig) -> RunnerDependencies:
             expected_database=value.expected_database,
             expected_index_root=value.index_root,
             expected_envelope_path=value.envelope_output,
-            embedding_adapter=load_embeddings(value.recorded_embedding_bundle),
+            embedding_adapter=load_embeddings(
+                value.recorded_embedding_bundle, role="query"
+            ),
             page_fetcher=page_fetch_module.create_tiered_page_fetcher(),
         )
 

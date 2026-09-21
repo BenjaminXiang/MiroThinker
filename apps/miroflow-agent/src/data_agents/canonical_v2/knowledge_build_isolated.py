@@ -286,14 +286,22 @@ _QWEN_EMBEDDING_DIMENSION = 4096
 #: The gateway's two routes are **not** the same pipeline (same text, both
 #: routes: cosine 0.808–0.920), so exactly one route may be used for both the
 #: rebuild and serving; both variants are frozen here rather than one, so the
-#: choice stays a bundle choice instead of a code change. The compatible route
-#: is the recommended one (OpenAI shape, no new client), the native route the
-#: fallback if that route's shape ever changes.
+#: choice stays a bundle choice instead of a code change. The switch ships the
+#: **native** variant: it carries the route's ``text_type``/``instruct``
+#: query-side treatment (frozen in the bundle, sent only by a query-role
+#: adapter), which the OpenAI shape cannot express; the compatible variant stays
+#: as the fallback twin, where both roles answer identically.
+#:
+#: Both bundles declare ``batch_size`` 20 — the model family's *documented* cap,
+#: below the 25 this gateway currently accepts, so a provider that tightens to
+#: its documented value degrades nothing (a 400 on the vector lane would be
+#: turned into lane degradation by F1, i.e. silent recall loss). The rebuild is
+#: bound by tokens, not by requests, so the smaller batch costs no real time.
 _QWEN_FLASH_EMBEDDING_BUNDLE_SHA256 = (
-    "81a536916053106114aa4c70ff43983bf6a12c8ecb0b5c562b43f9f02409b46a"
+    "67927ea060ec3036927376c7059aaa7d3140c33160b9be440556a19cd8d64ef3"
 )
 _QWEN_FLASH_OPENAI_COMPAT_EMBEDDING_BUNDLE_SHA256 = (
-    "2db8f03b255e138a13081566c6196db06d7af1a8a83c12cec2cbfaea00b22e3d"
+    "d5ff0ffb52bdaa70a5103fb9747fa7f320547f21dd8e7b6e3a5ce6bd05a2baf4"
 )
 _QWEN_FLASH_EMBEDDING_DIMENSION = 1024
 _ACCEPTED_EMBEDDING_AUTHORITIES = frozenset(
@@ -8000,6 +8008,16 @@ class _BoundEmbeddingAdapter(RecordedEmbeddingAdapter):
     authority_sha256: Sha256
 
 
+#: One retrieval has two sides and one authority can answer each of them with a
+#: different vector (DashScope's ``text_type``): ``query`` is a short question,
+#: ``document`` a record. The role is fixed when the adapter is constructed —
+#: never inferred from the text — because a document embedded through the query
+#: role (or the reverse) is a silent space shift, not an error any check sees.
+EMBEDDING_ROLE_QUERY = "query"
+EMBEDDING_ROLE_DOCUMENT = "document"
+_EMBEDDING_ROLES = frozenset({EMBEDDING_ROLE_QUERY, EMBEDDING_ROLE_DOCUMENT})
+
+
 @dataclass(slots=True)
 class _BatchingEmbeddingAdapter:
     """Batching, caching and vector validation shared by the HTTP providers.
@@ -8009,6 +8027,13 @@ class _BatchingEmbeddingAdapter:
     cache, the per-batch thread pool, and the "an answer we cannot use fails
     closed" vector validation — is provider-independent, so the two providers
     cannot drift apart on it.
+
+    ``role`` is which side of the retrieval the caller is embedding for, and it
+    is a constructor argument rather than something read off the text: one
+    authority answers differently by role (DashScope's ``text_type``), so a
+    document must never be embedded through a query-role adapter nor the other
+    way round. Only the native provider has a role dimension on the wire; the
+    OpenAI-compatible shape has none, so its two roles answer identically.
     """
 
     model_id: str
@@ -8018,6 +8043,7 @@ class _BatchingEmbeddingAdapter:
     batch_size: int
     max_workers: int
     timeout_seconds: int
+    role: str
     breaker: Any = field(default_factory=embedding_lane_breaker, repr=False)
     _cache: OrderedDict[str, tuple[float, ...]] = field(
         default_factory=OrderedDict,
@@ -8028,6 +8054,10 @@ class _BatchingEmbeddingAdapter:
     _condition: Condition = field(default_factory=Condition, init=False, repr=False)
 
     _MAX_CACHE_ENTRIES = 16_384
+
+    def __post_init__(self) -> None:
+        if self.role not in _EMBEDDING_ROLES:
+            raise ValueError(f"embedding adapter role is not known: {self.role!r}")
 
     def embed_batch(
         self,
@@ -8173,14 +8203,32 @@ class _GatewayOpenAICompatibleEmbeddingAdapter(_OpenAICompatibleEmbeddingAdapter
 
 @dataclass(slots=True)
 class _DashScopeNativeEmbeddingAdapter(_BatchingEmbeddingAdapter):
+    """The DashScope-native authority, role-aware on the wire.
+
+    ``query_text_type``/``query_instruct`` are the bundle's frozen query-side
+    treatment (the vendor's documented way to pair a short query with long
+    documents). They are sent **only** by a query-role adapter: a document-role
+    adapter passes neither, so it cannot reach the query side of the route even
+    by accident. The defaults exist for direct construction; the loader always
+    passes the bundle's validated values.
+    """
+
+    query_text_type: str = EMBEDDING_ROLE_QUERY
+    query_instruct: str = ""
+
     def _resolve_api_key(self) -> str:
         return _load_gateway_embedding_api_key()
 
     def _provider_client(self, api_key: str) -> Any:
+        query_side = self.role == EMBEDDING_ROLE_QUERY
         return _DashScopeTextEmbeddingClient(
             base_url=self.base_url,
             api_key=api_key,
             timeout=float(self.timeout_seconds),
+            text_type=self.query_text_type if query_side else None,
+            instruct=(
+                self.query_instruct if query_side and self.query_instruct else None
+            ),
         )
 
 
@@ -8362,7 +8410,7 @@ _OPENAI_COMPATIBLE_EMBEDDING_AUTHORITIES: tuple[tuple[dict[str, Any], Any], ...]
             "dimension": _QWEN_FLASH_EMBEDDING_DIMENSION,
             "base_url": "https://maas.qianwenaiapi.com/compatible-mode/v1",
             "api_key_source": _GATEWAY_EMBEDDING_API_KEY_SOURCE,
-            "batch_size": 25,
+            "batch_size": 20,
             "max_workers": 32,
             "timeout_seconds": 180,
             "content_sha256": _QWEN_FLASH_OPENAI_COMPAT_EMBEDDING_BUNDLE_SHA256,
@@ -8372,7 +8420,9 @@ _OPENAI_COMPATIBLE_EMBEDDING_AUTHORITIES: tuple[tuple[dict[str, Any], Any], ...]
 )
 
 
-def _load_dashscope_native_embedding_adapter(path: Path) -> _EmbeddingAdapter:
+def _load_dashscope_native_embedding_adapter(
+    path: Path, *, role: str
+) -> _EmbeddingAdapter:
     """Load the v2 candidate authority: DashScope-native shape, 1024 dimensions."""
 
     document = _load_recorded_bundle(
@@ -8389,6 +8439,8 @@ def _load_dashscope_native_embedding_adapter(path: Path) -> _EmbeddingAdapter:
                 "batch_size",
                 "max_workers",
                 "timeout_seconds",
+                "query_text_type",
+                "query_instruct",
                 "content_sha256",
             }
         ),
@@ -8400,9 +8452,19 @@ def _load_dashscope_native_embedding_adapter(path: Path) -> _EmbeddingAdapter:
         "dimension": _QWEN_FLASH_EMBEDDING_DIMENSION,
         "base_url": "https://maas.qianwenaiapi.com/api/v1",
         "api_key_source": _GATEWAY_EMBEDDING_API_KEY_SOURCE,
-        "batch_size": 25,
+        "batch_size": 20,
         "max_workers": 32,
         "timeout_seconds": 180,
+        # The route's query side, frozen here (not merely carried): which
+        # ``text_type`` the query role must use and the instruction pairing it
+        # with our documents. Pinned to "query" so a bundle cannot declare the
+        # document type for its query role — that would embed every query as a
+        # record and no check downstream would see it.
+        "query_text_type": EMBEDDING_ROLE_QUERY,
+        "query_instruct": (
+            "Given a Chinese-language query about Shenzhen technology companies, "
+            "professors, research papers or patents, retrieve the relevant records"
+        ),
         "content_sha256": _QWEN_FLASH_EMBEDDING_BUNDLE_SHA256,
     }
     # Same rule as the openai-compatible branch: the frozen identity is the model,
@@ -8418,12 +8480,26 @@ def _load_dashscope_native_embedding_adapter(path: Path) -> _EmbeddingAdapter:
         batch_size=cast(int, document["batch_size"]),
         max_workers=cast(int, document["max_workers"]),
         timeout_seconds=cast(int, document["timeout_seconds"]),
+        role=role,
+        query_text_type=cast(str, document["query_text_type"]),
+        query_instruct=cast(str, document["query_instruct"]),
     )
 
 
-def load_content_addressed_embedding_adapter(path: Path) -> _EmbeddingAdapter:
-    """Load one frozen build/serving embedding authority without retaining secrets."""
+def load_content_addressed_embedding_adapter(
+    path: Path, *, role: str
+) -> _EmbeddingAdapter:
+    """Load one frozen build/serving embedding authority without retaining secrets.
 
+    ``role`` is the side of the retrieval the caller embeds for, and it is
+    required rather than defaulted: on the native provider the two roles put
+    different parameters on the wire, so a default would silently pick one of two
+    different vector layouts (the build always passes ``document``, the serving
+    query lane ``query``).
+    """
+
+    if role not in _EMBEDDING_ROLES:
+        raise ValueError(f"embedding adapter role is not known: {role!r}")
     _require_unlinked_regular_source(path)
     try:
         raw = json.loads(_read_stable_unlinked_regular_file(path))
@@ -8438,7 +8514,7 @@ def load_content_addressed_embedding_adapter(path: Path) -> _EmbeddingAdapter:
     # (model, dimension, address, credential slot, content hash). A bundle cannot
     # claim one provider and carry another's identity.
     if raw.get("provider") == "dashscope-native":
-        return _load_dashscope_native_embedding_adapter(path)
+        return _load_dashscope_native_embedding_adapter(path, role=role)
     if raw.get("provider") != "openai-compatible":
         raise ValueError("embedding bundle provider is not a known embedding provider")
 
@@ -8468,6 +8544,11 @@ def load_content_addressed_embedding_adapter(path: Path) -> _EmbeddingAdapter:
     # customer-site endpoint.  The bundle file itself is untouched, and the
     # content hash still pins every recorded field (including the recorded
     # address) for as long as the bundle is used as the fallback.
+    #
+    # Both roles are accepted here: this wire shape carries no role dimension, so
+    # its two roles answer with the same vector and the fallback twin can serve a
+    # query lane unchanged. ``role`` only changes the request on the native
+    # branch above.
     for expected, adapter_type in _OPENAI_COMPATIBLE_EMBEDDING_AUTHORITIES:
         if not _matches_frozen_authority(document, expected):
             continue
@@ -8479,6 +8560,7 @@ def load_content_addressed_embedding_adapter(path: Path) -> _EmbeddingAdapter:
             batch_size=cast(int, document["batch_size"]),
             max_workers=cast(int, document["max_workers"]),
             timeout_seconds=cast(int, document["timeout_seconds"]),
+            role=role,
         )
     raise ValueError("release embedding bundle differs from frozen authority")
 

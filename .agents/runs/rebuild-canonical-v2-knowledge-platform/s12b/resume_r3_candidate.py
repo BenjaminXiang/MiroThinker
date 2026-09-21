@@ -213,7 +213,7 @@ def main(args: list[str] | None = None) -> int:
         )
         print("resume_builder_target=resolved", flush=True)
         embedding = build_module.load_content_addressed_embedding_adapter(
-            value.recorded_embedding_bundle
+            value.recorded_embedding_bundle, role="document"
         )
         print("resume_builder_embedding=loaded", flush=True)
         boundary = boundary_type(

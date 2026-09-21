@@ -4524,7 +4524,7 @@ def test_release_embedding_loader_batches_real_provider_without_persisting_secre
     monkeypatch.setattr(module, "_OpenAIEmbeddingClient", _FakeEmbeddingClient)
     monkeypatch.setattr(module, "load_local_api_key", lambda: "runtime-secret")
 
-    adapter = module.load_content_addressed_embedding_adapter(path)
+    adapter = module.load_content_addressed_embedding_adapter(path, role="document")
     texts = tuple(f"text-{index}" for index in range(65))
     vectors = adapter.embed_batch(texts)
 
@@ -4551,7 +4551,7 @@ def test_release_embedding_loader_batches_real_provider_without_persisting_secre
     tampered["content_sha256"] = _canonical_hash(tampered)
     path.write_text(json.dumps(tampered), encoding="utf-8")
     with pytest.raises(ValueError, match="authority|bundle"):
-        module.load_content_addressed_embedding_adapter(path)
+        module.load_content_addressed_embedding_adapter(path, role="document")
 
 
 def test_isolated_index_point_readback_is_bounded_and_complete(

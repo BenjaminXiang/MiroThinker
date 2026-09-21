@@ -51,8 +51,10 @@ def _orthogonal(seed: int, vector: tuple[float, ...]) -> tuple[float, ...]:
 def _make_embedder(table: dict[str, dict[str, tuple[float, ...]]]) -> Any:
     """A stub endpoint that maps text → vector, like a real embedding service."""
 
-    def embed(base_url: str, text: str, *, api_key: str, model: str, timeout: float):
-        del api_key, model, timeout
+    def embed(
+        base_url: str, text: str, *, api_key: str, model: str, timeout: float, role: str
+    ):
+        del api_key, model, timeout, role
         space = table.get(base_url)
         if space is None:
             raise identity.EmbeddingIdentityUnavailable(
@@ -328,6 +330,63 @@ def test_the_index_arm_passes_when_the_endpoint_reproduces_the_stored_vector(
     assert "与索引同源" in report.detail
 
 
+def test_the_index_arm_embeds_the_stored_document(tmp_path: Path) -> None:
+    """The index arm re-embeds a *document*, so it must declare that role.
+
+    The vector it compares against was written by the build, which embeds
+    documents. Asking a role-aware endpoint for the query side here would answer
+    with an adjacent-but-different vector and fail a healthy endpoint.
+    """
+
+    pack, space = _make_pack(tmp_path, seed=11)
+    roles: list[str] = []
+
+    def recording(base_url, text, *, api_key, model, timeout, role):
+        del base_url, api_key, model, timeout
+        roles.append(role)
+        return space[text]
+
+    report = identity.verify_embedding_identity(
+        configured_base_url="http://new/v1",
+        recorded_base_url="http://new/v1",  # same address: the reference arm is vacuous
+        embedder=recording,
+        pack_dir=pack,
+    )
+
+    assert report.passed is True
+    assert roles == [identity.ROLE_DOCUMENT]
+
+
+def test_the_reference_arm_probes_the_query_side() -> None:
+    """Both reference calls are queries, as the serving lane's will be."""
+
+    vector = _vector(1)
+    inner = _make_embedder(
+        {
+            "http://new/v1": {identity.PROBE_TEXT: vector},
+            "http://old/v1": {identity.PROBE_TEXT: vector},
+        }
+    )
+    roles: list[str] = []
+
+    def recording(base_url, text, *, api_key, model, timeout, role):
+        roles.append(role)
+        return inner(
+            base_url, text, api_key=api_key, model=model, timeout=timeout, role=role
+        )
+
+    report = identity.verify_embedding_identity(
+        configured_base_url="http://new/v1",
+        recorded_base_url="http://old/v1",
+        embedder=recording,
+        pack_dir=None,
+    )
+
+    assert report.arm == "reference"
+    assert report.passed is True
+    assert roles == [identity.ROLE_QUERY, identity.ROLE_QUERY]
+
+
 def test_the_index_arm_fails_and_says_what_to_do(tmp_path: Path) -> None:
     pack, space = _make_pack(tmp_path, seed=11)
     embedder = _make_embedder(
@@ -454,6 +513,7 @@ def test_the_http_embedder_reads_an_openai_compatible_response() -> None:
             api_key="probe-key",
             model=_MODEL,
             timeout=5.0,
+            role=identity.ROLE_QUERY,
         )
     finally:
         server.shutdown()
@@ -463,6 +523,10 @@ def test_the_http_embedder_reads_an_openai_compatible_response() -> None:
     assert calls[0]["path"] == "/v1/embeddings"
     assert calls[0]["payload"] == {"model": _MODEL, "input": identity.PROBE_TEXT}
     assert calls[0]["auth"] is True
+    # The query role adds nothing here: this wire shape has no ``text_type``, and
+    # inventing one would make the probe speak a request the endpoint never sees
+    # from the serving lane. The native shape is the module docstring's ceiling.
+    assert "text_type" not in calls[0]["payload"]
 
 
 # -- the route and the page --------------------------------------------------

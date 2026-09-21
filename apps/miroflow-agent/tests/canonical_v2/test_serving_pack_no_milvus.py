@@ -400,7 +400,7 @@ def test_v2_index_refuses_the_candidate_embedding_identity(
 
     snapshot = _open(worlds, worlds.v2_pack).index_snapshot
     candidate = build_module.load_content_addressed_embedding_adapter(
-        CANDIDATE_EMBEDDING_BUNDLE_DIR / bundle_name
+        CANDIDATE_EMBEDDING_BUNDLE_DIR / bundle_name, role="document"
     )
     assert candidate.model_id != worlds.adapter.model_id
     assert candidate.dimension != worlds.adapter.dimension

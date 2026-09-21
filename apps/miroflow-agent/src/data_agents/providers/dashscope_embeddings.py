@@ -31,7 +31,13 @@ _TEXT_EMBEDDINGS_PATH = "/services/embeddings/text-embedding/text-embedding"
 
 
 class DashScopeTextEmbeddingClient:
-    """One DashScope-native ``text-embedding`` call per ``embed_batch``."""
+    """One DashScope-native ``text-embedding`` call per ``embed_batch``.
+
+    ``text_type``/``instruct`` are the route's query-side knobs and are absent by
+    default: an absent ``text_type`` is the route's ``document`` role, which is
+    what a rebuild must use. Only a caller holding a *query* role passes them
+    (the serving lane), and it passes the values the frozen bundle records.
+    """
 
     def __init__(
         self,
@@ -39,10 +45,16 @@ class DashScopeTextEmbeddingClient:
         base_url: str,
         api_key: str = "",
         timeout: float = 60.0,
+        text_type: str | None = None,
+        instruct: str | None = None,
     ) -> None:
+        if instruct is not None and text_type is None:
+            raise ValueError("instruct needs the text_type it qualifies")
         self.base_url = base_url.rstrip("/")
         self.api_key = api_key
         self.timeout = timeout
+        self.text_type = text_type
+        self.instruct = instruct
 
     def embed_batch(
         self,
@@ -64,11 +76,16 @@ class DashScopeTextEmbeddingClient:
         headers: dict[str, str] = {"Content-Type": "application/json"}
         if self.api_key:
             headers["Authorization"] = f"Bearer {self.api_key}"
+        payload: dict[str, Any] = {"model": model, "input": {"texts": texts}}
+        if self.text_type is not None:
+            payload["text_type"] = self.text_type
+        if self.instruct is not None:
+            payload["instruct"] = self.instruct
         try:
             with httpx.Client(trust_env=False, timeout=self.timeout) as client:
                 response = client.post(
                     f"{self.base_url}{_TEXT_EMBEDDINGS_PATH}",
-                    json={"model": model, "input": {"texts": texts}},
+                    json=payload,
                     headers=headers,
                 )
             response.raise_for_status()

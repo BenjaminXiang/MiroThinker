@@ -78,7 +78,7 @@ def test_the_operator_address_wins_over_the_recorded_one(
     monkeypatch.setenv(ENV, "http://10.20.30.40:9000/v1")
 
     adapter = _module().load_content_addressed_embedding_adapter(
-        _write_bundle(tmp_path, FROZEN_DOCUMENT)
+        _write_bundle(tmp_path, FROZEN_DOCUMENT), role="document"
     )
 
     assert adapter.base_url == "http://10.20.30.40:9000/v1"
@@ -92,7 +92,7 @@ def test_without_the_setting_the_recorded_address_is_used(
     monkeypatch.delenv(ENV, raising=False)
 
     adapter = _module().load_content_addressed_embedding_adapter(
-        _write_bundle(tmp_path, FROZEN_DOCUMENT)
+        _write_bundle(tmp_path, FROZEN_DOCUMENT), role="document"
     )
 
     assert adapter.base_url == RECORDED_BASE_URL
@@ -104,7 +104,7 @@ def test_a_blank_setting_falls_back_to_the_recorded_address(
     monkeypatch.setenv(ENV, "   ")
 
     adapter = _module().load_content_addressed_embedding_adapter(
-        _write_bundle(tmp_path, FROZEN_DOCUMENT)
+        _write_bundle(tmp_path, FROZEN_DOCUMENT), role="document"
     )
 
     assert adapter.base_url == RECORDED_BASE_URL
@@ -159,14 +159,16 @@ def test_the_identity_gates_still_reject_a_changed_bundle(
         document = _resealed(FROZEN_DOCUMENT, **change)
         with pytest.raises(ValueError):
             module.load_content_addressed_embedding_adapter(
-                _write_bundle(tmp_path, document)
+                _write_bundle(tmp_path, document), role="document"
             )
         assert name
 
     # A foreign content hash: the document says one thing, its own bytes another.
     forged = {**FROZEN_DOCUMENT, "content_sha256": "0" * 64}
     with pytest.raises(ValueError):
-        module.load_content_addressed_embedding_adapter(_write_bundle(tmp_path, forged))
+        module.load_content_addressed_embedding_adapter(
+            _write_bundle(tmp_path, forged), role="document"
+        )
 
 
 def test_a_resealed_bundle_with_another_address_is_still_refused(
@@ -186,7 +188,7 @@ def test_a_resealed_bundle_with_another_address_is_still_refused(
     assert document["content_sha256"] != FROZEN_DOCUMENT["content_sha256"]
     with pytest.raises(ValueError):
         module.load_content_addressed_embedding_adapter(
-            _write_bundle(tmp_path, document)
+            _write_bundle(tmp_path, document), role="document"
         )
 
 
@@ -225,7 +227,7 @@ def test_the_address_is_not_part_of_the_frozen_identity_comparison(
     )
 
     adapter = module.load_content_addressed_embedding_adapter(
-        _write_bundle(tmp_path, resealed)
+        _write_bundle(tmp_path, resealed), role="document"
     )
 
     assert adapter.base_url == elsewhere
