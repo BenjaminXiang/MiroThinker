@@ -1,0 +1,65 @@
+#!/usr/bin/env bash
+# Scratch serving command for the F1/F2 probe (port 18285).
+#
+# Copied from the live command file
+# `.agents/runs/rebuild-canonical-v2-knowledge-platform/s12g/serve-18188-command.sh`
+# with exactly four differences:
+#   1. the port (18285 instead of 18188 — the live service owns that port),
+#   2. PYTHONPATH points at this worktree so the modified code is what runs,
+#   3. scratch state (access log / corrections / receipt / turn-debug) lives
+#      under /var/tmp/embedlane-285/,
+#   4. CANONICAL_V2_EMBEDDING_BASE_URL is set by the caller
+#      (phase 1: http://10.255.255.1:9/v1 — a black hole; phase 2: unset).
+#
+# The serving pack, index root, release identity, bundles and the Postgres
+# database are the live run16 ones, used read-only, as in the parent brief.
+PYTHONPATH=/home/longxiang/MiroThinker/.worktrees/embedding-lane-f1f2/apps/miroflow-agent \
+CANONICAL_V2_ACCESS_LOG_DB=/var/tmp/embedlane-285/access-logs.sqlite3 \
+CANONICAL_V2_CORRECTIONS_DB=/var/tmp/embedlane-285/corrections.sqlite3 \
+CANONICAL_V2_MANUAL_RECALL_DIR=/var/tmp/mirothinker-data-v2/manual-recall-v1 \
+CANONICAL_V2_SERVING_RECEIPT_PATH=/var/tmp/embedlane-285/mount-receipt.json \
+CANONICAL_V2_TURN_DEBUG_DIR=/var/tmp/embedlane-285/turn-debug \
+CHAT_CONTEXTUAL_INTERPRETATION=on \
+uv run python /home/longxiang/MiroThinker/.worktrees/embedding-lane-f1f2/.agents/runs/rebuild-canonical-v2-knowledge-platform/s12e/serve_s12e_port.py 18285 \
+  --database-url postgresql://miroflow@127.0.0.1:55458/miroflow_candidate_v2_20260916_r1 \
+  --expected-database miroflow_candidate_v2_20260916_r1 \
+  --database-target-kind disposable \
+  --accepted-backup-gate-root /home/longxiang/MiroThinker/.worktrees/data-rebuild/.agents/runs/rebuild-canonical-v2-knowledge-platform \
+  --source-manifest /home/longxiang/MiroThinker/.worktrees/data-rebuild/.agents/runs/full-column-serving-pack-rebuild/source-build-manifest-p4.json \
+  --source-manifest-sha256 a6e82fcd9dd5b2da22fd0c73cfe81b674ad04827092eb01fd4442956f70e184d \
+  --candidate-staging-root /var/tmp/mirothinker-data-v2/staging-v3 \
+  --index-root /var/tmp/mirothinker-data-v2/index-v3-v2 \
+  --index-marker-sha256 b6f78a3b1e28c280860a4210bfad286ef65090e758de5b876d7f639eefaa8373 \
+  --candidate-release-id candidate-v2-20260916-r1 \
+  --run-id p4-build-20260916-v1 \
+  --source-batch-id s12a-released-objects-full-v1 \
+  --source-batch-id s12c-r7-company-knowledge-v1 \
+  --source-batch-id s12c-r7-company-workbook-supplement-v1 \
+  --source-batch-id s12c-r7-paper-identifiers-v1 \
+  --source-batch-id s12c-r7-patent-identifiers-v1 \
+  --source-batch-id s12c-r7-professor-company-roles-v1 \
+  --source-batch-id s12e-professor-backfill-v1 \
+  --source-batch-id s12f-company-backfill-v1 \
+  --source-batch-id s12f-applicant-binding-v1 \
+  --source-batch-id p4-company-full-v1 \
+  --source-batch-id p4-patent-full-v1 \
+  --source-batch-id p4-paper-salvage-v1 \
+  --source-batch-id p4-professor-full-v1 \
+  --source-batch-id p4-professor-paper-links-v1 \
+  --source-batch-id p4-applicant-binding-full-v1 \
+  --parser-version historical_jsonl=v1 \
+  --parser-version historical_xlsx=v1 \
+  --parser-version released_objects_sqlite=canonical-v2-s12a-full-table-v1 \
+  --policy-version path_eligibility=path-eligibility-v1 \
+  --policy-version released_objects_mapper=canonical-v2-released-objects-mapper-v2 \
+  --model-version embedding=Qwen/Qwen3-Embedding-8B \
+  --recorded-decision-bundle /home/longxiang/MiroThinker/.worktrees/data-rebuild/.agents/runs/rebuild-canonical-v2-knowledge-platform/s12a/recorded-decision-bundle-v1.json \
+  --recorded-embedding-bundle /home/longxiang/MiroThinker/.worktrees/data-rebuild/.agents/runs/rebuild-canonical-v2-knowledge-platform/s12c/qwen-embedding-bundle-v1.json \
+  --recorded-serving-bundle /home/longxiang/MiroThinker/.worktrees/embedding-lane-f1f2/.agents/runs/rebuild-canonical-v2-knowledge-platform/s12g/serving-bundle-run16.json \
+  --recorded-serving-bundle-sha256 0a09aecde903584efb28ccc4f3851062b52891081f0b3b44e6ce5971c55115c4 \
+  --envelope-output /home/longxiang/MiroThinker/.worktrees/data-rebuild/.agents/runs/rebuild-canonical-v2-knowledge-platform/s12a/complete-candidate-build-envelope.json \
+  --accepted-original-milvus-path /home/longxiang/MiroThinker/apps/miroflow-agent/milvus.db \
+  --accepted-original-milvus-sha256 43ef203e0b101fcbed2a6c8fcde19a35d426199d3f02bc72525d0acf618867cc \
+  --accepted-original-milvus-record-sha256 df3715a0be8560d523ce2abb589bdaf690e0fe07babcad26c03a4da0ad8cbe6b \
+  --serve --serve-existing \
+  --serving-pack /var/tmp/mirothinker-data-v2/serving-pack-run16-readerbound

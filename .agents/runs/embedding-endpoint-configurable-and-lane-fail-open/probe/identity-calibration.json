@@ -1,0 +1,74 @@
+{
+  "real_index_arm": {
+    "configured": "http://100.64.0.27:18005/v1",
+    "expected_arm": "index",
+    "report": {
+      "arm": "index",
+      "passed": true,
+      "cosine": 0.999933,
+      "threshold": 0.99,
+      "detail": "与索引同源：索引文档自比 cos=0.9999（阈值 0.99，抽样 798 行最近邻亦为本文档）",
+      "checks": {
+        "point_id": "index-point:sha256:00004b004504c4e2cca961c9d149819e84580589215d69933bcd8c830e6c4c83",
+        "dimension": 4096,
+        "sample_rows": 798,
+        "sample_max_cosine": 0.999933,
+        "document_chars": 493,
+        "latency_ms": 830
+      }
+    }
+  },
+  "gateway_reference_arm": {
+    "configured": "http://127.0.0.1:41497/v1",
+    "recorded": "http://100.64.0.27:18005/v1",
+    "expected_arm": "reference",
+    "report": {
+      "arm": "reference",
+      "passed": true,
+      "cosine": 1.0,
+      "threshold": 0.999,
+      "detail": "与索引记录的端点同源：固定探针 cos=1.0000（阈值 0.999）",
+      "checks": {
+        "reference_base_url": "http://100.64.0.27:18005/v1",
+        "dimension": 4096,
+        "latency_ms": 64
+      }
+    }
+  },
+  "wrong_space_reference_arm": {
+    "configured": "http://127.0.0.1:45045/v1",
+    "recorded": "http://100.64.0.27:18005/v1",
+    "expected_arm": "reference",
+    "report": {
+      "arm": "reference",
+      "passed": false,
+      "cosine": -0.007435,
+      "threshold": 0.999,
+      "detail": "该端点与索引记录的端点不在同一嵌入空间（固定探针 cos=-0.0074 < 0.999）：不要切换到这个端点，换来的排序会整体失真",
+      "checks": {
+        "reference_base_url": "http://100.64.0.27:18005/v1",
+        "dimension": 4096,
+        "latency_ms": 34
+      }
+    }
+  },
+  "wrong_space_index_arm": {
+    "configured": "http://127.0.0.1:45045/v1",
+    "expected_arm": "index",
+    "report": {
+      "arm": "index",
+      "passed": false,
+      "cosine": 0.004543,
+      "threshold": 0.99,
+      "detail": "该端点与索引不在同一嵌入空间（索引文档自比 cos=0.0045 < 0.99）：不要切换到这个端点，请换回与索引同源的模型，或重建向量后再说",
+      "checks": {
+        "point_id": "index-point:sha256:00004b004504c4e2cca961c9d149819e84580589215d69933bcd8c830e6c4c83",
+        "dimension": 4096,
+        "sample_rows": 798,
+        "sample_max_cosine": 0.038052,
+        "document_chars": 493,
+        "latency_ms": 792
+      }
+    }
+  }
+}

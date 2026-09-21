@@ -325,6 +325,12 @@ class _ValidatingEmbeddingAdapter:
         self._validate_identity()
         try:
             raw_vectors = tuple(self._adapter.embed_batch(texts))
+        except (TimeoutError, ConnectionError):
+            # The provider is unreachable, not wrong: the lane degrades (the
+            # read engine fails open on exactly these two builtins) instead of
+            # being reported as a release integrity failure. Every other
+            # delegate failure below still fails the turn closed.
+            raise
         except Exception as exc:
             raise IsolatedKnowledgeReadIntegrityError(
                 "embedding adapter failed while producing vectors"
@@ -7725,6 +7731,14 @@ def create_isolated_vector_recall_adapter(
                     raise IsolatedKnowledgeReadIntegrityError(
                         "persisted vector matrix failed integrity validation"
                     ) from exc
+    # The read engine reports an expired outer wait through this optional hook
+    # so a provider that never answers still counts as a lane transport failure
+    # (see embedding_lane_resilience.note_lane_timeout).
+    note_outer_timeout = getattr(
+        getattr(embedding_adapter, "breaker", None), "note_lane_timeout", None
+    )
+    if note_outer_timeout is not None:
+        vector_recall.note_outer_timeout = note_outer_timeout
     return vector_recall
 
 

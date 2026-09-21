@@ -1,0 +1,48 @@
+{
+  "phase": "2-real",
+  "wall_seconds": 29.83,
+  "sse_event_names": [
+    "answer",
+    "done",
+    "plan_done",
+    "progress",
+    "retrieval_done",
+    "stage"
+  ],
+  "error_events": [],
+  "done_events": 1,
+  "answer_chars": 0,
+  "answer_head": "",
+  "retrieval_lane_rows": [
+    {
+      "lane": "exact",
+      "status": "succeeded",
+      "candidates": 0
+    },
+    {
+      "lane": "structured",
+      "status": "succeeded",
+      "candidates": 0
+    },
+    {
+      "lane": "lexical",
+      "status": "succeeded",
+      "candidates": 128
+    },
+    {
+      "lane": "vector",
+      "status": "succeeded",
+      "candidates": 128
+    },
+    {
+      "lane": "web",
+      "status": "succeeded",
+      "candidates": 18
+    },
+    {
+      "lane": "supplemental",
+      "status": "succeeded",
+      "candidates": 6
+    }
+  ]
+}

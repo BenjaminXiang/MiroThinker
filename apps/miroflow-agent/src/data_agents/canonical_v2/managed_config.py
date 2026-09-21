@@ -81,6 +81,9 @@ _FIELD_ENV_VARS: dict[str, str] = {
     "serving.web_topical_floor": "CANONICAL_V2_WEB_TOPICAL_FLOOR",
     "serving.rerank_timeout_seconds": "CANONICAL_V2_RERANK_TIMEOUT_SECONDS",
     "serving.rerank_max_documents": "CANONICAL_V2_RERANK_MAX_DOCUMENTS",
+    "serving.vector_lane_timeout_seconds": (
+        "CANONICAL_V2_VECTOR_LANE_TIMEOUT_SECONDS"
+    ),
     "serving.mount_receipt_path": "CANONICAL_V2_SERVING_RECEIPT_PATH",
     "serving.turn_debug_dir": "CANONICAL_V2_TURN_DEBUG_DIR",
     "serving.full_verify": "CANONICAL_V2_SERVING_FULL_VERIFY",
@@ -104,16 +107,10 @@ PAGE_READONLY_FIELDS: dict[str, str] = {
     "serving.full_verify": (
         "启动全量校验：开启会把启动从秒级拉到分钟级，必须由服务单元决定（只读展示）"
     ),
-    "extraction_endpoints.embedding_base_url": (
-        "服务线向量由发布包冻结：发布包的 embedding bundle 必须等于钉死的 base_url"
-        "（含校验和，不符即拒绝加载），改它需要重建全部向量；这两个受管字段没有运行期读者，"
-        "保存它不会改变任何行为（采集/构建侧另有脚本级覆盖 EMBEDDING_BASE_URL，不经受管配置）"
-        "（只读展示）"
-    ),
     "extraction_endpoints.embedding_model": (
-        "服务线向量由发布包冻结：模型名来自发布包 embedding bundle（与发布包不符即拒绝加载），"
-        "改它需要重建全部向量；这两个受管字段没有运行期读者，保存它不会改变任何行为"
-        "（采集/构建侧另有覆盖，不经受管配置）（只读展示）"
+        "服务线向量模型身份由发布包冻结：模型名与维度来自发布包 embedding bundle"
+        "（含校验和，不符即拒绝加载），改它需要重建全部向量。地址另有受管字段"
+        "（extraction_endpoints.embedding_base_url，已可在页面设置）（只读展示）"
     ),
 }
 
@@ -176,12 +173,13 @@ class CollectionSettings(BaseModel):
 class ExtractionEndpoints(BaseModel):
     """Collection-time endpoints. Credentials are env/key-file owned, never here.
 
-    ``embedding_base_url`` / ``embedding_model`` live in this group but are listed
-    in :data:`PAGE_READONLY_FIELDS`: the serving line resolves its embedding
-    endpoint from the frozen release bundle, and no runtime code reads the two
-    variables these fields project — a page edit would change nothing while
-    looking like it did. The collection/build scripts have their own
-    (unmanaged) ``EMBEDDING_BASE_URL`` override.
+    ``embedding_base_url`` is the operator's embedding address: the managed
+    value is the runtime's **effective** address (it wins over the address
+    recorded in the embedding bundle), so it is editable on the page.
+    ``embedding_model`` stays listed in :data:`PAGE_READONLY_FIELDS`: the model
+    identity is frozen by the release bundle (the index was built with it), and
+    no runtime code reads the variable it projects. The collection/build scripts
+    have their own (unmanaged) ``EMBEDDING_BASE_URL`` override.
     """
 
     model_config = ConfigDict(extra="forbid", frozen=True, validate_default=True)
@@ -235,13 +233,19 @@ class PathSettings(BaseModel):
 class ServingSettings(BaseModel):
     """Serving-line switches added after W1 (R16: they belong on the page).
 
-    Page-suitability judgement (design §6): the three tunables below are
-    operator-facing (recall floor / latency budget / cost ceiling).
-    ``chat_llm_profile`` is the profile the answer/rewrite paths resolve through
-    ``CHAT_LLM_PROFILE``. The receipt path, turn-debug directory and full-verify
-    flag are declared here so the page can *display* the effective value and its
-    source, but they are listed in :data:`PAGE_READONLY_FIELDS` and cannot be
-    written from the web surface.
+    Page-suitability judgement (design §6): the four tunables below are
+    operator-facing (recall floor / latency budget / cost ceiling / the vector
+    lane's wait). ``chat_llm_profile`` is the profile the answer/rewrite paths
+    resolve through ``CHAT_LLM_PROFILE``. The receipt path, turn-debug directory
+    and full-verify flag are declared here so the page can *display* the
+    effective value and its source, but they are listed in
+    :data:`PAGE_READONLY_FIELDS` and cannot be written from the web surface.
+
+    ``vector_lane_timeout_seconds`` has a *real* default (8 s) rather than the
+    "unset means the code default" shape of the other tunables: the page must be
+    able to show the number the serving line would actually wait, and the code
+    default it mirrors is pinned by a test
+    (``knowledge_read._VECTOR_LANE_OUTER_WAIT_DEFAULT_SECONDS``).
     """
 
     model_config = ConfigDict(extra="forbid", frozen=True, validate_default=True)
@@ -250,6 +254,7 @@ class ServingSettings(BaseModel):
     web_topical_floor: bool | None = None
     rerank_timeout_seconds: float | None = Field(default=None, gt=0, le=120)
     rerank_max_documents: int | None = Field(default=None, gt=0, le=2048)
+    vector_lane_timeout_seconds: float = Field(default=8.0, gt=0, le=120)
     mount_receipt_path: str | None = None
     turn_debug_dir: str | None = None
     full_verify: bool | None = None
@@ -470,7 +475,7 @@ FIELD_CATALOG: dict[str, FieldSpec] = {
         kind="url",
         group="endpoints",
         order=20,
-        consumer="采集与构建：Embedding 端点",
+        consumer="服务线向量读取 + 采集与构建：Embedding 端点（运行期生效地址）",
         connection="embedding",
         test_arg="base_url",
     ),
@@ -560,6 +565,17 @@ FIELD_CATALOG: dict[str, FieldSpec] = {
         min=1,
         max=2048,
         step=1,
+    ),
+    "serving.vector_lane_timeout_seconds": FieldSpec(
+        path="serving.vector_lane_timeout_seconds",
+        label="向量轨等待上限（秒）",
+        kind="float",
+        group="serving",
+        order=22,
+        consumer="检索与回答：向量轨（embedding）外层等待上限；超时只降级该轨，不中断回答",
+        min=0.1,
+        max=120,
+        step=0.1,
     ),
     "serving.mount_receipt_path": FieldSpec(
         path="serving.mount_receipt_path",

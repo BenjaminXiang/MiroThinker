@@ -569,7 +569,7 @@ function embeddingFrozen() {
       base_url: frozen.base_url || null,
       model: frozen.model || null,
       note: frozen.note || "",
-      source_text: "发布包冻结（presets.embedding_frozen）",
+      source_text: "运行期生效地址（presets.embedding_frozen）",
     };
   }
   return {
@@ -577,8 +577,8 @@ function embeddingFrozen() {
     model: runtime.model || null,
     note: runtime.runtime_note || "",
     source_text: runtime.base_url
-      ? "运行期解析（release embedding bundle）"
-      : "服务端未返回冻结的嵌入端点",
+      ? `运行期解析（来源 ${runtime.endpoint_origin || "unknown"}）`
+      : "服务端未返回生效的嵌入端点",
   };
 }
 
@@ -880,16 +880,17 @@ function renderCollectionRole() {
 
 function renderEmbeddingRole() {
   const frozen = embeddingFrozen();
+  const runtime = runtimeOf("embedding");
   const fields = roleFields("embedding");
   const readonly = fields.find((field) => !field.editable && field.readonly_reason);
   renderRoleState("embedding", [
     runtimeBadge(connectionByKey("embedding")),
-    pill("只读：服务线冻结值", "warn"),
+    pill("可设地址：模型身份仍由发布包冻结", "warn"),
   ]);
   const rows = [
     row("生效端点（服务线）", frozen.base_url || "—"),
     row("生效模型（服务线）", frozen.model || "—"),
-    row("来源", frozen.source_text),
+    row("端点来源", runtime.endpoint_origin || frozen.source_text),
   ];
   if (frozen.note) rows.push(row("服务端说明", frozen.note));
   if (readonly) rows.push(row("只读原因", readonly.readonly_reason));
@@ -899,10 +900,10 @@ function renderEmbeddingRole() {
   if (body) {
     const details = document.createElement("details");
     details.className = "advanced";
-    details.append(text("summary", "", "高级：采集侧覆盖"));
+    details.append(text("summary", "", "高级：端点与模型"));
     const note = readonly
-      ? `只影响后续采集/构建，不改服务线索引；服务端只读原因见上：${readonly.readonly_reason}`
-      : "只影响后续采集/构建，不改服务线索引：上面那两行才是检索向量真正在用的端点与模型。";
+      ? `地址字段改动会在重启后成为服务线真正使用的端点；只读字段的原因见上：${readonly.readonly_reason}`
+      : "地址字段改动会在重启后成为服务线真正使用的端点；模型名由发布包冻结，改动需要重建向量。";
     details.append(text("p", "note", note));
     if (fields.length) details.append(...fields.map(renderField));
     else details.append(text("p", "note", "目录里没有采集侧覆盖字段。"));
@@ -1314,6 +1315,9 @@ function connectionTestBody(connectionKey, fields, options) {
     const value = currentValueOf(field.path);
     if (typeof value === "string" && value) body[field.test_arg] = value;
   });
+  // 嵌入端点要额外做一次「向量身份」校验：200 + 4096 维并不说明这个端点与索引同源，
+  // 不同源的端点只会让排序整体失真。校验由服务端做，这里只说「要」。
+  if (connectionKey === "embedding") body.identity_check = true;
   return body;
 }
 
@@ -1357,12 +1361,14 @@ function describeConnectionTest(response, payload) {
     };
   }
   const remaining = (payload.rate || {}).remaining;
+  const identity = identityText(payload.identity);
   const text = [
     payload.ok ? "成功" : "失败",
     payload.called === false ? "（未发起调用）" : "",
     `· ${payload.latency_ms} ms`,
     payload.http_status === null || payload.http_status === undefined ? "" : `· HTTP ${payload.http_status}`,
     `· ${payload.detail}`,
+    identity,
     `· 凭据来源 ${(payload.used || {}).api_key_source || "—"}`,
     (payload.runtime || {}).enabled === false ? "· 运行期未启用" : "",
     remaining === null || remaining === undefined ? "" : `· 本分钟剩余 ${remaining} 次`,
@@ -1376,6 +1382,19 @@ function describeConnectionTest(response, payload) {
     detail: payload.detail,
     text,
   };
+}
+
+// 向量身份判定只说三件事：跑了哪条臂、量到的余弦、下一步做什么。
+function identityText(identity) {
+  if (!identity) return "";
+  const arm = identity.arm === "reference" ? "对照端点" : identity.arm === "index" ? "索引比对" : "未跑";
+  const cosine =
+    identity.cosine === null || identity.cosine === undefined
+      ? ""
+      : `cos=${identity.cosine}`;
+  const head =
+    identity.passed === true ? "向量身份通过" : identity.passed === false ? "向量身份不通过" : "向量身份未校验";
+  return `· ${head}（${arm}${cosine ? "，" + cosine : ""}）${identity.detail}`;
 }
 
 function delay(ms) {

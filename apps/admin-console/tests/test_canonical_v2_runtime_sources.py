@@ -146,7 +146,7 @@ def test_a_projected_rerank_endpoint_is_not_reported_as_a_bare_environment_varia
     assert pinned.endpoint_origin == "env:CANONICAL_V2_RERANK_BASE_URL"
 
 
-def test_embedding_uses_the_frozen_bundle_endpoint_and_the_local_credential(
+def test_embedding_uses_the_bundle_default_endpoint_and_the_local_credential(
     tmp_path: Path, fixture_root: Path
 ) -> None:
     """company/vectorizer.py:22,40-53 + providers/local_api_key.py:8-31."""
@@ -159,10 +159,31 @@ def test_embedding_uses_the_frozen_bundle_endpoint_and_the_local_credential(
 
     assert embedding.enabled is True
     assert embedding.base_url == "http://100.64.0.27:18005/v1"
-    assert embedding.endpoint_origin == "release-bundle-frozen"
+    assert embedding.endpoint_origin == "release-bundle-default"
     assert embedding.model == "Qwen/Qwen3-Embedding-8B"
     assert embedding.api_key == _FAKE_LOCAL
     assert embedding.api_key_origin == "legacy-file:.sglang_api_key"
+
+
+def test_embedding_prefers_the_managed_address_over_the_recorded_one(
+    tmp_path: Path, fixture_root: Path
+) -> None:
+    """knowledge_build_isolated.resolve_embedding_base_url, mirrored here."""
+
+    resolved, _settings, _secrets = _resolve(
+        tmp_path,
+        fixture_root,
+        {"CANONICAL_V2_EMBEDDING_BASE_URL": "http://10.20.30.40:9000/v1"},
+        sglang=_FAKE_LOCAL,
+    )
+
+    embedding = resolved["embedding"]
+
+    assert embedding.base_url == "http://10.20.30.40:9000/v1"
+    assert embedding.endpoint_origin == "env:CANONICAL_V2_EMBEDDING_BASE_URL"
+    assert "运行期 base_url" in embedding.runtime_note
+    assert embedding.model == "Qwen/Qwen3-Embedding-8B"
+    assert embedding.api_key == _FAKE_LOCAL
 
 
 def test_embedding_ignores_a_variable_nothing_reads_at_runtime(
