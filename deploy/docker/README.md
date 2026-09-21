@@ -516,6 +516,8 @@ python-build-standalone 直连本机只有 ~17 KB/s，不适合放在构建里�
 ## 13. 现场交付包与一键安装（运营者路径）
 
 运营者拿不到我们的机器，流程固定为：**下载交付包 → 拷到甲方机器 → 跑一条命令**。
+甲方运维**只需要填 4 个密钥**，其余（端点/模型/档位/路径/uid/PG 凭据/采集窗口）全部预置
+—— 见 [CONFIG-GUIDE.md](./CONFIG-GUIDE.md)（已实测：6/7 → 7/7 的唯一变量就是 `.deepseek_api_key`）。
 
 ```bash
 # 我方（每条 3.2 GB 的包，硬链接组装，不复制数据）
@@ -523,6 +525,7 @@ deploy/docker/build-site-bundle.sh [--with-local-keys] [--out DIR]   # 默认 /v
 # 产出：install-site.sh + README-FIRST.txt + BUNDLE-MANIFEST.txt + 两个 tgz(+sha256)
 #       + compose.yaml/README.md/kit-manifest.txt + checksums.sha256/sizes.tsv/site-paths.txt
 #       + bundles/（2 个发布 bundle）+ secrets.example/postgres.env
+#       + CONFIG-GUIDE.md（甲方配置指南）+ state/config-managed/settings.json（预置受管配置）
 # 大文件一律硬链接（同 fs）；跨 fs 自动退化复制并**在清单里记警告**（本机实测：13 链接 + 1 复制，
 # 复制的那一个是 install-site.sh 自己 —— 仓库在 /home、包在 /var/tmp，不同文件系统）。
 
