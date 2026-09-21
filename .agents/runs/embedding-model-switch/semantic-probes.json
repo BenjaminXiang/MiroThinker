@@ -1,0 +1,135 @@
+{
+  "schema_version": "canonical-v2-recall-cases-v1",
+  "suite": "probes",
+  "source": "Semantic probe set (hand-built 2026-09-21) for the embedding-model switch gate: queries whose answer depends on the vector lane (category / paraphrase / peer-of-X retrieval) rather than on an exact name or an id. kind=labeled entries carry an explicit expected entity; kind=structural entries have no GT and can only be reviewed through the lane counters and a human read of the answer.",
+  "cases": [
+    {
+      "case_id": "s01",
+      "group": "s01",
+      "turn": 1,
+      "kind": "labeled",
+      "query": "深圳有哪些做具身智能的公司",
+      "expected_entities": [
+        {"id": "ubtech", "label": "优必选", "match": ["优必选"], "domain": "company"}
+      ],
+      "forbidden_entities": [],
+      "note": "The replay gate's G7 flagship (优必选 must appear in every repetition). Sibling companies seen in the frozen answer — 众擎, 乐聚, 越疆 — are NOT scored: they are the web lane's luck, not frozen GT."
+    },
+    {
+      "case_id": "s02",
+      "group": "s02",
+      "turn": 1,
+      "kind": "structural",
+      "query": "深圳做机器人的公司",
+      "expected_entities": [],
+      "forbidden_entities": [],
+      "note": "Bare category phrasing, no enumerating frame — the case the topical floor was built for. Structural: no GT."
+    },
+    {
+      "case_id": "s03",
+      "group": "s03",
+      "turn": 1,
+      "kind": "labeled",
+      "query": "类似优必选的企业",
+      "expected_entities": [
+        {"id": "ubtech", "label": "优必选", "match": ["优必选"], "domain": "company"}
+      ],
+      "forbidden_entities": [],
+      "note": "Peer-of-X paraphrase (G5 shape). The anchor must survive into the answer; the peers themselves are not frozen GT."
+    },
+    {
+      "case_id": "s04",
+      "group": "s04",
+      "turn": 1,
+      "kind": "structural",
+      "query": "深圳有哪些人形机器人公司",
+      "expected_entities": [],
+      "forbidden_entities": [],
+      "note": "Category + product-form paraphrase. Structural: no GT."
+    },
+    {
+      "case_id": "s05",
+      "group": "s05",
+      "turn": 1,
+      "kind": "labeled",
+      "query": "深圳的灵巧手厂商有哪些",
+      "expected_entities": [
+        {"id": "zibianliang", "label": "自变量机器人", "match": ["自变量机器人", "自变量"], "domain": "company"}
+      ],
+      "forbidden_entities": [],
+      "note": "From test-set turn q14t1's frozen answer (自变量机器人科技（深圳）有限公司, X Square 五指灵巧手). Category query whose only route to a local company is the vector lane."
+    },
+    {
+      "case_id": "s06",
+      "group": "s06",
+      "turn": 1,
+      "kind": "structural",
+      "query": "做具身智能数据采集的公司",
+      "expected_entities": [],
+      "forbidden_entities": [],
+      "note": "Category query over the test set's data-route theme. Structural: no GT."
+    },
+    {
+      "case_id": "s07",
+      "group": "s07",
+      "turn": 1,
+      "kind": "structural",
+      "query": "深圳有什么具身智能创业公司",
+      "expected_entities": [],
+      "forbidden_entities": [],
+      "note": "Colloquial paraphrase of s01. Structural: no GT."
+    },
+    {
+      "case_id": "s08",
+      "group": "s08",
+      "turn": 1,
+      "kind": "structural",
+      "query": "和越疆科技类似的公司",
+      "expected_entities": [],
+      "forbidden_entities": [],
+      "note": "Peer-of-X where X is a local KB company (越疆 is named in G5's accepted set, so it is not frozen GT for the switch). Structural: no GT."
+    },
+    {
+      "case_id": "s09",
+      "group": "s09",
+      "turn": 1,
+      "kind": "labeled",
+      "query": "深圳做医疗机器人的企业有哪些",
+      "expected_entities": [
+        {"id": "aibo-hechuang", "label": "爱博合创", "match": ["爱博合创"], "domain": "company"}
+      ],
+      "forbidden_entities": [],
+      "note": "Category query whose expected company is carried by test-set 问题10 (血管介入手术机器人)."
+    },
+    {
+      "case_id": "s10",
+      "group": "s10",
+      "turn": 1,
+      "kind": "structural",
+      "query": "具身智能公司和机器人厂商有什么区别",
+      "expected_entities": [],
+      "forbidden_entities": [],
+      "note": "Concept contrast query with no entity shape. Structural: no GT."
+    },
+    {
+      "case_id": "s11",
+      "group": "s11",
+      "turn": 1,
+      "kind": "structural",
+      "query": "有哪些公司在做具身智能的数据引擎",
+      "expected_entities": [],
+      "forbidden_entities": [],
+      "note": "Capability paraphrase of the 无界智航 / 丁文伯 theme (合成仿真数据引擎). Structural: no GT."
+    },
+    {
+      "case_id": "s12",
+      "group": "s12",
+      "turn": 1,
+      "kind": "structural",
+      "query": "深圳做机器人触觉传感器的公司",
+      "expected_entities": [],
+      "forbidden_entities": [],
+      "note": "Category query aimed at 帕西尼感知科技 (named in test-set 问题7's frozen answer, so not frozen GT). Structural: no GT."
+    }
+  ]
+}
