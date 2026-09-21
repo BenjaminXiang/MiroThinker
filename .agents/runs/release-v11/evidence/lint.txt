@@ -1,0 +1,12 @@
+command: uv tool run ruff@0.8.0 check $(git diff --name-only 36df47b8 HEAD | grep -E '\.py$')   # 29 files
+date: 2026-09-21T22:27:26+08:00
+
+release/v1.1 (merged tree):
+apps/miroflow-agent/src/data_agents/canonical_v2/knowledge_build_isolated.py:4230:9: F402 Import `field` from line 14 shadowed by loop variable
+apps/miroflow-agent/src/data_agents/canonical_v2/knowledge_read_isolated.py:8265:33: E702 Multiple statements on one line (semicolon)
+Found 2 errors.
+
+36df47b8 (base tree, same two files):
+apps/miroflow-agent/src/data_agents/canonical_v2/knowledge_build_isolated.py:4225:9: F402 Import `field` from line 14 shadowed by loop variable
+apps/miroflow-agent/src/data_agents/canonical_v2/knowledge_read_isolated.py:8251:33: E702 Multiple statements on one line (semicolon)
+Found 2 errors.

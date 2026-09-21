@@ -1,0 +1,22 @@
+== protected paths, 2026-09-21T22:26:20+08:00 ==
+-- live service
+ 519941    20:15:27 18052964 /home/longxiang/MiroThinker/.worktrees/canonical-v2-s11-consolidation/.venv/bin/python3 /ho
+-- readerbound pack + receipt + live command file mtimes
+2026-09-21 01:59:48 +0800  /var/tmp/mirothinker-data-v2/serving-pack-run16-readerbound/institution_catalog.json
+2026-09-21 01:59:53 +0800  /var/tmp/mirothinker-data-v2/serving-pack-run16-readerbound/manifest.json
+2026-09-21 01:59:47 +0800  /var/tmp/mirothinker-data-v2/serving-pack-run16-readerbound/relationships.json
+2026-09-21 20:50:25 +0800  /var/tmp/mirothinker-data-v2/serving-pack-run16-readerbound.mount-receipt.json
+2026-09-17 05:55:20 +0800  /var/tmp/mirothinker-data-v2/index-v3-v2/lookup.sqlite3
+2026-09-17 05:55:21 +0800  /var/tmp/mirothinker-data-v2/index-v3-v2/vector_matrix.npz
+2026-09-21 02:10:45 +0800  /home/longxiang/MiroThinker/.worktrees/canonical-v2-s11-consolidation/.agents/runs/rebuild-canonical-v2-knowledge-platform/s12g/serve-18188-command.sh
+-- new pack dir
+total 4282000
+drwxrwxr-x  2 longxiang longxiang       4096 Sep 21 22:12 .
+drwxrwxr-x 38 longxiang longxiang       4096 Sep 21 22:26 ..
+-rw-rw-r--  1 longxiang longxiang        316 Sep 21 22:09 .canonical-v2-isolated-index-target.json
+-rw-rw-r--  1 longxiang longxiang        381 Sep 21 22:12 institution_catalog.json
+-rw-rw-r--  1 longxiang longxiang  896270336 Sep 21 22:09 lookup.sqlite3
+-rw-rw-r--  1 longxiang longxiang   11116227 Sep 21 22:12 manifest.json
+-rw-rw-r--  1 longxiang longxiang 3477354956 Sep 21 22:12 relationships.json
+-- disk
+/dev/nvme0n1p2  1.8T  758G  912G  46% /

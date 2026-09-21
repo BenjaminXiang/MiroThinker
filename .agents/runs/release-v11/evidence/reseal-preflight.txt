@@ -1,0 +1,9 @@
+== reseal inputs, 2026-09-21T21:34:12+08:00 ==
+  8303007285  2026-09-17 03:21:51  43735faa9300fc834bffcea44304462f30128d5dfa0eb048e76075a115ccea20  /home/longxiang/MiroThinker/.worktrees/data-rebuild/.agents/runs/rebuild-canonical-v2-knowledge-platform/s12a/complete-candidate-build-envelope.json
+   896270336  2026-09-17 05:55:20  2f3e69f4ed0dabe18eb104e296e6dbe4c0ef90683871ab2edf7c1643ecd2ddb8  /var/tmp/mirothinker-data-v2/index-v3-v2/lookup.sqlite3
+         316  2026-09-17 05:55:23  b6f78a3b1e28c280860a4210bfad286ef65090e758de5b876d7f639eefaa8373  /var/tmp/mirothinker-data-v2/index-v3-v2/.canonical-v2-isolated-index-target.json
+  1676818545  2026-09-17 05:55:21  b4705cccce00f2cebf630e8f4aa93ecb4921ad2961d5fe8219af4b4b9b0be36c  /var/tmp/mirothinker-data-v2/index-v3-v2/vector_matrix.npz
+-- pack dir (must not exist):
+ls: cannot access '/var/tmp/mirothinker-data-v2/serving-pack-run16-v11': No such file or directory
+-- free space /var/tmp:
+/dev/nvme0n1p2  1.8T  752G  918G  46% /

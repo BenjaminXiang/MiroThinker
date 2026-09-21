@@ -1,0 +1,34 @@
+# commands
+
+## admin-console full suite
+after:  cd /home/longxiang/MiroThinker/.worktrees/release-v11/apps/admin-console && uv run pytest -q --tb=no -rEf
+before: cd /home/longxiang/MiroThinker/.worktrees/release-v11-base/apps/admin-console && uv run pytest -q --tb=no -rEf
+
+## miroflow-agent canonical_v2 targeted (root venv, pydantic 2.12.5)
+after:  cd .worktrees/release-v11 && uv run pytest \
+          apps/miroflow-agent/tests/canonical_v2/test_knowledge_read_universal_web_contract.py \
+          apps/miroflow-agent/tests/canonical_v2/test_fast_boot.py \
+          apps/miroflow-agent/tests/canonical_v2/test_serving_pack_loader.py \
+          apps/miroflow-agent/tests/canonical_v2/test_knowledge_serving_isolated.py \
+          apps/miroflow-agent/tests/canonical_v2/test_index_projection_embedded_content.py \
+          apps/miroflow-agent/tests/canonical_v2/test_manual_recall_points.py \
+          apps/miroflow-agent/tests/canonical_v2/test_embedding_transport_classification.py \
+          apps/miroflow-agent/tests/canonical_v2/test_embedding_lane_fail_open.py \
+          apps/miroflow-agent/tests/canonical_v2/test_embedding_lane_breaker.py \
+          apps/miroflow-agent/tests/canonical_v2/test_embedding_endpoint_resolution.py -q --tb=no -rEf
+before: same list minus the four test_embedding_* files (they do not exist at 36df47b8), from .worktrees/release-v11-base
+
+## single-file re-run that names the pre-existing reds on the base tree
+cd .worktrees/release-v11-base && uv run pytest apps/miroflow-agent/tests/canonical_v2/test_manual_recall_points.py -q --tb=no -rEf
+  -> 2 failed, 6 passed
+
+# results
+after admin:  25 failed, 1543 passed, 31 skipped, 105 errors in 254.71s (0:04:14)
+before admin: 25 failed, 1481 passed, 31 skipped, 105 errors in 192.63s (0:03:12)
+after agent:  2 failed, 375 passed, 17 warnings in 70.50s (0:01:10)
+before agent: 2 failed, 346 passed, 17 warnings in 44.06s
+
+# FAILED/ERROR id lists
+after  = evidence/after-admin-ids.txt  (130 ids)
+before = evidence/before-admin-ids.txt (130 ids)
+diff(after, before) = empty -> identical failure sets
