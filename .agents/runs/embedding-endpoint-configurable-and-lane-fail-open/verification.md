@@ -166,8 +166,53 @@ parameters), `test_real_boundary_rejects_live_schema_fingerprint_drift_before_ro
 `test_complete_build_uses_verified_copies_landing_authority_projections_registry_index_and_verify`.
 Both sides fail them identically, including the two slow ones.
 
-Tail (tests 129–143, the ones the interrupted runs never reached) is run as an
-explicit selection on both sides; results appended below when the runs finish.
+Tail (tests 129–143, the ones the interrupted runs never reached) was then run
+as an explicit 15-test selection on both sides. After ~33 minutes each, both
+sides had completed the **same three** heavy tests and were inside the fourth:
+
+| Side | Result at interruption | Per-test cost observed |
+|---|---|---|
+| before (base) | **3 passed**, no failures, 2001.03 s | the 4th test alone had been running ~24 min |
+| after (branch) | **3 passed**, no failures, 1995.99 s | same |
+
+So tests **129–131 pass identically on both sides**, and the remaining
+**tests 132–143 (12 tests) are not compared**. They are the postgres-fixture
+family (`test_store_replay_and_single_envelope_readback_…`,
+`test_company_backfill_*`, `test_applicant_binding_*`,
+`test_patent_applicant_links_*`) — each takes on the order of 10 minutes on this
+box (the suite's own fixtures, not this change), so the pair would need roughly
+4 more hours of wall clock.
+
+**Residual risk of leaving them**: this slice touches the embedding bundle
+loader (F2), the vector lane (F1) and the managed config + admin connection test
+(round 2). None of the 12 tests imports or exercises those paths — they cover
+company backfill, applicant binding and envelope replay. Risk is low but not
+zero, and it is *unmeasured*; the confidence impact is bounded to "a regression
+in the build/envelope layer would not be attributed to this slice".
+
+Exact command to finish the comparison (≈4 h for the pair, run inside
+`/var/tmp/embedlane-base2` and in this worktree):
+
+```bash
+cd <tree>/apps/miroflow-agent
+uv run pytest $(for t in test_store_replay_and_single_envelope_readback_are_exact_and_conflicts_fail \
+  test_patent_applicant_links_seed_from_exact_company_names \
+  test_patent_applicant_links_abstain_on_ambiguous_names \
+  test_s12f_company_backfill_authority_pins_batch_contract \
+  test_s12f_applicant_binding_authority_pins_batch_contract \
+  test_company_backfill_admits_new_company_into_projection \
+  test_company_backfill_skips_existing_company_never_overwrites \
+  test_company_backfill_merge_helper_reports_exact_counts \
+  test_applicant_binding_binds_english_applicant_to_chinese_company \
+  test_applicant_binding_binds_to_backfilled_company \
+  test_applicant_binding_skips_non_resolved_statuses \
+  test_applicant_binding_skips_unknown_company_and_counts; do \
+  echo tests/canonical_v2/test_knowledge_build_isolated.py::$t; done) \
+  -q --tb=no -rf
+```
+
+The scratch base worktree can be removed with
+`git worktree remove --force /var/tmp/embedlane-base2` once that is done.
 
 ## ⑥ #2 — the wait cap is a managed row
 
