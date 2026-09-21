@@ -27,6 +27,7 @@ NETWORK=1
 EMBEDDING_URL=""
 RERANK_URL=""
 LLM_URL=""
+PYTHON_OVERRIDE=""
 FAILURES=0
 WARNINGS=0
 SYNC_DRY_RUN_TIMEOUT=120
@@ -55,6 +56,8 @@ Options:
   --embedding-url URL   embedding endpoint (default: from the embedding bundle, else frozen value)
   --rerank-url URL      rerank endpoint (default: CANONICAL_V2_RERANK_BASE_URL, else frozen value)
   --llm-url URL         chat LLM endpoint (default: CHAT_LLM_PROFILE, else the gemma4 endpoint)
+  --python PATH         interpreter to check against .python-version (default: the
+                        project venv, else 'uv python find'); for testing the check
   -h, --help            this text
 USAGE
 }
@@ -111,6 +114,10 @@ while [[ $# -gt 0 ]]; do
 		;;
 	--llm-url)
 		LLM_URL="${2:?--llm-url needs a value}"
+		shift 2
+		;;
+	--python)
+		PYTHON_OVERRIDE="${2:?--python needs a value}"
 		shift 2
 		;;
 	-h | --help)
@@ -249,7 +256,7 @@ resolve_row_value() {
 	@repo) printf '%s' "$REPO" ;;
 	@data-root) printf '%s' "$DATA_ROOT" ;;
 	@state-dir) printf '%s' "$STATE_DIR" ;;
-	@repo-entrypoint | @repo-runner)
+	@repo-entrypoint | @repo-runner | @python-pin)
 		printf '%s' "${reference/\{REPO\}/$REPO}"
 		;;
 	--s12a) printf '%s' "${GATE_ROOT%/}/s12a" ;;
@@ -624,7 +631,91 @@ else
 fi
 
 # ---------------------------------------------------------------------------
-# 6. ports
+# 6. interpreter contract — the reader digest decides whether boot is 280 s or
+#    ~470 s. open_serving_pack_authority compares the pack's recorded
+#    reader_contract_sha256 with reader_contract_digest(), which hashes
+#    sha256(python patch version + pydantic version + every canonical_v2/*.py).
+#    On a mismatch it does not fail: it silently replays the relationship/index
+#    reconstruction (~190 s extra on every boot). The patch is therefore part of
+#    the delivery contract, pinned once in .python-version (the file uv reads to
+#    pick the interpreter for uv sync/uv run) — this check reads that same file.
+# ---------------------------------------------------------------------------
+section "interpreter contract"
+PYTHON_PIN_FILE="$REPO/.python-version"
+PYTHON_PIN=""
+[[ -f "$PYTHON_PIN_FILE" ]] &&
+	PYTHON_PIN="$(head -1 "$PYTHON_PIN_FILE" | tr -d '[:space:]')"
+
+if [[ -n "$PYTHON_OVERRIDE" ]]; then
+	BOOT_PY="$PYTHON_OVERRIDE"
+	BOOT_PY_SOURCE="--python override (test only)"
+elif [[ -x "$REPO/.venv/bin/python" ]]; then
+	BOOT_PY="$REPO/.venv/bin/python"
+	BOOT_PY_SOURCE="project venv — what 'uv run python' uses in this tree"
+elif command -v uv >/dev/null 2>&1; then
+	BOOT_PY="$(cd -- "$REPO" && uv python find 2>/dev/null)"
+	BOOT_PY_SOURCE="uv python find (no venv yet)"
+fi
+BOOT_PY="${BOOT_PY:-}"
+
+if [[ -z "$PYTHON_PIN" ]]; then
+	fail "no interpreter pin: $PYTHON_PIN_FILE is missing or empty — the serving pack is sealed with one python patch version (see deploy/README.md 现场交付); without the pin a fresh uv sync may pick another patch and silently add ~190 s to every boot"
+else
+	pass "interpreter pin (.python-version): $PYTHON_PIN"
+fi
+
+BOOT_PY_VERSION=""
+if [[ -z "$BOOT_PY" || ! -x "$BOOT_PY" ]]; then
+	fail "cannot resolve the interpreter the boot will use (no $REPO/.venv/bin/python and 'uv python find' returned nothing) — run 'uv sync --frozen' first, then re-run this check"
+else
+	BOOT_PY_VERSION="$("$BOOT_PY" -c 'import sys; print("%d.%d.%d" % sys.version_info[:3])' 2>/dev/null)"
+	if [[ -z "$BOOT_PY_VERSION" ]]; then
+		fail "could not read the interpreter version from $BOOT_PY"
+	elif [[ -n "$PYTHON_PIN" && "$BOOT_PY_VERSION" != "$PYTHON_PIN" ]]; then
+		fail "boot interpreter is CPython $BOOT_PY_VERSION but the pack was sealed with CPython $PYTHON_PIN ($BOOT_PY_SOURCE: $BOOT_PY) — the boot will not fail, it will silently replay the reconstruction: ≈190 s added to EVERY boot (measured 466 s vs 276 s on the same machine and data root). Fix: uv python pin $PYTHON_PIN && uv sync --frozen (uv downloads the matching patch if it is missing), then re-run preflight"
+	elif [[ -n "$PYTHON_PIN" ]]; then
+		pass "boot interpreter matches the pin: CPython $BOOT_PY_VERSION ($BOOT_PY_SOURCE)"
+	fi
+fi
+
+# The pack itself is the authority on whether the patch matters: compare the
+# digest this interpreter computes against the one the seal recorded. This also
+# catches pydantic drift and any edit to canonical_v2/*.py, which the version
+# comparison cannot see.
+PACK_MANIFEST_PATH="$PACK_DIR/manifest.json"
+RECORDED_READER_DIGEST=""
+if [[ -f "$PACK_MANIFEST_PATH" ]]; then
+	RECORDED_READER_DIGEST="$(python3 -c '
+import json, sys
+try:
+    value = json.loads(open(sys.argv[1], encoding="utf-8").read()).get("reader_contract_sha256")
+except Exception:
+    value = None
+print(value or "")
+' "$PACK_MANIFEST_PATH" 2>/dev/null)"
+fi
+if [[ -z "$RECORDED_READER_DIGEST" ]]; then
+	warn "the pack records no reader_contract_sha256 — every boot replays the reconstruction by design (~190 s); nothing to compare"
+elif [[ -z "$BOOT_PY_VERSION" || ( -n "$PYTHON_PIN" && "$BOOT_PY_VERSION" != "$PYTHON_PIN" ) ]]; then
+	skip "reader-contract digest: not computed while the interpreter differs from the pin"
+else
+	READER_DIGEST_OUTPUT="$(cd -- "$REPO" && timeout 120 "$BOOT_PY" -c '
+import sys
+from src.data_agents.canonical_v2.serving_pack_loader import reader_contract_digest
+print(reader_contract_digest())
+' 2>&1)"
+	LOCAL_READER_DIGEST="$(printf '%s\n' "$READER_DIGEST_OUTPUT" | tail -1 | tr -d '[:space:]')"
+	if [[ "$LOCAL_READER_DIGEST" == "$RECORDED_READER_DIGEST" ]]; then
+		pass "reader-contract digest matches the pack (${LOCAL_READER_DIGEST:0:16}…): this boot takes the fast path, no reconstruction replay"
+	elif [[ ! "$LOCAL_READER_DIGEST" =~ ^[0-9a-f]{64}$ ]]; then
+		warn "could not compute the reader-contract digest yet ($(printf '%s' "$READER_DIGEST_OUTPUT" | tail -1 | cut -c1-120)) — run 'uv sync --frozen' and re-run preflight before acceptance"
+	else
+		fail "reader-contract digest differs from the pack (local ${LOCAL_READER_DIGEST:0:16}… vs pack ${RECORDED_READER_DIGEST:0:16}…) — the boot will silently replay the reconstruction (≈190 s per boot). The digest covers the python patch, the pydantic version and every canonical_v2/*.py byte: check the interpreter pin first, then that nothing edited the serving code"
+	fi
+fi
+
+# ---------------------------------------------------------------------------
+# 7. ports
 # ---------------------------------------------------------------------------
 section "ports"
 if command -v ss >/dev/null 2>&1; then
@@ -642,7 +733,7 @@ else
 fi
 
 # ---------------------------------------------------------------------------
-# 7. outbound reachability
+# 8. outbound reachability
 # ---------------------------------------------------------------------------
 section "outbound"
 if [[ "$NETWORK" == "0" ]]; then
@@ -829,7 +920,7 @@ PY
 fi
 
 # ---------------------------------------------------------------------------
-# 8. optional components and sizing (reported, never blocking)
+# 9. optional components and sizing (reported, never blocking)
 # ---------------------------------------------------------------------------
 section "optional components"
 CHROMIUM_DIR="$(ls -d "$HOME"/.cache/ms-playwright/chromium* 2>/dev/null | head -1 || true)"

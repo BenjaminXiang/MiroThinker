@@ -229,7 +229,13 @@ data/
 .deepseek_api_key
 .serper_api_key
 .bocha_api_key
+# The interpreter pin is part of the delivery contract, not local state: the
+# serving pack records a reader contract digest over
+# sha256(python patch + pydantic + canonical_v2 source bytes), and a boot whose
+# patch differs silently replays ~190 s of reconstruction. Keep it committable
+# so the delivery kit ships it (deploy/README.md §现场交付).
 .python-version
+!/.python-version
 
 # AI tool local state
 # .agents/ 内部分两类：specs/handoffs/reviews 是协作记录入 git（CLAUDE.md §8）；

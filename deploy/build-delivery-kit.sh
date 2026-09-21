@@ -353,6 +353,7 @@ row() {
 	row dir '--s12a' "$(arg_value --accepted-backup-gate-root)/s12a" 'ls -d' '[现场改写] <门禁根>/s12a/：解析期要求存在（空目录即可；服务模式不读 envelope）'
 	row file '@repo-entrypoint' "$SOURCE_TREE/.agents/runs/rebuild-canonical-v2-knowledge-platform/s12e/serve_s12e_port.py" 'test -s' '代码入口（code.tar 解开后即在位）'
 	row file '@repo-runner' "$SOURCE_TREE/.agents/runs/rebuild-canonical-v2-knowledge-platform/s12a/complete_candidate_runner.py" 'test -s' '入口 import 的 runner（code.tar 解开后即在位）'
+	row file '@python-pin' "$SOURCE_TREE/.python-version" 'test -s' '解释器版本钉死（uv 读它决定 uv sync/uv run 用哪个解释器）：补丁版本必须与服务包封印时一致，否则每次启动静默多花 ≈190 s（依据：reader_contract_digest 覆盖 python 补丁 + pydantic 版本 + canonical_v2 全部源码字节）'
 	row file '--recorded-serving-bundle' "$SERVING_BUNDLE" 'test -s' '[现场改写] 发布 bundle：服务启动时读取；内容随 kit 的 bundles/ 交付，现场放到自选位置后改命令文件'
 	row file '--recorded-embedding-bundle' "$EMBEDDING_BUNDLE" 'test -s' '[现场改写] 嵌入模型 bundle：服务启动时读取（模型地址/维度来源）；内容随 kit 的 bundles/ 交付'
 	row parentdir '--envelope-output' "$(arg_value --envelope-output)" "test -d $(dirname -- "$(arg_value --envelope-output)")" '[现场改写] 父目录必须存在；其字符串必须逐字符等于 <门禁根>/s12a/complete-candidate-build-envelope.json，且与发布 bundle 内的 envelope_path 一致'

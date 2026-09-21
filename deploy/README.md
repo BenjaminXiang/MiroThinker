@@ -219,6 +219,33 @@ bash deploy/install.sh && systemctl --user start canonical-v2-backend
 - 本机现存实例（18188）与 `deploy/*.sh` 的既有脚本不受影响：`preflight.sh`
   只读；端口占用会作为 `[FAIL]` 报出来（同时在跑的实例不会被碰）。
 
+### 解释器补丁版本是交付契约的一部分（2026-09-21 新增）
+
+服务包封印时记录了一个 **reader contract digest** =
+`sha256(python 补丁版本 + pydantic 版本 + canonical_v2 全部源码字节)`
+（`serving_pack_loader.reader_contract_digest`，实测与 run16 包的
+`reader_contract_sha256` 逐位一致）。启动时若这个 digest 对不上，
+**不会报错**：服务只是把关系/索引重建重放一遍，**每次启动静默多花 ≈ 190 s**
+（同机同数据实测 466 s vs 276 s）。所以解释器补丁版本不能靠运气。
+
+- 版本只钉在**一处**：仓库根的 `.python-version`（`uv python pin 3.12.12`
+  写的就是它，uv 用它决定 `uv sync`/`uv run` 选哪个解释器；已确认
+  `.python-version` 改 3.11.14 时 `uv python find` 立刻跟着变）。该文件已从
+  `.gitignore` 放行，随 `code.tar` 交付，并在 `site-paths.txt` 里作为
+  `@python-pin` 一行列出。
+- `preflight.sh` 的「interpreter contract」段做三件事：读 `.python-version`；
+  比对**实际会被启动用的解释器**（有 `.venv` 就是它，否则 `uv python find`）
+  的 `major.minor.patch`；再用该解释器算出 reader digest 与包内记录值比对
+  （这一条还能抓到 pydantic 或 canonical_v2 源码漂移）。不一致 → `[FAIL]`
+  并给出修法；无法计算 digest（还没 `uv sync`）→ `[WARN]`。
+- 现场一行确认：
+
+  ```bash
+  cd <代码根> && .venv/bin/python -V && cat .python-version   # 两者必须一致
+  # 彻底一点：bash deploy/preflight.sh --repo <代码根> --kit-dir <kit> 看 interpreter contract 三行是否全 PASS
+  ```
+
+
 ## 外部反代接入要求（nginx / Caddy，2026-09-21 实测）
 
 把 18188 挂到外部域名（例如 `star.sustech.edu.cn`）时，反代侧必须满足下面四条；
