@@ -51,7 +51,9 @@ def _canonical_sha256(payload: Any) -> str:
 
 def _write_bundle(tmp_path: Path, document: dict[str, Any]) -> Path:
     path = tmp_path / "embedding-bundle.json"
-    path.write_text(json.dumps(document, ensure_ascii=False, indent=1), encoding="utf-8")
+    path.write_text(
+        json.dumps(document, ensure_ascii=False, indent=1), encoding="utf-8"
+    )
     return path
 
 
@@ -119,9 +121,16 @@ def test_the_effective_address_is_stripped_and_keeps_its_path(
     )
 
 
-def test_a_non_http_effective_address_is_refused(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_a_non_http_effective_address_is_refused(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     module = _module()
-    for value in ("embed.example.cn/v1", "ftp://embed.example.cn/v1", "/v1", "https://"):
+    for value in (
+        "embed.example.cn/v1",
+        "ftp://embed.example.cn/v1",
+        "/v1",
+        "https://",
+    ):
         monkeypatch.setenv(ENV, value)
         with pytest.raises(ValueError):
             module.resolve_embedding_base_url(RECORDED_BASE_URL)
@@ -176,7 +185,9 @@ def test_a_resealed_bundle_with_another_address_is_still_refused(
 
     assert document["content_sha256"] != FROZEN_DOCUMENT["content_sha256"]
     with pytest.raises(ValueError):
-        module.load_content_addressed_embedding_adapter(_write_bundle(tmp_path, document))
+        module.load_content_addressed_embedding_adapter(
+            _write_bundle(tmp_path, document)
+        )
 
 
 def test_the_address_is_not_part_of_the_frozen_identity_comparison() -> None:

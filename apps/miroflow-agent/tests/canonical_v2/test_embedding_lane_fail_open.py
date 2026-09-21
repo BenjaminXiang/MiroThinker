@@ -79,6 +79,7 @@ def test_vector_transport_failure_degrades_the_lane_and_keeps_the_turn() -> None
         (TimeoutError("embedding read timed out"), "timeout"),
     )
     for error, expected_kind in failures:
+
         def vector_lane(_: Any, error: BaseException = error) -> Any:
             raise error
 

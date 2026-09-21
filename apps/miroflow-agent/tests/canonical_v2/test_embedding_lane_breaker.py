@@ -154,7 +154,6 @@ def test_the_open_breaker_skips_the_provider_call_entirely(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.setenv("API_KEY", "test-key")
-    module = import_module(BUILD_MODULE)
     server, base_url = _counting_server(200)
     try:
         breaker = _resilience().EmbeddingLaneBreaker(
