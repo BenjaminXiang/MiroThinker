@@ -25,6 +25,7 @@ import importlib.util
 import json
 import shutil
 import sys
+import warnings
 from datetime import datetime, timezone
 from importlib import import_module
 from pathlib import Path
@@ -49,6 +50,10 @@ from src.data_agents.canonical_v2.index_projection import (
 )
 from src.data_agents.canonical_v2.index_projection_isolated import (
     RecordedEmbeddingAdapter,
+)
+from src.data_agents.canonical_v2.path_eligibility import (
+    PathEligibilityEngine,
+    PathEligibilityRequest,
 )
 from src.data_agents.canonical_v2.knowledge_read import (
     LaneRequest,
@@ -380,6 +385,59 @@ def test_pack_boot_matches_envelope_path(serving_fixture: _PackFixture) -> None:
     pack_evidence = pack_read.execute(pack_plan)
     assert envelope_evidence == pack_evidence
     assert envelope_evidence.items
+
+
+def test_pack_boot_mounts_typed_path_eligibility_requests(
+    serving_fixture: _PackFixture,
+    pack_copy: Path,
+) -> None:
+    """A receipt-less boot mounts the declared request type, not raw dicts.
+
+    ``IndexProjectionRequest.public_path_eligibility_requests`` is declared as
+    ``tuple[PathEligibilityRequest, ...]``.  Mounting the pack's raw JSON
+    subtree there makes pydantic emit one ``PydanticSerializationUnexpectedValue``
+    entry per element for every dump of the reconstructed request, and the
+    request is dumped both by the full-verification boot and by the
+    release-bound knowledge read.  The typed requests are also what the
+    query-time professor-paper lane replays through
+    ``PathEligibilityEngine.evaluate`` (``knowledge_read_isolated``), which
+    refuses a bare mapping.
+    """
+
+    fixture = serving_fixture
+    web_policy, snapshot_policy = _web_policies()
+    with warnings.catch_warnings(record=True) as caught:
+        warnings.simplefilter("always")
+        authority = _open_authority(fixture, pack_copy)
+        pack_loader.create_serving_pack_knowledge_read(
+            authority=authority,
+            published_release=fixture.published,
+            universal_web_policy=web_policy,
+            web_search=lambda _request: RetrievalLaneResult(),
+            web_snapshot_policy=snapshot_policy,
+            embedding_adapter=fixture.adapter,
+        )
+    serializer_entries = [
+        line
+        for warning in caught
+        for line in str(warning.message).splitlines()
+        if "PydanticSerializationUnexpectedValue" in line
+    ]
+    assert not [
+        entry for entry in serializer_entries if "PathEligibilityRequest" in entry
+    ], "the reconstruction mounted raw JSON where PathEligibilityRequest was declared"
+
+    requests = authority.index_projection_request.public_path_eligibility_requests
+    assert requests
+    assert all(
+        isinstance(request, PathEligibilityRequest) for request in requests
+    ), "every mounted path request must be the declared type"
+    for request, result in zip(
+        requests,
+        authority.index_projection_request.public_path_eligibility_results,
+        strict=True,
+    ):
+        assert PathEligibilityEngine().evaluate(request) == result
 
 
 def test_pack_lane_adapters_match_upstream(serving_fixture: _PackFixture) -> None:
