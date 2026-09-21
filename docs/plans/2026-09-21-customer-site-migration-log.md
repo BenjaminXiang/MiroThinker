@@ -188,3 +188,18 @@ SSE `event: error` → 页面红字。同一轮里其余五条道全健康，但
 **未验证**：bind-mount 版 pgdata、`--env-file` 分支、物理卷还原、并发压测、下一轮封印（run17）后解释器是否同步。
 
 **影响哪些问题**：① 你要的"PostgreSQL 进容器"落地并端到端验收（采集线在容器形态下可用，含 `pg_dump` 备份路径）；② 主交付形态的**唯一硬缺口（启动耗时未归因）已消除**，容器与裸机同档（276 vs 275 s）；③ 新增一条**跨两条路径的交付要求**：钉死 CPython **3.12.12**（已写入交付方案 §3 前置条件）；④ 裸机线正被派去补"解释器钉版本 + preflight 检查"。
+
+## 第 6 轮 · 2026-09-21 · 解释器补丁版本变成硬检查（裸机路径补齐），并用**真实不匹配**复现了惩罚
+
+**做了什么**（活线树两个提交 `0b70b97c` `b2df6de6`）：
+
+- 新增 `.python-version` = **`3.12.12`**（`uv python pin`）——这正是 `uv sync` / `uv run` 真正读取、决定解释器的那个文件；刻意不动 `requires-python`（它只能表达下限，且会触发锁重解）。`.gitignore` 加否定规则，确保它随 kit 发货。
+- `deploy/preflight.sh` 新增 **interpreter contract** 段，三臂检查：① pin 存在且为 `3.12.12`；② **启动解释器**与 pin 一致；③ **reader-contract 摘要与包内记录（`ebc22047…`）一致**（权威那一臂）。版本号全树只出现在 `.python-version` 一处，preflight 内**没有任何版本字面量**。`build-delivery-kit.sh` 的 `site-paths.txt` 增加 `@python-pin` 行。
+
+**发现（真实复现，不是模拟）**：装了一个真的 **CPython 3.12.11**，对同一份 site / 包 / index / 状态目录 / 命令文件启动 ⇒ **426.0 s vs 3.12.12 的 291.0 s（+135 s），日志逐字相同、零报错**。容器侧对照是 +190 s（3.12.3）。方向与机制一致，绝对差随宿主而变。另测"摘要漂移"臂：给 `canonical_v2/__init__.py` 追加一行注释即 FAIL（随后逐字节还原，`326ac3e8…`）。
+
+**怎么验证**：match / mismatch / digest-drift 三臂的原始输出都留了证据（`rehearsal-preflight-interp-{match,mismatch,digest-drift}.txt`、`rehearsal-mismatch-boot.log`、`rehearsal-python-pin-probe.txt`）；kit 重打后 `code.tar` 新 sha256 `5df43c3d…`（含 `.python-version` 与新 preflight 段，本机复核过 tar 内容与摘要）；活线全程未动（`/chat` 200、pid 未变）。
+
+**未验证**：pydantic 那一项只有推理、没有实测；真实的 Ubuntu 3.12.3 没拿到（只弄到 3.12.11）；**systemd drop-in 里设 `UV_PYTHON` 会绕过该检查**（已作为一句规则写进交付方案 §3）。
+
+**影响哪些问题**：把"启动是 291 s 还是 466 s"从一个**运气问题**变成**可检查的交付契约**——两条路径（裸机/容器）现在共用同一个硬检查，且不依赖硬编码版本号。

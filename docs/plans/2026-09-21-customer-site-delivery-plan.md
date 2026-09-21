@@ -61,7 +61,7 @@
 | 内存 | **≥64 GB** | 本机实测进程 RSS **17.3 GB**，启动峰值更高；这是硬约束 |
 | CPU / 磁盘 | 8 核+ / 空闲 **≥100 GB** | 代码 2G + 数据 7G + venv + 备份与日志余量 |
 | 系统 | Ubuntu 22.04/24.04，可 `sudo`（装 Chromium 依赖、`loginctl enable-linger`） | 无需 GPU |
-| **解释器** | **CPython 3.12.12**（＝封印解释器补丁版本；裸机与容器同一要求） | 包的 release binding 含 `reader_contract_digest = sha256(python 补丁版本 + pydantic + 源码字节)`：**补丁不一致不报错，但每次启动静默重放 ≈190 s**（实测 276 s → 466 s）。仓库 `.python-version` 目前只钉到 `3.12`，交付前必须钉死补丁；验收时比对启动耗时即可发现（≈280 s 合格 / ≈470 s 说明不匹配） |
+| **解释器** | **CPython 3.12.12**（＝封印解释器补丁版本；裸机与容器同一要求）。**已在活线树钉死**：`.python-version` = `3.12.12`（`uv python pin`），随 kit 发货 | 包的 release binding 含 `reader_contract_digest = sha256(python 补丁版本 + pydantic + 源码字节)`：**补丁不一致不报错，但每次启动静默重放** —— 裸机实测 **291 s（3.12.12）vs 426 s（3.12.11）**、容器实测 **276 s vs 466 s**，日志完全相同、零报错。`preflight.sh` 已加三臂检查（pin / 启动解释器 / **reader-contract 摘要 vs 包**，版本号只在 `.python-version` 里出现一次）。**另注**：systemd drop-in 里不要设 `UV_PYTHON`（会绕过该检查） |
 | 网络（出网） | 可访问：LLM API（DeepSeek）、Bocha/Serper、**嵌入服务端点**、网页抓取目标 | 建议给白名单；代理环境变量**不生效**（客户端 `trust_env=False`），需直连或透明代理 |
 | 网络（入网） | 18188 端口由甲方反代/防火墙按需暴露 | 端口由 runner 钉死 `0.0.0.0:18188` |
 | 账号 | 与打包环境**同名用户**（见 §4），或至少能创建同构路径 | 避免权限与路径两处偏差 |
