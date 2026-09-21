@@ -343,8 +343,14 @@ else
 		pass "admin credential store present (admin-auth.sqlite3 + admin-auth.key)"
 	elif [[ ! -f "$ADMIN_DB" && ! -f "$ADMIN_KEY" ]]; then
 		pass "admin credential store absent — first boot will seed it and write admin-initial-password.txt"
+	elif [[ -f "$ADMIN_DB" && ! -f "$ADMIN_KEY" ]]; then
+		# Observed on a fresh boot: the store is seeded at startup, the session
+		# signing key is created lazily on the first login
+		# (admin_session.py:load_signing_key). Absence before that first login is
+		# normal, so this is a warning, not a failure.
+		warn "admin-auth.sqlite3 present but admin-auth.key is not yet created — expected until the first admin login; re-check after logging in and treat a persistent absence as a defect"
 	else
-		fail "admin credential store half-present (one of admin-auth.sqlite3 / admin-auth.key) — delete the pair and restart to reseed"
+		warn "admin-auth.key present without admin-auth.sqlite3 — the account store will be reseeded on the next boot and all existing sessions are invalidated (delete the stray key if that was not intended)"
 	fi
 	[[ -f "$STATE_DIR/admin-initial-password.txt" ]] &&
 		warn "admin-initial-password.txt still in the state dir — log in and change the password, then delete it" ||
@@ -363,6 +369,8 @@ fi
 section "data artifacts"
 CHECKSUMS="$KIT_DIR/checksums.sha256"
 SIZES="$KIT_DIR/sizes.tsv"
+# Relative entries in checksums.sha256/sizes.tsv are kit-relative, exactly how
+# the builder wrote them, so both modes run from the kit directory.
 if [[ "$FAST" == "1" ]]; then
 	if [[ ! -f "$SIZES" ]]; then
 		fail "--fast requested but $SIZES is missing"
@@ -372,8 +380,10 @@ if [[ "$FAST" == "1" ]]; then
 		while IFS=$'\t' read -r path expected; do
 			[[ -n "${path:-}" ]] || continue
 			total=$((total + 1))
-			if [[ -f "$path" ]]; then
-				actual="$(stat -c '%s' "$path")"
+			resolved="$path"
+			[[ "$path" == /* ]] || resolved="$KIT_DIR/$path"
+			if [[ -f "$resolved" ]]; then
+				actual="$(stat -c '%s' "$resolved")"
 				if [[ "$actual" != "$expected" ]]; then
 					fail "size mismatch: $path (expected $expected, found $actual)"
 					mismatch=$((mismatch + 1))
