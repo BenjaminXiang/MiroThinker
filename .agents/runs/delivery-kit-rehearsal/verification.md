@@ -194,3 +194,109 @@ network, our key files, our data root path, and a warm page cache; a fresh
 customer machine will differ in OS, disk speed, network path, and the absence of
 the frozen absolute paths (`/home/longxiang/...` for the forbidden Milvus path
 and our gate tree).
+
+## 8. Interpreter contract (follow-up, 2026-09-21)
+
+### 8.1 The mechanism, and why the patch is a contract
+
+`serving_pack_loader.reader_contract_digest()` hashes, in order:
+
+```
+"python=(3, 12, 12)\n"          # sys.version_info[:3] — patch version included
+"pydantic=2.12.5\n"
+for every *.py in the canonical_v2 package: path.name + file bytes
+```
+
+The pack manifest carries the digest of the reader that sealed it
+(`reader_contract_sha256 = ebc22047cc9bef912201da5292809935c619705a2b8d8eb718cfec081b0da362`
+for run16; the manifest has no python version string anywhere, only this digest).
+`_reader_contract_matches()` decides between "the reconstruction is a replay"
+and "run it": on a mismatch the boot **still succeeds** and silently pays the
+reconstruction (~190 s measured elsewhere: 466 s vs 276 s). Verified by reading
+`serving_pack_loader.py:213-309, 814`; the local digest was reproduced
+independently in both the live tree and the extracted kit tree and matched the
+manifest byte-for-byte (1.3 s per computation).
+
+### 8.2 What the pin is (single place)
+
+`.python-version` at the tree root, content `3.12.12`, written by
+`uv python pin 3.12.12`. Chosen because it is the file **uv already reads** to
+decide which interpreter `uv sync` / `uv run` uses — the command file runs
+`uv run python …`, so this is the mechanism that actually controls the boot
+interpreter. Evidence that it controls it, with two real interpreters:
+
+```
+pin=3.12.12 -> /home/longxiang/.local/share/uv/python/cpython-3.12.12-linux-x86_64-gnu/bin/python3.12
+pin=3.11.14 -> warning: … resolved to Python 3.11.14, which is incompatible with the
+               project's Python requirement: `==3.12.*` …
+               /home/longxiang/.local/share/uv/python/cpython-3.11.14-linux-x86_64-gnu/bin/python3.11
+```
+
+`.python-version` was gitignored (`.gitignore:232`, matching the generic
+pyenv/pipenv defaults); a negation `!/.python-version` with a comment now keeps
+it committable so `code.tar` ships it, and `site-paths.txt` lists it as
+`@python-pin` so the site checklist carries it too. The version number appears in
+exactly one file in the tree; `preflight.sh` contains no version literal.
+
+### 8.3 preflight behaviour (raw output)
+
+Section printed by `deploy/preflight.sh` as `== interpreter contract ==`.
+
+**Match** (scratch site, venv 3.12.12, exit 0):
+`logs/preflight-interp-match.txt`, also committed as
+`rehearsal-preflight-interp-match.txt`:
+
+```
+[PASS] interpreter pin (.python-version): 3.12.12
+[PASS] boot interpreter matches the pin: CPython 3.12.12 (project venv — what 'uv run python' uses in this tree)
+[PASS] reader-contract digest matches the pack (ebc22047cc9bef91…): this boot takes the fast path, no reconstruction replay
+```
+
+plus the checklist row `[PASS] file @python-pin -> …/site/.python-version (8 bytes)`.
+
+**Patch mismatch** — a *real* interpreter, not an injected string: CPython
+3.12.11, installed with `uv python install 3.12.11`, pointed at via the new
+`--python` test flag (exit 1):
+`logs/preflight-interp-mismatch.txt` / `rehearsal-preflight-interp-mismatch.txt`:
+
+```
+[PASS] interpreter pin (.python-version): 3.12.12
+[FAIL] boot interpreter is CPython 3.12.11 but the pack was sealed with CPython 3.12.12 (--python override (test only): /home/longxiang/.local/share/uv/python/cpython-3.12.11-linux-x86_64-gnu/bin/python3.12) — the boot will not fail, it will silently replay the reconstruction: ≈190 s added to EVERY boot (measured 466 s vs 276 s on the same machine and data root). Fix: uv python pin 3.12.12 && uv sync --frozen (uv downloads the matching patch if it is missing), then re-run preflight
+[SKIP] reader-contract digest: not computed while the interpreter differs from the pin
+```
+
+The `[SKIP]` is deliberate: with the wrong interpreter the digest is expected to
+differ, and the version line already says why.
+
+**Digest drift with the correct interpreter** — same site, one comment appended
+to `canonical_v2/__init__.py`, then reverted (exit 1):
+`logs/preflight-digest-drift.txt` / `rehearsal-preflight-digest-drift.txt`:
+
+```
+[PASS] boot interpreter matches the pin: CPython 3.12.12 (project venv — what 'uv run python' uses in this tree)
+[FAIL] reader-contract digest differs from the pack (local d19f8d4ec7133c9a… vs pack ebc22047cc9bef91…) — the boot will silently replay the reconstruction (≈190 s per boot). The digest covers the python patch, the pydantic version and every canonical_v2/*.py byte: check the interpreter pin first, then that nothing edited the serving code
+```
+
+The file was restored byte-identically (`326ac3e8…`, 210 bytes) and the section
+went back to three PASS lines — the check is not sticky.
+
+### 8.4 Real mismatched-interpreter boot on this machine
+
+The scratch site's venv was rebuilt with CPython 3.12.11 (`uv sync --frozen`
+after setting the site pin to 3.12.11) and the service was booted on 18299 with
+the same pack, index root, state dir and command file (`mismatch-boot.sh`,
+output committed as `rehearsal-mismatch-boot.log`):
+
+| Interpreter | Boot to `/chat` 200 | RSS at ready | Reader digest vs pack |
+|---|---|---|---|
+| CPython **3.12.12** (the pin, §1) | **291.0 s** | 17.24 GiB | matches → fast path |
+| CPython **3.12.11** (one patch off) | **426.0 s** | 17.26 GiB | differs → reconstruction replay |
+
+So the penalty is real and silent on this host too: **+135 s per boot** (the
+container measured +190 s; the absolute numbers differ by host, the direction
+does not). No error line appears in the service log — the log prefix is
+identical to a fast boot. The receipt was snapshotted and restored around this
+boot, the venv was re-synced back to 3.12.12 afterwards, and `uv run --no-sync
+python -V` in the site tree then reported 3.12.12 again (see
+`rehearsal-python-pin-probe.txt`). The live instance on 18188 was not involved at
+any point (`/chat` 200, same pid, uptime unbroken).

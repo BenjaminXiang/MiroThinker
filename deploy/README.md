@@ -238,6 +238,8 @@ bash deploy/install.sh && systemctl --user start canonical-v2-backend
   的 `major.minor.patch`；再用该解释器算出 reader digest 与包内记录值比对
   （这一条还能抓到 pydantic 或 canonical_v2 源码漂移）。不一致 → `[FAIL]`
   并给出修法；无法计算 digest（还没 `uv sync`）→ `[WARN]`。
+- 本机实测（2026-09-21，同机同数据：venv 换成 CPython 3.12.11 后重启）：
+  启动从 **291 s 变成 426 s（+135 s）**，日志无任何报错，只有启动变慢。
 - 现场一行确认：
 
   ```bash

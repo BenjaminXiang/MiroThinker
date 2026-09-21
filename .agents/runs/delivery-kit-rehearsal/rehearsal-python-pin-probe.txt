@@ -1,0 +1,19 @@
+# Evidence that .python-version is the mechanism uv uses (probe on 2026-09-21).
+# A copy of pyproject.toml + uv.lock + .python-version, no venv:
+
+$ echo 3.12.12 > .python-version && uv python find
+/home/longxiang/.local/share/uv/python/cpython-3.12.12-linux-x86_64-gnu/bin/python3.12
+
+$ echo 3.11.14 > .python-version && uv python find
+warning: The Python request from `.python-version` resolved to Python 3.11.14, which is
+incompatible with the project's Python requirement: `==3.12.*` (from `project.requires-python`)
+Use `uv python pin` to update the `.python-version` file to a compatible version
+/home/longxiang/.local/share/uv/python/cpython-3.11.14-linux-x86_64-gnu/bin/python3.11
+
+# And in the rehearsal site tree, with the pin restored to 3.12.12:
+$ cd <site> && cat .python-version && uv run --no-sync python -V
+3.12.12
+Python 3.12.12
+
+# The same command resolved 3.12.11 while the site's pin/venv were 3.12.11 during
+# the mismatch boot (§8.4), so the file really is what the boot follows.
