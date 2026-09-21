@@ -1,0 +1,185 @@
+== 0. 输入指纹（只读）==
+37e8124683ba24f024f9441bd697bad64b6dee97419abb9ed58d0996e6c343f5  /home/longxiang/MiroThinker/.worktrees/delivery-docker/deploy/docker/serve-command-container.py
+8f82ac719e036212d460b8e92ce05c754d10eeb1539ac6a0cf3f04f151d61ac7  /home/longxiang/delivery-xfer-v11/site-bundle/serve-command-v11.sh
+9d505d19510d43c28e739960a2e7547e631e089beb0fc88a35de1c144db72efb  /home/longxiang/MiroThinker/.worktrees/embedding-switch-line/.agents/runs/rebuild-canonical-v2-knowledge-platform/s12g/serve-18188-command-fembed.DRAFT.sh
+-- 宿主候选嵌入 bundle（凭据外泄面：只打印身份字段）--
+   model_id='qwen3.7-text-embedding-flash'  dimension=1024  provider='dashscope-native'  base_url='https://maas.qianwenaiapi.com/api/v1'
+-- 草案引用的宿主路径是否存在 --
+   不存在 /home/longxiang/MiroThinker/.worktrees/data-rebuild/.agents/runs/embedding-model-switch-v2/qwen3.7-text-embedding-flash-embedding-bundle-v1.json
+   不存在 /home/longxiang/MiroThinker/.worktrees/embedding-switch-line/.agents/runs/rebuild-canonical-v2-knowledge-platform/s12g/serving-bundle-fembed.json
+
+══ ① v1.1 交付件 serve-command-v11.sh：能不能当容器命令文件用（期望 exit 0）══
+$ python3 /home/longxiang/MiroThinker/.worktrees/delivery-docker/deploy/docker/serve-command-container.py check --image mirothinker-serving:v1.1 --command /home/longxiang/delivery-xfer-v11/site-bundle/serve-command-v11.sh
+  [OK]   运行期会读的镜像内路径 4 个（缺 0）
+  [OK]   数据面路径 5 个（挂载提供）：/var/tmp/mirothinker-canonical-v2-s12f、/var/tmp/mirothinker-data-v2
+  [note] 容器里 src 树的钉法：镜像 venv 的 editable .pth → /opt/mirothinker/apps/*（无需 PYTHONPATH）
+  [note] 惰性路径 4 个（运行期不读，只被参数校验触碰）：镜像里存在的 1 个，不在的 3 个（不在的是 source-build-manifest-p4.json、complete-candidate-build-envelope.json、milvus.db）
+  [OK]   记录的 serving bundle 与 identity 旗标自洽（6 条：sha/发布/库/索引/信封/嵌入模型）
+exit=0
+
+══ ② 宿主草案 serve-18188-command-fembed.DRAFT.sh：直接当容器命令文件用（期望 exit 1）══
+$ python3 /home/longxiang/MiroThinker/.worktrees/delivery-docker/deploy/docker/serve-command-container.py check --image mirothinker-serving:v1.1 --command /home/longxiang/MiroThinker/.worktrees/embedding-switch-line/.agents/runs/rebuild-canonical-v2-knowledge-platform/s12g/serve-18188-command-fembed.DRAFT.sh
+  [FAIL] 出现 PYTHONPATH=：镜像 venv 的 editable .pth 已把 src 钉在 /opt/mirothinker/apps/*，容器命令文件不该带宿主那条钉法
+  [FAIL] 出现命令替换 $(…)/反引号：容器命令文件必须是静态的（密钥由挂载文件提供）
+  [FAIL] 出现密钥赋值 CANONICAL_V2_EMBEDDING_API_KEY=…：容器里密钥由挂载文件提供（入口脚本负责投影），命令文件里不许有
+  [FAIL] 未解析的占位符 __STEP10_SERVING_BUNDLE_SHA256__：容器命令文件必须在打包前把 identity 定死
+  [FAIL] 未解析的占位符 __STEP7_INDEX_MARKER_SHA256__：容器命令文件必须在打包前把 identity 定死
+  [FAIL] --index-marker-sha256 的值不是 64 位 hex：'__STEP7_INDEX_MARKER_SHA256__'（占位符未解析？）
+  [FAIL] --recorded-serving-bundle-sha256 的值不是 64 位 hex：'__STEP10_SERVING_BUNDLE_SHA256__'（占位符未解析？）
+  [FAIL] 镜像内不存在（运行期会读）：/home/longxiang/MiroThinker/.worktrees/data-rebuild/.agents/runs/embedding-model-switch-v2/qwen3.7-text-embedding-flash-embedding-bundle-v1.json
+  [FAIL] 镜像内不存在（运行期会读）：/home/longxiang/MiroThinker/.worktrees/embedding-switch-line/.agents/runs/rebuild-canonical-v2-knowledge-platform/s12g/serving-bundle-fembed.json
+  [FAIL] 镜像内不存在（运行期会读）：/home/longxiang/MiroThinker/.venv/bin/python
+  [FAIL] 镜像内不存在（运行期会读）：/home/longxiang/MiroThinker/.worktrees/embedding-switch-line/.agents/runs/rebuild-canonical-v2-knowledge-platform/s12e/serve_s12e_port.py
+  [FAIL] 镜像内不存在（运行期会读）：/home/longxiang/MiroThinker/.worktrees/embedding-switch-line/apps/miroflow-agent
+  [OK]   运行期会读的镜像内路径 6 个（缺 5）
+  [OK]   数据面路径 5 个（挂载提供）：/var/tmp/mirothinker-canonical-v2-s12f、/var/tmp/mirothinker-data-v2
+  [note] 容器里 src 树的钉法：镜像 venv 的 editable .pth → /opt/mirothinker/apps/*（无需 PYTHONPATH）
+  [note] 惰性路径 4 个（运行期不读，只被参数校验触碰）：镜像里存在的 1 个，不在的 3 个（不在的是 source-build-manifest-p4.json、complete-candidate-build-envelope.json、milvus.db）
+  [note] 读不到记录的 serving bundle（/home/longxiang/MiroThinker/.worktrees/embedding-switch-line/.agents/runs/rebuild-canonical-v2-knowledge-platform/s12g/serving-bundle-fembed.json）：它与 identity 旗标的自洽这次没检查
+exit=1
+
+══ ③ convert（真 v1.1 镜像）：草案 → 容器命令文件，账本身份守护位（期望 exit 1）══
+$ python3 /home/longxiang/MiroThinker/.worktrees/delivery-docker/deploy/docker/serve-command-container.py convert --host-command /home/longxiang/MiroThinker/.worktrees/embedding-switch-line/.agents/runs/rebuild-canonical-v2-knowledge-platform/s12g/serve-18188-command-fembed.DRAFT.sh --image mirothinker-serving:v1.1 --out /tmp/serve-command-demo.h4NojI/serve-command-fembed.v1image.sh --map /home/longxiang/MiroThinker/.worktrees/embedding-switch-line/.agents/runs/rebuild-canonical-v2-knowledge-platform/s12e/serve_s12e_port.py=/home/longxiang/MiroThinker/.worktrees/canonical-v2-s11-consolidation/.agents/runs/rebuild-canonical-v2-knowledge-platform/s12e/serve_s12e_port.py --map /home/longxiang/MiroThinker/.venv/bin/python=uv run python --map /home/longxiang/MiroThinker/.worktrees/data-rebuild/.agents/runs/embedding-model-switch-v2/qwen3.7-text-embedding-flash-embedding-bundle-v1.json=/home/longxiang/MiroThinker/.worktrees/data-rebuild/.agents/runs/rebuild-canonical-v2-knowledge-platform/s12c/qwen-embedding-bundle-v1.json --map /home/longxiang/MiroThinker/.worktrees/embedding-switch-line/.agents/runs/embedding-model-switch-v2/qwen3.7-text-embedding-flash-embedding-bundle-v1.json=/home/longxiang/MiroThinker/.worktrees/data-rebuild/.agents/runs/rebuild-canonical-v2-knowledge-platform/s12c/qwen-embedding-bundle-v1.json --map /home/longxiang/MiroThinker/.worktrees/embedding-switch-line/.agents/runs/rebuild-canonical-v2-knowledge-platform/s12g/serving-bundle-fembed.json=/home/longxiang/MiroThinker/.worktrees/canonical-v2-s11-consolidation/.agents/runs/rebuild-canonical-v2-knowledge-platform/s12g/serving-bundle-run16.json --map __STEP7_INDEX_MARKER_SHA256__=b6f78a3b1e28c280860a4210bfad286ef65090e758de5b876d7f639eefaa8373 --map __STEP10_SERVING_BUNDLE_SHA256__=0a09aecde903584efb28ccc4f3851062b52891081f0b3b44e6ce5971c55115c4 --host-embedding-bundle /home/longxiang/MiroThinker/.worktrees/embedding-switch-line/.agents/runs/embedding-model-switch-v2/qwen3.7-text-embedding-flash-embedding-bundle-v1.json
+== convert: 逐项核对 ==
+  [OK]   映射 6 条：identity 旗标逐字相同，仅路径参数被替换
+  [OK]   占位符 2 个已解析为具体值：__STEP10_SERVING_BUNDLE_SHA256__、__STEP7_INDEX_MARKER_SHA256__
+  [note] 宿主命令里的 PYTHONPATH 已丢弃：镜像 venv 的 editable .pth 指向 /opt/mirothinker/apps/*
+  [note] 宿主命令里的 *_API_KEY= 已丢弃：容器里密钥由挂载文件 + 入口脚本投影提供
+  [FAIL] 宿主候选 bundle 与容器账本不是同一份内容（字段差异）：{'api_key_source': ("'env:CANONICAL_V2_EMBEDDING_API_KEY'", "'local_api_key'"), 'base_url': ("'https://maas.qianwenaiapi.com/api/v1'", "'http://100.64.0.27:18005/v1'"), 'batch_size': ('20', '32'), 'content_sha256': ("'67927ea060ec3036927376c7059aaa7d3140c33160b9be440556a19cd8d…", "'05473fabc8055e9ce3ebca9d846761cab7cb8c89eb51c96607172c402d1…"), 'dimension': ('1024', '4096'), 'model_id': ("'qwen3.7-text-embedding-flash'", "'Qwen/Qwen3-Embedding-8B'"), 'provider': ("'dashscope-native'", "'openai-compatible'"), 'query_instruct': ("'Given a Chinese-language query about Shenzhen technology co…", 'None'), 'query_text_type': ("'query'", 'None'), 'schema_version': ("'canonical-v2-dashscope-native-embedding-bundle-v1'", "'canonical-v2-openai-compatible-embedding-bundle-v1'")}
+== 写出容器命令文件：/tmp/serve-command-demo.h4NojI/serve-command-fembed.v1image.sh（3463 字节）==
+
+== check: 对刚刚写出的文件做容器校验 ==
+  [OK]   运行期会读的镜像内路径 4 个（缺 0）
+  [OK]   数据面路径 5 个（挂载提供）：/var/tmp/mirothinker-canonical-v2-s12f、/var/tmp/mirothinker-data-v2
+  [note] 容器里 src 树的钉法：镜像 venv 的 editable .pth → /opt/mirothinker/apps/*（无需 PYTHONPATH）
+  [note] 惰性路径 4 个（运行期不读，只被参数校验触碰）：镜像里存在的 1 个，不在的 3 个（不在的是 source-build-manifest-p4.json、complete-candidate-build-envelope.json、milvus.db）
+  [FAIL] --candidate-release-id 与 bundle 自述的 release_id 不符：'candidate-v2-20260922-r1' != 'candidate-v2-20260916-r1'（运行期 ValueError ⇒ 服务起不来）
+  [FAIL] --expected-database 与 bundle 自述的 database_name 不符：'miroflow_candidate_v2_20260922_r1' != 'miroflow_candidate_v2_20260916_r1'（运行期 ValueError ⇒ 服务起不来）
+  [FAIL] --index-root 与 bundle 自述的 index_root 不符：'/var/tmp/mirothinker-data-v2/index-v4-v2' != '/var/tmp/mirothinker-data-v2/index-v3-v2'（运行期 ValueError ⇒ 服务起不来）
+exit=1
+
+══ ④ 的前置：构造的假镜像树（v2 出包后应当长这样）══
+   候选 bundle 在容器里的位置：/home/longxiang/MiroThinker/.worktrees/data-rebuild/.agents/runs/rebuild-canonical-v2-knowledge-platform/s12c/qwen3.7-text-embedding-flash-embedding-bundle-v1.json
+   镜像内/home/longxiang/MiroThinker/.worktrees/canonical-v2-s11-consolidation/.agents/runs/rebuild-canonical-v2-knowledge-platform/s12e/serve_s12e_port.py
+   镜像内/home/longxiang/MiroThinker/.worktrees/canonical-v2-s11-consolidation/.agents/runs/rebuild-canonical-v2-knowledge-platform/s12g/serving-bundle-fembed.json
+   镜像内/home/longxiang/MiroThinker/.worktrees/data-rebuild/.agents/runs/rebuild-canonical-v2-knowledge-platform/s12a/recorded-decision-bundle-v1.json
+   镜像内/home/longxiang/MiroThinker/.worktrees/data-rebuild/.agents/runs/rebuild-canonical-v2-knowledge-platform/s12c/qwen3.7-text-embedding-flash-embedding-bundle-v1.json
+
+══ ④ convert（构造树 --probe-root，代替 docker run）：同样映射 + 候选 bundle 进账本（期望 exit 0）══
+$ python3 /home/longxiang/MiroThinker/.worktrees/delivery-docker/deploy/docker/serve-command-container.py convert --host-command /home/longxiang/MiroThinker/.worktrees/embedding-switch-line/.agents/runs/rebuild-canonical-v2-knowledge-platform/s12g/serve-18188-command-fembed.DRAFT.sh --image probe-root:/tmp/serve-command-demo.h4NojI/root --out /tmp/serve-command-demo.h4NojI/serve-command-fembed.v2shape.sh --probe-root /tmp/serve-command-demo.h4NojI/root --map /home/longxiang/MiroThinker/.worktrees/embedding-switch-line/.agents/runs/rebuild-canonical-v2-knowledge-platform/s12e/serve_s12e_port.py=/home/longxiang/MiroThinker/.worktrees/canonical-v2-s11-consolidation/.agents/runs/rebuild-canonical-v2-knowledge-platform/s12e/serve_s12e_port.py --map /home/longxiang/MiroThinker/.venv/bin/python=uv run python --map /home/longxiang/MiroThinker/.worktrees/data-rebuild/.agents/runs/embedding-model-switch-v2/qwen3.7-text-embedding-flash-embedding-bundle-v1.json=/home/longxiang/MiroThinker/.worktrees/data-rebuild/.agents/runs/rebuild-canonical-v2-knowledge-platform/s12c/qwen3.7-text-embedding-flash-embedding-bundle-v1.json --map /home/longxiang/MiroThinker/.worktrees/embedding-switch-line/.agents/runs/embedding-model-switch-v2/qwen3.7-text-embedding-flash-embedding-bundle-v1.json=/home/longxiang/MiroThinker/.worktrees/data-rebuild/.agents/runs/rebuild-canonical-v2-knowledge-platform/s12c/qwen3.7-text-embedding-flash-embedding-bundle-v1.json --map /home/longxiang/MiroThinker/.worktrees/embedding-switch-line/.agents/runs/rebuild-canonical-v2-knowledge-platform/s12g/serving-bundle-fembed.json=/home/longxiang/MiroThinker/.worktrees/canonical-v2-s11-consolidation/.agents/runs/rebuild-canonical-v2-knowledge-platform/s12g/serving-bundle-fembed.json --map __STEP7_INDEX_MARKER_SHA256__=b6f78a3b1e28c280860a4210bfad286ef65090e758de5b876d7f639eefaa8373 --map __STEP10_SERVING_BUNDLE_SHA256__=0a09aecde903584efb28ccc4f3851062b52891081f0b3b44e6ce5971c55115c4 --host-embedding-bundle /home/longxiang/MiroThinker/.worktrees/embedding-switch-line/.agents/runs/embedding-model-switch-v2/qwen3.7-text-embedding-flash-embedding-bundle-v1.json
+== convert: 逐项核对 ==
+  [note] 映射目标 /home/longxiang/MiroThinker/.worktrees/data-rebuild/.agents/runs/rebuild-canonical-v2-knowledge-platform/s12c/qwen3.7-text-embedding-flash-embedding-bundle-v1.json 不在容器数据面下（镜像内路径，交给 --image 检查）
+  [note] 映射目标 /home/longxiang/MiroThinker/.worktrees/canonical-v2-s11-consolidation/.agents/runs/rebuild-canonical-v2-knowledge-platform/s12g/serving-bundle-fembed.json 不在容器数据面下（镜像内路径，交给 --image 检查）
+  [OK]   映射 6 条：identity 旗标逐字相同，仅路径参数被替换
+  [OK]   占位符 2 个已解析为具体值：__STEP10_SERVING_BUNDLE_SHA256__、__STEP7_INDEX_MARKER_SHA256__
+  [note] 宿主命令里的 PYTHONPATH 已丢弃：镜像 venv 的 editable .pth 指向 /opt/mirothinker/apps/*
+  [note] 宿主命令里的 *_API_KEY= 已丢弃：容器里密钥由挂载文件 + 入口脚本投影提供
+  [OK]   宿主候选 bundle 与容器账本逐字段一致（model_id、dimension、provider、base_url … 全文，12 个字段）
+== 写出容器命令文件：/tmp/serve-command-demo.h4NojI/serve-command-fembed.v2shape.sh（3488 字节）==
+
+== check: 对刚刚写出的文件做容器校验 ==
+  [OK]   运行期会读的镜像内路径 4 个（缺 0）
+  [OK]   数据面路径 5 个（挂载提供）：/var/tmp/mirothinker-canonical-v2-s12f、/var/tmp/mirothinker-data-v2
+  [note] 容器里 src 树的钉法：镜像 venv 的 editable .pth → /opt/mirothinker/apps/*（无需 PYTHONPATH）
+  [note] 惰性路径 4 个（运行期不读，只被参数校验触碰）：镜像里存在的 1 个，不在的 3 个（不在的是 source-build-manifest-p4.json、complete-candidate-build-envelope.json、milvus.db）
+  [OK]   记录的 serving bundle 与 identity 旗标自洽（6 条：sha/发布/库/索引/信封/嵌入模型）
+exit=0
+
+══ ⑤ ④ 写出的容器命令文件（那份要是绿的就长这样）══
+CANONICAL_V2_ACCESS_LOG_DB=/var/tmp/mirothinker-canonical-v2-s12f/access-logs.sqlite3
+    CANONICAL_V2_CORRECTIONS_DB=/var/tmp/mirothinker-canonical-v2-s12f/corrections.sqlite3
+    CANONICAL_V2_MANUAL_RECALL_DIR=/var/tmp/mirothinker-data-v2/manual-recall-v1
+    CHAT_CONTEXTUAL_INTERPRETATION=on
+    uv
+    run
+    python
+    /home/longxiang/MiroThinker/.worktrees/canonical-v2-s11-consolidation/.agents/runs/rebuild-canonical-v2-knowledge-platform/s12e/serve_s12e_port.py
+    18188
+    --database-url
+    postgresql://miroflow@127.0.0.1:55458/miroflow_candidate_v2_20260922_r1
+    --expected-database
+    miroflow_candidate_v2_20260922_r1
+    --database-target-kind
+    disposable
+    --accepted-backup-gate-root
+    /home/longxiang/MiroThinker/.worktrees/data-rebuild/.agents/runs/rebuild-canonical-v2-knowledge-platform
+    --source-manifest
+    /home/longxiang/MiroThinker/.worktrees/data-rebuild/.agents/runs/full-column-serving-pack-rebuild/source-build-manifest-p4.json
+    --source-manifest-sha256
+    a6e82fcd9dd5b2da22fd0c73cfe81b674ad04827092eb01fd4442956f70e184d
+    --candidate-staging-root
+    /var/tmp/mirothinker-data-v2/staging-v4
+    --index-root
+    /var/tmp/mirothinker-data-v2/index-v4-v2
+    --index-marker-sha256
+    b6f78a3b1e28c280860a4210bfad286ef65090e758de5b876d7f639eefaa8373
+    --candidate-release-id
+    candidate-v2-20260922-r1
+    --run-id
+    fembed-build-20260922-v1
+    --source-batch-id
+    s12a-released-objects-full-v1
+    --source-batch-id
+    s12c-r7-company-knowledge-v1
+    --source-batch-id
+    s12c-r7-company-workbook-supplement-v1
+    --source-batch-id
+    s12c-r7-paper-identifiers-v1
+    --source-batch-id
+    s12c-r7-patent-identifiers-v1
+    --source-batch-id
+    s12c-r7-professor-company-roles-v1
+    --source-batch-id
+    s12e-professor-backfill-v1
+    --source-batch-id
+    s12f-company-backfill-v1
+    --source-batch-id
+    s12f-applicant-binding-v1
+    --source-batch-id
+    p4-company-full-v1
+    --source-batch-id
+    p4-patent-full-v1
+    --source-batch-id
+    p4-paper-salvage-v1
+    --source-batch-id
+    p4-professor-full-v1
+    --source-batch-id
+    p4-professor-paper-links-v1
+    --source-batch-id
+    p4-applicant-binding-full-v1
+    --parser-version
+    historical_jsonl=v1
+    --parser-version
+    historical_xlsx=v1
+    --parser-version
+    released_objects_sqlite=canonical-v2-s12a-full-table-v1
+    --policy-version
+    path_eligibility=path-eligibility-v1
+    --policy-version
+    released_objects_mapper=canonical-v2-released-objects-mapper-v2
+    --model-version
+    embedding=qwen3.7-text-embedding-flash
+    --recorded-decision-bundle
+    /home/longxiang/MiroThinker/.worktrees/data-rebuild/.agents/runs/rebuild-canonical-v2-knowledge-platform/s12a/recorded-decision-bundle-v1.json
+    --recorded-embedding-bundle
+    /home/longxiang/MiroThinker/.worktrees/data-rebuild/.agents/runs/rebuild-canonical-v2-knowledge-platform/s12c/qwen3.7-text-embedding-flash-embedding-bundle-v1.json
+    --recorded-serving-bundle
+    /home/longxiang/MiroThinker/.worktrees/canonical-v2-s11-consolidation/.agents/runs/rebuild-canonical-v2-knowledge-platform/s12g/serving-bundle-fembed.json
+    --recorded-serving-bundle-sha256
+    0a09aecde903584efb28ccc4f3851062b52891081f0b3b44e6ce5971c55115c4
+    --envelope-output
+    /home/longxiang/MiroThinker/.worktrees/data-rebuild/.agents/runs/rebuild-canonical-v2-knowledge-platform/s12a/complete-candidate-build-envelope.json
+    --accepted-original-milvus-path
+    /home/longxiang/MiroThinker/apps/miroflow-agent/milvus.db
+    --accepted-original-milvus-sha256
+    43ef203e0b101fcbed2a6c8fcde19a35d426199d3f02bc72525d0acf618867cc
+    --accepted-original-milvus-record-sha256
+    df3715a0be8560d523ce2abb589bdaf690e0fe07babcad26c03a4da0ad8cbe6b
+    --serve
+    --serve-existing
+    --serving-pack
+    /var/tmp/mirothinker-data-v2/serving-pack-fembed-v1
+
+══ ⑥ /tmp 里的中间产物（演示用，随 trap 删除；镜像里那份路径即上文 /home/longxiang/MiroThinker/.worktrees/data-rebuild/.agents/runs/rebuild-canonical-v2-knowledge-platform/s12c/qwen3.7-text-embedding-flash-embedding-bundle-v1.json）══
+-rw-rw-r-- 1 longxiang longxiang 3464 Sep 22 04:26 /tmp/serve-command-demo.h4NojI/serve-command-fembed.v1image.sh
+-rw-rw-r-- 1 longxiang longxiang 3489 Sep 22 04:27 /tmp/serve-command-demo.h4NojI/serve-command-fembed.v2shape.sh

@@ -1,0 +1,49 @@
+== 工具指纹 ==
+  变异前 sha256 = 37e8124683ba24f024f9441bd697bad64b6dee97419abb9ed58d0996e6c343f5
+  测试文件 = tests/canonical_v2/test_serving_command_container.py
+
+══ 0. 基线：全部通过（否则下面的变红没意义）══
+- Generated html report: file:///home/longxiang/MiroThinker/.worktrees/delivery-docker/apps/miroflow-agent/report.html -
+=========================== short test summary info ============================
+PASSED tests/canonical_v2/test_serving_command_container.py::test_a_fake_path_is_red
+PASSED tests/canonical_v2/test_serving_command_container.py::test_a_fully_present_tree_is_green
+PASSED tests/canonical_v2/test_serving_command_container.py::test_a_missing_data_plane_mount_point_is_red
+PASSED tests/canonical_v2/test_serving_command_container.py::test_host_constructs_and_unresolved_placeholders_are_red
+PASSED tests/canonical_v2/test_serving_command_container.py::test_convert_keeps_identity_and_only_replaces_mapped_tokens
+PASSED tests/canonical_v2/test_serving_command_container.py::test_convert_is_red_when_the_container_bundle_is_another_identity
+PASSED tests/canonical_v2/test_serving_command_container.py::test_convert_is_red_when_the_container_bundle_is_the_other_role_twin
+PASSED tests/canonical_v2/test_serving_command_container.py::test_a_serving_bundle_from_another_release_is_red
+PASSED tests/canonical_v2/test_serving_command_container.py::test_convert_is_red_when_the_candidate_bundle_is_not_mapped
+9 passed in 7.02s
+
+══ 变异 1：路径存在性检查被拆掉（_probe_image_paths 永远说都在）⇒ 期望路径类测试变红 ══
+- Generated html report: file:///home/longxiang/MiroThinker/.worktrees/delivery-docker/apps/miroflow-agent/report.html -
+=========================== short test summary info ============================
+PASSED tests/canonical_v2/test_serving_command_container.py::test_a_fully_present_tree_is_green
+PASSED tests/canonical_v2/test_serving_command_container.py::test_convert_keeps_identity_and_only_replaces_mapped_tokens
+PASSED tests/canonical_v2/test_serving_command_container.py::test_convert_is_red_when_the_container_bundle_is_another_identity
+PASSED tests/canonical_v2/test_serving_command_container.py::test_convert_is_red_when_the_container_bundle_is_the_other_role_twin
+PASSED tests/canonical_v2/test_serving_command_container.py::test_a_serving_bundle_from_another_release_is_red
+PASSED tests/canonical_v2/test_serving_command_container.py::test_convert_is_red_when_the_candidate_bundle_is_not_mapped
+FAILED tests/canonical_v2/test_serving_command_container.py::test_a_fake_path_is_red
+FAILED tests/canonical_v2/test_serving_command_container.py::test_a_missing_data_plane_mount_point_is_red
+FAILED tests/canonical_v2/test_serving_command_container.py::test_host_constructs_and_unresolved_placeholders_are_red
+3 failed, 6 passed in 7.19s
+
+══ 变异 2：身份比对被静默跳过（_read_container_bundle 永远返回 None）⇒ 期望身份类测试变红 ══
+- Generated html report: file:///home/longxiang/MiroThinker/.worktrees/delivery-docker/apps/miroflow-agent/report.html -
+=========================== short test summary info ============================
+PASSED tests/canonical_v2/test_serving_command_container.py::test_a_fake_path_is_red
+PASSED tests/canonical_v2/test_serving_command_container.py::test_a_missing_data_plane_mount_point_is_red
+PASSED tests/canonical_v2/test_serving_command_container.py::test_host_constructs_and_unresolved_placeholders_are_red
+PASSED tests/canonical_v2/test_serving_command_container.py::test_convert_is_red_when_the_candidate_bundle_is_not_mapped
+FAILED tests/canonical_v2/test_serving_command_container.py::test_a_fully_present_tree_is_green
+FAILED tests/canonical_v2/test_serving_command_container.py::test_convert_keeps_identity_and_only_replaces_mapped_tokens
+FAILED tests/canonical_v2/test_serving_command_container.py::test_convert_is_red_when_the_container_bundle_is_another_identity
+FAILED tests/canonical_v2/test_serving_command_container.py::test_convert_is_red_when_the_container_bundle_is_the_other_role_twin
+FAILED tests/canonical_v2/test_serving_command_container.py::test_a_serving_bundle_from_another_release_is_red
+5 failed, 4 passed in 7.20s
+
+== 还原核对 ==
+  还原后 sha256 = 37e8124683ba24f024f9441bd697bad64b6dee97419abb9ed58d0996e6c343f5
+  OK：与变异前一致
