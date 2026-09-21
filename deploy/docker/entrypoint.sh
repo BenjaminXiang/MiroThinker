@@ -8,6 +8,14 @@
 #     其实是权限」的失败提前翻译成人话。
 #
 # 退出码：预检失败 → 78（EX_CONFIG），便于 compose/运维一眼区分「配置问题」与「服务崩溃」。
+#
+# 可选环境变量：
+#   MIROTHINKER_SKIP_PREFLIGHT=1            跳过全部预检（自己看服务原生报错时用）
+#   MIROTHINKER_ENTRYPOINT_ENV_RECEIPT=1    只打印"凭据收据"（名字 + 是否已设置）后退出，
+#                                           不启动服务（现场排障：key 到底喂到哪几个槽位）
+#   MIROTHINKER_EMBEDDING_KEY_FILE=<path>   嵌入 key 文件位置（默认 /opt/mirothinker/.sglang_api_key，
+#                                           即 compose 的挂载点；测试/排障时可覆盖）
+#   MIROTHINKER_MIGRATE_WAIT_SECONDS=<n>    采集库迁移的有界等待秒数（默认 120）
 
 set -uo pipefail
 
@@ -72,8 +80,12 @@ if [[ "${MIROTHINKER_SKIP_PREFLIGHT:-0}" != "1" ]]; then
   probe_file="${STATE_DIR}/.entrypoint-write-probe"
   if ! touch "$probe_file" 2>/dev/null; then
     fail "状态目录不可写：$STATE_DIR（容器内 uid=$(id -u)）
-    一行修复：user: \"$(stat -c '%u:%g' "$STATE_DIR" 2>/dev/null || echo '数据属主 uid:gid')\"，
-    或宿主机 chown -R 该 uid "$STATE_DIR"。若确认要带病启动：设 MIROTHINKER_SKIP_PREFLIGHT=1。"
+    诊断：宿主上该目录属主 $(stat -c '%u:%g' "$STATE_DIR" 2>/dev/null || echo '?')，数据根属主 $(stat -c '%u:%g' "$DATA_ROOT" 2>/dev/null || echo '?') —— 容器要按**数据属主**那个 uid 跑（compose 的 user: 取 .env 里的 MIROTHINKER_UID/MIROTHINKER_GID）。
+    一行修复（在宿主机、交付包目录里执行）：
+      sudo ./install-site.sh        # 幂等；会把数据根 / 状态目录 / 密钥归一给数据属主
+    或： sudo chown -R $(stat -c '%u' "$DATA_ROOT" 2>/dev/null || echo '<数据属主 uid>') "$STATE_DIR"
+    注意：**不要**因为这里显示 root 就把 compose 的 user: 改成 0:0 —— 那是把服务跑成 root，既不对也不安全。
+    若确认要带病启动：设 MIROTHINKER_SKIP_PREFLIGHT=1。"
   fi
   rm -f "$probe_file"
 
@@ -92,14 +104,95 @@ if [[ "${MIROTHINKER_SKIP_PREFLIGHT:-0}" != "1" ]]; then
   fi
 fi
 
-# --- 5. 手工召回道目录：冻结命令文件指向它，缺了只是降级，这里顺手补齐 --------
+# --- 5. 嵌入凭据投影：一个 key 文件喂两个槽位 ---------------------------------
+# 现场（文件路线）只放 secrets/.sglang_api_key，由 compose 挂到容器内
+# /opt/mirothinker/.sglang_api_key。自有端点（v1 槽位）由 load_local_api_key()
+# **直接读文件**，不需要环境变量；但候选（第三方网关）嵌入 bundle 只认它自己声明的
+# 那个槽位（knowledge_build_isolated._GATEWAY_EMBEDDING_API_KEY_ENV，只读环境变量）。
+# 不做投影的话：文件路线的站点切到 v2 后，候选嵌入路由**拿不到任何凭据**，而向量道是
+# fail-open ⇒ 静默降级（答案照出、语义检索那条道死掉），最难现场排查的一类故障。
+#
+# 优先级（高 → 低）：显式环境变量 > 管理页写入的受管凭据 > 这个 key 文件。
+#   显式设置     ⇒ 一个字节都不动（service unit 仍是权威）；
+#   受管凭据里有 ⇒ 留给服务启动时投影（它会同时填 SGLANG_API_KEY 与候选槽位）；
+#   否则文件非空 ⇒ 导出候选槽位（v1 槽位保持原样：它本来就按文件读）。
+# 本段只打印字段名与"是否已设置"，从不打印值。
+EMBEDDING_KEY_FILE="${MIROTHINKER_EMBEDDING_KEY_FILE:-/opt/mirothinker/.sglang_api_key}"
+MANAGED_SECRETS_FILE="${CANONICAL_V2_MANAGED_SECRETS:-/opt/mirothinker/config/managed/secrets.json}"
+GATEWAY_EMBEDDING_KEY_ENV="CANONICAL_V2_EMBEDDING_API_KEY"
+
+# 受管凭据（管理页写的 secrets.json）里有没有嵌入 key。
+# 有 ⇒ 服务启动时会自己投影到两个槽位，这里就不该抢先把候选槽位钉死
+# （否则服务侧"已存在即跳过"，管理页换的 key 在候选槽位反而不生效）。
+# 只看退出码，不打印任何字段值。
+managed_has_embedding_key() {
+  [[ -s "$MANAGED_SECRETS_FILE" ]] || return 1
+  command -v python3 >/dev/null 2>&1 || return 1
+  python3 - "$MANAGED_SECRETS_FILE" >/dev/null 2>&1 <<'PY'
+import json
+import sys
+
+try:
+    document = json.load(open(sys.argv[1], encoding="utf-8"))
+except Exception:
+    raise SystemExit(1)
+value = document.get("secrets") if isinstance(document, dict) else None
+value = value.get("embedding.api_key") if isinstance(value, dict) else None
+raise SystemExit(0 if isinstance(value, str) and value.strip() else 1)
+PY
+}
+
+embedding_key_value=""
+if [[ -s "$EMBEDDING_KEY_FILE" && -r "$EMBEDDING_KEY_FILE" ]]; then
+  embedding_key_value="$(<"$EMBEDDING_KEY_FILE")"
+  # 与读侧的 .strip() 对齐：去掉首尾空白（只删首尾，不动中间）
+  embedding_key_value="${embedding_key_value#"${embedding_key_value%%[![:space:]]*}"}"
+  embedding_key_value="${embedding_key_value%"${embedding_key_value##*[![:space:]]}"}"
+fi
+
+if [[ -n "${!GATEWAY_EMBEDDING_KEY_ENV:-}" ]]; then
+  log "嵌入凭据投影：${GATEWAY_EMBEDDING_KEY_ENV} 已显式设置 —— 不动（环境变量优先）"
+elif managed_has_embedding_key; then
+  log "嵌入凭据投影：受管凭据里有 embedding.api_key —— 留给服务启动时投影到 SGLANG_API_KEY + ${GATEWAY_EMBEDDING_KEY_ENV}"
+elif [[ -n "$embedding_key_value" ]]; then
+  export "${GATEWAY_EMBEDDING_KEY_ENV}=${embedding_key_value}"
+  log "嵌入凭据投影：key 文件 → ${GATEWAY_EMBEDDING_KEY_ENV}（已设置；v1 槽位 SGLANG_API_KEY 仍按文件直读）"
+else
+  log "嵌入凭据投影：没有可用的嵌入凭据（${GATEWAY_EMBEDDING_KEY_ENV} 空、受管凭据里没有 embedding.api_key、key 文件 ${EMBEDDING_KEY_FILE} 不存在/为空）"
+  log "      ⇒ 自有端点（v1 槽位）与候选网关（${GATEWAY_EMBEDDING_KEY_ENV}）都拿不到凭据；向量道会降级，服务照常启动"
+fi
+
+# --- 6. 凭据收据（现场排障；只报名字与是否已设置） ---------------------------
+# MIROTHINKER_ENTRYPOINT_ENV_RECEIPT=1 ⇒ 打印收据后退出，不启动服务。
+# 收据由**子进程**打印：只有真正 export 出去的变量才会出现在里面。
+if [[ "${MIROTHINKER_ENTRYPOINT_ENV_RECEIPT:-0}" == "1" ]]; then
+  log "凭据收据（只报名字与是否已设置；从不打印值）："
+  EMBEDDING_KEY_FILE="$EMBEDDING_KEY_FILE" GATEWAY_ENV="$GATEWAY_EMBEDDING_KEY_ENV" /bin/sh -c '
+    for name in SGLANG_API_KEY OPENAI_API_KEY API_KEY "$GATEWAY_ENV"; do
+      eval "value=\${$name:-}"
+      if [ -n "$value" ]; then
+        printf "[entrypoint]   环境槽位 %s=已设置\n" "$name"
+      else
+        printf "[entrypoint]   环境槽位 %s=空\n" "$name"
+      fi
+    done
+    if [ -s "$EMBEDDING_KEY_FILE" ]; then
+      printf "[entrypoint]   key 文件 %s=已设置（v1 槽位按文件直读，不需要环境变量）\n" "$EMBEDDING_KEY_FILE"
+    else
+      printf "[entrypoint]   key 文件 %s=缺失/空\n" "$EMBEDDING_KEY_FILE"
+    fi
+  '
+  exit 0
+fi
+
+# --- 7. 手工召回道目录：冻结命令文件指向它，缺了只是降级，这里顺手补齐 --------
 if [[ ! -d "$MANUAL_RECALL_DIR" ]]; then
   mkdir -p "$MANUAL_RECALL_DIR" 2>/dev/null \
     && log "已创建 $MANUAL_RECALL_DIR" \
     || log "注意：$MANUAL_RECALL_DIR 不存在且创建失败（数据根只读），手工召回道将不可用"
 fi
 
-# --- 6. 采集库（PostgreSQL）DSN + 幂等迁移 -----------------------------------
+# --- 8. 采集库（PostgreSQL）DSN + 幂等迁移 -----------------------------------
 # 顺序与语义（有意为之）：
 #   * DSN 优先用显式 DATABASE_URL；否则由 POSTGRES_*（compose 的 env_file: secrets/postgres.env）组装；
 #   * 组装好的 DSN 只经 shell 变量传递，**从不打印**（migrate.py 出错时也只打掩码）；

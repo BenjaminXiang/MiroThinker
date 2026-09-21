@@ -1,0 +1,46 @@
+{
+  "login": 200,
+  "llm_test": {
+    "status": 200,
+    "body": {
+      "connection": "llm",
+      "label": "LLM 档位",
+      "ok": true,
+      "latency_ms": 126,
+      "http_status": 200,
+      "detail": "HTTP 200",
+      "called": true,
+      "runtime": {
+        "key": "llm",
+        "label": "LLM 档位（deepseekv4flash）",
+        "kind": "llm",
+        "enabled": true,
+        "base_url": "https://api.deepseek.com",
+        "model": "deepseek-v4-flash",
+        "api_key_origin": "managed-file(env:DEEPSEEK_API_KEY)",
+        "endpoint_origin": "chat-profile:deepseekv4flash",
+        "runtime_note": "运行期使用 chat profile deepseekv4flash（CHAT_LLM_PROFILE）；base_url https://api.deepseek.com；凭据来源 managed-file(env:DEEPSEEK_API_KEY)",
+        "pending_restart": false
+      },
+      "used": {
+        "api_key_source": "managed-file(env:DEEPSEEK_API_KEY)",
+        "effective_api_key_source": "managed-file(env:DEEPSEEK_API_KEY)",
+        "endpoint_source": "chat-profile:deepseekv4flash",
+        "base_url": "https://api.deepseek.com",
+        "model": "deepseek-v4-flash"
+      },
+      "rate": {
+        "per_minute_limit": 6,
+        "min_interval_seconds": 1.0,
+        "remaining": 5
+      },
+      "identity": null,
+      "restart_required": null
+    }
+  },
+  "config_status": 200,
+  "llm_origin_fields": {
+    "settings.serving.chat_llm_profile": "deepseekv4flash",
+    "env_vars.serving.chat_llm_profile": "CHAT_LLM_PROFILE"
+  }
+}

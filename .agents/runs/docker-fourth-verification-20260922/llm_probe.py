@@ -36,7 +36,13 @@ def call(method: str, path: str, payload: object = None, timeout: int = 90):
         return exc.code, exc.read().decode("utf-8", "replace")
 
 
-password = (STATE / "admin-initial-password.txt").read_text(encoding="utf-8").strip()
+import os as _os
+
+_password_file = _os.environ.get("MIROTHINKER_ADMIN_PASSWORD_FILE", "")
+if _password_file:
+    password = Path(_password_file).read_text(encoding="utf-8").strip()
+else:
+    password = (STATE / "admin-initial-password.txt").read_text(encoding="utf-8").strip()
 report: dict[str, object] = {"login": call("POST", "/api/auth/login", {"username": "admin", "password": password})[0]}
 
 code, text = call("POST", "/api/canonical-v2/admin/connections/test", {"connection": "llm"})

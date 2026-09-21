@@ -1,0 +1,18 @@
+{
+  "login": 200,
+  "llm_test": {
+    "status": 429,
+    "body": {
+      "detail": {
+        "error": "rate_limited",
+        "connection": "llm",
+        "retry_after_seconds": 1
+      }
+    }
+  },
+  "config_status": 200,
+  "llm_origin_fields": {
+    "settings.serving.chat_llm_profile": "deepseekv4flash",
+    "env_vars.serving.chat_llm_profile": "CHAT_LLM_PROFILE"
+  }
+}

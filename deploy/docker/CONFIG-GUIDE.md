@@ -32,6 +32,13 @@
 | `.bocha_api_key` | 联网检索（博查） | 甲方自行申请，或找我方代配 | 联网补充通道不可用：只答本地知识库内容；建议给 |
 | `.serper_api_key` | 联网检索（Serper/Google） | 同上 | 同上；与博查是**双通道**，只给一个也能工作（覆盖率略降） |
 
+> **`.sglang_api_key` 喂的是"所有嵌入道"，只放这一次就够**：同一个文件会被容器入口脚本投影到
+> 两条嵌入权威各自的凭据槽位 —— 自建端点（v1 槽位 `SGLANG_API_KEY`，按文件直读）与第三方
+> 网关（候选槽位 `CANONICAL_V2_EMBEDDING_API_KEY`）。站点实际跑哪条道，这个文件里就放哪条道的
+> key；**不需要**为第二条道再准备一个文件，也不需要设任何环境变量。
+> 排障：`docker compose exec -T app env MIROTHINKER_ENTRYPOINT_ENV_RECEIPT=1 /usr/local/bin/mirothinker-entrypoint`
+> 会打印"凭据收据"（只有槽位名与是否已设置，从不打印值）。
+
 **放置命令（把 `<你的key>` 换成真实值；在交付包目录里执行）**
 
 ```bash
