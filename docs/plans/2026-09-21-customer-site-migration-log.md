@@ -315,3 +315,29 @@ SSE `event: error` → 页面红字。同一轮里其余五条道全健康，但
 **新增一条待办（v1.1 集成时处理）**：索引臂需要 `CANONICAL_V2_SERVING_PACK`（受管字段 `paths.serving_pack_dir`），而现役服务单元没有设置它 ⇒ **客户机上索引臂会显示"未校验"**（对照端点臂不受影响）。建议把这一项加进部署命令/compose 环境。
 
 **未验证**：本机没有真实的第二个嵌入模型（用仓库自带 token-hash 4096 维假端点代替——协议对、维度对、空间错，正是要拒的失败形状，但不能排除"某个真实模型恰好 >0.99"；对照端点臂覆盖这种情况）；未在真实服务进程里跑过该探针；未做浏览器渲染验证。
+
+## 第 12 轮 · 2026-09-21 · 甲方配置指南交付 + "只填 key"**实测通过**（含一条差点踩中的降级陷阱）
+
+**交付**（容器线，2 个提交 `5220d2d5` `a0cd5c13`）：
+
+- `deploy/docker/CONFIG-GUIDE.md`（165 行中文，写给甲方运维）：一句话结论 / 4 个密钥清单表（谁申请·放哪·**不填会怎样**）/ 页面等效填法 / 页面唯一要用的配置 / **不要动的东西 + 报错原文** / 症状→原因→动作表 / 网络前提 / 验收三步；
+- `deploy/docker/site-config/managed-settings.json`（**预置受管配置**：chat LLM 档位、端点、采集窗口、四域开关——非机密）；
+- `README-FIRST.txt` 与 runbook §13 互链；交付包已重建。
+
+**关键发现（差点让甲方拿到降级答案）**：代码里 `CHAT_LLM_PROFILE` 的**默认是 `gemma4`**（`knowledge_serving_isolated.py:2140`）——**光放 `.deepseek_api_key` 不够**，必须由我们把档位预置成 `deepseekv4flash`。这正是新增的 `managed-settings.json` 的作用；没有它，客户现场会得到"模板化答案"而不是大模型成文。
+
+**"只填 key"实测（两阶段，冷 scratch、端口 18296、无 sudo）**：
+
+| | 阶段 1（3 个 key，缺 `.deepseek_api_key`） | 阶段 2（**只补那 1 个 key**） |
+|---|---|---|
+| 安装 | 21 ok / 5 warn / **0 FAIL**、`boot=284 s`、verify 全通 | — |
+| 嵌入连接测试（= 页面点一次"测试"） | `ok:true`、HTTP 200、33 ms、`model=Qwen/Qwen3-Embedding-8B`、来源标注齐全 | 同左 |
+| `/chat` 真实问题 | 8 条引用（本地 1）、**`degraded_template=true`** | 8 条引用、**`degraded_template=false`**（576 字成文） |
+| replay 门 | **6/7** | **ALL PASS 7/7** |
+
+**确切的"人工输入清单"**（除此之外没有任何编辑/填地址/建库/改路径）：① 4 条 `sudo install -m 600 /dev/stdin secrets/.<name> <<< "<key>"`；② 一行 `sudo ./install-site.sh`；③ 后补 key 时一行 `docker compose up -d --force-recreate app`；④ 浏览器 `/main` 登录改密 + `/admin` 点一次"测试"。⇒ **与"只填 key"无偏差**。
+
+**演练修掉两个真 bug**：① docker 会在缺失的 bind 源处**建同名目录**（导致"后补 key"无法覆盖，且旧校验把目录当"已配置"**假绿**）⇒ compose 加 `create_host_path: false` + 安装器识别清理 + 空 0600 占位；② **换 key 只 `restart` 不够**（bind 绑的是 inode，覆盖写会换 inode）⇒ 指南直接给 `--force-recreate`。
+
+**未验证**：`--force-recreate` 那条是从 inode 语义**推断**、未做反向实验；页面上"手填 key"只验到运行时凭据解析与连接测试，**没有在浏览器里真提交一次表单**；真 root（sudo）下的安装；跨文件系统传送后的链路。
+**另注**：`mount-receipt.json` 在 20:50 被重写**不是它**——是同一时段另一个 agent 的 scratch 实例（pid 1231373，20:41 起）读同一数据根所致；活线服务未动（pid 519941、`/chat` 200）。
