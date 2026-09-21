@@ -105,3 +105,36 @@ staging root the build is already using, not a regression.
 When the log prints `envelope_sha256=…` (alongside `receipt_sha256=` and
 `handoff_sha256=`), the build finished: proceed to step 6 (verify the vector
 matrix) and then 7 (index conversion) / 8 (seal).
+
+## Watch window (first 45 minutes, 2026-09-22 00:11 → 00:56)
+
+Sampler: `.agents/runs/full-column-serving-pack-rebuild/build-fembed-20260922.watchdog.log`
+(one line every 2 minutes, pid/state/cpu/rss/log-bytes/last-line).
+
+| Time | Elapsed | CPU time | %CPU | RSS | Log bytes | Last line |
+|---|---|---|---|---|---|---|
+| 00:12 | 1:34 | 1:34 | 93% | 2.3 GB | 796 | `P4_MERGE_LEDGER {…}` |
+| 00:20 | 9:35 | 9:35 | 98.8% | 3.8 GB | 1050 | `APPLICANT_BINDING_LEDGER …` |
+| 00:30 | 19:35 | 19:35 | 99.3% | 8.1 GB | 1050 | same |
+| 00:40 | 29:35 | 29:35 | 99.5% | 11.8 GB | 1050 | same |
+| 00:50 | 39:35 | 39:35 | 99.6% | 11.8 GB | 1050 | same |
+| 00:56 | 44:50 | 44:42 | 99.7% | 11.8 GB | 1050 | same |
+
+* **Advancing, not stalled**: CPU time tracks wall clock at ~99% (single core),
+  RSS grows with the restore then plateaus; the run is in the merge/restore
+  phase, which prints little.
+* **No error of any kind** in the log (`error|traceback|differ|exception|400|refus`
+  → 0 hits). The two known window-killers cannot have fired yet: no gateway call
+  has been made (`ss` shows zero sockets for the pid).
+* **The batch-20 killer was disproved ahead of the embedding phase** by driving
+  the build's own chain (`load_content_addressed_embedding_adapter(role="document")`
+  → native adapter → gateway) with the 20 *longest* real documents from the live
+  pack's lookup (read-only): 20 rows × 1024 dims, all non-zero, 1.605 s, HTTP 200
+  — `.agents/runs/embedding-model-switch-v2/build-embedding-path-probe.json`.
+* **The audit killer is structurally covered**: the running process's
+  `PYTHONPATH` pins the switch line's app root (checked in `/proc/2077915/environ`,
+  credential line never echoed), whose `index_projection_isolated.py` carries
+  `_MIN_VECTOR_COSINE_SIMILARITY = 0.99` at line 76.
+* Host head-room at 00:56: 396 GB RAM available (RSS 11.8 GB), `/var/tmp` 881 GB
+  free, staging 107 MB, index root marker only.
+
