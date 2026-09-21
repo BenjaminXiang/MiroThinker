@@ -57,13 +57,17 @@
 
 ### 3.1 现状取证（本机代码级，2026-09-21；逐行读过，未做故障注入）
 
-| 环节 | 事实 | 位置 |
+> **行号以活线树为准**：`.worktrees/canonical-v2-s11-consolidation`（18188 跑的就是它，
+> HEAD `36df47b8`）。主仓在其他分支上，行号会差几十行。
+
+| 环节 | 事实 | 位置（活线树） |
 |---|---|---|
 | 规划器 | 普通问题固定五道，含 `vector` | `knowledge_serving_isolated.py:663` |
 | 向量道取 query 向量 | 每轮一次 `embed_batch((query,))` | `serving_pack_loader.py:1697-1699` |
 | 传输 | 单 POST、无重试、无熔断、`timeout=180`、`trust_env=False`（代理环境变量不生效） | `company/vectorizer.py:39-59` |
-| 异常改写 | 适配器层把**所有**异常（含拒连/超时）统一包成 `IsolatedKnowledgeReadIntegrityError`（`ValueError` 系） | `knowledge_read_isolated.py:305-312` |
-| 调度器 | 只放过 `TimeoutError`；非 web 道 `timeout_seconds=None`（无上限） | `knowledge_read.py:7579-7589` |
+| 异常改写 | 适配器层 `except Exception` 把**所有**异常统一包成 `IsolatedKnowledgeReadIntegrityError`（`ValueError` 系） | `knowledge_read_isolated.py:325-331` |
+| 车道级容错钩子**已存在但不触发** | `_invoke_lane` 已经会把 `TimeoutError` 记成 `timeout`、`ConnectionError` 记成 `connection_failure`——但 httpx 抛的是 `httpx.ConnectError`/`ReadTimeout`，**不是内置那两个**，加上上一条的改写，钩子永远不响 | `knowledge_read.py:7546-7562` |
+| 外层无上限 | 非 web 道 `timeout_seconds=None`（`_web_lane_outer_wait_seconds` 只给 web 道） | `knowledge_read.py:7690-7698` |
 | 用户可见结果 | 异常穿出 `execute()` → SSE `event: error` → 页面红字 `canonical_v2_release_mismatch`；同步口 HTTP 409 | `api/canonical_v2_chat.py:434-451`、`static/chat.html:2017-2029` |
 | 端点冻结 | bundle 逐字段相等校验（含 `base_url`）+ 常量 `_QWEN_EMBEDDING_BUNDLE_SHA256` | `knowledge_build_isolated.py:8186-8199` |
 | 配置无读者 | `CANONICAL_V2_EMBEDDING_BASE_URL` 只有字段→env 映射；连接卡测的是冻结默认地址 | `managed_config.py:74`、`canonical_v2_runtime_sources.py:282-320` |
