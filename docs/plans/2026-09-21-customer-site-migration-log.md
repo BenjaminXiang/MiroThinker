@@ -417,3 +417,28 @@ SSE `event: error` → 页面红字。同一轮里其余五条道全健康，但
 **测试**：新增 31+1 全绿；四文件回归在 `-n 2` 下 **89 passed**（`-n 8` 会因 milvus-lite 既有问题抖动，与本改动无关）；`test_knowledge_build_isolated.py` 全量在本机**两棵树**上都跑不到汇总（`test_real_boundary_*` 家族卡在不可达的数据库，属既有红）。
 
 **遗留（交给切换切片）**：① **先试兼容路由**（一次带鉴权调用，可能省掉整个适配层）；② 切换本身**需要一份 OpenSpec change**（本切片惰性、无行为变更，故未立）；③ **凭据接线**：受管密钥页的 `embedding.api_key` 目前写的是 `SGLANG_API_KEY`，候选模型需要 `CANONICAL_V2_EMBEDDING_API_KEY` 这条槽；④ **两处合并交互**：F1 的透传、F2 的 `base_url` 排除与 `resolve_embedding_base_url`，合并时必须同样应用到 `dashscope-native` 分支，否则候选包会"钉住主机"而现役包可配。
+
+## 第 16 轮 · 2026-09-21 · v1.1 出包完成并演练通过（含一个"不加就起不来"的发现）
+
+**交付件**（`delivery/docker` 三个提交，工作区干净）：
+
+| 件 | 路径 / 尺寸 / sha256 |
+|---|---|
+| 镜像 | `mirothinker-serving:v1.1`（6.82 GB；tar 6.95 GB；**gz 2.16 GB**，`f842f6de…`；构建 144 s） |
+| 数据面 | `serving-data-v1.1.tar.gz` **1,481,979,537 B**（10 条目 = 新包 5 + 索引 3 + 2 目录，无 receipt；打包 9 s），`beb9449d…` |
+| 校验清单 | `/var/tmp/mirothinker-delivery-kit-v1.1/`（10 件 checksums + sizes + 两个发布 bundle） |
+| **可发交付包** | **`/var/tmp/mirothinker-site-bundle-v11/`（3.4 GB，17 文件）** |
+
+**演练**（scratch 根 + 端口 18296 + 无 sudo，两轮：首轮与"最终包本体"复核轮）：校验 21 s / 解包 44 s / 10 件 41 s / `docker load` 30 s；`mirothinker-verify` **0 FAIL**；**replay 门 6/7（空配置）→ 7/7（预置配置）**；`pg_dump`→恢复 **42/42 表**；turn-trace 写失败 **0 次**（修复后）。
+
+**身份校验两态都验到了**：空受管配置 → `arm=null`「未校验：未配置服务包目录」；**预置配置 → `arm=index, passed=true, cosine=0.999933`（阈值 0.99）** ⇒ 我们补的 `CANONICAL_V2_SERVING_PACK` 接线生效、"索引臂"真的跑起来了。
+
+**启动耗时口径（重要）**：**首装冷启 433–503 s（7–8.5 分钟）**；**热重启 288 s**。差异已归因：无 receipt 的首次全量校验 + 索引投影（205→243 s）与冷读相位（关系图 37.5→40.9 s、lookup 16.1→23.6 s），即机器负载/页缓存方差。**"≈276 s"那个数是热重启口径**，交付说明里必须写清"首装 8–9 分钟、之后重启 ≈5 分钟"。
+
+**v1.1 接线是"三处"不是两处，第三处不加就起不来**：① 冻结命令文件（只换 1 token，构建期断言；容器内 cmdline 实测指向新包）；② 受管字段 `paths.serving_pack_dir`（身份校验从"未校验"变 index 臂通过）；③ **镜像入口脚本 `/usr/local/bin/mirothinker-entrypoint` 把旧包名写死** ⇒ 实测 `预检失败：缺少 …serving-pack-run16-readerbound`、容器 **exit 78**；已用 `entrypoint-v11.sh` 只读覆盖修复（全盘 grep 确认启动路径上只有这两处硬编码）。顺带修掉 `TURN_TRACE_DIR`（代码默认相对路径 `var/turn-trace`，容器 cwd 不可写 ⇒ **每轮 PermissionError，v1 时代就存在**）。
+
+**未能验证 / 与期望不符（如实）**：① **sudo / 真实路径安装未测**（无 sudo，用 scratch 前缀），目标机首次实装仍需一次真人演练；② 未跑单测/CI（本片只改 shell/compose/探针）；③ **首启全量校验路径刷 47,087 行 `PydanticSerializationUnexpectedValue(Expected PathEligibilityRequest)` 警告**——产品侧缺陷，未修（要改代码 + 重建镜像），列为后续小项（与"日志降噪"合并）；④ `README.md` 仍是 v1 叙述（v1.1 差异写在 `README-FIRST.txt`/`BUNDLE-MANIFEST.txt`）；⑤ `kit-manifest.txt` 里 `data_plane_not_included` 行仍写旧包名（未重生成，已在 BUNDLE-MANIFEST 说明）；⑥ 演练密钥是符号链接且 664 ⇒ 安装器告警（正式交付要求 0600）。
+
+**客户上传前复核（6 条，已写进交付包）**：传 `-v11` 全目录（3.4 GB，`secrets/` 里放 4 个 0600 密钥）→ 传后 `sha256sum -c` 两个 `.sha256` → 确认 `serve-command-v11.sh` 与可执行的 `entrypoint-v11.sh` 在位 → `sudo ./install-site.sh --dry-run` 先看 → 目标机 ≥64 GB 内存 / ≥25 GB 盘 / 18188 空闲 / 能出网 → 装完 `/admin` 只需补密钥（端点与档位已预置）。
+
+**影响**：v1.1 交付包**可发**；启动耗时的现场口径被纠正（首装 7–8.5 分钟）；两处硬编码旧包名与 turn-trace 权限这两个"只在真装时才暴露"的缺陷已在包内修掉。
