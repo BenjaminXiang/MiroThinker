@@ -916,6 +916,35 @@ def test_the_embedding_card_receives_the_identity_verdict(
     assert payload["_probe_args"]["api_key"] == "unsaved-key"
 
 
+def test_the_card_asks_with_the_model_the_mounted_pack_records(
+    stores: tuple[Any, Any], tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The model the lane sends, not a literal: the pack's record decides it."""
+
+    pack = tmp_path / "pack"
+    pack.mkdir()
+    (pack / "manifest.json").write_text(
+        json.dumps({"embedding_model_id": "qwen3.7-text-embedding-flash"}),
+        encoding="utf-8",
+    )
+    monkeypatch.setenv("CANONICAL_V2_SERVING_PACK", str(pack))
+    endpoint = _AnsweringEndpoint()
+    try:
+        payload = _probe_route(
+            stores,
+            {
+                "connection": "embedding",
+                "base_url": endpoint.base_url,
+                "identity_check": True,
+            },
+            monkeypatch,
+        )
+    finally:
+        endpoint.close()
+
+    assert payload["_probe_args"]["model"] == "qwen3.7-text-embedding-flash"
+
+
 def test_without_the_flag_the_connection_test_stays_one_call(
     stores: tuple[Any, Any], monkeypatch: pytest.MonkeyPatch
 ) -> None:

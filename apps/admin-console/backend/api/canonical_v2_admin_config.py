@@ -93,7 +93,6 @@ def get_managed_secrets_store(request: Request) -> ManagedSecretsStore:
     return ManagedSecretsStore(path=default_secrets_path())
 
 
-
 def _unprocessable(detail: str) -> HTTPException:
     return HTTPException(status_code=422, detail=detail)
 
@@ -484,7 +483,8 @@ def get_connection_presets() -> object:
                 "model": embedding.model,
                 "note": (
                     f"运行期生效地址（来源 {embedding.endpoint_origin}）；"
-                    "模型身份仍由发布包冻结，地址可在受管配置里设置"
+                    "模型身份仍由发布包冻结（取自服务包记录，页面不可改），"
+                    "地址可在受管配置里设置"
                 ),
             }
             if embedding.base_url
