@@ -31,9 +31,16 @@ The card's dimension comes from the probe's answer and from the index matrix.
 pydantic and **every** `apps/miroflow-agent/src/data_agents/canonical_v2/*.py`:
 
 ```
-before 4ab79cdf882ed1522fa1f911ff05f35d44b92bb7f50d36395234547d3e24f1be
-after  c260d0546e5c9f148727853dadbc78e073044d82fdfac389f78c432a6928cc10
+before 4ab79cdf882ed1522fa1f911ff05f35d44b92bb7f50d36395234547d3e24f1be  (43b1bd78)
+after  4e24e12ca8150d95645c97d11ef3c73b1a1c24f8bb0fee1dc0cc56663abf0cb4  (this branch, HEAD)
 ```
+
+The "before" value was reproduced independently (same 56 files at `43b1bd78`),
+and exactly one file differs between the two states: `managed_secrets.py`
+(`git diff 43b1bd78 HEAD -- .../canonical_v2/` → 1 file, +47/-12). The credential
+commit's message quotes an intermediate `c260d054…`: that was the same edit
+**before** `ruff format` re-wrapped the file, so it was never the branch's
+committed state — the two values above are the ones to carry.
 
 The model-identity fix is console-only (`apps/admin-console/**`) → no digest
 impact. The credential fix edits `canonical_v2/managed_secrets.py` → **it must be
