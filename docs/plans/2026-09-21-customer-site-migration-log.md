@@ -128,3 +128,39 @@ SSE `event: error` → 页面红字。同一轮里其余五条道全健康，但
 - 车道上限目前是**环境变量**，尚未纳管到配置页。
 
 **影响哪些问题**：① "客户机器上每轮普通提问都红气泡"这一迁移阻塞项解除——注意它**与"甲方能否访问我方模型"无关**，是通用稳健性；② 拿到"地址可由现场运维在页面设置、无需重封发布包"的能力，这是**切阿里云/自建嵌入的前置**；③ 版本归属：**v1.1**（v1 冻结不动，分支待并入）。
+
+## 附轮 · 2026-09-21 · 容器交付路径（对照）：镜像 tar + compose，本机演练通过
+
+> 与第 3 轮（裸机路径）并行的一路：甲方允许装 Docker，所以另做一条**容器形态**对照。
+> 详细版见 [容器交付路径](./2026-09-21-customer-site-docker-path.md)，
+> 现场 runbook 在 `deploy/docker/README.md`，原始证据在分支 `delivery/docker`
+> 的 `.agents/runs/delivery-docker/{current-state.md,verification.md}`。
+
+**做了什么**：冻结交付 v1（`delivery-v1` = `36df47b8`）之上只加交付工具（Dockerfile / compose /
+入口脚本 / 验收与 replay 脚本 / 构建脚本 / runbook / `.dockerignore`），**服务代码与冻结参数一行未改**；
+冻结命令文件里那些"解析期要求存在"的账本绝对路径在镜像内直接建好（两个真实小文件随镜像 COPY），
+代码路径用一条符号链接 `/home/longxiang/MiroThinker/.worktrees/canonical-v2-s11-consolidation -> /opt/mirothinker`
+承接 ⇒ 容器内 entrypoint 直接 exec **同一个** `deploy/start-canonical-v2.sh`。
+
+**发现**（四条值得进方案/风险表的）：
+1. **只读数据根不会让启动失败** —— 服务侧写 mount-receipt 失败只打 warning，代价是每次启动全量重新哈希
+   （原假设"只读会崩"不成立）。
+2. **验收门依赖受管配置**：全新首启（`config/managed` 空）时 replay 门 **6/7**，`G1_framing` 第 3 轮
+   因答案走降级渲染（首句是 `（以下为基于本地数据的简要信息）`）而失败；把 `/admin` 该配的配上（chat LLM 档）
+   即 **7/7** ⇒ 验收前的 P3 配置步骤是门的前置。
+3. **uid 不匹配的症状是 `PermissionError` 而非"缺文件"**（本机 Python 3.12.3 下 `Path.is_file()`
+   对 EACCES 抛异常）—— 看起来像崩溃，实际是权限；容器入口预检把它翻译成指名路径 + uid 的人话。
+4. **构建机容器出网是白名单**（PyPI/GitHub CDN 不在内）⇒ 构建必须 `--network=host`；
+   现场不受影响（载镜像即可，不 apt / 不 PyPI / 不 uv sync）。
+
+**怎么验证**（实测数字）：启动 482–486 s（首启/有 receipt/带配置三次一致）；稳态 RSS **17.64 GiB**
+（对照活线 17.32 GiB）；`/chat` `/main` `/api/health` 全 200；嵌入探针 **HTTP 200 + 4096 维**；
+真实问答 `query_type=A:answer`、6 条引用、575 个流式 chunk、无 error 事件；replay 门 6/7 → 7/7；
+镜像 4.30 GiB（tar 4.37 GiB，gzip **1.40 GiB**，`docker load` 实测 21 s）。
+活线 pid 519941 全程未动（RSS 18 168 732 → 18 168 708 KiB，未重启），活线数据根的 receipt mtime 仍是 02:12。
+
+**影响哪些问题**：① 交付形态从"一条路"变成"两条可比的路"，选主路径前**必须对齐一件事**：
+裸机的 291 s（第 23 轮实测）与本机容器的 486 s 差在哪 —— 需要在同一台机器上背靠背比一次再下结论；
+② 容器形态把「现场装环境」整段消灭，但**新增**受管配置丢失、uid/属主、cgroup 内存（无 swap 兜底）、
+数据面仍 7 GB、启动相位不变等边界，已逐条写进 runbook §9；
+③ 冻结路径契约从"宿主机必须同构"改为"compose 的容器内 target 必须同构"，宿主机放哪儿都行。
