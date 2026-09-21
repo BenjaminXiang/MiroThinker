@@ -46,6 +46,7 @@
 | 1 | 代码树 | worktree 打包 tar（排除 `.venv`/`htmlcov`/`report.html`），含 `deploy/` 与 `config/managed/*`（**默认 gitignore，必须显式带上**） | ~2 GB | 待打包（P0） |
 | 2 | 服务包 | `serving-pack-run16-readerbound/`：`manifest.json`(11M) + `relationships.json`(3.47G) + `lookup.sqlite3`(896M) + `institution_catalog.json` + marker；**父目录须可写**（写 `*.mount-receipt.json`） | ~4.4 GB | 已有 |
 | 3 | 索引根 | `index-v3-v2/`：`lookup.sqlite3`(896M) + `vector_matrix.npz`(1.68G) + marker；**不得含 `milvus.db`** | ~2.6 GB | 已有 |
+| 3b | **数据面传输件** | `serving-data-v1.tar.gz`（含上面 2+3，顶层目录名即冻结路径名；**已排除 `*.mount-receipt.json`**）+ `.sha256` = `5d822e8c…` | **1,481,979,560 B（1.48 GB）**；原始 6.88 GB → **4.65x**（pigz 打包 7.4 s） | ✅ 已生成（`/var/tmp/mirothinker-data-face-xfer/`） |
 | 4 | 发布 bundle | `serving-bundle-run16.json`、`qwen-embedding-bundle-v1.json`；另两个"解析需要、服务不读"的文件须在位 | 几 MB | 已有 |
 | 5 | 密钥 | `.deepseek_api_key`、`.bocha_api_key`、`.serper_api_key`、嵌入服务 key（`.sglang_api_key` 或受管密钥页）；0600，独立加密渠道 | 几 KB | 甲方/你提供 |
 | 6 | 启动件 | systemd user unit + `deploy/start-canonical-v2.sh` + 命令文件（**建议先做 85→11 参数清理**，见 §5 P0-3） | — | 已有 / 待清理 |
