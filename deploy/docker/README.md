@@ -513,6 +513,49 @@ python-build-standalone 直连本机只有 ~17 KB/s，不适合放在构建里�
    否则启动时间会从 ~276 s 掉到 ~466 s。检测方式：对比启动耗时，或
    `docker compose exec app python -c "import sys; print(sys.version)"`。
 
+## 13. 现场交付包与一键安装（运营者路径）
+
+运营者拿不到我们的机器，流程固定为：**下载交付包 → 拷到甲方机器 → 跑一条命令**。
+
+```bash
+# 我方（每条 3.2 GB 的包，硬链接组装，不复制数据）
+deploy/docker/build-site-bundle.sh [--with-local-keys] [--out DIR]   # 默认 /var/tmp/mirothinker-site-bundle
+# 产出：install-site.sh + README-FIRST.txt + BUNDLE-MANIFEST.txt + 两个 tgz(+sha256)
+#       + compose.yaml/README.md/kit-manifest.txt + checksums.sha256/sizes.tsv/site-paths.txt
+#       + bundles/（2 个发布 bundle）+ secrets.example/postgres.env
+# 大文件一律硬链接（同 fs）；跨 fs 自动退化复制并**在清单里记警告**（本机实测：13 链接 + 1 复制，
+# 复制的那一个是 install-site.sh 自己 —— 仓库在 /home、包在 /var/tmp，不同文件系统）。
+
+# 现场（甲方机器）
+cd <交付包目录>
+sudo ./install-site.sh                 # 正式安装（幂等，可反复跑）
+sudo ./install-site.sh --dry-run       # 只检查：预检 + 校验 + 密钥检查，不落地任何改动
+sudo ./install-site.sh --fast          # 数据面改用 sizes.tsv 尺寸比对（跳过 6.5 GB 的 sha256）
+sudo ./install-site.sh --strict-probes # 嵌入端点探针不过就直接失败（默认只 warn）
+```
+
+安装器做什么（每步都打 `[ok]/[warn]/[FAIL]`，最后给汇总块）：预检（docker/compose/内存/磁盘/端口/
+**嵌入端点 200+4096**/chat LLM/不需要 PyPI·apt）→ 两个归档 sha256 → 解包数据面到冻结宿主路径 →
+`checksums.sha256` 十件校验 → 建状态目录（0700）→ `docker load` → 写 `.env`（uid:gid 取自数据属主）
++ 生成 PG 凭据 + 检查 4 个密钥（缺失即**响亮失败**并给出确切路径与命令模板）→ `docker compose up -d`
+→ 有界健康等待（带进度行）→ `mirothinker-verify` → 打印入口 URL / 首启口令路径 / 验收命令。
+
+退出码：`0` 全通 · `2` 用法错 · `10` 预检失败 · `11` 校验失败 · `12` 配置失败 ·
+`13` compose 或健康检查失败 · `14` verify 有红点。
+
+**本机实测**（冷 scratch root、端口 18296、不用 sudo）：校验 19 s → 解包 44 s → 十件校验 40 s →
+load 23 s → **首启 459 s**（冷数据面 + 无 receipt 的全量校验 + 同期机器负载）→ verify 全通，
+合计 ≈11 分钟；**幂等重跑** 22 ok / 0 FAIL（端口识别为本栈占用、镜像跳过 load、PG 凭据保留）；
+**缺密钥**时 exit 12 且不起栈。
+
+⚠ 两个运维要点：① 首装先到 `/admin` 配 chat LLM 选档 + 密钥，再跑 replay 门（否则 `G1_framing` 会红
+——受管配置为空时答案走降级渲染，是配置不是故障）；② 首次启动比后续慢（本机 459 s vs 276 s），
+healthcheck 的 `start_period: 720s` 与安装器的 900 s 等待都覆盖得住。
+
+测试专用旋钮：`MIROTHINKER_SITE_ROOT=<prefix>` 给所有宿主路径加前缀（**默认空 = 真实绝对路径**），
+使整套安装能在不碰真实 `/var/tmp/mirothinker-data-v2` 与活线状态目录的前提下排练；
+`MIROTHINKER_SITE_PORT` / `MIROTHINKER_SITE_PG_VOLUME` / `MIROTHINKER_SITE_FORCE_LOAD` 同理。
+
 ### 12.2 构建期踩过的坑（改 Dockerfile 前先看）
 
 1. **不要用 astral 的 `install.sh` 装 uv**：它要从 GitHub release CDN 取二进制，

@@ -479,3 +479,126 @@ pg_dump 116 484 B → 灌进 miroflow_collection_restorecheck → ALL 42 TABLES 
 > `pg_acceptance.py`，它按候选列表新建 seed 并触发一次 preview；该脚本没有"已有 seed 就跳过"
 > 的守卫（`pg_confirm.py` 才是本轮用的只读确认脚本）。**这是本切片的一个已知粗糙点**，
 > 建议下一步给 `pg_acceptance.py` 加 `--no-trigger` 或复用已有 seed。
+
+---
+
+# 追加：现场交付包 + 一键安装器（deliverable 1–3）
+
+## 状态块（as of 2026-09-21T21:10+08:00）
+
+- **交付物**：`deploy/docker/build-site-bundle.sh`（硬链接组装现场包）、
+  `deploy/docker/install-site.sh`（现场一键安装，sudo/幂等/`--dry-run`）、
+  生成物 `/var/tmp/mirothinker-site-bundle/{BUNDLE-MANIFEST.txt,README-FIRST.txt,install-site.sh,...}`。
+- **done（已实测）**：冷启动端到端安装（校验→解包→10 件校验→状态目录→load→配置→起栈→健康→verify）、
+  幂等重跑、缺密钥的响亮失败（exit 12）、恢复/重跑各步骤耗时、replay 门（6/7，见下）、
+  重启后第二次启动耗时 → 见下方原始输出。
+- **not done / 未验**：真机（非本机）跨文件系统传送后的完整链路（本机演练包目录与源在同一 fs，
+  除了 install-site.sh 自身是复制）；`--strict-probes` 的失败分支未实测；
+  bind-mount 版 pgdata；`site-paths.txt` 只随包交付、安装器未逐条消费（裸机路径才需要它）。
+- **next command**：
+  ```bash
+  ./deploy/docker/build-site-bundle.sh --with-local-keys \
+      --out /var/tmp/mirothinker-site-install-rehearsal/bundle      # 重造演练包（含测试密钥软链）
+  cd /var/tmp/mirothinker-site-install-rehearsal/bundle
+  MIROTHINKER_SITE_ROOT=/var/tmp/mirothinker-site-install-rehearsal/site-root \
+  MIROTHINKER_SITE_PG_VOLUME=mirothinker-pgdata-site-rehearsal \
+      ./install-site.sh --port 18296
+  ```
+
+## 演练原始输出（冷启动，scratch root + 端口 18296）
+
+目标：**空 scratch root**（`/var/tmp/mirothinker-site-install-rehearsal/site-root` 不存在）、
+不碰真实 `/var/tmp/mirothinker-data-v2` 与活线状态目录、不使用 sudo（当前用户在 docker 组）。
+
+| 步骤 | 结果 | 耗时 |
+|---|---|---|
+| 预检 | docker 28.5.1 / compose 2.40.2 / daemon ✓ / 内存 503 GB ✓ / 磁盘 924 GB ✓ / 端口 18296 空闲 ✓ | — |
+| 预检·嵌入探针 | `http://100.64.0.27:18005/v1` **HTTP 200，维度 4096**（用交付包里的 bundle JSON 拿端点+维度，用密钥实测） | — |
+| 预检·chat LLM | `https://api.deepseek.com/v1/models` → 200 | — |
+| 预检·离线断言 | 明确打印"不需要访问 PyPI / apt 源" | — |
+| 2 校验 | 镜像 tgz `a83b6c82…` ✓ / 数据 tgz `5d822e8c…` ✓ | **19 s** |
+| 3 解包 | 到 `<site-root>/var/tmp/mirothinker-data-v2`（两目录 + 8 文件） | **44 s** |
+| 3.1 十件校验 | `checksums.sha256` **10/10 全部 OK**（8 个数据文件 + 2 个发布 bundle） | **40 s** |
+| 4 状态目录 | `…-canonical-v2-s12f`（0700）建立 | — |
+| 5 载入镜像 | `docker load` → `mirothinker-serving:v1`（`sha256:3ad327d392d7…`） | **23 s** |
+| 6 配置 | `.env` 写入（uid:gid=**1004:1004** 取自数据属主、端口 18296、路径全带 scratch 前缀）；PG 凭据随机生成（0600）；4 个密钥就位 | — |
+| 7 起服务 | compose（app + db）启动；**健康检查通过 boot=459 s** | **459 s** |
+| 8 验收 | `mirothinker-verify`：`/api/health` `/chat` `/main` 200、嵌入 200+4096、RSS 17.61 GiB ⇒ **全通** | — |
+| 合计 | 从执行到"安装完成"约 **11 分钟** | — |
+
+第一次启动 459 s 的原因（与之前测得的 276 s 相比）：**冷数据面** —— 数据是刚解包出来的新 inode
+且**没有 mount-receipt**（交付的数据面刻意不含 receipt）⇒ 首启走全量校验（≈7 GB 哈希）+
+冷页缓存；再加上同时段机器有别的负载（load ≈4）。第二次启动（receipt 已写入、缓存已热）
+实测见下。
+
+### 幂等重跑（同一条命令再跑一次）
+
+```
+[ok]   端口 18296 由**本栈**占用（幂等重跑/升级场景，正常）
+[ok]   mirothinker-serving-v1.tar.gz sha256 一致 … / serving-data-v1.tar.gz sha256 一致 …
+[ok]   解包完成（0m45s）
+[ok]   10 个交付物 sha256 全部一致
+[ok]   镜像 mirothinker-serving:v1 已在本地（sha256:3ad327d392d7…），跳过 load
+[ok]   写入 …/bundle/.env（uid:gid=1004:1004 …）
+[ok]   PG 凭据已存在（保留）：…/secrets/postgres.env
+[ok]   4 个密钥就位且非空（内容未打印；权限：.deepseek_api_key=600 .bocha_api_key=664 …）
+[warn] 有密钥文件不是 0600（同机器其它用户可读）：chmod 600 …
+[ok]   容器已创建：app=Up 17 minutes (healthy) db=Up 17 minutes (healthy)
+[ok]   健康检查通过：boot=0s（服务本来就在跑）
+[ok]   容器内验收探针（mirothinker-verify）全通
+[ok] 22   [warn] 1   [FAIL] 0
+```
+
+### 缺密钥的失败路径（任务要求"必须响亮失败"）
+
+用**没有 secrets/** 的包跑 `--dry-run --fast`：
+
+```
+  [FAIL] 缺少 4 个密钥文件（服务会起来但采集/问答会降级；**不允许**半配置上栈）
+         现场请创建（0600，内容为各自的 API key）：
+           …/bundle-nokeys/secrets/.deepseek_api_key
+           …/bundle-nokeys/secrets/.bocha_api_key
+           …/bundle-nokeys/secrets/.serper_api_key
+           …/bundle-nokeys/secrets/.sglang_api_key
+         命令模板：
+           sudo install -m 600 /dev/stdin …/secrets/.deepseek_api_key <<< "<你的key>"
+  [FAIL] 密钥不齐：补齐后重跑本脚本（幂等）
+EXIT=12
+```
+
+⇒ 停在第 6 步、**没有**继续起栈 ✓（dry-run 下也没创建任何东西）。
+
+### replay 门（首装、未配 /admin）
+
+```
+RESULT: 1 FAILURE(S)
+  G1_framing: FAIL   （其余 6 组 PASS）
+```
+
+与上一轮结论一致：**受管配置为空时答案走降级渲染路径**，`G1_framing` 第 3 轮首句变成
+`（以下为基于本地数据的简要信息）`，命中"subject not in first sentence"。⇒ 安装器完成信息与
+`README-FIRST.txt` 已加警示：**先做 `/admin` 的 chat LLM 选档 + 密钥，再跑 replay 门**。
+
+### 演练期间踩到并修掉的两个真 bug
+
+1. **磁盘检查用了还不存在的带前缀路径** ⇒ `df` 空值、误报 `[FAIL] 磁盘可用 0 GB`。
+   修法：向上找到第一个已存在目录再 `df`（并打印实际测量的目录）。
+2. **幂等重跑时端口检查把"本栈自己占的端口"当冲突** ⇒ 重跑直接 exit 10。
+   修法：先用 `docker compose ps --ports` 判断是不是本栈占用，是则 `[ok] …（幂等重跑/升级场景）`。
+   另：`stat -c %a` 对符号链接给的是链接自身权限（777）⇒ 改用 `stat -L -c %a`。
+
+## 包的结构与大小
+
+```
+/var/tmp/mirothinker-site-bundle/            3.0 GB（13 个硬链接 + 1 个复制）
+  install-site.sh                            ~20 KB（唯一复制项：仓库在 /home，跨 fs 无法硬链接）
+  README-FIRST.txt / BUNDLE-MANIFEST.txt     生成
+  mirothinker-serving-v1.tar.gz (+.sha256)   1.56 GiB
+  serving-data-v1.tar.gz        (+.sha256)   1.48 GiB
+  compose.yaml / README.md / kit-manifest.txt
+  checksums.sha256 / sizes.tsv / site-paths.txt
+  bundles/{serving-bundle-run16.json,qwen-embedding-bundle-v1.json}
+  secrets.example/postgres.env
+```
+
+`BUNDLE-MANIFEST.txt` 逐文件记 size/hardlink/sha256 + 汇总（含"硬链接 13 / 复制 1"与警告）。
