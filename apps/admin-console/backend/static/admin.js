@@ -1315,6 +1315,9 @@ function connectionTestBody(connectionKey, fields, options) {
     const value = currentValueOf(field.path);
     if (typeof value === "string" && value) body[field.test_arg] = value;
   });
+  // 嵌入端点要额外做一次「向量身份」校验：200 + 4096 维并不说明这个端点与索引同源，
+  // 不同源的端点只会让排序整体失真。校验由服务端做，这里只说「要」。
+  if (connectionKey === "embedding") body.identity_check = true;
   return body;
 }
 
@@ -1358,12 +1361,14 @@ function describeConnectionTest(response, payload) {
     };
   }
   const remaining = (payload.rate || {}).remaining;
+  const identity = identityText(payload.identity);
   const text = [
     payload.ok ? "成功" : "失败",
     payload.called === false ? "（未发起调用）" : "",
     `· ${payload.latency_ms} ms`,
     payload.http_status === null || payload.http_status === undefined ? "" : `· HTTP ${payload.http_status}`,
     `· ${payload.detail}`,
+    identity,
     `· 凭据来源 ${(payload.used || {}).api_key_source || "—"}`,
     (payload.runtime || {}).enabled === false ? "· 运行期未启用" : "",
     remaining === null || remaining === undefined ? "" : `· 本分钟剩余 ${remaining} 次`,
@@ -1377,6 +1382,19 @@ function describeConnectionTest(response, payload) {
     detail: payload.detail,
     text,
   };
+}
+
+// 向量身份判定只说三件事：跑了哪条臂、量到的余弦、下一步做什么。
+function identityText(identity) {
+  if (!identity) return "";
+  const arm = identity.arm === "reference" ? "对照端点" : identity.arm === "index" ? "索引比对" : "未跑";
+  const cosine =
+    identity.cosine === null || identity.cosine === undefined
+      ? ""
+      : `cos=${identity.cosine}`;
+  const head =
+    identity.passed === true ? "向量身份通过" : identity.passed === false ? "向量身份不通过" : "向量身份未校验";
+  return `· ${head}（${arm}${cosine ? "，" + cosine : ""}）${identity.detail}`;
 }
 
 function delay(ms) {
