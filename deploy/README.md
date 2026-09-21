@@ -181,3 +181,40 @@ systemctl --user start canonical-v2-backend
       怀疑是 operations 运行环境未配置，需单独排查）
 - [ ] 历史文档中残留的 `miroflow:miroflow` 弱口令清理（120 个 .agents 历史文档，
       均为 build 期 disposable PG 的记录；真实轮换在 PG 重新启用时再做）
+
+## 现场交付（2026-09-21 新增）
+
+把本机这套服务搬到甲方服务器时用到的三个交付件。**方案与排期**见
+`docs/plans/2026-09-21-customer-site-delivery-plan.md`（含路径冻结、验收、回退），
+本节只讲怎么用；演练证据见 `.agents/runs/delivery-kit-rehearsal/`。
+
+```bash
+# 1) 我方机器：打交付包（默认输出 /var/tmp/mirothinker-delivery-kit/）
+bash deploy/build-delivery-kit.sh --source-tree <代码树>
+#    产物：code.tar(+sha256) / bundles/ / checksums.sha256 / sizes.tsv /
+#          site-paths.txt / kit-manifest.txt
+#    重跑很快：文件没变就不重打包，数据面按 路径+大小+时间 命中缓存，不重复读 7 GB
+
+# 2) 目标机：先自检（只读，不启动服务，不改任何文件）
+bash deploy/preflight.sh --repo <目标机代码根> --kit-dir <kit 目录>
+#    可选：--fast（只比对大小，不跑 sha256）、--port N、
+#          --no-network、--embedding-url/--rerank-url/--llm-url 覆盖探针地址
+#    退出码 0=READY；有 [FAIL] 则非零，逐行给证据
+
+# 3) 目标机：起服务后跑既有入口
+bash deploy/install.sh && systemctl --user start canonical-v2-backend
+```
+
+- `kit/site-paths.txt` 是**目标机路径清单**：每行给出种类
+  （`dir`/`file`/`parentdir`/`string`）、对应的命令行参数或环境变量、我方取值
+  （对照用）、检查命令与用途。带 `[现场改写]` 的必须换成目标机自己的路径。
+- `preflight.sh` 的取值来自**目标机自己的命令文件**（不读清单里的参考路径），
+  因此命令文件先改好再跑；它会做三处冻结字符串的交叉核对（索引根、索引 marker
+  sha256、发布 bundle 的 envelope_path/database_name）——这三处不一致启动会
+  fail-closed。
+- 探针口径：嵌入端点断言 **HTTP 200 + 维度 4096**；重排只判可达（该道 fail-open）；
+  LLM 档位与地址从 `config/managed/settings.json` 的 `serving.chat_llm_profile`
+  出发、按 `llm_profiles.py` 解析（密钥按同名规则找 `.deepseek_api_key`
+  / `.sglang_api_key`，只打印路径不打印内容）。
+- 本机现存实例（18188）与 `deploy/*.sh` 的既有脚本不受影响：`preflight.sh`
+  只读；端口占用会作为 `[FAIL]` 报出来（同时在跑的实例不会被碰）。
