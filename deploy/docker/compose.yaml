@@ -1,0 +1,100 @@
+# Canonical V2 服务栈容器编排（交付 v1）。
+#
+# 核心约定：**左边（宿主机）可改，右边（容器内）一个字符都不能改**。
+# 右侧的 /var/tmp/mirothinker-data-v2/... 等绝对路径是冻结的（服务包 manifest、
+# 索引 marker、serving bundle 三处逐字符比对），所以宿主机的数据放在哪儿都行，
+# 只要挂到这些目标路径上。
+#
+# 常用：
+#   docker compose -f deploy/docker/compose.yaml up -d          # 起
+#   docker compose -f deploy/docker/compose.yaml logs -f app    # 看启动相位
+#   docker compose -f deploy/docker/compose.yaml exec app mirothinker-verify  # 验收
+#   docker compose -f deploy/docker/compose.yaml down           # 停（数据不受影响）
+#
+# 全部可用环境变量（或在同目录 .env 里写）：
+#   MIROTHINKER_HOST_PORT    发布端口           默认 18188（容器内固定 18188）
+#   MIROTHINKER_DATA_ROOT    宿主机数据根        默认 /var/tmp/mirothinker-data-v2
+#   MIROTHINKER_STATE_DIR    宿主机状态目录      默认 /var/tmp/mirothinker-canonical-v2-s12f
+#   MIROTHINKER_SECRETS_DIR  宿主机密钥目录      默认 ./secrets（4 个密钥文件）
+#   MIROTHINKER_MANAGED_DIR  宿主机受管配置目录  默认 ./state/config-managed
+#   MIROTHINKER_UID / _GID   运行身份            默认 1000:1000（见 README「uid / 权限」）
+#   MIROTHINKER_MEM_LIMIT    内存上限            默认 40g（实测稳态 RSS ≈17.3 GiB）
+
+name: mirothinker-serving
+
+services:
+  app:
+    image: ${MIROTHINKER_IMAGE:-mirothinker-serving:v1}
+    # 非 root 运行，uid/gid 必须 = 数据属主（详见 README「uid / 权限」）
+    user: "${MIROTHINKER_UID:-1000}:${MIROTHINKER_GID:-1000}"
+    restart: unless-stopped
+    stop_grace_period: 30s
+    # 容器内固定 18188（冻结命令文件把端口钉死）；宿主机端口可改
+    ports:
+      - "${MIROTHINKER_HOST_PORT:-18188}:18188"
+    environment:
+      # 上游是本地模型服务时无需代理；明确关掉继承自宿主/环境里的代理变量
+      NO_PROXY: "127.0.0.1,localhost"
+      no_proxy: "127.0.0.1,localhost"
+    # ---- 数据面（不进镜像，按冻结绝对路径挂载）--------------------------------
+    # 服务包父目录可写 → 首启写 <pack>.mount-receipt.json；只读挂载不会失败，
+    # 但每次启动都会重新全量哈希（见 README「只读挂载」）。
+    volumes:
+      # ① 数据根：内含服务包 + 索引根 + 手工召回道三样，容器内路径冻结
+      - type: bind
+        source: ${MIROTHINKER_DATA_ROOT:-/var/tmp/mirothinker-data-v2}
+        target: /var/tmp/mirothinker-data-v2
+      # ② 状态目录：admin 账号库、会话密钥、访问日志、更正库、首启口令
+      - type: bind
+        source: ${MIROTHINKER_STATE_DIR:-/var/tmp/mirothinker-canonical-v2-s12f}
+        target: /var/tmp/mirothinker-canonical-v2-s12f
+      # ③ 受管配置（/admin 页保存的 settings.json / secrets.json 落在这里）：
+      #    **不挂就会写进容器层**，换镜像/重建容器即丢失 —— 必须挂。
+      - type: bind
+        source: ${MIROTHINKER_MANAGED_DIR:-./state/config-managed}
+        target: /opt/mirothinker/config/managed
+      # ③b 运行期日志缓存（网页抓取缓存等，可丢；挂出来是为了别把容器层撑大）
+      - type: bind
+        source: ${MIROTHINKER_LOG_DIR:-./state/logs}
+        target: /opt/mirothinker/logs
+      # ④ 四个密钥文件（只读；名字必须在仓库根，代码按 cwd/父目录查找）
+      - type: bind
+        source: ${MIROTHINKER_SECRETS_DIR:-./secrets}/.deepseek_api_key
+        target: /opt/mirothinker/.deepseek_api_key
+        read_only: true
+      - type: bind
+        source: ${MIROTHINKER_SECRETS_DIR:-./secrets}/.bocha_api_key
+        target: /opt/mirothinker/.bocha_api_key
+        read_only: true
+      - type: bind
+        source: ${MIROTHINKER_SECRETS_DIR:-./secrets}/.serper_api_key
+        target: /opt/mirothinker/.serper_api_key
+        read_only: true
+      - type: bind
+        source: ${MIROTHINKER_SECRETS_DIR:-./secrets}/.sglang_api_key
+        target: /opt/mirothinker/.sglang_api_key
+        read_only: true
+      # 可选：服务包 mount-receipt 换到可写路径（数据根只读时用）
+      #- type: bind
+      #  source: ${MIROTHINKER_STATE_DIR:-/var/tmp/mirothinker-canonical-v2-s12f}
+      #  target: /mnt/receipt
+      # 并设 CANONICAL_V2_SERVING_RECEIPT_PATH=/mnt/receipt/serving-pack.mount-receipt.json
+    # ---- 资源 -----------------------------------------------------------------
+    # 实测：稳态 RSS ≈17.3 GiB，启动峰值更高 ⇒ 宿主机 ≥64 GB 是硬约束。
+    # 40g 只是「别把整机拖死」的兜底；调小到接近 17.3 GiB 会让启动被 OOM 杀掉。
+    mem_limit: "${MIROTHINKER_MEM_LIMIT:-40g}"
+    # Chromium 渲染需要更大的 /dev/shm（默认 64 MB 会导致页面渲染失败/降级）
+    shm_size: "1gb"
+    # ---- 健康检查 --------------------------------------------------------------
+    # 端口在启动相位跑完（≈291 s）后才 bind，所以 start_period 必须 > 291 s。
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS --max-time 10 http://127.0.0.1:18188/api/health || exit 1"]
+      interval: 30s
+      timeout: 15s
+      retries: 5
+      start_period: 420s
+    logging:
+      driver: json-file
+      options:
+        max-size: "50m"
+        max-file: "5"
