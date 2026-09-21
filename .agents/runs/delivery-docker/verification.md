@@ -325,3 +325,120 @@ complete candidate runner failed: PermissionError: [Errno 13] Permission denied:
    Chromium tier-1 抓取的功能级验证（只验证了浏览器可执行文件存在于全局可读路径）。
 5. **只读挂载的代价**未单独测量（见 §4 说明）；`CANONICAL_V2_SERVING_RECEIPT_PATH` 这条替代
    路径本次只做了代码定位，未实测。
+
+---
+
+# 追加：PostgreSQL 进栈（Task A）与启动耗时归因（Task B）
+
+## 状态块（as of 2026-09-21T18:45+08:00）
+
+- **commits**：`9ea3a931`（容器路径 v1）→ **`6216c5d7`**（PG 进栈 + 归因 + 解释器版本修复）。
+- **done（已实测）**：
+  - Task A：PG 进 compose 栈，`console_database=configured`；登录/采集面/`pg_dump`+restore
+    行数对账/`/admin` 面板/`down`+`up` 幂等与持久化 —— 全部有原始数字（见下）；
+  - Task B：同机同数据根背靠背归因完成并**修复**——根因是解释器补丁版本；
+    容器启动 466 s → **276 s**（裸机 275 s），digest 与包记录逐字节一致。
+- **not done（未验）**：
+  - `bind mount` 版 pgdata（我只验了具名卷；bind 需要 `chown 999:999`，症状表里是代码侧推断）；
+  - 中断前后的最后一轮"最终镜像快速确认"在跑（本文件末尾会补一段确认输出）；
+  - `--env-file` 分支（我的设计不依赖它，未实测）；
+  - 203/8 进程级并发、PG 备份的物理卷还原、pg_upgrade 路径。
+- **next command（接手者第一条）**：
+  ```bash
+  cd /home/longxiang/MiroThinker/.worktrees/delivery-docker
+  .agents/runs/delivery-docker/rehearse-pg.sh up     # 起栈（含 PG）→ 自动跑验收
+  .agents/runs/delivery-docker/rehearse-pg.sh restart # 幂等 + 持久化复验
+  ```
+  原始日志都在 `/var/tmp/mirothinker-docker-logs/`（pg-acceptance*.json、pg-dump.sql、
+  pg-restore-check.log、attribution-*.log、boot-timing-*.jsonl）。
+
+## Task A · PG 验收（镜像 `09f0a1c4` 上完成；最终镜像 `b4efc4bd` 只差解释器/pyc）
+
+组合：`docker compose -p mirothinker-docker-pg -f <kit>/compose.yaml`，端口 18298，
+uid 1004:1004，pgdata 走具名卷 `mirothinker-pgdata-rehearsal`，凭据 `secrets/postgres.env`（0600，未入 git）。
+
+| 验收项 | 结果（原始） |
+|---|---|
+| db 健康 | `healthy`（up + 2 s） |
+| 迁移（首次，空库） | `{"head": "V042", "revision": "V042", "revision_before": "", "tables": 42, "waited_seconds": 0.196}` |
+| 迁移（二次） | `{"revision_before": "V042", "revision": "V042", "tables": 42}` ⇒ 幂等 |
+| 迁移（三次，restart 后） | `{"revision_before": "V042", "revision": "V042", "tables": 42, "waited_seconds": 0.075}` |
+| 库身份标记 | `identity marker ok (miroflow:destructive-target:v1:disposable:miroflow_collection_v1)` |
+| app 启动（带 PG + 迁移） | **479 s**（首次）/ **481 s**（restart 轮）——与无 PG 的 482–486 s 同档，迁移 ≈0.2 s 不进关键路径 |
+| `console_database` | `[canonical-v2] console_database=configured`（原来是 `unconfigured`） |
+| 登录 | `POST /api/auth/login` → **200**；`GET /api/auth/me` → 200 `{username: admin, role: admin}` |
+| 页面 | `/seeds` `/upload` `/jobs` `/browse` `/logs` `/admin` 全 **200** |
+| 采集面 API | `seeds` 200（决策前 `list[0]`）；`uploads` 200（`postgres: {available: true, source: "DATABASE_URL"}`，3 个域）；`jobs` 200（storage available） |
+| **preview 采集（第 1 次触发）** | 202 → run `failed`，1.2 s，`seed_status: adapter_missing`（我用的是 `sz.gov.cn`，没有对应 school adapter）⇒ **web_search 配额花费 0** |
+| **preview 采集（第 2 次触发，唯一一次真跑）** | 202 → run `succeeded`，**443 s**，`items_processed=1 / items_failed=0`，`seed_status=success`；`run_scope`: `run_kind=roster_crawl`、`trigger_mode=preview`、`written_profile_count=0`、`diagnostic_profile_count=995`（预演模式 = 抓取+抽取但不落库） |
+| 页面抓取量（quota 代理指标） | `logs/debug/professor_fetch_cache` 新增 **996** 个文件（995 个画像 + 1 个名录页）；Bocha/Serper 的 API 调用数**没有可读计数器**（作业 summary 只记配额上限 200/500），按抓取缓存与 `run_kind=roster_crawl` 判断本次以直连抓取为主 |
+| `/jobs` 有 run 行 | `GET /api/canonical-v2/admin/jobs` 200；`pipeline_run` 3 行（1 条迁移内建占位行 + 1 failed + 1 succeeded） |
+| `/admin` 面板（原 `unavailable`） | `GET /api/canonical-v2/admin/system-status` 200：`freshness.state=ok`（`pack_build_age_seconds=414619`，`per_domain.company.record_count=7086`…）、`collection={enabled:{company,paper,patent,professor}, max_web_searches_per_run:200, max_llm_calls_per_run:500}` |
+| `pg_dump` | **114 871 B**（`pg_dump --no-owner --no-acl`，从 db 容器内出，5432 不暴露宿主） |
+| restore 对账 | 灌到 `miroflow_collection_restorecheck`：`tables 42/42`、`professor_seed 2/2`、`pipeline_run 3/3`、`seed_registry 0/0`、`alembic V042/V042`、`run_digest md5=60dcca3404018ad4156348278aa679e4` 两侧相同；**42 张表逐表行数 diff 全等** |
+| `down` + `up` | 迁移幂等（见上）+ 数据仍在：`professor_seed=2 pipeline_run=3`（具名卷 `mirothinker-pgdata-rehearsal` 保留） |
+
+复现命令（每次都会重新跑一遍迁移，是幂等的）：
+
+```bash
+cd <kit 目录>
+export MIROTHINKER_DATA_ROOT=/var/tmp/mirothinker-docker-data-v2 \
+       MIROTHINKER_STATE_DIR=/var/tmp/mirothinker-docker-state-v1 \
+       MIROTHINKER_SECRETS_DIR=./secrets MIROTHINKER_MANAGED_DIR=./state/config-managed \
+       MIROTHINKER_LOG_DIR=./state/logs MIROTHINKER_UID=1004 MIROTHINKER_GID=1004 \
+       MIROTHINKER_HOST_PORT=18298 MIROTHINKER_PG_ENV_FILE=./secrets/postgres.env
+docker compose up -d
+docker compose exec -T app mirothinker-migrate --status
+```
+
+## Task B · 启动耗时归因（同机、同数据根、背靠背、热缓存）
+
+条件：两侧都读**同一个宿主目录** `/var/tmp/mirothinker-data-v2`（容器 `:ro` 挂到冻结路径），
+都用**同一份预热 receipt**（`CANONICAL_V2_SERVING_RECEIPT_PATH` 指向 scratch，pack_dir 相同故可绑定），
+都开 `CANONICAL_V2_SERVING_TIMING_PATH`，启动前各自 `cat` 6.5 GB 数据进页缓存（实测 1 s = 本来就在缓存里）。
+
+| 轮 | 环境 | 数据根 | receipt | 启动（up→/api/health 200） |
+|---|---|---|---|---|
+| ① | 裸机（3.12.12，本 worktree 的 .venv，ext4） | live 根 | 预热 | **275 s** |
+| ② | 容器（3.12.3 = Ubuntu 24.04 自带） | live 根 :ro | 同一份 | **466 s** |
+| ③ | 容器（3.12.3 + 预编译字节码） | live 根 :ro | 同一份 | **466 s**（pyc 不是主因） |
+| ④ | 容器（**3.12.12**，与封印解释器一致） | live 根 :ro | 同一份 | **276 s** ✅ |
+| （对照） | 容器（3.12.3，早前轮次） | **数据副本** | — | 482–486 s（与 ② 同档 ⇒ 副本不是主因） |
+
+相位（`boot-timing-*.jsonl`，单位 s）：
+
+| 相位 | 裸机 ① | 容器 ②（3.12.3） |
+|---|---|---|
+| pack.mount_identity | 0.000 | 0.000 |
+| pack.mount（receipt_used） | True | True |
+| pack.relationships_read | 37.714 | 28.655 |
+| snapshot.lookup_docs / lookup_points | 16.432 / 1.920 | 16.009 / 2.012 |
+| snapshot.open | 19.828 | 19.628 |
+| bound_documents.read | 6.168 | 6.732 |
+| vector.snapshot.open / npz_load / index_build | 4.992 / 1.341 / 5.680 | 5.075 / 1.290 / 5.545 |
+| **命名相位合计** | **94.1** | **84.9** |
+| **未记账段（>5 s 间隙求和）** | **120.1** | **305.4** |
+| 其中最大一段（snapshot.open → bound_documents.read） | 59.3 | **239.0** |
+
+⇒ 数据面读路径**两侧一致**（容器甚至略快）；差异 100% 在未记账段。
+
+定性证据链：
+1. **原始 CPU/内存基准两侧相同**：纯 python 循环 0.578 vs 0.633 s；json 300k dicts 0.911 vs 0.969 s；
+   分配+触碰 2 GB 1.120 vs 1.119 s；sha256 256 MB 0.269 vs 0.270 s；numpy matmul 0.030 vs 0.030 s。
+2. **Chromium 启动**（tier-1 抓取）：容器 0.60 s / 裸机 0.50 s；`--shm-size` 无影响。
+3. **出网**：6 个 provider/LLM 主机（deepseek/bocha/serper/star.sustech/dashscope/ark）在容器与宿主机都通 ⇒ 不是网络等待。
+4. **SIGABRT + `PYTHONFAULTHANDLER=1` 抓栈**：卡点在
+   `serving_pack_loader.py:1021 open_serving_pack_authority` → `_canonical_sha256`（整张对象图重放）。
+5. **摘要对账（决定性，逐字节）**：
+   - 包 manifest 记录：`reader_contract_sha256 = ebc22047cc9bef912201da5292809935c619705a2b8d8eb718cfec081b0da362`
+   - 裸机（3.12.12）：`ebc22047…` **相同** ⇒ 跳过重放；
+   - 容器（3.12.3）：`8b4b69de…` **不同** ⇒ 每次启动重放 ≈190 s；
+   - `reader_contract_digest()` 的实现：`sha256(python=3.12.x + pydantic 版本 + canonical_v2 包的 .py 字节)`
+     —— 补丁版本进摘要，所以 3.12.3 与 3.12.12 不等。
+6. **修复后**：容器 `reader_contract_digest == ebc22047…`（逐字节一致），启动 **276 s**。
+
+**结论（写进 runbook 的口径）**：容器与裸机在**同数据根**下应当给出同档启动时间
+（本机 275–276 s；带 PG 迁移的 compose 启动 479–481 s 是另一件事——那是首次带迁移的完整栈）。
+前提是**镜像解释器 = 封印该包的解释器补丁版本（当前 3.12.12）**；不满足时会静默多花 ≈190 s
+（不会报错、不会拒载，只是"变慢"）—— 这是本切片发现的最有价值的一条交付契约，
+两条交付路径都要钉住解释器版本。

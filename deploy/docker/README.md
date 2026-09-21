@@ -161,7 +161,7 @@ export MIROTHINKER_UID=1004 MIROTHINKER_GID=1004
 export MIROTHINKER_HOST_PORT=18188        # 甲方反代指到这个端口
 
 docker compose up -d
-docker compose logs -f app                # 启动相位（实测 479–486 s），看到 uvicorn 起来即完成
+docker compose logs -f app                # 启动相位（实测 276 s；见 §10），看到 uvicorn 起来即完成
 ```
 
 判断「起没起来」：
@@ -171,6 +171,8 @@ docker compose logs -f app                # 启动相位（实测 479–486 s）
 - 容器内 `curl -s http://127.0.0.1:18188/api/health` 返回 `{"status":"ok"}`；
 - 首次启动日志里会出现 `candidate_release_id=…`、`serving_pack=/var/tmp/…`、
   包/索引的校验行；任何 integrity/release 不匹配都会**fail-closed 并点名**，不需要猜。
+- **启动耗时对解释器补丁版本敏感**：镜像里的 Python 必须与封印该服务包的解释器一致
+  （当前 **3.12.12**）；不一致不会报错，只会静默多花 ≈190 s（见 §12.3）。
 - 采集库那一行在更前面：`[entrypoint] 采集库迁移就绪：{…}` 与
   `[canonical-v2] console_database=configured`（没有这一行就是没配 PG，采集面会 503）。
 
@@ -408,24 +410,21 @@ docker compose exec -T app bash -lc 'cp /tmp/accept/report.json /opt/mirothinker
 
 | 指标 | 数值 |
 |---|---|
-| 镜像尺寸 | **4 618 248 368 B（4.30 GiB）**；`docker save` tar 4 690 109 440 B（4.37 GiB）；gzip 副本 1 507 821 271 B（1.40 GiB） |
-| 构建耗时 | 增量构建（层缓存命中）**99–134 s**；全新构建（无缓存）本次未单独测，按分层实测估算 5–8 min（apt 28–33 s + uv 装 ~30 s + `uv sync` <90 s + Chromium 及系统依赖 ~120 s + 导出/打包 ~90 s） |
-| 容器启动（`up -d` → `/api/health` 首次 200） | **486 s**（首启、无 receipt、全量校验）／**482 s**（有 receipt）／486 s（带受管配置）；只读数据根 501 s（与另一次启动并行，受干扰）。裸机文档值是 291 s，见 §7 口径说明 |
-| 稳态 RSS | **17.64 GiB**（容器内所有进程 VmRSS 之和）／cgroup `memory.current` 17.36–17.82 GiB／`docker stats` 17.35 GiB（对照裸机活线 17.32 GiB） |
-| `/chat` `/main` `/api/health` | 全部 **HTTP 200**（宿主机侧 18298 与容器内 18188 各测一遍） |
-| 嵌入端点探针 | **HTTP 200 + 维度 4096**（`http://100.64.0.27:18005/v1`，model `Qwen/Qwen3-Embedding-8B`） |
-| 真实问答（`POST /api/chat/stream`） | `query_type=canonical_v2:A:answer`，答案 578 字、**6 条引用**、575 个 `answer_chunk` 流式事件、无 `event: error` |
-| replay 回归门 | 全新受管配置：**6/7**（G1 见 §6 说明）；放入 live `settings.json` 后：**7/7 ALL PASS**（169 s） |
-| 数据根只读挂载 | **启动成功**（501 s），仅一行 `serving pack mount receipt could not be written`；receipt 文件未被改动 |
-| uid 不匹配 | 入口预检拦下并点名（退出码 78）；绕过预检后应用侧原文是 `PermissionError: [Errno 13] Permission denied: …/manifest.json`（或索引根同名文件），退出码 2 |
-| 活线影响 | pid 519941 全程未动（RSS 18 168 732 → 18 168 708 KiB，同一进程）；活线数据根的 `.mount-receipt.json` mtime 仍是 02:12（未被我方写入） |
+| 镜像尺寸 | **4.9 GiB**（含托管 CPython 3.12.12 + 18915 个预编译 pyc）；`docker save` tar ≈5.1 GiB；gzip 副本 **1.56 GiB** |
+| 构建耗时 | 增量（层缓存命中）≈2 min；全新构建含 Chromium 与 `uv sync` 约 5–8 min（构建机需外网） |
+| **容器启动（up → `/api/health` 200）** | **276 s**（与同机裸机的 275 s 同档；数据根 = 活线目录 `:ro`＋预热 receipt＋热缓存） |
+| 容器启动（解释器与包不一致时） | 466 s（Python 3.12.3；多出的是 ≈190 s 的 reconstruction 重放，见 §12.3） |
+| 容器启动（compose 全栈首启，含 PG 迁移） | 479–481 s（迁移本身 0.075–0.20 s，不进关键路径） |
+| 稳态 RSS | 17.6 GiB（cgroup 17.4–17.8）；对照活线 17.3 GiB |
+| 采集库（PG） | 首次迁移 `revision_before="" → V042`，42 张表；二次/三次 `revision_before=V042 == revision`（幂等） |
+| 采集面 | 登录 200；`/seeds` `/upload` `/jobs` `/admin` 200；4 个 admin API 200；`console_database=configured` |
+| preview 采集（唯一一次真跑） | run `succeeded`，**443 s**，`written_profile_count=0`、`diagnostic_profile_count=995`、抓取缓存 +996 文件；`trigger_mode=preview`（不落库） |
+| `pg_dump` / restore 对账 | dump 116 484 B；restore 到 scratch 库后 **42/42 张表行数全等**（`professor_seed=3`、`pipeline_run=4`、`pipeline_issue=2`、`alembic_version=1`，其余为空） |
+| `down` + `up` | 迁移幂等 + 数据留存（具名卷 `mirothinker-pgdata`） |
+| 数据根只读挂载 | 启动成功；仅一行 `serving pack mount receipt could not be written`（设了 `CANONICAL_V2_SERVING_RECEIPT_PATH` 则连这行也没有） |
+| uid 不匹配 | 入口预检点名（退出码 78）；绕过预检是 `PermissionError … manifest.json`（退出码 2） |
 
-> 完整原始日志与命令见 `.agents/runs/delivery-docker/verification.md`。
-> **镜像可复现性**：两次构建的**镜像层逐层一致**（`docker history --no-trunc` 对比 8 层 ID 全同），
-> 但 image ID 会因为 config 里的 `created` 时间戳不同而不同 —— 交付 tar 里的 ID 与演练时的 ID
-> 因此不相等（内容层等价）。评审时请按「层一致」而不是「image ID 相等」判断。
-
----
+> 完整原始日志：`.agents/runs/delivery-docker/verification.md` 与 `/var/tmp/mirothinker-docker-logs/`。
 
 ## 11. 镜像内的冻结账本路径（为什么镜像里要有这些东西）
 
@@ -485,6 +484,34 @@ deploy/docker/build-image.sh mirothinker-serving:v1.1     # 产出 kit 到 /var/
   docker history --no-trunc --format '{{.ID}}' mirothinker-serving:v1
   ```
 - 演练用的镜像 ID 与交付 tar 里的镜像 ID 因此可能不相等（本次即是），这是正常的。
+
+### 12.3 解释器版本是冻结契约的一部分（**最容易踩的坑**）
+
+服务包 manifest 里记着**封印时那个"读者"的摘要**：
+
+```
+reader_contract_digest() = sha256( python=3.12.x  +  pydantic 版本  +  canonical_v2 包的 .py 字节 )
+```
+
+启动时 `open_serving_pack_authority` 会拿本机算出的摘要与包里记录的值比对
+（`serving_pack_loader.py:284-309`）：
+
+- **一致** ⇒ 直接信任封印时的 reconstruction，跳过重放（这是 run16 重封的意义）；
+- **不一致** ⇒ 每次启动都把整张对象图重新序列化 + 哈希，**静默多花 ≈190 s**
+  （实测 466 s vs 276 s；不会报错、不会拒载）。
+
+本机实测：包由 **3.12.12** 封印（`ebc22047…`）；Ubuntu 24.04 自带 **3.12.3** 算出
+`8b4b69de…` ⇒ 命中慢路径。镜像因此改用与封印一致的托管 CPython 3.12.12
+（构建机 `uv python install 3.12.12`，由 `build-image.sh` 作为构建上下文 COPY 进去；
+python-build-standalone 直连本机只有 ~17 KB/s，不适合放在构建里下载）。
+
+**运维含义（两条路径都要遵守）**：
+
+1. 现场重建 venv（裸机路径）时，**不要**用系统 python（Ubuntu 24.04 的 3.12.3 会命中慢路径），
+   用 `uv python install 3.12.12` 后再 `uv sync`；或把 `.python-version` 钉成 `3.12.12`。
+2. 下一次封印（run17+）如果换了构建机/解释器，**镜像与现场的解释器都要同步跟过去**，
+   否则启动时间会从 ~276 s 掉到 ~466 s。检测方式：对比启动耗时，或
+   `docker compose exec app python -c "import sys; print(sys.version)"`。
 
 ### 12.2 构建期踩过的坑（改 Dockerfile 前先看）
 
