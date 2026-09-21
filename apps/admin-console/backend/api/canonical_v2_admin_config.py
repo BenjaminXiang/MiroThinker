@@ -32,7 +32,6 @@ from backend.services.canonical_v2_connection_tests import (
     test_connection,
 )
 from src.data_agents.canonical_v2.managed_config import (
-    PAGE_READONLY_FIELDS,
     ManagedSettingsError,
     ManagedSettingsStore,
     ManagedSettingsUnsupportedError,
@@ -423,7 +422,9 @@ def get_connection_presets() -> object:
     the same table the serving line resolves through ``CHAT_LLM_PROFILE``, with
     each profile's *local* endpoint (the one the answer/rewrite path uses);
     ``chat_profile`` is what a process with this environment would actually run;
-    and ``embedding_frozen`` reports the value the release bundle freezes. No
+    and ``embedding_endpoint`` reports the *effective* embedding address and
+    model — the operator's managed address over the bundle-recorded one, exactly
+    what the serving process resolves — with the endpoint source named. No
     outbound call is made and nothing is read from the collection database.
     """
 
@@ -437,7 +438,10 @@ def get_connection_presets() -> object:
             {
                 "base_url": embedding.base_url,
                 "model": embedding.model,
-                "note": PAGE_READONLY_FIELDS["extraction_endpoints.embedding_base_url"],
+                "note": (
+                    f"运行期生效地址（来源 {embedding.endpoint_origin}）；"
+                    "模型身份仍由发布包冻结，地址可在受管配置里设置"
+                ),
             }
             if embedding.base_url
             else None

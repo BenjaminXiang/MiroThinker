@@ -115,9 +115,9 @@ CONNECTIONS: tuple[ConnectionSpec, ...] = (
         kind="embedding",
         secret_field="embedding.api_key",
         requires_key=False,
-        default_base_url=None,  # frozen release-bundle authority, resolved at runtime
+        default_base_url=None,  # runtime-effective address, resolved by resolve_embedding
         default_model="Qwen/Qwen3-Embedding-8B",
-        base_url_editable=False,
+        base_url_editable=False,  # the managed endpoint field owns the address
     ),
     ConnectionSpec(
         key="llm",

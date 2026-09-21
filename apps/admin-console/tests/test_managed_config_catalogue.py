@@ -229,38 +229,43 @@ def test_chat_profile_rejects_an_unknown_name_on_save(tmp_path: Path) -> None:
     assert document.serving.chat_llm_profile == "deepseek"
 
 
-# -- I5: the frozen embedding rows are display-only --------------------------
+# -- I5: the embedding model row is display-only, the address row is not ------
 
 
-def test_the_frozen_embedding_rows_are_display_only(tmp_path: Path) -> None:
-    """The serving index freezes the embedding endpoint; the page only shows it."""
+def test_the_frozen_embedding_model_row_is_display_only(tmp_path: Path) -> None:
+    """The model identity is frozen by the release bundle; the address is not.
 
-    paths = (
-        "extraction_endpoints.embedding_base_url",
-        "extraction_endpoints.embedding_model",
-    )
-    for path in paths:
-        reason = PAGE_READONLY_FIELDS[path]
-        assert reason.strip(), path
-        assert "冻结" in reason, path
+    The serving line resolves its embedding *address* from the managed field
+    (``resolve_embedding_base_url``: managed value wins, bundle address is the
+    fallback), so the address row is editable. The *model* is part of the frozen
+    vector identity — changing it would invalidate the whole index — so that row
+    stays display-only.
+    """
+
+    model_path = "extraction_endpoints.embedding_model"
+    address_path = "extraction_endpoints.embedding_base_url"
+    reason = PAGE_READONLY_FIELDS[model_path]
+    assert reason.strip()
+    assert "冻结" in reason
+    assert address_path not in PAGE_READONLY_FIELDS
 
     store = ManagedSettingsStore(tmp_path / "managed" / "settings.json", environ={})
     _, fields = store.effective()
     rows = {field.path: field for field in fields}
-    for path in paths:
-        assert rows[path].editable is False, path
-        assert rows[path].readonly_reason, path
+    assert rows[model_path].editable is False
+    assert rows[model_path].readonly_reason
+    assert rows[address_path].editable is True
+
+    result = store.patch(
+        {"extraction_endpoints": {"embedding_base_url": "http://127.0.0.1:18005/v1"}}
+    )
+    assert result["changed"] == [address_path]
+    assert result["audit_written"] is True
 
     with pytest.raises(ManagedSettingsUnsupportedError) as refusal:
         store.patch(
-            {
-                "extraction_endpoints": {
-                    "embedding_base_url": "http://127.0.0.1:18005/v1",
-                    "embedding_model": "Qwen/Qwen3-Embedding-8B",
-                }
-            }
+            {"extraction_endpoints": {"embedding_model": "Qwen/Qwen3-Embedding-8B"}}
         )
 
     assert "display-only" in str(refusal.value)
     assert "冻结" in str(refusal.value)
-    assert store.exists() is False

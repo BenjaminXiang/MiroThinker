@@ -7,7 +7,10 @@ the exact function the serving process calls:
 * Bocha / Serper — ``src/data_agents/providers/bocha_search.py:61`` (env, then the
   repository key file) and the Serper provider's identical pattern.
 * Embedding — ``src/data_agents/company/vectorizer.py:22,40-53``: base URL is the
-  frozen release-bundle authority (``knowledge_build_isolated.py:6720-6728``,
+  *effective* address resolved by ``knowledge_build_isolated.py``
+  (``resolve_embedding_base_url``: the managed field
+  ``extraction_endpoints.embedding_base_url`` → ``CANONICAL_V2_EMBEDDING_BASE_URL``
+  wins when set, otherwise the address recorded in the embedding bundle,
   ``http://100.64.0.27:18005/v1``) and the credential is
   ``load_local_api_key()`` (``providers/local_api_key.py:8-31``: ``API_KEY`` →
   ``OPENAI_API_KEY`` → ``SGLANG_API_KEY`` → ``.sglang_api_key``), *not* an
@@ -284,20 +287,36 @@ def resolve_embedding(
     secrets_store: ManagedSecretsStore | None,
     key_file_roots: Sequence[Path] | None = None,
 ) -> RuntimeConnection:
-    """Base URL/model from the frozen bundle; credential from ``load_local_api_key()``."""
+    """The *effective* embedding endpoint: the managed address over the bundle's.
+
+    Mirrors ``knowledge_build_isolated.resolve_embedding_base_url`` (the one
+    resolution point the serving process uses): ``CANONICAL_V2_EMBEDDING_BASE_URL``
+    — projected from the managed field ``extraction_endpoints.embedding_base_url``
+    at startup, or set by the service unit — wins when set; otherwise the
+    address recorded in the embedding bundle is used. The credential still comes
+    from ``load_local_api_key()``.
+    """
 
     from src.data_agents.company.vectorizer import EmbeddingClient
 
-    client = EmbeddingClient()
-    base_url = client.base_url
+    recorded = EmbeddingClient().base_url
+    configured, configured_origin = _first_env(
+        environ,
+        ("CANONICAL_V2_EMBEDDING_BASE_URL",),
+        applied_env=applied_env_names(environ),
+    )
+    base_url = (configured or recorded).rstrip("/")
+    endpoint_origin = (
+        configured_origin if configured else "release-bundle-default"
+    )
     model = "Qwen/Qwen3-Embedding-8B"
     roots = tuple(key_file_roots) if key_file_roots is not None else _key_file_roots()
     value, origin = _local_key(environ, roots)
     enabled = bool(value) and bool(base_url)
     if enabled:
         note = (
-            f"运行期 base_url 由 release embedding bundle 冻结（{base_url}）；"
-            f"凭据来源 {origin}"
+            f"运行期 base_url {base_url}（来源 {endpoint_origin}；未设置受管地址时"
+            f"回落到发布包记录的地址）；凭据来源 {origin}"
         )
     else:
         note = "运行期不可用：本地凭据缺失（API_KEY/OPENAI_API_KEY/SGLANG_API_KEY/.sglang_api_key 全空）"
@@ -312,7 +331,7 @@ def resolve_embedding(
         model=model,
         api_key=value,
         api_key_origin=origin,
-        endpoint_origin="release-bundle-frozen",
+        endpoint_origin=endpoint_origin,
         runtime_note=note,
         pending_restart=_pending_restart(
             secrets_store, "embedding.api_key", value, environ

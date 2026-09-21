@@ -104,16 +104,10 @@ PAGE_READONLY_FIELDS: dict[str, str] = {
     "serving.full_verify": (
         "启动全量校验：开启会把启动从秒级拉到分钟级，必须由服务单元决定（只读展示）"
     ),
-    "extraction_endpoints.embedding_base_url": (
-        "服务线向量由发布包冻结：发布包的 embedding bundle 必须等于钉死的 base_url"
-        "（含校验和，不符即拒绝加载），改它需要重建全部向量；这两个受管字段没有运行期读者，"
-        "保存它不会改变任何行为（采集/构建侧另有脚本级覆盖 EMBEDDING_BASE_URL，不经受管配置）"
-        "（只读展示）"
-    ),
     "extraction_endpoints.embedding_model": (
-        "服务线向量由发布包冻结：模型名来自发布包 embedding bundle（与发布包不符即拒绝加载），"
-        "改它需要重建全部向量；这两个受管字段没有运行期读者，保存它不会改变任何行为"
-        "（采集/构建侧另有覆盖，不经受管配置）（只读展示）"
+        "服务线向量模型身份由发布包冻结：模型名与维度来自发布包 embedding bundle"
+        "（含校验和，不符即拒绝加载），改它需要重建全部向量。地址另有受管字段"
+        "（extraction_endpoints.embedding_base_url，已可在页面设置）（只读展示）"
     ),
 }
 
@@ -176,12 +170,13 @@ class CollectionSettings(BaseModel):
 class ExtractionEndpoints(BaseModel):
     """Collection-time endpoints. Credentials are env/key-file owned, never here.
 
-    ``embedding_base_url`` / ``embedding_model`` live in this group but are listed
-    in :data:`PAGE_READONLY_FIELDS`: the serving line resolves its embedding
-    endpoint from the frozen release bundle, and no runtime code reads the two
-    variables these fields project — a page edit would change nothing while
-    looking like it did. The collection/build scripts have their own
-    (unmanaged) ``EMBEDDING_BASE_URL`` override.
+    ``embedding_base_url`` is the operator's embedding address: the managed
+    value is the runtime's **effective** address (it wins over the address
+    recorded in the embedding bundle), so it is editable on the page.
+    ``embedding_model`` stays listed in :data:`PAGE_READONLY_FIELDS`: the model
+    identity is frozen by the release bundle (the index was built with it), and
+    no runtime code reads the variable it projects. The collection/build scripts
+    have their own (unmanaged) ``EMBEDDING_BASE_URL`` override.
     """
 
     model_config = ConfigDict(extra="forbid", frozen=True, validate_default=True)
@@ -470,7 +465,7 @@ FIELD_CATALOG: dict[str, FieldSpec] = {
         kind="url",
         group="endpoints",
         order=20,
-        consumer="采集与构建：Embedding 端点",
+        consumer="服务线向量读取 + 采集与构建：Embedding 端点（运行期生效地址）",
         connection="embedding",
         test_arg="base_url",
     ),
