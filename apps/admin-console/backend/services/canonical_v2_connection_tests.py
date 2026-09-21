@@ -437,8 +437,8 @@ def test_connection(
         }
     caller = transport or post_json
     started = monotonic()
-    #: Appended to every report of the *second* attempt, so the operator can see
-    #: which route answered and why the call was repeated.
+    # Appended to every report of the *second* attempt, so the operator can see
+    # which route answered and why the call was repeated.
     note = ""
 
     def reported(status: int) -> dict[str, Any]:
