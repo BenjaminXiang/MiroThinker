@@ -78,11 +78,27 @@ contract.
 - `uv run pytest tests/test_embedding_identity_probe.py tests/test_canonical_v2_connection_tests.py -q`
   41 passed before the slice → **51 passed** after (26 → 35 identity, 15 → 16
   connection).
+- Every other admin-console suite that imports the two touched modules
+  (`test_canonical_v2_admin_config_api`, `test_admin_config_page_shell`,
+  `test_admin_model_roles_page`, `test_admin_config_single_channel`,
+  `test_canonical_v2_runtime_sources`, `test_embedding_effective_endpoint`,
+  `test_canonical_v2_model_discovery_api`, `test_canonical_v2_admin_secrets_api`):
+  **178 passed, 0 failed**.
+- The full admin-console suite, twice:
+  `uv run pytest tests -q -p no:randomly --tb=no -rf` →
+  **25 failed, 1564 passed, 31 skipped, 105 errors** in 283 s. That set is the
+  pre-existing, environment-driven red set this repo already records for an
+  admin-console run without its disposable Postgres (the switch line's
+  `tests ... -n 4` recorded "identical failure sets: 130 entries (25 failed, 105
+  errors)"); by file it is professor/data/chat_v1/review/seeds/turn-trace and the
+  static-page copy tests — **none of the 25 is in the touched surface** (the
+  failing ids, verbatim, are in `admin-suite-failing-ids.txt` next to this file).
+  A first, identical invocation reported 26 failures; the extra one did not
+  reproduce and was not captured (the run's output was truncated to its tail), so
+  it is recorded as an unexplained flake rather than folded into the claim.
 - `ruff@0.8.0 check` + `ruff@0.8.0 format` on the four touched files: clean
   (repo toolchain, scoped to the touched files — the whole-repo `just lint` was
   not run so nothing outside this slice could be rewritten).
-- The full admin-console suite is recorded below with its pre-existing,
-  DB-driven reds named.
 
 ## ③ Live evidence (2026-09-22, `maas.qianwenaiapi.com`)
 
