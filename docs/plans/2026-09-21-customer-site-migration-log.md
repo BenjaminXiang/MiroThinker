@@ -99,3 +99,32 @@ SSE `event: error` → 页面红字。同一轮里其余五条道全健康，但
 **未证明（诚实记录）**：不同数据根路径（路径冻结，本机无法模拟）、现场 OS/网络/文件系统差异、冷页缓存下的启动耗时、Chromium 抓取质量、PostgreSQL 相关页面（本机没装 PG）、密钥交付渠道、以及"85→11 清理后仍能启动"。
 
 **影响哪些问题**：R17 迁移交付有了**第一个端到端证据**（不是"按文档应该能跑"，而是"按现场步骤真跑通了"）；v1 冻结（`delivery-v1`）的交付件从此可复核（kit + checksums + preflight + 演练记录）。
+
+## 第 4 轮 · 2026-09-21 · F1/F2 完成并验证：向量道降级 + 嵌入端点可配置（迁移阻塞项解除，归 **v1.1**）
+
+**做了什么**（分支 `fix/embedding-lane-f1f2`，6 个提交，基线 `36df47b8`；**不进 v1 冻结**）：
+
+- **F1**：传输类失败在唯一发 HTTP 的地方（`company/vectorizer.py::EmbeddingClient.embed_batch`）归一为内建 `TimeoutError` / `ConnectionError`（含非 2xx、非 JSON 两类边界），`_ValidatingEmbeddingAdapter` 对这两个内建**原样透传**——`_invoke_lane` 里**早就存在**的 fail-open 钩子这才真正生效；向量道新增 **8 s 外层等待上限**（`CANONICAL_V2_VECTOR_LANE_TIMEOUT_SECONDS`）与 **连续 2 次失败 → 300 s 跳过**的短熔断（新 `embedding_lane_resilience.py`，状态放在适配器里，keep-warm 因此共享）。
+- **F2**：新增唯一解析点 `resolve_embedding_base_url`（受管配置 `extraction_endpoints.embedding_base_url` 优先 → 否则用发布包记录的地址）；冻结校验保留 `content_sha256` / 模型 / 维度，**不再携带 `base_url` 字面量**；管理页改为上报并测试**生效地址**，地址行可编辑、文案不再声称端点被冻结。**发布包一字节未改、未重新封印。**
+
+**发现**：
+
+1. 红气泡根因坐实：`except Exception` 把"连不上/超时"洗成"完整性失败"，而调度器只放过内建 `TimeoutError`/`ConnectionError` ⇒ **一直在的 fail-open 钩子永远不触发**。
+2. **AC6 口径修正**：发布包的 `content_sha256` 就是文档自身的自哈希、`base_url` 在哈希之内 ⇒ "改包内地址同时保留自校验"在密码学上不成立。可行且更严格的形式就是实现取的这条：**包冻结 + 运行期覆盖地址**。
+3. 熔断放在适配器内的副作用：**构建期**端点打不通时也会在第 2 次失败后跳过（端点死了构建本来就跑不成，净效果相同）——记录在案。
+
+**怎么验证**（关键部分本机独立复跑过）：
+
+- 新增 **52 个测试全绿**；我复跑 4 个 miroflow-agent 新文件 = **29 passed / 22.0 s**，管理侧 `test_embedding_effective_endpoint.py` = **8 passed / 0.83 s**。
+- admin-console 全量套件前后**失败集合逐字节一致**（25F/105E/1481P → 25F/105E/1490P，130 条 ID `comm` 无差异）——没有引入新失败。
+- miroflow-agent 定向 **376 passed + 1 failed**（该失败**在基线上同样失败**，既有红）。
+- **真实探针**（scratch 端口 18285；18188 全程未动，事后 `/chat` 200、pid 519941 未重启）：嵌入地址指向黑洞 `10.255.255.1:9` → 一轮真实 `/api/chat/stream` **39.8 s 正常结束、无 `event: error`**、向量道 `unavailable`、其余四路照常答题、访问日志 `completed`；换回真实地址 → 向量道 `succeeded`、128 候选、车道耗时 0.87 s。
+
+**未验证 / 遗留**（诚实记录）：
+
+- `tests/canonical_v2/test_knowledge_build_isolated.py` 两次都在 25 分钟预算内没跑完（~55%），**该文件的基线对比缺失**（补跑命令已写在 verification.md）。
+- `failure_kind` 不出现在 SSE 帧里（只在引擎层证明）；熔断"稳态第 3 轮零请求"用注入时钟 + 真实连接计数证明，未做端到端驱动。
+- **身份探针未做**：同维度换模型仍会被静默接受（连接测试目前只验 200 + 维度 4096）。
+- 车道上限目前是**环境变量**，尚未纳管到配置页。
+
+**影响哪些问题**：① "客户机器上每轮普通提问都红气泡"这一迁移阻塞项解除——注意它**与"甲方能否访问我方模型"无关**，是通用稳健性；② 拿到"地址可由现场运维在页面设置、无需重封发布包"的能力，这是**切阿里云/自建嵌入的前置**；③ 版本归属：**v1.1**（v1 冻结不动，分支待并入）。
