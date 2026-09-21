@@ -1,0 +1,138 @@
+== 0. 交付包当前状态（传输后副本） ==
+(secrets/ 不存在)
+
+== 1. 放 4 个 key（CONFIG-GUIDE §2 的原文命令，sudo install -m 600） ==
+install: cannot create regular file 'secrets/.deepseek_api_key': No such file or directory
+install: cannot create regular file 'secrets/.bocha_api_key': No such file or directory
+install: cannot create regular file 'secrets/.serper_api_key': No such file or directory
+install: cannot create regular file 'secrets/.sglang_api_key': No such file or directory
+  落位后的属主/权限（无内容）：
+ls: cannot access 'secrets/': No such file or directory
+  ⇒ 注意：全部 root:root 0600（这就是甲方第一条命令的样子）
+
+== 2. sudo ./install-site.sh --dry-run（runbook 推荐先跑） ==
+
+== 0. 前置：身份 / 目录 / 参数 ==
+  运行身份: uid=0（root）
+  交付包:   /home/longxiang/delivery-xfer-v11/site-bundle
+  宿主路径: 数据 /var/tmp/mirothinker-fourth-verify-20260922/var/tmp/mirothinker-data-v2
+            状态 /var/tmp/mirothinker-fourth-verify-20260922/var/tmp/mirothinker-canonical-v2-s12f
+            端口 18298（容器内固定 18188）
+  交付物:   镜像 mirothinker-serving-v1.1.tar.gz（tag mirothinker-serving:v1.1） / 数据 serving-data-v1.1.tar.gz
+  [ok]   交付包关键文件齐全
+
+== 1. 预检 ==
+  [ok]   docker 存在：Docker version 28.5.1, build e180ab8
+  [ok]   compose v2 存在：2.40.2
+  [ok]   docker daemon 可用
+  [ok]   内存 503 GB（≥64 GB 达标）
+  [ok]   磁盘可用 880 GB（按 /var/tmp 所在分区；安装期需要 ≈25 GB：压缩包 3.2 GB + 解包 7 GB + 镜像 5.2 GB）
+  [ok]   端口 18298 空闲
+  [warn] 嵌入端点探针跳过：缺 /home/longxiang/delivery-xfer-v11/site-bundle/secrets/.sglang_api_key（安装器稍后会要求补齐 4 个密钥）
+  [warn] chat LLM 探针跳过：缺 /home/longxiang/delivery-xfer-v11/site-bundle/secrets/.deepseek_api_key
+  [ok]   不需要访问 PyPI / apt 源（镜像与数据面都是离线交付物）
+
+== 2. 校验交付包（sha256，动任何东西之前） ==
+  [ok]   mirothinker-serving-v1.1.tar.gz sha256 一致（f842f6de955466d0…，2.1GB）
+  [ok]   serving-data-v1.1.tar.gz sha256 一致（beb9449dea88b516…，1.4GB）
+  （校验耗时 0m22s）
+
+== 3. 数据面落位（/var/tmp/mirothinker-fourth-verify-20260922/var/tmp/mirothinker-data-v2，容器内路径固定为 /var/tmp/mirothinker-data-v2） ==
+  [dry-run] 会创建 /var/tmp/mirothinker-fourth-verify-20260922/var/tmp/mirothinker-data-v2 并解包 serving-data-v1.1.tar.gz（约 7 GB 解包后）
+
+== 3.1 10 个交付物校验（checksums.sha256） ==
+  [dry-run] 会用 checksums.sha256 校验 8 个数据文件 + bundles/ 里 2 个发布 bundle
+
+== 4. 状态目录（/var/tmp/mirothinker-fourth-verify-20260922/var/tmp/mirothinker-canonical-v2-s12f） ==
+  [dry-run] 会创建 /var/tmp/mirothinker-fourth-verify-20260922/var/tmp/mirothinker-canonical-v2-s12f（0700）
+
+== 5. 载入镜像 ==
+  [ok]   镜像 mirothinker-serving:v1.1 已在本地（sha256:04c3cfcd465f…），跳过 load（要强制重载：MIROTHINKER_SITE_FORCE_LOAD=1）
+
+== 6. 现场配置（.env / PG 凭据 / 4 个密钥） ==
+  [dry-run] 会写 /home/longxiang/delivery-xfer-v11/site-bundle/.env（uid:gid=0:0，端口 18298，路径见上）
+  [dry-run] 会生成 /home/longxiang/delivery-xfer-v11/site-bundle/secrets/postgres.env（随机口令，0600），并检查 secrets/ 下 4 个密钥
+  [ok]   命令文件覆盖件在位且指向 serving-pack-run16-v11（v1.1 服务包）
+  [ok]   入口覆盖件在位且可执行（预检路径 serving-pack-run16-v11）
+  [FAIL] 缺少 4 个密钥文件（服务会起来但采集/问答会降级；**不允许**半配置上栈）
+         现场请创建（0600，内容为各自的 API key）：
+           /home/longxiang/delivery-xfer-v11/site-bundle/secrets/.deepseek_api_key
+           /home/longxiang/delivery-xfer-v11/site-bundle/secrets/.bocha_api_key
+           /home/longxiang/delivery-xfer-v11/site-bundle/secrets/.serper_api_key
+           /home/longxiang/delivery-xfer-v11/site-bundle/secrets/.sglang_api_key
+         命令模板：
+           sudo install -m 600 /dev/stdin /home/longxiang/delivery-xfer-v11/site-bundle/secrets/.deepseek_api_key <<< "<你的key>"
+         也可先只放 .sglang_api_key + .deepseek_api_key 让问答可用，其余走 /admin 密钥页。
+  [FAIL] 密钥不齐：补齐后重跑本脚本（幂等；确实要降级安装：--accept-degraded-keys）
+
+================ 安装结果 ================
+  [ok] 13   [warn] 2   [FAIL] 2
+  需要你知道的条目：
+    [warn] 嵌入端点探针跳过：缺 /home/longxiang/delivery-xfer-v11/site-bundle/secrets/.sglang_api_key（安装器稍后会要求补齐 4 个密钥）
+    [warn] chat LLM 探针跳过：缺 /home/longxiang/delivery-xfer-v11/site-bundle/secrets/.deepseek_api_key
+    [FAIL] 缺少 4 个密钥文件（服务会起来但采集/问答会降级；**不允许**半配置上栈）
+    [FAIL] 密钥不齐：补齐后重跑本脚本（幂等；确实要降级安装：--accept-degraded-keys）
+  结论：有未通过项 —— 按上面的 [FAIL] 逐条处理后重跑本脚本（幂等）
+  注意：本次用了测试前缀 MIROTHINKER_SITE_ROOT=/var/tmp/mirothinker-fourth-verify-20260922（所有宿主路径都在它下面）
+==========================================
+  dry-run exit=12
+
+== 3. sudo ./install-site.sh（正式；健康等待上限 300 s） ==
+
+== 0. 前置：身份 / 目录 / 参数 ==
+  运行身份: uid=0（root）
+  交付包:   /home/longxiang/delivery-xfer-v11/site-bundle
+  宿主路径: 数据 /var/tmp/mirothinker-fourth-verify-20260922/var/tmp/mirothinker-data-v2
+            状态 /var/tmp/mirothinker-fourth-verify-20260922/var/tmp/mirothinker-canonical-v2-s12f
+            端口 18298（容器内固定 18188）
+  交付物:   镜像 mirothinker-serving-v1.1.tar.gz（tag mirothinker-serving:v1.1） / 数据 serving-data-v1.1.tar.gz
+  [ok]   交付包关键文件齐全
+
+== 1. 预检 ==
+  [ok]   docker 存在：Docker version 28.5.1, build e180ab8
+  [ok]   compose v2 存在：2.40.2
+  [ok]   docker daemon 可用
+  [ok]   内存 503 GB（≥64 GB 达标）
+  [ok]   磁盘可用 880 GB（按 /var/tmp 所在分区；安装期需要 ≈25 GB：压缩包 3.2 GB + 解包 7 GB + 镜像 5.2 GB）
+  [ok]   端口 18298 空闲
+  [warn] 嵌入端点探针跳过：缺 /home/longxiang/delivery-xfer-v11/site-bundle/secrets/.sglang_api_key（安装器稍后会要求补齐 4 个密钥）
+  [warn] chat LLM 探针跳过：缺 /home/longxiang/delivery-xfer-v11/site-bundle/secrets/.deepseek_api_key
+  [ok]   不需要访问 PyPI / apt 源（镜像与数据面都是离线交付物）
+
+== 2. 校验交付包（sha256，动任何东西之前） ==
+  [ok]   mirothinker-serving-v1.1.tar.gz sha256 一致（f842f6de955466d0…，2.1GB）
+  [ok]   serving-data-v1.1.tar.gz sha256 一致（beb9449dea88b516…，1.4GB）
+  （校验耗时 0m21s）
+
+== 3. 数据面落位（/var/tmp/mirothinker-fourth-verify-20260922/var/tmp/mirothinker-data-v2，容器内路径固定为 /var/tmp/mirothinker-data-v2） ==
+  [ok]   解包完成（0m44s）
+
+== 3.1 10 个交付物校验（checksums.sha256） ==
+./install-site.sh: line 295: /tmp/mirothinker-checksums.out: Permission denied
+  [FAIL] 校验失败，前几行差异：
+
+================ 安装结果 ================
+  [ok] 11   [warn] 2   [FAIL] 1
+  需要你知道的条目：
+    [warn] 嵌入端点探针跳过：缺 /home/longxiang/delivery-xfer-v11/site-bundle/secrets/.sglang_api_key（安装器稍后会要求补齐 4 个密钥）
+    [warn] chat LLM 探针跳过：缺 /home/longxiang/delivery-xfer-v11/site-bundle/secrets/.deepseek_api_key
+    [FAIL] 校验失败，前几行差异：
+  结论：有未通过项 —— 按上面的 [FAIL] 逐条处理后重跑本脚本（幂等）
+  注意：本次用了测试前缀 MIROTHINKER_SITE_ROOT=/var/tmp/mirothinker-fourth-verify-20260922（所有宿主路径都在它下面）
+==========================================
+install exit=11  总耗时=2026-09-22T01:03:58+08:00  65s
+
+== 4. 失败现场（若失败） ==
+-- 宿主侧属主：
+ls: cannot access '/var/tmp/mirothinker-fourth-verify-20260922/var/tmp/mirothinker-canonical-v2-s12f': No such file or directory
+drwxr-xr-x 3 root      root      4096 Sep 22 01:03 /var/tmp/mirothinker-fourth-verify-20260922
+drwxr-xr-x 3 root      root      4096 Sep 22 01:03 /var/tmp/mirothinker-fourth-verify-20260922/var/tmp
+drwxr-xr-x 4 root      root      4096 Sep 22 01:03 /var/tmp/mirothinker-fourth-verify-20260922/var/tmp/mirothinker-data-v2
+drwx------ 2 longxiang longxiang 4096 Sep 17 05:55 /var/tmp/mirothinker-fourth-verify-20260922/var/tmp/mirothinker-data-v2/index-v3-v2
+-- .env（无内容敏感项）:
+grep: /home/longxiang/delivery-xfer-v11/site-bundle/.env: No such file or directory
+-- 容器状态 / 重启次数 / 退出码：
+NAME      IMAGE     COMMAND   SERVICE   CREATED   STATUS    PORTS
+-- app 日志尾部：
+-- db 状态：
+

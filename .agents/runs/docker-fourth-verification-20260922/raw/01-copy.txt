@@ -1,0 +1,30 @@
+== cross-fs copy 2026-09-22T01:00:26+08:00 ==
+src: /var/tmp/mirothinker-site-bundle-v11 (fs: /dev/nvme0n1p2)
+dst: /home/longxiang/delivery-xfer-v11/site-bundle (fs: /dev/sda1)
+
+real	0m1.770s
+user	0m0.000s
+sys	0m1.770s
+exit=0
+3645060568	./site-bundle
+total 3559656
+drwxrwxr-x 5 longxiang longxiang       4096 Sep 21 23:10 .
+drwxrwxr-x 3 longxiang longxiang         33 Sep 22 01:00 ..
+-rw-rw-r-- 1 longxiang longxiang       3070 Sep 21 23:11 BUNDLE-MANIFEST.txt
+drwxrwxr-x 2 longxiang longxiang         88 Sep 21 23:10 bundles
+-rw-rw-r-- 1 longxiang longxiang       1303 Sep 21 22:33 checksums.sha256
+-rw-rw-r-- 1 longxiang longxiang      11833 Sep 21 22:53 compose.yaml
+-rw-rw-r-- 1 longxiang longxiang      12340 Sep 21 22:31 CONFIG-GUIDE.md
+-rwxr-xr-x 1 longxiang longxiang       7563 Sep 21 23:10 entrypoint-v11.sh
+-rwxr-xr-x 1 longxiang longxiang      26817 Sep 21 23:10 install-site.sh
+-rw-rw-r-- 1 longxiang longxiang        699 Sep 21 22:35 kit-manifest.txt
+-rw-rw-r-- 1 longxiang longxiang 2162962373 Sep 21 22:34 mirothinker-serving-v1.1.tar.gz
+-rw-rw-r-- 1 longxiang longxiang        134 Sep 21 22:35 mirothinker-serving-v1.1.tar.gz.sha256
+-rw-rw-r-- 1 longxiang longxiang       3711 Sep 21 23:11 README-FIRST.txt
+-rw-rw-r-- 1 longxiang longxiang      39470 Sep 21 22:35 README.md
+drwxrwxr-x 2 longxiang longxiang         34 Sep 21 23:10 secrets.example
+-rw-r--r-- 1 longxiang longxiang       3454 Sep 21 23:10 serve-command-v11.sh
+-rw-rw-r-- 1 longxiang longxiang 1481979537 Sep 21 22:32 serving-data-v1.1.tar.gz
+-rw-rw-r-- 1 longxiang longxiang         91 Sep 21 22:32 serving-data-v1.1.tar.gz.sha256
+-rw-rw-r-- 1 longxiang longxiang        634 Sep 21 22:33 sizes.tsv
+drwxrwxr-x 3 longxiang longxiang         36 Sep 21 23:08 state

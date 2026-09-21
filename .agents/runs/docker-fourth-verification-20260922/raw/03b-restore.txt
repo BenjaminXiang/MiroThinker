@@ -1,0 +1,13 @@
+== 0. 复原前的状态（D1 之后） ==
+host: secrets/.sglang_api_key owner=root:root mode=600 inode=22578793892
+host hash: 0ed2420f3164
+container: sha256sum: /opt/mirothinker/.sglang_api_key: Permission deni
+== 1. 属主归一（= install-site.sh 现在会自动做的事），然后只 restart ==
+host: secrets/.sglang_api_key owner=longxiang:longxiang mode=600 inode=22578793892
+host hash: 0ed2420f3164
+ Container mirothinker-serving-app-1  Restarting
+ Container mirothinker-serving-app-1  Started
+restart 后容器内看到的：0ed2420f3164  ← 应等于宿主 hash
+health OK after 281s
+== 2. 复原后的连接测试 ==
+{"login": 200, "ok": true, "http_status": 200, "dimension": null, "api_key_source": "legacy-file:.sglang_api_key", "endpoint_source": "managed-file(env:CANONICAL_V2_EMBEDDING_BASE_URL)", "error": null, "raw_detail": "HTTP 200"}

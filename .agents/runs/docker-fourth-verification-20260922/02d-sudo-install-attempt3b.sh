@@ -15,7 +15,7 @@ echo "-- 容器 StartedAt / 重启次数："
 cid="$(sudo docker compose -f "$B/compose.yaml" ps -q app)"
 sudo docker inspect -f 'StartedAt={{.State.StartedAt}} restarts={{.RestartCount}} status={{.State.Status}} health={{.State.Health.Status}}' "$cid"
 echo "-- 首启耗时（对比容器 StartedAt 与 health 首次 200 的时间）："
-echo "   安装器记录：…已等 7m32s 后 /api/health 200（见 raw/02c-sudo-attempt3.log 末尾）"
+echo "   安装器记录：…已等 7m32s 后 /api/health 200（见 raw/02c-sudo-attempt3.txt 末尾）"
 echo
 
 echo "== 1. 幂等重跑安装器（服务已在跑，健康检查应立刻通过） =="

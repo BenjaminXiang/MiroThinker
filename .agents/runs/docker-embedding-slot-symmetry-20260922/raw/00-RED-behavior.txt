@@ -1,0 +1,24 @@
+== 行为级 RED（2026-09-22，未改的 entrypoint + 只把 START_SCRIPT 指到 stub；stub 内容不变，仅这一行被替换）==
+[entrypoint] effective identity: uid=1004 gid=1004 user=longxiang
+[entrypoint] repo=/tmp/red-stub/start.sh data_root=/var/tmp/mirothinker-data-v2 state=/var/tmp/mirothinker-canonical-v2-s12f
+[entrypoint] HOME=/tmp/red-stub UV_CACHE_DIR=/tmp/red-stub/.cache/uv
+[entrypoint] 采集库未配置（无 DATABASE_URL，也没有 POSTGRES_USER/POSTGRES_PASSWORD）
+[entrypoint]       ⇒ 采集面保持现状：503 + 导航隐藏（这是设计行为，不是故障）
+[entrypoint] 预检通过，交给冻结生产启动脚本：/tmp/red-stub/start.sh
+[stub] CANONICAL_V2_EMBEDDING_API_KEY=<空>
+[stub] SGLANG_API_KEY=<空>
+[stub] 文件 v1 槽位可读=是
+exit=0
+
+== 同一 stub、同一文件（仍只替换 START_SCRIPT 一行），修好后的行为 ==
+[entrypoint] effective identity: uid=1004 gid=1004 user=longxiang
+[entrypoint] repo=/tmp/red-stub/start.sh data_root=/var/tmp/mirothinker-data-v2 state=/var/tmp/mirothinker-canonical-v2-s12f
+[entrypoint] HOME=/tmp/red-stub UV_CACHE_DIR=/tmp/red-stub/.cache/uv
+[entrypoint] 嵌入凭据投影：key 文件 → CANONICAL_V2_EMBEDDING_API_KEY（已设置；v1 槽位 SGLANG_API_KEY 仍按文件直读）
+[entrypoint] 采集库未配置（无 DATABASE_URL，也没有 POSTGRES_USER/POSTGRES_PASSWORD）
+[entrypoint]       ⇒ 采集面保持现状：503 + 导航隐藏（这是设计行为，不是故障）
+[entrypoint] 预检通过，交给冻结生产启动脚本：/tmp/red-stub/start.sh
+[stub] CANONICAL_V2_EMBEDDING_API_KEY=sk-fake-red-only-9999
+[stub] SGLANG_API_KEY=<空>
+[stub] 文件 v1 槽位可读=是
+exit=0

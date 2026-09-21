@@ -4,7 +4,7 @@
 "下次启动生效"用一次 `restart` 验证）。顺带发现 1 个会给甲方错误指令的页面文案（D8）。
 
 工具：`agent-browser` 0.26.0（user-scope 技能），Chrome via CDP；输出全部过密钥/口令脱敏，
-原始日志 `raw/04-browser.log`，截图 `raw/04-admin-after-save.png`。
+原始日志 `raw/04-browser.txt`，截图 `raw/04-admin-after-save.png`。
 
 ## 步骤与观测（原文）
 
@@ -56,7 +56,7 @@ agent-browser click @e94                       # 保存后 refs 重排，测试�
 | 审计 `secrets-audit.jsonl` | `{"action":"secrets-patch","changes":[{"action":"set","field":"llm.api_key","suffix4":"2b92"}],"operator":"admin","stored_fields":["llm.api_key"]}` —— 只有字段名与后 4 位，**无明文** |
 | 掩码回显 | 页面显示 `sk-…2b92`（3 位头 + 4 位尾），符合设计 |
 
-## "下次启动生效"的验证（`raw/04b-save-takes-effect.log`）
+## "下次启动生效"的验证（`raw/04b-save-takes-effect.txt`）
 
 - 重启前：`llm` 连接测试 → `ok:true, HTTP 200, 凭据来源 legacy-file:.deepseek_api_key`
   （运行期仍是文件那份，符合"保存 ≠ 生效"的文档语义）；

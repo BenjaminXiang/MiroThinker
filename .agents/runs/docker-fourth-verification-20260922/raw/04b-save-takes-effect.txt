@@ -1,0 +1,8 @@
+== 重启前：受管文件里的状态（不回显内容） ==
+managed: state/config-managed/secrets.json owner=longxiang:longxiang mode=600 mtime=2026-09-22 01:55:44.156775414 +0800
+== docker compose restart app ==
+health OK after 301s
+== 重启后：llm 连接测试（运行期凭据来源） ==
+{"login": 200, "ok": true, "http": 200, "detail": "HTTP 200", "used": {"api_key_source": "managed-file(env:DEEPSEEK_API_KEY)", "effective_api_key_source": "managed-file(env:DEEPSEEK_API_KEY)", "endpoint_source": "chat-profile:deepseekv4flash", "base_url": "https://api.deepseek.com", "model": "deepseek-v4-flash"}, "runtime_note": "运行期使用 chat profile deepseekv4flash（CHAT_LLM_PROFILE）；base_url https://api.deepseek.com；凭据来源 managed-file(env:DEEPSEEK_API_KEY)", "api_key_origin": "managed-file(env:DEEPSEEK_API_KEY)", "config_origin_fields": {"settings.serving.chat_llm_profile": "deepseekv4flash", "env_vars.serving.chat_llm_profile": "CHAT_LLM_PROFILE"}}
+== 嵌入连接测试（确认这一步没把别的弄坏） ==
+{"ok": null, "http_status": null, "dimension": null, "api_key_source": null, "endpoint_source": null, "error": null}

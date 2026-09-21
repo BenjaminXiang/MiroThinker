@@ -1,0 +1,71 @@
+== 0. 落点与来源 ==
+CWD=/home/longxiang/delivery-xfer-v11/site-bundle
+src fs: /dev/nvme0n1p2  881G
+dst fs: /dev/sda1       1.3T
+dst bytes(du -sb): 3645060568 / src bytes(du -sb): 3645076759
+
+== 1. 两个大归档：与交付清单记录的 sha256 对比（传输完整性）==
+mirothinker-serving-v1.1.tar.gz
+  recorded=f842f6de955466d03af7a8e2669702dc27035eabc0dc5e1878a09e76bee7491b
+  actual  =f842f6de955466d03af7a8e2669702dc27035eabc0dc5e1878a09e76bee7491b  (13 s, 2162962373 bytes)
+  -> MATCH
+serving-data-v1.1.tar.gz
+  recorded=beb9449dea88b5164ec78f198b6faf4e84ce21d424ffeb13fe9b0cb875d14ada
+  actual  =beb9449dea88b5164ec78f198b6faf4e84ce21d424ffeb13fe9b0cb875d14ada  (8 s, 1481979537 bytes)
+  -> MATCH
+
+== 2. 逐文件核对（BUNDLE-MANIFEST.txt 的 file 行 → sha256sum -c，相对路径）==
+  manifest file 行数: 17
+sha256sum: ' ': No such file or directory
+ : FAILED open or read
+sha256sum: ' ': No such file or directory
+ : FAILED open or read
+sha256sum: ' ': No such file or directory
+ : FAILED open or read
+sha256sum: ' ': No such file or directory
+ : FAILED open or read
+sha256sum: ' ': No such file or directory
+ : FAILED open or read
+sha256sum: ' ': No such file or directory
+ : FAILED open or read
+sha256sum: ' ': No such file or directory
+ : FAILED open or read
+sha256sum: ' ': No such file or directory
+ : FAILED open or read
+sha256sum: ' ': No such file or directory
+ : FAILED open or read
+sha256sum: ' ': No such file or directory
+ : FAILED open or read
+sha256sum: ' ': No such file or directory
+ : FAILED open or read
+sha256sum: ' ': No such file or directory
+ : FAILED open or read
+sha256sum: ' ': No such file or directory
+ : FAILED open or read
+sha256sum: ' ': No such file or directory
+ : FAILED open or read
+sha256sum: ' ': No such file or directory
+ : FAILED open or read
+sha256sum: ' ': No such file or directory
+ : FAILED open or read
+sha256sum: ' ': No such file or directory
+ : FAILED open or read
+sha256sum: WARNING: 17 listed files could not be read
+  exit=1 （0 = 全部 OK；耗时 0s）
+
+== 3. README-FIRST.txt 第 ① 步的原文命令，在传输后的副本上照抄执行 ==
+-- 3a. 数据面（.sha256 里是相对文件名）:
+serving-data-v1.1.tar.gz: OK
+  exit=0
+-- 3b. 镜像（.sha256 里是**打包机绝对路径**）:
+  文件内容: f842f6de955466d03af7a8e2669702dc27035eabc0dc5e1878a09e76bee7491b  /var/tmp/mirothinker-docker-kit-v11/mirothinker-serving-v1.1.tar.gz
+  本机执行:
+/var/tmp/mirothinker-docker-kit-v11/mirothinker-serving-v1.1.tar.gz: OK
+  exit=0
+  ↑ 注意它校验的是**哪一条路径**：不是本目录的副本。
+-- 3c. 复现甲方机器上的情形（同一格式，但绝对路径在其机器上不存在）:
+  模拟文件内容: f842f6de955466d03af7a8e2669702dc27035eabc0dc5e1878a09e76bee7491b  /srv/mirothinker-delivery/mirothinker-serving-v1.1.tar.gz
+sha256sum: /srv/mirothinker-delivery/mirothinker-serving-v1.1.tar.gz: No such file or directory
+/srv/mirothinker-delivery/mirothinker-serving-v1.1.tar.gz: FAILED open or read
+sha256sum: WARNING: 1 listed file could not be read
+  exit=1 （甲方看到的就是这个）

@@ -1,0 +1,165 @@
+== 1. secrets/ 目录（交付包里没有；按文档落 key 前必须先建） ==
+  created /home/longxiang/delivery-xfer-v11/site-bundle/secrets
+total 0
+
+== 2. sudo 安装（v1.1 原版 + 唯一 /tmp 路径；健康等待上限 200 s） ==
+
+== 0. 前置：身份 / 目录 / 参数 ==
+  运行身份: uid=0（root）
+  交付包:   /home/longxiang/delivery-xfer-v11/site-bundle
+  宿主路径: 数据 /var/tmp/mirothinker-fourth-verify-20260922/var/tmp/mirothinker-data-v2
+            状态 /var/tmp/mirothinker-fourth-verify-20260922/var/tmp/mirothinker-canonical-v2-s12f
+            端口 18298（容器内固定 18188）
+  交付物:   镜像 mirothinker-serving-v1.1.tar.gz（tag mirothinker-serving:v1.1） / 数据 serving-data-v1.1.tar.gz
+  [ok]   交付包关键文件齐全
+
+== 1. 预检 ==
+  [ok]   docker 存在：Docker version 28.5.1, build e180ab8
+  [ok]   compose v2 存在：2.40.2
+  [ok]   docker daemon 可用
+  [ok]   内存 503 GB（≥64 GB 达标）
+  [ok]   磁盘可用 874 GB（按 /var/tmp/mirothinker-fourth-verify-20260922/var/tmp 所在分区；安装期需要 ≈25 GB：压缩包 3.2 GB + 解包 7 GB + 镜像 5.2 GB）
+  [ok]   端口 18298 空闲
+  [ok]   嵌入端点 http://100.64.0.27:18005/v1：HTTP 200，维度 4096（期望 4096）
+  [ok]   chat LLM 端点可达（https://api.deepseek.com/v1/models → 200）
+  [ok]   不需要访问 PyPI / apt 源（镜像与数据面都是离线交付物）
+
+== 2. 校验交付包（sha256，动任何东西之前） ==
+  [ok]   mirothinker-serving-v1.1.tar.gz sha256 一致（f842f6de955466d0…，2.1GB）
+  [ok]   serving-data-v1.1.tar.gz sha256 一致（beb9449dea88b516…，1.4GB）
+  （校验耗时 0m21s）
+
+== 3. 数据面落位（/var/tmp/mirothinker-fourth-verify-20260922/var/tmp/mirothinker-data-v2，容器内路径固定为 /var/tmp/mirothinker-data-v2） ==
+  [ok]   解包完成（0m46s）
+
+== 3.1 10 个交付物校验（checksums.sha256） ==
+  [ok]   10 个交付物 sha256 全部一致（0m40s）
+
+== 4. 状态目录（/var/tmp/mirothinker-fourth-verify-20260922/var/tmp/mirothinker-canonical-v2-s12f） ==
+  [ok]   状态目录就位（0700）：admin 账号库 / 密钥 / 首启口令 / 访问日志都落在这里
+
+== 5. 载入镜像 ==
+  [ok]   镜像 mirothinker-serving:v1.1 已在本地（sha256:04c3cfcd465f…），跳过 load（要强制重载：MIROTHINKER_SITE_FORCE_LOAD=1）
+
+== 6. 现场配置（.env / PG 凭据 / 4 个密钥） ==
+  [ok]   写入 /home/longxiang/delivery-xfer-v11/site-bundle/.env（uid:gid=1004:1004 取自数据属主；端口 18298）
+  [ok]   命令文件覆盖件在位且指向 serving-pack-run16-v11（v1.1 服务包）
+  [ok]   入口覆盖件在位且可执行（预检路径 serving-pack-run16-v11）
+  [ok]   受管配置已存在（保留现场版本，不覆盖）
+  [ok]   生成 PG 凭据 /home/longxiang/delivery-xfer-v11/site-bundle/secrets/postgres.env（随机口令，0600；已存在则不动）
+  [ok]   4 个密钥就位且非空（内容未打印；权限：.deepseek_api_key=600 .bocha_api_key=600 .serper_api_key=600 .sglang_api_key=600 ）
+
+== 7. 起服务（docker compose，容器内固定 18188 → 宿主 18298） ==
+ Network mirothinker-serving_default  Creating
+ Network mirothinker-serving_default  Created
+ Volume mirothinker-pgdata-fourth-v11  Creating
+ Volume mirothinker-pgdata-fourth-v11  Created
+ Container mirothinker-serving-db-1  Creating
+ Container mirothinker-serving-db-1  Created
+ Container mirothinker-serving-app-1  Creating
+ Container mirothinker-serving-app-1  Created
+ Container mirothinker-serving-db-1  Starting
+ Container mirothinker-serving-db-1  Started
+ Container mirothinker-serving-app-1  Starting
+ Container mirothinker-serving-app-1  Started
+  [ok]   容器已创建：app=Up Less than a second (health: starting) db=Up Less than a second (health: starting) 
+  等待健康（启动相位实测 ≈276 s；端口在相位结束前不会 bind，属正常）…
+    …已等 0m31s（容器状态：Restarting (78) 2 seconds ago）
+    …已等 1m02s（容器状态：Restarting (78) 6 seconds ago）
+    …已等 1m32s（容器状态：Restarting (78) 37 seconds ago）
+    …已等 2m02s（容器状态：Restarting (78) 15 seconds ago）
+    …已等 2m32s（容器状态：Restarting (78) 45 seconds ago）
+    …已等 3m02s（容器状态：Restarting (78) 15 seconds ago）
+  [FAIL] 在 200s 内未健康（boot 已耗 3m22s）
+         app-1  | [entrypoint] repo=/home/longxiang/MiroThinker/.worktrees/canonical-v2-s11-consolidation/deploy/start-canonical-v2.sh data_root=/var/tmp/mirothinker-data-v2 state=/var/tmp/mirothinker-canonical-v2-s12f
+         app-1  | [entrypoint] HOME=/var/tmp/mirothinker-home UV_CACHE_DIR=/var/tmp/mirothinker-home/.cache/uv
+         app-1  | [entrypoint] 预检失败：状态目录不可写：/var/tmp/mirothinker-canonical-v2-s12f（容器内 uid=1004）
+         app-1  |     一行修复：user: "0:0"，
+         app-1  |     或宿主机 chown -R 该 uid /var/tmp/mirothinker-canonical-v2-s12f。若确认要带病启动：设 MIROTHINKER_SKIP_PREFLIGHT=1。
+         app-1  | [entrypoint] effective identity: uid=1004 gid=1004 user=1004
+         app-1  | <no passwd entry>
+         app-1  | [entrypoint] repo=/home/longxiang/MiroThinker/.worktrees/canonical-v2-s11-consolidation/deploy/start-canonical-v2.sh data_root=/var/tmp/mirothinker-data-v2 state=/var/tmp/mirothinker-canonical-v2-s12f
+         app-1  | [entrypoint] HOME=/var/tmp/mirothinker-home UV_CACHE_DIR=/var/tmp/mirothinker-home/.cache/uv
+         app-1  | [entrypoint] 预检失败：状态目录不可写：/var/tmp/mirothinker-canonical-v2-s12f（容器内 uid=1004）
+         app-1  |     一行修复：user: "0:0"，
+         app-1  |     或宿主机 chown -R 该 uid /var/tmp/mirothinker-canonical-v2-s12f。若确认要带病启动：设 MIROTHINKER_SKIP_PREFLIGHT=1。
+         app-1  | [entrypoint] effective identity: uid=1004 gid=1004 user=1004
+         app-1  | <no passwd entry>
+         app-1  | [entrypoint] repo=/home/longxiang/MiroThinker/.worktrees/canonical-v2-s11-consolidation/deploy/start-canonical-v2.sh data_root=/var/tmp/mirothinker-data-v2 state=/var/tmp/mirothinker-canonical-v2-s12f
+         app-1  | [entrypoint] HOME=/var/tmp/mirothinker-home UV_CACHE_DIR=/var/tmp/mirothinker-home/.cache/uv
+         app-1  | [entrypoint] 预检失败：状态目录不可写：/var/tmp/mirothinker-canonical-v2-s12f（容器内 uid=1004）
+         app-1  |     一行修复：user: "0:0"，
+         app-1  |     或宿主机 chown -R 该 uid /var/tmp/mirothinker-canonical-v2-s12f。若确认要带病启动：设 MIROTHINKER_SKIP_PREFLIGHT=1。
+         app-1  | [entrypoint] effective identity: uid=1004 gid=1004 user=1004
+         app-1  | <no passwd entry>
+         app-1  | [entrypoint] repo=/home/longxiang/MiroThinker/.worktrees/canonical-v2-s11-consolidation/deploy/start-canonical-v2.sh data_root=/var/tmp/mirothinker-data-v2 state=/var/tmp/mirothinker-canonical-v2-s12f
+         app-1  | [entrypoint] HOME=/var/tmp/mirothinker-home UV_CACHE_DIR=/var/tmp/mirothinker-home/.cache/uv
+         app-1  | [entrypoint] 预检失败：状态目录不可写：/var/tmp/mirothinker-canonical-v2-s12f（容器内 uid=1004）
+         app-1  |     一行修复：user: "0:0"，
+         app-1  |     或宿主机 chown -R 该 uid /var/tmp/mirothinker-canonical-v2-s12f。若确认要带病启动：设 MIROTHINKER_SKIP_PREFLIGHT=1。
+         app-1  | [entrypoint] effective identity: uid=1004 gid=1004 user=1004
+         app-1  | <no passwd entry>
+         app-1  | [entrypoint] repo=/home/longxiang/MiroThinker/.worktrees/canonical-v2-s11-consolidation/deploy/start-canonical-v2.sh data_root=/var/tmp/mirothinker-data-v2 state=/var/tmp/mirothinker-canonical-v2-s12f
+         app-1  | [entrypoint] HOME=/var/tmp/mirothinker-home UV_CACHE_DIR=/var/tmp/mirothinker-home/.cache/uv
+         app-1  | [entrypoint] 预检失败：状态目录不可写：/var/tmp/mirothinker-canonical-v2-s12f（容器内 uid=1004）
+         app-1  |     一行修复：user: "0:0"，
+         app-1  |     或宿主机 chown -R 该 uid /var/tmp/mirothinker-canonical-v2-s12f。若确认要带病启动：设 MIROTHINKER_SKIP_PREFLIGHT=1。
+         app-1  | [entrypoint] effective identity: uid=1004 gid=1004 user=1004
+         app-1  | <no passwd entry>
+         app-1  | [entrypoint] repo=/home/longxiang/MiroThinker/.worktrees/canonical-v2-s11-consolidation/deploy/start-canonical-v2.sh data_root=/var/tmp/mirothinker-data-v2 state=/var/tmp/mirothinker-canonical-v2-s12f
+         app-1  | [entrypoint] HOME=/var/tmp/mirothinker-home UV_CACHE_DIR=/var/tmp/mirothinker-home/.cache/uv
+         app-1  | [entrypoint] 预检失败：状态目录不可写：/var/tmp/mirothinker-canonical-v2-s12f（容器内 uid=1004）
+         app-1  |     一行修复：user: "0:0"，
+         app-1  |     或宿主机 chown -R 该 uid /var/tmp/mirothinker-canonical-v2-s12f。若确认要带病启动：设 MIROTHINKER_SKIP_PREFLIGHT=1。
+  [FAIL] 服务未健康
+
+================ 安装结果 ================
+  [ok] 23   [warn] 0   [FAIL] 2
+  需要你知道的条目：
+    [FAIL] 在 200s 内未健康（boot 已耗 3m22s）
+    [FAIL] 服务未健康
+  结论：有未通过项 —— 按上面的 [FAIL] 逐条处理后重跑本脚本（幂等）
+  注意：本次用了测试前缀 MIROTHINKER_SITE_ROOT=/var/tmp/mirothinker-fourth-verify-20260922（所有宿主路径都在它下面）
+==========================================
+install exit=13  总耗时=310s
+
+== 3. 失败现场 ==
+-- 宿主侧属主（root 建的目录 vs 数据属主）：
+/var/tmp/mirothinker-fourth-verify-20260922                            owner=root:root mode=755
+/var/tmp/mirothinker-fourth-verify-20260922/var/tmp                    owner=root:root mode=755
+/var/tmp/mirothinker-fourth-verify-20260922/var/tmp/mirothinker-data-v2 owner=root:root mode=755
+/var/tmp/mirothinker-fourth-verify-20260922/var/tmp/mirothinker-data-v2/index-v3-v2 owner=longxiang:longxiang mode=700
+/var/tmp/mirothinker-fourth-verify-20260922/var/tmp/mirothinker-canonical-v2-s12f owner=root:root mode=700
+-- .env：
+/home/longxiang/delivery-xfer-v11/site-bundle/.env owner=root:root mode=600
+MIROTHINKER_UID=1004
+MIROTHINKER_GID=1004
+MIROTHINKER_HOST_PORT=18298
+-- 容器：
+NAME                        IMAGE                      COMMAND                  SERVICE   CREATED         STATUS                           PORTS
+mirothinker-serving-app-1   mirothinker-serving:v1.1   "/usr/bin/tini -- /u…"   app       3 minutes ago   Restarting (78) 36 seconds ago   
+mirothinker-serving-db-1    postgres:16                "docker-entrypoint.s…"   db        3 minutes ago   Up 3 minutes (healthy)           5432/tcp
+app: status=restarting exit=78 restarts=12 oom=false
+-- app 日志（entrypoint 预检）：
+app-1  | <no passwd entry>
+app-1  | [entrypoint] repo=/home/longxiang/MiroThinker/.worktrees/canonical-v2-s11-consolidation/deploy/start-canonical-v2.sh data_root=/var/tmp/mirothinker-data-v2 state=/var/tmp/mirothinker-canonical-v2-s12f
+app-1  | [entrypoint] HOME=/var/tmp/mirothinker-home UV_CACHE_DIR=/var/tmp/mirothinker-home/.cache/uv
+app-1  | [entrypoint] 预检失败：状态目录不可写：/var/tmp/mirothinker-canonical-v2-s12f（容器内 uid=1004）
+app-1  |     一行修复：user: "0:0"，
+app-1  |     或宿主机 chown -R 该 uid /var/tmp/mirothinker-canonical-v2-s12f。若确认要带病启动：设 MIROTHINKER_SKIP_PREFLIGHT=1。
+app-1  | [entrypoint] effective identity: uid=1004 gid=1004 user=1004
+app-1  | <no passwd entry>
+app-1  | [entrypoint] repo=/home/longxiang/MiroThinker/.worktrees/canonical-v2-s11-consolidation/deploy/start-canonical-v2.sh data_root=/var/tmp/mirothinker-data-v2 state=/var/tmp/mirothinker-canonical-v2-s12f
+app-1  | [entrypoint] HOME=/var/tmp/mirothinker-home UV_CACHE_DIR=/var/tmp/mirothinker-home/.cache/uv
+app-1  | [entrypoint] 预检失败：状态目录不可写：/var/tmp/mirothinker-canonical-v2-s12f（容器内 uid=1004）
+app-1  |     一行修复：user: "0:0"，
+app-1  |     或宿主机 chown -R 该 uid /var/tmp/mirothinker-canonical-v2-s12f。若确认要带病启动：设 MIROTHINKER_SKIP_PREFLIGHT=1。
+app-1  | [entrypoint] effective identity: uid=1004 gid=1004 user=1004
+app-1  | <no passwd entry>
+app-1  | [entrypoint] repo=/home/longxiang/MiroThinker/.worktrees/canonical-v2-s11-consolidation/deploy/start-canonical-v2.sh data_root=/var/tmp/mirothinker-data-v2 state=/var/tmp/mirothinker-canonical-v2-s12f
+app-1  | [entrypoint] HOME=/var/tmp/mirothinker-home UV_CACHE_DIR=/var/tmp/mirothinker-home/.cache/uv
+app-1  | [entrypoint] 预检失败：状态目录不可写：/var/tmp/mirothinker-canonical-v2-s12f（容器内 uid=1004）
+app-1  |     一行修复：user: "0:0"，
+app-1  |     或宿主机 chown -R 该 uid /var/tmp/mirothinker-canonical-v2-s12f。若确认要带病启动：设 MIROTHINKER_SKIP_PREFLIGHT=1。
+-- db：
+db: status=running health=healthy

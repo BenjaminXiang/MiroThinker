@@ -14,7 +14,7 @@
 | `03b-restore-ownership.sh` | 属主归一 + **只 restart** 复原 ⇒ 功能级回到 ok:true/200（并再次证明 restart 够） |
 | `ab.sh` + `key_probe.py`/`llm_probe.py`/`llm_origin.py` | 浏览器操作封装（脱敏）+ 嵌入/对话连接测试探针（登录 → 连接测试 → 凭据来源） |
 
-另：`02e-no-up.log` 是对**新代码路径**（`--no-up`）的实测：exit 0、22 ok/1 warn/0 FAIL、
+另：`02e-no-up.txt` 是对**新代码路径**（`--no-up`）的实测：exit 0、22 ok/1 warn/0 FAIL、
 运行中的容器未被触碰（Up 11 minutes）。
 
 ## ② 用到的既有回归面（不重复跑）

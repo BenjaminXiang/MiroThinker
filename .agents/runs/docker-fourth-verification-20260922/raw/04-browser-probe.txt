@@ -1,0 +1,2 @@
+== 04 页面前的基线（保存前语义：运行期凭据来源） ==
+{"login": 200, "ok": true, "http": 200, "detail": "HTTP 200", "runtime": {"api_key_origin": "legacy-file:.deepseek_api_key", "endpoint_origin": "chat-profile:deepseekv4flash", "runtime_note": "运行期使用 chat profile deepseekv4flash（CHAT_LLM_PROFILE）；base_url https://api.deepseek.com；凭据来源 legacy-file:.deepseek_api_key"}}

@@ -1,0 +1,39 @@
+===== 0. 换 entrypoint 前的现场（02:21:09） =====
+bundle entrypoint-v11.sh sha256: 310fd521c2a0b232…（旧版备份 .pre-slot-projection）
+运行中容器的配置环境（名字与是否为空；由 docker exec 视角）：
+  SGLANG_API_KEY=空（容器配置未设，符合只给文件的现场）
+  CANONICAL_V2_EMBEDDING_API_KEY=空（容器配置未设，符合只给文件的现场）
+
+===== 1. 重启 app 容器（bind 挂的入口覆盖件内容已换；restart 即重新挂载） =====
+health OK after 301s
+
+===== 2. 新 entrypoint 在真实容器里的启动日志（投影那一行） =====
+
+===== 3. 机制级验收①：容器内跑 entrypoint 的凭据收据模式（名字与是否为空，无值） =====
+$ docker compose exec -T app env MIROTHINKER_ENTRYPOINT_ENV_RECEIPT=1 /usr/local/bin/mirothinker-entrypoint
+[entrypoint] 凭据收据（只报名字与是否已设置；从不打印值）：
+[entrypoint]   环境槽位 SGLANG_API_KEY=空
+[entrypoint]   环境槽位 OPENAI_API_KEY=空
+[entrypoint]   环境槽位 API_KEY=空
+[entrypoint]   环境槽位 CANONICAL_V2_EMBEDDING_API_KEY=已设置
+[entrypoint]   key 文件 /opt/mirothinker/.sglang_api_key=已设置（v1 槽位按文件直读，不需要环境变量）
+收据 exit=0
+
+===== 4. 机制级验收②：**运行中的服务进程**自己的环境（只有名字与是否为空） =====
+  服务进程 pid=26 cmd=/opt/mirothinker/.venv/bin/python3 /home/longxiang/MiroThinker/.worktr…
+  进程环境 SGLANG_API_KEY=空
+  进程环境 API_KEY=空
+  进程环境 OPENAI_API_KEY=空
+  进程环境 CANONICAL_V2_EMBEDDING_API_KEY=已设置
+
+===== 5. 无回归：v1 槽位仍按文件工作（连接测试）+ 页面档位（llm）不受影响 =====
+  embedding: {"login": 200, "ok": true, "http": 200, "detail": "HTTP 200", "api_key_source": "legacy-file:.sglang_api_key"}
+  llm     : {"login": 200, "ok": null, "http": null, "api_key_source": null}
+== 启动日志里的投影行（全量 grep，不用 --tail）==
+app-1  | [entrypoint] 嵌入凭据投影：key 文件 → CANONICAL_V2_EMBEDDING_API_KEY（已设置；v1 槽位 SGLANG_API_KEY 仍按文件直读）
+  llm: {"login": 200, "status": 200, "body": {"ok": true, "http_status": 200, "detail": "HTTP 200"}, "api_key_source": "managed-file(env:DEEPSEEK_API_KEY)"}
+
+== 机制级验收③：显式环境变量优先（容器内，注入一个假值；只打印名字与判定，无值）==#
+docker compose exec -T -e CANONICAL_V2_EMBEDDING_API_KEY=<fake-value> app env MIROTHINKER_ENTRYPOINT_ENV_RECEIPT=1 /usr/local/bin/mirothinker-entrypoint
+[entrypoint] 嵌入凭据投影：CANONICAL_V2_EMBEDDING_API_KEY 已显式设置 —— 不动（环境变量优先）
+[entrypoint]   环境槽位 CANONICAL_V2_EMBEDDING_API_KEY=已设置

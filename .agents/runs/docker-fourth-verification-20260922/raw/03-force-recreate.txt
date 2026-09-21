@@ -1,0 +1,101 @@
+===== A. 基线（01:27:41） =====
+host:  inode=22576207157 hash=0ed2420f3164
+container: hash=0ed2420f3164
+{"login": 200, "ok": true, "http_status": 200, "dimension": null, "api_key_source": "legacy-file:.sglang_api_key", "endpoint_source": "managed-file(env:CANONICAL_V2_EMBEDDING_BASE_URL)", "error": null, "raw": {"connection": "embedding", "label": "Embedding 模型端点", "ok": true, "latency_ms": 29, "http_status": 200, "detail": "HTTP 200", "called": true, "runtime": {"key": "embedding", "label": "Embedding 模型端点", "kind": "embedding", "enabled": true, "base_url": "http://100.64.0.27:18005/v1", "model": "Qwen/Qwen3-Embedding-8B", "api_key_origin": "legacy-file:.sglang_api_key", "endpoint_origin": "managed-file(env:CANONICAL_V2_EMBEDDING_BASE_URL)", "runtime_note": "运行期 base_url http://100.64.0.27:18005/v1（来源 managed-file(env:CANONICAL_V2_EMBEDDING_BASE_URL)；未设置受管地址时回落到发布包记录的地址）；凭据来源 legacy-file:.sglang_api_key", "pending_restart": false}, "used": {"api_key_source": "legacy-file:.sglang_api_key", "effective_api_key_source": "legacy-file:.sglang_api_key", "endpoint_source": "managed-file(env:CANONICAL_V2_EMBEDDING_BASE_URL)", "base_url": null, "model": "Qwen/Qwen3-Embedding-8B"}, "rate": {"per_minute_limit": 6, "min_interval_seconds": 1.0, "remaining": 5}, "identity": null, "restart_required": null}}
+
+===== B. 文档命令换成一个故意错的 key（in-place） =====
+host: inode 22576207157 -> 22578793892  (inode 变了)
+host: hash=3a8e2874223c（= 新内容）
+B1 运行中的容器（未重启）看到的：hash=0ed2420f3164  ← in-place 写在挂载点上是否立即可见
+B2 docker compose restart app（01:27:41）
+    restart 后容器内看到的：hash=
+    health OK after 281s
+B3 管理员连接测试（功能级，重启后）：
+{"login": 200, "ok": false, "http_status": 401, "dimension": null, "api_key_source": "none", "endpoint_source": "managed-file(env:CANONICAL_V2_EMBEDDING_BASE_URL)", "error": null, "raw": {"connection": "embedding", "label": "Embedding 模型端点", "ok": false, "latency_ms": 10, "http_status": 401, "detail": "HTTP 401：端点可达，凭据被拒绝", "called": true, "runtime": {"key": "embedding", "label": "Embedding 模型端点", "kind": "embedding", "enabled": false, "base_url": "http://100.64.0.27:18005/v1", "model": "Qwen/Qwen3-Embedding-8B", "api_key_origin": null, "endpoint_origin": "managed-file(env:CANONICAL_V2_EMBEDDING_BASE_URL)", "runtime_note": "运行期不可用：本地凭据缺失（API_KEY/OPENAI_API_KEY/SGLANG_API_KEY/.sglang_api_key 全空）", "pending_restart": false}, "used": {"api_key_source": "none", "effective_api_key_source": "none", "endpoint_source": "managed-file(env:CANONICAL_V2_EMBEDDING_BASE_URL)", "base_url": null, "model": "Qwen/Qwen3-Embedding-8B"}, "rate": {"per_minute_limit": 6, "min_interval_seconds": 1.0, "remaining": 5}, "identity": null, "restart_required": null}}
+
+===== C. mv 换 inode（新文件顶掉旧 inode）+ 判决 =====
+host: inode 22578793892 -> 21896584924  (mv 换了 inode)
+C1 运行中的容器（未重启）看到的：hash=  ← 挂载是否绑在旧 inode 上
+  判定：B3 = 服务**已按新 key 工作** ⇒ 文档说'只 restart 不够'与实测不符（见报告）
+C2 docker compose up -d --force-recreate app（01:32:36）
+    recreate 后容器内看到的：hash=（host=21896584924 的 hash=c65977bc5279）
+    health OK after 281s
+C3 管理员连接测试（功能级，recreate 后）：
+{"login": 200, "ok": false, "http_status": 401, "dimension": null, "api_key_source": "none", "endpoint_source": "managed-file(env:CANONICAL_V2_EMBEDDING_BASE_URL)", "error": null, "raw": {"connection": "embedding", "label": "Embedding 模型端点", "ok": false, "latency_ms": 10, "http_status": 401, "detail": "HTTP 401：端点可达，凭据被拒绝", "called": true, "runtime": {"key": "embedding", "label": "Embedding 模型端点", "kind": "embedding", "enabled": false, "base_url": "http://100.64.0.27:18005/v1", "model": "Qwen/Qwen3-Embedding-8B", "api_key_origin": null, "endpoint_origin": "managed-file(env:CANONICAL_V2_EMBEDDING_BASE_URL)", "runtime_note": "运行期不可用：本地凭据缺失（API_KEY/OPENAI_API_KEY/SGLANG_API_KEY/.sglang_api_key 全空）", "pending_restart": false}, "used": {"api_key_source": "none", "effective_api_key_source": "none", "endpoint_source": "managed-file(env:CANONICAL_V2_EMBEDDING_BASE_URL)", "base_url": null, "model": "Qwen/Qwen3-Embedding-8B"}, "rate": {"per_minute_limit": 6, "min_interval_seconds": 1.0, "remaining": 5}, "identity": null, "restart_required": null}}
+
+===== D. 换回真 key（文档命令）+ --force-recreate 复原 =====
+host: inode=22578793892 hash=0ed2420f3164（= 真 key 的内容哈希）
+    recreate 后容器内看到的：hash=
+Usage:  docker compose [OPTIONS] COMMAND
+
+Define and run multi-container applications with Docker
+
+Options:
+      --all-resources              Include all resources, even those not
+                                   used by services
+      --ansi string                Control when to print ANSI control
+                                   characters ("never"|"always"|"auto")
+                                   (default "auto")
+      --compatibility              Run compose in backward compatibility mode
+      --dry-run                    Execute command in dry run mode
+      --env-file stringArray       Specify an alternate environment file
+  -f, --file stringArray           Compose configuration files
+      --parallel int               Control max parallelism, -1 for
+                                   unlimited (default -1)
+      --profile stringArray        Specify a profile to enable
+      --progress string            Set type of progress output (auto,
+                                   tty, plain, json, quiet)
+      --project-directory string   Specify an alternate working directory
+                                   (default: the path of the, first
+                                   specified, Compose file)
+  -p, --project-name string        Project name
+
+Management Commands:
+  bridge      Convert compose files into another model
+
+Commands:
+  attach      Attach local standard input, output, and error streams to a service's running container
+  build       Build or rebuild services
+  commit      Create a new image from a service container's changes
+  config      Parse, resolve and render compose file in canonical format
+  cp          Copy files/folders between a service container and the local filesystem
+  create      Creates containers for a service
+  down        Stop and remove containers, networks
+  events      Receive real time events from containers
+  exec        Execute a command in a running container
+  export      Export a service container's filesystem as a tar archive
+  images      List images used by the created containers
+  kill        Force stop service containers
+  logs        View output from containers
+  ls          List running compose projects
+  pause       Pause services
+  port        Print the public port for a port binding
+  ps          List containers
+  publish     Publish compose application
+  pull        Pull service images
+  push        Push service images
+  restart     Restart service containers
+  rm          Removes stopped service containers
+  run         Run a one-off command on a service
+  scale       Scale services 
+  start       Start services
+  stats       Display a live stream of container(s) resource usage statistics
+  stop        Stop services
+  top         Display the running processes
+  unpause     Unpause services
+  up          Create and start containers
+  version     Show the Docker Compose version information
+  volumes     List volumes
+  wait        Block until containers of all (or specified) services stop.
+  watch       Watch build context for service and rebuild/refresh containers when files are updated
+
+Run 'docker compose COMMAND --help' for more information on a command.
+    health OK after 276s
+D1 管理员连接测试（复原后）：
+{"login": 200, "ok": false, "http_status": 401, "dimension": null, "api_key_source": "none", "endpoint_source": "managed-file(env:CANONICAL_V2_EMBEDDING_BASE_URL)", "error": null, "raw": {"connection": "embedding", "label": "Embedding 模型端点", "ok": false, "latency_ms": 11, "http_status": 401, "detail": "HTTP 401：端点可达，凭据被拒绝", "called": true, "runtime": {"key": "embedding", "label": "Embedding 模型端点", "kind": "embedding", "enabled": false, "base_url": "http://100.64.0.27:18005/v1", "model": "Qwen/Qwen3-Embedding-8B", "api_key_origin": null, "endpoint_origin": "managed-file(env:CANONICAL_V2_EMBEDDING_BASE_URL)", "runtime_note": "运行期不可用：本地凭据缺失（API_KEY/OPENAI_API_KEY/SGLANG_API_KEY/.sglang_api_key 全空）", "pending_restart": false}, "used": {"api_key_source": "none", "effective_api_key_source": "none", "endpoint_source": "managed-file(env:CANONICAL_V2_EMBEDDING_BASE_URL)", "base_url": null, "model": "Qwen/Qwen3-Embedding-8B"}, "rate": {"per_minute_limit": 6, "min_interval_seconds": 1.0, "remaining": 5}, "identity": null, "restart_required": null}}
+
+===== 汇总 =====
+03-A-baseline              {"login": 200, "ok": true, "http_status": 200, "dimension": null, "api_key_source": "legacy-file:.sglang_api_key", "endpoint_source": "managed-file(env:CANONICAL_V2_EMBEDDING_BASE_URL)", "error": null, "raw": {"connection": "embedding", "label": "Embedding 模型端点", "ok": true, "latency_ms": 29, "http_status": 200, "detail": "HTTP 200", "called": true, "runtime": {"key": "embedding", "label":
+03-B3-after-restart        {"login": 200, "ok": false, "http_status": 401, "dimension": null, "api_key_source": "none", "endpoint_source": "managed-file(env:CANONICAL_V2_EMBEDDING_BASE_URL)", "error": null, "raw": {"connection": "embedding", "label": "Embedding 模型端点", "ok": false, "latency_ms": 10, "http_status": 401, "detail": "HTTP 401：端点可达，凭据被拒绝", "called": true, "runtime": {"key": "embeddin
+03-C3-after-recreate       {"login": 200, "ok": false, "http_status": 401, "dimension": null, "api_key_source": "none", "endpoint_source": "managed-file(env:CANONICAL_V2_EMBEDDING_BASE_URL)", "error": null, "raw": {"connection": "embedding", "label": "Embedding 模型端点", "ok": false, "latency_ms": 10, "http_status": 401, "detail": "HTTP 401：端点可达，凭据被拒绝", "called": true, "runtime": {"key": "embeddin
+03-D1-restored             {"login": 200, "ok": false, "http_status": 401, "dimension": null, "api_key_source": "none", "endpoint_source": "managed-file(env:CANONICAL_V2_EMBEDDING_BASE_URL)", "error": null, "raw": {"connection": "embedding", "label": "Embedding 模型端点", "ok": false, "latency_ms": 11, "http_status": 401, "detail": "HTTP 401：端点可达，凭据被拒绝", "called": true, "runtime": {"key": "embeddin

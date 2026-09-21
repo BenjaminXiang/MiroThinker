@@ -9,8 +9,8 @@
 `mirothinker-pgdata-fourth-v11`；交付包用**跨 fs 传过来的副本**
 `/home/longxiang/delivery-xfer-v11/site-bundle`。
 
-三次尝试，证据分别在 `raw/02-sudo-attempt1.log`、`raw/02b-sudo-attempt2.log`、
-`raw/02c-sudo-attempt3.log`：
+三次尝试，证据分别在 `raw/02-sudo-attempt1.txt`、`raw/02b-sudo-attempt2.txt`、
+`raw/02c-sudo-attempt3.txt`：
 
 | # | 安装器 | 材料 | 结果 | 根因 |
 |---|---|---|---|---|
@@ -81,10 +81,10 @@ root 安装下宿主目录属主是 root，于是 entrypoint 的文案变成
 
 - **第 3 次（修好的安装器）**：`docker load` 走了传送后的 `tar.gz`（`MIROTHINKER_SITE_FORCE_LOAD=1`）→
   容器起来后 `[entrypoint] 预检通过`、`mount-receipt` 写出、`manual-recall-v1` 建出、
-  采集库迁移幂等 `{"revision":"V042","tables":42}`（`raw/02c-sudo-attempt3.log`）。
+  采集库迁移幂等 `{"revision":"V042","tables":42}`（`raw/02c-sudo-attempt3.txt`）。
 - **首启耗时**（冷数据面 + 无 mount-receipt）：容器 `StartedAt=2026-09-21T17:14:55Z`，
   安装器轮询在 `…已等 7m32s` 之后拿到 `/api/health` 200 ⇒ **≈455 s**（README-FIRST 记录的是 7 分 13 秒）。
-- **幂等重跑**（`raw/02d-sudo-attempt3b.log`）：`install exit=0`、**25 ok / 0 warn / 0 FAIL**、
+- **幂等重跑**（`raw/02d-sudo-attempt3b.txt`）：`install exit=0`、**25 ok / 0 warn / 0 FAIL**、
   全量校验 21 s + 解包 45 s + 10 件校验 41 s、健康检查**立刻通过**（boot=0s）、
   容器内验收探针 `mirothinker-verify` 全通、总耗时 109 s。
 - **属主终态**：数据根 `longxiang:longxiang 755`、`index-v3-v2` `700`、状态目录 `700`、

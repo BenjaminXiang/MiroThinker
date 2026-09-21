@@ -1,0 +1,70 @@
+== --no-up 分支实测（新代码路径） ==
+
+== 0. 前置：身份 / 目录 / 参数 ==
+  运行身份: uid=0（root）
+  交付包:   /home/longxiang/delivery-xfer-v11/site-bundle
+  宿主路径: 数据 /var/tmp/mirothinker-fourth-verify-20260922/var/tmp/mirothinker-data-v2
+            状态 /var/tmp/mirothinker-fourth-verify-20260922/var/tmp/mirothinker-canonical-v2-s12f
+            端口 18298（容器内固定 18188）
+  交付物:   镜像 mirothinker-serving-v1.1.tar.gz（tag mirothinker-serving:v1.1） / 数据 serving-data-v1.1.tar.gz
+  [ok]   交付包关键文件齐全
+
+== 1. 预检 ==
+  [ok]   docker 存在：Docker version 28.5.1, build e180ab8
+  [ok]   compose v2 存在：2.40.2
+  [ok]   docker daemon 可用
+  [ok]   内存 503 GB（≥64 GB 达标）
+  [ok]   磁盘可用 874 GB（按 /var/tmp/mirothinker-fourth-verify-20260922/var/tmp 所在分区；安装期需要 ≈25 GB：压缩包 3.2 GB + 解包 7 GB + 镜像 5.2 GB）
+  [ok]   端口 18298 由**本栈**占用（幂等重跑/升级场景，正常）
+  [ok]   嵌入端点 http://100.64.0.27:18005/v1：HTTP 200，维度 4096（期望 4096）
+  [ok]   chat LLM 端点可达（https://api.deepseek.com/v1/models → 200）
+  [ok]   不需要访问 PyPI / apt 源（镜像与数据面都是离线交付物）
+
+== 2. 校验交付包（sha256，动任何东西之前） ==
+  [ok]   mirothinker-serving-v1.1.tar.gz sha256 一致（f842f6de955466d0…，2.1GB）
+  [ok]   serving-data-v1.1.tar.gz sha256 一致（beb9449dea88b516…，1.4GB）
+  （校验耗时 0m22s）
+
+== 3. 数据面落位（/var/tmp/mirothinker-fourth-verify-20260922/var/tmp/mirothinker-data-v2，容器内路径固定为 /var/tmp/mirothinker-data-v2） ==
+  [ok]   解包完成（0m45s）
+
+== 3.1 10 个交付物校验（checksums.sha256） ==
+  [ok]   10 个交付物 sha256 全部一致（0m40s）
+
+== 4. 状态目录（/var/tmp/mirothinker-fourth-verify-20260922/var/tmp/mirothinker-canonical-v2-s12f） ==
+  [ok]   状态目录就位（0700）：admin 账号库 / 密钥 / 首启口令 / 访问日志都落在这里
+  属主归一（容器内 uid=1004:1004）：数据根=1004:1004 状态目录=1004:1004
+
+== 5. 载入镜像 ==
+  [ok]   镜像 mirothinker-serving:v1.1 已在本地（sha256:04c3cfcd465f…），跳过 load（要强制重载：MIROTHINKER_SITE_FORCE_LOAD=1）
+
+== 6. 现场配置（.env / PG 凭据 / 4 个密钥） ==
+  [ok]   写入 /home/longxiang/delivery-xfer-v11/site-bundle/.env（uid:gid=1004:1004 取自数据属主；端口 18298）
+  [ok]   命令文件覆盖件在位且指向 serving-pack-run16-v11（v1.1 服务包）
+  [ok]   入口覆盖件在位且可执行（预检路径 serving-pack-run16-v11）
+  [ok]   受管配置已存在（保留现场版本，不覆盖）
+  [ok]   PG 凭据已存在（保留）：/home/longxiang/delivery-xfer-v11/site-bundle/secrets/postgres.env
+  [ok]   4 个密钥就位且非空（内容未打印；权限：.deepseek_api_key=600 .bocha_api_key=600 .serper_api_key=600 .sglang_api_key=600 ）
+
+== 7. 起服务（docker compose，容器内固定 18188 → 宿主 18298） ==
+  [warn] --no-up：按要求停在起服务之前（数据面/状态目录/配置/密钥检查都已就位）
+
+================ 安装（--no-up）完成 ================
+  数据/状态：   /var/tmp/mirothinker-fourth-verify-20260922/var/tmp/mirothinker-data-v2
+                /var/tmp/mirothinker-fourth-verify-20260922/var/tmp/mirothinker-canonical-v2-s12f（首启口令在 admin-initial-password.txt）
+  起服务：      cd /home/longxiang/delivery-xfer-v11/site-bundle && docker compose up -d
+  健康检查：    http://127.0.0.1:18298/api/health（启动相位实测 ≈276 s）
+  验收：        cd /home/longxiang/delivery-xfer-v11/site-bundle && docker compose exec -T app mirothinker-verify
+===================================================
+
+================ 安装结果 ================
+  [ok] 22   [warn] 1   [FAIL] 0
+  需要你知道的条目：
+    [warn] --no-up：按要求停在起服务之前（数据面/状态目录/配置/密钥检查都已就位）
+  结论：安装完成（或 --dry-run 检查通过）
+  注意：本次用了测试前缀 MIROTHINKER_SITE_ROOT=/var/tmp/mirothinker-fourth-verify-20260922（所有宿主路径都在它下面）
+==========================================
+exit=0
+-- 容器是否被动过（应保持 Up，无 recreate）：
+mirothinker-serving-app-1	Up 11 minutes (healthy)
+mirothinker-serving-db-1	Up About an hour (healthy)

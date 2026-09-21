@@ -1,0 +1,57 @@
+== D6 修复验证（docker run 隔离容器；假冻结路径 + root:root 0700 状态目录）==
+state dir: /tmp/d6-check.AHuz4W/state longxiang:longxiang 700
+[entrypoint] effective identity: uid=1004 gid=1004 user=1004
+<no passwd entry>
+[entrypoint] repo=/home/longxiang/MiroThinker/.worktrees/canonical-v2-s11-consolidation/deploy/start-canonical-v2.sh data_root=/var/tmp/mirothinker-data-v2 state=/var/tmp/mirothinker-canonical-v2-s12f
+[entrypoint] HOME=/var/tmp/mirothinker-home UV_CACHE_DIR=/var/tmp/mirothinker-home/.cache/uv
+[entrypoint] 服务包父目录可写：本次启动会写 /var/tmp/mirothinker-data-v2/serving-pack-run16-readerbound.mount-receipt.json（下次启动走 receipt 快路径）
+[entrypoint] 嵌入凭据投影：没有可用的嵌入凭据（CANONICAL_V2_EMBEDDING_API_KEY 空、受管凭据里没有 embedding.api_key、key 文件 /opt/mirothinker/.sglang_api_key 不存在/为空）
+[entrypoint]       ⇒ 自有端点（v1 槽位）与候选网关（CANONICAL_V2_EMBEDDING_API_KEY）都拿不到凭据；向量道会降级，服务照常启动
+[entrypoint] 已创建 /var/tmp/mirothinker-data-v2/manual-recall-v1
+[entrypoint] 采集库未配置（无 DATABASE_URL，也没有 POSTGRES_USER/POSTGRES_PASSWORD）
+[entrypoint]       ⇒ 采集面保持现状：503 + 导航隐藏（这是设计行为，不是故障）
+[entrypoint] 预检通过，交给冻结生产启动脚本：/home/longxiang/MiroThinker/.worktrees/canonical-v2-s11-consolidation/deploy/start-canonical-v2.sh
+[canonical-v2] console_database=unconfigured
+Traceback (most recent call last):
+  File "/opt/mirothinker/apps/miroflow-agent/src/data_agents/canonical_v2/serving_pack_loader.py", line 744, in open_serving_pack_authority
+    manifest = ServingPackManifest.model_validate_json(manifest_path.read_bytes())
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/mirothinker/.venv/lib/python3.12/site-packages/pydantic/main.py", line 766, in model_validate_json
+    return cls.__pydantic_validator__.validate_json(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+pydantic_core._pydantic_core.ValidationError: 1 validation error for ServingPackManifest
+  Invalid JSON: EOF while parsing a value at line 1 column 0 [type=json_invalid, input_value=b'', input_type=bytes]
+    For further information visit https://errors.pydantic.dev/2.12/v/json_invalid
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/opt/mirothinker/.agents/runs/rebuild-canonical-v2-knowledge-platform/s12a/complete_candidate_runner.py", line 1159, in main
+    handoff = create_pack_handoff(config)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/mirothinker/.agents/runs/rebuild-canonical-v2-knowledge-platform/s12a/complete_candidate_runner.py", line 1016, in create_serving_pack_handoff
+    authority = pack_authority()
+                ^^^^^^^^^^^^^^^^
+  File "/opt/mirothinker/.agents/runs/rebuild-canonical-v2-knowledge-platform/s12a/complete_candidate_runner.py", line 1003, in pack_authority
+    pack_loader_module.open_serving_pack_authority(
+  File "/opt/mirothinker/apps/miroflow-agent/src/data_agents/canonical_v2/serving_pack_loader.py", line 746, in open_serving_pack_authority
+    raise ServingPackIntegrityError(
+src.data_agents.canonical_v2.serving_pack_loader.ServingPackIntegrityError: serving pack manifest is unreadable or invalid
+complete candidate runner failed: ServingPackIntegrityError: serving pack manifest is unreadable or invalid
+exit=2
+
+== D6 修复验证（重跑：状态目录 root:root 0700，模拟真 root 安装的属主现场）==
+stat: cannot statx '/tmp/d6-check.mqBDk3/state': Permission denied
+state dir: 
+[entrypoint] effective identity: uid=1004 gid=1004 user=1004
+<no passwd entry>
+[entrypoint] repo=/home/longxiang/MiroThinker/.worktrees/canonical-v2-s11-consolidation/deploy/start-canonical-v2.sh data_root=/var/tmp/mirothinker-data-v2 state=/var/tmp/mirothinker-canonical-v2-s12f
+[entrypoint] HOME=/var/tmp/mirothinker-home UV_CACHE_DIR=/var/tmp/mirothinker-home/.cache/uv
+[entrypoint] 预检失败：状态目录不可写：/var/tmp/mirothinker-canonical-v2-s12f（容器内 uid=1004）
+    诊断：宿主上该目录属主 0:0，数据根属主 1004:1004 —— 容器要按**数据属主**那个 uid 跑（compose 的 user: 取 .env 里的 MIROTHINKER_UID/MIROTHINKER_GID）。
+    一行修复（在宿主机、交付包目录里执行）：
+      sudo ./install-site.sh        # 幂等；会把数据根 / 状态目录 / 密钥归一给数据属主
+    或： sudo chown -R 1004 /var/tmp/mirothinker-canonical-v2-s12f
+    注意：**不要**因为这里显示 root 就把 compose 的 user: 改成 0:0 —— 那是把服务跑成 root，既不对也不安全。
+    若确认要带病启动：设 MIROTHINKER_SKIP_PREFLIGHT=1。
+exit=78

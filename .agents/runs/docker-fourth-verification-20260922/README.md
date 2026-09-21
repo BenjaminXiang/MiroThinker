@@ -7,10 +7,10 @@
 
 | # | 命题 | 结论 | 证据 |
 |---|---|---|---|
-| 1 | `--force-recreate` 的反向实验 | **通过（且推翻原推断）**：`restart` 就够；真正的坑是**属主**不是 inode | `03-force-recreate-experiment.md`、`raw/03-*.log|json`、`raw/03b-restore.log` |
-| 2 | 浏览器里真提交一次 key 表单 | **通过**（登录 → 填写 → 保存 → 测试 → 下次启动真生效） | `04-browser-key-form.md`、`raw/04-browser.log`、`raw/04-*.json`、`raw/04-admin-after-save.png` |
-| 3 | 真 root（sudo）下的安装 | **通过（修完 3 个 root 专属缺陷后）**：v1.1 现货包在 sudo 下装不完 | `02-sudo-install.md`、`raw/02-sudo-attempt1.log`、`raw/02b-sudo-attempt2.log`、`raw/02c/02d-*.log` |
-| 4 | 跨文件系统传送后的完整链路 | **通过**：跨 fs 拷贝 → 17/17 逐文件校验 → 从副本安装/load/起服 | `01-cross-filesystem-transfer.md`、`raw/01-*.log` |
+| 1 | `--force-recreate` 的反向实验 | **通过（且推翻原推断）**：`restart` 就够；真正的坑是**属主**不是 inode | `03-force-recreate-experiment.md`、`raw/03-*.txt|json`、`raw/03b-restore.txt` |
+| 2 | 浏览器里真提交一次 key 表单 | **通过**（登录 → 填写 → 保存 → 测试 → 下次启动真生效） | `04-browser-key-form.md`、`raw/04-browser.txt`、`raw/04-*.json`、`raw/04-admin-after-save.png` |
+| 3 | 真 root（sudo）下的安装 | **通过（修完 3 个 root 专属缺陷后）**：v1.1 现货包在 sudo 下装不完 | `02-sudo-install.md`、`raw/02-sudo-attempt1.txt`、`raw/02b-sudo-attempt2.txt`、`raw/02c/02d-*.txt` |
+| 4 | 跨文件系统传送后的完整链路 | **通过**：跨 fs 拷贝 → 17/17 逐文件校验 → 从副本安装/load/起服 | `01-cross-filesystem-transfer.md`、`raw/01-*.txt` |
 
 新发现的缺陷（8 条，5 条已修机制、3 条仅报告）：见 `findings.md`。
 

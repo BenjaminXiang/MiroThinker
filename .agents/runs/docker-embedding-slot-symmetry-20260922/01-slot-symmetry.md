@@ -34,7 +34,7 @@
 [stub] 文件 v1 槽位可读=是
 ```
 
-（`raw/00-RED-behavior.log`；`sk-fake-red-only-9999` 是本轮临时生成的**假值**，不是任何真凭据。）
+（`raw/00-RED-behavior.txt`；`sk-fake-red-only-9999` 是本轮临时生成的**假值**，不是任何真凭据。）
 
 同一 stub、同一文件，改完后再跑：
 
@@ -71,7 +71,7 @@ cd apps/miroflow-agent && uv run pytest tests/canonical_v2/test_deploy_entrypoin
 定向套件（含邻域）：`uv run pytest tests/canonical_v2 -k "managed or embedding or deploy or secrets" -q`
 → **8 passed**（我的 5 条 + `test_fast_boot` / `test_knowledge_build_isolated` / `test_serving_pack_loader`），1755 deselected。
 
-## 容器内机制级验收（原始命令与输出见 `raw/05-container-acceptance.log`）
+## 容器内机制级验收（原始命令与输出见 `raw/05-container-acceptance.txt`）
 
 换 entrypoint（仍是**只给文件**、未设任何环境变量的现场）→ `docker compose restart app`
 （281 s）→ 三项检查：

@@ -10,7 +10,7 @@ mkdir -p /home/longxiang/delivery-xfer-v11
 time cp -a /var/tmp/mirothinker-site-bundle-v11 ./site-bundle     # 3.4 GB
 ```
 
-原始输出（`raw/01-copy.log`）：
+原始输出（`raw/01-copy.txt`）：
 
 ```
 src: /var/tmp/mirothinker-site-bundle-v11 (fs: /dev/nvme0n1p2)
@@ -22,7 +22,7 @@ dst bytes(du -sb): 3645060568 / src bytes: 3645076759
 `stat` 复核：交付包 15 个文件 + `state/config-managed/settings.json`，两个大归档
 2 162 962 373 B / 1 481 979 537 B，与源一致。
 
-## 校验（`raw/01-verify.log`、`raw/01-verify-manifest.log`）
+## 校验（`raw/01-verify.txt`、`raw/01-verify-manifest.txt`）
 
 | 检查 | 命令 | 结果 |
 |---|---|---|

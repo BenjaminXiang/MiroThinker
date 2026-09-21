@@ -1,0 +1,17 @@
+bundles/qwen-embedding-bundle-v1.json: OK
+bundles/serving-bundle-run16.json: OK
+checksums.sha256: OK
+compose.yaml: OK
+CONFIG-GUIDE.md: OK
+entrypoint-v11.sh: OK
+install-site.sh: OK
+kit-manifest.txt: OK
+mirothinker-serving-v1.1.tar.gz: OK
+mirothinker-serving-v1.1.tar.gz.sha256: OK
+README.md: OK
+secrets.example/postgres.env: OK
+serve-command-v11.sh: OK
+serving-data-v1.1.tar.gz: OK
+serving-data-v1.1.tar.gz.sha256: OK
+sizes.tsv: OK
+state/config-managed/settings.json: OK

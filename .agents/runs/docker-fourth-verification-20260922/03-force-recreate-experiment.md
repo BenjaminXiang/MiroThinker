@@ -16,7 +16,7 @@
 | 文件级：宿主 | `sudo sha256sum` + `stat -c %i`（inode） | 确认"文档命令"到底换不换 inode |
 | 功能级：服务真的用哪份凭据 | 管理员连接测试 `POST /api/canonical-v2/admin/connections/test {"connection":"embedding"}` | 响应里带 `api_key_source` / `http_status`；换错 key 时端点回 401 |
 
-## 实测（原始输出在 `raw/03-force-recreate.log`，逐段 JSON 在 `raw/03-*.json`）
+## 实测（原始输出在 `raw/03-force-recreate.txt`，逐段 JSON 在 `raw/03-*.json`）
 
 **A. 基线（01:27:41）**
 
@@ -66,7 +66,7 @@ C2 docker compose up -d --force-recreate app → 容器内 hash=Permission denie
 （这一步暴露了 **D7**：文档命令把 key 写成 root:root 0600 ⇒ 容器 uid 1004 读不到 ⇒ 复原后
 连接测试仍是 401/凭据缺失；补一次 `chown 1004:1004` 后**只 `restart`** 即恢复
 `ok:true / 200 / api_key_source=legacy-file:.sglang_api_key`，且 restart 后容器内 hash 立刻
-等于宿主 hash —— `raw/03b-restore.log`。）
+等于宿主 hash —— `raw/03b-restore.txt`。）
 
 ## 结论（对文档的动作）
 

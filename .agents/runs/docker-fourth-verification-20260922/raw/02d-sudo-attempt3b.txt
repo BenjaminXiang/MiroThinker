@@ -1,0 +1,128 @@
+== 0. 前一次被打断时的现场 ==
+-- health: 200
+-- 容器 StartedAt / 重启次数：
+StartedAt=2026-09-21T17:14:55.361765413Z restarts=15 status=running health=healthy
+-- 首启耗时（对比容器 StartedAt 与 health 首次 200 的时间）：
+   安装器记录：…已等 7m32s 后 /api/health 200（见 raw/02c-sudo-attempt3.log 末尾）
+
+== 1. 幂等重跑安装器（服务已在跑，健康检查应立刻通过） ==
+
+== 0. 前置：身份 / 目录 / 参数 ==
+  运行身份: uid=0（root）
+  交付包:   /home/longxiang/delivery-xfer-v11/site-bundle
+  宿主路径: 数据 /var/tmp/mirothinker-fourth-verify-20260922/var/tmp/mirothinker-data-v2
+            状态 /var/tmp/mirothinker-fourth-verify-20260922/var/tmp/mirothinker-canonical-v2-s12f
+            端口 18298（容器内固定 18188）
+  交付物:   镜像 mirothinker-serving-v1.1.tar.gz（tag mirothinker-serving:v1.1） / 数据 serving-data-v1.1.tar.gz
+  [ok]   交付包关键文件齐全
+
+== 1. 预检 ==
+  [ok]   docker 存在：Docker version 28.5.1, build e180ab8
+  [ok]   compose v2 存在：2.40.2
+  [ok]   docker daemon 可用
+  [ok]   内存 503 GB（≥64 GB 达标）
+  [ok]   磁盘可用 874 GB（按 /var/tmp/mirothinker-fourth-verify-20260922/var/tmp 所在分区；安装期需要 ≈25 GB：压缩包 3.2 GB + 解包 7 GB + 镜像 5.2 GB）
+  [ok]   端口 18298 由**本栈**占用（幂等重跑/升级场景，正常）
+  [ok]   嵌入端点 http://100.64.0.27:18005/v1：HTTP 200，维度 4096（期望 4096）
+  [ok]   chat LLM 端点可达（https://api.deepseek.com/v1/models → 200）
+  [ok]   不需要访问 PyPI / apt 源（镜像与数据面都是离线交付物）
+
+== 2. 校验交付包（sha256，动任何东西之前） ==
+  [ok]   mirothinker-serving-v1.1.tar.gz sha256 一致（f842f6de955466d0…，2.1GB）
+  [ok]   serving-data-v1.1.tar.gz sha256 一致（beb9449dea88b516…，1.4GB）
+  （校验耗时 0m21s）
+
+== 3. 数据面落位（/var/tmp/mirothinker-fourth-verify-20260922/var/tmp/mirothinker-data-v2，容器内路径固定为 /var/tmp/mirothinker-data-v2） ==
+  [ok]   解包完成（0m45s）
+
+== 3.1 10 个交付物校验（checksums.sha256） ==
+  [ok]   10 个交付物 sha256 全部一致（0m41s）
+
+== 4. 状态目录（/var/tmp/mirothinker-fourth-verify-20260922/var/tmp/mirothinker-canonical-v2-s12f） ==
+  [ok]   状态目录就位（0700）：admin 账号库 / 密钥 / 首启口令 / 访问日志都落在这里
+  属主归一（容器内 uid=1004:1004）：数据根 1004:1004:1004:1004，状态目录 :
+
+== 5. 载入镜像 ==
+  [ok]   镜像 mirothinker-serving:v1.1 已在本地（sha256:04c3cfcd465f…），跳过 load（要强制重载：MIROTHINKER_SITE_FORCE_LOAD=1）
+
+== 6. 现场配置（.env / PG 凭据 / 4 个密钥） ==
+  [ok]   写入 /home/longxiang/delivery-xfer-v11/site-bundle/.env（uid:gid=1004:1004 取自数据属主；端口 18298）
+  [ok]   命令文件覆盖件在位且指向 serving-pack-run16-v11（v1.1 服务包）
+  [ok]   入口覆盖件在位且可执行（预检路径 serving-pack-run16-v11）
+  [ok]   受管配置已存在（保留现场版本，不覆盖）
+  [ok]   PG 凭据已存在（保留）：/home/longxiang/delivery-xfer-v11/site-bundle/secrets/postgres.env
+  [ok]   4 个密钥就位且非空（内容未打印；权限：.deepseek_api_key=600 .bocha_api_key=600 .serper_api_key=600 .sglang_api_key=600 ）
+
+== 7. 起服务（docker compose，容器内固定 18188 → 宿主 18298） ==
+ Container mirothinker-serving-db-1  Running
+ Container mirothinker-serving-app-1  Running
+  [ok]   容器已创建：app=Up 12 minutes (healthy) db=Up 18 minutes (healthy) 
+  等待健康（启动相位实测 ≈276 s；端口在相位结束前不会 bind，属正常）…
+  [ok]   健康检查通过：boot=0s（http://127.0.0.1:18298/api/health）
+
+== 8. 验收 ==
+== HTTP 探针 (http://127.0.0.1:18188) ==
+  [OK]   /api/health -> HTTP 200
+  [OK]   /chat -> HTTP 200
+  [OK]   /main -> HTTP 200
+== 嵌入端点探针（断言 HTTP 200 + 维度 4096）==
+  [OK]   http://100.64.0.27:18005/v1 HTTP 200，维度 4096（model=Qwen/Qwen3-Embedding-8B）
+== 内存 ==
+  RSS 合计: 17.61 GiB
+  cgroup memory.current: 17.31 GiB
+== 结果：全通 ==
+  [ok]   容器内验收探针（mirothinker-verify）全通
+
+================ 安装完成 ================
+  问答页：      http://<本机IP>:18298/chat
+  管理台：      http://<本机IP>:18298/main
+  首启口令：    /var/tmp/mirothinker-fourth-verify-20260922/var/tmp/mirothinker-canonical-v2-s12f/admin-initial-password.txt   （登录后立即改密）
+  状态/日志：   /var/tmp/mirothinker-fourth-verify-20260922/var/tmp/mirothinker-canonical-v2-s12f   与  /home/longxiang/delivery-xfer-v11/site-bundle/state/logs
+  采集库：      docker compose -f /home/longxiang/delivery-xfer-v11/site-bundle/compose.yaml exec -T db psql -U miroflow -d miroflow_collection_v1
+  ⚠ 先做 /admin 配置再跑 replay 门：首装时受管配置为空，答案会走降级渲染路径
+     ⇒ replay 门会红在 G1_framing（第 3 轮首句是"以下为基于本地数据的简要信息"）。
+     这不是安装故障：先在 http://<本机IP>:18298/admin 配好 chat LLM 选档 + 密钥，门即 7/7。
+  验收（replay 门，7 组会话）：
+      cd /home/longxiang/delivery-xfer-v11/site-bundle && docker compose exec -T app mirothinker-replay --out-dir /tmp/accept
+  停止/启动：
+      cd /home/longxiang/delivery-xfer-v11/site-bundle && docker compose down      # / up -d（数据与状态在宿主，不丢）
+  配置只剩密钥这一步：见 /home/longxiang/delivery-xfer-v11/site-bundle/CONFIG-GUIDE.md（甲方运维版）
+  备份采集库（pg_dump）与常见故障处置：见 /home/longxiang/delivery-xfer-v11/site-bundle/README.md
+==========================================
+
+================ 安装结果 ================
+  [ok] 25   [warn] 0   [FAIL] 0
+  结论：安装完成（或 --dry-run 检查通过）
+  注意：本次用了测试前缀 MIROTHINKER_SITE_ROOT=/var/tmp/mirothinker-fourth-verify-20260922（所有宿主路径都在它下面）
+==========================================
+install exit=0  总耗时=109s
+
+== 2. 属主/权限终态 ==
+/var/tmp/mirothinker-fourth-verify-20260922/var/tmp/mirothinker-data-v2  owner=longxiang:longxiang mode=755
+/var/tmp/mirothinker-fourth-verify-20260922/var/tmp/mirothinker-data-v2/index-v3-v2 owner=longxiang:longxiang mode=700
+/var/tmp/mirothinker-fourth-verify-20260922/var/tmp/mirothinker-canonical-v2-s12f owner=longxiang:longxiang mode=700
+/home/longxiang/delivery-xfer-v11/site-bundle/secrets                    owner=longxiang:longxiang mode=755
+/home/longxiang/delivery-xfer-v11/site-bundle/secrets/.sglang_api_key    owner=longxiang:longxiang mode=600
+/home/longxiang/delivery-xfer-v11/site-bundle/state/config-managed       owner=longxiang:longxiang mode=775
+/home/longxiang/delivery-xfer-v11/site-bundle/state/logs                 owner=longxiang:longxiang mode=755
+/home/longxiang/delivery-xfer-v11/site-bundle/.env                       owner=longxiang:longxiang mode=600
+-- 容器内视角：
+uid=1004 key_readable=yes state_writable=yes
+
+== 3. 普通用户（非 sudo）视角 ==
+  .env 可读（非 sudo compose 可用）
+NAME                        IMAGE                      COMMAND                  SERVICE   CREATED          STATUS                    PORTS
+mirothinker-serving-app-1   mirothinker-serving:v1.1   "/usr/bin/tini -- /u…"   app       18 minutes ago   Up 12 minutes (healthy)   0.0.0.0:18298->18188/tcp, [::]:18298->18188/tcp
+mirothinker-serving-db-1    postgres:16                "docker-entrypoint.s…"   db        18 minutes ago   Up 18 minutes (healthy)   5432/tcp
+-- 首启口令文件（容器内生成了吗）：
+total 308
+-rw------- 1 longxiang longxiang  4096 Sep 22 01:22 access-logs.sqlite3
+-rw------- 1 longxiang longxiang 32768 Sep 22 01:22 access-logs.sqlite3-shm
+-rw------- 1 longxiang longxiang 70072 Sep 22 01:22 access-logs.sqlite3-wal
+-rw------- 1 longxiang longxiang  4096 Sep 22 01:22 admin-auth.sqlite3
+-rw------- 1 longxiang longxiang 32768 Sep 22 01:22 admin-auth.sqlite3-shm
+-rw------- 1 longxiang longxiang 53592 Sep 22 01:22 admin-auth.sqlite3-wal
+-rw------- 1 longxiang longxiang    17 Sep 22 01:22 admin-initial-password.txt
+-rw------- 1 longxiang longxiang  4096 Sep 22 01:22 corrections.sqlite3
+-rw------- 1 longxiang longxiang 32768 Sep 22 01:22 corrections.sqlite3-shm
+-rw------- 1 longxiang longxiang 65952 Sep 22 01:22 corrections.sqlite3-wal

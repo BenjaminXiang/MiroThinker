@@ -1,0 +1,960 @@
+### 2026-09-22T01:54:09+08:00  agent-browser open http://127.0.0.1:18298/main
+✓ 管理台 · 深圳科创数据平台
+  http://127.0.0.1:18298/main
+### exit=0
+### 2026-09-22T01:54:20+08:00  agent-browser snapshot -i
+- region "登录" [ref=e1]
+  - heading "管理员登录" [level=1, ref=e2]
+  - textbox "用户名" [required, ref=e3]
+  - textbox "口令" [required, ref=e4]
+  - button "登录" [ref=e5]
+### exit=0
+### 2026-09-22T01:54:34+08:00  agent-browser fill @e3 admin
+✓ Done
+### exit=0
+### 2026-09-22T01:54:34+08:00  agent-browser fill @e4 <redacted-password>
+✓ Done
+### exit=0
+### 2026-09-22T01:54:34+08:00  agent-browser click @e5
+✓ Done
+### exit=0
+### 2026-09-22T01:54:36+08:00  agent-browser snapshot -i
+- button "退出登录" [ref=e1]
+- region "仪表盘" [ref=e2]
+  - region "系统状态" [ref=e3]
+    - heading "系统状态" [level=2, ref=e8]
+  - region "快捷入口" [ref=e4]
+    - heading "快捷入口" [level=2, ref=e9]
+    - link "管理配置" [ref=e10]
+    - link "访问日志" [ref=e11]
+    - link "数据浏览" [ref=e12]
+    - link "任务运维" [ref=e13]
+    - link "上传导入" [ref=e14]
+    - link "Seed 管理" [ref=e15]
+    - link "对话" [ref=e16]
+  - region "账号管理" [ref=e5]
+    - heading "账号管理" [level=2, ref=e17]
+    - heading "账号列表" [level=3, ref=e6]
+    - button "重置口令" [ref=e23]
+    - button "删除" [ref=e24]
+    - textbox "新账号" [required, ref=e18]
+    - button "创建" [ref=e19]
+    - heading "修改我的口令" [level=3, ref=e7]
+    - textbox "当前口令" [required, ref=e20]
+    - textbox "新口令" [required, ref=e21]
+    - button "修改" [ref=e22]
+### exit=0
+### 2026-09-22T01:54:54+08:00  agent-browser open http://127.0.0.1:18298/admin
+✓ 管理配置中心 · Canonical V2
+  http://127.0.0.1:18298/admin
+### exit=0
+### 2026-09-22T01:55:29+08:00  agent-browser snapshot -i
+- link "首页" [ref=e5]
+- link "对话" [ref=e6]
+- link "数据浏览" [ref=e7]
+- link "访问日志" [ref=e8]
+- link "管理配置" [ref=e9]
+- link "任务运维" [ref=e10]
+- link "上传导入" [ref=e11]
+- link "Seed 管理" [ref=e12]
+- link "退出登录" [ref=e13]
+- region "采集与构建" [ref=e1]
+  - heading "采集与构建" [level=2, ref=e19]
+  - combobox "企业采集开关 默认 影响：采集与构建调度：域开关 · 默认：启用" [expanded=false, ref=e20]: 默认
+    - option "默认" [selected, ref=e46]
+    - option "启用" [ref=e47]
+    - option "停用" [ref=e48]
+  - combobox "论文采集开关 默认 影响：采集与构建调度：域开关 · 默认：启用" [expanded=false, ref=e21]: 默认
+    - option "默认" [selected, ref=e49]
+    - option "启用" [ref=e50]
+    - option "停用" [ref=e51]
+  - combobox "专利采集开关 默认 影响：采集与构建调度：域开关 · 默认：启用" [expanded=false, ref=e22]: 默认
+    - option "默认" [selected, ref=e52]
+    - option "启用" [ref=e53]
+    - option "停用" [ref=e54]
+  - combobox "教授采集开关 默认 影响：采集与构建调度：域开关 · 默认：启用" [expanded=false, ref=e23]: 默认
+    - option "默认" [selected, ref=e55]
+    - option "启用" [ref=e56]
+    - option "停用" [ref=e57]
+  - spinbutton "每轮 web search 配额上限 默认 影响：采集与构建调度：每轮 web 检索配额 · 默认：200" [ref=e24]: 200
+  - spinbutton "每轮 LLM 调用上限 默认 影响：采集与构建调度：每轮 LLM 调用上限 · 默认：500" [ref=e25]: 500
+  - spinbutton "执行窗口起始（UTC 小时） 默认 影响：采集与构建调度：执行窗口起始 · 默认：17" [ref=e26]: 17
+  - spinbutton "执行窗口结束（UTC 小时） 默认 影响：采集与构建调度：执行窗口结束 · 默认：22" [ref=e27]: 22
+  - heading "各域新鲜度（pack 构建时间 vs 投影时点）" [level=3, ref=e14]
+  - columnheader "域" [ref=e58]
+  - columnheader "记录数" [ref=e59]
+  - columnheader "pack 构建时间" [ref=e60]
+  - columnheader "距今" [ref=e61]
+  - columnheader "投影 as_of" [ref=e62]
+  - cell "企业" [ref=e63]
+  - cell "7086" [ref=e64]
+  - cell "2026/9/16 22:05:50" [ref=e65]
+  - cell "5.2 天" [ref=e66]
+  - cell "2026/9/16 22:05:50" [ref=e67]
+  - cell "论文" [ref=e68]
+  - cell "24520" [ref=e69]
+  - cell "2026/9/16 22:05:50" [ref=e70]
+  - cell "5.2 天" [ref=e71]
+  - cell "2026/9/16 22:05:50" [ref=e72]
+  - cell "专利" [ref=e73]
+  - cell "11504" [ref=e74]
+  - cell "2026/9/16 22:05:50" [ref=e75]
+  - cell "5.2 天" [ref=e76]
+  - cell "2026/9/16 22:05:50" [ref=e77]
+  - cell "教授" [ref=e78]
+  - cell "3958" [ref=e79]
+  - cell "2026/9/16 22:05:50" [ref=e80]
+  - cell "5.2 天" [ref=e81]
+  - cell "2026/9/16 22:05:50" [ref=e82]
+  - button "保存本卡" [ref=e15]
+- region "检索与回答" [ref=e2]
+  - heading "检索与回答" [level=2, ref=e28]
+  - combobox "Web 轨主题相关性下限（kill switch） 默认 影响：检索与回答：Web 轨相关度下限 · 默认：未设置" [expanded=false, ref=e29]: 默认
+    - option "默认" [selected, ref=e83]
+    - option "启用" [ref=e84]
+    - option "停用" [ref=e85]
+  - spinbutton "Rerank 超时（秒） 默认 影响：检索与回答：rerank 超时预算 · 默认：未设置" [ref=e30]
+  - spinbutton "Rerank 单次最大文档数 默认 影响：检索与回答：rerank 单次文档上限 · 默认：未设置" [ref=e31]
+  - spinbutton "向量轨等待上限（秒） 默认 影响：检索与回答：向量轨（embedding）外层等待上限；超时只降级该轨，不中断回答 · 默认：8" [ref=e32]: 8
+  - textbox "挂载收据路径 默认 影响：服务启动：挂载收据路径（只读展示） · 默认：未设置 只读展示 取证路径：由服务单元钉死；页面改动会让挂载收据散落各处（只读展示）" [disabled, ref=e33]
+  - textbox "轮次调试目录 默认 影响：服务启动：轮次转储目录（只读展示） · 默认：未设置 只读展示 调试目录：开启会把原始轮次转储落盘，必须由部署显式决定（只读展示）" [disabled, ref=e34]
+  - combobox "启动全量校验 默认 影响：服务启动：全量校验（只读展示） · 默认：未设置 只读展示 启动全量校验：开启会把启动从秒级拉到分钟级，必须由服务单元决定（只读展示）" [expanded=false, disabled, ref=e35]: 默认
+    - option "默认" [disabled, ref=e86]
+    - option "启用" [disabled, ref=e87]
+    - option "停用" [disabled, ref=e88]
+  - button "保存本卡" [ref=e16]
+- region "存储与保留" [ref=e3]
+  - heading "存储与保留" [level=2, ref=e36]
+  - textbox "serving pack 目录 受管文件 影响：服务启动：serving pack 目录 · 默认：未设置" [ref=e37]: /var/tmp/mirothinker-data-v2/serving-pack-run16-v11
+  - spinbutton "访问日志保留天数 默认 影响：访问日志清理与保留 · 默认：90" [ref=e38]: 90
+  - heading "库与磁盘" [level=3, ref=e17]
+  - button "保存本卡" [ref=e18]
+- region "模型与连接" [ref=e4]
+  - heading "模型与连接" [level=2, ref=e39]
+  - button "全部测试" [ref=e45]
+  - region "对话模型" [ref=e40]
+    - heading "对话模型（回答与改写用它）" [level=3, ref=e89]
+    - combobox [expanded=false, ref=e90]: DeepSeek V4 Flash（deepseekv4flash）
+      - option "火山方舟 Ark / 豆包（ark）" [ref=e125]
+      - option "DeepSeek V4 Flash（deepseekv4flash）" [selected, ref=e126]
+      - option "DeepSeek V4 Lite（deepseekv4lite）" [ref=e127]
+      - option "DeepSeek V4 Pro（deepseekv4pro）" [ref=e128]
+      - option "本地 qwen3.6-35b-a3b（gemma4）（gemma4）" [ref=e129]
+      - option "MiroThinker 1.7 235B（mirothinker）（mirothinker）" [ref=e130]
+      - option "本地 qwen3.5-35b-a3b（qwen35）（qwen35）" [ref=e131]
+    - textbox "新密钥（留空 = 不改动；明文既不回显也不入日志）" [ref=e91]
+    - button "清除密钥" [ref=e92]
+    - button "测试连通性" [ref=e93]
+    - button "保存本卡" [ref=e94]
+  - region "采集模型" [ref=e41]
+    - heading "采集模型（摘要与富化用它）" [level=3, ref=e95]
+    - combobox [expanded=false, ref=e96]: 选择预设填入 Base URL…
+      - option "选择预设填入 Base URL…" [selected, ref=e132]
+      - option "本机 OpenAI 兼容服务（vLLM / SGLang）" [ref=e133]
+      - option "DeepSeek" [ref=e134]
+      - option "阿里云百炼（OpenAI 兼容模式）" [ref=e135]
+      - option "OpenAI" [ref=e136]
+      - option "硅基流动 SiliconFlow" [ref=e137]
+      - option "自定义端点" [ref=e138]
+    - textbox "采集 LLM Base URL 受管文件 影响：采集与构建：LLM 端点 · 默认：未设置" [ref=e97]: https://api.deepseek.com
+    - textbox "采集 LLM 模型名 受管文件 影响：采集与构建：LLM 模型 · 默认：未设置" [ref=e98]: deepseek-v4-flash
+    - button "拉取模型列表" [ref=e99]
+    - button "测试连通性" [ref=e100]
+    - button "保存本卡" [ref=e101]
+  - region "嵌入模型" [ref=e42]
+    - heading "嵌入模型（检索向量用它）" [level=3, ref=e102]
+    - textbox "新密钥（留空 = 不改动；明文既不回显也不入日志）" [ref=e103]
+    - button "清除密钥" [ref=e104]
+    - button "测试连通性" [ref=e105]
+    - button "保存本卡" [ref=e106]
+  - region "重排模型" [ref=e43]
+    - heading "重排模型" [level=3, ref=e107]
+    - combobox [expanded=false, ref=e108]: 选择预设填入 Base URL…
+      - option "选择预设填入 Base URL…" [selected, ref=e139]
+      - option "本机 OpenAI 兼容服务（vLLM / SGLang）" [ref=e140]
+      - option "DeepSeek" [ref=e141]
+      - option "阿里云百炼（OpenAI 兼容模式）" [ref=e142]
+      - option "OpenAI" [ref=e143]
+      - option "硅基流动 SiliconFlow" [ref=e144]
+      - option "自定义端点" [ref=e145]
+    - textbox "Rerank Base URL 默认 影响：检索与回答：rerank 客户端端点（未配置则 rerank 不启用） · 默认：未设置" [ref=e109]
+    - textbox "Rerank 模型名 默认 影响：检索与回答：rerank 客户端模型 · 默认：未设置" [ref=e110]
+    - textbox "新密钥（留空 = 不改动；明文既不回显也不入日志）" [ref=e111]
+    - button "清除密钥" [ref=e112]
+    - button "拉取模型列表" [ref=e113]
+    - button "测试连通性" [ref=e114]
+    - button "保存本卡" [ref=e115]
+  - region "Web 搜索" [ref=e44]
+    - heading "Web 搜索" [level=3, ref=e116]
+    - heading "Bocha 博查 Web 搜索" [level=4, ref=e146]
+    - textbox "新密钥（留空 = 不改动；明文既不回显也不入日志）" [ref=e117]
+    - button "清除密钥" [ref=e118]
+    - button "测试连通性" [ref=e119]
+    - button "保存本卡" [ref=e120]
+    - heading "Serper Web 搜索" [level=4, ref=e147]
+    - textbox "新密钥（留空 = 不改动；明文既不回显也不入日志）" [ref=e121]
+    - button "清除密钥" [ref=e122]
+    - button "测试连通性" [ref=e123]
+    - button "保存本卡" [ref=e124]
+### exit=0
+### 2026-09-22T01:55:43+08:00  agent-browser fill @e91 <redacted-key>
+✓ Done
+### exit=0
+### 2026-09-22T01:55:43+08:00  agent-browser click @e94
+✓ Done
+### exit=0
+### 2026-09-22T01:55:47+08:00  agent-browser screenshot raw/04-admin-after-save.png
+✓ Screenshot saved to raw/04-admin-after-save.png
+### exit=0
+### 2026-09-22T01:56:20+08:00  agent-browser snapshot -i
+- link "首页" [ref=e5]
+- link "对话" [ref=e6]
+- link "数据浏览" [ref=e7]
+- link "访问日志" [ref=e8]
+- link "管理配置" [ref=e9]
+- link "任务运维" [ref=e10]
+- link "上传导入" [ref=e11]
+- link "Seed 管理" [ref=e12]
+- link "退出登录" [ref=e13]
+- button "复制重启命令" [ref=e14]
+- region "采集与构建" [ref=e1]
+  - heading "采集与构建" [level=2, ref=e20]
+  - combobox "企业采集开关 默认 影响：采集与构建调度：域开关 · 默认：启用" [expanded=false, ref=e21]: 默认
+    - option "默认" [selected, ref=e47]
+    - option "启用" [ref=e48]
+    - option "停用" [ref=e49]
+  - combobox "论文采集开关 默认 影响：采集与构建调度：域开关 · 默认：启用" [expanded=false, ref=e22]: 默认
+    - option "默认" [selected, ref=e50]
+    - option "启用" [ref=e51]
+    - option "停用" [ref=e52]
+  - combobox "专利采集开关 默认 影响：采集与构建调度：域开关 · 默认：启用" [expanded=false, ref=e23]: 默认
+    - option "默认" [selected, ref=e53]
+    - option "启用" [ref=e54]
+    - option "停用" [ref=e55]
+  - combobox "教授采集开关 默认 影响：采集与构建调度：域开关 · 默认：启用" [expanded=false, ref=e24]: 默认
+    - option "默认" [selected, ref=e56]
+    - option "启用" [ref=e57]
+    - option "停用" [ref=e58]
+  - spinbutton "每轮 web search 配额上限 默认 影响：采集与构建调度：每轮 web 检索配额 · 默认：200" [ref=e25]: 200
+  - spinbutton "每轮 LLM 调用上限 默认 影响：采集与构建调度：每轮 LLM 调用上限 · 默认：500" [ref=e26]: 500
+  - spinbutton "执行窗口起始（UTC 小时） 默认 影响：采集与构建调度：执行窗口起始 · 默认：17" [ref=e27]: 17
+  - spinbutton "执行窗口结束（UTC 小时） 默认 影响：采集与构建调度：执行窗口结束 · 默认：22" [ref=e28]: 22
+  - heading "各域新鲜度（pack 构建时间 vs 投影时点）" [level=3, ref=e15]
+  - columnheader "域" [ref=e59]
+  - columnheader "记录数" [ref=e60]
+  - columnheader "pack 构建时间" [ref=e61]
+  - columnheader "距今" [ref=e62]
+  - columnheader "投影 as_of" [ref=e63]
+  - cell "企业" [ref=e64]
+  - cell "7086" [ref=e65]
+  - cell "2026/9/16 22:05:50" [ref=e66]
+  - cell "5.2 天" [ref=e67]
+  - cell "2026/9/16 22:05:50" [ref=e68]
+  - cell "论文" [ref=e69]
+  - cell "24520" [ref=e70]
+  - cell "2026/9/16 22:05:50" [ref=e71]
+  - cell "5.2 天" [ref=e72]
+  - cell "2026/9/16 22:05:50" [ref=e73]
+  - cell "专利" [ref=e74]
+  - cell "11504" [ref=e75]
+  - cell "2026/9/16 22:05:50" [ref=e76]
+  - cell "5.2 天" [ref=e77]
+  - cell "2026/9/16 22:05:50" [ref=e78]
+  - cell "教授" [ref=e79]
+  - cell "3958" [ref=e80]
+  - cell "2026/9/16 22:05:50" [ref=e81]
+  - cell "5.2 天" [ref=e82]
+  - cell "2026/9/16 22:05:50" [ref=e83]
+  - button "保存本卡" [ref=e16]
+- region "检索与回答" [ref=e2]
+  - heading "检索与回答" [level=2, ref=e29]
+  - combobox "Web 轨主题相关性下限（kill switch） 默认 影响：检索与回答：Web 轨相关度下限 · 默认：未设置" [expanded=false, ref=e30]: 默认
+    - option "默认" [selected, ref=e84]
+    - option "启用" [ref=e85]
+    - option "停用" [ref=e86]
+  - spinbutton "Rerank 超时（秒） 默认 影响：检索与回答：rerank 超时预算 · 默认：未设置" [ref=e31]
+  - spinbutton "Rerank 单次最大文档数 默认 影响：检索与回答：rerank 单次文档上限 · 默认：未设置" [ref=e32]
+  - spinbutton "向量轨等待上限（秒） 默认 影响：检索与回答：向量轨（embedding）外层等待上限；超时只降级该轨，不中断回答 · 默认：8" [ref=e33]: 8
+  - textbox "挂载收据路径 默认 影响：服务启动：挂载收据路径（只读展示） · 默认：未设置 只读展示 取证路径：由服务单元钉死；页面改动会让挂载收据散落各处（只读展示）" [disabled, ref=e34]
+  - textbox "轮次调试目录 默认 影响：服务启动：轮次转储目录（只读展示） · 默认：未设置 只读展示 调试目录：开启会把原始轮次转储落盘，必须由部署显式决定（只读展示）" [disabled, ref=e35]
+  - combobox "启动全量校验 默认 影响：服务启动：全量校验（只读展示） · 默认：未设置 只读展示 启动全量校验：开启会把启动从秒级拉到分钟级，必须由服务单元决定（只读展示）" [expanded=false, disabled, ref=e36]: 默认
+    - option "默认" [disabled, ref=e87]
+    - option "启用" [disabled, ref=e88]
+    - option "停用" [disabled, ref=e89]
+  - button "保存本卡" [ref=e17]
+- region "存储与保留" [ref=e3]
+  - heading "存储与保留" [level=2, ref=e37]
+  - textbox "serving pack 目录 受管文件 影响：服务启动：serving pack 目录 · 默认：未设置" [ref=e38]: /var/tmp/mirothinker-data-v2/serving-pack-run16-v11
+  - spinbutton "访问日志保留天数 默认 影响：访问日志清理与保留 · 默认：90" [ref=e39]: 90
+  - heading "库与磁盘" [level=3, ref=e18]
+  - button "保存本卡" [ref=e19]
+- region "模型与连接" [ref=e4]
+  - heading "模型与连接" [level=2, ref=e40]
+  - button "全部测试" [ref=e46]
+  - region "对话模型" [ref=e41]
+    - heading "对话模型（回答与改写用它）" [level=3, ref=e90]
+    - combobox [expanded=false, ref=e91]: DeepSeek V4 Flash（deepseekv4flash）
+      - option "火山方舟 Ark / 豆包（ark）" [ref=e126]
+      - option "DeepSeek V4 Flash（deepseekv4flash）" [selected, ref=e127]
+      - option "DeepSeek V4 Lite（deepseekv4lite）" [ref=e128]
+      - option "DeepSeek V4 Pro（deepseekv4pro）" [ref=e129]
+      - option "本地 qwen3.6-35b-a3b（gemma4）（gemma4）" [ref=e130]
+      - option "MiroThinker 1.7 235B（mirothinker）（mirothinker）" [ref=e131]
+      - option "本地 qwen3.5-35b-a3b（qwen35）（qwen35）" [ref=e132]
+    - textbox "新密钥（留空 = 不改动；明文既不回显也不入日志）" [ref=e92]
+    - button "清除密钥" [ref=e93]
+    - button "测试连通性" [ref=e94]
+    - button "保存本卡" [ref=e95]
+  - region "采集模型" [ref=e42]
+    - heading "采集模型（摘要与富化用它）" [level=3, ref=e96]
+    - combobox [expanded=false, ref=e97]: 选择预设填入 Base URL…
+      - option "选择预设填入 Base URL…" [selected, ref=e133]
+      - option "本机 OpenAI 兼容服务（vLLM / SGLang）" [ref=e134]
+      - option "DeepSeek" [ref=e135]
+      - option "阿里云百炼（OpenAI 兼容模式）" [ref=e136]
+      - option "OpenAI" [ref=e137]
+      - option "硅基流动 SiliconFlow" [ref=e138]
+      - option "自定义端点" [ref=e139]
+    - textbox "采集 LLM Base URL 受管文件 影响：采集与构建：LLM 端点 · 默认：未设置" [ref=e98]: https://api.deepseek.com
+    - textbox "采集 LLM 模型名 受管文件 影响：采集与构建：LLM 模型 · 默认：未设置" [ref=e99]: deepseek-v4-flash
+    - button "拉取模型列表" [ref=e100]
+    - button "测试连通性" [ref=e101]
+    - button "保存本卡" [ref=e102]
+  - region "嵌入模型" [ref=e43]
+    - heading "嵌入模型（检索向量用它）" [level=3, ref=e103]
+    - textbox "新密钥（留空 = 不改动；明文既不回显也不入日志）" [ref=e104]
+    - button "清除密钥" [ref=e105]
+    - button "测试连通性" [ref=e106]
+    - button "保存本卡" [ref=e107]
+  - region "重排模型" [ref=e44]
+    - heading "重排模型" [level=3, ref=e108]
+    - combobox [expanded=false, ref=e109]: 选择预设填入 Base URL…
+      - option "选择预设填入 Base URL…" [selected, ref=e140]
+      - option "本机 OpenAI 兼容服务（vLLM / SGLang）" [ref=e141]
+      - option "DeepSeek" [ref=e142]
+      - option "阿里云百炼（OpenAI 兼容模式）" [ref=e143]
+      - option "OpenAI" [ref=e144]
+      - option "硅基流动 SiliconFlow" [ref=e145]
+      - option "自定义端点" [ref=e146]
+    - textbox "Rerank Base URL 默认 影响：检索与回答：rerank 客户端端点（未配置则 rerank 不启用） · 默认：未设置" [ref=e110]
+    - textbox "Rerank 模型名 默认 影响：检索与回答：rerank 客户端模型 · 默认：未设置" [ref=e111]
+    - textbox "新密钥（留空 = 不改动；明文既不回显也不入日志）" [ref=e112]
+    - button "清除密钥" [ref=e113]
+    - button "拉取模型列表" [ref=e114]
+    - button "测试连通性" [ref=e115]
+    - button "保存本卡" [ref=e116]
+  - region "Web 搜索" [ref=e45]
+    - heading "Web 搜索" [level=3, ref=e117]
+    - heading "Bocha 博查 Web 搜索" [level=4, ref=e147]
+    - textbox "新密钥（留空 = 不改动；明文既不回显也不入日志）" [ref=e118]
+    - button "清除密钥" [ref=e119]
+    - button "测试连通性" [ref=e120]
+    - button "保存本卡" [ref=e121]
+    - heading "Serper Web 搜索" [level=4, ref=e148]
+    - textbox "新密钥（留空 = 不改动；明文既不回显也不入日志）" [ref=e122]
+    - button "清除密钥" [ref=e123]
+    - button "测试连通性" [ref=e124]
+    - button "保存本卡" [ref=e125]
+### exit=0
+### 2026-09-22T01:56:25+08:00  agent-browser click @e94
+✓ Done
+### exit=0
+### 2026-09-22T01:56:30+08:00  agent-browser snapshot
+- banner
+  - strong
+    - StaticText "管理配置中心"
+  - StaticText "Canonical V2 · 采集与构建 / 检索与回答 / 存储与保留 / 模型与连接"
+  - navigation
+    - link "首页" [ref=e5]
+    - link "对话" [ref=e6]
+    - link "数据浏览" [ref=e7]
+    - link "访问日志" [ref=e8]
+    - link "管理配置" [ref=e9]
+    - link "任务运维" [ref=e10]
+    - link "上传导入" [ref=e11]
+    - link "Seed 管理" [ref=e12]
+    - StaticText "admin"
+    - link "退出登录" [ref=e13]
+- main
+  - status
+    - StaticText "已保存的改动需重启生效"
+    - code
+      - StaticText "systemctl --user restart canonical-v2-backend"
+    - button "复制重启命令" [ref=e14]
+  - region "采集与构建" [ref=e1]
+    - sectionheader
+      - heading "采集与构建" [level=2, ref=e20]
+      - StaticText "pack 构建于 2026/9/16 22:05:50"
+    - generic
+      - LabelText
+        - StaticText "企业采集开关"
+        - LineBreak "\n"
+        - generic
+          - StaticText "默认 影响：采集与构建调度：域开关 · 默认：启用"
+      - combobox "企业采集开关 默认 影响：采集与构建调度：域开关 · 默认：启用" [expanded=false, ref=e21]: 默认
+        - MenuListPopup
+          - option "默认" [selected, ref=e47]
+          - option "启用" [ref=e48]
+          - option "停用" [ref=e49]
+      - LabelText
+        - StaticText "论文采集开关"
+        - LineBreak "\n"
+        - generic
+          - StaticText "默认 影响：采集与构建调度：域开关 · 默认：启用"
+      - combobox "论文采集开关 默认 影响：采集与构建调度：域开关 · 默认：启用" [expanded=false, ref=e22]: 默认
+        - MenuListPopup
+          - option "默认" [selected, ref=e50]
+          - option "启用" [ref=e51]
+          - option "停用" [ref=e52]
+      - LabelText
+        - StaticText "专利采集开关"
+        - LineBreak "\n"
+        - generic
+          - StaticText "默认 影响：采集与构建调度：域开关 · 默认：启用"
+      - combobox "专利采集开关 默认 影响：采集与构建调度：域开关 · 默认：启用" [expanded=false, ref=e23]: 默认
+        - MenuListPopup
+          - option "默认" [selected, ref=e53]
+          - option "启用" [ref=e54]
+          - option "停用" [ref=e55]
+      - LabelText
+        - StaticText "教授采集开关"
+        - LineBreak "\n"
+        - generic
+          - StaticText "默认 影响：采集与构建调度：域开关 · 默认：启用"
+      - combobox "教授采集开关 默认 影响：采集与构建调度：域开关 · 默认：启用" [expanded=false, ref=e24]: 默认
+        - MenuListPopup
+          - option "默认" [selected, ref=e56]
+          - option "启用" [ref=e57]
+          - option "停用" [ref=e58]
+      - LabelText
+        - StaticText "每轮 web search 配额上限"
+        - LineBreak "\n"
+        - generic
+          - StaticText "默认 影响：采集与构建调度：每轮 web 检索配额 · 默认：200"
+      - spinbutton "每轮 web search 配额上限 默认 影响：采集与构建调度：每轮 web 检索配额 · 默认：200" [ref=e25]: 200
+        - StaticText "200"
+      - LabelText
+        - StaticText "每轮 LLM 调用上限"
+        - LineBreak "\n"
+        - generic
+          - StaticText "默认 影响：采集与构建调度：每轮 LLM 调用上限 · 默认：500"
+      - spinbutton "每轮 LLM 调用上限 默认 影响：采集与构建调度：每轮 LLM 调用上限 · 默认：500" [ref=e26]: 500
+        - StaticText "500"
+      - LabelText
+        - StaticText "执行窗口起始（UTC 小时）"
+        - LineBreak "\n"
+        - generic
+          - StaticText "默认 影响：采集与构建调度：执行窗口起始 · 默认：17"
+      - spinbutton "执行窗口起始（UTC 小时） 默认 影响：采集与构建调度：执行窗口起始 · 默认：17" [ref=e27]: 17
+        - StaticText "17"
+      - LabelText
+        - StaticText "执行窗口结束（UTC 小时）"
+        - LineBreak "\n"
+        - generic
+          - StaticText "默认 影响：采集与构建调度：执行窗口结束 · 默认：22"
+      - spinbutton "执行窗口结束（UTC 小时） 默认 影响：采集与构建调度：执行窗口结束 · 默认：22" [ref=e28]: 22
+        - StaticText "22"
+    - heading "各域新鲜度（pack 构建时间 vs 投影时点）" [level=3, ref=e15]
+    - table
+      - rowgroup
+        - row
+          - columnheader "域" [ref=e59]
+          - columnheader "记录数" [ref=e60]
+          - columnheader "pack 构建时间" [ref=e61]
+          - columnheader "距今" [ref=e62]
+          - columnheader "投影 as_of" [ref=e63]
+      - rowgroup
+        - row
+          - cell "企业" [ref=e64]
+          - cell "7086" [ref=e65]
+          - cell "2026/9/16 22:05:50" [ref=e66]
+          - cell "5.2 天" [ref=e67]
+          - cell "2026/9/16 22:05:50" [ref=e68]
+        - row
+          - cell "论文" [ref=e69]
+          - cell "24520" [ref=e70]
+          - cell "2026/9/16 22:05:50" [ref=e71]
+          - cell "5.2 天" [ref=e72]
+          - cell "2026/9/16 22:05:50" [ref=e73]
+        - row
+          - cell "专利" [ref=e74]
+          - cell "11504" [ref=e75]
+          - cell "2026/9/16 22:05:50" [ref=e76]
+          - cell "5.2 天" [ref=e77]
+          - cell "2026/9/16 22:05:50" [ref=e78]
+        - row
+          - cell "教授" [ref=e79]
+          - cell "3958" [ref=e80]
+          - cell "2026/9/16 22:05:50" [ref=e81]
+          - cell "5.2 天" [ref=e82]
+          - cell "2026/9/16 22:05:50" [ref=e83]
+    - generic
+      - StaticText "pack 构建时间"
+      - StaticText "2026/9/16 22:05:50"
+      - StaticText "投影 as_of"
+      - StaticText "2026/9/16 22:05:50（5.2 天前）"
+      - StaticText "采集历史"
+      - StaticText "不可用：build-time pipeline_run history is not readable from this process"
+    - button "保存本卡" [ref=e16]
+    - paragraph
+      - StaticText "采集开关与配额在服务启动/采集调度时读取；被环境变量覆盖的字段不可编辑（env 优先，不制造第二真相源）。 保存后需重启服务才生效。"
+  - region "检索与回答" [ref=e2]
+    - sectionheader
+      - heading "检索与回答" [level=2, ref=e29]
+      - StaticText "检索/回答运行期开关"
+    - paragraph
+      - StaticText "Rerank 的运行期状态（已启用/未启用、待重启）与生效端点/模型在「模型与连接 › 重排模型」——本卡不重复：这里只改检索与回答自己的字段。"
+    - generic
+      - LabelText
+        - StaticText "Web 轨主题相关性下限（kill switch）"
+        - LineBreak "\n"
+        - generic
+          - StaticText "默认 影响：检索与回答：Web 轨相关度下限 · 默认：未设置"
+      - combobox "Web 轨主题相关性下限（kill switch） 默认 影响：检索与回答：Web 轨相关度下限 · 默认：未设置" [expanded=false, ref=e30]: 默认
+        - MenuListPopup
+          - option "默认" [selected, ref=e84]
+          - option "启用" [ref=e85]
+          - option "停用" [ref=e86]
+      - LabelText
+        - StaticText "Rerank 超时（秒）"
+        - LineBreak "\n"
+        - generic
+          - StaticText "默认 影响：检索与回答：rerank 超时预算 · 默认：未设置"
+      - spinbutton "Rerank 超时（秒） 默认 影响：检索与回答：rerank 超时预算 · 默认：未设置" [ref=e31]
+      - LabelText
+        - StaticText "Rerank 单次最大文档数"
+        - LineBreak "\n"
+        - generic
+          - StaticText "默认 影响：检索与回答：rerank 单次文档上限 · 默认：未设置"
+      - spinbutton "Rerank 单次最大文档数 默认 影响：检索与回答：rerank 单次文档上限 · 默认：未设置" [ref=e32]
+      - LabelText
+        - StaticText "向量轨等待上限（秒）"
+        - LineBreak "\n"
+        - generic
+          - StaticText "默认 影响：检索与回答：向量轨（embedding）外层等待上限；超时只降级该轨，不中断回答 · 默认：8"
+      - spinbutton "向量轨等待上限（秒） 默认 影响：检索与回答：向量轨（embedding）外层等待上限；超时只降级该轨，不中断回答 · 默认：8" [ref=e33]: 8
+        - StaticText "8"
+      - LabelText
+        - StaticText "挂载收据路径"
+        - LineBreak "\n"
+        - generic
+          - StaticText "默认"
+          - StaticText " 影响：服务启动：挂载收据路径（只读展示） · 默认：未设置"
+          - StaticText "只读展示"
+          - StaticText " 取证路径：由服务单元钉死；页面改动会让挂载收据散落各处（只读展示）"
+      - textbox "挂载收据路径 默认 影响：服务启动：挂载收据路径（只读展示） · 默认：未设置 只读展示 取证路径：由服务单元钉死；页面改动会让挂载收据散落各处（只读展示）" [disabled, ref=e34]
+      - LabelText
+        - StaticText "轮次调试目录"
+        - LineBreak "\n"
+        - generic
+          - StaticText "默认"
+          - StaticText " 影响：服务启动：轮次转储目录（只读展示） · 默认：未设置"
+          - StaticText "只读展示"
+          - StaticText " 调试目录：开启会把原始轮次转储落盘，必须由部署显式决定（只读展示）"
+      - textbox "轮次调试目录 默认 影响：服务启动：轮次转储目录（只读展示） · 默认：未设置 只读展示 调试目录：开启会把原始轮次转储落盘，必须由部署显式决定（只读展示）" [disabled, ref=e35]
+      - LabelText
+        - StaticText "启动全量校验"
+        - LineBreak "\n"
+        - generic
+          - StaticText "默认"
+          - StaticText " 影响：服务启动：全量校验（只读展示） · 默认：未设置"
+          - StaticText "只读展示"
+          - StaticText " 启动全量校验：开启会把启动从秒级拉到分钟级，必须由服务单元决定（只读展示）"
+      - combobox "启动全量校验 默认 影响：服务启动：全量校验（只读展示） · 默认：未设置 只读展示 启动全量校验：开启会把启动从秒级拉到分钟级，必须由服务单元决定（只读展示）" [expanded=false, disabled, ref=e36]: 默认
+        - MenuListPopup
+          - option "默认" [disabled, ref=e87]
+          - option "启用" [disabled, ref=e88]
+          - option "停用" [disabled, ref=e89]
+    - button "保存本卡" [ref=e17]
+    - paragraph
+      - StaticText "Rerank 连通性测试已移到「模型与连接 › 重排模型」：那边用页面上「未保存」的端点/模型值发起一次最小调用（成功/失败 + 延迟），同样受服务端限频保护。 其它卡片只展示状态：它们没有主动探针，页面不为此造按钮。"
+  - region "存储与保留" [ref=e3]
+    - sectionheader
+      - heading "存储与保留" [level=2, ref=e37]
+      - StaticText "路径 · 库计数/体积 · 磁盘余量"
+    - generic
+      - LabelText
+        - StaticText "serving pack 目录"
+        - LineBreak "\n"
+        - generic
+          - StaticText "受管文件 影响：服务启动：serving pack 目录 · 默认：未设置"
+      - textbox "serving pack 目录 受管文件 影响：服务启动：serving pack 目录 · 默认：未设置" [ref=e38]: /var/tmp/mirothinker-data-v2/serving-pack-run16-v11
+        - StaticText "/var/tmp/mirothinker-data-v2/serving-pack-run16-v11"
+      - LabelText
+        - StaticText "访问日志保留天数"
+        - LineBreak "\n"
+        - generic
+          - StaticText "默认 影响：访问日志清理与保留 · 默认：90"
+      - spinbutton "访问日志保留天数 默认 影响：访问日志清理与保留 · 默认：90" [ref=e39]: 90
+        - StaticText "90"
+    - heading "库与磁盘" [level=3, ref=e18]
+    - generic
+      - StaticText "SQLite lookup"
+      - StaticText "854.8 MB · quick_check=ok · build_metadata=2 · build_receipt=1 · index_point=51026 · lookup_document=47068 · lookup_manifest=7"
+      - StaticText "SQLite corrections"
+      - StaticText "4.0 KB · quick_check=ok · added_records=0 · field_corrections=0 · workspace_meta=1"
+      - StaticText "SQLite access_log"
+      - StaticText "4.0 KB · quick_check=ok · sessions=0 · turns=0 · workspace_meta=1"
+      - StaticText "磁盘 /var/tmp"
+      - StaticText "剩余 873.8 GB / 共 1.7 TB（已用 50.3%）"
+      - StaticText "磁盘 /"
+      - StaticText "剩余 873.8 GB / 共 1.7 TB（已用 50.3%）"
+      - StaticText "磁盘 /md1"
+      - StaticText "不可用"
+    - paragraph
+      - StaticText "保留期预览：保留最近 90 天，访问日志早于 2026-06-23 的部分会被清理"
+    - button "保存本卡" [ref=e19]
+  - region "模型与连接" [ref=e4]
+    - sectionheader
+      - heading "模型与连接" [level=2, ref=e40]
+      - StaticText "/opt/mirothinker/config/managed/secrets.json（已存在）"
+      - generic
+        - button "全部测试" [ref=e46]
+    - paragraph
+      - StaticText "按「角色」配置，而不是按文件：每块先说清现在生效的是什么、来自哪里，再给出该角色能改的字段和动作。 同一个字段只有一个入口；预设/档位只是填值，不能绕开下面的字段。"
+    - generic
+      - region "对话模型" [ref=e41]
+        - sectionheader
+          - heading "对话模型（回答与改写用它）" [level=3, ref=e90]
+          - StaticText "运行期已启用"
+        - generic
+          - StaticText "档位（保存值）"
+          - StaticText "deepseekv4flash"
+          - StaticText "档位（运行期）"
+          - StaticText "deepseekv4flash · 与保存值一致"
+          - StaticText "该档位的模型"
+          - StaticText "deepseek-v4-flash"
+          - StaticText "该档位的端点"
+          - StaticText "https://api.deepseek.com"
+          - StaticText "该档位的密钥变量"
+          - StaticText "DEEPSEEK_API_KEY（写在下面的密钥框，重启后生效）"
+          - StaticText "运行期端点"
+          - StaticText "https://api.deepseek.com · 来源：chat-profile:deepseekv4flash"
+          - StaticText "运行期说明"
+          - StaticText "运行期使用 chat profile deepseekv4flash（CHAT_LLM_PROFILE）；base_url https://api.deepseek.com；凭据来源 legacy-file:.deepseek_api_key"
+        - generic
+          - LabelText
+            - StaticText "档位（profile）"
+          - combobox [expanded=false, ref=e91]: DeepSeek V4 Flash（deepseekv4flash）
+            - MenuListPopup
+              - option "火山方舟 Ark / 豆包（ark）" [ref=e126]
+              - option "DeepSeek V4 Flash（deepseekv4flash）" [selected, ref=e127]
+              - option "DeepSeek V4 Lite（deepseekv4lite）" [ref=e128]
+              - option "DeepSeek V4 Pro（deepseekv4pro）" [ref=e129]
+              - option "本地 qwen3.6-35b-a3b（gemma4）（gemma4）" [ref=e130]
+              - option "MiroThinker 1.7 235B（mirothinker）（mirothinker）" [ref=e131]
+              - option "本地 qwen3.5-35b-a3b（qwen35）（qwen35）" [ref=e132]
+          - StaticText "模型 deepseek-v4-flash · 端点 https://api.deepseek.com"
+          - StaticText "已设置 · sk-…2b92 · 来源 受管文件"
+          - textbox "新密钥（留空 = 不改动；明文既不回显也不入日志）" [ref=e92]
+          - button "清除密钥" [ref=e93]
+          - StaticText "写入受管文件，重启后由环境变量 DEEPSEEK_API_KEY 读取"
+        - generic
+          - button "测试连通性" [ref=e94]
+          - StaticText "成功 · 152 ms · HTTP 200 · HTTP 200 · 凭据来源 legacy-file:.deepseek_api_key · 本分钟剩余 5 次 · 测试不改配置，保存才写文件"
+          - button "保存本卡" [ref=e95]
+          - StaticText "密钥已写入 llm.api_key。保存 ≠ 测试；重启后生效：systemctl --user restart canonical-v2-backend"
+          - generic
+            - StaticText "测试将请求："
+            - code
+              - StaticText "https://api.deepseek.com/chat/completions"
+      - region "采集模型" [ref=e42]
+        - sectionheader
+          - heading "采集模型（摘要与富化用它）" [level=3, ref=e96]
+          - StaticText "端点来源：受管文件"
+        - generic
+          - StaticText "生效端点"
+          - StaticText "https://api.deepseek.com · 来源：受管文件"
+          - StaticText "生效模型"
+          - StaticText "deepseek-v4-flash · 来源：受管文件"
+          - StaticText "凭据来源"
+          - StaticText "legacy-file:.deepseek_api_key"
+          - StaticText "说明"
+          - StaticText "采集与构建用它做摘要与富化；改动要重启服务才生效。"
+        - generic
+          - LabelText
+            - StaticText "提供方预设"
+          - combobox [expanded=false, ref=e97]: 选择预设填入 Base URL…
+            - MenuListPopup
+              - option "选择预设填入 Base URL…" [selected, ref=e133]
+              - option "本机 OpenAI 兼容服务（vLLM / SGLang）" [ref=e134]
+              - option "DeepSeek" [ref=e135]
+              - option "阿里云百炼（OpenAI 兼容模式）" [ref=e136]
+              - option "OpenAI" [ref=e137]
+              - option "硅基流动 SiliconFlow" [ref=e138]
+              - option "自定义端点" [ref=e139]
+          - StaticText "预设只是填值：选一个会把它的默认 Base URL 填进下面的字段"
+          - LabelText
+            - StaticText "采集 LLM Base URL"
+            - LineBreak "\n"
+            - generic
+              - StaticText "受管文件 影响：采集与构建：LLM 端点 · 默认：未设置"
+          - textbox "采集 LLM Base URL 受管文件 影响：采集与构建：LLM 端点 · 默认：未设置" [ref=e98]: https://api.deepseek.com
+            - StaticText "https://api.deepseek.com"
+          - LabelText
+            - StaticText "采集 LLM 模型名"
+            - LineBreak "\n"
+            - generic
+              - StaticText "受管文件 影响：采集与构建：LLM 模型 · 默认：未设置"
+          - textbox "采集 LLM 模型名 受管文件 影响：采集与构建：LLM 模型 · 默认：未设置" [ref=e99]: deepseek-v4-flash
+            - StaticText "deepseek-v4-flash"
+          - paragraph
+            - StaticText "凭据与「对话模型」档位共用一份（llm）：在那块填写，这里不设第二个入口。"
+          - button "拉取模型列表" [ref=e100]
+          - StaticText "未拉取"
+          - StaticText "模型列表将请求：https://api.deepseek.com/v1/models（页面推算；服务端会在结果里给出 request_url）"
+        - generic
+          - button "测试连通性" [ref=e101]
+          - StaticText "未测试"
+          - button "保存本卡" [ref=e102]
+          - generic
+            - StaticText "测试将请求："
+            - code
+              - StaticText "https://api.deepseek.com/chat/completions"
+      - region "嵌入模型" [ref=e43]
+        - sectionheader
+          - heading "嵌入模型（检索向量用它）" [level=3, ref=e103]
+          - generic
+            - StaticText "运行期已启用"
+            - StaticText "可设地址：模型身份仍由发布包冻结"
+        - paragraph
+          - StaticText "服务线向量模型身份由发布包冻结：地址可在下方设置并重启生效；模型名改动需要重建全部向量"
+        - generic
+          - StaticText "生效端点（服务线）"
+          - StaticText "http://100.64.0.27:18005/v1"
+          - StaticText "生效模型（服务线）"
+          - StaticText "Qwen/Qwen3-Embedding-8B"
+          - StaticText "端点来源"
+          - StaticText "managed-file(env:CANONICAL_V2_EMBEDDING_BASE_URL)"
+          - StaticText "服务端说明"
+          - StaticText "运行期生效地址（来源 managed-file(env:CANONICAL_V2_EMBEDDING_BASE_URL)）；模型身份仍由发布包冻结，地址可在受管配置里设置"
+          - StaticText "只读原因"
+          - StaticText "服务线向量模型身份由发布包冻结：模型名与维度来自发布包 embedding bundle（含校验和，不符即拒绝加载），改它需要重建全部向量。地址另有受管字段（extraction_endpoints.embedding_base_url，已可在页面设置）（只读展示）"
+        - generic
+          - StaticText "已设置 · k8#…0204 · 来源 legacy-file:.sglang_api_key"
+          - textbox "新密钥（留空 = 不改动；明文既不回显也不入日志）" [ref=e104]
+          - button "清除密钥" [ref=e105]
+          - StaticText "写入受管文件，重启后由环境变量 SGLANG_API_KEY 读取"
+          - group
+            - DisclosureTriangle "高级：端点与模型" [expanded=false]
+              - StaticText "高级：端点与模型"
+        - generic
+          - button "测试连通性" [ref=e106]
+          - StaticText "未测试"
+          - button "保存本卡" [ref=e107]
+          - generic
+            - StaticText "测试将请求："
+            - code
+              - StaticText "http://100.64.0.27:18005/v1/embeddings"
+            - StaticText "（服务线冻结端点）"
+      - region "重排模型" [ref=e44]
+        - sectionheader
+          - heading "重排模型" [level=3, ref=e108]
+          - StaticText "运行期未启用"
+        - generic
+          - StaticText "生效端点"
+          - StaticText "未配置（未配置则 rerank 不启用）"
+          - StaticText "生效模型"
+          - StaticText "未设置 · 来源：默认值"
+          - StaticText "运行期说明"
+          - StaticText "运行期未启用：未配置 CANONICAL_V2_RERANK_BASE_URL（configured_reranker() 返回 None，服务不会调用 rerank）；如需启用请在页面填写端点并重启服务"
+        - generic
+          - LabelText
+            - StaticText "提供方预设"
+          - combobox [expanded=false, ref=e109]: 选择预设填入 Base URL…
+            - MenuListPopup
+              - option "选择预设填入 Base URL…" [selected, ref=e140]
+              - option "本机 OpenAI 兼容服务（vLLM / SGLang）" [ref=e141]
+              - option "DeepSeek" [ref=e142]
+              - option "阿里云百炼（OpenAI 兼容模式）" [ref=e143]
+              - option "OpenAI" [ref=e144]
+              - option "硅基流动 SiliconFlow" [ref=e145]
+              - option "自定义端点" [ref=e146]
+          - StaticText "预设只是填值：选一个会把它的默认 Base URL 填进下面的字段"
+          - LabelText
+            - StaticText "Rerank Base URL"
+            - LineBreak "\n"
+            - generic
+              - StaticText "默认 影响：检索与回答：rerank 客户端端点（未配置则 rerank 不启用） · 默认：未设置"
+          - textbox "Rerank Base URL 默认 影响：检索与回答：rerank 客户端端点（未配置则 rerank 不启用） · 默认：未设置" [ref=e110]
+          - LabelText
+            - StaticText "Rerank 模型名"
+            - LineBreak "\n"
+            - generic
+              - StaticText "默认 影响：检索与回答：rerank 客户端模型 · 默认：未设置"
+          - textbox "Rerank 模型名 默认 影响：检索与回答：rerank 客户端模型 · 默认：未设置" [ref=e111]
+          - StaticText "未设置"
+          - textbox "新密钥（留空 = 不改动；明文既不回显也不入日志）" [ref=e112]
+          - button "清除密钥" [ref=e113]
+          - StaticText "写入受管文件，重启后由环境变量 CANONICAL_V2_RERANK_API_KEY 读取"
+          - button "拉取模型列表" [ref=e114]
+          - StaticText "未拉取"
+          - StaticText "模型列表将请求：—（先填 Base URL 或选档位）"
+        - generic
+          - button "测试连通性" [ref=e115]
+          - StaticText "未测试"
+          - button "保存本卡" [ref=e116]
+          - generic
+            - StaticText "测试将请求：—（端点未配置/未启用，运行期不会发起调用）"
+      - region "Web 搜索" [ref=e45]
+        - sectionheader
+          - heading "Web 搜索" [level=3, ref=e117]
+          - StaticText "2 个搜索提供方"
+        - generic
+          - generic
+            - sectionheader
+              - heading "Bocha 博查 Web 搜索" [level=4, ref=e147]
+              - StaticText "运行期已启用"
+            - paragraph
+              - StaticText "运行期使用 provider 固定主机（https://api.bochaai.com/v1/web-search）；凭据来源 legacy-file:.bocha_api_key"
+            - paragraph
+              - StaticText "端点由 provider 固定：https://api.bochaai.com/v1/web-search（页面不改写）"
+            - StaticText "已设置 · sk-…9eb1 · 来源 legacy-file:.bocha_api_key"
+            - textbox "新密钥（留空 = 不改动；明文既不回显也不入日志）" [ref=e118]
+            - button "清除密钥" [ref=e119]
+            - StaticText "写入受管文件，重启后由环境变量 BOCHA_API_KEY 读取"
+            - button "测试连通性" [ref=e120]
+            - button "保存本卡" [ref=e121]
+            - StaticText "未测试"
+            - generic
+              - StaticText "测试将请求："
+              - code
+                - StaticText "https://api.bochaai.com/v1/web-search"
+              - StaticText "（provider 固定主机，页面不改写）"
+          - generic
+            - sectionheader
+              - heading "Serper Web 搜索" [level=4, ref=e148]
+              - StaticText "运行期已启用"
+            - paragraph
+              - StaticText "运行期使用 provider 固定主机（https://google.serper.dev/search）；凭据来源 legacy-file:.serper_api_key"
+            - paragraph
+              - StaticText "端点由 provider 固定：https://google.serper.dev/search（页面不改写）"
+            - StaticText "已设置 · cba…1e2e · 来源 legacy-file:.serper_api_key"
+            - textbox "新密钥（留空 = 不改动；明文既不回显也不入日志）" [ref=e122]
+            - button "清除密钥" [ref=e123]
+            - StaticText "写入受管文件，重启后由环境变量 SERPER_API_KEY 读取"
+            - button "测试连通性" [ref=e124]
+            - button "保存本卡" [ref=e125]
+            - StaticText "未测试"
+            - generic
+              - StaticText "测试将请求："
+              - code
+                - StaticText "https://google.serper.dev/search"
+              - StaticText "（provider 固定主机，页面不改写）"
+    - paragraph
+      - StaticText "密钥只写不读：页面只显示掩码与来源（env / 受管文件 / 旧 key 文件），明文既不回显也不写日志与审计。 「运行期已启用/未启用」由服务端按运行期真实解析链给出。 「保存 ≠ 测试」：保存只把值写进受管文件，测试是当场发起一次最小调用；两者都要重启服务才在运行期生效。 「拉取模型列表」「测试连通性」「全部测试」共用服务端限频（同一连接 6 次/分钟），点太快会被拒并提示等待秒数； 「全部测试」按顺序逐个探针，不并发。"
+  - group
+    - DisclosureTriangle "只读快照（原始受管配置 · env 覆盖清单 · 密钥掩码视图）" [expanded=false]
+      - StaticText "只读快照（原始受管配置 · env 覆盖清单 · 密钥掩码视图）"
+### exit=0
+### 2026-09-22T02:06:01+08:00  agent-browser open http://127.0.0.1:18298/main
+✓ 管理台 · 深圳科创数据平台
+  http://127.0.0.1:18298/main
+### exit=0
+### 2026-09-22T02:06:01+08:00  agent-browser snapshot -i
+- button "退出登录" [ref=e1]
+- region "仪表盘" [ref=e2]
+  - region "系统状态" [ref=e3]
+    - heading "系统状态" [level=2, ref=e8]
+  - region "快捷入口" [ref=e4]
+    - heading "快捷入口" [level=2, ref=e9]
+    - link "管理配置" [ref=e10]
+    - link "访问日志" [ref=e11]
+    - link "数据浏览" [ref=e12]
+    - link "任务运维" [ref=e13]
+    - link "上传导入" [ref=e14]
+    - link "Seed 管理" [ref=e15]
+    - link "对话" [ref=e16]
+  - region "账号管理" [ref=e5]
+    - heading "账号管理" [level=2, ref=e17]
+    - heading "账号列表" [level=3, ref=e6]
+    - textbox "新账号" [required, ref=e18]
+    - button "创建" [ref=e19]
+    - heading "修改我的口令" [level=3, ref=e7]
+    - textbox "当前口令" [required, ref=e20]
+    - textbox "新口令" [required, ref=e21]
+    - button "修改" [ref=e22]
+### exit=0
+### 2026-09-22T02:06:22+08:00  agent-browser fill @e20 <redacted-password>
+✓ Done
+### exit=0
+### 2026-09-22T02:06:23+08:00  agent-browser fill @e21 KO0hVUpElzvKF7wXPlni634e9642
+✓ Done
+### exit=0
+### 2026-09-22T02:06:23+08:00  agent-browser click @e22
+✓ Done
+### exit=0
+### 2026-09-22T02:06:26+08:00  agent-browser snapshot
+- banner
+  - strong
+    - StaticText "深圳科创数据平台"
+  - StaticText "管理台 · Canonical V2"
+  - StaticText "当前用户"
+  - StaticText "admin（admin）"
+  - button "退出登录" [ref=e1]
+- main
+  - status
+    - StaticText "口令已更新，其它会话已失效"
+  - region "仪表盘" [ref=e2]
+    - region "系统状态" [ref=e3]
+      - sectionheader
+        - heading "系统状态" [level=2, ref=e8]
+        - StaticText "生成于 2026-09-21T18:06:01.802868+00:00"
+      - generic
+        - StaticText "state"
+        - StaticText "ok"
+        - StaticText "generated_at"
+        - StaticText "2026-09-21T18:06:01.802868+00:00"
+        - StaticText "pack"
+        - StaticText "14 个字段"
+        - StaticText "index_marker"
+        - StaticText "8 个字段"
+        - StaticText "freshness"
+        - StaticText "7 个字段"
+        - StaticText "operations"
+        - StaticText "5 个字段"
+        - StaticText "storage"
+        - StaticText "2 个字段"
+        - StaticText "disk"
+        - StaticText "2 个字段"
+        - StaticText "config"
+        - StaticText "5 个字段"
+        - StaticText "collection"
+        - StaticText "5 个字段"
+    - region "快捷入口" [ref=e4]
+      - sectionheader
+        - heading "快捷入口" [level=2, ref=e9]
+      - navigation
+        - link "管理配置" [ref=e10]
+        - link "访问日志" [ref=e11]
+        - link "数据浏览" [ref=e12]
+        - link "任务运维" [ref=e13]
+        - link "上传导入" [ref=e14]
+        - link "Seed 管理" [ref=e15]
+        - link "对话" [ref=e16]
+    - region "账号管理" [ref=e5]
+      - sectionheader
+        - heading "账号管理" [level=2, ref=e17]
+        - StaticText "口令 ≥ 8 位；修改口令后该账号其它会话立即失效。"
+      - heading "账号列表" [level=3, ref=e6]
+      - list
+        - listitem [level=1]
+          - StaticText "admin（admin）"
+          - button "重置口令" [ref=e23]
+          - button "删除" [ref=e24]
+      - generic
+        - LabelText
+          - StaticText "新账号"
+        - textbox "新账号" [required, ref=e18]
+        - button "创建" [ref=e19]
+      - paragraph
+      - heading "修改我的口令" [level=3, ref=e7]
+      - generic
+        - LabelText
+          - StaticText "当前口令"
+        - textbox "当前口令" [required, ref=e20]
+        - LabelText
+          - StaticText "新口令"
+        - textbox "新口令" [required, ref=e21]
+        - button "修改" [ref=e22]
+### exit=0
