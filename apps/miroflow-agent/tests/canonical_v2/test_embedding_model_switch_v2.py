@@ -57,14 +57,17 @@ CANDIDATE_DIMENSION = 1024
 LIVE_MODEL_ID = "Qwen/Qwen3-Embedding-8B"
 LIVE_DIMENSION = 4096
 CANDIDATE_BUNDLE_SHA256 = (
-    "cdddcdfd998e6c9e6147f735fd71370f209045636f3b2f3efa15e7e73a8e96ad"
+    "81a536916053106114aa4c70ff43983bf6a12c8ecb0b5c562b43f9f02409b46a"
 )
 CANDIDATE_COMPAT_BUNDLE_SHA256 = (
-    "45e458552e7031c6ca50b2ab5af225fbc5197a60c2d402b7b8b4e1fe3535029c"
+    "2db8f03b255e138a13081566c6196db06d7af1a8a83c12cec2cbfaea00b22e3d"
 )
 GATEWAY_KEY_ENV = "CANONICAL_V2_EMBEDDING_API_KEY"
 NATIVE_PATH = "/api/v1/services/embeddings/text-embedding/text-embedding"
 GATEWAY_COMPAT_BASE_URL = "https://maas.qianwenaiapi.com/compatible-mode/v1"
+#: Both routes refuse a batch larger than this (measured 2026-09-21: 25 → 200,
+#: 26 → HTTP 400 "batch size is invalid, it should not be larger than 25").
+GATEWAY_MAX_BATCH = 25
 
 #: Both candidate variants are one model in two wire shapes: the native route
 #: (needs the adapter) and the gateway's OpenAI-compatible route (needs none).
@@ -640,6 +643,30 @@ def test_candidate_bundle_is_self_hashed_and_frozen(
     assert adapter.model_id == CANDIDATE_MODEL_ID
     assert adapter.dimension == CANDIDATE_DIMENSION
     assert adapter.authority_sha256 == bundle_sha256
+
+
+def test_the_candidate_bundles_stay_within_the_route_batch_cap() -> None:
+    """The gateway refuses batches above 25 on **both** routes (measured 2026-09-21).
+
+    Measured directly: batch 25 → 200 on both routes, batch 26 → HTTP 400
+    ``batch size is invalid, it should not be larger than 25: input.contents``.
+    A bundle declaring 32 would fail the rebuild's very first batch — and on the
+    serving path the F1 contract turns a 4xx into lane degradation, i.e. silent
+    recall loss rather than an error. 25 is also the throughput-optimal choice:
+    tokens (not requests) bound the rebuild, so a smaller round number would only
+    add requests.
+    """
+
+    for bundle_path in (CANDIDATE_BUNDLE_PATH, CANDIDATE_COMPAT_BUNDLE_PATH):
+        document = json.loads(bundle_path.read_bytes())
+        assert document["batch_size"] == GATEWAY_MAX_BATCH == 25, document["batch_size"]
+        adapter = _build_module().load_content_addressed_embedding_adapter(bundle_path)
+        assert adapter.batch_size == 25
+
+    # The live authority keeps its own value: this cap is the gateway's, not a
+    # policy change for the self-hosted endpoint.
+    live_document, _ = _build_module()._OPENAI_COMPATIBLE_EMBEDDING_AUTHORITIES[0]
+    assert live_document["batch_size"] == 32
 
 
 def test_the_two_candidate_routes_are_distinct_authorities() -> None:

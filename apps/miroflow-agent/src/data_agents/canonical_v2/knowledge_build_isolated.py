@@ -290,10 +290,10 @@ _QWEN_EMBEDDING_DIMENSION = 4096
 #: is the recommended one (OpenAI shape, no new client), the native route the
 #: fallback if that route's shape ever changes.
 _QWEN_FLASH_EMBEDDING_BUNDLE_SHA256 = (
-    "cdddcdfd998e6c9e6147f735fd71370f209045636f3b2f3efa15e7e73a8e96ad"
+    "81a536916053106114aa4c70ff43983bf6a12c8ecb0b5c562b43f9f02409b46a"
 )
 _QWEN_FLASH_OPENAI_COMPAT_EMBEDDING_BUNDLE_SHA256 = (
-    "45e458552e7031c6ca50b2ab5af225fbc5197a60c2d402b7b8b4e1fe3535029c"
+    "2db8f03b255e138a13081566c6196db06d7af1a8a83c12cec2cbfaea00b22e3d"
 )
 _QWEN_FLASH_EMBEDDING_DIMENSION = 1024
 _ACCEPTED_EMBEDDING_AUTHORITIES = frozenset(
@@ -8070,7 +8070,11 @@ class _BatchingEmbeddingAdapter:
             if isinstance(exc, (TimeoutError, ConnectionError)):
                 self.breaker.record(
                     ok=False,
-                    reason=("timeout" if isinstance(exc, TimeoutError) else "connection_failure"),
+                    reason=(
+                        "timeout"
+                        if isinstance(exc, TimeoutError)
+                        else "connection_failure"
+                    ),
                 )
             raise
 
@@ -8358,7 +8362,7 @@ _OPENAI_COMPATIBLE_EMBEDDING_AUTHORITIES: tuple[tuple[dict[str, Any], Any], ...]
             "dimension": _QWEN_FLASH_EMBEDDING_DIMENSION,
             "base_url": "https://maas.qianwenaiapi.com/compatible-mode/v1",
             "api_key_source": _GATEWAY_EMBEDDING_API_KEY_SOURCE,
-            "batch_size": 32,
+            "batch_size": 25,
             "max_workers": 32,
             "timeout_seconds": 180,
             "content_sha256": _QWEN_FLASH_OPENAI_COMPAT_EMBEDDING_BUNDLE_SHA256,
@@ -8396,7 +8400,7 @@ def _load_dashscope_native_embedding_adapter(path: Path) -> _EmbeddingAdapter:
         "dimension": _QWEN_FLASH_EMBEDDING_DIMENSION,
         "base_url": "https://maas.qianwenaiapi.com/api/v1",
         "api_key_source": _GATEWAY_EMBEDDING_API_KEY_SOURCE,
-        "batch_size": 32,
+        "batch_size": 25,
         "max_workers": 32,
         "timeout_seconds": 180,
         "content_sha256": _QWEN_FLASH_EMBEDDING_BUNDLE_SHA256,

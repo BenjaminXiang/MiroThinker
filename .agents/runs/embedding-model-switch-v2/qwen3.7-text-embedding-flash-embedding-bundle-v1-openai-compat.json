@@ -1,8 +1,8 @@
 {
   "api_key_source": "env:CANONICAL_V2_EMBEDDING_API_KEY",
   "base_url": "https://maas.qianwenaiapi.com/compatible-mode/v1",
-  "batch_size": 32,
-  "content_sha256": "45e458552e7031c6ca50b2ab5af225fbc5197a60c2d402b7b8b4e1fe3535029c",
+  "batch_size": 25,
+  "content_sha256": "2db8f03b255e138a13081566c6196db06d7af1a8a83c12cec2cbfaea00b22e3d",
   "dimension": 1024,
   "max_workers": 32,
   "model_id": "qwen3.7-text-embedding-flash",
