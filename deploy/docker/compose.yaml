@@ -120,18 +120,34 @@ services:
         source: ${MIROTHINKER_SECRETS_DIR:-./secrets}/.deepseek_api_key
         target: /opt/mirothinker/.deepseek_api_key
         read_only: true
+        # 源文件缺失时**不要**让 docker 自动建一个同名目录（那会让"后补 key"变成
+        # 无法覆盖的目录，实测踩过）；由 install-site.sh 预置空占位文件。
+        bind:
+          create_host_path: false
       - type: bind
         source: ${MIROTHINKER_SECRETS_DIR:-./secrets}/.bocha_api_key
         target: /opt/mirothinker/.bocha_api_key
         read_only: true
+        # 源文件缺失时**不要**让 docker 自动建一个同名目录（那会让"后补 key"变成
+        # 无法覆盖的目录，实测踩过）；由 install-site.sh 预置空占位文件。
+        bind:
+          create_host_path: false
       - type: bind
         source: ${MIROTHINKER_SECRETS_DIR:-./secrets}/.serper_api_key
         target: /opt/mirothinker/.serper_api_key
         read_only: true
+        # 源文件缺失时**不要**让 docker 自动建一个同名目录（那会让"后补 key"变成
+        # 无法覆盖的目录，实测踩过）；由 install-site.sh 预置空占位文件。
+        bind:
+          create_host_path: false
       - type: bind
         source: ${MIROTHINKER_SECRETS_DIR:-./secrets}/.sglang_api_key
         target: /opt/mirothinker/.sglang_api_key
         read_only: true
+        # 源文件缺失时**不要**让 docker 自动建一个同名目录（那会让"后补 key"变成
+        # 无法覆盖的目录，实测踩过）；由 install-site.sh 预置空占位文件。
+        bind:
+          create_host_path: false
       # 可选：服务包 mount-receipt 换到可写路径（数据根只读时用）
       #- type: bind
       #  source: ${MIROTHINKER_STATE_DIR:-/var/tmp/mirothinker-canonical-v2-s12f}

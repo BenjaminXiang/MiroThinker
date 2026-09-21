@@ -91,6 +91,7 @@ chmod 0755 "${OUT_DIR}/install-site.sh" 2>/dev/null || true
 place "${KIT_DIR}/compose.yaml" "${OUT_DIR}/compose.yaml" "compose.yaml"
 place "${KIT_DIR}/README.md" "${OUT_DIR}/README.md" "README.md（runbook）"
 place "${KIT_DIR}/kit-manifest.txt" "${OUT_DIR}/kit-manifest.txt" "kit-manifest.txt"
+place "${DEPLOY_DIR}/CONFIG-GUIDE.md" "${OUT_DIR}/CONFIG-GUIDE.md" "CONFIG-GUIDE.md（配置指南）"
 
 echo "-- 校验清单（裸机 kit 的 10 个交付物）--"
 place "${BM_KIT_DIR}/checksums.sha256" "${OUT_DIR}/checksums.sha256" "checksums.sha256"
@@ -116,6 +117,11 @@ place "${KIT_DIR}/${IMAGE_TGZ}" "${OUT_DIR}/${IMAGE_TGZ}" "$IMAGE_TGZ"
 place "${KIT_DIR}/${IMAGE_TGZ}.sha256" "${OUT_DIR}/${IMAGE_TGZ}.sha256" "${IMAGE_TGZ}.sha256"
 place "${DATA_XFER_DIR}/${DATA_TGZ}" "${OUT_DIR}/${DATA_TGZ}" "$DATA_TGZ"
 place "${DATA_XFER_DIR}/${DATA_TGZ}.sha256" "${OUT_DIR}/${DATA_TGZ}.sha256" "${DATA_TGZ}.sha256"
+
+echo "-- 预置受管配置（非机密：端点/档位/窗口）--"
+mkdir -p "${OUT_DIR}/state/config-managed"
+place "${DEPLOY_DIR}/site-config/managed-settings.json" \
+      "${OUT_DIR}/state/config-managed/settings.json" "state/config-managed/settings.json（预置）"
 
 if [[ "$WITH_LOCAL_KEYS" == "1" ]]; then
   echo "-- [测试专用] 把本机 4 个密钥以符号链接放进 secrets/（绝不进正式交付包）--"
@@ -175,6 +181,9 @@ Canonical V2 服务栈 · 现场交付包（v1）
 
 给操作者（三步）：
 
+  配置（只有这一步是人工）：把 4 个密钥写进这个目录的 secrets/（见 CONFIG-GUIDE.md §2）。
+  其余全部已预置：不需要改任何配置文件 / 路径 / 数据库。
+
   ①  校验
         cd <本目录>
         sha256sum -c mirothinker-serving-v1.tar.gz.sha256
@@ -219,7 +228,8 @@ Canonical V2 服务栈 · 现场交付包（v1）
         docker compose -f compose.yaml exec -T app mirothinker-verify
         docker compose -f compose.yaml exec -T app mirothinker-replay --out-dir /tmp/accept
 
-细节（口径、故障处置、备份/回滚）见本目录 README.md（runbook）。
+细节：配置只看 CONFIG-GUIDE.md（给运维看，含"只填 key"的边界与症状表）；
+      运维/故障/备份/回滚看 README.md（runbook）。
 EOF
 
 echo

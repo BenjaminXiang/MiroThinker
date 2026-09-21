@@ -2,7 +2,8 @@
 # Canonical V2 服务栈 · 现场一键安装器（在甲方机器上、以 sudo 运行，幂等，支持 --dry-run）
 #
 #   sudo ./install-site.sh [--dry-run] [--fast] [--skip-probes] [--strict-probes]
-#                          [--port N] [--bundle-dir DIR] [--no-up] [--timeout-seconds N]
+#                          [--accept-degraded-keys] [--port N] [--bundle-dir DIR]
+#                          [--no-up] [--timeout-seconds N]
 #
 # 环境变量（**测试专用**）：
 #   MIROTHINKER_SITE_ROOT=<prefix>   给所有"宿主路径"加前缀，使整套流程可以在不碰
@@ -24,6 +25,7 @@ DRY_RUN=0
 FAST=0
 SKIP_PROBES=0
 STRICT_PROBES=0
+ACCEPT_DEGRADED_KEYS=0
 DO_UP=1
 PORT="${MIROTHINKER_SITE_PORT:-}"
 HEALTH_TIMEOUT="${MIROTHINKER_SITE_HEALTH_TIMEOUT:-900}"
@@ -45,11 +47,12 @@ while [[ $# -gt 0 ]]; do
     --fast) FAST=1; shift ;;
     --skip-probes) SKIP_PROBES=1; shift ;;
     --strict-probes) STRICT_PROBES=1; shift ;;
+    --accept-degraded-keys) ACCEPT_DEGRADED_KEYS=1; shift ;;
     --port) PORT="$2"; shift 2 ;;
     --bundle-dir) BUNDLE_DIR="$(cd "$2" && pwd)"; shift 2 ;;
     --no-up) DO_UP=0; shift ;;
     --timeout-seconds) HEALTH_TIMEOUT="$2"; shift 2 ;;
-    -h|--help) sed -n '2,24p' "$0"; exit 0 ;;
+    -h|--help) sed -n '2,25p' "$0"; exit 0 ;;
     *) echo "unknown argument: $1（--help 看用法）" >&2; exit 2 ;;
   esac
 done
@@ -304,6 +307,15 @@ ENVEOF
   ok "写入 ${ENV_FILE}（uid:gid=${owner_uid}:${owner_gid} 取自数据属主；端口 ${PORT}）"
 
   mkdir -p "$SECRETS_DIR" "$MANAGED_DIR" "${BUNDLE_DIR}/state/logs" 2>/dev/null
+  # 预置受管配置（端点/档位/采集窗口，非机密）——已存在则不动，避免覆盖现场在页面上的改动
+  if [[ ! -s "${MANAGED_DIR}/settings.json" && -s "${BUNDLE_DIR}/state/config-managed/settings.json" ]]; then
+    cp "${BUNDLE_DIR}/state/config-managed/settings.json" "${MANAGED_DIR}/settings.json"
+    ok "预置受管配置已就位（端点/档位/窗口；现场无需编辑）"
+  elif [[ -s "${MANAGED_DIR}/settings.json" ]]; then
+    ok "受管配置已存在（保留现场版本，不覆盖）"
+  else
+    warn "交付包里没有预置受管配置：chat LLM 档位会退回默认（gemma4），放 .deepseek_api_key 也不够用"
+  fi
   if [[ ! -s "$PG_ENV_FILE" ]]; then
     ( umask 077; printf 'POSTGRES_USER=miroflow\nPOSTGRES_PASSWORD=%s\n' "$(openssl rand -hex 24)" > "$PG_ENV_FILE" )
     ok "生成 PG 凭据 ${PG_ENV_FILE}（随机口令，0600；已存在则不动）"
@@ -317,27 +329,66 @@ ENVEOF
   fi
 fi
 
+# 密钥校验：必须是**普通文件且非空**。
+# 特别处理一个实测踩过的坑：docker 的 bind mount 在源文件缺失时会**建一个同名目录**，
+# 之后"后补 key"就变成无法覆盖的目录 —— 这里主动识别并修复（rmdir + 建空占位文件）。
 missing_keys=()
 for key in .deepseek_api_key .bocha_api_key .serper_api_key .sglang_api_key; do
-  [[ -s "${SECRETS_DIR}/${key}" ]] || missing_keys+=("${SECRETS_DIR}/${key}")
+  path="${SECRETS_DIR}/${key}"
+  if [[ -d "$path" ]]; then
+    rmdir "$path" 2>/dev/null \
+      && warn "${key} 被 docker 建成了目录（源文件曾缺失）；已删除，改放普通文件" \
+      || warn "${key} 是目录且非空，无法自动处理：请手动 rm -rf '$path' 后放普通文件"
+    path_ok=0
+  elif [[ -f "$path" && -s "$path" ]]; then
+    path_ok=1
+  elif [[ -e "$path" ]]; then
+    warn "${key} 存在但是空文件 ⇒ 视为未配置（服务按"没有这个 key"降级）"
+    path_ok=0
+  else
+    path_ok=0
+  fi
+  [[ "$path_ok" == "1" ]] || missing_keys+=("$path")
 done
 if [[ ${#missing_keys[@]} -gt 0 ]]; then
+  if [[ "$ACCEPT_DEGRADED_KEYS" == "1" ]]; then
+    warn "缺少 ${#missing_keys[@]} 个密钥文件（--accept-degraded-keys：继续，但相应能力会降级）"
+  else
   fail "缺少 ${#missing_keys[@]} 个密钥文件（服务会起来但采集/问答会降级；**不允许**半配置上栈）"
   printf '         现场请创建（0600，内容为各自的 API key）：\n'
   printf '           %s\n' "${missing_keys[@]}"
   printf '         命令模板：\n'
   printf '           sudo install -m 600 /dev/stdin %s <<< "<你的key>"\n' "${missing_keys[0]}"
   printf '         也可先只放 .sglang_api_key + .deepseek_api_key 让问答可用，其余走 /admin 密钥页。\n'
-  die 12 "密钥不齐：补齐后重跑本脚本（幂等）"
+  die 12 "密钥不齐：补齐后重跑本脚本（幂等；确实要降级安装：--accept-degraded-keys）"
+  fi
+  degraded_keys=()
+  for key in .deepseek_api_key .bocha_api_key .serper_api_key .sglang_api_key; do
+    [[ -f "${SECRETS_DIR}/${key}" && -s "${SECRETS_DIR}/${key}" ]] && continue
+    degraded_keys+=("${key}")
+    # 放一个空的 0600 占位文件：compose 的密钥挂载设了 create_host_path:false，
+    # 没有文件会直接失败；空文件等价于"没有这个 key"（服务侧按未配置降级），
+    # 且之后把真 key 写进同一个路径即可（普通文件，不会变成目录）。
+    if [[ "$DRY_RUN" != "1" && ! -e "${SECRETS_DIR}/${key}" ]]; then
+      ( umask 077; : > "${SECRETS_DIR}/${key}" )
+    fi
+  done
+  warn "缺的密钥：${degraded_keys[*]}（各自影响：.sglang_api_key=语义检索, .deepseek_api_key=成文答案, .bocha/.serper=联网补充）"
 fi
 key_modes=""
 key_mode_warn=0
 for key in .deepseek_api_key .bocha_api_key .serper_api_key .sglang_api_key; do
+  [[ -s "${SECRETS_DIR}/${key}" ]] || continue          # 缺的 key 由下面的缺失清单负责
   mode="$(stat -L -c %a "${SECRETS_DIR}/${key}")"
   key_modes="${key_modes}${key}=${mode} "
   [[ "$mode" != "600" ]] && key_mode_warn=1
 done
-ok "4 个密钥就位且非空（内容未打印；权限：${key_modes}）"
+present=$(( 4 - ${#missing_keys[@]} ))
+if [[ "$present" == "4" ]]; then
+  ok "4 个密钥就位且非空（内容未打印；权限：${key_modes}）"
+else
+  warn "就位的密钥 ${present}/4（内容未打印；权限：${key_modes}）"
+fi
 if [[ "$key_mode_warn" == "1" ]]; then
   warn "有密钥文件不是 0600（同机器其它用户可读）：chmod 600 ${SECRETS_DIR}/.*_api_key"
 fi
@@ -401,6 +452,7 @@ cat <<DONE
       cd ${BUNDLE_DIR} && docker compose exec -T app mirothinker-replay --out-dir /tmp/accept
   停止/启动：
       cd ${BUNDLE_DIR} && docker compose down      # / up -d（数据与状态在宿主，不丢）
+  配置只剩密钥这一步：见 ${BUNDLE_DIR}/CONFIG-GUIDE.md（甲方运维版）
   备份采集库（pg_dump）与常见故障处置：见 ${BUNDLE_DIR}/README.md
 ==========================================
 DONE

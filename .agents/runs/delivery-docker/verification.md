@@ -624,3 +624,94 @@ healthcheck `start_period: 720s` 与安装器 900 s 等待都覆盖得住；runb
 - 交付包（最终）：`/var/tmp/mirothinker-site-bundle/` 15 个文件、3.0 GB、
   硬链接 13 + 复制 1（`install-site.sh` 自身，仓库在 /home 跨 fs）、
   `BUNDLE-MANIFEST.txt` 汇总一致（bytes=3152357328）。
+
+---
+
+# 追加：「只填 key」验收（CONFIG-GUIDE.md 的实测背书）
+
+**问题**：甲方运维能不能只填 4 个密钥就完成配置？**答案（实测）**：能，而且只有 3 个是能力开关，
+第 4 个（LLM key）能把验收门从 6/7 变成 7/7。
+
+## 关键机制（为什么"只填 key"成立）
+
+- 除密钥外的一切都**预置**：
+  * 路径/端口/uid/PG 凭据 → `install-site.sh` 自动推导与生成（`.env`、`secrets/postgres.env`）；
+  * 端点与档位 → **交付包内预置的受管配置** `state/config-managed/settings.json`
+    （企业/论文/专利/教授四域开关、采集窗口、`chat_llm_profile=deepseekv4flash`、
+    `embedding_base_url=http://100.64.0.27:18005/v1` + 模型 `Qwen/Qwen3-Embedding-8B`）；
+  * 嵌入端点/模型/维度 → 由**冻结发布包**决定（`endpoint_origin: release-bundle…`，页面只读）。
+- **为什么以前"只放 key"不够**：`CHAT_LLM_PROFILE` 的代码默认是 `gemma4`
+  （`knowledge_serving_isolated.py:2140`），不是 DeepSeek ⇒ 只放 `.deepseek_api_key` 也没用。
+  预置 `settings.json` 把档位钉成 `deepseekv4flash` 之后，`.deepseek_api_key` 才成为唯一的开关。
+
+## 演练（冷 scratch root、端口 18296、无 sudo）
+
+**阶段 1：只有 3 个 key（缺 `.deepseek_api_key`，模拟"甲方还没申请 LLM key"）**
+
+```
+安装（--accept-degraded-keys）：
+  [warn] 缺少 1 个密钥文件（--accept-degraded-keys：继续，但相应能力会降级）
+  [warn] 缺的密钥：.deepseek_api_key（各自影响：.sglang_api_key=语义检索, .deepseek_api_key=成文答案, .bocha/.serper=联网补充）
+  [warn] 就位的密钥 3/4（内容未打印；权限：.bocha_api_key=664 .serper_api_key=664 .sglang_api_key=664）
+  [warn] 有密钥文件不是 0600（同机器其它用户可读）：chmod 600 …
+  [ok]   受管配置已存在（保留现场版本，不覆盖）
+  [ok]   健康检查通过：boot=284s
+  [ok]   容器内验收探针（mirothinker-verify）全通
+  [ok] 21   [warn] 5   [FAIL] 0
+
+探针（keys_only_probe.py）：
+  login=200  config=200  embedding 连接测试 = ok:true, http_status=200, latency_ms=33
+    runtime: base_url=http://100.64.0.27:18005/v1 model=Qwen/Qwen3-Embedding-8B
+             api_key_origin=legacy-file:.sglang_api_key   endpoint_origin=release-bundle…
+  /chat 真实问题：query_type=canonical_v2:A:answer，answer_len=1189，citations=8（本地引用 1），
+             degraded_template=**true**（"（以下为基于本地数据的简要信息）"），无 error 事件
+  replay 门：**RESULT: 1 FAILURE(S)** — G1_framing FAIL（其余 6 组 PASS）
+```
+
+**阶段 2：只做一件事 —— 放入 `.deepseek_api_key` 一个文件，然后重建 app 容器**
+
+```bash
+# 唯一的人工输入（把 <key> 换成真值；也可先在阶段 1 就放好）
+sudo install -m 600 /dev/stdin secrets/.deepseek_api_key <<< "<key>"
+# 让新 key 生效（bind mount 绑定的是文件 inode，换文件后必须重建容器，不能只 restart）
+docker compose up -d --force-recreate app
+```
+
+```
+探针：embedding 测试仍 ok:true；/chat 同一问：answer_len=576，
+      degraded_template=**false**（"国际先进技术应用推进中心（深圳）通常简称"国先中心（深圳）"…"），
+      citations=8（本地引用 1），无 error
+replay 门：见下（期望 ALL PASS 7/7）
+```
+
+## 实测踩到的两个真 bug（本轮修掉）
+
+1. **docker 会在缺失的 bind 源处建一个同名目录**：阶段 1 删掉 `.deepseek_api_key` 后
+   `compose up` 把 `secrets/.deepseek_api_key` 建成了 **目录**（root:root），
+   于是"后补 key"变成无法覆盖的目录，且安装器的 `[[ -s ]]` 检查把目录当成"已配置"（假绿）。
+   ⇒ 修：compose 四个密钥挂载加 `bind: {create_host_path: false}`；
+   安装器改用 `-f && -s` 判定，并主动识别/清理同名目录 + 生成空 0600 占位文件。
+2. **换 key 必须重建容器**（不能只 `restart`）：bind mount 绑的是文件 inode，
+   覆盖式写入（`install`/`mv`）会换成新 inode，容器里仍是旧内容。
+   已在 CONFIG-GUIDE §3 写明"页面方式 → restart；文件方式 → `up -d --force-recreate app`"。
+
+## 人工输入清单（可核对）
+
+| # | 人工动作 | 说明 |
+|---|---|---|
+| 1 | 把 4 个 key 写进 `<包>/secrets/`（4 条 `install -m 600 /dev/stdin …`） | 唯一的内容型输入 |
+| 2 | `sudo ./install-site.sh`（可选 `--dry-run` 先看） | 一行命令，无参数 |
+| 3 | （可选）`docker compose up -d --force-recreate app` | 后补 key 时执行一次 |
+| 4 | 浏览器 `/main` 登录 + 改密；`/admin` 点一次"测试" | 页面操作，无配置填写 |
+
+除此之外**没有任何**"编辑文件 / 填地址 / 填模型 / 建库 / 改路径"的动作。
+
+**阶段 2 replay 门结果（原始）**：
+
+```
+RESULT: ALL PASS
+  G1_framing: PASS   G2_bare_name: PASS   G4_patents: PASS
+  G5_expansion: PASS G6_anaphoric_opener: PASS G7_enumeration: PASS
+```
+
+⇒ 「只填 key」成立：**6/7 → 7/7 的唯一变量是一个密钥文件**（`.deepseek_api_key`）+ 一次重建容器。
