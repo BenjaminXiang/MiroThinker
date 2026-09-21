@@ -39,14 +39,27 @@ as fact here) then settled what the probe could not:
 | `POST /api/v1/services/embeddings/text-embedding/text-embedding` (native) | 200, 1024 dims |
 | same text, compatible route vs native route | cosines **0.839 / 0.920 / 0.808** ⇒ the two routes are **not** the same pipeline |
 | same route, same text, twice | cosine **0.99914** (not 1.0) ⇒ this endpoint is slightly **stochastic** (the live 8B endpoint measured 1.000000, 15/15) |
+| same route, same text, **30 repeats × 3 texts** (own measurement, §5.1) | bimodal: 1.000000 or 0.998004–0.998829; pooled min **0.998004** over 1305 pairs, **0.997556** in an earlier run |
 | `dimensions` param on the compatible route | 1024 → 200, 512 → 200, **4096 → HTTP 400** |
+
+**One live finding, and a fix.** The native route's answer rows are
+`['embedding', 'index', 'type']` — the gateway says `index` where DashScope's
+documentation says `text_index`. Slice 1's native client was built from the
+plan's description of that shape and therefore rejected every live answer with
+"malformed embedding row": the native adapter could not have embedded anything.
+Both spellings are now accepted (the row is placed by whichever index key it
+carries), verified against a live call, and covered by tests. The compatible
+route needed no such fix — it is the OpenAI shape our client already spoke.
 
 Consequence: the switch **can ship with no new client** — the compatible route is
 byte-compatible with `company/vectorizer.EmbeddingClient` — so a second candidate
 bundle variant freezes that route as an authority of its own (§3), and the native
-adapter is kept as the fallback. No live call was made from this worktree:
-`/var/tmp/mirothinker-qianwen-api-key` does not exist on this host (`ABSENT`), and
-no key was created, read, or printed.
+adapter is kept as the fallback. Live calls were made in this session for the
+measurement in §5.1 and for the row-key finding above: the key was read from
+`/var/tmp/mirothinker-qianwen-api-key` (the file the orchestrator placed there),
+was never printed, logged, written into any artifact, or embedded in an argument
+list, and no key was created or rotated. An earlier check of the same path during
+slice 1 found it absent — this run found it present.
 
 ## 2. What was built
 
@@ -167,10 +180,11 @@ that is a request-shape decision to make deliberately, on both sides.
 ## 4. Verification (this slice)
 
 New tests: `apps/miroflow-agent/tests/canonical_v2/test_embedding_model_switch_v2.py`
-(43 tests, local `ThreadingHTTPServer` stand-in for the gateway — no key, no
-network) plus one parametrized test in
+(56 tests, local `ThreadingHTTPServer` stand-in for the gateway — no key, no
+network), one parametrized test in
 `apps/miroflow-agent/tests/canonical_v2/test_serving_pack_no_milvus.py` (which owns
-the real pack/index fixture).
+the real pack/index fixture), and the tuned-floor cases in
+`apps/admin-console/tests/test_embedding_identity_probe.py`.
 
 | cluster | tests | locks |
 |---|---|---|
@@ -183,15 +197,61 @@ the real pack/index fixture).
 | credential slot, compatible variant | 1 | loaded through the real loader with a recording client: the local slot's key is never used (no key ⇒ `ValueError`, zero calls), the gateway key reaches `…/compatible-mode/v1` and only it |
 | inertness | 2 | the live bundle still loads to `_OpenAICompatibleEmbeddingAdapter` with 4096/`Qwen/Qwen3-Embedding-8B` and the provider is never called at load time |
 | pair mismatch, real fixtures | 2 | the real pack refuses either candidate adapter (`ServingPackIntegrityError: embedding model differs`); the real `vector_matrix.npz` refuses the candidate identity, and refuses a matching model with the wrong dimension |
+| index-key spellings | 2 | the gateway's measured `index` and DashScope's documented `text_index` both place rows; a row with neither is refused |
+| F1/F2 seam after merge | 3 | F2's address override reaches both candidate bundles; F1's pass-through keeps the gateway client's transport builtins builtins (and still fails closed on a wrong answer); F1's breaker opens after two gateway transport failures |
+| rebuild-audit floor (C.1) | 7 | the measured repeat band (1.0 … 0.997556) passes the real audit; 0.932903 / 0.86 / 0.241886 / 0.0 / −0.03 and a wrong dimension are still refused; the constant is 0.99 |
+| identity-check floor (C.2, admin) | 9 | the measured repeat band passes the reference arm; the wrong-answer band still fails with the operator message; the floor's bounds are pinned |
 
-Regression suites re-run, results as run this session (`--no-cov`):
+Regression suites re-run after this session's work, results as run
+(`--no-cov`):
 
 | command | result |
 |---|---|
-| `pytest tests/canonical_v2/test_embedding_model_switch_v2.py` (alone) | **43 passed** |
-| `pytest test_serving_pack_loader.py test_fast_boot.py test_serving_pack_no_milvus.py test_embedding_model_switch_v2.py -n 2` | **102 passed, exit 0** |
-| the same four files with `-n 8` | flaky: the milvus-lite fixtures abort with `Assert "init_flag_ == true" => Mmap manager has not been init` under 8 concurrent workers (pymilvus-lite init race, unrelated to this diff — it hits `test_serving_pack_loader`'s fixture before any embedding code runs). Use `-n 2` for this set. |
+| `pytest tests/canonical_v2/test_embedding_model_switch_v2.py` (alone, gateway stand-in, no key) | **56 passed** |
+| the eight embedding/pack files: `test_serving_pack_loader`, `test_fast_boot`, `test_serving_pack_no_milvus`, `test_embedding_model_switch_v2`, `test_embedding_endpoint_resolution`, `test_embedding_lane_breaker`, `test_embedding_lane_fail_open`, `test_embedding_transport_classification` at `-n 2` | **144 passed, exit 0** |
+| `pytest apps/admin-console/tests -n 4` (mine vs `release/v1.1`, both with `PYTHONPATH=<their>/apps/miroflow-agent`) | **identical failure sets**: 130 entries (25 failed, 105 errors), 127 distinct `file::function` ids with identical status and counts. The red set is pre-existing and environment-driven (DB-dependent tests). |
+| `pytest tests/canonical_v2/test_embedding_identity_probe.py` (admin) | **26 passed** |
+| the same eight files at `-n 8` | flaky: the milvus-lite fixtures abort with `Assert "init_flag_ == true" => Mmap manager has not been init` under 8 concurrent workers (pymilvus-lite init race, unrelated to this diff). Use `-n 2` for this set. |
 | `pytest tests/canonical_v2/test_knowledge_build_isolated.py -k "embedding or adapter"` (this branch **and** a pristine `delivery-v1` worktree) | **3 passed** on both — identical |
+
+### The merge with `release/v1.1` (Task B)
+
+`git merge 82dc8f61`: two conflicts, both in `knowledge_build_isolated.py`, both
+the interaction predicted when the candidate slice was written.
+
+1. **Provider/credential-slot block vs F2's resolver.** Kept both: F2's
+   `EMBEDDING_BASE_URL_ENV` + `resolve_embedding_base_url` stay module-level, the
+   gateway credential slot and the accepted-authority table sit beside them.
+1. **The `openai-compatible` loader vs F2's "the address is not part of the frozen
+   identity".** Kept the table-driven dispatch; F2's rule now lives once in
+   `_matches_frozen_authority` (both sides drop `base_url`) and is applied to the
+   new branches too — the native loader resolves its effective address through
+   `resolve_embedding_base_url`, so the candidate no longer pins its host while
+   the live authority moves. The recorded address stays pinned by the content
+   hash, which F2's own `test_a_resealed_bundle_with_another_address_is_still_refused`
+   still asserts.
+
+Auto-merged without conflict, and verified by the suites above: F1's lane breaker
+now wraps **every** provider (the breaker field, its pre-cache check and its
+outcome recording landed inside the shared `_BatchingEmbeddingAdapter`), F1's
+transport pass-through in `_ValidatingEmbeddingAdapter`, the managed lane-wait
+knob, and the compatible client's transport normalisation in
+`company/vectorizer.py`.
+
+One of F2's tests had to adapt to the refactor: its
+`test_the_address_is_not_part_of_the_frozen_identity_comparison` sniffed the
+loader's source for a literal `expected = {` block, which the table dispatch no
+longer has. It now asserts the guarantee behaviourally (a bundle differing only
+in the recorded address still loads and uses its own address) plus the structural
+seam both branches share. Three new integration tests cover the seam the merge
+created: F2's override reaches both candidate bundles, F1's pass-through covers
+the gateway client (transport builtins still pass, a wrong answer still fails
+closed), and F1's breaker opens after two gateway transport failures.
+
+### The floors (Task C)
+
+Both floors are **0.99** with derivations and RED/GREEN evidence in §5.2–§5.3,
+and the build line's port patch is verified in §5.4.
 
 `test_knowledge_build_isolated.py` as a whole cannot reach a summary on this host
 today, on **either** tree: the `test_real_boundary_*` / `test_complete_build_uses_*`
@@ -205,69 +265,121 @@ schema-fingerprint drift) and `test_complete_build_uses_verified_copies_…`. Bo
 trees fail the same tests, so nothing in this slice's diff is implicated; a run
 with the real database up is what would settle it (see §7).
 
-## 5. Required tuning before the switch: cosine thresholds vs this gateway's noise
+## 5. The measured noise, and the two floors derived from it
 
-**This gateway is slightly stochastic; our live endpoint is not.** Same route,
-same text, two calls: cosine **0.99914**. The live Qwen3-Embedding-8B endpoint
-measured **1.000000** (15/15). Two independent places compare vectors across
-time and both use a floor that today's code tuned for a deterministic endpoint.
-Neither is in this worktree's diff — this is a flag, not a fix.
+Both floors were re-tuned against a measured distribution, not a single sample.
+Evidence: `.agents/runs/embedding-model-switch-v2/repeat-noise-measurement.json`
+(raw pair values, generated by `measure_repeat_noise.py`, key never printed).
 
-### 5.1 `REFERENCE_COSINE_FLOOR = 0.999` — margin ≈ 0.1 % above the noise floor
+### 5.1 The measurement (compatible route, `qwen3.7-text-embedding-flash`)
 
-`apps/admin-console/backend/services/canonical_v2_embedding_identity.py:59`
-(F1/F2 branch `fix/embedding-lane-f1f2`, **not** in this worktree) — the
-embedding card's identity probe, arm `reference`: it embeds one fixed probe
-string against the *recorded* address and against the *configured* one and
-requires cosine ≥ 0.999. When the operator has not overridden the address
-(the normal case) both calls go to the **same** endpoint, so the comparison is a
-same-endpoint repeat — and against this gateway that lands at **0.99914**,
-i.e. **0.00014 above the floor**. The threshold was calibrated for 1.000000
-determinism, where any margin is infinite; here the margin is inside the noise,
-so the probe can fail intermittently on a perfectly healthy endpoint.
+30 repeats per text, three text shapes (short Chinese entity line, short English
+technical line, document-length block); pairwise cosine among the repeats:
 
-Options, for the switch slice to choose (it is that slice's code, not this
-branch's):
+| text | repeats | pairs | min | p1 | p5 | median | max | mean | stdev | latency (median) |
+|---|---|---|---|---|---|---|---|---|---|---|
+| zh-short | 30 | 435 | 0.998829 | 0.998829 | 0.998829 | 1.000000 | 1.000000 | 0.999461 | 0.000584 | 0.204 s |
+| en-short | 30 | 435 | 0.998772 | 0.998772 | 0.998772 | 0.998772 | 1.000000 | 0.999376 | 0.000615 | 0.207 s |
+| zh-document | 30 | 435 | 0.998004 | 0.998004 | 0.998004 | 1.000000 | 1.000000 | 0.999082 | 0.000996 | 0.211 s |
+| **pooled** | 90 | **1305** | **0.998004** | — | — | — | 1.000000 | — | — | — |
 
-1. **Lower the reference floor to ≈0.995** — still far above a different space
-   (the orthogonal case measured −0.03) and above the cross-route distance
-   (0.808–0.920, §3.2), so it keeps its discriminating power while clearing the
-   measured noise floor. Cheapest, smallest change.
-1. **Require the index arm too** (`INDEX_COSINE_FLOOR = 0.99`, same file:63) and
-   treat a marginal reference arm as inconclusive rather than failed. The index
-   arm compares a document's stored vector against a fresh embedding — the same
-   kind of repeat comparison, so it carries the same noise, but its 0.99 floor
-   has ~0.9 % of headroom and is comfortable.
-1. **Take a multi-sample median** (e.g. 3 calls per address, compare medians /
-   require the median ≥ floor). Slowest, most robust to a single bad sample, and
-   it also protects against a spiky endpoint.
+An earlier run (25 repeats, same route) saw the low mode at **0.997556** for the
+short Chinese text, so the *lowest repeat cosine ever observed here is
+0.997556*. The distribution is **bimodal, not a continuum**: each text's pairs
+take exactly two values — the identical answer (1.000000) and one slightly
+rounded mode (~0.998004–0.998829) — and which share each side gets moves between
+runs, i.e. the mode itself drifted ~0.0013. Nothing was observed below 0.9975 in
+~1.6k pairs.
 
-Any of these also needs a comment saying the endpoint is stochastic — the
-current calibration note ("same space, tight bar … measured 1.000000") is true
-only of the *live* address.
+Controls, same run:
 
-### 5.2 `_MIN_VECTOR_COSINE_SIMILARITY = 0.999` — a second 0.999, on the **rebuild** path
+| control | cosine |
+|---|---|
+| cross-route, same text (compatible vs native) | 0.8598–0.8639 (zh-short), 0.9287–0.9295 (en-short), 0.9319–0.9329 (zh-document) |
+| two different texts (zh-short vs en-short) | 0.2366–0.2434 |
+| `dimensions: 512` (3 calls, informational) | repeat cosines 1.000000/1.000000/1.000000, dims 512 |
+
+So the band a **healthy** endpoint lands in is ≈0.9976–1.0, and the band a
+**wrong** answer lands in is ≤0.933 (sibling route) down to ≈0 (another space).
+
+### 5.2 Rebuild path: `_MIN_VECTOR_COSINE_SIMILARITY` 0.999 → **0.99**
 
 `apps/miroflow-agent/src/data_agents/canonical_v2/index_projection_isolated.py:56`,
-used at `…:1177-1189` (`_validate_physical_point_rows`). The full rebuild writes
-each point's vector and then **reads it back and re-embeds the same
-`embedded_content`**, requiring cosine ≥ 0.999 against the stored vector
-(`index_projection_isolated.py:306` — `_read_points_with_client(…, embedding_adapter=…)` inside the rebuild). This is on the switch's critical
-path, and it is a *per-point* comparison: at 0.99914 noise per comparison and
-~51k points, the lower tail crossing 0.999 is not a tail risk, it is the
-expected outcome — a rebuild that fails with `isolated Milvus vector differs from its bound embedding`, which reads like data corruption but is the
-endpoint's stochasticity.
+used in `_validate_physical_point_rows` at `…:1177-1189`. The rebuild writes each
+point's vector and then reads it back and re-embeds the same `embedded_content`,
+comparing against the stored vector (`_read_points_with_client(…, embedding_adapter=…)` at `…:306`). Per point, ~51k times per rebuild.
 
-Before the rebuild rehearsal, measure the repeat distribution properly (e.g. 20
-repeats of one text through the chosen route) and either lower this floor the
-same way, or make the audit accept a small shortfall fraction. The v2 (no-Milvus)
-serving path does not re-embed for verification — it loads `vector_matrix.npz`
-and checks model/dimension/norms only — so the serving side has no equivalent
-comparison.
+Derivation: the measured lowest repeat is 0.997556, so any floor at or above it
+false-fails a healthy endpoint — and a per-point audit over ~51k comparisons
+reaches the tail of the distribution, so "usually above" is not enough.
+**0.99** sits **0.0076 below the lowest repeat ever measured** — 3.2× the whole
+observed spread (1 − 0.997556) — while keeping **0.06 above the highest measured
+wrong answer** (0.9329, the sibling route) and far above another space (≈ −0.03).
+The guard's power is not in the third decimal: a vector bound to the wrong point
+measures 0.24 (unrelated documents) or up to 0.93 (near-duplicate or sibling
+route), dimension and norm are checked separately beside the cosine.
 
-One sample of the repeat cosine is not a distribution; the 0.99914 figure is a
-single measurement. Treat both floors as "must be re-calibrated against a
-measured distribution" rather than adjusting them by guesswork.
+A shortfall-fraction rule (e.g. "≤0.5 % of points may sit below 0.998") was
+considered and **not** adopted: the hard floor already clears the measured tail
+with 3× the observed spread, and the corruption this audit catches is
+systematic, so an allowance would only add a knob that can hide a real fault.
+
+Evidence (RED before, GREEN after), driving the real audit function with vectors
+placed at exact cosines (`.agents/runs/.../test_embedding_model_switch_v2.py`,
+`test_rebuild_audit_*`):
+
+```
+floor 0.999: RED  — "isolated Milvus vector differs from its bound embedding" at cosine 0.997556
+floor 0.99 : GREEN — the whole measured band (1.0, 0.998829, 0.998772, 0.998004, 0.997556) passes
+floor 0.99 : still refuses 0.932903 / 0.86 / 0.241886 / 0.0 / −0.03 and a wrong dimension
+```
+
+### 5.3 Identity check: `REFERENCE_COSINE_FLOOR` 0.999 → **0.99**
+
+`apps/admin-console/backend/services/canonical_v2_embedding_identity.py:59`. Arm
+`reference` embeds the fixed probe text against the *recorded* address and the
+*configured* one; with the operator's setting unset both calls go to the same
+address, so this arm compares exactly the repeat-distribution measured in §5.1.
+At 0.999 the margin above the noise floor was **0.00014** — inside the noise.
+
+Derivation: **0.99**, the same number and the same reasoning as §5.2: 0.0076
+below the lowest repeat ever measured, 0.06 above the highest wrong answer, far
+above another space. `INDEX_COSINE_FLOOR` stays **0.99** (it has ~0.9 % headroom
+against the same noise, and the two arms now share one rule). Making the verdict
+require *both* arms was considered; not done, because the index arm is a
+fallback for when the recorded endpoint is unreachable, not a second opinion —
+changing that semantics is the switch slice's call, not a threshold fix.
+
+Evidence (RED before, GREEN after), driving the real probe with stub endpoints
+(`apps/admin-console/tests/test_embedding_identity_probe.py`):
+
+```
+floor 0.999: FAILS a healthy repeat at cosine 0.998829 (the measured band)
+floor 0.99 : passes the whole measured band (1.0, 0.998829, 0.998772, 0.998004, 0.997556)
+floor 0.99 : still rejects 0.932903 / 0.86 / 0.241886 with "不要切换到这个端点"
+floor 0.99 : test_the_reference_floor_is_derived_from_the_measured_noise_band pins both bounds
+```
+
+### 5.4 Port patch for the build line (the rebuild runs there)
+
+`.worktrees/data-rebuild/.../index_projection_isolated.py` is an **older
+generation** of the same file (no `serving_timing`, no `lookup-sqlite` point
+store), so the branch's diff does not apply textually — but its audit site is
+the same rule, at line 52 (`_MIN_VECTOR_COSINE_SIMILARITY = 0.999`) and line 942
+(`cosine_similarity < _MIN_VECTOR_COSINE_SIMILARITY`). A one-hunk port patch
+against that file's own context is committed at
+`.agents/runs/embedding-model-switch-v2/rebuild-line-cosine-floor.patch`
+(0.999 → 0.99 plus the derivation comment).
+
+```
+$ git -C .worktrees/data-rebuild apply --check \
+    .agents/runs/embedding-model-switch-v2/rebuild-line-cosine-floor.patch
+Checking patch apps/miroflow-agent/src/data_agents/canonical_v2/index_projection_isolated.py...
+(exit 0 — applies cleanly; that worktree was NOT modified)
+```
+
+The rebuild's launcher must apply it (or carry the tuned value) before the run;
+the audit itself needs no other change, since the comparison reads the constant.
 
 ## 6. Runbook lines (copy verbatim into the switch's runbook)
 
@@ -276,8 +388,8 @@ measured distribution" rather than adjusting them by guesswork.
 > The embedding gateway is reachable through two routes that are **not** the same
 > pipeline: `POST /compatible-mode/v1/embeddings` (OpenAI shape) and
 > `POST /api/v1/services/embeddings/text-embedding/text-embedding` (DashScope
-> native). The same text measures cosine 0.808–0.920 between them. Use **one**
-> route for the rebuild **and** for serving — pass the same
+> native). The same text measures cosine 0.860–0.933 between them (measured,
+> 3 texts). Use **one** route for the rebuild **and** for serving — pass the same
 > `--recorded-embedding-bundle` to the build and to the serve command
 > (`…-openai-compat.json` **or** `…-v1.json`, never one each). Recommended:
 > the **openai-compatible** variant (`…-openai-compat.json`,
@@ -288,28 +400,33 @@ measured distribution" rather than adjusting them by guesswork.
 > (`content_sha256=cdddcdfd998e6c9e6147f735fd71370f209045636f3b2f3efa15e7e73a8e96ad`)
 > stays as the fallback if the compatible route's shape changes. Mixing the two
 > is undetectable by any integrity check and looks like a slightly worse model,
-> so it is a runbook rule, not a code guarantee. Both routes' bundles read the
-> same credential slot: `CANONICAL_V2_EMBEDDING_API_KEY`.
+> so it is a runbook rule, not a code guarantee. Both variants read the same
+> credential slot: `CANONICAL_V2_EMBEDDING_API_KEY`. If the operator overrides
+> `CANONICAL_V2_EMBEDDING_BASE_URL`, the override must point at the *same* route
+> — the probe will (correctly) report "不在同一嵌入空间" if it does not.
 
-**Thresholds before the switch.**
+**Thresholds: already tuned on this branch — carry them to the rebuild host.**
 
-> The gateway endpoint is **stochastic**: the same text through the same route
-> measures cosine **0.99914** between two calls (the live 8B endpoint measures
-> 1.000000, 15/15). Two floors in today's code were calibrated for a
-> deterministic endpoint and must be re-tuned **before** the rebuild:
-> `canonical_v2_embedding_identity.REFERENCE_COSINE_FLOOR = 0.999` (arm
-> `reference` compares two calls against the recorded/configured address — the
-> same address in the normal case, i.e. a same-endpoint repeat) sits 0.00014
-> above the noise floor and can fail on a healthy endpoint; and
-> `index_projection_isolated._MIN_VECTOR_COSINE_SIMILARITY = 0.999`, which the
-> **rebuild** applies per point (~51k comparisons) when it re-embeds a point's
-> content and compares it against the vector it just wrote, will hit the lower
-> tail and abort the rebuild with an integrity error that looks like corruption.
-> The index arm (`INDEX_COSINE_FLOOR = 0.99`) has ~0.9 % headroom and is fine.
-> Preferred order: measure the repeat distribution (≈20 repeats through the
-> chosen route), then lower the reference floor to ≈0.995 and/or require the
-> index arm and a small shortfall allowance on the per-point audit. Do not
-> change them by guesswork from the single 0.99914 sample.
+> The gateway endpoint is **stochastic**: same route, same text, 30 repeats:
+> answers are bimodal (identical, or a slightly rounded mode at 0.9980–0.9988),
+> pooled minimum **0.998004** over 1305 pairs and **0.997556** in an earlier
+> run, with the mode itself moving ~0.0013 between runs. Both cosine floors were
+> therefore re-derived from that distribution and are **0.99**:
+>
+> - `index_projection_isolated._MIN_VECTOR_COSINE_SIMILARITY` (rebuild path,
+>   per point, ~51k comparisons) — 0.99 is 0.0076 below the lowest repeat ever
+>   measured (3× the observed spread) and 0.06 above the highest measured wrong
+>   answer (0.9329). At the old 0.999 it aborted the audit on a healthy
+>   endpoint: RED evidence in §5.2.
+> - `canonical_v2_embedding_identity.REFERENCE_COSINE_FLOOR` (admin identity
+>   check) — same number, same derivation; `INDEX_COSINE_FLOOR` stays 0.99.
+> - **The build host must carry the rebuild-path floor.** The rebuild runs in
+>   `.worktrees/data-rebuild`, whose copy of that file is an older generation:
+>   apply `.agents/runs/embedding-model-switch-v2/rebuild-line-cosine-floor.patch`
+>   there (`git apply --check` verified clean, §5.4) before launching, or the
+>   rebuild will false-fail its own audit.
+>   Do not tighten either floor without a fresh measurement of the same kind
+>   (`measure_repeat_noise.py` in this directory).
 
 ## 7. Not verified, and what the switch still needs
 
