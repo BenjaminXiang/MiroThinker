@@ -1,0 +1,49 @@
+# v1.1 交付件清单与 sha256（生成 2026-09-21T23:28:20+08:00，主机 gpu01）
+
+## A. 现场交付包（要发给运营者的那一份）— /var/tmp/mirothinker-site-bundle-v11/
+
+           410  9b840145f94fbd7547f21bd7d4c7e7ce564e1a5f2960f45df31b1de30ceec23f  bundles/qwen-embedding-bundle-v1.json
+          1013  671c838adbfa1c09b61ed6c176b3392e1169349392d70e6e1a771203a800d574  bundles/serving-bundle-run16.json
+          1303  e88d5e5044530e149e9ba5cf047bfc5a35c23b825c01a4d432d0854565f639fa  checksums.sha256
+         11833  cd1a6738713671745ab34cd2045264ae74592d40b3beb9eeea180456b82f8bbe  compose.yaml
+         12340  6cfb7d66f283337b81bfb56989c27a2530b74990e1ca7df2976faa51d0c67868  CONFIG-GUIDE.md
+          7563  e41a51940c1dcf38678b0beee2b1891e6402c25aea19ef74c791b67ccd17380c  entrypoint-v11.sh
+         26817  0bd5749c39e72800f6e7e7e7ddbda9ae1a90da16c1d4e2ab95f8cf4f4cdcd77c  install-site.sh
+           699  28bffeb5a947259dc2698d081e54cae4be1372fc8aa5c9ebb94e3a9d4c44dfad  kit-manifest.txt
+    2162962373  f842f6de955466d03af7a8e2669702dc27035eabc0dc5e1878a09e76bee7491b  mirothinker-serving-v1.1.tar.gz
+           134  bf35a1f752d5c2f7e37de2d4320e3dc8c684bc946f3955f5fa3ec45a8611f1df  mirothinker-serving-v1.1.tar.gz.sha256
+         39470  c3fe40a3a12361544394dea51fa7b9beb9cdff5d54138a4e02b8c45ca5da31bf  README.md
+          1055  6ae73e24012f70e0353f19f4177849d5e4c4068e8ac90abaf42d544244a84412  secrets.example/postgres.env
+          3454  8f82ac719e036212d460b8e92ce05c754d10eeb1539ac6a0cf3f04f151d61ac7  serve-command-v11.sh
+    1481979537  beb9449dea88b5164ec78f198b6faf4e84ce21d424ffeb13fe9b0cb875d14ada  serving-data-v1.1.tar.gz
+            91  30a5de4dce86022a145fd1865e2377824e55c9bcc0a2457d3f605bf7b26f4ab4  serving-data-v1.1.tar.gz.sha256
+           634  27c3e6a50533681b617888a3f7babe6c942ff9b1f95a248bdef7194a6fee2656  sizes.tsv
+           772  78f76b96cbedbe0d764a28aa872616f03bee250dd4ae4342fd6fa395e25f712a  state/config-managed/settings.json
+          3070  8c893aa2a5b6c433f86104a979375c41041992c3b35928b124fc84a4af46b436  BUNDLE-MANIFEST.txt（生成物）
+          3711  c4f1e4e8f3a3cf51393b42289bf9421bc09dac79e5c4cbb9f2a33a65e1223a83  README-FIRST.txt（生成物）
+
+## B. 镜像 kit — /var/tmp/mirothinker-docker-kit-v11/
+
+         10132  29b5bbb679db2106d4da6c016a737f083157189e970c692e5edc688ac9b31058  compose.yaml
+           699  28bffeb5a947259dc2698d081e54cae4be1372fc8aa5c9ebb94e3a9d4c44dfad  kit-manifest.txt
+    6951186432  28df2655cf4bdbda7c90489d2e88f19abb291bd05dc4f5571f702980ea9891d4  mirothinker-serving-v1.1.tar
+    2162962373  f842f6de955466d03af7a8e2669702dc27035eabc0dc5e1878a09e76bee7491b  mirothinker-serving-v1.1.tar.gz
+           134  bf35a1f752d5c2f7e37de2d4320e3dc8c684bc946f3955f5fa3ec45a8611f1df  mirothinker-serving-v1.1.tar.gz.sha256
+           131  fd5463189102873150f90c06c2ff8dbb5ddfb98e49a248963084fef137008c7c  mirothinker-serving-v1.1.tar.sha256
+         39470  c3fe40a3a12361544394dea51fa7b9beb9cdff5d54138a4e02b8c45ca5da31bf  README.md
+          1055  6ae73e24012f70e0353f19f4177849d5e4c4068e8ac90abaf42d544244a84412  secrets.example/postgres.env
+           245  8216708ea3062d6c243fc800b2965ba806f154079b4995e3b79539d86c562f38  secrets/README.txt
+
+## C. 数据面 — /var/tmp/mirothinker-data-face-xfer/（v1.1 两个文件；v1 文件为历史留存）
+
+    1481979537  beb9449dea88b5164ec78f198b6faf4e84ce21d424ffeb13fe9b0cb875d14ada  serving-data-v1.1.tar.gz
+            91  30a5de4dce86022a145fd1865e2377824e55c9bcc0a2457d3f605bf7b26f4ab4  serving-data-v1.1.tar.gz.sha256
+           934  4313998440acb6f81a93d8298f1ecea43f20eaf79c5f2745491663a9205f275c  source-listing.txt
+    1481979560  5d822e8ce3c32aefe9b7f29316945039795f991577bf45be285c8cddc9a43b3b  serving-data-v1.tar.gz
+
+## D. 校验清单（BM-kit 形态）— /var/tmp/mirothinker-delivery-kit-v1.1/
+
+           410  9b840145f94fbd7547f21bd7d4c7e7ce564e1a5f2960f45df31b1de30ceec23f  bundles/qwen-embedding-bundle-v1.json
+          1013  671c838adbfa1c09b61ed6c176b3392e1169349392d70e6e1a771203a800d574  bundles/serving-bundle-run16.json
+          1303  e88d5e5044530e149e9ba5cf047bfc5a35c23b825c01a4d432d0854565f639fa  checksums.sha256
+           634  27c3e6a50533681b617888a3f7babe6c942ff9b1f95a248bdef7194a6fee2656  sizes.tsv
