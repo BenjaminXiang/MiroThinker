@@ -529,6 +529,274 @@ def test_the_http_embedder_reads_an_openai_compatible_response() -> None:
     assert "text_type" not in calls[0]["payload"]
 
 
+# -- the fleet's two wire shapes ---------------------------------------------
+# The probe speaks the shape the endpoint under test answers: the OpenAI
+# compatible one (the shape this card has always spoken) and, when that address
+# has no such route, the DashScope-native one through the merged client. Each
+# address is asked once and the answer is held for the rest of the check.
+
+
+#: The versioned prefix a real base URL carries (``https://…/api/v1``); each wire
+#: shape appends its own path to it.
+_ROUTE_PREFIX = "/v1"
+_COMPATIBLE_ROUTE = f"{_ROUTE_PREFIX}{identity.EMBEDDINGS_PATH}"
+_NATIVE_ROUTE = f"{_ROUTE_PREFIX}{identity.NATIVE_EMBEDDINGS_PATH}"
+
+
+def _openai_answers(table: dict[str, tuple[float, ...]]) -> Any:
+    """The compatible shape's answer: rows under ``data``."""
+
+    def answer(payload: dict[str, Any]) -> tuple[int, dict[str, Any]]:
+        return 200, {"data": [{"index": 0, "embedding": list(table[payload["input"]])}]}
+
+    return answer
+
+
+def _native_answers(table: dict[str, tuple[float, ...]]) -> Any:
+    """The native shape's answer: rows under ``output.embeddings``."""
+
+    def answer(payload: dict[str, Any]) -> tuple[int, dict[str, Any]]:
+        rows = [
+            {"index": index, "embedding": list(table[text])}
+            for index, text in enumerate(payload["input"]["texts"])
+        ]
+        return 200, {"output": {"embeddings": rows}}
+
+    return answer
+
+
+def _refuses(status: int) -> Any:
+    """A route that exists in the mock but answers with a status only."""
+
+    return lambda payload: (status, {})
+
+
+class _ShapeEndpoint:
+    """One loopback endpoint whose routes are declared, so the shape is visible.
+
+    ``routes`` maps a request path — *after* the versioned prefix, which is the
+    part both shapes share — to an answer function. A path that is not declared
+    answers 404 with an empty body, the way the gateway's native prefix refuses
+    ``/embeddings`` (measured 2026-09-22). Every call is recorded with its payload
+    and its full path, which is how a test reads the shape and the role a call
+    carried.
+    """
+
+    def __init__(
+        self, routes: dict[str, Any], *, base_path: str = _ROUTE_PREFIX
+    ) -> None:
+        import http.server
+
+        resolved = {f"{base_path}{path}": answer for path, answer in routes.items()}
+        self.calls: list[dict[str, Any]] = []
+        calls = self.calls
+
+        class Handler(http.server.BaseHTTPRequestHandler):
+            def do_POST(self) -> None:  # noqa: N802 - handler API
+                length = int(self.headers.get("Content-Length", "0"))
+                payload = json.loads(self.rfile.read(length) or b"{}")
+                answer = resolved.get(self.path)
+                status, body = (404, {}) if answer is None else answer(payload)
+                calls.append(
+                    {
+                        "path": self.path,
+                        "payload": payload,
+                        "auth": bool(self.headers.get("Authorization")),
+                    }
+                )
+                encoded = json.dumps(body).encode("utf-8")
+                self.send_response(status)
+                self.send_header("Content-Type", "application/json")
+                self.send_header("Content-Length", str(len(encoded)))
+                self.end_headers()
+                self.wfile.write(encoded)
+
+            def log_message(self, *_: object) -> None:
+                return
+
+        self._server = http.server.ThreadingHTTPServer(("127.0.0.1", 0), Handler)
+        self._thread = threading.Thread(target=self._server.serve_forever, daemon=True)
+        self._thread.start()
+
+    @property
+    def base_url(self) -> str:
+        return f"http://127.0.0.1:{self._server.server_port}/v1"
+
+    def paths(self) -> list[str]:
+        return [str(call["path"]) for call in self.calls]
+
+    def close(self) -> None:
+        self._server.shutdown()
+        self._server.server_close()
+
+
+def test_the_native_path_literal_matches_the_merged_client() -> None:
+    """One path, two apps: the console's literal and the client's must be one.
+
+    The probe calls the merged client for the request shape, but the connection
+    test builds the native URL itself — a drift between the two literals would
+    surface as "未校验" on a healthy endpoint instead of a verdict.
+    """
+
+    from src.data_agents.providers import dashscope_embeddings
+
+    assert identity.NATIVE_EMBEDDINGS_PATH == dashscope_embeddings._TEXT_EMBEDDINGS_PATH
+
+
+def test_the_index_arm_validates_a_native_only_endpoint(tmp_path: Path) -> None:
+    """The route the switch ships: no compatible route, a native one that answers."""
+
+    pack, space = _make_pack(tmp_path, seed=31)
+    _point_id, content = identity._probe_document(pack / identity._LOOKUP_FILENAME)
+    endpoint = _ShapeEndpoint(
+        {identity.NATIVE_EMBEDDINGS_PATH: _native_answers({content: space[content]})}
+    )
+    try:
+        report = identity.verify_embedding_identity(
+            configured_base_url=endpoint.base_url,
+            api_key="probe-key",
+            recorded_base_url=endpoint.base_url,  # same address: reference is vacuous
+            pack_dir=pack,
+        )
+    finally:
+        endpoint.close()
+
+    assert report.arm == "index"
+    assert report.passed is True
+    assert report.cosine == pytest.approx(1.0)
+    assert report.checks["provider"] == identity.PROVIDER_DASHSCOPE_NATIVE
+    assert report.checks["role"] == identity.ROLE_DOCUMENT
+    assert "404" in str(report.checks["provider_evidence"])
+    # The compatible shape was asked first and refused; the native call carried
+    # the document side — the route's *absent* ``text_type``, never a guess.
+    assert endpoint.paths() == [_COMPATIBLE_ROUTE, _NATIVE_ROUTE]
+    assert endpoint.calls[1]["payload"]["input"] == {"texts": [content]}
+    assert "text_type" not in endpoint.calls[1]["payload"]
+    assert endpoint.calls[1]["auth"] is True
+
+
+def test_a_compatible_endpoint_stays_one_call_per_address(tmp_path: Path) -> None:
+    """The shape in service today keeps exactly the calls it made before."""
+
+    pack, space = _make_pack(tmp_path, seed=32)
+    _point_id, content = identity._probe_document(pack / identity._LOOKUP_FILENAME)
+    endpoint = _ShapeEndpoint(
+        {identity.EMBEDDINGS_PATH: _openai_answers({content: space[content]})}
+    )
+    try:
+        report = identity.verify_embedding_identity(
+            configured_base_url=endpoint.base_url,
+            recorded_base_url=endpoint.base_url,
+            pack_dir=pack,
+        )
+    finally:
+        endpoint.close()
+
+    assert report.passed is True
+    assert report.checks["provider"] == identity.PROVIDER_OPENAI_COMPATIBLE
+    assert endpoint.paths() == [_COMPATIBLE_ROUTE]
+
+
+def test_a_native_endpoint_in_another_space_still_fails(tmp_path: Path) -> None:
+    """A native route is no easier to pass: the comparison is the same one."""
+
+    pack, space = _make_pack(tmp_path, seed=33)
+    _point_id, content = identity._probe_document(pack / identity._LOOKUP_FILENAME)
+    endpoint = _ShapeEndpoint(
+        {
+            identity.NATIVE_EMBEDDINGS_PATH: _native_answers(
+                {content: _orthogonal(77, space[content])}
+            )
+        }
+    )
+    try:
+        report = identity.verify_embedding_identity(
+            configured_base_url=endpoint.base_url,
+            recorded_base_url=endpoint.base_url,
+            pack_dir=pack,
+        )
+    finally:
+        endpoint.close()
+
+    assert report.arm == "index"
+    assert report.passed is False
+    assert report.cosine is not None and report.cosine < 0.99
+    assert "不要切换" in report.detail
+    assert report.checks["provider"] == identity.PROVIDER_DASHSCOPE_NATIVE
+
+
+def test_a_native_route_that_rejects_the_credential_is_unverified(
+    tmp_path: Path,
+) -> None:
+    """A route/credential problem is 未校验: no pass, no crash, the route named."""
+
+    pack, _space = _make_pack(tmp_path, seed=34)
+    endpoint = _ShapeEndpoint({identity.NATIVE_EMBEDDINGS_PATH: _refuses(401)})
+    try:
+        report = identity.verify_embedding_identity(
+            configured_base_url=endpoint.base_url,
+            recorded_base_url=endpoint.base_url,
+            pack_dir=pack,
+        )
+    finally:
+        endpoint.close()
+
+    assert report.arm is None
+    assert report.passed is None
+    assert report.cosine is None
+    assert "未校验" in report.detail
+    assert report.checks["provider"] == identity.PROVIDER_DASHSCOPE_NATIVE
+
+
+def test_a_rejected_compatible_route_never_falls_through_to_the_native_one(
+    tmp_path: Path,
+) -> None:
+    """Only an *absent* route selects the native shape; 401 is an answer."""
+
+    pack, _space = _make_pack(tmp_path, seed=35)
+    endpoint = _ShapeEndpoint({identity.EMBEDDINGS_PATH: _refuses(401)})
+    try:
+        report = identity.verify_embedding_identity(
+            configured_base_url=endpoint.base_url,
+            recorded_base_url=endpoint.base_url,
+            pack_dir=pack,
+        )
+    finally:
+        endpoint.close()
+
+    assert report.passed is None
+    assert "401" in report.detail
+    assert endpoint.paths() == [_COMPATIBLE_ROUTE]
+
+
+def test_the_reference_arm_probes_the_query_side_of_a_native_route() -> None:
+    """Both arms' roles survive the shape change: reference = the route's query side."""
+
+    vector = _vector(1)
+    table = {identity.PROBE_TEXT: vector}
+    configured = _ShapeEndpoint(
+        {identity.NATIVE_EMBEDDINGS_PATH: _native_answers(table)}
+    )
+    recorded = _ShapeEndpoint({identity.NATIVE_EMBEDDINGS_PATH: _native_answers(table)})
+    try:
+        report = identity.verify_embedding_identity(
+            configured_base_url=configured.base_url,
+            recorded_base_url=recorded.base_url,
+        )
+    finally:
+        configured.close()
+        recorded.close()
+
+    assert report.arm == "reference"
+    assert report.passed is True
+    assert report.checks["provider"] == identity.PROVIDER_DASHSCOPE_NATIVE
+    assert report.checks["role"] == identity.ROLE_QUERY
+    for endpoint in (configured, recorded):
+        assert endpoint.paths() == [_COMPATIBLE_ROUTE, _NATIVE_ROUTE]
+        native_call = endpoint.calls[1]
+        assert native_call["payload"]["text_type"] == identity.ROLE_QUERY
+
+
 # -- the route and the page --------------------------------------------------
 
 
