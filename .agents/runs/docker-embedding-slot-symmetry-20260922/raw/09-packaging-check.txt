@@ -47,3 +47,12 @@ exit=1
 FAILED tests/canonical_v2/test_install_site_embedding_probe.py::test_installer_probe_uses_the_bundle_model_and_dimension
 FAILED tests/canonical_v2/test_install_site_embedding_probe.py::test_probe_is_skipped_instead_of_guessing_a_model
 2 failed in 11.43s
+
+===== E. 真交付包 + 真嵌入端点：改后的探针照旧全通（--dry-run，无落地）=====
+  [ok]   嵌入端点 http://100.64.0.27:18005/v1：HTTP 200，维度 4096（期望 4096）
+  [ok]   chat LLM 端点可达（https://api.deepseek.com/v1/models → 200）
+== 6. 现场配置（.env / PG 凭据 / 4 个密钥） ==
+  [dry-run] 会生成 /home/longxiang/delivery-xfer-v11/site-bundle/secrets/postgres.env（随机口令，0600），并检查 secrets/ 下 4 个密钥
+  [ok]   4 个密钥就位且非空（内容未打印；权限：.deepseek_api_key=600 .bocha_api_key=600 .serper_api_key=600 .sglang_api_key=600 ）
+  [ok] 16   [warn] 0   [FAIL] 0
+--dry-run 结束：以上检查通过，未做任何落地改动

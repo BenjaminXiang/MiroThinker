@@ -105,6 +105,21 @@ dimension，且它带 `model_id`（v1.1 实测 `Qwen/Qwen3-Embedding-8B`；v2 �
 测试：`apps/miroflow-agent/tests/canonical_v2/test_delivery_consistency_check.py`（4 条：出包脚本确实调用它、
 硬规则会红、不一致会报、自洽时不报）。
 
+## 3.1 真交付包 + 真端点的回归（改了探针之后的"真调用"）
+
+把改后的 `install-site.sh` 放回交付包副本、用**真的** v1.1 bundle 与**真的**嵌入端点跑 `--dry-run`
+（不落地任何改动，`raw/09-packaging-check.txt` E 段）：
+
+```
+[ok]   嵌入端点 http://100.64.0.27:18005/v1：HTTP 200，维度 4096（期望 4096）
+[ok]   chat LLM 端点可达（https://api.deepseek.com/v1/models → 200）
+[ok]   4 个密钥就位且非空（内容未打印；权限：…=600）
+[ok] 16   [warn] 0   [FAIL] 0
+--dry-run 结束：以上检查通过，未做任何落地改动
+```
+
+⇒ 探针的模型/维度/端点全部来自随包 bundle 之后，真实调用照旧全通（v1.1 包上行为不变）。
+
 ## 4. 没验到 / 留给 v2
 
 * "真候选路由 + 真网关"的端到端仍归 v2（本分支没有候选路由代码）；本轮只把**安装期/交付期**的
