@@ -100,14 +100,24 @@ def _build_module() -> Any:
     return import_module(BUILD_MODULE)
 
 
-def _native_body(rows: list[tuple[int, list[float]]]) -> bytes:
-    """One DashScope-native answer: positional rows carrying their own index."""
+def _native_body(
+    rows: list[tuple[int, list[float]]],
+    *,
+    index_key: str = "index",
+) -> bytes:
+    """One native answer in the gateway's *measured* shape.
+
+    Measured live 2026-09-21: rows carry ``['embedding', 'index', 'type']`` — the
+    gateway says ``index`` where DashScope's documentation says ``text_index``.
+    ``index_key`` lets a test emit the documented spelling instead.
+    """
 
     return json.dumps(
         {
             "output": {
                 "embeddings": [
-                    {"text_index": index, "embedding": vector} for index, vector in rows
+                    {index_key: index, "embedding": vector, "type": "text"}
+                    for index, vector in rows
                 ]
             },
             "usage": {"total_tokens": len(rows)},
@@ -280,6 +290,57 @@ def test_native_client_rejects_an_answer_it_cannot_align(
             timeout=5.0,
         )
         with pytest.raises(ValueError):
+            client.embed_batch(["first", "second"], model="a-model")
+
+
+def test_native_client_accepts_the_documented_text_index_spelling() -> None:
+    """DashScope documents ``text_index``; the gateway answers ``index``.
+
+    Both spellings must work, because the client is the same code for the
+    documented API and for this gateway.
+    """
+
+    with _gateway(
+        lambda call, body: (
+            200,
+            _native_body([(1, [1.0, 2.0]), (0, [3.0, 4.0])], index_key="text_index"),
+            "application/json",
+            0.0,
+        )
+    ) as gateway:
+        client = DashScopeTextEmbeddingClient(
+            base_url=gateway.base_url,
+            api_key="local-stand-in-key",
+            timeout=5.0,
+        )
+        vectors = client.embed_batch(["first", "second"], model="a-model")
+    assert vectors == [[3.0, 4.0], [1.0, 2.0]]
+
+
+def test_native_client_rejects_a_row_without_any_index() -> None:
+    with _gateway(
+        lambda call, body: (
+            200,
+            json.dumps(
+                {
+                    "output": {
+                        "embeddings": [
+                            {"embedding": [1.0, 2.0], "type": "text"},
+                            {"embedding": [3.0, 4.0], "type": "text"},
+                        ]
+                    }
+                }
+            ).encode("utf-8"),
+            "application/json",
+            0.0,
+        )
+    ) as gateway:
+        client = DashScopeTextEmbeddingClient(
+            base_url=gateway.base_url,
+            api_key="local-stand-in-key",
+            timeout=5.0,
+        )
+        with pytest.raises(ValueError, match="malformed"):
             client.embed_batch(["first", "second"], model="a-model")
 
 
@@ -503,9 +564,9 @@ def test_the_two_candidate_routes_are_distinct_authorities() -> None:
     """Same model, two routes: separate bundles, because the routes differ.
 
     The compatible and native routes answer the same text with cosines of
-    0.808–0.920 (measured), so they are not one authority: an index built
-    through one route may only be served through that route, and each variant
-    keeps its own frozen hash and address.
+    0.860–0.933 (measured 2026-09-21), so they are not one authority: an index
+    built through one route may only be served through that route, and each
+    variant keeps its own frozen hash and address.
     """
 
     module = _build_module()

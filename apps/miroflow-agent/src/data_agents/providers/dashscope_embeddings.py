@@ -88,12 +88,19 @@ class DashScopeTextEmbeddingClient:
         return _ordered_embeddings(data, expected=len(texts))
 
 
-def _ordered_embeddings(document: Any, *, expected: int) -> list[list[float]]:
-    """Read ``output.embeddings`` and restore input order through ``text_index``.
+#: Where a row states its input position. DashScope's documentation names it
+#: ``text_index``; the MaaS gateway's native route answers ``index`` (measured
+#: live 2026-09-21: rows carry ``['embedding', 'index', 'type']``). Both are
+#: accepted, and the row is placed by whichever one it carries.
+_ROW_INDEX_KEYS = ("text_index", "index")
 
-    DashScope does not promise the answer order, so every row is placed back at
-    the index it names; a set that is not exactly ``0..n-1`` is a validation
-    failure, never a silent misalignment of text and vector.
+
+def _ordered_embeddings(document: Any, *, expected: int) -> list[list[float]]:
+    """Read ``output.embeddings`` and restore input order through the row index.
+
+    Neither DashScope nor the gateway promises the answer order, so every row is
+    placed back at the index it names; a set that is not exactly ``0..n-1`` is a
+    validation failure, never a silent misalignment of text and vector.
     """
 
     output = document.get("output") if isinstance(document, dict) else None
@@ -102,8 +109,14 @@ def _ordered_embeddings(document: Any, *, expected: int) -> list[list[float]]:
         raise ValueError("embedding provider returned a different row count")
     ordered: dict[int, list[float]] = {}
     for row in rows:
-        text_index = row.get("text_index") if isinstance(row, dict) else None
-        if not isinstance(text_index, int) or isinstance(text_index, bool):
+        text_index = None
+        if isinstance(row, dict):
+            for key in _ROW_INDEX_KEYS:
+                value = row.get(key)
+                if isinstance(value, int) and not isinstance(value, bool):
+                    text_index = value
+                    break
+        if text_index is None:
             raise ValueError("embedding provider returned a malformed embedding row")
         if text_index in ordered or not 0 <= text_index < expected:
             raise ValueError(
