@@ -178,14 +178,9 @@ def _session_id(run_id: str, slug: str) -> str:
 
 def _order_cases(cases: Sequence[dict[str, Any]]) -> list[dict[str, Any]]:
     order: dict[str, int] = {}
-    ordered: list[dict[str, Any]] = []
     for case in cases:
-        group = str(case.get("group") or case["case_id"])
-        order.setdefault(group, len(order))
-        ordered.append(case)
-    return sorted(
-        ordered, key=lambda c: (order[str(c.get("group") or c["case_id"])], int(c["turn"]))
-    )
+        order.setdefault(_group_of(case), len(order))
+    return sorted(cases, key=lambda c: (order[_group_of(c)], int(c["turn"])))
 
 
 # --- HTTP / SSE ------------------------------------------------------------
