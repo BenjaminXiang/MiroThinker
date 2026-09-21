@@ -701,6 +701,49 @@ def _web_lane_outer_wait_seconds(policy: WebSearchPolicy) -> float | None:
     return max(policy.timeout_ms / 1_000, _WEB_LANE_OUTER_WAIT_FLOOR_SECONDS)
 
 
+#: Whole-lane outer wait for the vector future. The lane's provider is one
+#: remote embedding endpoint; without a cap a black-holed route holds the turn
+#: until the client's own timeout.
+_VECTOR_LANE_OUTER_WAIT_DEFAULT_SECONDS = 8.0
+
+
+def _vector_lane_outer_wait_seconds() -> float:
+    """The vector lane's whole-lane budget (seconds).
+
+    Operator-tunable through ``CANONICAL_V2_VECTOR_LANE_TIMEOUT_SECONDS`` (the
+    managed-config naming convention; the same variable name is used by the
+    service unit). An unparsable or non-positive value falls back to the
+    default — a broken knob must not remove the cap.
+    """
+
+    raw = os.environ.get("CANONICAL_V2_VECTOR_LANE_TIMEOUT_SECONDS", "").strip()
+    if not raw:
+        return _VECTOR_LANE_OUTER_WAIT_DEFAULT_SECONDS
+    try:
+        value = float(raw)
+    except ValueError:
+        return _VECTOR_LANE_OUTER_WAIT_DEFAULT_SECONDS
+    return value if value > 0 else _VECTOR_LANE_OUTER_WAIT_DEFAULT_SECONDS
+
+
+def _note_lane_outer_timeout(adapter: Any) -> None:
+    """Tell a lane adapter its outer wait expired (optional hook, best-effort).
+
+    A lane whose provider has its own much longer request timeout fails far too
+    late for a lane-level breaker to be useful, so the lane adapter may expose
+    ``note_outer_timeout`` and count the expiry itself. Observability must never
+    break the turn, so a hook that raises is ignored.
+    """
+
+    note = getattr(adapter, "note_outer_timeout", None)
+    if not callable(note):
+        return
+    try:
+        note()
+    except Exception:  # noqa: BLE001 - a lane hook must not fail the turn
+        return
+
+
 class WebSearchPolicy(ContractModel):
     mode: Literal["disabled", "universal", "official_only"]
     max_provider_calls: int = Field(default=0, ge=0)
@@ -7690,12 +7733,17 @@ class _EphemeralKnowledgeRead(KnowledgeRead):
                     timeout_seconds = (
                         _web_lane_outer_wait_seconds(effective_web_policy)
                         if lane == "web"
-                        else None
+                        else (
+                            _vector_lane_outer_wait_seconds()
+                            if lane == "vector"
+                            else None
+                        )
                     )
                     try:
                         outcomes[lane] = futures[lane].result(timeout=timeout_seconds)
                     except TimeoutError:
                         outcomes[lane] = (None, "timeout")
+                        _note_lane_outer_timeout(self._adapter_for(lane))
             finally:
                 executor.shutdown(wait=False, cancel_futures=True)
 
