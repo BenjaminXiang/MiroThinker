@@ -101,7 +101,13 @@ Unchanged on purpose: `--database-url …miroflow_candidate_v2_20260916_r1`, `--
 `CANONICAL_V2_LEXICAL_INDEX=0`, `CHAT_CONTEXTUAL_INTERPRETATION=on`, `DATABASE_URL=<console>`.
 The pack/index are read-only for a `--serve --serve-existing` boot; the only shared file written
 is the pack's mount receipt (`serving-pack-run16-readerbound.mount-receipt.json`), which the
-mount writes with the same content the live boot wrote.
+mount rewrites with the same identity the live boot recorded — verified after the run:
+`pack_dir` / `release_id` / `index_root` / `index_marker_sha256` / `pack_manifest_sha256` /
+`verification` all unchanged (only `generated_at` and `mount_seconds` differ), and a receipt that
+did not bind would fall back to full verification rather than fail the boot. Nothing under
+`.worktrees/canonical-v2-s11-consolidation/` was modified (`git status` clean) and the live access
+log (`/var/tmp/mirothinker-canonical-v2-s12f/access-logs.sqlite3`) was last written at 15:01,
+before this work started.
 
 Session identity: one session per **turn group** (`session:chat:<run-id>-<group slug>`), fresh
 random `run-id` per run, so (a) follow-ups keep their antecedent (`他` / `上述企业` / `这论文`)
@@ -260,6 +266,11 @@ statement: it catches loss, not rank movement inside the top-k.
 | 2026-09-21 12:29 | 2-turn smoke on group 问题1 | `q1t2` resolved 丁文伯 → 深圳无界智航科技有限公司; both turns' debug dumps found by name |
 | 2026-09-21 12:29–12:41 | **baseline capture, 37/37 ok** | `<baseline.json>` (§5) |
 | 2026-09-21 12:45 | `--diff baseline.json baseline.json` | PASS, 0 fail / 0 review |
+| 2026-09-21 12:52 | scratch instance stopped (both PIDs), live 18188 verified still 200 | no production or other-scratch dir written |
+
+To re-boot the scratch for a control run or a re-capture:
+`bash .agents/runs/embedding-model-switch/serve-18295-command.sh > /var/tmp/recall-295/logs/serve-18295.log 2>&1 &`
+(~300 s to health; the warm web cache and the mount receipt under `/var/tmp/recall-295` persist).
 
 ## 9. What this gate does not cover
 
