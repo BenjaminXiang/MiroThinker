@@ -102,6 +102,9 @@ fi
 
 cp "${REPO_ROOT}/deploy/docker/compose.yaml" "${KIT_DIR}/compose.yaml"
 cp "${REPO_ROOT}/deploy/docker/README.md" "${KIT_DIR}/README.md"
+# 凭据模板（真值在 secrets/，不入 git/镜像）
+rm -rf "${KIT_DIR}/secrets.example"
+cp -r "${REPO_ROOT}/deploy/docker/secrets.example" "${KIT_DIR}/secrets.example"
 mkdir -p "${KIT_DIR}/secrets"
 cat > "${KIT_DIR}/secrets/README.txt" <<'TXT'
 把 4 个密钥文件放进本目录（文件名必须完全一致，0600，仅属主可读）：
