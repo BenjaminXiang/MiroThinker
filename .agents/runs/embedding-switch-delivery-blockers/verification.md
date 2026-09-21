@@ -115,6 +115,25 @@ for the pinned id). The credential written through the store's page API reaches
 both slots at startup and the candidate slot's value is accepted by the gateway
 (200 / 1024 dims). No key, no masked tail and no upstream body was printed.
 
+### ④b The card's verdict on the shipped route (2 more calls, 6 total)
+
+The real index is the one being rebuilt (off-limits), so the pack was a **scratch**
+one whose single stored vector is the live model's own answer for the probe
+document (one call to store it, one by the probe itself). That exercises the same
+comparison the arm makes against the rebuilt pack, minus its 51k rows:
+
+```
+arm: index | passed: True | cosine: 0.998833 | threshold: 0.99
+provider: dashscope-native | role: document | dimension: 1024
+evidence: compatible route absent (HTTP 404); spoke the native route
+detail:   与索引同源：索引文档自比 cos=0.9988（阈值 0.99，抽样 0 行最近邻亦为本文档）
+```
+
+The cosine sits inside the measured repeat band (0.9980–1.0) and above the 0.99
+floor the switch derived — a healthy gateway passes its own identity check. What
+this does **not** claim: that the rebuilt pack's identity is right (it does not
+exist yet); the arm's index here is scratch, not the pack under construction.
+
 ## ⑤ Not verified
 
 - **The file (docker) route is still half-open**: the delivery mounts
@@ -125,11 +144,12 @@ both slots at startup and the candidate slot's value is accepted by the gateway
   and export it in `deploy/docker/entrypoint.sh`, symmetric with the write-side
   rule above) — reported, not changed: it cannot be verified without building and
   running the image here.
-- **A live identity verdict** on the switched endpoint still needs the rebuilt
-  pack (the mounted index is the old 4096-dim one); the card will honestly report
-  a dimension mismatch until then.
+- **The real index's verdict**: the mounted index is the old 4096-dim one, so a
+  check against *it* would honestly report a dimension mismatch; and reading it
+  would mean reading the live index the build is filling, which was out of bounds.
+  The verdict above is the scratch-pack version.
 - The **page hint** is pinned at string level (the repo's convention for
-  `admin.js`), not by executing the page.
+  `admin.js`), not by executing the page (`node --check` does parse the file).
 - The **11 MB manifest read** per card interaction is measured (77 ms) but not
   cached; if the card ever becomes a polling surface that would need attention.
 
