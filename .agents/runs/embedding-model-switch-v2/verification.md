@@ -39,7 +39,7 @@ as fact here) then settled what the probe could not:
 | `POST /api/v1/services/embeddings/text-embedding/text-embedding` (native) | 200, 1024 dims |
 | same text, compatible route vs native route | cosines **0.839 / 0.920 / 0.808** ⇒ the two routes are **not** the same pipeline |
 | same route, same text, twice | cosine **0.99914** (not 1.0) ⇒ this endpoint is slightly **stochastic** (the live 8B endpoint measured 1.000000, 15/15) |
-| same route, same text, **30 repeats × 3 texts** (own measurement, §5.1) | bimodal: 1.000000 or 0.998004–0.998829; pooled min **0.998004** over 1305 pairs, **0.997556** in an earlier run |
+| same route, same text, **60 repeats × 5 texts** (own measurement, §5.1) | discrete: 1.000000 or a rounded-mode cluster at 0.9980–0.9988; pooled min **0.998002** over 8,850 pairs, **0.997556** in an earlier run |
 | `dimensions` param on the compatible route | 1024 → 200, 512 → 200, **4096 → HTTP 400** |
 
 **One live finding, and a fix.** The native route's answer rows are
@@ -124,8 +124,8 @@ same one must be used for the rebuild and for serving** (see §3.2).
 | `dimension` | `1024` |
 | `base_url` | `https://maas.qianwenaiapi.com/api/v1` |
 | `api_key_source` | `env:CANONICAL_V2_EMBEDDING_API_KEY` |
-| `batch_size` / `max_workers` / `timeout_seconds` | `32` / `32` / `180` |
-| `content_sha256` | `cdddcdfd998e6c9e6147f735fd71370f209045636f3b2f3efa15e7e73a8e96ad` |
+| `batch_size` / `max_workers` / `timeout_seconds` | `25` / `32` / `180` |
+| `content_sha256` | `81a536916053106114aa4c70ff43983bf6a12c8ecb0b5c562b43f9f02409b46a` |
 
 `.agents/runs/embedding-model-switch-v2/qwen3.7-text-embedding-flash-embedding-bundle-v1-openai-compat.json`
 (compatible — **recommended**, needs no new client)
@@ -138,8 +138,8 @@ same one must be used for the rebuild and for serving** (see §3.2).
 | `dimension` | `1024` |
 | `base_url` | `https://maas.qianwenaiapi.com/compatible-mode/v1` |
 | `api_key_source` | `env:CANONICAL_V2_EMBEDDING_API_KEY` |
-| `batch_size` / `max_workers` / `timeout_seconds` | `32` / `32` / `180` |
-| `content_sha256` | `45e458552e7031c6ca50b2ab5af225fbc5197a60c2d402b7b8b4e1fe3535029c` |
+| `batch_size` / `max_workers` / `timeout_seconds` | `25` / `32` / `180` |
+| `content_sha256` | `2db8f03b255e138a13081566c6196db06d7af1a8a83c12cec2cbfaea00b22e3d` |
 
 Constants: `_QWEN_FLASH_EMBEDDING_BUNDLE_SHA256` (native hash),
 `_QWEN_FLASH_OPENAI_COMPAT_EMBEDDING_BUNDLE_SHA256` (compatible hash),
@@ -150,6 +150,28 @@ stays absent. Each hash is the `_canonical_sha256` of the document without its
 `content_sha256` field, verified against the module's own function; the same
 function reproduces the live bundle's `05473fab…`, so all identities are computed
 the same way.
+
+### 3.1a The batch cap the bundles must respect
+
+Both routes refuse a batch larger than **25** — measured directly 2026-09-21:
+
+| probe | compatible route | native route |
+|---|---|---|
+| batch 25 | **200**, 25 rows, index 0…24 complete, 1024 dims | **200**, 25 rows |
+| batch 26 | **400** `batch size is invalid, it should not be larger than 25.: input.contents` | — |
+| batch 32 | **400** (same message) | **400** `InvalidParameter` (same message) |
+
+The cap is identical on the two routes, so one number covers both variants, and
+both bundles were re-frozen at `batch_size: 25` (hashes above, recomputed). At 32
+the rebuild would have failed on its first call, and on the serving path F1's
+contract turns a 4xx into lane *degradation* — silent recall loss instead of an
+error. 25 rather than a rounder 16: the rebuild is token-bound (1M TPM), not
+request-bound, so a smaller batch only adds requests (2,041 calls at 25 versus
+3,190 at 16 for 51,026 points, same tokens). The live authority keeps
+`batch_size: 32` — this is the gateway's cap, not a policy for the self-hosted
+endpoint. A test pins the declared value to the measured cap so an edit cannot
+silently reintroduce it; the precheck's `--batch-probe` (currently hard-coded to
+a 32-text batch) should be retargeted to the declared 25.
 
 ### 3.2 Route selection: one route, for the rebuild **and** for serving
 
@@ -273,34 +295,61 @@ Evidence: `.agents/runs/embedding-model-switch-v2/repeat-noise-measurement.json`
 
 ### 5.1 The measurement (compatible route, `qwen3.7-text-embedding-flash`)
 
-30 repeats per text, three text shapes (short Chinese entity line, short English
-technical line, document-length block); pairwise cosine among the repeats:
+**Long sample** (2026-09-21, `--repeats 60`, five text shapes; raw pairs in
+`repeat-noise-measurement-long.json`): 60 calls per text, pairwise cosine among
+the repeats:
 
-| text | repeats | pairs | min | p1 | p5 | median | max | mean | stdev | latency (median) |
+| text | calls | pairs | min | p1 | p5 | median | max | mean | stdev | latency (median) |
 |---|---|---|---|---|---|---|---|---|---|---|
-| zh-short | 30 | 435 | 0.998829 | 0.998829 | 0.998829 | 1.000000 | 1.000000 | 0.999461 | 0.000584 | 0.204 s |
-| en-short | 30 | 435 | 0.998772 | 0.998772 | 0.998772 | 0.998772 | 1.000000 | 0.999376 | 0.000615 | 0.207 s |
-| zh-document | 30 | 435 | 0.998004 | 0.998004 | 0.998004 | 1.000000 | 1.000000 | 0.999082 | 0.000996 | 0.211 s |
-| **pooled** | 90 | **1305** | **0.998004** | — | — | — | 1.000000 | — | — | — |
+| zh-short | 60 | 1,770 | 0.998002 | 0.998002 | 0.998139 | 0.998829 | 1.000000 | 0.999278 | 0.000682 | 0.208 s |
+| en-short | 60 | 1,770 | 0.998772 | 0.998772 | 0.998772 | 1.000000 | 1.000000 | 0.999420 | 0.000613 | 0.205 s |
+| zh-medium | 60 | 1,770 | 0.998308 | 0.998308 | 0.998308 | 0.998308 | 1.000000 | 0.999140 | 0.000846 | 0.205 s |
+| en-medium | 60 | 1,770 | 0.998655 | 0.998655 | 0.998655 | 0.998655 | 1.000000 | 0.999323 | 0.000673 | 0.207 s |
+| zh-document (long) | 60 | 1,770 | 0.998004 | 0.998004 | 0.998004 | 0.998004 | 1.000000 | 0.998986 | 0.000998 | 0.205 s |
+| **pooled** | 300 | **8,850** | **0.998002** | — | — | 0.998829 | 1.000000 | — | — | — |
 
-An earlier run (25 repeats, same route) saw the low mode at **0.997556** for the
-short Chinese text, so the *lowest repeat cosine ever observed here is
-0.997556*. The distribution is **bimodal, not a continuum**: each text's pairs
-take exactly two values — the identical answer (1.000000) and one slightly
-rounded mode (~0.998004–0.998829) — and which share each side gets moves between
-runs, i.e. the mode itself drifted ~0.0013. Nothing was observed below 0.9975 in
-~1.6k pairs.
+Nothing in 8,850 pairs fell below 0.998: **0 pairs below 0.9985 / 0.998 / 0.9975
+/ 0.995 / 0.99**. An earlier 25-repeat run saw the low mode at **0.997556**, which
+remains the lowest repeat ever observed across ~10.5k pairs in four runs.
 
-Controls, same run:
+Mode structure: the distribution is **discrete, not a continuum** — each text's
+pairs take two to four exact values, one identical (1.000000) and a small cluster
+of rounded modes that depends on the text and moves between runs (zh-short
+showed 0.998002 / 0.998139 / 0.998829 in this sample, 0.997556 in the first).
+That is why a floor in the third decimal cannot hold and why the floors were
+derived from the *minimum*, not from the median.
 
-| control | cosine |
+Earlier sample (30 repeats × 3 texts, `repeat-noise-measurement.json`, for
+continuity): pooled min 0.998004 over 1,305 pairs, same shape.
+
+Controls:
+
+| control | this sample |
 |---|---|
-| cross-route, same text (compatible vs native) | 0.8598–0.8639 (zh-short), 0.9287–0.9295 (en-short), 0.9319–0.9329 (zh-document) |
+| cross-route, same text (compatible vs native) | 0.8608–0.8640 (zh-short), 0.9294–0.9295 (en-short), 0.8659–0.8678 (zh-medium), **0.9584–0.9594** (en-medium), 0.9319–0.9327 (zh-document) |
 | two different texts (zh-short vs en-short) | 0.2366–0.2434 |
-| `dimensions: 512` (3 calls, informational) | repeat cosines 1.000000/1.000000/1.000000, dims 512 |
+| `dimensions: 512` (3 calls, informational) | repeat cosines 0.998790/0.998790/1.000000, dims 512 |
 
-So the band a **healthy** endpoint lands in is ≈0.9976–1.0, and the band a
-**wrong** answer lands in is ≤0.933 (sibling route) down to ≈0 (another space).
+So a healthy endpoint's repeat cosine lands in **0.9976–1.0** (worst single value
+ever observed: 0.997556), and a *wrong* answer lands at ≤**0.9594** (the closest
+measured cross-route agreement, a long English text; short texts are as low as
+0.8608).
+
+**Do the 0.99 floors still hold?** Yes, with margin on both sides:
+
+- below: the pooled minimum 0.998002 is **0.008002 above 0.99** on this sample —
+  **4.0× the whole observed spread** (1 − 0.998002) — and with the historical
+  worst pair (0.997556) the margin is 0.007556, still 3.8× the spread. Nothing
+  observed comes within 0.0075 of the floor.
+- above: the floor keeps **0.031** of separation from the highest measured
+  wrong answer (0.9594, up from 0.9329 in the previous sample), i.e. the two bands
+  remain separated by a factor of ~26 in distance from the floor.
+
+Both floors are 0.99 (§5.2, §5.3) and the derivation still stands: no
+re-derivation is needed. If a future sample ever drops below 0.99, the proposal
+is already written down — lower the floor to the measured minimum minus 3–4× the
+spread, or switch the audit to a fraction-based rule — but the data does not call
+for either today.
 
 ### 5.2 Rebuild path: `_MIN_VECTOR_COSINE_SIMILARITY` 0.999 → **0.99**
 
@@ -309,7 +358,8 @@ used in `_validate_physical_point_rows` at `…:1177-1189`. The rebuild writes e
 point's vector and then reads it back and re-embeds the same `embedded_content`,
 comparing against the stored vector (`_read_points_with_client(…, embedding_adapter=…)` at `…:306`). Per point, ~51k times per rebuild.
 
-Derivation: the measured lowest repeat is 0.997556, so any floor at or above it
+Derivation: the measured lowest repeat is 0.997556 (long sample: 0.998002), so
+any floor at or above it
 false-fails a healthy endpoint — and a per-point audit over ~51k comparisons
 reaches the tail of the distribution, so "usually above" is not enough.
 **0.99** sits **0.0076 below the lowest repeat ever measured** — 3.2× the whole
@@ -330,7 +380,8 @@ placed at exact cosines (`.agents/runs/.../test_embedding_model_switch_v2.py`,
 
 ```
 floor 0.999: RED  — "isolated Milvus vector differs from its bound embedding" at cosine 0.997556
-floor 0.99 : GREEN — the whole measured band (1.0, 0.998829, 0.998772, 0.998004, 0.997556) passes
+             and again at 0.998002 (the long sample's minimum)
+floor 0.99 : GREEN — the whole measured band (1.0, 0.998829, 0.998772, 0.998308, 0.998004, 0.997556) passes
 floor 0.99 : still refuses 0.932903 / 0.86 / 0.241886 / 0.0 / −0.03 and a wrong dimension
 ```
 
@@ -401,22 +452,25 @@ the audit itself needs no other change, since the comparison reads the constant.
 > stays as the fallback if the compatible route's shape changes. Mixing the two
 > is undetectable by any integrity check and looks like a slightly worse model,
 > so it is a runbook rule, not a code guarantee. Both variants read the same
-> credential slot: `CANONICAL_V2_EMBEDDING_API_KEY`. If the operator overrides
+> credential slot: `CANONICAL_V2_EMBEDDING_API_KEY`, and both declare
+> `batch_size: 25` (the gateway rejects more than 25 on either route: 25 → 200,
+> 26 → 400). If the operator overrides
 > `CANONICAL_V2_EMBEDDING_BASE_URL`, the override must point at the *same* route
 > — the probe will (correctly) report "不在同一嵌入空间" if it does not.
 
 **Thresholds: already tuned on this branch — carry them to the rebuild host.**
 
-> The gateway endpoint is **stochastic**: same route, same text, 30 repeats:
-> answers are bimodal (identical, or a slightly rounded mode at 0.9980–0.9988),
-> pooled minimum **0.998004** over 1305 pairs and **0.997556** in an earlier
-> run, with the mode itself moving ~0.0013 between runs. Both cosine floors were
-> therefore re-derived from that distribution and are **0.99**:
+> The gateway endpoint is **stochastic**: same route, same text, 60 repeats ×
+> 5 text shapes: answers are discrete (identical, or a two-to-four-value cluster
+> of rounded modes at 0.9980–0.9988), pooled minimum **0.998002** over 8,850
+> pairs and **0.997556** in an earlier run, with the low mode depending on the
+> text and moving ~0.0013 between runs. Both cosine floors were therefore
+> re-derived from that distribution and are **0.99**:
 >
 > - `index_projection_isolated._MIN_VECTOR_COSINE_SIMILARITY` (rebuild path,
->   per point, ~51k comparisons) — 0.99 is 0.0076 below the lowest repeat ever
->   measured (3× the observed spread) and 0.06 above the highest measured wrong
->   answer (0.9329). At the old 0.999 it aborted the audit on a healthy
+>   per point, ~51k comparisons) — 0.99 is 0.0080 below the long sample's
+>   minimum (4.0× the observed spread) and 0.031 above the highest measured
+>   wrong answer (0.9594). At the old 0.999 it aborted the audit on a healthy
 >   endpoint: RED evidence in §5.2.
 > - `canonical_v2_embedding_identity.REFERENCE_COSINE_FLOOR` (admin identity
 >   check) — same number, same derivation; `INDEX_COSINE_FLOOR` stays 0.99.

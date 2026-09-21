@@ -44,12 +44,24 @@ COMPATIBLE_BASE_URL = "https://maas.qianwenaiapi.com/compatible-mode/v1"
 NATIVE_BASE_URL = "https://maas.qianwenaiapi.com/api/v1"
 MODEL = "qwen3.7-text-embedding-flash"
 
-#: Text shapes the rebuild will actually embed: a short Chinese entity line, a
-#: short English technical line, and a long document-like block (the shape of
-#: ``IndexProjectionPoint.embedded_content``).
+#: Text shapes the rebuild will actually embed: two short lines (Chinese/English),
+#: two medium document fragments, and one full document-length block (the shape
+#: of ``IndexProjectionPoint.embedded_content``).
 TEXTS: dict[str, str] = {
     "zh-short": "深圳具身智能机器人企业，专注人形机器人本体与灵巧手研发。",
     "en-short": "Thin-film lithium niobate photonic chips for high-speed optical interconnects.",
+    "zh-medium": (
+        "深圳市南山区某半导体设备企业，主营晶圆缺陷检测装备。"
+        "产品覆盖明场/暗场光学检测与电子束复检，客户为国内头部晶圆厂。"
+        "团队来自海外设备厂商与国内高校，2025 年完成 B 轮融资。"
+    ),
+    "en-medium": (
+        "A photonic integrated circuit platform for 800G and 1.6T optical "
+        "interconnects, combining thin-film lithium niobate modulators with "
+        "silicon photonic waveguides and co-packaged optics for data-centre "
+        "switches; the team targets volume manufacturing with wafer-level "
+        "packaging and automated optical alignment."
+    ),
     "zh-document": (
         "深圳市示例科技有限公司，南山区，人工智能\n"
         "公司聚焦具身智能与人形机器人整机，覆盖本体结构、灵巧手与运动控制算法。"
