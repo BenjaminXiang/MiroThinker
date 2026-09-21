@@ -121,7 +121,7 @@ from .knowledge_read import (
     create_ephemeral_knowledge_read,
     create_ephemeral_query_planner,
 )
-from .path_eligibility import PathEligibilityResult
+from .path_eligibility import PathEligibilityRequest, PathEligibilityResult
 from .relationship_projection import (
     RelationshipCatalogIdentity,
     RelationshipDecisionInput,
@@ -1057,11 +1057,16 @@ def open_serving_pack_authority(
     index_request = IndexProjectionRequest.model_construct(
         candidate_projection_request=candidate_request,
         candidate_projection_result=candidate_result,
-        public_path_eligibility_requests=tuple(
-            _require_list(
-                relationships.get("public_path_eligibility_requests"),
-                owner="relationships.public_path_eligibility_requests",
-            )
+        # These are read, not just serialized: the professor-paper lane replays
+        # every request through PathEligibilityEngine.evaluate at query time,
+        # which refuses a bare mapping.  Mounting raw JSON dicts here also made
+        # every dump of the reconstructed request (the boot hash check and the
+        # release-bound read) emit one pydantic serializer warning per request —
+        # 47k log lines per boot on the production pack.
+        public_path_eligibility_requests=_parse_models(
+            PathEligibilityRequest,
+            relationships.get("public_path_eligibility_requests"),
+            owner="relationships.public_path_eligibility_requests",
         ),
         public_path_eligibility_results=eligibility_results,
         index_projection_version=_require_str(
