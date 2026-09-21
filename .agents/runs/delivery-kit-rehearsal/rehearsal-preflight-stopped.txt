@@ -1,0 +1,82 @@
+canonical-v2 site preflight
+repo         /var/tmp/mirothinker-delivery-rehearsal/site
+kit          /var/tmp/mirothinker-delivery-rehearsal
+command file /var/tmp/mirothinker-delivery-rehearsal/serve-18299-command.sh
+started at   2026-09-21T15:33:11+08:00
+
+== paths ==
+[PASS] site-paths.txt found in kit (17 rows)
+[PASS] dir     @data-root -> /var/tmp/mirothinker-data-v2
+[PASS] dir     @repo -> /var/tmp/mirothinker-delivery-rehearsal/site
+[PASS] dir     @state-dir -> /var/tmp/mirothinker-delivery-rehearsal/state
+[PASS] dir     --serving-pack -> /var/tmp/mirothinker-data-v2/serving-pack-run16-readerbound
+[PASS] dir     --index-root -> /var/tmp/mirothinker-data-v2/index-v3-v2
+[PASS] dir     CANONICAL_V2_MANUAL_RECALL_DIR -> /var/tmp/mirothinker-delivery-rehearsal/state/manual-recall-v1
+[PASS] dir     --accepted-backup-gate-root -> /var/tmp/mirothinker-delivery-rehearsal/gate
+[PASS] dir     --s12a -> /var/tmp/mirothinker-delivery-rehearsal/gate/s12a
+[PASS] file    @repo-entrypoint -> /var/tmp/mirothinker-delivery-rehearsal/site/.agents/runs/rebuild-canonical-v2-knowledge-platform/s12e/serve_s12e_port.py (1046 bytes)
+[PASS] file    @repo-runner -> /var/tmp/mirothinker-delivery-rehearsal/site/.agents/runs/rebuild-canonical-v2-knowledge-platform/s12a/complete_candidate_runner.py (49128 bytes)
+[PASS] file    --recorded-serving-bundle -> /var/tmp/mirothinker-delivery-rehearsal/bundles/serving-bundle-run16.json (953 bytes)
+[PASS] file    --recorded-embedding-bundle -> /var/tmp/mirothinker-delivery-rehearsal/bundles/qwen-embedding-bundle-v1.json (410 bytes)
+[PASS] parentdir --envelope-output -> /var/tmp/mirothinker-delivery-rehearsal/gate/s12a
+[PASS] string  --source-manifest -> /var/tmp/mirothinker-delivery-rehearsal/gate/full-column/source-build-manifest-p4.json (no file needed)
+[PASS] string  --candidate-staging-root -> /var/tmp/mirothinker-data-v2/staging-v3 (no file needed)
+[PASS] string  --recorded-decision-bundle -> /var/tmp/mirothinker-delivery-rehearsal/gate/s12a/recorded-decision-bundle-v1.json (no file needed)
+[PASS] string  --accepted-original-milvus-path -> /home/longxiang/MiroThinker/apps/miroflow-agent/milvus.db (no file needed)
+
+== writability and state ==
+[PASS] pack parent dir is writable (mount receipt is written there): /var/tmp/mirothinker-data-v2
+[PASS] mount receipt present: /var/tmp/mirothinker-data-v2/serving-pack-run16-readerbound.mount-receipt.json (boot reuses it instead of re-hashing 1.7 GB)
+[PASS] state dir exists: /var/tmp/mirothinker-delivery-rehearsal/state
+[PASS] state dir is writable
+[PASS] admin credential store present (admin-auth.sqlite3 + admin-auth.key)
+[WARN] admin-initial-password.txt still in the state dir — log in and change the password, then delete it
+[PASS] no milvus.db inside the index root
+
+== data artifacts ==
+[PASS] sha256 verified for 10 artifacts (checksums.sha256)
+
+== frozen-string cross-checks ==
+[PASS] cross-check: index_root agrees (pack manifest == --index-root): /var/tmp/mirothinker-data-v2/index-v3-v2
+[PASS] cross-check: release_id agrees: candidate-v2-20260916-r1
+[PASS] cross-check: forbidden milvus path agrees: /home/longxiang/MiroThinker/apps/miroflow-agent/milvus.db
+[PASS] cross-check: manifest index_marker_sha256 == --index-marker-sha256
+[PASS] cross-check: index marker root == --index-root
+[PASS] cross-check: index marker file sha256 == --index-marker-sha256 (b6f78a3b1e28c280…)
+[PASS] cross-check: serving bundle content_sha256 == --recorded-serving-bundle-sha256
+[PASS] cross-check: serving bundle index_root == --index-root
+[PASS] cross-check: serving bundle envelope_path == --envelope-output
+[PASS] cross-check: serving bundle database_name == --expected-database
+[PASS] cross-check: serving bundle release_id == --candidate-release-id
+[PASS] cross-check: --expected-database matches the release identity (miroflow_candidate_v2_20260916_r1)
+[PASS] cross-check: --envelope-output is the fixed evidence path (/var/tmp/mirothinker-delivery-rehearsal/gate/s12a/complete-candidate-build-envelope.json)
+[PASS] cross-check: embedding bundle base_url: http://100.64.0.27:18005/v1
+[PASS] cross-check: embedding bundle dimension == 4096
+
+== runtime ==
+[PASS] uv on PATH: uv 0.9.27
+[PASS] uv sync --frozen is plannable (--dry-run, no changes made)
+[PASS] system python3: Python 3.10.12
+[SKIP] system python3 is 3.10; the venv is rebuilt by uv with its own 3.12 interpreter
+
+== ports ==
+[PASS] port 18299 is free
+[PASS] port 18188 is already serving (existing instance left untouched by this check)
+
+== outbound ==
+[PASS] embedding endpoint reachable and dimension == 4096 (http://100.64.0.27:18005/v1, key source: key file /var/tmp/mirothinker-delivery-rehearsal/site/.sglang_api_key (contents never printed))
+[PASS] rerank endpoint reachable (http=401, http://100.64.0.27:18006)
+[WARN] rerank endpoint answered 401 — the lane is fail-open, but check model/key before acceptance
+[PASS] chat LLM endpoint reachable (http=200, profile=deepseekv4flash, https://api.deepseek.com)
+[PASS] pypi.org reachable (uv sync can rebuild the venv)
+
+== optional components ==
+[PASS] playwright chromium present: /home/longxiang/.cache/ms-playwright/chromium-1179
+[WARN] postgresql not installed — /seeds /upload and 3 maintenance jobs will 503; /chat is unaffected
+[PASS] RAM is 503.5 GB
+[PASS] 988 GB free on /var/tmp/mirothinker-delivery-rehearsal/site
+[PASS] 988 GB free on /var/tmp/mirothinker-data-v2
+
+== summary ==
+failures=0 warnings=3
+RESULT: READY (warnings are non-blocking, review them anyway)

@@ -14,7 +14,7 @@ command in this rehearsal targeted 18188.
 | Item | Value |
 |---|---|
 | Kit | `/var/tmp/mirothinker-delivery-kit/` built by `deploy/build-delivery-kit.sh` |
-| code.tar | 449,075,200 bytes, 4674 entries, sha256 `e11e63b7b81c220467a1f23f3b9d0a51353e0694598541e2d3ee5843b1176439` (tree state at commit `9d29d375` + evidence files; the builder re-mints the digest whenever the tree changes) |
+| code.tar | 449 MB, 4677 entries; the digest of the delivered kit is recorded in the kit's own `kit-manifest.txt` (the builder re-mints `code.tar` whenever the tree changes, so quoting a digest here would go stale by construction) |
 | Scratch site | `/var/tmp/mirothinker-delivery-rehearsal/site` (code.tar extracted there) |
 | Scratch state | `/var/tmp/mirothinker-delivery-rehearsal/state` (fresh, empty) |
 | Scratch gate root | `/var/tmp/mirothinker-delivery-rehearsal/gate` (with an empty `s12a/`) |
@@ -71,9 +71,11 @@ answer came from the local knowledge base, not from the web lane.
 
 ## 3. preflight output (scratch site, service stopped)
 
-Full output: `/var/tmp/mirothinker-delivery-rehearsal/logs/preflight-scratch-stopped.txt`
-(the earlier run against the *running* instance is
-`.../logs/preflight-scratch.txt`). Headline:
+Full outputs committed beside this file:
+`rehearsal-preflight-stopped.txt` (service stopped → READY) and
+`rehearsal-preflight-running.txt` (service up → the port FAIL below). The replay
+gate's own report and log are committed as `rehearsal-replay-report.json` /
+`rehearsal-replay.log`. Headline:
 
 ```
 == summary ==
