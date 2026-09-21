@@ -60,8 +60,15 @@ RUNNER="$GATE_ROOT/s12a/complete_candidate_runner.py"
 SEALER="$GATE_ROOT/s12c/build_serving_pack.py"
 
 RUNS="$SWITCH_LINE/.agents/runs/embedding-model-switch-v2"
-BUNDLE_COMPAT="$RUNS/qwen3.7-text-embedding-flash-embedding-bundle-v1-openai-compat.json"   # 45e45855…  (chosen route)
-BUNDLE_NATIVE="$RUNS/qwen3.7-text-embedding-flash-embedding-bundle-v1.json"                # cdddcdfd…  (fallback)
+# ROUTE DISCIPLINE (option B, decided 2026-09-22): the query-side treatment
+# (text_type=query + instruct) exists ONLY on the DashScope-native interface, and the
+# build embeds the DOCUMENTS through that same interface. The two routes are NOT the
+# same vector space — measured same-text cross-route cosine <= 0.9594 against 1.0 for
+# same-route repeats — so a build/serve route mismatch puts the query vector in a
+# different subspace than the document vectors and degrades recall silently, with no
+# error anywhere. Build and serve MUST name the same bundle.
+BUNDLE_NATIVE="$RUNS/qwen3.7-text-embedding-flash-embedding-bundle-v1.json"                # content 67927ea0… / file 35104c06…  (CHOSEN ROUTE — the build used this)
+BUNDLE_COMPAT="$RUNS/qwen3.7-text-embedding-flash-embedding-bundle-v1-openai-compat.json"  # content d5ff0ffb… / file d7d2f57f…  (fallback only: no query-side treatment)
 
 KEY_FILE=/var/tmp/mirothinker-qianwen-api-key        # 0600, outside the repo
 
@@ -278,6 +285,34 @@ envelope_sha256=…            # the envelope's *content* sha (not the file byte
 > resume wrapper for this run. Budget accordingly and keep the gateway key/quota
 > healthy before starting.
 
+## 5.5. Merge the three lines (do it the moment the build prints `envelope_sha256=`)
+
+Three branches must be in the tree **before the sealer runs**; one of them must also be
+there **before the image is re-baked**. Measured 2026-09-22 with git (each branch against
+its *own* base):
+
+| branch | files vs its base | `canonical_v2` package `.py` | deadline |
+|---|---|---|---|
+| `v2/boot-log-noise` | 2 (base `ac44b404`) | 1 (`serving_pack_loader.py`) | moves `reader_contract_sha256` ⇒ **before the seal** |
+| `v2/admin-identity-native` | 18 (base `ac44b404`) | 1 (`managed_secrets.py`) | moves the digest ⇒ **before the seal** |
+| `delivery/docker` | 100 (base `a0cd5c13`, the merge base with this line) | **0** | digest-neutral, so it may follow the seal — but it **must** be in the tree the image is built from |
+
+**Conflict risk is zero by construction**: this line's changed-file set and
+`delivery/docker`'s are disjoint, and the two agent branches are disjoint relative to
+their own base and byte-identical on everything they inherit in common.
+
+**Never build the image from `delivery/docker`.** `build-image.sh` takes the *script's*
+tree as the Docker context (`REPO_ROOT`, line 22) and the Dockerfile does
+`COPY . /opt/mirothinker/` — so the image carries the code of whatever tree it was run
+from. `delivery/docker` does not contain `ac44b404`; it lacks exactly the six v2
+route/lane files (`embedding_lane_resilience`, `index_projection_isolated`,
+`knowledge_build_isolated`, `knowledge_read`, `knowledge_read_isolated`,
+`managed_config`). Build from the fully merged line.
+
+⚠ **Frame trap**: `git diff ac44b404..delivery/docker` lists 6 `canonical_v2` files —
+that is a *symmetric* difference (`ac44b404` is not its ancestor) and reads exactly
+backwards. Always compute against the true merge base (`git merge-base`).
+
 ## 6. Verify the new vector matrix
 
 ```bash
@@ -325,8 +360,26 @@ records `reader_contract_sha256` = `sha256(python + pydantic + every
 canonical_v2/*.py)`, and a boot whose reader digest differs pays the ~285 s
 reconstruction replay instead of the ~120 s fast path.
 
+**Running from the switch line is not enough — the tree must be pinned** (measured
+2026-09-22). The sealer's `_bootstrap_src()` tries a plain
+`import_module("src.data_agents.canonical_v2.serving_pack_loader")` **first** and only
+falls back to its own tree on `ModuleNotFoundError`. The deployment venv's editable
+`.pth` points at `/home/longxiang/MiroThinker/apps/miroflow-agent` (the **main
+checkout, which sits on a stale branch**), so that first import *succeeds* and the
+sealer binds the wrong tree — whose `serving_pack_loader` has **no**
+`reader_contract_digest` at all, i.e. the manifest write raises `AttributeError`.
+With `PYTHONPATH` set it binds the switch line. The same pin must be on the *serving*
+command (step 12): the digest covers the whole package, so seal and boot must import
+the same tree or every boot pays the replay.
+
 ```bash
 cd "$SWITCH_LINE/apps/miroflow-agent"
+export PYTHONPATH="$SWITCH_LINE/apps/miroflow-agent${PYTHONPATH:+:$PYTHONPATH}"
+# prove the pin BEFORE spending 42 minutes:
+"$DEPLOY_PY" -c "import src.data_agents.canonical_v2.serving_pack_loader as m; print('sealer binds:', m.__file__); print('digest:', m.reader_contract_digest())"
+# expect: the switch line's path, and a digest; then RECORD that digest — step 9's
+# mount_seconds and any later mismatch check against it.
+
 EXPECTED_MARKER_SHA256="$("$DEPLOY_PY" -c "import hashlib;print(hashlib.sha256(open('$INDEX_V2/.canonical-v2-isolated-index-target.json','rb').read()).hexdigest())")"
 
 "$DEPLOY_PY" "$SEALER" \
@@ -370,14 +423,45 @@ before step 12.
 
 ```bash
 cp "$RUN_ROOT/generate_run16_serving_bundle.py" "$RUN_ROOT/generate_fembed_serving_bundle.py"
-# edit ONLY the release-bound identities + embedding_model_id:
-#   SOURCE  = ../rebuild-canonical-v2-knowledge-platform/s12g/serving-bundle-run16.json
-#   OUTPUT  = ../rebuild-canonical-v2-knowledge-platform/s12g/serving-bundle-fembed.json
-#   RELEASE_ID / DATABASE_NAME / INDEX_ROOT / ENVELOPE / PACK_DIR / PACK_GENERATOR_RUN_ID
-#   embedding_model_id = "qwen3.7-text-embedding-flash"
+```
+
+> **The generator's own defaults are traps — do not trust them.** Two of them produce
+> a *silently wrong* bundle (nothing fails; the recorded values are just wrong):
+>
+> 1. its `INDEX_ROOT` constant reads `…/index-v3` (the **build** form), but the run16
+>    bundle it produced actually records `…/index-v3-v2` (the **serving** form) — the
+>    real run must have edited that constant, and the checked-in copy kept the default.
+>    **Set it to `$INDEX_V2` (`…/index-v4-v2`), the form the serve command passes.**
+> 2. it never assigns `embedding_model_id`; the field is required and is inherited from
+>    SOURCE, so it would stay `Qwen/Qwen3-Embedding-8B`. **Add it to the
+>    `payload.update({…})` dict** (not just a constant) — otherwise the delivered bundle
+>    records the old 4096-dim model. Nothing compares it today (verified: every
+>    cross-check uses the *manifest's* or the *adapter's* id), so this is hygiene, not a
+>    refusal — but it is the kind of wrong value a later reader trusts.
+
+Edits, complete list:
+
+```
+SOURCE  = S12G / "serving-bundle-run16.json"          # ← run16's, not run15's
+OUTPUT  = S12G / "serving-bundle-fembed.json"
+RELEASE_ID = "candidate-v2-20260922-r1"
+DATABASE_NAME = "miroflow_candidate_v2_20260922_r1"
+INDEX_ROOT = Path("/var/tmp/mirothinker-data-v2/index-v4-v2")   # SERVING form ($INDEX_V2)
+ENVELOPE = "$GATE_ROOT/s12a/complete-candidate-build-envelope.json"   # the switch line's
+PACK_DIR = Path("/var/tmp/mirothinker-data-v2/serving-pack-fembed-v1")
+PACK_GENERATOR_RUN_ID = "fembed-pack-20260922-v1"
+# plus, inside payload.update({...}):
+#   "embedding_model_id": "qwen3.7-text-embedding-flash"
+# INDEX_MARKER_SHA256 comes from EXPECTED_MARKER_SHA256 (set below) — keep that.
+```
+
+```bash
 EXPECTED_MARKER_SHA256="$("$DEPLOY_PY" -c "import hashlib;print(hashlib.sha256(open('$INDEX_V2/.canonical-v2-isolated-index-target.json','rb').read()).hexdigest())")" \
   "$DEPLOY_PY" "$RUN_ROOT/generate_fembed_serving_bundle.py"
 sha256sum "$GATE_ROOT/s12g/serving-bundle-fembed.json"   # record: the serve command needs --recorded-serving-bundle-sha256
+# read it back and confirm the two trap fields, before any window step depends on it:
+"$DEPLOY_PY" -c "import json;d=json.load(open('$GATE_ROOT/s12g/serving-bundle-fembed.json'));print({k:d.get(k) for k in ('release_id','index_root','embedding_model_id','database_name')})"
+# expect index_root …/index-v4-v2 and embedding_model_id qwen3.7-text-embedding-flash
 ```
 
 ## 11. Recall non-regression gate (blocking)
@@ -418,6 +502,23 @@ lives in its own directory, the scratch boot rewrites that pack's mount receipt
 (same identity, new `generated_at`/`mount_seconds`) — expected, and it does not
 touch the live pack's receipt.
 
+**Pre-calibrated 2026-09-22 — read this before judging the verdict.** Running the
+comparator on the two *frozen* artifacts — `--diff baseline.json control.json`, i.e.
+two independent runs of the **same** configuration — returns **VERDICT: REVIEW**
+(`0 fail-level, 3 review-level`). So on a good switch:
+
+* **REVIEW is the expected shape, not a failure.** The three items to expect are all
+  `rule1(concept) q15t1` (生成式模型生成 / 物理仿真引擎生成 / 基于规则生成), `ANSWER
+  hit->miss`, annotated `[web timeouts=2]` — concept *wording*, not an entity.
+* **Do not judge on citation counts or wall seconds.** Between those two same-config
+  runs: `citation local 239 vs 228`, `citation web 80 vs 128`, `wall seconds 698.7 vs
+  489.8`. All noise.
+* **The candidate layer's noise band is ≈7** (`candidate-layer hits 22 vs 29` across the
+  same two runs) — a FAIL claim ("an annotated entity's candidates *and* answers both
+  vanish") has to sit clearly outside that band to mean anything.
+* **The one zero-noise metric is `vector median`** (61.0 in both runs, all four
+  slices) — that is the metric a hard FAIL should rest on (rule: drop > 30% ⇒ FAIL).
+
 ## 12. Cutover and rollback
 
 Cutover = a new serve-command file + restart. Take the live file as the template
@@ -430,11 +531,12 @@ Cutover = a new serve-command file + restart. Take the live file as the template
 | `--index-root` | `…/index-v3-v2` | `…/index-v4-v2` |
 | `--index-marker-sha256` | `b6f78a3b…` | step 7's marker |
 | `--model-version embedding=` | `Qwen/Qwen3-Embedding-8B` | `qwen3.7-text-embedding-flash` |
-| `--recorded-embedding-bundle` | `…/s12c/qwen-embedding-bundle-v1.json` | `$BUNDLE_COMPAT` |
+| `--recorded-embedding-bundle` | `…/s12c/qwen-embedding-bundle-v1.json` | **`$BUNDLE_NATIVE`** — the same route the build embedded through. `$BUNDLE_COMPAT` here drops the query-side treatment *and* moves the query vector into a different subspace (see §0). |
 | `--recorded-serving-bundle` (+ sha) | `…/s12g/serving-bundle-run16.json` (+ `0a09aecde9…`) | `…/s12g/serving-bundle-fembed.json` (+ step 10's sha) |
 | `--candidate-release-id`, `--run-id` | run16 values | `$RELEASE_ID`, `$RUN_ID` |
 | `--database-url`, `--expected-database` | `miroflow_candidate_v2_20260916_r1` | `$TARGET_DB` |
 | env prefix | — | add `CANONICAL_V2_EMBEDDING_API_KEY="$(cat /var/tmp/mirothinker-qianwen-api-key)"` |
+| **launch form (the `src` trap)** | `uv run python <live tree>/…/serve_s12e_port.py` — the live line's own per-worktree venv pins *its* tree | **Do not** rely on `uv run` from `$SWITCH_LINE`: that worktree has **no `.venv`**, so `uv run` would sync a fresh interpreter (network at cutover, and a different `reader_contract_sha256` ⇒ every boot pays the ~285 s replay instead of the ~120 s fast path). Pin the tree explicitly: `PYTHONPATH=$SWITCH_LINE/apps/miroflow-agent /home/longxiang/MiroThinker/.venv/bin/python $SWITCH_LINE/…/serve_s12e_port.py` — the main venv **is** the sealing interpreter (3.12.12 + pydantic 2.12.5), and `PYTHONPATH` precedes the editable `.pth`. **Measured** (2026-09-22): without the prefix `import src.data_agents.canonical_v2` resolves to the main tree; with it, to the switch line. |
 
 Unchanged on purpose: `--database-target-kind disposable`,
 `--accepted-backup-gate-root`, `--source-manifest` + sha, the 15 `--source-batch-id`
