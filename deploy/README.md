@@ -218,3 +218,32 @@ bash deploy/install.sh && systemctl --user start canonical-v2-backend
   / `.sglang_api_key`，只打印路径不打印内容）。
 - 本机现存实例（18188）与 `deploy/*.sh` 的既有脚本不受影响：`preflight.sh`
   只读；端口占用会作为 `[FAIL]` 报出来（同时在跑的实例不会被碰）。
+
+## 外部反代接入要求（nginx / Caddy，2026-09-21 实测）
+
+把 18188 挂到外部域名（例如 `star.sustech.edu.cn`）时，反代侧必须满足下面四条；
+否则典型症状是"页面能开、但登录或流式回答失败"：
+
+1. **透传原始 Host 与 `X-Forwarded-Proto` / `X-Forwarded-Host`**
+   后端用它们决定 Cookie 的 `Secure` 标记与**写操作的同源判定**（`Origin` / `Sec-Fetch-Site` 校验，无 CSRF token）：
+   - Caddy：`reverse_proxy` 默认自动带 `X-Forwarded-For/Host/Proto`，写 `reverse_proxy 100.64.0.4:18188` 即可；
+   - nginx：必须显式写 `proxy_set_header Host $host;`、`proxy_set_header X-Forwarded-Proto $scheme;`、
+     `proxy_set_header X-Forwarded-Host $host;`；
+   - **不要**把 Host 改成上游地址（`proxy_set_header Host 100.64.0.4:18188;`）——登录会被同源校验拒绝。
+2. **SSE 不缓冲**：`/api/chat/stream` 是 `text/event-stream`。nginx 必须 `proxy_buffering off;`
+   （Caddy 默认即时 flush，无需额外配置）。
+3. **超时给足**：一轮问答可达 30–60 s；nginx 显式设 `proxy_read_timeout 300s; proxy_send_timeout 300s;`
+   （默认 60 s 可能掐断长回答）。
+4. **路径前缀可用**：前端 API 调用是相对路径（`fetch("api/chat/stream")`），根路径与子路径都能工作；
+   子路径（如 `/guoxian/`）用 `proxy_pass http://127.0.0.1:18188/;`（尾斜杠剥前缀）。
+
+**网络前提**：18188 由 `firewall-18188.sh` 收口，只放行 `127.0.0.0/8`、`100.64.0.0/10`（tailnet 整段）
+与 `100.64.0.34`（dbg21），其余一律 DROP。反代所在机器要么在 tailnet 内，要么把它的源 IP
+加进该脚本的 `SPECS` 后再 `apply`。
+
+**安全建议**：对外只暴露 `/chat` 与 `/api/chat*`；管理面（`/main` `/admin` `/logs` `/seeds` `/upload`
+`/jobs` `/browse`）即使有应用级登录，也建议在反代上加第二层（IP 白名单或 basic auth）——dbg21 当年就是这么做的。
+
+**已实测（2026-09-21）**：带 `Host: star.sustech.edu.cn` + `X-Forwarded-Proto: https` +
+`X-Forwarded-Host: star.sustech.edu.cn` 请求本机 `GET /chat` → **200**，`GET /` → **302 → /chat**。
+即**应用侧无需任何改动**，只差"反代指向 + 网络放行"两件事。
