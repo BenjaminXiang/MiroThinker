@@ -210,9 +210,16 @@
 
 | 类型 | 内容 | 现场动作 | 回滚 |
 |---|---|---|---|
-| **代码** | 补丁 tar / `git bundle`（单 commit 或区间） | 落位 → `uv sync`（依赖未变可跳过）→ 重启（291 s）→ replay 门 | 回退到上一 commit + 重启 |
-| **数据** | 新服务包（+ 索引根，若向量矩阵变了） | 落位 → 校验 sha256 → 命令文件换一个 token → 重启（291 s）→ 探针 | 命令文件换回旧包（旧包保留） |
+| **代码** | 补丁 tar / `git bundle` + **重封后的 `manifest.json`**（见下） | 落位 → 重启 → replay 门 | 回退到上一 commit + 重启 |
+| **数据** | 新服务包（+ 索引根，若向量矩阵变了） | 落位 → 校验 sha256 → 命令文件换一个 token → 重启 → 探针 | 命令文件换回旧包（旧包保留） |
 | **配置** | 受管配置 / 密钥 | `/admin` 页面改 → 重启生效 | 页面改回 |
+
+**两条实测约束（2026-09-21 量到，决定上面"代码"那一行的形态）**：
+
+1. **改任何 `canonical_v2/*.py` 都会让 reader contract 失配**（`serving_pack_loader.py:257`：digest = python 补丁版本 + pydantic + **该包全部源码字节**）⇒ 启动会**真的重跑重建证明**，实测 **+137～190 s**（276 s → 466 s），**日志毫无异常**。要保住 ≈276 s 的启动就**必须重新封印**（41 分钟；解释器必须同为 3.12.12）。这条是设计使然（docstring 写得很清楚：代码与封印代码不同时，重放才"证明"了东西）。
+2. **重新封印的增量只有一个文件**：对比 `serving-pack-run16-sealed` → `serving-pack-run16-readerbound` 两个包——`relationships.json`(3.47G) / `lookup.sqlite3`(896M) / `institution_catalog.json` / 两个 marker **全部逐字节相同**，只有 `manifest.json` 变了（11,116,133 → 11,116,235 B，**gz 后 ≈2.5 MB**）。serving bundle 只引用 `index_root` / `release_id` / `index_target_id`，**不含包文件哈希** ⇒ 不因重封而变。
+
+⇒ **代码补丁的正确形态 = 代码 tar + 新 `manifest.json`（≈2.5 MB gz）**，**不需要重传 1.4 GB 数据面**——前提是该次没有重建数据（若重建，属"数据"那一行）。
 
 每次推送附一页变更说明（做了什么 / 影响什么 / 怎么回退 / 验收结果），版本号进台账；现场保留上一版以便随时回滚。
 
