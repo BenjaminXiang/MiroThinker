@@ -164,3 +164,27 @@ SSE `event: error` → 页面红字。同一轮里其余五条道全健康，但
 ② 容器形态把「现场装环境」整段消灭，但**新增**受管配置丢失、uid/属主、cgroup 内存（无 swap 兜底）、
 数据面仍 7 GB、启动相位不变等边界，已逐条写进 runbook §9；
 ③ 冻结路径契约从"宿主机必须同构"改为"compose 的容器内 target 必须同构"，宿主机放哪儿都行。
+
+## 第 5 轮 · 2026-09-21 · 容器线补完：PostgreSQL 进栈并端到端验收 + **启动耗时归因找到根因并修复**
+
+**做了什么**（分支 `delivery/docker`，本轮 4 个提交：`6216c5d7` `51cac2bb` `0a0988c6` `e802fe25`；主仓与容器线工作区均已干净，无遗留容器，活线 pid 519941 未动）：
+
+- **PostgreSQL 进 compose 栈**：`db` 服务 = `postgres:16`，库名固定 `miroflow_collection_v1`，pgdata 用具名卷 `mirothinker-pgdata`，**不对宿主发布端口**（应急 `127.0.0.1:5432` 以注释保留）；凭据走 `secrets/postgres.env`（0600，不入 git，模板随 kit）；app 入口从 `POSTGRES_*` 组装 `DATABASE_URL`（口令 URL 转义、从不打印）；新增 `migrate.py` 做**幂等迁移**（有界等 PG → `COMMENT ON DATABASE` 写身份标记 → `alembic upgrade head`，失败只降级）；镜像加 `UV_NO_SYNC=1`（作业门里的 `uv run` 才不会联网装 dev 组）。
+- **启动耗时归因（原 486 s vs 291 s）**：找到根因并修复，详见下。
+
+**发现（本轮三条，第一条是大鱼）**：
+
+1. **解释器补丁版本会静默让每次启动多花 ≈190 s**。包的 release binding 含 `reader_contract_digest = sha256(python 补丁版本 + pydantic + canonical_v2 源码字节)`；包由 **CPython 3.12.12** 封印，而 Ubuntu 24.04 自带 **3.12.3** ⇒ 摘要不符 ⇒ **每次启动重放重建 ≈190 s（不报错、日志看不出）**。证据链：两侧原始 CPU/JSON/分配/哈希/numpy 完全相同、Chromium 0.5–0.6 s、6 个 provider 主机都通；SIGABRT + faulthandler 抓到卡点在 `serving_pack_loader.py:1021 _canonical_sha256`；把镜像换成托管 CPython 3.12.12 后摘要与包逐字节一致。**这条对两条交付路径都成立**——即使解释器换成未来某个 3.12.13 也会同样变慢。
+2. **只读数据根不阻塞启动**（第一轮已验证）：写 mount-receipt 失败只打一行 warning；代价是每次全量重哈希，可用 `CANONICAL_V2_SERVING_RECEIPT_PATH` 指到可写路径规避。
+3. **验收门依赖受管配置**：空配置首启 replay 门 6/7（答案走降级渲染），配好 chat LLM 档即 7/7 ⇒ **验收顺序必须是"先配置（P3）再跑门"**。
+
+**怎么验证**（原始数字）：
+
+- **PG 验收全绿**：db healthy 2 s；迁移首次 `{"revision_before":"","revision":"V042","tables":42,"waited_seconds":0.196}`，二次/三次 `revision_before=V042==revision`（**幂等**）；app 日志 `console_database=configured`；登录 200；`/seeds` `/upload` `/jobs` `/admin` 全 200、4 个管理 API 200（`postgres.available=true`）；**真跑一次 preview**：`succeeded`、443 s、`written_profile_count=0`、`diagnostic_profile_count=995`，run 行在 `/jobs` 可见；**`pg_dump` 116,484 B → 灌进 scratch 库 → 42/42 张表行数全等**；`/admin` 面板 `state=ok / freshness=ok`（此前是 `unavailable`）；`down` + `up` 后数据仍在。
+- **启动耗时背靠背**（同机、同数据根、热页缓存）：裸机（3.12.12）**275 s** ／ 容器（3.12.3）**466 s** ／ 容器（预编译 18,915 个 pyc，仍 3.12.3）**466 s** ／ **容器（3.12.12）276 s** ✅。⇒ runbook 承诺数字从 486 s 改为 **≈276 s（与裸机同档）**。
+- 最终 kit：镜像 `3ad327d3`、tar 5,260,715,520 B `c308d2c2…`、**gz 1,670,300,769 B `a83b6c82…`**。
+- **配额**：3 次 preview 触发只有 1 次真抓取（SUSTech 名录 996 次页面抓取）；另两次 1–1.2 s 即结束（`adapter_missing` / `parser_low_quality`，≈0 花费）——其中一次是驱动脚本缺"已有 seed 就跳过"守卫导致的多触发，已记为该脚本的已知粗糙点。
+
+**未验证**：bind-mount 版 pgdata、`--env-file` 分支、物理卷还原、并发压测、下一轮封印（run17）后解释器是否同步。
+
+**影响哪些问题**：① 你要的"PostgreSQL 进容器"落地并端到端验收（采集线在容器形态下可用，含 `pg_dump` 备份路径）；② 主交付形态的**唯一硬缺口（启动耗时未归因）已消除**，容器与裸机同档（276 vs 275 s）；③ 新增一条**跨两条路径的交付要求**：钉死 CPython **3.12.12**（已写入交付方案 §3 前置条件）；④ 裸机线正被派去补"解释器钉版本 + preflight 检查"。
