@@ -100,14 +100,14 @@ def _write(tmp_path: Path, name: str, payload: dict) -> Path:
     return path
 
 
-def _diff(tmp_path: Path, before: dict, after: dict, *, lenient: bool = False) -> int:
+def _diff(tmp_path: Path, before: dict, after: dict, *, strict: bool = False) -> int:
     return harness._diff(
         argparse.Namespace(
             diff=[
                 str(_write(tmp_path, "a.json", before)),
                 str(_write(tmp_path, "b.json", after)),
             ],
-            lenient_concepts=lenient,
+            strict_concepts=strict,
         )
     )
 
@@ -245,19 +245,42 @@ def test_diff_passes_on_identical_runs(tmp_path: Path, capsys: object) -> None:
     assert "VERDICT: PASS" in capsys.readouterr().out
 
 
-def test_diff_flags_labeled_answer_regression_as_fail(tmp_path: Path, capsys: object) -> None:
+def test_diff_flags_labeled_retrieval_loss_as_fail(tmp_path: Path, capsys: object) -> None:
+    """Lost in the candidate layer *and* the answer: the retrieval dropped it."""
     before = _payload([_record("q1", entities={"e1": _entity(True, True)})])
-    after = _payload([_record("q1", entities={"e1": _entity(False, True)})])
+    after = _payload([_record("q1", entities={"e1": _entity(False, False)})])
     assert _diff(tmp_path, before, after) == 1
     out = capsys.readouterr().out
     assert "VERDICT: FAIL" in out
     assert "rule1(labeled) q1" in out
+    assert "ANSWER+CANDIDATE hit->miss" in out
 
 
-def test_diff_flags_labeled_candidate_regression_as_fail(tmp_path: Path) -> None:
+def test_diff_labeled_answer_only_loss_is_review_not_fail(tmp_path: Path, capsys: object) -> None:
+    """Calibration: the null experiment only ever moved answer wording while the
+    candidate set held the entity, so that shape is review-level."""
+    before = _payload([_record("q1", entities={"e1": _entity(True, True)})])
+    after = _payload([_record("q1", entities={"e1": _entity(False, True)})])
+    assert _diff(tmp_path, before, after) == 2
+    out = capsys.readouterr().out
+    assert "VERDICT: REVIEW" in out
+    assert "still in the candidate layer" in out
+
+
+def test_diff_labeled_candidate_only_loss_is_review(tmp_path: Path) -> None:
     before = _payload([_record("q1", entities={"e1": _entity(True, True)})])
     after = _payload([_record("q1", entities={"e1": _entity(True, False)})])
-    assert _diff(tmp_path, before, after) == 1
+    assert _diff(tmp_path, before, after) == 2
+
+
+def test_diff_labeled_answer_only_loss_without_candidate_hit_is_review(
+    tmp_path: Path,
+) -> None:
+    """An entity that was never in the candidate set (web-only) cannot be a
+    retrieval regression."""
+    before = _payload([_record("q1", entities={"e1": _entity(True, False)})])
+    after = _payload([_record("q1", entities={"e1": _entity(False, False)})])
+    assert _diff(tmp_path, before, after) == 2
 
 
 def test_diff_median_vector_drop_over_thirty_percent_is_fail(tmp_path: Path, capsys: object) -> None:
@@ -275,7 +298,29 @@ def test_diff_probe_gt_loss_is_review_not_fail(tmp_path: Path, capsys: object) -
         [_record("s1", suite="probes", kind="labeled", entities={"e1": _entity(True, False)})]
     )
     assert _diff(tmp_path, before, after) == 2
-    assert "rule2(probe" in capsys.readouterr().out
+    assert "rule2(probe top-k)" in capsys.readouterr().out
+
+
+def test_diff_per_case_vector_halving_is_review_for_any_suite(tmp_path: Path) -> None:
+    stable = [_record(f"q{i}", entities={}, vector=128) for i in range(2, 6)]
+    before = _payload([_record("q1", entities={}, vector=64)] + stable)
+    after = _payload([_record("q1", entities={}, vector=30)] + stable)
+    assert _diff(tmp_path, before, after) == 2
+
+
+def test_diff_small_vector_counts_are_below_the_drop_floor(tmp_path: Path) -> None:
+    """A 4 -> 0 lane change is a cutoff artefact, not a halving worth a look."""
+    stable = [_record(f"q{i}", entities={}, vector=128) for i in range(2, 6)]
+    before = _payload([_record("q1", entities={}, vector=4)] + stable)
+    after = _payload([_record("q1", entities={}, vector=0)] + stable)
+    assert _diff(tmp_path, before, after) == 0
+
+
+def test_web_note_reports_provider_timeouts() -> None:
+    record = _record("q1", entities={})
+    assert harness._web_note(record) == ""
+    record["web"]["timed_out"] = 2
+    assert harness._web_note(record) == " [web timeouts=2]"
 
 
 def test_diff_probe_vector_drop_over_fifty_percent_is_review(tmp_path: Path) -> None:
@@ -299,15 +344,15 @@ def test_diff_missing_candidate_layer_is_review(tmp_path: Path, capsys: object) 
     assert "candidate layer unavailable" in capsys.readouterr().out
 
 
-def test_diff_concept_regression_is_fail_unless_lenient(tmp_path: Path) -> None:
+def test_diff_concept_regression_is_review_unless_strict(tmp_path: Path) -> None:
     before = _payload(
         [_record("q11", kind="concept", entities={"c1": _entity(True, None)})]
     )
     after = _payload(
         [_record("q11", kind="concept", entities={"c1": _entity(False, None)})]
     )
-    assert _diff(tmp_path, before, after) == 1
-    assert _diff(tmp_path, before, after, lenient=True) == 2
+    assert _diff(tmp_path, before, after) == 2
+    assert _diff(tmp_path, before, after, strict=True) == 1
 
 
 def test_diff_unlabeled_case_regression_does_not_fail(tmp_path: Path, capsys: object) -> None:

@@ -71,8 +71,15 @@ from typing import Any, Iterable, Sequence
 SCHEMA_VERSION = "canonical-v2-recall-eval-v1"
 SESSION_COOKIE = "miroflow_chat_session"
 LOCAL_CITATION_TYPES = frozenset({"professor", "paper", "patent", "company"})
-# §4.4: probe lane drop that forces human review, and the median-lane gate.
-PROBE_LANE_REVIEW_DROP = 0.50
+# §4.4 thresholds, calibrated against the control run of 2026-09-21 (two captures
+# of the identical pre-switch configuration, `.agents/runs/embedding-model-switch`):
+# the vector lane did not move on a single case, the answer layer moved exactly
+# where the web lane did (17 provider timeouts in A vs 0 in B), and every
+# concept-string flip was answer wording. Hence a per-case lane drop is a signal
+# worth a look once the anchor count is big enough to be meaningful, concept
+# strings are not hard assertions, and the median stays a FAIL-level gate.
+VECTOR_DROP_REVIEW = 0.50
+VECTOR_DROP_FLOOR = 8
 MEDIAN_LANE_FAIL_DROP = 0.30
 _TAIL_BYTES = 512 * 1024
 
@@ -762,31 +769,74 @@ def _drop(before: float | None, after: float | None) -> float | None:
 
 def _entity_rows(
     before: dict[str, Any], after: dict[str, Any]
-) -> list[tuple[str, str, str, str, str, str]]:
-    rows: list[tuple[str, str, str, str, str, str]] = []
+) -> list[dict[str, Any]]:
+    """Per-entity A→B comparison with the layer each hit lived in.
+
+    ``answer_*`` is "present in the answer text or the citations", ``candidate_*``
+    is the recalled candidate set (None = that layer was unavailable, so that half
+    of the comparison cannot be judged).
+    """
+    rows: list[dict[str, Any]] = []
     before_entities = (before.get("hits") or {}).get("entities") or {}
     after_entities = (after.get("hits") or {}).get("entities") or {}
     for entity_id, before_entity in before_entities.items():
         after_entity = after_entities.get(entity_id)
-        if after_entity is None:
-            rows.append((entity_id, "?", "?", "?", "missing-in-after"))
-            continue
-        flags: list[str] = []
-        if before_entity.get("answer_or_citations") and not after_entity.get("answer_or_citations"):
-            flags.append("ANSWER hit->miss")
-        if before_entity.get("candidate") and after_entity.get("candidate") is False:
-            flags.append("CANDIDATE hit->miss")
         rows.append(
-            (
-                entity_id,
-                "Y" if before_entity.get("answer_or_citations") else "n",
-                "Y" if after_entity.get("answer_or_citations") else "n",
-                "Y" if before_entity.get("candidate") else "n",
-                "Y" if after_entity.get("candidate") else "n",
-                " ".join(flags) or "-",
-            )
+            {
+                "entity_id": entity_id,
+                "label": before_entity.get("label", entity_id),
+                "answer_a": bool(before_entity.get("answer_or_citations")),
+                "answer_b": (
+                    None
+                    if after_entity is None
+                    else bool(after_entity.get("answer_or_citations"))
+                ),
+                "candidate_a": before_entity.get("candidate"),
+                "candidate_b": (
+                    None if after_entity is None else after_entity.get("candidate")
+                ),
+                "missing_in_b": after_entity is None,
+            }
         )
     return rows
+
+
+def _web_note(record: dict[str, Any]) -> str:
+    """Whether the web lane was degraded for this case (provider timeouts), so a
+    reader knows that case's answer layer is web-dependent."""
+    timeouts = int((record.get("web") or {}).get("timed_out") or 0)
+    return f" [web timeouts={timeouts}]" if timeouts else ""
+
+
+def _labeled_frames(row: dict[str, Any]) -> tuple[list[str], list[str]]:
+    """Split one entity's A→B movement into fail-level and review-level frames.
+
+    Calibrated by the control run: the candidate set is the layer the embedding
+    feeds, so only losing an entity there *and* in the answer is a retrieval
+    regression. An answer-only loss is what a web-evidence or synthesis change
+    looks like (both were observed in the null experiment).
+    """
+    fails: list[str] = []
+    reviews: list[str] = []
+    if row["missing_in_b"]:
+        return [], ["entity absent from B's record"]
+    if row["answer_a"] and not row["answer_b"]:
+        if row["candidate_a"] and row["candidate_b"] is False:
+            fails.append("ANSWER+CANDIDATE hit->miss")
+        elif row["candidate_a"] and row["candidate_b"] is None:
+            reviews.append("ANSWER hit->miss, candidate layer unavailable in B")
+        elif row["candidate_a"]:
+            reviews.append("ANSWER hit->miss, still in the candidate layer")
+        else:
+            reviews.append("ANSWER-only hit->miss (never in the candidate layer)")
+    if (
+        row["answer_a"]
+        and row["answer_b"]
+        and row["candidate_a"]
+        and row["candidate_b"] is False
+    ):
+        reviews.append("CANDIDATE-only hit->miss (answer still names it)")
+    return fails, reviews
 
 
 def _diff(args: argparse.Namespace) -> int:
@@ -804,28 +854,35 @@ def _diff(args: argparse.Namespace) -> int:
         f"shared cases={len(shared)} only-in-A={len(only_a)} only-in-B={len(only_b)}"
     )
     print(
-        "\ncase_id    suite     kind           ansA ansB candA candB vecA  vecB  d_vec%  vec_id"
+        "\ncase_id    suite     kind           ansA ansB candA candB webA  vecA  vecB  d_vec%  vec_id"
     )
-    print("-" * 96)
+    print("-" * 104)
     for case_id in shared:
         a, b = a_records[case_id], b_records[case_id]
         va, vb = _vector_candidates(a), _vector_candidates(b)
         delta = _drop(va, vb)
+        web_a = (a.get("lanes") or {}).get("web", {}).get("candidates")
         print(
             f"{case_id:<10} {a.get('suite',''):<9} {a.get('kind',''):<14} "
             f"{'Y' if (a.get('hits') or {}).get('answer_all_entities') else ('n' if (a.get('hits') or {}).get('entities') else '-'):<4} "
             f"{'Y' if (b.get('hits') or {}).get('answer_all_entities') else ('n' if (b.get('hits') or {}).get('entities') else '-'):<4} "
             f"{'Y' if (a.get('candidate_layer') or {}).get('available') else '-':<5} "
             f"{'Y' if (b.get('candidate_layer') or {}).get('available') else '-':<5} "
+            f"{web_a if web_a is not None else '-':<6}"
             f"{va if va is not None else '-':<5} {vb if vb is not None else '-':<5} "
             f"{'%+.0f%%' % (-100 * delta) if delta is not None else '-':<7} "
             f"{'<==' if delta is not None and delta > 0 else ''}"
+            f"{'' if int((a.get('web') or {}).get('timed_out') or 0) == 0 else '  web-timeout-A'}"
         )
 
     fails: list[str] = []
     reviews: list[str] = []
 
-    # Rule 1 (plan §4.4.1): a test-set turn that was a hit must not become a miss.
+    # Rule 1 (plan §4.4.1, calibrated by the control run): a test-set turn that was
+    # a hit must not become a retrieval miss. `concept` cases carry 关键点 strings
+    # that are answer wording, not entities — they flipped on noise, so their
+    # movement is review-level unless --strict-concepts asks for the plan-literal
+    # reading.
     for case_id in shared:
         a, b = a_records[case_id], b_records[case_id]
         if a.get("suite") != "testset":
@@ -833,38 +890,54 @@ def _diff(args: argparse.Namespace) -> int:
         kind = a.get("kind")
         if kind not in {"labeled", "concept"}:
             continue
-        lenient = kind == "concept" and args.lenient_concepts
+        note = _web_note(a)
         for row in _entity_rows(a, b):
-            entity_id, ans_a, ans_b, cand_a, cand_b, flag = row
-            if flag == "-":
+            if kind == "concept":
+                if not (row["answer_a"] and not row["answer_b"]):
+                    continue
+                message = f"rule1(concept) {case_id} [{row['label']}] ANSWER hit->miss{note}"
+                (fails if args.strict_concepts else reviews).append(
+                    message if args.strict_concepts else message + " (wording, not an entity)"
+                )
                 continue
-            label = ((a.get("hits") or {}).get("entities") or {}).get(entity_id, {}).get(
-                "label", entity_id
-            )
-            message = f"rule1({kind}) {case_id} [{label}] {flag}"
-            if lenient:
-                reviews.append(message + " (concept, --lenient-concepts)")
-            else:
-                fails.append(message)
+            row_fails, row_reviews = _labeled_frames(row)
+            for frame in row_fails:
+                fails.append(f"rule1(labeled) {case_id} [{row['label']}] {frame}{note}")
+            for frame in row_reviews:
+                reviews.append(f"rule1(labeled) {case_id} [{row['label']}] {frame}{note}")
 
-    # Rule 2 (plan §4.4.2): probes — GT lost, or a >50% vector-lane drop.
+    # Rule 2 (plan §4.4.2, calibrated): probes — GT lost; and any case whose
+    # vector lane loses more than half of its candidates. The null experiment moved
+    # no case's vector count at all, so a halving is signal; the floor keeps a
+    # one-or-two candidate case from triggering on rounding.
     for case_id in shared:
         a, b = a_records[case_id], b_records[case_id]
-        if a.get("suite") != "probes":
-            continue
-        for row in _entity_rows(a, b):
-            entity_id, _, _, _, _, flag = row
-            if flag == "-":
-                continue
-            label = ((a.get("hits") or {}).get("entities") or {}).get(entity_id, {}).get(
-                "label", entity_id
-            )
-            reviews.append(f"rule2(probe {a.get('kind')}) {case_id} [{label}] {flag}")
-        delta = _drop(_vector_candidates(a), _vector_candidates(b))
-        if delta is not None and delta > PROBE_LANE_REVIEW_DROP:
+        if a.get("suite") == "probes":
+            for row in _entity_rows(a, b):
+                if row["missing_in_b"]:
+                    reviews.append(
+                        f"rule2(probe) {case_id} [{row['label']}] entity absent from B"
+                    )
+                elif row["answer_a"] and not row["answer_b"]:
+                    reviews.append(
+                        f"rule2(probe {a.get('kind')}) {case_id} [{row['label']}] "
+                        f"ANSWER hit->miss{_web_note(a)}"
+                    )
+                elif row["candidate_a"] and row["candidate_b"] is False:
+                    reviews.append(
+                        f"rule2(probe top-k) {case_id} [{row['label']}] "
+                        f"CANDIDATE hit->miss{_web_note(a)}"
+                    )
+        va, vb = _vector_candidates(a), _vector_candidates(b)
+        delta = _drop(va, vb)
+        if (
+            va is not None
+            and va >= VECTOR_DROP_FLOOR
+            and delta is not None
+            and delta > VECTOR_DROP_REVIEW
+        ):
             reviews.append(
-                f"rule2(probe) {case_id} vector candidates "
-                f"{_vector_candidates(a)} -> {_vector_candidates(b)} "
+                f"rule2(vector) {case_id} vector candidates {va} -> {vb} "
                 f"({-100 * delta:.0f}% drop)"
             )
 
@@ -1000,11 +1073,12 @@ def _parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
         help="serving instance's TURN_TRACE_DIR (lane in/retained/filtered, web outcomes)",
     )
     parser.add_argument(
-        "--lenient-concepts",
+        "--strict-concepts",
         action="store_true",
         help=(
-            "downgrade 关键点 concept-string regressions from FAIL to REVIEW "
-            "(the strings are answer wording, not KB entities)"
+            "treat 关键点 concept-string regressions as FAIL (the plan's literal "
+            "reading). Default: REVIEW — two captures of the identical pre-switch "
+            "configuration flipped 3 of them on answer wording alone"
         ),
     )
     parser.add_argument(

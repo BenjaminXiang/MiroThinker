@@ -6,7 +6,7 @@ index rebuild are a different slice.
 
 ## Layer ① — tests written in this slice
 
-`apps/admin-console/tests/test_eval_recall_canonical_v2.py` — **19 hermetic tests**, no network,
+`apps/admin-console/tests/test_eval_recall_canonical_v2.py` — **24 hermetic tests**, no network,
 no live instance. Fixtures are constructed records/streams (no transcript fixtures exist for this
 surface; the realistic fixtures are the two committed case files, also asserted here).
 
@@ -17,10 +17,10 @@ surface; the realistic fixtures are the two committed case files, also asserted 
 | sessions | 3 | one session per turn group (a group's follow-ups must not lose their antecedent), the serving process's 12-char debug-dump suffix rules, and the guard that rejects a `--run-id` that would collide after that truncation |
 | ordering | 1 | group first-seen order preserved, turns ordered inside a group |
 | aggregates | 1 | vector median/min/max over the cases that have a vector lane, citation local/web mix, candidate-layer counters |
-| diff verdicts | 9 | PASS on identical input; FAIL for a labeled answer regression; FAIL for a labeled candidate-layer regression; FAIL for the >30 % median vector drop; REVIEW for a probe GT loss; REVIEW for a probe vector drop >50 % *without* a median move; REVIEW for a missing candidate layer; FAIL-by-default for concept regressions and REVIEW with `--lenient-concepts`; REVIEW on a case-set mismatch |
+| diff verdicts | 14 | PASS on identical input; **FAIL only for a both-layer retrieval loss**; LABELED answer-only loss → REVIEW; LABELED candidate-only loss → REVIEW; answer-only loss of an entity that was never in the candidate set → REVIEW; median vector drop >30 % → FAIL; per-case lane halving → REVIEW for any suite; sub-floor lane counts ignored; probe top-k loss → REVIEW; probe GT loss → REVIEW; missing candidate layer → REVIEW; concept regression → REVIEW by default and FAIL with `--strict-concepts`; case-set mismatch → REVIEW; `_web_note` timeout annotation |
 | committed case sets | 1 | 25 turns / 17 groups for the test set, 10–15 probes with `labeled` carrying entities and `structural` carrying none, globally unique case ids |
 
-`cd apps/admin-console && uv run pytest tests/test_eval_recall_canonical_v2.py -q` → **19 passed**.
+`cd apps/admin-console && uv run pytest tests/test_eval_recall_canonical_v2.py -q` → **24 passed**.
 `uv run ruff check scripts/eval_recall_canonical_v2.py tests/test_eval_recall_canonical_v2.py` →
 **All checks passed**.
 
@@ -49,7 +49,13 @@ Everything below ran against the real `POST /api/chat/stream` path on the scratc
    vector lane; all 37 had a candidate layer; 35/37 answers were LLM-synthesized.
 5. `--diff baseline.json baseline.json` → **PASS, 0 fail-level, 0 review-level** — the diff path is
    not noisy on identical input.
-6. Two real defects were found and fixed by these live runs, and locked by tests: the per-case
+6. **Control run** (second capture, identical configuration, same state dirs): 37/37 ok, 489.8 s,
+   0 web timeouts vs the baseline's 17. `--diff baseline.json control.json` → calibrated
+   **REVIEW** (3 concept rows, all on the web-degraded `q15t1`) / plan-literal **FAIL** with
+   `--strict-concepts`. Vector counts identical on 34/34 cases, labeled assertions identical on
+   18/18 cases. This is the evidence behind the calibrated thresholds in `protocol.md` §6 and the
+   full analysis in `noise-floor.md`.
+7. Two real defects were found and fixed by these live runs, and locked by tests: the per-case
    session bug (follow-ups answered with no retrieval in 0.86 s) and the case-file ordering.
 
 ## Not verified / limits
