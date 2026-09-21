@@ -369,3 +369,51 @@ SSE `event: error` → 页面红字。同一轮里其余五条道全健康，但
 **未验证**：冷缓存下的答案层地板（对照跑的网络证据大量来自基线的缓存）；换向之后的任何结论；n=1 之外的第二条对照（再做一次约 94 次调用）。
 
 **影响哪些问题**：① 召回门从"会误报"变成"可执行"——**没有这一步，换模型后大概率会因为网络天气而被误判为退化**；② 基线那份"网络降级跑"的事实被记进协议（`protocol.md` §5），换后复测必须用同一协议（跑两遍看第二遍）；③ 方案 §4.4 已同步为标定后的规则。
+
+## 第 14 轮 · 2026-09-21 · v1.1 切片 A 完成：三合一 + 重封 42.08 min；**"只有 manifest 变"成立**
+
+**合并**：三个分支**无冲突**合并（路径不相交，`deploy/README.md` 等预期冲突没发生），并有 `union-check.py` 证明"合并树 = 三个分支的并集"（每个改动路径都属某分支、blob 相等、无冲突标记、无删除）。服务路径文件动了 12 个（全部来自 F1/F2）。
+
+**测试（前后对比）**：
+
+| 套件 | 合并后 | 基线 `36df47b8` | 判定 |
+|---|---|---|---|
+| admin-console 全量 | 25F / 105E / **1543 passed** | 25F / 105E / 1481 passed | 失败集合 **130 条逐字节一致**（+62 通过 = 分支新测试） |
+| miroflow-agent 定向 | 2F / 375P | 2F / 346P | 同一批既有红（+29 通过） |
+| ruff（29 个改动 .py） | 2 错 | 2 错 | **均既有、0 新增** |
+
+**重封**：用**官方 sealer**（`s12c/build_serving_pack.py`），不是一次性的 `s12g/reseal_serving_pack.py`（理由：round-23 记录称一次性工具"不是本次路径"，且本次相位集合与官方 sealer 完全一致）。总 **2524.6 s = 42.08 min**（上次 41.41 min，逐相位差 <4%）：`envelope_validate` 2024.1 · `index_snapshot_verify` 11.2 · `index_artifacts_copied` 1.7 · `authority_documents_written` 178.7 · `manifest_written` 5.5 · `dogfood_open` 303.5。
+
+- 新包：`/var/tmp/mirothinker-data-v2/serving-pack-run16-v11`（4.28 GB）
+- 新 `manifest.json` sha256 **`588fdd9e…`**；新 `reader_contract_sha256` **`79e7492b…`**（与合并树独立算出的值一致）
+- **快路径验证**（每次新进程）：新包 + 收据 → 打开 **119.9 s**（跳过重放）；把**现役包**挂在 v1.1 代码下 → **284.4 s**（重放）；两者内容一致（47,068 文档 / 51,026 点 / 关系 sha 相同），且重放**复现了它记录的请求哈希、无完整性错误** ⇒ 这是**读侧等价性**证据，不只是结构 diff。
+
+**增量证明（决定甲方更新要传多大）**：**"只有 manifest 变"成立** —— `relationships.json`(3,477,354,956 B)、`lookup.sqlite3`(896,270,336 B)、`institution_catalog.json`、两个 marker **sha256 与现役包完全相同**；只有 `manifest.json` 不同（11,116,235 → 11,116,227 B），且内部只有三个字段变（`generated_at`、`generator_run_id`、`reader_contract_sha256`）。⇒ **甲方更新 = 一个 11.1 MB 的 manifest**，不是 4.28 GB 的包。
+
+**未验证 / 待复核**：① **没有做启动级端到端**（没绑端口，活线未动）⇒ 切换前必须用 scratch 实例跑一次 replay 门（切片 B 的演练会覆盖）；② `test_knowledge_build_isolated.py` 未重跑（继承缺口）；③ 容器镜像与站点包仍基于 `36df47b8` ⇒ **v1.1 的交付包必须重建**（切片 B）；④ 新包收据现在记为 `verification: "receipt"`（无害）；⑤ 下一轮可用更便宜的重封路径（`s12g/reseal_serving_pack.py` 逐字拷贝 + 只改 manifest，可省 33.7 分钟的信封校验）。
+
+**影响**：v1.1 的"代码身份 + 数据身份"齐了，且更新成本从 GB 级降到 **11 MB 级**；切片 B 只剩"重建镜像/数据件 + 冷装演练 + 重开下载"。
+
+## 第 15 轮 · 2026-09-21 · 换模型切片 1 完成（**惰性**）：网关存在 OpenAI 兼容路由 + 适配层已备好
+
+**关键探测（无需 key，用状态码区分"无路由"与"需鉴权"）**：
+
+| 路径 | 状态 | 结论 |
+|---|---|---|
+| `/v1/embeddings` | **404** | 无此路由 |
+| `/compatible-mode/v1/embeddings` | **401**（"No API-key provided"） | **路由存在**（与官方 DashScope 同前缀） |
+| `/api/v1/services/embeddings/text-embedding/text-embedding` | 401（InvalidApiKey） | 原生路由存在 |
+| `/compatible-mode/v1/models` | 401（OpenAI 形状错误体） | 兼容面存在 |
+
+⇒ **该网关确实提供 OpenAI 兼容入口**。如果它在那里服务 flash 模型，切换就退化成"改 provider + base_url"，**零新代码**——一次带鉴权的调用即可定论，这是切换切片要做的第一件事。
+
+**同时把适配层也做好了（惰性，什么都没切换）**：
+
+- 新增 `providers/dashscope_embeddings.py`：请求 `input.texts`、响应按 `text_index` 回位（顺序不对/行数不对/空向量 ⇒ `ValueError`＝"答案不可用"，不是传输故障）；错误分类与 F1 契约定相同（超时→`TimeoutError`、非 2xx/拒连/非 JSON→`ConnectionError`）。
+- **按 bundle 的 `provider` 字段选择实现**，把批处理/缓存/去重/向量校验抽成共享核心 ⇒ OpenAI 路径行为逐字节不变，流水线不分叉。
+- **凭据槽隔离**：候选模型的 key 走 `CANONICAL_V2_EMBEDDING_API_KEY`，**永不** `load_local_api_key()` ⇒ 本地端点的 key 不可能被带去第三方（构造上保证 + 测试）。
+- 新身份：`...flash-embedding-bundle-v1.json`（1024 维、`provider=dashscope-native`、`content_sha256 cdddcdfd…`）+ `_QWEN_FLASH_*` 常量入授权集；**配对不匹配在三层 fail-closed**（包授权 / 索引矩阵 / 校验适配器），每种都有测试——包括"**新 bundle 配旧索引**"这种最容易犯的形状。
+
+**测试**：新增 31+1 全绿；四文件回归在 `-n 2` 下 **89 passed**（`-n 8` 会因 milvus-lite 既有问题抖动，与本改动无关）；`test_knowledge_build_isolated.py` 全量在本机**两棵树**上都跑不到汇总（`test_real_boundary_*` 家族卡在不可达的数据库，属既有红）。
+
+**遗留（交给切换切片）**：① **先试兼容路由**（一次带鉴权调用，可能省掉整个适配层）；② 切换本身**需要一份 OpenSpec change**（本切片惰性、无行为变更，故未立）；③ **凭据接线**：受管密钥页的 `embedding.api_key` 目前写的是 `SGLANG_API_KEY`，候选模型需要 `CANONICAL_V2_EMBEDDING_API_KEY` 这条槽；④ **两处合并交互**：F1 的透传、F2 的 `base_url` 排除与 `resolve_embedding_base_url`，合并时必须同样应用到 `dashscope-native` 分支，否则候选包会"钉住主机"而现役包可配。
