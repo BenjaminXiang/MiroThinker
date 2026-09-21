@@ -19,8 +19,7 @@
     "rerank_model": null
   },
   "paths": {
-    "access_log_retention_days": 90,
-    "serving_pack_dir": "/var/tmp/mirothinker-data-v2/serving-pack-run16-v11"
+    "access_log_retention_days": 90
   },
   "serving": {
     "chat_llm_profile": "deepseekv4flash"

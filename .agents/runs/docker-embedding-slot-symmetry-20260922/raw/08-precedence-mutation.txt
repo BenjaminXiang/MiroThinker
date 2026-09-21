@@ -1,0 +1,30 @@
+== 判红能力（mutation）：把 runner 复制一份，只把优先级反过来（env 先于 CLI）==
+238:    serving_pack = None  # MUTATION: 假装 CLI 没给
+239-        environment_pack = os.environ.get("CANONICAL_V2_SERVING_PACK", "").strip()
+240-        if environment_pack:
+241-            environment_path = Path(environment_pack)
+--- 用同一个测试文件跑（把 runner 路径指到变异体）---
+- Generated html report: file:///home/longxiang/MiroThinker/.worktrees/delivery-docker/apps/miroflow-agent/report.html -
+=========================== short test summary info ============================
+FAILED tests/canonical_v2/test_serving_pack_selection_precedence.py::test_cli_pack_wins_over_the_environment
+FAILED tests/canonical_v2/test_serving_pack_selection_precedence.py::test_environment_still_names_the_pack_when_the_cli_is_absent
+FAILED tests/canonical_v2/test_serving_pack_selection_precedence.py::test_no_pack_is_not_guessed
+3 failed in 7.32s
+
+== 干净的 mutation：env 覆盖 CLI（结构合法） ==
+        )
+    serving_pack = None  # MUTATION: 让 env 先于 CLI
+    if True:
+        environment_pack = os.environ.get("CANONICAL_V2_SERVING_PACK", "").strip()
+        if environment_pack:
+            environment_path = Path(environment_pack)
+            if not environment_path.is_absolute():
+                raise RunnerConfigurationError(
+                    "CANONICAL_V2_SERVING_PACK must be an absolute path"
+                )
+            serving_pack = environment_path
+=========================== short test summary info ============================
+PASSED tests/canonical_v2/test_serving_pack_selection_precedence.py::test_environment_still_names_the_pack_when_the_cli_is_absent
+PASSED tests/canonical_v2/test_serving_pack_selection_precedence.py::test_no_pack_is_not_guessed
+FAILED tests/canonical_v2/test_serving_pack_selection_precedence.py::test_cli_pack_wins_over_the_environment
+1 failed, 2 passed in 7.24s

@@ -125,8 +125,8 @@ v2 只剩"真候选路由 + 真网关打一次请求"的端到端（见 `02-v2-h
 
 | # | 位置 | 遗留值 | 影响 |
 |---|---|---|---|
-| L1 | `site-config/managed-settings.json`（本轮**未改**的部分） | `paths.serving_pack_dir = /var/tmp/mirothinker-data-v2/serving-pack-run16-v11` | `CANONICAL_V2_SERVING_PACK` **有读者**（pack loader；admin-console 的 status/identity 页）。v2 换包名后，这条会指向 v1.1 的包目录（服务线的 `--serving-pack` CLI 参数若优先则只影响页面显示，需在 v2 核对优先级） |
-| L2 | `install-site.sh:233` | 安装器嵌入探针写死 `"model":"Qwen/Qwen3-Embedding-8B"`（地址/维度**已经**取自 `bundles/qwen-embedding-bundle-v1.json`） | v2 站点会拿旧模型 id 打网关 ⇒ 404/维度 0，**假红**（`[warn] 嵌入端点探针未过`），现场会误以为 key/网络有问题。修法一行：随包 bundle 里本来就有 `model_id`（见 `bundles/qwen-embedding-bundle-v1.json`），照 `verify.sh` 的读法取它即可 |
+| L1 | `site-config/managed-settings.json` | ~~`paths.serving_pack_dir`~~ | **已处理（第三轮，`04-l1-l2-and-packaging-check.md §1`）**：判决 = `--serving-pack` CLI **赢**（`complete_candidate_runner.py:238-246`，镜像内同）；活站点的页面走 runtime manifest（`collect_pack` :192-207，实测 `source=runtime_manifest`）⇒ **非阻塞**；预置里该项已改**缺席**，判红测试 `test_serving_pack_selection_precedence.py` |
+| L2 | `install-site.sh:233` | ~~探针写死 `"model":"Qwen/Qwen3-Embedding-8B"`~~ | **已修（第三轮，`04-… §2`）**：模型 id 改从随包 `bundles/qwen-embedding-bundle-v1.json` 的 `model_id` 取（缺字段则跳过并说明，不猜），行为级测试 `test_install_site_embedding_probe.py` 钉住，判红演示见 `raw/09-packaging-check.txt` D 段 |
 | L3 | `deploy/docker/verify.sh:4/29`（`Dockerfile:150` 把它 COPY 成容器内 `mirothinker-verify`） | **只是措辞**："断言 HTTP 200 + 维度 4096"（实际断言是 `bundle["dimension"]`/`bundle["model_id"]`，bundle 驱动 ✓） | v2 站点上断言仍然正确，但打印出来的期望值文字会与新包不符。建议出包时把这两处文字改成"按随包 bundle" |
 | L4 | `entrypoint.sh:23` / `build-site-bundle.sh:67-68` / `build-data-face-kit.sh:22` / `build-image.sh:135` / `install-site.sh:130-152` | 服务包名 `serving-pack-run16-readerbound` → `serving-pack-run16-v11` 写死在多处（`OLD/NEW_PACK_TOKEN` 支持环境变量覆盖 ✓） | v2 换包名时是一组"必须同步改"的点；好消息是覆盖件生成器已有 token 断言，改名时它会拒绝出包 |
 | L5 | `CONFIG-GUIDE §6/§7/§8`、`README.md §…`、`README-FIRST` 生成文本 | `100.64.0.27:18005`、"维度 4096"、"serving-pack-run16-readerbound"、`delivery-v1` commit 等**按本包写死的数字/名字** | 对 v1.1 是正确描述；v2 出包时这些数字要随包更新（建议出包脚本加一条"文档数字 vs 包内 bundle"的自检） |

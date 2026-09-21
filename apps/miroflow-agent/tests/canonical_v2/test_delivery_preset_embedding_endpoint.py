@@ -125,7 +125,10 @@ def test_preset_projection_leaves_the_embedding_endpoint_to_the_bundle(
     # 预置该做的事照旧：采集端点的 LLM 与问答档位仍被投影（"只填 key"的前提）。
     assert target["LOCAL_LLM_BASE_URL"] == "https://api.deepseek.com"
     assert target["CHAT_LLM_PROFILE"] == "deepseekv4flash"
-    assert "paths.serving_pack_dir" in receipt["settings_applied"]
+    # 服务包路径不预置（L1 判决：--serving-pack CLI 赢过 CANONICAL_V2_SERVING_PACK，
+    # 版本相关路径留在预置里只会让页面/探针指向旧包；见 test_serving_pack_selection_precedence.py）。
+    assert "paths.serving_pack_dir" not in receipt["settings_applied"]
+    assert "CANONICAL_V2_SERVING_PACK" not in target
 
 
 def test_effective_view_reports_the_embedding_fields_as_unset(tmp_path: Path) -> None:

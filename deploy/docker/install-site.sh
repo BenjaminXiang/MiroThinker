@@ -217,20 +217,31 @@ fi
 if [[ "$SKIP_PROBES" == "1" ]]; then
   warn "已跳过出网探针（--skip-probes）"
 else
-  # ① 嵌入端点：用交付包里的 qwen-embedding-bundle-v1.json 拿端点与维度，用密钥实测
+  # ① 嵌入端点：端点 / 模型 / 维度**全部取自随包 bundle**（交付件自证），一个都不写死。
+  #    写死模型 id 的代价：v2 站点（第三方网关、另一个模型）会拿 v1 的模型 id 去打 ⇒ 404 /
+  #    维度 0 ⇒ 现场看到"配置好了却报黄灯"，最费支持。
   emb_bundle="${BUNDLE_DIR}/bundles/qwen-embedding-bundle-v1.json"
   key_file="${SECRETS_DIR}/.sglang_api_key"
+  emb_url=""; emb_dim=""; emb_model=""
   if [[ -f "$emb_bundle" ]]; then
-    emb_url="$(python3 -c 'import json,sys;print(json.load(open(sys.argv[1]))["base_url"])' "$emb_bundle" 2>/dev/null)"
-    emb_dim="$(python3 -c 'import json,sys;print(json.load(open(sys.argv[1]))["dimension"])' "$emb_bundle" 2>/dev/null)"
+    mapfile -t emb_fields < <(python3 - "$emb_bundle" <<'PY' 2>/dev/null
+import json
+import sys
+
+document = json.load(open(sys.argv[1], encoding="utf-8"))
+for key in ("base_url", "dimension", "model_id"):
+    print(document.get(key) or "")
+PY
+)
+    emb_url="${emb_fields[0]:-}"; emb_dim="${emb_fields[1]:-}"; emb_model="${emb_fields[2]:-}"
   fi
-  if [[ -f "$emb_bundle" && -n "${emb_url:-}" && -n "${emb_dim:-}" ]]; then
+  if [[ -f "$emb_bundle" && -n "$emb_url" && -n "$emb_dim" && -n "$emb_model" ]]; then
     if [[ -r "$key_file" ]]; then
       resp_file="$(mktemp)"
       code=$(curl -sS --max-time 30 -o "$resp_file" -w '%{http_code}' "${emb_url%/}/embeddings" \
         -H "Authorization: Bearer $(cat "$key_file")" \
         -H 'Content-Type: application/json' \
-        -d '{"model":"Qwen/Qwen3-Embedding-8B","input":["安装器探针"]}' 2>/dev/null)
+        -d "$(python3 -c 'import json,sys;print(json.dumps({"model":sys.argv[1],"input":["安装器探针"]}))' "$emb_model")" 2>/dev/null)
       dims=$(python3 -c "import json,sys;print(len(json.load(open(sys.argv[1]))['data'][0]['embedding']))" "$resp_file" 2>/dev/null || echo 0)
       rm -f "$resp_file"
       dims="${dims:-0}"
@@ -245,7 +256,11 @@ else
       warn "嵌入端点探针跳过：缺 ${key_file}（安装器稍后会要求补齐 4 个密钥）"
     fi
   else
-    warn "嵌入端点探针跳过：交付包里没有 bundles/qwen-embedding-bundle-v1.json"
+    if [[ ! -f "$emb_bundle" ]]; then
+      warn "嵌入端点探针跳过：交付包里没有 bundles/qwen-embedding-bundle-v1.json"
+    else
+      warn "嵌入端点探针跳过：随包 bundle 缺 base_url/dimension/model_id 之一（包本身不完整？）—— 探针不猜模型，宁可跳过也不拿旧模型 id 去打"
+    fi
   fi
   # ② chat LLM 端点：默认探 deepseek（凭 .deepseek_api_key）；可用 MIROTHINKER_SITE_LLM_PROBE 覆盖
   llm_probe="${MIROTHINKER_SITE_LLM_PROBE:-https://api.deepseek.com/v1/models}"

@@ -1,0 +1,49 @@
+===== A. 出包自检：对 v1.1 现货包（传输后的副本） =====
+-- A1 换预置之前（副本里仍是上一轮的预置：含 paths.serving_pack_dir）--
+  [warn] README.md:139: 出现 serving-pack-run16-readerbound（随包的服务包是 serving-pack-run16-v11）
+  [warn] README.md:337: 出现 serving-pack-run16-readerbound（随包的服务包是 serving-pack-run16-v11）
+  [warn] README.md:338: 出现 serving-pack-run17（随包的服务包是 serving-pack-run16-v11）
+  [warn] README.md:39: 出现 serving-pack-run16-readerbound（随包的服务包是 serving-pack-run16-v11）
+  [warn] README.md:441: 出现 serving-pack-rebuild（随包的服务包是 serving-pack-run16-v11）
+  [warn] README.md:4: 出现 serving-pack-run16-readerbound（随包的服务包是 serving-pack-run16-v11）
+  [warn] README.md:76: 出现 serving-pack-run16-readerbound（随包的服务包是 serving-pack-run16-v11）
+  [warn] README.md:89: 出现 serving-pack-run16-readerbound（随包的服务包是 serving-pack-run16-v11）
+  [warn] state/config-managed/settings.json: paths.serving_pack_dir = '/var/tmp/mirothinker-data-v2/serving-pack-run16-v11' 是版本相关路径；服务线的包选择由 --serving-pack 决定（CLI 赢过该环境变量），建议随包重打时留空，避免页面/探针指向旧包目录
+  [warn] 共 9 处需要人看一眼（改不改由出包人判断）
+exit=0
+
+-- A2 把副本的预置刷新成本轮仓库版本（同时去掉 serving_pack_dir）--
+  [warn] README.md:139: 出现 serving-pack-run16-readerbound（随包的服务包是 serving-pack-run16-v11）
+  [warn] README.md:337: 出现 serving-pack-run16-readerbound（随包的服务包是 serving-pack-run16-v11）
+  [warn] README.md:338: 出现 serving-pack-run17（随包的服务包是 serving-pack-run16-v11）
+  [warn] README.md:39: 出现 serving-pack-run16-readerbound（随包的服务包是 serving-pack-run16-v11）
+  [warn] README.md:441: 出现 serving-pack-rebuild（随包的服务包是 serving-pack-run16-v11）
+  [warn] README.md:4: 出现 serving-pack-run16-readerbound（随包的服务包是 serving-pack-run16-v11）
+  [warn] README.md:76: 出现 serving-pack-run16-readerbound（随包的服务包是 serving-pack-run16-v11）
+  [warn] README.md:89: 出现 serving-pack-run16-readerbound（随包的服务包是 serving-pack-run16-v11）
+  [warn] 共 8 处需要人看一眼（改不改由出包人判断）
+exit=0
+
+===== B. 合成一个 v2 包：bundle 换成网关/1024，文档仍是 v1 的数字 ⇒ 自检要报出来 =====
+  [warn] CONFIG-GUIDE.md:1: 提到嵌入却出现端点 http://100.64.0.27:18005/v1（随包 bundle 记录的是 ['https://maas.qianwenaiapi.com/api/v1']）
+  [warn] CONFIG-GUIDE.md:2: 提到嵌入却出现模型 id Qwen/Qwen3-Embedding-8B（随包 bundle 记录的是 ['qwen3.7-text-embedding-flash']）
+  [warn] CONFIG-GUIDE.md:1: 写着「维度 4096」（随包 bundle 是 ['1024']）
+  [warn] CONFIG-GUIDE.md:3: 出现 serving-pack-run16-v11（随包的服务包是 serving-pack-fembed-v1）
+  [warn] 共 4 处需要人看一眼（改不改由出包人判断）
+exit=0
+
+===== C. 硬规则：预置钉住嵌入地址 ⇒ 出包必须停（exit 1）=====
+  [warn] CONFIG-GUIDE.md:1: 提到嵌入却出现端点 http://100.64.0.27:18005/v1（随包 bundle 记录的是 ['https://maas.qianwenaiapi.com/api/v1']）
+  [warn] CONFIG-GUIDE.md:2: 提到嵌入却出现模型 id Qwen/Qwen3-Embedding-8B（随包 bundle 记录的是 ['qwen3.7-text-embedding-flash']）
+  [warn] CONFIG-GUIDE.md:1: 写着「维度 4096」（随包 bundle 是 ['1024']）
+  [warn] CONFIG-GUIDE.md:3: 出现 serving-pack-run16-v11（随包的服务包是 serving-pack-fembed-v1）
+  [FAIL] state/config-managed/settings.json: 钉住了 extraction_endpoints.embedding_base_url = 'http://100.64.0.27:18005/v1' —— 预置不许替操作者决定嵌入地址/身份（地址由 bundle 记录，改地址在管理页做）
+exit=1
+
+===== D. L2 的判红能力：把同一个测试指向**修前**的 install-site.sh（HEAD 版本）=====
+233:        -d '{"model":"Qwen/Qwen3-Embedding-8B","input":["安装器探针"]}' 2>/dev/null)
+- Generated html report: file:///home/longxiang/MiroThinker/.worktrees/delivery-docker/apps/miroflow-agent/report.html -
+=========================== short test summary info ============================
+FAILED tests/canonical_v2/test_install_site_embedding_probe.py::test_installer_probe_uses_the_bundle_model_and_dimension
+FAILED tests/canonical_v2/test_install_site_embedding_probe.py::test_probe_is_skipped_instead_of_guessing_a_model
+2 failed in 11.43s

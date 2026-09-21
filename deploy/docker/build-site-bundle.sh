@@ -224,6 +224,14 @@ mkdir -p "${OUT_DIR}/state/config-managed"
 place "${DEPLOY_DIR}/site-config/managed-settings.json" \
       "${OUT_DIR}/state/config-managed/settings.json" "state/config-managed/settings.json（预置）"
 
+echo "-- 出包自检：交付件里的数字/名字 vs 随包 bundle --"
+# 硬规则（预置不许钉嵌入地址/模型）会 exit 1 拦下出包；软规则只逐条报（file:line），
+# 提醒随包更新文档里的端点/维度/模型/包名 —— 改不改由出包人判断，脚本不改任何文字。
+if ! python3 "${DEPLOY_DIR}/check-delivery-consistency.py" "${OUT_DIR}"; then
+  printf '  [FAIL] 出包自检不通过：先修预置（或对应的交付件），再重新出包\n' >&2
+  exit 1
+fi
+
 if [[ "$WITH_LOCAL_KEYS" == "1" ]]; then
   echo "-- [测试专用] 把本机 4 个密钥以符号链接放进 secrets/（绝不进正式交付包）--"
   mkdir -p "${OUT_DIR}/secrets"
