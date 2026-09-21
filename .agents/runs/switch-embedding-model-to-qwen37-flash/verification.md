@@ -56,6 +56,12 @@ pack, database or live service is modified.
   answered here: it costs one more live call and belongs to the pre-window run.
 * The merge (tasks T2.1–T2.5) does not exist yet: the parent's F1/F2 interaction
   requirements are written as tasks with named test files, not as verified facts.
+* The gateway characteristics recorded in design §2.1 are the **lane's** repeat
+  measurement (`.agents/runs/embedding-model-switch-v2/repeat-noise-measurement.json`,
+  a sibling slice that landed after this branch's base `17404d7a`, lane tip
+  `5a8b4a13`) plus this slice's single probe — referenced, not re-run here. The
+  candidate bundle hashes in `precheck.sh` were re-checked against the lane tip and
+  still match (`cdddcdfd…`, `45e45855…`).
 
 ## 5. OpenSpec validation
 

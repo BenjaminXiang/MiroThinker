@@ -39,6 +39,18 @@ the gateway credential slot). The native bundle stays frozen as the fallback.
 The route is therefore part of the frozen bundle identity: **exactly one route for
 both the rebuild and serving.** A route flip later is a new rebuild.
 
+### 2.1 Measured gateway characteristics that shape the checks
+
+From the lane's repeat measurement (`.agents/runs/embedding-model-switch-v2/repeat-noise-measurement.json`,
+30 calls on the compatible route, 2026-09-21) and this slice's probe:
+
+| Characteristic | Value | Consequence for this change |
+|---|---|---|
+| Same text, same route, repeated | repeat cosine **min 0.9988** over 30 calls — the gateway is **stochastic** | never compare vectors for byte equality; every identity check in §1 compares model id, dimension and point-set, and the recall gate is the only thing that can bound the semantic effect |
+| Per-call latency (compatible route) | **median 0.204 s, p95 0.232 s** over 30 calls; first cold call 0.311 s | the rebuild's latency is not the bottleneck — the TPM ceiling is (runbook §estimates) |
+| Cross-route cosine | **0.86 (zh-short), 0.929 (en-short), 0.932 (zh-document)** | confirms the one-route rule above; the earlier single-text probe read 0.808–0.920 |
+| `dimensions` parameter | honoured: `dimensions: 512` returned 512-dim rows | 1024 is a *chosen* width, not a constraint; a 512 variant would be a new bundle **and** a new rebuild — explicitly out of scope |
+
 ## 3. Verification surface
 
 | Property | How it is verified | Why not otherwise |

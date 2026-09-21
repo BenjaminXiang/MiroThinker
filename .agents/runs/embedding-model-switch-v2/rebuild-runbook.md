@@ -469,8 +469,8 @@ modified.
 | points to embed | 51,026 | live `vector_matrix.npz` meta + `index_point` row count |
 | batch size / workers | 32 / 32 | candidate bundle |
 | calls | ⌈51,026 ÷ 32⌉ = **1,595** | derived |
-| per-call latency | 0.28 s (plan §1); 0.311 s measured for a 1-text call | probe |
-| latency-bound wall clock | 1,595 × 0.28 ÷ 32 ≈ **14 s** | not binding |
+| per-call latency | 0.204 s median / 0.232 s p95 (30 measured calls, compatible route); 0.311 s for the first cold call; 0.28 s in the plan | `repeat-noise-measurement.json`, this slice's probe |
+| latency-bound wall clock | 1,595 × 0.204 ÷ 32 ≈ **10 s** | not binding |
 | RPM 24,000 | 1,595 calls total ≈ 80 calls/min over 20 min | not binding |
 | **TPM 1,000,000** | **binding** | plan §1 |
 | embedded text volume | **52,193,135 characters** (mean 1,023/point, max 15,078, min 97) | measured from the live `index_point.point_json` |
@@ -483,6 +483,13 @@ which read literally implies up to 3.3 tokens/char and would put the pass at
 2.5 h+; and (b) Qwen-family tokenizer behaviour on mixed zh/en corpora
 (1.5–2.5 chars/token). Plan the window with **1 h for the pass and 3 h as the
 contingency**, and read the gateway's own usage ledger afterwards.
+
+Second caveat, measured on the lane: **the gateway is stochastic** — the same text
+embedded twice scores repeat cosine ≥ 0.9988 (30 calls, compatible route), so the
+rebuild's vectors are not reproducible byte-for-byte. Nothing in the pipeline
+compares vectors for equality (the identity checks compare model id, dimension and
+point-set), and the recall gate is the only bound on the semantic effect; do not
+"fix" a differing vector by re-embedding during the window.
 
 **Whole window**: run16's build took **≈6.5 h** (22:05:52 → 04:35:35, watchdog log;
 the plan's planning figure is 8 h), the seal **42 min**, the conversion **≈5 min**,
