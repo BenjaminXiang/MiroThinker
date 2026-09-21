@@ -602,3 +602,25 @@ RESULT: 1 FAILURE(S)
 ```
 
 `BUNDLE-MANIFEST.txt` 逐文件记 size/hardlink/sha256 + 汇总（含"硬链接 13 / 复制 1"与警告）。
+
+### 重启后第二次启动（receipt 已写入、缓存已热）
+
+```
+SECOND_BOOT_SECONDS=289
+-rw-r--r-- 1 longxiang longxiang 1547 Sep 21 20:12 \
+  /var/tmp/mirothinker-site-install-rehearsal/site-root/var/tmp/mirothinker-data-v2/serving-pack-run16-receipt…mount-receipt.json
+```
+
+⇒ **首次 459 s / 之后 289 s**（本机；裸机同数据根 275 s、容器热态 276 s 一致）。
+healthcheck `start_period: 720s` 与安装器 900 s 等待都覆盖得住；runbook 与 README-FIRST
+按"首启 7–8 分钟、后续约 5 分钟"给口径。
+
+### 收尾与不变量核对
+
+- 演练栈已 `docker compose down` + 删除演练卷 `mirothinker-pgdata-site-rehearsal`；无残留容器。
+- **活线未动**：`ps -o pid,rss -p 519941` → 18 170 256 KiB；`/chat` → 200；仍监听 18188。
+- **真实目录未写**：`/var/tmp/mirothinker-data-v2/…mount-receipt.json` mtime 仍是 02:12:56；
+  `/var/tmp/mirothinker-canonical-v2-s12f/admin-initial-password.txt` mtime 仍是 09-17 22:41。
+- 交付包（最终）：`/var/tmp/mirothinker-site-bundle/` 15 个文件、3.0 GB、
+  硬链接 13 + 复制 1（`install-site.sh` 自身，仓库在 /home 跨 fs）、
+  `BUNDLE-MANIFEST.txt` 汇总一致（bytes=3152357328）。
