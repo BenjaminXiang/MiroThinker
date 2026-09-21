@@ -27,6 +27,7 @@ import stat
 import secrets
 from threading import Condition
 from typing import Any, Literal, Protocol, cast
+from urllib.parse import urlsplit
 
 import psycopg
 from psycopg import sql
@@ -42,6 +43,10 @@ from pydantic import (
 )
 from sqlalchemy.engine import make_url
 
+from src.data_agents.canonical_v2.embedding_lane_resilience import (
+    BREAKER_FAILURE_THRESHOLD,
+    embedding_lane_breaker,
+)
 from src.data_agents.contracts import ReleasedObject as HistoricalReleasedObject
 from src.data_agents.company.vectorizer import (
     EmbeddingClient as _OpenAIEmbeddingClient,
@@ -8013,6 +8018,7 @@ class _BatchingEmbeddingAdapter:
     batch_size: int
     max_workers: int
     timeout_seconds: int
+    breaker: Any = field(default_factory=embedding_lane_breaker, repr=False)
     _cache: OrderedDict[str, tuple[float, ...]] = field(
         default_factory=OrderedDict,
         init=False,
@@ -8030,6 +8036,18 @@ class _BatchingEmbeddingAdapter:
         if not texts:
             return ()
 
+        # Both consumers of this adapter reach the embedding provider here: the
+        # vector lane's read and the serving keep-warm cycle. The breaker is
+        # consulted before the cache probe so an open breaker costs no provider
+        # call at all, and every transport outcome is recorded for both.
+        allowed, state = self.breaker.attempt_allowed()
+        if not allowed:
+            raise ConnectionError(
+                "embedding endpoint is skipped: vector lane breaker is "
+                f"{state} after {BREAKER_FAILURE_THRESHOLD} consecutive transport "
+                "failures"
+            )
+
         while True:
             with self._condition:
                 missing = tuple(
@@ -8045,10 +8063,15 @@ class _BatchingEmbeddingAdapter:
 
         try:
             vectors = self._embed_uncached(missing)
-        except Exception:
+        except Exception as exc:
             with self._condition:
                 self._inflight_texts.difference_update(missing)
                 self._condition.notify_all()
+            if isinstance(exc, (TimeoutError, ConnectionError)):
+                self.breaker.record(
+                    ok=False,
+                    reason=("timeout" if isinstance(exc, TimeoutError) else "connection_failure"),
+                )
             raise
 
         with self._condition:
@@ -8062,6 +8085,7 @@ class _BatchingEmbeddingAdapter:
                     del self._cache[text]
             self._inflight_texts.difference_update(missing)
             self._condition.notify_all()
+            self.breaker.record(ok=True)
             return tuple(self._cache[text] for text in texts)
 
     def _embed_uncached(
@@ -8241,6 +8265,34 @@ def load_recorded_embedding_adapter(path: Path) -> _EmbeddingAdapter:
     )
 
 
+#: The managed setting ``extraction_endpoints.embedding_base_url`` projected
+#: into the process environment at startup (``managed_config._FIELD_ENV_VARS``
+#: + ``managed_runtime.apply_managed_runtime_config``), or set directly by the
+#: service unit. It is the *only* way the embedding address moves: the bundle
+#: stays frozen on disk.
+EMBEDDING_BASE_URL_ENV = "CANONICAL_V2_EMBEDDING_BASE_URL"
+
+
+def resolve_embedding_base_url(recorded: str) -> str:
+    """The effective embedding base URL: the operator's setting over the bundle.
+
+    Precedence is environment (managed setting, applied at startup) → the address
+    recorded in the embedding bundle. Either way the result has to be a non-empty
+    ``http(s)`` URL: a typo must fail the boot loudly rather than degrade a lane
+    into a permanent "unreachable" state.
+    """
+
+    override = os.environ.get(EMBEDDING_BASE_URL_ENV, "").strip()
+    effective = override or (recorded or "").strip()
+    parts = urlsplit(effective)
+    if not effective or parts.scheme not in {"http", "https"} or not parts.netloc:
+        raise ValueError(
+            "effective embedding base_url must be a non-empty http(s) URL "
+            f"(configured through {EMBEDDING_BASE_URL_ENV} or the embedding bundle)"
+        )
+    return effective
+
+
 #: The candidate gateway's credential slot. Deliberately *not* the local
 #: endpoint's slot (``load_local_api_key``: API_KEY → OPENAI_API_KEY →
 #: SGLANG_API_KEY → ``.sglang_api_key``): that one holds the self-hosted
@@ -8257,12 +8309,31 @@ def _load_gateway_embedding_api_key() -> str:
     return os.environ.get(_GATEWAY_EMBEDDING_API_KEY_ENV, "").strip()
 
 
+def _matches_frozen_authority(
+    document: dict[str, Any], expected: dict[str, Any]
+) -> bool:
+    """F2's rule: every recorded field is the identity **except the address**.
+
+    ``resolve_embedding_base_url`` makes the effective address operational (the
+    managed setting, or the bundle's recorded value when the setting is unset),
+    so ``base_url`` is outside the comparison on both sides.  The recorded
+    address is still pinned by the content hash — ``_load_recorded_bundle``
+    recomputes it over every field including ``base_url`` — so a bundle cannot
+    point somewhere else without also being a different authority.
+    """
+
+    return {key: value for key, value in document.items() if key != "base_url"} == {
+        key: value for key, value in expected.items() if key != "base_url"
+    }
+
+
 #: Every openai-compatible authority the loader accepts: the frozen document and
 #: the adapter that reads *its* credential slot. Two bundles can share a wire
 #: shape and still not share a slot — the live endpoint's key lives in
 #: ``load_local_api_key``'s slot, the third-party gateway's in
-#: ``CANONICAL_V2_EMBEDDING_API_KEY`` — so the match is field for field and the
-#: adapter follows from the document, never from the caller.
+#: ``CANONICAL_V2_EMBEDDING_API_KEY`` — so the match is field for field (bar the
+#: address, see :func:`_matches_frozen_authority`) and the adapter follows from
+#: the document, never from the caller.
 _OPENAI_COMPATIBLE_EMBEDDING_AUTHORITIES: tuple[tuple[dict[str, Any], Any], ...] = (
     (
         {
@@ -8330,13 +8401,16 @@ def _load_dashscope_native_embedding_adapter(path: Path) -> _EmbeddingAdapter:
         "timeout_seconds": 180,
         "content_sha256": _QWEN_FLASH_EMBEDDING_BUNDLE_SHA256,
     }
-    if document != expected:
+    # Same rule as the openai-compatible branch: the frozen identity is the model,
+    # the dimension, the credential slot and the content hash, and the recorded
+    # address is pinned by the hash rather than by the comparison.
+    if not _matches_frozen_authority(document, expected):
         raise ValueError("candidate embedding bundle differs from frozen authority")
     return _DashScopeNativeEmbeddingAdapter(
         model_id=cast(str, document["model_id"]),
         dimension=cast(int, document["dimension"]),
         authority_sha256=cast(str, document["content_sha256"]),
-        base_url=cast(str, document["base_url"]),
+        base_url=resolve_embedding_base_url(cast(str, document["base_url"])),
         batch_size=cast(int, document["batch_size"]),
         max_workers=cast(int, document["max_workers"]),
         timeout_seconds=cast(int, document["timeout_seconds"]),
@@ -8382,14 +8456,22 @@ def load_content_addressed_embedding_adapter(path: Path) -> _EmbeddingAdapter:
             }
         ),
     )
+    # The frozen identity is the model, its dimension, the credential slot and the
+    # content hash — not the host serving it (see
+    # :func:`_matches_frozen_authority`).  ``base_url`` is deliberately outside the
+    # comparison: the effective address is an operational parameter resolved at
+    # :func:`resolve_embedding_base_url`, so an operator can point the lane at a
+    # customer-site endpoint.  The bundle file itself is untouched, and the
+    # content hash still pins every recorded field (including the recorded
+    # address) for as long as the bundle is used as the fallback.
     for expected, adapter_type in _OPENAI_COMPATIBLE_EMBEDDING_AUTHORITIES:
-        if document != expected:
+        if not _matches_frozen_authority(document, expected):
             continue
         return adapter_type(
             model_id=cast(str, document["model_id"]),
             dimension=cast(int, document["dimension"]),
             authority_sha256=cast(str, document["content_sha256"]),
-            base_url=cast(str, document["base_url"]),
+            base_url=resolve_embedding_base_url(cast(str, document["base_url"])),
             batch_size=cast(int, document["batch_size"]),
             max_workers=cast(int, document["max_workers"]),
             timeout_seconds=cast(int, document["timeout_seconds"]),
@@ -10302,5 +10384,6 @@ __all__ = [
     "load_recorded_decision_adapter",
     "load_content_addressed_embedding_adapter",
     "load_recorded_embedding_adapter",
+    "resolve_embedding_base_url",
     "load_recorded_serving_inputs",
 ]

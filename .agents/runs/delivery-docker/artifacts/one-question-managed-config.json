@@ -1,0 +1,28 @@
+{
+  "query": "介绍一下 国际先进技术应用推进中心（深圳）",
+  "events": {
+    "stage": 3,
+    "plan_done": 1,
+    "progress": 5,
+    "retrieval_done": 1,
+    "answer_chunk": 575,
+    "answer": 1,
+    "done": 1
+  },
+  "query_type": "canonical_v2:A:answer",
+  "answer_len": 578,
+  "answer_head": "国际先进技术应用推进中心（深圳）简称“国先中心（深圳）”，是在国家发展改革委、深圳市政府支持指导下设立、由深圳市科技创新局作为业务主管部门、依托粤港澳大湾区数字经济研究院建设的世界级先进技术应用推广平台，注册地在深圳。\n\n它的核心定位是聚焦人工智能、具身智能、低空经济等重点领域，为技术对接场景、为企业对接需求。具体承担两类平台功能：一是国际先进技术成果汇聚平台，加快汇聚大湾区乃至国内外前沿技术创新成果和高端创新要素，为先进技术应用策划场景项目、提供场景机会，推动成果面向应用场景的工程化落地与直接转化；二是产业应用场景技术供给平台，面向重要央国企和创新型领军企业对接场景应用需求，建立常态化技术供",
+  "citations": 6,
+  "citation_origins": [
+    "?",
+    "http://www.locpg.hk/20250509/865d9aae06524656b62fa1ae8677d92a/c.html",
+    "https://www.sz.gov.cn/cn/xxgk/zfxxgj/sldzc/szfld/qwz/jqhd/content/post_12148154.",
+    "https://job.xidian.edu.cn/company/view/id/826300",
+    "https://www.sz.gov.cn/cn/xxgk/zfxxgj/zwdt/content/post_12160307.html",
+    "https://news.qq.com/rain/a/20250512A02MCR00"
+  ],
+  "evidence_count": 0,
+  "evidence_origins": [],
+  "has_error_event": false,
+  "raw_sse_bytes": 30001
+}

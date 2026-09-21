@@ -31,8 +31,11 @@ from backend.services.canonical_v2_connection_tests import (
     normalize_base_url,
     test_connection,
 )
+from backend.services.canonical_v2_embedding_identity import (
+    EmbeddingIdentityReport,
+    verify_embedding_identity,
+)
 from src.data_agents.canonical_v2.managed_config import (
-    PAGE_READONLY_FIELDS,
     ManagedSettingsError,
     ManagedSettingsStore,
     ManagedSettingsUnsupportedError,
@@ -406,8 +409,48 @@ def test_admin_connection(
             "min_interval_seconds": _TEST_LIMITER.min_interval_seconds,
             "remaining": decision.remaining,
         },
+        "identity": _embedding_identity(resolved, result, body),
         "restart_required": _RESTART_NOTICE if runtime.pending_restart else None,
     }
+
+
+# -- embedding identity (the check that stops a silent model switch) ---------
+# The connection test itself stays one bounded call per invocation; the
+# embedding card additionally asks for the identity probe, which measures
+# whether the endpoint answers in the space the index was built in. A wrong
+# space does not fail any transport check — it only produces wrong rankings —
+# so "answers 200 with 4096 floats" is not evidence of anything.
+def _embedding_identity(
+    resolved: Mapping[str, Any],
+    result: Mapping[str, Any],
+    body: Mapping[str, Any],
+) -> dict[str, Any] | None:
+    if resolved["spec"].kind != "embedding":
+        return None
+    if not bool(body.get("identity_check")):
+        return None
+    if not result.get("ok"):
+        return EmbeddingIdentityReport(
+            arm=None,
+            passed=None,
+            cosine=None,
+            detail="端点未通过连通性检查，跳过向量身份校验",
+        ).as_dict()
+    try:
+        return verify_embedding_identity(
+            configured_base_url=resolved["base_url"],
+            api_key=resolved["api_key"],
+            model=resolved["model"],
+        ).as_dict()
+    except Exception as exc:  # noqa: BLE001 - an advisory check never 5xxs
+        # The probe reads the mounted pack and numpy files; a failure to read
+        # them is reported as "not verified", never as a broken connection.
+        return EmbeddingIdentityReport(
+            arm=None,
+            passed=None,
+            cosine=None,
+            detail=f"未校验：身份探针不可用（{type(exc).__name__}）",
+        ).as_dict()
 
 
 # -- model configuration (I2/I3: provider presets + model discovery) ---------
@@ -423,7 +466,9 @@ def get_connection_presets() -> object:
     the same table the serving line resolves through ``CHAT_LLM_PROFILE``, with
     each profile's *local* endpoint (the one the answer/rewrite path uses);
     ``chat_profile`` is what a process with this environment would actually run;
-    and ``embedding_frozen`` reports the value the release bundle freezes. No
+    and ``embedding_endpoint`` reports the *effective* embedding address and
+    model — the operator's managed address over the bundle-recorded one, exactly
+    what the serving process resolves — with the endpoint source named. No
     outbound call is made and nothing is read from the collection database.
     """
 
@@ -437,7 +482,10 @@ def get_connection_presets() -> object:
             {
                 "base_url": embedding.base_url,
                 "model": embedding.model,
-                "note": PAGE_READONLY_FIELDS["extraction_endpoints.embedding_base_url"],
+                "note": (
+                    f"运行期生效地址（来源 {embedding.endpoint_origin}）；"
+                    "模型身份仍由发布包冻结，地址可在受管配置里设置"
+                ),
             }
             if embedding.base_url
             else None

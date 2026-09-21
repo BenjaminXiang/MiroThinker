@@ -1,0 +1,100 @@
+# Re-seal: raw phases, the receipt, and what a v1.1 boot does with the pack
+
+## Sealer phase lines (pid 1462948, started 2026-09-21T21:35:33+08:00, finished 22:17:58)
+
+```
+phase=envelope_validate seconds=2024.062
+phase=index_snapshot_verify seconds=11.228
+phase=index_artifacts_copied seconds=1.685
+phase=authority_documents_written seconds=178.666
+phase=manifest_written seconds=5.457
+phase=dogfood_open seconds=303.459
+```
+
+Total = **2524.557 s = 42.08 min**. The previous reader-bound re-seal
+(`/tmp/boot-prof/reseal3.log`, 2026-09-20) for comparison:
+
+```
+phase=envelope_validate seconds=2008.628
+phase=index_snapshot_verify seconds=10.245
+phase=index_artifacts_copied seconds=1.639
+phase=authority_documents_written seconds=161.555
+phase=manifest_written seconds=5.431
+phase=dogfood_open seconds=296.973
+```
+
+Total there = 2484.471 s = 41.41 min. Phase-for-phase the two runs agree within
+4 % (`envelope_validate` is the bulk in both: 33.7 min vs 33.5 min), i.e. the
+merge did not change the cost of sealing. This run had light background load
+(one single-core probe and one other worktree's pytest on a 96-core box).
+
+```
+serving_pack_summary={'pack_dir': '/var/tmp/mirothinker-data-v2/serving-pack-run16-v11',
+ 'release_id': 'candidate-v2-20260916-r1',
+ 'file_sizes': {'lookup.sqlite3': 896270336, '.canonical-v2-isolated-index-target.json': 316,
+                'relationships.json': 3477354956, 'institution_catalog.json': 381,
+                'manifest.json': 11116227},
+ 'phase_seconds': {'index_snapshot_verify': 11.228, 'index_artifacts_copied': 1.685,
+                   'authority_documents_written': 178.666, 'manifest_written': 5.457,
+                   'dogfood_open': 303.459}}
+```
+
+No `serving pack build failed`, no traceback in the log; exit 0.
+
+## The pack's mount receipt
+
+The sealer's `dogfood_open` writes the receipt as a side effect of opening the
+fresh pack. It was first written as `verification: "full"` at 22:17:37
+(`mount_seconds 299.19`); the independent fast-path open below then re-wrote it as
+`verification: "receipt"` at 22:26:06 (`mount_seconds 119.052`). Both states bind
+the same manifest:
+
+```
+schema_version        = canonical-v2-serving-mount-receipt-v1
+pack_dir              = /var/tmp/mirothinker-data-v2/serving-pack-run16-v11
+index_root            = /var/tmp/mirothinker-data-v2/index-v3-v2
+release_id            = candidate-v2-20260916-r1
+pack_manifest_sha256  = 588fdd9eb8f357484ad21f9a22ea0abe1bf3efa7f0b12862be8c2c514438276f
+index_marker_sha256   = b6f78a3b1e28c280860a4210bfad286ef65090e758de5b876d7f639eefaa8373
+```
+
+A receipt only ever excuses checks for the manifest bytes it binds, so whichever
+state travels with the pack is safe; a modified pack stops binding and the boot
+falls back to full verification.
+
+## What a v1.1 boot does with each pack (`fastpath-check.py`, fresh process per run)
+
+| run | pack | `receipt_used` | recorded reader == this reader | timed phases | open wall |
+|---|---|---|---|---|---|
+| A | `serving-pack-run16-readerbound` (the pack the live service mounts) | false (receipt path overridden to a scratch file so the live receipt stayed untouched) | **False** (`ebc22047…` vs `79e7492b…`) → the replay ran | 78.0 s | **284.415 s** |
+| B | `serving-pack-run16-v11` (re-sealed) | true | **True** → replay skipped | 78.4 s | **119.904 s** |
+| C | `serving-pack-run16-v11`, forced replay (the seal's own `dogfood_open`, `verify_reconstruction=true`) | — | — | `pack.*` + `snapshot.*` | 303.459 s |
+
+Timed phase detail (`CANONICAL_V2_SERVING_TIMING_PATH` journals):
+
+```
+A: pack.mount_identity 0.000  pack.mount{receipt_used:false}  pack.file_hash 1.132
+   pack.relationships_read 38.298  snapshot.lookup_docs 16.449  snapshot.lookup_points 1.933  snapshot.open 19.876
+B: pack.mount_identity 0.000  pack.mount{receipt_used:true}
+   pack.relationships_read 38.316  snapshot.lookup_docs 17.291  snapshot.lookup_points 2.024  snapshot.open 20.807
+```
+
+Runs A and B produce the **same authority**: 47 068 lookup documents, 51 026
+points, domain counts `{company: 7086, paper: 24520, patent: 11504, professor:
+3958}`, `relationship_result.content_sha256 =
+fb2211ab9081151a9c79d89fe098763c5b834d6b15af42511e4101fbd7c50f50`.
+Run C (the sealer's dogfood) asserts the same thing the strict way: it refuses to
+finish unless the reloaded authority equals the envelope object-for-object
+(`index_result`, `relationship_projection_result`, `candidate_projection_result`,
+`institution_catalog`, `release_verification`).
+
+Two things run A proves beyond the timing:
+
+1. The merged v1.1 reading code **reproduces the recorded request hashes of the
+   pack the live service mounts** (the replay ran and the two
+   `ServingPackIntegrityError` comparisons passed) — read-side equivalence of the
+   merge against the frozen pack, not just a structural diff.
+2. Serving the old pack under v1.1 code would pay the replay on every boot; that
+   is the ~165 s this re-seal removes (284.4 s → 119.9 s for the same code and the
+   same content, and the earlier boot-level measurement of the same effect was
+   421 s → 291 s for the whole boot).

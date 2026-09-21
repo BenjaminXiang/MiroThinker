@@ -223,7 +223,8 @@ def test_every_id_the_script_looks_up_exists_in_the_shell() -> None:
 def test_embedding_role_spells_out_the_rebuild_consequence() -> None:
     page = _page()
 
-    assert "服务线索引由发布包冻结：改它需要重建全部向量" in page
+    assert "服务线向量模型身份由发布包冻结：地址可在下方设置并重启生效" in page
+    assert "模型名改动需要重建全部向量" in page
     assert 'id="role-embedding"' in page
 
 
@@ -238,5 +239,5 @@ def test_the_probe_buttons_stay_script_built() -> None:
     # The role copy that must travel with each control, however, is script-side.
     script = _script()
     assert "保存 ≠ 测试" in script
-    assert "高级：采集侧覆盖" in script
-    assert "只影响后续采集/构建，不改服务线索引" in script
+    assert "高级：端点与模型" in script
+    assert "地址字段改动会在重启后成为服务线真正使用的端点" in script

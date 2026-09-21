@@ -1,0 +1,32 @@
+run at 2026-09-21T22:22:14+08:00
+== files (size + sha256) ==
+-- /var/tmp/mirothinker-data-v2/serving-pack-run16-readerbound
+         316  b6f78a3b1e28c280860a4210bfad286ef65090e758de5b876d7f639eefaa8373  .canonical-v2-isolated-index-target.json
+         381  88b5d714c4684518d97b571368f3f990a524d9a0d747b799d2f4332e54f4b057  institution_catalog.json
+   896270336  2f3e69f4ed0dabe18eb104e296e6dbe4c0ef90683871ab2edf7c1643ecd2ddb8  lookup.sqlite3
+    11116235  ce815fc678e27b44ec54b808245cafebf8a93557a847450b5f4cada113cfa94b  manifest.json
+  3477354956  b65794b005ede1aa04e3743307044bbfe0895541c28b4251dc0ddc35be4bca7f  relationships.json
+-- /var/tmp/mirothinker-data-v2/serving-pack-run16-v11
+         316  b6f78a3b1e28c280860a4210bfad286ef65090e758de5b876d7f639eefaa8373  .canonical-v2-isolated-index-target.json
+         381  88b5d714c4684518d97b571368f3f990a524d9a0d747b799d2f4332e54f4b057  institution_catalog.json
+   896270336  2f3e69f4ed0dabe18eb104e296e6dbe4c0ef90683871ab2edf7c1643ecd2ddb8  lookup.sqlite3
+    11116227  588fdd9eb8f357484ad21f9a22ea0abe1bf3efa7f0b12862be8c2c514438276f  manifest.json
+  3477354956  b65794b005ede1aa04e3743307044bbfe0895541c28b4251dc0ddc35be4bca7f  relationships.json
+
+== per-file verdict ==
+file set: identical
+same      .canonical-v2-isolated-index-target.json
+same      institution_catalog.json
+same      lookup.sqlite3
+CHANGED   manifest.json
+same      relationships.json
+
+== manifest field diff, and the data-file hashes the manifest records ==
+field differs: generated_at
+   2026-09-20T17:59:53.598727+00:00 -> 2026-09-21T14:12:37.669517+00:00
+field differs: generator_run_id
+   run16-readerbound-20260921-v2 -> run16-v11-20260921-v1
+field differs: reader_contract_sha256
+   ebc22047cc9bef912201da5292809935c619705a2b8d8eb718cfec081b0da362 -> 79e7492bb1d8a26d536d86c7d6b8b90bc5cb014ffe0e2b6f5bc4460591300d67
+unchanged fields: ['build_manifest', 'candidate_projection_result_content_sha256', 'embedding_model_id', 'files', 'index_forbidden_milvus_paths', 'index_marker_sha256', 'index_policy_snapshot', 'index_projection_request_sha256', 'index_rebuild_decisions', 'index_result_content_sha256', 'index_root', 'index_target_id', 'institution_catalog_content_sha256', 'internal_reference_projection_result_content_sha256', 'pack_id', 'relationship_request_sha256', 'relationship_result_content_sha256', 'release_id', 'release_verification', 'schema_version']
+recorded reader_contract_sha256: 79e7492bb1d8a26d536d86c7d6b8b90bc5cb014ffe0e2b6f5bc4460591300d67

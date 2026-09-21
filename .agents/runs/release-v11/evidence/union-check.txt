@@ -1,0 +1,10 @@
+base=36df47b8 merge=HEAD
+  branch fix/embedding-lane-f1f2: 41 changed paths
+  branch delivery/docker: 33 changed paths
+  branch feat/recall-regression: 10 changed paths
+merged changed paths: 84
+paths changed by the merge that no branch changed: []
+paths whose merged blob differs from every owning branch: []
+paths changed by a branch but missing from the merge: []
+status conflicts: []
+VERDICT: union holds

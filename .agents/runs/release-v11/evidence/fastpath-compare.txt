@@ -1,0 +1,15 @@
+== fastpath vs probe summary ==
+readerbound pack under release/v1.1 code, no receipt at the override path:
+  receipt_used=false, verify_reconstruction passed (the replay ran and reproduced the recorded hashes)
+  open wall = 284.415 s   (timed phases 78.0 s; ~206 s reconstruction + graph)
+
+same code, the re-sealed v1.1 pack, with the receipt the seal wrote:
+  receipt_used=true, recorded reader == this reader = True, verify_reconstruction=no
+  open wall = 119.904 s   (timed phases 78.4 s; ~41 s graph)
+
+forced replay on the same v1.1 pack (the seal's own dogfood_open, verify_reconstruction=true):
+  dogfood_open phase = 303.459 s
+
+identical content in all three: 47068 lookup documents, 51026 points,
+domain counts {"company": 7086, "paper": 24520, "patent": 11504, "professor": 3958},
+relationship_result content sha fb2211ab9081151a9c79d89fe098763c5b834d6b15af42511e4101fbd7c50f50

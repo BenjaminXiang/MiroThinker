@@ -32,6 +32,9 @@ from typing import Any
 
 import pytest
 
+from src.data_agents.canonical_v2.embedding_lane_resilience import (
+    EmbeddingLaneBreaker,
+)
 from src.data_agents.providers.dashscope_embeddings import (
     DashScopeTextEmbeddingClient,
 )
@@ -241,6 +244,9 @@ def _flash_adapter(gateway: _Gateway, **overrides: Any) -> Any:
         "batch_size": 2,
         "max_workers": 2,
         "timeout_seconds": 5,
+        # F1's lane breaker is process-scoped: a test that provokes transport
+        # failures must not leave the shared breaker open for the next one.
+        "breaker": EmbeddingLaneBreaker(),
     }
     fields.update(overrides)
     return module._DashScopeNativeEmbeddingAdapter(**fields)
@@ -529,6 +535,81 @@ def test_flash_adapter_lets_a_transport_failure_stay_a_builtin(
             adapter.embed_batch(("text-0",))
 
 
+# --- F1/F2 integration (release/v1.1) ----------------------------------------
+
+
+def test_f1_transport_pass_through_covers_the_gateway_client(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The lane's fail-open hole must not launder this client's transport errors.
+
+    F1 opened ``_ValidatingEmbeddingAdapter`` for exactly ``TimeoutError`` and
+    ``ConnectionError``; the candidate's client has to raise those, or the
+    gateway being unreachable would be reported as release corruption.
+    """
+
+    monkeypatch.setenv(GATEWAY_KEY_ENV, "local-stand-in-key")
+    read_module = import_module(READ_MODULE)
+
+    with _gateway(lambda call, body: (503, b"{}", "application/json", 0.0)) as gateway:
+        validating = read_module._ValidatingEmbeddingAdapter(
+            _flash_adapter(gateway),
+            expected_model_id=CANDIDATE_MODEL_ID,
+        )
+        with pytest.raises(ConnectionError):
+            validating.embed_batch(("text-0",))
+
+    with _gateway(
+        lambda call, body: (
+            200,
+            _native_body([(0, _text_vector("text-0"))]),
+            "application/json",
+            2.0,
+        )
+    ) as gateway:
+        validating = read_module._ValidatingEmbeddingAdapter(
+            _flash_adapter(gateway, timeout_seconds=1),
+            expected_model_id=CANDIDATE_MODEL_ID,
+        )
+        with pytest.raises(TimeoutError):
+            validating.embed_batch(("text-0",))
+
+    # A genuinely wrong answer still fails closed through the same validator.
+    with _gateway(
+        lambda call, body: (
+            200,
+            _native_body([(0, [1.0] * LIVE_DIMENSION)]),
+            "application/json",
+            0.0,
+        )
+    ) as gateway:
+        validating = read_module._ValidatingEmbeddingAdapter(
+            _flash_adapter(gateway),
+            expected_model_id=CANDIDATE_MODEL_ID,
+        )
+        with pytest.raises(read_module.IsolatedKnowledgeReadIntegrityError):
+            validating.embed_batch(("text-0",))
+
+
+def test_f1_lane_breaker_sees_the_gateway_client_failures(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Two transport failures from the gateway must open F1's breaker."""
+
+    monkeypatch.setenv(GATEWAY_KEY_ENV, "local-stand-in-key")
+    breaker = EmbeddingLaneBreaker()
+    with _gateway(lambda call, body: (503, b"{}", "application/json", 0.0)) as gateway:
+        adapter = _flash_adapter(gateway, breaker=breaker)
+        for _ in range(2):
+            with pytest.raises(ConnectionError):
+                adapter.embed_batch(("text-0",))
+        # Third call: the breaker answers before any provider call.
+        with pytest.raises(ConnectionError, match="breaker"):
+            adapter.embed_batch(("text-1",))
+        assert breaker.state() == "open"
+        assert len(gateway.calls) == 2
+
+
 # --- the new identity --------------------------------------------------------
 
 
@@ -735,6 +816,42 @@ def test_the_compatible_candidate_reads_the_gateway_slot_only(
     assert [call[:2] for call in calls] == [
         (GATEWAY_COMPAT_BASE_URL, "gateway-slot-key")
     ]
+
+
+@pytest.mark.parametrize(
+    ("bundle_path", "bundle_sha256", "constant_name", "adapter_class"),
+    CANDIDATE_BUNDLES,
+)
+def test_f2_address_override_applies_to_the_candidate_bundles(
+    bundle_path: Path,
+    bundle_sha256: str,
+    constant_name: str,
+    adapter_class: str,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """F2's rule reaches the new branches: the address is operational everywhere.
+
+    Without this, the candidate bundles would pin their gateway host while the
+    live authority lets the operator move — the interaction flagged when the
+    native slice was written.
+    """
+
+    module = _build_module()
+    recorded = json.loads(bundle_path.read_bytes())["base_url"]
+
+    monkeypatch.delenv("CANONICAL_V2_EMBEDDING_BASE_URL", raising=False)
+    assert (
+        module.load_content_addressed_embedding_adapter(bundle_path).base_url
+        == recorded
+    )
+
+    monkeypatch.setenv(
+        "CANONICAL_V2_EMBEDDING_BASE_URL", "http://127.0.0.1:9/alternate/v1"
+    )
+    assert (
+        module.load_content_addressed_embedding_adapter(bundle_path).base_url
+        == "http://127.0.0.1:9/alternate/v1"
+    )
 
 
 def test_the_live_bundle_still_loads_to_the_openai_provider(

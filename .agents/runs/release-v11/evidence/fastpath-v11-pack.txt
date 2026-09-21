@@ -1,0 +1,15 @@
+pack                      = /var/tmp/mirothinker-data-v2/serving-pack-run16-v11
+pack manifest sha256      = 588fdd9eb8f357484ad21f9a22ea0abe1bf3efa7f0b12862be8c2c514438276f
+pack schema_version       = canonical-v2-serving-pack-v2
+pack generator_run_id     = run16-v11-20260921-v1
+recorded reader_contract  = 79e7492bb1d8a26d536d86c7d6b8b90bc5cb014ffe0e2b6f5bc4460591300d67
+this reader contract      = 79e7492bb1d8a26d536d86c7d6b8b90bc5cb014ffe0e2b6f5bc4460591300d67
+recorded == this reader   = True
+receipt path              = /var/tmp/mirothinker-data-v2/serving-pack-run16-v11.mount-receipt.json
+receipt exists            = True
+verify_reconstruction     = no
+open wall seconds         = 119.904
+lookup documents          = 47068
+points                    = 51026
+domain counts             = {"company": 7086, "paper": 24520, "patent": 11504, "professor": 3958}
+relationship_result_sha   = fb2211ab9081151a9c79d89fe098763c5b834d6b15af42511e4101fbd7c50f50

@@ -158,12 +158,15 @@ def test_keys_are_never_written_as_text() -> None:
     assert 'input.type = "password"' in _SCRIPT
 
 
-def test_the_embedding_role_reads_the_frozen_value_and_honours_readonly() -> None:
+def test_the_embedding_role_reports_the_effective_address_and_honours_readonly() -> None:
+    """The address is operator-set; the model identity is frozen and display-only."""
+
     assert "embedding_frozen" in _SCRIPT
     assert "readonly_reason" in _SCRIPT
-    assert "服务线索引由发布包冻结：改它需要重建全部向量" in _PAGE
-    assert "高级：采集侧覆盖" in _SCRIPT
-    assert "只影响后续采集/构建，不改服务线索引" in _SCRIPT
+    assert "服务线向量模型身份由发布包冻结：地址可在下方设置并重启生效" in _PAGE
+    assert "高级：端点与模型" in _SCRIPT
+    assert "地址字段改动会在重启后成为服务线真正使用的端点" in _SCRIPT
+    assert "可设地址：模型身份仍由发布包冻结" in _SCRIPT
 
 
 def test_saving_and_testing_are_separate_and_say_so() -> None:

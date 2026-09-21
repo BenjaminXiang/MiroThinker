@@ -1,0 +1,10 @@
+== HTTP 探针 (http://127.0.0.1:18188) ==
+  [OK]   /api/health -> HTTP 200
+  [OK]   /chat -> HTTP 200
+  [OK]   /main -> HTTP 200
+== 嵌入端点探针（断言 HTTP 200 + 维度 4096）==
+  [OK]   http://100.64.0.27:18005/v1 HTTP 200，维度 4096（model=Qwen/Qwen3-Embedding-8B）
+== 内存 ==
+  RSS 合计: 17.64 GiB
+  cgroup memory.current: 17.82 GiB
+== 结果：全通 ==

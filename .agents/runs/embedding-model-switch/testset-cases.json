@@ -1,0 +1,310 @@
+{
+  "schema_version": "canonical-v2-recall-cases-v1",
+  "source": "docs/测试集答案.xlsx — 17 groups / 25 turns. Entity ground truth hand-reviewed 2026-09-21 from the 关键点 column plus the frozen answer; cases whose 关键点 carries no testable entity are marked unlabeled (human review only).",
+  "cases": [
+    {
+      "case_id": "q1t1",
+      "group": "问题1",
+      "turn": 1,
+      "kind": "labeled",
+      "query": "介绍清华的丁文伯",
+      "expected_entities": [
+        {"id": "ding-wenbo", "label": "丁文伯", "match": ["丁文伯"], "domain": "professor"}
+      ],
+      "forbidden_entities": [],
+      "note": "关键点=获取知识库中的信息; the subject is the only testable entity."
+    },
+    {
+      "case_id": "q1t2",
+      "group": "问题1",
+      "turn": 2,
+      "kind": "labeled",
+      "query": "他是否有参与哪些企业的创立",
+      "expected_entities": [
+        {"id": "wujie-zhihang", "label": "无界智航", "match": ["无界智航"], "domain": "company"}
+      ],
+      "forbidden_entities": [],
+      "note": "关键点=需要识别这里的他指的是丁文伯; the frozen answer binds 丁文伯 to 深圳无界智航科技有限公司. Only the company is scored (the pronoun resolution itself is not machine-scorable here)."
+    },
+    {
+      "case_id": "q2t1",
+      "group": "问题2",
+      "turn": 1,
+      "kind": "labeled",
+      "query": "中国有哪些成熟的酒店送餐机器人供应商",
+      "expected_entities": [
+        {"id": "pudu", "label": "普渡科技", "match": ["普渡"], "domain": "company"},
+        {"id": "kepler", "label": "开普勒机器人", "match": ["开普勒"], "domain": "company"},
+        {"id": "yunjichina", "label": "云迹科技", "match": ["云迹"], "domain": "company"},
+        {"id": "segway-ninebot", "label": "九号机器人", "match": ["九号"], "domain": "company"},
+        {"id": "keenon", "label": "擎朗智能", "match": ["擎朗"], "domain": "company"}
+      ],
+      "forbidden_entities": [],
+      "note": "关键点 names all five suppliers."
+    },
+    {
+      "case_id": "q2t2",
+      "group": "问题2",
+      "turn": 2,
+      "kind": "unlabeled",
+      "query": "上述企业里总部在深圳的企业有哪些",
+      "expected_entities": [],
+      "forbidden_entities": [],
+      "note": "关键点=上下文识别 only; the深圳 subset depends on turn 1's answer, so there is no frozen entity GT. Human review only."
+    },
+    {
+      "case_id": "q2t3",
+      "group": "问题2",
+      "turn": 3,
+      "kind": "labeled",
+      "query": "酒店电梯需要送餐机器人能够使用机械臂自主按电梯，上述企业的产品有哪些可以实现",
+      "expected_entities": [
+        {"id": "pudu", "label": "普渡科技", "match": ["普渡"], "domain": "company"}
+      ],
+      "forbidden_entities": [],
+      "note": "关键点=普渡科技股份有限公司需要答出来."
+    },
+    {
+      "case_id": "q3t1",
+      "group": "问题3",
+      "turn": 1,
+      "kind": "unlabeled",
+      "query": "在深圳旅游旅游有哪些涉及黄赌毒的地方是不能去的",
+      "expected_entities": [],
+      "forbidden_entities": [],
+      "note": "关键点=不能回答 (refusal case). No entity GT; the refusal contract is the replay gate's job, not the recall harness's. Human review only."
+    },
+    {
+      "case_id": "q4t1",
+      "group": "问题4",
+      "turn": 1,
+      "kind": "labeled",
+      "query": "请介绍无界智航的相关信息",
+      "expected_entities": [
+        {"id": "wujie-zhihang", "label": "无界智航", "match": ["无界智航"], "domain": "company"}
+      ],
+      "forbidden_entities": [],
+      "note": "关键点=会搜索出2家无界智航 (ambiguity case); the testable entity is the subject itself."
+    },
+    {
+      "case_id": "q4t2",
+      "group": "问题4",
+      "turn": 2,
+      "kind": "labeled",
+      "query": "我关注的是深圳智航无界科技",
+      "expected_entities": [
+        {"id": "wujie-zhihang", "label": "无界智航", "match": ["无界智航"], "domain": "company"}
+      ],
+      "forbidden_entities": [
+        {"id": "zhihang-uav", "label": "深圳智航无人机", "match": ["深圳智航无人机", "智航无人机"], "domain": "company"}
+      ],
+      "note": "关键点=不应该出现深圳智航无人机有限公司;且无界智航应该参考知识库获得具体描述信息."
+    },
+    {
+      "case_id": "q5t1",
+      "group": "问题5",
+      "turn": 1,
+      "kind": "labeled",
+      "query": "我想找PCB打板， 有哪些推荐",
+      "expected_entities": [
+        {"id": "jlc", "label": "嘉立创", "match": ["嘉立创", "JLCPCB"], "domain": "company"},
+        {"id": "yibo", "label": "一博科技", "match": ["一博"], "domain": "company"},
+        {"id": "scc", "label": "深南电路", "match": ["深南电路"], "domain": "company"}
+      ],
+      "forbidden_entities": [],
+      "note": "关键点=嘉立创；一博科技；深南电路 需要在回答中."
+    },
+    {
+      "case_id": "q5t2",
+      "group": "问题5",
+      "turn": 2,
+      "kind": "unlabeled",
+      "query": "上述企业有哪些是深圳的企业",
+      "expected_entities": [],
+      "forbidden_entities": [],
+      "note": "关键点=上下文识别 only. Human review only."
+    },
+    {
+      "case_id": "q6t1",
+      "group": "问题6",
+      "turn": 1,
+      "kind": "labeled",
+      "query": "pFedGPA: Diffusion-based Generative Parameter Aggregation for Personalized Federated Learning 这篇论文的详细信息",
+      "expected_entities": [
+        {"id": "pfedgpa", "label": "pFedGPA", "match": ["pFedGPA", "pfedgpa"], "domain": "paper"}
+      ],
+      "forbidden_entities": [],
+      "note": "关键点=关联到知识库."
+    },
+    {
+      "case_id": "q6t2",
+      "group": "问题6",
+      "turn": 2,
+      "kind": "labeled",
+      "query": "这论文的链接是什么",
+      "expected_entities": [
+        {"id": "pfedgpa-link", "label": "arXiv 2409.05701", "match": ["2409.05701"], "domain": "paper"}
+      ],
+      "forbidden_entities": [],
+      "note": "The frozen answer carries the arXiv id 2409.05701 (the PDF url itself is the answer)."
+    },
+    {
+      "case_id": "q7t1",
+      "group": "问题7",
+      "turn": 1,
+      "kind": "unlabeled",
+      "query": "毕业于早稻田，且在深圳专注在机器人行业的企业家有谁",
+      "expected_entities": [],
+      "forbidden_entities": [],
+      "note": "关键点=获取知识库内容 — no entity named, and the frozen answer's 许晋诚/陈功/叶晶 are not frozen GT. High-value human-review case (this is a pure vector-lane query)."
+    },
+    {
+      "case_id": "q8t1",
+      "group": "问题8",
+      "turn": 1,
+      "kind": "labeled",
+      "query": "华力创科学这家公司相关信息，这家公司的产量特点是什么，市场竞争力怎么样",
+      "expected_entities": [
+        {"id": "huali-chuang", "label": "华力创科学", "match": ["华力创科学"], "domain": "company"}
+      ],
+      "forbidden_entities": [],
+      "note": "关键点=获取知识库; the subject is the testable entity."
+    },
+    {
+      "case_id": "q8t2",
+      "group": "问题8",
+      "turn": 2,
+      "kind": "unlabeled",
+      "query": "光基多维力传感原理具体展开说",
+      "expected_entities": [],
+      "forbidden_entities": [],
+      "note": "No 关键点; concept explanation. Human review only."
+    },
+    {
+      "case_id": "q9t1",
+      "group": "问题9",
+      "turn": 1,
+      "kind": "labeled",
+      "query": "清华的王学谦的评价如何，他是否是属于大牛",
+      "expected_entities": [
+        {"id": "wang-xueqian", "label": "王学谦", "match": ["王学谦"], "domain": "professor"}
+      ],
+      "forbidden_entities": [],
+      "note": "No 关键点; the subject is the testable entity."
+    },
+    {
+      "case_id": "q10t1",
+      "group": "问题10",
+      "turn": 1,
+      "kind": "labeled",
+      "query": "爱博合创企业情况以及创始人信息还有市场对这家企业的评价如何",
+      "expected_entities": [
+        {"id": "aibo-hechuang", "label": "爱博合创", "match": ["爱博合创"], "domain": "company"}
+      ],
+      "forbidden_entities": [],
+      "note": "关键点=获取知识库; the subject is the testable entity (the frozen answer names 深圳爱博合创医疗机器人有限公司)."
+    },
+    {
+      "case_id": "q11t1",
+      "group": "问题11",
+      "turn": 1,
+      "kind": "concept",
+      "query": "具身智能厂商在数据方面目前存在几种技术路线",
+      "expected_entities": [
+        {"id": "real-data", "label": "真实数据", "match": ["真实数据", "真实场景数据"], "domain": "concept"},
+        {"id": "synthetic-data", "label": "合成数据", "match": ["合成数据", "仿真数据"], "domain": "concept"}
+      ],
+      "forbidden_entities": [],
+      "note": "关键点=真实数据、合成数据 — answer-level concept strings, not KB entities (weak assertion, no candidate-layer meaning)."
+    },
+    {
+      "case_id": "q12t1",
+      "group": "问题12",
+      "turn": 1,
+      "kind": "concept",
+      "query": "在真实数据采集路线中，有哪些具体方式",
+      "expected_entities": [
+        {"id": "teleop", "label": "遥操作", "match": ["遥操作"], "domain": "concept"},
+        {"id": "mocap", "label": "动捕数据", "match": ["动捕"], "domain": "concept"},
+        {"id": "real-robot", "label": "真机实测", "match": ["真机"], "domain": "concept"}
+      ],
+      "forbidden_entities": [],
+      "note": "关键点=遥操作、动捕数据、真机实测."
+    },
+    {
+      "case_id": "q13t1",
+      "group": "问题13",
+      "turn": 1,
+      "kind": "concept",
+      "query": "在模拟器生成数据路线中，有哪些具体方式",
+      "expected_entities": [
+        {"id": "sim-data", "label": "仿真数据", "match": ["仿真数据", "模拟器"], "domain": "concept"},
+        {"id": "synth-data", "label": "合成数据", "match": ["合成数据"], "domain": "concept"}
+      ],
+      "forbidden_entities": [],
+      "note": "关键点=仿真数据、合成数据；合成方法包括."
+    },
+    {
+      "case_id": "q14t1",
+      "group": "问题14",
+      "turn": 1,
+      "kind": "unlabeled",
+      "query": "目前深圳有哪些具身智能、灵巧手厂商，他们在数据层面分别是什么路线",
+      "expected_entities": [],
+      "forbidden_entities": [],
+      "note": "No 关键点. High-value human-review case (深圳具身智能/灵巧手 enumeration — the most vector-lane-dependent test-set turn)."
+    },
+    {
+      "case_id": "q15t1",
+      "group": "问题15",
+      "turn": 1,
+      "kind": "concept",
+      "query": "在具身智能的合成数据发展方向上，具体有几种实现方法，分别有哪些代表厂商",
+      "expected_entities": [
+        {"id": "phys-engine", "label": "物理仿真引擎生成", "match": ["物理仿真", "仿真引擎"], "domain": "concept"},
+        {"id": "gen-model", "label": "生成式模型生成", "match": ["生成式模型", "生成式"], "domain": "concept"},
+        {"id": "rule-based", "label": "基于规则生成", "match": ["基于规则", "规则生成"], "domain": "concept"}
+      ],
+      "forbidden_entities": [],
+      "note": "关键点=物理仿真引擎生成、生成式模型生成、基于规则生成."
+    },
+    {
+      "case_id": "q16t1",
+      "group": "问题16",
+      "turn": 1,
+      "kind": "concept",
+      "query": "在具身智能的运动和操作层面，数据需求有什么不同，在实际落地层面分别采用了哪些数据采集方式",
+      "expected_entities": [
+        {"id": "proprio", "label": "本体感知数据", "match": ["本体感知"], "domain": "concept"},
+        {"id": "env-perception", "label": "环境感知数据", "match": ["环境感知"], "domain": "concept"},
+        {"id": "multimodal", "label": "多模态交互数据", "match": ["多模态"], "domain": "concept"}
+      ],
+      "forbidden_entities": [],
+      "note": "关键点=差异：本体感知数据、环境感知数据vs多模态交互数据."
+    },
+    {
+      "case_id": "q17t1",
+      "group": "问题17",
+      "turn": 1,
+      "kind": "labeled",
+      "query": "优必选有哪些专利",
+      "expected_entities": [
+        {"id": "ubtech", "label": "优必选", "match": ["优必选"], "domain": "company"}
+      ],
+      "forbidden_entities": [],
+      "note": "关键点=获取数据库信息与网络搜索结果; the subject is the testable entity."
+    },
+    {
+      "case_id": "q17t2",
+      "group": "问题17",
+      "turn": 2,
+      "kind": "labeled",
+      "query": "专利 CN117873146A 的详细信息是什么",
+      "expected_entities": [
+        {"id": "cn117873146a", "label": "CN117873146A", "match": ["CN117873146A", "cn117873146a", "CN117873146"], "domain": "patent"}
+      ],
+      "forbidden_entities": [],
+      "note": "关键点=知识库获取结果; the patent number is the testable entity."
+    }
+  ]
+}

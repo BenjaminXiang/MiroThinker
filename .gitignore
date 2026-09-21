@@ -230,6 +230,8 @@ data/
 .serper_api_key
 .bocha_api_key
 .python-version
+# 容器交付的真值凭据目录（模板在 deploy/docker/secrets.example/）
+deploy/docker/secrets/
 
 # AI tool local state
 # .agents/ 内部分两类：specs/handoffs/reviews 是协作记录入 git（CLAUDE.md §8）；

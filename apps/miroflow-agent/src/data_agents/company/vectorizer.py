@@ -42,19 +42,43 @@ class EmbeddingClient:
         *,
         model: str = _DEFAULT_MODEL,
     ) -> list[list[float]]:
+        """One OpenAI-compatible embeddings call, with transport failures normalized.
+
+        This is the only place on the serving path that speaks HTTP for
+        embeddings, so it is where a provider that is *unreachable* (as opposed
+        to one whose answer is *unusable*) becomes the builtin exception the
+        lane-level fail-open hook already understands: ``TimeoutError`` for a
+        timeout, ``ConnectionError`` for anything else that is not an answer
+        (connect/read/write faults, DNS, refused connections, non-2xx status).
+        Integrity checks over the returned vectors stay where they are and keep
+        failing closed — a transport failure must never be laundered into one.
+        """
         if not texts:
             return []
         headers: dict[str, str] = {}
         if self.api_key:
             headers["Authorization"] = f"Bearer {self.api_key}"
-        with httpx.Client(trust_env=False, timeout=self.timeout) as client:
-            response = client.post(
-                f"{self.base_url}/embeddings",
-                json={"input": texts, "model": model},
-                headers=headers,
-            )
-        response.raise_for_status()
-        data = response.json()
+        try:
+            with httpx.Client(trust_env=False, timeout=self.timeout) as client:
+                response = client.post(
+                    f"{self.base_url}/embeddings",
+                    json={"input": texts, "model": model},
+                    headers=headers,
+                )
+            response.raise_for_status()
+            data = response.json()
+        except httpx.TimeoutException as exc:
+            raise TimeoutError(
+                f"embedding endpoint {self.base_url} did not answer in time"
+            ) from exc
+        except (httpx.HTTPError, OSError) as exc:
+            raise ConnectionError(
+                f"embedding endpoint {self.base_url} is unreachable"
+            ) from exc
+        except json.JSONDecodeError as exc:
+            raise ConnectionError(
+                f"embedding endpoint {self.base_url} answered with a non-JSON body"
+            ) from exc
         results = sorted(data["data"], key=lambda x: x["index"])
         return [item["embedding"] for item in results]
 

@@ -1,0 +1,10 @@
+mirothinker-ro-manual 29.5GiB / 503.5GiB 5.86% 100.17%
+mirothinker-docker-rw-app-1 17.8GiB / 40GiB 44.49% 0.09%
+canonical-v2-s12c-pg-20260726-r8 4.168GiB / 503.5GiB 0.83% 0.00%
+med-chat-qdrant 316.2MiB / 503.5GiB 0.06% 1.01%
+med-chat-redis 8MiB / 503.5GiB 0.00% 1.05%
+med-chat-postgres 27.07MiB / 503.5GiB 0.01% 0.00%
+med-chat-minio 120.9MiB / 503.5GiB 0.02% 0.02%
+alaya-web 19.42MiB / 503.5GiB 0.00% 0.00%
+alaya-backend 44.84MiB / 503.5GiB 0.01% 0.10%
+alaya-nginx 28.53MiB / 503.5GiB 0.01% 0.00%

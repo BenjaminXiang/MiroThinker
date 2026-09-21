@@ -701,6 +701,59 @@ def _web_lane_outer_wait_seconds(policy: WebSearchPolicy) -> float | None:
     return max(policy.timeout_ms / 1_000, _WEB_LANE_OUTER_WAIT_FLOOR_SECONDS)
 
 
+#: Whole-lane outer wait for the vector future. The lane's provider is one
+#: remote embedding endpoint; without a cap a black-holed route holds the turn
+#: until the client's own timeout.
+#:
+#: This is the only place the serving path turns the knob into a number. The
+#: managed field ``serving.vector_lane_timeout_seconds`` is projected into
+#: ``CANONICAL_V2_VECTOR_LANE_TIMEOUT_SECONDS`` at startup and lands here; the
+#: catalogue's default must equal this constant (pinned by
+#: ``tests/canonical_v2/test_embedding_lane_fail_open.py``).
+_VECTOR_LANE_OUTER_WAIT_DEFAULT_SECONDS = 8.0
+
+_VECTOR_LANE_TIMEOUT_ENV = "CANONICAL_V2_VECTOR_LANE_TIMEOUT_SECONDS"
+
+
+def _vector_lane_outer_wait_seconds() -> float:
+    """The vector lane's whole-lane budget (seconds).
+
+    Operator-tunable through the managed field
+    ``serving.vector_lane_timeout_seconds`` →
+    ``CANONICAL_V2_VECTOR_LANE_TIMEOUT_SECONDS`` (projected at startup by
+    ``managed_runtime``), or set directly by the service unit. An unparsable or
+    non-positive value falls back to the default — a broken knob must not remove
+    the cap.
+    """
+
+    raw = os.environ.get(_VECTOR_LANE_TIMEOUT_ENV, "").strip()
+    if not raw:
+        return _VECTOR_LANE_OUTER_WAIT_DEFAULT_SECONDS
+    try:
+        value = float(raw)
+    except ValueError:
+        return _VECTOR_LANE_OUTER_WAIT_DEFAULT_SECONDS
+    return value if value > 0 else _VECTOR_LANE_OUTER_WAIT_DEFAULT_SECONDS
+
+
+def _note_lane_outer_timeout(adapter: Any) -> None:
+    """Tell a lane adapter its outer wait expired (optional hook, best-effort).
+
+    A lane whose provider has its own much longer request timeout fails far too
+    late for a lane-level breaker to be useful, so the lane adapter may expose
+    ``note_outer_timeout`` and count the expiry itself. Observability must never
+    break the turn, so a hook that raises is ignored.
+    """
+
+    note = getattr(adapter, "note_outer_timeout", None)
+    if not callable(note):
+        return
+    try:
+        note()
+    except Exception:  # noqa: BLE001 - a lane hook must not fail the turn
+        return
+
+
 class WebSearchPolicy(ContractModel):
     mode: Literal["disabled", "universal", "official_only"]
     max_provider_calls: int = Field(default=0, ge=0)
@@ -7687,15 +7740,19 @@ class _EphemeralKnowledgeRead(KnowledgeRead):
                 for lane in result_order:
                     if lane in outcomes:
                         continue
-                    timeout_seconds = (
-                        _web_lane_outer_wait_seconds(effective_web_policy)
-                        if lane == "web"
-                        else None
-                    )
+                    if lane == "web":
+                        timeout_seconds = _web_lane_outer_wait_seconds(
+                            effective_web_policy
+                        )
+                    elif lane == "vector":
+                        timeout_seconds = _vector_lane_outer_wait_seconds()
+                    else:
+                        timeout_seconds = None
                     try:
                         outcomes[lane] = futures[lane].result(timeout=timeout_seconds)
                     except TimeoutError:
                         outcomes[lane] = (None, "timeout")
+                        _note_lane_outer_timeout(self._adapter_for(lane))
             finally:
                 executor.shutdown(wait=False, cancel_futures=True)
 
