@@ -53,7 +53,27 @@ _VECTOR_MATRIX_SCHEMA_VERSION = "canonical-v2-vector-matrix-v1"
 _INDEX_POINT_TABLE = "index_point"
 _POINT_READ_BATCH_SIZE = 128
 _POINT_WRITE_BATCH_SIZE = 128
-_MIN_VECTOR_COSINE_SIMILARITY = 0.999
+#: The cosine a re-embedded point must reach against the vector stored for it.
+#:
+#: This is a **corruption** guard, not a space-drift guard: the point's own
+#: content is embedded again and compared with what the index kept. It used to
+#: sit at 0.999, which encoded "a deterministic endpoint reproduces its own
+#: vector". The candidate gateway is not deterministic — measured 2026-09-21,
+#: same text and route, 30 repeats per text: answers are bimodal (identical, or
+#: ~0.998) with a pooled minimum of 0.998004 over 1305 pairs and 0.997556 in an
+#: earlier run, and the noisy mode itself moved ~0.0013 between runs. Because
+#: this audit runs per point, a ~51k-point rebuild reaches the tail of that
+#: distribution: at 0.999 it would abort with "isolated Milvus vector differs
+#: from its bound embedding", which reads like corruption but is the endpoint's
+#: rounding.
+#:
+#: 0.99 is chosen from the measurements: 0.0076 below the lowest repeat ever
+#: observed (3x the full observed spread) while keeping 0.06 of separation from
+#: the highest measured wrong answer — a vector bound to the wrong point
+#: measures 0.24 for unrelated documents and up to 0.93 for the sibling route of
+#: the same model, and another space measures ≈ -0.03. Dimension and norm are
+#: checked separately below, so lowering the cosine floor does not weaken them.
+_MIN_VECTOR_COSINE_SIMILARITY = 0.99
 _TOKEN_RE = re.compile(r"[A-Za-z][A-Za-z0-9-]{1,}|[\u3400-\u4DBF\u4E00-\u9FFF]")
 
 #: Where a marked isolated index keeps its ``IndexProjectionPoint`` objects.
@@ -1462,6 +1482,8 @@ def _read_index_points_from_path(
             "isolated point store contains duplicate point IDs"
         )
     return ordered
+
+
 def _write_publication_quality_report(
     root: Path,
     *,

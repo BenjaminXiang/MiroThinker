@@ -1,0 +1,26 @@
+--- a/apps/miroflow-agent/src/data_agents/canonical_v2/index_projection_isolated.py
++++ b/apps/miroflow-agent/src/data_agents/canonical_v2/index_projection_isolated.py
+@@ -49,7 +49,22 @@
+ _VECTOR_MATRIX_SCHEMA_VERSION = "canonical-v2-vector-matrix-v1"
+ _POINT_READ_BATCH_SIZE = 128
+ _POINT_WRITE_BATCH_SIZE = 128
+-_MIN_VECTOR_COSINE_SIMILARITY = 0.999
++#: The cosine a re-embedded point must reach against the vector stored for it.
++#:
++#: Corruption guard, not a space-drift guard: a vector bound to the wrong point
++#: measures 0.24 (unrelated documents) to 0.93 (the sibling route of the same
++#: model), another space measures ≈ -0.03, and dimension/norm are checked
++#: separately beside this comparison. It was 0.999, which encoded "a
++#: deterministic endpoint reproduces its own vector"; the v2 candidate gateway
++#: (qwen3.7-text-embedding-flash) is stochastic — measured 2026-09-21, 30
++#: repeats per text: answers are bimodal (identical or ~0.998), pooled minimum
++#: 0.997556 over ~1.6k repeat pairs, and the noisy mode moved ~0.0013 between
++#: runs. This audit runs per point, so a ~51k-point rebuild reaches the tail of
++#: that distribution: at 0.999 it aborts with "isolated Milvus vector differs
++#: from its bound embedding", which reads like corruption but is the endpoint's
++#: rounding. 0.99 keeps 0.0076 below the lowest repeat ever measured (3x the
++#: observed spread) and 0.06 above the highest measured wrong answer.
++_MIN_VECTOR_COSINE_SIMILARITY = 0.99
+ _TOKEN_RE = re.compile(r"[A-Za-z][A-Za-z0-9-]{1,}|[\u3400-\u4DBF\u4E00-\u9FFF]")
+ 
+ 

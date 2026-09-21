@@ -23,6 +23,7 @@ from collections.abc import Callable, Iterator
 from contextlib import contextmanager
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from importlib import import_module
+import hashlib
 import json
 from pathlib import Path
 import socket
@@ -904,3 +905,148 @@ def test_an_unknown_provider_is_refused(tmp_path: Path) -> None:
 
     with pytest.raises(ValueError, match="not a known embedding provider"):
         module.load_content_addressed_embedding_adapter(path)
+
+
+# --- the rebuild audit's cosine floor (Task C.1) -----------------------------
+#
+# `index_projection_isolated._validate_physical_point_rows` re-embeds each
+# point's content and compares it with the vector the index stored — per point,
+# ~51k times per rebuild. Its floor was 0.999, calibrated for a deterministic
+# endpoint, while the candidate gateway's measured repeat noise bottoms out at
+# 0.997556. These tests drive the real audit function with vectors placed at
+# chosen cosines: the measured-noise band must pass, and every genuinely wrong
+# vector must still fail closed.
+
+INDEX_MODULE = "src.data_agents.canonical_v2.index_projection_isolated"
+POINT_DIMENSION = 8
+#: Measured 2026-09-21 (`.agents/runs/embedding-model-switch-v2/repeat-noise-measurement.json`):
+#: the low mode over three texts plus the earlier run's lowest single pair.
+MEASURED_REPEAT_COSINES = (1.0, 0.998829, 0.998772, 0.998004, 0.997556)
+#: Measured wrong answers: the sibling route of the same model (0.933/0.860), an
+#: unrelated document pair (0.242), a zero vector, and another space (−0.03).
+WRONG_VECTOR_COSINES = (0.932903, 0.86, 0.241886, 0.0, -0.03)
+
+
+def _unit(vector: list[float]) -> list[float]:
+    norm = sum(value * value for value in vector) ** 0.5
+    return [value / norm for value in vector]
+
+
+def _at_cosine(base: list[float], other: list[float], target: float) -> list[float]:
+    """A unit vector whose cosine against ``base`` is ``target``."""
+
+    unit_base = _unit(base)
+    unit_other = _unit(other)
+    projection = sum(o * b for o, b in zip(unit_other, unit_base, strict=True))
+    perpendicular = [
+        o - projection * b for o, b in zip(unit_other, unit_base, strict=True)
+    ]
+    unit_perpendicular = _unit(perpendicular)
+    sine = (max(0.0, 1.0 - target * target)) ** 0.5
+    return [
+        target * b + sine * p
+        for b, p in zip(unit_base, unit_perpendicular, strict=True)
+    ]
+
+
+def _audit_row(index: int, *, stored: list[float]) -> tuple[dict[str, Any], str]:
+    contracts_module = import_module("src.data_agents.canonical_v2.contracts")
+    projection_module = import_module("src.data_agents.canonical_v2.index_projection")
+    text = f"深圳市示例科技公司 {index}"
+    point = projection_module.IndexProjectionPoint(
+        point_id=f"point:audit-{index}",
+        canonical_object_id=f"company:audit-{index}",
+        release_id="candidate-audit",
+        projection_id=f"projection:audit-{index}",
+        projection_scope=contracts_module.ProjectionScope.public_domain,
+        domain="company",
+        reference_type=None,
+        projection_view=projection_module.ProjectionView.default,
+        projection_version="projection-v1",
+        schema_version="index-projection-point-v1",
+        embedding_model=CANDIDATE_MODEL_ID,
+        eligibility_policy_version="path-eligibility-v1",
+        eligibility_decision_id=f"decision:audit-{index}",
+        eligibility_outcome="admitted",
+        source_projection_content_sha256=hashlib.sha256(
+            f"source:{index}".encode()
+        ).hexdigest(),
+        embedded_content=text,
+        embedded_content_sha256=hashlib.sha256(text.encode("utf-8")).hexdigest(),
+        source_evidence_ids=(f"evidence:audit-{index}",),
+    )
+    row = {
+        "point_id": point.point_id,
+        "release_id": point.release_id,
+        "projection_id": point.projection_id,
+        "canonical_object_id": point.canonical_object_id,
+        "embedded_content_sha256": point.embedded_content_sha256,
+        "point_json": point.model_dump_json(),
+        "vector": list(stored),
+    }
+    return row, text
+
+
+class _FixedAdapter:
+    """Answers every point with the vector the test chose for it."""
+
+    def __init__(self, expected: dict[str, list[float]], *, dimension: int) -> None:
+        self.model_id = CANDIDATE_MODEL_ID
+        self.dimension = dimension
+        self._expected = expected
+
+    def embed_batch(self, texts: tuple[str, ...]) -> tuple[tuple[float, ...], ...]:
+        return tuple(tuple(self._expected[text]) for text in texts)
+
+
+def _run_audit(cosines: tuple[float, ...]) -> tuple[Any, ...]:
+    index_module = import_module(INDEX_MODULE)
+    rows: list[dict[str, Any]] = []
+    expected: dict[str, list[float]] = {}
+    for index, target in enumerate(cosines):
+        base = [1.0, 0.5 - index / 100.0, 0.25, 0.125, 0.0625, 0.03125, 0.015, 0.0075]
+        other = [0.1, 0.9, 0.2, 0.05, 0.4, 0.3, 0.25, 0.6 + index / 50.0]
+        row, text = _audit_row(index, stored=_at_cosine(base, other, target))
+        rows.append(row)
+        expected[text] = _unit(base)
+    return index_module._validate_physical_point_rows(
+        rows,
+        expected_point_ids=None,
+        embedding_adapter=_FixedAdapter(expected, dimension=POINT_DIMENSION),
+    )
+
+
+def test_rebuild_audit_passes_the_measured_repeat_band() -> None:
+    """The floor must not false-fail a healthy gateway, tail included."""
+
+    index_module = import_module(INDEX_MODULE)
+    points = _run_audit(MEASURED_REPEAT_COSINES)
+
+    assert len(points) == len(MEASURED_REPEAT_COSINES)
+    # The floor really is the tuned one, not a test-local constant.
+    assert index_module._MIN_VECTOR_COSINE_SIMILARITY == 0.99
+    assert index_module._MIN_VECTOR_COSINE_SIMILARITY < min(MEASURED_REPEAT_COSINES)
+
+
+@pytest.mark.parametrize("cosine", WRONG_VECTOR_COSINES)
+def test_rebuild_audit_still_refuses_a_wrong_vector(cosine: float) -> None:
+    """Corruption is caught: wrong point, wrong space, or a dead vector."""
+
+    index_module = import_module(INDEX_MODULE)
+    with pytest.raises(index_module.IndexProjectionIntegrityError):
+        _run_audit((cosine,))
+
+
+def test_rebuild_audit_still_refuses_a_wrong_dimension() -> None:
+    """The dimension check is separate from the cosine floor and stays strict."""
+
+    index_module = import_module(INDEX_MODULE)
+    row, text = _audit_row(0, stored=[1.0] * (POINT_DIMENSION + 1))
+    with pytest.raises(index_module.IndexProjectionIntegrityError):
+        index_module._validate_physical_point_rows(
+            [row],
+            expected_point_ids=None,
+            embedding_adapter=_FixedAdapter(
+                {text: [1.0] * POINT_DIMENSION}, dimension=POINT_DIMENSION
+            ),
+        )

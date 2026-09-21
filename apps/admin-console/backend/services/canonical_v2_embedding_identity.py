@@ -54,12 +54,23 @@ PROBE_TEXT = (
     "｜ probe-0123456789abcdef"
 )
 
-#: Same space, tight bar: two addresses of one model are expected to answer with
-#: the same vector (measured 1.000000 on the live endpoint, see verification.md).
-REFERENCE_COSINE_FLOOR = 0.999
+#: Reference arm. Two addresses of one model are expected to answer with the
+#: same vector — but the candidate gateway is stochastic, so "the same vector"
+#: needs a floor with room: measured 2026-09-21 (30 repeats per text, same route
+#: and address), answers are bimodal (identical or ~0.998) with a pooled minimum
+#: of 0.998004 over 1305 pairs and 0.997556 in an earlier run, the noisy mode
+#: moving ~0.0013 between runs. With the operator's setting unset both probe
+#: calls go to the *same* address, so that repeat noise is what this arm
+#: compares. 0.999 sat 0.00014 above the noise floor (a coin-flip failure on a
+#: healthy endpoint); 0.99 keeps 0.0076 below the lowest repeat ever measured
+#: while staying 0.06 above the highest wrong-answer measurement (a sibling
+#: route of the same model: 0.860–0.933) and far above another space (≈ −0.03).
+REFERENCE_COSINE_FLOOR = 0.99
 #: Index arm. Calibrated on the live release: the endpoint reproduces the stored
 #: vector of a document it embedded at build time to ≥0.9999, while an endpoint
-#: in another space lands near 0 (measured — see verification.md).
+#: in another space lands near 0 (measured — see verification.md). It carries
+#: ~0.9 % of headroom against the gateway's measured repeat noise, so it stays
+#: where it was; it now equals the reference floor, one rule for both arms.
 INDEX_COSINE_FLOOR = 0.99
 #: Rows read for the nearest-neighbour check (stride over the persisted matrix,
 #: ~26MB instead of the full 1.7GB: this runs inside the serving process).

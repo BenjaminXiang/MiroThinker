@@ -191,6 +191,80 @@ def test_the_reference_arm_passes_when_both_endpoints_share_one_space() -> None:
     assert "同源" in report.detail
 
 
+#: Measured on the candidate gateway 2026-09-21 (30 repeats per text, same route
+#: and address; `.agents/runs/embedding-model-switch-v2/`): the band a healthy
+#: endpoint's repeat cosine actually lands in, plus the earlier run's lowest pair.
+MEASURED_REPEAT_COSINES = (1.0, 0.998829, 0.998772, 0.998004, 0.997556)
+#: Measured wrong answers: a sibling route of the same model (0.933/0.860) and an
+#: unrelated document pair (0.242).
+MEASURED_WRONG_ANSWER_COSINES = (0.932903, 0.86, 0.241886)
+
+
+def _at_cosine(
+    reference: tuple[float, ...], other: tuple[float, ...], target: float
+) -> tuple[float, ...]:
+    """A unit vector whose cosine against *reference* is exactly *target*."""
+
+    base = np.asarray(reference, dtype=np.float64)
+    candidate = np.asarray(other, dtype=np.float64)
+    projected = candidate - float(candidate @ base) * base
+    perpendicular = projected / np.linalg.norm(projected)
+    sine = (max(0.0, 1.0 - target * target)) ** 0.5
+    return tuple(float(value) for value in (target * base + sine * perpendicular))
+
+
+def _reference_report(configured: tuple[float, ...]) -> Any:
+    embedder = _make_embedder(
+        {
+            **_one_text("http://index/v1", _vector(1)),
+            **_one_text("http://new/v1", configured),
+        }
+    )
+    return identity.verify_embedding_identity(
+        configured_base_url="http://new/v1",
+        recorded_base_url="http://index/v1",
+        embedder=embedder,
+    )
+
+
+@pytest.mark.parametrize("cosine", MEASURED_REPEAT_COSINES)
+def test_the_reference_arm_tolerates_the_measured_repeat_noise(cosine: float) -> None:
+    """A stochastic endpoint must not fail its own identity check.
+
+    The gateway answers the same probe twice at 0.998-1.0; the arm compares
+    exactly such a pair when the operator's address setting is empty, so the
+    floor has to sit below that band (0.999 did not).
+    """
+
+    report = _reference_report(_at_cosine(_vector(1), _vector(2), cosine))
+
+    assert report.arm == "reference"
+    assert report.passed is True
+    assert report.cosine == pytest.approx(cosine, abs=1e-6)
+    assert report.threshold == identity.REFERENCE_COSINE_FLOOR
+
+
+@pytest.mark.parametrize("cosine", MEASURED_WRONG_ANSWER_COSINES)
+def test_the_reference_arm_still_rejects_the_wrong_answer_band(
+    cosine: float,
+) -> None:
+    """Tuning the floor down must not open the door to another space."""
+
+    report = _reference_report(_at_cosine(_vector(1), _vector(2), cosine))
+
+    assert report.passed is False
+    assert "不要切换到这个端点" in report.detail
+
+
+def test_the_reference_floor_is_derived_from_the_measured_noise_band() -> None:
+    """The number, and why it cannot be tightened without new measurements."""
+
+    assert identity.REFERENCE_COSINE_FLOOR < min(MEASURED_REPEAT_COSINES)
+    assert identity.REFERENCE_COSINE_FLOOR > max(MEASURED_WRONG_ANSWER_COSINES)
+    assert identity.REFERENCE_COSINE_FLOOR == 0.99
+    assert identity.INDEX_COSINE_FLOOR == 0.99
+
+
 def test_the_reference_arm_fails_loudly_in_another_space() -> None:
     recorded = _vector(1)
     embedder = _make_embedder(
@@ -588,4 +662,4 @@ def test_the_page_asks_for_the_identity_check_on_the_embedding_card() -> None:
     assert "向量身份未校验" in page
     # The verdict travels with every other connection-test line.
     assert "const identity = identityText(payload.identity);" in page
-    assert "payload.ok ? \"成功\" : \"失败\"" in page
+    assert 'payload.ok ? "成功" : "失败"' in page
