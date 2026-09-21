@@ -69,13 +69,19 @@ sudo ./install-site.sh --dry-run    # 先只看检查结果，不落地任何改
 - **保存后在下次重启生效**（服务在启动时读取一次凭据；重启：
   `cd <交付包目录> && docker compose restart app`，约 5 分钟）。
 
-> **换 key 之后怎么生效（两种方式不同，实测踩过）**：
-> * **页面方式**：`docker compose restart app` 即可（服务在启动时读一次凭据）。
-> * **密钥文件方式**：要 `docker compose up -d --force-recreate app` —— **只 restart 不够**。
->   容器把密钥文件按 inode 挂进去，`install`/`mv` 这类"换文件"的写法会换成新 inode，
->   容器里看到的还是旧内容（或旧空文件）。
+> **换 key 之后怎么生效（2026-09-22 反向实验实测；此前"必须 --force-recreate"的说法已作废）**：
+> * 两种方式都只需 **`cd <交付包目录> && docker compose restart app`**（服务在启动时读一次凭据，
+>   启动相位 ≈5 分钟）。bind mount 挂的是**文件**：不重启时容器里看到的仍是旧文件内容；
+>   而 `restart` 会按路径重新挂载 ⇒ 新文件即刻生效。`up -d --force-recreate app` 也行，
+>   但**不是必须**（两者启动耗时一样，restart 更轻）。
+> * **真正会让"换了 key 却没生效"的是属主**：`sudo install -m 600 …` 放进去的文件属主是
+>   `root:root 0600`，容器以**数据属主**运行（安装器写进 .env 的 `MIROTHINKER_UID`），
+>   读不到就当作"没有这个 key"（连接测试会显示"凭据缺失/401"，日志同样）。
+>   ⇒ 换完 key 后**重跑一次 `sudo ./install-site.sh`**（幂等，它会把属主归一给数据属主），
+>   或 `sudo chown $(sudo stat -c %u /var/tmp/mirothinker-data-v2/index-v3-v2) secrets/.*_api_key`，
+>   然后 `docker compose restart app`。
 > * 如果第一次安装时某个密钥是缺的，安装器会放一个**空的占位文件**（0600）；之后把真 key
->   写进同一个路径（内容写进去或换文件都可以，换文件记得 `--force-recreate`）。
+>   写进同一个路径即可（内容写进去或换文件都可以，换文件记得 `restart app`）。
 >
 > 两条路等价，任选其一。密钥文件（§2）与页面（本节）指向同一批凭据；
 > 页面更适合"先上线、后补 key"，文件更适合"一次装完"。
@@ -118,8 +124,8 @@ sudo ./install-site.sh --dry-run    # 先只看检查结果，不落地任何改
 | 症状 | 原因 | 动作 |
 |---|---|---|
 | 安装器 `[FAIL] 缺少 N 个密钥文件` | 有 key 没放 | 按它打印的路径与命令模板放好，重跑 `install-site.sh` |
-| 问答只给要点、不像大模型写的成文段落 | 缺 `.deepseek_api_key`（或档位不对） | 放 key（或页面填）→ 重启（页面方式 `restart`；文件方式 `up -d --force-recreate app`，约 5 分钟） |
-| 语义类问题变差/失败 | 缺 `.sglang_api_key`，或嵌入端点不通 | 放 key；`/admin` → 嵌入端点 → "测试"应为 200 + 维度 4096 |
+| 问答只给要点、不像大模型写的成文段落 | 缺 `.deepseek_api_key`（或档位不对，或 key 文件属主是 root 容器读不到） | 放 key（或页面填）→ `docker compose restart app`（约 5 分钟） |
+| 语义类问题变差/失败 | 缺 `.sglang_api_key`，或嵌入端点不通，或 key 文件属主是 root | 放 key（属主归一并 `restart app`）；`/admin` → 嵌入端点 → "测试"应为 200 + 维度 4096 |
 | 安装器 `[warn] 嵌入端点探针未过` | 出网不通或 key 不对 | 检查到 `100.64.0.27:18005` 的出网；`/admin` 点测试定位是地址还是凭据问题 |
 | 问答没有联网内容 | 缺 `.bocha_api_key` / `.serper_api_key` | 放 key → 重启 |
 | 出网通但抓不到网页 | **代理环境变量不生效**（客户端禁用代理） | 需要**直连**或**透明代理**；`http_proxy/https_proxy` 写了也没用 |
@@ -127,7 +133,8 @@ sudo ./install-site.sh --dry-run    # 先只看检查结果，不落地任何改
 | 容器被 kill（exit 137） | 内存不足 | 该服务稳态占用 ≈17.6 GB，另有采集库；机器建议 ≥64 GB。看 `dmesg` 与 `docker inspect --format '{{.State.OOMKilled}}'` |
 | 采集页（`/seeds` `/upload` `/jobs`）503，但 `/chat` 正常 | 采集库（PostgreSQL）未就绪 | `docker compose ps db` 应为 healthy；`docker compose logs db`；`docker compose exec app mirothinker-migrate --status` |
 | 每次重启都多花 ≈190 秒 | 镜像里的 Python 与封印该数据包的解释器补丁版本不一致 | 换回交付包里的镜像（自带的解释器是 3.12.12）；**不要**自行升级镜像里的 Python |
-| 放进 key 了但能力没变 | 文件方式只 `restart` 了（bind mount 绑的是旧 inode） | 用 `docker compose up -d --force-recreate app` |
+| 放进 key 了但能力没变 | ① key 文件属主是 root（sudo install 放的，容器读不到）；② 或没重启（服务只在启动时读凭据） | 先归属主（重跑 `sudo ./install-site.sh` 或 `chown` 给数据属主），再 `docker compose restart app` |
+| 安装器 `[FAIL] 校验失败` 且差异清单是空的 | 以前有人非 root 跑过，`/tmp` 里留下的固定文件 root 打不开（v1.1 的已知缺陷，v2 已改成 mktemp） | 删掉旧的 `/tmp/mirothinker-checksums.out`（或直接用 v2 包） |
 | 安装器提示"某个 key 是目录" | 曾经缺文件时 docker 建了同名目录 | 安装器会自己删掉并放空占位文件；若提示非空目录，手动 `rm -rf` 后重跑 |
 | `/main` 打不开、没有账号 | 状态目录不存在或不可写 | 安装器会自动创建（0700）；若手删过，重跑安装器 |
 
@@ -153,6 +160,7 @@ sudo ./install-site.sh --dry-run    # 先只看检查结果，不落地任何改
 # ② 登录并改密
 #    浏览器：http://<机器IP>:18188/main
 #    首启口令在状态目录：/var/tmp/mirothinker-canonical-v2-s12f/admin-initial-password.txt
+#    （root 安装时该文件的属主是**数据属主**、状态目录 0700 ⇒ 普通用户读不到就 `sudo cat`）
 #    登录后**立即改密**（改完用新口令再登录一次确认）
 
 # ③ 跑回归门（7 组真实会话）。**先确认 chat LLM 档位与 key 已就绪**，否则门会是 6/7：

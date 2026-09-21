@@ -197,6 +197,27 @@ place "${KIT_DIR}/${IMAGE_TGZ}" "${OUT_DIR}/${IMAGE_TGZ}" "$IMAGE_TGZ"
 place "${KIT_DIR}/${IMAGE_TGZ}.sha256" "${OUT_DIR}/${IMAGE_TGZ}.sha256" "${IMAGE_TGZ}.sha256"
 place "${DATA_XFER_DIR}/${DATA_TGZ}" "${OUT_DIR}/${DATA_TGZ}" "$DATA_TGZ"
 place "${DATA_XFER_DIR}/${DATA_TGZ}.sha256" "${OUT_DIR}/${DATA_TGZ}.sha256" "${DATA_TGZ}.sha256"
+# 两个 .sha256 一律改写成**相对文件名**：README-FIRST 让操作者在交付包目录里
+# `sha256sum -c <name>.sha256`，绝对路径在他们的机器上不存在（打包机上还会校验到
+# 另一个同名文件）。
+for tgz in "$IMAGE_TGZ" "$DATA_TGZ"; do
+  sha_out="${OUT_DIR}/${tgz}.sha256"
+  [[ -s "$sha_out" ]] || continue
+  digest="$(awk '{print $1}' "$sha_out")"
+  printf '%s  %s\n' "$digest" "$tgz" > "$sha_out"
+  printf '  [ok]   %s.sha256 改写为相对文件名（%s…）\n' "$tgz" "${digest:0:16}"
+done
+
+echo "-- 密钥目录（空目录 + 说明；4 个密钥由操作者在此落位）--"
+mkdir -p "${OUT_DIR}/secrets"
+if [[ -s "${KIT_DIR}/secrets/README.txt" ]]; then
+  cp "${KIT_DIR}/secrets/README.txt" "${OUT_DIR}/secrets/README.txt"
+  printf '  [ok]   secrets/ 已建（含 README.txt）—— CONFIG-GUIDE §2 的 install 命令才有落点\n'
+else
+  printf '把 4 个密钥文件放进本目录（文件名必须完全一致，0600）：\n  .deepseek_api_key  .bocha_api_key  .serper_api_key  .sglang_api_key\n' \
+    > "${OUT_DIR}/secrets/README.txt"
+  printf '  [warn] kit 里没有 secrets/README.txt，已就地生成一份\n'
+fi
 
 echo "-- 预置受管配置（非机密：端点/档位/窗口）--"
 mkdir -p "${OUT_DIR}/state/config-managed"

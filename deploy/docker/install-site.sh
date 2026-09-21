@@ -104,6 +104,25 @@ rewrite_paths() {
 
 human_elapsed() { printf '%dm%02ds' $(($1 / 60)) $(($1 % 60)); }
 
+# 交付物校验/加载的中间输出必须用 mktemp：**不能**用 /tmp 下的固定文件名。
+# 实测（Ubuntu 24.04，fs.protected_regular=2）：非 root 跑过一次之后，再用 sudo 跑，
+# root 打不开那个属于别人的 /tmp 文件（O_CREAT 被拒）⇒ 装到一半以"校验失败"退出，
+# 而报错文案还指向校验和，最难查。
+tmp_checksums_out="$(mktemp)"
+tmp_load_out="$(mktemp)"
+cleanup_tmp() { rm -f "$tmp_checksums_out" "$tmp_load_out"; }
+trap cleanup_tmp EXIT
+
+# 数据属主 = 容器内运行 uid（compose 的 user:）。真 root 安装时宿主侧资产默认是
+# root:root，而容器里 uid 是数据属主 ⇒ 状态目录 0700 会让入口预检 exit 78、
+# 密钥 0600 会让容器读不到（能力静默降级）。凡是容器要读/写的东西都归一到这里。
+owner_uid=""
+owner_gid=""
+normalize_owner() {
+  [[ "$(id -u)" == "0" && -n "$owner_uid" && -e "$1" ]] || return 0
+  chown -R "${owner_uid}:${owner_gid}" "$1" 2>/dev/null
+}
+
 # 覆盖件检查（--dry-run 也跑）：这两份文件缺失/不可执行 ⇒ 容器 exit 78 或服务错包，
 # 是最该在"动任何东西之前"发现的问题。
 check_overrides() {
@@ -292,10 +311,10 @@ else
     [[ "$bad" == "0" ]] && ok "--fast：$(grep -c $'\t' "$tmp_sizes") 个文件尺寸全部一致（未算 sha256）" || fail "--fast 尺寸校验有差异"
     rm -f "$tmp_sizes"
   else
-    if (cd "$BUNDLE_DIR" && sha256sum -c "$tmp_list" > /tmp/mirothinker-checksums.out 2>&1); then
-      ok "$(grep -c ': OK$' /tmp/mirothinker-checksums.out) 个交付物 sha256 全部一致（$(human_elapsed $(( $(date +%s) - t0 )))）"
+    if (cd "$BUNDLE_DIR" && sha256sum -c "$tmp_list" > "$tmp_checksums_out" 2>&1); then
+      ok "$(grep -c ': OK$' "$tmp_checksums_out") 个交付物 sha256 全部一致（$(human_elapsed $(( $(date +%s) - t0 )))）"
     else
-      fail "校验失败，前几行差异："; grep -v ': OK$' /tmp/mirothinker-checksums.out | head -5 | sed 's/^/         /'
+      fail "校验失败，前几行差异："; grep -v ': OK$' "$tmp_checksums_out" | head -5 | sed 's/^/         /'
     fi
   fi
   rm -f "$tmp_list"
@@ -303,13 +322,22 @@ fi
 if [[ "$FAIL" != "0" ]]; then summary_block; exit 11; fi
 
 # ==============================================================================
+# 数据属主（= 容器内运行 uid，compose 的 user:）在解包之后就能确定了；后面的
+# 状态目录/密钥/受管配置都要按它归一属主（真 root 安装时它们默认是 root:root）。
+owner_uid="$(stat -c '%u' "${DATA_ROOT}/index-v3-v2" 2>/dev/null || stat -c '%u' "$DATA_ROOT" 2>/dev/null || echo "$(id -u)")"
+owner_gid="$(stat -c '%g' "${DATA_ROOT}/index-v3-v2" 2>/dev/null || stat -c '%g' "$DATA_ROOT" 2>/dev/null || echo "$(id -g)")"
+
 step "4. 状态目录（$STATE_DIR）"
 if [[ "$DRY_RUN" == "1" ]]; then
-  printf '  [dry-run] 会创建 %s（0700）\n' "$STATE_DIR"
+  printf '  [dry-run] 会创建 %s（0700，属主 %s:%s）\n' "$STATE_DIR" "$owner_uid" "$owner_gid"
 else
   mkdir -p "$STATE_DIR" && chmod 700 "$STATE_DIR" \
     && ok "状态目录就位（0700）：admin 账号库 / 密钥 / 首启口令 / 访问日志都落在这里" \
     || die 12 "无法创建 $STATE_DIR"
+  normalize_owner "$DATA_ROOT"
+  normalize_owner "$STATE_DIR"
+  printf '  属主归一（容器内 uid=%s）：数据根=%s 状态目录=%s\n' \
+    "${owner_uid}:${owner_gid}" "$(stat -c '%u:%g' "$DATA_ROOT")" "$(stat -c '%u:%g' "$STATE_DIR")"
 fi
 
 # ==============================================================================
@@ -320,18 +348,16 @@ elif [[ "$DRY_RUN" == "1" ]]; then
   printf '  [dry-run] 会 docker load -i %s\n' "$IMAGE_TGZ"
 else
   t0=$(date +%s)
-  if docker load -i "${BUNDLE_DIR}/${IMAGE_TGZ}" > /tmp/mirothinker-load.out 2>&1; then
+  if docker load -i "${BUNDLE_DIR}/${IMAGE_TGZ}" > "$tmp_load_out" 2>&1; then
     image_id="$(docker image inspect -f '{{.Id}}' "$IMAGE_TAG" 2>/dev/null | cut -c1-19)"
-    ok "docker load 完成（$(human_elapsed $(( $(date +%s) - t0 )))：$(tail -1 /tmp/mirothinker-load.out | head -c 80)… id=${image_id}…）"
+    ok "docker load 完成（$(human_elapsed $(( $(date +%s) - t0 )))：$(tail -1 "$tmp_load_out" | head -c 80)… id=${image_id}…）"
   else
-    die 12 "docker load 失败：$(tail -3 /tmp/mirothinker-load.out | head -c 300)"
+    die 12 "docker load 失败：$(tail -3 "$tmp_load_out" | head -c 300)"
   fi
 fi
 
 # ==============================================================================
 step "6. 现场配置（.env / PG 凭据 / 4 个密钥）"
-owner_uid="$(stat -c '%u' "${DATA_ROOT}/index-v3-v2" 2>/dev/null || stat -c '%u' "$DATA_ROOT" 2>/dev/null || echo "$(id -u)")"
-owner_gid="$(stat -c '%g' "${DATA_ROOT}/index-v3-v2" 2>/dev/null || stat -c '%g' "$DATA_ROOT" 2>/dev/null || echo "$(id -g)")"
 if [[ "$DRY_RUN" == "1" ]]; then
   printf '  [dry-run] 会写 %s（uid:gid=%s:%s，端口 %s，路径见上）\n' "$ENV_FILE" "$owner_uid" "$owner_gid" "$PORT"
   printf '  [dry-run] 会生成 %s（随机口令，0600），并检查 secrets/ 下 4 个密钥\n' "$PG_ENV_FILE"
@@ -358,6 +384,14 @@ ENVEOF
 
   mkdir -p "$SECRETS_DIR" "$MANAGED_DIR" "${BUNDLE_DIR}/state/logs" 2>/dev/null
   check_overrides
+  # 真 root 安装：.env 与 secrets/ 里后补的密钥都是 root:root。容器不读 .env，但
+  # **读 secrets/**；.env 则要留给操作者（sudo 之外的 docker compose 也要能读）。
+  normalize_owner "$SECRETS_DIR"
+  normalize_owner "$MANAGED_DIR"
+  normalize_owner "${BUNDLE_DIR}/state/logs"
+  if [[ "$(id -u)" == "0" && -n "${SUDO_UID:-}" ]]; then
+    chown "${SUDO_UID}:${SUDO_GID:-$SUDO_UID}" "$ENV_FILE" 2>/dev/null
+  fi
   # 预置受管配置（端点/档位/采集窗口，非机密）——已存在则不动，避免覆盖现场在页面上的改动
   if [[ ! -s "${MANAGED_DIR}/settings.json" && -s "${BUNDLE_DIR}/state/config-managed/settings.json" ]]; then
     cp "${BUNDLE_DIR}/state/config-managed/settings.json" "${MANAGED_DIR}/settings.json"
@@ -447,6 +481,21 @@ if [[ "$DRY_RUN" == "1" ]]; then summary_block; echo; echo "--dry-run 结束：�
 
 # ==============================================================================
 step "7. 起服务（docker compose，容器内固定 18188 → 宿主 ${PORT}）"
+if [[ "$DO_UP" != "1" ]]; then
+  warn "--no-up：按要求停在起服务之前（数据面/状态目录/配置/密钥检查都已就位）"
+  cat <<DONE
+
+================ 安装（--no-up）完成 ================
+  数据/状态：   ${DATA_ROOT}
+                ${STATE_DIR}（首启口令在 admin-initial-password.txt）
+  起服务：      cd ${BUNDLE_DIR} && docker compose up -d
+  健康检查：    http://127.0.0.1:${PORT}/api/health（启动相位实测 ≈276 s）
+  验收：        cd ${BUNDLE_DIR} && docker compose exec -T app mirothinker-verify
+===================================================
+DONE
+  summary_block
+  [[ "$FAIL" == "0" ]] && exit 0 || exit 14
+fi
 cd "$BUNDLE_DIR" || die 13 "无法进入 $BUNDLE_DIR"
 t0=$(date +%s)
 if ! docker compose up -d; then

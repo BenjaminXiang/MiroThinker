@@ -1,0 +1,49 @@
+{
+  "login": 200,
+  "embedding_test": {
+    "status": 200,
+    "body": {
+      "connection": "embedding",
+      "label": "Embedding 模型端点",
+      "ok": false,
+      "latency_ms": 11,
+      "http_status": 401,
+      "detail": "HTTP 401：端点可达，凭据被拒绝",
+      "called": true,
+      "runtime": {
+        "key": "embedding",
+        "label": "Embedding 模型端点",
+        "kind": "embedding",
+        "enabled": false,
+        "base_url": "http://100.64.0.27:18005/v1",
+        "model": "Qwen/Qwen3-Embedding-8B",
+        "api_key_origin": null,
+        "endpoint_origin": "managed-file(env:CANONICAL_V2_EMBEDDING_BASE_URL)",
+        "runtime_note": "运行期不可用：本地凭据缺失（API_KEY/OPENAI_API_KEY/SGLANG_API_KEY/.sglang_api_key 全空）",
+        "pending_restart": false
+      },
+      "used": {
+        "api_key_source": "none",
+        "effective_api_key_source": "none",
+        "endpoint_source": "managed-file(env:CANONICAL_V2_EMBEDDING_BASE_URL)",
+        "base_url": null,
+        "model": "Qwen/Qwen3-Embedding-8B"
+      },
+      "rate": {
+        "per_minute_limit": 6,
+        "min_interval_seconds": 1.0,
+        "remaining": 5
+      },
+      "identity": null,
+      "restart_required": null
+    }
+  },
+  "summary": {
+    "ok": false,
+    "http_status": 401,
+    "dimension": null,
+    "api_key_source": "none",
+    "endpoint_source": "managed-file(env:CANONICAL_V2_EMBEDDING_BASE_URL)",
+    "error": null
+  }
+}

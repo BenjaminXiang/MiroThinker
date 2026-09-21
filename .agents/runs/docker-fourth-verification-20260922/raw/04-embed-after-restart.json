@@ -1,0 +1,21 @@
+{
+  "login": 200,
+  "embedding_test": {
+    "status": 429,
+    "body": {
+      "detail": {
+        "error": "rate_limited",
+        "connection": "embedding",
+        "retry_after_seconds": 1
+      }
+    }
+  },
+  "summary": {
+    "ok": null,
+    "http_status": null,
+    "dimension": null,
+    "api_key_source": null,
+    "endpoint_source": null,
+    "error": null
+  }
+}

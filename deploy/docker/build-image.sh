@@ -87,7 +87,9 @@ PY
 
 echo "== 导出镜像 tar =="
 docker save "$TAG" -o "$TAR_PATH"
-sha256sum "$TAR_PATH" > "${TAR_PATH}.sha256"
+# 校验文件里写**相对文件名**：写绝对路径的话，现场 `sha256sum -c` 要么校验到打包机上的
+# 另一个同名文件（打包机上），要么直接 "No such file or directory"（甲方机器上）。
+( cd "$(dirname "$TAR_PATH")" && sha256sum "$(basename "$TAR_PATH")" > "$(basename "$TAR_PATH").sha256" )
 
 # 压缩副本（网络传输用）。docker load 直接吃 .tar.gz：
 #   docker load -i mirothinker-serving-v1.tar.gz
