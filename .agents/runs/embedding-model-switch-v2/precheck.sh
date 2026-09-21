@@ -9,7 +9,7 @@
 #   bash precheck.sh --fast          # skip large-file hashing (size-only)
 #   bash precheck.sh --full          # also hash the pack lookup/relationships and the index artifacts
 #   bash precheck.sh --offline       # no network at all (endpoint checks reported as SKIP)
-#   bash precheck.sh --batch-probe   # adds ONE extra live call: a 25-text batch (the measured cap; declare-matched)
+#   bash precheck.sh --batch-probe   # adds ONE extra live call: a 20-text batch (the declared value)
 #
 # Exit codes: 0 = no FAIL (warnings allowed) · 2 = at least one FAIL
 #
@@ -81,8 +81,8 @@ OLD_POINTS=51026
 OLD_DIM=4096
 RUN16_ENVELOPE_SHA=43735faa9300fc834bffcea44304462f30128d5dfa0eb048e76075a115ccea20
 RUN16_ENVELOPE_BYTES=8303007285
-BUNDLE_NATIVE_SHA=81a536916053106114aa4c70ff43983bf6a12c8ecb0b5c562b43f9f02409b46a
-BUNDLE_COMPAT_SHA=2db8f03b255e138a13081566c6196db06d7af1a8a83c12cec2cbfaea00b22e3d
+BUNDLE_NATIVE_SHA=67927ea060ec3036927376c7059aaa7d3140c33160b9be440556a19cd8d64ef3
+BUNDLE_COMPAT_SHA=d5ff0ffb52bdaa70a5103fb9747fa7f320547f21dd8e7b6e3a5ce6bd05a2baf4
 HARNESS_SHA=ed80f818d4f902b3d5044e42910f046fbd6b9ca8ceb395f39386295c123b0e70
 GATE_SHA=(
   "baseline.json:7af37a34e57f5fe9f500d1d7810911a1cb7067fa651b27b8ad6867a8b51f99a2"
@@ -427,7 +427,7 @@ PY
 import json, os, time, urllib.error, urllib.request
 key = os.environ.get("CANONICAL_V2_EMBEDDING_API_KEY") or open(os.environ["KEY_FILE"]).read().strip()
 url = os.environ["GATEWAY_URL"].rstrip("/") + "/compatible-mode/v1/embeddings"
-texts = [f"批量上限探针 {i} — batch cap probe" for i in range(25)]
+texts = [f"批量上限探针 {i} — batch cap probe" for i in range(20)]
 body = json.dumps({"model": "qwen3.7-text-embedding-flash", "input": texts}).encode()
 req = urllib.request.Request(url, data=body, headers={"Content-Type": "application/json",
                                                      "Authorization": f"Bearer {key}"})
@@ -436,14 +436,15 @@ try:
     with urllib.request.urlopen(req, timeout=60) as r:
         doc, status = json.loads(r.read()), r.status
 except urllib.error.HTTPError as e:
-    print(f"[WARN] H3 batch probe — HTTP {e.code} for a 25-text batch: {e.read()[:200]!r} "
-          f"(25 is the measured cap — 26 is rejected; a rejection here means the limit changed, "
-          f"and lowering the bundle's batch_size re-freezes its content_sha256)")
+    print(f"[WARN] H3 batch probe — HTTP {e.code} for a 20-text batch: {e.read()[:200]!r} "
+          f"(20 is what both bundles declare; the gateway measured 25 as its cap, so a "
+          f"rejection here means the limit dropped below the declared value — lower "
+          f"batch_size and re-freeze the bundle's content_sha256)")
     raise SystemExit(0)
 lat = time.perf_counter() - t0
 rows = len(doc.get("data") or [])
-tag = "OK" if rows == 25 else "WARN"
-print(f"[{tag}]   H3 batch probe — HTTP {status}, rows={rows}/25, latency={lat:.3f}s, usage={doc.get('usage')}")
+tag = "OK" if rows == 20 else "WARN"
+print(f"[{tag}]   H3 batch probe — HTTP {status}, rows={rows}/20, latency={lat:.3f}s, usage={doc.get('usage')}")
 PY
     fi
   else
