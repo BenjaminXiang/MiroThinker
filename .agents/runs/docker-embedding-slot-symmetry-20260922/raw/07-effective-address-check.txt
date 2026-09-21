@@ -1,0 +1,22 @@
+== '交付预置 + 候选 bundle 记录地址' 组合下的生效地址（用**镜像内交付代码**跑）==
+候选 bundle 记录地址（来自 embedding-switch-line 的 qwen3.7-text-embedding-flash-embedding-bundle-v1.json）: https://maas.qianwenaiapi.com/api/v1
+Traceback (most recent call last):
+  File "<stdin>", line 3, in <module>
+  File "/opt/mirothinker/apps/miroflow-agent/src/data_agents/canonical_v2/managed_runtime.py", line 31, in <module>
+    from .managed_config import (
+  File "/opt/mirothinker/apps/miroflow-agent/src/data_agents/canonical_v2/managed_config.py", line 30, in <module>
+    from pydantic import (
+ModuleNotFoundError: No module named 'pydantic'
+== '交付预置 + 候选 bundle 记录地址' 组合下的生效地址（用**镜像内交付代码 + 服务自己的解释器**跑）==
+候选 bundle 记录地址（embedding-switch-line/…/qwen3.7-text-embedding-flash-embedding-bundle-v1.json）: https://maas.qianwenaiapi.com/api/v1
+旧预置（备份 .pre-r1-fix） 生效地址 = http://100.64.0.27:18005/v1
+旧预置（备份 .pre-r1-fix） 预置贡献的 embedding 字段 = ['extraction_endpoints.embedding_base_url', 'extraction_endpoints.embedding_model']
+新预置（本轮交付件）       生效地址 = https://maas.qianwenaiapi.com/api/v1
+新预置（本轮交付件）       预置贡献的 embedding 字段 = ['（预置里没有 embedding 字段）']
+
+== 模型那一侧的交付代码证据（镜像内 grep + 管理面视图）==
+-- CANONICAL_V2_EMBEDDING_MODEL 在 /opt/mirothinker/{apps,deploy} 的全部命中：
+/opt/mirothinker/apps/miroflow-agent/src/data_agents/canonical_v2/managed_config.py:75:    "extraction_endpoints.embedding_model": "CANONICAL_V2_EMBEDDING_MODEL",
+/opt/mirothinker/apps/admin-console/tests/test_canonical_v2_model_discovery_api.py:54:    "CANONICAL_V2_EMBEDDING_MODEL",
+-- 候选/自有适配器的 model 来源（recorded 适配器构造处）：
+8173:        model_id=document["model_id"],

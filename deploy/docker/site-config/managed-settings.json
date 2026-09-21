@@ -13,8 +13,6 @@
     "window_end_hour_utc": 22
   },
   "extraction_endpoints": {
-    "embedding_base_url": "http://100.64.0.27:18005/v1",
-    "embedding_model": "Qwen/Qwen3-Embedding-8B",
     "llm_base_url": "https://api.deepseek.com",
     "llm_model": "deepseek-v4-flash",
     "rerank_base_url": null,

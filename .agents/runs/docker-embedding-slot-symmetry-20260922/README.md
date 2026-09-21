@@ -5,14 +5,17 @@
 
 | 文档 | 内容 |
 |---|---|
-| `01-slot-symmetry.md` | 事实链复核、优先级规则、行为级 RED/GREEN、改动清单、5 条新测试、容器内机制级验收 |
-| `02-v2-handoff.md` | 端到端**不归本轮**：判据（可直接照抄的命令）、谁验、以及两条跨线风险（R1 端点覆盖优先级 / R2 指南措辞） |
+| `01-slot-symmetry.md` | 文件路线 → 候选槽位：事实链复核、优先级规则、行为级 RED/GREEN、改动清单、5 条新测试、容器内机制级验收 |
+| `02-v2-handoff.md` | 端到端**不归本轮**：判据（可直接照抄的命令）、谁验、R1/R2 的处置记录 |
+| `03-preset-embedding-endpoint.md` | 交付预置里的 v1 时代嵌入端点/模型：两个字段的事实结论（带行号）、预置怎么改与为什么、5 条新测试、容器证据、**其它 v1 遗留清单（L1-L7，只列）** |
 | `raw/00-RED-behavior.txt` | 行为级 RED（文件在、候选槽位空）与修好后同一 stub 的对照 |
 | `raw/05-container-acceptance.txt` | 真实容器：收据模式 + **运行中服务进程**环境 + 显式环境变量优先 + 无回归（v1 槽位/页面档位） |
+| `raw/06-preset-fix.txt` | 交付预置换掉后：生效端点来源由"受管覆盖"→`release-bundle-default`（同一实例，连接测试仍 200） |
 | `raw/03-D6-diagnosis.txt` | D6 修复验证（隔离容器：root:root 0700 状态目录 → exit 78 与新诊断文案） |
 
 改的机制文件：`deploy/docker/entrypoint.sh`（投影 + 凭据收据 + D6）、
-`apps/miroflow-agent/tests/canonical_v2/test_deploy_entrypoint_embedding_projection.py`（新增 5 条）、
-`deploy/docker/CONFIG-GUIDE.md`（§2 一句：一个文件喂所有嵌入道 + 排障命令）。
+`deploy/docker/site-config/managed-settings.json`（删掉 v1 时代的嵌入地址/模型两个键）、
+`deploy/docker/CONFIG-GUIDE.md`（§2 一个文件喂所有嵌入道 + §4 "地址可改、身份不可改"重写）、
+`apps/miroflow-agent/tests/canonical_v2/`（新增 2 个测试文件、共 10 条）。
 
 **证据里出现的 `sk-fake-…` 之类全部是本轮临时生成的假值**；未使用、未打印任何真密钥。

@@ -1,0 +1,22 @@
+===== 0. 换预置之前的基线（运行中的进程仍在用启动时投影的值） 02:37:55 =====
+宿主受管文件：/home/longxiang/delivery-xfer-v11/site-bundle/state/config-managed/settings.json longxiang:longxiang 664
+  extraction_endpoints（旧预置）: {"embedding_base_url": "http://100.64.0.27:18005/v1", "embedding_model": "Qwen/Qwen3-Embedding-8B", "llm_base_url": "https://api.deepseek.com", "llm_model": "deepseek-v4-flash", "rerank_base_url": null, "rerank_model": null}
+  {"login": 200, "ok": true, "http": 200, "detail": "HTTP 200", "base_url": "http://100.64.0.27:18005/v1", "model": "Qwen/Qwen3-Embedding-8B", "endpoint_origin": "managed-file(env:CANONICAL_V2_EMBEDDING_BASE_URL)", "api_key_origin": "legacy-file:.sglang_api_key", "runtime_note": "运行期 base_url http://100.64.0.27:18005/v1（来源 managed-file(env:CANONICAL_V2_EMBEDDING_BASE_URL)；未设置受管地址时回落到发布包记录的地址）；凭据来源 legacy-file:.sglang_api_key"}
+
+===== 1. 落位修好的交付预置（= build-site-bundle.sh 会打进包的那份）02:37:56 =====
+  extraction_endpoints（新预置）: {"llm_base_url": "https://api.deepseek.com", "llm_model": "deepseek-v4-flash", "rerank_base_url": null, "rerank_model": null}
+  含 embedding 字段吗： 否
+  与仓库源 diff（应为本轮改动）:
+  与仓库当前源逐字一致 ✓
+
+===== 2. 重启服务让新预置生效（R16：启动时投影）02:37:56 =====
+health OK after 300s
+
+===== 3. 生效端点（改后）02:42:58 =====
+  {"login": 200, "ok": true, "http": 200, "detail": "HTTP 200", "base_url": "http://100.64.0.27:18005/v1", "model": "Qwen/Qwen3-Embedding-8B", "endpoint_origin": "release-bundle-default", "api_key_origin": "legacy-file:.sglang_api_key", "runtime_note": "运行期 base_url http://100.64.0.27:18005/v1（来源 release-bundle-default；未设置受管地址时回落到发布包记录的地址）；凭据来源 legacy-file:.sglang_api_key"}
+
+===== 4. 服务进程环境里还有没有那个覆盖（只有名字与是否为空） =====
+  CANONICAL_V2_EMBEDDING_BASE_URL=空
+  CANONICAL_V2_EMBEDDING_MODEL=空
+  CHAT_LLM_PROFILE=空
+  LOCAL_LLM_BASE_URL=空
