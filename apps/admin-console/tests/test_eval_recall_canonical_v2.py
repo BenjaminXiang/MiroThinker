@@ -192,6 +192,33 @@ def test_order_cases_keeps_group_order_and_turn_order() -> None:
     assert [case["case_id"] for case in ordered] == ["b1", "b2", "a1"]
 
 
+def test_group_slugs_share_one_session_per_turn_group() -> None:
+    cases = [
+        {"case_id": "q1t1", "group": "问题1", "turn": 1},
+        {"case_id": "q1t2", "group": "问题1", "turn": 2},
+        {"case_id": "q2t1", "group": "问题2", "turn": 1},
+        {"case_id": "s01", "group": "s01", "turn": 1},
+    ]
+    slugs = harness._group_slugs(cases)
+    sessions = {group: harness._session_id("866c", slug) for group, slug in slugs.items()}
+    assert sessions["问题1"] == sessions["问题1"]
+    assert len({harness._session_suffix(session) for session in sessions.values()}) == 3
+    assert sessions["问题1"] == "session:chat:866c-q1t1"
+    # the serving process names the debug dump after the last 12 characters
+    assert all(
+        len(harness._session_suffix(session)) <= 12 for session in sessions.values()
+    )
+
+
+def test_session_id_rejects_a_run_id_that_breaks_the_debug_file_name() -> None:
+    try:
+        harness._session_id("866c-too-long", "q1t1")
+    except SystemExit as exc:
+        assert "too long" in str(exc)
+    else:  # pragma: no cover - the guard must fire
+        raise AssertionError("expected SystemExit for an over-long run id")
+
+
 # --- aggregates ------------------------------------------------------------
 
 def test_aggregate_reports_vector_median_and_citation_mix() -> None:

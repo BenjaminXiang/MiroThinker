@@ -147,6 +147,35 @@ def _cases_from_workbook(path: Path) -> tuple[str, list[dict[str, Any]]]:
     return "testset", cases
 
 
+def _group_of(case: dict[str, Any]) -> str:
+    return str(case.get("group") or case["case_id"])
+
+
+def _slug(case_id: str) -> str:
+    return re.sub(r"[^0-9A-Za-z-]", "", case_id)[:7] or "case"
+
+
+def _group_slugs(cases: Sequence[dict[str, Any]]) -> dict[str, str]:
+    """One session slug per turn group: a group's turns must share a session or
+    the follow-ups ("他/上述企业/这论文") lose their antecedent and the group's
+    multi-turn semantics disappear."""
+    slugs: dict[str, str] = {}
+    for case in cases:
+        slugs.setdefault(_group_of(case), _slug(case["case_id"]))
+    return slugs
+
+
+def _session_id(run_id: str, slug: str) -> str:
+    session_id = f"session:chat:{run_id}-{slug}"
+    if len(_session_suffix(session_id)) != len(run_id) + 1 + len(slug):
+        raise SystemExit(
+            f"run id {run_id!r} is too long: the serving process names its "
+            "per-turn debug dump after the last 12 characters of the session id, "
+            "so the group slug must survive that truncation"
+        )
+    return session_id
+
+
 def _order_cases(cases: Sequence[dict[str, Any]]) -> list[dict[str, Any]]:
     order: dict[str, int] = {}
     ordered: list[dict[str, Any]] = []
@@ -641,15 +670,18 @@ def _capture(args: argparse.Namespace) -> int:
             raise SystemExit(f"--only matched no case: {sorted(wanted)}")
 
     run_id = args.run_id or secrets.token_hex(2)
+    slugs = _group_slugs(cases)
+    sessions = {group: _session_id(run_id, slug) for group, slug in slugs.items()}
     started = time.monotonic()
     records: list[dict[str, Any]] = []
     print(
-        f"target={args.base_url} label={args.label} cases={len(cases)} run_id={run_id} "
+        f"target={args.base_url} label={args.label} cases={len(cases)} "
+        f"groups={len(slugs)} run_id={run_id} "
         f"turn_debug_dir={args.turn_debug_dir} turn_trace_dir={args.turn_trace_dir}",
         flush=True,
     )
     for index, case in enumerate(cases, start=1):
-        session_id = f"session:chat:{run_id}-{case['case_id']}"
+        session_id = sessions[_group_of(case)]
         record = _run_case(
             case,
             base_url=args.base_url,
@@ -953,7 +985,13 @@ def _parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     )
     parser.add_argument("--out", help="capture JSON to write")
     parser.add_argument("--label", default="unlabeled", help="free-text run label (pack/model)")
-    parser.add_argument("--only", help="comma-separated case ids to run")
+    parser.add_argument(
+        "--only",
+        help=(
+            "comma-separated case ids; a group's earlier turns are not replayed, "
+            "so referent-dependent follow-ups lose their antecedent"
+        ),
+    )
     parser.add_argument("--run-id", help="session prefix override (default: random 4 hex)")
     parser.add_argument("--timeout", type=float, default=240.0)
     parser.add_argument(
