@@ -203,7 +203,7 @@ earlier recorded run of the same suite
 exactly 12 failures, all of them `test_real_boundary_*` (10 params +
 schema-fingerprint drift) and `test_complete_build_uses_verified_copies_…`. Both
 trees fail the same tests, so nothing in this slice's diff is implicated; a run
-with the real database up is what would settle it (see §5).
+with the real database up is what would settle it (see §7).
 
 ## 5. Required tuning before the switch: cosine thresholds vs this gateway's noise
 
