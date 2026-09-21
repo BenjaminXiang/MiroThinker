@@ -36,6 +36,12 @@ def _checker() -> ModuleType:
     return module
 
 
+def _write_ledger(tmp_path: Path, document: dict) -> Path:
+    ledger = tmp_path / "ledger.json"
+    ledger.write_text(json.dumps(document), encoding="utf-8")
+    return ledger
+
+
 def _pack(tmp_path: Path, *, preset: dict, bundle: dict, guide: str, pack: str) -> Path:
     out = tmp_path / "bundle"
     (out / "bundles").mkdir(parents=True)
@@ -114,17 +120,53 @@ def test_docs_disagreeing_with_the_shipped_bundle_are_reported(tmp_path: Path) -
         ),
         pack="serving-pack-fembed-v1",
     )
+    ledger = _write_ledger(
+        tmp_path, _V2_BUNDLE
+    )  # 账本与站点身份一致：这条只考"文档 vs 包"
 
-    result = _checker().main(["check", str(out)])
+    result = _checker().main(["check", str(out), "--ledger", str(ledger)])
 
     assert result == 0
-    errors, warnings = _checker().check(out)
+    errors, warnings = _checker().check(out, ledger=ledger)
     text = "\n".join(message for _priority, message in warnings)
     assert not errors
     assert "100.64.0.27:18005" in text  # 端点与随包 bundle 不同
     assert "维度 4096" in text  # 维度不同
     assert "Qwen/Qwen3-Embedding-8B" in text  # 模型 id 不同
     assert "serving-pack-run16-v11" in text  # 包名不同
+
+
+def test_ledger_identity_must_match_the_site_bundle(tmp_path: Path) -> None:
+    """镜像账本（运行期按它逐字段比对）与站点包的嵌入身份必须一致 —— 不一致即拦包。"""
+
+    out = _pack(
+        tmp_path,
+        preset=_CLEAN_PRESET,
+        bundle=_V2_BUNDLE,
+        guide="嵌入端点 " + _V2_BUNDLE["base_url"] + "\n",
+        pack="serving-pack-fembed-v1",
+    )
+    ledger = _write_ledger(tmp_path, _V1_BUNDLE)  # 镜像账本还是 v1 身份
+
+    errors, _warnings = _checker().check(out, ledger=ledger)
+
+    assert any("身份都不一致" in error for error in errors)
+    assert _checker().main(["check", str(out), "--ledger", str(ledger)]) == 1
+
+
+def test_ledger_matching_the_site_bundle_passes(tmp_path: Path) -> None:
+    out = _pack(
+        tmp_path,
+        preset=_CLEAN_PRESET,
+        bundle=_V1_BUNDLE,
+        guide="嵌入端点 " + _V1_BUNDLE["base_url"] + "（维度 4096）\n",
+        pack="serving-pack-run16-v11",
+    )
+    ledger = _write_ledger(tmp_path, _V1_BUNDLE)
+
+    errors, _warnings = _checker().check(out, ledger=ledger)
+
+    assert errors == []
 
 
 def test_a_self_consistent_package_reports_nothing(tmp_path: Path) -> None:
@@ -141,9 +183,10 @@ def test_a_self_consistent_package_reports_nothing(tmp_path: Path) -> None:
         ),
         pack="serving-pack-run16-v11",
     )
+    ledger = _write_ledger(tmp_path, _V1_BUNDLE)
 
-    errors, warnings = _checker().check(out)
+    errors, warnings = _checker().check(out, ledger=ledger)
 
     assert errors == []
     assert warnings == []
-    assert _checker().main(["check", str(out)]) == 0
+    assert _checker().main(["check", str(out), "--ledger", str(ledger)]) == 0

@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # 容器内验收探针（只读，不改服务状态）。用法：
 #   docker compose exec -T app mirothinker-verify
-# 覆盖：/api/health、/chat、/main、嵌入端点（HTTP 200 + 维度 4096）、容器内存占用。
+# 覆盖：/api/health、/chat、/main、嵌入端点（身份取自**站点在用的记录 bundle**：HTTP 200 +
+# 维度与之一致；形状按"先兼容、只有 404/405 才换原生"的规则问地址）、容器内存占用。
 # 退出码 0 = 全通；非 0 = 有红点（逐条打印）。
 
 set -uo pipefail
@@ -9,7 +10,6 @@ set -uo pipefail
 PORT="${MIROTHINKER_PORT:-18188}"
 BASE="http://127.0.0.1:${PORT}"
 FAILED=0
-EMBEDDING_BUNDLE="/home/longxiang/MiroThinker/.worktrees/data-rebuild/.agents/runs/rebuild-canonical-v2-knowledge-platform/s12c/qwen-embedding-bundle-v1.json"
 PY=/opt/mirothinker/.venv/bin/python
 
 say() { printf '%s\n' "$*"; }
@@ -26,40 +26,12 @@ for path in /api/health /chat /main; do
   fi
 done
 
-say "== 嵌入端点探针（断言 HTTP 200 + 维度 4096）=="
-if "$PY" - "$EMBEDDING_BUNDLE" <<'PY'
-import json, sys, urllib.request
-from pathlib import Path
-sys.path.insert(0, "/opt/mirothinker/apps/miroflow-agent")
-from src.data_agents.providers.local_api_key import load_local_api_key  # noqa: E402
-
-bundle = json.loads(Path(sys.argv[1]).read_text(encoding="utf-8"))
-base_url = bundle["base_url"].rstrip("/")
-expected = int(bundle["dimension"])
-key = load_local_api_key() or ""
-if not key:
-    print("  [FAIL] 未找到本地嵌入密钥（.sglang_api_key / SGLANG_API_KEY / API_KEY）")
-    raise SystemExit(1)
-req = urllib.request.Request(
-    f"{base_url}/embeddings",
-    data=json.dumps({"model": bundle["model_id"], "input": ["探针"]}).encode(),
-    headers={"Content-Type": "application/json", "Authorization": f"Bearer {key}"},
-)
-try:
-    with urllib.request.urlopen(req, timeout=30) as resp:
-        status = resp.status
-        payload = json.loads(resp.read())
-except Exception as exc:  # noqa: BLE001
-    print(f"  [FAIL] 嵌入端点不可达：{type(exc).__name__}: {exc}")
-    raise SystemExit(1) from exc
-dims = len(payload["data"][0]["embedding"])
-if status == 200 and dims == expected:
-    print(f"  [OK]   {base_url} HTTP 200，维度 {dims}（model={bundle['model_id']}）")
-else:
-    print(f"  [FAIL] HTTP {status}，维度 {dims}（期望 {expected}）")
-    raise SystemExit(1)
-PY
-then :; else FAILED=1; fi
+say "== 嵌入端点探针（断言站点真正在用的身份）=="
+# 期望身份不写死：取自**运行中的服务** argv 里的 --recorded-embedding-bundle（运行期就是按它
+# 加载并逐字段比对的），退一步取冻结命令文件里的同一参数；地址取服务进程环境里的
+# CANONICAL_V2_EMBEDDING_BASE_URL（受管/页面覆盖）否则 bundle 记录的地址；形状按"先兼容、
+# 只有 404/405 才换 DashScope 原生"的规则问地址（与页面身份校验同一条规则）。
+if "$PY" /usr/local/bin/mirothinker-verify-embedding; then :; else FAILED=1; fi
 
 say "== 内存 =="
 "$PY" - <<'PY'

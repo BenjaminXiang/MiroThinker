@@ -148,10 +148,14 @@ COPY deploy/docker/ledger/s12c/qwen-embedding-bundle-v1.json \
 # 交付工具（容器内自检：/chat、/main、/api/health、嵌入探针 200 + 4096 维；
 # replay 回归门；采集库幂等迁移；入口预检）
 COPY deploy/docker/verify.sh /usr/local/bin/mirothinker-verify
+# 嵌入身份探针（verify.sh 调它）：期望身份取自**站点在用的记录 bundle**，不写死模型/维度/地址
+# （v1 账本 = 4096 维自建端点；v2 = 1024 维 dashscope 原生网关）。
+COPY deploy/docker/verify_embedding.py /usr/local/bin/mirothinker-verify-embedding
 COPY deploy/docker/replay.sh /usr/local/bin/mirothinker-replay
 COPY deploy/docker/migrate.py /usr/local/bin/mirothinker-migrate
 COPY deploy/docker/entrypoint.sh /usr/local/bin/mirothinker-entrypoint
-RUN chmod 0755 /usr/local/bin/mirothinker-verify /usr/local/bin/mirothinker-replay \
+RUN chmod 0755 /usr/local/bin/mirothinker-verify /usr/local/bin/mirothinker-verify-embedding \
+              /usr/local/bin/mirothinker-replay \
               /usr/local/bin/mirothinker-migrate /usr/local/bin/mirothinker-entrypoint
 
 # 服务进程在容器内固定监听 18188（冻结命令文件把端口钉死在 18188，端口映射交给 compose）

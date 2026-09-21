@@ -1,0 +1,14 @@
+== 场景：一个 v2 风格的站点（候选网关，1024 维，原生形状）==
+   假网关 http://127.0.0.1:34529/api/v1（兼容形状 404 / 原生形状 200 · 1024 维）
+   真 v1 账本身份：model=Qwen/Qwen3-Embedding-8B dimension=4096 provider=openai-compatible
+
+== A. 旧 verify 的嵌入断言（期望身份 = v1 账本）==
+  [FAIL] 嵌入端点不可达：HTTPError: HTTP Error 404: Not Found
+   exit=1（非 0 ⇒ 旧验收会判红）
+
+== B. 新探针（期望身份 = 站点在用的记录 bundle）==
+  [OK]   身份来源：/tmp/tmph25sn87r/candidate-embedding-bundle.json（model=qwen3.7-text-embedding-flash dimension=1024 provider=dashscope-native）
+  生效地址：http://127.0.0.1:34529/api/v1（来源 受管/环境覆盖 CANONICAL_V2_EMBEDDING_BASE_URL（服务进程环境优先））
+  [OK]   服务包身份一致：manifest embedding_model_id=qwen3.7-text-embedding-flash
+  [OK]   嵌入端点 http://127.0.0.1:34529/api/v1（形状 dashscope-native，角色 query）HTTP 200，维度 1024（model=qwen3.7-text-embedding-flash）
+   exit=0（0 ⇒ 新验收判过）

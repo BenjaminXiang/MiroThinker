@@ -32,23 +32,35 @@ _PRESET_FORBIDDEN = (
 )
 _PRESET_ADVISORY = ("paths.serving_pack_dir",)
 # 文档里合法的"非自建端点"引用（chat LLM、提供方地址）——命中就不报。
-_IGNORED_URLS = frozenset(
-    {"https://api.deepseek.com", "https://api.deepseek.com/v1"}
-)
-# 文档里合法的"带 embedding 字样但不是模型 id"的 token。
+_IGNORED_URLS = frozenset({"https://api.deepseek.com", "https://api.deepseek.com/v1"})
+# 文档里合法的"带 embedding 字样但不是模型 id"的 token：这里忽略的是**文件名**（模型 id 的
+# 正则会把 `…/qwen-embedding-bundle-v1.json` 当 org/model 形状命中）。它不是身份值，所以忽略
+# 它不会掩盖"账本身份 vs 站点身份"的不一致 —— 那条由上面的硬检查单独负责。
 _IGNORED_TOKENS = frozenset({"qwen-embedding-bundle-v1.json"})
 _MAX_PER_CATEGORY = 12
-_TEXT_FILES = ("CONFIG-GUIDE.md", "README.md", "README-FIRST.txt", "BUNDLE-MANIFEST.txt", "install-site.sh")
+#: 镜像里烘着的那份账本（Dockerfile COPY；运行期按 --recorded-embedding-bundle 加载并逐字段比对）。
+_LEDGER_RELATIVE = Path("ledger") / "s12c" / "qwen-embedding-bundle-v1.json"
+_IDENTITY_FIELDS = ("model_id", "dimension", "base_url", "provider")
+_TEXT_FILES = (
+    "CONFIG-GUIDE.md",
+    "README.md",
+    "README-FIRST.txt",
+    "BUNDLE-MANIFEST.txt",
+    "install-site.sh",
+)
+#: 本脚本随 deploy/docker/ 一起走：镜像账本的源就在它旁边。
+_REPO_LEDGER = Path(__file__).resolve().parent / _LEDGER_RELATIVE
 _URL_RE = re.compile(r"https?://[^\s)\"'`（），。：、；]+")
 # 只认"像自建嵌入端点"的地址：裸 IP、带端口的 host，或路径里带 embed。
-_ENDPOINT_LIKE_RE = re.compile(r"^https?://(\d{1,3}(?:\.\d{1,3}){3}|[^/]*:\d+|.*embed)", re.IGNORECASE)
-_DIMENSION_RE = re.compile(r"维度\s*(\d+)")
+_ENDPOINT_LIKE_RE = re.compile(
+    r"^https?://(\d{1,3}(?:\.\d{1,3}){3}|[^/]*:\d+|.*embed)", re.IGNORECASE
+)
+# 只认像"向量维度"的数（三位以上）：散文里的"维度 0"之类不该被当成维度声明。
+_DIMENSION_RE = re.compile(r"维度\s*(\d{3,5})")
 _PACK_RE = re.compile(r"serving-pack-[A-Za-z0-9._-]+")
 # 只认"像嵌入模型 id"的 token：名字里必须带 embedding（否则 api/health、18005/v1 这类也会命中），
 # 并且排除文件名/路径形状（…embedding-bundle-v1.json、bundles/…）。
-_MODEL_RE = re.compile(
-    r"[A-Za-z0-9][A-Za-z0-9_.:/-]*[Ee]mbedding[A-Za-z0-9_.:/-]*"
-)
+_MODEL_RE = re.compile(r"[A-Za-z0-9][A-Za-z0-9_.:/-]*[Ee]mbedding[A-Za-z0-9_.:/-]*")
 _PATHLIKE_RE = re.compile(r"\.[A-Za-z0-9]{2,5}$")
 
 
@@ -81,7 +93,7 @@ def _pack_name(out_dir: Path) -> str:
     return match.group(0) if match else ""
 
 
-def check(out_dir: Path) -> tuple[list[str], list[str]]:
+def check(out_dir: Path, *, ledger: Path | None = None) -> tuple[list[str], list[str]]:
     """Return (errors, warnings); errors stop the packaging, warnings only report."""
 
     errors: list[str] = []
@@ -110,23 +122,66 @@ def check(out_dir: Path) -> tuple[list[str], list[str]]:
             for field in _PRESET_ADVISORY:
                 leaf = field.split(".", 1)[1]
                 if isinstance(paths, dict) and paths.get(leaf) is not None:
-                    warn(4, (
-                        f"{_PRESET_RELATIVE}: {field} = {paths[leaf]!r} 是版本相关路径；"
-                        "服务线的包选择由 --serving-pack 决定（CLI 赢过该环境变量），"
-                        "建议随包重打时留空，避免页面/探针指向旧包目录"
-                    ))
+                    warn(
+                        4,
+                        (
+                            f"{_PRESET_RELATIVE}: {field} = {paths[leaf]!r} 是版本相关路径；"
+                            "服务线的包选择由 --serving-pack 决定（CLI 赢过该环境变量），"
+                            "建议随包重打时留空，避免页面/探针指向旧包目录"
+                        ),
+                    )
+
+    # 硬检查：镜像账本（运行期按 --recorded-embedding-bundle 加载并逐字段比对的那份）的身份，
+    # 必须与站点包里的某个嵌入 bundle 一致 —— v2 换身份时最容易只改一边。
+    site_bundles = _bundles(out_dir)
+    ledger_path = Path(ledger) if ledger is not None else _REPO_LEDGER
+    if ledger_path.is_file():
+        try:
+            ledger_doc = json.loads(ledger_path.read_text(encoding="utf-8"))
+        except ValueError as exc:
+            errors.append(f"镜像账本不是合法 JSON：{ledger_path}（{exc}）")
+        else:
+            ledger_identity = {
+                field: ledger_doc.get(field) for field in _IDENTITY_FIELDS
+            }
+            if not site_bundles:
+                errors.append(
+                    "站点包里没有可比的嵌入 bundle（bundles/ 下没有任何记录 base_url 的 JSON）—— "
+                    f"镜像账本 {ledger_path.name} 的身份无从对照"
+                )
+            elif not any(
+                {field: bundle.get(field) for field in _IDENTITY_FIELDS}
+                == ledger_identity
+                for bundle in site_bundles
+            ):
+                site = "; ".join(
+                    f"{bundle['path']}={bundle.get('model_id')}/{bundle.get('dimension')}"
+                    for bundle in site_bundles
+                )
+                errors.append(
+                    "镜像账本与站点包里的嵌入 bundle 身份都不一致：账本 "
+                    f"{ledger_path.name}={ledger_identity.get('model_id')}/{ledger_identity.get('dimension')}"
+                    f" vs 站点 {site}（v2 换身份时两者必须同一次改到；运行期会按账本逐字段比对，"
+                    "站点包则喂安装器/验收）"
+                )
 
     bundles = _bundles(out_dir)
     pack_name = _pack_name(out_dir)
     urls = {str(bundle["base_url"]) for bundle in bundles if bundle["base_url"]}
-    dimensions = {str(bundle["dimension"]) for bundle in bundles if bundle["dimension"] is not None}
+    dimensions = {
+        str(bundle["dimension"])
+        for bundle in bundles
+        if bundle["dimension"] is not None
+    }
     models = {str(bundle["model_id"]) for bundle in bundles if bundle["model_id"]}
 
     for name in _TEXT_FILES:
         path = out_dir / name
         if not path.is_file():
             continue
-        for number, line in enumerate(path.read_text(encoding="utf-8", errors="replace").splitlines(), start=1):
+        for number, line in enumerate(
+            path.read_text(encoding="utf-8", errors="replace").splitlines(), start=1
+        ):
             mentions_embedding = "嵌入" in line or "embedding" in line.lower()
             if mentions_embedding:
                 for url in _URL_RE.findall(line):
@@ -140,7 +195,11 @@ def check(out_dir: Path) -> tuple[list[str], list[str]]:
                         f"{sorted(urls) or '无'}）",
                     )
                 for token in _MODEL_RE.findall(line):
-                    if token in models or token in _IGNORED_TOKENS or _PATHLIKE_RE.search(token):
+                    if (
+                        token in models
+                        or token in _IGNORED_TOKENS
+                        or _PATHLIKE_RE.search(token)
+                    ):
                         continue
                     warn(
                         1,
@@ -156,7 +215,8 @@ def check(out_dir: Path) -> tuple[list[str], list[str]]:
             for found in _PACK_RE.findall(line):
                 if pack_name and found != pack_name:
                     warn(
-                        3, f"{name}:{number}: 出现 {found}（随包的服务包是 {pack_name}）"
+                        3,
+                        f"{name}:{number}: 出现 {found}（随包的服务包是 {pack_name}）",
                     )
 
     return errors, warnings
@@ -164,28 +224,37 @@ def check(out_dir: Path) -> tuple[list[str], list[str]]:
 
 def main(argv: list[str]) -> int:
     if len(argv) < 2:
-        print("usage: check-delivery-consistency.py <out-dir> [--quiet]", file=sys.stderr)
+        print(
+            "usage: check-delivery-consistency.py <out-dir> [--quiet]", file=sys.stderr
+        )
         return 2
     out_dir = Path(argv[1])
     quiet = "--quiet" in argv[2:]
+    ledger: Path | None = None
+    if "--ledger" in argv:
+        ledger = Path(argv[argv.index("--ledger") + 1])
     if not out_dir.is_dir():
         print(f"[FAIL] 交付包目录不存在：{out_dir}", file=sys.stderr)
         return 1
 
-    errors, warnings = check(out_dir)
+    errors, warnings = check(out_dir, ledger=ledger)
     unique_warnings = [
         message for _priority, message in sorted(dict.fromkeys(warnings))
     ]
     for warning in unique_warnings[:_MAX_PER_CATEGORY]:
         print(f"  [warn] {warning}")
     if len(unique_warnings) > _MAX_PER_CATEGORY:
-        print(f"  [warn] …另有 {len(unique_warnings) - _MAX_PER_CATEGORY} 条同类（不逐条列）")
+        print(
+            f"  [warn] …另有 {len(unique_warnings) - _MAX_PER_CATEGORY} 条同类（不逐条列）"
+        )
     for error in errors:
         print(f"  [FAIL] {error}")
     if not errors and not unique_warnings and not quiet:
         print("  [ok]   交付件里的数字/名字与随包 bundle 一致")
     elif not errors and not quiet:
-        print(f"  [warn] 共 {len(unique_warnings)} 处需要人看一眼（改不改由出包人判断）")
+        print(
+            f"  [warn] 共 {len(unique_warnings)} 处需要人看一眼（改不改由出包人判断）"
+        )
     return 1 if errors else 0
 
 

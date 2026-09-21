@@ -1,0 +1,37 @@
+===== 容器内机制级验收：新嵌入身份探针（v1.1 实例，真端点）=====
+--- 把探针与负例 bundle 放进容器 /tmp（只读用途，不改站点状态）---
+--- A. 真站点身份（服务 argv 的 --recorded-embedding-bundle）---
+  [OK]   身份来源：/home/longxiang/MiroThinker/.worktrees/data-rebuild/.agents/runs/rebuild-canonical-v2-knowledge-platform/s12c/qwen-embedding-bundle-v1.json（model=Qwen/Qwen3-Embedding-8B dimension=4096 provider=openai-compatible）
+  生效地址：http://100.64.0.27:18005/v1（来源 记录 bundle 的 base_url）
+  [OK]   服务包身份一致：manifest embedding_model_id=Qwen/Qwen3-Embedding-8B
+  [FAIL] 防漂移：身份模块里找不到 PROVIDER_OPENAI_COMPATIBLE（本探针镜像了它）
+  [FAIL] 防漂移：身份模块里找不到 PROVIDER_DASHSCOPE_NATIVE（本探针镜像了它）
+  [FAIL] 防漂移：身份模块里找不到 NATIVE_EMBEDDINGS_PATH（本探针镜像了它）
+  [OK]   嵌入端点 http://100.64.0.27:18005/v1（形状 openai-compatible，角色 query）HTTP 200，维度 4096（model=Qwen/Qwen3-Embedding-8B）
+   exit=1
+--- B. 人为把期望身份换成一版候选身份（1024/候选模型）⇒ 必须红 ---
+  [OK]   身份来源：/tmp/neg-bundle.json（model=qwen3.7-text-embedding-flash dimension=1024 provider=openai-compatible）
+  生效地址：http://100.64.0.27:18005/v1（来源 记录 bundle 的 base_url）
+  [FAIL] 身份不一致：服务包 manifest 的 embedding_model_id=Qwen/Qwen3-Embedding-8B ≠ 记录 bundle 的 model_id=qwen3.7-text-embedding-flash（索引身份 ≠ 嵌入权威身份）
+  [FAIL] 防漂移：身份模块里找不到 PROVIDER_OPENAI_COMPATIBLE（本探针镜像了它）
+  [FAIL] 防漂移：身份模块里找不到 PROVIDER_DASHSCOPE_NATIVE（本探针镜像了它）
+  [FAIL] 防漂移：身份模块里找不到 NATIVE_EMBEDDINGS_PATH（本探针镜像了它）
+  [FAIL] 嵌入端点探针未过：两条路线都不通：兼容形状 HTTP 404（该路线不存在），原生形状 HTTP 404
+   exit=1
+
+===== 重跑（防漂移判定修正后）：v1.1 真站点 =====
+--- A. 真站点身份 ---
+  [OK]   身份来源：/home/longxiang/MiroThinker/.worktrees/data-rebuild/.agents/runs/rebuild-canonical-v2-knowledge-platform/s12c/qwen-embedding-bundle-v1.json（model=Qwen/Qwen3-Embedding-8B dimension=4096 provider=openai-compatible）
+  生效地址：http://100.64.0.27:18005/v1（来源 记录 bundle 的 base_url）
+  [OK]   服务包身份一致：manifest embedding_model_id=Qwen/Qwen3-Embedding-8B
+  [note] 防漂移：canonical_v2_embedding_identity.py 只讲 OpenAI 兼容形状（没有原生路线常量）—— 本探针多一条原生回退，与它不冲突
+  [OK]   嵌入端点 http://100.64.0.27:18005/v1（形状 openai-compatible，角色 query）HTTP 200，维度 4096（model=Qwen/Qwen3-Embedding-8B）
+   exit=0
+--- B. 期望身份换成一版候选身份（1024）⇒ 必须红 ---
+  [OK]   身份来源：/tmp/neg-bundle.json（model=qwen3.7-text-embedding-flash dimension=1024 provider=openai-compatible）
+  生效地址：http://100.64.0.27:18005/v1（来源 记录 bundle 的 base_url）
+  [FAIL] 身份不一致：服务包 manifest 的 embedding_model_id=Qwen/Qwen3-Embedding-8B ≠ 记录 bundle 的 model_id=qwen3.7-text-embedding-flash（索引身份 ≠ 嵌入权威身份）
+  [note] 防漂移：canonical_v2_embedding_identity.py 只讲 OpenAI 兼容形状（没有原生路线常量）—— 本探针多一条原生回退，与它不冲突
+  [FAIL] 嵌入端点探针未过：两条路线都不通：兼容形状 HTTP 404（该路线不存在），原生形状 HTTP 404
+   exit=1
+--- 真调用计数（本轮）：嵌入式探针请求 = A 1 次 + B 2 次（兼容 404/200 后按规则再试原生）---
