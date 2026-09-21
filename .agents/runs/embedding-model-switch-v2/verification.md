@@ -123,7 +123,8 @@ Regression suites re-run, results as run this session (xdist `-n 8`, `--no-cov`)
 | command | result |
 |---|---|
 | `pytest tests/canonical_v2/test_embedding_model_switch_v2.py` (alone) | **31 passed** |
-| `pytest tests/canonical_v2/test_serving_pack_loader.py test_fast_boot.py test_serving_pack_no_milvus.py test_embedding_model_switch_v2.py` | **88 passed, exit 0** |
+| `pytest test_serving_pack_loader.py test_fast_boot.py test_serving_pack_no_milvus.py test_embedding_model_switch_v2.py -n 2` | **89 passed, exit 0** |
+| the same four files with `-n 8` | flaky: the milvus-lite fixtures abort with `Assert "init_flag_ == true" => Mmap manager has not been init` under 8 concurrent workers (pymilvus-lite init race, unrelated to this diff — it hits `test_serving_pack_loader`'s fixture before any embedding code runs). Use `-n 2` for this set. |
 | `pytest tests/canonical_v2/test_knowledge_build_isolated.py -k "embedding or adapter"` (this branch **and** a pristine `delivery-v1` worktree) | **3 passed** on both — identical |
 
 `test_knowledge_build_isolated.py` as a whole cannot reach a summary on this host
