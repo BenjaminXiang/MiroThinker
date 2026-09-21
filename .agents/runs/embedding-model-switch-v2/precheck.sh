@@ -448,7 +448,7 @@ print(f"[{tag}]   H3 batch probe — HTTP {status}, rows={rows}/20, latency={lat
 PY
     fi
   else
-    skip "H3 batch probe" "--batch-probe not requested (one extra live call; re-confirms the declared batch of 25 is accepted)"
+    skip "H3 batch probe" "--batch-probe not requested (one extra live call; re-confirms the declared batch of 20 is accepted)"
   fi
 fi
 
