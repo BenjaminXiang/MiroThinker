@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "collection": {
+    "enabled": {
+      "company": true,
+      "paper": true,
+      "patent": true,
+      "professor": true
+    },
+    "max_llm_calls_per_run": 500,
+    "max_web_searches_per_run": 200,
+    "window_start_hour_utc": 17,
+    "window_end_hour_utc": 22
+  },
+  "extraction_endpoints": {
+    "embedding_base_url": "http://100.64.0.27:18005/v1",
+    "embedding_model": "Qwen/Qwen3-Embedding-8B",
+    "llm_base_url": "https://api.deepseek.com",
+    "llm_model": "deepseek-v4-flash",
+    "rerank_base_url": null,
+    "rerank_model": null
+  },
+  "paths": {
+    "access_log_retention_days": 90,
+    "serving_pack_dir": null
+  },
+  "serving": {
+    "chat_llm_profile": "deepseekv4flash"
+  }
+}

@@ -1,0 +1,36 @@
+event: stage
+data: {"name":"planning"}
+
+event: plan_done
+data: {"lanes":["exact","structured","lexical","vector","web"],"domains":["professor","company","paper","patent"],"views":["深圳国际先进技术应用推进中心 布局和进展","深圳国际先进技术应用推进中心 百度百科","深圳国际先进技术应用推进中心 官网"]}
+
+event: stage
+data: {"name":"retrieval"}
+
+event: progress
+data: {"detail":"✓ 精确匹配：1 个结果","lane":"exact","count":1}
+
+event: progress
+data: {"detail":"✓ 关键词检索：0 个结果","lane":"lexical","count":0}
+
+event: progress
+data: {"detail":"✓ 结构化查询：1 个结果","lane":"structured","count":1}
+
+event: progress
+data: {"detail":"✓ 语义检索：1 个结果","lane":"vector","count":1}
+
+event: progress
+data: {"detail":"✓ 网络搜索：1 个结果","lane":"web","count":1}
+
+event: retrieval_done
+data: {"lanes":[{"lane":"exact","status":"succeeded","candidates":1},{"lane":"structured","status":"succeeded","candidates":1},{"lane":"lexical","status":"succeeded","candidates":0},{"lane":"vector","status":"succeeded","candidates":1},{"lane":"web","status":"succeeded","candidates":1}],"web_items":[]}
+
+event: stage
+data: {"name":"synthesis"}
+
+event: answer
+data: {"query":"它有哪些布局和进展","query_type":"canonical_v2:A:answer","answer_text":"（以下为基于本地数据的简要信息）\n- 深圳国际先进技术应用推进中心；简介：深圳国际先进技术应用推进中心（又被称为国先中心（深圳）），国际先进技术应用推进中心（深圳）是在国家发展改革委、深圳市政府支持指导下设立，深圳市科技创新局作为业务主管部门，依托粤港澳大湾区数字经济研究院建设的世界级先进技术应用推广平台。国先中心（深圳）聚焦人工智能、具身智能、低空经济等重点领域，为技术对接场景、为企业对接；技术路线：国际先进技术成果汇聚平台：加快汇……\n共检索到 1 个相关结果并全部展示，为代表性结果而非穷尽列表。","citations":[{"type":"company","id":"local-source-d7c52f78b8f5d974","label":"深圳国际先进技术应用推进中心","url":null}],"evidence":[],"clarification":null,"structured_payload":{},"answer_style":"template","citation_map":{"1":"local-source-d7c52f78b8f5d974"},"suggested_followups":[]}
+
+event: done
+data: {}
+
