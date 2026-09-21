@@ -7730,15 +7730,14 @@ class _EphemeralKnowledgeRead(KnowledgeRead):
                 for lane in result_order:
                     if lane in outcomes:
                         continue
-                    timeout_seconds = (
-                        _web_lane_outer_wait_seconds(effective_web_policy)
-                        if lane == "web"
-                        else (
-                            _vector_lane_outer_wait_seconds()
-                            if lane == "vector"
-                            else None
+                    if lane == "web":
+                        timeout_seconds = _web_lane_outer_wait_seconds(
+                            effective_web_policy
                         )
-                    )
+                    elif lane == "vector":
+                        timeout_seconds = _vector_lane_outer_wait_seconds()
+                    else:
+                        timeout_seconds = None
                     try:
                         outcomes[lane] = futures[lane].result(timeout=timeout_seconds)
                     except TimeoutError:
