@@ -983,3 +983,398 @@ v1 槽位：改动前后同一条探针**逐字一致**（`ok:true / HTTP 200 / 
 ⇒ v2 镜像原样重打：现场那个自建地址不可达 ⇒ `[FAIL] 嵌入端点不可达`；就算可达也是维度不符 ⇒ **FAILED=1**。**我们自己的验收会在一个装对了的站点上报红**，而甲方唯一的判断依据就是它——这比"假黄灯"严重（那是 warn，这是 fail）。已派修，要求：**镜像那条"问地址、只有 404/405 才改讲原生形状"的既有规则**（`canonical_v2_embedding_identity.py`），别自己发明第二套；期望身份**从站点真正在用的 bundle 取**，不再写死；并给一条**能判红**的检查（假 bundle 制造不一致 ⇒ 必须红）。
 
 **六、范围外的判断（不改）**：`deploy/docker/ledger/s12a/recorded-decision-bundle-v1.json` 是决策账本，与嵌入身份无关，本轮不动；v1.1 镜像（已打好）继续带 v1 账本，两者不冲突——前提是**按发布打镜像**这个前提成立，已要求核实。
+
+## 第 31 轮 · 2026-09-22 · 一键验收的假红拆掉了（先复现、再修）；并挖出那份账本的**真实身份**——它是运行期的冻结嵌入权威，不是"验收用的期望"
+
+**一、事实链（带行号；我上一轮的判断只对了一半）**
+
+我上一轮说 `ledger/s12c/qwen-embedding-bundle-v1.json` 是"给 verify 用的期望身份"。**实际不止**：
+
+| 读取方 | 位置 | 性质 |
+|---|---|---|
+| **运行期（服务线）** | 冻结命令文件传 `--recorded-embedding-bundle <该路径>`；`knowledge_build_isolated.py:8155 load_content_addressed_embedding_adapter(path)` 在 **:8186-8203** 把文档与冻结 `expected` **逐字段**比对（`model_id` / `dimension=4096` / `base_url=100.64.0.27…` / `content_sha256=_QWEN_EMBEDDING_BUNDLE_SHA256=05473fab…`），不符即 `release embedding bundle differs from frozen authority` | **运行期的冻结嵌入权威** ⇒ 内容与代码常量**必须同一次改**，不能随手换 |
+| 验收（本轮改的对象） | `verify.sh:12`（旧）把同一路径当期望 | 断言 HTTP 200 + 维度 == 该账本 dimension |
+| 镜像构建 | `Dockerfile:143-146` 把它 COPY 到冻结绝对路径 | 账本**烘进镜像** |
+| 站点包 | `<site-bundle>/bundles/qwen-embedding-bundle-v1.json`（与镜像账本**字节相同**，sha256 `9b840145…`） | 安装器探针（上一轮已改成从它取身份） |
+| 其它 | `replay.sh` / `migrate.py` / `entrypoint.sh` / `build-*.sh` | `grep` **零命中** |
+
+**二、修法：验收不再"猜"身份**
+
+新增 `deploy/docker/verify_embedding.py`（COPY 成 `mirothinker-verify-embedding`，由 `verify.sh` 调用）。身份**三级、不回落写死路径**：① **运行中服务进程 argv** 的 `--recorded-embedding-bundle`（运行期就是按它加载并逐字段比对的）；② 退一步读冻结命令文件里的同一参数；③ 都没有 ⇒ **FAIL 让人来查**。地址优先级：**服务进程环境**的 `CANONICAL_V2_EMBEDDING_BASE_URL`（受管/页面覆盖，即 `resolve_embedding_base_url` 的优先级；注意 `docker compose exec` 看不到那一层，所以读 `/proc/<pid>/environ`）→ 本进程环境 → 账本记录值。身份另与 `<pack>/manifest.json` 的 `embedding_model_id` **对照**（不一致即 FAIL：索引身份 ≠ 嵌入权威身份）。
+
+**形状复用镜像里已有的页面规则**（`canonical_v2_embedding_identity.py` 的字面量），不发明第二套：兼容形状优先，**只有 404/405** 才改讲原生形状（带 `text_type`，角色=服务线查询侧，取账本 `query_text_type`，缺省 `query`）；401/500 **不换形状**。并加**防漂移**：把镜像里已有模块的路线/状态码集合/角色选择字面量读出来逐个比对，不一致即 FAIL；v1.1 只有兼容常量 ⇒ 打 `[note]`，**不假装校验过**。
+
+**三、判红演示（这一轮最该看的东西）** —— 同一假候选网关（兼容 404 / 原生 200·1024 维）：
+
+```
+== A. 旧 verify 的嵌入断言（期望身份 = v1 账本）==
+  [FAIL] 嵌入端点不可达：HTTPError: HTTP Error 404        exit=1   ← 装对了的站点被判红
+== B. 新探针（期望身份 = 站点在用的记录 bundle）==
+  [OK] 身份来源：…candidate-embedding-bundle.json（model=qwen3.7-text-embedding-flash dimension=1024 provider=dashscope-native）
+  [OK] 服务包身份一致：manifest embedding_model_id=qwen3.7-text-embedding-flash
+  [OK] 嵌入端点 …（形状 dashscope-native，角色 query）HTTP 200，维度 1024   exit=0
+```
+
+**A 就是"假红"的复现**（甲方在装对了的站点上看到 FAIL），**B 是修好之后的样子**。真容器（v1.1 实例 + 真端点）两侧也验了：真站点身份 ⇒ 三条 `[OK]` + 防漂移 `[note]`、exit 0；人为换成候选身份 ⇒ `[FAIL] 身份不一致` + `[FAIL] 探针未过`、exit 1。新增 9 条测试（含出包自检 2 条），相关文件一起 **71 passed / 1 skipped**（那条 skip 是"v2 合并后生效"的条件用例）。真调用**只用了 4 次**，都是单条文本打站点自己的端点。
+
+**四、为什么不破坏 v1.1（核实过，不是断言）**：账本**烘进镜像**、镜像**按发布**打 ⇒ v1.1 镜像（已打好、不动）继续带 v1 账本；`grep -rn ledger deploy/docker/*.sh` **零命中**（没有共享、出包脚本不重建）；站点包里的同名 bundle 是**复制**不是链接；`verify.sh`/新探针**只进镜像**（站点包里没有这两个文件）。探针还对 v1.1 **向后兼容**（在真 v1.1 站点上打出 `[OK]`），因为身份取自站点自己的记录。
+
+**五、由此得到的 v2 切包硬要求（已写进 runbook §12）**
+
+账本内容与代码常量绑死 ⇒ 这五处**必须在同一次改**：
+
+1. `deploy/docker/ledger/s12c/qwen-embedding-bundle-v1.json`（镜像账本）；
+2. 服务命令的 `--recorded-embedding-bundle`（候选 bundle）；
+3. 站点包的 `bundles/qwen-embedding-bundle-v1.json`；
+4. switch-line 里的冻结常量（`_QWEN_EMBEDDING_BUNDLE_SHA256` / `_QWEN_EMBEDDING_DIMENSION` / 模型 id）；
+5. 且**包必须在 (4) 之后封印**（封印的 `reader_contract_sha256` 覆盖 `canonical_v2/*.py`）。
+
+出包自检能拦"账本身份与站点包不一致"，但它**看不到代码常量**，所以 (4) 得靠人。**另外**：`_IGNORED_TOKENS` 里那条忽略的只是**文件名**（模型 id 正则会误命中 `…/qwen-embedding-bundle-v1.json`），不涉及身份值；真正的不一致由新加的硬检查负责（有测试覆盖）。
+
+**六、未验（如实）**：v2 镜像里探针打**真候选网关**的样子（本轮用本地假原生网关 + 真容器验了身份链路，**没拿真网关打过**，为省配额）——留给 v2 冷装，期望输出已写明；**账本内容本身没换成候选**（与代码常量耦合，属切包动作）。
+
+## 第 32 轮 · 2026-09-22 · **第二处集成缺口：宿主切换命令与容器命令文件是两套路径约定，中间只做了一次 token 替换**
+
+这一轮也是"不问就没人问"的类型：v2 的**宿主**切换命令我已经复核好了，但**容器**里那份命令文件是**另一个东西**。
+
+**一、实测差异（三方对照）**
+
+| 项 | 宿主草案（我做的） | 容器（v1.1 站点包里那份，实测） |
+|---|---|---|
+| launcher 路径 | `<switch-line>/….s12e/serve_s12e_port.py` | `/home/longxiang/MiroThinker/.worktrees/canonical-v2-s11-consolidation/…/s12e/serve_s12e_port.py` —— 而 `Dockerfile:138-139` 把 `canonical-v2-s11-consolidation` **符号链接到 `/opt/mirothinker`**（＝镜像自己那棵树） |
+| `src` 树靠什么钉住 | **必须** `PYTHONPATH=<switch>/apps/miroflow-agent`（宿主主 venv 的 editable `.pth` 指向主仓检出） | **不需要**：镜像里的 venv 是从 `/opt/mirothinker` 建的（`.dockerignore` 排除 `.venv`），editable 天然指向镜像自己那棵树 |
+| `--recorded-embedding-bundle` | 候选 bundle 路径 | 镜像账本路径（`Dockerfile:145-146` 从 `deploy/docker/ledger/` COPY 进去） |
+| 数据面 | 宿主 `/var/tmp/mirothinker-data-v2/{…}` | 同类路径，由 compose 挂载 |
+
+**⇒ 危险**：两套混用 ⇒ `PYTHONPATH` 指向容器里不存在的路径、launcher 指向不存在的目录 ⇒ **容器起不来，或 import 到错的树**。而现有的"宿主命令 → 容器命令"转换只有 `build-site-bundle.sh:64` 那处**换一个包名 token**（`install-site.sh:129-136` 也只校这一个 token）。
+
+**二、顺带确认的两件事**
+
+- `.dockerignore` 排除的是 `.git` / `.venv` / 各种缓存 / `.worktrees` / `.gstack` / `deploy/docker/secrets/` —— **没有排除 `.agents/`** ⇒ 若从**合并后的 switch-line** 打镜像，候选 bundle 会随 `COPY . /opt/mirothinker/` 进到 `/opt/mirothinker/.agents/runs/embedding-model-switch-v2/…`。这给"候选 bundle 在容器里从哪来"提供了第二条路（账本模式 vs 直接引用镜像内路径），已让容器线去判断并给理由。
+- 对**已打好的 v1.1 镜像**做只读检查：容器命令文件引用的 5 个代表性绝对路径里 **4 个存在**，唯一的 `MISSING` 是 `apps/miroflow-agent/milvus.db` —— 而 v1.1 容器实测能起能服务，所以那一路径在 v2（无 Milvus 合约）里不是必需的。这条也顺手证实了"镜像内路径要逐条核对"这个检查是**做得出来的**（不必重建镜像）。
+
+**三、已派**：容器线复核我这张表（**有错要直说**）、把"容器版命令文件"的产出做成**可靠的东西**（生成器/模板+断言/转换脚本由它选），并给一条**能判红**的检查（容器命令文件引用的绝对路径在镜像内必须存在）。同时明确划界：**宿主草案与我的校验器归我，容器侧归它**，两者要在**身份字段**上取同一组值（同样从 step 7 / step 10 那两处占位符来），只在**启动形态**上分叉。
+
+## 第 33 轮 · 2026-09-22 · **构建失败：一次 HTTP 429 杀掉 4 小时**（诊断 + 两个真缺陷 + 重跑方案）
+
+**一、发生了什么**
+
+构建在 **04:19:24** 中止，已跑 **4 小时 08 分**（00:11 起），死在**嵌入段**。终局错误：
+
+```
+IsolatedKnowledgeBuildError: physical index materialization/parity failed:
+  embedding endpoint https://maas.qianwenaiapi.com/api/v1 is unreachable
+```
+
+**二、完整病因链（逐层读出来的）**
+
+```
+httpx.HTTPStatusError: Client error '429 Too Many Requests' for url
+  '…/api/v1/services/embeddings/text-embedding/text-embedding'
+  ← dashscope_embeddings.py:91   response.raise_for_status()
+  ← dashscope_embeddings.py:98   except (httpx.HTTPError, OSError): raise ConnectionError("… is unreachable")
+  ← knowledge_build_isolated.py:8139  embed_one → client.embed_batch(...)
+  ← knowledge_build_isolated.py:8161  executor.map(embed_one, batches)
+  ← knowledge_build_isolated.py:10161 raise IsolatedKnowledgeBuildError("… is unreachable")
+```
+
+**端点本身完全正常** —— 我 04:31 亲自探过：`http_code=200`、`connect=0.110s`、`total=0.377s`、**1024 维**、`model=qwen3.7-text-embedding-flash`。所以这是**限流**，不是不可达。
+
+**为什么会被限流**：要嵌 51,026 个点，bundle 声明 `batch_size=20` / `max_workers=32` ⇒ 约 **2,552 次调用**，而 32 个 worker 并发打出去是**每秒上百次的突发**；runbook 自己的估算就写着"TPM 1,000,000 是 binding 项、整个 pass 20–35 分钟**正好贴着上限**"。
+
+**三、两个真缺陷（这才是要带走的东西）**
+
+1. **嵌入段零重试、零退避**：任何一次 429/5xx 直接中止整段。这正是 agent-79 在交班时列为**风险第 1 条**的那件事（"The embedding pass aborts on any transport error (no checkpoint, no retries)"）——它**如期发生了**。
+2. **错误信息撒谎**：适配器把 **429（与所有 4xx/5xx）** 一律包成 `ConnectionError("endpoint … is unreachable")`。这一步让我（以及任何后来人）第一反应去找网络故障，实际是"你在猛敲我"。这一条**单独就值得修**——排查成本是真实的。
+
+**四、修法（已派，含我的设计）**
+
+- **区分"限流"与"不可达"**：新增一个异常类型，**必须是内置 `ConnectionError` 的子类** ⇒ 服务侧 F1 的"传输失败⇒车道降级"语义**一个字节都不变**（`_invoke_lane` 抓的就是内置 `ConnectionError`），而构建侧能专门识别它。消息带状态码与 `Retry-After`。
+- **构建侧重试 + 自适应退避**：有上限的指数退避 + 抖动、尊重 `Retry-After`；并且**整池一起冷却**（一个 worker 撞到 429 就让所有 worker 等这段，避免服务器已经说"慢点"时继续猛敲），而不是每个 batch 各自蛮干。
+- **不改 bundle 任何字段**（`max_workers`/`batch_size`/`content_sha256` 都是冻结身份，动了要连带动代码常量与构建旗标）。
+- **服务侧不加重试**：那是 F1 的设计，保持不变，并要求在回报里确认捕获路径未变。
+- **验收用本地假端点**（先 429 再 200），零真配额：先取 RED（修前必须失败）、再 GREEN，并打印每次重试的**实际间隔在拉长**。
+
+**五、保留证据的清理（已做，未删任何东西）**
+
+| 项 | 处置 |
+|---|---|
+| `staging-v4`（107 MB，16 文件） | 移到 `staging-v4.20260922-0419-failed`（启动器要求 staging 不存在） |
+| `index-v4/{lookup.sqlite3 660 MB, milvus.db}` | 移到 `index-v4-content.20260922-0419-failed/` |
+| `index-v4/.canonical-v2-isolated-index-target.json` | **保留**（它是身份令牌、不含内容）⇒ 其 sha256 仍是 `058c0bcfa905b46d3a3d` ✅，`--index-marker-sha256` 继续成立 |
+| 固定信封路径 | **本来就是空的**（失败发生在写信封之前）✅ |
+| 目标库 | 仍是上次那份（有 5.8 GB 数据）；重跑前按 runbook **步 4** 重置（它用数据库注释做标记，标记不符会拒绝，别硬来） |
+
+**六、重跑方案**
+
+1. 重跑 runbook **步 3**（`prepare_isolated_index_target` 重建/校验索引标记，期望 sha 不变）；
+2. 重跑 runbook **步 4**（DROP+CREATE 可丢弃库并打标记）；
+3. **用同一个启动器**重发（它会自己断言：信封路径空、staging 不存在、标记在位、PG 容器在跑）；
+4. **重发前的硬前置**：修好后我要自己看过 diff、并确认那条假端点测试真的红过。
+
+**新的 ETA**：上一跑 `00:11 → 04:19` 走到嵌入段（非嵌入部分约 4 小时），嵌入段 20–60 分钟 ⇒ 若 05:30 前后重发，**信封约在 09:45–10:30**；之后封印 42 分、转换 ~5 分、两次 scratch 启动各 ~5 分、两遍门 16–24 分 ⇒ **切换决策约在 11:00–12:00**。
+
+**七、监控教训（要修的）**：我那个报警看门狗有**窗口漏洞** —— 循环条件是"进程还活着"，进程一死就跳出，**不读最后那段新字节**；这次 traceback（6 KB）正好落在"日志增长"与"进程退出"之间不足 45 秒的窗口里，所以报警日志只留下 `EXITED` 一行，**致命的 traceback 是靠人（另一个子代理）发现的**。也就是说：采样器（每 2 分钟）起了作用、报警器没起作用。重跑前必须补上"退出时最后读一次"。
+
+## 第 34 轮 · 2026-09-22 · 429 修复落地并验证；重发（第 3 次）成功在跑；**两次重发失败是我读 runbook 截断造成的，runbook 本身是对的**
+
+**一、修复的验证（我自己做的，不采信转述）**
+
+- 我**自己跑**了新增的测试文件：`11 passed in 10.31s` ✅
+- 我**自己读**了两处关键 hunk：分类（`EmbeddingEndpointRateLimitedError(ConnectionError)`，只由 429 抛，带 `status_code` 与解析后的 `Retry-After`；400/503 各自如实命名，"unreachable" 从此只留给真的没应答）与重试（每 batch ≤8 次尝试、退避 1→2→4→8→16→32→60 封顶、抖动**只加不减**、`Retry-After` 作下限并封顶、**全池共享一个冷却闸门**且按"压力轮次"计数）。
+- 它给的行为证据也对：假端点自测的间隔 `0.173 → 0.562 → 1.374s`（在拉长）、`Retry-After: 1` ⇒ 间隔 `1.010s`（服务端喊话是下限）、四 worker 三次被拒 ⇒ `calls=7`，前四次齐发（毫秒级）后**一次 0.308s 的公共冷却**、三个被拒 batch 在 ~3ms 内一起回来（若是各自退避会在 0.3/0.9/2.7s 后才回）。
+- **服务侧语义未变**有硬证据：`knowledge_read.py` 零改动、`_invoke_lane` 的捕获子句与 HEAD **逐字节相同**（`git show HEAD:… | diff`），且新类型是 `ConnectionError` 子类、`isinstance(exc, TimeoutError)` 为 False（不会被 timeout 分支抢走）。
+- **一处诚实的代价**（它主动报的）：重试位于构建与服务**共用**的 `_embed_uncached`，所以服务侧遇到 429 时**会在降级前最多耗到该车道既有的 8s 外等待预算**；最终分类、fail-open 结论、breaker 计数都不变，**只有延迟变了**。要"服务侧一遇 429 立刻降级"需要在 `index_projection_isolated.py` 加构建专属 seam——**我裁决：本轮不做**（8s 在该车道既有预算内、一次查询只打一个向量、且那属于我明令不动的服务侧账本）。
+
+**二、我裁决的另一件事：5xx 只分类、不重试**
+
+它把这个交我裁决（理由：开启 5xx 重试会让三条 F1 钉死断言失败——那些断言数的是"两次失败 ⇒ 两次 provider 调用"，等于要改写服务侧账本）。**我同意保持不重试**：本次真实病因是 429（已覆盖），且用 8 worker + 闸门后 429 应显著变少。**记为残余风险**：构建期间若遇到 503，仍会中止整段（4 小时）；正确的解法是构建专属 seam（与上面那条同一个 seam），列为后续。
+
+**三、两次重发失败，**原因是我的错，不是 runbook 的**
+
+- **失败 1（25 秒内）**：`IsolatedKnowledgeBuildSafetyError: isolated target or accepted backup gate validation failed`，根因链露出来了 —— `psycopg.errors.UndefinedTable: relation "public.canonical_v2_alembic_version" does not exist`。原因：**我用 `alembic.ini`（V 系列，建的是标准 `alembic_version`）去迁移**，而构建要的是 **`canonical_v2_alembic.ini`（C2 系列，建 `canonical_v2_alembic_version`）**，期望值 `_EXPECTED_ALEMBIC_REVISION = "C2_0016"`。
+- **失败 2**：改用 C2 链后报 `RebuildWriteGateError: An explicit Canonical V2 backup gate root is required` —— 该链是 fail-closed 的，必须给 `CANONICAL_V2_BACKUP_GATE_ROOT`。
+- **然后我在 `build-run16.sh:137-141` 找到了权威配方**，并**同时发现：runbook 步 4 本来就把这段配方完整写着**（`CANONICAL_V2_BACKUP_GATE_ROOT` + `postgresql+psycopg://` + `-c canonical_v2_alembic.ini`）。
+
+⇒ **为什么我会漏**：我先前用 `sed -n '/^## 4\./,/^## 5\./p' | head -80` 去读那段，**`head -80` 把步 4 的后半截（正是迁移那段）截掉了**，于是我"补"了一个 runbook 并不缺的缺口，并即兴用了错的 ini。**教训：执行 runbook 的一步之前，把那一整步读完**（截断视图会让"照文档做"变成"照我记得的文档做"）。
+
+**四、修好并发起第 3 次**
+
+1. 把库按步 4 重建（标记守卫）→ 用**正确的链**迁移 ⇒ `public.canonical_v2_alembic_version = C2_0016` ✅ 且**没有**残留的 V 系列 `alembic_version` 表 ✅；
+2. 启动前置四项逐项确认（信封空、staging 不存在、索引标记在位且 sha 未变、PG 容器在跑）、42 张表与 runbook 一致；
+3. **带 `CANONICAL_V2_EMBEDDING_MAX_WORKERS=8` 重发** ⇒ 真实 runner **pid 3576681**、86% CPU、r3 日志已打出 `P4_MERGE_LEDGER`（前置校验通过、已进合并相位）；
+4. **两个监控都重挂了**：采样器（2 分钟一行）+ **修好的**报警看门狗（退出后补最终扫描），警报日志为空。
+
+**五、新 ETA**：非嵌入部分约 4 小时（上一跑实测）⇒ 若 06:28 起算，**信封约 10:30 前后**；之后封印 42 分、转换 ~5 分、两次 scratch 启动各 ~5 分、两遍门 16–24 分 ⇒ **切换决策约 11:45–12:30**。
+
+**六、值得单独记的一条**：**失败得早是好事** —— 这两次重发失败都在**启动后 25 秒内**被前置校验拦下，代价是 25 秒，而不是又一个 4 小时。这与上一轮"4 小时后才死在嵌入段"形成对照：**能前移到前置的检查，价值极高**。
+
+## 第 35 轮 · 2026-09-22 · 构建（第 3 次）11:36 出信封；步 6–10 全过、两次 scratch 启动成功；**12:52 那份"run16 失败档案"是旧看门狗的误报**
+
+**一、构建成功（硬事实，写这一段时逐项复核过）**
+
+- 信封：`…/.worktrees/embedding-switch-line/.agents/runs/rebuild-canonical-v2-knowledge-platform/s12a/complete-candidate-build-envelope.json`，**8,311,207,976 B**，mtime `2026-09-22 11:36`；它**自带** `content_sha256 = 7126e14a82ce7c86996075658fb101ede5c7f7aaf3c334572743a69e8f455b14`（这个值是我从信封内容里读出来的，不是转述）。
+- 同一封信里的发布校验：`accepted: true`、`canonical_index_parity: true`、`missing_points / extra_points / stale_points / cross_release_points` **全 0**、`manifest_sha256 = 574b6b1297f5aec47b17bc245088fa2f7eb1c792248eb8c13de43f1b8decc396`。
+- 第 3 次发射带上了上一轮修的两件事（429 重试闸门 + 8 worker）：这次**没有**再死在 429 上，跑完全程（前两次分别死在 25 秒和 4 小时处）。**"修好一处、再发射"这条纪律第一次在构建线上闭环**：改的是可复现的故障，验证方式是"这一跑能不能活到出信封"。
+
+**二、步 6–10 的证据（逐条，都是此刻能复核的形态）**
+
+1. **步 6 矩阵**：`/var/tmp/mirothinker-data-v2/index-v4-v2/` = `lookup.sqlite3` 897,474,560 B + `vector_matrix.npz` **422,803,574 B**（1024 维 × 51,026 点的预期量级）；`milvus.db` **0 个**。
+2. **步 7 转换**：目标根的标记 sha `df594dc5…` 不是靠记忆——它作为 `--index-marker-sha256` 进命令行，runner 把它作为**期望值**交给加载器（`complete_candidate_runner.py:1012`），不一致即拒绝启动；两次 scratch 启动都过了 ⇒ 标记在位且相符。
+3. **步 8 封印**：`/var/tmp/mirothinker-data-v2/serving-pack-fembed-v1/` = **5 个文件**（`manifest.json` 11,116,288 B、`relationships.json` 3,481,532,061 B、`lookup.sqlite3` 897,474,560 B、`institution_catalog.json`、`.canonical-v2-isolated-index-target.json`），**无 `milvus.db`**。
+4. **步 10 服务 bundle**：`s12g/serving-bundle-fembed.json` 声明 `content_sha256 = 8ec351c9…`、`embedding_model_id = qwen3.7-text-embedding-flash`、`index_root = …/index-v4-v2`、`envelope_path = <switch line>/s12a/complete-candidate-build-envelope.json`；命令文件校验器 **31/31**（含 6c"声明哈希 vs 文件哈希"、6d bundle 五个字段与命令行逐项绑定、6e 信封必须落在 gate root 下）。
+
+**三、一个容易误读的点：两处 boot 日志都写 `fast_boot=0`，这是对的**
+
+`fast_boot` 只由 `CANONICAL_V2_FAST_BOOT=1` 打开（`complete_candidate_runner.py:582`），两条命令都没开 ⇒ 打印 0 属预期。第 9 步量到的 ~118 s"快路径"来自 `reuse_audited_vector_snapshot=True` 那条代码路径，**与这个开关无关**。两次 scratch 启动各约 **4–5 分钟**（含全量 replay），是这条路的正常成本，不是退化。
+
+**四、12:52 那份"run16 失败档案"是误报，不要按它行动**
+
+`data-rebuild/.agents/runs/full-column-serving-pack-rebuild/run16-failure-report-20260922-125223.md` 写"detected 12:52:23 (runner process absent)"，但它贴的两段日志尾巴是 **9-17 的 run16**（`candidate_release_id=candidate-v2-20260916-r1`、`envelope_sha256=a8440bdf…`）；`build-run16.log` 的 mtime 是 **9-17 04:32**，文件里 `candidate-v2-20260922-r1` **0 次命中**。结论：报警器盯的是早已结束的 run16 日志，今天的 fembed 构建根本没写进那个文件。两个看门狗（`watchdog.log`、`watchdog-run16.log`）到 16:27 仍在每 2 分钟写一行 `runner-not-running`——**下次发射前必须重指或关掉**，否则它会再生成一份看起来很像真的失败档案。
+
+## 第 36 轮 · 2026-09-22 · 召回门跑了两次：第一次是**测量本身假的**（换了包、却在跑主树的控制台代码）→ 修 → 第二次 **判过（0 条 fail 级）**；同一轮还拆掉两个交付阻断
+
+**一、第一次门（16:18 结束）：结论 REVIEW，但那个 REVIEW 不是"退化"，是"没测到"**
+
+- 现象：37 例全部 `candB=-`（候选层在 after 侧缺失），而答案层 `ansA/ansB` 逐行相同、向量层 `vecA/vecB` 逐行相同（`d_vec%` 全 `-0%`）；totals 里 74 条 REVIEW 全是 `coverage: candidate layer unavailable in B`。
+- 我当时先怀疑"写 turn-debug 失败"，逐条排除：实例环境**有** `CANONICAL_V2_TURN_DEBUG_DIR`；目录存在可写但**零文件**；启动日志里 `turn debug dump failed` **0 次命中** ⇒ 不是写失败，是**根本没走到写**。
+- 根因（可复现、有硬证据）：部署 venv 里**两条** editable `.pth` 都指向主仓库 —— `apps/miroflow-agent` **和** `apps/admin-console`；我的命令文件只在 `PYTHONPATH` 里钉了前者，于是 `src` 来自切换线、`backend`（聊天适配器，也就是**写 turn-debug 的那段代码**）来自**主树**。`import backend.main` 成功 ⇒ runner 自带的那条兜底插入永远不触发 ⇒ 静默。
+- 在主树聊天适配器里 `_maybe_dump_turn_debug` **不存在**（`grep -c` = 0），两棵树该文件相差 314 行；主树那份停在 9-06。
+- 活体证据：`GET /api/auth/me` → **404**、`GET /api/canonical-v2/admin/chat-gaps` → **404**（这两条路由只在切换线上存在），而 `/api/health` → 200。
+
+**二、修与复验**
+
+- `PYTHONPATH` 改成**两个根**（admin-console 在前）：`…/apps/admin-console:…/apps/miroflow-agent`。
+- 新增机器探针 `check-package-resolution.sh`：用**命令文件自己的 python+PYTHONPATH** 解析 `backend`/`src` 落在哪棵树；切换命令校验器加 3 项（两个根 + 该语义探针）⇒ **29 → 32 项**。
+- 重启后复验：`/api/auth/me` → **401**（路由在、未登录）、`chat-gaps` → **401**、探针轮 13.6 秒落盘 `turn-debug-tdbg1-01.json`（原件留在 `/var/tmp/fembed-296/probe-turn-identity-fix-debug.json`）；**admin 账号库落在 scratch 目录**（`/var/tmp/fembed-296/logs/admin-auth.sqlite3`），没碰活线状态。
+- 顺带发现：**步 12 的切换草案有同一个缺陷**（也是半钉）。是新校验器在上线前把它拦住的 —— 否则活线会用主树的控制台代码启动，`/api/auth/*`、seeds、uploads、jobs 这些接口会集体消失。
+
+**三、第二次门（16:42 结束）：判过**
+
+```
+warm-up exit=0   judged exit=0
+baseline ↔ after : REVIEW — 0 fail-level, 3 review-level
+control  ↔ after : REVIEW — 0 fail-level, 3 review-level
+```
+
+| 指标 | baseline | after | Δ |
+|---|---|---|---|
+| 候选层命中 | 22 | **29** | **+7** |
+| 候选层受检 | 37 | 37 | 覆盖缺口消失 |
+| **vector median（all/shared/testset/probes）** | 61.0 / 61.0 / 61.0 / 72.0 | **同上，四个切片全同** | **+0** |
+| 引用 local/web | 239 / 80 | 158 / 125 | 已知 web 道噪声 |
+| 墙钟 | 698.7 s | 355.6 s | — |
+
+按**事前标定**的读法：同配置两跑本就是 REVIEW（0 fail 级），所以"REVIEW + 0 fail 级"就是**好切换的预期形状**；唯一硬 FAIL 闸门（vector median 掉 >30%）**纹丝不动**。三条 review 级全是 `rule1(concept)` 的**措辞**漂移（`真实数据`/`物理仿真引擎生成`/`基于规则生成`/`真机实测`/`遥操作`），属于本门事先声明为非实体的一类。**结论：召回没有退化，值得切。**
+
+**四、同一轮拆掉的第二个交付阻断：宿主命令文件里的 `$(cat …)` 会让 systemd 秒崩**
+
+- 活线是用户级 systemd 单元，`ExecStart` = `<活线树>/deploy/start-canonical-v2.sh`，该脚本最后一行是 `exec env $(cat "$COMMAND_FILE")` —— **完全不做 shell 求值**。
+- 我那份宿主草案里带着 `CANONICAL_V2_EMBEDDING_API_KEY="$(cat /var/tmp/mirothinker-qianwen-api-key)"`：分词后 `env` 收到 `…KEY="$(cat` 和 `/var/tmp/mirothinker-qianwen-api-key)"` 两个 argv，然后会去**执行第二个**。合成同形文件实测：`env: '/tmp/some-key)"': No such file or directory`。活线的 run16 命令文件本来就**无引号、无 `$(`**——正是为这条路径。
+- 修法：key 走 systemd `EnvironmentFile`（0600）+ drop-in，**安装的命令文件保持无引号**。已用临时 oneshot 单元实测送达（`ExecStart=/usr/bin/env` 打出 `CANONICAL_V2_EMBEDDING_API_KEY=sk-ws-…`，探针单元随后删除）。校验器新增两项（拒绝 shell 形式 + `--expect-key-file` 必须指到一个真有该变量的文件）⇒ 宿主草案带 key 文件 **32 ok / 0 fail**，不带则**按设计**报 `EMBEDDING_KEY` 失败。
+
+**五、必须上报的一条需求落差：页面里填的 key，今天到不了服务链路**
+
+`ManagedSecretsStore.apply_to_environ` 只在 `backend/main.py` 的 **uvicorn startup 事件**里跑；而服务输入（包括那个**一次性读入** `CANONICAL_V2_EMBEDDING_API_KEY` 的嵌入适配器，`knowledge_build_isolated._gateway_embedding_api_key`）在 **uvicorn 启动之前**就构建完了，并且 `complete_candidate_runner.py` **根本不调用** managed runtime。⇒ "甲方在配置页只填 key"对**服务链路的嵌入 key** 目前不成立（对控制台侧功能成立）。解法是 runner 侧补一次 `apply_managed_runtime_config()`（在封印的 `canonical_v2/*.py` 之外，**不需要重新封印**），**建议切换后立即做**；在那之前，宿主线上的 key 由 `EnvironmentFile` 提供。
+
+**六、下一步（步 12 决策包已齐）**
+
+门结果（本轮）+ 32/32 的切换命令（含密钥通道）+ 回滚（备份命令文件、换回旧包旧索引，无需重建）+ 5 分钟验收清单（health 200 / `/api/auth/me` 401 而非 404 / 包的 release+index 标记 / 一轮真问 / admin 登录 / 嵌入连通性测试）。**切换会重启 18188（约 5 分钟停机），必须你先点头。**
+
+## 第 37 轮 · 2026-09-22 · 上线前 replay 门（7 段真实会话 / 27 轮）对**新栈**跑通：ALL PASS；另补两批定向单测 198 项全绿
+
+**一、replay 门（repo 里"每次热更新前必跑"的那道）——对新栈全绿**
+
+- 目标实例：scratch 18296（`serving-pack-fembed-v1` + `index-v4-v2` + `qwen3.7-text-embedding-flash`），不是活线。
+- 命令：`python scripts/replay_fix_round1.py --base-url http://127.0.0.1:18296 --out-dir <switch line>/…/replay-fix-round1-18296`
+- 结果：**`REPLAY_EXIT=0` / `RESULT: ALL PASS`**；7 个会话 27 轮 **0 失败**：
+
+  | 会话 | 轮数 | 结果 |
+  |---|---|---|
+  | G1_framing | 3 | PASS |
+  | G2_bare_name（×3 次重复） | 6 | PASS |
+  | G3_person_pronoun | 2 | PASS |
+  | **G4_patents（企业→专利，历史缺口）** | 2 | PASS |
+  | G5_expansion | 2 | PASS |
+  | G6_anaphoric_opener | 1 | PASS |
+  | **G7_enumeration（具身智能枚举，×3 次重复）** | 3 | PASS |
+
+  单轮墙钟 0.8–42.7 s；每轮 SSE 全量留档（1.4 MB，目录 `…/replay-fix-round1-18296/`）。
+- **意义**：召回门量的是"检索面有没有退化"，这道门量的是"用户看得见的行为有没有退化"（别名解析、本地引用、企业→专利、枚举完整性）。两道门在同一天对同一个新栈全绿，切换的证据链第一次闭合。
+
+**二、定向单测（我此刻跑的，命令可复核）**
+
+- 嵌入道（8 个文件）：**110 passed / 58.04 s** —— `test_embedding_throttle_retry`（新增）、`test_embedding_lane_fail_open`（本切片改过）、`test_embedding_model_switch_v2`、`test_embedding_endpoint_resolution`、`test_embedding_credential_projection`、`test_embedding_lane_breaker`、`test_embedding_transport_classification`、`test_knowledge_read_sufficiency_retry_contract`
+- 控制台（5 个文件）：**88 passed / 17.67 s** —— `test_embedding_effective_endpoint`、`test_embedding_identity_probe`、`test_admin_auth_throttle`、`test_canonical_v2_admin_secrets_api`、`test_managed_secrets_store`
+
+**三、必须在上线前处理的一处卫生问题（要你决定）**
+
+切换线的工作区里有**未提交的生产代码改动**：`apps/miroflow-agent/src/data_agents/canonical_v2/knowledge_build_isolated.py`、`providers/dashscope_embeddings.py`（429 重试修复）与 `tests/canonical_v2/test_embedding_lane_fail_open.py`（新增的 `test_embedding_throttle_retry.py` 也未跟踪）。封印时算出来的 reader 指纹取的是**磁盘内容**，所以现在"包 ↔ 代码"是靠**工作区状态**锁着的：任何一次 `git checkout` / `git clean` 都会让指纹变化（按 runbook 的记载，指纹不同 ⇒ 每次启动退回重放而不是 ~120 s 快路径），而这三处改动本身**没进版本历史**。建议切换前提交（按纪律我不擅自 commit）。另外 4 个未跟踪脚本/工件里，`s12g/serving-bundle-fembed.json` 是切换命令引用到的，必须保留。
+
+## 第 38 轮 · 2026-09-22 · "与 18188 相比有没有退化"追到底：**引用差不是迁移造成的，是回答模型不同**；同一轮又抓到两处必须切换前修的配置落差
+
+**一、先把结论钉在两条轴上**
+
+1. **检索面（embedding 迁移的考点）：无退化**。vector median 四个切片与基线**逐切片相同**（61/61/61/72，+0）；候选层命中 22→**29**；候选层覆盖 37/37（第一次那种"没测到"不复现）；37 例里 35 例答案实体层逐行相同。
+2. **引用密度那一处的差（local 239→158）不是噪声、也不是迁移**：它**跟着回答模型走**。
+
+**二、证据：同一个模型两次跑逐例稳定，不同模型之间系统性不同**
+
+| 案例 | A(deepseek) | C(deepseek) | B(gemma4) | B2(gemma4) |
+|---|---|---|---|---|
+| q2t3 | 26 | 25 | **1** | **1** |
+| s10 | 8 | 10 | **0** | **0** |
+| s01 | 21 | 21 | **12** | **12** |
+| 全量 local/web | 239/80 | 228/128 | 158/125 | 165/124 |
+| 答案 all-hit | 20/20 | 20/20 | 18/20 | 18/20 |
+
+同配置两跑（B vs B2，gemma4）连判定都是 **PASS、0 fail / 0 review**，引用只差 7 条（158↔165）⇒ 不是抖动。差异的来源：**活线的回答模型写在她那棵树的** `config/managed/settings.json`（`serving.chat_llm_profile = deepseekv4flash`，启动时投影成 `CHAT_LLM_PROFILE`）；**切换线里没有这个文件** ⇒ 落到默认 `gemma4`（qwen3.6-35b-a3b @ star.sustech.edu.cn）。⇒ **按原样切换，活线的回答模型会静默从 deepseek-v4-flash 变成 gemma4**——这才是这一轮真正需要拦的东西，而不是 embedding。
+
+**三、已做的两处修复（都在切换前，都不是改代码）**
+
+1. **把托管设置带进切换线**：`<switch line>/config/managed/settings.json`（0600），`serving.chat_llm_profile=deepseekv4flash` 保持与活线一致；重启后 18296 的 `/connections/presets` 实测回报 **chat_profile=deepseekv4flash** ✅。
+2. **页面身份/连通性测试读的是包路径**：`canonical_v2_admin_status` / `canonical_v2_embedding_identity` / `canonical_v2_runtime_sources` 三处都读 `CANONICAL_V2_SERVING_PACK`，未设时**回退写死的 `Qwen/Qwen3-Embedding-8B`**（活线今天正好"蒙对"：它的包本来就是那个模型）。⇒ 切换后若不管，**页面上按"测试连通性"会拿旧模型名去测**（大概率 404 `Model not exist`）。已在同一份受管设置里设 `paths.serving_pack_dir=/var/tmp/mirothinker-data-v2/serving-pack-fembed-v1`，页面将报 `qwen3.7-text-embedding-flash`。
+3. 顺手留了切换前后的对照基线（页面读数）：**活线今天** = `chat_profile=deepseekv4flash`、`frozen model=Qwen/Qwen3-Embedding-8B`、`base_url=http://100.64.0.27:18005/v1`。
+
+**四、还差最后一步（正在跑）**
+
+"新栈 + 活线回答模型（deepseekv4flash）"的第三份采集（B''）正在跑（约 15–20 分钟）。若它在引用密度与 all-hit 上回到 A/C 的水平（local ≈228-239、all-hit 20/20），则"迁移本身零退化"在**两条轴**上都闭合。已写进 runbook §12 的切换前置与验收清单：**带 settings.json、设 `serving_pack_dir`、切后页面三项核对**（profile=deepseekv4flash / model=qwen3.7-text-embedding-flash / 连通性测试通过且 1024 维）。
+
+## 第 39 轮 · 2026-09-22 · **完整评估**：新栈 vs 18188，检索轴与答案轴都无退化（同模型第三次采集闭合）；三处"控制台/配置"落差已修并实测；replay 门两边同日全绿
+
+**一、判定（同回答模型的"苹果对苹果"采集，`afterB`）**
+
+| 对比 | 答案实体命中 | 全命中例 | 候选层命中 | **vector median** | 引用 local/web | 墙钟 | 判定 |
+|---|---|---|---|---|---|---|---|
+| baseline(18188 配置) ↔ afterB | 31 → 28 | 20 → 17 | 22 → **24** | **+0**（61/61/61/72） | 239/80 → **225**/92 | 698.7 → 666.4 s | REVIEW，**0 fail 级** |
+| control(同配置二遍) ↔ afterB | 31 → 28 | 20 → 17 | 29 → 24 | **+0** | 228/128 → **225**/92 | 489.8 → 666.4 s | REVIEW，**0 fail 级** |
+| 同栈换模型（gemma4 ↔ deepseek） | 29 → 28 | 18 → 17 | 29 → 24 | **+0** | 165/124 → **225**/92 | 431.3 → 666.4 s | REVIEW，0 fail 级 |
+
+- **唯一硬 FAIL 闸门（vector median 掉 >30%）纹丝不动**；候选层落在同配置噪声带内（同配置两遍是 22 ↔ 29）。
+- 三组里的 review 级项全部落在**事先标定可容忍**的类：`concept` 措辞漂移（同配置的 baseline↔control 自己就会产生 3 条）＋ 一条 `q6t2` 的**候选层**漏、**答案仍然点名**（arXiv 2409.05701）。
+- **引用密度回到噪声带内**：afterB 225，对照 baseline 239 / control 228（同配置互差 239↔228、158↔165）。
+- 顺手量化了混淆的量级：**同一个栈上换回答模型能挪 60 条引用（165→225），而迁移只挪 3–14 条**——所以第一次那种"看着像退化"的读数，根源在模型而不在包。
+
+**二、之前那个"引用 239→158"是怎么被误读的（已闭合）**
+
+活线的回答模型写在她那棵树的 `config/managed/settings.json`（`chat_llm_profile=deepseekv4flash`）；切换线里没有这份文件 ⇒ 默认 `gemma4`（qwen3.6-35b-a3b）。两个模型各自两遍采集**逐例完全可分且各自稳定**（q2t3：26/25 vs 1/1；s10：8/10 vs 0/0；s01：21/21 vs 12/12）。把设置带过去之后，第三次采集（同栈+同模型）落回 225。⇒ **这不是迁移造成的退化，是切换会静默换掉回答模型**——已修（带 settings.json），并且**改之前会掉、改之后不会**。
+
+**三、行为轴：同一天、同一套 replay 门，两边都全绿**
+
+| 目标 | 结果 |
+|---|---|
+| 新栈（18296 = fembed 包 + index-v4-v2 + flash） | **RESULT: ALL PASS**，7 会话 27 轮 0 失败 |
+| 活线 18188（今天的线上状态） | **RESULT: ALL PASS**，7 会话 27 轮 0 失败 |
+
+（G1 framing / G2 裸名×3 / G3 人称代词 / **G4 企业→专利** / G5 扩展 / G6 指代开场 / **G7 具身智能枚举×3**）
+
+**四、这一轮抓出并修掉的三处"页面/配置"落差（切换前必须做，都已实测）**
+
+1. **回答模型** → 带 `<switch line>/config/managed/settings.json`（`chat_llm_profile=deepseekv4flash`）。
+2. **页面身份读的包路径** → 设 `paths.serving_pack_dir=<fembed 包>`；不设时三处（状态卡/嵌入身份探针/**连接性测试**）都会回退写死的 `Qwen/Qwen3-Embedding-8B`。
+3. **页面测的地址与凭据槽** → 设 `extraction_endpoints.embedding_base_url=https://maas.qianwenaiapi.com/api/v1`（与 bundle 一致），并把 key 种进受管密钥库的 `embedding.api_key`（这个字段**设计上就同时填两个槽**：控制台/本地权威的 `SGLANG_API_KEY` 与网关道的镜像 `CANONICAL_V2_EMBEDDING_API_KEY`）。不做的实测症状：`ok=false, HTTP 404/401`（拿新模型名去测旧本地端点）。
+
+实测（脚本 `page-identity-check.sh`，scratch 18296）：
+
+```
+chat_profile    = deepseekv4flash
+frozen model    = qwen3.7-text-embedding-flash
+frozen base_url = https://maas.qianwenaiapi.com/api/v1
+conn_test       = ok, 347 ms（兼容路线 404 → DashScope 原生路线 200）
+```
+
+**五、切换会改变什么 / 不会改变什么**
+
+| 项 | 18188 今天 | 切换后 |
+|---|---|---|
+| 启动器树 | s11-consolidation | embedding-switch-line |
+| 包 / 索引 | run16-readerbound / index-v3-v2 | fembed-v1 / index-v4-v2 |
+| 嵌入模型（身份+地址） | Qwen/Qwen3-Embedding-8B @ 本地 sglang | qwen3.7-text-embedding-flash @ DashScope 原生 |
+| 回答模型 | deepseekv4flash | **deepseekv4flash（修复后一致）** |
+| 页面身份卡 / 连接性测试 | 蒙对的旧字面量 / 测本地端点 | 正确身份 / 测新端点（都实测过） |
+| 嵌入密钥来源 | 无（本地端点） | systemd `EnvironmentFile` + 受管密钥库 |
+| 停机 | — | 重启 18188，实测该路启动约 5 分钟 |
+
+**六、仍未验证 / 待决**
+
+- **全量单测**（DB 绑定那批需 disposable Postgres）未跑；本切片未改生产代码。
+- **页面填 key → 服务道**这条链路仍有个顺序问题（受管配置在 uvicorn startup 才投影，而服务输入更早构建）⇒ 建议切换后做 runner 侧一行调用（在封印之外，不需重封）。今天的替代是 `EnvironmentFile`。
+- **切换线有未提交的生产改动**（429 重试两文件 + 测试）——封印指纹覆盖磁盘内容，建议切换前提交（等用户点头）。
+- 大流量/并发压测不在本轮范围。
+
+## 第 40 轮 · 2026-09-23 · "未验证项"全面补齐 + **更正一条我自己报错的缺口**：页面填的 key 其实到得了服务道；并给两个测试套件补上"可跑通的环境配方 + 配置隔离"
+
+**一、先更正一条误判（我自己上一轮写进文档的）**
+
+第 36/38 轮我报过一条"需求落差"：*配置页填的 key 到不了服务链路*（理由是"受管配置在 uvicorn startup 才投影，而服务输入更早构建，runner 也不调用 managed runtime"）。**这条是错的**：真正的 R16 采纳点在**服务包打开函数**里 —— `serving_pack_loader.open_serving_pack_authority`（注释原文：*"R16: the serving process adopts the operator's managed configuration here — once, at startup, never on a request path"*），而 `--serve-existing` 启动在构建任何服务输入**之前**就会打开包。
+
+- **实测证据**：我把命令文件里的 key 整段删掉（`serve-fembed-gate-18296-nokey-command.sh`，0 个引号、0 个 `$(`），启动日志里那行回执是 `managed_configuration_adopted=none skipped_env=CANONICAL_V2_EMBEDDING_BASE_URL,CANONICAL_V2_SERVING_PACK,CHAT_LLM_PROFILE,SGLANG_API_KEY,CANONICAL_V2_EMBEDDING_API_KEY`（=五个值**已经**在环境里，来自受管库的投影），进程初始环境里确实带着 `CANONICAL_V2_EMBEDDING_API_KEY`，**向量道正常给出 128 个候选**。
+- 处置：把我为此加的 runner 补丁**撤回**（纯增量 45 行，`git checkout` 还原；该文件不在任何封印身份里，实测证明它本来就不需要这段），runbook §12 与 verification §8.2 里那条错结论**就地改成更正版**并附实测；index 同步。
+- 保留的 net 收益：`EnvironmentFile` 仍然保留（"服务单元本身就是权威"），并新增了一个可复用的**页面三项核对脚本** `page-identity-check.sh`。
+
+**二、把"未验证项"逐条补掉**
+
+| 项 | 动作 | 结果 |
+|---|---|---|
+| 全量单测（app 侧） | 407 个测试文件全量跑 | 首跑 `98 failed / 5527 passed / 299 skipped`；**与活线树逐条比对后确认既有**（6 文件子集：切换线 73 条 = 活线树 73 条，集合完全相同） |
+| 全量单测（控制台侧） | 127 个文件全量跑 | 首跑 `29 failed / 1572 passed / 105 errors`；**127 条与活线树完全相同**（活线 `66 failed/1486 passed/61 errors`） |
+| 环境性失败 | 建**专用测试库** `miroflow_test_mock` + 按格式打**库注释标记**（`miroflow:destructive-target:v1:disposable:miroflow_test_mock`）+ 补夹具（`docs/专辑项目导出1768807339.xlsx` 软链进工作区） | 三级修复：库闸 `Refusing…` 101 条 → 库标记 98 条 → 夹具 9 条；**配方已写进 runbook** |
+| 真差异 | 逐条隔离复跑 | console 129 → 124（隔离 fixture 修好 5 条、**0 新增**）；agent 那 10 条"仅切换线红"里 **8 条是隔离抖动**（隔离单跑全过），**2 条**根因同源：`test_parse_args_default_has_no_serving_pack` 等被**机器上真实受管配置**投影出的 `CANONICAL_V2_SERVING_PACK` 污染 |
+| 系统性修法 | 两个套件各补一条**会话级配置隔离 fixture**（console `scratch_managed_configuration`；agent 新建 `tests/conftest.py::_isolate_managed_configuration`），把 `CANONICAL_V2_MANAGED_SETTINGS/SECRETS` 钉到空的临时文件 | 修好 5 + 2 条，**0 新增红** |
+| 负载/并发 | 新写 `load-probe.py`，8 并发对同一批 8 个问题 | 新栈：**8/8 HTTP 200、0 错误**、向量道 16–128 候选；web 道 5–6 轮 `unavailable`、2 轮无引用。**活线同样形态**（同 8 问、同 5–6 轮 unavailable、同样 2 轮 cite=0、同样 ok=6/8）⇒ **既有负载特性，不是迁移引入** |
+| 回滚前置 | 旧包/旧索引/旧标记在位性核对 | `serving-pack-run16-readerbound` + `index-v3-v2`（896 MB + 1.68 GB）原封不动；活线正跑着它们 ⇒ 回滚必然可启动 |
+| 受管配置 | 新增 `check-cutover-settings.sh`（校验 profile / pack 目录 / 地址 / 密钥槽 + 0600 + 用真类解析） | 正向 6 OK / failures=0；反向（故意给错 profile）立刻变红 |
+| runner 套件 | 同文件复跑 | 7 passed（既有红灯 1 条已修：测试 fake 缺 `role=` 参数，HEAD 版本同样红 ⇒ 既有） |
+
+**三、口径说明（避免把"套件红"读成"线坏了"）**
+
+- 两个套件在**活线上同样红**且**集合几乎完全相同**（控制台 127/129 相同、agent 6 文件 73/73 相同）⇒ 残余红灯是**既有/环境性**的（主要是 DB 绑定的集成族需要完整 backfill 夹具链），**不是本次迁移引入**。
+- 这一轮真正的"代码/配置"改动只有：撤回我的 runner 补丁、修 2 处测试 fake、补 2 个隔离 fixture、新增 2 个校验脚本；**生产代码零改动**（除撤回我自己加的之外）。
+
+**四、最终数字（补记，2026-09-23 01:27）**
+
+- **agent 套件（设计模式：不设测试库，DB 绑定族按设计跳过 + 新的配置隔离 fixture）**：首跑 `98 failed / 5527 passed / 299 skipped / 3 errors` → 最终 **`90 failed / 5535 passed / 299 skipped / 3 errors`**；**逐条比对：修好 10 条、新增 2 条**。
+  - 修好的 10 条正是被"机器上的受管配置"污染的那一类（`test_parse_args_default_has_no_serving_pack`、`…_skips_envelope_ownership`、`test_rewriter_empty_output_falls_back_to_deterministic_view`、`test_import_company_xlsx_detects_real_header_and_merges_continu…`、`test_run_company_official_product_capture` 4 条、`test_v019_*` 2 条）✅
+  - 新增的 2 条是 **DB 绑定的集成测试抖动**（`storage/test_title_resolution_cache::test_integration_set_get_roundtrip`、`storage/test_v025_migration::test_v025_adds_professor_admin_action_table`）——同类项在前面的对比里也反复出现/消失（都属于需要预置库的那批），与本次改动无关。写进"已知抖动"清单。
+- **带测试库跑 agent 套件的教训**：设 `DATABASE_URL_TEST` 会把 DB 绑定族从 **skip 变成 run**（299 → 153 skipped），而那批需要**预置好的库**（V 系列 schema + 种子），裸测试库上会成片失败（+103 条）——这不是缺陷，是**用法**。配方已按此更正进 runbook：**agent 用设计模式跑；控制台才用专用库**。
+- **控制台套件**（专用库 + 库标记 + 夹具 + 隔离 fixture）：`124 failed / 1584 passed / 29 skipped / 61 errors`；与活线树（`66 failed / 1486 passed / 61 errors`）逐条比对 **127/129 相同**，差异那 2 条已被隔离 fixture 消掉（0 新增）。

@@ -1,0 +1,159 @@
+{
+  "session_id": "session:chat:jQWUFoPIQvip2fjAVVDqSLII9TSsHgfD",
+  "turn_id": "turn:chat:sha256:e80e0c2c2d75e26c1b04abe2ee287e96924b777264d69726936652541406eb0f",
+  "turn_count": 1,
+  "query": "优必选科技怎么样",
+  "planned_displayed_ids": [],
+  "recalled_handles": [
+    {
+      "id": "company-c-332686c23caa9e079bc67f95",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市优必选科技股份有限公司"
+    },
+    {
+      "id": "company-c-56ec6244a1f2bd5395f1ba77",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市优必行科技有限公司"
+    },
+    {
+      "id": "company-c-a4a0668d8742c1cc4de7a0c0",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市百答科技有限公司"
+    },
+    {
+      "id": "company-c-cddc889afff60261ebc5a037",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市小柚机器人有限公司"
+    },
+    {
+      "id": "company-c-fb811c19272d014b1650715b",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳华宇智爱科技有限公司"
+    },
+    {
+      "id": "company-c-a4d26e3c32795d1147ffa863",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳北鱼信息科技有限公司"
+    },
+    {
+      "id": "company-c-caebbc4ae302d5a2242b5fba",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市宇多机器人有限公司"
+    },
+    {
+      "id": "company-c-ec5258c4f676ffc03e2fe4e8",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "本识科技（深圳）有限公司"
+    },
+    {
+      "id": "company-c-a908c95ec0c753abd265c587",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "优程企服科技（深圳）有限公司"
+    },
+    {
+      "id": "company-c-e4d7a18ba1d0c25dc8713b1c",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市香蕉科技有限公司"
+    },
+    {
+      "id": "company-c-908db4eb285cdcb63e611fb9",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市秘银科技有限公司"
+    },
+    {
+      "id": "company-c-13aff44f7f5918afae40367c",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳真伊科技有限公司"
+    },
+    {
+      "id": "company-c-0f03aba2f594e9dfd2d1e4b2",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市品优移动通讯设备有限公司"
+    },
+    {
+      "id": "company-c-9ace124d850f06c55502a140",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳奇译果科技有限公司"
+    },
+    {
+      "id": "company-c-942a381f4b7131af405dcd2b",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳总享科技有限公司"
+    },
+    {
+      "id": "company-c-1b5e37c1fe71d4df37ea9f81",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳欧沃机器人有限公司"
+    }
+  ],
+  "evidence_items": {
+    "total": 17,
+    "by_domain": {
+      "company": 17
+    },
+    "by_lane": {
+      "exact": 1,
+      "vector": 16
+    },
+    "by_source_nature": {
+      "local": 17
+    },
+    "with_claim_binding": 17
+  },
+  "protected_slots": [],
+  "requested_traversal": null,
+  "admitted_claims": {
+    "total": 1,
+    "by_predicate": {
+      "canonical_projection": 1
+    },
+    "by_claim_type": {
+      "material_fact": 1
+    },
+    "patent_evidence_claims": 0
+  },
+  "committed_handle_ids": [
+    "company-c-332686c23caa9e079bc67f95"
+  ],
+  "committed_names": [
+    "深圳市优必选科技股份有限公司"
+  ],
+  "render_mode": "prose_renderer",
+  "response_mode": "answer",
+  "citations": 1,
+  "answer_chars": 577,
+  "lane_timings": [
+    [
+      "structured",
+      0.0
+    ],
+    [
+      "exact",
+      0.863
+    ],
+    [
+      "lexical",
+      1.017
+    ],
+    [
+      "vector",
+      1.037
+    ]
+  ]
+}

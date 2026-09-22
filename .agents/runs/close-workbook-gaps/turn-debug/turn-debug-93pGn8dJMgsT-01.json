@@ -1,0 +1,126 @@
+{
+  "session_id": "session:chat:93pGn8dJMgsTVDMZcrPy3tR-XInulFYc",
+  "turn_id": "turn:chat:sha256:b8da2011234382a98f119551139231cf31a485fa59e5bddf7cfc5a0e36217382",
+  "turn_count": 1,
+  "query": "介绍一下 国际先进技术应用推进中心（深圳）",
+  "planned_displayed_ids": [],
+  "recalled_handles": [
+    {
+      "id": "company-c-d4182bdd53fa74cebbfebd6f",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳国际先进技术应用推进中心"
+    },
+    {
+      "id": "web-handle:sha256:94b8987088dd8d60366c27fab55ed1da368e583854a1e67ffdcf04f0a262379b",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "河套深圳园区打造深港科技创新聚集地 - 香港中联办"
+    },
+    {
+      "id": "web-handle:sha256:72f6499794e89cf5651ab2343b50e33c781d47442de21e4af2f30b8a3f9cfab6",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "河套数学与交叉学科研究院、国际先进技术应用推进中心（深圳）揭牌"
+    },
+    {
+      "id": "web-handle:sha256:857f812e5160647e4509bc3a01ebb915ea421cf004ea76f6565ccfe78b01acea",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "支持国际先进技术应用推进中心（深圳）建设具身智能技术试验场 ..."
+    },
+    {
+      "id": "web-handle:sha256:370df350aca1d133429a27e21432f84007ed703495b78b8e73b5911ef0558b18",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "粤港澳大湾区数字经济研究院（国际先进技术应用推进中心（深圳））"
+    },
+    {
+      "id": "web-handle:sha256:dea3c3c1147d7939d0d7c303c2b7d2641d14a692716129f09fc81ea984a9cbf0",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "支持国际先进技术应用推进中心（深圳）建设具身智能技术试验场"
+    },
+    {
+      "id": "web-handle:sha256:96b6091ec9835f30c21c2bbee71cec66a4e9c279a1dcc1fb116fb1471f068149",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "建重大平台强核心攻关优产业生态深圳新质生产力加速迸发"
+    },
+    {
+      "id": "web-handle:sha256:ead27843c8a01f8bdb316fb03503f28828f47e5b96f4cb06c6ea234af9e089f7",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "光源资本携手国际先进技术应用推进中心（深圳） - QQ News"
+    }
+  ],
+  "evidence_items": {
+    "total": 10,
+    "by_domain": {
+      "company": 3,
+      "professor": 7
+    },
+    "by_lane": {
+      "exact": 1,
+      "lexical": 1,
+      "vector": 1,
+      "web": 7
+    },
+    "by_source_nature": {
+      "current_web": 7,
+      "local": 3
+    },
+    "with_claim_binding": 10
+  },
+  "protected_slots": [
+    {
+      "kind": "geography",
+      "value": "深圳",
+      "entity_ids": []
+    }
+  ],
+  "requested_traversal": null,
+  "admitted_claims": {
+    "total": 5,
+    "by_predicate": {
+      "canonical_projection": 1,
+      "geography": 4
+    },
+    "by_claim_type": {
+      "material_fact": 5
+    },
+    "patent_evidence_claims": 0
+  },
+  "committed_handle_ids": [
+    "company-c-d4182bdd53fa74cebbfebd6f"
+  ],
+  "committed_names": [
+    "深圳国际先进技术应用推进中心"
+  ],
+  "render_mode": "prose_renderer",
+  "response_mode": "answer",
+  "citations": 5,
+  "answer_chars": 514,
+  "lane_timings": [
+    [
+      "structured",
+      0.0
+    ],
+    [
+      "vector",
+      1.568
+    ],
+    [
+      "lexical",
+      1.718
+    ],
+    [
+      "exact",
+      1.879
+    ],
+    [
+      "web",
+      11.354
+    ]
+  ]
+}
