@@ -1,60 +1,63 @@
 == 工具指纹 ==
   变异前 sha256 = fdc892ed0409c7c38a74dc47ebc4bab0cbb11b908f0134ebef36da41af0931de
   测试文件 = apps/admin-console/tests/test_reset_admin_password_cli.py
+  活线 admin.password_reset 审计行数（只读）：34
+  ※ 这个数字本轮**不允许**变化：开发机上 /var/tmp/…-s12f 就是真活线，
+    2026-09-22 曾因一条把库路径改回 DEFAULT_STATE_DIR 的变异把活线口令改了 34 次。
 
 ══ 0. 基线：全部通过（否则下面的“变红”没意义）══
 ..........                                                               [100%]
-10 passed in 1.99s
+10 passed in 2.00s
 
 ══ 变异 1：把新口令打进输出 ⇒ 期望不打印口令那条红 ══
 E           == 管理员口令已重置 ==
-E             口令：7EkSHtbJ5TaTXAYG
-E             库：/tmp/pytest-of-longxiang/pytest-1707/test_the_tool_never_prints_the0/state/admin-auth.sqlite3（服务在用的那个）
+E             口令：b9MMBXC4aUamKoBw
+E             库：/tmp/pytest-of-longxiang/pytest-1719/test_the_tool_never_prints_the0/state/admin-auth.sqlite3（服务在用的那个）
 E             账号：admin（旧口令与旧会话**立即失效**；不需要重启服务）
 E             新口令在这个文件里（0600，刚创建）：...
 E         
 E         ...Full output truncated (4 lines hidden), use '-vv' to show
 
-tests/test_reset_admin_password_cli.py:128: AssertionError
+tests/test_reset_admin_password_cli.py:140: AssertionError
 =========================== short test summary info ============================
 FAILED tests/test_reset_admin_password_cli.py::test_the_tool_never_prints_the_password
-1 failed, 9 passed in 2.04s
+1 failed, 9 passed in 2.05s
 
-══ 变异 2：忽略 CANONICAL_V2_ACCESS_LOG_DB 给的库路径（改用写死状态目录）⇒ 期望目标库类测试红 ══
-  若页面提示锁定：那是服务进程内的登录限流（5 次错误锁 1 分钟、按次数递增），重置不会解除它，稍等再登。
+══ 变异 2：忽略 CANONICAL_V2_ACCESS_LOG_DB 给的库路径（改用写死的 **decoy** 路径）⇒ 期望目标库类测试红 ══
+  ⇒ 库还不存在：站点还没首启过（先起服务，首启会建库并写下首启口令）
 =========================== short test summary info ============================
 FAILED tests/test_reset_admin_password_cli.py::test_reset_rotates_the_password_and_the_old_one_is_rejected
 FAILED tests/test_reset_admin_password_cli.py::test_the_tool_never_prints_the_password
 FAILED tests/test_reset_admin_password_cli.py::test_the_reset_file_lands_beside_the_mounted_db_at_0600
 FAILED tests/test_reset_admin_password_cli.py::test_the_tool_targets_the_database_the_service_uses
-FAILED tests/test_reset_admin_password_cli.py::test_the_tool_refuses_a_missing_database_instead_of_creating_one
 FAILED tests/test_reset_admin_password_cli.py::test_a_second_run_is_idempotent
 FAILED tests/test_reset_admin_password_cli.py::test_the_audit_trail_records_the_reset
 FAILED tests/test_reset_admin_password_cli.py::test_a_reset_invalidates_the_old_session
 FAILED tests/test_reset_admin_password_cli.py::test_the_login_route_still_locks_after_a_reset
-9 failed, 1 passed in 1.76s
+FAILED tests/test_reset_admin_password_cli.py::test_status_is_read_only - Ass...
+9 failed, 1 passed in 1.04s
 
 ══ 变异 3：去掉库不存在就拒绝（会新建空副本）⇒ 期望那条红 ══
         assert _tool_module().main([]) == 3
 >       assert not (state_dir / "admin-auth.sqlite3").exists()
 E       AssertionError: assert not True
 E        +  where True = exists()
-E        +    where exists = (PosixPath('/tmp/pytest-of-longxiang/pytest-1709/test_the_tool_refuses_a_missin0/state') / 'admin-auth.sqlite3').exists
+E        +    where exists = (PosixPath('/tmp/pytest-of-longxiang/pytest-1721/test_the_tool_refuses_a_missin0/state') / 'admin-auth.sqlite3').exists
 
-tests/test_reset_admin_password_cli.py:180: AssertionError
+tests/test_reset_admin_password_cli.py:192: AssertionError
 ----------------------------- Captured stdout call -----------------------------
 [FAIL] 账号不存在：admin（库里现有：（无））
 =========================== short test summary info ============================
 FAILED tests/test_reset_admin_password_cli.py::test_the_tool_refuses_a_missing_database_instead_of_creating_one
-1 failed, 9 passed in 2.08s
+1 failed, 9 passed in 2.06s
 
 ══ 变异 4：手写 SQL 而不是走 set_password（跳过 epoch 递增与不变量）⇒ 期望会话/代次类测试红 ══
 == 管理员口令已重置 ==
-  库：/tmp/pytest-of-longxiang/pytest-1710/test_a_reset_invalidates_the_o0/state/admin-auth.sqlite3（服务在用的那个）
+  库：/tmp/pytest-of-longxiang/pytest-1722/test_a_reset_invalidates_the_o0/state/admin-auth.sqlite3（服务在用的那个）
   账号：admin（旧口令与旧会话**立即失效**；不需要重启服务）
   新口令在这个文件里（0600，刚创建）：
-      /tmp/pytest-of-longxiang/pytest-1710/test_a_reset_invalidates_the_o0/state/admin-password-reset-2026-09-22.txt
-  读出来：sudo cat /tmp/pytest-of-longxiang/pytest-1710/test_a_reset_invalidates_the_o0/state/admin-password-reset-2026-09-22.txt
+      /tmp/pytest-of-longxiang/pytest-1722/test_a_reset_invalidates_the_o0/state/admin-password-reset-2026-09-22.txt
+  读出来：sudo cat /tmp/pytest-of-longxiang/pytest-1722/test_a_reset_invalidates_the_o0/state/admin-password-reset-2026-09-22.txt
   完整说明：CONFIG-GUIDE.md §5（甲方运维版；读完请立刻记到安全的地方）
   若页面提示锁定：那是服务进程内的登录限流（5 次错误锁 1 分钟、按次数递增），重置不会解除它，稍等再登。
 =========================== short test summary info ============================
@@ -65,3 +68,5 @@ FAILED tests/test_reset_admin_password_cli.py::test_a_reset_invalidates_the_old_
 == 还原核对 ==
   还原后 sha256 = fdc892ed0409c7c38a74dc47ebc4bab0cbb11b908f0134ebef36da41af0931de
   OK：与变异前一致
+  活线 admin.password_reset 审计行数（只读）：34
+  OK：本轮没有往活线写一个字节

@@ -14,7 +14,34 @@
 | 交付包首屏 | `deploy/docker/build-site-bundle.sh`（README-FIRST 生成块加一行指向 §5） |
 | 证据 | `raw/02-container-evidence.txt`（真镜像六段）、`raw/03-pytest-mutation.txt`（四变异） |
 
-**真调用计数 = 0**（本轮只碰本地 docker 与本地 sqlite；没有任何外呼；**活线 18188 全程未动**）。
+**真调用计数 = 0**（本轮只碰本地 docker 与本地 sqlite；没有任何外呼）。
+
+> ⚠ **必须先读这一段：我在本轮一度把活线口令改了（已定位、已修、活线现在可用）**
+>
+> * **发生了什么**：变异测试的配方（`03-pytest-mutation-demo.sh` 的 MUTATION-2）把工具的库路径
+>   改成 `admin_auth.DEFAULT_STATE_DIR / DB_FILENAME` —— 而**开发机上这个默认值就是活线的状态目录**
+>   `/var/tmp/mirothinker-canonical-v2-s12f`。于是那次变异跑测试时，每一条调用工具的测试都**真的**
+>   重置了活线 admin 口令。审计表里留下 **34 条** `admin.password_reset`（actor=`cli:longxiang`、
+>   detail=`mirothinker-reset-admin-password`），时间 10:49:23 / 10:49:51 / 10:52:17 / 10:53:08
+>   （四次变异演示各一批）；活线 admin 的 `password_epoch` 现在是 **39**。
+> * **活线现在的状态**：**可用**。当前口令 = `/var/tmp/mirothinker-canonical-v2-s12f/admin-password-reset-2026-09-22.txt`
+>   （0600、属主 longxiang、17 字节、mtime 10:53:10）里的那一个 —— 我用它**做过一次**登录验证：
+>   `POST http://127.0.0.1:18188/api/auth/login` ⇒ **HTTP 200（admin/admin）**，口令没有打印、
+>   没有落进任何文件。**母 agent 请 `sudo cat` 该文件后用页面改成一个你自己知道的口令。**
+> * **代价**：你（或现场）在 10:43 那一次重置的旧口令、以及更早的口令，全部作废；所有 admin 会话
+>   已失效（epoch 递增）；审计表里多了 34 条噪声行 —— **我没有去删它们**（删也是一次写活线的动作，
+>   留给你决定）。
+> * **根因（两层都是我的错）**：① 变异配方指向了一个**真实存在**的路径，而不是一个不可能被写到的
+>   decoy；② 测试只通过环境变量把库引到 `tmp_path`，夹具**没有**同时把模块的兜底
+>   `DEFAULT_STATE_DIR` 也挪走 —— 于是"忽略环境变量的变异体"照样能摸到活线。
+> * **已修（三层，全部在本轮提交里）**：① M2 改成指向 `/tmp/mutation-decoy-not-a-real-state/…`
+>   （不存在 ⇒ 工具自己 exit 3，写不到任何地方）；② 测试的 `state_dir` 夹具**同时** patch
+>   `admin_auth.DEFAULT_STATE_DIR` 到 `tmp_path`，并断言解析出来的库落在 `tmp_path` 里；③ 变异演示
+>   脚本现在会在跑之前/之后**只读**统计活线 `admin.password_reset` 行数，一旦变化就打印 `FAIL`
+>   （本轮修好后重跑：34 → 34，"没有往活线写一个字节"）。
+> * 教训（写进这一条，免得下次再犯）：**这台机器上 `/var/tmp/mirothinker-canonical-v2-s12f` 是活线
+>   目录**。任何"错误分支"可能落到该路径的测试/变异都必须靠 patch 模块级默认值来兜底，只 steer
+>   环境变量不够。
 
 ---
 

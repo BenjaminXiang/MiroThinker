@@ -64,13 +64,25 @@ def fresh_login_limiter(monkeypatch: pytest.MonkeyPatch) -> None:
 
 @pytest.fixture()
 def state_dir(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
-    """把状态目录指到 tmp_path，只设冻结命令文件里那一个变量（与本包真实布局一致）。"""
+    """把状态目录指到 tmp_path，只设冻结命令文件里那一个变量（与本包真实布局一致）。
+
+    **安全闸**：连模块的兜底 `DEFAULT_STATE_DIR` 也一起挪到 tmp_path，并断言解析结果落在 tmp_path 里。
+    这条不是洁癖 —— 开发机上 `/var/tmp/mirothinker-canonical-v2-s12f` 就是**真活线**的状态目录：
+    工具一旦忽略环境变量（或有变异版这么做），测试就会**真的把活线口令改掉**（2026-09-22 踩过，
+    一次变异测试往活线写了 34 条 admin.password_reset）。有了这道闸，任何"改错地方"的版本
+    都只会在 tmp_path 里打转。
+    """
+
+    from backend.services import admin_auth
 
     state = tmp_path / "state"
     state.mkdir()
     monkeypatch.delenv(DB_PATH_ENV, raising=False)
     monkeypatch.delenv(KEY_PATH_ENV, raising=False)
     monkeypatch.setenv(ACCESS_LOG_PATH_ENV, str(state / "access-logs.sqlite3"))
+    monkeypatch.setattr(admin_auth, "DEFAULT_STATE_DIR", tmp_path / "default-state")
+    resolved = admin_auth.default_db_path()
+    assert tmp_path in resolved.parents, f"测试要改的库必须落在 tmp_path 里，实得 {resolved}"
     return state
 
 
