@@ -274,7 +274,7 @@ def test_production_builder_receives_exact_original_milvus_evidence(
         create_isolated_knowledge_build=create_isolated,
         FileCompleteCandidateEnvelopeSink=Value,
         load_recorded_decision_adapter=lambda path: ("decision", path),
-        load_recorded_embedding_adapter=lambda path: ("embedding", path),
+        load_recorded_embedding_adapter=lambda path, *, role=None: ("embedding", path),
         CompleteCandidateTargetConfig=Value,
         DestructiveDatabaseTarget=Value,
         IsolatedIndexTarget=Value,
@@ -309,7 +309,7 @@ def test_production_serve_fails_before_builder_without_task_12_2_serving_bundle(
         create_isolated_knowledge_build=create_isolated,
         FileCompleteCandidateEnvelopeSink=object,
         load_recorded_decision_adapter=lambda path: path,
-        load_recorded_embedding_adapter=lambda path: path,
+        load_recorded_embedding_adapter=lambda path, *, role=None: path,
     )
 
     def import_probe(name: str) -> Any:

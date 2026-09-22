@@ -1,0 +1,214 @@
+{
+  "base_url": "http://127.0.0.1:18296",
+  "generated_at": "2026-09-22T20:51:21",
+  "sessions": {
+    "G1_framing": {
+      "turns": [
+        {
+          "query": "介绍一下 国际先进技术应用推进中心（深圳）",
+          "repeat": 1,
+          "sse": "G1_framing_r1_t1.sse",
+          "seconds": 14.6,
+          "query_type": "canonical_v2:A:answer",
+          "answer_head": "深圳国际先进技术应用推进中心（简称“国先中心（深圳）”）是在国家发展改革委、深圳市政府支持指导下设立，由深圳市科技创新局作为业务主管部门，依托粤港澳大湾区数字经济研究院建设的世界级先进技术应用推广平台。\n\n该平台聚焦人工智能、具身智能、低空",
+          "failures": []
+        },
+        {
+          "query": "有没有更详细的信息",
+          "repeat": 1,
+          "sse": "G1_framing_r1_t2.sse",
+          "seconds": 16.6,
+          "query_type": "canonical_v2:A:answer",
+          "answer_head": "深圳国际先进技术应用推进中心（又称国先中心（深圳））是在国家发展改革委、深圳市政府支持指导下设立，由深圳市科技创新局作为业务主管部门，依托粤港澳大湾区数字经济研究院建设的世界级先进技术应用推广平台。\n\n该中心聚焦人工智能、具身智能、低空经济",
+          "failures": []
+        },
+        {
+          "query": "它有哪些布局和进展",
+          "repeat": 1,
+          "sse": "G1_framing_r1_t3.sse",
+          "seconds": 16.3,
+          "query_type": "canonical_v2:A:answer",
+          "answer_head": "深圳国际先进技术应用推进中心（国先中心）是在国家发展改革委、深圳市政府支持指导下设立，由深圳市科技创新局作为业务主管部门，依托粤港澳大湾区数字经济研究院建设的世界级先进技术应用推广平台。\n\n在布局与进展方面，该中心主要聚焦人工智能、具身智能",
+          "failures": []
+        }
+      ],
+      "pass": true
+    },
+    "G2_bare_name": {
+      "turns": [
+        {
+          "query": "国际先进技术应用推进中心（深圳）",
+          "repeat": 1,
+          "sse": "G2_bare_name_r1_t1.sse",
+          "seconds": 6.0,
+          "query_type": "canonical_v2:A:answer",
+          "answer_head": "国际先进技术应用推进中心（深圳）（简称“国先中心（深圳）”）位于深圳。\n\n该中心是在国家发展改革委、深圳市政府支持指导下设立，由深圳市科技创新局作为业务主管部门，依托粤港澳大湾区数字经济研究院建设的世界级先进技术应用推广平台。其注册地为深圳",
+          "failures": []
+        },
+        {
+          "query": "这个中心的企业培育情况怎么样",
+          "repeat": 1,
+          "sse": "G2_bare_name_r1_t2.sse",
+          "seconds": 7.0,
+          "query_type": "canonical_v2:A:answer",
+          "answer_head": "深圳国际先进技术应用推进中心（国先中心）的企业培育工作主要依托其作为世界级先进技术应用推广平台的定位，聚焦人工智能、具身智能、低空经济等重点领域，通过搭建技术供需对接与孵化服务体系来推动成果的工程化落地与直接转化。\n\n在核心服务机制上，该中",
+          "failures": []
+        },
+        {
+          "query": "国际先进技术应用推进中心（深圳）",
+          "repeat": 2,
+          "sse": "G2_bare_name_r2_t1.sse",
+          "seconds": 4.7,
+          "query_type": "canonical_v2:A:answer",
+          "answer_head": "国际先进技术应用推进中心（深圳）（简称“国先中心（深圳）”）位于深圳。\n\n该中心是在国家发展改革委、深圳市政府支持指导下设立，由深圳市科技创新局作为业务主管部门，依托粤港澳大湾区数字经济研究院建设的世界级先进技术应用推广平台。其注册地为深圳",
+          "failures": []
+        },
+        {
+          "query": "这个中心的企业培育情况怎么样",
+          "repeat": 2,
+          "sse": "G2_bare_name_r2_t2.sse",
+          "seconds": 4.0,
+          "query_type": "canonical_v2:A:answer",
+          "answer_head": "深圳国际先进技术应用推进中心（国先中心）的企业培育工作主要依托其作为世界级先进技术应用推广平台的定位，聚焦人工智能、具身智能、低空经济等重点领域，通过搭建技术供需对接与孵化服务体系来推动成果的工程化落地与直接转化。\n\n在核心服务机制上，该中",
+          "failures": []
+        },
+        {
+          "query": "国际先进技术应用推进中心（深圳）",
+          "repeat": 3,
+          "sse": "G2_bare_name_r3_t1.sse",
+          "seconds": 5.1,
+          "query_type": "canonical_v2:A:answer",
+          "answer_head": "国际先进技术应用推进中心（深圳）（简称“国先中心（深圳）”）位于深圳。\n\n该中心是在国家发展改革委、深圳市政府支持指导下设立，由深圳市科技创新局作为业务主管部门，依托粤港澳大湾区数字经济研究院建设的世界级先进技术应用推广平台。其注册地为深圳",
+          "failures": []
+        },
+        {
+          "query": "这个中心的企业培育情况怎么样",
+          "repeat": 3,
+          "sse": "G2_bare_name_r3_t2.sse",
+          "seconds": 4.5,
+          "query_type": "canonical_v2:A:answer",
+          "answer_head": "深圳国际先进技术应用推进中心（国先中心）的企业培育工作主要依托其作为世界级先进技术应用推广平台的定位，聚焦人工智能、具身智能、低空经济等重点领域，通过搭建技术供需对接与孵化服务体系来推动成果的工程化落地与直接转化。\n\n在核心服务机制上，该中",
+          "failures": []
+        }
+      ],
+      "pass": true
+    },
+    "G3_person_pronoun": {
+      "turns": [
+        {
+          "query": "介绍一下 国际先进技术应用推进中心（深圳）",
+          "repeat": 1,
+          "sse": "G3_person_pronoun_r1_t1.sse",
+          "seconds": 5.3,
+          "query_type": "canonical_v2:A:answer",
+          "answer_head": "深圳国际先进技术应用推进中心（简称“国先中心（深圳）”）是在国家发展改革委、深圳市政府支持指导下设立，由深圳市科技创新局作为业务主管部门，依托粤港澳大湾区数字经济研究院建设的世界级先进技术应用推广平台。\n\n该中心于2025年5月在河套深港科",
+          "failures": []
+        },
+        {
+          "query": "他有哪些论文",
+          "repeat": 1,
+          "sse": "G3_person_pronoun_r1_t2.sse",
+          "seconds": 0.9,
+          "query_type": "canonical_v2:G:clarification_only",
+          "answer_head": "您的问题里使用了“他/她/它/这家”等指代词，但我暂时无法确定具体指代对象，为了准确回答，请补充您想了解的对象（例如教授姓名、公司名、论文标题或专利号），我会立即为您查询。如果您只是想了解某一类信息的大致情况，也可以直接描述需求，我会先给出",
+          "failures": []
+        }
+      ],
+      "pass": true
+    },
+    "G4_patents": {
+      "turns": [
+        {
+          "query": "优必选科技怎么样",
+          "repeat": 1,
+          "sse": "G4_patents_r1_t1.sse",
+          "seconds": 8.6,
+          "query_type": "canonical_v2:A:answer",
+          "answer_head": "深圳市优必选科技股份有限公司（UBTECH）是一家总部位于深圳的机器人领域头部企业，也是全球极少数具备人形机器人全栈式技术能力的公司。公司成立于2012年，定位为“智能服务机器人领导者”及“物理AI终端公司”，业务覆盖工业制造、商用服务、教",
+          "failures": []
+        },
+        {
+          "query": "该公司的专利有哪些",
+          "repeat": 1,
+          "sse": "G4_patents_r1_t2.sse",
+          "seconds": 23.0,
+          "query_type": "canonical_v2:A:answer",
+          "answer_head": "深圳市优必选科技股份有限公司在机器人领域拥有广泛的专利布局，涵盖人形机器人、清洁机器人、泳池清洁机器人及底层核心控制算法等多个方向。以下是该公司作为申请人（含与关联公司共同申请）的部分代表性专利：\n\n**人形机器人及核心硬件结构**\n*  ",
+          "failures": []
+        }
+      ],
+      "pass": true
+    },
+    "G5_expansion": {
+      "turns": [
+        {
+          "query": "优必选科技怎么样",
+          "repeat": 1,
+          "sse": "G5_expansion_r1_t1.sse",
+          "seconds": 5.9,
+          "query_type": "canonical_v2:A:answer",
+          "answer_head": "深圳市优必选科技股份有限公司（UBTECH）是一家总部位于深圳的机器人领域头部企业，也是全球极少数具备人形机器人全栈式技术能力的公司。公司成立于2012年，定位为“智能服务机器人领导者”及“物理AI终端公司”，业务覆盖工业制造、商用服务、教",
+          "failures": []
+        },
+        {
+          "query": "还有哪些类似的公司",
+          "repeat": 1,
+          "sse": "G5_expansion_r1_t2.sse",
+          "seconds": 20.2,
+          "query_type": "canonical_v2:A:answer",
+          "answer_head": "深圳市优必选科技股份有限公司（优必选）是人形机器人与智能服务机器人领域的头部企业。在深圳，与其业务定位、技术路线或应用场景相似的公司主要集中在人形机器人、智能服务机器人及具身智能产业链环节。\n\n根据公开信息，以下深圳企业是优必选在机器人领域",
+          "failures": []
+        }
+      ],
+      "pass": true
+    },
+    "G6_anaphoric_opener": {
+      "turns": [
+        {
+          "query": "这个中心是做什么的",
+          "repeat": 1,
+          "sse": "G6_anaphoric_opener_r1_t1.sse",
+          "seconds": 0.8,
+          "query_type": "canonical_v2:G:clarification_only",
+          "answer_head": "您的问题里使用了“他/她/它/这家”等指代词，但我暂时无法确定具体指代对象，为了准确回答，请补充您想了解的对象（例如教授姓名、公司名、论文标题或专利号），我会立即为您查询。如果您只是想了解某一类信息的大致情况，也可以直接描述需求，我会先给出",
+          "failures": []
+        }
+      ],
+      "pass": true
+    },
+    "G7_enumeration": {
+      "turns": [
+        {
+          "query": "深圳有哪些做具身智能的公司",
+          "repeat": 1,
+          "sse": "G7_enumeration_r1_t1.sse",
+          "seconds": 42.7,
+          "query_type": "canonical_v2:A:answer",
+          "answer_head": "深圳在具身智能领域已形成较为完整的产业链，涵盖了本体研发、核心零部件、系统集成及平台运营等多个环节。以下是深圳具身智能领域具有代表性的企业及机构：\n\n**1. 本体研发与整机制造**\n*   **深圳市优必选科技股份有限公司**：具身智能领",
+          "failures": []
+        },
+        {
+          "query": "深圳有哪些做具身智能的公司",
+          "repeat": 2,
+          "sse": "G7_enumeration_r2_t1.sse",
+          "seconds": 34.2,
+          "query_type": "canonical_v2:A:answer",
+          "answer_head": "深圳在具身智能领域已形成较为完整的产业链，涵盖了本体研发、核心零部件、系统集成及平台运营等多个环节。以下是深圳具身智能领域具有代表性的企业及机构：\n\n**1. 本体研发与整机制造**\n*   **深圳市优必选科技股份有限公司**：具身智能领",
+          "failures": []
+        },
+        {
+          "query": "深圳有哪些做具身智能的公司",
+          "repeat": 3,
+          "sse": "G7_enumeration_r3_t1.sse",
+          "seconds": 34.9,
+          "query_type": "canonical_v2:A:answer",
+          "answer_head": "深圳在具身智能领域已形成较为完整的产业链，涵盖了本体研发、核心零部件、系统集成及平台运营等多个环节。以下是深圳具身智能领域具有代表性的企业及机构：\n\n**1. 本体研发与整机制造**\n*   **深圳市优必选科技股份有限公司**：具身智能领",
+          "failures": []
+        }
+      ],
+      "pass": true
+    }
+  },
+  "all_pass": true,
+  "total_failures": 0
+}

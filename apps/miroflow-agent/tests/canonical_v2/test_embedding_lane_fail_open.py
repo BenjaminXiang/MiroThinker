@@ -74,8 +74,20 @@ def _vector_trace(result: Any) -> Any:
 
 def test_vector_transport_failure_degrades_the_lane_and_keeps_the_turn() -> None:
     module = _module()
+    # ``EmbeddingEndpointRateLimitedError`` is the refusal the rebuild's batch
+    # fan-out waits out (HTTP 429): F1's capture must keep treating it as a
+    # transport failure, so the lane degrades fail-open, unchanged.
+    rate_limited = import_module(
+        "src.data_agents.providers.dashscope_embeddings"
+    ).EmbeddingEndpointRateLimitedError(
+        "embedding endpoint https://gateway.invalid/api/v1 rate limited the batch "
+        "(HTTP 429, Retry-After=7s)",
+        status_code=429,
+        retry_after=7.0,
+    )
     failures = (
         (ConnectionError("embedding endpoint is unreachable"), "connection_failure"),
+        (rate_limited, "connection_failure"),
         (TimeoutError("embedding read timed out"), "timeout"),
     )
     for error, expected_kind in failures:

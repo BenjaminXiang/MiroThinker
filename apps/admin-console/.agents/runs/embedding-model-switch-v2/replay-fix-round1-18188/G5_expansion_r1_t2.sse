@@ -1,0 +1,3426 @@
+event: stage
+data: {"name":"planning"}
+
+event: plan_done
+data: {"lanes":["exact","structured","lexical","vector","web"],"domains":["company"],"views":["与深圳市优必选科技股份有限公司类似的公司","人形机器人 厂商 上市公司 深圳","人形机器人 行业 主要企业 深圳","人形机器人 竞争对手 优必选 深圳"]}
+
+event: stage
+data: {"name":"retrieval"}
+
+event: progress
+data: {"detail":"✓ 精确匹配：1 个结果","lane":"exact","count":1}
+
+event: progress
+data: {"detail":"✓ 关键词检索：0 个结果","lane":"lexical","count":0}
+
+event: progress
+data: {"detail":"✓ 结构化查询：0 个结果","lane":"structured","count":0}
+
+event: progress
+data: {"detail":"✓ supplemental：0 个结果","lane":"supplemental","count":0}
+
+event: progress
+data: {"detail":"✓ 语义检索：128 个结果","lane":"vector","count":128}
+
+event: progress
+data: {"detail":"✓ 网络搜索：0 个结果","lane":"web","count":0}
+
+event: retrieval_done
+data: {"lanes":[{"lane":"exact","status":"succeeded","candidates":1},{"lane":"structured","status":"succeeded","candidates":0},{"lane":"lexical","status":"succeeded","candidates":0},{"lane":"vector","status":"succeeded","candidates":128},{"lane":"web","status":"unavailable","candidates":0},{"lane":"supplemental","status":"succeeded","candidates":0}],"web_items":[]}
+
+event: stage
+data: {"name":"synthesis"}
+
+event: answer_chunk
+data: {"text":"优"}
+
+event: answer_chunk
+data: {"text":"必"}
+
+event: answer_chunk
+data: {"text":"选"}
+
+event: answer_chunk
+data: {"text":"是"}
+
+event: answer_chunk
+data: {"text":"一"}
+
+event: answer_chunk
+data: {"text":"家"}
+
+event: answer_chunk
+data: {"text":"总"}
+
+event: answer_chunk
+data: {"text":"部"}
+
+event: answer_chunk
+data: {"text":"位"}
+
+event: answer_chunk
+data: {"text":"于"}
+
+event: answer_chunk
+data: {"text":"深"}
+
+event: answer_chunk
+data: {"text":"圳"}
+
+event: answer_chunk
+data: {"text":"、"}
+
+event: answer_chunk
+data: {"text":"以"}
+
+event: answer_chunk
+data: {"text":"人"}
+
+event: answer_chunk
+data: {"text":"形"}
+
+event: answer_chunk
+data: {"text":"机"}
+
+event: answer_chunk
+data: {"text":"器"}
+
+event: answer_chunk
+data: {"text":"人"}
+
+event: answer_chunk
+data: {"text":"和"}
+
+event: answer_chunk
+data: {"text":"智"}
+
+event: answer_chunk
+data: {"text":"能"}
+
+event: answer_chunk
+data: {"text":"服"}
+
+event: answer_chunk
+data: {"text":"务"}
+
+event: answer_chunk
+data: {"text":"机"}
+
+event: answer_chunk
+data: {"text":"器"}
+
+event: answer_chunk
+data: {"text":"人"}
+
+event: answer_chunk
+data: {"text":"为"}
+
+event: answer_chunk
+data: {"text":"核"}
+
+event: answer_chunk
+data: {"text":"心"}
+
+event: answer_chunk
+data: {"text":"的"}
+
+event: answer_chunk
+data: {"text":"科"}
+
+event: answer_chunk
+data: {"text":"技"}
+
+event: answer_chunk
+data: {"text":"公"}
+
+event: answer_chunk
+data: {"text":"司"}
+
+event: answer_chunk
+data: {"text":"，"}
+
+event: answer_chunk
+data: {"text":"产"}
+
+event: answer_chunk
+data: {"text":"品"}
+
+event: answer_chunk
+data: {"text":"覆"}
+
+event: answer_chunk
+data: {"text":"盖"}
+
+event: answer_chunk
+data: {"text":"工"}
+
+event: answer_chunk
+data: {"text":"业"}
+
+event: answer_chunk
+data: {"text":"制"}
+
+event: answer_chunk
+data: {"text":"造"}
+
+event: answer_chunk
+data: {"text":"（"}
+
+event: answer_chunk
+data: {"text":"W"}
+
+event: answer_chunk
+data: {"text":"a"}
+
+event: answer_chunk
+data: {"text":"lk"}
+
+event: answer_chunk
+data: {"text":"e"}
+
+event: answer_chunk
+data: {"text":"r系"}
+
+event: answer_chunk
+data: {"text":"列"}
+
+event: answer_chunk
+data: {"text":"）"}
+
+event: answer_chunk
+data: {"text":"、"}
+
+event: answer_chunk
+data: {"text":"商"}
+
+event: answer_chunk
+data: {"text":"用"}
+
+event: answer_chunk
+data: {"text":"服"}
+
+event: answer_chunk
+data: {"text":"务"}
+
+event: answer_chunk
+data: {"text":"（"}
+
+event: answer_chunk
+data: {"text":"Cru"}
+
+event: answer_chunk
+data: {"text":"z"}
+
+event: answer_chunk
+data: {"text":"r系"}
+
+event: answer_chunk
+data: {"text":"列"}
+
+event: answer_chunk
+data: {"text":"）"}
+
+event: answer_chunk
+data: {"text":"和"}
+
+event: answer_chunk
+data: {"text":"教"}
+
+event: answer_chunk
+data: {"text":"育"}
+
+event: answer_chunk
+data: {"text":"科"}
+
+event: answer_chunk
+data: {"text":"研"}
+
+event: answer_chunk
+data: {"text":"（"}
+
+event: answer_chunk
+data: {"text":"悟"}
+
+event: answer_chunk
+data: {"text":"空"}
+
+event: answer_chunk
+data: {"text":"、"}
+
+event: answer_chunk
+data: {"text":"A"}
+
+event: answer_chunk
+data: {"text":"lp"}
+
+event: answer_chunk
+data: {"text":"h"}
+
+event: answer_chunk
+data: {"text":"a、"}
+
+event: answer_chunk
+data: {"text":"J"}
+
+event: answer_chunk
+data: {"text":"i"}
+
+event: answer_chunk
+data: {"text":"m"}
+
+event: answer_chunk
+data: {"text":"u"}
+
+event: answer_chunk
+data: {"text":"等"}
+
+event: answer_chunk
+data: {"text":"）"}
+
+event: answer_chunk
+data: {"text":"多"}
+
+event: answer_chunk
+data: {"text":"条"}
+
+event: answer_chunk
+data: {"text":"线"}
+
+event: answer_chunk
+data: {"text":"。"}
+
+event: answer_chunk
+data: {"text":"与"}
+
+event: answer_chunk
+data: {"text":"它"}
+
+event: answer_chunk
+data: {"text":"同"}
+
+event: answer_chunk
+data: {"text":"处"}
+
+event: answer_chunk
+data: {"text":"深"}
+
+event: answer_chunk
+data: {"text":"圳"}
+
+event: answer_chunk
+data: {"text":"、"}
+
+event: answer_chunk
+data: {"text":"业"}
+
+event: answer_chunk
+data: {"text":"务"}
+
+event: answer_chunk
+data: {"text":"方"}
+
+event: answer_chunk
+data: {"text":"向"}
+
+event: answer_chunk
+data: {"text":"相"}
+
+event: answer_chunk
+data: {"text":"近"}
+
+event: answer_chunk
+data: {"text":"的"}
+
+event: answer_chunk
+data: {"text":"公"}
+
+event: answer_chunk
+data: {"text":"司"}
+
+event: answer_chunk
+data: {"text":"有"}
+
+event: answer_chunk
+data: {"text":"不"}
+
+event: answer_chunk
+data: {"text":"少"}
+
+event: answer_chunk
+data: {"text":"，"}
+
+event: answer_chunk
+data: {"text":"以"}
+
+event: answer_chunk
+data: {"text":"下"}
+
+event: answer_chunk
+data: {"text":"按"}
+
+event: answer_chunk
+data: {"text":"代"}
+
+event: answer_chunk
+data: {"text":"表"}
+
+event: answer_chunk
+data: {"text":"性"}
+
+event: answer_chunk
+data: {"text":"列"}
+
+event: answer_chunk
+data: {"text":"出"}
+
+event: answer_chunk
+data: {"text":"："}
+
+event: answer_chunk
+data: {"text":"\n\n"}
+
+event: answer_chunk
+data: {"text":"-"}
+
+event: answer_chunk
+data: {"text":" "}
+
+event: answer_chunk
+data: {"text":"深"}
+
+event: answer_chunk
+data: {"text":"圳"}
+
+event: answer_chunk
+data: {"text":"优"}
+
+event: answer_chunk
+data: {"text":"艾"}
+
+event: answer_chunk
+data: {"text":"智"}
+
+event: answer_chunk
+data: {"text":"合"}
+
+event: answer_chunk
+data: {"text":"机"}
+
+event: answer_chunk
+data: {"text":"器"}
+
+event: answer_chunk
+data: {"text":"人"}
+
+event: answer_chunk
+data: {"text":"科"}
+
+event: answer_chunk
+data: {"text":"技"}
+
+event: answer_chunk
+data: {"text":"有"}
+
+event: answer_chunk
+data: {"text":"限"}
+
+event: answer_chunk
+data: {"text":"公"}
+
+event: answer_chunk
+data: {"text":"司"}
+
+event: answer_chunk
+data: {"text":"："}
+
+event: answer_chunk
+data: {"text":"主"}
+
+event: answer_chunk
+data: {"text":"打"}
+
+event: answer_chunk
+data: {"text":"复"}
+
+event: answer_chunk
+data: {"text":"合"}
+
+event: answer_chunk
+data: {"text":"协"}
+
+event: answer_chunk
+data: {"text":"作"}
+
+event: answer_chunk
+data: {"text":"机"}
+
+event: answer_chunk
+data: {"text":"器"}
+
+event: answer_chunk
+data: {"text":"人"}
+
+event: answer_chunk
+data: {"text":"、"}
+
+event: answer_chunk
+data: {"text":"移"}
+
+event: answer_chunk
+data: {"text":"动"}
+
+event: answer_chunk
+data: {"text":"底"}
+
+event: answer_chunk
+data: {"text":"盘"}
+
+event: answer_chunk
+data: {"text":"和"}
+
+event: answer_chunk
+data: {"text":"巡"}
+
+event: answer_chunk
+data: {"text":"检"}
+
+event: answer_chunk
+data: {"text":"机"}
+
+event: answer_chunk
+data: {"text":"器"}
+
+event: answer_chunk
+data: {"text":"人"}
+
+event: answer_chunk
+data: {"text":"，"}
+
+event: answer_chunk
+data: {"text":"产"}
+
+event: answer_chunk
+data: {"text":"品"}
+
+event: answer_chunk
+data: {"text":"包"}
+
+event: answer_chunk
+data: {"text":"括"}
+
+event: answer_chunk
+data: {"text":"O"}
+
+event: answer_chunk
+data: {"text":"W"}
+
+event: answer_chunk
+data: {"text":"系"}
+
+event: answer_chunk
+data: {"text":"列"}
+
+event: answer_chunk
+data: {"text":"复"}
+
+event: answer_chunk
+data: {"text":"合"}
+
+event: answer_chunk
+data: {"text":"协"}
+
+event: answer_chunk
+data: {"text":"作"}
+
+event: answer_chunk
+data: {"text":"机"}
+
+event: answer_chunk
+data: {"text":"器"}
+
+event: answer_chunk
+data: {"text":"人"}
+
+event: answer_chunk
+data: {"text":"、"}
+
+event: answer_chunk
+data: {"text":"A"}
+
+event: answer_chunk
+data: {"text":"R"}
+
+event: answer_chunk
+data: {"text":"I"}
+
+event: answer_chunk
+data: {"text":"S"}
+
+event: answer_chunk
+data: {"text":"系"}
+
+event: answer_chunk
+data: {"text":"列"}
+
+event: answer_chunk
+data: {"text":"巡"}
+
+event: answer_chunk
+data: {"text":"检"}
+
+event: answer_chunk
+data: {"text":"机"}
+
+event: answer_chunk
+data: {"text":"器"}
+
+event: answer_chunk
+data: {"text":"人"}
+
+event: answer_chunk
+data: {"text":"、"}
+
+event: answer_chunk
+data: {"text":"巡"}
+
+event: answer_chunk
+data: {"text":"霄"}
+
+event: answer_chunk
+data: {"text":"轮"}
+
+event: answer_chunk
+data: {"text":"式"}
+
+event: answer_chunk
+data: {"text":"人"}
+
+event: answer_chunk
+data: {"text":"形"}
+
+event: answer_chunk
+data: {"text":"机"}
+
+event: answer_chunk
+data: {"text":"器"}
+
+event: answer_chunk
+data: {"text":"人"}
+
+event: answer_chunk
+data: {"text":"等"}
+
+event: answer_chunk
+data: {"text":"，"}
+
+event: answer_chunk
+data: {"text":"应"}
+
+event: answer_chunk
+data: {"text":"用"}
+
+event: answer_chunk
+data: {"text":"于"}
+
+event: answer_chunk
+data: {"text":"半"}
+
+event: answer_chunk
+data: {"text":"导"}
+
+event: answer_chunk
+data: {"text":"体"}
+
+event: answer_chunk
+data: {"text":"晶"}
+
+event: answer_chunk
+data: {"text":"圆"}
+
+event: answer_chunk
+data: {"text":"厂"}
+
+event: answer_chunk
+data: {"text":"、"}
+
+event: answer_chunk
+data: {"text":"电"}
+
+event: answer_chunk
+data: {"text":"厂"}
+
+event: answer_chunk
+data: {"text":"巡"}
+
+event: answer_chunk
+data: {"text":"检"}
+
+event: answer_chunk
+data: {"text":"、"}
+
+event: answer_chunk
+data: {"text":"锂"}
+
+event: answer_chunk
+data: {"text":"电"}
+
+event: answer_chunk
+data: {"text":"与"}
+
+event: answer_chunk
+data: {"text":"3C"}
+
+event: answer_chunk
+data: {"text":"精"}
+
+event: answer_chunk
+data: {"text":"密"}
+
+event: answer_chunk
+data: {"text":"制"}
+
+event: answer_chunk
+data: {"text":"造"}
+
+event: answer_chunk
+data: {"text":"等"}
+
+event: answer_chunk
+data: {"text":"场"}
+
+event: answer_chunk
+data: {"text":"景"}
+
+event: answer_chunk
+data: {"text":"。"}
+
+event: answer_chunk
+data: {"text":"\n"}
+
+event: answer_chunk
+data: {"text":"-"}
+
+event: answer_chunk
+data: {"text":" "}
+
+event: answer_chunk
+data: {"text":"深"}
+
+event: answer_chunk
+data: {"text":"圳"}
+
+event: answer_chunk
+data: {"text":"市"}
+
+event: answer_chunk
+data: {"text":"宇"}
+
+event: answer_chunk
+data: {"text":"数"}
+
+event: answer_chunk
+data: {"text":"科"}
+
+event: answer_chunk
+data: {"text":"技"}
+
+event: answer_chunk
+data: {"text":"有"}
+
+event: answer_chunk
+data: {"text":"限"}
+
+event: answer_chunk
+data: {"text":"公"}
+
+event: answer_chunk
+data: {"text":"司"}
+
+event: answer_chunk
+data: {"text":"："}
+
+event: answer_chunk
+data: {"text":"产"}
+
+event: answer_chunk
+data: {"text":"品"}
+
+event: answer_chunk
+data: {"text":"线"}
+
+event: answer_chunk
+data: {"text":"覆"}
+
+event: answer_chunk
+data: {"text":"盖"}
+
+event: answer_chunk
+data: {"text":"四"}
+
+event: answer_chunk
+data: {"text":"足"}
+
+event: answer_chunk
+data: {"text":"与"}
+
+event: answer_chunk
+data: {"text":"人"}
+
+event: answer_chunk
+data: {"text":"形"}
+
+event: answer_chunk
+data: {"text":"机"}
+
+event: answer_chunk
+data: {"text":"器"}
+
+event: answer_chunk
+data: {"text":"人"}
+
+event: answer_chunk
+data: {"text":"，"}
+
+event: answer_chunk
+data: {"text":"包"}
+
+event: answer_chunk
+data: {"text":"括"}
+
+event: answer_chunk
+data: {"text":"G"}
+
+event: answer_chunk
+data: {"text":"o"}
+
+event: answer_chunk
+data: {"text":"1、"}
+
+event: answer_chunk
+data: {"text":"G"}
+
+event: answer_chunk
+data: {"text":"o"}
+
+event: answer_chunk
+data: {"text":"2、"}
+
+event: answer_chunk
+data: {"text":"B"}
+
+event: answer_chunk
+data: {"text":"1、"}
+
+event: answer_chunk
+data: {"text":"B"}
+
+event: answer_chunk
+data: {"text":"2、"}
+
+event: answer_chunk
+data: {"text":"H"}
+
+event: answer_chunk
+data: {"text":"1、"}
+
+event: answer_chunk
+data: {"text":"G"}
+
+event: answer_chunk
+data: {"text":"1等"}
+
+event: answer_chunk
+data: {"text":"，"}
+
+event: answer_chunk
+data: {"text":"面"}
+
+event: answer_chunk
+data: {"text":"向"}
+
+event: answer_chunk
+data: {"text":"家"}
+
+event: answer_chunk
+data: {"text":"庭"}
+
+event: answer_chunk
+data: {"text":"陪"}
+
+event: answer_chunk
+data: {"text":"伴"}
+
+event: answer_chunk
+data: {"text":"、"}
+
+event: answer_chunk
+data: {"text":"教"}
+
+event: answer_chunk
+data: {"text":"育"}
+
+event: answer_chunk
+data: {"text":"科"}
+
+event: answer_chunk
+data: {"text":"研"}
+
+event: answer_chunk
+data: {"text":"、"}
+
+event: answer_chunk
+data: {"text":"电"}
+
+event: answer_chunk
+data: {"text":"力"}
+
+event: answer_chunk
+data: {"text":"巡"}
+
+event: answer_chunk
+data: {"text":"检"}
+
+event: answer_chunk
+data: {"text":"、"}
+
+event: answer_chunk
+data: {"text":"安"}
+
+event: answer_chunk
+data: {"text":"防"}
+
+event: answer_chunk
+data: {"text":"巡"}
+
+event: answer_chunk
+data: {"text":"逻"}
+
+event: answer_chunk
+data: {"text":"及"}
+
+event: answer_chunk
+data: {"text":"人"}
+
+event: answer_chunk
+data: {"text":"形"}
+
+event: answer_chunk
+data: {"text":"机"}
+
+event: answer_chunk
+data: {"text":"器"}
+
+event: answer_chunk
+data: {"text":"人"}
+
+event: answer_chunk
+data: {"text":"科"}
+
+event: answer_chunk
+data: {"text":"研"}
+
+event: answer_chunk
+data: {"text":"展"}
+
+event: answer_chunk
+data: {"text":"示"}
+
+event: answer_chunk
+data: {"text":"。"}
+
+event: answer_chunk
+data: {"text":"\n"}
+
+event: answer_chunk
+data: {"text":"-"}
+
+event: answer_chunk
+data: {"text":" "}
+
+event: answer_chunk
+data: {"text":"深"}
+
+event: answer_chunk
+data: {"text":"圳"}
+
+event: answer_chunk
+data: {"text":"优"}
+
+event: answer_chunk
+data: {"text":"地"}
+
+event: answer_chunk
+data: {"text":"智"}
+
+event: answer_chunk
+data: {"text":"能"}
+
+event: answer_chunk
+data: {"text":"有"}
+
+event: answer_chunk
+data: {"text":"限"}
+
+event: answer_chunk
+data: {"text":"公"}
+
+event: answer_chunk
+data: {"text":"司"}
+
+event: answer_chunk
+data: {"text":"："}
+
+event: answer_chunk
+data: {"text":"专"}
+
+event: answer_chunk
+data: {"text":"注"}
+
+event: answer_chunk
+data: {"text":"商"}
+
+event: answer_chunk
+data: {"text":"用"}
+
+event: answer_chunk
+data: {"text":"服"}
+
+event: answer_chunk
+data: {"text":"务"}
+
+event: answer_chunk
+data: {"text":"机"}
+
+event: answer_chunk
+data: {"text":"器"}
+
+event: answer_chunk
+data: {"text":"人"}
+
+event: answer_chunk
+data: {"text":"，"}
+
+event: answer_chunk
+data: {"text":"定"}
+
+event: answer_chunk
+data: {"text":"位"}
+
+event: answer_chunk
+data: {"text":"室"}
+
+event: answer_chunk
+data: {"text":"内"}
+
+event: answer_chunk
+data: {"text":"外"}
+
+event: answer_chunk
+data: {"text":"低"}
+
+event: answer_chunk
+data: {"text":"速"}
+
+event: answer_chunk
+data: {"text":"无"}
+
+event: answer_chunk
+data: {"text":"人"}
+
+event: answer_chunk
+data: {"text":"配"}
+
+event: answer_chunk
+data: {"text":"送"}
+
+event: answer_chunk
+data: {"text":"及"}
+
+event: answer_chunk
+data: {"text":"服"}
+
+event: answer_chunk
+data: {"text":"务"}
+
+event: answer_chunk
+data: {"text":"机"}
+
+event: answer_chunk
+data: {"text":"器"}
+
+event: answer_chunk
+data: {"text":"人"}
+
+event: answer_chunk
+data: {"text":"解"}
+
+event: answer_chunk
+data: {"text":"决"}
+
+event: answer_chunk
+data: {"text":"方"}
+
+event: answer_chunk
+data: {"text":"案"}
+
+event: answer_chunk
+data: {"text":"，"}
+
+event: answer_chunk
+data: {"text":"产"}
+
+event: answer_chunk
+data: {"text":"品"}
+
+event: answer_chunk
+data: {"text":"用"}
+
+event: answer_chunk
+data: {"text":"于"}
+
+event: answer_chunk
+data: {"text":"酒"}
+
+event: answer_chunk
+data: {"text":"店"}
+
+event: answer_chunk
+data: {"text":"、"}
+
+event: answer_chunk
+data: {"text":"写"}
+
+event: answer_chunk
+data: {"text":"字"}
+
+event: answer_chunk
+data: {"text":"楼"}
+
+event: answer_chunk
+data: {"text":"、"}
+
+event: answer_chunk
+data: {"text":"医"}
+
+event: answer_chunk
+data: {"text":"院"}
+
+event: answer_chunk
+data: {"text":"、"}
+
+event: answer_chunk
+data: {"text":"餐"}
+
+event: answer_chunk
+data: {"text":"厅"}
+
+event: answer_chunk
+data: {"text":"等"}
+
+event: answer_chunk
+data: {"text":"场"}
+
+event: answer_chunk
+data: {"text":"景"}
+
+event: answer_chunk
+data: {"text":"的"}
+
+event: answer_chunk
+data: {"text":"配"}
+
+event: answer_chunk
+data: {"text":"送"}
+
+event: answer_chunk
+data: {"text":"与"}
+
+event: answer_chunk
+data: {"text":"送"}
+
+event: answer_chunk
+data: {"text":"餐"}
+
+event: answer_chunk
+data: {"text":"。"}
+
+event: answer_chunk
+data: {"text":"\n"}
+
+event: answer_chunk
+data: {"text":"-"}
+
+event: answer_chunk
+data: {"text":" "}
+
+event: answer_chunk
+data: {"text":"深"}
+
+event: answer_chunk
+data: {"text":"圳"}
+
+event: answer_chunk
+data: {"text":"市"}
+
+event: answer_chunk
+data: {"text":"锐"}
+
+event: answer_chunk
+data: {"text":"曼"}
+
+event: answer_chunk
+data: {"text":"智"}
+
+event: answer_chunk
+data: {"text":"能"}
+
+event: answer_chunk
+data: {"text":"技"}
+
+event: answer_chunk
+data: {"text":"术"}
+
+event: answer_chunk
+data: {"text":"有"}
+
+event: answer_chunk
+data: {"text":"限"}
+
+event: answer_chunk
+data: {"text":"公"}
+
+event: answer_chunk
+data: {"text":"司"}
+
+event: answer_chunk
+data: {"text":"："}
+
+event: answer_chunk
+data: {"text":"产"}
+
+event: answer_chunk
+data: {"text":"品"}
+
+event: answer_chunk
+data: {"text":"涵"}
+
+event: answer_chunk
+data: {"text":"盖"}
+
+event: answer_chunk
+data: {"text":"无"}
+
+event: answer_chunk
+data: {"text":"人"}
+
+event: answer_chunk
+data: {"text":"驾"}
+
+event: answer_chunk
+data: {"text":"驶"}
+
+event: answer_chunk
+data: {"text":"叉"}
+
+event: answer_chunk
+data: {"text":"车"}
+
+event: answer_chunk
+data: {"text":"、"}
+
+event: answer_chunk
+data: {"text":"送"}
+
+event: answer_chunk
+data: {"text":"餐"}
+
+event: answer_chunk
+data: {"text":"机"}
+
+event: answer_chunk
+data: {"text":"器"}
+
+event: answer_chunk
+data: {"text":"人"}
+
+event: answer_chunk
+data: {"text":"、"}
+
+event: answer_chunk
+data: {"text":"搬"}
+
+event: answer_chunk
+data: {"text":"运"}
+
+event: answer_chunk
+data: {"text":"机"}
+
+event: answer_chunk
+data: {"text":"器"}
+
+event: answer_chunk
+data: {"text":"人"}
+
+event: answer_chunk
+data: {"text":"、"}
+
+event: answer_chunk
+data: {"text":"商"}
+
+event: answer_chunk
+data: {"text":"用"}
+
+event: answer_chunk
+data: {"text":"清"}
+
+event: answer_chunk
+data: {"text":"洁"}
+
+event: answer_chunk
+data: {"text":"机"}
+
+event: answer_chunk
+data: {"text":"器"}
+
+event: answer_chunk
+data: {"text":"人"}
+
+event: answer_chunk
+data: {"text":"等"}
+
+event: answer_chunk
+data: {"text":"，"}
+
+event: answer_chunk
+data: {"text":"应"}
+
+event: answer_chunk
+data: {"text":"用"}
+
+event: answer_chunk
+data: {"text":"于"}
+
+event: answer_chunk
+data: {"text":"工"}
+
+event: answer_chunk
+data: {"text":"厂"}
+
+event: answer_chunk
+data: {"text":"物"}
+
+event: answer_chunk
+data: {"text":"流"}
+
+event: answer_chunk
+data: {"text":"、"}
+
+event: answer_chunk
+data: {"text":"酒"}
+
+event: answer_chunk
+data: {"text":"店"}
+
+event: answer_chunk
+data: {"text":"餐"}
+
+event: answer_chunk
+data: {"text":"厅"}
+
+event: answer_chunk
+data: {"text":"配"}
+
+event: answer_chunk
+data: {"text":"送"}
+
+event: answer_chunk
+data: {"text":"、"}
+
+event: answer_chunk
+data: {"text":"政"}
+
+event: answer_chunk
+data: {"text":"务"}
+
+event: answer_chunk
+data: {"text":"大"}
+
+event: answer_chunk
+data: {"text":"厅"}
+
+event: answer_chunk
+data: {"text":"、"}
+
+event: answer_chunk
+data: {"text":"医"}
+
+event: answer_chunk
+data: {"text":"疗"}
+
+event: answer_chunk
+data: {"text":"健"}
+
+event: answer_chunk
+data: {"text":"康"}
+
+event: answer_chunk
+data: {"text":"机"}
+
+event: answer_chunk
+data: {"text":"构"}
+
+event: answer_chunk
+data: {"text":"等"}
+
+event: answer_chunk
+data: {"text":"。"}
+
+event: answer_chunk
+data: {"text":"\n"}
+
+event: answer_chunk
+data: {"text":"-"}
+
+event: answer_chunk
+data: {"text":" "}
+
+event: answer_chunk
+data: {"text":"深"}
+
+event: answer_chunk
+data: {"text":"圳"}
+
+event: answer_chunk
+data: {"text":"市"}
+
+event: answer_chunk
+data: {"text":"杰"}
+
+event: answer_chunk
+data: {"text":"思"}
+
+event: answer_chunk
+data: {"text":"谷"}
+
+event: answer_chunk
+data: {"text":"科"}
+
+event: answer_chunk
+data: {"text":"技"}
+
+event: answer_chunk
+data: {"text":"有"}
+
+event: answer_chunk
+data: {"text":"限"}
+
+event: answer_chunk
+data: {"text":"公"}
+
+event: answer_chunk
+data: {"text":"司"}
+
+event: answer_chunk
+data: {"text":"："}
+
+event: answer_chunk
+data: {"text":"拥"}
+
+event: answer_chunk
+data: {"text":"有"}
+
+event: answer_chunk
+data: {"text":"爱"}
+
+event: answer_chunk
+data: {"text":"乐"}
+
+event: answer_chunk
+data: {"text":"优"}
+
+event: answer_chunk
+data: {"text":"家"}
+
+event: answer_chunk
+data: {"text":"用"}
+
+event: answer_chunk
+data: {"text":"智"}
+
+event: answer_chunk
+data: {"text":"能"}
+
+event: answer_chunk
+data: {"text":"机"}
+
+event: answer_chunk
+data: {"text":"器"}
+
+event: answer_chunk
+data: {"text":"人"}
+
+event: answer_chunk
+data: {"text":"、"}
+
+event: answer_chunk
+data: {"text":"优"}
+
+event: answer_chunk
+data: {"text":"友"}
+
+event: answer_chunk
+data: {"text":"U"}
+
+event: answer_chunk
+data: {"text":"05服"}
+
+event: answer_chunk
+data: {"text":"务"}
+
+event: answer_chunk
+data: {"text":"机"}
+
+event: answer_chunk
+data: {"text":"器"}
+
+event: answer_chunk
+data: {"text":"人"}
+
+event: answer_chunk
+data: {"text":"等"}
+
+event: answer_chunk
+data: {"text":"，"}
+
+event: answer_chunk
+data: {"text":"覆"}
+
+event: answer_chunk
+data: {"text":"盖"}
+
+event: answer_chunk
+data: {"text":"家"}
+
+event: answer_chunk
+data: {"text":"庭"}
+
+event: answer_chunk
+data: {"text":"早"}
+
+event: answer_chunk
+data: {"text":"教"}
+
+event: answer_chunk
+data: {"text":"陪"}
+
+event: answer_chunk
+data: {"text":"伴"}
+
+event: answer_chunk
+data: {"text":"、"}
+
+event: answer_chunk
+data: {"text":"银"}
+
+event: answer_chunk
+data: {"text":"行"}
+
+event: answer_chunk
+data: {"text":"政"}
+
+event: answer_chunk
+data: {"text":"务"}
+
+event: answer_chunk
+data: {"text":"导"}
+
+event: answer_chunk
+data: {"text":"览"}
+
+event: answer_chunk
+data: {"text":"、"}
+
+event: answer_chunk
+data: {"text":"酒"}
+
+event: answer_chunk
+data: {"text":"店"}
+
+event: answer_chunk
+data: {"text":"展"}
+
+event: answer_chunk
+data: {"text":"馆"}
+
+event: answer_chunk
+data: {"text":"迎"}
+
+event: answer_chunk
+data: {"text":"宾"}
+
+event: answer_chunk
+data: {"text":"等"}
+
+event: answer_chunk
+data: {"text":"场"}
+
+event: answer_chunk
+data: {"text":"景"}
+
+event: answer_chunk
+data: {"text":"。"}
+
+event: answer_chunk
+data: {"text":"\n"}
+
+event: answer_chunk
+data: {"text":"-"}
+
+event: answer_chunk
+data: {"text":" "}
+
+event: answer_chunk
+data: {"text":"深"}
+
+event: answer_chunk
+data: {"text":"圳"}
+
+event: answer_chunk
+data: {"text":"市"}
+
+event: answer_chunk
+data: {"text":"三"}
+
+event: answer_chunk
+data: {"text":"宝"}
+
+event: answer_chunk
+data: {"text":"创"}
+
+event: answer_chunk
+data: {"text":"新"}
+
+event: answer_chunk
+data: {"text":"云"}
+
+event: answer_chunk
+data: {"text":"技"}
+
+event: answer_chunk
+data: {"text":"术"}
+
+event: answer_chunk
+data: {"text":"有"}
+
+event: answer_chunk
+data: {"text":"限"}
+
+event: answer_chunk
+data: {"text":"公"}
+
+event: answer_chunk
+data: {"text":"司"}
+
+event: answer_chunk
+data: {"text":"："}
+
+event: answer_chunk
+data: {"text":"以"}
+
+event: answer_chunk
+data: {"text":"S"}
+
+event: answer_chunk
+data: {"text":"an"}
+
+event: answer_chunk
+data: {"text":"bo"}
+
+event: answer_chunk
+data: {"text":"t"}
+
+event: answer_chunk
+data: {"text":"小"}
+
+event: answer_chunk
+data: {"text":"精"}
+
+event: answer_chunk
+data: {"text":"灵"}
+
+event: answer_chunk
+data: {"text":"机"}
+
+event: answer_chunk
+data: {"text":"器"}
+
+event: answer_chunk
+data: {"text":"人"}
+
+event: answer_chunk
+data: {"text":"、"}
+
+event: answer_chunk
+data: {"text":"S"}
+
+event: answer_chunk
+data: {"text":"an"}
+
+event: answer_chunk
+data: {"text":"bo"}
+
+event: answer_chunk
+data: {"text":"t"}
+
+event: answer_chunk
+data: {"text":"三"}
+
+event: answer_chunk
+data: {"text":"宝"}
+
+event: answer_chunk
+data: {"text":"机"}
+
+event: answer_chunk
+data: {"text":"器"}
+
+event: answer_chunk
+data: {"text":"人"}
+
+event: answer_chunk
+data: {"text":"为"}
+
+event: answer_chunk
+data: {"text":"代"}
+
+event: answer_chunk
+data: {"text":"表"}
+
+event: answer_chunk
+data: {"text":"，"}
+
+event: answer_chunk
+data: {"text":"应"}
+
+event: answer_chunk
+data: {"text":"用"}
+
+event: answer_chunk
+data: {"text":"于"}
+
+event: answer_chunk
+data: {"text":"家"}
+
+event: answer_chunk
+data: {"text":"庭"}
+
+event: answer_chunk
+data: {"text":"陪"}
+
+event: answer_chunk
+data: {"text":"伴"}
+
+event: answer_chunk
+data: {"text":"安"}
+
+event: answer_chunk
+data: {"text":"防"}
+
+event: answer_chunk
+data: {"text":"、"}
+
+event: answer_chunk
+data: {"text":"商"}
+
+event: answer_chunk
+data: {"text":"场"}
+
+event: answer_chunk
+data: {"text":"导"}
+
+event: answer_chunk
+data: {"text":"购"}
+
+event: answer_chunk
+data: {"text":"、"}
+
+event: answer_chunk
+data: {"text":"酒"}
+
+event: answer_chunk
+data: {"text":"店"}
+
+event: answer_chunk
+data: {"text":"接"}
+
+event: answer_chunk
+data: {"text":"待"}
+
+event: answer_chunk
+data: {"text":"、"}
+
+event: answer_chunk
+data: {"text":"银"}
+
+event: answer_chunk
+data: {"text":"行"}
+
+event: answer_chunk
+data: {"text":"政"}
+
+event: answer_chunk
+data: {"text":"务"}
+
+event: answer_chunk
+data: {"text":"咨"}
+
+event: answer_chunk
+data: {"text":"询"}
+
+event: answer_chunk
+data: {"text":"等"}
+
+event: answer_chunk
+data: {"text":"。"}
+
+event: answer_chunk
+data: {"text":"\n"}
+
+event: answer_chunk
+data: {"text":"-"}
+
+event: answer_chunk
+data: {"text":" "}
+
+event: answer_chunk
+data: {"text":"深"}
+
+event: answer_chunk
+data: {"text":"圳"}
+
+event: answer_chunk
+data: {"text":"市"}
+
+event: answer_chunk
+data: {"text":"旗"}
+
+event: answer_chunk
+data: {"text":"瀚"}
+
+event: answer_chunk
+data: {"text":"物"}
+
+event: answer_chunk
+data: {"text":"联"}
+
+event: answer_chunk
+data: {"text":"科"}
+
+event: answer_chunk
+data: {"text":"技"}
+
+event: answer_chunk
+data: {"text":"有"}
+
+event: answer_chunk
+data: {"text":"限"}
+
+event: answer_chunk
+data: {"text":"公"}
+
+event: answer_chunk
+data: {"text":"司"}
+
+event: answer_chunk
+data: {"text":"："}
+
+event: answer_chunk
+data: {"text":"拥"}
+
+event: answer_chunk
+data: {"text":"有"}
+
+event: answer_chunk
+data: {"text":"S"}
+
+event: answer_chunk
+data: {"text":"an"}
+
+event: answer_chunk
+data: {"text":"bo"}
+
+event: answer_chunk
+data: {"text":"t"}
+
+event: answer_chunk
+data: {"text":"、"}
+
+event: answer_chunk
+data: {"text":"D"}
+
+event: answer_chunk
+data: {"text":"o"}
+
+event: answer_chunk
+data: {"text":"n"}
+
+event: answer_chunk
+data: {"text":"k"}
+
+event: answer_chunk
+data: {"text":"ey"}
+
+event: answer_chunk
+data: {"text":"、"}
+
+event: answer_chunk
+data: {"text":"Q"}
+
+event: answer_chunk
+data: {"text":"i"}
+
+event: answer_chunk
+data: {"text":"h"}
+
+event: answer_chunk
+data: {"text":"an"}
+
+event: answer_chunk
+data: {"text":"等"}
+
+event: answer_chunk
+data: {"text":"品"}
+
+event: answer_chunk
+data: {"text":"牌"}
+
+event: answer_chunk
+data: {"text":"，"}
+
+event: answer_chunk
+data: {"text":"产"}
+
+event: answer_chunk
+data: {"text":"品"}
+
+event: answer_chunk
+data: {"text":"服"}
+
+event: answer_chunk
+data: {"text":"务"}
+
+event: answer_chunk
+data: {"text":"家"}
+
+event: answer_chunk
+data: {"text":"庭"}
+
+event: answer_chunk
+data: {"text":"和"}
+
+event: answer_chunk
+data: {"text":"企"}
+
+event: answer_chunk
+data: {"text":"业"}
+
+event: answer_chunk
+data: {"text":"用"}
+
+event: answer_chunk
+data: {"text":"户"}
+
+event: answer_chunk
+data: {"text":"，"}
+
+event: answer_chunk
+data: {"text":"聚"}
+
+event: answer_chunk
+data: {"text":"焦"}
+
+event: answer_chunk
+data: {"text":"物"}
+
+event: answer_chunk
+data: {"text":"联"}
+
+event: answer_chunk
+data: {"text":"网"}
+
+event: answer_chunk
+data: {"text":"与"}
+
+event: answer_chunk
+data: {"text":"智"}
+
+event: answer_chunk
+data: {"text":"能"}
+
+event: answer_chunk
+data: {"text":"电"}
+
+event: answer_chunk
+data: {"text":"子"}
+
+event: answer_chunk
+data: {"text":"产"}
+
+event: answer_chunk
+data: {"text":"品"}
+
+event: answer_chunk
+data: {"text":"。"}
+
+event: answer_chunk
+data: {"text":"\n"}
+
+event: answer_chunk
+data: {"text":"-"}
+
+event: answer_chunk
+data: {"text":" "}
+
+event: answer_chunk
+data: {"text":"深"}
+
+event: answer_chunk
+data: {"text":"圳"}
+
+event: answer_chunk
+data: {"text":"市"}
+
+event: answer_chunk
+data: {"text":"中"}
+
+event: answer_chunk
+data: {"text":"科"}
+
+event: answer_chunk
+data: {"text":"睿"}
+
+event: answer_chunk
+data: {"text":"成"}
+
+event: answer_chunk
+data: {"text":"智"}
+
+event: answer_chunk
+data: {"text":"能"}
+
+event: answer_chunk
+data: {"text":"科"}
+
+event: answer_chunk
+data: {"text":"技"}
+
+event: answer_chunk
+data: {"text":"有"}
+
+event: answer_chunk
+data: {"text":"限"}
+
+event: answer_chunk
+data: {"text":"公"}
+
+event: answer_chunk
+data: {"text":"司"}
+
+event: answer_chunk
+data: {"text":"："}
+
+event: answer_chunk
+data: {"text":"产"}
+
+event: answer_chunk
+data: {"text":"品"}
+
+event: answer_chunk
+data: {"text":"包"}
+
+event: answer_chunk
+data: {"text":"括"}
+
+event: answer_chunk
+data: {"text":"Q"}
+
+event: answer_chunk
+data: {"text":"ro"}
+
+event: answer_chunk
+data: {"text":"bo"}
+
+event: answer_chunk
+data: {"text":"t"}
+
+event: answer_chunk
+data: {"text":"、"}
+
+event: answer_chunk
+data: {"text":"Q"}
+
+event: answer_chunk
+data: {"text":"影"}
+
+event: answer_chunk
+data: {"text":"、"}
+
+event: answer_chunk
+data: {"text":"小"}
+
+event: answer_chunk
+data: {"text":"小"}
+
+event: answer_chunk
+data: {"text":"Q"}
+
+event: answer_chunk
+data: {"text":"智"}
+
+event: answer_chunk
+data: {"text":"能"}
+
+event: answer_chunk
+data: {"text":"机"}
+
+event: answer_chunk
+data: {"text":"器"}
+
+event: answer_chunk
+data: {"text":"人"}
+
+event: answer_chunk
+data: {"text":"等"}
+
+event: answer_chunk
+data: {"text":"，"}
+
+event: answer_chunk
+data: {"text":"用"}
+
+event: answer_chunk
+data: {"text":"于"}
+
+event: answer_chunk
+data: {"text":"家"}
+
+event: answer_chunk
+data: {"text":"庭"}
+
+event: answer_chunk
+data: {"text":"早"}
+
+event: answer_chunk
+data: {"text":"教"}
+
+event: answer_chunk
+data: {"text":"陪"}
+
+event: answer_chunk
+data: {"text":"伴"}
+
+event: answer_chunk
+data: {"text":"、"}
+
+event: answer_chunk
+data: {"text":"企"}
+
+event: answer_chunk
+data: {"text":"业"}
+
+event: answer_chunk
+data: {"text":"前"}
+
+event: answer_chunk
+data: {"text":"台"}
+
+event: answer_chunk
+data: {"text":"迎"}
+
+event: answer_chunk
+data: {"text":"宾"}
+
+event: answer_chunk
+data: {"text":"导"}
+
+event: answer_chunk
+data: {"text":"览"}
+
+event: answer_chunk
+data: {"text":"及"}
+
+event: answer_chunk
+data: {"text":"腾"}
+
+event: answer_chunk
+data: {"text":"讯"}
+
+event: answer_chunk
+data: {"text":"生"}
+
+event: answer_chunk
+data: {"text":"态"}
+
+event: answer_chunk
+data: {"text":"合"}
+
+event: answer_chunk
+data: {"text":"作"}
+
+event: answer_chunk
+data: {"text":"场"}
+
+event: answer_chunk
+data: {"text":"景"}
+
+event: answer_chunk
+data: {"text":"。"}
+
+event: answer_chunk
+data: {"text":"\n"}
+
+event: answer_chunk
+data: {"text":"-"}
+
+event: answer_chunk
+data: {"text":" "}
+
+event: answer_chunk
+data: {"text":"深"}
+
+event: answer_chunk
+data: {"text":"圳"}
+
+event: answer_chunk
+data: {"text":"市"}
+
+event: answer_chunk
+data: {"text":"维"}
+
+event: answer_chunk
+data: {"text":"兴"}
+
+event: answer_chunk
+data: {"text":"顺"}
+
+event: answer_chunk
+data: {"text":"科"}
+
+event: answer_chunk
+data: {"text":"技"}
+
+event: answer_chunk
+data: {"text":"有"}
+
+event: answer_chunk
+data: {"text":"限"}
+
+event: answer_chunk
+data: {"text":"公"}
+
+event: answer_chunk
+data: {"text":"司"}
+
+event: answer_chunk
+data: {"text":"："}
+
+event: answer_chunk
+data: {"text":"产"}
+
+event: answer_chunk
+data: {"text":"品"}
+
+event: answer_chunk
+data: {"text":"有"}
+
+event: answer_chunk
+data: {"text":"小"}
+
+event: answer_chunk
+data: {"text":"Q"}
+
+event: answer_chunk
+data: {"text":"第"}
+
+event: answer_chunk
+data: {"text":"一"}
+
+event: answer_chunk
+data: {"text":"代"}
+
+event: answer_chunk
+data: {"text":"机"}
+
+event: answer_chunk
+data: {"text":"器"}
+
+event: answer_chunk
+data: {"text":"人"}
+
+event: answer_chunk
+data: {"text":"、"}
+
+event: answer_chunk
+data: {"text":"智"}
+
+event: answer_chunk
+data: {"text":"能"}
+
+event: answer_chunk
+data: {"text":"人"}
+
+event: answer_chunk
+data: {"text":"形"}
+
+event: answer_chunk
+data: {"text":"机"}
+
+event: answer_chunk
+data: {"text":"器"}
+
+event: answer_chunk
+data: {"text":"人"}
+
+event: answer_chunk
+data: {"text":"系"}
+
+event: answer_chunk
+data: {"text":"列"}
+
+event: answer_chunk
+data: {"text":"、"}
+
+event: answer_chunk
+data: {"text":"伺"}
+
+event: answer_chunk
+data: {"text":"服"}
+
+event: answer_chunk
+data: {"text":"舵"}
+
+event: answer_chunk
+data: {"text":"机"}
+
+event: answer_chunk
+data: {"text":"系"}
+
+event: answer_chunk
+data: {"text":"列"}
+
+event: answer_chunk
+data: {"text":"等"}
+
+event: answer_chunk
+data: {"text":"，"}
+
+event: answer_chunk
+data: {"text":"应"}
+
+event: answer_chunk
+data: {"text":"用"}
+
+event: answer_chunk
+data: {"text":"于"}
+
+event: answer_chunk
+data: {"text":"教"}
+
+event: answer_chunk
+data: {"text":"育"}
+
+event: answer_chunk
+data: {"text":"陪"}
+
+event: answer_chunk
+data: {"text":"伴"}
+
+event: answer_chunk
+data: {"text":"、"}
+
+event: answer_chunk
+data: {"text":"远"}
+
+event: answer_chunk
+data: {"text":"程"}
+
+event: answer_chunk
+data: {"text":"安"}
+
+event: answer_chunk
+data: {"text":"防"}
+
+event: answer_chunk
+data: {"text":"监"}
+
+event: answer_chunk
+data: {"text":"控"}
+
+event: answer_chunk
+data: {"text":"、"}
+
+event: answer_chunk
+data: {"text":"科"}
+
+event: answer_chunk
+data: {"text":"技"}
+
+event: answer_chunk
+data: {"text":"馆"}
+
+event: answer_chunk
+data: {"text":"展"}
+
+event: answer_chunk
+data: {"text":"示"}
+
+event: answer_chunk
+data: {"text":"、"}
+
+event: answer_chunk
+data: {"text":"学"}
+
+event: answer_chunk
+data: {"text":"校"}
+
+event: answer_chunk
+data: {"text":"教"}
+
+event: answer_chunk
+data: {"text":"学"}
+
+event: answer_chunk
+data: {"text":"研"}
+
+event: answer_chunk
+data: {"text":"发"}
+
+event: answer_chunk
+data: {"text":"等"}
+
+event: answer_chunk
+data: {"text":"。"}
+
+event: answer_chunk
+data: {"text":"\n"}
+
+event: answer_chunk
+data: {"text":"-"}
+
+event: answer_chunk
+data: {"text":" "}
+
+event: answer_chunk
+data: {"text":"深"}
+
+event: answer_chunk
+data: {"text":"圳"}
+
+event: answer_chunk
+data: {"text":"普"}
+
+event: answer_chunk
+data: {"text":"智"}
+
+event: answer_chunk
+data: {"text":"联"}
+
+event: answer_chunk
+data: {"text":"科"}
+
+event: answer_chunk
+data: {"text":"机"}
+
+event: answer_chunk
+data: {"text":"器"}
+
+event: answer_chunk
+data: {"text":"人"}
+
+event: answer_chunk
+data: {"text":"技"}
+
+event: answer_chunk
+data: {"text":"术"}
+
+event: answer_chunk
+data: {"text":"有"}
+
+event: answer_chunk
+data: {"text":"限"}
+
+event: answer_chunk
+data: {"text":"公"}
+
+event: answer_chunk
+data: {"text":"司"}
+
+event: answer_chunk
+data: {"text":"："}
+
+event: answer_chunk
+data: {"text":"业"}
+
+event: answer_chunk
+data: {"text":"务"}
+
+event: answer_chunk
+data: {"text":"方"}
+
+event: answer_chunk
+data: {"text":"向"}
+
+event: answer_chunk
+data: {"text":"覆"}
+
+event: answer_chunk
+data: {"text":"盖"}
+
+event: answer_chunk
+data: {"text":"导"}
+
+event: answer_chunk
+data: {"text":"览"}
+
+event: answer_chunk
+data: {"text":"咨"}
+
+event: answer_chunk
+data: {"text":"询"}
+
+event: answer_chunk
+data: {"text":"、"}
+
+event: answer_chunk
+data: {"text":"医"}
+
+event: answer_chunk
+data: {"text":"疗"}
+
+event: answer_chunk
+data: {"text":"康"}
+
+event: answer_chunk
+data: {"text":"复"}
+
+event: answer_chunk
+data: {"text":"、"}
+
+event: answer_chunk
+data: {"text":"电"}
+
+event: answer_chunk
+data: {"text":"商"}
+
+event: answer_chunk
+data: {"text":"物"}
+
+event: answer_chunk
+data: {"text":"流"}
+
+event: answer_chunk
+data: {"text":"仓"}
+
+event: answer_chunk
+data: {"text":"储"}
+
+event: answer_chunk
+data: {"text":"拣"}
+
+event: answer_chunk
+data: {"text":"货"}
+
+event: answer_chunk
+data: {"text":"搬"}
+
+event: answer_chunk
+data: {"text":"货"}
+
+event: answer_chunk
+data: {"text":"、"}
+
+event: answer_chunk
+data: {"text":"装"}
+
+event: answer_chunk
+data: {"text":"配"}
+
+event: answer_chunk
+data: {"text":"转"}
+
+event: answer_chunk
+data: {"text":"运"}
+
+event: answer_chunk
+data: {"text":"检"}
+
+event: answer_chunk
+data: {"text":"测"}
+
+event: answer_chunk
+data: {"text":"维"}
+
+event: answer_chunk
+data: {"text":"护"}
+
+event: answer_chunk
+data: {"text":"、"}
+
+event: answer_chunk
+data: {"text":"柔"}
+
+event: answer_chunk
+data: {"text":"性"}
+
+event: answer_chunk
+data: {"text":"制"}
+
+event: answer_chunk
+data: {"text":"造"}
+
+event: answer_chunk
+data: {"text":"及"}
+
+event: answer_chunk
+data: {"text":"重"}
+
+event: answer_chunk
+data: {"text":"载"}
+
+event: answer_chunk
+data: {"text":"特"}
+
+event: answer_chunk
+data: {"text":"种"}
+
+event: answer_chunk
+data: {"text":"作"}
+
+event: answer_chunk
+data: {"text":"业"}
+
+event: answer_chunk
+data: {"text":"。"}
+
+event: answer_chunk
+data: {"text":"\n"}
+
+event: answer_chunk
+data: {"text":"-"}
+
+event: answer_chunk
+data: {"text":" "}
+
+event: answer_chunk
+data: {"text":"深"}
+
+event: answer_chunk
+data: {"text":"圳"}
+
+event: answer_chunk
+data: {"text":"市"}
+
+event: answer_chunk
+data: {"text":"华"}
+
+event: answer_chunk
+data: {"text":"信"}
+
+event: answer_chunk
+data: {"text":"智"}
+
+event: answer_chunk
+data: {"text":"达"}
+
+event: answer_chunk
+data: {"text":"科"}
+
+event: answer_chunk
+data: {"text":"技"}
+
+event: answer_chunk
+data: {"text":"有"}
+
+event: answer_chunk
+data: {"text":"限"}
+
+event: answer_chunk
+data: {"text":"公"}
+
+event: answer_chunk
+data: {"text":"司"}
+
+event: answer_chunk
+data: {"text":"："}
+
+event: answer_chunk
+data: {"text":"产"}
+
+event: answer_chunk
+data: {"text":"品"}
+
+event: answer_chunk
+data: {"text":"包"}
+
+event: answer_chunk
+data: {"text":"括"}
+
+event: answer_chunk
+data: {"text":"火"}
+
+event: answer_chunk
+data: {"text":"眼"}
+
+event: answer_chunk
+data: {"text":"R"}
+
+event: answer_chunk
+data: {"text":"-"}
+
+event: answer_chunk
+data: {"text":"X"}
+
+event: answer_chunk
+data: {"text":"1巡"}
+
+event: answer_chunk
+data: {"text":"检"}
+
+event: answer_chunk
+data: {"text":"机"}
+
+event: answer_chunk
+data: {"text":"器"}
+
+event: answer_chunk
+data: {"text":"人"}
+
+event: answer_chunk
+data: {"text":"、"}
+
+event: answer_chunk
+data: {"text":"仿"}
+
+event: answer_chunk
+data: {"text":"生"}
+
+event: answer_chunk
+data: {"text":"四"}
+
+event: answer_chunk
+data: {"text":"足"}
+
+event: answer_chunk
+data: {"text":"巡"}
+
+event: answer_chunk
+data: {"text":"检"}
+
+event: answer_chunk
+data: {"text":"机"}
+
+event: answer_chunk
+data: {"text":"器"}
+
+event: answer_chunk
+data: {"text":"人"}
+
+event: answer_chunk
+data: {"text":"、"}
+
+event: answer_chunk
+data: {"text":"智"}
+
+event: answer_chunk
+data: {"text":"能"}
+
+event: answer_chunk
+data: {"text":"健"}
+
+event: answer_chunk
+data: {"text":"康"}
+
+event: answer_chunk
+data: {"text":"护"}
+
+event: answer_chunk
+data: {"text":"理"}
+
+event: answer_chunk
+data: {"text":"机"}
+
+event: answer_chunk
+data: {"text":"器"}
+
+event: answer_chunk
+data: {"text":"人"}
+
+event: answer_chunk
+data: {"text":"等"}
+
+event: answer_chunk
+data: {"text":"，"}
+
+event: answer_chunk
+data: {"text":"用"}
+
+event: answer_chunk
+data: {"text":"于"}
+
+event: answer_chunk
+data: {"text":"数"}
+
+event: answer_chunk
+data: {"text":"据"}
+
+event: answer_chunk
+data: {"text":"中"}
+
+event: answer_chunk
+data: {"text":"心"}
+
+event: answer_chunk
+data: {"text":"、"}
+
+event: answer_chunk
+data: {"text":"电"}
+
+event: answer_chunk
+data: {"text":"力"}
+
+event: answer_chunk
+data: {"text":"机"}
+
+event: answer_chunk
+data: {"text":"房"}
+
+event: answer_chunk
+data: {"text":"、"}
+
+event: answer_chunk
+data: {"text":"地"}
+
+event: answer_chunk
+data: {"text":"铁"}
+
+event: answer_chunk
+data: {"text":"管"}
+
+event: answer_chunk
+data: {"text":"廊"}
+
+event: answer_chunk
+data: {"text":"巡"}
+
+event: answer_chunk
+data: {"text":"检"}
+
+event: answer_chunk
+data: {"text":"及"}
+
+event: answer_chunk
+data: {"text":"医"}
+
+event: answer_chunk
+data: {"text":"院"}
+
+event: answer_chunk
+data: {"text":"养"}
+
+event: answer_chunk
+data: {"text":"老"}
+
+event: answer_chunk
+data: {"text":"监"}
+
+event: answer_chunk
+data: {"text":"护"}
+
+event: answer_chunk
+data: {"text":"。"}
+
+event: answer_chunk
+data: {"text":"\n"}
+
+event: answer_chunk
+data: {"text":"-"}
+
+event: answer_chunk
+data: {"text":" "}
+
+event: answer_chunk
+data: {"text":"炬"}
+
+event: answer_chunk
+data: {"text":"星"}
+
+event: answer_chunk
+data: {"text":"科"}
+
+event: answer_chunk
+data: {"text":"技"}
+
+event: answer_chunk
+data: {"text":"（"}
+
+event: answer_chunk
+data: {"text":"深"}
+
+event: answer_chunk
+data: {"text":"圳"}
+
+event: answer_chunk
+data: {"text":"）"}
+
+event: answer_chunk
+data: {"text":"有"}
+
+event: answer_chunk
+data: {"text":"限"}
+
+event: answer_chunk
+data: {"text":"公"}
+
+event: answer_chunk
+data: {"text":"司"}
+
+event: answer_chunk
+data: {"text":"："}
+
+event: answer_chunk
+data: {"text":"主"}
+
+event: answer_chunk
+data: {"text":"打"}
+
+event: answer_chunk
+data: {"text":"仓"}
+
+event: answer_chunk
+data: {"text":"储"}
+
+event: answer_chunk
+data: {"text":"物"}
+
+event: answer_chunk
+data: {"text":"流"}
+
+event: answer_chunk
+data: {"text":"机"}
+
+event: answer_chunk
+data: {"text":"器"}
+
+event: answer_chunk
+data: {"text":"人"}
+
+event: answer_chunk
+data: {"text":"，"}
+
+event: answer_chunk
+data: {"text":"产"}
+
+event: answer_chunk
+data: {"text":"品"}
+
+event: answer_chunk
+data: {"text":"有"}
+
+event: answer_chunk
+data: {"text":"F"}
+
+event: answer_chunk
+data: {"text":"l"}
+
+event: answer_chunk
+data: {"text":"ex"}
+
+event: answer_chunk
+data: {"text":"C"}
+
+event: answer_chunk
+data: {"text":"o"}
+
+event: answer_chunk
+data: {"text":"m"}
+
+event: answer_chunk
+data: {"text":"et"}
+
+event: answer_chunk
+data: {"text":"·"}
+
+event: answer_chunk
+data: {"text":"小"}
+
+event: answer_chunk
+data: {"text":"白"}
+
+event: answer_chunk
+data: {"text":"龙"}
+
+event: answer_chunk
+data: {"text":"、"}
+
+event: answer_chunk
+data: {"text":"F"}
+
+event: answer_chunk
+data: {"text":"l"}
+
+event: answer_chunk
+data: {"text":"ex"}
+
+event: answer_chunk
+data: {"text":"S"}
+
+event: answer_chunk
+data: {"text":"w"}
+
+event: answer_chunk
+data: {"text":"i"}
+
+event: answer_chunk
+data: {"text":"ft"}
+
+event: answer_chunk
+data: {"text":"·"}
+
+event: answer_chunk
+data: {"text":"小"}
+
+event: answer_chunk
+data: {"text":"旋"}
+
+event: answer_chunk
+data: {"text":"风"}
+
+event: answer_chunk
+data: {"text":"系"}
+
+event: answer_chunk
+data: {"text":"列"}
+
+event: answer_chunk
+data: {"text":"、"}
+
+event: answer_chunk
+data: {"text":"F"}
+
+event: answer_chunk
+data: {"text":"l"}
+
+event: answer_chunk
+data: {"text":"ex"}
+
+event: answer_chunk
+data: {"text":"P"}
+
+event: answer_chunk
+data: {"text":"o"}
+
+event: answer_chunk
+data: {"text":"rt"}
+
+event: answer_chunk
+data: {"text":"e"}
+
+event: answer_chunk
+data: {"text":"r·"}
+
+event: answer_chunk
+data: {"text":"大"}
+
+event: answer_chunk
+data: {"text":"力"}
+
+event: answer_chunk
+data: {"text":"士"}
+
+event: answer_chunk
+data: {"text":"及"}
+
+event: answer_chunk
+data: {"text":"F"}
+
+event: answer_chunk
+data: {"text":"l"}
+
+event: answer_chunk
+data: {"text":"ex"}
+
+event: answer_chunk
+data: {"text":"G"}
+
+event: answer_chunk
+data: {"text":"a"}
+
+event: answer_chunk
+data: {"text":"l"}
+
+event: answer_chunk
+data: {"text":"ax"}
+
+event: answer_chunk
+data: {"text":"y"}
+
+event: answer_chunk
+data: {"text":"云"}
+
+event: answer_chunk
+data: {"text":"服"}
+
+event: answer_chunk
+data: {"text":"务"}
+
+event: answer_chunk
+data: {"text":"平"}
+
+event: answer_chunk
+data: {"text":"台"}
+
+event: answer_chunk
+data: {"text":"，"}
+
+event: answer_chunk
+data: {"text":"服"}
+
+event: answer_chunk
+data: {"text":"务"}
+
+event: answer_chunk
+data: {"text":"于"}
+
+event: answer_chunk
+data: {"text":"电"}
+
+event: answer_chunk
+data: {"text":"商"}
+
+event: answer_chunk
+data: {"text":"、"}
+
+event: answer_chunk
+data: {"text":"零"}
+
+event: answer_chunk
+data: {"text":"售"}
+
+event: answer_chunk
+data: {"text":"、"}
+
+event: answer_chunk
+data: {"text":"第"}
+
+event: answer_chunk
+data: {"text":"三"}
+
+event: answer_chunk
+data: {"text":"方"}
+
+event: answer_chunk
+data: {"text":"物"}
+
+event: answer_chunk
+data: {"text":"流"}
+
+event: answer_chunk
+data: {"text":"仓"}
+
+event: answer_chunk
+data: {"text":"库"}
+
+event: answer_chunk
+data: {"text":"的"}
+
+event: answer_chunk
+data: {"text":"拣"}
+
+event: answer_chunk
+data: {"text":"选"}
+
+event: answer_chunk
+data: {"text":"搬"}
+
+event: answer_chunk
+data: {"text":"运"}
+
+event: answer_chunk
+data: {"text":"。"}
+
+event: answer_chunk
+data: {"text":"\n\n"}
+
+event: answer_chunk
+data: {"text":"除"}
+
+event: answer_chunk
+data: {"text":"上"}
+
+event: answer_chunk
+data: {"text":"述"}
+
+event: answer_chunk
+data: {"text":"企"}
+
+event: answer_chunk
+data: {"text":"业"}
+
+event: answer_chunk
+data: {"text":"外"}
+
+event: answer_chunk
+data: {"text":"，"}
+
+event: answer_chunk
+data: {"text":"深"}
+
+event: answer_chunk
+data: {"text":"圳"}
+
+event: answer_chunk
+data: {"text":"在"}
+
+event: answer_chunk
+data: {"text":"机"}
+
+event: answer_chunk
+data: {"text":"器"}
+
+event: answer_chunk
+data: {"text":"人"}
+
+event: answer_chunk
+data: {"text":"领"}
+
+event: answer_chunk
+data: {"text":"域"}
+
+event: answer_chunk
+data: {"text":"还"}
+
+event: answer_chunk
+data: {"text":"有"}
+
+event: answer_chunk
+data: {"text":"不"}
+
+event: answer_chunk
+data: {"text":"少"}
+
+event: answer_chunk
+data: {"text":"相"}
+
+event: answer_chunk
+data: {"text":"关"}
+
+event: answer_chunk
+data: {"text":"公"}
+
+event: answer_chunk
+data: {"text":"司"}
+
+event: answer_chunk
+data: {"text":"，"}
+
+event: answer_chunk
+data: {"text":"覆"}
+
+event: answer_chunk
+data: {"text":"盖"}
+
+event: answer_chunk
+data: {"text":"教"}
+
+event: answer_chunk
+data: {"text":"育"}
+
+event: answer_chunk
+data: {"text":"娱"}
+
+event: answer_chunk
+data: {"text":"乐"}
+
+event: answer_chunk
+data: {"text":"、"}
+
+event: answer_chunk
+data: {"text":"工"}
+
+event: answer_chunk
+data: {"text":"业"}
+
+event: answer_chunk
+data: {"text":"巡"}
+
+event: answer_chunk
+data: {"text":"检"}
+
+event: answer_chunk
+data: {"text":"、"}
+
+event: answer_chunk
+data: {"text":"物"}
+
+event: answer_chunk
+data: {"text":"流"}
+
+event: answer_chunk
+data: {"text":"搬"}
+
+event: answer_chunk
+data: {"text":"运"}
+
+event: answer_chunk
+data: {"text":"等"}
+
+event: answer_chunk
+data: {"text":"不"}
+
+event: answer_chunk
+data: {"text":"同"}
+
+event: answer_chunk
+data: {"text":"细"}
+
+event: answer_chunk
+data: {"text":"分"}
+
+event: answer_chunk
+data: {"text":"方"}
+
+event: answer_chunk
+data: {"text":"向"}
+
+event: answer_chunk
+data: {"text":"。"}
+
+event: answer_chunk
+data: {"text":"如"}
+
+event: answer_chunk
+data: {"text":"果"}
+
+event: answer_chunk
+data: {"text":"您"}
+
+event: answer_chunk
+data: {"text":"对"}
+
+event: answer_chunk
+data: {"text":"某"}
+
+event: answer_chunk
+data: {"text":"条"}
+
+event: answer_chunk
+data: {"text":"产"}
+
+event: answer_chunk
+data: {"text":"品"}
+
+event: answer_chunk
+data: {"text":"线"}
+
+event: answer_chunk
+data: {"text":"（"}
+
+event: answer_chunk
+data: {"text":"如"}
+
+event: answer_chunk
+data: {"text":"人"}
+
+event: answer_chunk
+data: {"text":"形"}
+
+event: answer_chunk
+data: {"text":"机"}
+
+event: answer_chunk
+data: {"text":"器"}
+
+event: answer_chunk
+data: {"text":"人"}
+
+event: answer_chunk
+data: {"text":"、"}
+
+event: answer_chunk
+data: {"text":"商"}
+
+event: answer_chunk
+data: {"text":"用"}
+
+event: answer_chunk
+data: {"text":"服"}
+
+event: answer_chunk
+data: {"text":"务"}
+
+event: answer_chunk
+data: {"text":"或"}
+
+event: answer_chunk
+data: {"text":"仓"}
+
+event: answer_chunk
+data: {"text":"储"}
+
+event: answer_chunk
+data: {"text":"物"}
+
+event: answer_chunk
+data: {"text":"流"}
+
+event: answer_chunk
+data: {"text":"）"}
+
+event: answer_chunk
+data: {"text":"更"}
+
+event: answer_chunk
+data: {"text":"感"}
+
+event: answer_chunk
+data: {"text":"兴"}
+
+event: answer_chunk
+data: {"text":"趣"}
+
+event: answer_chunk
+data: {"text":"，"}
+
+event: answer_chunk
+data: {"text":"我"}
+
+event: answer_chunk
+data: {"text":"可"}
+
+event: answer_chunk
+data: {"text":"以"}
+
+event: answer_chunk
+data: {"text":"再"}
+
+event: answer_chunk
+data: {"text":"深"}
+
+event: answer_chunk
+data: {"text":"入"}
+
+event: answer_chunk
+data: {"text":"梳"}
+
+event: answer_chunk
+data: {"text":"理"}
+
+event: answer_chunk
+data: {"text":"。"}
+
+event: answer
+data: {"query":"还有哪些类似的公司","query_type":"canonical_v2:A:answer","answer_text":"优必选是一家总部位于深圳、以人形机器人和智能服务机器人为核心的科技公司，产品覆盖工业制造（Walker系列）、商用服务（Cruzr系列）和教育科研（悟空、Alpha、Jimu等）多条线。与它同处深圳、业务方向相近的公司有不少，以下按代表性列出：\n\n- 深圳优艾智合机器人科技有限公司：主打复合协作机器人、移动底盘和巡检机器人，产品包括OW系列复合协作机器人、ARIS系列巡检机器人、巡霄轮式人形机器人等，应用于半导体晶圆厂、电厂巡检、锂电与3C精密制造等场景。\n- 深圳市宇数科技有限公司：产品线覆盖四足与人形机器人，包括Go1、Go2、B1、B2、H1、G1等，面向家庭陪伴、教育科研、电力巡检、安防巡逻及人形机器人科研展示。\n- 深圳优地智能有限公司：专注商用服务机器人，定位室内外低速无人配送及服务机器人解决方案，产品用于酒店、写字楼、医院、餐厅等场景的配送与送餐。\n- 深圳市锐曼智能技术有限公司：产品涵盖无人驾驶叉车、送餐机器人、搬运机器人、商用清洁机器人等，应用于工厂物流、酒店餐厅配送、政务大厅、医疗健康机构等。\n- 深圳市杰思谷科技有限公司：拥有爱乐优家用智能机器人、优友U05服务机器人等，覆盖家庭早教陪伴、银行政务导览、酒店展馆迎宾等场景。\n- 深圳市三宝创新云技术有限公司：以Sanbot小精灵机器人、Sanbot三宝机器人为代表，应用于家庭陪伴安防、商场导购、酒店接待、银行政务咨询等。\n- 深圳市旗瀚物联科技有限公司：拥有Sanbot、Donkey、Qihan等品牌，产品服务家庭和企业用户，聚焦物联网与智能电子产品。\n- 深圳市中科睿成智能科技有限公司：产品包括Qrobot、Q影、小小Q智能机器人等，用于家庭早教陪伴、企业前台迎宾导览及腾讯生态合作场景。\n- 深圳市维兴顺科技有限公司：产品有小Q第一代机器人、智能人形机器人系列、伺服舵机系列等，应用于教育陪伴、远程安防监控、科技馆展示、学校教学研发等。\n- 深圳普智联科机器人技术有限公司：业务方向覆盖导览咨询、医疗康复、电商物流仓储拣货搬货、装配转运检测维护、柔性制造及重载特种作业。\n- 深圳市华信智达科技有限公司：产品包括火眼R-X1巡检机器人、仿生四足巡检机器人、智能健康护理机器人等，用于数据中心、电力机房、地铁管廊巡检及医院养老监护。\n- 炬星科技（深圳）有限公司：主打仓储物流机器人，产品有FlexComet·小白龙、FlexSwift·小旋风系列、FlexPorter·大力士及FlexGalaxy云服务平台，服务于电商、零售、第三方物流仓库的拣选搬运。\n\n除上述企业外，深圳在机器人领域还有不少相关公司，覆盖教育娱乐、工业巡检、物流搬运等不同细分方向。如果您对某条产品线（如人形机器人、商用服务或仓储物流）更感兴趣，我可以再深入梳理。\n此外，本次检索还召回以下相关本地企业：深圳市优必行科技有限公司、深圳市宇多机器人有限公司、深圳华冠机器人技术有限公司、深圳智机未来科技有限公司、深圳欧沃机器人有限公司、深圳视界空间智能科技有限公司、深圳市秘银科技有限公司、深圳运通机器人有限公司、深圳市矩阵动力科技开发有限公司、深圳市简睿科技有限公司、深圳市百答科技有限公司、深圳市优智创芯科技有限公司、深圳市弘百业科技有限公司、深圳市守行智能科技有限公司、深圳市智猴科技有限公司、深圳北鱼信息科技有限公司、深圳华宇智爱科技有限公司、本识科技（深圳）有限公司、深圳市商汤科技有限公司、深圳市新战略传媒有限公司、深圳市凯之成智能装备有限公司、深圳真伊科技有限公司、深圳未来互娱科技有限公司、睿博天米科技（深圳）有限公司、深圳中智卫安机器人技术有限公司、深圳市百加智能机器人有限公司、深圳小奇点人工智能服务有限公司、深圳广田智能科技有限公司、像工场（深圳）科技有限公司、深圳火石信息科技有限公司、深圳市易致机器人科技有限公司、深圳图灵智能机器人科技有限公司、深圳市华图鑫石智能科技有限公司、深圳市思天极创教育科技有限公司、深圳市小奇乐科技有限公司、行云智能（深圳）技术有限公司、深圳三体机器人科技有限公司、深圳市联升科教计算机有限公司、深圳市中科鸥鹏智能科技有限公司、深圳市钱元机器人科技有限公司、深思有形（深圳）科技有限公司、深圳湛华科技有限公司、深圳飞鼠动力科技有限公司、幻神智能科技（深圳）有限公司、深圳市小柚机器人有限公司、深圳广目云奇智能技术有限公司、深圳追一科技有限公司、深圳市愚公科技有限公司、深圳市鼎盛智能科技有限公司、深圳市越疆科技股份有限公司、深圳市智星空科技有限公司、深圳市思创优技术有限公司、深圳市趣创科技有限公司、深圳市乐喔科技有限公司、深圳市中舟智能科技有限公司、深圳路波科技有限公司、深圳市奇信智能科技有限公司、深圳一粒砂科技有限公司、深圳无芯科技有限公司、深圳市智拓欣扬科技有限公司、比目智慧科技（深圳）有限公司、深圳市思新科技有限公司、深圳市博坦智能有限公司、深圳墨奇智能技术有限公司 等（共 112 家）。","citations":[{"type":"company","id":"official-source-00c4bd4a40424540","label":"深圳市优必选科技股份有限公司","url":"http://www.ubtrobot.com/"},{"type":"company","id":"local-source-71a5b23d210d621b","label":"深圳优艾智合机器人科技有限公司","url":null},{"type":"company","id":"local-source-11127f5a1bf1e394","label":"深圳市宇数科技有限公司","url":null},{"type":"company","id":"local-source-25620717b5bce951","label":"深圳普智联科机器人技术有限公司","url":null},{"type":"company","id":"local-source-de0465f9cabff02f","label":"深圳市华信智达科技有限公司","url":null},{"type":"company","id":"local-source-c9b1aa7eadb36ef6","label":"深圳欧沃机器人有限公司","url":null},{"type":"company","id":"local-source-7871147443e5a4c1","label":"深圳市杰思谷科技有限公司","url":null},{"type":"company","id":"local-source-737e5ce879a6b32b","label":"深圳优地智能有限公司","url":null},{"type":"company","id":"local-source-45564623728e923c","label":"深圳市矩阵动力科技开发有限公司","url":null},{"type":"company","id":"local-source-067d26551b96866c","label":"深圳市简睿科技有限公司","url":null},{"type":"company","id":"local-source-b75d07f88ee51eb0","label":"深圳市锐曼智能技术有限公司","url":null},{"type":"company","id":"local-source-aa99ffb8abafdfd5","label":"深圳市优智创芯科技有限公司","url":null}],"evidence":[],"clarification":null,"structured_payload":{},"answer_style":"llm_synthesized","citation_map":{"1":"official-source-00c4bd4a40424540","2":"local-source-71a5b23d210d621b","3":"local-source-11127f5a1bf1e394","4":"local-source-25620717b5bce951","5":"local-source-de0465f9cabff02f","6":"local-source-c9b1aa7eadb36ef6","7":"local-source-7871147443e5a4c1","8":"local-source-737e5ce879a6b32b","9":"local-source-45564623728e923c","10":"local-source-067d26551b96866c","11":"local-source-b75d07f88ee51eb0","12":"local-source-aa99ffb8abafdfd5"},"suggested_followups":[]}
+
+event: done
+data: {}
+

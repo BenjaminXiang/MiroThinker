@@ -239,6 +239,40 @@ _TEST_ADMIN_PASSWORD = secrets.token_urlsafe(16)
 
 
 @pytest.fixture(scope="session", autouse=True)
+def scratch_managed_configuration(tmp_path_factory: pytest.TempPathFactory) -> Iterator[Path]:
+    """Keep the suite off the machine's real operator configuration.
+
+    ``managed_runtime.apply_managed_runtime_config()`` projects the managed settings and
+    credentials into ``os.environ`` when a service starts, and those values persist for the
+    whole process. Without this pin a *configured* machine changes what later tests observe
+    through the very code the page runs (measured 2026-09-23: two ``connections/presets``
+    tests went red only because the tree carried a real ``config/managed/settings.json``
+    whose ``serving_pack_dir`` made the page name the switched model). R16 is "one read at
+    service startup"; a test session is not a service, so it gets empty files.
+    """
+
+    root = tmp_path_factory.mktemp("managed-config")
+    settings = root / "settings.json"
+    secrets = root / "secrets.json"
+    settings.write_text("{}\n", encoding="utf-8")
+    secrets.write_text("{}\n", encoding="utf-8")
+    overrides = {
+        "CANONICAL_V2_MANAGED_SETTINGS": str(settings),
+        "CANONICAL_V2_MANAGED_SECRETS": str(secrets),
+    }
+    previous = {name: os.environ.get(name) for name in overrides}
+    os.environ.update(overrides)
+    try:
+        yield root
+    finally:
+        for name, value in previous.items():
+            if value is None:
+                os.environ.pop(name, None)
+            else:
+                os.environ[name] = value
+
+
+@pytest.fixture(scope="session", autouse=True)
 def scratch_admin_auth_state(tmp_path_factory: pytest.TempPathFactory) -> Iterator[Path]:
     """Keep every test on its own credential store, never the serving one.
 

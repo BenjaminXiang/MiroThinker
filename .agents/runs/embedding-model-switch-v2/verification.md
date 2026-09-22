@@ -520,3 +520,200 @@ the audit itself needs no other change, since the comparison reads the constant.
   starts.
 - **Human docs**: `docs/plans/` was out of scope by instruction; the index and
   round-log entry for this slice are still to be written by the orchestrator.
+
+## 8. Gate round (2026-09-22) — two silent integration defects, closed before any verdict was read
+
+### 8.1 The candidate layer was empty because `backend` came from the main tree
+
+Attempt 1 of the recall gate (16:02–16:18) returned REVIEW for 37/37 cases with
+`candB = -` against `candA = Y` for every row, while the answer layer (`ansA/ansB`) and
+the vector lane (`vecA/vecB`) were identical row for row. The turn-debug directory stayed
+empty and the boot log had **zero** `turn debug dump failed` lines — so nothing had failed
+to write: the code that writes it was not loaded.
+
+Root cause, proved not inferred:
+
+* the deployment venv `.venv` carries **two** editable `.pth` entries pointing at the main
+  checkout — `_editable_impl_admin_console.pth` (`apps/admin-console`) and
+  `_editable_impl_miroflow-agent.pth`;
+* the command file pinned only `PYTHONPATH=<switch line>/apps/miroflow-agent`, so `src`
+  resolved to the switch line while `backend` resolved through the `.pth` to the **main tree**;
+* the runner's own fallback insert (`complete_candidate_runner.py:958-967`) fires only on
+  `ModuleNotFoundError`, and `import backend.main` *succeeded* — so nothing complained;
+* the main tree's `canonical_v2_chat.py` has no `_maybe_dump_turn_debug` at all
+  (`grep -c` = 0 there, and the two files differ by 314 lines).
+
+Live proof on the booted scratch instance: `GET /api/auth/me` → **404** and
+`GET /api/canonical-v2/admin/chat-gaps` → **404** (both routes exist only on the serving
+tree) while `/api/health` → 200.
+
+Fix and re-verification:
+
+* `PYTHONPATH` now carries **both** roots, admin-console first:
+  `…/apps/admin-console:…/apps/miroflow-agent`;
+* after the restart the same probes return **401** (route present, session required), the
+  admin store is created under the scratch state dir (`/var/tmp/fembed-296/logs/admin-auth.sqlite3`,
+  not the live one), and one probe turn wrote `turn-debug-tdbg1-01.json` (kept as
+  `/var/tmp/fembed-296/probe-turn-identity-fix-debug.json`);
+* gate pass 1 then reported `cand=yes` on all 37 cases.
+
+Compounding, not just patching: `check-package-resolution.sh` (new) resolves `backend` and
+`src` through a command file's own python + `PYTHONPATH`; the cutover checker gained three
+items (both roots pinned, plus the semantic resolution probe) and now reports 32 checks. The
+**same defect was present in the step-12 cutover draft** and the new items caught it before
+any install — without them the live line would have come up on the main tree's admin console.
+
+### 8.2 The host cutover could not have booted: a shell substitution inside a quote-free-only file
+
+The live line is a user unit whose `ExecStart` is `<live tree>/deploy/start-canonical-v2.sh`;
+that script ends with `exec env $(cat "$COMMAND_FILE")` — **no shell evaluation**. The fembed
+draft carried `CANONICAL_V2_EMBEDDING_API_KEY="$(cat /var/tmp/mirothinker-qianwen-api-key)"`,
+which word-splits into the argv tokens `CANONICAL_V2_EMBEDDING_API_KEY="$(cat` and
+`/var/tmp/mirothinker-qianwen-api-key)"`, after which `env(1)` tries to execute the second
+one. Proved with a synthetic file of the same shape:
+`env: '/tmp/some-key)"': No such file or directory` — i.e. the unit would crash-loop. The
+live run16 command file is quote-free (0 `"`, 0 `$(`) for exactly this reason.
+
+Fix and proof:
+
+* the key travels in a systemd `EnvironmentFile` (0600) named by a drop-in; the **installed**
+  command file stays quote-free. Proved end-to-end with a temporary oneshot unit whose
+  `ExecStart=/usr/bin/env` printed `CANONICAL_V2_EMBEDDING_API_KEY=sk-ws-…` (probe unit removed
+  afterwards);
+* checker: item 5 refuses the shell form and — with `--expect-key-file <path>` — requires that
+  file to exist and define the variable; item 5b requires the host file to be quote-free.
+  The host draft scores **32 ok / 0 fail** with the key file named, and fails `EMBEDDING_KEY`
+  without it (by design: the checklist must name the key file).
+
+Two further cutover facts established while checking this (both in the runbook §12):
+
+* ~~the page's key field **cannot** feed the serving lane today~~ — **corrected 2026-09-23, the claim
+  was wrong**: the R16 adoption is called by `serving_pack_loader.open_serving_pack_authority`
+  ("R16: the serving process adopts the operator's managed configuration here — once, at startup,
+  never on a request path"), which the `--serve-existing` boot runs **before** any serving input is
+  built. Measured: a command file with the key token removed booted with the key already in its
+  initial environment (from `config/managed/secrets.json`) and its vector lane served 128
+  candidates. The `EnvironmentFile` is still what the unit supplies without page interaction, and
+  an environment value always wins over the store;
+* the switch is safe for the admin login: both trees' `admin_auth.py` are byte-identical and
+  the accounts DB + signing key resolve from `CANONICAL_V2_ACCESS_LOG_DB`'s parent, which the
+  cutover keeps unchanged.
+
+### 8.3 Gate result (attempt 2, the valid one) — the switch is recall-neutral
+
+```
+warm-up exit=0    (37 cases, all cand=yes)
+judged  exit=0
+VERDICT_BASELINE_EXIT=2   VERDICT: REVIEW — 0 fail-level, 3 review-level
+VERDICT_CONTROL_EXIT=2    VERDICT: REVIEW — 0 fail-level, 3 review-level
+```
+
+Counts and the one zero-noise metric (baseline ↔ after, `--diff`):
+
+| line | baseline | after | Δ |
+|---|---|---|---|
+| candidate-layer hits | 22 | **29** | **+7** |
+| candidate-layer checked | 37 | 37 | +0 (the attempt-1 coverage gap is gone) |
+| llm-synthesized turns | 35 | 35 | +0 |
+| **vector median (all / shared / testset / probes)** | 61.0 / 61.0 / 61.0 / 72.0 | **same, all four** | **+0** |
+| vector coverage (n) | 34 | 34 | — |
+| citation local / web | 239 / 80 | 158 / 125 | known web-lane noise |
+| wall seconds | 698.7 | 355.6 | — |
+
+`control ↔ after` (same question with the web-lane noise removed) is the same shape: candidate
+hits 29 → 29, all four vector medians +0, `REVIEW — 0 fail-level, 3 review-level`.
+
+Reading it against the calibration already recorded (`noise-floor.md`, protocol §6): a
+same-configuration pair scores REVIEW with 0 fail-level, so **REVIEW with 0 fail-level is the
+expected shape of a healthy switch**, and the only hard-FAIL tripwire (`vector median` drop
+> 30 %) does not even move. The three review-level items are all `rule1(concept)` *wording*
+drift (`真实数据`, `物理仿真引擎生成`, `基于规则生成`, `真机实测`, `遥操作`) — the class this
+gate declares as non-entity drift. **Verdict: recall did not regress; the switch is eligible.**
+
+### 8.4 The apples-to-apples capture (same answer model) — and the three console gaps it exposed
+
+The first after run was confounded: the live line's answer model comes from
+`<tree>/config/managed/settings.json` (`serving.chat_llm_profile = deepseekv4flash`), the switch
+line had no such file, so the after arm wrote its prose with the default `gemma4`
+(`qwen3.6-35b-a3b`). The difference is large and perfectly reproducible within each model:
+
+| case | deepseek ×2 (baseline, control) | gemma4 ×2 (after, after2) |
+|---|---|---|
+| q2t3 local citations | 26 / 25 | **1 / 1** |
+| s10 | 8 / 10 | **0 / 0** |
+| s01 | 21 / 21 | **12 / 12** |
+| totals local / web | 239/80, 228/128 | 158/125, 165/124 |
+| answer all-hit | 20/20, 20/20 | 18/20, 18/20 |
+
+With the settings carried over, the third capture (`afterB`, same stack + same model) closes it:
+
+| pairing | answer hits | all-hit | cand. hits | vector median | local/web | wall s | verdict |
+|---|---|---|---|---|---|---|---|
+| baseline ↔ afterB | 31 → 28 | 20 → 17 | 22 → **24** | **+0** (61/61/61/72) | 239/80 → **225**/92 | 698.7 → 666.4 | REVIEW, 0 fail |
+| control ↔ afterB | 31 → 28 | 20 → 17 | 29 → 24 | **+0** | 228/128 → **225**/92 | 489.8 → 666.4 | REVIEW, 0 fail |
+| after ↔ afterB (model contrast) | 29 → 28 | 18 → 17 | 29 → 24 | **+0** | 165/124 → **225**/92 | 431.3 → 666.4 | REVIEW, 0 fail |
+
+Every review-level row in every pairing is in a class the calibration already tolerates: `concept`
+wording (the same-configuration pair baseline↔control produced 3 of them too) plus one
+`CANDIDATE-only` miss on `q6t2` whose answer still names the arXiv id. **No fail-level item anywhere;
+the vector median never moves; the citation density lands 225 against 239/228 — inside the measured
+same-configuration band (239↔228 and 158↔165).** The model contrast is an order larger than the
+migration's effect (+60 local citations for deepseek over gemma4 on the same stack), which is why the
+confounded first comparison looked like a regression at all.
+
+**Behavioural parity, both lines, same day**: `replay_fix_round1.py` — new stack 37/37 requests,
+**RESULT: ALL PASS** (27 turns, 7/7 sessions); live 18188 the same day: **RESULT: ALL PASS** (27
+turns, 0 failures). Artifacts: `replay-fix-round1-18296/`, `replay-fix-round1-18188/`.
+
+**Three operator-surface gaps found while checking this (all fixed and measured, runbook §12)**:
+`settings.json` not carried over (answer model); `paths.serving_pack_dir` unset (the page named the
+old model); `extraction_endpoints.embedding_base_url` unset + the page's credential slot empty (the
+connection test probed the old endpoint, then 401). After all three, on the scratch instance:
+
+```
+chat_profile    = deepseekv4flash
+frozen model    = qwen3.7-text-embedding-flash
+frozen base_url = https://maas.qianwenaiapi.com/api/v1
+conn_test       = ok, 347 ms (compatible 404 → dashscope-native 200)
+```
+
+### 8.5 "Unverified items" pass (2026-09-23) — what was actually checked, and one correction
+
+**Correction first.** §8.2 recorded "the page's key field cannot feed the serving lane" as a gap. That was
+wrong: the R16 adoption is called by `serving_pack_loader.open_serving_pack_authority` ("R16: the serving
+process adopts the operator's managed configuration here — once, at startup, never on a request path"),
+and a `--serve-existing` boot opens the pack *before* any serving input is built. Measured: with the key
+token deleted from the command file (`serve-fembed-gate-18296-nokey-command.sh`, 0 quotes, 0 `$(`), the
+process's initial environment already carried `CANONICAL_V2_EMBEDDING_API_KEY` (projected from
+`config/managed/secrets.json`) and the vector lane served **128 candidates** on a live turn. The
+runner-side patch written for that phantom gap was reverted (it was purely additive: `git checkout`
+restores it; the runner is not part of any sealed identity). The `EnvironmentFile` stays — the unit is
+the authority, and an env value wins over the store.
+
+**Suites, with the live tree as the baseline** (same environment, same fixtures, 2026-09-23):
+
+| suite | switch line | live tree (s11-consolidation) | shared red |
+|---|---|---|---|
+| console (127 files) | 68 failed / 1579 passed / 61 errors | 66 failed / 1486 passed / 61 errors | **127 of 129 items identical** |
+| agent, 6-file subset | 73 red | 73 red | **73 of 73 identical** |
+| agent, 17-file subset | 28 red | 18 red | 18 shared; the 10 extra were 8 isolation artefacts + 2 config-leak items (below) |
+| agent, full | 98 failed / 5527 passed / 299 skipped | (subsets above) | pre-existing / DB-bound |
+
+Environment repairs that made the runs meaningful: a dedicated `miroflow_test_mock` with the
+destructive-target marker comment, and the console's real-data XLSX fixture symlinked into the worktree.
+
+**Two isolation defects found and fixed (test-side, both suites)**: `apply_managed_runtime_config()`
+projects the machine's managed files into `os.environ` for the whole process, so a *configured* machine
+flipped tests that assert defaults — 5 console items and the two `test_parse_args_default_has_no_serving_pack`
+/ `…_skips_envelope_ownership` items. Both suites now pin `CANONICAL_V2_MANAGED_SETTINGS` /
+`CANONICAL_V2_MANAGED_SECRETS` to empty tmp files for the session. Console: 129 → 124 red, **0 new**.
+Also fixed: two stale embedding-loader fakes in `s12a/test_complete_candidate_runner.py` that predated the
+`role=` parameter (red at HEAD too, now 7/7 green).
+
+**Concurrency**: a new `load-probe.py` (8 parallel turns, 8 lanes-mixed queries) — new stack: 8/8 HTTP 200,
+0 errors, vector lane 16–128 candidates, web lane `unavailable` on 5–6 turns and 2 turns with 0 citations.
+The **live line shows the same shape** (same queries, same unavailable/zero-citation turns, ok=6/8) ⇒ a
+pre-existing load characteristic, not a switch regression.
+
+**Rollback preconditions** verified read-only: `serving-pack-run16-readerbound` and `index-v3-v2` untouched
+(and currently being served by the live line, which is the strongest possible proof a rollback boots).

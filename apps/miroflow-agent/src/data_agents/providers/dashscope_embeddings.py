@@ -15,6 +15,17 @@ that is *unreachable* becomes ``TimeoutError``/``ConnectionError``, the builtins
 the lane-level fail-open hook understands. An *answer we cannot use* (a wrong
 ``text_index`` set, an empty vector) stays a validation failure and fails
 closed.
+
+One non-2xx answer is not a transport failure and must not be reported as one:
+HTTP 429 means *the endpoint answered* and asked us to come back later, so it is
+raised as :class:`EmbeddingEndpointRateLimitedError` with the status and the
+provider's own ``Retry-After``. It subclasses the builtin ``ConnectionError``,
+which keeps every existing consumer's semantics identical (the serving lane still
+degrades fail-open) while letting the rebuild's batch fan-out recognize the rate
+signal and wait behind a cooldown instead of losing four hours of work. Every
+other status names itself in its message ("refused the request (HTTP 400)",
+"answered a transient server error (HTTP 503)") rather than claiming the endpoint
+was unreachable.
 """
 
 from __future__ import annotations
@@ -28,6 +39,90 @@ import httpx
 #: prefix (``https://maas.qianwenaiapi.com/api/v1``), the way the OpenAI bundle
 #: records ``.../v1`` and the client appends ``/embeddings``.
 _TEXT_EMBEDDINGS_PATH = "/services/embeddings/text-embedding/text-embedding"
+
+
+class EmbeddingEndpointRateLimitedError(ConnectionError):
+    """The endpoint answered HTTP 429: this call was refused *for now*.
+
+    A subclass of the builtin ``ConnectionError`` on purpose, because both
+    consumers have to keep working unchanged:
+
+    * the serving lane's fail-open hook (``knowledge_read._invoke_lane``
+      captures the builtin) still degrades the lane instead of failing the turn,
+      and the embedding breaker still counts the refused call as a transport
+      failure;
+    * a caller that *can* wait — the rebuild's per-batch fan-out — recognizes
+      the provider's rate signal and retries behind a cooldown rather than
+      abandoning a four-hour pass.
+
+    ``status_code`` carries the provider's answer (429). ``retry_after`` is its
+    own ``Retry-After`` in seconds when it sent a usable one, else ``None``: the
+    caller then falls back to its own back-off instead of guessing.
+    """
+
+    def __init__(
+        self,
+        message: str,
+        *,
+        status_code: int,
+        retry_after: float | None = None,
+    ) -> None:
+        super().__init__(message)
+        self.status_code = status_code
+        self.retry_after = retry_after
+
+
+def _retry_after_seconds(value: str | None) -> float | None:
+    """The provider's ``Retry-After`` as a delay, or ``None`` when unusable.
+
+    Only the delay-seconds form is read (RFC 9110 also allows an HTTP date): a
+    date would have to be turned into a delay against a clock this client does
+    not trust, and reporting "no hint" is more honest than guessing one.
+    """
+
+    if value is None:
+        return None
+    try:
+        seconds = float(value.strip())
+    except ValueError:
+        return None
+    return seconds if seconds >= 0 else None
+
+
+def _status_failure(
+    error: httpx.HTTPStatusError,
+    *,
+    base_url: str,
+) -> ConnectionError:
+    """Classify one non-2xx answer into the failure it actually is.
+
+    The distinction the previous single message erased: "unreachable" is for a
+    provider that did not answer, while a status answer must name the status.
+    Only the rate status is a type of its own, because only the rate status is
+    waited out (see the module docstring); a server fault stays a plain
+    ``ConnectionError`` — honest about being transient, but failing the pass the
+    way it always did.
+    """
+
+    status = error.response.status_code
+    if status == 429:
+        retry_after = _retry_after_seconds(error.response.headers.get("Retry-After"))
+        message = f"embedding endpoint {base_url} rate limited the batch (HTTP {status}"
+        if retry_after is not None:
+            message += f", Retry-After={retry_after:g}s"
+        return EmbeddingEndpointRateLimitedError(
+            message + ")",
+            status_code=status,
+            retry_after=retry_after,
+        )
+    if 500 <= status < 600:
+        return ConnectionError(
+            f"embedding endpoint {base_url} answered a transient server error "
+            f"(HTTP {status})"
+        )
+    return ConnectionError(
+        f"embedding endpoint {base_url} refused the request (HTTP {status})"
+    )
 
 
 class DashScopeTextEmbeddingClient:
@@ -90,6 +185,11 @@ class DashScopeTextEmbeddingClient:
                 )
             response.raise_for_status()
             data = response.json()
+        except httpx.HTTPStatusError as exc:
+            # The endpoint answered; the answer is the failure. Caught before the
+            # generic HTTPError clause so a status is never reported as "the
+            # endpoint did not answer".
+            raise _status_failure(exc, base_url=self.base_url) from exc
         except httpx.TimeoutException as exc:
             raise TimeoutError(
                 f"embedding endpoint {self.base_url} did not answer in time"
@@ -146,4 +246,4 @@ def _ordered_embeddings(document: Any, *, expected: int) -> list[list[float]]:
     return [ordered[index] for index in range(expected)]
 
 
-__all__ = ["DashScopeTextEmbeddingClient"]
+__all__ = ["DashScopeTextEmbeddingClient", "EmbeddingEndpointRateLimitedError"]

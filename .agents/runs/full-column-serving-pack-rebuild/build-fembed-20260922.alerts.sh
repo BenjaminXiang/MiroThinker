@@ -19,20 +19,31 @@ BAD='\bERROR\b|\berror\b|HTTP 400|BadRequest|InvalidParameter|retry|reconnect'
 
 OFFSET=0
 : > "$OUT"
-while kill -0 "$PID" 2>/dev/null; do
-  SIZE=$(stat -c %s "$LOG" 2>/dev/null || echo 0)
-  if (( SIZE > OFFSET )); then
-    HITS=$(tail -c +$((OFFSET + 1)) "$LOG" | head -c $((SIZE - OFFSET)) \
-      | grep -nE "$FATAL|$BAD" 2>/dev/null | head -20)
-    if [[ -n "$HITS" ]]; then
-      { printf '%s pid=%s bytes=[%s,%s) SIG-HITS:\n' "$(date -Is)" "$PID" "$OFFSET" "$SIZE"
-        printf '%s\n' "$HITS" | cut -c1-300; } >> "$OUT"
-      if printf '%s\n' "$HITS" | grep -qE "$FATAL"; then
-        printf '%s FATAL signature seen; log=%s\n' "$(date -Is)" "$LOG" > "$MARKER"
-      fi
+
+# Scan the bytes appended since the last call. MUST also run once after the process
+# exits: on 2026-09-22 the fatal traceback (~6 KB) landed less than one 45 s tick
+# before the process died, the `while kill -0` loop then exited without reading it,
+# and the alert log kept only the EXITED line — the failure was found by a human
+# instead. The final flush below closes that window.
+scan_new_bytes() {
+  local size hits
+  size=$(stat -c %s "$LOG" 2>/dev/null || echo 0)
+  (( size > OFFSET )) || return 0
+  hits=$(tail -c +$((OFFSET + 1)) "$LOG" | head -c $((size - OFFSET)) \
+    | grep -nE "$FATAL|$BAD" 2>/dev/null | head -20)
+  if [[ -n "$hits" ]]; then
+    { printf '%s pid=%s bytes=[%s,%s) SIG-HITS:\n' "$(date -Is)" "$PID" "$OFFSET" "$size"
+      printf '%s\n' "$hits" | cut -c1-300; } >> "$OUT"
+    if printf '%s\n' "$hits" | grep -qE "$FATAL"; then
+      printf '%s FATAL signature seen; log=%s\n' "$(date -Is)" "$LOG" > "$MARKER"
     fi
-    OFFSET=$SIZE
   fi
+  OFFSET=$size
+}
+
+while kill -0 "$PID" 2>/dev/null; do
+  scan_new_bytes
   sleep 45
 done
+scan_new_bytes   # final flush — the bytes written just before exit
 printf '%s pid=%s EXITED (rc unknown) log_bytes=%s\n' "$(date -Is)" "$PID" "$(stat -c %s "$LOG" 2>/dev/null || echo 0)" >> "$OUT"

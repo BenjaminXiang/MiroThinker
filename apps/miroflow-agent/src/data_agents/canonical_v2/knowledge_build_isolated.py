@@ -21,11 +21,13 @@ import json
 import math
 import os
 from pathlib import Path
+import random
 import re
 import sqlite3
 import stat
 import secrets
 from threading import Condition
+import time
 from typing import Any, Literal, Protocol, cast
 from urllib.parse import urlsplit
 
@@ -53,6 +55,7 @@ from src.data_agents.company.vectorizer import (
 )
 from src.data_agents.providers.dashscope_embeddings import (
     DashScopeTextEmbeddingClient as _DashScopeTextEmbeddingClient,
+    EmbeddingEndpointRateLimitedError as _EmbeddingEndpointRateLimitedError,
 )
 from src.data_agents.providers.local_api_key import load_local_api_key
 from src.data_agents.storage.database_target import (
@@ -8018,6 +8021,167 @@ EMBEDDING_ROLE_DOCUMENT = "document"
 _EMBEDDING_ROLES = frozenset({EMBEDDING_ROLE_QUERY, EMBEDDING_ROLE_DOCUMENT})
 
 
+#: How the build reacts to a provider that rate limits a batch (HTTP 429).
+#:
+#: The rebuild of 2026-09-22 lost four hours to a single 429: 51,026 points in
+#: batches of 20 across 32 workers is ~2,552 calls, and a pass that rides the
+#: account's per-minute budget has no headroom for one refusal. This policy is
+#: deliberately bounded the other way — a provider that never relents has to
+#: fail the build with a legible message rather than be hammered for hours:
+#:
+#: * the cooldown is shared by the whole fan-out: a provider saying "too many
+#:   requests" is answering the *pool*, so one worker's refusal parks every
+#:   worker (``_EmbeddingThrottleGate``);
+#: * it grows once per round of pressure and stops at the cap, so the effective
+#:   rate falls while the pressure lasts;
+#: * the provider's own ``Retry-After`` is honoured as a floor, capped so one
+#:   absurd header cannot park a rebuild;
+#: * each batch makes at most ``_EMBEDDING_THROTTLE_MAX_ATTEMPTS`` attempts, so
+#:   the worst case is ``1+2+4+8+16+32+60`` seconds of waiting per batch — a few
+#:   minutes against the hours a single refusal used to cost.
+#:
+#: These are policy, not bundle identity: the bundle's recorded ``max_workers``
+#: is read, never rewritten (the operator's override is applied at the pool).
+_EMBEDDING_THROTTLE_BASE_COOLDOWN_SECONDS = 1.0
+_EMBEDDING_THROTTLE_COOLDOWN_FACTOR = 2.0
+_EMBEDDING_THROTTLE_COOLDOWN_CAP_SECONDS = 60.0
+_EMBEDDING_THROTTLE_COOLDOWN_JITTER = 0.25
+_EMBEDDING_THROTTLE_RETRY_AFTER_CAP_SECONDS = 60.0
+_EMBEDDING_THROTTLE_MAX_ATTEMPTS = 8
+
+#: The operator's rate lever for a pass that rides the provider's per-minute
+#: budget: the *effective* fan-out width, over the bundle's recorded
+#: ``max_workers``. The bundle and its ``content_sha256`` identity are never
+#: rewritten, so slowing a pass down needs no reseal.
+EMBEDDING_MAX_WORKERS_ENV = "CANONICAL_V2_EMBEDDING_MAX_WORKERS"
+
+
+def resolve_embedding_max_workers(recorded: int) -> int:
+    """The effective fan-out width: the operator's setting over the bundle's.
+
+    Same precedence as :func:`resolve_embedding_base_url` — environment (managed
+    setting, applied at startup) → the width the bundle records. It is applied
+    where the pool is built and never written back into the adapter, so the
+    recorded identity stays the one the loader checked. A value that is not a
+    whole number of workers fails loudly: a rate lever nobody can read is worse
+    than no lever, because the pass would silently keep bursting.
+    """
+
+    raw = os.environ.get(EMBEDDING_MAX_WORKERS_ENV, "").strip()
+    if not raw:
+        return max(1, int(recorded))
+    try:
+        width = int(raw)
+    except ValueError as exc:
+        raise ValueError(
+            f"{EMBEDDING_MAX_WORKERS_ENV} must be a whole number of workers, "
+            f"not {raw!r}"
+        ) from exc
+    if width < 1:
+        raise ValueError(f"{EMBEDDING_MAX_WORKERS_ENV} must be at least 1, not {width}")
+    return width
+
+
+@dataclass(frozen=True, slots=True)
+class _ThrottleCooldown:
+    """What one refusal observation did to the pool's shared cooldown."""
+
+    round_opened: bool
+    round_number: int
+    seconds: float
+
+
+class _EmbeddingThrottleGate:
+    """The one cooldown every worker of a fan-out waits behind.
+
+    A refused worker does not sleep alone. With 32 workers, independent per-call
+    back-off would leave the other 31 still hammering an endpoint that has just
+    asked us to slow down — so the refusal pushes a deadline the whole pool waits
+    behind, and the pool's *rate* is what falls.
+
+    Escalation counts rounds of pressure, not refused calls: a worker that finds
+    no cooldown in force opens a new round and waits longer, while a worker that
+    arrives during a round joins it (the thundering herd a cooldown boundary
+    produces resolves as one round, not as 32), and any refusal still extends the
+    deadline when the provider asks for more than we scheduled. A batch served
+    while no cooldown is in force means the pool is healthy again, so the next
+    refusal starts from the base step instead of inheriting an old escalation.
+
+    Jitter only ever *adds* to a step: a provider that asked to be left alone
+    must never be retried early because a coin flip came up low.
+    """
+
+    def __init__(
+        self,
+        *,
+        base_seconds: float,
+        factor: float,
+        cap_seconds: float,
+        jitter_ratio: float,
+        retry_after_cap_seconds: float,
+    ) -> None:
+        self._base = max(0.0, float(base_seconds))
+        self._factor = max(1.0, float(factor))
+        self._cap = max(0.0, float(cap_seconds))
+        self._jitter_ratio = max(0.0, float(jitter_ratio))
+        self._retry_after_cap = max(0.0, float(retry_after_cap_seconds))
+        self._condition = Condition()
+        self._deadline = 0.0
+        self._round = 0
+
+    def wait(self) -> None:
+        """Block until the pool's cooldown has expired (a no-op when none is on)."""
+
+        with self._condition:
+            while True:
+                remaining = self._deadline - time.monotonic()
+                if remaining <= 0:
+                    return
+                self._condition.wait(remaining)
+
+    def observe_refusal(
+        self,
+        *,
+        retry_after: float | None,
+    ) -> _ThrottleCooldown:
+        """Record one refused call and return the cooldown it leaves behind."""
+
+        with self._condition:
+            now = time.monotonic()
+            if now >= self._deadline:
+                self._round += 1
+                step = min(self._base * self._factor ** (self._round - 1), self._cap)
+                if retry_after is not None:
+                    step = max(step, min(retry_after, self._retry_after_cap))
+                seconds = step + step * self._jitter_ratio * random.random()
+                self._deadline = now + seconds
+                self._condition.notify_all()
+                return _ThrottleCooldown(
+                    round_opened=True,
+                    round_number=self._round,
+                    seconds=seconds,
+                )
+            scheduled = self._deadline
+            if retry_after is not None:
+                self._deadline = max(
+                    scheduled, now + min(retry_after, self._retry_after_cap)
+                )
+            if self._deadline != scheduled:
+                self._condition.notify_all()
+            return _ThrottleCooldown(
+                round_opened=False,
+                round_number=self._round,
+                seconds=self._deadline - now,
+            )
+
+    def observe_served(self) -> None:
+        """A batch was served: the pool is healthy, so escalation starts over."""
+
+        with self._condition:
+            if time.monotonic() >= self._deadline:
+                self._round = 0
+
+
 @dataclass(slots=True)
 class _BatchingEmbeddingAdapter:
     """Batching, caching and vector validation shared by the HTTP providers.
@@ -8133,30 +8297,81 @@ class _BatchingEmbeddingAdapter:
             texts[offset : offset + self.batch_size]
             for offset in range(0, len(texts), self.batch_size)
         )
+        # One cooldown for the whole fan-out, built once per uncached pass: see
+        # ``_EmbeddingThrottleGate`` for why a refused worker must not back off
+        # on its own while the rest of the pool keeps bursting.
+        cooldown = _EmbeddingThrottleGate(
+            base_seconds=_EMBEDDING_THROTTLE_BASE_COOLDOWN_SECONDS,
+            factor=_EMBEDDING_THROTTLE_COOLDOWN_FACTOR,
+            cap_seconds=_EMBEDDING_THROTTLE_COOLDOWN_CAP_SECONDS,
+            jitter_ratio=_EMBEDDING_THROTTLE_COOLDOWN_JITTER,
+            retry_after_cap_seconds=_EMBEDDING_THROTTLE_RETRY_AFTER_CAP_SECONDS,
+        )
 
         def embed_one(batch: tuple[str, ...]) -> tuple[tuple[float, ...], ...]:
             client = self._provider_client(api_key)
-            raw_vectors = client.embed_batch(list(batch), model=self.model_id)
-            if len(raw_vectors) != len(batch):
-                raise ValueError(
-                    "release embedding provider returned a different row count"
-                )
-            vectors: list[tuple[float, ...]] = []
-            for raw_vector in raw_vectors:
-                vector = tuple(float(value) for value in raw_vector)
-                if (
-                    len(vector) != self.dimension
-                    or not all(math.isfinite(value) for value in vector)
-                    or not any(value != 0.0 for value in vector)
-                ):
+            attempt = 0
+            while True:
+                cooldown.wait()
+                attempt += 1
+                try:
+                    raw_vectors = client.embed_batch(list(batch), model=self.model_id)
+                except _EmbeddingEndpointRateLimitedError as exc:
+                    # The provider answered "not now" and named the rate. A 5xx,
+                    # a timeout, an unreachable endpoint and an answer we cannot
+                    # use all still fail the pass the way they always did: 5xx is
+                    # a server fault rather than this pass's own over-budget
+                    # signal, and F1's breaker counts one provider call per
+                    # refused attempt — waiting a fault out is a separate
+                    # decision from waiting out the rate signal.
+                    if attempt >= _EMBEDDING_THROTTLE_MAX_ATTEMPTS:
+                        raise
+                    decision = cooldown.observe_refusal(retry_after=exc.retry_after)
+                    if decision.round_opened:
+                        # One line per cooldown round (never one per worker): a
+                        # pass that is being slowed down should say so in
+                        # build.log instead of looking stalled, and the watchdog
+                        # sampler reads exactly this column.
+                        print(
+                            "EMBEDDING_THROTTLE "
+                            + json.dumps(
+                                {
+                                    "attempt": attempt,
+                                    "batch_size": len(batch),
+                                    "cooldown_seconds": round(decision.seconds, 3),
+                                    "retry_after": exc.retry_after,
+                                    "round": decision.round_number,
+                                    "status": exc.status_code,
+                                },
+                                ensure_ascii=False,
+                                sort_keys=True,
+                            ),
+                            flush=True,
+                        )
+                    continue
+                cooldown.observe_served()
+                if len(raw_vectors) != len(batch):
                     raise ValueError(
-                        "release embedding provider returned an invalid vector"
+                        "release embedding provider returned a different row count"
                     )
-                vectors.append(vector)
-            return tuple(vectors)
+                vectors: list[tuple[float, ...]] = []
+                for raw_vector in raw_vectors:
+                    vector = tuple(float(value) for value in raw_vector)
+                    if (
+                        len(vector) != self.dimension
+                        or not all(math.isfinite(value) for value in vector)
+                        or not any(value != 0.0 for value in vector)
+                    ):
+                        raise ValueError(
+                            "release embedding provider returned an invalid vector"
+                        )
+                    vectors.append(vector)
+                return tuple(vectors)
 
         with ThreadPoolExecutor(
-            max_workers=min(self.max_workers, len(batches))
+            max_workers=min(
+                resolve_embedding_max_workers(self.max_workers), len(batches)
+            )
         ) as executor:
             parts = tuple(executor.map(embed_one, batches))
         return tuple(vector for part in parts for vector in part)
