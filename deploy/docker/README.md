@@ -284,6 +284,23 @@ cat ${MIROTHINKER_STATE_DIR}/admin-initial-password.txt
 
 > 容器形态不做「多副本共享状态」：状态目录是单机 bind mount，只能挂给一个容器。
 
+### 5.1 忘了口令：重置（口令只存哈希，找不回）
+
+```bash
+cd <交付包目录>
+docker compose exec app mirothinker-reset-admin-password      # 幂等；输出里没有口令
+sudo cat ${MIROTHINKER_STATE_DIR}/admin-password-reset-<日期>.txt
+docker compose exec app mirothinker-reset-admin-password --status   # 只看：库/账号/口令文件清单
+```
+
+* 改的是**挂载出来的那个库**（`${MIROTHINKER_STATE_DIR}/admin-auth.sqlite3`）；库不存在就拒绝执行
+  （绝不新建一个容器层里的空副本让人白改一场）；
+* 旧口令与旧会话**立即失效**；**不用重启服务**（登录每次读库，WAL 下外部写入立刻可见）；
+* 登录限流是**服务进程内**的内存计数，重置**不会**解除已生效的锁定（等它到期）；
+* 若容器根本起不来：`docker compose run --rm --entrypoint /opt/mirothinker/.venv/bin/python app /usr/local/bin/mirothinker-reset-admin-password`
+  （一次性容器，绕过入口预检；正常运维用不着）。
+* 甲方视角的完整说明（含首启口令在哪、改完记哪）在 **[CONFIG-GUIDE.md](./CONFIG-GUIDE.md) §5**。
+
 ---
 
 ## 6. 验收

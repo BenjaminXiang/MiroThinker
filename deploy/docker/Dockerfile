@@ -154,9 +154,14 @@ COPY deploy/docker/verify_embedding.py /usr/local/bin/mirothinker-verify-embeddi
 COPY deploy/docker/replay.sh /usr/local/bin/mirothinker-replay
 COPY deploy/docker/migrate.py /usr/local/bin/mirothinker-migrate
 COPY deploy/docker/entrypoint.sh /usr/local/bin/mirothinker-entrypoint
+# 管理员口令重置（忘了口令时唯一的出路：口令只存 scrypt 哈希，找不回只能重置）。
+# 走 admin_auth 自己的 set_password + append_audit，新口令只写进挂载出来的状态目录、
+# 从不打印；库不存在就拒绝执行（绝不新建一个容器层里的空副本）。
+COPY deploy/docker/reset_admin_password.py /usr/local/bin/mirothinker-reset-admin-password
 RUN chmod 0755 /usr/local/bin/mirothinker-verify /usr/local/bin/mirothinker-verify-embedding \
               /usr/local/bin/mirothinker-replay \
-              /usr/local/bin/mirothinker-migrate /usr/local/bin/mirothinker-entrypoint
+              /usr/local/bin/mirothinker-migrate /usr/local/bin/mirothinker-entrypoint \
+              /usr/local/bin/mirothinker-reset-admin-password
 
 # 服务进程在容器内固定监听 18188（冻结命令文件把端口钉死在 18188，端口映射交给 compose）
 EXPOSE 18188

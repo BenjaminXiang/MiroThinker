@@ -344,6 +344,7 @@ Canonical V2 服务栈 · 现场交付包（${DELIVERY_VERSION}）
 
   浏览 http://<机器IP>:18188/main   → 用状态目录里的首启口令登录并立即改密
         /var/tmp/mirothinker-canonical-v2-s12f/admin-initial-password.txt
+        （**忘了口令**不用重装：一条命令重置，见 CONFIG-GUIDE.md §5；该文件只在首启那一次有效）
   问答页：http://<机器IP>:18188/chat
   验收：
         docker compose -f compose.yaml exec -T app mirothinker-verify

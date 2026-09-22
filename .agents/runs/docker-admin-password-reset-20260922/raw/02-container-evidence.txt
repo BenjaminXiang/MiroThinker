@@ -1,0 +1,73 @@
+== 0. 输入 ==
+  镜像：mirothinker-serving:v1.1（04c3cfcd465f）
+  容器运行身份：1004:1004（= 数据属主，与 compose 的 user: 一致）
+  工具：/home/longxiang/MiroThinker/.worktrees/delivery-docker/deploy/docker/reset_admin_password.py（sha256 fdc892ed0409c7c3…）
+  scratch 状态目录：/tmp/reset-password-evidence.IKvx4f/state（挂到冻结路径 /var/tmp/mirothinker-canonical-v2-s12f）
+
+══ ① 播种（镜像自己的 admin_auth 建的库与首启口令文件；口令不打印）══
+  seeded: db=True initial-file=True
+
+══ ② 容器内：服务进程持有连接 → 跑重置 → 同一实例立刻看到新口令（旧口令立刻失效）══
+  service-before: old_works=True
+  reset-exit=0
+---- 工具输出（原文；口令不在其中）----
+== 管理员口令已重置 ==
+  库：/var/tmp/mirothinker-canonical-v2-s12f/admin-auth.sqlite3（服务在用的那个）
+  账号：admin（旧口令与旧会话**立即失效**；不需要重启服务）
+  新口令在这个文件里（0600，刚创建）：
+      /var/tmp/mirothinker-canonical-v2-s12f/admin-password-reset-2026-09-22.txt
+  读出来：sudo cat /var/tmp/mirothinker-canonical-v2-s12f/admin-password-reset-2026-09-22.txt
+  完整说明：CONFIG-GUIDE.md §5（甲方运维版；读完请立刻记到安全的地方）
+  若页面提示锁定：那是服务进程内的登录限流（5 次错误锁 1 分钟、按次数递增），重置不会解除它，稍等再登。
+----
+  service-after（同一个连接、不重启）: old_works=False
+  service-after（同一个连接、不重启）: new_works=True
+  reset-file=admin-password-reset-2026-09-22.txt mode=0o600 uid=1004
+  audit(admin.password_reset)=['ok']
+  epoch=2
+
+══ ③ 宿主侧看产物（容器运行身份 1004:1004 = 数据属主，与 compose 的 user: 一致）══
+  total 40
+  -rw------- 1 longxiang longxiang 28672 Sep 22 10:51 admin-auth.sqlite3
+  -rw------- 1 longxiang longxiang    17 Sep 22 10:51 admin-initial-password.txt
+  -rw------- 1 longxiang longxiang    17 Sep 22 10:51 admin-password-reset-2026-09-22.txt
+  -rw-r--r-- 1 longxiang longxiang    16 Sep 22 10:51 scratch-old-password.txt
+  重置文件内容长度（只打印长度，不打印口令）：17 字节
+
+══ ④ 判红：只挂工具、不挂状态目录 ⇒ 期望 exit 3 且不在容器层新建空库 ══
+$ docker run --rm --user 1004:1004 -v <工具>:/tmp/reset-admin-password.py:ro \
+    --entrypoint /opt/mirothinker/.venv/bin/python mirothinker-serving:v1.1 /tmp/reset-admin-password.py
+[FAIL] 口令库不存在：/var/tmp/mirothinker-canonical-v2-s12f/admin-auth.sqlite3
+       本工具**不新建**库（否则你可能改到一个空副本上、服务还在用旧的那个）。先确认状态目录挂载对了、服务已经首启过。
+  exit=3
+  容器层里有没有被建出空库（应当 no such file）:
+ls: cannot access '/var/tmp/mirothinker-canonical-v2-s12f/admin-auth.sqlite3': No such file or directory
+total 12
+drwxr-xr-x 2 root root 4096 Sep 21 22:32 .
+drwxrwxrwt 1 root root 4096 Sep 21 22:32 ..
+
+══ ⑤ 逃生门（README §5.1 里写给运维的那条）：容器起不来时用一次性 compose 容器跑同一条工具 ══
+$ docker compose -f <交付包目录>/compose.yaml run --rm --no-deps \
+    --entrypoint /opt/mirothinker/.venv/bin/python app /usr/local/bin/mirothinker-reset-admin-password --status
+== 管理员账号库 ==
+  口令库：/var/tmp/mirothinker-canonical-v2-s12f/admin-auth.sqlite3（2026-09-22 10:51）
+  会话签名密钥：/var/tmp/mirothinker-canonical-v2-s12f/admin-auth.key（不存在）
+  账号：admin（role=admin，口令最后修改 2026-09-22T02:51:24.409263+00:00，epoch=2）
+== 状态目录里的口令文件（只列文件名，从不打印内容）==
+  /var/tmp/mirothinker-canonical-v2-s12f/admin-initial-password.txt（2026-09-22 10:51）
+  /var/tmp/mirothinker-canonical-v2-s12f/admin-password-reset-2026-09-22.txt（2026-09-22 10:51）
+  ⇒ `admin-initial-password.txt` 是**首启**那一次的口令：改过密之后它就不管用了；
+     以最近一个 `admin-password-reset-<日期>.txt` 为准。
+  exit=0
+
+══ ⑥ 容器内 --status（只读；只列文件名，不打印内容）══
+== 管理员账号库 ==
+  口令库：/var/tmp/mirothinker-canonical-v2-s12f/admin-auth.sqlite3（2026-09-22 10:51）
+  会话签名密钥：/var/tmp/mirothinker-canonical-v2-s12f/admin-auth.key（不存在）
+  账号：admin（role=admin，口令最后修改 2026-09-22T02:51:24.409263+00:00，epoch=2）
+== 状态目录里的口令文件（只列文件名，从不打印内容）==
+  /var/tmp/mirothinker-canonical-v2-s12f/admin-initial-password.txt（2026-09-22 10:51）
+  /var/tmp/mirothinker-canonical-v2-s12f/admin-password-reset-2026-09-22.txt（2026-09-22 10:51）
+  ⇒ `admin-initial-password.txt` 是**首启**那一次的口令：改过密之后它就不管用了；
+     以最近一个 `admin-password-reset-<日期>.txt` 为准。
+  exit=0
