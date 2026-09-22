@@ -608,7 +608,12 @@ function keyStatusRow(connectionKey, roleId) {
   result.id = `role-${roleId}-key-result`;
   wrapper.append(input, clearButton, result);
   if (entry && entry.env_var) {
-    wrapper.append(text("span", "meta", `写入受管文件，重启后由环境变量 ${entry.env_var} 读取`));
+    // 一个字段可能填多个槽位（如嵌入端点：本机自建端点与网关各读一个变量）。
+    // 页面如实把要填的变量都写出来，否则“重启后生效”只是半句真话。
+    const slots = [entry.env_var, ...(entry.mirror_env_vars || [])];
+    wrapper.append(
+      text("span", "meta", `写入受管文件，重启后由环境变量 ${slots.join("、")} 读取`),
+    );
   }
   return wrapper;
 }

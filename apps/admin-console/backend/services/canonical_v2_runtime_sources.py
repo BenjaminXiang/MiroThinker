@@ -33,6 +33,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
+import json
 import os
 from pathlib import Path
 from typing import Any
@@ -53,6 +54,47 @@ _DEFAULT_CHAT_PROFILE = "gemma4"
 
 _LOCAL_KEY_ENV_NAMES = ("API_KEY", "OPENAI_API_KEY", "SGLANG_API_KEY")
 _LOCAL_KEY_FILENAME = ".sglang_api_key"
+
+#: The model the *recorded* (self-hosted) embedding authority runs. It is the
+#: fallback for a host with no serving pack mounted; a mounted pack records the
+#: effective identity instead (:func:`_recorded_embedding_model`).
+FROZEN_EMBEDDING_MODEL = "Qwen/Qwen3-Embedding-8B"
+
+_SERVING_PACK_ENV = "CANONICAL_V2_SERVING_PACK"
+_PACK_MANIFEST_FILENAME = "manifest.json"
+
+
+def _recorded_embedding_model(environ: Mapping[str, str]) -> str | None:
+    """The embedding model identity the mounted serving pack records, if any.
+
+    The lane's model identity is frozen in the release embedding bundle, which
+    this process cannot read (it holds no bundle path). The pack is that
+    authority's *record*: ``open_serving_pack_authority`` refuses to boot unless
+    the bundle's ``model_id`` equals the manifest's ``embedding_model_id``, so the
+    recorded value **is** the identity the lane sends on the wire — on disk, where
+    the console can read it. Without it the card would keep testing a literal the
+    switched line no longer uses (a 404 ``Model not exist`` from the gateway).
+
+    Never raises and never invents: an absent pack, an unreadable or malformed
+    manifest, or a value that is not a non-empty string yields ``None`` and the
+    frozen literal stands. This is not an operator setting.
+    """
+
+    pack = str(environ.get(_SERVING_PACK_ENV, "")).strip()
+    if not pack:
+        return None
+    try:
+        document: Any = json.loads(
+            (Path(pack) / _PACK_MANIFEST_FILENAME).read_text(encoding="utf-8")
+        )
+    except (OSError, ValueError):
+        return None
+    if not isinstance(document, Mapping):
+        return None
+    value = document.get("embedding_model_id")
+    if not isinstance(value, str) or not value.strip():
+        return None
+    return value.strip()
 
 
 @dataclass(frozen=True, slots=True)
@@ -293,8 +335,14 @@ def resolve_embedding(
     resolution point the serving process uses): ``CANONICAL_V2_EMBEDDING_BASE_URL``
     — projected from the managed field ``extraction_endpoints.embedding_base_url``
     at startup, or set by the service unit — wins when set; otherwise the
-    address recorded in the embedding bundle is used. The credential still comes
-    from ``load_local_api_key()``.
+    address recorded in the embedding bundle is used.
+
+    The **model identity** is not an operator setting: it is frozen by the release
+    and read from the mounted serving pack's record
+    (:func:`_recorded_embedding_model`) — the same identity the lane sends — with
+    the recorded authority's literal only as the no-pack fallback. The credential
+    comes from the managed store / local slot (see ``managed_secrets``: one page
+    field fills both the recorded and the candidate slot).
     """
 
     from src.data_agents.company.vectorizer import EmbeddingClient
@@ -306,17 +354,18 @@ def resolve_embedding(
         applied_env=applied_env_names(environ),
     )
     base_url = (configured or recorded).rstrip("/")
-    endpoint_origin = (
-        configured_origin if configured else "release-bundle-default"
-    )
-    model = "Qwen/Qwen3-Embedding-8B"
+    endpoint_origin = configured_origin if configured else "release-bundle-default"
+    recorded_model = _recorded_embedding_model(environ)
+    model = recorded_model or FROZEN_EMBEDDING_MODEL
+    model_origin = "服务包记录" if recorded_model else "发布包记录（无服务包）"
     roots = tuple(key_file_roots) if key_file_roots is not None else _key_file_roots()
     value, origin = _local_key(environ, roots)
     enabled = bool(value) and bool(base_url)
     if enabled:
         note = (
             f"运行期 base_url {base_url}（来源 {endpoint_origin}；未设置受管地址时"
-            f"回落到发布包记录的地址）；凭据来源 {origin}"
+            f"回落到发布包记录的地址）；模型身份 {model}（{model_origin}）；"
+            f"凭据来源 {origin}"
         )
     else:
         note = "运行期不可用：本地凭据缺失（API_KEY/OPENAI_API_KEY/SGLANG_API_KEY/.sglang_api_key 全空）"

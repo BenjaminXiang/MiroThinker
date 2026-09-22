@@ -6,6 +6,7 @@ import pytest
 
 from backend.services.canonical_v2_connection_tests import (
     CONNECTIONS,
+    PING_TEXT,
     SPEC_BY_KEY,
     ConnectionTestRateLimiter,
     UnsafeEndpointError,
@@ -221,3 +222,95 @@ def test_chat_path_matches_the_openai_client_the_runtime_builds() -> None:
 
     assert url == "https://api.deepseek.com/chat/completions"
     assert request_spec["payload"]["max_tokens"] == 1
+
+
+# -- the embedding connection's second route ---------------------------------
+# The fleet speaks two embedding shapes. The candidate gateway's native prefix
+# (``.../api/v1``) has no ``/embeddings`` — measured live 2026-09-22: 404 with an
+# empty body — while its compatible prefix (``.../compatible-mode/v1``) has no
+# native route. So the embedding test asks the compatible shape first and, only
+# when that route does not exist, asks the native one. A route that *answers*
+# (a credential rejection, a server error) is that route's answer and is never
+# retried elsewhere.
+
+_NATIVE_EMBEDDINGS_URL = (
+    "https://maas.qianwenaiapi.com/api/v1"
+    "/services/embeddings/text-embedding/text-embedding"
+)
+
+
+class _RouteAwareTransport:
+    """Answers one declared status per call, recording every call in order."""
+
+    def __init__(self, statuses: list[int]) -> None:
+        self._statuses = list(statuses)
+        self.calls: list[dict[str, object]] = []
+
+    def __call__(self, url, *, payload, headers, timeout):
+        self.calls.append(
+            {"url": url, "payload": payload, "headers": headers, "timeout": timeout}
+        )
+        return self._statuses.pop(0), ""
+
+
+def test_the_embedding_test_asks_the_native_route_when_the_compatible_one_is_absent() -> (
+    None
+):
+    transport = _RouteAwareTransport([404, 200])
+
+    result = run_connection_test(
+        SPEC_BY_KEY["embedding"],
+        api_key=_FAKE_KEY,
+        base_url="https://maas.qianwenaiapi.com/api/v1",
+        transport=transport,
+    )
+
+    assert result["ok"] is True
+    assert result["http_status"] == 200
+    assert len(transport.calls) == 2
+    assert (
+        transport.calls[0]["url"] == "https://maas.qianwenaiapi.com/api/v1/embeddings"
+    )
+    assert transport.calls[1]["url"] == _NATIVE_EMBEDDINGS_URL
+    # The native shape carries the texts under ``input``; the credential travels
+    # with it (the fallback must not drop it).
+    assert transport.calls[1]["payload"]["input"] == {"texts": [PING_TEXT]}
+    assert _FAKE_KEY in json.dumps(transport.calls[1]["headers"])
+    # Both statuses are reported: the operator can see which route answered.
+    assert "404" in result["detail"]
+    assert "200" in result["detail"]
+
+
+def test_a_rejected_credential_never_moves_to_the_native_route() -> None:
+    """401 is an answer about the credential, not a missing route."""
+
+    transport = _RouteAwareTransport([401])
+
+    result = run_connection_test(
+        SPEC_BY_KEY["embedding"],
+        api_key=_FAKE_KEY,
+        base_url="https://maas.qianwenaiapi.com/api/v1",
+        transport=transport,
+    )
+
+    assert result["ok"] is False
+    assert result["http_status"] == 401
+    assert "凭据被拒绝" in result["detail"]
+    assert len(transport.calls) == 1
+
+
+def test_only_the_embedding_connection_has_a_second_route() -> None:
+    """A rerank 404 is a rerank 404: no other connection gets a hidden second call."""
+
+    transport = _RouteAwareTransport([404])
+
+    result = run_connection_test(
+        SPEC_BY_KEY["rerank"],
+        api_key=_FAKE_KEY,
+        base_url="http://127.0.0.1:18099",
+        transport=transport,
+    )
+
+    assert result["ok"] is False
+    assert result["http_status"] == 404
+    assert len(transport.calls) == 1

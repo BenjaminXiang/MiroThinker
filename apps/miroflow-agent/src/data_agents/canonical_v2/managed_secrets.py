@@ -85,6 +85,13 @@ class SecretSpec:
     label: str
     env_var: str | None
     legacy_files: tuple[str, ...] = ()
+    #: Other variables this **same value** must also occupy when it is projected at
+    #: startup. The read-side aliases above are for *reporting* an externally set
+    #: value; these are writes, for a credential that two runtime authorities
+    #: consume through **different** slots. The page cannot know which authority a
+    #: site runs, and one credential must not starve the other line, so the field
+    #: fills both.
+    mirror_env_vars: tuple[str, ...] = ()
     extra_env_names: tuple[str, ...] = ()
     env_var_resolver: Callable[[Mapping[str, str]], str] | None = None
 
@@ -101,6 +108,18 @@ class SecretSpec:
             except Exception:  # noqa: BLE001 - never fail a read over metadata
                 return None
         return None
+
+    def env_vars_to_fill(
+        self, environ: Mapping[str, str] | None = None
+    ) -> tuple[str, ...]:
+        """Every variable a projected value must occupy, primary first."""
+
+        primary = self.env_var_for(environ)
+        names = [primary] if primary else []
+        for name in self.mirror_env_vars:
+            if name not in names:
+                names.append(name)
+        return tuple(names)
 
 
 # The whitelist. Every entry is a credential some connection actually consumes;
@@ -133,11 +152,21 @@ SECRET_SPECS: tuple[SecretSpec, ...] = (
         field="embedding.api_key",
         connection="embedding",
         label="Embedding 模型端点",
-        # The serving embedding adapter reads ``load_local_api_key()``
-        # (providers/local_api_key.py:8-11, called at knowledge_build_isolated.py:6570):
-        # API_KEY -> OPENAI_API_KEY -> SGLANG_API_KEY -> .sglang_api_key. We write the
-        # least generic of those, and accept the siblings when reporting origins.
+        # Two authorities consume this one credential, through two different slots,
+        # and the page cannot know which one a site runs:
+        #
+        # * the recorded (self-hosted) authority reads ``load_local_api_key()``
+        #   (providers/local_api_key.py:8-11, called at knowledge_build_isolated.py:6570):
+        #   API_KEY -> OPENAI_API_KEY -> SGLANG_API_KEY -> .sglang_api_key. We write
+        #   the least generic of those, and accept the siblings when reporting origins.
+        # * the candidate (gateway) authority reads only the slot its bundle declares
+        #   as ``api_key_source`` (knowledge_build_isolated._GATEWAY_EMBEDDING_API_KEY_ENV,
+        #   "CANONICAL_V2_EMBEDDING_API_KEY"). That slot is deliberately *not* the
+        #   local one, so that a bundle pointing at a third-party host can never be
+        #   handed the self-hosted endpoint's key — the read side stays closed, and
+        #   the page fills both slots instead.
         env_var="SGLANG_API_KEY",
+        mirror_env_vars=("CANONICAL_V2_EMBEDDING_API_KEY",),
         legacy_files=(".sglang_api_key",),
         extra_env_names=("API_KEY", "OPENAI_API_KEY"),
     ),
@@ -230,6 +259,10 @@ class SecretState:
     origin: str | None
     applied_to_process_env: bool
     legacy_files: tuple[str, ...]
+    #: Variables this credential *also* fills when projected (empty for most
+    #: fields). The page names them so "restart and the service reads it" is not
+    #: silently half true.
+    mirror_env_vars: tuple[str, ...] = ()
 
     def as_dict(self) -> dict[str, Any]:
         return {
@@ -243,6 +276,7 @@ class SecretState:
             "origin": self.origin,
             "applied_to_process_env": self.applied_to_process_env,
             "legacy_files": list(self.legacy_files),
+            "mirror_env_vars": list(self.mirror_env_vars),
         }
 
 
@@ -407,6 +441,7 @@ class ManagedSecretsStore:
                     origin=origin,
                     applied_to_process_env=bool(material) and spec.env_var in applied,
                     legacy_files=spec.legacy_files,
+                    mirror_env_vars=spec.mirror_env_vars,
                 )
             )
         return tuple(states)
@@ -575,14 +610,14 @@ class ManagedSecretsStore:
             file_value = stored.get(spec.field)
             if not file_value:
                 continue
-            env_var = spec.env_var_for(target)
-            if env_var is None:
-                continue
-            if target.get(env_var, "").strip():
-                skipped.append(env_var)
-                continue
-            target[env_var] = file_value
-            applied.append(env_var)
+            for env_var in spec.env_vars_to_fill(target):
+                # The same rule for the primary and its mirrors: an existing
+                # value wins, so the service unit stays the authority.
+                if target.get(env_var, "").strip():
+                    skipped.append(env_var)
+                    continue
+                target[env_var] = file_value
+                applied.append(env_var)
         return {"applied": tuple(applied), "skipped_env": tuple(skipped)}
 
 

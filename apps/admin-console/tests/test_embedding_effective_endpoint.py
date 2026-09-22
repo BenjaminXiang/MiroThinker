@@ -10,6 +10,7 @@ spec table. No provider is dialled and nothing reads the live state directory.
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 from typing import Any
 
@@ -167,3 +168,108 @@ def test_the_page_copy_stops_claiming_the_address_is_frozen() -> None:
     assert "发布包冻结（presets.embedding_frozen）" not in page
     assert "只读：服务线冻结值" not in page
     assert "可设地址：模型身份仍由发布包冻结" in page
+
+
+def test_the_secrets_card_names_every_variable_the_key_fills() -> None:
+    """One page field, two slots: the hint must not name only half of them."""
+
+    page = (_STATIC / "admin.js").read_text(encoding="utf-8")
+
+    assert "entry.mirror_env_vars" in page
+    assert "写入受管文件，重启后由环境变量 ${slots.join" in page
+
+
+# -- the model identity comes from the mounted pack's record ------------------
+# The card must validate the endpoint with the model the *serving lane* sends.
+# That identity is frozen in the release bundle, which this process cannot read
+# (it holds no bundle path), but the pack it serves from records the same value:
+# the loader refuses to boot unless the bundle's ``model_id`` equals the pack
+# manifest's ``embedding_model_id``. So the record is the source, and neither the
+# page nor an environment variable may override it.
+
+PACK_ENV = "CANONICAL_V2_SERVING_PACK"
+RECORDED_MODEL = "Qwen/Qwen3-Embedding-8B"
+CANDIDATE_MODEL = "qwen3.7-text-embedding-flash"
+
+
+def _pack_recording(tmp_path: Path, model: Any) -> Path:
+    pack = tmp_path / "pack"
+    pack.mkdir(parents=True, exist_ok=True)
+    (pack / "manifest.json").write_text(
+        json.dumps({"embedding_model_id": model}), encoding="utf-8"
+    )
+    return pack
+
+
+def test_the_model_comes_from_the_mounted_packs_record(tmp_path: Path) -> None:
+    """The card's model is the recorded identity, not a literal in this module."""
+
+    pack = _pack_recording(tmp_path, CANDIDATE_MODEL)
+
+    connection = resolve_embedding(
+        environ={PACK_ENV: str(pack), "API_KEY": "test-key"},
+        secrets_store=None,
+        key_file_roots=(),
+    )
+
+    assert connection.model == CANDIDATE_MODEL
+
+
+def test_without_a_pack_the_frozen_literal_stands() -> None:
+    """No pack mounted (a development host): the recorded authority's model."""
+
+    connection = resolve_embedding(
+        environ={"API_KEY": "test-key"}, secrets_store=None, key_file_roots=()
+    )
+
+    assert connection.model == RECORDED_MODEL
+
+
+@pytest.mark.parametrize(
+    "payload",
+    [
+        "{not json",
+        json.dumps({"embedding_model_id": ""}),
+        json.dumps({"embedding_model_id": 4096}),
+        json.dumps({"other": "value"}),
+    ],
+)
+def test_an_unusable_pack_record_falls_back_instead_of_breaking_the_card(
+    tmp_path: Path, payload: str
+) -> None:
+    pack = tmp_path / "pack"
+    pack.mkdir(parents=True, exist_ok=True)
+    (pack / "manifest.json").write_text(payload, encoding="utf-8")
+
+    connection = resolve_embedding(
+        environ={PACK_ENV: str(pack), "API_KEY": "test-key"},
+        secrets_store=None,
+        key_file_roots=(),
+    )
+
+    assert connection.model == RECORDED_MODEL
+
+
+def test_a_missing_manifest_is_not_an_error(tmp_path: Path) -> None:
+    connection = resolve_embedding(
+        environ={PACK_ENV: str(tmp_path / "absent"), "API_KEY": "k"},
+        secrets_store=None,
+        key_file_roots=(),
+    )
+
+    assert connection.model == RECORDED_MODEL
+
+
+def test_the_presets_endpoint_reports_the_records_model(
+    stores: tuple[ManagedSettingsStore, ManagedSecretsStore],
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    pack = _pack_recording(tmp_path, CANDIDATE_MODEL)
+    monkeypatch.setenv(PACK_ENV, str(pack))
+
+    reported = _presets(stores)["embedding_frozen"]
+
+    assert reported["model"] == CANDIDATE_MODEL
+    assert "模型身份仍由发布包冻结" in reported["note"]
+    assert "服务包记录" in reported["note"]

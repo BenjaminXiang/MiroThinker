@@ -5,9 +5,14 @@ Requirement R16 (2026-09-15): every connection on the admin page gets a
 the operator types an endpoint or a key, presses test, and sees success/failure
 plus latency. Three properties make that safe:
 
-1. **One minimal call.** Each connection has one fixed, cheap request shape
-   (a one-token completion, a single-document rerank, a one-word embedding, a
-   one-result search). Nothing here walks a corpus or streams.
+1. **One minimal call per route.** Each connection has one fixed, cheap request
+   shape (a one-token completion, a single-document rerank, a one-word embedding,
+   a one-result search). Nothing here walks a corpus or streams. The embedding
+   connection is the one exception in *time*, never in shape: this fleet's
+   embedding endpoints speak two wire shapes, so the test asks the compatible one
+   and repeats the same one-word call in the native shape only when that route
+   does not exist (404/405) — a route that answers costs exactly the call it
+   always did.
 2. **Rate limiting.** The button is cheap for a human and expensive if hammered,
    so the limiter is server-side, per connection and per client, and a rejected
    call never reaches the network.
@@ -33,6 +38,11 @@ from typing import Any
 from urllib import error as urllib_error
 from urllib import request as urllib_request
 from urllib.parse import urlsplit
+
+from backend.services.canonical_v2_embedding_identity import (
+    NATIVE_EMBEDDINGS_PATH,
+    ROUTE_ABSENT_STATUSES,
+)
 
 DEFAULT_TIMEOUT_SECONDS = 5.0
 PING_TEXT = "ping"
@@ -353,6 +363,25 @@ def post_json(
 Transport = Callable[..., tuple[int, str]]
 
 
+def build_native_embedding_request(
+    *, base_url: str, model: str | None, text: str
+) -> tuple[str, dict[str, Any]]:
+    """The DashScope-native shape of the same one-word embedding call: (url, payload).
+
+    Same texts, other envelope: the native route takes them under ``input.texts``
+    at its own path (the merged client the identity probe calls speaks this shape;
+    one test pins the two path literals together). The model is the one the
+    compatible attempt already resolved, and the caller reuses that attempt's
+    headers — a fallback that dropped either would test a different endpoint than
+    the operator configured.
+    """
+
+    return _join(base_url, NATIVE_EMBEDDINGS_PATH), {
+        "model": model,
+        "input": {"texts": [text]},
+    }
+
+
 def test_connection(
     spec: ConnectionSpec,
     *,
@@ -363,7 +392,15 @@ def test_connection(
     timeout: float = DEFAULT_TIMEOUT_SECONDS,
     disabled_reason: str | None = None,
 ) -> dict[str, Any]:
-    """Perform exactly one minimal call and report status + latency only.
+    """Perform the connection's minimal call(s) and report status + latency only.
+
+    One call per route the connection can speak, and no more: the embedding kind
+    asks the compatible shape first (the shape this card has always spoken) and,
+    **only when that route does not exist** (HTTP 404/405), repeats the call in
+    the native shape — the fleet's two routes are the only shapes it has, and the
+    candidate gateway's native prefix answers no ``/embeddings`` (measured
+    2026-09-22: 404 with an empty body). Every other answer, a rejected credential
+    included, is that route's own answer and is reported as it arrived.
 
     ``disabled_reason`` short-circuits a connection the runtime has not enabled
     (and for which the caller supplied no endpoint of its own): the honest answer
@@ -400,6 +437,59 @@ def test_connection(
         }
     caller = transport or post_json
     started = monotonic()
+    # Appended to every report of the *second* attempt, so the operator can see
+    # which route answered and why the call was repeated.
+    note = ""
+
+    def reported(status: int) -> dict[str, Any]:
+        """The one status → result mapping, shared by both attempts.
+
+        Wording lives here once so the two attempts cannot describe the same
+        answer differently; ``latency_ms`` is measured when the test ends.
+        """
+
+        latency_ms = int((monotonic() - started) * 1000)
+        if 200 <= status < 300:
+            return {
+                "ok": True,
+                "latency_ms": latency_ms,
+                "http_status": status,
+                "detail": f"HTTP {status}{note}",
+                "called": True,
+            }
+        if status in {401, 403}:
+            return {
+                "ok": False,
+                "latency_ms": latency_ms,
+                "http_status": status,
+                "detail": f"HTTP {status}：端点可达，凭据被拒绝{note}",
+                "called": True,
+            }
+        if status in {404, 405}:
+            return {
+                "ok": False,
+                "latency_ms": latency_ms,
+                "http_status": status,
+                "detail": f"HTTP {status}：端点可达，但路径或方法不被接受{note}",
+                "called": True,
+            }
+        return {
+            "ok": False,
+            "latency_ms": latency_ms,
+            "http_status": status,
+            "detail": f"HTTP {status}{note}",
+            "called": True,
+        }
+
+    def transport_failure(detail: str) -> dict[str, Any]:
+        return {
+            "ok": False,
+            "latency_ms": int((monotonic() - started) * 1000),
+            "http_status": None,
+            "detail": f"{detail}{note}",
+            "called": True,
+        }
+
     try:
         status, _body = caller(
             url,
@@ -408,54 +498,32 @@ def test_connection(
             timeout=timeout,
         )
     except TimeoutError:
-        return {
-            "ok": False,
-            "latency_ms": int((monotonic() - started) * 1000),
-            "http_status": None,
-            "detail": f"超时（>{timeout:g}s）",
-            "called": True,
-        }
+        return transport_failure(f"超时（>{timeout:g}s）")
     except Exception as exc:  # noqa: BLE001 - any transport failure is a result
-        return {
-            "ok": False,
-            "latency_ms": int((monotonic() - started) * 1000),
-            "http_status": None,
-            "detail": f"传输失败（{type(exc).__name__}）",
-            "called": True,
-        }
-    latency_ms = int((monotonic() - started) * 1000)
+        return transport_failure(f"传输失败（{type(exc).__name__}）")
     status = int(status)
-    if 200 <= status < 300:
-        return {
-            "ok": True,
-            "latency_ms": latency_ms,
-            "http_status": status,
-            "detail": f"HTTP {status}",
-            "called": True,
-        }
-    if status in {401, 403}:
-        return {
-            "ok": False,
-            "latency_ms": latency_ms,
-            "http_status": status,
-            "detail": f"HTTP {status}：端点可达，凭据被拒绝",
-            "called": True,
-        }
-    if status in {404, 405}:
-        return {
-            "ok": False,
-            "latency_ms": latency_ms,
-            "http_status": status,
-            "detail": f"HTTP {status}：端点可达，但路径或方法不被接受",
-            "called": True,
-        }
-    return {
-        "ok": False,
-        "latency_ms": latency_ms,
-        "http_status": status,
-        "detail": f"HTTP {status}",
-        "called": True,
-    }
+    if spec.kind == "embedding" and status in ROUTE_ABSENT_STATUSES:
+        note = f"（OpenAI 兼容路线 HTTP {status}，改试 DashScope 原生路线）"
+        # ``build_request`` resolved this base a moment ago; the fallback must ask
+        # the same address, with the same credential, in the other shape.
+        native_url, native_payload = build_native_embedding_request(
+            base_url=str(base_url or spec.default_base_url or ""),
+            model=request_spec["payload"].get("model"),
+            text=PING_TEXT,
+        )
+        try:
+            status, _body = caller(
+                native_url,
+                payload=native_payload,
+                headers=request_spec["headers"],
+                timeout=timeout,
+            )
+        except TimeoutError:
+            return transport_failure(f"超时（>{timeout:g}s）")
+        except Exception as exc:  # noqa: BLE001 - any transport failure is a result
+            return transport_failure(f"传输失败（{type(exc).__name__}）")
+        status = int(status)
+    return reported(status)
 
 
 # -- model list (I3: pick a model id from the endpoint) ----------------------

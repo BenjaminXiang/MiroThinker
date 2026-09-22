@@ -428,7 +428,7 @@ def test_admin_page_renders_the_credentials_card() -> None:
     assert script.status_code == 200
     assert "模型与连接" in page.text
     assert 'id="roleBlocks"' in page.text
-    assert ">测试连通性<" not in page.text  #每块角色里的探针按钮由 admin.js 生成
+    assert ">测试连通性<" not in page.text  # 每块角色里的探针按钮由 admin.js 生成
     assert "api/canonical-v2/admin/secrets" in script.text
     assert "api/canonical-v2/admin/connections/test" in script.text
     assert "需重启生效" in script.text
@@ -511,3 +511,6 @@ def test_secrets_payload_exposes_runtime_state_per_connection(
         if item["field"] == "embedding.api_key"
     )
     assert entry["env_var"] == "SGLANG_API_KEY"
+    # The page must name every variable this credential fills: the candidate
+    # (gateway) bundle reads its own slot, and one page field fills both.
+    assert entry["mirror_env_vars"] == ["CANONICAL_V2_EMBEDDING_API_KEY"]

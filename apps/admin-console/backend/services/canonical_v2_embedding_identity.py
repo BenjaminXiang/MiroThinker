@@ -37,12 +37,26 @@ document the build already embedded, and the reference arm probes the query side
 the serving lane runs. Handing the wrong role to a role-aware endpoint would make
 a healthy endpoint read as a different space.
 
-Known ceiling: the default HTTP client below speaks the **OpenAI-compatible**
-shape only, so a DashScope-native endpoint answers it with HTTP 404 and the card
-reports 未校验 rather than a verdict (never a false failure). The native shape has
-to be added here before the switched endpoint can be validated from the page; the
-client for it already exists at ``src.data_agents.providers.dashscope_embeddings``
-and this app imports from that tree elsewhere.
+**Both of the fleet's wire shapes are spoken, and the endpoint decides which.**
+The compatible shape (``{address}/embeddings``) is asked first — it is the shape
+this card has always spoken and the one every endpoint already in service
+answers — and only an *absent route* (HTTP 404/405, measured live on the
+candidate gateway's native prefix 2026-09-22) selects the DashScope-native shape,
+which is spoken through the merged client at
+``src.data_agents.providers.dashscope_embeddings``. The choice is made **per
+address** and held for the rest of the check, so a native-only endpoint validates
+without costing a compatible endpoint an extra call. The shape is asked of the
+address rather than declared here because this process holds no embedding bundle
+— the frozen authority the serving process loads — and a declaration that
+disagreed with the address would silently validate the other route. Every other
+answer (401, 500, a wrong dimension) is that route's own answer and is reported
+as such, never retried elsewhere; the route that answered travels with the
+verdict (:data:`PROVIDER_OPENAI_COMPATIBLE` / :data:`PROVIDER_DASHSCOPE_NATIVE`).
+
+Known ceiling: those **two text shapes** are what this check can speak.
+Multimodal routes (``multimodal-embedding``) and any third shape are out of
+scope — an endpoint that answers neither route reports 未校验 with both attempts
+named, never a verdict.
 """
 
 from __future__ import annotations
@@ -60,6 +74,24 @@ import urllib.error
 import urllib.request
 
 EMBEDDINGS_PATH = "/embeddings"
+
+#: The two wire shapes this fleet's embedding endpoints speak. One name per
+#: *route*, not per vendor: the compatible shape is what a self-hosted
+#: OpenAI-compatible server answers, the native one is DashScope's own
+#: ``services/embeddings/text-embedding`` route.
+PROVIDER_OPENAI_COMPATIBLE = "openai-compatible"
+PROVIDER_DASHSCOPE_NATIVE = "dashscope-native"
+
+#: The native route's path, appended to the versioned prefix a bundle records
+#: (``https://maas.qianwenaiapi.com/api/v1``). The merged client this probe calls
+#: carries the same literal; one test pins the two together, because a drift here
+#: would surface as 未校验 on a healthy endpoint instead of a verdict.
+NATIVE_EMBEDDINGS_PATH = "/services/embeddings/text-embedding/text-embedding"
+
+#: Statuses that mean "this wire shape has no route at that address". They are
+#: the *only* answer that lets the probe speak the other shape: a 401 is about the
+#: credential and a 500 about the server, and both are that route's own answer.
+ROUTE_ABSENT_STATUSES = frozenset({404, 405})
 
 #: The retrieval side a call embeds for. Part of the probe's own contract: the
 #: index arm compares a stored *document* vector, the reference arm probes the
@@ -170,8 +202,8 @@ def _post_embeddings(
     ``role`` is accepted and ignored: this client speaks the OpenAI-compatible
     shape, which carries no role dimension, so both roles answer with the same
     vector (the same is true of the compatible embedding authority in the serving
-    line). A role-aware route needs the native client — see the module docstring's
-    known ceiling.
+    line). The native shape is spoken by :func:`_post_native_embeddings`, which
+    does carry the role.
     """
 
     del role
@@ -191,6 +223,8 @@ def _post_embeddings(
             raw = response.read()
     except urllib.error.HTTPError as exc:
         exc.read()
+        if exc.code in ROUTE_ABSENT_STATUSES:
+            raise _RouteAbsent(exc.code) from exc
         raise EmbeddingIdentityUnavailable(f"端点返回 HTTP {exc.code}") from exc
     except (urllib.error.URLError, OSError, TimeoutError) as exc:
         raise EmbeddingIdentityUnavailable(
@@ -213,8 +247,39 @@ class EmbeddingIdentityUnavailable(RuntimeError):
     """One arm could not produce a measurement (never a verdict)."""
 
 
-def _embed(
-    embedder: Callable[..., tuple[float, ...]] | None,
+class _RouteAbsent(EmbeddingIdentityUnavailable):
+    """The wire shape this call speaks has no route at that address (404/405).
+
+    Separated from every other failure because it is the one answer that says
+    something about the *address* rather than about the request: only it lets the
+    probe speak the fleet's other shape (see :class:`_RouteAwareEmbedder`). Its
+    message stands on its own when it is what the arm reports.
+    """
+
+    def __init__(self, status: int) -> None:
+        self.status = int(status)
+        super().__init__(f"端点没有 OpenAI 兼容的嵌入路线（HTTP {self.status}）")
+
+
+def _native_text_type(role: str) -> str | None:
+    """The native route's side selector for one of our roles.
+
+    ``None`` means "send nothing": the route's *document* side is its **absent**
+    ``text_type``, the same convention the serving line's loader uses, so a
+    document-role call cannot reach the query side even by accident. The arm's
+    role is a required argument all the way down for this reason — a guessed role
+    would put a whole arm on the other side of the route, which reads as another
+    space (measured: query vs document = 0.912 on the candidate gateway).
+    """
+
+    if role == ROLE_QUERY:
+        return ROLE_QUERY
+    if role == ROLE_DOCUMENT:
+        return None
+    raise EmbeddingIdentityUnavailable(f"未知的嵌入角色（{role}）")
+
+
+def _post_native_embeddings(
     base_url: str,
     text: str,
     *,
@@ -223,8 +288,145 @@ def _embed(
     timeout: float,
     role: str,
 ) -> tuple[float, ...]:
-    caller = embedder or _post_embeddings
-    return caller(
+    """One bounded DashScope-native call, through the merged provider client.
+
+    The client owns the native request shape and its answer parsing
+    (``input.texts`` → ``output.embeddings``, placed back by the row index), so
+    this probe keeps no second copy of either. Its failures are normalized the way
+    the serving lane needs them — a timeout stays ``TimeoutError``, and *any*
+    other non-answer, a 4xx/5xx included, becomes ``ConnectionError`` — and both
+    are reported here as 未校验 with the route named: the probe's contract is to
+    measure or to say it could not, never to guess a verdict.
+    """
+
+    from src.data_agents.providers.dashscope_embeddings import (
+        DashScopeTextEmbeddingClient,
+    )
+
+    client = DashScopeTextEmbeddingClient(
+        base_url=base_url,
+        api_key=api_key,
+        timeout=timeout,
+        text_type=_native_text_type(role),
+    )
+    try:
+        rows = client.embed_batch([text], model=model)
+    except TimeoutError as exc:
+        raise EmbeddingIdentityUnavailable(
+            "DashScope 原生路线超时（TimeoutError）"
+        ) from exc
+    except ConnectionError as exc:
+        raise EmbeddingIdentityUnavailable(
+            "DashScope 原生路线没有可用回答（ConnectionError）"
+        ) from exc
+    except (ValueError, KeyError, IndexError, TypeError) as exc:
+        raise EmbeddingIdentityUnavailable(
+            "端点返回体不是 DashScope 原生的嵌入响应"
+        ) from exc
+    vector = tuple(float(value) for value in rows[0]) if rows else ()
+    if not vector or any(not math.isfinite(value) for value in vector):
+        raise EmbeddingIdentityUnavailable("端点返回的向量为空或含非有限值")
+    return vector
+
+
+class _RouteAwareEmbedder:
+    """Speak the shape each address answers, decided once per address.
+
+    The compatible shape is asked first and its own 404/405 is what selects the
+    native one; every other outcome of that first call (200, 401, 500, a timeout)
+    is reported as it is and never retried on the native route — the probe must
+    not turn "the credential was refused" into "the other route may work". The
+    decision is held per address for the rest of the check, so the reference arm's
+    two calls each speak their own endpoint's shape and no address is asked twice
+    for its shape. The shape used for the **endpoint under test** is reported with
+    the verdict, with the evidence that selected it.
+    """
+
+    def __init__(self, *, endpoint_under_test: str) -> None:
+        self._endpoint = endpoint_under_test.rstrip("/")
+        self._providers: dict[str, str] = {}
+        self._evidence: dict[str, str] = {}
+
+    def __call__(
+        self,
+        base_url: str,
+        text: str,
+        *,
+        api_key: str,
+        model: str,
+        timeout: float,
+        role: str,
+    ) -> tuple[float, ...]:
+        address = base_url.rstrip("/")
+        provider = self._providers.get(address)
+        if provider == PROVIDER_DASHSCOPE_NATIVE:
+            return _post_native_embeddings(
+                address,
+                text,
+                api_key=api_key,
+                model=model,
+                timeout=timeout,
+                role=role,
+            )
+        if provider == PROVIDER_OPENAI_COMPATIBLE:
+            return _post_embeddings(
+                address,
+                text,
+                api_key=api_key,
+                model=model,
+                timeout=timeout,
+                role=role,
+            )
+        try:
+            vector = _post_embeddings(
+                address,
+                text,
+                api_key=api_key,
+                model=model,
+                timeout=timeout,
+                role=role,
+            )
+        except _RouteAbsent as absent:
+            self._providers[address] = PROVIDER_DASHSCOPE_NATIVE
+            self._evidence[address] = (
+                f"compatible route absent (HTTP {absent.status}); spoke the native route"
+            )
+            return _post_native_embeddings(
+                address,
+                text,
+                api_key=api_key,
+                model=model,
+                timeout=timeout,
+                role=role,
+            )
+        self._providers[address] = PROVIDER_OPENAI_COMPATIBLE
+        self._evidence[address] = "compatible route answered"
+        return vector
+
+    @property
+    def provider(self) -> str | None:
+        """The shape the endpoint under test answered (None if never called)."""
+
+        return self._providers.get(self._endpoint)
+
+    @property
+    def provider_evidence(self) -> str | None:
+        """What selected that shape, in one line, for the operator's record."""
+
+        return self._evidence.get(self._endpoint)
+
+
+def _embed(
+    embedder: Callable[..., tuple[float, ...]],
+    base_url: str,
+    text: str,
+    *,
+    api_key: str,
+    model: str,
+    timeout: float,
+    role: str,
+) -> tuple[float, ...]:
+    return embedder(
         base_url, text, api_key=api_key, model=model, timeout=timeout, role=role
     )
 
@@ -340,7 +542,7 @@ def _index_arm(
     api_key: str,
     model: str,
     timeout: float,
-    embedder: Callable[..., tuple[float, ...]] | None,
+    embedder: Callable[..., tuple[float, ...]],
     pack_dir: Path | None,
 ) -> EmbeddingIdentityReport:
     lookup_path, matrix_path = _index_assets(pack_dir)
@@ -376,6 +578,7 @@ def _index_arm(
         )
     checks = {
         "point_id": point_id,
+        "role": ROLE_DOCUMENT,
         "dimension": len(vector),
         "sample_rows": sample_rows,
         "sample_max_cosine": round(sample_max, 6),
@@ -427,7 +630,7 @@ def _reference_arm(
     api_key: str,
     model: str,
     timeout: float,
-    embedder: Callable[..., tuple[float, ...]] | None,
+    embedder: Callable[..., tuple[float, ...]],
 ) -> EmbeddingIdentityReport:
     reference = _embed(
         embedder,
@@ -454,6 +657,7 @@ def _reference_arm(
     cosine = _cosine(reference, configured)
     checks = {
         "reference_base_url": recorded_base_url,
+        "role": ROLE_QUERY,
         "dimension": len(configured),
     }
     if cosine < REFERENCE_COSINE_FLOOR:
@@ -495,7 +699,12 @@ def verify_embedding_identity(
     """Which arm can run, and does the configured endpoint pass it?
 
     Never raises: an arm that cannot be measured yields ``passed=None`` with the
-    reason, so a connection test can always report something actionable.
+    reason, so a connection test can always report something actionable. Every
+    report names, in ``checks``, the arm's role, the wire shape the endpoint under
+    test answered and the evidence that selected it.
+
+    ``embedder`` replaces the transport (tests); by default the probe speaks the
+    endpoint's shape through _RouteAwareEmbedder.
     """
 
     if not configured_base_url:
@@ -513,6 +722,9 @@ def verify_embedding_identity(
     except Exception:  # noqa: BLE001 - resolution must not break the test
         recorded = ""
     configured = configured_base_url.rstrip("/")
+    probe: Callable[..., tuple[float, ...]] = embedder or _RouteAwareEmbedder(
+        endpoint_under_test=configured
+    )
     started = time.monotonic()
     reference_error: str | None = None
     if recorded and recorded != configured:
@@ -523,21 +735,21 @@ def verify_embedding_identity(
                 api_key=api_key,
                 model=selected_model,
                 timeout=timeout,
-                embedder=embedder,
+                embedder=probe,
             )
         except EmbeddingIdentityUnavailable as exc:
             reference_error = str(exc)
         except Exception as exc:  # noqa: BLE001 - reported, never raised
             reference_error = f"{type(exc).__name__}"
         else:
-            return _with_latency(report, started)
+            return _with_latency(report, started, embedder=probe)
     try:
         report = _index_arm(
             configured_base_url=configured,
             api_key=api_key,
             model=selected_model,
             timeout=timeout,
-            embedder=embedder,
+            embedder=probe,
             pack_dir=pack_dir,
         )
     except EmbeddingIdentityUnavailable as exc:
@@ -547,28 +759,45 @@ def verify_embedding_identity(
             if reference_error is None
             else f"未校验：记录端点不可用（{reference_error}）且 {reason}"
         )
-        return EmbeddingIdentityReport(
-            arm=None,
-            passed=None,
-            cosine=None,
-            detail=detail,
-            checks={"reference_error": reference_error},
+        return _with_latency(
+            EmbeddingIdentityReport(
+                arm=None,
+                passed=None,
+                cosine=None,
+                detail=detail,
+                checks={"reference_error": reference_error},
+            ),
+            started,
+            embedder=probe,
         )
     except Exception as exc:  # noqa: BLE001 - reported, never raised
-        return EmbeddingIdentityReport(
-            arm=None,
-            passed=None,
-            cosine=None,
-            detail=f"未校验：索引比对失败（{type(exc).__name__}）",
+        return _with_latency(
+            EmbeddingIdentityReport(
+                arm=None,
+                passed=None,
+                cosine=None,
+                detail=f"未校验：索引比对失败（{type(exc).__name__}）",
+            ),
+            started,
+            embedder=probe,
         )
-    return _with_latency(report, started)
+    return _with_latency(report, started, embedder=probe)
 
 
 def _with_latency(
-    report: EmbeddingIdentityReport, started: float
+    report: EmbeddingIdentityReport,
+    started: float,
+    *,
+    embedder: Callable[..., tuple[float, ...]] | None = None,
 ) -> EmbeddingIdentityReport:
+    """Add the measured latency, and — when the endpoint's shape was resolved —
+    the shape and the evidence that selected it, to every verdict of one check."""
+
     checks = dict(report.checks)
     checks["latency_ms"] = int((time.monotonic() - started) * 1000)
+    if isinstance(embedder, _RouteAwareEmbedder) and embedder.provider is not None:
+        checks["provider"] = embedder.provider
+        checks["provider_evidence"] = embedder.provider_evidence
     return EmbeddingIdentityReport(
         arm=report.arm,
         passed=report.passed,
@@ -583,8 +812,12 @@ __all__ = [
     "DEFAULT_TIMEOUT_SECONDS",
     "INDEX_COSINE_FLOOR",
     "INDEX_SAMPLE_STRIDE",
+    "NATIVE_EMBEDDINGS_PATH",
     "PROBE_TEXT",
+    "PROVIDER_DASHSCOPE_NATIVE",
+    "PROVIDER_OPENAI_COMPATIBLE",
     "REFERENCE_COSINE_FLOOR",
+    "ROUTE_ABSENT_STATUSES",
     "EmbeddingIdentityReport",
     "EmbeddingIdentityUnavailable",
     "verify_embedding_identity",

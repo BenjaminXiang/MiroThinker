@@ -229,3 +229,41 @@ def test_llm_credential_projection_follows_the_chat_profile(tmp_path: Path) -> N
 
     assert default_target["API_KEY"] == _FAKE_BOCHA  # gemma4 default profile
     assert deepseek_target["DEEPSEEK_API_KEY"] == _FAKE_BOCHA
+
+
+def test_the_embedding_key_targets_both_authority_slots() -> None:
+    """One page field, the two variables this fleet's embedding lines read.
+
+    ``SGLANG_API_KEY`` is what the recorded (self-hosted) authority reads through
+    ``load_local_api_key()``; ``CANONICAL_V2_EMBEDDING_API_KEY`` is the slot the
+    candidate (gateway) bundle declares as its ``api_key_source``. The page cannot
+    know which line a site runs, and the delivery promise is one key, so the field
+    fills both.
+    """
+
+    spec = next(spec for spec in SECRET_SPECS if spec.field == "embedding.api_key")
+
+    assert spec.env_var_for({}) == "SGLANG_API_KEY"
+    assert spec.mirror_env_vars == ("CANONICAL_V2_EMBEDDING_API_KEY",)
+    assert spec.extra_env_names == ("API_KEY", "OPENAI_API_KEY")
+
+
+def test_projection_fills_the_mirror_slot_under_the_same_rules(tmp_path: Path) -> None:
+    fake_key = "sk-fake-embedding-4444-5555-6e1b"
+    store = _store(tmp_path)
+    store.patch({"embedding.api_key": fake_key})
+
+    target: dict[str, str] = {}
+    receipt = store.apply_to_environ(target)
+
+    assert target["SGLANG_API_KEY"] == fake_key
+    assert target["CANONICAL_V2_EMBEDDING_API_KEY"] == fake_key
+    assert receipt["applied"] == ("SGLANG_API_KEY", "CANONICAL_V2_EMBEDDING_API_KEY")
+    # An environment value wins in either slot, so the service unit stays the
+    # authority; the primary keeps its enumerated position in the receipt.
+    pinned: dict[str, str] = {"CANONICAL_V2_EMBEDDING_API_KEY": "unit-9999"}
+    second = store.apply_to_environ(pinned)
+    assert pinned["SGLANG_API_KEY"] == fake_key
+    assert pinned["CANONICAL_V2_EMBEDDING_API_KEY"] == "unit-9999"
+    assert second["skipped_env"] == ("CANONICAL_V2_EMBEDDING_API_KEY",)
+    assert fake_key not in json.dumps(second)
