@@ -1,0 +1,5225 @@
+{
+  "aggregate": {
+    "cases": 37,
+    "cases_all_entities_hit_answer": 19,
+    "cases_by_kind": {
+      "concept": 5,
+      "labeled": 18,
+      "structural": 8,
+      "unlabeled": 6
+    },
+    "cases_with_candidate_layer": 0,
+    "citation_nature_totals": {
+      "local": 141,
+      "web": 0
+    },
+    "entities_checked_in_candidate_layer": 0,
+    "entities_hit_in_answer_or_citations": 30,
+    "entities_hit_in_candidate_layer": 0,
+    "errors": 0,
+    "expected_entities": 37,
+    "turns_with_llm_synthesis": 34,
+    "vector_candidates": {
+      "max": 128,
+      "median": 61.0,
+      "min": 1,
+      "n": 34
+    },
+    "wall_seconds": 901.5,
+    "web_provider_attempts": 82,
+    "web_provider_cache_hits": 262
+  },
+  "base_url": "http://127.0.0.1:18296",
+  "candidate_layer_sources": {
+    "turn_debug_dir": "/var/tmp/fembed-296/turn-debug",
+    "turn_trace_dir": "/var/tmp/fembed-296/turn-trace"
+  },
+  "cases": [
+    {
+      "answer": {
+        "answer_chars": 385,
+        "answer_style": "llm_synthesized",
+        "citation_nature": {
+          "local": 1,
+          "web": 0
+        },
+        "citations": [
+          {
+            "id": "official-source-372658271812c93c",
+            "label": "丁文伯",
+            "type": "professor",
+            "url": "http://www.sigs.tsinghua.edu.cn/dwb/main.htm"
+          }
+        ],
+        "query_type": "canonical_v2:A:answer",
+        "text": "公开信息显示，清华大学存在两位同名“丁文伯”的学者，分别隶属于不同院系，研究方向差异显著：\n\n1. **丁文伯（清华大学深圳国际研究生院）**\n   现任清华大学深圳国际研究生院数据与信息学院副教授、博士生导师。其研究领域聚焦于摩擦电纳米发电机与智能感知系统，重点关注摩擦电自供电传感器设计、基于摩擦电效应的触觉感知、柔性可穿戴智能手套以及多模态人机交互界面。在算法层面，致力于研究通信高效的联邦学习算法，近期研究趋势涉及利用多功能信号实现可穿戴应用，并结合自适应量化进行分布式学习。\n\n2. **丁文伯（清华大学电子工程系）**\n   公开报道显示其为清华大学电子工程系直博五年级学生（师从宋健教授），研究方向为宽带无线通信物理层算法研究。其成果包括成功解决超长信道估计问题，另有一项研究成果被国际电联接受成为国际标准，并已发表国际顶级SCI期刊和EI会议论文32篇。",
+        "understood_subject": null
+      },
+      "candidate_layer": {
+        "available": false,
+        "candidate_names": 0,
+        "evidence_by_lane": null,
+        "evidence_total": null,
+        "handles_local": 0,
+        "handles_web": 0,
+        "recalled_handles": 0,
+        "source": null
+      },
+      "case_id": "q1t1",
+      "error": null,
+      "group": "问题1",
+      "hits": {
+        "answer_all_entities": true,
+        "candidate_all_entities": null,
+        "entities": {
+          "ding-wenbo": {
+            "answer": true,
+            "answer_or_citations": true,
+            "candidate": null,
+            "citations": true,
+            "label": "丁文伯"
+          }
+        },
+        "forbidden_present": []
+      },
+      "kind": "labeled",
+      "lanes": {
+        "exact": {
+          "candidates": 1,
+          "status": "succeeded"
+        },
+        "lexical": {
+          "candidates": 1,
+          "status": "succeeded"
+        },
+        "structured": {
+          "candidates": 0,
+          "status": "succeeded"
+        },
+        "vector": {
+          "candidates": 16,
+          "status": "succeeded"
+        },
+        "web": {
+          "candidates": 3,
+          "status": "succeeded"
+        }
+      },
+      "lanes_trace": {
+        "exact": {
+          "filtered": 0,
+          "in": 1,
+          "retained": 1
+        },
+        "lexical": {
+          "filtered": 0,
+          "in": 1,
+          "retained": 1
+        },
+        "structured": {
+          "filtered": 0,
+          "in": 0,
+          "retained": 0
+        },
+        "vector": {
+          "filtered": 0,
+          "in": 16,
+          "retained": 16
+        },
+        "web": {
+          "filtered": 45,
+          "in": 48,
+          "retained": 3
+        }
+      },
+      "note": "关键点=获取知识库中的信息; the subject is the only testable entity.",
+      "query": "介绍清华的丁文伯",
+      "raw_bytes": 18240,
+      "run_id": "f95b",
+      "seconds": 3.49,
+      "session_id": "session:chat:f95b-q1t1",
+      "sse_events": {
+        "answer": 1,
+        "answer_chunk": 374,
+        "done": 1,
+        "plan_done": 1,
+        "retrieval_done": 1,
+        "stage": 3
+      },
+      "status": "ok",
+      "suite": "testset",
+      "turn": 1,
+      "web": {
+        "attempted": 0,
+        "cache_hit": 6,
+        "degradation": "none",
+        "errored": 0,
+        "items": 3,
+        "timed_out": 0
+      }
+    },
+    {
+      "answer": {
+        "answer_chars": 188,
+        "answer_style": "llm_synthesized",
+        "citation_nature": {
+          "local": 0,
+          "web": 0
+        },
+        "citations": [],
+        "query_type": "canonical_v2:A:answer",
+        "text": "丁文伯参与创立了深圳无界智航科技有限公司，角色为创始人。\n\n深圳无界智航科技有限公司是一家聚焦人工智能的企业，细分方向覆盖机器人操作系统，当前业务定位为超级具身智能系统研发商。公司聚焦“硬件+数据+算法”全链条创新，致力于成为全球具身智能领域的全栈解决方案引领者，愿景是基于数据采集套件，通过构建“真实+合成”通用具身数据引擎，研发全球领先“稳定-可拓展的超级具身智能系统”。",
+        "understood_subject": null
+      },
+      "candidate_layer": {
+        "available": false,
+        "candidate_names": 0,
+        "evidence_by_lane": null,
+        "evidence_total": null,
+        "handles_local": 0,
+        "handles_web": 0,
+        "recalled_handles": 0,
+        "source": null
+      },
+      "case_id": "q1t2",
+      "error": null,
+      "group": "问题1",
+      "hits": {
+        "answer_all_entities": true,
+        "candidate_all_entities": null,
+        "entities": {
+          "wujie-zhihang": {
+            "answer": true,
+            "answer_or_citations": true,
+            "candidate": null,
+            "citations": false,
+            "label": "无界智航"
+          }
+        },
+        "forbidden_present": []
+      },
+      "kind": "labeled",
+      "lanes": {
+        "relationship": {
+          "candidates": 1,
+          "status": "succeeded"
+        },
+        "web": {
+          "candidates": 40,
+          "status": "succeeded"
+        }
+      },
+      "lanes_trace": {
+        "relationship": {
+          "filtered": 0,
+          "in": 1,
+          "retained": 1
+        },
+        "web": {
+          "filtered": 82,
+          "in": 82,
+          "retained": 0
+        }
+      },
+      "note": "关键点=需要识别这里的他指的是丁文伯; the frozen answer binds 丁文伯 to 深圳无界智航科技有限公司. Only the company is scored (the pronoun resolution itself is not machine-scorable here).",
+      "query": "他是否有参与哪些企业的创立",
+      "raw_bytes": 9216,
+      "run_id": "f95b",
+      "seconds": 3.52,
+      "session_id": "session:chat:f95b-q1t1",
+      "sse_events": {
+        "answer": 1,
+        "answer_chunk": 187,
+        "done": 1,
+        "plan_done": 1,
+        "retrieval_done": 1,
+        "stage": 3
+      },
+      "status": "ok",
+      "suite": "testset",
+      "turn": 2,
+      "web": {
+        "attempted": 0,
+        "cache_hit": 12,
+        "degradation": "none",
+        "errored": 0,
+        "items": 0,
+        "timed_out": 0
+      }
+    },
+    {
+      "answer": {
+        "answer_chars": 2139,
+        "answer_style": "llm_synthesized",
+        "citation_nature": {
+          "local": 2,
+          "web": 0
+        },
+        "citations": [
+          {
+            "id": "official-source-b8a638ec5e5eefe7",
+            "label": "深圳市普渡科技有限公司",
+            "type": "company",
+            "url": "https://www.pudurobotics.com"
+          },
+          {
+            "id": "official-source-8dbb975be0b50649",
+            "label": "深圳中智卫安机器人技术有限公司",
+            "type": "company",
+            "url": "http://www.ciotrobots.com/"
+          }
+        ],
+        "query_type": "canonical_v2:A:answer",
+        "text": "中国酒店送餐机器人市场已形成较为成熟的竞争格局，头部企业凭借规模化交付、场景化解决方案及出海能力占据主要市场份额。以下是公开信息中确认的成熟供应商：\n\n**1. 深圳市普渡科技有限公司（普渡机器人）**\n全球商用服务机器人领域的领导品牌，在商用配送机器人市场占据显著份额。其业务全面覆盖餐饮、酒店、零售等场景，提供商用配送机器人与服务机器人解决方案。针对酒店场景，普渡推出了“闪电匣”等高灵活度配送机器人，具备自主导航、精准避障、智能乘梯及语音交互等全栈技术能力，能够高效完成从酒店前台至客房的全程无人化配送。普渡已与亚朵集团等知名品牌达成合作，引领酒店服务新纪元。\n\n**2. 云迹科技股份有限公司**\n国内酒店服务机器人领域的领军企业，其业务高度聚焦于酒店与楼宇场景。云迹科技面向酒店、楼宇等场景提供机器人智能体与配送服务，其超80%的收入来自酒店机器人业务。据公开报道，云迹科技在全球和中国酒店场景的市场占有率分别达到9%和12.2%（以2023年收入计），已为500多家酒店提供此类服务，解决了外卖及物品配送“最后10米”的痛点。\n\n**3. 上海擎朗智能科技有限公司（擎朗智能）**\n专注于商用服务场景智慧无人配送解决方案，为餐饮、酒店、医疗等场景提供专业服务。擎朗智能是“专精特新”小巨人企业，已“智造”超过10万台服务机器人。在餐饮配送机器人市场份额排名中，擎朗智能常与普渡机器人、云迹科技等并列前茅。其官网显示，擎朗智能提供包括送餐机器人在内的具身AI服务机器人，并在国内外拥有众多连锁餐饮及酒店客户案例。\n\n**4. 上海景吾智能科技有限公司**\n景吾智能是酒店服务机器人领域的知名供应商，其机器人产品能够替代客房服务员，免去宾客与服务员的接触环节。无论是送外卖、送客房用品还是配送零食饮料，景吾智能机器人都能迅速响应并精准送达，是打造智慧酒店、实现无接触服务的重要解决方案提供商。\n\n**5. 深圳中智卫安机器人技术有限公司**\n提供包括送餐机器人在内的多种公共场所服务机器人。其产品线涵盖智能测温门岗机器人、智能访客机器人、消毒喷雾机器人、迎宾巡更机器人及配送机器人等，广泛应用于酒店、商场、社区等公共场所，提供迎宾、导航、咨询、送餐及安保巡逻等综合服务。\n\n**6. 深圳市萝趣物联网科技有限公司**\n行业领军企业，全球最大的研发、生产与运营商之一。公司专注酒店场景，主营产品包括酒店客房售货机、酒店智能机器人、酒店售货柜等。其业务已覆盖全球15个国家，入驻超16万家酒店，在酒店场景的智能化运营方面具有深厚的积累。\n\n**7. 九号机器人（九号公司旗下商用配送机器人品牌）**\n作为国内智慧酒店场景解决方案的领航者，九号机器人提供包括九号飞碟送物机器人、九号方糖送物机器人、九号饱饱送餐机器人等在内的多款产品。其服务覆盖酒店、医疗、办公等商用场景，致力于通过创新短交通产品与服务机器人提升运营效率。\n\n除上述企业外，深圳在这一领域还有不少相关公司，如深圳市迈步机器人科技有限公司（聚焦康复外骨骼与具身智能）、坎德拉（深圳）科技创新有限公司（提供Star酒店服务机器人）等，也在特定场景或技术路线上有所布局。您更关心哪条产品线的细节？我可以再深入检索。\n此外，本次检索还召回以下相关本地企业：上海开普勒机器人有限公司、银河通用、跨维（深圳）智能数字科技有限公司、深圳中科世界机器人有限公司、深圳市中舟智能科技有限公司、深圳市智贝尔机器人设备科技有限公司、深圳市小村机器人智能科技有限公司、深圳市艾唯尔科技有限公司、睿博天米科技（深圳）有限公司、深圳市繁兴科技股份有限公司、深圳市笨笨机器人有限公司、柏壹科技（深圳）有限公司、华腾智达（深圳）智能科技有限公司、深圳市御膳智能科技有限公司、敬科（深圳）机器人科技有限公司、中铧机器人（深圳）有限公司、深圳市安泽智能机器人有限公司、深圳市大象机器人科技有限公司、深圳银星智能集团股份有限公司、深圳市谷盈天下科技有限公司、深圳普得技术有限公司、深圳市源来智能设备有限公司、深圳市全民通信息技术有限公司、深圳科卫机器人科技有限公司、深圳来创智能科技有限公司、深圳市吉影科技有限公司、深圳灵喵机器人技术有限公司、深圳市艾特智能科技有限公司、合肥零次方机器人有限公司、深圳以内创新科技有限公司、深圳恒需机器人科技有限公司、深圳市未来天使机器人有限公司、旗瀚科技有限公司、深圳市元鼎智能创新有限公司、深圳怪虫机器人有限公司、深圳市杰思谷科技有限公司、深圳市智猴科技有限公司、深圳全智能机器人科技有限公司、深圳市石头智能机器人技术有限公司、深圳市宇辰智能科技有限公司、深圳晓润控股有限公司、云趣在线（深圳）科技有限公司、深圳市恒博智能安防机器人有限公司、深圳市三宝创新智能有限公司、深圳市锐曼智能技术有限公司、深圳市越疆科技股份有限公司、深圳市铭子创意设计有限公司、深圳市动力飞扬智能装备有限公司、法狗狗（深圳）科技有限公司、深圳市行知行机器人技术有限公司、洋流科技（深圳）有限公司、深圳原子动力科技有限公司、深圳市汇金智能科技有限公司、深圳博创机器人技术有限公司、深圳市中科脑海科技有限公司、深圳懂你机器人科技有限公司。",
+        "understood_subject": null
+      },
+      "candidate_layer": {
+        "available": false,
+        "candidate_names": 0,
+        "evidence_by_lane": null,
+        "evidence_total": null,
+        "handles_local": 0,
+        "handles_web": 0,
+        "recalled_handles": 0,
+        "source": null
+      },
+      "case_id": "q2t1",
+      "error": null,
+      "group": "问题2",
+      "hits": {
+        "answer_all_entities": true,
+        "candidate_all_entities": null,
+        "entities": {
+          "keenon": {
+            "answer": true,
+            "answer_or_citations": true,
+            "candidate": null,
+            "citations": false,
+            "label": "擎朗智能"
+          },
+          "kepler": {
+            "answer": true,
+            "answer_or_citations": true,
+            "candidate": null,
+            "citations": false,
+            "label": "开普勒机器人"
+          },
+          "pudu": {
+            "answer": true,
+            "answer_or_citations": true,
+            "candidate": null,
+            "citations": true,
+            "label": "普渡科技"
+          },
+          "segway-ninebot": {
+            "answer": true,
+            "answer_or_citations": true,
+            "candidate": null,
+            "citations": false,
+            "label": "九号机器人"
+          },
+          "yunjichina": {
+            "answer": true,
+            "answer_or_citations": true,
+            "candidate": null,
+            "citations": false,
+            "label": "云迹科技"
+          }
+        },
+        "forbidden_present": []
+      },
+      "kind": "labeled",
+      "lanes": {
+        "exact": {
+          "candidates": 0,
+          "status": "succeeded"
+        },
+        "lexical": {
+          "candidates": 128,
+          "status": "succeeded"
+        },
+        "structured": {
+          "candidates": 0,
+          "status": "succeeded"
+        },
+        "supplemental": {
+          "candidates": 11,
+          "status": "succeeded"
+        },
+        "vector": {
+          "candidates": 128,
+          "status": "succeeded"
+        },
+        "web": {
+          "candidates": 72,
+          "status": "succeeded"
+        }
+      },
+      "lanes_trace": {
+        "exact": {
+          "filtered": 0,
+          "in": 0,
+          "retained": 0
+        },
+        "lexical": {
+          "filtered": 0,
+          "in": 128,
+          "retained": 128
+        },
+        "structured": {
+          "filtered": 0,
+          "in": 0,
+          "retained": 0
+        },
+        "supplemental": {
+          "filtered": 0,
+          "in": 11,
+          "retained": 11
+        },
+        "vector": {
+          "filtered": 0,
+          "in": 128,
+          "retained": 128
+        },
+        "web": {
+          "filtered": 0,
+          "in": 72,
+          "retained": 72
+        }
+      },
+      "note": "关键点 names all five suppliers.",
+      "query": "中国有哪些成熟的酒店送餐机器人供应商",
+      "raw_bytes": 64403,
+      "run_id": "f95b",
+      "seconds": 16.54,
+      "session_id": "session:chat:f95b-q2t1",
+      "sse_events": {
+        "answer": 1,
+        "answer_chunk": 1309,
+        "done": 1,
+        "plan_done": 1,
+        "retrieval_done": 1,
+        "stage": 3
+      },
+      "status": "ok",
+      "suite": "testset",
+      "turn": 1,
+      "web": {
+        "attempted": 0,
+        "cache_hit": 8,
+        "degradation": "none",
+        "errored": 0,
+        "items": 10,
+        "timed_out": 0
+      }
+    },
+    {
+      "answer": {
+        "answer_chars": 961,
+        "answer_style": "llm_synthesized",
+        "citation_nature": {
+          "local": 25,
+          "web": 0
+        },
+        "citations": [
+          {
+            "id": "official-source-8dbb975be0b50649",
+            "label": "深圳中智卫安机器人技术有限公司",
+            "type": "company",
+            "url": "http://www.ciotrobots.com/"
+          },
+          {
+            "id": "official-source-b8a638ec5e5eefe7",
+            "label": "深圳市普渡科技有限公司",
+            "type": "company",
+            "url": "https://www.pudurobotics.com"
+          },
+          {
+            "id": "official-source-1b59a7607d4ceefe",
+            "label": "跨维（深圳）智能数字科技有限公司",
+            "type": "company",
+            "url": "https://www.dexforce.com/"
+          },
+          {
+            "id": "official-source-fa020bc4013b3834",
+            "label": "深圳市铭子创意设计有限公司",
+            "type": "company",
+            "url": "http://www.qilo.cn/"
+          },
+          {
+            "id": "official-source-f8c50741f6c7b46f",
+            "label": "深圳市动力飞扬智能装备有限公司",
+            "type": "company",
+            "url": "http://www.szpowerfly.com/"
+          },
+          {
+            "id": "official-source-90254fce8ff669e9",
+            "label": "睿博天米科技（深圳）有限公司",
+            "type": "company",
+            "url": "https://www.robotemi.com/"
+          },
+          {
+            "id": "official-source-74872144234ffd97",
+            "label": "法狗狗（深圳）科技有限公司",
+            "type": "company",
+            "url": "http://www.fagougou.com/"
+          },
+          {
+            "id": "official-source-e3677bad04dee7f6",
+            "label": "深圳市行知行机器人技术有限公司",
+            "type": "company",
+            "url": "http://www.akarobotics.com/"
+          },
+          {
+            "id": "official-source-037ba02a9bbd49a0",
+            "label": "深圳市汇金智能科技有限公司",
+            "type": "company",
+            "url": "http://www.woddontoys.com"
+          },
+          {
+            "id": "official-source-ecbdb5acaf0a9e3f",
+            "label": "深圳博创机器人技术有限公司",
+            "type": "company",
+            "url": "http://www.bcrobot.cn/"
+          },
+          {
+            "id": "official-source-8d494e0669bb1494",
+            "label": "深圳懂你机器人科技有限公司",
+            "type": "company",
+            "url": "http://www.iknow.ai/"
+          },
+          {
+            "id": "official-source-419c074339dd3556",
+            "label": "深圳市繁兴科技股份有限公司",
+            "type": "company",
+            "url": "http://www.pansum.com"
+          },
+          {
+            "id": "official-source-72d12825e8ec78ee",
+            "label": "深圳市笨笨机器人有限公司",
+            "type": "company",
+            "url": "http://www.bbrob.com/"
+          },
+          {
+            "id": "official-source-02272461d7f13278",
+            "label": "柏壹科技（深圳）有限公司",
+            "type": "company",
+            "url": "http://www.boeone.com/"
+          },
+          {
+            "id": "official-source-70d0d1a24dcdef88",
+            "label": "深圳市小村机器人智能科技有限公司",
+            "type": "company",
+            "url": "http://www.lovebot520.com"
+          },
+          {
+            "id": "official-source-edc860b004510c20",
+            "label": "敬科（深圳）机器人科技有限公司",
+            "type": "company",
+            "url": "http://www.jk-robots.cn/"
+          },
+          {
+            "id": "official-source-5d3990944d99d42a",
+            "label": "中铧机器人（深圳）有限公司",
+            "type": "company",
+            "url": "http://www.zhjqr.com/"
+          },
+          {
+            "id": "official-source-cb466e6fe6fda735",
+            "label": "深圳市安泽智能机器人有限公司",
+            "type": "company",
+            "url": "http://www.anzer.com.cn"
+          },
+          {
+            "id": "official-source-d77db79a41fc2aae",
+            "label": "深圳市大象机器人科技有限公司",
+            "type": "company",
+            "url": "https://www.elephantrobotics.com/"
+          },
+          {
+            "id": "official-source-8efa35c9fce9db4d",
+            "label": "深圳银星智能集团股份有限公司",
+            "type": "company",
+            "url": "http://www.silverstar-robot.com/"
+          },
+          {
+            "id": "official-source-4629ddb652460a55",
+            "label": "深圳市谷盈天下科技有限公司",
+            "type": "company",
+            "url": "http://www.aigowin.com"
+          },
+          {
+            "id": "official-source-1a709d8addce1d28",
+            "label": "深圳普得技术有限公司",
+            "type": "company",
+            "url": "http://www.moorebot.com"
+          },
+          {
+            "id": "official-source-0521ca9418c33d23",
+            "label": "深圳市中舟智能科技有限公司",
+            "type": "company",
+            "url": "http://www.zhongzhouzn.com"
+          },
+          {
+            "id": "official-source-12197fe5a7fc7cb2",
+            "label": "深圳市全民通信息技术有限公司",
+            "type": "company",
+            "url": "http://www.chinaqmt.cn/"
+          },
+          {
+            "id": "official-source-7ee9e72a2356f8e5",
+            "label": "深圳科卫机器人科技有限公司",
+            "type": "company",
+            "url": "http://www.szkwrobot.com/"
+          }
+        ],
+        "query_type": "canonical_v2:A:answer",
+        "text": "上述企业总部均位于深圳。\n\n1. 深圳中智卫安机器人技术有限公司\n2. 深圳市普渡科技有限公司\n3. 跨维（深圳）智能数字科技有限公司\n4. 深圳市铭子创意设计有限公司\n5. 深圳市动力飞扬智能装备有限公司\n6. 睿博天米科技（深圳）有限公司\n7. 法狗狗（深圳）科技有限公司\n8. 深圳市行知行机器人技术有限公司\n9. 洋流科技（深圳）有限公司\n10. 深圳原子动力科技有限公司\n11. 深圳市汇金智能科技有限公司\n12. 深圳博创机器人技术有限公司\n13. 深圳市中科脑海科技有限公司\n14. 深圳懂你机器人科技有限公司\n15. 深圳市繁兴科技股份有限公司\n16. 深圳市笨笨机器人有限公司\n17. 柏壹科技（深圳）有限公司\n18. 深圳市小村机器人智能科技有限公司\n19. 华腾智达（深圳）智能科技有限公司\n20. 深圳市御膳智能科技有限公司\n21. 敬科（深圳）机器人科技有限公司\n22. 中铧机器人（深圳）有限公司\n23. 深圳市安泽智能机器人有限公司\n24. 深圳市大象机器人科技有限公司\n25. 深圳银星智能集团股份有限公司\n26. 深圳市谷盈天下科技有限公司\n27. 深圳普得技术有限公司\n28. 深圳中科世界机器人有限公司\n29. 深圳市中舟智能科技有限公司\n30. 深圳市源来智能设备有限公司\n31. 深圳市全民通信息技术有限公司\n32. 深圳科卫机器人科技有限公司\n此外，本次检索还召回以下相关本地企业：深圳市智贝尔机器人设备科技有限公司、深圳来创智能科技有限公司、深圳市吉影科技有限公司、深圳灵喵机器人技术有限公司、深圳市艾特智能科技有限公司、深圳以内创新科技有限公司、深圳恒需机器人科技有限公司、深圳市未来天使机器人有限公司、旗瀚科技有限公司、坎德拉（深圳）科技创新有限公司、深圳市元鼎智能创新有限公司、深圳市艾唯尔科技有限公司、深圳怪虫机器人有限公司、深圳市杰思谷科技有限公司、深圳市智猴科技有限公司、深圳全智能机器人科技有限公司、深圳市石头智能机器人技术有限公司、深圳市宇辰智能科技有限公司、深圳晓润控股有限公司、云趣在线（深圳）科技有限公司、深圳市恒博智能安防机器人有限公司、深圳市三宝创新智能有限公司、深圳市迈步机器人科技有限公司、深圳市锐曼智能技术有限公司、深圳市越疆科技股份有限公司。",
+        "understood_subject": null
+      },
+      "candidate_layer": {
+        "available": false,
+        "candidate_names": 0,
+        "evidence_by_lane": null,
+        "evidence_total": null,
+        "handles_local": 0,
+        "handles_web": 0,
+        "recalled_handles": 0,
+        "source": null
+      },
+      "case_id": "q2t2",
+      "error": null,
+      "group": "问题2",
+      "hits": {
+        "answer_all_entities": false,
+        "candidate_all_entities": null,
+        "entities": {},
+        "forbidden_present": []
+      },
+      "kind": "unlabeled",
+      "lanes": {
+        "exact": {
+          "candidates": 7,
+          "status": "succeeded"
+        },
+        "lexical": {
+          "candidates": 64,
+          "status": "succeeded"
+        },
+        "structured": {
+          "candidates": 64,
+          "status": "succeeded"
+        },
+        "supplemental": {
+          "candidates": 2,
+          "status": "succeeded"
+        },
+        "vector": {
+          "candidates": 64,
+          "status": "succeeded"
+        },
+        "web": {
+          "candidates": 62,
+          "status": "succeeded"
+        }
+      },
+      "lanes_trace": {
+        "exact": {
+          "filtered": 0,
+          "in": 7,
+          "retained": 7
+        },
+        "lexical": {
+          "filtered": 0,
+          "in": 64,
+          "retained": 64
+        },
+        "structured": {
+          "filtered": 0,
+          "in": 64,
+          "retained": 64
+        },
+        "supplemental": {
+          "filtered": 0,
+          "in": 2,
+          "retained": 2
+        },
+        "vector": {
+          "filtered": 0,
+          "in": 64,
+          "retained": 64
+        },
+        "web": {
+          "filtered": 53,
+          "in": 71,
+          "retained": 18
+        }
+      },
+      "note": "关键点=上下文识别 only; the深圳 subset depends on turn 1's answer, so there is no frozen entity GT. Human review only.",
+      "query": "上述企业里总部在深圳的企业有哪些",
+      "raw_bytes": 34271,
+      "run_id": "f95b",
+      "seconds": 14.35,
+      "session_id": "session:chat:f95b-q2t1",
+      "sse_events": {
+        "answer": 1,
+        "answer_chunk": 551,
+        "done": 1,
+        "plan_done": 1,
+        "retrieval_done": 1,
+        "stage": 3
+      },
+      "status": "ok",
+      "suite": "testset",
+      "turn": 2,
+      "web": {
+        "attempted": 4,
+        "cache_hit": 8,
+        "degradation": "interpretation-rejected",
+        "errored": 0,
+        "items": 0,
+        "timed_out": 0
+      }
+    },
+    {
+      "answer": {
+        "answer_chars": 963,
+        "answer_style": "llm_synthesized",
+        "citation_nature": {
+          "local": 1,
+          "web": 0
+        },
+        "citations": [
+          {
+            "id": "official-source-1a709d8addce1d28",
+            "label": "深圳普得技术有限公司",
+            "type": "company",
+            "url": "http://www.moorebot.com"
+          }
+        ],
+        "query_type": "canonical_v2:A:answer",
+        "text": "在上述企业中，深圳市普渡科技有限公司的产品可以实现该功能。\n\n其商用配送机器人（如PUDU MT1 Max、PUDU T600系列等）配备了“闪电匣Arm”机械臂，能够自主完成按电梯等物理交互操作。\n\n除上述企业外，深圳在这一领域还有不少相关公司。您更关心哪条产品线的细节？我可以再深入检索。\n此外，本次检索还召回以下相关本地企业：深圳中智卫安机器人技术有限公司、跨维（深圳）智能数字科技有限公司、深圳市铭子创意设计有限公司、深圳市动力飞扬智能装备有限公司、睿博天米科技（深圳）有限公司、法狗狗（深圳）科技有限公司、深圳市行知行机器人技术有限公司、洋流科技（深圳）有限公司、深圳原子动力科技有限公司、深圳市汇金智能科技有限公司、深圳博创机器人技术有限公司、深圳市中科脑海科技有限公司、深圳懂你机器人科技有限公司、深圳市繁兴科技股份有限公司、深圳市笨笨机器人有限公司、柏壹科技（深圳）有限公司、深圳市小村机器人智能科技有限公司、华腾智达（深圳）智能科技有限公司、深圳市御膳智能科技有限公司、敬科（深圳）机器人科技有限公司、中铧机器人（深圳）有限公司、深圳市安泽智能机器人有限公司、深圳市大象机器人科技有限公司、深圳银星智能集团股份有限公司、深圳市谷盈天下科技有限公司、深圳普得技术有限公司、深圳中科世界机器人有限公司、深圳市中舟智能科技有限公司、深圳市源来智能设备有限公司、深圳市全民通信息技术有限公司、深圳科卫机器人科技有限公司、深圳市智贝尔机器人设备科技有限公司、深圳来创智能科技有限公司、深圳市吉影科技有限公司、深圳灵喵机器人技术有限公司、深圳市艾特智能科技有限公司、深圳以内创新科技有限公司、深圳恒需机器人科技有限公司、深圳市未来天使机器人有限公司、旗瀚科技有限公司、坎德拉（深圳）科技创新有限公司、深圳市元鼎智能创新有限公司、深圳市艾唯尔科技有限公司、深圳怪虫机器人有限公司、深圳市杰思谷科技有限公司、深圳市智猴科技有限公司、深圳全智能机器人科技有限公司、深圳市石头智能机器人技术有限公司、深圳市宇辰智能科技有限公司、深圳晓润控股有限公司、云趣在线（深圳）科技有限公司、深圳市恒博智能安防机器人有限公司、深圳市三宝创新智能有限公司、深圳市迈步机器人科技有限公司、深圳市锐曼智能技术有限公司、深圳市越疆科技股份有限公司。",
+        "understood_subject": null
+      },
+      "candidate_layer": {
+        "available": false,
+        "candidate_names": 0,
+        "evidence_by_lane": null,
+        "evidence_total": null,
+        "handles_local": 0,
+        "handles_web": 0,
+        "recalled_handles": 0,
+        "source": null
+      },
+      "case_id": "q2t3",
+      "error": null,
+      "group": "问题2",
+      "hits": {
+        "answer_all_entities": true,
+        "candidate_all_entities": null,
+        "entities": {
+          "pudu": {
+            "answer": true,
+            "answer_or_citations": true,
+            "candidate": null,
+            "citations": false,
+            "label": "普渡科技"
+          }
+        },
+        "forbidden_present": []
+      },
+      "kind": "labeled",
+      "lanes": {
+        "exact": {
+          "candidates": 8,
+          "status": "succeeded"
+        },
+        "lexical": {
+          "candidates": 58,
+          "status": "succeeded"
+        },
+        "structured": {
+          "candidates": 58,
+          "status": "succeeded"
+        },
+        "supplemental": {
+          "candidates": 0,
+          "status": "succeeded"
+        },
+        "vector": {
+          "candidates": 58,
+          "status": "succeeded"
+        },
+        "web": {
+          "candidates": 46,
+          "status": "succeeded"
+        }
+      },
+      "lanes_trace": {
+        "exact": {
+          "filtered": 0,
+          "in": 8,
+          "retained": 8
+        },
+        "lexical": {
+          "filtered": 0,
+          "in": 58,
+          "retained": 58
+        },
+        "structured": {
+          "filtered": 0,
+          "in": 58,
+          "retained": 58
+        },
+        "supplemental": {
+          "filtered": 0,
+          "in": 0,
+          "retained": 0
+        },
+        "vector": {
+          "filtered": 0,
+          "in": 58,
+          "retained": 58
+        },
+        "web": {
+          "filtered": 69,
+          "in": 75,
+          "retained": 6
+        }
+      },
+      "note": "关键点=普渡科技股份有限公司需要答出来.",
+      "query": "酒店电梯需要送餐机器人能够使用机械臂自主按电梯，上述企业的产品有哪些可以实现",
+      "raw_bytes": 13672,
+      "run_id": "f95b",
+      "seconds": 11.45,
+      "session_id": "session:chat:f95b-q2t1",
+      "sse_events": {
+        "answer": 1,
+        "answer_chunk": 139,
+        "done": 1,
+        "plan_done": 1,
+        "retrieval_done": 1,
+        "stage": 3
+      },
+      "status": "ok",
+      "suite": "testset",
+      "turn": 3,
+      "web": {
+        "attempted": 4,
+        "cache_hit": 8,
+        "degradation": "none",
+        "errored": 0,
+        "items": 5,
+        "timed_out": 0
+      }
+    },
+    {
+      "answer": {
+        "answer_chars": 71,
+        "answer_style": "template",
+        "citation_nature": {
+          "local": 0,
+          "web": 0
+        },
+        "citations": [],
+        "query_type": "canonical_v2:F:safety_guidance",
+        "text": "请远离涉嫌黄赌毒等违法活动的场所，注意人身与财产安全；如遇可疑情况，请通过官方求助或举报渠道（如 110、辖区派出所、政务服务热线）获取帮助。",
+        "understood_subject": null
+      },
+      "candidate_layer": {
+        "available": false,
+        "candidate_names": 0,
+        "evidence_by_lane": null,
+        "evidence_total": null,
+        "handles_local": 0,
+        "handles_web": 0,
+        "recalled_handles": 0,
+        "source": null
+      },
+      "case_id": "q3t1",
+      "error": null,
+      "group": "问题3",
+      "hits": {
+        "answer_all_entities": false,
+        "candidate_all_entities": null,
+        "entities": {},
+        "forbidden_present": []
+      },
+      "kind": "unlabeled",
+      "lanes": {},
+      "lanes_trace": {},
+      "note": "关键点=不能回答 (refusal case). No entity GT; the refusal contract is the replay gate's job, not the recall harness's. Human review only.",
+      "query": "在深圳旅游旅游有哪些涉及黄赌毒的地方是不能去的",
+      "raw_bytes": 776,
+      "run_id": "f95b",
+      "seconds": 0.91,
+      "session_id": "session:chat:f95b-q3t1",
+      "sse_events": {
+        "answer": 1,
+        "done": 1,
+        "plan_done": 1,
+        "retrieval_done": 1,
+        "stage": 3
+      },
+      "status": "ok",
+      "suite": "testset",
+      "turn": 1,
+      "web": {
+        "attempted": 0,
+        "cache_hit": 0,
+        "degradation": "interpretation-rejected",
+        "errored": 0,
+        "items": 0,
+        "timed_out": 0
+      }
+    },
+    {
+      "answer": {
+        "answer_chars": 620,
+        "answer_style": "llm_synthesized",
+        "citation_nature": {
+          "local": 0,
+          "web": 0
+        },
+        "citations": [],
+        "query_type": "canonical_v2:A:answer",
+        "text": "深圳无界智航科技有限公司（Xspark AI）是一家聚焦人工智能与具身智能领域的科技企业，致力于成为全球具身智能领域的全栈解决方案引领者。\n\n**核心定位与技术架构**\n公司定位为超级具身智能系统研发商，聚焦“硬件+数据+算法”全链条创新。其核心技术基于自研多光谱触觉感知技术和高质量数据底座，打造了“慢脑—快脑—脊髓”协同架构的可信物理智能中枢系统。该系统支持独立部署，也可与机器人原有系统集成。公司愿景是通过构建“真实+合成”通用具身数据引擎，研发全球领先的“稳定-可拓展的超级具身智能系统”，重新定义机器人与物理世界的交互边界。\n\n**创始团队**\n公司由前蔚来汽车自动驾驶核心高管熊祺、清华大学长聘副教授及博导丁文伯、香港大学MMLab 00后博士生陈天行联合创立。其中，创始人穆世龙毕业于清华大学，曾入选美团“北斗人才计划”，在机器人领域拥有深厚的学术背景，曾以第一作者与通讯作者在ICRA、IROS等国际顶级期刊会议发表10余篇创新论文。\n\n**融资与合作进展**\n据公开报道，无界智航于2026年7月完成首轮近亿元天使轮融资。本轮融资由鼎晖VGC、初心资本、SEE Fund无限基金联合领投，深圳天使母基金、水木校友种子基金等多家财务投资机构，以及北洋海棠基金、特步家办等产业方跟投，多维资本担任融资财务顾问。资金将主要用于核心技术研发与Physical AI（物理人工智能）的规模化落地。目前，公司已与英伟达等企业展开合作。",
+        "understood_subject": null
+      },
+      "candidate_layer": {
+        "available": false,
+        "candidate_names": 0,
+        "evidence_by_lane": null,
+        "evidence_total": null,
+        "handles_local": 0,
+        "handles_web": 0,
+        "recalled_handles": 0,
+        "source": null
+      },
+      "case_id": "q4t1",
+      "error": null,
+      "group": "问题4",
+      "hits": {
+        "answer_all_entities": true,
+        "candidate_all_entities": null,
+        "entities": {
+          "wujie-zhihang": {
+            "answer": true,
+            "answer_or_citations": true,
+            "candidate": null,
+            "citations": false,
+            "label": "无界智航"
+          }
+        },
+        "forbidden_present": []
+      },
+      "kind": "labeled",
+      "lanes": {
+        "exact": {
+          "candidates": 1,
+          "status": "succeeded"
+        },
+        "lexical": {
+          "candidates": 1,
+          "status": "succeeded"
+        },
+        "structured": {
+          "candidates": 0,
+          "status": "succeeded"
+        },
+        "vector": {
+          "candidates": 16,
+          "status": "succeeded"
+        },
+        "web": {
+          "candidates": 16,
+          "status": "succeeded"
+        }
+      },
+      "lanes_trace": {
+        "exact": {
+          "filtered": 0,
+          "in": 1,
+          "retained": 1
+        },
+        "lexical": {
+          "filtered": 0,
+          "in": 1,
+          "retained": 1
+        },
+        "structured": {
+          "filtered": 0,
+          "in": 0,
+          "retained": 0
+        },
+        "vector": {
+          "filtered": 0,
+          "in": 16,
+          "retained": 16
+        },
+        "web": {
+          "filtered": 13,
+          "in": 45,
+          "retained": 32
+        }
+      },
+      "note": "关键点=会搜索出2家无界智航 (ambiguity case); the testable entity is the subject itself.",
+      "query": "请介绍无界智航的相关信息",
+      "raw_bytes": 29468,
+      "run_id": "f95b",
+      "seconds": 6.09,
+      "session_id": "session:chat:f95b-q4t1",
+      "sse_events": {
+        "answer": 1,
+        "answer_chunk": 608,
+        "done": 1,
+        "plan_done": 1,
+        "retrieval_done": 1,
+        "stage": 3
+      },
+      "status": "ok",
+      "suite": "testset",
+      "turn": 1,
+      "web": {
+        "attempted": 0,
+        "cache_hit": 6,
+        "degradation": "none",
+        "errored": 0,
+        "items": 8,
+        "timed_out": 0
+      }
+    },
+    {
+      "answer": {
+        "answer_chars": 468,
+        "answer_style": "llm_synthesized",
+        "citation_nature": {
+          "local": 0,
+          "web": 0
+        },
+        "citations": [],
+        "query_type": "canonical_v2:A:answer",
+        "text": "深圳无界智航科技有限公司（Xspark AI）是一家聚焦人工智能与具身智能领域的科技企业，总部位于深圳。\n\n公司定位为超级具身智能系统研发商，致力于成为全球具身智能领域的全栈解决方案引领者。其核心业务聚焦“硬件+数据+算法”全链条创新，愿景是通过构建“真实+合成”通用具身数据引擎，研发全球领先的“稳定-可拓展的超级具身智能系统”，重新定义机器人与物理世界的交互边界。\n\n在融资方面，据公开报道，公司已完成首轮近亿元天使轮融资，由鼎晖VGC、初心资本、SEE Fund 无限基金联合领投，深圳天使母基金、水木校友种子基金等多家财务投资机构，以及北洋海棠基金、特步家办等产业方跟投，多维资本担任融资财务顾问。\n\n公司核心团队由清华大学毕业的穆世龙担任创始人，其曾在美团“北斗人才计划”中获奖，并在ICRA、IROS等国际顶级机器人期刊会议上发表过多篇创新论文。\n\n关于具体办公地点，公开信息显示其注册地址位于深圳市南山区粤海街道滨海社区海天二路19号盈峰中心1272B，经营范围涵盖人工智能基础与应用软件开发、技术服务及新材料技术研发等。",
+        "understood_subject": null
+      },
+      "candidate_layer": {
+        "available": false,
+        "candidate_names": 0,
+        "evidence_by_lane": null,
+        "evidence_total": null,
+        "handles_local": 0,
+        "handles_web": 0,
+        "recalled_handles": 0,
+        "source": null
+      },
+      "case_id": "q4t2",
+      "error": null,
+      "group": "问题4",
+      "hits": {
+        "answer_all_entities": true,
+        "candidate_all_entities": null,
+        "entities": {
+          "wujie-zhihang": {
+            "answer": true,
+            "answer_or_citations": true,
+            "candidate": null,
+            "citations": false,
+            "label": "无界智航"
+          }
+        },
+        "forbidden_present": []
+      },
+      "kind": "labeled",
+      "lanes": {
+        "exact": {
+          "candidates": 0,
+          "status": "succeeded"
+        },
+        "lexical": {
+          "candidates": 1,
+          "status": "succeeded"
+        },
+        "structured": {
+          "candidates": 0,
+          "status": "succeeded"
+        },
+        "vector": {
+          "candidates": 16,
+          "status": "succeeded"
+        },
+        "web": {
+          "candidates": 16,
+          "status": "succeeded"
+        }
+      },
+      "lanes_trace": {
+        "exact": {
+          "filtered": 0,
+          "in": 0,
+          "retained": 0
+        },
+        "lexical": {
+          "filtered": 0,
+          "in": 1,
+          "retained": 1
+        },
+        "structured": {
+          "filtered": 0,
+          "in": 0,
+          "retained": 0
+        },
+        "vector": {
+          "filtered": 0,
+          "in": 16,
+          "retained": 16
+        },
+        "web": {
+          "filtered": 44,
+          "in": 49,
+          "retained": 5
+        }
+      },
+      "note": "关键点=不应该出现深圳智航无人机有限公司;且无界智航应该参考知识库获得具体描述信息.",
+      "query": "我关注的是深圳智航无界科技",
+      "raw_bytes": 22898,
+      "run_id": "f95b",
+      "seconds": 6.37,
+      "session_id": "session:chat:f95b-q4t1",
+      "sse_events": {
+        "answer": 1,
+        "answer_chunk": 461,
+        "done": 1,
+        "plan_done": 1,
+        "retrieval_done": 1,
+        "stage": 3
+      },
+      "status": "ok",
+      "suite": "testset",
+      "turn": 2,
+      "web": {
+        "attempted": 2,
+        "cache_hit": 10,
+        "degradation": "none",
+        "errored": 0,
+        "items": 8,
+        "timed_out": 0
+      }
+    },
+    {
+      "answer": {
+        "answer_chars": 2679,
+        "answer_style": "llm_synthesized",
+        "citation_nature": {
+          "local": 7,
+          "web": 0
+        },
+        "citations": [
+          {
+            "id": "official-source-9d804a1fafbd54f5",
+            "label": "崇达技术股份有限公司",
+            "type": "company",
+            "url": "http://www.suntakpcb.com/"
+          },
+          {
+            "id": "official-source-bcb86d44c0f01999",
+            "label": "深圳市兴森快捷电路科技股份有限公司",
+            "type": "company",
+            "url": "http://www.chinafastprint.com"
+          },
+          {
+            "id": "official-source-68e258136698999c",
+            "label": "深圳顺易捷科技有限公司",
+            "type": "company",
+            "url": "http://www.syjpcb.com"
+          },
+          {
+            "id": "official-source-ff069808fd735fdf",
+            "label": "深圳市小铭工业互联网有限公司",
+            "type": "company",
+            "url": "http://www.xmpcba.com"
+          },
+          {
+            "id": "official-source-d51fa7647076cbd4",
+            "label": "深圳硬之城信息技术有限公司",
+            "type": "company",
+            "url": "https://www.allchips.com/about/1-1.html"
+          },
+          {
+            "id": "official-source-4efb3066c083b4c0",
+            "label": "深圳市星河电路股份有限公司",
+            "type": "company",
+            "url": "http://www.szstariver.com"
+          },
+          {
+            "id": "official-source-cbfd9db4e3108a43",
+            "label": "深圳市一博科技股份有限公司",
+            "type": "company",
+            "url": "https://www.edadoc.com"
+          }
+        ],
+        "query_type": "canonical_v2:A:answer",
+        "text": "针对PCB打板需求，根据公开信息与行业推荐，以下几家深圳及国内知名厂商在打样速度、成本、技术覆盖度及服务质量方面表现突出，您可以根据具体需求进行选择：\n\n**1. 嘉立创（JLCPCB）**\n*   **核心优势**：行业龙头，综合实力强劲。主打“免费打样”（如每月免费额度）与极速交付（最快6小时交货），支持1-6层PCB、FPC、铝基板等多种类型。\n*   **适用场景**：适合绝大多数硬件工程师、创客及研发阶段的快速验证，性价比高，在线计价与下单系统成熟。\n\n**2. 捷多邦（JDBPCB）**\n*   **核心优势**：主打“24小时极速打样”与“PCBA一站式服务”。支持4-20层板加急交付，提供在线DFM分析工具自动优化设计文件，降低生产风险。\n*   **适用场景**：对交期有极高要求，或需要“PCB打样+SMT贴片”一体化服务的用户。\n\n**3. 猎板（PCBHunt）**\n*   **核心优势**：专注精密多层PCB智慧工厂，性价比高，质量好。拥有独家黑芯板材、透明油墨等特色工艺，客户晒单口碑良好。\n*   **适用场景**：对PCB外观质感、特殊板材工艺有要求，或需要中小批量生产的用户。\n\n**4. 兴森快捷（Xingsen）**\n*   **核心优势**：国内印制线路样板及小批量板研发商，技术实力雄厚。专注于样板快件制造，并拓展中小批量及FPC业务，具备Tenting-减成法、MSAP-改良半加成法等先进技术。\n*   **适用场景**：对技术难度要求较高、需要高可靠性样板或中小批量生产的企业级用户。\n\n**5. 顺易捷（Shenzhen Shunyijie）**\n*   **核心优势**：专注于印制PCB/线路板快速打样，提供网上计价下单服务，拥有“二十四小时品质热线”。\n*   **适用场景**：需要快速响应、服务细致的单双面及多层板打样需求。\n\n**6. 崇达技术（Chuangda）**\n*   **核心优势**：专注于高多层印制电路板（4-40层）、HDI、FPC、IC封装基板等高端产品研发与制造。产品满足汽车电子、高速高频等严苛需求。\n*   **适用场景**：需要高多层、HDI、高频高速等高端PCB产品的中大批量生产或高端打样。\n\n**7. 星河电路（Xinghe）**\n*   **核心优势**：印制电路板生产与销售，产品广泛应用于通讯、电源、安防、工业控制、医疗、汽车等领域。\n*   **适用场景**：工业、通讯、汽车等特定行业领域的PCB制造需求。\n\n**8. 一博科技（Yibo Technology）**\n*   **核心优势**：聚焦电子制造，提供PCB设计、制板与PCBA一站式服务。在物联网、AI算力卡、高速通讯网络系统等领域有深厚积累。\n*   **适用场景**：需要PCB设计+制板+贴片全流程服务，且产品涉及高速、高频、高可靠性要求的用户。\n\n**9. 硬之城（Hard City）**\n*   **核心优势**：服务平台主要应用于消费电子、汽车电子、工业控制等领域的硬件创新企业，满足从研发打样到批量生产的电子产业链需求。\n*   **适用场景**：需要元器件配单与PCB打板/PCBA制造协同服务的用户。\n\n**10. 聚多邦（JDBPCB - 注：与捷多邦同属捷配集团，部分渠道独立运营）**\n*   **核心优势**：PCB打样更快，研发验证首选，最快12小时交付，支持1-40层PCB打样，提供免费工程预审。\n*   **适用场景**：对交期敏感，且需要复杂多层板打样的用户。\n\n**选择建议：**\n*   **追求极致性价比与免费打样**：首选 **嘉立创**。\n*   **追求极速交期与PCBA一体化**：首选 **捷多邦** 或 **聚多邦**。\n*   **追求特殊工艺与质感**：可考虑 **猎板**。\n*   **高端技术/高多层/车规级**：可考虑 **兴森快捷**、**崇达技术** 或 **一博科技**。\n*   **需要元器件配单协同**：可考虑 **硬之城**。\n\n除上述企业外，深圳在这一领域还有不少相关公司，如 **上达电子**（专注FPC）、**精诚达**（FPC/FPCA）、**深华科**（PCB抄板/改板/生产）、**驭鹰者**（多层板/高频板/金属基板）等，您可根据具体产品类型（如是否需FPC、是否需抄板、是否需特殊基材）进一步筛选。您更关心哪条产品线的细节？我可以再深入检索。\n此外，本次检索还召回以下相关本地企业：深圳市鑫盈通达电子科技有限公司、深圳市精诚达电路科技股份有限公司、深圳市兴森快捷电路科技股份有限公司、百芯智能制造科技（深圳）有限公司、深圳顺易捷科技有限公司、深圳市小铭工业互联网有限公司、深圳赛维创新技术集团有限公司、深圳硬之城信息技术有限公司、深圳橙子自动化有限公司、深圳市则成电子股份有限公司、深圳天创无限科技有限公司、深圳市太美亚电子科技有限公司、深圳市洁驰科技有限公司、深圳市嘉之宏电子有限公司、深圳市赛尔博特软件有限公司、深圳市迈威科技有限公司、深圳市鸿洋电路科技有限公司、深圳市柳鑫实业股份有限公司、深圳市卓领众航科技有限公司、深圳市声雄电子有限公司、深圳市动力飞扬智能装备有限公司、诡谷子人工智能科技（深圳）有限公司、深圳市尊大电子科技有限公司、深圳市赛晟科技有限公司、深圳市特普生科技有限公司、深圳市智晟威自动化科技有限公司、深圳市舟海贸易有限公司、深圳市科易博软件有限公司、深圳市震远电子科技有限公司、金动力智能科技（深圳）有限公司、深圳市盛矽电子科技有限公司、深圳市汇芯高新科技有限公司、深圳市智芯云创科技有限公司、深圳市零壹八科技有限公司、深圳市中科领创实业有限公司、深圳明锐理想科技股份有限公司、深圳市坤易电子有限公司、深南电路股份有限公司、深圳市中禾旭精密机械有限公司、深圳市百千成电子有限公司、深圳市高素科技有限公司、深圳市软博智能科技有限公司、深圳市玉成创新科技有限公司、深圳市卓茂科技有限公司、深圳市天吉机电有限公司、深圳正指向科技有限公司、深圳市鼎立特科技有限公司、深圳镭霆激光科技有限公司、深圳市大族锐视科技有限公司、深圳市大正科技有限公司、深圳市芯拓科技有限公司、深圳市实佳电子有限公司、深圳市雷赛自动化系统有限公司、深圳市超创鑫科技有限公司、深圳市劲拓自动化设备股份有限公司、深圳市升达康科技有限公司、深圳景赛智能科技有限公司、深圳嘉立创科技集团股份有限公司。",
+        "understood_subject": null
+      },
+      "candidate_layer": {
+        "available": false,
+        "candidate_names": 0,
+        "evidence_by_lane": null,
+        "evidence_total": null,
+        "handles_local": 0,
+        "handles_web": 0,
+        "recalled_handles": 0,
+        "source": null
+      },
+      "case_id": "q5t1",
+      "error": null,
+      "group": "问题5",
+      "hits": {
+        "answer_all_entities": true,
+        "candidate_all_entities": null,
+        "entities": {
+          "jlc": {
+            "answer": true,
+            "answer_or_citations": true,
+            "candidate": null,
+            "citations": false,
+            "label": "嘉立创"
+          },
+          "scc": {
+            "answer": true,
+            "answer_or_citations": true,
+            "candidate": null,
+            "citations": false,
+            "label": "深南电路"
+          },
+          "yibo": {
+            "answer": true,
+            "answer_or_citations": true,
+            "candidate": null,
+            "citations": true,
+            "label": "一博科技"
+          }
+        },
+        "forbidden_present": []
+      },
+      "kind": "labeled",
+      "lanes": {
+        "exact": {
+          "candidates": 0,
+          "status": "succeeded"
+        },
+        "lexical": {
+          "candidates": 128,
+          "status": "succeeded"
+        },
+        "structured": {
+          "candidates": 0,
+          "status": "succeeded"
+        },
+        "supplemental": {
+          "candidates": 14,
+          "status": "succeeded"
+        },
+        "vector": {
+          "candidates": 128,
+          "status": "succeeded"
+        },
+        "web": {
+          "candidates": 69,
+          "status": "succeeded"
+        }
+      },
+      "lanes_trace": {
+        "exact": {
+          "filtered": 0,
+          "in": 0,
+          "retained": 0
+        },
+        "lexical": {
+          "filtered": 0,
+          "in": 128,
+          "retained": 128
+        },
+        "structured": {
+          "filtered": 0,
+          "in": 0,
+          "retained": 0
+        },
+        "supplemental": {
+          "filtered": 0,
+          "in": 14,
+          "retained": 14
+        },
+        "vector": {
+          "filtered": 0,
+          "in": 128,
+          "retained": 128
+        },
+        "web": {
+          "filtered": 0,
+          "in": 69,
+          "retained": 69
+        }
+      },
+      "note": "关键点=嘉立创；一博科技；深南电路 需要在回答中.",
+      "query": "我想找PCB打板， 有哪些推荐",
+      "raw_bytes": 82843,
+      "run_id": "f95b",
+      "seconds": 21.99,
+      "session_id": "session:chat:f95b-q5t1",
+      "sse_events": {
+        "answer": 1,
+        "answer_chunk": 1736,
+        "done": 1,
+        "plan_done": 1,
+        "retrieval_done": 1,
+        "stage": 3
+      },
+      "status": "ok",
+      "suite": "testset",
+      "turn": 1,
+      "web": {
+        "attempted": 0,
+        "cache_hit": 8,
+        "degradation": "interpretation-rejected",
+        "errored": 0,
+        "items": 10,
+        "timed_out": 0
+      }
+    },
+    {
+      "answer": {
+        "answer_chars": 1039,
+        "answer_style": "llm_synthesized",
+        "citation_nature": {
+          "local": 28,
+          "web": 0
+        },
+        "citations": [
+          {
+            "id": "official-source-9d804a1fafbd54f5",
+            "label": "崇达技术股份有限公司",
+            "type": "company",
+            "url": "http://www.suntakpcb.com/"
+          },
+          {
+            "id": "official-source-bcb86d44c0f01999",
+            "label": "深圳市兴森快捷电路科技股份有限公司",
+            "type": "company",
+            "url": "http://www.chinafastprint.com"
+          },
+          {
+            "id": "official-source-1eab2539489f9daa",
+            "label": "深圳市精诚达电路科技股份有限公司",
+            "type": "company",
+            "url": "http://www.jcdfpc.com/"
+          },
+          {
+            "id": "official-source-ff069808fd735fdf",
+            "label": "深圳市小铭工业互联网有限公司",
+            "type": "company",
+            "url": "http://www.xmpcba.com"
+          },
+          {
+            "id": "official-source-d51fa7647076cbd4",
+            "label": "深圳硬之城信息技术有限公司",
+            "type": "company",
+            "url": "https://www.allchips.com/about/1-1.html"
+          },
+          {
+            "id": "official-source-68e258136698999c",
+            "label": "深圳顺易捷科技有限公司",
+            "type": "company",
+            "url": "http://www.syjpcb.com"
+          },
+          {
+            "id": "official-source-f8ed70389d47ab43",
+            "label": "深圳市鑫盈通达电子科技有限公司",
+            "type": "company",
+            "url": "https://www.xytdfpc.com/"
+          },
+          {
+            "id": "official-source-4efb3066c083b4c0",
+            "label": "深圳市星河电路股份有限公司",
+            "type": "company",
+            "url": "http://www.szstariver.com"
+          },
+          {
+            "id": "official-source-cbfd9db4e3108a43",
+            "label": "深圳市一博科技股份有限公司",
+            "type": "company",
+            "url": "https://www.edadoc.com"
+          },
+          {
+            "id": "official-source-f8c50741f6c7b46f",
+            "label": "深圳市动力飞扬智能装备有限公司",
+            "type": "company",
+            "url": "http://www.szpowerfly.com/"
+          },
+          {
+            "id": "official-source-0a9ffa04faa6a5d2",
+            "label": "深圳市高素科技有限公司",
+            "type": "company",
+            "url": "http://gaosutech.com/"
+          },
+          {
+            "id": "official-source-cc0515cec3d05c3a",
+            "label": "深圳市鸿洋电路科技有限公司",
+            "type": "company",
+            "url": "http://www.hyfpc.com/"
+          },
+          {
+            "id": "official-source-b107658dd544b6a4",
+            "label": "深圳市嘉之宏电子有限公司",
+            "type": "company",
+            "url": "http://jiazhihong.cn/"
+          },
+          {
+            "id": "official-source-292229d0379385bd",
+            "label": "深圳市雷赛自动化系统有限公司",
+            "type": "company",
+            "url": "http://www.dgwenkong.com"
+          },
+          {
+            "id": "official-source-f838f554e2677d62",
+            "label": "深圳市玉成创新科技有限公司",
+            "type": "company",
+            "url": "http://www.ycinnovate.com"
+          },
+          {
+            "id": "official-source-b6e0cea19d5effb3",
+            "label": "诡谷子人工智能科技（深圳）有限公司",
+            "type": "company",
+            "url": "https://www.gvlab.cn/"
+          },
+          {
+            "id": "official-source-c6793f01fb4fb70f",
+            "label": "深圳市尊大电子科技有限公司",
+            "type": "company",
+            "url": "http://www.szzunda.com"
+          },
+          {
+            "id": "official-source-e3ad2ee90ddfccbd",
+            "label": "深圳市赛晟科技有限公司",
+            "type": "company",
+            "url": "http://www.szcitech.com"
+          },
+          {
+            "id": "official-source-1a92e6d2bbd45ef1",
+            "label": "深圳市特普生科技有限公司",
+            "type": "company",
+            "url": "https://www.temp-sen.com/"
+          },
+          {
+            "id": "official-source-1efda8ea1c8059db",
+            "label": "深圳赛维创新技术集团有限公司",
+            "type": "company",
+            "url": "http://www.fpcba.cn/"
+          },
+          {
+            "id": "official-source-4b852c97a987891c",
+            "label": "深圳市卓茂科技有限公司",
+            "type": "company",
+            "url": "http://www.zmbga.com/"
+          },
+          {
+            "id": "official-source-356a7358413b52b3",
+            "label": "深圳市天吉机电有限公司",
+            "type": "company",
+            "url": "http://www.sztjjd.com"
+          },
+          {
+            "id": "official-source-540ae9072f556ae4",
+            "label": "深圳市赛尔博特软件有限公司",
+            "type": "company",
+            "url": "http://www.sailbest.net/"
+          },
+          {
+            "id": "official-source-e40e97b12a312347",
+            "label": "深圳明锐理想科技股份有限公司",
+            "type": "company",
+            "url": "http://www.magic-ray.com"
+          },
+          {
+            "id": "official-source-ddbb931b027afbde",
+            "label": "深圳正指向科技有限公司",
+            "type": "company",
+            "url": "http://www.zzxipd.com/"
+          },
+          {
+            "id": "official-source-7ad3465658e20eab",
+            "label": "深圳市智晟威自动化科技有限公司",
+            "type": "company",
+            "url": "http://www.zsw-auto.com/"
+          },
+          {
+            "id": "official-source-e41dde84d362d27c",
+            "label": "深圳市深华科电子有限公司",
+            "type": "company",
+            "url": "http://www.shkpcb.com"
+          },
+          {
+            "id": "official-source-3146d38a8a5d2049",
+            "label": "深圳市劲拓自动化设备股份有限公司",
+            "type": "company",
+            "url": "http://www.jt-ele.com"
+          }
+        ],
+        "query_type": "canonical_v2:A:answer",
+        "text": "上述企业均为深圳的企业。\n\n具体包括：\n1. 崇达技术股份有限公司\n2. 深圳市兴森快捷电路科技股份有限公司\n3. 深圳市精诚达电路科技股份有限公司\n4. 深圳市小铭工业互联网有限公司\n5. 深圳硬之城信息技术有限公司\n6. 深圳顺易捷科技有限公司\n7. 深圳市鑫盈通达电子科技有限公司\n8. 深圳市星河电路股份有限公司\n9. 深圳市一博科技股份有限公司\n10. 深圳市动力飞扬智能装备有限公司\n11. 深圳市高素科技有限公司\n12. 深圳市实佳电子有限公司\n13. 深圳市鸿洋电路科技有限公司\n14. 深圳市软博智能科技有限公司\n15. 深圳市嘉之宏电子有限公司\n16. 深圳市雷赛自动化系统有限公司\n17. 深圳市玉成创新科技有限公司\n18. 诡谷子人工智能科技（深圳）有限公司\n19. 深圳市尊大电子科技有限公司\n20. 深圳市赛晟科技有限公司\n21. 深圳市特普生科技有限公司\n22. 深圳市超创鑫科技有限公司\n23. 深圳赛维创新技术集团有限公司\n24. 深圳市卓茂科技有限公司\n25. 深圳市天吉机电有限公司\n26. 深圳市赛尔博特软件有限公司\n27. 深圳明锐理想科技股份有限公司\n28. 深圳市坤易电子有限公司\n29. 深圳正指向科技有限公司\n30. 深圳市智晟威自动化科技有限公司\n31. 深圳市深华科电子有限公司\n32. 深圳市劲拓自动化设备股份有限公司\n此外，本次检索还召回以下相关本地企业：深南电路股份有限公司、深圳市鼎立特科技有限公司、深圳市升达康科技有限公司、深圳市中禾旭精密机械有限公司、深圳镭霆激光科技有限公司、深圳市舟海贸易有限公司、深圳市大族锐视科技有限公司、深圳市科易博软件有限公司、深圳市震远电子科技有限公司、百芯智能制造科技（深圳）有限公司、上达电子（深圳）股份有限公司、深圳景赛智能科技有限公司、深圳嘉立创科技集团股份有限公司、深圳天创无限科技有限公司、金动力智能科技（深圳）有限公司、深圳市盛矽电子科技有限公司、深圳市柳鑫实业股份有限公司、深圳市汇芯高新科技有限公司、深圳市迈威科技有限公司、深圳市驭鹰者电子有限公司、深圳市智芯云创科技有限公司、深圳市卓领众航科技有限公司、深圳市大正科技有限公司、深圳市百千成电子有限公司、深圳市零壹八科技有限公司、深圳橙子自动化有限公司、深圳市则成电子股份有限公司、深圳市声雄电子有限公司、深圳市芯拓科技有限公司、深圳市中科领创实业有限公司、深圳市洁驰科技有限公司、深圳市太美亚电子科技有限公司。",
+        "understood_subject": null
+      },
+      "candidate_layer": {
+        "available": false,
+        "candidate_names": 0,
+        "evidence_by_lane": null,
+        "evidence_total": null,
+        "handles_local": 0,
+        "handles_web": 0,
+        "recalled_handles": 0,
+        "source": null
+      },
+      "case_id": "q5t2",
+      "error": null,
+      "group": "问题5",
+      "hits": {
+        "answer_all_entities": false,
+        "candidate_all_entities": null,
+        "entities": {},
+        "forbidden_present": []
+      },
+      "kind": "unlabeled",
+      "lanes": {
+        "exact": {
+          "candidates": 8,
+          "status": "succeeded"
+        },
+        "lexical": {
+          "candidates": 64,
+          "status": "succeeded"
+        },
+        "structured": {
+          "candidates": 64,
+          "status": "succeeded"
+        },
+        "vector": {
+          "candidates": 64,
+          "status": "succeeded"
+        },
+        "web": {
+          "candidates": 22,
+          "status": "succeeded"
+        }
+      },
+      "lanes_trace": {
+        "exact": {
+          "filtered": 0,
+          "in": 8,
+          "retained": 8
+        },
+        "lexical": {
+          "filtered": 0,
+          "in": 64,
+          "retained": 64
+        },
+        "structured": {
+          "filtered": 0,
+          "in": 64,
+          "retained": 64
+        },
+        "vector": {
+          "filtered": 0,
+          "in": 64,
+          "retained": 64
+        },
+        "web": {
+          "filtered": 56,
+          "in": 78,
+          "retained": 22
+        }
+      },
+      "note": "关键点=上下文识别 only. Human review only.",
+      "query": "上述企业有哪些是深圳的企业",
+      "raw_bytes": 36427,
+      "run_id": "f95b",
+      "seconds": 12.41,
+      "session_id": "session:chat:f95b-q5t1",
+      "sse_events": {
+        "answer": 1,
+        "answer_chunk": 548,
+        "done": 1,
+        "plan_done": 1,
+        "retrieval_done": 1,
+        "stage": 3
+      },
+      "status": "ok",
+      "suite": "testset",
+      "turn": 2,
+      "web": {
+        "attempted": 0,
+        "cache_hit": 8,
+        "degradation": "interpretation-rejected",
+        "errored": 0,
+        "items": 10,
+        "timed_out": 0
+      }
+    },
+    {
+      "answer": {
+        "answer_chars": 595,
+        "answer_style": "llm_synthesized",
+        "citation_nature": {
+          "local": 1,
+          "web": 0
+        },
+        "citations": [
+          {
+            "id": "official-source-091ed54ba620f57c",
+            "label": "pFedGPA: Diffusion-based Generative Parameter Aggregation for Personalized Federated Learning",
+            "type": "paper",
+            "url": "https://doi.org/10.1609/aaai.v39i17.33980"
+          }
+        ],
+        "query_type": "canonical_v2:A:answer",
+        "text": "论文《pFedGPA: Diffusion-based Generative Parameter Aggregation for Personalized Federated Learning》由Jiahao Lai、Jiaqi Li、Jian Xu、Yanru Wu、Boshi Tang、Siqi Chen、Yongfeng Huang、Wenbo Ding、Yang Li共同撰写，已发表于2025年AAAI会议（Proceedings of the AAAI Conference on Artificial Intelligence）。\n\n该研究针对个性化联邦学习（Personalized Federated Learning）中传统线性聚合方法（如FedAvg）在处理异构数据分布时，因忽视参数空间的高维复杂性而导致模型性能下降的问题，提出了一种基于扩散模型（Diffusion Model）的生成式参数聚合框架pFedGPA。\n\n核心机制包括：\n1. 在服务器端部署扩散模型，以整合来自不同客户端的多样化参数分布。\n2. 提出了一种参数反演方法（parameter inversion method），旨在更有效地融合参数信息，从而缓解异构数据带来的挑战。\n\n该论文最初于2024年9月9日提交至arXiv（编号：2409.05701），并于2025年2月11日进行了修订。",
+        "understood_subject": null
+      },
+      "candidate_layer": {
+        "available": false,
+        "candidate_names": 0,
+        "evidence_by_lane": null,
+        "evidence_total": null,
+        "handles_local": 0,
+        "handles_web": 0,
+        "recalled_handles": 0,
+        "source": null
+      },
+      "case_id": "q6t1",
+      "error": null,
+      "group": "问题6",
+      "hits": {
+        "answer_all_entities": true,
+        "candidate_all_entities": null,
+        "entities": {
+          "pfedgpa": {
+            "answer": true,
+            "answer_or_citations": true,
+            "candidate": null,
+            "citations": true,
+            "label": "pFedGPA"
+          }
+        },
+        "forbidden_present": []
+      },
+      "kind": "labeled",
+      "lanes": {
+        "exact": {
+          "candidates": 1,
+          "status": "succeeded"
+        },
+        "lexical": {
+          "candidates": 0,
+          "status": "succeeded"
+        },
+        "structured": {
+          "candidates": 0,
+          "status": "succeeded"
+        },
+        "vector": {
+          "candidates": 16,
+          "status": "succeeded"
+        },
+        "web": {
+          "candidates": 16,
+          "status": "succeeded"
+        }
+      },
+      "lanes_trace": {
+        "exact": {
+          "filtered": 0,
+          "in": 1,
+          "retained": 1
+        },
+        "lexical": {
+          "filtered": 0,
+          "in": 0,
+          "retained": 0
+        },
+        "structured": {
+          "filtered": 0,
+          "in": 0,
+          "retained": 0
+        },
+        "vector": {
+          "filtered": 0,
+          "in": 16,
+          "retained": 16
+        },
+        "web": {
+          "filtered": 0,
+          "in": 19,
+          "retained": 19
+        }
+      },
+      "note": "关键点=关联到知识库.",
+      "query": "pFedGPA: Diffusion-based Generative Parameter Aggregation for Personalized Federated Learning 这篇论文的详细信息",
+      "raw_bytes": 26548,
+      "run_id": "f95b",
+      "seconds": 11.37,
+      "session_id": "session:chat:f95b-q6t1",
+      "sse_events": {
+        "answer": 1,
+        "answer_chunk": 550,
+        "done": 1,
+        "plan_done": 1,
+        "retrieval_done": 1,
+        "stage": 3
+      },
+      "status": "ok",
+      "suite": "testset",
+      "turn": 1,
+      "web": {
+        "attempted": 0,
+        "cache_hit": 2,
+        "degradation": "interpretation-rejected",
+        "errored": 0,
+        "items": 8,
+        "timed_out": 0
+      }
+    },
+    {
+      "answer": {
+        "answer_chars": 134,
+        "answer_style": "llm_synthesized",
+        "citation_nature": {
+          "local": 1,
+          "web": 0
+        },
+        "citations": [
+          {
+            "id": "official-source-091ed54ba620f57c",
+            "label": "pFedGPA: Diffusion-based Generative Parameter Aggregation for Personalized Federated Learning",
+            "type": "paper",
+            "url": "https://doi.org/10.1609/aaai.v39i17.33980"
+          }
+        ],
+        "query_type": "canonical_v2:A:answer",
+        "text": "论文《pFedGPA: Diffusion-based Generative Parameter Aggregation for Personalized Federated Learning》的链接为：https://arxiv.org/abs/2409.05701",
+        "understood_subject": null
+      },
+      "candidate_layer": {
+        "available": false,
+        "candidate_names": 0,
+        "evidence_by_lane": null,
+        "evidence_total": null,
+        "handles_local": 0,
+        "handles_web": 0,
+        "recalled_handles": 0,
+        "source": null
+      },
+      "case_id": "q6t2",
+      "error": null,
+      "group": "问题6",
+      "hits": {
+        "answer_all_entities": true,
+        "candidate_all_entities": null,
+        "entities": {
+          "pfedgpa-link": {
+            "answer": true,
+            "answer_or_citations": true,
+            "candidate": null,
+            "citations": false,
+            "label": "arXiv 2409.05701"
+          }
+        },
+        "forbidden_present": []
+      },
+      "kind": "labeled",
+      "lanes": {
+        "exact": {
+          "candidates": 1,
+          "status": "succeeded"
+        },
+        "lexical": {
+          "candidates": 0,
+          "status": "succeeded"
+        },
+        "structured": {
+          "candidates": 1,
+          "status": "succeeded"
+        },
+        "vector": {
+          "candidates": 1,
+          "status": "succeeded"
+        },
+        "web": {
+          "candidates": 16,
+          "status": "succeeded"
+        }
+      },
+      "lanes_trace": {
+        "exact": {
+          "filtered": 0,
+          "in": 1,
+          "retained": 1
+        },
+        "lexical": {
+          "filtered": 0,
+          "in": 0,
+          "retained": 0
+        },
+        "structured": {
+          "filtered": 0,
+          "in": 1,
+          "retained": 1
+        },
+        "vector": {
+          "filtered": 0,
+          "in": 1,
+          "retained": 1
+        },
+        "web": {
+          "filtered": 56,
+          "in": 61,
+          "retained": 5
+        }
+      },
+      "note": "The frozen answer carries the arXiv id 2409.05701 (the PDF url itself is the answer).",
+      "query": "这论文的链接是什么",
+      "raw_bytes": 7788,
+      "run_id": "f95b",
+      "seconds": 7.36,
+      "session_id": "session:chat:f95b-q6t1",
+      "sse_events": {
+        "answer": 1,
+        "answer_chunk": 128,
+        "done": 1,
+        "plan_done": 1,
+        "retrieval_done": 1,
+        "stage": 3
+      },
+      "status": "ok",
+      "suite": "testset",
+      "turn": 2,
+      "web": {
+        "attempted": 4,
+        "cache_hit": 8,
+        "degradation": "interpretation-rejected",
+        "errored": 0,
+        "items": 5,
+        "timed_out": 0
+      }
+    },
+    {
+      "answer": {
+        "answer_chars": 1109,
+        "answer_style": "llm_synthesized",
+        "citation_nature": {
+          "local": 1,
+          "web": 0
+        },
+        "citations": [
+          {
+            "id": "official-source-e2fb0d09c87a65ce",
+            "label": "深圳市迈步机器人科技有限公司",
+            "type": "company",
+            "url": "http://www.milebot.com.cn/"
+          }
+        ],
+        "query_type": "canonical_v2:A:answer",
+        "text": "毕业于早稻田大学，且在深圳专注机器人行业的企业家是深圳市迈步机器人科技有限公司的联合创始人兼首席技术官（CTO）叶晶。\n\n公开信息显示，叶晶拥有日本早稻田大学生命理工学（机器人）专业博士学位，作为核心创始团队成员，他专注于康复外骨骼与具身智能机器人的研发与产业化，带领团队推出了BEAR系列、EXO系列及MAX系列等多款机器人产品。\n此外，本次检索还召回以下相关本地企业：跨维（深圳）智能数字科技有限公司、深圳市普渡科技有限公司、隐形科技（深圳）有限公司、深圳市智谷天厨科技有限公司、深圳市探真智能科技有限公司、赛柏坦（深圳）科技有限公司、深圳市格松科技有限公司、深圳市小湾智能有限公司、深圳市微埃智能科技有限公司、深圳市艾唯尔科技有限公司、乐聚智能（深圳）股份有限公司、深圳市卫邦科技有限公司、深圳市启天太一科技有限公司、地心引力（深圳）空间技术有限公司、深圳市欧铠智能机器人股份有限公司、深圳普得技术有限公司、深圳潜行创新科技有限公司、深圳市博铭维技术股份有限公司、远行光年科技（深圳）有限公司、深圳市海柔智能科技有限公司、深圳乐智机器人有限公司、深圳市玖胜云智联科技有限公司、前海企保科技（深圳）有限公司、深圳市未境创新科技有限公司、深圳市埃尔法光电科技有限公司、深圳市松崎机器人自动化设备有限公司、深圳市普渡科技股份有限公司、深圳市智芯云创科技有限公司、深圳若步智能科技有限公司、统域机器人（深圳）有限公司、或宇连接（深圳）科技有限责任公司、深圳图灵智能机器人科技有限公司、光年创新（深圳）科技有限公司、法狗狗（深圳）科技有限公司、深圳市行知行机器人技术有限公司、洋流科技（深圳）有限公司、深圳极数迭代科技有限公司、深圳博创机器人技术有限公司、自兴人工智能（深圳）有限公司、乐聚（深圳）机器人技术有限公司、深圳市美斯图科技有限公司、子歌教育机器人（深圳）有限公司、深圳市爱陪伴智能科技有限公司、深圳市恒科通机器人有限公司、深圳奇点机器人集团有限公司、深圳市智通云联科技有限公司、星派克智能装备（深圳）有限公司、深圳数心网络科技有限公司、深圳澳谷智能科技有限公司、深圳市功夫机器人有限公司、工启机器人（深圳）有限公司、深圳市智语通科技有限公司、敬科（深圳）机器人科技有限公司、斯坦德机器人（无锡）股份有限公司、深圳市哈蜜淘科技有限公司、深圳市长荣科机电设备有限公司、深圳市香蕉智能科技有限公司、深圳市柳溪机器人有限公司、深圳市李斯古德教育科技有限公司、深圳果力智能科技有限公司、深圳市凡诚智能装备有限公司、深圳优旺特科技有限公司、深圳瑞科时尚电子有限公司、深圳市鼎石机器人自动化科技有限公司 等（共 69 家）。",
+        "understood_subject": null
+      },
+      "candidate_layer": {
+        "available": false,
+        "candidate_names": 0,
+        "evidence_by_lane": null,
+        "evidence_total": null,
+        "handles_local": 0,
+        "handles_web": 0,
+        "recalled_handles": 0,
+        "source": null
+      },
+      "case_id": "q7t1",
+      "error": null,
+      "group": "问题7",
+      "hits": {
+        "answer_all_entities": false,
+        "candidate_all_entities": null,
+        "entities": {},
+        "forbidden_present": []
+      },
+      "kind": "unlabeled",
+      "lanes": {
+        "exact": {
+          "candidates": 0,
+          "status": "succeeded"
+        },
+        "lexical": {
+          "candidates": 128,
+          "status": "succeeded"
+        },
+        "structured": {
+          "candidates": 0,
+          "status": "succeeded"
+        },
+        "supplemental": {
+          "candidates": 4,
+          "status": "succeeded"
+        },
+        "vector": {
+          "candidates": 128,
+          "status": "succeeded"
+        },
+        "web": {
+          "candidates": 91,
+          "status": "succeeded"
+        }
+      },
+      "lanes_trace": {
+        "exact": {
+          "filtered": 0,
+          "in": 0,
+          "retained": 0
+        },
+        "lexical": {
+          "filtered": 0,
+          "in": 128,
+          "retained": 128
+        },
+        "structured": {
+          "filtered": 0,
+          "in": 0,
+          "retained": 0
+        },
+        "supplemental": {
+          "filtered": 0,
+          "in": 4,
+          "retained": 4
+        },
+        "vector": {
+          "filtered": 0,
+          "in": 128,
+          "retained": 128
+        },
+        "web": {
+          "filtered": 0,
+          "in": 69,
+          "retained": 69
+        }
+      },
+      "note": "关键点=获取知识库内容 — no entity named, and the frozen answer's 许晋诚/陈功/叶晶 are not frozen GT. High-value human-review case (this is a pure vector-lane query).",
+      "query": "毕业于早稻田，且在深圳专注在机器人行业的企业家有谁",
+      "raw_bytes": 13433,
+      "run_id": "f95b",
+      "seconds": 18.34,
+      "session_id": "session:chat:f95b-q7t1",
+      "sse_events": {
+        "answer": 1,
+        "answer_chunk": 164,
+        "done": 1,
+        "plan_done": 1,
+        "retrieval_done": 1,
+        "stage": 3
+      },
+      "status": "ok",
+      "suite": "testset",
+      "turn": 1,
+      "web": {
+        "attempted": 4,
+        "cache_hit": 8,
+        "degradation": "interpretation-rejected",
+        "errored": 0,
+        "items": 10,
+        "timed_out": 0
+      }
+    },
+    {
+      "answer": {
+        "answer_chars": 713,
+        "answer_style": "llm_synthesized",
+        "citation_nature": {
+          "local": 1,
+          "web": 0
+        },
+        "citations": [
+          {
+            "id": "official-source-2d75554388fe57f6",
+            "label": "华力创科学（深圳）有限公司",
+            "type": "company",
+            "url": "http://www.haptron-scientific.com/"
+          }
+        ],
+        "query_type": "canonical_v2:A:answer",
+        "text": "华力创科学（深圳）有限公司是一家成立于2019年、总部位于深圳的先进制造与力传感技术企业，其核心竞争力在于通过光学感知技术重塑机器人触觉，在具身智能领域展现出显著的市场先发优势。\n\n在产量与生产特点方面，该公司目前属于典型的技术驱动型初创企业，公开资料显示其人员规模少于50人，注册资本约362.9万至399.2万元，实缴资本约203.7万元。这种轻资产、高精尖的组织架构决定了其生产模式并非传统的大规模标准化制造，而是聚焦于高附加值、高精度的核心传感器研发与小批量定制化生产。其核心产品为Photon系列多维力传感器（涵盖PhotonR40、PhotonR56、PhotonR80、PhotonOne、Photon micro、Photon Finger、Photon_Bike、Photon_AO、Photon_AC等型号），这些产品主要作为具身智能机器人的关键感知部件，直接绑定于高端机器人本体进行集成，而非面向大众消费市场的海量通用件。\n\n在市场竞争力方面，华力创科学凭借自研的光学多模态感知技术建立了较高的技术壁垒。该技术通过应用非激光光源感知结构纳米级形变，实现了单位空间内受力、微位移等信息的高精度实时测量，从而为机器人提供高精度的力觉感知能力。凭借这一技术优势，公司已成为国内多维力传感器的新锐力量，其客户群体覆盖了宇树、智元等头部人形机器人企业，显示出其在高端机器人供应链中已具备较强的市场认可度和竞争力。\n\n需要说明的是，华力创科学（深圳）有限公司是该公司在华南地区的重要布局。若您需要了解该机构在其他城市（如北京、上海等）分部的具体业务侧重或产能分布，建议在提问时注明具体城市，以便获取更精准的区域信息。",
+        "understood_subject": null
+      },
+      "candidate_layer": {
+        "available": false,
+        "candidate_names": 0,
+        "evidence_by_lane": null,
+        "evidence_total": null,
+        "handles_local": 0,
+        "handles_web": 0,
+        "recalled_handles": 0,
+        "source": null
+      },
+      "case_id": "q8t1",
+      "error": null,
+      "group": "问题8",
+      "hits": {
+        "answer_all_entities": true,
+        "candidate_all_entities": null,
+        "entities": {
+          "huali-chuang": {
+            "answer": true,
+            "answer_or_citations": true,
+            "candidate": null,
+            "citations": true,
+            "label": "华力创科学"
+          }
+        },
+        "forbidden_present": []
+      },
+      "kind": "labeled",
+      "lanes": {
+        "exact": {
+          "candidates": 1,
+          "status": "succeeded"
+        },
+        "lexical": {
+          "candidates": 1,
+          "status": "succeeded"
+        },
+        "structured": {
+          "candidates": 0,
+          "status": "succeeded"
+        },
+        "vector": {
+          "candidates": 16,
+          "status": "succeeded"
+        },
+        "web": {
+          "candidates": 16,
+          "status": "succeeded"
+        }
+      },
+      "lanes_trace": {
+        "exact": {
+          "filtered": 0,
+          "in": 1,
+          "retained": 1
+        },
+        "lexical": {
+          "filtered": 0,
+          "in": 1,
+          "retained": 1
+        },
+        "structured": {
+          "filtered": 0,
+          "in": 0,
+          "retained": 0
+        },
+        "vector": {
+          "filtered": 0,
+          "in": 16,
+          "retained": 16
+        },
+        "web": {
+          "filtered": 49,
+          "in": 71,
+          "retained": 22
+        }
+      },
+      "note": "关键点=获取知识库; the subject is the testable entity.",
+      "query": "华力创科学这家公司相关信息，这家公司的产量特点是什么，市场竞争力怎么样",
+      "raw_bytes": 33084,
+      "run_id": "f95b",
+      "seconds": 12.52,
+      "session_id": "session:chat:f95b-q8t1",
+      "sse_events": {
+        "answer": 1,
+        "answer_chunk": 683,
+        "done": 1,
+        "plan_done": 1,
+        "retrieval_done": 1,
+        "stage": 3
+      },
+      "status": "ok",
+      "suite": "testset",
+      "turn": 1,
+      "web": {
+        "attempted": 10,
+        "cache_hit": 2,
+        "degradation": "interpretation-rejected",
+        "errored": 0,
+        "items": 8,
+        "timed_out": 0
+      }
+    },
+    {
+      "answer": {
+        "answer_chars": 947,
+        "answer_style": "llm_synthesized",
+        "citation_nature": {
+          "local": 0,
+          "web": 0
+        },
+        "citations": [],
+        "query_type": "canonical_v2:A:answer",
+        "text": "光基多维力传感（通常指基于光纤光栅的多维力/力矩传感器）的核心原理是利用光纤光栅（FBG）对应变和温度敏感的特性，将机械力引起的结构形变转化为光波长的变化进行测量。其具体展开如下：\n\n1. **光电转换机制**\n   光纤光栅是一种周期性调制的光纤芯折射率结构。当宽带光通过时，特定波长的光会被反射（布拉格波长）。当传感器受力发生形变时，光纤光栅的光栅周期和有效折射率发生变化，导致反射光的中心波长发生漂移。通过高精度解调仪检测波长的漂移量，即可反推出光纤所承受的应变大小。\n\n2. **多维解耦与结构设计**\n   多维力（如六维力：Fx, Fy, Fz, Mx, My, Mz）测量的难点在于“维间耦合”（串扰），即施加一个方向的力时，其他方向也会产生读数。光基方案通常采用以下策略解决：\n   - **敏感元布局**：将多个光纤光栅应变子传感器以特定几何结构粘贴或嵌入弹性体中。例如，专利文献中提到的方法是将6个光纤光栅分别置于空间坐标系的三个主轴及相邻主轴角平分线的轴上，通过特定的空间分布来区分不同方向的力和力矩。\n   - **弹性体设计**：设计具有高线性度和高重复性的弹性承载体，确保力到应变的转换关系可预测。\n   - **解耦算法**：建立应变与多维力之间的数学映射模型（如灵敏度矩阵），通过矩阵运算将各光栅测得的应变值解耦，计算出独立的六维力/力矩分量。\n\n3. **温度补偿**\n   光纤光栅对温度也敏感，温度变化会引起波长漂移，干扰力测量。因此，光基多维力传感器通常集成温度子传感器（如未受力的光纤光栅或独立温度探头），通过算法实时扣除温度引起的波长漂移，实现温漂补偿，确保测量准确性。\n\n4. **相比传统技术的优势**\n   与基于电阻应变片的传统六维力传感器相比，光基方案具有抗电磁干扰、耐腐蚀、本质安全（无电火花风险）、体积小、重量轻等优势，特别适用于特种机器人、恶劣工业环境或强电磁场场景。\n\n目前，深圳传感网络科技有限公司作为科技媒体与服务平台，主要提供行业信息整合，未直接披露其自有光基多维力传感产品的具体技术细节；而基于光纤光栅的六维力传感器技术多见于相关专利（如CN205102965U）及行业研究报告中，属于机器人力觉感知领域的重要技术路线之一。",
+        "understood_subject": null
+      },
+      "candidate_layer": {
+        "available": false,
+        "candidate_names": 0,
+        "evidence_by_lane": null,
+        "evidence_total": null,
+        "handles_local": 0,
+        "handles_web": 0,
+        "recalled_handles": 0,
+        "source": null
+      },
+      "case_id": "q8t2",
+      "error": null,
+      "group": "问题8",
+      "hits": {
+        "answer_all_entities": false,
+        "candidate_all_entities": null,
+        "entities": {},
+        "forbidden_present": []
+      },
+      "kind": "unlabeled",
+      "lanes": {
+        "exact": {
+          "candidates": 1,
+          "status": "succeeded"
+        },
+        "lexical": {
+          "candidates": 16,
+          "status": "succeeded"
+        },
+        "structured": {
+          "candidates": 0,
+          "status": "succeeded"
+        },
+        "vector": {
+          "candidates": 16,
+          "status": "succeeded"
+        },
+        "web": {
+          "candidates": 16,
+          "status": "succeeded"
+        }
+      },
+      "lanes_trace": {
+        "exact": {
+          "filtered": 0,
+          "in": 1,
+          "retained": 1
+        },
+        "lexical": {
+          "filtered": 0,
+          "in": 16,
+          "retained": 16
+        },
+        "structured": {
+          "filtered": 0,
+          "in": 0,
+          "retained": 0
+        },
+        "vector": {
+          "filtered": 0,
+          "in": 16,
+          "retained": 16
+        },
+        "web": {
+          "filtered": 70,
+          "in": 73,
+          "retained": 3
+        }
+      },
+      "note": "No 关键点; concept explanation. Human review only.",
+      "query": "光基多维力传感原理具体展开说",
+      "raw_bytes": 43374,
+      "run_id": "f95b",
+      "seconds": 15.5,
+      "session_id": "session:chat:f95b-q8t1",
+      "sse_events": {
+        "answer": 1,
+        "answer_chunk": 912,
+        "done": 1,
+        "plan_done": 1,
+        "retrieval_done": 1,
+        "stage": 3
+      },
+      "status": "ok",
+      "suite": "testset",
+      "turn": 2,
+      "web": {
+        "attempted": 10,
+        "cache_hit": 2,
+        "degradation": "interpretation-rejected",
+        "errored": 0,
+        "items": 8,
+        "timed_out": 0
+      }
+    },
+    {
+      "answer": {
+        "answer_chars": 739,
+        "answer_style": "llm_synthesized",
+        "citation_nature": {
+          "local": 1,
+          "web": 0
+        },
+        "citations": [
+          {
+            "id": "official-source-3b920acbd58c92f8",
+            "label": "王学谦",
+            "type": "professor",
+            "url": "http://www.sigs.tsinghua.edu.cn/wxq/main.htm"
+          }
+        ],
+        "query_type": "canonical_v2:A:answer",
+        "text": "公开信息显示，清华大学存在两位同名“王学谦”的教授，分别任职于不同院系，其学术评价与行业地位如下：\n\n**1. 清华大学深圳国际研究生院 王学谦（智能控制与空间机器人领域）**\n*   **学术地位**：属于该领域的知名专家。公开资料显示，他是清华大学深圳国际研究生院教授、博士生导师，智能控制与测试研究所所长，深圳市空间机器人技术创新中心主任。\n*   **科研实力**：被业界视为空间机器人领域的领跑者。据公开报道，他已出版学术专著4部，发表学术论文200余篇，授权国家发明专利100余项。\n*   **学术兼职**：担任中国宇航学会机器人专业委员会委员、国家级专家等职务。\n*   **研究方向**：聚焦先进控制理论与空间机器人技术，包括空间机器人振动抑制、自主目标捕获控制等。\n*   **评价**：在空间机器人及智能控制领域具有显著的行业影响力，符合“大牛”（行业领军人物）的特征。\n\n**2. 清华大学电子工程系 王学谦（控制理论与信号处理领域）**\n*   **学术地位**：清华大学电子工程系副教授、博士生导师。\n*   **科研实力**：主持国家自然科学基金青年基金、博新计划、中国博士后基金等3项国家级科研项目，独立撰写Springer英文专著1部，在Information Fusion等高水平期刊发表论文。\n*   **评价**：属于青年学术骨干，在控制理论与信号处理领域有扎实的研究成果，但相较于深研院王学谦在空间机器人领域的广泛行业影响力，其“大牛”标签更多体现在学术研究的严谨性与高水平产出上。\n\n**注意**：上述两位均为清华大学教授，但研究领域不同。若指空间机器人方向的王学谦，其在行业内具有较高知名度；若指电子系的王学谦，则是优秀的青年学者。",
+        "understood_subject": null
+      },
+      "candidate_layer": {
+        "available": false,
+        "candidate_names": 0,
+        "evidence_by_lane": null,
+        "evidence_total": null,
+        "handles_local": 0,
+        "handles_web": 0,
+        "recalled_handles": 0,
+        "source": null
+      },
+      "case_id": "q9t1",
+      "error": null,
+      "group": "问题9",
+      "hits": {
+        "answer_all_entities": true,
+        "candidate_all_entities": null,
+        "entities": {
+          "wang-xueqian": {
+            "answer": true,
+            "answer_or_citations": true,
+            "candidate": null,
+            "citations": true,
+            "label": "王学谦"
+          }
+        },
+        "forbidden_present": []
+      },
+      "kind": "labeled",
+      "lanes": {
+        "exact": {
+          "candidates": 1,
+          "status": "succeeded"
+        },
+        "lexical": {
+          "candidates": 1,
+          "status": "succeeded"
+        },
+        "structured": {
+          "candidates": 0,
+          "status": "succeeded"
+        },
+        "vector": {
+          "candidates": 16,
+          "status": "succeeded"
+        },
+        "web": {
+          "candidates": 16,
+          "status": "succeeded"
+        }
+      },
+      "lanes_trace": {
+        "exact": {
+          "filtered": 0,
+          "in": 1,
+          "retained": 1
+        },
+        "lexical": {
+          "filtered": 0,
+          "in": 1,
+          "retained": 1
+        },
+        "structured": {
+          "filtered": 0,
+          "in": 0,
+          "retained": 0
+        },
+        "vector": {
+          "filtered": 0,
+          "in": 16,
+          "retained": 16
+        },
+        "web": {
+          "filtered": 43,
+          "in": 47,
+          "retained": 4
+        }
+      },
+      "note": "No 关键点; the subject is the testable entity.",
+      "query": "清华的王学谦的评价如何，他是否是属于大牛",
+      "raw_bytes": 34305,
+      "run_id": "f95b",
+      "seconds": 11.09,
+      "session_id": "session:chat:f95b-q9t1",
+      "sse_events": {
+        "answer": 1,
+        "answer_chunk": 714,
+        "done": 1,
+        "plan_done": 1,
+        "retrieval_done": 1,
+        "stage": 3
+      },
+      "status": "ok",
+      "suite": "testset",
+      "turn": 1,
+      "web": {
+        "attempted": 10,
+        "cache_hit": 2,
+        "degradation": "interpretation-rejected",
+        "errored": 0,
+        "items": 8,
+        "timed_out": 0
+      }
+    },
+    {
+      "answer": {
+        "answer_chars": 840,
+        "answer_style": "llm_synthesized",
+        "citation_nature": {
+          "local": 1,
+          "web": 0
+        },
+        "citations": [
+          {
+            "id": "official-source-99b0b2d34e292e12",
+            "label": "深圳爱博合创医疗机器人有限公司",
+            "type": "company",
+            "url": "http://abrobo.com/"
+          }
+        ],
+        "query_type": "canonical_v2:A:answer",
+        "text": "深圳爱博合创医疗机器人有限公司（简称“爱博合创”）是一家聚焦先进制造与医疗机器人领域的企业，核心业务定位为血管介入手术机器人系统的研发商。公司成立于2020年6月4日，法定代表人为郭健，总部位于深圳，并在北京设有爱博合创(北京)科技有限公司（法定代表人为杨建玲）作为分部。\n\n**企业概况与核心产品**\n爱博合创深耕血管介入手术机器人领域，针对临床中手术质量受限于术者经验、医生辐射与负重威胁、医疗资源不平衡等痛点，独创了先进介入机器人平台。其核心技术路线覆盖冠心病、神经血管疾病及外周血管病变的诊断与治疗，支持在导管室、复合手术室及远程诊疗中心使用，具备急诊快速转运、基层医院远程PCI及复杂介入手术支持能力。\n公司主打产品包括PANVIS-A™、PANVIS Star™及PANVIS®系列血管介入手术机器人。其中，PANVIS-A™脑血管介入手术辅助操作系统已成功获得国家药品监督管理局批准上市，标志着其具备完全独立自主知识产权。\n\n**创始人及核心团队**\n*   **郭书祥（创始人）**：师从中国科学院外籍院士、日本工程院院士福田敏男，在血管介入手术机器人领域拥有近30年科研经验。他专注微机器人技术、血管检查微系统及医疗生物用遥控微操作系统研究，提出了线性拖曳推送技术及基于多源力信息融合的遥操作技术。\n*   **郭健（联合创始人/法定代表人）**：拥有多年心脑血管外科手术辅助机器人系统研发背景。\n\n**市场评价与行业认可**\n公开资料显示，爱博合创在行业内具有较高的认可度，被认定为高新技术企业、科技型中小企业及专精特新中小企业。其产品在专业领域内受到关注，例如PANVIS®系列血管介入手术机器人曾首次亮相中国心血管大会（OCC），向业界展示了我国医疗自主创新的潜力。公司秉持“用户至上、追求卓越、创新驱动、敏捷迭代”的价值观，致力于提供术者好用、患者受益的医疗解决方案。\n\n爱博合创在北京设有分部，如果您想了解北京分部的具体业务或人员情况，可以进一步说明。",
+        "understood_subject": null
+      },
+      "candidate_layer": {
+        "available": false,
+        "candidate_names": 0,
+        "evidence_by_lane": null,
+        "evidence_total": null,
+        "handles_local": 0,
+        "handles_web": 0,
+        "recalled_handles": 0,
+        "source": null
+      },
+      "case_id": "q10t1",
+      "error": null,
+      "group": "问题10",
+      "hits": {
+        "answer_all_entities": true,
+        "candidate_all_entities": null,
+        "entities": {
+          "aibo-hechuang": {
+            "answer": true,
+            "answer_or_citations": true,
+            "candidate": null,
+            "citations": true,
+            "label": "爱博合创"
+          }
+        },
+        "forbidden_present": []
+      },
+      "kind": "labeled",
+      "lanes": {
+        "exact": {
+          "candidates": 0,
+          "status": "succeeded"
+        },
+        "lexical": {
+          "candidates": 1,
+          "status": "succeeded"
+        },
+        "structured": {
+          "candidates": 0,
+          "status": "succeeded"
+        },
+        "supplemental": {
+          "candidates": 3,
+          "status": "succeeded"
+        },
+        "vector": {
+          "candidates": 16,
+          "status": "succeeded"
+        },
+        "web": {
+          "candidates": 16,
+          "status": "succeeded"
+        }
+      },
+      "lanes_trace": {
+        "exact": {
+          "filtered": 0,
+          "in": 0,
+          "retained": 0
+        },
+        "lexical": {
+          "filtered": 0,
+          "in": 1,
+          "retained": 1
+        },
+        "structured": {
+          "filtered": 0,
+          "in": 0,
+          "retained": 0
+        },
+        "supplemental": {
+          "filtered": 0,
+          "in": 3,
+          "retained": 3
+        },
+        "vector": {
+          "filtered": 0,
+          "in": 16,
+          "retained": 16
+        },
+        "web": {
+          "filtered": 26,
+          "in": 51,
+          "retained": 25
+        }
+      },
+      "note": "关键点=获取知识库; the subject is the testable entity (the frozen answer names 深圳爱博合创医疗机器人有限公司).",
+      "query": "爱博合创企业情况以及创始人信息还有市场对这家企业的评价如何",
+      "raw_bytes": 39836,
+      "run_id": "f95b",
+      "seconds": 11.74,
+      "session_id": "session:chat:f95b-q10t1",
+      "sse_events": {
+        "answer": 1,
+        "answer_chunk": 823,
+        "done": 1,
+        "plan_done": 1,
+        "retrieval_done": 1,
+        "stage": 3
+      },
+      "status": "ok",
+      "suite": "testset",
+      "turn": 1,
+      "web": {
+        "attempted": 4,
+        "cache_hit": 8,
+        "degradation": "none",
+        "errored": 0,
+        "items": 8,
+        "timed_out": 0
+      }
+    },
+    {
+      "answer": {
+        "answer_chars": 1324,
+        "answer_style": "llm_synthesized",
+        "citation_nature": {
+          "local": 0,
+          "web": 0
+        },
+        "citations": [],
+        "query_type": "canonical_v2:A:answer",
+        "text": "具身智能行业在数据采集方面，目前主要形成了三条清晰的技术路线：\n\n1. **真机遥操作**：通过人类操作者远程操控实体机器人进行数据采集。这种方式能够获取高保真、包含真实物理交互（如触觉反馈、空间坐标、时序动作）的数据，真实性最高，但规模化采集成本较高，且对操作环境和人员依赖较强。\n2. **无本体数据采集**：通常指不依赖特定机器人本体，通过其他手段（如人类演示、视频记录等）获取数据，侧重于动作意图和环境交互逻辑的提取，适用于算法训练中对本体特性不敏感的场景。\n3. **仿真数据采集**：在虚拟仿真环境中生成数据。其优势在于成本极低、可大规模并行生成、覆盖长尾场景，但存在“仿真到现实”（Sim2Real）的差距，数据在物理真实性和复杂环境交互细节上可能与真实世界存在偏差。\n\n这三条路线在成本、真实性、规模化能力与适用场景上各有优劣，企业通常会根据自身需求进行组合选择。\n此外，本次检索还召回以下相关本地企业：深圳市智拓欣扬科技有限公司、魔法工场（无锡）科技有限公司、安徽聆动通用机器人科技有限公司、杭州云深处科技有限公司、深圳市格松科技有限公司、深圳墨奇智能技术有限公司、深圳市探真智能科技有限公司、源升智能机器人（深圳）有限公司、北京灵御智能科技有限公司、智元创新（上海）科技有限公司、北京银河通用机器人有限公司、深圳市诺因智能有限公司、智身科技（北京）有限公司、简智新创（北京）机器人科技有限公司、北京人形机器人创新中心有限公司、乐聚智能（深圳）股份有限公司、深圳玉树智能机器人有限公司、浙江人形机器人创新中心有限公司、深圳市合智思创信息技术有限公司、睿尔曼智能科技（北京）有限公司、乐聚（深圳）机器人技术有限公司、北京加速进化科技有限公司、戴盟（深圳）机器人科技有限公司、深圳华视美达信息技术有限公司、合肥零次方机器人有限公司、深圳市未来天使机器人有限公司、深圳揽月动力科技有限公司、深圳市维兴顺科技有限公司、深圳市微明星网络科技有限公司、深圳市优必选科技股份有限公司、北京中科慧灵机器人技术有限公司、深圳跃瓦创新科技有限公司、斯坦德机器人（无锡）股份有限公司、深圳市女娲机器人科技有限公司、深圳未来动力有限公司、深圳市嘉宝果科技有限公司、引力（深圳）智能机器人有限公司、上海纬钛科技有限公司、深圳市万定智能科技有限公司、深圳市晶带科技有限公司、深圳极数迭代科技有限公司、知有无界（深圳）智能科技有限公司、深圳市锐峰汇智科技有限公司、深圳市卓尔思科技有限公司、深圳市乎睿数据有限公司、深圳市优联智能控股有限公司、深圳市大景智能控制有限公司、深圳市华信天线技术有限公司、奇历士技术（深圳）有限公司、深圳市科华特科技有限公司、深圳大鹏光启科技有限公司、寻界科技（深圳）有限公司、深圳联恒智控科技有限公司、深圳市思博慧数据科技有限公司、深圳万物传感科技有限公司、隐形科技（深圳）有限公司、松延动力（北京）科技有限公司、深圳市智帽科技开发有限公司、深圳市广友电子有限公司、深圳市斯凯互联卫星技术有限公司、深圳市微科通讯设备有限公司、深圳市科迈爱康科技有限公司、深圳市杰成电子有限公司、深圳和而泰智能控制股份有限公司 等（共 125 家）。",
+        "understood_subject": null
+      },
+      "candidate_layer": {
+        "available": false,
+        "candidate_names": 0,
+        "evidence_by_lane": null,
+        "evidence_total": null,
+        "handles_local": 0,
+        "handles_web": 0,
+        "recalled_handles": 0,
+        "source": null
+      },
+      "case_id": "q11t1",
+      "error": null,
+      "group": "问题11",
+      "hits": {
+        "answer_all_entities": false,
+        "candidate_all_entities": null,
+        "entities": {
+          "real-data": {
+            "answer": false,
+            "answer_or_citations": false,
+            "candidate": null,
+            "citations": false,
+            "label": "真实数据"
+          },
+          "synthetic-data": {
+            "answer": true,
+            "answer_or_citations": true,
+            "candidate": null,
+            "citations": false,
+            "label": "合成数据"
+          }
+        },
+        "forbidden_present": []
+      },
+      "kind": "concept",
+      "lanes": {
+        "exact": {
+          "candidates": 0,
+          "status": "succeeded"
+        },
+        "lexical": {
+          "candidates": 128,
+          "status": "succeeded"
+        },
+        "structured": {
+          "candidates": 0,
+          "status": "succeeded"
+        },
+        "supplemental": {
+          "candidates": 0,
+          "status": "succeeded"
+        },
+        "vector": {
+          "candidates": 128,
+          "status": "succeeded"
+        },
+        "web": {
+          "candidates": 3,
+          "status": "succeeded"
+        }
+      },
+      "lanes_trace": {
+        "exact": {
+          "filtered": 0,
+          "in": 0,
+          "retained": 0
+        },
+        "lexical": {
+          "filtered": 0,
+          "in": 128,
+          "retained": 128
+        },
+        "structured": {
+          "filtered": 0,
+          "in": 0,
+          "retained": 0
+        },
+        "supplemental": {
+          "filtered": 0,
+          "in": 0,
+          "retained": 0
+        },
+        "vector": {
+          "filtered": 0,
+          "in": 128,
+          "retained": 128
+        },
+        "web": {
+          "filtered": 40,
+          "in": 43,
+          "retained": 3
+        }
+      },
+      "note": "关键点=真实数据、合成数据 — answer-level concept strings, not KB entities (weak assertion, no candidate-layer meaning).",
+      "query": "具身智能厂商在数据方面目前存在几种技术路线",
+      "raw_bytes": 22003,
+      "run_id": "f95b",
+      "seconds": 16.05,
+      "session_id": "session:chat:f95b-q11t1",
+      "sse_events": {
+        "answer": 1,
+        "answer_chunk": 383,
+        "done": 1,
+        "plan_done": 1,
+        "retrieval_done": 1,
+        "stage": 3
+      },
+      "status": "ok",
+      "suite": "testset",
+      "turn": 1,
+      "web": {
+        "attempted": 0,
+        "cache_hit": 8,
+        "degradation": "interpretation-rejected",
+        "errored": 0,
+        "items": 3,
+        "timed_out": 0
+      }
+    },
+    {
+      "answer": {
+        "answer_chars": 1717,
+        "answer_style": "llm_synthesized",
+        "citation_nature": {
+          "local": 0,
+          "web": 0
+        },
+        "citations": [],
+        "query_type": "canonical_v2:A:answer",
+        "text": "在具身智能与机器人领域，真实数据采集是训练模型的核心瓶颈。目前行业普遍采用真实数据与仿真数据结合的训练方式，而在真实数据采集路线上，主要包含以下几种具体方式：\n\n1. **人类远程操作（Teleoperation）**\n这是目前获取高质量具身操作数据的主流方式。操作员通过控制器实时操控机器人执行任务，系统同步记录机器人的动作与状态数据。这种方式能提供符合人类逻辑的高质量演示，但受限于操作员的时间成本。\n\n2. **动作捕捉技术（Motion Capture）**\n利用高精度传感器捕捉人类或机器人在复杂环境中的动作、感知和交互数据。通过机器学习算法对捕捉到的运动数据进行处理，生成动作模型，使机器人能够执行如精确搬运、装配等细致任务。多模态动作捕捉是构建人形机器人数据工厂的关键技术。\n\n3. **仿真到现实迁移（Sim-to-Real）**\n在仿真环境中搭建虚拟数字场景，采用虚实结合的方式进行数据采集。虽然主要依赖仿真，但通过记录机器人在仿真场景中的运动轨迹，并结合现实世界的微调，可以增加训练集数量，弥补真实数据量的不足。\n\n4. **互联网视频学习（Internet Video）**\n汇集来自互联网的大规模人类视频数据集，让机器人通过观看视频学习通用技能和常识。这种方式数据规模巨大，但通常作为辅助手段，与真实物理操作数据结合使用。\n\n5. **野外实地测量与传感器采集**\n在地理信息系统及特定工业场景中，通过野外实地测量、传感器数据采集（如水位、流速、水质监测等）获取原始信息。这种方式特别适合局部、零星或高精度的物理环境数据获取。\n\n6. **软件接口与数据对接**\n通过各软件厂商开放的数据接口，实现不同软件数据的互联互通。这是目前最常见的数据对接方式，用于获取结构化业务数据。\n\n除上述方式外，深圳在这一领域还有不少相关公司，如镁拓科技（深圳）有限责任公司等，它们聚焦于AI基础训练数据提供商的角色，为算法模型开发提供专业数据集。您更关心哪条技术路线的具体实施细节？我可以再深入检索。\n此外，本次检索还召回以下相关本地企业：深圳市喜悦智慧数据有限公司、深圳市方易通科技有限公司、深圳市亿云联科技有限公司、大象云控（深圳）信息技术有限公司、深圳瀚海数据科技有限公司、深圳市鸿和达智能科技有限公司、华云中科（深圳）管理有限公司、仿脑科技（深圳）有限公司、深圳市纯庆智能有限公司、深圳市乎睿数据有限公司、中电鹰硕（深圳）智慧互联有限公司、深圳有为数据智能有限公司、深圳市星际存储技术有限公司、深圳市汇恒通科技有限公司、联捷计算科技（深圳）有限公司、深圳市般若大数据技术有限公司、深圳日海智城科技有限公司、鸬鹚科技（深圳）有限公司、深圳仁云投资咨询有限公司、隐形科技（深圳）有限公司、基诺信息科技（深圳）有限公司、深圳市科迈爱康科技有限公司、墨智科技（深圳）有限公司、深圳鼎讯智城科技有限公司、深圳市佳晔盛科技有限公司、深圳市贝尔加数据信息有限公司、深圳华强技术有限公司、深圳市艾特科技工程有限公司、深圳数溪科技有限公司、深圳市京银科技有限公司、深圳市旗扬特种装备技术工程有限公司、深圳市铭扬智能装备有限公司、深圳市哈工云数据有限公司、深圳前海鲁班科技有限公司、深圳无界智航科技有限公司、深圳市驷远科技有限公司、深圳市神灯数据服务有限公司、深圳市华育昌国际科教开发有限公司、深圳市德骜数据有限公司、深圳匠韵智能有限公司、密信技术（深圳）有限公司、深圳市汉云科技有限公司、深圳蜜獾智抄科技有限公司、深圳卫捕士科技有限公司、深圳市空间数据科技有限公司、深圳市信泰诚信息技术有限公司、深圳市随你探探网络科技有限公司、深圳仁云互联网有限公司、深圳市寒武科耀大数据有限责任公司、深圳市华仁智信技术有限公司、深圳第一路演网络科技股份有限公司、深圳昂楷科技有限公司、道克瑞国际物流（深圳）有限公司、深圳七七元素科技有限公司、小质科技（深圳）有限公司、深圳市云果信息科技有限公司、深圳市奇云生物信息科技有限公司、深圳熙光技术有限公司、深圳极数迭代科技有限公司、深圳灿态信息技术有限公司、深圳市阿鼎科技有限公司、深圳市简睿科技有限公司。",
+        "understood_subject": null
+      },
+      "candidate_layer": {
+        "available": false,
+        "candidate_names": 0,
+        "evidence_by_lane": null,
+        "evidence_total": null,
+        "handles_local": 0,
+        "handles_web": 0,
+        "recalled_handles": 0,
+        "source": null
+      },
+      "case_id": "q12t1",
+      "error": null,
+      "group": "问题12",
+      "hits": {
+        "answer_all_entities": false,
+        "candidate_all_entities": null,
+        "entities": {
+          "mocap": {
+            "answer": false,
+            "answer_or_citations": false,
+            "candidate": null,
+            "citations": false,
+            "label": "动捕数据"
+          },
+          "real-robot": {
+            "answer": false,
+            "answer_or_citations": false,
+            "candidate": null,
+            "citations": false,
+            "label": "真机实测"
+          },
+          "teleop": {
+            "answer": false,
+            "answer_or_citations": false,
+            "candidate": null,
+            "citations": false,
+            "label": "遥操作"
+          }
+        },
+        "forbidden_present": []
+      },
+      "kind": "concept",
+      "lanes": {
+        "exact": {
+          "candidates": 0,
+          "status": "succeeded"
+        },
+        "lexical": {
+          "candidates": 128,
+          "status": "succeeded"
+        },
+        "structured": {
+          "candidates": 0,
+          "status": "succeeded"
+        },
+        "vector": {
+          "candidates": 128,
+          "status": "succeeded"
+        },
+        "web": {
+          "candidates": 96,
+          "status": "succeeded"
+        }
+      },
+      "lanes_trace": {
+        "exact": {
+          "filtered": 0,
+          "in": 0,
+          "retained": 0
+        },
+        "lexical": {
+          "filtered": 0,
+          "in": 128,
+          "retained": 128
+        },
+        "structured": {
+          "filtered": 0,
+          "in": 0,
+          "retained": 0
+        },
+        "vector": {
+          "filtered": 0,
+          "in": 128,
+          "retained": 128
+        },
+        "web": {
+          "filtered": 0,
+          "in": 68,
+          "retained": 68
+        }
+      },
+      "note": "关键点=遥操作、动捕数据、真机实测.",
+      "query": "在真实数据采集路线中，有哪些具体方式",
+      "raw_bytes": 42508,
+      "run_id": "f95b",
+      "seconds": 16.77,
+      "session_id": "session:chat:f95b-q12t1",
+      "sse_events": {
+        "answer": 1,
+        "answer_chunk": 830,
+        "done": 1,
+        "plan_done": 1,
+        "retrieval_done": 1,
+        "stage": 3
+      },
+      "status": "ok",
+      "suite": "testset",
+      "turn": 1,
+      "web": {
+        "attempted": 4,
+        "cache_hit": 8,
+        "degradation": "interpretation-rejected",
+        "errored": 0,
+        "items": 10,
+        "timed_out": 0
+      }
+    },
+    {
+      "answer": {
+        "answer_chars": 2168,
+        "answer_style": "llm_synthesized",
+        "citation_nature": {
+          "local": 0,
+          "web": 0
+        },
+        "citations": [],
+        "query_type": "canonical_v2:A:answer",
+        "text": "在具身智能与自动驾驶等领域，利用模拟器生成数据（合成数据）主要涵盖以下几类具体技术路线与方式：\n\n**1. 物理仿真与高保真环境构建**\n这是最基础的生成方式，通过物理引擎模拟真实世界的物理规律（如重力、碰撞、摩擦），构建虚拟环境以生成训练数据。\n*   **具体方式**：基于物理真实的虚拟环境进行机器人仿真与测试。例如，NVIDIA Isaac Sim 是一个基于 Omniverse 库构建的开源参考框架，专门用于在物理真实的虚拟环境中进行机器人仿真、测试和合成数据生成。\n*   **应用场景**：广泛用于机器人、无人机、无人车等具身智能产品的研发与训练，以优化任务策略和控制算法。\n\n**2. 生成式AI与“世界模型”生成**\n利用生成式人工智能技术，在虚拟世界中快速“生成世界”，构建高度真实的仿真环境，特别是针对现实中难以高频获取的极端或长尾场景。\n*   **具体方式**：依托生成式AI技术，只需几分钟即可构建高度真实的仿真城市环境，并精准复刻现实道路中难以高频获取的极端场景。例如，文远知行发布的通用仿真模型 WeRide GENESIS，能够生成连续、多视角的虚拟驾驶场景。\n*   **应用场景**：特斯拉的“世界模拟器”能够基于真实世界的海量数据，以极高的保真度生成连续、多视角的虚拟驾驶场景，用于训练自动驾驶系统，涵盖雨天路滑、行人横穿马路、车辆加塞等罕见长尾场景的生成与对抗性测试。\n\n**3. 遥操作与动作捕捉数据生成**\n通过捕捉人类操作者的动作数据，将其映射到机器人本体上，从而生成高质量的具身操作数据。\n*   **具体方式**：\n    *   **动捕遥操作**：通过高精度传感器（如动捕手套、全身动捕设备）捕捉运动数据，利用机器学习算法进行处理和生成动作模型，将人体动作映射到机器人本体上，实现精准的遥操作控制。\n    *   **远程控制器记录**：人类通过远程控制器实时控制机器人操作，并记录机器人的操作数据。\n*   **应用场景**：用于构建人形机器人的数据工厂，支持精确搬运、装配等复杂任务的数据采集。\n\n**4. 仿真场景搭建与虚实结合合成**\n在仿真环境中搭建虚拟数字场景，采用虚实结合的方式进行数据采集，记录机器人在仿真场景中的运动轨迹及各传感器数据。\n*   **具体方式**：构建仿真场景进行数据合成，记录机器人在仿真场景中的运动轨迹及各传感器数据。\n*   **应用场景**：用于构建人形机器人具身操作数据集，补充真实世界数据采集的不足。\n\n**5. 基于实际数据的场景分析与模拟生成**\n分析从真实驾驶或作业环境收集的实际输入数据，识别环境类别、移动代理类别及移动模式类别，并据此产生模拟数据。\n*   **具体方式**：一种产生用于训练自动驾驶代理的模拟数据的方法，包括分析从驾驶环境收集的实际输入数据，以识别多个环境类别、多个移动代理类别及多个移动模式类别，并根据这些类别产生模拟数据。\n\n除上述企业外，深圳在这一领域还有不少相关公司，您更关心哪条产品线的细节？我可以再深入检索。\n此外，本次检索还召回以下相关本地企业：大象云控（深圳）信息技术有限公司、深圳瀚海数据科技有限公司、联捷计算科技（深圳）有限公司、深圳匠韵智能有限公司、深圳市鸿和达智能科技有限公司、华云中科（深圳）管理有限公司、深圳市喜悦智慧数据有限公司、仿脑科技（深圳）有限公司、深圳市纯庆智能有限公司、深圳市乎睿数据有限公司、中电鹰硕（深圳）智慧互联有限公司、深圳有为数据智能有限公司、深圳市星际存储技术有限公司、深圳市汇恒通科技有限公司、镁拓科技（深圳）有限责任公司、深圳市般若大数据技术有限公司、深圳日海智城科技有限公司、鸬鹚科技（深圳）有限公司、深圳仁云投资咨询有限公司、隐形科技（深圳）有限公司、基诺信息科技（深圳）有限公司、深圳市方易通科技有限公司、深圳市科迈爱康科技有限公司、墨智科技（深圳）有限公司、深圳鼎讯智城科技有限公司、深圳市佳晔盛科技有限公司、深圳市贝尔加数据信息有限公司、深圳华强技术有限公司、深圳市艾特科技工程有限公司、深圳数溪科技有限公司、深圳市亿云联科技有限公司、深圳市京银科技有限公司、深圳市旗扬特种装备技术工程有限公司、深圳市铭扬智能装备有限公司、深圳市哈工云数据有限公司、深圳前海鲁班科技有限公司、深圳市驷远科技有限公司、深圳市神灯数据服务有限公司、深圳市华育昌国际科教开发有限公司、深圳市德骜数据有限公司、密信技术（深圳）有限公司、深圳蜜獾智抄科技有限公司、深圳卫捕士科技有限公司、深圳市空间数据科技有限公司、深圳市信泰诚信息技术有限公司、深圳市随你探探网络科技有限公司、深圳仁云互联网有限公司、深圳市寒武科耀大数据有限责任公司、深圳市华仁智信技术有限公司、深圳第一路演网络科技股份有限公司、深圳昂楷科技有限公司、道克瑞国际物流（深圳）有限公司、深圳七七元素科技有限公司、小质科技（深圳）有限公司、深圳市云果信息科技有限公司、深圳市奇云生物信息科技有限公司、深圳市必易微电子股份有限公司、深圳市其域创新科技有限公司、深圳市迪浦电子有限公司、深圳市九天睿芯科技有限公司、深圳市普方立民科技股份有限公司、深圳市傲科光电子有限公司、深圳市诚芯微科技股份有限公司。",
+        "understood_subject": null
+      },
+      "candidate_layer": {
+        "available": false,
+        "candidate_names": 0,
+        "evidence_by_lane": null,
+        "evidence_total": null,
+        "handles_local": 0,
+        "handles_web": 0,
+        "recalled_handles": 0,
+        "source": null
+      },
+      "case_id": "q13t1",
+      "error": null,
+      "group": "问题13",
+      "hits": {
+        "answer_all_entities": true,
+        "candidate_all_entities": null,
+        "entities": {
+          "sim-data": {
+            "answer": true,
+            "answer_or_citations": true,
+            "candidate": null,
+            "citations": false,
+            "label": "仿真数据"
+          },
+          "synth-data": {
+            "answer": true,
+            "answer_or_citations": true,
+            "candidate": null,
+            "citations": false,
+            "label": "合成数据"
+          }
+        },
+        "forbidden_present": []
+      },
+      "kind": "concept",
+      "lanes": {
+        "exact": {
+          "candidates": 1,
+          "status": "succeeded"
+        },
+        "lexical": {
+          "candidates": 128,
+          "status": "succeeded"
+        },
+        "structured": {
+          "candidates": 0,
+          "status": "succeeded"
+        },
+        "vector": {
+          "candidates": 128,
+          "status": "succeeded"
+        },
+        "web": {
+          "candidates": 92,
+          "status": "succeeded"
+        }
+      },
+      "lanes_trace": {
+        "exact": {
+          "filtered": 0,
+          "in": 1,
+          "retained": 1
+        },
+        "lexical": {
+          "filtered": 0,
+          "in": 128,
+          "retained": 128
+        },
+        "structured": {
+          "filtered": 0,
+          "in": 0,
+          "retained": 0
+        },
+        "vector": {
+          "filtered": 0,
+          "in": 128,
+          "retained": 128
+        },
+        "web": {
+          "filtered": 0,
+          "in": 69,
+          "retained": 69
+        }
+      },
+      "note": "关键点=仿真数据、合成数据；合成方法包括.",
+      "query": "在模拟器生成数据路线中，有哪些具体方式",
+      "raw_bytes": 60114,
+      "run_id": "f95b",
+      "seconds": 27.43,
+      "session_id": "session:chat:f95b-q13t1",
+      "sse_events": {
+        "answer": 1,
+        "answer_chunk": 1229,
+        "done": 1,
+        "plan_done": 1,
+        "retrieval_done": 1,
+        "stage": 3
+      },
+      "status": "ok",
+      "suite": "testset",
+      "turn": 1,
+      "web": {
+        "attempted": 4,
+        "cache_hit": 8,
+        "degradation": "interpretation-rejected",
+        "errored": 0,
+        "items": 10,
+        "timed_out": 0
+      }
+    },
+    {
+      "answer": {
+        "answer_chars": 3861,
+        "answer_style": "llm_synthesized",
+        "citation_nature": {
+          "local": 7,
+          "web": 0
+        },
+        "citations": [
+          {
+            "id": "official-source-9fda2bc43c12d5a8",
+            "label": "深圳市智拓欣扬科技有限公司",
+            "type": "company",
+            "url": "http://xinyang-ai.com/"
+          },
+          {
+            "id": "official-source-723939af54f5e85c",
+            "label": "戴盟（深圳）机器人科技有限公司",
+            "type": "company",
+            "url": "https://www.dmrobot.com/"
+          },
+          {
+            "id": "official-source-8cbf1b4cf8f19379",
+            "label": "乐聚智能（深圳）股份有限公司",
+            "type": "company",
+            "url": "https://www.lejurobot.com/"
+          },
+          {
+            "id": "official-source-7afa8217ac59e195",
+            "label": "深圳超维传感科技有限公司",
+            "type": "company",
+            "url": "https://hysense.ai"
+          },
+          {
+            "id": "official-source-00c4bd4a40424540",
+            "label": "深圳市优必选科技股份有限公司",
+            "type": "company",
+            "url": "http://www.ubtrobot.com/"
+          },
+          {
+            "id": "official-source-a93afc1e3264b580",
+            "label": "深圳市乎睿数据有限公司",
+            "type": "company",
+            "url": "https://www.hooraydata.com/"
+          },
+          {
+            "id": "official-source-b704be2954788318",
+            "label": "斯坦德机器人（无锡）股份有限公司",
+            "type": "company",
+            "url": "http://www.standard-robots.com"
+          }
+        ],
+        "query_type": "canonical_v2:A:answer",
+        "text": "深圳在具身智能与灵巧手领域已形成从底层数据采集、核心零部件（灵巧手/传感器）到整机本体及行业应用的完整产业链。在数据层面，各厂商主要采取“真机遥操作”、“真人示教”、“仿真合成”以及“多模态融合”等路线。以下是深圳具身智能及灵巧手相关厂商及其数据路线的详细梳理：\n\n### 一、 整机本体与通用操作厂商（侧重多模态数据与遥操作）\n\n1. **戴盟（深圳）机器人科技有限公司**\n   - **核心产品**：DM-Hand1（多维触觉感知五指灵巧手）、Sparky1（心灵手巧型人形机器人）、DM-EXton（穿戴式遥操作数据采集系统）。\n   - **数据路线**：该公司聚焦于**“以人为中心”的穿戴式遥操作数据采集**，通过自主研发的遥操作数据采集系统，结合高分辨率多模态触觉感知，构建包含视觉、触觉和语言的操作模型。其数据路线强调真机遥操与触觉数据的深度融合，旨在解决复杂操作中的精细控制问题。\n\n2. **深圳市智拓欣扬科技有限公司**\n   - **核心产品**：多平台系统（覆盖儿童陪伴机器人到轮式人形机器人）。\n   - **数据路线**：采用**“B2C产品验证+数据闭环”**路线。通过B2C端产品（如陪伴机器人）在真实物理世界中收集用户交互数据，验证“大脑-小脑”云端协同架构，并将产生的数据反哺B2B平台，实现AI智能的持续进化。其核心在于利用消费级场景产生海量真实物理世界数据。\n\n3. **深圳市优必选科技股份有限公司**\n   - **核心产品**：Walker S/S1/S2、Walker C、Cruzr S2、悟空、Alpha系列等。\n   - **数据路线**：作为行业龙头，优必选在工业制造（汽车/3C流水线）、商用服务及教育科研场景中积累了大量**真机运行数据**。其数据路线侧重于在真实工业与服务场景中验证步态规划、精准同步作业及多语言交互能力，通过规模化部署获取长尾场景数据。\n\n4. **乐聚智能（深圳）股份有限公司**\n   - **核心产品**：Roban、Aelos系列、KUAVO系列、PANDO、TALOS。\n   - **数据路线**：采取**“科研教育+工业场景”**双轮驱动的数据路线。一方面通过高校实验室的ROS教学、SLAM算法验证及STEAM教育收集基础控制与编程数据；另一方面在汽车制造、物流搬运等工业场景中获取高精度对接、巡检及搬运的真实操作数据，用于训练具身智能体。\n\n5. **深圳揽月动力科技有限公司**\n   - **核心产品**：双轮足人形机器人（高165cm，自重60kg）。\n   - **数据路线**：聚焦于**工业与物流高重复性力控场景**的数据采集。其数据路线侧重于在搬运、码垛、上下料等任务中，收集移动操作过程中的力控反馈与交互数据，以强化机器人在复杂操作中的鲁棒性。\n\n6. **深圳市探真智能科技有限公司**\n   - **核心产品**：工业级具身智能体。\n   - **数据路线**：依托大疆创新团队背景，采取**“计算机视觉+三维空间重建”**的数据路线。通过深度融合视觉感知与空间重建技术，收集工业场景中复杂、高危环境下的三维空间数据与操作指令，解决非结构化环境下的具身智能体感知与行动问题。\n\n7. **深圳玉树智能机器人有限公司**\n   - **核心产品**：精灵G1通用具身智能机器人、远征A2通用人形机器人。\n   - **数据路线**：基于**“运营平台+智能装备”**模式，在市政街道、公园、园区等城市服务场景中收集环境感知与服务交互数据。其数据路线侧重于城市服务场景下的多模态感知数据积累，以支持通用具身智能机器人在开放环境中的落地。\n\n### 二、 灵巧手与核心零部件厂商（侧重触觉数据与仿真）\n\n8. **源升智能机器人（深圳）有限公司**\n   - **核心产品**：Apex Hand（灵巧手）。\n   - **数据路线**：聚焦于**狭小空间光滑物体抓取、医疗把脉、日常手机/鼠标操作**等精细操作场景。其数据路线侧重于通过半结构化工厂柔性装配等特定场景，收集高精度触觉与操作数据，未来延伸至家庭服务场景。\n\n9. **深圳超维传感科技有限公司**\n   - **核心产品**：灵巧手触觉传感器、机器人电子皮肤。\n   - **数据路线**：作为触觉传感器供应商，其数据路线侧重于为灵巧手AI训练提供**高一致性、高可靠性的触觉数据基础**。通过多物理量融合感知技术，在指尖微小空间内集成轮廓、三向力及姿态感知，解决灵巧手在AI训练中对高精度触觉数据的需求。\n\n10. **深圳市兆威灵巧手技术有限公司（兆威机电旗下）**\n    - **核心产品**：ZWHAND系列灵巧手。\n    - **数据路线**：通过现场演示抓取、负重及连续操作，积累**机械结构与运动控制**相关的底层数据。其数据路线侧重于灵巧手硬件层面的性能验证与操作数据积累，为上层具身智能算法提供可靠的执行端数据支持。\n\n11. **深圳星际光年科技有限公司**\n    - **核心产品**：低成本高自由度通用末端执行器、具身数据采集系统。\n    - **数据路线**：专注于**具身数据采集系统**的研发，旨在解决低成本、高自由度末端执行器的数据采集问题。其数据路线侧重于构建标准化的具身操作数据集，推动通用操作数据的规模化获取。\n\n### 三、 数据基础设施与平台厂商（侧重多模态对齐与仿真）\n\n12. **深圳市乎睿数据有限公司**\n    - **核心定位**：具身智能数据服务商。\n    - **数据路线**：作为数据层厂商，乎睿数据致力于解决具身智能数据集总量少、标准不统一的问题。其数据路线侧重于**多模态数据的清洗、标注与标准化**，为具身智能模型训练提供高质量、结构化的数据供给。\n\n13. **深圳市神灯数据服务有限公司**\n    - **核心定位**：数据服务。\n    - **数据路线**：提供数据标注与处理服务，支持具身智能领域的数据闭环构建。\n\n14. **深圳市思博慧数据科技有限公司**\n    - **核心定位**：数据监控与分析。\n    - **数据路线**：虽主要面向交通监控，但其数据积累能力可延伸至具身智能场景中的**环境感知与行为分析数据**，为具身智能体提供外部场景数据支持。\n\n### 四、 行业背景与政策导向\n\n深圳正着力打造**具身智能数据采集基地**，着力提升具身智能数据供给能力。根据公开信息，深圳在具身智能数据层面主要鼓励以下路线：\n- **多模态融合**：结合视、触、力、位等多模态数据，提升模型对物理世界的理解能力。\n- **遥操作与示教**：通过穿戴式遥操作设备与人类示教，收集高质量的真机操作数据。\n- **仿真合成**：利用仿真引擎生成大量合成数据，弥补真实世界数据获取成本高、风险大的不足。\n- **真机验证**：在工业、物流、服务等真实场景中收集长尾数据，实现模型的持续迭代。\n\n除上述企业外，深圳在这一领域还有不少相关公司，如**深圳市未来天使机器人有限公司**（家庭陪伴与教育场景数据）、**深圳未来动力有限公司**（核心零部件数据）等，共同构成了深圳具身智能与灵巧手产业的丰富生态。您更关心哪条产品线的细节？我可以再深入检索。\n此外，本次检索还召回以下相关本地企业：深圳市格松科技有限公司、深圳市诺因智能有限公司、深圳墨奇智能技术有限公司、引力（深圳）智能机器人有限公司、深圳市维兴顺科技有限公司、深圳市微明星网络科技有限公司、深圳市嘉宝果科技有限公司、斯坦德机器人（无锡）股份有限公司、深圳市女娲机器人科技有限公司、深圳市杰成电子有限公司、深圳华视美达信息技术有限公司、深圳市宙斯机器人有限公司、深圳市艾特科技工程有限公司、丘脑智能科技（深圳）有限公司、深圳市诠云科技有限公司、前海兰博智能科技（深圳）有限公司、深圳蜜獾智抄科技有限公司、深圳市信利康电子有限公司、深圳第一路演网络科技股份有限公司、深圳市矩阵动力科技开发有限公司、深圳跃瓦创新科技有限公司、深圳市世纪云芯科技有限公司、奇历士技术（深圳）有限公司、寻界科技（深圳）有限公司、深圳市广友电子有限公司、深圳佰维存储科技股份有限公司、深圳极数迭代科技有限公司、深圳市汇金智能科技有限公司、深圳市鸿和达智能科技有限公司、深圳市锐峰汇智科技有限公司、深圳市龙域通信科技有限公司、深圳前海极北数据科技有限公司、仿脑科技（深圳）有限公司、深圳市巨龙创视科技有限公司、深圳市纯庆智能有限公司、深圳市己匠科技有限公司、广东鹏行智能有限公司、深圳触景数据科技有限公司、深圳有为数据智能有限公司、深圳市优联智能控股有限公司、深圳市鹏诚新能源科技有限公司、深圳联恒智控科技有限公司、隐形科技（深圳）有限公司、深圳市轻生活科技有限公司、深圳若奇火鸡科技有限公司、深圳国创具身智能机器人有限公司、深圳市奇普乐芯片技术有限公司、深圳市科迈爱康科技有限公司、深圳和锐网络科技有限公司、深圳市易联电子有限公司、深圳市凯曼达科技有限公司、广东灵锶智能科技有限公司、跨维（深圳）智能数字科技有限公司、深圳华强技术有限公司、深圳市亿云联科技有限公司、深圳市旗扬特种装备技术工程有限公司、深圳市铭扬智能装备有限公司、大象云控（深圳）信息技术有限公司、深圳前海鲁班科技有限公司、深圳创达云睿智能科技有限公司。",
+        "understood_subject": null
+      },
+      "candidate_layer": {
+        "available": false,
+        "candidate_names": 0,
+        "evidence_by_lane": null,
+        "evidence_total": null,
+        "handles_local": 0,
+        "handles_web": 0,
+        "recalled_handles": 0,
+        "source": null
+      },
+      "case_id": "q14t1",
+      "error": null,
+      "group": "问题14",
+      "hits": {
+        "answer_all_entities": false,
+        "candidate_all_entities": null,
+        "entities": {},
+        "forbidden_present": []
+      },
+      "kind": "unlabeled",
+      "lanes": {
+        "exact": {
+          "candidates": 1,
+          "status": "succeeded"
+        },
+        "lexical": {
+          "candidates": 128,
+          "status": "succeeded"
+        },
+        "structured": {
+          "candidates": 0,
+          "status": "succeeded"
+        },
+        "supplemental": {
+          "candidates": 14,
+          "status": "succeeded"
+        },
+        "vector": {
+          "candidates": 128,
+          "status": "succeeded"
+        },
+        "web": {
+          "candidates": 111,
+          "status": "succeeded"
+        }
+      },
+      "lanes_trace": {
+        "exact": {
+          "filtered": 0,
+          "in": 1,
+          "retained": 1
+        },
+        "lexical": {
+          "filtered": 0,
+          "in": 128,
+          "retained": 128
+        },
+        "structured": {
+          "filtered": 0,
+          "in": 0,
+          "retained": 0
+        },
+        "supplemental": {
+          "filtered": 0,
+          "in": 14,
+          "retained": 14
+        },
+        "vector": {
+          "filtered": 0,
+          "in": 128,
+          "retained": 128
+        },
+        "web": {
+          "filtered": 0,
+          "in": 79,
+          "retained": 79
+        }
+      },
+      "note": "No 关键点. High-value human-review case (深圳具身智能/灵巧手 enumeration — the most vector-lane-dependent test-set turn).",
+      "query": "目前深圳有哪些具身智能、灵巧手厂商，他们在数据层面分别是什么路线",
+      "raw_bytes": 133116,
+      "run_id": "f95b",
+      "seconds": 35.41,
+      "session_id": "session:chat:f95b-q14t1",
+      "sse_events": {
+        "answer": 1,
+        "answer_chunk": 2847,
+        "done": 1,
+        "plan_done": 1,
+        "retrieval_done": 1,
+        "stage": 3
+      },
+      "status": "ok",
+      "suite": "testset",
+      "turn": 1,
+      "web": {
+        "attempted": 4,
+        "cache_hit": 8,
+        "degradation": "interpretation-rejected",
+        "errored": 0,
+        "items": 10,
+        "timed_out": 0
+      }
+    },
+    {
+      "answer": {
+        "answer_chars": 2330,
+        "answer_style": "llm_synthesized",
+        "citation_nature": {
+          "local": 0,
+          "web": 0
+        },
+        "citations": [],
+        "query_type": "canonical_v2:A:answer",
+        "text": "在具身智能的合成数据发展方向上，目前主要存在两条核心的技术路线之争，分别是“视频合成+3D重建”和“端到端3D生成”。此外，行业普遍将合成数据与基于规则的仿真推演、物理仿真引擎以及生成式大模型等技术结合，形成多样化的实现方法。\n\n**1. 视频合成+3D重建路线**\n该路线基于传统视频数据处理，通过视频生成模型结合3D重建技术来生成空间数据。\n*   **代表厂商/平台**：\n    *   **DataMesh**：发布具身智能数据产品解决方案，聚焦工业与设施场景，提供从工业场景建模、物理属性与传感器仿真、照片级视觉生成到规模化自动真值标注的服务。\n    *   **DataMesh Robotics**：面向具身智能提供工业级合成训练数据，构建数字孪生场景，模拟传感器，自动生成真值标注，并导出至NVIDIA Isaac Sim / Omniverse等平台。\n\n**2. 端到端3D生成路线**\n该路线以生成模型为核心，尝试以更高的效率直接生成空间数据，被视为具身合成数据的重要发展方向。\n*   **代表厂商/平台**：\n    *   **英伟达（NVIDIA）**：提供用于AI和3D仿真工作流的合成数据解决方案，探索用于物理AI的SDG（合成数据生成）工作负载，涵盖仿真/建模/设计、机器人、生成式AI等用例，其Omniverse和Isaac平台是重要支撑。\n    *   **华为云**：通过CloudRobo平台在云侧结合视频生成模型和物理引擎提供合成数据服务，帮助模型能力快速升级。\n\n**3. 基于物理仿真与规则推演的路线**\n利用底层通用仿真平台或基于规则的仿真推演方法生成数据，是合成数据的重要基础手段。\n*   **代表厂商/平台**：\n    *   **Gazebo**：提供可扩展的物理引擎和多机器人模型库，是底层通用仿真平台的典型代表。\n    *   **NVIDIA Isaac Sim**：作为另一大底层通用仿真平台，广泛用于机器人仿真和合成数据生成。\n    *   **相关技术方**：存在基于规则的仿真推演智能体生成方法等技术，涉及计算机仿真技术领域。\n\n**4. 生成式大模型与通用合成数据技术**\n利用生成式人工智能技术、大模型创建模仿真实世界数据的合成数据集，解决AI数据瓶颈。\n*   **代表厂商/平台**：\n    *   **AWS**：提供基于生成式AI技术的合成数据创建服务，强调合成数据集具有与真实数据相同的数学特性。\n    *   **Google Cloud**：利用合成数据加快“数据到AI”的生命周期，无需手动标注或等待现场收集。\n    *   **沙利文（Frost & Sullivan）**：发布《2025年中国合成数据解决方案发展洞察》，分析合成数据解决方案的技术路径和市场格局。\n    *   **国际合成数据生成公司**：包括Datagen、MOSTLY AI、TonicAI, Inc.、Synthesis AI、GenRocket, Inc.、Gretel Labs, Inc.和K2view Ltd.等，提供综合数据生成服务。\n\n除上述企业外，深圳在这一领域还有不少相关公司，如生境科技等也在该领域有技术布局。您更关心哪条技术路线的具体应用案例或哪家厂商的详细解决方案？我可以再深入检索。\n此外，本次检索还召回以下相关本地企业：深圳市智拓欣扬科技有限公司、魔法工场（无锡）科技有限公司、安徽聆动通用机器人科技有限公司、杭州云深处科技有限公司、深圳市格松科技有限公司、源升智能机器人（深圳）有限公司、北京银河通用机器人有限公司、北京灵御智能科技有限公司、智元创新（上海）科技有限公司、深圳市诺因智能有限公司、智身科技（北京）有限公司、简智新创（北京）机器人科技有限公司、深圳墨奇智能技术有限公司、深圳市探真智能科技有限公司、北京人形机器人创新中心有限公司、深圳玉树智能机器人有限公司、乐聚智能（深圳）股份有限公司、睿尔曼智能科技（北京）有限公司、浙江人形机器人创新中心有限公司、北京加速进化科技有限公司、乐聚（深圳）机器人技术有限公司、戴盟（深圳）机器人科技有限公司、深圳市未来天使机器人有限公司、深圳市维兴顺科技有限公司、深圳市微明星网络科技有限公司、深圳市优必选科技股份有限公司、广东具身风暴机器人有限公司、深圳未来动力有限公司、深圳华视美达信息技术有限公司、合肥零次方机器人有限公司、引力（深圳）智能机器人有限公司、上海纬钛科技有限公司、深圳市信利康电子有限公司、深圳市华仁智信技术有限公司、深圳市华杰智通科技有限公司、深圳跃瓦创新科技有限公司、深圳市乎睿数据有限公司、深圳市朗科科技股份有限公司、斯坦德机器人（无锡）股份有限公司、深圳市思博慧数据科技有限公司、深圳市女娲机器人科技有限公司、松延动力（北京）科技有限公司、深圳市宙斯机器人有限公司、深圳市艾特科技工程有限公司、大象云控（深圳）信息技术有限公司、前海兰博智能科技（深圳）有限公司、深圳市神灯数据服务有限公司、广州高擎机电科技有限公司、北京启物科技有限责任公司、柏发物联（深圳）科技有限公司、深圳蜜獾智抄科技有限公司、北京中科慧灵机器人技术有限公司、深圳第一路演网络科技股份有限公司、深圳镜界智能科技有限公司、深圳市矩阵动力科技开发有限公司、深圳动魅科技有限公司、知有无界（深圳）智能科技有限公司、深圳市世纪云芯科技有限公司、仿脑科技（深圳）有限公司、广东鹏行智能有限公司、深圳市云中飞电子有限公司、深圳超维传感科技有限公司、深圳市会硕科技有限公司、深圳国创具身智能机器人有限公司。",
+        "understood_subject": null
+      },
+      "candidate_layer": {
+        "available": false,
+        "candidate_names": 0,
+        "evidence_by_lane": null,
+        "evidence_total": null,
+        "handles_local": 0,
+        "handles_web": 0,
+        "recalled_handles": 0,
+        "source": null
+      },
+      "case_id": "q15t1",
+      "error": null,
+      "group": "问题15",
+      "hits": {
+        "answer_all_entities": true,
+        "candidate_all_entities": null,
+        "entities": {
+          "gen-model": {
+            "answer": true,
+            "answer_or_citations": true,
+            "candidate": null,
+            "citations": false,
+            "label": "生成式模型生成"
+          },
+          "phys-engine": {
+            "answer": true,
+            "answer_or_citations": true,
+            "candidate": null,
+            "citations": false,
+            "label": "物理仿真引擎生成"
+          },
+          "rule-based": {
+            "answer": true,
+            "answer_or_citations": true,
+            "candidate": null,
+            "citations": false,
+            "label": "基于规则生成"
+          }
+        },
+        "forbidden_present": []
+      },
+      "kind": "concept",
+      "lanes": {
+        "exact": {
+          "candidates": 0,
+          "status": "succeeded"
+        },
+        "lexical": {
+          "candidates": 128,
+          "status": "succeeded"
+        },
+        "structured": {
+          "candidates": 0,
+          "status": "succeeded"
+        },
+        "supplemental": {
+          "candidates": 0,
+          "status": "succeeded"
+        },
+        "vector": {
+          "candidates": 128,
+          "status": "succeeded"
+        },
+        "web": {
+          "candidates": 97,
+          "status": "succeeded"
+        }
+      },
+      "lanes_trace": {
+        "exact": {
+          "filtered": 0,
+          "in": 0,
+          "retained": 0
+        },
+        "lexical": {
+          "filtered": 0,
+          "in": 128,
+          "retained": 128
+        },
+        "structured": {
+          "filtered": 0,
+          "in": 0,
+          "retained": 0
+        },
+        "supplemental": {
+          "filtered": 0,
+          "in": 0,
+          "retained": 0
+        },
+        "vector": {
+          "filtered": 0,
+          "in": 128,
+          "retained": 128
+        },
+        "web": {
+          "filtered": 0,
+          "in": 73,
+          "retained": 73
+        }
+      },
+      "note": "关键点=物理仿真引擎生成、生成式模型生成、基于规则生成.",
+      "query": "在具身智能的合成数据发展方向上，具体有几种实现方法，分别有哪些代表厂商",
+      "raw_bytes": 61418,
+      "run_id": "f95b",
+      "seconds": 29.5,
+      "session_id": "session:chat:f95b-q15t1",
+      "sse_events": {
+        "answer": 1,
+        "answer_chunk": 1264,
+        "done": 1,
+        "plan_done": 1,
+        "retrieval_done": 1,
+        "stage": 3
+      },
+      "status": "ok",
+      "suite": "testset",
+      "turn": 1,
+      "web": {
+        "attempted": 4,
+        "cache_hit": 8,
+        "degradation": "interpretation-rejected",
+        "errored": 0,
+        "items": 10,
+        "timed_out": 0
+      }
+    },
+    {
+      "answer": {
+        "answer_chars": 2106,
+        "answer_style": "llm_synthesized",
+        "citation_nature": {
+          "local": 0,
+          "web": 0
+        },
+        "citations": [],
+        "query_type": "canonical_v2:A:answer",
+        "text": "在具身智能领域，运动（全身/移动）与操作（手部/末端执行器）在数据需求上存在显著差异，并因此衍生出不同的数据采集技术路线。\n\n**一、 运动与操作层面的数据需求差异**\n\n1.  **运动层面（全身/移动）**\n    *   **数据特征**：主要关注全身协调、步态规划、平衡控制及环境交互。数据需求侧重于空间坐标、时序动作、本体状态（如关节角度、力矩）以及环境变化。\n    *   **核心目标**：让智能体在复杂物理环境中实现稳定的移动、避障和姿态调整。\n\n2.  **操作层面（手部/末端）**\n    *   **数据特征**：要求极高的精度和多模态融合。除了运动学数据，还必须包含触觉反馈（如压力、纹理）、视觉细节（如物体抓取点）以及精细的末端姿态。\n    *   **核心目标**：实现灵巧的抓取、装配、插拔等物理交互任务。操作数据通常需要逐集生成，每一集都需要实体机器人、真实/模拟环境、任务定义及操作员演示，数据规模相对较小但质量要求极高。\n\n**二、 实际落地层面的数据采集方式**\n\n目前行业主要采用以下三种技术路线进行数据采集：\n\n1.  **真机遥操作（Teleoperation）**\n    *   **方式**：通过穿戴式设备（如动捕手套、外骨骼）或远程控制器，由人类操作员实时控制机器人执行任务，并记录机器人的操作数据。\n    *   **应用**：这是目前获取高质量操作数据的主流方式，尤其适用于精细操作任务。通过高精度传感器捕捉运动数据，利用机器学习算法进行处理和生成动作模型，实现精准的遥操作控制。\n    *   **优势**：数据真实度高，能直接反映人类在物理世界中的操作逻辑。\n\n2.  **动作捕捉（Motion Capture）**\n    *   **方式**：利用光学式（基于摄像头）或惯性式（基于惯性传感器）动捕系统，捕捉人类或参照物的运动数据，再通过关节重映射、末端姿态映射等技术，将人体动作映射到机器人本体上。\n    *   **应用**：广泛应用于人形机器人的全身运动数据采集，构建“数据工厂”。\n    *   **优势**：能够高效采集大规模的运动数据，适用于全身协调和步态训练。\n\n3.  **仿真合成与无本体采集（Simulation & Synthetic Data）**\n    *   **方式**：在仿真环境中搭建虚拟数字场景，采用虚实结合的方式进行数据采集，记录机器人在仿真场景中的运动轨迹；或利用互联网视频蒸馏、生成式模型合成数据。\n    *   **应用**：用于解决真实物理世界操作数据极度匮乏的瓶颈，加速模型训练与部署。\n    *   **优势**：成本低、规模大、安全性高，可覆盖长尾场景和危险环境。\n\n除上述企业外，深圳在这一领域还有不少相关公司，您更关心哪条产品线的细节？我可以再深入检索。\n此外，本次检索还召回以下相关本地企业：深圳市智拓欣扬科技有限公司、魔法工场（无锡）科技有限公司、安徽聆动通用机器人科技有限公司、杭州云深处科技有限公司、源升智能机器人（深圳）有限公司、深圳市探真智能科技有限公司、北京灵御智能科技有限公司、北京银河通用机器人有限公司、深圳市格松科技有限公司、智元创新（上海）科技有限公司、深圳市诺因智能有限公司、智身科技（北京）有限公司、简智新创（北京）机器人科技有限公司、深圳墨奇智能技术有限公司、戴盟（深圳）机器人科技有限公司、北京人形机器人创新中心有限公司、深圳玉树智能机器人有限公司、乐聚智能（深圳）股份有限公司、北京启物科技有限责任公司、北京加速进化科技有限公司、睿尔曼智能科技（北京）有限公司、浙江人形机器人创新中心有限公司、深圳市维兴顺科技有限公司、深圳市朗科科技股份有限公司、合肥零次方机器人有限公司、深圳市嘉宝果科技有限公司、深圳市未来天使机器人有限公司、上海纬钛科技有限公司、深圳市微明星网络科技有限公司、深圳市优必选科技股份有限公司、深圳市冰峰云端科技有限公司、中微（深圳）集成技术有限公司、深圳动魅科技有限公司、乐聚（深圳）机器人技术有限公司、深圳市女娲机器人科技有限公司、引力（深圳）智能机器人有限公司、深圳无界智航科技有限公司、深圳极数迭代科技有限公司、深圳壹秘科技有限公司、深圳市乎睿数据有限公司、深圳市睿达科技有限公司、斯坦德机器人（无锡）股份有限公司、深圳市艾比森光电股份有限公司、深圳市思博慧数据科技有限公司、松延动力（北京）科技有限公司、深圳曼瑞德科技有限公司、深圳市科迈爱康科技有限公司、现实回环（深圳）科技有限公司、深圳未来动力有限公司、深圳华视美达信息技术有限公司、深圳市宙斯机器人有限公司、深圳市青橙无线科技有限公司、深圳市泛邦通用科技有限公司、深圳市艾特科技工程有限公司、丘脑智能科技（深圳）有限公司、深圳市亿云联科技有限公司、深圳揽月动力科技有限公司、前海兰博智能科技（深圳）有限公司、未见科技贸易（深圳）有限公司、深圳市神灯数据服务有限公司、广州高擎机电科技有限公司、深圳市明德信诚投资咨询有限责任公司、深圳蜜獾智抄科技有限公司。",
+        "understood_subject": null
+      },
+      "candidate_layer": {
+        "available": false,
+        "candidate_names": 0,
+        "evidence_by_lane": null,
+        "evidence_total": null,
+        "handles_local": 0,
+        "handles_web": 0,
+        "recalled_handles": 0,
+        "source": null
+      },
+      "case_id": "q16t1",
+      "error": null,
+      "group": "问题16",
+      "hits": {
+        "answer_all_entities": false,
+        "candidate_all_entities": null,
+        "entities": {
+          "env-perception": {
+            "answer": false,
+            "answer_or_citations": false,
+            "candidate": null,
+            "citations": false,
+            "label": "环境感知数据"
+          },
+          "multimodal": {
+            "answer": true,
+            "answer_or_citations": true,
+            "candidate": null,
+            "citations": false,
+            "label": "多模态交互数据"
+          },
+          "proprio": {
+            "answer": false,
+            "answer_or_citations": false,
+            "candidate": null,
+            "citations": false,
+            "label": "本体感知数据"
+          }
+        },
+        "forbidden_present": []
+      },
+      "kind": "concept",
+      "lanes": {
+        "exact": {
+          "candidates": 0,
+          "status": "succeeded"
+        },
+        "lexical": {
+          "candidates": 128,
+          "status": "succeeded"
+        },
+        "structured": {
+          "candidates": 0,
+          "status": "succeeded"
+        },
+        "vector": {
+          "candidates": 128,
+          "status": "succeeded"
+        },
+        "web": {
+          "candidates": 73,
+          "status": "succeeded"
+        }
+      },
+      "lanes_trace": {
+        "exact": {
+          "filtered": 0,
+          "in": 0,
+          "retained": 0
+        },
+        "lexical": {
+          "filtered": 0,
+          "in": 128,
+          "retained": 128
+        },
+        "structured": {
+          "filtered": 0,
+          "in": 0,
+          "retained": 0
+        },
+        "vector": {
+          "filtered": 0,
+          "in": 128,
+          "retained": 128
+        },
+        "web": {
+          "filtered": 0,
+          "in": 57,
+          "retained": 57
+        }
+      },
+      "note": "关键点=差异：本体感知数据、环境感知数据vs多模态交互数据.",
+      "query": "在具身智能的运动和操作层面，数据需求有什么不同，在实际落地层面分别采用了哪些数据采集方式",
+      "raw_bytes": 54283,
+      "run_id": "f95b",
+      "seconds": 19.17,
+      "session_id": "session:chat:f95b-q16t1",
+      "sse_events": {
+        "answer": 1,
+        "answer_chunk": 1090,
+        "done": 1,
+        "plan_done": 1,
+        "retrieval_done": 1,
+        "stage": 3
+      },
+      "status": "ok",
+      "suite": "testset",
+      "turn": 1,
+      "web": {
+        "attempted": 8,
+        "cache_hit": 4,
+        "degradation": "interpretation-rejected",
+        "errored": 0,
+        "items": 10,
+        "timed_out": 0
+      }
+    },
+    {
+      "answer": {
+        "answer_chars": 2053,
+        "answer_style": "template",
+        "citation_nature": {
+          "local": 0,
+          "web": 0
+        },
+        "citations": [],
+        "query_type": "canonical_v2:A:answer",
+        "text": "（以下为基于本地数据的简要信息）\n- 一种机械臂及人形机器人；专利号：CN119159610A；申请人：深圳市优必选科技股份有限公司；摘要：该专利围绕“一种机械臂及人形机器人”展开。本发明提供一种机械臂及人形机器人，涉及机器人技术领域。机械臂包括大臂组件，大臂组件包括大臂、肩关节电机和肘关节电机，大臂具有肘关节端和肩关节端；肩关节电机具有第一壳体和第一转轴，第一壳体和肩关节端连接；肘关节电机具有第二壳体和第二转轴，第二壳体和肘关节端连……\n- 一种眼动数据分析方法、装置、可读存储介质及电子设备；专利号：CN120066256A；申请人：深圳市优必选医疗机器人有限公司、深圳市优必选科技股份有限公司；摘要：该专利围绕“一种眼动数据分析方法、装置、可读存储介质及电子设备”展开。本申请属于眼动数据分析技术领域，尤其涉及一种眼动数据分析方法、装置、计算机可读存储介质及电子设备。所述方法包括：获取与目标题目对应的眼动数据；其中，所述目标题目包括各个……\n- 垛型图生成方法、装置、码垛机器人及机器人码垛方法；专利号：CN117533803A；申请人：深圳市优必选科技股份有限公司；摘要：该专利围绕“垛型图生成方法、装置、码垛机器人及机器人码垛方法”展开。本申请涉及码垛控制技术领域，提供了一种垛型图生成方法、装置、码垛机器人及机器人码垛方法，该方法包括：每执行完一次码垛操作，获取基于当前帧深度信息得到的原始垛型图；对前一帧的原始垛型图和当前帧的所述原始垛型……\n- 一种清洁装置；专利号：CN117694792A；申请人：深圳市优必选科技股份有限公司；摘要：该专利围绕“一种清洁装置”展开。本申请属于清洁机器人设备技术领域，尤其涉及一种清洁装置，包括：机身组件，设有装配空间及排气口；集尘组件，包括内壳和安装于内壳的集尘盒，内壳设有第一进风口和第一出风口，第一进风口和第一出风口均与集尘盒连通；风机，风机具有气流入口和气流出口，气流入口与第一出风口对接连通，气流入口……\n- 一种泳池清洁设备；专利号：CN117569655A；申请人：深圳市优纪元科技有限公司、深圳市优必选科技股份有限公司；摘要：该专利围绕“一种泳池清洁设备”展开。本申请公开了一种泳池清洁设备，涉及清洁设备技术领域。泳池清洁设备包括设置有第一电连接部的水面清洁机器人以及具有第一基站本体、驱动装置和充电座的清洁基站。第一基站本体用于安装在泳池岸边，充电座上设置有第二电连接部，驱动装置设置于第一基站本体上，……\n- 充电基站识别方法、装置、机器人及计算机程序产品；专利号：CN120477655A；申请人：深圳市优纪元科技有限公司、深圳市优必选科技股份有限公司；摘要：该专利围绕“充电基站识别方法、装置、机器人及计算机程序产品”展开。本申请适用于机器人技术领域，提供了一种充电基站识别方法、装置、机器人及计算机程序产品。所述方法包括：获取周围环境的点云数据；从所述点云数据中筛选出强度值在预设强度范围内的点，得到第一……\n- 垃圾尘盒及清洁机器人；专利号：CN222091571U；申请人：深圳市优必选科技股份有限公司；摘要：该专利围绕“垃圾尘盒及清洁机器人”展开。本申请提供一种垃圾尘盒及清洁机器人，涉及清洁机器人技术领域。垃圾尘盒包括盒体、至少一个隔离件和盖体，所述盒体的内部设有敞口腔；所述隔离件设置于所述敞口腔，并将所述敞口腔分隔形成多个容纳腔，所述隔离件设有过滤孔，相邻两个所述容纳腔通过所述过滤孔连通；所述盖体盖设……\n- 多媒体数据处理方法、装置、电子设备、计算机可读存储介质及计算机程序产品；专利号：CN119815079A；申请人：深圳市优必选科技股份有限公司；摘要：该专利围绕“多媒体数据处理方法、装置、电子设备、计算机可读存储介质及计算机程序产品”展开。本申请提供了一种多媒体数据处理方法、装置、电子设备、计算机可读存储介质及计算机程序产品；应用于推流服务器；方法包括：接收机器人发送的对应第一传输协议的第一多媒体……\n- 一种锁定机构及机器人；专利号：CN120244939A；申请人：深圳市优必行科技有限公司、深圳市优必选科技股份有限公司；摘要：该专利围绕“一种锁定机构及机器人”展开。本申请公开了一种锁定机构及机器人，涉及机器人技术领域。锁定机构包括：基座；驱动组件，安装于基座上；传动组件，设于驱动组件的端部，传动组件与驱动组件传动连接，并沿第一方向滑动安装于基座上，传动组件远离驱动组件的一端配置有第一斜面；插销组……\n- 机器人定位方法、装置、电子设备、存储介质及程序产品；专利号：CN118548889A；申请人：深圳市优必选科技股份有限公司；摘要：该专利围绕“机器人定位方法、装置、电子设备、存储介质及程序产品”展开。本申请实施例提供一种机器人定位方法、装置、电子设备、存储介质及程序产品，其中方法包括：在机器人基于电子地图……\n共检索到 128 个相关结果并全部展示，为代表性结果而非穷尽列表。",
+        "understood_subject": null
+      },
+      "candidate_layer": {
+        "available": false,
+        "candidate_names": 0,
+        "evidence_by_lane": null,
+        "evidence_total": null,
+        "handles_local": 0,
+        "handles_web": 0,
+        "recalled_handles": 0,
+        "source": null
+      },
+      "case_id": "q17t1",
+      "error": null,
+      "group": "问题17",
+      "hits": {
+        "answer_all_entities": true,
+        "candidate_all_entities": null,
+        "entities": {
+          "ubtech": {
+            "answer": true,
+            "answer_or_citations": true,
+            "candidate": null,
+            "citations": false,
+            "label": "优必选"
+          }
+        },
+        "forbidden_present": []
+      },
+      "kind": "labeled",
+      "lanes": {
+        "relationship": {
+          "candidates": 128,
+          "status": "succeeded"
+        },
+        "web": {
+          "candidates": 40,
+          "status": "succeeded"
+        }
+      },
+      "lanes_trace": {
+        "relationship": {
+          "filtered": 0,
+          "in": 128,
+          "retained": 128
+        },
+        "web": {
+          "filtered": 20,
+          "in": 60,
+          "retained": 40
+        }
+      },
+      "note": "关键点=获取数据库信息与网络搜索结果; the subject is the testable entity.",
+      "query": "优必选有哪些专利",
+      "raw_bytes": 6588,
+      "run_id": "f95b",
+      "seconds": 24.95,
+      "session_id": "session:chat:f95b-q17t1",
+      "sse_events": {
+        "answer": 1,
+        "done": 1,
+        "plan_done": 1,
+        "retrieval_done": 1,
+        "stage": 3
+      },
+      "status": "ok",
+      "suite": "testset",
+      "turn": 1,
+      "web": {
+        "attempted": 0,
+        "cache_hit": 6,
+        "degradation": "synthesis-fallback",
+        "errored": 0,
+        "items": 0,
+        "timed_out": 0
+      }
+    },
+    {
+      "answer": {
+        "answer_chars": 304,
+        "answer_style": "llm_synthesized",
+        "citation_nature": {
+          "local": 0,
+          "web": 0
+        },
+        "citations": [],
+        "query_type": "canonical_v2:A:answer",
+        "text": "专利 CN117873146A 的名称为“一种机器人的落地控制方法、机器人及终端设备”，属于发明专利，申请人为深圳市优必选科技股份有限公司。\n\n该专利主要涉及机器人技术领域，旨在解决机器人跳跃落地时的控制问题。其核心技术方案包括以下步骤：\n1. 在检测到机器人完成跳跃并稳定落地后，系统会获取落地时间、腿部所受冲击力以及腰部实际高度等数据。\n2. 基于落地时间计算机器人落地后的腿部实际刚度。\n3. 结合腿部实际刚度和腿部所受冲击力，进一步计算机器人腰部的期望高度。\n4. 通过对比腰部的实际高度与期望高度，得出腰部的高度控制量。\n5. 最终根据该控制量调节机器人在落地后的腰部高度，以实现更稳定的落地控制。",
+        "understood_subject": null
+      },
+      "candidate_layer": {
+        "available": false,
+        "candidate_names": 0,
+        "evidence_by_lane": null,
+        "evidence_total": null,
+        "handles_local": 0,
+        "handles_web": 0,
+        "recalled_handles": 0,
+        "source": null
+      },
+      "case_id": "q17t2",
+      "error": null,
+      "group": "问题17",
+      "hits": {
+        "answer_all_entities": true,
+        "candidate_all_entities": null,
+        "entities": {
+          "cn117873146a": {
+            "answer": true,
+            "answer_or_citations": true,
+            "candidate": null,
+            "citations": false,
+            "label": "CN117873146A"
+          }
+        },
+        "forbidden_present": []
+      },
+      "kind": "labeled",
+      "lanes": {
+        "exact": {
+          "candidates": 1,
+          "status": "succeeded"
+        },
+        "lexical": {
+          "candidates": 1,
+          "status": "succeeded"
+        },
+        "structured": {
+          "candidates": 0,
+          "status": "succeeded"
+        },
+        "vector": {
+          "candidates": 16,
+          "status": "succeeded"
+        },
+        "web": {
+          "candidates": 1,
+          "status": "succeeded"
+        }
+      },
+      "lanes_trace": {
+        "exact": {
+          "filtered": 0,
+          "in": 1,
+          "retained": 1
+        },
+        "lexical": {
+          "filtered": 0,
+          "in": 1,
+          "retained": 1
+        },
+        "structured": {
+          "filtered": 0,
+          "in": 0,
+          "retained": 0
+        },
+        "vector": {
+          "filtered": 0,
+          "in": 16,
+          "retained": 16
+        },
+        "web": {
+          "filtered": 56,
+          "in": 57,
+          "retained": 1
+        }
+      },
+      "note": "关键点=知识库获取结果; the patent number is the testable entity.",
+      "query": "专利 CN117873146A 的详细信息是什么",
+      "raw_bytes": 14404,
+      "run_id": "f95b",
+      "seconds": 8.49,
+      "session_id": "session:chat:f95b-q17t1",
+      "sse_events": {
+        "answer": 1,
+        "answer_chunk": 302,
+        "done": 1,
+        "plan_done": 1,
+        "retrieval_done": 1,
+        "stage": 3
+      },
+      "status": "ok",
+      "suite": "testset",
+      "turn": 2,
+      "web": {
+        "attempted": 0,
+        "cache_hit": 6,
+        "degradation": "interpretation-rejected",
+        "errored": 0,
+        "items": 0,
+        "timed_out": 0
+      }
+    },
+    {
+      "answer": {
+        "answer_chars": 2832,
+        "answer_style": "template",
+        "citation_nature": {
+          "local": 20,
+          "web": 0
+        },
+        "citations": [
+          {
+            "id": "official-source-9fda2bc43c12d5a8",
+            "label": "深圳市智拓欣扬科技有限公司",
+            "type": "company",
+            "url": "http://xinyang-ai.com/"
+          },
+          {
+            "id": "official-source-8cbf1b4cf8f19379",
+            "label": "乐聚智能（深圳）股份有限公司",
+            "type": "company",
+            "url": "https://www.lejurobot.com/"
+          },
+          {
+            "id": "official-source-51c89a9ba4028ee0",
+            "label": "深圳市未来天使机器人有限公司",
+            "type": "company",
+            "url": "http://www.future-angel.com/"
+          },
+          {
+            "id": "official-source-0c6503685a486bc2",
+            "label": "深圳市维兴顺科技有限公司",
+            "type": "company",
+            "url": "http://www.wxskj.com/"
+          },
+          {
+            "id": "official-source-00c4bd4a40424540",
+            "label": "深圳市优必选科技股份有限公司",
+            "type": "company",
+            "url": "http://www.ubtrobot.com/"
+          },
+          {
+            "id": "official-source-b704be2954788318",
+            "label": "斯坦德机器人（无锡）股份有限公司",
+            "type": "company",
+            "url": "http://www.standard-robots.com"
+          },
+          {
+            "id": "official-source-27344c343614c846",
+            "label": "深圳市女娲机器人科技有限公司",
+            "type": "company",
+            "url": "http://www.evarobot.com.cn"
+          },
+          {
+            "id": "official-source-6716c093c6edefdd",
+            "label": "深圳市宙斯机器人有限公司",
+            "type": "company",
+            "url": "http://www.zeus69.com"
+          },
+          {
+            "id": "official-source-f23826f3c3f09413",
+            "label": "引力（深圳）智能机器人有限公司",
+            "type": "company",
+            "url": "http://www.gravityoffice.cn/"
+          },
+          {
+            "id": "official-source-6e4bad850f062de5",
+            "label": "深圳市信利康电子有限公司",
+            "type": "company",
+            "url": "http://www.showcome.net"
+          },
+          {
+            "id": "official-source-ab2871c82c81c0cb",
+            "label": "深圳市矩阵动力科技开发有限公司",
+            "type": "company",
+            "url": "http://www.aiframe.me/"
+          },
+          {
+            "id": "official-source-723939af54f5e85c",
+            "label": "戴盟（深圳）机器人科技有限公司",
+            "type": "company",
+            "url": "https://www.dmrobot.com/"
+          },
+          {
+            "id": "official-source-037ba02a9bbd49a0",
+            "label": "深圳市汇金智能科技有限公司",
+            "type": "company",
+            "url": "http://www.woddontoys.com"
+          },
+          {
+            "id": "official-source-95c5fe2542ecd0ec",
+            "label": "深圳市世纪云芯科技有限公司",
+            "type": "company",
+            "url": "http://www.antpool.com"
+          },
+          {
+            "id": "official-source-c637abf0066ff312",
+            "label": "深圳市巨龙创视科技有限公司",
+            "type": "company",
+            "url": "http://www.jvttech.com/"
+          },
+          {
+            "id": "official-source-e8fb0eccbb1b043b",
+            "label": "广东鹏行智能有限公司",
+            "type": "company",
+            "url": "https://www.pxing.com/"
+          },
+          {
+            "id": "official-source-b584e1be0cc63005",
+            "label": "深圳市鹏诚新能源科技有限公司",
+            "type": "company",
+            "url": "http://www.pchne.com"
+          },
+          {
+            "id": "official-source-513857f13f994f0c",
+            "label": "深圳市轻生活科技有限公司",
+            "type": "company",
+            "url": "http://www.leletop.com/"
+          },
+          {
+            "id": "official-source-a238e889bdbf8861",
+            "label": "深圳市凯曼达科技有限公司",
+            "type": "company",
+            "url": "http://www.kmdbattery.com"
+          },
+          {
+            "id": "official-source-451926ea30f45624",
+            "label": "深圳创达云睿智能科技有限公司",
+            "type": "company",
+            "url": "http://www.eegsmart.com/"
+          }
+        ],
+        "query_type": "canonical_v2:A:answer",
+        "text": "（以下为基于本地数据的简要信息）\n- 深圳市智拓欣扬科技有限公司；简介：深圳市智拓欣扬科技有限公司成立于2024年，公司打造机器人界的“多平台系统“。通过“大脑-小脑”云端协同架构，为从儿童陪伴机器人到轮式人形机器人的所有设备提供持续进化的AI智能。公司的B2C产品验证技术并产生数据，B2B平台实现规模化盈利，旨在成为物理世界AI的底层操作系统。；产品：深圳市智拓欣扬科技有限公司成立于2024年，公司打造机器人界的“多平台系统“。通过……\n- 会员-智能可穿戴设备 深圳市智能穿戴产业联合会/深智联FSW官方网站：会员 您的位置： 首页 > 会员 行业协会 公共服务平台 理事会成员 会员单位 深圳腾信百纳科技有限公司 深圳市彼岸心智科技有限公司 深圳市时刻传播信息咨询有限公司 中油佳汇防水（深圳）股份有限公司 深圳市鑫明光建筑科技有限公司 深圳市华瑞日钟表有限公司 中科华智（深圳）智能有限公司 深圳市建鑫高表业有限公司 引力(深圳)智能机……\n- 会员-智能可穿戴设备 深圳市智能穿戴产业联合会/深智联FSW官方网站：会员 您的位置： 首页 > 会员 行业协会 公共服务平台 理事会成员 会员单位 深圳腾信百纳科技有限公司 深圳市彼岸心智科技有限公司 深圳市时刻传播信息咨询有限公司 中油佳汇防水（深圳）股份有限公司 深圳市鑫明光建筑科技有限公司 深圳市华瑞日钟表有限公司 中科华智（深圳）智能有限公司 深圳市建鑫高表业有限公司 引力(深圳)智能机……\n- 深圳市格松科技有限公司；简介：格松科技于2025年正式独立运作，是一家专注于具身智能领域研发与量产的创新型企业。自成立以来，公司始终坚守“用机器人改变世界，让机器人走进千家万户”的核心使命，以技术创新为核心发展引擎，深耕具身智能赛道，致力于构建产值超千亿元的具身智能产业生态，凭借深厚的技术积累与清晰的发展战略，成为机器人领域极具成长潜力的新锐力量。；核心团队：蔡优飞，职务：创始人&CEO，介绍：蔡……\n- 深圳具身智能公司排名（排行榜） - 职友集：系统检测到访问异常\n\n为保障账户安全，请输入下方验证码完成验证：\n\n验证码（点击图片可刷新）\n提交验证\n- 深圳工业机器人崛起:人工智能推动高端制造革命_智能化_技术_领域：搜狐首页\n新闻\n体育\n汽车\n房产\n旅游\n教育\n时尚\n科技\n财经\n娱乐\n更多\n登录狐友\n您访问的页面不见了！\n3\n秒后您将\n去搜狐首页\n设置首页 - 搜狗输入法 - 支付中心 - 搜狐招聘 - 广告服务 - 客服中心 - 联系方式 - 保护隐私权 - About SOHU - 公司介绍\nCopyright © 2016 Sohu.co……\n- 源升智能机器人（深圳）有限公司；简介：产品型号 Apex Hand；技术路线：半结构化工厂柔性装配、狭小空间光滑物体抓取、医疗把脉、日常手机/鼠标操作，未来延伸至家庭服务。；核心团队：杨思成，CEO，北京航空航天大学机械工程及自动化本科，清华大学机械工程硕士，曾任华为数据分析师、腾讯Robotics X实验室高级研究员。李望维，联合创始人，新加坡国立大学博士，腾讯Robotics X实验室前触觉感……\n- 具身智能“交付元年”，深圳多家本体企业“爆单” - OFweek人工智能网：网站导航\n太阳能光伏\n电子工程\n激光\n光通讯\n工控\n显示\n智能电网\n云计算\n环保\n风电\n物联网\n3D打印\n智能家居\n人工智能\n新能源汽车\n氢能\n智慧城市\n仪器仪表\nVR\n智能硬件\n传感器\n智能汽车\n锂电\n新材料\n储能\n机器人\n智能制造\n智慧海洋\n可穿戴设备\n医械科技\n安防\n通信\n电力\n照明\n电源\n光学\n返回OFweek首页……\n- 2025年中国具身智能行业市场前景预测研究报告(简版)-中商情报网：中商官网 微博 公众号 行业与市场地位证明 十五五规划 媒体报道 联系我们 立即搜索 首页 观产业 排行榜 数据库 知识库 招商通 研究院 产业规划 产业地产 产业招商 项目包装 可研报告 统计调查评估 招商项目评估 两图两链两库两池 研究报告 精品报告 碳中和 新能源 大健康 大数据 人工智能 氢能 锂电池 储能 智能家居 数字……\n- 深圳市诺因智能有限公司；技术路线：新能源汽车、智能制造、消费电子、服务机器人等需要无线供电或补能的场景。；核心团队：李银川，创始人，本科北京理工大学、博士美国哥伦比亚大学联合培养，华为诺亚方舟实验室前首席研究员，2025年创立诺因知行科技；注册地：深圳市南山区粤海街道高新区社区科技南八路2号豪威科技大厦1205。\n……（其余 54 条候选省略）\n关于关键部分，暂时没有找到直接对应的信息。如果您能提供更多背景（比如具体年份、相关机构或技术方向），我可以帮您更精确地查找。\n此外，本次检索还召回以下相关本地企业：深圳墨奇智能技术有限公司、深圳市探真智能科技有限公司、乐聚智能（深圳）股份有限公司、深圳玉树智能机器人有限公司、深圳市未来天使机器人有限公司、深圳市维兴顺科技有限公司、乐聚（深圳）机器人技术有限公司、深圳市优必选科技股份有限公司、斯坦德机器人（无锡）股份有限公司、深圳市女娲机器人科技有限公司、深圳未来动力有限公司、深圳市宙斯机器人有限公司、前海兰博智能科技（深圳）有限公司、深圳市信利康电子有限公司、深圳市矩阵动力科技开发有限公司、戴盟（深圳）机器人科技有限公司、深圳跃瓦创新科技有限公司、深圳市汇金智能科技有限公司、深圳市世纪云芯科技有限公司、深圳市巨龙创视科技有限公司、广东鹏行智能有限公司、深圳市优联智能控股有限公司、深圳市鹏诚新能源科技有限公司、深圳市轻生活科技有限公司、深圳国创具身智能机器人有限公司、深圳市凯曼达科技有限公司、深圳创达云睿智能科技有限公司、深圳市微明星网络科技有限公司、深圳市视鑫数码有限公司、深圳奥嘟比科技有限公司、深圳市赛元微电子股份有限公司、深圳佰维存储科技股份有限公司、深圳市泰科智能机器人有限公司、深圳地瓜机器人有限公司、跨维（深圳）智能数字科技有限公司、深圳揽月动力科技有限公司、广东具身风暴机器人有限公司、深圳市深创谷技术服务有限公司、深圳动保科技有限公司、业成光电（深圳）有限公司、晶门科技（深圳）有限公司、深圳市保车士科技有限公司、深圳市华控智能电子科技有限公司、深圳市日王实业有限公司、深圳邦凯新能源股份有限公司、深圳凌奈智控有限公司、中微（深圳）集成技术有限公司、深圳市电王能源科技有限公司、深圳动魅科技有限公司、深圳市钢盾科技有限公司、深圳集智岛科技有限公司、美格智能技术股份有限公司、深圳市泰利科科技有限公司、深圳市红格子科技有限公司、深圳市日懋科技有限公司、深圳辉度科技发展有限公司、深圳市创凯光科技有限公司、深圳市中创电测技术有限公司、乾宇微纳技术（深圳）有限公司、深圳市航鸿达科技有限公司、深圳市星三力光电科技有限公司。",
+        "understood_subject": null
+      },
+      "candidate_layer": {
+        "available": false,
+        "candidate_names": 0,
+        "evidence_by_lane": null,
+        "evidence_total": null,
+        "handles_local": 0,
+        "handles_web": 0,
+        "recalled_handles": 0,
+        "source": null
+      },
+      "case_id": "s01",
+      "error": null,
+      "group": "s01",
+      "hits": {
+        "answer_all_entities": true,
+        "candidate_all_entities": null,
+        "entities": {
+          "ubtech": {
+            "answer": true,
+            "answer_or_citations": true,
+            "candidate": null,
+            "citations": true,
+            "label": "优必选"
+          }
+        },
+        "forbidden_present": []
+      },
+      "kind": "labeled",
+      "lanes": {
+        "exact": {
+          "candidates": 0,
+          "status": "succeeded"
+        },
+        "lexical": {
+          "candidates": 128,
+          "status": "succeeded"
+        },
+        "structured": {
+          "candidates": 0,
+          "status": "succeeded"
+        },
+        "supplemental": {
+          "candidates": 12,
+          "status": "succeeded"
+        },
+        "vector": {
+          "candidates": 128,
+          "status": "succeeded"
+        },
+        "web": {
+          "candidates": 70,
+          "status": "succeeded"
+        }
+      },
+      "lanes_trace": {
+        "exact": {
+          "filtered": 0,
+          "in": 0,
+          "retained": 0
+        },
+        "lexical": {
+          "filtered": 0,
+          "in": 128,
+          "retained": 128
+        },
+        "structured": {
+          "filtered": 0,
+          "in": 0,
+          "retained": 0
+        },
+        "supplemental": {
+          "filtered": 0,
+          "in": 12,
+          "retained": 12
+        },
+        "vector": {
+          "filtered": 0,
+          "in": 128,
+          "retained": 128
+        },
+        "web": {
+          "filtered": 0,
+          "in": 70,
+          "retained": 70
+        }
+      },
+      "note": "The replay gate's G7 flagship (优必选 must appear in every repetition). Sibling companies seen in the frozen answer — 众擎, 乐聚, 越疆 — are NOT scored: they are the web lane's luck, not frozen GT.",
+      "query": "深圳有哪些做具身智能的公司",
+      "raw_bytes": 14288,
+      "run_id": "f95b",
+      "seconds": 26.58,
+      "session_id": "session:chat:f95b-s01",
+      "sse_events": {
+        "answer": 1,
+        "done": 1,
+        "plan_done": 1,
+        "retrieval_done": 1,
+        "stage": 3
+      },
+      "status": "ok",
+      "suite": "probes",
+      "turn": 1,
+      "web": {
+        "attempted": 0,
+        "cache_hit": 8,
+        "degradation": "synthesis-fallback",
+        "errored": 0,
+        "items": 10,
+        "timed_out": 0
+      }
+    },
+    {
+      "answer": {
+        "answer_chars": 652,
+        "answer_style": "llm_synthesized",
+        "citation_nature": {
+          "local": 3,
+          "web": 0
+        },
+        "citations": [
+          {
+            "id": "official-source-b8a638ec5e5eefe7",
+            "label": "深圳市普渡科技有限公司",
+            "type": "company",
+            "url": "https://www.pudurobotics.com"
+          },
+          {
+            "id": "official-source-1b59a7607d4ceefe",
+            "label": "跨维（深圳）智能数字科技有限公司",
+            "type": "company",
+            "url": "https://www.dexforce.com/"
+          },
+          {
+            "id": "official-source-e2fb0d09c87a65ce",
+            "label": "深圳市迈步机器人科技有限公司",
+            "type": "company",
+            "url": "http://www.milebot.com.cn/"
+          }
+        ],
+        "query_type": "canonical_v2:A:answer",
+        "text": "深圳在机器人领域拥有多家具有代表性的企业，涵盖商用服务、具身智能仿真及康复外骨骼等不同细分赛道。以下是几家主要公司的业务概况：\n\n**深圳市普渡科技有限公司**\n该公司聚焦于商用服务机器人领域，核心业务定位为商用配送机器人与服务机器人解决方案。其产品与服务广泛覆盖餐饮、酒店、零售等商业场景，提供相应的配送与服务支持。\n\n**跨维（深圳）智能数字科技有限公司**\n这是一家专注于具身智能仿真与数据闭环的企业，业务核心在于Sim2Real（仿真到现实）数据闭环与3D视觉引导技术。公司由香港中文大学（深圳）终身教授贾奎创立，核心团队具备深厚的学术与产业背景。其产品线包括DexForce W1、PickWiz 3D视觉引导软件、XEMA北极鸥系列3D工业智能相机、DexOne智能视觉一体化设备、DexVerse™具身智能引擎以及X-Wiz具身大脑。其技术应用场景涵盖汽车零部件抓取、新能源电池装配、3C电子检测、物流仓储拣选、医疗耗材分拣及康养陪护人形机器人服务等。\n\n**深圳市迈步机器人科技有限公司**\n该公司致力于康复外骨骼与具身智能机器人的研发与产业化。其外骨骼机器人产品（如BEAR系列、EXO系列、MAX系列等）主要应用于医院康复科、康复中心、养老机构及社区日间照料中心，用于脑卒中、脊髓损伤、帕金森及儿童脑瘫等导致的下肢运动功能障碍者的步态康复训练，也可在家庭等日常场景中辅助行动不便人群提升步行能力。\n\n除上述企业外，深圳在这一领域还有不少相关公司，涉及工业机器人、特种机器人等多个方向。",
+        "understood_subject": null
+      },
+      "candidate_layer": {
+        "available": false,
+        "candidate_names": 0,
+        "evidence_by_lane": null,
+        "evidence_total": null,
+        "handles_local": 0,
+        "handles_web": 0,
+        "recalled_handles": 0,
+        "source": null
+      },
+      "case_id": "s02",
+      "error": null,
+      "group": "s02",
+      "hits": {
+        "answer_all_entities": false,
+        "candidate_all_entities": null,
+        "entities": {},
+        "forbidden_present": []
+      },
+      "kind": "structural",
+      "lanes": {
+        "exact": {
+          "candidates": 0,
+          "status": "succeeded"
+        },
+        "lexical": {
+          "candidates": 16,
+          "status": "succeeded"
+        },
+        "structured": {
+          "candidates": 0,
+          "status": "succeeded"
+        },
+        "vector": {
+          "candidates": 16,
+          "status": "succeeded"
+        },
+        "web": {
+          "candidates": 3,
+          "status": "succeeded"
+        }
+      },
+      "lanes_trace": {
+        "exact": {
+          "filtered": 0,
+          "in": 0,
+          "retained": 0
+        },
+        "lexical": {
+          "filtered": 0,
+          "in": 16,
+          "retained": 16
+        },
+        "structured": {
+          "filtered": 0,
+          "in": 0,
+          "retained": 0
+        },
+        "vector": {
+          "filtered": 0,
+          "in": 16,
+          "retained": 16
+        },
+        "web": {
+          "filtered": 48,
+          "in": 51,
+          "retained": 3
+        }
+      },
+      "note": "Bare category phrasing, no enumerating frame — the case the topical floor was built for. Structural: no GT.",
+      "query": "深圳做机器人的公司",
+      "raw_bytes": 30201,
+      "run_id": "f95b",
+      "seconds": 7.45,
+      "session_id": "session:chat:f95b-s02",
+      "sse_events": {
+        "answer": 1,
+        "answer_chunk": 632,
+        "done": 1,
+        "plan_done": 1,
+        "retrieval_done": 1,
+        "stage": 3
+      },
+      "status": "ok",
+      "suite": "probes",
+      "turn": 1,
+      "web": {
+        "attempted": 0,
+        "cache_hit": 6,
+        "degradation": "interpretation-rejected",
+        "errored": 0,
+        "items": 3,
+        "timed_out": 0
+      }
+    },
+    {
+      "answer": {
+        "answer_chars": 445,
+        "answer_style": "llm_synthesized",
+        "citation_nature": {
+          "local": 1,
+          "web": 0
+        },
+        "citations": [
+          {
+            "id": "official-source-00c4bd4a40424540",
+            "label": "深圳市优必选科技股份有限公司",
+            "type": "company",
+            "url": "http://www.ubtrobot.com/"
+          }
+        ],
+        "query_type": "canonical_v2:A:answer",
+        "text": "优必选（深圳市优必选科技股份有限公司）是人形机器人及智能服务机器人领域的龙头企业，公开信息显示与其业务领域（人形机器人、智能服务机器人、核心零部件）相关的上市公司主要包括珠城科技（301280）、天奇股份（002009）、新兴装备（002933）、兆新股份（002256）、和晶科技（300279）、昊志机电、万集科技、博实股份、祥鑫科技、居然之家、科大等。\n\n这些企业与优必选存在供应链合作、技术协同或产业布局上的关联。例如，优必选在高性能、小型化、低成本的伺服舵机研发和量产上拥有深厚积累和核心技术专利，这构成了其重要的技术护城河，而上述部分上市公司可能涉及相关核心零部件或自动化产线的配套与服务。优必选的产品线涵盖工业制造（如Walker S/S1/S2用于汽车及3C工厂流水线）、商用服务（如Walker C、Cruzr S2）以及教育科研（如悟空、Alpha、Jimu系列）等多个场景。\n\n除上述企业外，深圳在这一领域还有不少相关公司，您更关心哪条产品线的细节？我可以再深入检索。",
+        "understood_subject": null
+      },
+      "candidate_layer": {
+        "available": false,
+        "candidate_names": 0,
+        "evidence_by_lane": null,
+        "evidence_total": null,
+        "handles_local": 0,
+        "handles_web": 0,
+        "recalled_handles": 0,
+        "source": null
+      },
+      "case_id": "s03",
+      "error": null,
+      "group": "s03",
+      "hits": {
+        "answer_all_entities": true,
+        "candidate_all_entities": null,
+        "entities": {
+          "ubtech": {
+            "answer": true,
+            "answer_or_citations": true,
+            "candidate": null,
+            "citations": true,
+            "label": "优必选"
+          }
+        },
+        "forbidden_present": []
+      },
+      "kind": "labeled",
+      "lanes": {
+        "exact": {
+          "candidates": 1,
+          "status": "succeeded"
+        },
+        "lexical": {
+          "candidates": 0,
+          "status": "succeeded"
+        },
+        "structured": {
+          "candidates": 0,
+          "status": "succeeded"
+        },
+        "vector": {
+          "candidates": 16,
+          "status": "succeeded"
+        },
+        "web": {
+          "candidates": 16,
+          "status": "succeeded"
+        }
+      },
+      "lanes_trace": {
+        "exact": {
+          "filtered": 0,
+          "in": 1,
+          "retained": 1
+        },
+        "lexical": {
+          "filtered": 0,
+          "in": 0,
+          "retained": 0
+        },
+        "structured": {
+          "filtered": 0,
+          "in": 0,
+          "retained": 0
+        },
+        "vector": {
+          "filtered": 0,
+          "in": 16,
+          "retained": 16
+        },
+        "web": {
+          "filtered": 67,
+          "in": 70,
+          "retained": 3
+        }
+      },
+      "note": "Peer-of-X paraphrase (G5 shape). The anchor must survive into the answer; the peers themselves are not frozen GT.",
+      "query": "类似优必选的企业",
+      "raw_bytes": 21906,
+      "run_id": "f95b",
+      "seconds": 8.86,
+      "session_id": "session:chat:f95b-s03",
+      "sse_events": {
+        "answer": 1,
+        "answer_chunk": 431,
+        "done": 1,
+        "plan_done": 1,
+        "retrieval_done": 1,
+        "stage": 3
+      },
+      "status": "ok",
+      "suite": "probes",
+      "turn": 1,
+      "web": {
+        "attempted": 0,
+        "cache_hit": 12,
+        "degradation": "interpretation-rejected",
+        "errored": 0,
+        "items": 8,
+        "timed_out": 0
+      }
+    },
+    {
+      "answer": {
+        "answer_chars": 1901,
+        "answer_style": "llm_synthesized",
+        "citation_nature": {
+          "local": 8,
+          "web": 0
+        },
+        "citations": [
+          {
+            "id": "official-source-00c4bd4a40424540",
+            "label": "深圳市优必选科技股份有限公司",
+            "type": "company",
+            "url": "http://www.ubtrobot.com/"
+          },
+          {
+            "id": "official-source-e2fb0d09c87a65ce",
+            "label": "深圳市迈步机器人科技有限公司",
+            "type": "company",
+            "url": "http://www.milebot.com.cn/"
+          },
+          {
+            "id": "official-source-64ef5e706d452486",
+            "label": "深圳市幻尔科技有限公司",
+            "type": "company",
+            "url": "http://www.hiwonder.com"
+          },
+          {
+            "id": "official-source-9fda2bc43c12d5a8",
+            "label": "深圳市智拓欣扬科技有限公司",
+            "type": "company",
+            "url": "http://xinyang-ai.com/"
+          },
+          {
+            "id": "official-source-f2e758588c78cde6",
+            "label": "深圳市同川科技有限公司",
+            "type": "company",
+            "url": "http://www.tc-drive.com"
+          },
+          {
+            "id": "official-source-c67031c0bd4fbeb2",
+            "label": "深圳市机智人科技有限公司",
+            "type": "company",
+            "url": "http://www.znrobo.com"
+          },
+          {
+            "id": "official-source-c5f2fde347e1a5d8",
+            "label": "乐森机器人（深圳）有限公司",
+            "type": "company",
+            "url": "https://robosen.cn/"
+          },
+          {
+            "id": "official-source-b704be2954788318",
+            "label": "斯坦德机器人（无锡）股份有限公司",
+            "type": "company",
+            "url": "http://www.standard-robots.com"
+          }
+        ],
+        "query_type": "canonical_v2:A:answer",
+        "text": "深圳作为全球人形机器人产业的重要集聚地，拥有从整机制造、核心零部件到人工智能算法的完整产业链。根据公开报道及行业梳理，深圳在人形机器人领域具有代表性的企业包括：\n\n**整机与核心整机研发企业：**\n*   **深圳市优必选科技股份有限公司**：作为“人形机器人第一股”，具备人形机器人全栈式技术能力，其Walker S系列机器人已进入多家全球知名汽车工厂实训与作业。\n*   **跨维（深圳）智能数字科技有限公司**：聚焦人形核心部件与整机，推出DEX-1人形机器人及核心关节模组，在具身智能仿真与3D视觉引导方面具有技术优势。\n*   **乐聚（深圳）机器人技术有限公司**：在科研教育及商业服务领域有深厚积累，其机器人产品广泛应用于高校实验室及商业场景。\n*   **深圳市迈步机器人科技有限公司**：业务定位为康复外骨骼与具身智能机器人，在康复训练及日常生活辅助场景有明确布局。\n*   **深圳优艾智合机器人科技有限公司**：推出巡霄轮式人形机器人，应用于半导体、能源巡检及物流搬运等工业场景。\n*   **深圳市幻尔科技有限公司**：推出TonyPi人形机器人，主要面向中小学及高校的人工智能教育、STEAM创客课堂及科研实验室。\n*   **深圳市智拓欣扬科技有限公司**：打造机器人界的“多平台系统”，通过“大脑-小脑”云端协同架构，为轮式人形机器人等设备提供AI智能。\n*   **乐森机器人（深圳）有限公司**：专注于家用智能玩伴及STEM教育，推出星际特工、擎天柱等仿人形机器人产品。\n*   **斯坦德机器人（无锡）股份有限公司**：在深圳设有布局，发布首款人形具身智能机器人DARWIN，面向3C电子、汽车等行业的物流搬运。\n*   **深圳市宙斯机器人有限公司**：专注于人形格斗竞技赛事，推出“截”J系列、泰拳系列等人形格斗机器人。\n*   **深圳市未来天使机器人有限公司**：提供R1家庭陪伴机器人等智能服务机器人产品，覆盖家庭陪伴与安防场景。\n*   **深圳市女娲机器人科技有限公司**：在户外道路、园区及市政环卫场景落地大型清扫与消毒作业机器人。\n*   **深圳市维兴顺科技有限公司**：提供智能人形机器人系列，应用于教育陪伴、远程安防监控及科技馆展示。\n\n**核心零部件与产业链关键企业：**\n*   **深圳市同川科技有限公司**：提供人形机器人关节模块及谐波减速器，是产业链上游关键供应商。\n*   **深圳市机智人科技有限公司**：为人形机器人提供高精度三维环境感知激光雷达。\n*   **宇树科技**：作为全球知名人形机器人企业，已在深圳落子布局。\n*   **众擎机器人**：由小鹏旗下机器人团队创始人创立，是深圳人形机器人领域的新兴力量。\n\n除上述企业外，深圳在这一领域还有不少相关公司，如速腾聚创、兆威机电、汇川技术等也在人形机器人产业链中占据重要位置。\n此外，本次检索还召回以下相关本地企业：深圳市普渡科技有限公司、深圳市美华机器人设备有限公司、深圳市新战略传媒有限公司、深圳市铭子创意设计有限公司、深圳市动力飞扬智能装备有限公司、睿博天米科技（深圳）有限公司、法狗狗（深圳）科技有限公司、深圳市行知行机器人技术有限公司、洋流科技（深圳）有限公司、深圳原子动力科技有限公司、深圳市汇金智能科技有限公司、深圳博创机器人技术有限公司、深圳市中科脑海科技有限公司、深圳懂你机器人科技有限公司、深圳科大人工智能科技有限公司、自兴人工智能（深圳）有限公司、深圳市繁兴科技股份有限公司、深圳市新力科技有限公司、深圳国科盛机器人科技有限公司、深圳市华滋自动化技术有限公司、深圳瓦力泰克智能机器人科技有限公司、深圳市美斯图科技有限公司、深圳市隆高科技有限公司、深圳市卫邦科技有限公司、深圳市福之岛实业有限公司、深圳市笨笨机器人有限公司、深圳市小奇乐科技有限公司、柏壹科技（深圳）有限公司、子歌教育机器人（深圳）有限公司、深圳市爱陪伴智能科技有限公司、深圳市启明创新科技开发有限公司、赛柏坦（深圳）科技有限公司、深圳跬步动力科技有限公司、深圳市小二极客科技有限公司、深圳市恒科通机器人有限公司、深圳市磐创网络科技有限公司、深圳奇点机器人集团有限公司、深圳康诺思腾科技有限公司、深圳市软博智能科技有限公司、深圳市精锋医疗科技股份有限公司、深圳市智通云联科技有限公司、深圳市中科鸥鹏智能科技有限公司、广东鹏行智能有限公司、星派克智能装备（深圳）有限公司、深圳市小村机器人智能科技有限公司、深圳前海瑞集科技有限公司、深圳一诺基业科技有限公司、深圳市威博特科技有限公司。",
+        "understood_subject": null
+      },
+      "candidate_layer": {
+        "available": false,
+        "candidate_names": 0,
+        "evidence_by_lane": null,
+        "evidence_total": null,
+        "handles_local": 0,
+        "handles_web": 0,
+        "recalled_handles": 0,
+        "source": null
+      },
+      "case_id": "s04",
+      "error": null,
+      "group": "s04",
+      "hits": {
+        "answer_all_entities": false,
+        "candidate_all_entities": null,
+        "entities": {},
+        "forbidden_present": []
+      },
+      "kind": "structural",
+      "lanes": {
+        "exact": {
+          "candidates": 0,
+          "status": "succeeded"
+        },
+        "lexical": {
+          "candidates": 128,
+          "status": "succeeded"
+        },
+        "structured": {
+          "candidates": 0,
+          "status": "succeeded"
+        },
+        "supplemental": {
+          "candidates": 17,
+          "status": "succeeded"
+        },
+        "vector": {
+          "candidates": 128,
+          "status": "succeeded"
+        },
+        "web": {
+          "candidates": 86,
+          "status": "succeeded"
+        }
+      },
+      "lanes_trace": {
+        "exact": {
+          "filtered": 0,
+          "in": 0,
+          "retained": 0
+        },
+        "lexical": {
+          "filtered": 0,
+          "in": 128,
+          "retained": 128
+        },
+        "structured": {
+          "filtered": 0,
+          "in": 0,
+          "retained": 0
+        },
+        "supplemental": {
+          "filtered": 0,
+          "in": 17,
+          "retained": 17
+        },
+        "vector": {
+          "filtered": 0,
+          "in": 128,
+          "retained": 128
+        },
+        "web": {
+          "filtered": 0,
+          "in": 69,
+          "retained": 69
+        }
+      },
+      "note": "Category + product-form paraphrase. Structural: no GT.",
+      "query": "深圳有哪些人形机器人公司",
+      "raw_bytes": 58075,
+      "run_id": "f95b",
+      "seconds": 29.35,
+      "session_id": "session:chat:f95b-s04",
+      "sse_events": {
+        "answer": 1,
+        "answer_chunk": 1162,
+        "done": 1,
+        "plan_done": 1,
+        "retrieval_done": 1,
+        "stage": 3
+      },
+      "status": "ok",
+      "suite": "probes",
+      "turn": 1,
+      "web": {
+        "attempted": 0,
+        "cache_hit": 12,
+        "degradation": "none",
+        "errored": 0,
+        "items": 10,
+        "timed_out": 0
+      }
+    },
+    {
+      "answer": {
+        "answer_chars": 2532,
+        "answer_style": "llm_synthesized",
+        "citation_nature": {
+          "local": 10,
+          "web": 0
+        },
+        "citations": [
+          {
+            "id": "official-source-7afa8217ac59e195",
+            "label": "深圳超维传感科技有限公司",
+            "type": "company",
+            "url": "https://hysense.ai"
+          },
+          {
+            "id": "official-source-723939af54f5e85c",
+            "label": "戴盟（深圳）机器人科技有限公司",
+            "type": "company",
+            "url": "https://www.dmrobot.com/"
+          },
+          {
+            "id": "official-source-108c0c0c7211930a",
+            "label": "深圳忆海原识科技有限公司",
+            "type": "company",
+            "url": "https://www.yihaiyuanshi.com"
+          },
+          {
+            "id": "official-source-be29fa75977320e6",
+            "label": "深圳蓝胖子机器智能有限公司",
+            "type": "company",
+            "url": "http://www.dorabot.com"
+          },
+          {
+            "id": "official-source-38c758a03fdede2b",
+            "label": "自变量机器人科技（深圳）有限公司",
+            "type": "company",
+            "url": "https://www.x2robot.com/"
+          },
+          {
+            "id": "official-source-22a912856c0660ee",
+            "label": "深圳市睿研智能控制有限公司",
+            "type": "company",
+            "url": "http://ruirobot.cn/"
+          },
+          {
+            "id": "official-source-86819b9becc3804a",
+            "label": "深圳市大寰机器人科技有限公司",
+            "type": "company",
+            "url": "http://www.dh-robotics.com/"
+          },
+          {
+            "id": "official-source-374c0890a87e5344",
+            "label": "国民技术股份有限公司",
+            "type": "company",
+            "url": "http://www.nationz.com.cn"
+          },
+          {
+            "id": "official-source-2fd0134f404f060e",
+            "label": "深圳市模量科技有限公司",
+            "type": "company",
+            "url": "https://www.modu-tech.cn/"
+          },
+          {
+            "id": "official-source-bef393547cae1539",
+            "label": "赛感科技（深圳）有限公司",
+            "type": "company",
+            "url": "http://sycsense.com/"
+          }
+        ],
+        "query_type": "canonical_v2:A:answer",
+        "text": "深圳在机器人灵巧手及核心零部件领域聚集了众多企业，涵盖了从整机灵巧手、触觉传感器到核心关节模组的全产业链。以下是公开信息中明确涉及灵巧手研发或生产的深圳企业：\n\n**整机灵巧手与核心执行器厂商**\n*   **深圳市兆威机电股份有限公司**：行业龙头之一，发布了LM06和DM17系列新一代灵巧手，采用高度集成一体化设计，内置微型电机，具备17-20个主动自由度，并集成柔性电子皮肤，核心组件设计寿命超过1万小时。\n*   **戴盟（深圳）机器人科技有限公司**：定位为通用仿人机器人产品研发商，推出了DM-Hand1多维触觉感知五指灵巧手，同时研发高分辨率多模态触觉感知技术及穿戴式遥操作数据采集系统。\n*   **自变量机器人科技（深圳）有限公司**：通用智能机器人研发企业，推出了X Square五指灵巧手，并自研Great Wall操作大模型，实现端到端统一具身大模型。\n*   **深圳忆海原识科技有限公司**：推出了25-DOF工业级灵巧手，面向实验室自动化、生物医药操作及危险环境远程作业等场景。\n*   **深圳市睿研智能控制有限公司（睿研智控）**：专注于机器人核心零部件，主要产品包括RY-H1（15自由度灵巧手）和RY-H2（6自由度灵巧手），以及机器人关节模组。\n*   **深圳蓝胖子机器智能有限公司**：在仓储物流机器人之外，推出了DoraHand多指灵巧手产品。\n*   **深圳星际光年科技有限公司**：专注于具身智能通用操作领域，致力于打造以灵巧手为核心的工业级通用末端执行器平台，产品包括轻羽15 Pantheon Hand 01等。\n*   **源升智能机器人（深圳）有限公司**：推出了Apex Hand灵巧手，面向半结构化工厂柔性装配、医疗把脉及日常操作等场景。\n*   **深圳伯牙智能动力有限公司**：专注灵巧手及机器人软硬件一体产品研发。\n*   **深圳市大寰机器人科技有限公司**：核心团队在机器人灵巧手领域有深厚积淀，设计开发了多种型号的机器人灵巧手。\n*   **广东灵锶智能科技有限公司**：足式机器人研发商，其产品线中包含LINXAI H25灵巧手。\n*   **深圳创通智科机器人有限公司**：在家庭服务机器人研发中，其技术团队在灵巧手设计及控制领域拥有显著成果。\n\n**灵巧手触觉传感器与感知技术厂商**\n灵巧手的“心灵手巧”离不开先进的触觉感知技术，深圳在此领域也有多家代表性企业：\n*   **帕西尼感知科技（深圳）有限公司**：自研多维度面阵触觉传感器，让人形机器人拥有像人一样丰富的触觉，是灵巧手感知层的重要供应商。\n*   **深圳超维传感科技有限公司**：专注于灵巧手触觉传感器研发，通过多物理量融合感知技术在指尖微小空间内集成轮廓、三向力及姿态感知。\n*   **深圳市模量科技有限公司**：专注于多模态多维力触觉传感技术，产品应用于人形机器人、灵巧手及机械臂的触觉感知。\n*   **赛感科技（深圳）有限公司**：聚焦新一代高性能柔性触觉传感器和机器人电子皮肤，应用于人形机器人灵巧手及身体触觉。\n*   **猿声先达科技（深圳）有限公司**：提供机器人全栈触觉技术解决方案，产品MultiDT用于机器人灵巧手指尖精密抓取与操作。\n*   **深圳叠动科技有限公司**：全球首创将微机电系统（MEMS）工艺与视触觉传感器结合，研发出小尺寸、高性能视触觉传感器，用于灵巧手精细操作。\n*   **零感科技（深圳）有限公司**：产品LGS-Flex-01等应用于机器人灵巧手精细抓取与力控操作。\n*   **深圳市松果体机器人科技有限公司**：研发了仿生人手的触觉传感器及TCS触觉驱动控制解决方案，推出PS系列高分高维触觉成像传感器。\n*   **深圳市力感科技有限公司**：其阵列传感器赋予机器人手指精细化触觉，可实时检测抓取物体压力分布。\n*   **国民技术股份有限公司**：在工业控制领域，其芯片技术路线覆盖人形机器人灵巧手控制。\n\n除上述企业外，深圳在这一领域还有不少相关公司，如灵心巧手（灵心巧匠/灵心伙伴）等也在积极布局机器人相关业务。深圳作为智能机器人产业高地，已聚集超7万家机器人企业，灵巧手作为具身智能的“最后一厘米”，正迎来快速发展期。\n此外，本次检索还召回以下相关本地企业：陶世智能科技（深圳）有限公司、深圳市灵巧驱控技术有限公司、深圳睿瀚医疗科技有限公司、深圳果力智能科技有限公司、天使之手机器人科技（深圳）有限公司、深圳力驰传感技术有限公司、深圳擎羽科技有限公司、深圳市领芯微科技有限公司、深圳柔触机器人科技有限公司、深圳市领略数控设备有限公司、深圳市陆飞智能创新科技有限公司、深圳市和意精工智能制造有限公司、深圳市梭芯智能有限公司、深圳市新力科技有限公司、深圳市目心智能科技有限公司、深圳乐居智能电子有限公司、深圳市氪灵机器人有限公司、深圳九光控股有限公司、深圳市福士工业科技有限公司、深圳中科创新机器人有限公司、深圳未来动力有限公司、深圳市南科佳安机器人科技有限公司、深圳瑞科时尚电子有限公司、深思有形（深圳）科技有限公司、慧灵科技（深圳）有限公司、深圳市铭子创意设计有限公司、深圳市海芯机器人技术有限公司、深圳市小楠智能制造有限公司、深圳指尖儿科技有限公司、深圳普智联科机器人技术有限公司、深圳市力生视觉智能科技有限公司、深圳灵美科技有限公司、深圳信炜科技有限公司、深圳创想未来机器人有限公司、深圳瓦力泰克智能机器人科技有限公司、深圳市伏茂斯科技开发有限公司、深圳创想家机器人科技有限公司、深圳市妙动科技有限公司、深圳市魔力信息技术有限公司、深圳墨影科技有限公司、深圳智触计算机系统有限公司、深圳市天工机械制造技术开发有限公司、深圳芯通科科技有限公司、港仔机器人科技（深圳）有限公司、深圳市大族唯创科技有限公司、深圳市幻尔科技有限公司、深圳慧智星晨科技有限公司、深圳云松鼠智能科技有限公司、深圳莲偶科技有限公司、徕福机器人（深圳）有限公司、深圳逐际动力科技有限公司、深圳市蜘蛛人智能科技有限公司、横川机器人（深圳）有限公司、深圳懒人自动化机械有限公司。",
+        "understood_subject": null
+      },
+      "candidate_layer": {
+        "available": false,
+        "candidate_names": 0,
+        "evidence_by_lane": null,
+        "evidence_total": null,
+        "handles_local": 0,
+        "handles_web": 0,
+        "recalled_handles": 0,
+        "source": null
+      },
+      "case_id": "s05",
+      "error": null,
+      "group": "s05",
+      "hits": {
+        "answer_all_entities": true,
+        "candidate_all_entities": null,
+        "entities": {
+          "zibianliang": {
+            "answer": true,
+            "answer_or_citations": true,
+            "candidate": null,
+            "citations": true,
+            "label": "自变量机器人"
+          }
+        },
+        "forbidden_present": []
+      },
+      "kind": "labeled",
+      "lanes": {
+        "exact": {
+          "candidates": 1,
+          "status": "succeeded"
+        },
+        "lexical": {
+          "candidates": 23,
+          "status": "succeeded"
+        },
+        "structured": {
+          "candidates": 0,
+          "status": "succeeded"
+        },
+        "supplemental": {
+          "candidates": 17,
+          "status": "succeeded"
+        },
+        "vector": {
+          "candidates": 128,
+          "status": "succeeded"
+        },
+        "web": {
+          "candidates": 82,
+          "status": "succeeded"
+        }
+      },
+      "lanes_trace": {
+        "exact": {
+          "filtered": 0,
+          "in": 1,
+          "retained": 1
+        },
+        "lexical": {
+          "filtered": 0,
+          "in": 23,
+          "retained": 23
+        },
+        "structured": {
+          "filtered": 0,
+          "in": 0,
+          "retained": 0
+        },
+        "supplemental": {
+          "filtered": 0,
+          "in": 17,
+          "retained": 17
+        },
+        "vector": {
+          "filtered": 0,
+          "in": 128,
+          "retained": 128
+        },
+        "web": {
+          "filtered": 0,
+          "in": 59,
+          "retained": 59
+        }
+      },
+      "note": "From test-set turn q14t1's frozen answer (自变量机器人科技（深圳）有限公司, X Square 五指灵巧手). Category query whose only route to a local company is the vector lane.",
+      "query": "深圳的灵巧手厂商有哪些",
+      "raw_bytes": 81779,
+      "run_id": "f95b",
+      "seconds": 16.87,
+      "session_id": "session:chat:f95b-s05",
+      "sse_events": {
+        "answer": 1,
+        "answer_chunk": 1685,
+        "done": 1,
+        "plan_done": 1,
+        "retrieval_done": 1,
+        "stage": 3
+      },
+      "status": "ok",
+      "suite": "probes",
+      "turn": 1,
+      "web": {
+        "attempted": 2,
+        "cache_hit": 10,
+        "degradation": "none",
+        "errored": 0,
+        "items": 10,
+        "timed_out": 0
+      }
+    },
+    {
+      "answer": {
+        "answer_chars": 607,
+        "answer_style": "llm_synthesized",
+        "citation_nature": {
+          "local": 0,
+          "web": 0
+        },
+        "citations": [],
+        "query_type": "canonical_v2:A:answer",
+        "text": "在具身智能数据采集领域，目前有多家企业通过不同的技术路线提供相关服务。以下是公开信息中明确涉及具身智能数据采集业务的主要公司：\n\n**安徽聆动通用机器人科技有限公司**\n该公司提供专门的具身智能数据采集与训练服务。其核心产品包括LDT系列具身智能采训推一体机和LDB系列行业级具身通用机器人。公司定位为泛制造业产线用工替代及公共/企业/高校具身智能数据采集训练场，旨在支持科研探索及千行百业具身智能机器人的快速部署与功能迭代。\n\n**艾欧智能**\n艾欧智能聚焦于真实世界机器人与具身智能数据解决方案。基于自研软硬件一体化平台，公司提供可扩展、高质量、可定制的训练数据能力，以支持Physical AI的高效研发与落地应用。其核心产品包括面向多种机器人构型的通用遥操作平台TeleXperience，服务全球160+家企业及科研机构。\n\n**杭州景联文科技有限公司**\n据公开报道，该公司是国内具身智能数据服务领域的标杆型企业，具备全场景真机数据采集能力。公司依托与西南地区21所深度合作中职、大专院校的资源，可快速组建千人规模的标准化采集团队，主要服务于办公等场景的具身智能数据采集。\n\n此外，行业趋势显示，随着人形机器人和机械臂进入真实场景，训练数据正从实验室标准化采集转向工厂、仓储、家庭等开放环境中的连续物理交互数据。除上述企业外，深圳在这一领域还有不少相关公司，您更关心哪条产品线的细节？我可以再深入检索。",
+        "understood_subject": null
+      },
+      "candidate_layer": {
+        "available": false,
+        "candidate_names": 0,
+        "evidence_by_lane": null,
+        "evidence_total": null,
+        "handles_local": 0,
+        "handles_web": 0,
+        "recalled_handles": 0,
+        "source": null
+      },
+      "case_id": "s06",
+      "error": null,
+      "group": "s06",
+      "hits": {
+        "answer_all_entities": false,
+        "candidate_all_entities": null,
+        "entities": {},
+        "forbidden_present": []
+      },
+      "kind": "structural",
+      "lanes": {
+        "exact": {
+          "candidates": 0,
+          "status": "succeeded"
+        },
+        "lexical": {
+          "candidates": 16,
+          "status": "succeeded"
+        },
+        "structured": {
+          "candidates": 0,
+          "status": "succeeded"
+        },
+        "vector": {
+          "candidates": 16,
+          "status": "succeeded"
+        },
+        "web": {
+          "candidates": 3,
+          "status": "succeeded"
+        }
+      },
+      "lanes_trace": {
+        "exact": {
+          "filtered": 0,
+          "in": 0,
+          "retained": 0
+        },
+        "lexical": {
+          "filtered": 0,
+          "in": 16,
+          "retained": 16
+        },
+        "structured": {
+          "filtered": 0,
+          "in": 0,
+          "retained": 0
+        },
+        "vector": {
+          "filtered": 0,
+          "in": 16,
+          "retained": 16
+        },
+        "web": {
+          "filtered": 47,
+          "in": 50,
+          "retained": 3
+        }
+      },
+      "note": "Category query over the test set's data-route theme. Structural: no GT.",
+      "query": "做具身智能数据采集的公司",
+      "raw_bytes": 28131,
+      "run_id": "f95b",
+      "seconds": 4.19,
+      "session_id": "session:chat:f95b-s06",
+      "sse_events": {
+        "answer": 1,
+        "answer_chunk": 596,
+        "done": 1,
+        "plan_done": 1,
+        "retrieval_done": 1,
+        "stage": 3
+      },
+      "status": "ok",
+      "suite": "probes",
+      "turn": 1,
+      "web": {
+        "attempted": 0,
+        "cache_hit": 6,
+        "degradation": "none",
+        "errored": 0,
+        "items": 3,
+        "timed_out": 0
+      }
+    },
+    {
+      "answer": {
+        "answer_chars": 789,
+        "answer_style": "llm_synthesized",
+        "citation_nature": {
+          "local": 1,
+          "web": 0
+        },
+        "citations": [
+          {
+            "id": "official-source-9fda2bc43c12d5a8",
+            "label": "深圳市智拓欣扬科技有限公司",
+            "type": "company",
+            "url": "http://xinyang-ai.com/"
+          }
+        ],
+        "query_type": "canonical_v2:A:answer",
+        "text": "深圳在具身智能领域已形成较为完整的产业集群，涌现出一批从底层技术到整机集成的代表性创业公司。以下是几家具有代表性的深圳具身智能企业：\n\n**1. 深圳市智拓欣扬科技有限公司**\n该公司成立于2024年，定位为物理世界AI的底层操作系统。公司通过“大脑-小脑”云端协同架构，为从儿童陪伴机器人到轮式人形机器人的各类设备提供持续进化的AI智能，旨在打造机器人界的“多平台系统”。\n\n**2. 深圳墨奇智能技术有限公司**\n这是一家于2025年8月注册成立的具身智能创业公司，由imile联合创始人高文礼创立。公司愿景是构建人机共生的繁荣世界，致力于让生产力与创造力无限延伸。\n\n**3. 深圳市格松科技有限公司**\n格松科技于2025年正式独立运作，是一家专注于具身智能领域研发与量产的创新型企业。公司由师从徐扬生院士的蔡优飞担任CEO，拥有超10年机器人行业深耕经验，致力于构建产值超千亿元的具身智能产业生态。\n\n**4. 跨维智能**\n作为深圳具身智能领域的独角兽企业，跨维智能在B轮融资中融得10亿元，并拟开启IPO冲刺。公司积累了仿真、合成数据、空间感知和模型等技术，随着世界模型成为行业新关键词，其技术积累在具身智能赛道中具备显著优势。\n\n**5. 深圳国创具身智能机器人有限公司**\n该公司由兆威机电、奥比中光、峰岹科技、云天励飞等深圳知名企业联合成立，注册资本3000万元，经营范围涵盖智能机器人的研发、工业机器人制造及销售等，体现了产业链上下游企业共同布局具身智能机器人的趋势。\n\n**6. 乐聚机器人**\n乐聚机器人是深圳具身智能领域的知名代表企业之一，曾入选中国人工智能科技企业五十强，并与华为等头部企业建立了战略合作关系，在人形机器人研发与应用落地方面具有较高行业影响力。\n\n除上述企业外，深圳在这一领域还有不少相关公司，如众擎机器人等也在具身智能赛道中活跃。",
+        "understood_subject": null
+      },
+      "candidate_layer": {
+        "available": false,
+        "candidate_names": 0,
+        "evidence_by_lane": null,
+        "evidence_total": null,
+        "handles_local": 0,
+        "handles_web": 0,
+        "recalled_handles": 0,
+        "source": null
+      },
+      "case_id": "s07",
+      "error": null,
+      "group": "s07",
+      "hits": {
+        "answer_all_entities": false,
+        "candidate_all_entities": null,
+        "entities": {},
+        "forbidden_present": []
+      },
+      "kind": "structural",
+      "lanes": {
+        "exact": {
+          "candidates": 0,
+          "status": "succeeded"
+        },
+        "lexical": {
+          "candidates": 16,
+          "status": "succeeded"
+        },
+        "structured": {
+          "candidates": 0,
+          "status": "succeeded"
+        },
+        "vector": {
+          "candidates": 16,
+          "status": "succeeded"
+        },
+        "web": {
+          "candidates": 16,
+          "status": "succeeded"
+        }
+      },
+      "lanes_trace": {
+        "exact": {
+          "filtered": 0,
+          "in": 0,
+          "retained": 0
+        },
+        "lexical": {
+          "filtered": 0,
+          "in": 16,
+          "retained": 16
+        },
+        "structured": {
+          "filtered": 0,
+          "in": 0,
+          "retained": 0
+        },
+        "vector": {
+          "filtered": 0,
+          "in": 16,
+          "retained": 16
+        },
+        "web": {
+          "filtered": 0,
+          "in": 74,
+          "retained": 74
+        }
+      },
+      "note": "Colloquial paraphrase of s01. Structural: no GT.",
+      "query": "深圳有什么具身智能创业公司",
+      "raw_bytes": 36821,
+      "run_id": "f95b",
+      "seconds": 5.88,
+      "session_id": "session:chat:f95b-s07",
+      "sse_events": {
+        "answer": 1,
+        "answer_chunk": 769,
+        "done": 1,
+        "plan_done": 1,
+        "retrieval_done": 1,
+        "stage": 3
+      },
+      "status": "ok",
+      "suite": "probes",
+      "turn": 1,
+      "web": {
+        "attempted": 0,
+        "cache_hit": 8,
+        "degradation": "interpretation-rejected",
+        "errored": 0,
+        "items": 8,
+        "timed_out": 0
+      }
+    },
+    {
+      "answer": {
+        "answer_chars": 508,
+        "answer_style": "llm_synthesized",
+        "citation_nature": {
+          "local": 1,
+          "web": 0
+        },
+        "citations": [
+          {
+            "id": "official-source-33bde5c69772e784",
+            "label": "深圳市越疆科技股份有限公司",
+            "type": "company",
+            "url": "https://www.dobot.cn"
+          }
+        ],
+        "query_type": "canonical_v2:A:answer",
+        "text": "公开信息显示，深圳市越疆科技股份有限公司（DOBOT）是一家从制造现场走出来的具身智能企业，其核心业务涵盖“机械臂+人形+轮式+多足”全系产品。\n\n在产业链布局方面，越疆科技位于深圳南山科技园，其产业链上下游包含核心零部件供应商以及同园区的科达利控股子公司——科盟（创新）机器人。\n\n越疆科技的主要产品线包括：\n- **工业机器人**：如CR 30H（300°/s行业最快30KG大负载工业机器人）。\n- **协作机器人**：涵盖CRA系列（高性能高精度工业协作机器人）、Nova系列（商业专用智能协作机器人）以及CR3、CR5、CR10、CR16、CRA系列、CRS系列、MG400、M1Pro、Nova系列、Magician系列（含Magician Lite、Magician E6）等。\n- **具身智能与人形机器人**：如Dobot Atom、Dobot Atom Ⅱ（全球首款“灵巧操作+直膝行走”全尺寸人形机器人）。\n- **四足机器狗**：如Rover X1（全球首款家庭智能体四足机器狗）及六足仿生机器狗。\n\n除上述企业外，深圳在这一领域还有不少相关公司。您更关心哪条产品线的细节？我可以再深入检索。",
+        "understood_subject": null
+      },
+      "candidate_layer": {
+        "available": false,
+        "candidate_names": 0,
+        "evidence_by_lane": null,
+        "evidence_total": null,
+        "handles_local": 0,
+        "handles_web": 0,
+        "recalled_handles": 0,
+        "source": null
+      },
+      "case_id": "s08",
+      "error": null,
+      "group": "s08",
+      "hits": {
+        "answer_all_entities": false,
+        "candidate_all_entities": null,
+        "entities": {},
+        "forbidden_present": []
+      },
+      "kind": "structural",
+      "lanes": {
+        "exact": {
+          "candidates": 1,
+          "status": "succeeded"
+        },
+        "lexical": {
+          "candidates": 0,
+          "status": "succeeded"
+        },
+        "structured": {
+          "candidates": 0,
+          "status": "succeeded"
+        },
+        "vector": {
+          "candidates": 16,
+          "status": "succeeded"
+        },
+        "web": {
+          "candidates": 3,
+          "status": "succeeded"
+        }
+      },
+      "lanes_trace": {
+        "exact": {
+          "filtered": 0,
+          "in": 1,
+          "retained": 1
+        },
+        "lexical": {
+          "filtered": 0,
+          "in": 0,
+          "retained": 0
+        },
+        "structured": {
+          "filtered": 0,
+          "in": 0,
+          "retained": 0
+        },
+        "vector": {
+          "filtered": 0,
+          "in": 16,
+          "retained": 16
+        },
+        "web": {
+          "filtered": 46,
+          "in": 49,
+          "retained": 3
+        }
+      },
+      "note": "Peer-of-X where X is a local KB company (越疆 is named in G5's accepted set, so it is not frozen GT for the switch). Structural: no GT.",
+      "query": "和越疆科技类似的公司",
+      "raw_bytes": 22603,
+      "run_id": "f95b",
+      "seconds": 3.61,
+      "session_id": "session:chat:f95b-s08",
+      "sse_events": {
+        "answer": 1,
+        "answer_chunk": 476,
+        "done": 1,
+        "plan_done": 1,
+        "retrieval_done": 1,
+        "stage": 3
+      },
+      "status": "ok",
+      "suite": "probes",
+      "turn": 1,
+      "web": {
+        "attempted": 0,
+        "cache_hit": 6,
+        "degradation": "none",
+        "errored": 0,
+        "items": 3,
+        "timed_out": 0
+      }
+    },
+    {
+      "answer": {
+        "answer_chars": 3137,
+        "answer_style": "llm_synthesized",
+        "citation_nature": {
+          "local": 19,
+          "web": 0
+        },
+        "citations": [
+          {
+            "id": "official-source-b3fadcb5370dc170",
+            "label": "深圳市奇诺动力科技有限公司",
+            "type": "company",
+            "url": "http://www.xenodynamics.cc"
+          },
+          {
+            "id": "official-source-30f8154f6761462e",
+            "label": "深圳睿瀚医疗科技有限公司",
+            "type": "company",
+            "url": "http://rhb-tech.com/"
+          },
+          {
+            "id": "official-source-d2575555a8f7379a",
+            "label": "深圳市罗伯医疗科技有限公司",
+            "type": "company",
+            "url": "http://www.docrobo.com"
+          },
+          {
+            "id": "official-source-3dcb1d30bec9baf6",
+            "label": "深圳健行仿生技术有限公司",
+            "type": "company",
+            "url": "http://www.bionicm.cn/"
+          },
+          {
+            "id": "official-source-4c805dbe99e0cd95",
+            "label": "深圳市嘀嗒健康机器人科技有限公司",
+            "type": "company",
+            "url": "https://www.dingdang.ai/"
+          },
+          {
+            "id": "official-source-a105cb6508406912",
+            "label": "深圳市卫邦科技有限公司",
+            "type": "company",
+            "url": "http://www.weibond.com/"
+          },
+          {
+            "id": "official-source-fa8bff33e67b79ae",
+            "label": "深圳康诺思腾科技有限公司",
+            "type": "company",
+            "url": "https://www.csrbtx.com/"
+          },
+          {
+            "id": "official-source-e4574327997364a2",
+            "label": "深圳市精锋医疗科技股份有限公司",
+            "type": "company",
+            "url": "http://www.edgemedicalrobotics.com/"
+          },
+          {
+            "id": "official-source-c4b65c2fe2fd4980",
+            "label": "深圳市博为医疗机器人有限公司",
+            "type": "company",
+            "url": "http://broadcare.com.cn/"
+          },
+          {
+            "id": "official-source-4959a0119dd5860f",
+            "label": "深圳市鑫君特智能医疗器械有限公司",
+            "type": "company",
+            "url": "http://www.futurtec.com/"
+          },
+          {
+            "id": "official-source-f1c6d8336d137fc2",
+            "label": "易普森智慧健康科技（深圳）有限公司",
+            "type": "company",
+            "url": "http://www.epshealth.com"
+          },
+          {
+            "id": "official-source-e2fb0d09c87a65ce",
+            "label": "深圳市迈步机器人科技有限公司",
+            "type": "company",
+            "url": "http://www.milebot.com.cn/"
+          },
+          {
+            "id": "official-source-634bb423a470aee9",
+            "label": "深圳柳叶刀机器人有限公司",
+            "type": "company",
+            "url": "https://www.lancet-robotics.com/"
+          },
+          {
+            "id": "official-source-f024a34082ffa61a",
+            "label": "深圳睿心智能医疗科技有限公司",
+            "type": "company",
+            "url": "https://www.raysightmed.com/#/"
+          },
+          {
+            "id": "official-source-db07c3202ea0d022",
+            "label": "天智星（深圳）科技有限公司",
+            "type": "company",
+            "url": "http://www.sisgene.cn"
+          },
+          {
+            "id": "official-source-008b62745a407691",
+            "label": "深圳市通甪科技有限公司",
+            "type": "company",
+            "url": "http://angio8.com/"
+          },
+          {
+            "id": "official-source-45c386a275d8e4a2",
+            "label": "深圳市奥昇医疗科技有限责任公司",
+            "type": "company",
+            "url": "http://www.ultrastmedtech.com/"
+          },
+          {
+            "id": "official-source-be71b966d56bf7b2",
+            "label": "哈工小愈（深圳）健康科技有限公司",
+            "type": "company",
+            "url": "http://www.espinecare.com.cn/"
+          },
+          {
+            "id": "official-source-e370a69733c263a9",
+            "label": "深圳智触计算机系统有限公司",
+            "type": "company",
+            "url": "https://www.intelligent-haptronic-solutions.com/"
+          }
+        ],
+        "query_type": "canonical_v2:A:answer",
+        "text": "深圳在医疗机器人领域拥有较为完整的产业链，涵盖了手术机器人、康复机器人、护理与物流机器人、以及医疗辅助与消毒机器人等多个细分赛道。以下是深圳地区具有代表性的医疗机器人企业及其核心产品：\n\n**手术机器人**\n*   **深圳市精锋医疗科技股份有限公司**：专注于微创手术机器人，核心产品包括精锋®多孔腔镜手术机器人MP1000和精锋®单孔腔镜手术机器人SP1000，广泛应用于泌尿外科、妇科、普外科及胸外科的微创手术。\n*   **深圳康诺思腾科技有限公司**：研发Sentire思腾®腔镜手术机器人，主要应用于泌尿外科前列腺癌根治术、妇科肿瘤切除、普外科肝胆胃肠手术及胸外科肺段切除等复杂软组织微创手术。\n*   **深圳市罗伯医疗科技有限公司**（ROBO医疗）：专注于消化内镜手术机器人，其核心产品RM-XHDB01A适用于食管、胃内镜黏膜下剥离术（ESD）中对病变组织的钳夹与提拉，已在全国多家三甲医院完成临床验证。\n*   **元化智能科技（深圳）有限公司**：定位为高端专科智能医疗装备，核心产品为锟铻®全骨科手术机器人，覆盖全膝关节置换、全髋关节置换、单髁膝关节置换、脊柱及创伤术式，已在全国超4000例手术中应用。\n*   **天智星（深圳）科技有限公司**：核心产品为天玑2.0骨科手术机器人，主要应用于三甲医院骨科手术室，覆盖脊柱椎弓根螺钉置入、骨盆骨折通道螺钉固定、关节置换定位等高难度精准手术场景。\n*   **深圳柳叶刀机器人有限公司**：定位为跨科室手术机器人平台，核心产品包括Lancet RobPath THA（全髋关节置换手术机器人系统）、Lancet-KBAS（全膝关节置换手术机器人系统）以及Dencore®（口腔种植导航机器人系统），覆盖骨科与口腔科手术。\n*   **深圳市阿瑟医疗机器人有限公司**：产品线涵盖阿瑟放疗机器人及腹腔镜手术机器人（阿瑟4.5代），分别应用于放射治疗中心及微创外科手术室。\n*   **深圳睿心智能医疗科技有限公司**：专注于心血管介入手术机器人，核心产品包括睿心血管介入手术机器人（RuiXin Vascular Robot），用于实现精准支架置入，提高手术成功率并降低辐射暴露。\n*   **深圳市通甪科技有限公司**（Angio8）：致力于血管介入手术机器人研发，提供智能化手术解决方案，产品包括血管介入手术机器人及Angio8紫外脉冲激光消融系统，应用于复杂冠状动脉狭窄及外周血管介入治疗。\n*   **深圳惟德精准医疗科技有限公司**：定位为软组织介入手术机器人企业，核心产品WD-Lung-Navi I用于成人肺及腹部实体器官的经皮穿刺手术导航定位，适用于活检、消融、粒子植入等术式。\n\n**康复与外骨骼机器人**\n*   **深圳睿瀚医疗科技有限公司**：专注于手部康复机器人，核心产品包括睿瀚I型（网络化智能自驱式手部康复系统）、睿瀚II型（可穿戴式手部康复机器人）及睿瀚III型（脑控手部康复机器人），主要用于脑卒中、脑外伤等导致的手功能障碍全周期康复训练。\n*   **深圳市迈步机器人科技有限公司**：聚焦康复外骨骼与具身智能机器人，核心产品包括BEAR系列及EXO系列外骨骼机器人，用于脑卒中、脊髓损伤、帕金森及儿童脑瘫等导致的下肢运动功能障碍者的步态康复训练。\n*   **深圳市奇诺动力科技有限公司**：专注于膝关节保护与下肢步行辅助，核心产品用于前交叉韧带及后交叉韧带重建术后膝关节保护、脊髓损伤患者下肢步行辅助及下肢步行障碍成人患者的步态康复训练。\n*   **深圳健行仿生技术有限公司**：专注于智能动力假肢与下肢康复，核心产品包括BionicM智能动力假肢（大腿款智能电动膝机器人）及智能电动踝机器人（小腿款），适用于下肢截肢者日常室内外行走、上下楼梯等生活场景。\n*   **哈工小愈（深圳）健康科技有限公司**：核心产品包括小愈ESPINEBOT®-S108BIO、小愈机器人S305PR及智能脊椎理疗床，应用于家庭、康养中心及脊柱康复机构，提供脊椎理疗与运动排酸服务。\n\n**护理、物流与辅助机器人**\n*   **深圳市博为医疗机器人有限公司**：产品线丰富，包括综合自动调配机器人、台式西林配药机器人、台式安瓿配药机器人、智能内镜清洗机器人3.0版、护士助手机器人及医用物流机器人，广泛应用于静配中心（PIVAS）、消化内镜中心及医院科室。\n*   **易普森智慧健康科技（深圳）有限公司**：核心产品包括医院物流机器人（配送转运机器人），已在全国多家医院及康养院承担常规药品、器械、医疗物资的无人配送任务，并入选工信部《医疗领域机器人应用优秀场景名单》。\n*   **深圳市迈康信医用机器人有限公司**：专注于智能医疗器械研发，产品应用于医疗机构转运/移动患者，以及养老院及家庭为行动不便者洗澡、坐便、移位等护理场景。\n\n**医疗消毒与影像辅助机器人**\n*   **深圳东紫科技有限公司**：核心产品包括PulseIn-C1、PulseIn-D、PulseStrike 360等移动光触媒消毒机及空气消毒设备，应用于手术室、ICU、烧伤病房等需要严格消毒的医疗环境。\n*   **坎德拉（深圳）科技创新有限公司**：产品线涵盖烛光医疗机器人系列，应用于医院、隔离病区等场景。\n*   **深圳市奥昇医疗科技有限责任公司**：聚焦医用超声诊断、治疗手术机器人开发，核心产品包括PUCA®脉冲超声空化消融机器人，用于前列腺增生、肝脏及胰腺等实体肿瘤的无创消融治疗，以及泌尿专科超声和麻醉专科超声设备。\n*   **深圳智触计算机系统有限公司**：产品落地于医疗手术模拟教培领域，用于消化内镜、支气管镜等介入手术的规范化培训，帮助学员在脱离真实患者的情况下反复练习。\n\n除上述企业外，深圳在这一领域还有不少相关公司，如深圳市嘀嗒健康机器人科技有限公司（健康机器人研发）、跨维（深圳）智能数字科技有限公司（具身智能仿真与3D视觉引导，覆盖医疗耗材无菌分拣等场景）等。深圳医疗机器人产业已形成从核心零部件到整机制造再到场景应用的完整产业链条，涵盖了手术、康复、护理、消毒及辅助诊断等多个细分方向。\n此外，本次检索还召回以下相关本地企业：深圳市卫邦科技有限公司、深圳市普渡科技有限公司、深圳市肯綮科技有限公司、深圳市鑫君特智能医疗器械有限公司、深圳机器之心科技有限公司、深圳市桑谷医疗机器人有限公司、深圳扬奇医芯智能科技有限公司、深圳市慧流体生物科技有限公司、基态生物科技（深圳）有限公司、深圳市干支科技有限公司、杉木（深圳）生物科技有限公司、中慧医学成像（深圳）有限公司、深圳科卫机器人科技有限公司、科凌力智能医学软件（深圳）有限公司、深圳市数智智能有限公司、深圳市乐心平江科技有限公司、深圳市箴石医疗设备有限公司、深圳鸿博智成科技有限公司、深圳垦拓流体技术股份有限公司、深圳博创机器人技术有限公司、自兴人工智能（深圳）有限公司、深圳市华滋自动化技术有限公司、乐聚（深圳）机器人技术有限公司、深圳市笨笨机器人有限公司、深圳奇点机器人集团有限公司、深圳市普惠医学技术有限公司、深圳蝶变智慧医用技术有限公司、深圳市胡桃医疗科技有限公司、深圳市迈泰生物医疗有限公司、深圳市特蒙科技有限公司、深圳梧童科技有限公司、深圳市鼎盛智能科技有限公司、深圳市中舟智能科技有限公司、深圳市合成智造科技有限公司、深圳市香蕉智能科技有限公司、深圳华大因源医药科技有限公司、深圳市哎哟不错科研有限公司、深圳市联影医疗数据服务有限公司、源升智能机器人（深圳）有限公司、深圳道壹科技有限公司。",
+        "understood_subject": null
+      },
+      "candidate_layer": {
+        "available": false,
+        "candidate_names": 0,
+        "evidence_by_lane": null,
+        "evidence_total": null,
+        "handles_local": 0,
+        "handles_web": 0,
+        "recalled_handles": 0,
+        "source": null
+      },
+      "case_id": "s09",
+      "error": null,
+      "group": "s09",
+      "hits": {
+        "answer_all_entities": false,
+        "candidate_all_entities": null,
+        "entities": {
+          "aibo-hechuang": {
+            "answer": false,
+            "answer_or_citations": false,
+            "candidate": null,
+            "citations": false,
+            "label": "爱博合创"
+          }
+        },
+        "forbidden_present": []
+      },
+      "kind": "labeled",
+      "lanes": {
+        "exact": {
+          "candidates": 0,
+          "status": "succeeded"
+        },
+        "lexical": {
+          "candidates": 128,
+          "status": "succeeded"
+        },
+        "structured": {
+          "candidates": 0,
+          "status": "succeeded"
+        },
+        "supplemental": {
+          "candidates": 14,
+          "status": "succeeded"
+        },
+        "vector": {
+          "candidates": 128,
+          "status": "succeeded"
+        },
+        "web": {
+          "candidates": 82,
+          "status": "succeeded"
+        }
+      },
+      "lanes_trace": {
+        "exact": {
+          "filtered": 0,
+          "in": 0,
+          "retained": 0
+        },
+        "lexical": {
+          "filtered": 0,
+          "in": 128,
+          "retained": 128
+        },
+        "structured": {
+          "filtered": 0,
+          "in": 0,
+          "retained": 0
+        },
+        "supplemental": {
+          "filtered": 0,
+          "in": 14,
+          "retained": 14
+        },
+        "vector": {
+          "filtered": 0,
+          "in": 128,
+          "retained": 128
+        },
+        "web": {
+          "filtered": 0,
+          "in": 73,
+          "retained": 73
+        }
+      },
+      "note": "Category query whose expected company is carried by test-set 问题10 (血管介入手术机器人).",
+      "query": "深圳做医疗机器人的企业有哪些",
+      "raw_bytes": 116976,
+      "run_id": "f95b",
+      "seconds": 23.15,
+      "session_id": "session:chat:f95b-s09",
+      "sse_events": {
+        "answer": 1,
+        "answer_chunk": 2451,
+        "done": 1,
+        "plan_done": 1,
+        "retrieval_done": 1,
+        "stage": 3
+      },
+      "status": "ok",
+      "suite": "probes",
+      "turn": 1,
+      "web": {
+        "attempted": 0,
+        "cache_hit": 12,
+        "degradation": "interpretation-rejected",
+        "errored": 0,
+        "items": 10,
+        "timed_out": 0
+      }
+    },
+    {
+      "answer": {
+        "answer_chars": 2097,
+        "answer_style": "llm_synthesized",
+        "citation_nature": {
+          "local": 0,
+          "web": 0
+        },
+        "citations": [],
+        "query_type": "canonical_v2:A:answer",
+        "text": "具身智能公司与机器人厂商的核心区别在于业务重心、技术深度以及产品形态的侧重点不同。简单来说，具身智能公司更侧重于“大脑”与“交互”，而机器人厂商更侧重于“身体”与“执行”。\n\n**1. 核心定义与侧重点**\n*   **具身智能公司**：聚焦于“具身智能”这一前沿交叉领域。其核心在于让智能体（AI）通过物理实体与环境进行实时交互，实现感知、认知、决策和行动的一体化。这类公司强调智能体通过身体与环境的动态交互实现自主学习和进化，重点解决的是如何让AI具备类似人类的感知、规划、决策和行为能力，实现“感知-认知-决策-行动-反馈”的闭环。\n*   **机器人厂商**：传统意义上的机器人厂商主要聚焦于机器人的本体制造、运动控制及特定场景的自动化执行。其核心在于提供具备物理实体、能完成特定任务（如搬运、焊接、清洁）的硬件设备。\n\n**2. 技术路线差异**\n*   **具身智能公司**：通常以人工智能、大模型、多模态感知为核心驱动力。它们致力于构建连接物理智能体与虚拟智能体的基座模型，强调算法的泛化能力、少样本学习能力以及“大脑-小脑”的云端协同架构。技术重点在于让机器人具备理解复杂环境、自主规划任务并持续进化的能力。\n*   **机器人厂商**：技术路线更多围绕机械结构、伺服驱动、传感器集成及传统的运动控制算法。重点在于硬件的稳定性、精度、耐用性以及特定任务的高效执行。\n\n**3. 产品形态与应用**\n*   **具身智能公司**：产品形态更加多元和通用，不仅包括人形机器人、四足机器人，还可能涵盖智能体平台、具身数据引擎、超级具身智能系统等。应用场景广泛，从家庭服务、医疗康养到工业柔性制造、科研教育等，强调机器人在非结构化环境中的适应性和交互性。\n*   **机器人厂商**：产品形态相对固定，如工业机械臂、协作机器人、特种作业机器人、服务机器人等。应用场景多为结构化或半结构化的工业、商业环境，强调任务的标准化和重复性。\n\n**4. 产业定位**\n*   **具身智能公司**：被视为实现通用人工智能（AGI）的关键路径，旨在打造具备感知、决策和执行闭环能力的智能机器人，重塑多领域。它们往往是技术创新的引领者，推动机器人从“自动化”向“智能化”跃迁。\n*   **机器人厂商**：是智能制造和服务业的重要基础设施提供商，侧重于将成熟的技术转化为可大规模量产和部署的硬件产品，满足市场对自动化设备的需求。\n\n**总结**\n具身智能公司是机器人产业的高级形态和智能化升级方向，它们不仅制造机器人，更赋予机器人“智慧”和“自主性”。而机器人厂商则是这一产业的基础，提供实现智能的物理载体。随着技术发展，两者的界限正在模糊，越来越多的机器人厂商开始融入具身智能技术，而具身智能公司也必然需要依托机器人硬件来实现其智能愿景。\n此外，本次检索还召回以下相关本地企业：深圳诺因智能有限公司、深圳市探真智能科技有限公司、深圳市格松科技有限公司、深圳墨奇智能技术有限公司、深圳市诺因智能有限公司、深圳逐际动力科技有限公司、深维探索（深圳）智能科技有限公司、深圳亮源新创科技有限公司、深圳跃瓦创新科技有限公司、深圳市心感智影科技有限公司、深圳超维动力智能科技有限公司、跨维（深圳）智能数字科技有限公司、深圳赛博格机器人有限公司、深圳国创具身智能机器人有限公司、深圳无界智航科技有限公司、智元创新（上海）科技有限公司、寻界科技（深圳）有限公司、深圳市道和通泰机器人有限公司、深圳市玄创机器人有限公司、知有无界（深圳）智能科技有限公司、广东具身风暴机器人有限公司、智平方（深圳）科技有限公司、简智新创（北京）机器人科技有限公司、杭州云深处科技有限公司、源升智能机器人（深圳）有限公司、嘉蕴兴自动化科技（深圳）有限公司、深思有形（深圳）科技有限公司、深圳市智拓欣扬科技有限公司、戴盟（深圳）机器人科技有限公司、智身科技（北京）有限公司、深圳未来动力有限公司、深圳极数迭代科技有限公司、深圳市比安诺科技有限公司、安徽聆动通用机器人科技有限公司、深圳市小友智心科技有限公司、自变量机器人科技（深圳）有限公司、深圳市枣橙科技有限公司、深圳市火花次元科技有限公司、中煤科工（辽宁）具身智能科技有限公司、未来维度（深圳）科技有限公司、星尘智能（深圳）有限公司、枢途科技（深圳）有限公司、深圳向纺未来科技有限公司、中科先进（深圳）集成技术有限公司、玄智（深圳）科技有限公司、深圳市宇智动力技术研究有限公司、深圳若愚科技有限公司、远行光年科技（深圳）有限公司、深圳缔宙科技有限公司、深圳市云之梦科技有限公司、深圳市骁巨智能科技有限公司、深圳市航宇数字视觉科技有限公司、拓元智慧（深圳）科技有限公司、留形三维控股（深圳）有限公司、深圳市黑锅底创新科技有限公司、深圳市梭芯智能有限公司、深圳璇玑动力科技有限公司、深圳星际光年科技有限公司、深圳市瑞鸿安科技有限公司、艾欧智能（深圳）有限公司、北京灵御智能科技有限公司、深圳增强现实技术有限公司、光年创新（深圳）科技有限公司、赛感科技（深圳）有限公司 等（共 81 家）。",
+        "understood_subject": null
+      },
+      "candidate_layer": {
+        "available": false,
+        "candidate_names": 0,
+        "evidence_by_lane": null,
+        "evidence_total": null,
+        "handles_local": 0,
+        "handles_web": 0,
+        "recalled_handles": 0,
+        "source": null
+      },
+      "case_id": "s10",
+      "error": null,
+      "group": "s10",
+      "hits": {
+        "answer_all_entities": false,
+        "candidate_all_entities": null,
+        "entities": {},
+        "forbidden_present": []
+      },
+      "kind": "structural",
+      "lanes": {
+        "exact": {
+          "candidates": 0,
+          "status": "succeeded"
+        },
+        "lexical": {
+          "candidates": 1,
+          "status": "succeeded"
+        },
+        "structured": {
+          "candidates": 0,
+          "status": "succeeded"
+        },
+        "supplemental": {
+          "candidates": 2,
+          "status": "succeeded"
+        },
+        "vector": {
+          "candidates": 128,
+          "status": "succeeded"
+        },
+        "web": {
+          "candidates": 46,
+          "status": "succeeded"
+        }
+      },
+      "lanes_trace": {
+        "exact": {
+          "filtered": 0,
+          "in": 0,
+          "retained": 0
+        },
+        "lexical": {
+          "filtered": 0,
+          "in": 1,
+          "retained": 1
+        },
+        "structured": {
+          "filtered": 0,
+          "in": 0,
+          "retained": 0
+        },
+        "supplemental": {
+          "filtered": 0,
+          "in": 2,
+          "retained": 2
+        },
+        "vector": {
+          "filtered": 0,
+          "in": 128,
+          "retained": 128
+        },
+        "web": {
+          "filtered": 5,
+          "in": 51,
+          "retained": 46
+        }
+      },
+      "note": "Concept contrast query with no entity shape. Structural: no GT.",
+      "query": "具身智能公司和机器人厂商有什么区别",
+      "raw_bytes": 56520,
+      "run_id": "f95b",
+      "seconds": 17.32,
+      "session_id": "session:chat:f95b-s10",
+      "sse_events": {
+        "answer": 1,
+        "answer_chunk": 1142,
+        "done": 1,
+        "plan_done": 1,
+        "retrieval_done": 1,
+        "stage": 3
+      },
+      "status": "ok",
+      "suite": "probes",
+      "turn": 1,
+      "web": {
+        "attempted": 0,
+        "cache_hit": 6,
+        "degradation": "interpretation-rejected",
+        "errored": 0,
+        "items": 10,
+        "timed_out": 0
+      }
+    },
+    {
+      "answer": {
+        "answer_chars": 1590,
+        "answer_style": "llm_synthesized",
+        "citation_nature": {
+          "local": 0,
+          "web": 0
+        },
+        "citations": [],
+        "query_type": "canonical_v2:A:answer",
+        "text": "目前公开信息显示，布局具身智能数据引擎（数据平台/数据集）的企业主要包括以下几类：\n\n**1. 科技大厂与生态企业**\n*   **京东**：作为大厂代表，集中发布了数据平台与数据集，布局具身智能数据基建。\n*   **戴盟机器人**：同样发布了数据平台与数据集，参与大厂阵营的具身智能数据基建布局。\n*   **觅蜂科技**：作为智元（Agibot）旗下企业，发布了数据平台与数据集。\n\n**2. 专业数据采集与数据平台厂商**\n*   **广州宸祺出行科技有限公司（如祺出行）**：其旗下数据业务板块正式发布了具身智能数据平台。该平台是一套面向第一人称视角（Ego-centric）操作视频的自动化处理流水线，专门服务于具身智能数据需求。\n*   **专业数据采集厂商集群**：据行业盘点，国内有25家具身智能数据采集厂商正在活跃布局，主要分布在以下城市：\n    *   **北京**：光轮智能（北京）科技有限公司、简智新创（北京）机器人科技有限公司、北京诺亦腾科技有限公司、北京无问智行科技有限公司、星忆科技（北京）等。\n    *   其他地区的厂商也在积极提供相关数据采集与处理服务。\n\n**行业背景补充**\n具身智能数据引擎是连接物理世界与AI模型的关键环节。目前，真机数据采集的市场价格大约在每小时500-1000元之间，而无本体数据的价格预计将收敛至真机数据的三分之一左右。随着宇树科技、智元、众擎、千寻等具身智能公司的崛起，数据基建已成为行业竞争的重要高地。\n\n除上述企业外，深圳在这一领域还有不少相关公司，如深圳市优必选科技股份有限公司等也在探索具身智能全链路技术。您更关心哪条产品线的细节？我可以再深入检索。\n此外，本次检索还召回以下相关本地企业：深圳众深科技有限公司、深圳作为科技有限公司、深圳市振高科技有限公司、深圳和众创科技有限公司、深圳市乌鲁鲁智能科技有限公司、深圳市早知道科技有限公司、深圳市香橙科技有限公司、深圳市银舍智能科技有限公司、深圳市执卓科技发展有限公司、深圳市腾胜辉科技有限公司、中科未来世界科技（深圳）有限公司、深圳市垦鑫达科技有限公司、深圳市高远无人机有限公司、深圳市誉致科技有限公司、腾讯科技（深圳）有限公司、深圳市星桐科技有限公司、深圳凌恩科技有限公司、深圳市众城丰电子有限公司、航天科工深圳（集团）有限公司、顶群科技（深圳）有限公司、深圳市摩为特科技有限公司、深圳市斗士科技有限责任公司、深圳海思机器人有限公司、深圳市智臻创新科技有限公司、深圳创想电子技术有限公司、深圳市诺丰泰智能科技有限公司、深圳市天生乐科技有限公司、深圳德德电气科技有限公司、深圳赛博格机器人有限公司、深圳市泰合技术有限公司、深圳中科创新机器人有限公司、深圳市电科电源股份有限公司、深圳市和而不同人工智能技术有限公司、松翰科技（深圳）有限公司、天使之手机器人科技（深圳）有限公司、深圳市领芯微科技有限公司、深圳牛卓科技有限公司、深圳市爱普特微电子有限公司、深圳市惠和缘科技有限公司、深圳市东盛创新科技有限公司、深圳黑顿科技有限公司、航天紫金（深圳）创新科技集团有限公司、深圳乐居智能电子有限公司、中熙宁（深圳）科技有限公司、深圳市立泽科技有限公司、深圳市森榄技术有限公司、富璟科技（深圳）有限公司、深圳市信哪儿科技有限公司、深圳市蓝方技术有限公司、深圳万物传感科技有限公司、深圳市智驭星辰科技有限公司、深圳市小洁机器人有限公司、深圳市广智信息科技有限公司、深圳幸狐科技有限公司、深圳市智纬科技有限公司、深圳市正奇创新机器人有限公司、深圳市不止技术有限公司、未来维度（深圳）科技有限公司、深圳爱为客科技有限公司、尚科宁家（中国）科技有限公司、深圳市元宇宙科技有限公司、深圳市闻视科技有限公司、深圳市陆飞智能创新科技有限公司、深圳市优博讯科技股份有限公司。",
+        "understood_subject": null
+      },
+      "candidate_layer": {
+        "available": false,
+        "candidate_names": 0,
+        "evidence_by_lane": null,
+        "evidence_total": null,
+        "handles_local": 0,
+        "handles_web": 0,
+        "recalled_handles": 0,
+        "source": null
+      },
+      "case_id": "s11",
+      "error": null,
+      "group": "s11",
+      "hits": {
+        "answer_all_entities": false,
+        "candidate_all_entities": null,
+        "entities": {},
+        "forbidden_present": []
+      },
+      "kind": "structural",
+      "lanes": {
+        "exact": {
+          "candidates": 0,
+          "status": "succeeded"
+        },
+        "lexical": {
+          "candidates": 0,
+          "status": "succeeded"
+        },
+        "structured": {
+          "candidates": 0,
+          "status": "succeeded"
+        },
+        "supplemental": {
+          "candidates": 12,
+          "status": "succeeded"
+        },
+        "vector": {
+          "candidates": 128,
+          "status": "succeeded"
+        },
+        "web": {
+          "candidates": 98,
+          "status": "succeeded"
+        }
+      },
+      "lanes_trace": {
+        "exact": {
+          "filtered": 0,
+          "in": 0,
+          "retained": 0
+        },
+        "lexical": {
+          "filtered": 0,
+          "in": 0,
+          "retained": 0
+        },
+        "structured": {
+          "filtered": 0,
+          "in": 0,
+          "retained": 0
+        },
+        "supplemental": {
+          "filtered": 0,
+          "in": 12,
+          "retained": 12
+        },
+        "vector": {
+          "filtered": 0,
+          "in": 128,
+          "retained": 128
+        },
+        "web": {
+          "filtered": 0,
+          "in": 74,
+          "retained": 74
+        }
+      },
+      "note": "Capability paraphrase of the 无界智航 / 丁文伯 theme (合成仿真数据引擎). Structural: no GT.",
+      "query": "有哪些公司在做具身智能的数据引擎",
+      "raw_bytes": 35567,
+      "run_id": "f95b",
+      "seconds": 20.26,
+      "session_id": "session:chat:f95b-s11",
+      "sse_events": {
+        "answer": 1,
+        "answer_chunk": 680,
+        "done": 1,
+        "plan_done": 1,
+        "retrieval_done": 1,
+        "stage": 3
+      },
+      "status": "ok",
+      "suite": "probes",
+      "turn": 1,
+      "web": {
+        "attempted": 4,
+        "cache_hit": 8,
+        "degradation": "interpretation-rejected",
+        "errored": 0,
+        "items": 10,
+        "timed_out": 0
+      }
+    },
+    {
+      "answer": {
+        "answer_chars": 522,
+        "answer_style": "llm_synthesized",
+        "citation_nature": {
+          "local": 1,
+          "web": 0
+        },
+        "citations": [
+          {
+            "id": "official-source-7afa8217ac59e195",
+            "label": "深圳超维传感科技有限公司",
+            "type": "company",
+            "url": "https://hysense.ai"
+          }
+        ],
+        "query_type": "canonical_v2:A:answer",
+        "text": "深圳在机器人触觉传感器领域有多家代表性企业，主要涵盖柔性电子皮肤、多维力觉感知及灵巧手专用传感器等方向：\n\n1. **赛感科技(深圳)有限公司**：全球领先的柔性触觉传感器创新企业，专注新一代高性能柔性触觉传感器及机器人电子皮肤的研发、生产与销售。其技术源自南方科技大学超柔性电子学实验室，产品具备高灵敏、大量程、快响应及高线性等优势。\n2. **帕西尼感知科技（深圳）有限公司**：致力于开发全场景应用触觉数字化与触感技术，核心产品包括阵列式触觉传感器与超轻量六维力传感器，广泛应用于机器人自动化、航空航天及文娱消费等场景。\n3. **深圳超维传感科技有限公司**：人形机器人触觉传感器领域的先锋研发制造企业，专注于灵巧手触觉传感器。通过独创的多物理量融合感知技术，在指尖微小空间内集成轮廓、三向力及姿态感知，为灵巧手的AI训练提供高一致性、高可靠性的数据基础。\n4. **零感科技（深圳）有限公司**：依托深圳大学科学技术发展研究院的柔性智能传感团队，致力于碳基柔性压力传感器（电子皮肤）的研发及其产业化应用，提出了仿皮肤微纳力敏触点的设计方法。\n\n除上述企业外，深圳在这一领域还有不少相关公司。您更关心哪条产品线的细节？我可以再深入检索。",
+        "understood_subject": null
+      },
+      "candidate_layer": {
+        "available": false,
+        "candidate_names": 0,
+        "evidence_by_lane": null,
+        "evidence_total": null,
+        "handles_local": 0,
+        "handles_web": 0,
+        "recalled_handles": 0,
+        "source": null
+      },
+      "case_id": "s12",
+      "error": null,
+      "group": "s12",
+      "hits": {
+        "answer_all_entities": false,
+        "candidate_all_entities": null,
+        "entities": {},
+        "forbidden_present": []
+      },
+      "kind": "structural",
+      "lanes": {
+        "exact": {
+          "candidates": 1,
+          "status": "succeeded"
+        },
+        "lexical": {
+          "candidates": 16,
+          "status": "succeeded"
+        },
+        "structured": {
+          "candidates": 0,
+          "status": "succeeded"
+        },
+        "vector": {
+          "candidates": 16,
+          "status": "succeeded"
+        },
+        "web": {
+          "candidates": 3,
+          "status": "succeeded"
+        }
+      },
+      "lanes_trace": {
+        "exact": {
+          "filtered": 0,
+          "in": 1,
+          "retained": 1
+        },
+        "lexical": {
+          "filtered": 0,
+          "in": 16,
+          "retained": 16
+        },
+        "structured": {
+          "filtered": 0,
+          "in": 0,
+          "retained": 0
+        },
+        "vector": {
+          "filtered": 0,
+          "in": 16,
+          "retained": 16
+        },
+        "web": {
+          "filtered": 47,
+          "in": 50,
+          "retained": 3
+        }
+      },
+      "note": "Category query aimed at 帕西尼感知科技 (named in test-set 问题7's frozen answer, so not frozen GT). Structural: no GT.",
+      "query": "深圳做机器人触觉传感器的公司",
+      "raw_bytes": 24863,
+      "run_id": "f95b",
+      "seconds": 4.47,
+      "session_id": "session:chat:f95b-s12",
+      "sse_events": {
+        "answer": 1,
+        "answer_chunk": 517,
+        "done": 1,
+        "plan_done": 1,
+        "retrieval_done": 1,
+        "stage": 3
+      },
+      "status": "ok",
+      "suite": "probes",
+      "turn": 1,
+      "web": {
+        "attempted": 0,
+        "cache_hit": 6,
+        "degradation": "none",
+        "errored": 0,
+        "items": 3,
+        "timed_out": 0
+      }
+    }
+  ],
+  "cases_source": [
+    "/home/longxiang/MiroThinker/.worktrees/recall-regression/.agents/runs/embedding-model-switch/testset-cases.json",
+    "/home/longxiang/MiroThinker/.worktrees/recall-regression/.agents/runs/embedding-model-switch/semantic-probes.json"
+  ],
+  "generated_at": "2026-09-22T08:18:31+00:00",
+  "kind": "canonical-v2-recall-eval",
+  "label": "after-qwen3.7-flash-1024",
+  "run_id": "f95b",
+  "schema_version": "canonical-v2-recall-eval-v1"
+}

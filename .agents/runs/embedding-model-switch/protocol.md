@@ -95,6 +95,23 @@ The instance under test must be started with:
 * `CANONICAL_V2_TURN_DEBUG_DIR=<dir>` — otherwise there is no candidate layer and L1 entity
   checks cannot run; `--diff` then reports REVIEW per case.
 * `TURN_TRACE_DIR=<dir>` — otherwise lane `in/retained/filtered` and web outcomes are missing.
+* **the tree under test's code for BOTH packages** — verified, never assumed. Setting the env
+  vars is not enough: the deployment venv's editable `.pth` pins `apps/miroflow-agent` **and**
+  `apps/admin-console` at the main checkout, so a command that pins only `apps/miroflow-agent`
+  on `PYTHONPATH` serves `src` from the tree under test while `backend` (the chat adapter — the
+  code that writes the turn-debug dump) comes from the **main tree**. Nothing fails loudly:
+  `import backend.main` succeeds, so the runner's own fallback insert never fires; the dump
+  function simply does not exist there, so the dir stays empty, no warning is logged, and
+  `--diff` reports REVIEW for every case exactly as if the env var were unset. **This cost one
+  full gate run on 2026-09-22.** Two cheap proofs, both required before capturing:
+
+  ```bash
+  bash <tree>/.agents/runs/embedding-model-switch-v2/check-package-resolution.sh <command-file>
+  #   expect backend -> <tree>/apps/admin-console/backend  and  src -> <tree>/apps/miroflow-agent/src
+  curl -s -o /dev/null -w '%{http_code}\n' <base>/api/auth/me      # on the booted instance
+  #   401/403 = right tree; 404 = the MAIN tree's admin console (that route exists only on the serving tree)
+  # and, after one real turn: ls <CANONICAL_V2_TURN_DEBUG_DIR> must NOT be empty
+  ```
 
 Scratch recipe used for the baseline (the live 18188 line was never touched):
 `.agents/runs/embedding-model-switch/serve-18295-command.sh` — a copy of the live command file
@@ -312,6 +329,10 @@ statement: it catches loss, not rank movement inside the top-k.
 | 2026-09-21 13:05 | `--diff baseline.json control.json` | calibrated **REVIEW** (3 concept rows); `--strict-concepts` → **FAIL** (same 3 rows) |
 | 2026-09-21 13:02–13:08 | rule calibration from the control (`noise-floor.md`), 24 tests pass | concept → review-level, per-case lane halving → review for every suite with an anchor floor, labeled answer-only loss → review |
 | 2026-09-21 13:08 | scratch stopped again (both PIDs); live 18188 verified 200, `.worktrees/canonical-v2-s11-consolidation` git-clean | |
+| 2026-09-22 08:02–08:18 | **fembed gate attempt 1** on scratch 18296 (fembed pack + index-v4-v2 + qwen3.7-text-embedding-flash) | REVIEW 37/37 — **but a measurement artifact, not a verdict**: `candB=-` on every row with `ansA/ansB` and `vecA/vecB` identical; the served `backend` package was the main tree's (see §4), so no candidate layer was written |
+| 2026-09-22 08:24 | instance restarted with both package roots pinned; `check-package-resolution.sh` green, `/api/auth/me` 401 (was 404), one probe turn wrote `turn-debug-tdbg1-01.json` | identity fixed; probe artifact kept at `/var/tmp/fembed-296/probe-turn-identity-fix-debug.json` |
+| 2026-09-22 08:29–08:42 | **fembed gate attempt 2** (warm-up + judged, 37/37, all `cand=yes`) | `after.json`; `VERDICT_BASELINE_EXIT=2`, `VERDICT_CONTROL_EXIT=2` — both `REVIEW, 0 fail-level, 3 review-level` |
+| 2026-09-22 08:42 | the two diffs, read against `noise-floor.md` | candidate hits 22 → **29** (+7); **vector median 61.0/61.0/61.0/72.0 → identical, all four slices, +0**; the 3 review rows are `rule1(concept)` wording drift (`真实数据`, `物理仿真引擎生成`, `基于规则生成`, `真机实测`, `遥操作`). **No fail-level item: recall did not regress → the switch is eligible.** |
 
 To re-boot the scratch for a control run or a re-capture:
 `bash .agents/runs/embedding-model-switch/serve-18295-command.sh > /var/tmp/recall-295/logs/serve-18295.log 2>&1 &`
