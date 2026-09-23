@@ -1,0 +1,59 @@
+{
+  "session_id": "session:chat:gx_6UgdNpZqVg-QibP69TlsB1804nSBu",
+  "turn_id": "turn:chat:sha256:fe8fd522392162bbd69027ccb18877200a926b228dc50d83968ce20acb7f27a3",
+  "turn_count": 3,
+  "query": "腾讯的这个月的专利",
+  "planned_displayed_ids": [],
+  "recalled_handles": [],
+  "evidence_items": {
+    "total": 0,
+    "by_domain": {},
+    "by_lane": {},
+    "by_source_nature": {},
+    "with_claim_binding": 0
+  },
+  "protected_slots": [
+    {
+      "kind": "displayed_entity_set",
+      "value": "displayed_entity_set",
+      "entity_ids": [
+        "company-c-87d66866feef46f0010806b0"
+      ]
+    }
+  ],
+  "requested_traversal": null,
+  "admitted_claims": {
+    "total": 0,
+    "by_predicate": {},
+    "by_claim_type": {},
+    "patent_evidence_claims": 0
+  },
+  "committed_handle_ids": [],
+  "committed_names": [],
+  "render_mode": "deterministic_fallback",
+  "response_mode": "answer",
+  "citations": 0,
+  "answer_chars": 103,
+  "lane_timings": [
+    [
+      "structured",
+      0.084
+    ],
+    [
+      "lexical",
+      0.116
+    ],
+    [
+      "exact",
+      0.16
+    ],
+    [
+      "vector",
+      0.158
+    ],
+    [
+      "web",
+      5.65
+    ]
+  ]
+}

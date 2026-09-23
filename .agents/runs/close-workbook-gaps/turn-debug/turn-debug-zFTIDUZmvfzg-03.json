@@ -1,0 +1,990 @@
+{
+  "session_id": "session:chat:zFTIDUZmvfzgsajmip8sYdxHDXz1JzzD",
+  "turn_id": "turn:chat:sha256:57ffae1216002cbcbef225813dd6d89f662d01de06b36be733c7c5b4db56e9d8",
+  "turn_count": 3,
+  "query": "目前有哪几种主流的JEPA变体？",
+  "planned_displayed_ids": [],
+  "recalled_handles": [
+    {
+      "id": "company-c-02930c58b6ed5419419dbf46",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市儒瀚科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:92d4605aa87a888937e15ff955669a5c9519d0fb98e2ddd86d694b743e8658d3",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "160行代码读懂LeCun的JEPA世界模型 - 智源社区"
+    },
+    {
+      "id": "paper-c-11b21ea74ee4a05935174ed3",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Particle Swarm Optimization With an Aging Leader and Challengers"
+    },
+    {
+      "id": "web-handle:sha256:bf0a12840bacf3fa9ae03d515e7b4157bf5b8b9aee3ec065660b480f78c39803",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "EJA选型 - 豆丁网"
+    },
+    {
+      "id": "paper-c-60162fbb5eeb7286e74e8cd9",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Top-k with Skyline Queries: Relaxing the Preference Input while Producing Output of Controllable Size"
+    },
+    {
+      "id": "web-handle:sha256:d6576fb598d61eab7b5da3f1772aa8f91242592aa65d02adb2a334cae0b03402",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "seq-JEPA: 不变等变世界模型的自回归预测学习 - alphaXiv"
+    },
+    {
+      "id": "paper-c-77d6c67a6ab42c3727169c3b",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Mechanism of D-type cyclin recognition by the AMBRA1 E3 ligase receptor"
+    },
+    {
+      "id": "web-handle:sha256:b01639b43bfeb2d004ead4cc6365e2bc4285a0dcc5ce7af051c7bca607c07b82",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "EJA选型.doc"
+    },
+    {
+      "id": "paper-c-7b1f4f722f0eba7d340b266a",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Deep Learning Hierarchical Representations for Image Steganalysis"
+    },
+    {
+      "id": "web-handle:sha256:88e9f1b30245c5c7fec92b5f6eb0c9e6feb16a1a6cb81cf9135913617fdbf420",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "2026.8 具身智能中的JEPA 动作-世界-模型 - 知乎专栏"
+    },
+    {
+      "id": "paper-c-a66e05cd08277e46a092373e",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Structure of the DDB1-AMBRA1 E3 ligase receptor complex linked to cell cycle regulation"
+    },
+    {
+      "id": "web-handle:sha256:1892f1834cfa6b77b411e204bf0e6fa27d30837f336f227fa05013c01d265bd0",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "EJA选型 - 豆丁网"
+    },
+    {
+      "id": "paper-c-a988fb081066ecef2ab48c02",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "NFRA-AIC: A RFID Reader Anti-Collision Protocol With Adaptive Interrogation Capacity"
+    },
+    {
+      "id": "web-handle:sha256:80d049b82daef79fcb3b4cf72d517019ed73cdf2d99138aac92f699ceab837e6",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "联合嵌入预测架构（JEPA）| Ultralytics"
+    },
+    {
+      "id": "company-c-3de41df8638e87b9122b826c",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳揽月动力科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:027ea258abc744fe02aba68e3a277c94ef99b2c3fd00e91ee74c7e1a784a83da",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "热塑性弹性体具体有哪些型号?"
+    },
+    {
+      "id": "paper-c-077880511da750936b32478a",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Root hair developmental regulators orchestrate drought triggered microbiome changes and the interaction with beneficial Rhizobiaceae"
+    },
+    {
+      "id": "web-handle:sha256:8d7e8d5bca6a9148dd9fbde9c23103353ae61cf9d8fc46a7ce6242a7219d4252",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "联合嵌入预测架构（JEPA）：从理论构想到世界模型的实践之路"
+    },
+    {
+      "id": "paper-c-2c27ec103f5546084801dc54",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Are we ready for a new paradigm shift? A survey on visual deep MLP"
+    },
+    {
+      "id": "web-handle:sha256:165526f0b376ac3991bca1b328590e4f0fa54696d28a24c4ca858b017d845e10",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "语言变体的主要类型有 - 简搜题"
+    },
+    {
+      "id": "paper-c-2ff5ec634b2e7e8103bbc66d",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "NavCoT: Boosting LLM-Based Vision-and-Language Navigation via Learning Disentangled Reasoning"
+    },
+    {
+      "id": "web-handle:sha256:f37f39187256008de375816f378fa3eff7e78407049fd4f918ce08da3bf004a9",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "图灵奖得主LeCun 推崇的JEPA 是什么? - CSDN博客"
+    },
+    {
+      "id": "paper-c-338928863bdafeb85b26c9ec",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Adaptive scheduling-based fine-grained greybox fuzzing for cloud-native applications"
+    },
+    {
+      "id": "web-handle:sha256:b3508a059d48a15b5c37606732608d4f8a9d0b47d291fbd040eee679dc2f0855",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "java四种变量类型_IT问答中心_中公优就业"
+    },
+    {
+      "id": "paper-c-375540ecdaad13f555c78e82",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Class-Variant Margin Normalized Softmax Loss for Deep Face Recognition"
+    },
+    {
+      "id": "web-handle:sha256:669e6926b8fb6e148d7d8c43d74a4377e10992352f7adadf8bc42a930d57152b",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "seq-JEPA：不变-等变世界模型的自回归预测学习| 论文 - HyperAI"
+    },
+    {
+      "id": "paper-c-4587a281a68aea9b2d98201b",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Histidine-Gated Proton-Coupled Electron Transfer to the CuA Site of Nitrous Oxide Reductase"
+    },
+    {
+      "id": "web-handle:sha256:4158ef76cea3a95fc8493fc49e4866658e7715085f6986bc364a3534d6efa332",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "EJA系列变送器型号的分类_横河EJA变送器-江苏欧偌测控技术有限公司"
+    },
+    {
+      "id": "paper-c-4fcc8e5ee1353fc17692922c",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "FIERY1 promotes microRNA accumulation by suppressing rRNA-derived small interfering RNAs in Arabidopsis"
+    },
+    {
+      "id": "web-handle:sha256:01d4d1877f95e14fca69bb9279f4c895f84ad28ad2facb87ace124404874f0dd",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "联合嵌入预测架构（JEPA）：完整而深入的指南"
+    },
+    {
+      "id": "paper-c-5d6fa34da55f0b2a1a3cb5a8",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "An AI-designed adenine base editor"
+    },
+    {
+      "id": "web-handle:sha256:035cba051f0e5da6345e2aed42f7d602ad85ee121265fe83f5bc5f59e3349d90",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "新冠病毒变异知多少"
+    },
+    {
+      "id": "paper-c-6111dd8b48d66d0c8b8a9093",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "A Quantitative Survey of Communication Optimizations in Distributed Deep Learning"
+    },
+    {
+      "id": "web-handle:sha256:8d7a31c96881ccaa9aeafb6093c77976253ab6b030a1bed4ce8860ab70829f1c",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "隐空间的世界模型：LLM-JEPA 和V-JEPA 2 - 知乎专栏"
+    },
+    {
+      "id": "paper-c-86c3391b7f5cf8f26705d88b",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Retrievals Can Be Detrimental: Unveiling the Backdoor Vulnerability of Retrieval-Augmented Diffusion Models"
+    },
+    {
+      "id": "web-handle:sha256:c753361be49cdeb8a5c062950cc8cd0ac0163c1a09eb76c3b2678159b13465ff",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "EJA-CXT型号对比表 - 豆丁网"
+    },
+    {
+      "id": "paper-c-9941c36d9a0ced11fd6c0274",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Cellular traffic prediction via deep state space models with attention mechanism"
+    },
+    {
+      "id": "web-handle:sha256:8924c837e133c91a88a559dc3314468851dbfd83269bc2028e585b549e20023c",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "Var-JEPA：联合嵌入预测架构的一种变分表述 - alphaXiv"
+    },
+    {
+      "id": "paper-c-dda11ff88f663c9a647b9d92",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Residual Quotient Learning for Zero-Reference Low-Light Image Enhancement"
+    },
+    {
+      "id": "web-handle:sha256:1db7d464d90693633270b72b7125ba65c3b5c2e1b84b9b25011fe8946347e51e",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "PEPA「CAS号:141286-78-4」 – 960化工网"
+    },
+    {
+      "id": "paper-c-e3e1cfb9621672201bc77802",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Performance analysis and comparison of PoW, PoS and DAG based blockchains"
+    },
+    {
+      "id": "web-handle:sha256:2559c0a79b7be92de0e7030703cccf88ab51223296e923e76d0023112cb02263",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "联合嵌入预测架构）模型的潜在空间中进行规划，可在新环境布局泛 ..."
+    },
+    {
+      "id": "paper-c-f7319bb1167c4690a1a342ef",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Dynamic Low-Rank Instance Adaptation for Universal Neural Image Compression"
+    },
+    {
+      "id": "web-handle:sha256:cf220ba64492feeb7f8c9b2e8f8f5bae4f4c21ab7aaeee1066fa9cff4eb50744",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "血型糖蛋白 A (MNS 血型)(GYPA)基因  MCE"
+    },
+    {
+      "id": "professor-c-faa8b06d971397266fd4aab1",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "康熙"
+    },
+    {
+      "id": "web-handle:sha256:10983784524ff5201480389014ca0a57f91033266f1fdd243636efa3309f4de7",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "eja压力变送器型号有几种_住范儿家装官网"
+    },
+    {
+      "id": "company-c-0121db92cf682ae47060650e",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市神拓机电股份有限公司"
+    },
+    {
+      "id": "web-handle:sha256:d8ebffbcfa24f45379fca7d656fe550ab9f8bea255a794f0a41e93db88ff1e9c",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "VL-JEPA: Joint Embedding Predictive Architecture for Vision-language-CSDN博客"
+    },
+    {
+      "id": "company-c-018519c75ab587fbade26f6c",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市奇普乐芯片技术有限公司"
+    },
+    {
+      "id": "web-handle:sha256:1c841fc8f037fa28081551cd9adb6954e2353c990bb0506a5efd89f6a21d96e5",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "Meta的V-JEPA：Yann LeCun对高级机器智能(AMI)愿景的下一步- 知乎"
+    },
+    {
+      "id": "company-c-049298414e97265fe04c51d6",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市恒泰实业投资发展有限公司"
+    },
+    {
+      "id": "web-handle:sha256:4f9c700ca0cafc99fcb7f9487c427ce58b5c33438d6e8e1fda8720d60234e49a",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "请对于丰田VVT—i与本田i—VTEC详细介绍 - 车质网"
+    },
+    {
+      "id": "company-c-0652566cc9c49dd5537ece83",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市云联志远网络科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:718e8c4f0611badbce8a109ddf5977292680a13238221d0be45f7fe99422d0bd",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "Introducing V-JEPA 2 - AI at Meta"
+    },
+    {
+      "id": "company-c-08e75d79dafa1105fc7880fb",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳核芯物联科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:ba84d92c42d0f2b1b264242165cd31ea13eb03c56387a3d858bef4c82e4ed96d",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "ivtec和vtec的区别-汽车之家"
+    },
+    {
+      "id": "company-c-099f99d1cf8fb666eec6267f",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市鑫鸿云数据科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:28db20a2ce656489e47a5e1f52f4f88de9f8f76dca7fba4e24b67dc4193c1949",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "Meta V-JEPA 2世界模型(上). <機器人玩家第067篇原創文> - Medium"
+    },
+    {
+      "id": "company-c-0b4524a93f224ef5aec79ec0",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市赛晟科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:ed6579371937d7a36e1f6e6a007e312722c51bb98706a16011ba933ac94b2881",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "vtec发动机和地球梦(vtec发动机)-爱问教育"
+    },
+    {
+      "id": "company-c-1238eb68d92bb3b8ffae5c1c",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市合正汽车电子有限公司"
+    },
+    {
+      "id": "web-handle:sha256:9aa1372c8f7d8e12730556c5fe343ae594a0a30f91e15d820ccf6796107f8663",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "Yann LeCun JEPA Models - YouTube"
+    },
+    {
+      "id": "company-c-15f35646f20be5fdd55239b5",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市恒美兴电子有限公司"
+    },
+    {
+      "id": "web-handle:sha256:c5b06269441077624966e6af0895f9ce86381e8ff61edb82e83a72492de87b80",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "vtec和ivtec的区别-汽车之家"
+    },
+    {
+      "id": "company-c-2013dee1876f31e1a30c692a",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "前海七剑科技（深圳）有限公司"
+    },
+    {
+      "id": "web-handle:sha256:c59f4c5d64108ffb8c137cfc240a5ccc50d4dba38ac56244cbb7058aa4156b10",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "V-JEPA && V-JEPA 2 ：基于特征空间的世界模型 - 知乎专栏"
+    },
+    {
+      "id": "company-c-21b64f4b74eeabd67ef5f467",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市数合泰科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:87cd7b8e0cba5e15183c4b531a5e707efa1084545f76d28bc37dcb459c2e8db7",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "【简述玻璃夹胶炉使用EVA胶片与pvb胶片的区别】报价_供应商_图片-玻璃夹胶炉 夹丝炉-日照众科玻璃机械有限公司"
+    },
+    {
+      "id": "company-c-27d00c7779af716def50c19a",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "柏科数据技术（深圳）股份有限公司"
+    },
+    {
+      "id": "web-handle:sha256:4b76aa26da16d504c70657a3c95550f8f667a12915fbf5f7f1f8e557c1983d51",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "JEPA 解读_jepa与传统有何区别 - CSDN博客"
+    },
+    {
+      "id": "company-c-2cee4201b2ec5befc0b23db3",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "华斯无微生物科技（深圳）有限公司"
+    },
+    {
+      "id": "web-handle:sha256:7babd71a1cef6ec1719005dd7c2944aac96b55e6f3ee0d3515aa3ffe24e2b9af",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "LEPA-1A 可变静子叶片(VSV)指的是哪几级?( )-刷刷题APP"
+    },
+    {
+      "id": "company-c-2cf0a6a099fd6fa840908421",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "橙果视界（深圳）科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:77c84daf4068e6f6b2ededca1ce629cffc1d764090abd2199c15aedd397ce90e",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "Yann Lecun主推JEPA世界模型详细解读#大模型#世界模型#sora"
+    },
+    {
+      "id": "company-c-2eb5cf6c4d2768704401115e",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳声音动力科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:a030f7de3b58c63d49d0a048bb5d35e81d0df304aa32f810bf82e215314c2e15",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "详细对比一下丰田VVT—i与本田i—VTEC - 车质网"
+    },
+    {
+      "id": "company-c-31c5c0fc58d7416bccbe14b5",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市智谷天厨科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:3a9299adb4efc0426eea6335d83297352822eae8562c3ded904d582e4e73af39",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "Can someone explain to me in a laymen-ish terms why is I-JEPA ..."
+    },
+    {
+      "id": "company-c-346eddeb051c9035f779034f",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市诚恒科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:ca8690f337a31b98f8adeb1e31bdaf24273edae0436c00ed7c1e7a67e34b91fc",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "江苏中塑TPEtpe与eva的区别塑料材料热塑性弹性体_网易订阅"
+    },
+    {
+      "id": "company-c-34e8280652f6aa75d65952e1",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳爱思企业管理顾问有限公司"
+    },
+    {
+      "id": "web-handle:sha256:a5e0abfcd151ca6b0bbd1f19e419349e56e48e76fc48c018feccd00f201d65c6",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "What Is JEPA? LeCun Architecture & World Models - Turing Post"
+    },
+    {
+      "id": "company-c-36481fd59d0d17ece1bd4954",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳云里物里科技股份有限公司"
+    },
+    {
+      "id": "web-handle:sha256:0c871a1a40926405226262ee6b7ab2439a8945ea1331b05ec0ff714bc3ce0e40",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "160行代码读懂LeCun的JEPA世界模型|投资界"
+    },
+    {
+      "id": "company-c-3d1d92769bd8347ec6e4c858",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市天吉机电有限公司"
+    },
+    {
+      "id": "web-handle:sha256:7a4529349fd30e3c64a3f4d19b6b0575bc7043ddf917e1bd4b1003784a10d0a9",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "AI는 비디오만 보고 세상을 이해할 수 있을까? V-JEPA 2가 ... - DLI Lab"
+    },
+    {
+      "id": "company-c-44fd5a7a3edc11cc693871a4",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市美好创亿医疗科技股份有限公司"
+    },
+    {
+      "id": "company-c-48230cf4bf2e334e60d58570",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市恒宇源科技有限公司"
+    },
+    {
+      "id": "company-c-4c22c6cce1d1edc2e6535255",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳炜世科技有限公司"
+    },
+    {
+      "id": "company-c-4d4662f9e7bb9471786f341c",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "丘脑智能科技（深圳）有限公司"
+    },
+    {
+      "id": "company-c-4f616267df57ea187f761c66",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市杰成电子有限公司"
+    },
+    {
+      "id": "company-c-50000b8ee3825d751bf2f683",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市欣和电子有限公司"
+    },
+    {
+      "id": "company-c-52495e82e1fc2337e4191f9f",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "中科优辰（深圳）科技有限公司"
+    },
+    {
+      "id": "company-c-54a994fd623966c519d3e750",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳华芯集成电路设计有限公司"
+    },
+    {
+      "id": "company-c-57dcce9e020e190324321b8a",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市时和科技有限公司"
+    },
+    {
+      "id": "company-c-606bf1c208fbb15767ab606e",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "心动电波（深圳）科技有限公司"
+    },
+    {
+      "id": "company-c-6fe44fb705c30faadafe7fe1",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳新声半导体有限公司"
+    },
+    {
+      "id": "company-c-72081f47ab183b77afbdf732",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市嘉宝果科技有限公司"
+    },
+    {
+      "id": "company-c-737ad1a3b0bc2674116d4545",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市骏之源电子有限公司"
+    },
+    {
+      "id": "company-c-7934cbeeebe78a8da93a48bf",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市时代速信科技有限公司"
+    },
+    {
+      "id": "company-c-7b8a0064eb145ab7022f9ddb",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市新视野科技有限公司"
+    },
+    {
+      "id": "company-c-7c14b322a2e79347312105b5",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳拜尔洛克生物技术有限公司"
+    },
+    {
+      "id": "company-c-7d81489d95af37c6fe0e086d",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市顾美科技有限公司"
+    },
+    {
+      "id": "company-c-7d8b8bdb5a4bcda9728ef7b0",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市未来智能技术服务有限公司"
+    },
+    {
+      "id": "company-c-7d924955a3a7d649f1a20c83",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "北一半导体科技（广东）有限公司"
+    },
+    {
+      "id": "company-c-7f31c00f8abfb3d7dd819a37",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳腾睿微电子科技有限公司"
+    },
+    {
+      "id": "company-c-82b2790441bde61821c09b32",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市凌研电子科技有限公司"
+    },
+    {
+      "id": "company-c-82c0decb10057659fdabd97d",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市泊吧智能有限公司"
+    },
+    {
+      "id": "company-c-838f3b8df27ec34571c85096",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市先进封装科技有限公司"
+    },
+    {
+      "id": "company-c-856f6085b3922e35508bf84e",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市诠云科技有限公司"
+    },
+    {
+      "id": "company-c-87fb524985ff313b98f6eb76",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市新微云科技有限公司"
+    },
+    {
+      "id": "company-c-8820ff15ddd2f8febea0f3ea",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市埃尔法光电科技有限公司"
+    },
+    {
+      "id": "company-c-8c6dc51f771537851a5b6c1b",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市六度人和科技有限公司"
+    },
+    {
+      "id": "company-c-8dcf5e4b3cedbedb188546e8",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "牛芯半导体（深圳）股份有限公司"
+    },
+    {
+      "id": "company-c-9eaad6ddad490a5be805a00a",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "麦思威科技（深圳）有限责任公司"
+    },
+    {
+      "id": "company-c-a1bd089e8a144023c2d28fa3",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市电速科技有限公司"
+    },
+    {
+      "id": "company-c-a81780303807eef6c905265f",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "咻享智能（深圳）有限公司"
+    },
+    {
+      "id": "company-c-a8e0ea4f797407d2828da484",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "眺月科技（深圳）有限公司"
+    },
+    {
+      "id": "company-c-cdcd04a5dc1baa42a728222c",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市傲鹏伟业软件科技有限公司"
+    },
+    {
+      "id": "company-c-d270d072f3e47e275ea0a05b",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市甲天行科技有限公司"
+    },
+    {
+      "id": "company-c-d6aa4a67e09203f10ce5892b",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市逸步科技有限公司"
+    },
+    {
+      "id": "company-c-dadff40b15c6b9377ef4bb55",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳和锐网络科技有限公司"
+    },
+    {
+      "id": "company-c-dd54f1abecb657a559525bc8",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "寻界科技（深圳）有限公司"
+    },
+    {
+      "id": "company-c-e66715e429dd230e60411cc2",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深氧未来（深圳）科技有限公司"
+    },
+    {
+      "id": "company-c-f0434aedec60c20d82ecb593",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "硅基记忆（深圳）科技有限公司"
+    },
+    {
+      "id": "company-c-f103f44ae82a8a145872008c",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳深度图灵科技有限公司"
+    },
+    {
+      "id": "company-c-f88d5bb1b7951fba35273235",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳星火半导体科技有限公司"
+    },
+    {
+      "id": "paper-c-0012640f52791c83d75827b4",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Chance-Constrained Multiple-Choice Knapsack Problem: Model, Algorithms, and Applications."
+    }
+  ],
+  "evidence_items": {
+    "total": 128,
+    "by_domain": {
+      "company": 63,
+      "paper": 21,
+      "professor": 44
+    },
+    "by_lane": {
+      "lexical": 85,
+      "web": 43
+    },
+    "by_source_nature": {
+      "current_web": 43,
+      "local": 85
+    },
+    "with_claim_binding": 128
+  },
+  "protected_slots": [],
+  "requested_traversal": null,
+  "admitted_claims": {
+    "total": 14,
+    "by_predicate": {
+      "current_web_result": 14
+    },
+    "by_claim_type": {
+      "material_fact": 14
+    },
+    "patent_evidence_claims": 0
+  },
+  "committed_handle_ids": [
+    "web-handle:sha256:92d4605aa87a888937e15ff955669a5c9519d0fb98e2ddd86d694b743e8658d3",
+    "web-handle:sha256:d6576fb598d61eab7b5da3f1772aa8f91242592aa65d02adb2a334cae0b03402",
+    "web-handle:sha256:88e9f1b30245c5c7fec92b5f6eb0c9e6feb16a1a6cb81cf9135913617fdbf420",
+    "web-handle:sha256:80d049b82daef79fcb3b4cf72d517019ed73cdf2d99138aac92f699ceab837e6",
+    "web-handle:sha256:8d7e8d5bca6a9148dd9fbde9c23103353ae61cf9d8fc46a7ce6242a7219d4252",
+    "web-handle:sha256:f37f39187256008de375816f378fa3eff7e78407049fd4f918ce08da3bf004a9",
+    "web-handle:sha256:669e6926b8fb6e148d7d8c43d74a4377e10992352f7adadf8bc42a930d57152b",
+    "web-handle:sha256:01d4d1877f95e14fca69bb9279f4c895f84ad28ad2facb87ace124404874f0dd",
+    "web-handle:sha256:8d7a31c96881ccaa9aeafb6093c77976253ab6b030a1bed4ce8860ab70829f1c",
+    "web-handle:sha256:8924c837e133c91a88a559dc3314468851dbfd83269bc2028e585b549e20023c",
+    "web-handle:sha256:d8ebffbcfa24f45379fca7d656fe550ab9f8bea255a794f0a41e93db88ff1e9c",
+    "web-handle:sha256:1c841fc8f037fa28081551cd9adb6954e2353c990bb0506a5efd89f6a21d96e5",
+    "web-handle:sha256:718e8c4f0611badbce8a109ddf5977292680a13238221d0be45f7fe99422d0bd",
+    "web-handle:sha256:28db20a2ce656489e47a5e1f52f4f88de9f8f76dca7fba4e24b67dc4193c1949",
+    "company-c-02930c58b6ed5419419dbf46",
+    "company-c-3de41df8638e87b9122b826c",
+    "company-c-0121db92cf682ae47060650e",
+    "company-c-018519c75ab587fbade26f6c",
+    "company-c-049298414e97265fe04c51d6",
+    "company-c-0652566cc9c49dd5537ece83",
+    "company-c-08e75d79dafa1105fc7880fb",
+    "company-c-099f99d1cf8fb666eec6267f",
+    "company-c-0b4524a93f224ef5aec79ec0",
+    "company-c-1238eb68d92bb3b8ffae5c1c",
+    "company-c-15f35646f20be5fdd55239b5",
+    "company-c-2013dee1876f31e1a30c692a",
+    "company-c-21b64f4b74eeabd67ef5f467",
+    "company-c-27d00c7779af716def50c19a",
+    "company-c-2cee4201b2ec5befc0b23db3",
+    "company-c-2cf0a6a099fd6fa840908421",
+    "company-c-2eb5cf6c4d2768704401115e",
+    "company-c-31c5c0fc58d7416bccbe14b5",
+    "company-c-346eddeb051c9035f779034f",
+    "company-c-34e8280652f6aa75d65952e1",
+    "company-c-36481fd59d0d17ece1bd4954",
+    "company-c-3d1d92769bd8347ec6e4c858",
+    "company-c-44fd5a7a3edc11cc693871a4",
+    "company-c-48230cf4bf2e334e60d58570",
+    "company-c-4c22c6cce1d1edc2e6535255",
+    "company-c-4d4662f9e7bb9471786f341c",
+    "company-c-4f616267df57ea187f761c66",
+    "company-c-50000b8ee3825d751bf2f683",
+    "company-c-52495e82e1fc2337e4191f9f",
+    "company-c-54a994fd623966c519d3e750",
+    "company-c-57dcce9e020e190324321b8a",
+    "company-c-606bf1c208fbb15767ab606e",
+    "company-c-6fe44fb705c30faadafe7fe1",
+    "company-c-72081f47ab183b77afbdf732",
+    "company-c-737ad1a3b0bc2674116d4545",
+    "company-c-7934cbeeebe78a8da93a48bf",
+    "company-c-7b8a0064eb145ab7022f9ddb",
+    "company-c-7c14b322a2e79347312105b5",
+    "company-c-7d81489d95af37c6fe0e086d",
+    "company-c-7d8b8bdb5a4bcda9728ef7b0",
+    "company-c-7d924955a3a7d649f1a20c83",
+    "company-c-7f31c00f8abfb3d7dd819a37",
+    "company-c-82b2790441bde61821c09b32",
+    "company-c-82c0decb10057659fdabd97d",
+    "company-c-838f3b8df27ec34571c85096",
+    "company-c-856f6085b3922e35508bf84e",
+    "company-c-87fb524985ff313b98f6eb76",
+    "company-c-8820ff15ddd2f8febea0f3ea",
+    "company-c-8c6dc51f771537851a5b6c1b",
+    "company-c-8dcf5e4b3cedbedb188546e8",
+    "company-c-9eaad6ddad490a5be805a00a",
+    "company-c-a1bd089e8a144023c2d28fa3",
+    "company-c-a81780303807eef6c905265f",
+    "company-c-a8e0ea4f797407d2828da484",
+    "company-c-cdcd04a5dc1baa42a728222c",
+    "company-c-d270d072f3e47e275ea0a05b",
+    "company-c-d6aa4a67e09203f10ce5892b",
+    "company-c-dadff40b15c6b9377ef4bb55",
+    "company-c-dd54f1abecb657a559525bc8",
+    "company-c-e66715e429dd230e60411cc2",
+    "company-c-f0434aedec60c20d82ecb593",
+    "company-c-f103f44ae82a8a145872008c",
+    "company-c-f88d5bb1b7951fba35273235"
+  ],
+  "committed_names": [
+    "160行代码读懂LeCun的JEPA世界模型 - 智源社区",
+    "seq-JEPA: 不变等变世界模型的自回归预测学习 - alphaXiv",
+    "2026.8 具身智能中的JEPA 动作-世界-模型 - 知乎专栏",
+    "联合嵌入预测架构（JEPA）| Ultralytics",
+    "联合嵌入预测架构（JEPA）：从理论构想到世界模型的实践之路",
+    "图灵奖得主LeCun 推崇的JEPA 是什么? - CSDN博客",
+    "seq-JEPA：不变-等变世界模型的自回归预测学习| 论文 - HyperAI",
+    "联合嵌入预测架构（JEPA）：完整而深入的指南",
+    "隐空间的世界模型：LLM-JEPA 和V-JEPA 2 - 知乎专栏",
+    "Var-JEPA：联合嵌入预测架构的一种变分表述 - alphaXiv",
+    "VL-JEPA: Joint Embedding Predictive Architecture for Vision-language-CSDN博客",
+    "Meta的V-JEPA：Yann LeCun对高级机器智能(AMI)愿景的下一步- 知乎",
+    "Introducing V-JEPA 2 - AI at Meta",
+    "Meta V-JEPA 2世界模型(上). <機器人玩家第067篇原創文> - Medium",
+    "深圳市儒瀚科技有限公司",
+    "深圳揽月动力科技有限公司",
+    "深圳市神拓机电股份有限公司",
+    "深圳市奇普乐芯片技术有限公司",
+    "深圳市恒泰实业投资发展有限公司",
+    "深圳市云联志远网络科技有限公司",
+    "深圳核芯物联科技有限公司",
+    "深圳市鑫鸿云数据科技有限公司",
+    "深圳市赛晟科技有限公司",
+    "深圳市合正汽车电子有限公司",
+    "深圳市恒美兴电子有限公司",
+    "前海七剑科技（深圳）有限公司",
+    "深圳市数合泰科技有限公司",
+    "柏科数据技术（深圳）股份有限公司",
+    "华斯无微生物科技（深圳）有限公司",
+    "橙果视界（深圳）科技有限公司",
+    "深圳声音动力科技有限公司",
+    "深圳市智谷天厨科技有限公司",
+    "深圳市诚恒科技有限公司",
+    "深圳爱思企业管理顾问有限公司",
+    "深圳云里物里科技股份有限公司",
+    "深圳市天吉机电有限公司",
+    "深圳市美好创亿医疗科技股份有限公司",
+    "深圳市恒宇源科技有限公司",
+    "深圳炜世科技有限公司",
+    "丘脑智能科技（深圳）有限公司",
+    "深圳市杰成电子有限公司",
+    "深圳市欣和电子有限公司",
+    "中科优辰（深圳）科技有限公司",
+    "深圳华芯集成电路设计有限公司",
+    "深圳市时和科技有限公司",
+    "心动电波（深圳）科技有限公司",
+    "深圳新声半导体有限公司",
+    "深圳市嘉宝果科技有限公司",
+    "深圳市骏之源电子有限公司",
+    "深圳市时代速信科技有限公司",
+    "深圳市新视野科技有限公司",
+    "深圳拜尔洛克生物技术有限公司",
+    "深圳市顾美科技有限公司",
+    "深圳市未来智能技术服务有限公司",
+    "北一半导体科技（广东）有限公司",
+    "深圳腾睿微电子科技有限公司",
+    "深圳市凌研电子科技有限公司",
+    "深圳市泊吧智能有限公司",
+    "深圳市先进封装科技有限公司",
+    "深圳市诠云科技有限公司",
+    "深圳市新微云科技有限公司",
+    "深圳市埃尔法光电科技有限公司",
+    "深圳市六度人和科技有限公司",
+    "牛芯半导体（深圳）股份有限公司",
+    "麦思威科技（深圳）有限责任公司",
+    "深圳市电速科技有限公司",
+    "咻享智能（深圳）有限公司",
+    "眺月科技（深圳）有限公司",
+    "深圳市傲鹏伟业软件科技有限公司",
+    "深圳市甲天行科技有限公司",
+    "深圳市逸步科技有限公司",
+    "深圳和锐网络科技有限公司",
+    "寻界科技（深圳）有限公司",
+    "深氧未来（深圳）科技有限公司",
+    "硅基记忆（深圳）科技有限公司",
+    "深圳深度图灵科技有限公司",
+    "深圳星火半导体科技有限公司"
+  ],
+  "render_mode": "prose_renderer",
+  "response_mode": "answer",
+  "citations": 14,
+  "answer_chars": 1847,
+  "lane_timings": [
+    [
+      "structured",
+      0.001
+    ],
+    [
+      "exact",
+      0.872
+    ],
+    [
+      "vector",
+      2.687
+    ],
+    [
+      "lexical",
+      3.435
+    ],
+    [
+      "web",
+      4.93
+    ]
+  ]
+}

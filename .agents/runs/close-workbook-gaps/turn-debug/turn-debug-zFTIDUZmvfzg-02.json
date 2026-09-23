@@ -1,0 +1,172 @@
+{
+  "session_id": "session:chat:zFTIDUZmvfzgsajmip8sYdxHDXz1JzzD",
+  "turn_id": "turn:chat:sha256:81fdb8a935052d4e3506c123f7171b4b4631fc27784fa1bbe1e51e4c03d5a9f6",
+  "turn_count": 2,
+  "query": "请用通俗易懂的方式解释一下什么是JEPA",
+  "planned_displayed_ids": [],
+  "recalled_handles": [
+    {
+      "id": "web-handle:sha256:ff17060139f53f940f1e2acc1e32d80c5f59409b8b98bb3391f9e6bff9795b10",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "AI 术语中什么是JEPA"
+    },
+    {
+      "id": "web-handle:sha256:d0bf181d62513721ebf58d6613023d14cbf498b6978aeb8476aafe2e6e4ab60f",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "为什么I-JEPA (Yann Lecun) 架构不是生成式的吗？ - Reddit"
+    },
+    {
+      "id": "web-handle:sha256:9895c29e0d6704ee22cba4fa835270f54f55ba8ab6e3a13ddd6b9e4ba9a0c816",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "什么是JEPA（联合嵌入预测架构），它与现有技术有何不同？"
+    },
+    {
+      "id": "web-handle:sha256:a9776c8c4992ec254ba3a365c8532154a3b245ce55425dde66b87f09b14a854a",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "4年JEPA进化之路，12篇核心突破！LeCun(杨立昆)如何用它重构AI ..."
+    },
+    {
+      "id": "web-handle:sha256:4331bf114c00e15fc7bfd4dd0b05fabe430280d8dd813769cccd280b0316ff3f",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "JEPA:Yann LeCun 提出的联合嵌入预测架构JEPA(Joint-Embedding Predictive A - 掘金"
+    },
+    {
+      "id": "web-handle:sha256:91267b86c20bacbcffcc8ba832b23826221704852e7f02e7c9b93f2ada6188be",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "联合嵌入预测架构（JEPA）：从理论构想到世界模型的实践之路原创"
+    },
+    {
+      "id": "web-handle:sha256:cc61a926db81393ba60e0f72bd1aa69e27bfbb5baa3c44be3b6f9e68a36cea29",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "LeCun缓解AI末日焦虑:超级智能助手即将到来_Meta_未来世界_人类"
+    },
+    {
+      "id": "web-handle:sha256:c56efd1d76c7e1e5f0f8a755e2c9534f707bd8a99154604eedfaa4be190879f2",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "联合嵌入预测架构（JEPA）：完整而深入的指南"
+    },
+    {
+      "id": "professor-c-6c3925ed0f0d4874984c4f5d",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "贾铁争"
+    },
+    {
+      "id": "professor-c-f2b8aadb07f568d0b8462439",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "黄捷"
+    },
+    {
+      "id": "professor-c-7e55a97039dce8e76a116c90",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "江锦成"
+    },
+    {
+      "id": "professor-c-1b23a2cbd6db7621162201e5",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "贾子安"
+    },
+    {
+      "id": "professor-c-4fd03d66a0478181a85227a3",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "熊捷"
+    },
+    {
+      "id": "professor-c-58ec2ba7838fa4637d0bb697",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "贾宁"
+    },
+    {
+      "id": "professor-c-142d1ddab7b3eb6ae4dc3a2b",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "何佳清"
+    },
+    {
+      "id": "professor-c-70fd20739f3bdd5abf56e1ca",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "贾凡"
+    }
+  ],
+  "evidence_items": {
+    "total": 16,
+    "by_domain": {
+      "professor": 16
+    },
+    "by_lane": {
+      "vector": 8,
+      "web": 8
+    },
+    "by_source_nature": {
+      "current_web": 8,
+      "local": 8
+    },
+    "with_claim_binding": 16
+  },
+  "protected_slots": [],
+  "requested_traversal": null,
+  "admitted_claims": {
+    "total": 7,
+    "by_predicate": {
+      "current_web_result": 7
+    },
+    "by_claim_type": {
+      "material_fact": 7
+    },
+    "patent_evidence_claims": 0
+  },
+  "committed_handle_ids": [
+    "web-handle:sha256:ff17060139f53f940f1e2acc1e32d80c5f59409b8b98bb3391f9e6bff9795b10",
+    "web-handle:sha256:9895c29e0d6704ee22cba4fa835270f54f55ba8ab6e3a13ddd6b9e4ba9a0c816",
+    "web-handle:sha256:4331bf114c00e15fc7bfd4dd0b05fabe430280d8dd813769cccd280b0316ff3f",
+    "web-handle:sha256:91267b86c20bacbcffcc8ba832b23826221704852e7f02e7c9b93f2ada6188be",
+    "web-handle:sha256:c56efd1d76c7e1e5f0f8a755e2c9534f707bd8a99154604eedfaa4be190879f2"
+  ],
+  "committed_names": [
+    "AI 术语中什么是JEPA",
+    "什么是JEPA（联合嵌入预测架构），它与现有技术有何不同？",
+    "JEPA:Yann LeCun 提出的联合嵌入预测架构JEPA(Joint-Embedding Predictive A - 掘金",
+    "联合嵌入预测架构（JEPA）：从理论构想到世界模型的实践之路原创",
+    "联合嵌入预测架构（JEPA）：完整而深入的指南"
+  ],
+  "render_mode": "prose_renderer",
+  "response_mode": "answer",
+  "citations": 7,
+  "answer_chars": 647,
+  "lane_timings": [
+    [
+      "structured",
+      0.0
+    ],
+    [
+      "exact",
+      0.878
+    ],
+    [
+      "vector",
+      0.928
+    ],
+    [
+      "lexical",
+      1.191
+    ],
+    [
+      "web",
+      3.905
+    ]
+  ]
+}

@@ -1,0 +1,170 @@
+{
+  "session_id": "session:chat:Riy8JX1SGTOK1Pylb1A1eE5Y-_1t-IR4",
+  "turn_id": "turn:chat:sha256:609eb1190e8d1ec0bb4bcc1d33b02304cfe62f99258453fa2400674f2d043fa1",
+  "turn_count": 1,
+  "query": "沈向洋",
+  "planned_displayed_ids": [],
+  "recalled_handles": [
+    {
+      "id": "company-c-d666a0d67069163c27a0572e",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳思谋信息科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:492d9180d1b5557a8a1802199215907ee5b2582222a62a27e85fa58baa0a7acc",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "沈向洋-沈向洋简介-沈向洋联系方式-沈向洋最新动态-京城名师培训网"
+    },
+    {
+      "id": "web-handle:sha256:fa5290180b2a3bcc5d915cfd84c0925b3aea33a3032b4500c00747d857850b88",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "沈向洋 专家 - 网盛创新研究院"
+    },
+    {
+      "id": "web-handle:sha256:705d33b9a255e43c8f7df59ba7f84a2885c4b1b0061be5196c43d42db600bd16",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "沈向洋- 维基百科，自由的百科全书"
+    },
+    {
+      "id": "professor-c-ae108249a135d97a7c83f640",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "王洋"
+    },
+    {
+      "id": "professor-c-d0702f27fddbd515b039f604",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "徐洋洋"
+    },
+    {
+      "id": "professor-c-2d3075bb08e1bce6169a277f",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "王勃然"
+    },
+    {
+      "id": "professor-c-9d35fafa7d2a0ae4a9d4d489",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "胡颖"
+    },
+    {
+      "id": "professor-c-7f232e1adf2e4a82cdc55cbb",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "魏彦杰"
+    },
+    {
+      "id": "professor-c-04495f725ad10815e39eb30d",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "李肖鹏"
+    },
+    {
+      "id": "professor-c-ca1e9dbc36e40402e6b9e105",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "张涌"
+    },
+    {
+      "id": "professor-c-1f3b54a47c4bad94bdefdcae",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "陈语谦"
+    },
+    {
+      "id": "professor-c-ff5cef833a8d6166b32574ec",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "徐睿峰"
+    },
+    {
+      "id": "professor-c-1f97cf80b517a61ac9d54e44",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "蔡云鹏"
+    },
+    {
+      "id": "professor-c-f1623ebb0a86e348e632fbb4",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "陈鑫磊"
+    },
+    {
+      "id": "professor-c-1176b26849bfa21e69c56994",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "徐扬生"
+    }
+  ],
+  "evidence_items": {
+    "total": 16,
+    "by_domain": {
+      "company": 1,
+      "professor": 15
+    },
+    "by_lane": {
+      "lexical": 1,
+      "vector": 12,
+      "web": 3
+    },
+    "by_source_nature": {
+      "current_web": 3,
+      "local": 13
+    },
+    "with_claim_binding": 16
+  },
+  "protected_slots": [],
+  "requested_traversal": null,
+  "admitted_claims": {
+    "total": 3,
+    "by_predicate": {
+      "current_web_result": 3
+    },
+    "by_claim_type": {
+      "material_fact": 3
+    },
+    "patent_evidence_claims": 0
+  },
+  "committed_handle_ids": [
+    "web-handle:sha256:492d9180d1b5557a8a1802199215907ee5b2582222a62a27e85fa58baa0a7acc",
+    "web-handle:sha256:fa5290180b2a3bcc5d915cfd84c0925b3aea33a3032b4500c00747d857850b88",
+    "web-handle:sha256:705d33b9a255e43c8f7df59ba7f84a2885c4b1b0061be5196c43d42db600bd16"
+  ],
+  "committed_names": [
+    "沈向洋-沈向洋简介-沈向洋联系方式-沈向洋最新动态-京城名师培训网",
+    "沈向洋 专家 - 网盛创新研究院",
+    "沈向洋- 维基百科，自由的百科全书"
+  ],
+  "render_mode": "prose_renderer",
+  "response_mode": "answer",
+  "citations": 3,
+  "answer_chars": 361,
+  "lane_timings": [
+    [
+      "structured",
+      0.0
+    ],
+    [
+      "exact",
+      0.545
+    ],
+    [
+      "vector",
+      0.937
+    ],
+    [
+      "lexical",
+      1.01
+    ],
+    [
+      "web",
+      4.323
+    ]
+  ]
+}

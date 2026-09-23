@@ -1,0 +1,185 @@
+{
+  "session_id": "session:chat:gx_6UgdNpZqVg-QibP69TlsB1804nSBu",
+  "turn_id": "turn:chat:sha256:940786ef0012a6e708776dfd9df094f3019ad60fe1a5f3f55a6571ad7f52b8a9",
+  "turn_count": 2,
+  "query": "最近很火的趋势是什么",
+  "planned_displayed_ids": [],
+  "recalled_handles": [
+    {
+      "id": "web-handle:sha256:82fa76655c4d4fbfc570867baefc212f475fb48be49cd83f6088f49044fe425e",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "年轻人的“养生新宠”-为什么中式传统饮食突然火了? - 今日头条"
+    },
+    {
+      "id": "web-handle:sha256:0d62d612ce8f6d4c0c850b73ca2dae3aa46d58401a56916f54bf523d10b8f8c3",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "Google 趋势"
+    },
+    {
+      "id": "web-handle:sha256:f4190613ce8f7893b6913ae8bce669398fbb2ba0270700690f66783e1e40c166",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "顶爆视频, 深入分析当今网络热潮, 时尚趋势与文化现象"
+    },
+    {
+      "id": "web-handle:sha256:7598b3b4df51539bdef7f44a383fc6f42cf1710e0f2bf544715390cf59bee1f4",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "时下流行- Google 趋势"
+    },
+    {
+      "id": "web-handle:sha256:63c515bbec05aa5dac13112da4e89280dd553eb8e8fd63aed16638a39a4967e2",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "趋势网美美潮流风向标,全球潮流资讯集散地,用户每日必"
+    },
+    {
+      "id": "web-handle:sha256:08545a7189bd65163f51740489900a545c9c2153430204a29a56220a6059abd0",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "最新熱門趨勢"
+    },
+    {
+      "id": "web-handle:sha256:5ad557f3a1bde6ab3b4e072905c3be0668c74fb571cb0ab0b9460ea86f021d40",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "“我很中国!” 中国China成为潮流_央广网"
+    },
+    {
+      "id": "web-handle:sha256:b4fde726a99135da8e2775a96dc8a5f3e5b1d21972e86ebeb7bce3d890fa407e",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "谷歌趋势（Google Trends）产品： 2026年十款热门产品 - Shopify"
+    },
+    {
+      "id": "professor-c-63a995af64d3bfaec26459f5",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "何斌斌"
+    },
+    {
+      "id": "professor-c-205889845e376ef8634237ac",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "唐仙"
+    },
+    {
+      "id": "professor-c-325c090147adf34977f2da6e",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "肖腾飞"
+    },
+    {
+      "id": "professor-c-b141d53eba172c573c5d3d95",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "曲建飞"
+    },
+    {
+      "id": "professor-c-b9d04fc35b5f8b0bfac25fc3",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "刘晟材"
+    },
+    {
+      "id": "professor-c-cc063de1a1c264c262059a6f",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "郭艺璇"
+    },
+    {
+      "id": "professor-c-c866cdd0b9660c8798e58e0c",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "何展翔"
+    },
+    {
+      "id": "professor-c-f41b4e24b078d96480734d6a",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "邬家臻"
+    }
+  ],
+  "evidence_items": {
+    "total": 16,
+    "by_domain": {
+      "professor": 16
+    },
+    "by_lane": {
+      "vector": 8,
+      "web": 8
+    },
+    "by_source_nature": {
+      "current_web": 8,
+      "local": 8
+    },
+    "with_claim_binding": 16
+  },
+  "protected_slots": [],
+  "requested_traversal": null,
+  "admitted_claims": {
+    "total": 11,
+    "by_predicate": {
+      "current_web_result": 8,
+      "semantic_recall": 3
+    },
+    "by_claim_type": {
+      "material_fact": 11
+    },
+    "patent_evidence_claims": 0
+  },
+  "committed_handle_ids": [
+    "professor-c-63a995af64d3bfaec26459f5",
+    "web-handle:sha256:82fa76655c4d4fbfc570867baefc212f475fb48be49cd83f6088f49044fe425e",
+    "professor-c-205889845e376ef8634237ac",
+    "web-handle:sha256:0d62d612ce8f6d4c0c850b73ca2dae3aa46d58401a56916f54bf523d10b8f8c3",
+    "professor-c-325c090147adf34977f2da6e",
+    "web-handle:sha256:f4190613ce8f7893b6913ae8bce669398fbb2ba0270700690f66783e1e40c166",
+    "web-handle:sha256:7598b3b4df51539bdef7f44a383fc6f42cf1710e0f2bf544715390cf59bee1f4",
+    "web-handle:sha256:63c515bbec05aa5dac13112da4e89280dd553eb8e8fd63aed16638a39a4967e2",
+    "web-handle:sha256:08545a7189bd65163f51740489900a545c9c2153430204a29a56220a6059abd0",
+    "web-handle:sha256:5ad557f3a1bde6ab3b4e072905c3be0668c74fb571cb0ab0b9460ea86f021d40",
+    "web-handle:sha256:b4fde726a99135da8e2775a96dc8a5f3e5b1d21972e86ebeb7bce3d890fa407e"
+  ],
+  "committed_names": [
+    "何斌斌",
+    "年轻人的“养生新宠”-为什么中式传统饮食突然火了? - 今日头条",
+    "唐仙",
+    "Google 趋势",
+    "肖腾飞",
+    "顶爆视频, 深入分析当今网络热潮, 时尚趋势与文化现象",
+    "时下流行- Google 趋势",
+    "趋势网美美潮流风向标,全球潮流资讯集散地,用户每日必",
+    "最新熱門趨勢",
+    "“我很中国!” 中国China成为潮流_央广网",
+    "谷歌趋势（Google Trends）产品： 2026年十款热门产品 - Shopify"
+  ],
+  "render_mode": "deterministic_fallback",
+  "response_mode": "answer",
+  "citations": 11,
+  "answer_chars": 895,
+  "lane_timings": [
+    [
+      "structured",
+      0.0
+    ],
+    [
+      "exact",
+      0.712
+    ],
+    [
+      "vector",
+      1.241
+    ],
+    [
+      "lexical",
+      1.332
+    ],
+    [
+      "web",
+      12.213
+    ]
+  ]
+}

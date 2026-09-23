@@ -1,0 +1,173 @@
+{
+  "session_id": "session:chat:gx_6UgdNpZqVg-QibP69TlsB1804nSBu",
+  "turn_id": "turn:chat:sha256:5f7f2bbd310e7d3bf5b1c82bc19d5b1b09f4758e8b033828e58775c977fcc794",
+  "turn_count": 5,
+  "query": "郑立中教授的发过的论文",
+  "planned_displayed_ids": [],
+  "recalled_handles": [
+    {
+      "id": "professor-c-e993b9129e03825776d34e00",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "教授"
+    },
+    {
+      "id": "web-handle:sha256:ab07e7751aeeadfa1c9b55e016b35bbb72006a206d4a3fd5c4aa3ce6b6a48ccc",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "郑立中-中国科学院大学-UCAS"
+    },
+    {
+      "id": "web-handle:sha256:c3826a01bdf6226f965b0adb5594bf954c25fc72beb491995f798793933f04e3",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "清华大学电子系校友郑立中被任命为《IEEE信息论汇刊》首位华人主编"
+    },
+    {
+      "id": "web-handle:sha256:4761ec849c8ca7fef1af5679095e3c1595a994f01d1baf829f35666faa1ed2d0",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "郑立仁_泰山学院郑立仁_大学教师库_高等教育资讯网"
+    },
+    {
+      "id": "web-handle:sha256:21b0ad1d39f06d4692e0d6a638b8b10bec9370bd4dbe4a7f3a3c013ecceef987",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "郑立中-中国科学院大学-UCAS"
+    },
+    {
+      "id": "web-handle:sha256:869be80c25941eb4e9d0b51a417baebe205ba772bf195ae5f4efa6c6d8e9bc25",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "麻省理工郑立中教授来信息学院作报告-山东大学新闻网"
+    },
+    {
+      "id": "web-handle:sha256:6c09feffcdd5a54f73514613e7f7abf5f59a197ca0500291e14e50bd4ecbf468",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "郑立中教授：一扇门，一片土壤，一个新世界| 茶思下午茶 - 知乎专栏"
+    },
+    {
+      "id": "web-handle:sha256:a33d1a56129533eede21f509b64e638c84afb669785bbe46fb2b5489e8135b52",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "郑立-教师教学发展中心"
+    },
+    {
+      "id": "web-handle:sha256:64f7b9c927e253a3fa32ccc58fb82357c8743b98da157cdd7f5c984322b4cbf8",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "郑立中（麻省理工学院教授）_百度百科"
+    },
+    {
+      "id": "professor-c-e6363eff33ff2c7b32877396",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "郑仲煊"
+    },
+    {
+      "id": "professor-c-1f8ee6d7a30257f2ac125e9e",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "张泽中"
+    },
+    {
+      "id": "professor-c-f14c22fc88919e0633d09d7d",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "郑博"
+    },
+    {
+      "id": "professor-c-e451884aab70879d9f739bbf",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "郑问枢"
+    },
+    {
+      "id": "professor-c-c3c13071409178cd75a47146",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "郑梅珍"
+    },
+    {
+      "id": "professor-c-3afa06853c79e15e5a9eb796",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "郑楷"
+    },
+    {
+      "id": "professor-c-f3a1c714e97ed8f5b931a4f8",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "Zitan Chen"
+    }
+  ],
+  "evidence_items": {
+    "total": 16,
+    "by_domain": {
+      "professor": 16
+    },
+    "by_lane": {
+      "exact": 1,
+      "vector": 7,
+      "web": 8
+    },
+    "by_source_nature": {
+      "current_web": 8,
+      "local": 8
+    },
+    "with_claim_binding": 16
+  },
+  "protected_slots": [],
+  "requested_traversal": null,
+  "admitted_claims": {
+    "total": 4,
+    "by_predicate": {
+      "current_web_result": 4
+    },
+    "by_claim_type": {
+      "material_fact": 4
+    },
+    "patent_evidence_claims": 0
+  },
+  "committed_handle_ids": [
+    "web-handle:sha256:c3826a01bdf6226f965b0adb5594bf954c25fc72beb491995f798793933f04e3",
+    "web-handle:sha256:869be80c25941eb4e9d0b51a417baebe205ba772bf195ae5f4efa6c6d8e9bc25",
+    "web-handle:sha256:6c09feffcdd5a54f73514613e7f7abf5f59a197ca0500291e14e50bd4ecbf468",
+    "web-handle:sha256:64f7b9c927e253a3fa32ccc58fb82357c8743b98da157cdd7f5c984322b4cbf8",
+    "professor-c-e993b9129e03825776d34e00"
+  ],
+  "committed_names": [
+    "清华大学电子系校友郑立中被任命为《IEEE信息论汇刊》首位华人主编",
+    "麻省理工郑立中教授来信息学院作报告-山东大学新闻网",
+    "郑立中教授：一扇门，一片土壤，一个新世界| 茶思下午茶 - 知乎专栏",
+    "郑立中（麻省理工学院教授）_百度百科",
+    "教授"
+  ],
+  "render_mode": "prose_renderer",
+  "response_mode": "answer",
+  "citations": 4,
+  "answer_chars": 371,
+  "lane_timings": [
+    [
+      "structured",
+      0.0
+    ],
+    [
+      "exact",
+      0.6
+    ],
+    [
+      "vector",
+      0.842
+    ],
+    [
+      "lexical",
+      0.877
+    ],
+    [
+      "web",
+      14.557
+    ]
+  ]
+}

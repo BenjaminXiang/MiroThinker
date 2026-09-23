@@ -1,0 +1,168 @@
+{
+  "session_id": "session:chat:gx_6UgdNpZqVg-QibP69TlsB1804nSBu",
+  "turn_id": "turn:chat:sha256:873e317fc9863590018b076d193fedcbc76072d539bf109fe67abfdb7bbe4483",
+  "turn_count": 4,
+  "query": "郑立中",
+  "planned_displayed_ids": [],
+  "recalled_handles": [
+    {
+      "id": "web-handle:sha256:3134603eff1f4c914eb633dcaa6de5c2c326595c2eca21940fcf0bdb372af40a",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "郑立中_360百科"
+    },
+    {
+      "id": "web-handle:sha256:0d8f2d04d9800da271d6734e2885654878b7702f1c809187d9bac5de1494b8cd",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "清华大学电子系校友郑立中被任命为《IEEE信息论汇刊》首位华人主编"
+    },
+    {
+      "id": "web-handle:sha256:d320718f16db6cc18d2c6ff3e67a569edb55fa4f35d3aa895dcdb6767b26f32b",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "李亚飞、龚清概任台办副主任 郑立中、孙亚夫不再担任(图简历)_中国经济网——国家经济门户"
+    },
+    {
+      "id": "professor-c-e6363eff33ff2c7b32877396",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "郑仲煊"
+    },
+    {
+      "id": "professor-c-1f8ee6d7a30257f2ac125e9e",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "张泽中"
+    },
+    {
+      "id": "professor-c-42d9f049456053ad216165ea",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "郑月"
+    },
+    {
+      "id": "professor-c-8b1d82ce366b8417d706333d",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "郑绍远"
+    },
+    {
+      "id": "professor-c-bac43a484ee63634ada8d7c9",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "郑宇健"
+    },
+    {
+      "id": "professor-c-37408ee17272ce4edcf11b90",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "梁灏锵"
+    },
+    {
+      "id": "professor-c-85fc1988d140e13f6ff73791",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "郑裕基"
+    },
+    {
+      "id": "professor-c-d02b92cc670c19096905805d",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "郑庆彬"
+    },
+    {
+      "id": "professor-c-3d73e103926b63c196e3379f",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "陈俊挺"
+    },
+    {
+      "id": "professor-c-12859f470d579db35ac6bec9",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "林天麟"
+    },
+    {
+      "id": "professor-c-72b50d52377eba9db2721e44",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "陈子忠"
+    },
+    {
+      "id": "professor-c-b6a2c82e15a8357431bba393",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "沈钊龙"
+    },
+    {
+      "id": "professor-c-e005c821d4aaab82f94b0a59",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "黄锦圣"
+    }
+  ],
+  "evidence_items": {
+    "total": 16,
+    "by_domain": {
+      "professor": 16
+    },
+    "by_lane": {
+      "vector": 13,
+      "web": 3
+    },
+    "by_source_nature": {
+      "current_web": 3,
+      "local": 13
+    },
+    "with_claim_binding": 16
+  },
+  "protected_slots": [],
+  "requested_traversal": null,
+  "admitted_claims": {
+    "total": 3,
+    "by_predicate": {
+      "current_web_result": 3
+    },
+    "by_claim_type": {
+      "material_fact": 3
+    },
+    "patent_evidence_claims": 0
+  },
+  "committed_handle_ids": [
+    "web-handle:sha256:3134603eff1f4c914eb633dcaa6de5c2c326595c2eca21940fcf0bdb372af40a",
+    "web-handle:sha256:0d8f2d04d9800da271d6734e2885654878b7702f1c809187d9bac5de1494b8cd",
+    "web-handle:sha256:d320718f16db6cc18d2c6ff3e67a569edb55fa4f35d3aa895dcdb6767b26f32b"
+  ],
+  "committed_names": [
+    "郑立中_360百科",
+    "清华大学电子系校友郑立中被任命为《IEEE信息论汇刊》首位华人主编",
+    "李亚飞、龚清概任台办副主任 郑立中、孙亚夫不再担任(图简历)_中国经济网——国家经济门户"
+  ],
+  "render_mode": "prose_renderer",
+  "response_mode": "answer",
+  "citations": 3,
+  "answer_chars": 319,
+  "lane_timings": [
+    [
+      "structured",
+      0.0
+    ],
+    [
+      "exact",
+      0.739
+    ],
+    [
+      "vector",
+      1.077
+    ],
+    [
+      "lexical",
+      1.257
+    ],
+    [
+      "web",
+      2.337
+    ]
+  ]
+}

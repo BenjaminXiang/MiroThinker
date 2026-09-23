@@ -1,0 +1,175 @@
+{
+  "session_id": "session:chat:gx_6UgdNpZqVg-QibP69TlsB1804nSBu",
+  "turn_id": "turn:chat:sha256:25c2a0b47546c8c48a1221b114eaf32ac4500dd86b8eb93fbaa04f10c6dcba40",
+  "turn_count": 1,
+  "query": "郭达雅",
+  "planned_displayed_ids": [],
+  "recalled_handles": [
+    {
+      "id": "web-handle:sha256:aea97b6f5a6d28ce46fc575ff59e0b4d3fcab91e2de125b69d7fa9aaa167b6a2",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "DeepSeek核心研究员,曾获中山大学管理学院李学柔基金奖学金  中山大学管理学院"
+    },
+    {
+      "id": "web-handle:sha256:e2b18704f24156db24077ad679a30a8458b695f0208fd507db9d4c66702455e0",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "为什么大厂必须抢郭达雅？-钛媒体官方网站"
+    },
+    {
+      "id": "web-handle:sha256:ffa7d3b68dfd17fa4bc7b56168970addeb07c0860b7467579b2a8bab68716256",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "为什么大厂必须抢郭达雅?-36氪"
+    },
+    {
+      "id": "professor-c-1d3c48fb87e99ac83174a0a2",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "戴佳妮"
+    },
+    {
+      "id": "professor-c-8312355aa8e97626bc2140ad",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "张天尧"
+    },
+    {
+      "id": "professor-c-6a3477ed4bdecad9a9f64650",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "刘玥扬"
+    },
+    {
+      "id": "professor-c-05dde2479c787916cc8d352e",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "佟欢"
+    },
+    {
+      "id": "professor-c-600cdf74abb5e63718f58344",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "张又丹"
+    },
+    {
+      "id": "professor-c-5920f3464198b30709d34469",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "郭梦垚"
+    },
+    {
+      "id": "professor-c-95e40a87d3e29fac2fc49005",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "郭澄阳"
+    },
+    {
+      "id": "professor-c-fc6f56bb3f4c55276caf0905",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "邢丁予"
+    },
+    {
+      "id": "professor-c-c5133215aad757c4cc3b6c2f",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "郭晓杨"
+    },
+    {
+      "id": "professor-c-a8f1d0dbe8a19eca96cb5647",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "杨玉婷"
+    },
+    {
+      "id": "professor-c-6f94a6ffbe5ff9a17b6d00fe",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "杜鸿达"
+    },
+    {
+      "id": "professor-c-260354108919446fe1e31590",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "郭湘闽"
+    },
+    {
+      "id": "professor-c-d983607a89585ef4999e88c4",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "郭宇韬"
+    }
+  ],
+  "evidence_items": {
+    "total": 16,
+    "by_domain": {
+      "professor": 16
+    },
+    "by_lane": {
+      "vector": 13,
+      "web": 3
+    },
+    "by_source_nature": {
+      "current_web": 3,
+      "local": 13
+    },
+    "with_claim_binding": 16
+  },
+  "protected_slots": [],
+  "requested_traversal": null,
+  "admitted_claims": {
+    "total": 6,
+    "by_predicate": {
+      "current_web_result": 3,
+      "semantic_recall": 3
+    },
+    "by_claim_type": {
+      "material_fact": 6
+    },
+    "patent_evidence_claims": 0
+  },
+  "committed_handle_ids": [
+    "professor-c-1d3c48fb87e99ac83174a0a2",
+    "web-handle:sha256:aea97b6f5a6d28ce46fc575ff59e0b4d3fcab91e2de125b69d7fa9aaa167b6a2",
+    "professor-c-8312355aa8e97626bc2140ad",
+    "web-handle:sha256:e2b18704f24156db24077ad679a30a8458b695f0208fd507db9d4c66702455e0",
+    "professor-c-6a3477ed4bdecad9a9f64650",
+    "web-handle:sha256:ffa7d3b68dfd17fa4bc7b56168970addeb07c0860b7467579b2a8bab68716256"
+  ],
+  "committed_names": [
+    "戴佳妮",
+    "DeepSeek核心研究员,曾获中山大学管理学院李学柔基金奖学金  中山大学管理学院",
+    "张天尧",
+    "为什么大厂必须抢郭达雅？-钛媒体官方网站",
+    "刘玥扬",
+    "为什么大厂必须抢郭达雅?-36氪"
+  ],
+  "render_mode": "deterministic_fallback",
+  "response_mode": "answer",
+  "citations": 6,
+  "answer_chars": 619,
+  "lane_timings": [
+    [
+      "structured",
+      0.0
+    ],
+    [
+      "exact",
+      1.264
+    ],
+    [
+      "vector",
+      1.528
+    ],
+    [
+      "lexical",
+      1.793
+    ],
+    [
+      "web",
+      17.995
+    ]
+  ]
+}

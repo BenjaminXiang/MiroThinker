@@ -1,0 +1,965 @@
+{
+  "session_id": "session:chat:zFTIDUZmvfzgsajmip8sYdxHDXz1JzzD",
+  "turn_id": "turn:chat:sha256:1c957294c84f33caff508303e07d9a5cfa9cc853905deb795553c56a8147cb30",
+  "turn_count": 4,
+  "query": "世界上最美丽的女人是谁",
+  "planned_displayed_ids": [],
+  "recalled_handles": [
+    {
+      "id": "company-c-2574a3871e604ee1896520fe",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳美丽策光生物科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:81b6245a8b1ab021393ab78e622f244d778663a497746735f28620099bc89dfe",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "世界上最漂亮女人是谁? - 搜狗问问"
+    },
+    {
+      "id": "company-c-3bcefe6472ab0b1abed84844",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳美丽讯网络科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:5280d2b9d02af2fbe05e0267351c62c74c6d149d9ef614d49e5e448b4552520e",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "地球上最好看的10个女人排行榜，她们确实颜值惊艳！ - 搜狐"
+    },
+    {
+      "id": "company-c-a8e0ea4f797407d2828da484",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "眺月科技（深圳）有限公司"
+    },
+    {
+      "id": "web-handle:sha256:ae1484d69b9eba66b86894c275474afc1d8230455c9088a5057fb87d2c715ec8",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "DeepSeek评价世界最美女人_%ub_气质_因为"
+    },
+    {
+      "id": "company-c-b4ffb69c741cc48e63930d5a",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市智绘科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:129e4af69e9ad31d865385c7e5d9a0f664291d463bfd35e3ddcde76889dcde2a",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "全世界最美的10個公主！6歲靠顏值美翻全球，卻淪為生育工具“嫁老頭”"
+    },
+    {
+      "id": "company-c-d779c0b58a917976c74d9d72",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "简厨科技（深圳）有限公司"
+    },
+    {
+      "id": "web-handle:sha256:fadc409350d512d4956bb6d10b01433360ff165ff01c53e8afb6c916dac8bd28",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "世界上最漂亮的女人是谁"
+    },
+    {
+      "id": "company-c-f95563af1ff2fbc8491025ca",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市宜远智能科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:279683cec4405836fa27f9db8ad523fa4c112209723b31ef206eacf40261a03e",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "世界上最美的人是谁？回顾过去十年“全球百大最美面孔”NO.1"
+    },
+    {
+      "id": "company-c-9dc9ca3cc2c70a9337c08786",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市思坦科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:0f3548bdd0cdaa78ce3b1c5c2836e893c8dafc563778ec65c656f2667745f618",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "世界上最美的人"
+    },
+    {
+      "id": "company-c-04c4726f11d1e9338c3cc92e",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市微阳信息技术有限公司"
+    },
+    {
+      "id": "web-handle:sha256:7d30aaca581aa69fca575de1354e75648ffc9fa83b50c75ecbac657ec9670588",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "谁是世界上最美丽的女人 - 文旅"
+    },
+    {
+      "id": "company-c-10892483a557d6d72f679dbb",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳中科世界机器人有限公司"
+    },
+    {
+      "id": "web-handle:sha256:6e763aa03d3f41e2c6d48a8d0e0b4f6dba3da7455f78a667943cdef46b57e4d9",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "世界上最漂亮的50位女性名单_网易订阅"
+    },
+    {
+      "id": "company-c-1cf1809b5ca134a9d0fa0db5",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市智销云科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:7f2fda6880a027554912de3e2bc9ce5cf3b8858d8a70de8103234d2076bf465e",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "世界上最美丽的21 位女性 - 知乎专栏"
+    },
+    {
+      "id": "company-c-1d9efdf6c3ed6500af8a4ebc",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市天宏汇成电子科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:230037ec22a8976cb2641e767c0af17108a3e607cc4a68a126310343e8444061",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "世界上最漂亮的女人TOP10 美得让人忘记呼吸"
+    },
+    {
+      "id": "company-c-277383b59a4358641176fc89",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳无界智航科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:7bcee87b481b0fbc98d5fa4d82d672a89281d3ba09839326e8fe6340809f8869",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "2024世界最美丽女性榜单出炉美的标准是什么？ - 大纪元"
+    },
+    {
+      "id": "company-c-3300ae2dc5ec29ebe1ca8b95",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳闻储创新科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:378335b791972a933fde9c9aafeac8d837d4a5377268878d795a55d1aa545917",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "谁是世界上最漂亮的女人 爱问知识人"
+    },
+    {
+      "id": "company-c-357443c430848d5ad08e8586",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市智拓欣扬科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:fdd3f90b846e02ebc12d93fc2b224eb54a2ee1b843841505f786bd7038d71f86",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "全球公认最美的30个女性 - Instagram"
+    },
+    {
+      "id": "company-c-36481fd59d0d17ece1bd4954",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳云里物里科技股份有限公司"
+    },
+    {
+      "id": "web-handle:sha256:9a9fc5acb8636a28a7f16e5bd1e8478b7fb52f9048925ca61e3dbf5772de96ac",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "世界公认最美的女人 世界上最美的人？"
+    },
+    {
+      "id": "company-c-385ea876f9b3e9a155b1241e",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市恒之易电子商务有限公司"
+    },
+    {
+      "id": "web-handle:sha256:e0ecf9424741817da4d5475e6109ed5d5677b5deb4e022b829a7c9fafc56dd50",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "世界上最美的女人_百度百科"
+    },
+    {
+      "id": "company-c-3d67b707a5a2b62df5fe0d7b",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市塔雷斯测量设备有限公司"
+    },
+    {
+      "id": "web-handle:sha256:9ec1c728180eeea4ac2c572f189c6c83ff7d4749ec9636ede9e349d7bae12acb",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "世界上美女排行榜 看看哪个是你心中最美的女人_知秀网"
+    },
+    {
+      "id": "company-c-498e1bd87a678db075fcaba5",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市昇维旭技术有限公司"
+    },
+    {
+      "id": "web-handle:sha256:a2a6897bd24e80a29e4be2e9bac91fd80d3bd5dcdacc4749b8e241cec4a273e3",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "全世界最美的10個女明星！亞洲獨佔其中7個，第1名竟然就在台灣 ..."
+    },
+    {
+      "id": "company-c-50000b8ee3825d751bf2f683",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市欣和电子有限公司"
+    },
+    {
+      "id": "web-handle:sha256:422290fbaa6b5d982c2271258b28d179f4c876f474432763907d5d6228ff7e54",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "全球最漂亮的女人TOP10"
+    },
+    {
+      "id": "company-c-52b8be7ffeb3715120f32568",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳安维森实业有限公司"
+    },
+    {
+      "id": "web-handle:sha256:1ceb30bf25dd55bb9d7553ce92d49e071b7559ce8c66cd76cc820cab8b82b28c",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "原创2024全世界最漂亮的10个女人排行榜，中国仅上榜一人！ - 搜狐"
+    },
+    {
+      "id": "company-c-555adfea306497eddda3fed3",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳面元智能科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:da6c274ed7956e2a2b76d280868867718fa228cef1a618284cb4f9aa110765d7",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "世界上最美丽的女人排行，每位都是性感女神！"
+    },
+    {
+      "id": "company-c-70fa061f657b661ccf90856f",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "康佳芯盈半导体科技（深圳）有限公司"
+    },
+    {
+      "id": "web-handle:sha256:6317fb4eae96e51c8813acf282ecfcce60ffc840b731f83cc8da4a3b7a9c4ddc",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "世界上最美的小仙女是谁? - 搜狗问问"
+    },
+    {
+      "id": "company-c-75a8d7ae8efe724d21600e3c",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "隐形科技（深圳）有限公司"
+    },
+    {
+      "id": "web-handle:sha256:f6b8964057b7066f9b54f635d2966d573482347a1cf62333006e3592f997ff0f",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "世界排名前20位最漂亮的女人"
+    },
+    {
+      "id": "company-c-7c14b322a2e79347312105b5",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳拜尔洛克生物技术有限公司"
+    },
+    {
+      "id": "web-handle:sha256:8fd170b8942a3a4ccab926a4c470fc1c99aa313140d6778039e1f64756fb83cc",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "地球上最美的女性!网评全球十大美女排名"
+    },
+    {
+      "id": "company-c-935bdab6385450b5304dcd71",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "建瓴半导体（深圳）有限公司"
+    },
+    {
+      "id": "web-handle:sha256:b0883bbbfcba9b5f4b83b97e6ca701664ceb24d28a2705fd0ade34a01fd8d1c3",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "世界上最漂亮的50位女性名单"
+    },
+    {
+      "id": "company-c-9484d4c6a9855db4ce61389b",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市瀚思通汽车电子有限公司"
+    },
+    {
+      "id": "web-handle:sha256:fac0bb656d1b613bdd8989de83118dda8d61406a267334e840ab1ae8e73c5743",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "世界上最美丽的20个女人"
+    },
+    {
+      "id": "company-c-9a51193bf16049ced0e0a018",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "浦东国际先进技术应用推进中心"
+    },
+    {
+      "id": "web-handle:sha256:9e94d02365d62c9c77fe214b6213da36f68e6eb11f597926fa84afe6107c07d0",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "她们是2018世界十大最美女子 - 知乎专栏"
+    },
+    {
+      "id": "company-c-9b12cf41746000ec3ed4f4a4",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市小湾智能有限公司"
+    },
+    {
+      "id": "web-handle:sha256:c6a5f5e3214b9a5bebba33a7cb11a69afb7ad5ffae94e7212b6fa1ec1ab65ec6",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "當中由韓國女團BLACKPINK 成員Rosé 奪得冠軍，成為今年「全球第 ..."
+    },
+    {
+      "id": "company-c-a07e1c7792562e465987386e",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市格松科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:6e92d21320b50c7db5077c49fd8ec162cc9e1a01cb961793c8624484b8ea5a9c",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "全球最美女性排行榜_百度百科"
+    },
+    {
+      "id": "company-c-a26f53e6ff2772d76f05172e",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市知用电子有限公司"
+    },
+    {
+      "id": "web-handle:sha256:edd020cadb4e74361340f345d238bac5b1c2c9b964c0341bbe23ca135db8ae07",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "百大美女洗牌! Rosé登頂全球最美周子瑜名次曝｜TVBS新聞- YouTube"
+    },
+    {
+      "id": "company-c-ab72663795ff1809fb6ca887",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "视启未来（深圳）科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:6c02f9015e41f0e923f9c3379eda4e22befc1dc421c15b775d2e6a4496408c2d",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "「全球最美女星」排行榜出爐～楊冪僅第8、周子瑜超車Lisa"
+    },
+    {
+      "id": "company-c-af2119054a161bd8fc2df462",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市美丽加互联网有限公司"
+    },
+    {
+      "id": "web-handle:sha256:8130626d642bdd6feb7f62c729faa1b33b6e3b93dfe750689a109da6c146e604",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "世界最美的女人 全球公认的世界十大美女"
+    },
+    {
+      "id": "company-c-b05920953f60968a19b0eec2",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "恒璇机器人关节科技（深圳）有限公司"
+    },
+    {
+      "id": "web-handle:sha256:c8a4e13237b8f3a000668fa6206981d688f59b283407cd51059790c1e736c65b",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "2024世界最美麗女性榜單出爐美的標準是什麼？ | 大紀元"
+    },
+    {
+      "id": "company-c-b0cdb4130066999355116cfc",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市坚恒发电子有限公司"
+    },
+    {
+      "id": "web-handle:sha256:6875219e3ab9dd0349fb9138a7c28760f381e2259a3b4b29c9f37f000d0896b5",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "全球最漂亮的女人TOP10"
+    },
+    {
+      "id": "company-c-bb870c11470a9bf3514638d0",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市海谱纳米光学科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:ff5a4b82a094a0dfa70a1546aaea0b6d498dae52e154a0cc19355ceaca191a3f",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "全世界最美的10個2025女明星！迪麗熱巴只排第2，其中之一就在台灣"
+    },
+    {
+      "id": "company-c-be789e4e9ee179576759d646",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳形拓科技有限公司"
+    },
+    {
+      "id": "web-handle:sha256:e43b1cdaa731df47a42c568614257ecb9e37d56607ca52568a0d07a2f51301a2",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "世界最美的女人全球公认的世界十大美女 - 新经网"
+    },
+    {
+      "id": "company-c-d200d16fb2ab08e2e74484c0",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳安培龙科技股份有限公司"
+    },
+    {
+      "id": "web-handle:sha256:1fc95051659199a81f24d429ded69d2a3e2df1fb4697ccabb51b7e12fb1bc640",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "2019年最美丽的女性:世界上最漂亮的10位女性_网易订阅"
+    },
+    {
+      "id": "company-c-d5d564196c8fee86066c0cba",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "中科未来世界科技（深圳）有限公司"
+    },
+    {
+      "id": "web-handle:sha256:833f93df561e23127a1e71bfa6e786c7300f65cf746a8424fbf287e269299451",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "世界上最漂亮的50位女性名单_费舍尔_伊娃格林_拉恩布罗西奥"
+    },
+    {
+      "id": "company-c-de33b174a6f837639e97058b",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市无一设计有限公司"
+    },
+    {
+      "id": "company-c-dfcf416a15d0be1db00ed30f",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市泰高技术有限公司"
+    },
+    {
+      "id": "company-c-ea0fd348dea00f86de7d729e",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "原子世界（深圳）科技有限公司"
+    },
+    {
+      "id": "company-c-ebb0d90bd516545ca515890d",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳赛博格机器人有限公司"
+    },
+    {
+      "id": "company-c-eff1d7e5edf91a6a1621bd8d",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市小山世界科技有限公司"
+    },
+    {
+      "id": "company-c-f2be72add5291b6dbc255ae0",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市微合科技有限公司"
+    },
+    {
+      "id": "company-c-f5bd442f1a327e07351c8c1e",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳墨奇智能技术有限公司"
+    },
+    {
+      "id": "patent-c-997b251b9357f016ee14b13c",
+      "kind": "canonical",
+      "domain": "patent",
+      "display_name": "一种自动化超声扫描方法及系统"
+    },
+    {
+      "id": "professor-c-f1568aca537b4f7154d77c7b",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "刘美"
+    },
+    {
+      "id": "professor-c-54e2de8769ee07752f0012ed",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "苏芷庭"
+    },
+    {
+      "id": "professor-c-e5d2a0ff19f8e0795d59468a",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "江雨馨"
+    },
+    {
+      "id": "professor-c-92ea46cb5b3ed318b3b05aea",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "刘美希"
+    },
+    {
+      "id": "professor-c-840f9d42f5ffc6fc328ba427",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "索娅"
+    },
+    {
+      "id": "professor-c-72b0212ebf9fe04c5fb9a289",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "肖雯琪"
+    },
+    {
+      "id": "professor-c-61c30778b7d0ba098702af99",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "王婷"
+    },
+    {
+      "id": "professor-c-dc4b379e2b2763dc03190285",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "黄蓉"
+    },
+    {
+      "id": "professor-c-b8fa01d818b6c7b3a79af883",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "王璐璐"
+    },
+    {
+      "id": "professor-c-d05d283d6e87cee7c4e0cffb",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "孙莹莹"
+    },
+    {
+      "id": "professor-c-5319864a41165e6b4ed30525",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "卢月丽"
+    },
+    {
+      "id": "professor-c-ff546702e2555945c4760c04",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "姜梦琦"
+    },
+    {
+      "id": "professor-c-4eb4d4bf8a6827152f38e018",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "洪妍"
+    },
+    {
+      "id": "professor-c-62127b51be4bf1b0b717a2bb",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "倪婧娇"
+    },
+    {
+      "id": "professor-c-1946e2b12c200de7770c0e8d",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "王艺瑾"
+    },
+    {
+      "id": "professor-c-5965597c9140bebb0b9fa391",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "关贝贝"
+    },
+    {
+      "id": "professor-c-9d17fb8b23f68bd20c4a5982",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "王丽彩"
+    },
+    {
+      "id": "professor-c-f7110b2287acb3893f4e4da3",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "朱璇"
+    },
+    {
+      "id": "professor-c-c7f33d2a8f68ddd235a62b3d",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "韩佳禾"
+    },
+    {
+      "id": "professor-c-c78a8ded5ebaf457a33dbd65",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "严雅琦"
+    },
+    {
+      "id": "professor-c-17750c7d1519e841475ac07e",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "化梦媛"
+    },
+    {
+      "id": "professor-c-b30ddabd062098539dae7f8b",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "李茜"
+    },
+    {
+      "id": "professor-c-5a912aee9698db281261cdec",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "徐安琪"
+    },
+    {
+      "id": "professor-c-c6047c0817eea2ec09786661",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "万芳"
+    },
+    {
+      "id": "professor-c-84c0b514facaacb017c05d57",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "韩西丽"
+    },
+    {
+      "id": "professor-c-df5bb28fe72cda57789ecb2c",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "赖莎"
+    },
+    {
+      "id": "professor-c-9bcea7ea7b4dba3caa2bf264",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "毛成婷"
+    },
+    {
+      "id": "professor-c-16befbda0616c85363ca4588",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "唐英英"
+    },
+    {
+      "id": "professor-c-1d3c48fb87e99ac83174a0a2",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "戴佳妮"
+    },
+    {
+      "id": "professor-c-aed9de76625c2be171e6c7d7",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "何玥儿"
+    },
+    {
+      "id": "professor-c-17dc4addbdd65c2905dbfa3d",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "郭纾妤"
+    },
+    {
+      "id": "professor-c-452e4d0b0922306c6f55fd2c",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "孙丽媛"
+    },
+    {
+      "id": "professor-c-e443e0cc57f9d24f9818e087",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "韦婷"
+    },
+    {
+      "id": "professor-c-2594bbd4c91527e90ca38b05",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "萧若薇"
+    },
+    {
+      "id": "professor-c-ee208dce053a2e11ccecd06a",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "李颜颜"
+    },
+    {
+      "id": "professor-c-600cdf74abb5e63718f58344",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "张又丹"
+    },
+    {
+      "id": "professor-c-f892d1c87ec0a8ecc29a24b1",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "黄思雅"
+    },
+    {
+      "id": "professor-c-fb9c311292f045da630e729c",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "金春媛"
+    },
+    {
+      "id": "professor-c-6a3477ed4bdecad9a9f64650",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "刘玥扬"
+    },
+    {
+      "id": "professor-c-545acd7f10240894b35dc17c",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "李嘉敏"
+    },
+    {
+      "id": "professor-c-5a801033d808ea39c091145b",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "黄阿莎"
+    },
+    {
+      "id": "professor-c-7fab50ff6d2dc19cdcbb4baa",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "古嘉雯"
+    },
+    {
+      "id": "professor-c-a19514201751edc2c8b3074f",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "王紫璇"
+    },
+    {
+      "id": "professor-c-d975aab4aea80595cf77437b",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "杨文静"
+    }
+  ],
+  "evidence_items": {
+    "total": 131,
+    "by_domain": {
+      "company": 48,
+      "patent": 1,
+      "professor": 82
+    },
+    "by_lane": {
+      "lexical": 46,
+      "vector": 47,
+      "web": 38
+    },
+    "by_source_nature": {
+      "current_web": 38,
+      "local": 93
+    },
+    "with_claim_binding": 131
+  },
+  "protected_slots": [],
+  "requested_traversal": null,
+  "admitted_claims": {
+    "total": 12,
+    "by_predicate": {
+      "current_web_result": 12
+    },
+    "by_claim_type": {
+      "material_fact": 12
+    },
+    "patent_evidence_claims": 0
+  },
+  "committed_handle_ids": [
+    "company-c-2574a3871e604ee1896520fe",
+    "web-handle:sha256:81b6245a8b1ab021393ab78e622f244d778663a497746735f28620099bc89dfe",
+    "web-handle:sha256:5280d2b9d02af2fbe05e0267351c62c74c6d149d9ef614d49e5e448b4552520e",
+    "company-c-3bcefe6472ab0b1abed84844",
+    "web-handle:sha256:ae1484d69b9eba66b86894c275474afc1d8230455c9088a5057fb87d2c715ec8",
+    "web-handle:sha256:129e4af69e9ad31d865385c7e5d9a0f664291d463bfd35e3ddcde76889dcde2a",
+    "company-c-a8e0ea4f797407d2828da484",
+    "web-handle:sha256:fadc409350d512d4956bb6d10b01433360ff165ff01c53e8afb6c916dac8bd28",
+    "company-c-b4ffb69c741cc48e63930d5a",
+    "web-handle:sha256:279683cec4405836fa27f9db8ad523fa4c112209723b31ef206eacf40261a03e",
+    "company-c-d779c0b58a917976c74d9d72",
+    "web-handle:sha256:0f3548bdd0cdaa78ce3b1c5c2836e893c8dafc563778ec65c656f2667745f618",
+    "company-c-f95563af1ff2fbc8491025ca",
+    "web-handle:sha256:7d30aaca581aa69fca575de1354e75648ffc9fa83b50c75ecbac657ec9670588",
+    "company-c-9dc9ca3cc2c70a9337c08786",
+    "web-handle:sha256:6e763aa03d3f41e2c6d48a8d0e0b4f6dba3da7455f78a667943cdef46b57e4d9",
+    "company-c-04c4726f11d1e9338c3cc92e",
+    "web-handle:sha256:7f2fda6880a027554912de3e2bc9ce5cf3b8858d8a70de8103234d2076bf465e",
+    "company-c-10892483a557d6d72f679dbb",
+    "web-handle:sha256:230037ec22a8976cb2641e767c0af17108a3e607cc4a68a126310343e8444061",
+    "company-c-1cf1809b5ca134a9d0fa0db5",
+    "web-handle:sha256:7bcee87b481b0fbc98d5fa4d82d672a89281d3ba09839326e8fe6340809f8869",
+    "company-c-1d9efdf6c3ed6500af8a4ebc",
+    "web-handle:sha256:378335b791972a933fde9c9aafeac8d837d4a5377268878d795a55d1aa545917",
+    "company-c-277383b59a4358641176fc89",
+    "web-handle:sha256:fdd3f90b846e02ebc12d93fc2b224eb54a2ee1b843841505f786bd7038d71f86",
+    "company-c-3300ae2dc5ec29ebe1ca8b95",
+    "web-handle:sha256:9a9fc5acb8636a28a7f16e5bd1e8478b7fb52f9048925ca61e3dbf5772de96ac",
+    "company-c-357443c430848d5ad08e8586",
+    "web-handle:sha256:e0ecf9424741817da4d5475e6109ed5d5677b5deb4e022b829a7c9fafc56dd50",
+    "company-c-36481fd59d0d17ece1bd4954",
+    "web-handle:sha256:9ec1c728180eeea4ac2c572f189c6c83ff7d4749ec9636ede9e349d7bae12acb",
+    "company-c-385ea876f9b3e9a155b1241e",
+    "web-handle:sha256:a2a6897bd24e80a29e4be2e9bac91fd80d3bd5dcdacc4749b8e241cec4a273e3",
+    "company-c-3d67b707a5a2b62df5fe0d7b",
+    "web-handle:sha256:422290fbaa6b5d982c2271258b28d179f4c876f474432763907d5d6228ff7e54",
+    "company-c-498e1bd87a678db075fcaba5",
+    "web-handle:sha256:1ceb30bf25dd55bb9d7553ce92d49e071b7559ce8c66cd76cc820cab8b82b28c",
+    "company-c-50000b8ee3825d751bf2f683",
+    "web-handle:sha256:da6c274ed7956e2a2b76d280868867718fa228cef1a618284cb4f9aa110765d7",
+    "company-c-52b8be7ffeb3715120f32568",
+    "web-handle:sha256:6317fb4eae96e51c8813acf282ecfcce60ffc840b731f83cc8da4a3b7a9c4ddc",
+    "company-c-555adfea306497eddda3fed3",
+    "web-handle:sha256:f6b8964057b7066f9b54f635d2966d573482347a1cf62333006e3592f997ff0f",
+    "company-c-70fa061f657b661ccf90856f",
+    "web-handle:sha256:8fd170b8942a3a4ccab926a4c470fc1c99aa313140d6778039e1f64756fb83cc",
+    "company-c-75a8d7ae8efe724d21600e3c",
+    "web-handle:sha256:b0883bbbfcba9b5f4b83b97e6ca701664ceb24d28a2705fd0ade34a01fd8d1c3",
+    "company-c-7c14b322a2e79347312105b5",
+    "web-handle:sha256:fac0bb656d1b613bdd8989de83118dda8d61406a267334e840ab1ae8e73c5743",
+    "company-c-935bdab6385450b5304dcd71",
+    "web-handle:sha256:9e94d02365d62c9c77fe214b6213da36f68e6eb11f597926fa84afe6107c07d0",
+    "company-c-9484d4c6a9855db4ce61389b",
+    "web-handle:sha256:c6a5f5e3214b9a5bebba33a7cb11a69afb7ad5ffae94e7212b6fa1ec1ab65ec6",
+    "company-c-9a51193bf16049ced0e0a018",
+    "web-handle:sha256:6e92d21320b50c7db5077c49fd8ec162cc9e1a01cb961793c8624484b8ea5a9c",
+    "company-c-9b12cf41746000ec3ed4f4a4",
+    "web-handle:sha256:edd020cadb4e74361340f345d238bac5b1c2c9b964c0341bbe23ca135db8ae07",
+    "company-c-a07e1c7792562e465987386e",
+    "web-handle:sha256:6c02f9015e41f0e923f9c3379eda4e22befc1dc421c15b775d2e6a4496408c2d",
+    "company-c-a26f53e6ff2772d76f05172e",
+    "web-handle:sha256:8130626d642bdd6feb7f62c729faa1b33b6e3b93dfe750689a109da6c146e604",
+    "company-c-ab72663795ff1809fb6ca887",
+    "company-c-af2119054a161bd8fc2df462"
+  ],
+  "committed_names": [
+    "深圳美丽策光生物科技有限公司",
+    "世界上最漂亮女人是谁? - 搜狗问问",
+    "地球上最好看的10个女人排行榜，她们确实颜值惊艳！ - 搜狐",
+    "深圳美丽讯网络科技有限公司",
+    "DeepSeek评价世界最美女人_%ub_气质_因为",
+    "全世界最美的10個公主！6歲靠顏值美翻全球，卻淪為生育工具“嫁老頭”",
+    "眺月科技（深圳）有限公司",
+    "世界上最漂亮的女人是谁",
+    "深圳市智绘科技有限公司",
+    "世界上最美的人是谁？回顾过去十年“全球百大最美面孔”NO.1",
+    "简厨科技（深圳）有限公司",
+    "世界上最美的人",
+    "深圳市宜远智能科技有限公司",
+    "谁是世界上最美丽的女人 - 文旅",
+    "深圳市思坦科技有限公司",
+    "世界上最漂亮的50位女性名单_网易订阅",
+    "深圳市微阳信息技术有限公司",
+    "世界上最美丽的21 位女性 - 知乎专栏",
+    "深圳中科世界机器人有限公司",
+    "世界上最漂亮的女人TOP10 美得让人忘记呼吸",
+    "深圳市智销云科技有限公司",
+    "2024世界最美丽女性榜单出炉美的标准是什么？ - 大纪元",
+    "深圳市天宏汇成电子科技有限公司",
+    "谁是世界上最漂亮的女人 爱问知识人",
+    "深圳无界智航科技有限公司",
+    "全球公认最美的30个女性 - Instagram",
+    "深圳闻储创新科技有限公司",
+    "世界公认最美的女人 世界上最美的人？",
+    "深圳市智拓欣扬科技有限公司",
+    "世界上最美的女人_百度百科",
+    "深圳云里物里科技股份有限公司",
+    "世界上美女排行榜 看看哪个是你心中最美的女人_知秀网",
+    "深圳市恒之易电子商务有限公司",
+    "全世界最美的10個女明星！亞洲獨佔其中7個，第1名竟然就在台灣 ...",
+    "深圳市塔雷斯测量设备有限公司",
+    "全球最漂亮的女人TOP10",
+    "深圳市昇维旭技术有限公司",
+    "原创2024全世界最漂亮的10个女人排行榜，中国仅上榜一人！ - 搜狐",
+    "深圳市欣和电子有限公司",
+    "世界上最美丽的女人排行，每位都是性感女神！",
+    "深圳安维森实业有限公司",
+    "世界上最美的小仙女是谁? - 搜狗问问",
+    "深圳面元智能科技有限公司",
+    "世界排名前20位最漂亮的女人",
+    "康佳芯盈半导体科技（深圳）有限公司",
+    "地球上最美的女性!网评全球十大美女排名",
+    "隐形科技（深圳）有限公司",
+    "世界上最漂亮的50位女性名单",
+    "深圳拜尔洛克生物技术有限公司",
+    "世界上最美丽的20个女人",
+    "建瓴半导体（深圳）有限公司",
+    "她们是2018世界十大最美女子 - 知乎专栏",
+    "深圳市瀚思通汽车电子有限公司",
+    "當中由韓國女團BLACKPINK 成員Rosé 奪得冠軍，成為今年「全球第 ...",
+    "浦东国际先进技术应用推进中心",
+    "全球最美女性排行榜_百度百科",
+    "深圳市小湾智能有限公司",
+    "百大美女洗牌! Rosé登頂全球最美周子瑜名次曝｜TVBS新聞- YouTube",
+    "深圳市格松科技有限公司",
+    "「全球最美女星」排行榜出爐～楊冪僅第8、周子瑜超車Lisa",
+    "深圳市知用电子有限公司",
+    "世界最美的女人 全球公认的世界十大美女",
+    "视启未来（深圳）科技有限公司",
+    "深圳市美丽加互联网有限公司"
+  ],
+  "render_mode": "prose_renderer",
+  "response_mode": "answer",
+  "citations": 12,
+  "answer_chars": 1121,
+  "lane_timings": [
+    [
+      "structured",
+      0.0
+    ],
+    [
+      "exact",
+      0.73
+    ],
+    [
+      "vector",
+      1.083
+    ],
+    [
+      "lexical",
+      2.762
+    ],
+    [
+      "web",
+      5.168
+    ]
+  ]
+}
