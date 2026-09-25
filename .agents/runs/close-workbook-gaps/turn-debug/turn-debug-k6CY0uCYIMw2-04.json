@@ -1,0 +1,171 @@
+{
+  "session_id": "session:chat:k6CY0uCYIMw2OiO0w_R7wZ9zoBfOPb81",
+  "turn_id": "turn:chat:sha256:be86e73cb890d6d20e5a1941295aac267890f38a048c4fc61e8617fbcc687a8c",
+  "turn_count": 4,
+  "query": "深圳大学 裘奚晨卉 身份证 电话 邮箱",
+  "planned_displayed_ids": [],
+  "recalled_handles": [
+    {
+      "id": "professor-c-d92941bbfb544cefd6dfc727",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "裘奚晨卉"
+    },
+    {
+      "id": "web-handle:sha256:e0ea12cb6cb62676540311965bb1c37520d1a9429d9c30eed773c0bf3ea77ca4",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "裘奚晨卉_护理学院- 师资队伍"
+    },
+    {
+      "id": "web-handle:sha256:3a2140a6276cbd5fc9e7437cd98f2cf875c1b1c693fa88d008d89cdf3802fb3a",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "护理学院_深圳大学医学部- 师资队伍"
+    },
+    {
+      "id": "web-handle:sha256:3cfaee566415f9d20c41904837575d04a77a6772acf46fbca09e347bc6624585",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "培养国际视野人才，探索国际护理新进展——理论篇"
+    },
+    {
+      "id": "web-handle:sha256:53b8f2d1ee4f3f5ac3be294e5cdc547deef28f6f670da5e98626b93625ffa4e9",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "深圳大学护理学院与澳门镜湖护理学院师生开展老年护理 ..."
+    },
+    {
+      "id": "web-handle:sha256:866496ff55ccb9985c93983ccae054bbbeed71ed9d0ba5377156d9b5322382fb",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "追随护理之光——护理职业发展前景分析与职业规划漫谈"
+    },
+    {
+      "id": "web-handle:sha256:385fc8883454a031a865e9ef4d3368332237967533a92de7b9eb96d845c153e9",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "联系方式&郑巍璇(个体经营)"
+    },
+    {
+      "id": "web-handle:sha256:5516ce0ad174fc494144e862883816fc516a5f74f3193342199212f46ac5cbab",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "临沂沐卉农产品有限公司联系我们"
+    },
+    {
+      "id": "web-handle:sha256:7799d7d7e0b495696834ed4c1d69954358ce3a3588b7a9b4439ff1032e54e0cd",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "ChiCTR2100054617 版本V1.1 版本创建时间2021/12/21 08 ..."
+    },
+    {
+      "id": "professor-c-210beb5d5224bb2ebee02b4f",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "王晨"
+    },
+    {
+      "id": "professor-c-70e34070bd0d337a0cc1911e",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "李秀婷"
+    },
+    {
+      "id": "professor-c-0764c81164f2b551b0994b65",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "张婷茹"
+    },
+    {
+      "id": "professor-c-e5d2a0ff19f8e0795d59468a",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "江雨馨"
+    },
+    {
+      "id": "professor-c-9b3712259fccf4c5fb4ef991",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "王晨晨"
+    },
+    {
+      "id": "professor-c-9ae96906d82d6a59eebc2d79",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "李丹卉"
+    },
+    {
+      "id": "professor-c-eb807381985477c24ab3dd06",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "朱晨茜"
+    }
+  ],
+  "evidence_items": {
+    "total": 18,
+    "by_domain": {
+      "professor": 18
+    },
+    "by_lane": {
+      "exact": 1,
+      "vector": 9,
+      "web": 8
+    },
+    "by_source_nature": {
+      "current_web": 8,
+      "local": 10
+    },
+    "with_claim_binding": 18
+  },
+  "protected_slots": [],
+  "requested_traversal": null,
+  "admitted_claims": {
+    "total": 6,
+    "by_predicate": {
+      "canonical_projection": 1,
+      "current_web_result": 1,
+      "geography": 4
+    },
+    "by_claim_type": {
+      "material_fact": 6
+    },
+    "patent_evidence_claims": 0
+  },
+  "committed_handle_ids": [
+    "professor-c-d92941bbfb544cefd6dfc727",
+    "web-handle:sha256:e0ea12cb6cb62676540311965bb1c37520d1a9429d9c30eed773c0bf3ea77ca4",
+    "web-handle:sha256:3a2140a6276cbd5fc9e7437cd98f2cf875c1b1c693fa88d008d89cdf3802fb3a"
+  ],
+  "committed_names": [
+    "裘奚晨卉",
+    "裘奚晨卉_护理学院- 师资队伍",
+    "护理学院_深圳大学医学部- 师资队伍"
+  ],
+  "render_mode": "prose_renderer",
+  "response_mode": "answer",
+  "citations": 6,
+  "answer_chars": 377,
+  "lane_timings": [
+    [
+      "structured",
+      0.0
+    ],
+    [
+      "exact",
+      0.831
+    ],
+    [
+      "vector",
+      1.19
+    ],
+    [
+      "lexical",
+      1.342
+    ],
+    [
+      "web",
+      14.853
+    ]
+  ]
+}

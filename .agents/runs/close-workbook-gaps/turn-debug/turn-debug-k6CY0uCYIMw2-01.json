@@ -1,0 +1,168 @@
+{
+  "session_id": "session:chat:k6CY0uCYIMw2OiO0w_R7wZ9zoBfOPb81",
+  "turn_id": "turn:chat:sha256:20f112f1fb3b3d26ca7dfcd15bdb0f497554eaa5fca9e18d0170faf0f69faf6b",
+  "turn_count": 1,
+  "query": "你好",
+  "planned_displayed_ids": [],
+  "recalled_handles": [
+    {
+      "id": "web-handle:sha256:0e729ce60bbb4e6a8883fa4943be01321428bd4bd7cb02e0876da318068c6e2a",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "\\\\\\\"您好、_快速问医生_免费咨询"
+    },
+    {
+      "id": "web-handle:sha256:c8d6606970e45b4d201390d818ac233f3445d96aa72761c40e517c63533f5994",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "你好吗? - 简书"
+    },
+    {
+      "id": "web-handle:sha256:3704ce67ac7674d97043350dd6623fbbfc8725c422d9bfb3a77004b7a1a06d09",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "你好 - 简书"
+    },
+    {
+      "id": "professor-c-d92941bbfb544cefd6dfc727",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "裘奚晨卉"
+    },
+    {
+      "id": "professor-c-5c9ac30ac0daf62c66f24827",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "贺婷"
+    },
+    {
+      "id": "professor-c-64867f4121421b2bc6f75b90",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "侯文雅"
+    },
+    {
+      "id": "professor-c-2a3c406c1fb1c4ff05f00d9a",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "郝祁"
+    },
+    {
+      "id": "professor-c-eb807381985477c24ab3dd06",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "朱晨茜"
+    },
+    {
+      "id": "professor-c-5df47c6881b75c57004547d9",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "徐勤"
+    },
+    {
+      "id": "professor-c-5091787895d086281ea60c8e",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "康康"
+    },
+    {
+      "id": "professor-c-dc8e0ab48f1c881c9c445ba2",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "朱贺"
+    },
+    {
+      "id": "professor-c-205889845e376ef8634237ac",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "唐仙"
+    },
+    {
+      "id": "professor-c-edbc90c64f21f03838c2d33e",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "于严淏"
+    },
+    {
+      "id": "professor-c-465dd9dde703f4d591ba3a7e",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "韦朝晗"
+    },
+    {
+      "id": "professor-c-4ede36966ff9a0510249399e",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "胡亚欣"
+    },
+    {
+      "id": "professor-c-6c781955591e69e6eda8287b",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "祝晋旋"
+    }
+  ],
+  "evidence_items": {
+    "total": 16,
+    "by_domain": {
+      "professor": 16
+    },
+    "by_lane": {
+      "vector": 13,
+      "web": 3
+    },
+    "by_source_nature": {
+      "current_web": 3,
+      "local": 13
+    },
+    "with_claim_binding": 16
+  },
+  "protected_slots": [],
+  "requested_traversal": null,
+  "admitted_claims": {
+    "total": 3,
+    "by_predicate": {
+      "semantic_recall": 3
+    },
+    "by_claim_type": {
+      "material_fact": 3
+    },
+    "patent_evidence_claims": 0
+  },
+  "committed_handle_ids": [
+    "professor-c-d92941bbfb544cefd6dfc727",
+    "professor-c-5c9ac30ac0daf62c66f24827",
+    "professor-c-64867f4121421b2bc6f75b90"
+  ],
+  "committed_names": [
+    "裘奚晨卉",
+    "贺婷",
+    "侯文雅"
+  ],
+  "render_mode": "prose_renderer",
+  "response_mode": "answer",
+  "citations": 3,
+  "answer_chars": 112,
+  "lane_timings": [
+    [
+      "structured",
+      0.0
+    ],
+    [
+      "exact",
+      1.219
+    ],
+    [
+      "vector",
+      1.367
+    ],
+    [
+      "lexical",
+      1.663
+    ],
+    [
+      "web",
+      16.343
+    ]
+  ]
+}

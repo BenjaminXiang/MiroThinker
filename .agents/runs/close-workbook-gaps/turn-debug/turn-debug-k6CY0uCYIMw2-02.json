@@ -1,0 +1,168 @@
+{
+  "session_id": "session:chat:k6CY0uCYIMw2OiO0w_R7wZ9zoBfOPb81",
+  "turn_id": "turn:chat:sha256:d24f05e36221cd94be658c0cb0c144db6995aa45d7891380d2a2e80133d35631",
+  "turn_count": 2,
+  "query": "你好",
+  "planned_displayed_ids": [],
+  "recalled_handles": [
+    {
+      "id": "web-handle:sha256:0e729ce60bbb4e6a8883fa4943be01321428bd4bd7cb02e0876da318068c6e2a",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "\\\\\\\"您好、_快速问医生_免费咨询"
+    },
+    {
+      "id": "web-handle:sha256:1921fadde7a8f2adec2fa12149dab378d300438da662144d004adcfb9a160fc0",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "你好- song and lyrics by Kelly Yu"
+    },
+    {
+      "id": "web-handle:sha256:01369eb22b702c43acdb682c1f3f98697b28e09c34563a2ccbbf0894811307ef",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "你好吗? - 简书"
+    },
+    {
+      "id": "web-handle:sha256:1a3ec2b7a9cbef643863fae9b3c6981718f912106c748f31eb294e1680287150",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "详细信息"
+    },
+    {
+      "id": "web-handle:sha256:66c3540decdd4ff06399238c5a23bfdfaac77fe40edb8f4c68258b5cf8a7a7de",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "Quick BI数据解读提示“请补充相关数据，以便我为您提供更准确 ..."
+    },
+    {
+      "id": "web-handle:sha256:8b413c3ac0c8c5fd57aeff34857001becb122aaf480db50a95baf6c416b9c1d2",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "您刚才的回答能具体点吗?很感谢"
+    },
+    {
+      "id": "web-handle:sha256:8640b9222af273baa05329de3ade84bfe6c6ffa7eec300050e6ce5749cf2349c",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "关于转发国家税务局《关于土地使用税若干具体问题的补充 ..."
+    },
+    {
+      "id": "web-handle:sha256:2eaf0932d64cad682f2df9718b3ac0e6ae2539ae5f24410da9b7b2f9e1a8632e",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "补充 - 民生e点通-群众留言板 - 中国宁波网民生e点通-天一论坛 - 手机版 - Powered by Discuz!"
+    },
+    {
+      "id": "professor-c-d92941bbfb544cefd6dfc727",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "裘奚晨卉"
+    },
+    {
+      "id": "professor-c-5c9ac30ac0daf62c66f24827",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "贺婷"
+    },
+    {
+      "id": "professor-c-64867f4121421b2bc6f75b90",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "侯文雅"
+    },
+    {
+      "id": "professor-c-2a3c406c1fb1c4ff05f00d9a",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "郝祁"
+    },
+    {
+      "id": "professor-c-eb807381985477c24ab3dd06",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "朱晨茜"
+    },
+    {
+      "id": "professor-c-5df47c6881b75c57004547d9",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "徐勤"
+    },
+    {
+      "id": "professor-c-5091787895d086281ea60c8e",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "康康"
+    },
+    {
+      "id": "professor-c-dc8e0ab48f1c881c9c445ba2",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "朱贺"
+    }
+  ],
+  "evidence_items": {
+    "total": 16,
+    "by_domain": {
+      "professor": 16
+    },
+    "by_lane": {
+      "vector": 8,
+      "web": 8
+    },
+    "by_source_nature": {
+      "current_web": 8,
+      "local": 8
+    },
+    "with_claim_binding": 16
+  },
+  "protected_slots": [],
+  "requested_traversal": null,
+  "admitted_claims": {
+    "total": 3,
+    "by_predicate": {
+      "semantic_recall": 3
+    },
+    "by_claim_type": {
+      "material_fact": 3
+    },
+    "patent_evidence_claims": 0
+  },
+  "committed_handle_ids": [
+    "professor-c-d92941bbfb544cefd6dfc727",
+    "professor-c-5c9ac30ac0daf62c66f24827",
+    "professor-c-64867f4121421b2bc6f75b90"
+  ],
+  "committed_names": [
+    "裘奚晨卉",
+    "贺婷",
+    "侯文雅"
+  ],
+  "render_mode": "prose_renderer",
+  "response_mode": "answer",
+  "citations": 3,
+  "answer_chars": 152,
+  "lane_timings": [
+    [
+      "structured",
+      0.0
+    ],
+    [
+      "vector",
+      1.007
+    ],
+    [
+      "exact",
+      1.1
+    ],
+    [
+      "lexical",
+      1.273
+    ],
+    [
+      "web",
+      12.342
+    ]
+  ]
+}

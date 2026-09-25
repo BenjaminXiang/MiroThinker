@@ -1,0 +1,166 @@
+{
+  "session_id": "session:chat:k6CY0uCYIMw2OiO0w_R7wZ9zoBfOPb81",
+  "turn_id": "turn:chat:sha256:f262fe71505ea150b53d2f6d8fb8dc1bdf3bcd26ccfd8ceb8e8e260f4447df79",
+  "turn_count": 3,
+  "query": "你好",
+  "planned_displayed_ids": [],
+  "recalled_handles": [
+    {
+      "id": "web-handle:sha256:0e729ce60bbb4e6a8883fa4943be01321428bd4bd7cb02e0876da318068c6e2a",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "\\\\\\\"您好、_快速问医生_免费咨询"
+    },
+    {
+      "id": "web-handle:sha256:1921fadde7a8f2adec2fa12149dab378d300438da662144d004adcfb9a160fc0",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "你好- song and lyrics by Kelly Yu"
+    },
+    {
+      "id": "web-handle:sha256:01369eb22b702c43acdb682c1f3f98697b28e09c34563a2ccbbf0894811307ef",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "你好吗? - 简书"
+    },
+    {
+      "id": "web-handle:sha256:1a3ec2b7a9cbef643863fae9b3c6981718f912106c748f31eb294e1680287150",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "详细信息"
+    },
+    {
+      "id": "web-handle:sha256:ac00bc2a7f67640aeaec1c4aff4af6d612838c5719d07576da76a3b45d5f409b",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "翻译"
+    },
+    {
+      "id": "web-handle:sha256:0deb32f1bb8d6137901193cd8b01dd1384050c02ea30d846d8ff4259f7c5c16e",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "你好"
+    },
+    {
+      "id": "web-handle:sha256:e5ef07588d216d0796c2b4d221edbc3b9d135e0a6294ff0d6010b96a7c12dda6",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "Google"
+    },
+    {
+      "id": "web-handle:sha256:634ecfcff9cd3654d9dd4f6d4b36561e720016c31c947bdccece305d8e7363f6",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "您好,想咨询一个问题-找法网"
+    },
+    {
+      "id": "professor-c-d92941bbfb544cefd6dfc727",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "裘奚晨卉"
+    },
+    {
+      "id": "professor-c-5c9ac30ac0daf62c66f24827",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "贺婷"
+    },
+    {
+      "id": "professor-c-64867f4121421b2bc6f75b90",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "侯文雅"
+    },
+    {
+      "id": "professor-c-2a3c406c1fb1c4ff05f00d9a",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "郝祁"
+    },
+    {
+      "id": "professor-c-eb807381985477c24ab3dd06",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "朱晨茜"
+    },
+    {
+      "id": "professor-c-5df47c6881b75c57004547d9",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "徐勤"
+    },
+    {
+      "id": "professor-c-5091787895d086281ea60c8e",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "康康"
+    },
+    {
+      "id": "professor-c-dc8e0ab48f1c881c9c445ba2",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "朱贺"
+    }
+  ],
+  "evidence_items": {
+    "total": 16,
+    "by_domain": {
+      "professor": 16
+    },
+    "by_lane": {
+      "vector": 8,
+      "web": 8
+    },
+    "by_source_nature": {
+      "current_web": 8,
+      "local": 8
+    },
+    "with_claim_binding": 16
+  },
+  "protected_slots": [],
+  "requested_traversal": null,
+  "admitted_claims": {
+    "total": 1,
+    "by_predicate": {
+      "semantic_recall": 1
+    },
+    "by_claim_type": {
+      "material_fact": 1
+    },
+    "patent_evidence_claims": 0
+  },
+  "committed_handle_ids": [
+    "professor-c-d92941bbfb544cefd6dfc727",
+    "web-handle:sha256:0deb32f1bb8d6137901193cd8b01dd1384050c02ea30d846d8ff4259f7c5c16e"
+  ],
+  "committed_names": [
+    "裘奚晨卉",
+    "你好"
+  ],
+  "render_mode": "prose_renderer",
+  "response_mode": "answer",
+  "citations": 1,
+  "answer_chars": 132,
+  "lane_timings": [
+    [
+      "structured",
+      0.0
+    ],
+    [
+      "exact",
+      0.563
+    ],
+    [
+      "lexical",
+      0.837
+    ],
+    [
+      "vector",
+      0.831
+    ],
+    [
+      "web",
+      11.626
+    ]
+  ]
+}

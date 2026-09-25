@@ -1,0 +1,169 @@
+{
+  "session_id": "session:chat:k6CY0uCYIMw2OiO0w_R7wZ9zoBfOPb81",
+  "turn_id": "turn:chat:sha256:5b558481ee24544c25df0bc9501670a506aab1da6de89028d02d030d5e0366e8",
+  "turn_count": 5,
+  "query": "深圳科创学院 教授 邮箱 手机",
+  "planned_displayed_ids": [],
+  "recalled_handles": [
+    {
+      "id": "professor-c-e993b9129e03825776d34e00",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "教授"
+    },
+    {
+      "id": "web-handle:sha256:16e8c84d4ffe3bd89a539c25c41030a01002850b85ae802690336707e8aa41eb",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "教授-深圳大学电子与信息工程学院"
+    },
+    {
+      "id": "web-handle:sha256:efb662a8d6c529a5b8b5333472a82d7db79951c89fdb8d00c0aa78db28433174",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "深圳科创学院"
+    },
+    {
+      "id": "web-handle:sha256:3cb3668e0ff90796f9fd4a66a781e9776f3d84b138f2c5d1bfc9fe213b06ace3",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "教授-深圳大学生命与海洋科学学院"
+    },
+    {
+      "id": "web-handle:sha256:b7cb752c35c533a5e4046ef42129452c50c1d75d09024eff615ada9ec022fe11",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "关于开展2025深圳科创学院冬季科创营报名的通知 - 教务处"
+    },
+    {
+      "id": "web-handle:sha256:ef8cbf445a3832aade599b6eef8baeee2ddee4b353685c7bb94a114e8e7d7952",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "教授-深圳大学生命与海洋科学学院"
+    },
+    {
+      "id": "web-handle:sha256:8aa2bddc17ad00915fd5574ca2eb628798f3846530b1d4e8836836c1858e4b6a",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "深圳科创学院"
+    },
+    {
+      "id": "web-handle:sha256:a7f22b6f38f114a0c4d2eea7fdd168cefc42d8544a97a5a903b67d321bd99c22",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "教授-深圳大学法学院"
+    },
+    {
+      "id": "web-handle:sha256:cfc204f01132c963e4af49d671be75f02e06f9c6c5bc5f36253e9423b8d75a2d",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "SZCCF走进深圳科创学院报名开启！"
+    },
+    {
+      "id": "professor-c-6275ae7185a91f45f6b83ba8",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "罗锴"
+    },
+    {
+      "id": "professor-c-08d11badc397a5d4d436dc23",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "呼唤"
+    },
+    {
+      "id": "professor-c-caff01d5acf4f224f5ef93e8",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "张磊"
+    },
+    {
+      "id": "professor-c-69dc4f55958814400246a96f",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "谢恺"
+    },
+    {
+      "id": "professor-c-75c7ff189aeb498556fff4e3",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "教学平台"
+    },
+    {
+      "id": "professor-c-e005c821d4aaab82f94b0a59",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "黄锦圣"
+    },
+    {
+      "id": "professor-c-8b7d7bbfefc26014df50ee50",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "李晓岩"
+    }
+  ],
+  "evidence_items": {
+    "total": 17,
+    "by_domain": {
+      "professor": 17
+    },
+    "by_lane": {
+      "exact": 1,
+      "vector": 8,
+      "web": 8
+    },
+    "by_source_nature": {
+      "current_web": 8,
+      "local": 9
+    },
+    "with_claim_binding": 17
+  },
+  "protected_slots": [],
+  "requested_traversal": null,
+  "admitted_claims": {
+    "total": 4,
+    "by_predicate": {
+      "geography": 4
+    },
+    "by_claim_type": {
+      "material_fact": 4
+    },
+    "patent_evidence_claims": 0
+  },
+  "committed_handle_ids": [
+    "web-handle:sha256:efb662a8d6c529a5b8b5333472a82d7db79951c89fdb8d00c0aa78db28433174",
+    "professor-c-e993b9129e03825776d34e00",
+    "web-handle:sha256:8aa2bddc17ad00915fd5574ca2eb628798f3846530b1d4e8836836c1858e4b6a"
+  ],
+  "committed_names": [
+    "深圳科创学院",
+    "教授",
+    "深圳科创学院"
+  ],
+  "render_mode": "prose_renderer",
+  "response_mode": "answer",
+  "citations": 4,
+  "answer_chars": 262,
+  "lane_timings": [
+    [
+      "structured",
+      0.0
+    ],
+    [
+      "exact",
+      0.18
+    ],
+    [
+      "lexical",
+      0.229
+    ],
+    [
+      "vector",
+      0.32
+    ],
+    [
+      "web",
+      7.124
+    ]
+  ]
+}
