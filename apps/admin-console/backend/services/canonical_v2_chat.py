@@ -1070,7 +1070,20 @@ def _retrieval_done_web_items(evidence_set: EvidenceSet) -> list[dict[str, str]]
 
 
 _SOFT_SUBJECT_MAX_LENGTH = 30
-_SOFT_SUBJECT_QUESTION_MARKERS = ("吗", "呢", "哪些", "什么")
+# Interrogative families that a soft-subject candidate must never contain.
+# The 哪几/几种/几类 family was missing: 「目前有哪几种主流的JEPA变体？」 passed
+# the candidate guard as the WHOLE question — the echo guard compares raw
+# punctuation while _search_view rstrips the trailing ？, and the bare-name
+# relaxation accepts any punctuation-free CJK run — so the web
+# subject-consistency gate used the sentence as a bound entity name and
+# dropped 51 of 54 web results. Candidate-scoped on purpose: the query-level
+# _ENUMERATION_MARKERS is also consumed by _enumeration_planning_context, and
+# widening THAT would change planning. Entity names never contain these.
+_SOFT_SUBJECT_QUESTION_MARKERS = (
+    "吗", "呢", "哪些", "什么", "哪一", "哪几", "哪种", "谁",
+    "怎么", "如何", "为何", "是否", "多少", "几个", "几种", "几类",
+    "几款", "几家",
+)
 # News-headline shapes a web display name takes when the handle was minted
 # off an article title instead of an entity name: an enumerating 、 joining
 # parallel names, or an event-verb suffix.
@@ -1101,13 +1114,24 @@ def _is_bare_entity_name_query(query: str) -> bool:
     )
 
 
+def soft_subject_question_shaped(candidate: str | None) -> bool:
+    """True when a candidate carries an interrogative family (never a name).
+
+    Shared with the Phase-6 query interpreter's subject validator (check ⑦):
+    both producers of subject state must reject question-shaped strings, not
+    only the deterministic derivation."""
+    if not candidate:
+        return False
+    return any(marker in candidate for marker in _SOFT_SUBJECT_QUESTION_MARKERS)
+
+
 def _soft_subject_candidate_ok(candidate: str, *, query: str) -> bool:
     """Base guards every soft-anchor candidate must pass."""
     if not candidate or len(candidate) > _SOFT_SUBJECT_MAX_LENGTH:
         return False
     if candidate == query.strip() and not _is_bare_entity_name_query(query):
         return False
-    return not any(marker in candidate for marker in _SOFT_SUBJECT_QUESTION_MARKERS)
+    return not soft_subject_question_shaped(candidate)
 
 
 def _soft_subject_name(

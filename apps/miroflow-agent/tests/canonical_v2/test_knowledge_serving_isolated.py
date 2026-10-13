@@ -34,6 +34,7 @@ from src.data_agents.canonical_v2.knowledge_read import (
     LocalSourceRelationshipTrace,
     MaterialQuestionPart,
     ProtectedSlot,
+    QueryPlanningPolicy,
     QueryPlanningRequest,
     RerankRequest,
     StructuredConstraints,
@@ -421,6 +422,193 @@ def test_enumeration_proposal_widens_the_web_result_window(
         )
     )
     assert ordinary.max_web_results == bundle.max_web_results
+
+
+# Known gap (bare-name subjects): a name with no role word, no legal company
+# suffix, and no institution bound to it ("丁文伯是谁",
+# "请介绍无界智航的相关信息") is recognized by none of the repository's
+# extractors, so it holds no local foothold and the turn executes Web-only.
+# These entries carry the explicit record of that verdict; a future
+# evidence-backed name-shape decision re-triages them deliberately instead of
+# drifting the routing, and no marker/regex guess is allowed to close them.
+_BARE_NAME_KNOWN_GAP_QUERIES = (
+    "丁文伯是谁",
+    "请介绍无界智航的相关信息",
+)
+
+
+@pytest.mark.parametrize(
+    "query",
+    (
+        "世界上最美丽的女人是谁",
+        "目前有哪几种主流的JEPA变体？",
+        *_BARE_NAME_KNOWN_GAP_QUERIES,
+    ),
+)
+def test_no_foothold_query_executes_only_the_public_web_lane(
+    tmp_path: Path, query: str
+) -> None:
+    """A query with no local-scope foothold must not sweep the local domains:
+    the execution set is the public Web lane alone. `domains` stays the full
+    public scope — the candidate scope is not the execution set, and the
+    information_retrieval contract requires a non-empty domain tuple — and the
+    enumeration windows stay at the bundle width, since there is no local
+    subject to widen for.
+
+    The bare-name entries are the known gap, asserted explicitly below (see
+    ``_BARE_NAME_KNOWN_GAP_QUERIES``) so the gap has one place to change."""
+    bundle = _bundle(tmp_path)
+    proposal = serving_module._proposal_provider(bundle=bundle)(
+        QueryPlanningRequest(
+            request_id="query-request:no-foothold",
+            release_id=RELEASE_ID,
+            original_query=query,
+            as_of=NOW,
+        )
+    )
+    assert proposal.lanes == ("web",)
+    assert proposal.domains == serving_module._PUBLIC_DOMAINS
+    assert proposal.max_candidates == bundle.max_candidates + bundle.max_web_results
+    assert proposal.max_web_results == bundle.max_web_results
+    assert proposal.professor_vector_view is None
+    assert proposal.web_mode == "universal"
+    if query in _BARE_NAME_KNOWN_GAP_QUERIES:
+        # The explicit known-gap assertion, kept separate from the routing
+        # assertions above: the name itself is why the foothold legs see
+        # nothing here. This is the tripwire a name-shape decision updates.
+        assert serving_module._has_local_scope_foothold(query) is False
+
+
+@pytest.mark.parametrize(
+    ("query", "enumeration_marked"),
+    (
+        # Domain word ("公司").
+        ("深圳有哪些做具身智能的公司", True),
+        # Platform subject word ("数据采集").
+        ("在真实数据采集路线中，有哪些具体方式", True),
+        # Name extractor: company-suffixed name (_explicit_organization_name).
+        ("请介绍无界智航公司", False),
+        # Professor marker + institution-bound name extraction.
+        ("丁文伯教授的研究方向是什么？", False),
+    ),
+)
+def test_local_foothold_query_keeps_the_local_lanes_and_windows(
+    tmp_path: Path, query: str, enumeration_marked: bool
+) -> None:
+    """A query that does hold a local foothold keeps today's routing exactly —
+    the full local lane set plus Web, and the enumeration window when the
+    query carries a list marker (widen-on-marker must not be lost)."""
+    bundle = _bundle(tmp_path)
+    proposal = serving_module._proposal_provider(bundle=bundle)(
+        QueryPlanningRequest(
+            request_id="query-request:foothold",
+            release_id=RELEASE_ID,
+            original_query=query,
+            as_of=NOW,
+        )
+    )
+    assert proposal.lanes == ("exact", "structured", "lexical", "vector", "web")
+    if enumeration_marked:
+        assert (
+            proposal.max_candidates
+            == serving_module._ENUMERATION_CANDIDATE_WINDOW
+        )
+        assert proposal.max_web_results == serving_module._ENUMERATION_CANDIDATE_WINDOW
+    else:
+        assert proposal.max_candidates == bundle.max_candidates + bundle.max_web_results
+        assert proposal.max_web_results == bundle.max_web_results
+
+
+@pytest.mark.parametrize(
+    ("followup", "enumeration_marked"),
+    (
+        ("还有哪些", True),
+        ("有没有更详细的信息", False),
+        ("他有哪些代表性研究成果", True),
+    ),
+)
+@pytest.mark.parametrize(
+    "prior_turn_query",
+    (
+        # Company-scope prior turn.
+        "深圳有哪些具身机器人企业",
+        # Professor-scope prior turn.
+        "清华的丁文伯的研究方向是什么",
+    ),
+)
+def test_session_scope_followup_keeps_the_local_lanes(
+    tmp_path: Path, followup: str, enumeration_marked: bool, prior_turn_query: str
+) -> None:
+    """Session exemption: an anaphoric follow-up ("还有哪些", "有没有更详细的
+    信息", "他有哪些代表性研究成果") names no local scope of its own, so its
+    foothold is the scope inherited from the prior turn (G11T2). Without it the
+    follow-up would silently degrade to Web-only retrieval and the carryover
+    would be execution-inert — domains re-labelled, local lanes never run."""
+    bundle = _bundle(tmp_path)
+    proposal = serving_module._proposal_provider(bundle=bundle)(
+        QueryPlanningRequest(
+            request_id="query-request:session-scope-followup",
+            release_id=RELEASE_ID,
+            original_query=followup,
+            prior_turn_query=prior_turn_query,
+            as_of=NOW,
+        )
+    )
+    assert proposal.lanes == ("exact", "structured", "lexical", "vector", "web")
+    # The inherited scope is what the follow-up resolves against.
+    assert proposal.domains != serving_module._PUBLIC_DOMAINS
+    if enumeration_marked:
+        assert proposal.max_candidates == serving_module._ENUMERATION_CANDIDATE_WINDOW
+    else:
+        assert proposal.max_candidates == bundle.max_candidates + bundle.max_web_results
+
+
+def test_no_foothold_proposal_forms_a_valid_public_web_plan(tmp_path: Path) -> None:
+    """The read-side A–G validators only require `"web" in lanes` plus a
+    non-empty public domain tuple for an information_retrieval proposal, so a
+    Web-only execution set has to plan and validate untouched (no validator
+    was changed for the Web-only routing)."""
+    bundle = _bundle(tmp_path)
+    policy = QueryPlanningPolicy(
+        policy_id=f"query-planning-policy:{bundle.release_id}",
+        policy_version="canonical-v2-serving-planning-v1",
+        public_domains=serving_module._PUBLIC_DOMAINS,
+        supported_lanes=(
+            "exact",
+            "structured",
+            "lexical",
+            "vector",
+            "relationship",
+            "internal_reference",
+            "web",
+        ),
+        supported_relationship_paths=(),
+        max_candidates=bundle.max_candidates + bundle.max_web_results,
+        max_provider_calls=2,
+        max_planning_attempts=1,
+    )
+    request = QueryPlanningRequest(
+        request_id="query-request:no-foothold-plan",
+        release_id=RELEASE_ID,
+        original_query="目前有哪几种主流的JEPA变体？",
+        as_of=NOW,
+    )
+    plan = create_ephemeral_query_planner(
+        planning_policy=policy,
+        institution_catalog=InstitutionCatalog(
+            catalog_id=f"institution-catalog:{RELEASE_ID}",
+            catalog_version="institution-catalog-v1",
+            release_id=RELEASE_ID,
+            entries=(),
+        ),
+        proposal_provider=serving_module._proposal_provider(bundle=bundle),
+    ).plan(request)
+    assert plan.interaction_mode == "information_retrieval"
+    assert plan.lanes == ("web",)
+    assert plan.domains == serving_module._PUBLIC_DOMAINS
+    assert plan.web_required is True
+    assert plan.web_policy.mode == "universal"
+    assert tuple(query.lane for query in plan.lane_queries) == ("web",)
 
 
 def test_enumeration_discovery_views_merge_before_other_rewrite_views() -> None:

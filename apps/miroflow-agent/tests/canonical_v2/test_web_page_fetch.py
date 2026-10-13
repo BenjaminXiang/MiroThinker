@@ -423,3 +423,47 @@ def test_fetcher_warm_failure_does_not_poison_real_fetch() -> None:
     text = fetcher("https://example.test/retry")
     assert "擎朗智能" in (text or "")
     assert len(attempts) == 2
+
+
+def test_pending_provider_prefetches_pages_during_merge() -> None:
+    """LAT-5: while one provider's future is still pending, the pages of the
+    results already in hand are fetched — the fetcher caches per URL, so the
+    fetch stage after the merge is a cache hit instead of a second wait."""
+    import time as _time
+
+    started = _time.monotonic()
+    provider_done: list[float] = []
+    fetched: list[tuple[str, float]] = []
+
+    class _FastBocha:
+        def search(self, query: str) -> dict[str, Any]:
+            return {"organic": list(_BOCHA_RESULTS)}
+
+    class _SlowSerper:
+        def search(self, query: str) -> dict[str, Any]:
+            _time.sleep(1.5)
+            provider_done.append(_time.monotonic() - started)
+            return {"organic": []}
+
+    def fetcher(url: str) -> str:
+        fetched.append((url, _time.monotonic() - started))
+        return "王学谦教授团队长期从事空间机器人研究。" * 10
+
+    adapter = serving_module._DualWebLaneAdapter(
+        timeout_ms=10_000,
+        max_snapshot_bytes=8_192,
+        clock=lambda: NOW,
+        bocha=_FastBocha(),
+        serper=_SlowSerper(),
+        page_fetcher=fetcher,
+        extra_view_queries=lambda _query: ("JEPA 变体 主流",),
+    )
+    adapter(_lane_request("清华的王学谦"))
+
+    assert provider_done, "the slow provider never finished"
+    assert fetched, "no page was fetched at all"
+    first_fetch = min(t for _, t in fetched)
+    assert first_fetch < provider_done[0], (
+        "pages were not prefetched during the merge: first fetch at "
+        f"{first_fetch:.2f}s vs provider done at {provider_done[0]:.2f}s"
+    )

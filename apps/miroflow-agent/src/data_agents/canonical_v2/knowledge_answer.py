@@ -1347,6 +1347,7 @@ def _enumeration_member_coverage_sentence(
     request: TurnRequest,
     context: ContextReceipt | None,
     answer_text: str,
+    require_mentioned_member: bool,
 ) -> str | None:
     """The AQ-S2c member coverage sentence for an enumeration turn.
 
@@ -1356,22 +1357,47 @@ def _enumeration_member_coverage_sentence(
     no capability claim about any of them. Returns None when the turn is not
     an enumeration turn, when nothing was recalled, or when every recalled
     local member is already named.
+
+    `require_mentioned_member` is the topical floor, and the caller owns it
+    because it belongs to the PROSE path only. When it is set, the sentence may
+    only ship if the prose already names at least one of the recalled local
+    companies: an enumeration marker in the query ("哪些"/"谁") does not make
+    the turn about local companies, so a concept or person question
+    ("目前有哪几种主流的JEPA变体？", "世界上最美丽的女人是谁") can sweep
+    company handles into the recall window as literal noise, and appending that
+    list under an answer that names no company at all is an unrelated name
+    dump, not a disclosure (18296). The deterministic fallback path passes
+    False: its answer text is a degraded, self-labelled restatement rather
+    than a verdict on the question, it cannot name members the evidence
+    extraction did not put into its points, and G7 1b.1b requires the fallback
+    to keep naming the recalled local universe (优必选 committed at rank 5 must
+    still appear) — the floor would silently drop that disclosure instead of
+    holding the sentence back.
     """
     if context is None:
         return None
     if not _is_enumeration_turn(request):
         return None
     folded_answer = answer_text.casefold()
-    unmentioned = tuple(
-        handle.display_name
+    recalled_members = tuple(
+        (
+            handle.display_name,
+            any(
+                form in folded_answer
+                for form in _prose_mention_name_forms(handle.display_name)
+            ),
+        )
         for handle in request.evidence_set.entity_handles
         if isinstance(handle, CanonicalEntityHandle)
         and handle.domain == "company"
         and handle.display_name.strip()
-        and not any(
-            form in folded_answer
-            for form in _prose_mention_name_forms(handle.display_name)
-        )
+    )
+    if require_mentioned_member and not any(
+        mentioned for _, mentioned in recalled_members
+    ):
+        return None
+    unmentioned = tuple(
+        display_name for display_name, mentioned in recalled_members if not mentioned
     )
     if not unmentioned:
         return None
@@ -1577,6 +1603,12 @@ def _degraded_fallback_text(
     keeps the AQ-S2c member coverage sentence — the prose path's join
     channel — so recalled local members the prose never named stay in the
     answer (and in the committed universe) when synthesis degrades.
+
+    The prose path's topical floor does not apply here
+    (``require_mentioned_member=False``): this text is a degraded, self-labelled
+    restatement rather than a verdict on the question, so the recalled local
+    universe is named exactly as G7 1b.1b specifies, whether or not one of its
+    members survived into the fallback points.
     """
     text = f"（以下为基于本地数据的简要信息）\n{result.answer_text}"
     if request is None:
@@ -1585,6 +1617,7 @@ def _degraded_fallback_text(
         request=request,
         context=result.context_receipt,
         answer_text=text,
+        require_mentioned_member=False,
     )
     if coverage_sentence is None:
         return text
@@ -2672,6 +2705,9 @@ class _EphemeralKnowledgeAnswer(KnowledgeAnswer):
             request=request,
             context=context,
             answer_text=synthesis.answer_text,
+            # Prose path: the topical floor applies — the disclosure only ships
+            # when the prose already names a recalled local company.
+            require_mentioned_member=True,
         )
         committed_text = (
             synthesis.answer_text

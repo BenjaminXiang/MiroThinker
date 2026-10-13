@@ -410,6 +410,71 @@ def _infer_domains(query: str) -> tuple[str, ...]:
     )
 
 
+# Platform subject matter: the ecosystem the local domains actually describe
+# (embodied intelligence / robotics and its data, model, and component supply
+# chain). A query carrying one of these words talks about local-scope subject
+# matter even when no domain word or name matched.
+_PLATFORM_TOPIC_MARKERS = (
+    "具身智能",
+    "机器人",
+    "人形",
+    "灵巧手",
+    "机械臂",
+    "传感器",
+    "触觉",
+    "视觉",
+    "导航",
+    "自动驾驶",
+    "无人机",
+    "芯片",
+    "半导体",
+    "集成电路",
+    "数据采集",
+    "数据集",
+    "仿真",
+    "模拟器",
+    "合成数据",
+    "训练",
+    "模型",
+    "算法",
+    "大模型",
+    "医疗机器人",
+    "物流机器人",
+    "工业机器人",
+    "智能装备",
+    "电机",
+    "减速器",
+    "激光雷达",
+)
+
+
+def _has_local_scope_foothold(query: str) -> bool:
+    """Whether a query is anchored to the platform's local scope at all.
+
+    Three ways to hold a foothold: (a) the domain inference is not the
+    all-four-domain fallback, i.e. a domain word, an organization name, or an
+    institution-bound person name matched; (b) the query carries a platform
+    subject word (``_PLATFORM_TOPIC_MARKERS``); (c) one of the repository's
+    name extractors recognizes a named subject. (c) is subsumed by (a) for the
+    three extractors ``_infer_domains`` itself consults and is kept explicit
+    for the case where every domain word fires alongside a name.
+
+    Known gap: a bare person name with no role/domain word ("丁文伯是谁") and a
+    name whose shape no extractor recognizes ("请介绍无界智航的相关信息" — no
+    company suffix, no domain word) hold no foothold and execute as Web-only.
+    Widening this needs a real name-shape decision, not another marker guess.
+    """
+    if tuple(_infer_domains(query)) != tuple(_PUBLIC_DOMAINS):
+        return True
+    if any(marker in query for marker in _PLATFORM_TOPIC_MARKERS):
+        return True
+    return (
+        _explicit_organization_name(query) is not None
+        or extract_leading_company_name(query) is not None
+        or extract_institution_person_name(query) is not None
+    )
+
+
 def _contextual_web_search_view(query: str) -> str:
     frame = _question_frame(query)
     relation_term = {
@@ -643,12 +708,21 @@ def _proposal_provider(
                 max_web_results=0,
             )
         relationship_paths = _relationship_path(request)
+        # Routing semantics: `domains` is the candidate scope — which public
+        # domains the plan may draw from, and the contract requires it to stay
+        # non-empty — while `lanes` is the execution set actually run. A
+        # relationship turn is bound to a displayed entity and always executes
+        # locally; a free-text turn with no local-scope foothold has no subject
+        # the local lanes could match, so only the public Web lane executes
+        # rather than sweeping the whole library ("世界上最美丽的女人是谁").
+        local_scope_foothold = True
         if relationship_paths:
             path = relationship_paths[0]
             domains = (path.target_type,)
             lanes = ("relationship", "web")
         else:
             domains = _infer_domains(request.original_query)
+            inherited_local_scope = False
             if (
                 tuple(domains) == tuple(_PUBLIC_DOMAINS)
                 and request.prior_turn_query
@@ -660,7 +734,22 @@ def _proposal_provider(
                 inherited = _infer_domains(request.prior_turn_query)
                 if tuple(inherited) != tuple(_PUBLIC_DOMAINS):
                     domains = inherited
-            lanes = ("exact", "structured", "lexical", "vector", "web")
+                    # Session exemption: an anaphoric follow-up ("还有哪些",
+                    # "有没有更详细的信息", "他有哪些代表性研究成果") names no
+                    # scope of its own, so the inherited local scope IS this
+                    # turn's foothold. Without it the carryover would only
+                    # re-label the candidate scope while the local lanes went
+                    # unexecuted — a follow-up would silently degrade to
+                    # Web-only retrieval.
+                    inherited_local_scope = True
+            local_scope_foothold = inherited_local_scope or _has_local_scope_foothold(
+                request.original_query
+            )
+            lanes = (
+                ("exact", "structured", "lexical", "vector", "web")
+                if local_scope_foothold
+                else ("web",)
+            )
         search_text = (
             _contextual_web_search_view(request.original_query)
             if request.displayed_entity_names
@@ -732,6 +821,19 @@ def _proposal_provider(
                     theme_part = _theme_material_part(request.original_query)
                     if theme_part is not None:
                         material_parts = (theme_part,)
+        # The widened windows exist to reach local suppliers, so a turn with no
+        # local-scope foothold keeps the bundle windows: nothing local executes
+        # for them to widen for.
+        enumeration_window_widened = local_scope_foothold and (
+            (
+                request.enumeration_context is not None
+                and request.enumeration_context.requested
+            )
+            or any(
+                marker in request.original_query
+                for marker in _ENUMERATION_QUERY_MARKERS
+            )
+        )
         return RecordedPlanningProposal(
             proposal_id=f"planning-proposal:serving:{request.request_id}",
             request_sha256=request.content_sha256,
@@ -755,16 +857,7 @@ def _proposal_provider(
                     bundle.max_candidates + bundle.max_web_results,
                     _ENUMERATION_CANDIDATE_WINDOW,
                 )
-                if (
-                    (
-                        request.enumeration_context is not None
-                        and request.enumeration_context.requested
-                    )
-                    or any(
-                        marker in request.original_query
-                        for marker in _ENUMERATION_QUERY_MARKERS
-                    )
-                )
+                if enumeration_window_widened
                 else bundle.max_candidates + bundle.max_web_results
             ),
             max_provider_calls=1,
@@ -778,16 +871,7 @@ def _proposal_provider(
             # (九号 at merged rank 36-43) survive the read-side truncation.
             max_web_results=(
                 max(bundle.max_web_results, _ENUMERATION_CANDIDATE_WINDOW)
-                if (
-                    (
-                        request.enumeration_context is not None
-                        and request.enumeration_context.requested
-                    )
-                    or any(
-                        marker in request.original_query
-                        for marker in _ENUMERATION_QUERY_MARKERS
-                    )
-                )
+                if enumeration_window_widened
                 else bundle.max_web_results
             ),
             professor_vector_view=(
@@ -1557,9 +1641,31 @@ class _DualWebLaneAdapter:
             extras=extras,
         ))[:_SERVING_WEB_MAX_QUERY_VIEWS]
 
+    def _fire_page_prefetch(self, urls: list[str], limit: int) -> None:
+        """LAT-5: warm the page cache while provider futures are still pending.
+
+        The fetcher caches per URL (900 s TTL), so the fetch stage after the
+        merge turns into cache hits for whatever this reaches. A URL that
+        falls out of the final order costs one speculative fetch — no result
+        is ever dropped, and the fetch stage still fetches the final top-N
+        normally."""
+        seen: set[str] = set()
+        for url in urls:
+            if not url or url in seen or url.casefold().endswith(".pdf"):
+                continue
+            seen.add(url)
+            try:
+                self._executor.submit(self._page_fetcher, url)
+            except Exception:  # noqa: BLE001 - prefetch is best-effort
+                return
+            if len(seen) >= limit:
+                return
+
     def _merged_results_for_views(
         self,
         queries: tuple[str, ...],
+        *,
+        prefetch_limit: int = 0,
     ) -> tuple[_NormalizedWebResult, ...]:
         if len(queries) <= 1:
             return self._merged_results(queries[0] if queries else "")
@@ -1589,9 +1695,23 @@ class _DualWebLaneAdapter:
             )
         per_view: list[tuple[_NormalizedWebResult, ...]] = []
         timed_out: set[str] = set()
+        prefetch_started = False
+        arrived_urls: list[str] = []
         for index in range(len(queries)):
             provider_results: dict[str, list[dict[str, Any]]] = {}
             for provider_version in ("bocha-v1", "serper-v1"):
+                future = futures[(index, provider_version)]
+                if (
+                    not prefetch_started
+                    and prefetch_limit > 0
+                    and self._page_fetcher is not None
+                    and arrived_urls
+                    and not future.done()
+                ):
+                    # About to block on a pending provider: the results already
+                    # in hand are enough to start their page fetches.
+                    prefetch_started = True
+                    self._fire_page_prefetch(arrived_urls, prefetch_limit)
                 try:
                     provider_results[provider_version] = futures[
                         (index, provider_version)
@@ -1610,6 +1730,13 @@ class _DualWebLaneAdapter:
                             retried=0,
                             cache_hit=0,
                         )
+                else:
+                    for raw in provider_results[provider_version]:
+                        locator = str(
+                            raw.get("link") or raw.get("url") or ""
+                        ).strip()
+                        if locator:
+                            arrived_urls.append(locator)
             per_view.append(
                 self._normalize_and_order_results(provider_results=provider_results)
             )
@@ -1686,8 +1813,24 @@ class _DualWebLaneAdapter:
             request.query_text,
         ).strip()
         question_frame = _question_frame(request.original_query)
+        # List-style questions get deeper page fetches: company/theme mentions
+        # that bind recall (开普勒/九号 in brand listicles) sit below the
+        # snippet cut, so two fetches miss them. The depth also lifts the
+        # snippet window (6000 chars at depth >= 5), which is what gives
+        # concept questions their page material — do not gate it on the local
+        # foothold without a replacement window. Computed before the merge so
+        # the prefetch below warms exactly the pages this depth will need.
+        fetch_depth = (
+            8
+            if any(
+                marker in request.original_query
+                for marker in _ENUMERATION_QUERY_MARKERS
+            )
+            else 2
+        )
         merged = self._merged_results_for_views(
-            self._request_view_queries(request, query_text)
+            self._request_view_queries(request, query_text),
+            prefetch_limit=fetch_depth,
         )
         gated = _apply_web_subject_consistency(results=merged, request=request)
         gated = _apply_web_topical_floor(results=gated, request=request)
@@ -1725,17 +1868,8 @@ class _DualWebLaneAdapter:
                 retained=len(gated),
                 filtered=len(merged) - len(gated),
             )
-        # List-style questions get deeper page fetches: company/theme mentions
-        # that bind recall (开普勒/九号 in brand listicles) sit below the
-        # snippet cut, so two fetches miss them.
-        fetch_depth = (
-            8
-            if any(
-                marker in request.original_query
-                for marker in _ENUMERATION_QUERY_MARKERS
-            )
-            else 2
-        )
+        # (fetch_depth is computed before the merge — the prefetch warms the
+        # same pages this stage will need.)
         organic = self._enrich_with_page_text(organic, depth=fetch_depth)
         if self._gap_judge is not None and _should_rewrite_serving_query(
             request.original_query
@@ -4406,10 +4540,16 @@ def _serving_supplemental_search(
         # among the dropped); 8 workers keep the batch within the limits
         # while adding at most one extra probe round.
         probe_results: dict[tuple[str, int], tuple[_NormalizedWebResult, ...]] = {}
-        with ThreadPoolExecutor(
+        # LAT-4: exit at the deadline instead of joining slow probes. The loop
+        # below already stops consuming results at `max_wall_seconds`; a
+        # `with ThreadPoolExecutor(...)` then blocks in shutdown() until the
+        # slowest abandoned probe finishes (measured: stage elapsed 12.8 s on
+        # a 10 s budget), and those late results are never read anyway.
+        pool = ThreadPoolExecutor(
             max_workers=min(8, len(query_by_job)),
             thread_name_prefix="canonical-v2-serving-probe",
-        ) as pool:
+        )
+        try:
             future_by_job = {
                 pool.submit(probe, query): job for job, query in query_by_job.items()
             }
@@ -4419,6 +4559,8 @@ def _serving_supplemental_search(
                     probe_results[job] = future.result(timeout=max(0.05, remaining))
                 except Exception:  # noqa: BLE001 - each probe degrades independently
                     continue
+        finally:
+            pool.shutdown(wait=False, cancel_futures=True)
         # LAT-3: judge every job's rule misses in one batched call per chunk
         # instead of one serial judge round-trip per job (the wide-enumeration
         # tail). Findings keep the original job order.

@@ -84,6 +84,15 @@ def is_headline_shaped_name(name: str | None) -> bool:
     return _check(name)
 
 
+def is_question_shaped_subject(name: str | None) -> bool:
+    """Re-exported from canonical_v2_chat for validation check ⑦."""
+    from backend.services.canonical_v2_chat import (
+        soft_subject_question_shaped as _check,
+    )
+
+    return _check(name)
+
+
 _ENUMERATION_MARKERS = ("哪些", "谁", "多少", "几个", "列出")
 
 
@@ -144,6 +153,11 @@ def validate_interpretation(
                 return None
         # ④ headline-shaped names never bind.
         if is_headline_shaped_name(subject.name):
+            return None
+        # ⑦ question-shaped subjects never bind: an interrogative phrase is not
+        # an entity name (the same candidate guard the deterministic
+        # soft-subject derivation uses — see soft_subject_question_shaped).
+        if is_question_shaped_subject(subject.name):
             return None
     # ⑥ enumeration turns never single-subject.
     if query_is_enumeration and interpretation.intent != "enumerate":

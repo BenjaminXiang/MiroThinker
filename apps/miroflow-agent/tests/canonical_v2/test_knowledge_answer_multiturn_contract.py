@@ -2789,6 +2789,13 @@ _S2C_RECALL_IDS = tuple(f"company:s2c-{index:02d}" for index in range(1, 81))
 _S2C_RECALL_NAMES = tuple(
     f"深圳市粤科{index:02d}机器人有限公司" for index in range(1, 81)
 )
+# Topical-floor fixture: the prose-path coverage sentence only ships when the
+# prose already names a recalled local company, so every prose-path scenario
+# carries this extra recalled member. It sits AFTER the scenario's own recall
+# window, so the `unmentioned` set — membership and recall-rank order — stays
+# exactly what each assertion below expects.
+_S2C_PROSE_NAMED_ID = "company:s2c-prose-named"
+_S2C_PROSE_NAMED_NAME = "深圳市举证机器人有限公司"
 
 
 def _s2c_request(
@@ -2900,7 +2907,11 @@ def test_member_coverage_sentence_triggered_by_enumeration_coverage_context() ->
 
 def test_member_coverage_sentence_caps_at_64_with_overflow_count() -> None:
     """AQ-S2d: the sentence names at most 64 recalled members in recall-rank
-    order and discloses the overflow as a count ("等（共 N 家）")."""
+    order and discloses the overflow as a count ("等（共 N 家）").
+
+    The prose names one recalled member (`_S2C_PROSE_NAMED_NAME`, recall rank
+    81) to clear the prose path's topical floor; the 80-member window it also
+    names stays untouched, so the cap and the overflow count are unchanged."""
     module = _answer_module()
     read_module = _read_module()
 
@@ -2909,7 +2920,10 @@ def test_member_coverage_sentence_caps_at_64_with_overflow_count() -> None:
 
     def prose(result: Any) -> Any:
         return module.ProseSynthesisResult(
-            answer_text="这些企业在酒店配送场景各有侧重。",
+            answer_text=(
+                f"{_S2C_PROSE_NAMED_NAME}也属酒店配送场景；"
+                "这些企业各有侧重。"
+            ),
             selected_claim_ids=(),
             selected_handle_ids=(),
         )
@@ -2924,6 +2938,8 @@ def test_member_coverage_sentence_caps_at_64_with_overflow_count() -> None:
             read_module,
             session_id="session:s2c:cap",
             turn_id="turn:s2c:cap:1",
+            company_ids=(*_S2C_RECALL_IDS, _S2C_PROSE_NAMED_ID),
+            company_names=(*_S2C_RECALL_NAMES, _S2C_PROSE_NAMED_NAME),
         )
     )
     assert "深圳市粤科64机器人有限公司" in result.answer_text
@@ -3301,7 +3317,11 @@ def test_member_coverage_sentence_sources_the_recalled_set_beyond_the_claim_wind
 def test_member_coverage_sentence_follows_recall_rank_order() -> None:
     """AQ-S2c: listing order is the recall rank (entity_handles order), not
     the selector's displayed order — a shuffled displayed subset must not
-    reorder the sentence."""
+    reorder the sentence.
+
+    The prose names one recalled member (`_S2C_PROSE_NAMED_NAME`, last in the
+    recall window) to clear the prose path's topical floor; the four-member
+    window it also names is unchanged."""
     module = _answer_module()
     read_module = _read_module()
     recall_ids = (
@@ -3328,7 +3348,7 @@ def test_member_coverage_sentence_follows_recall_rank_order() -> None:
 
     def prose(result: Any) -> Any:
         return module.ProseSynthesisResult(
-            answer_text="这些企业在酒店配送场景各有侧重。",
+            answer_text=f"{_S2C_PROSE_NAMED_NAME}也属酒店配送场景，这些企业各有侧重。",
             selected_claim_ids=(),
             selected_handle_ids=(),
         )
@@ -3343,8 +3363,8 @@ def test_member_coverage_sentence_follows_recall_rank_order() -> None:
             read_module,
             session_id="session:s2c:rank-order",
             turn_id="turn:s2c:rank-order:1",
-            company_ids=recall_ids,
-            company_names=recall_names,
+            company_ids=(*recall_ids, _S2C_PROSE_NAMED_ID),
+            company_names=(*recall_names, _S2C_PROSE_NAMED_NAME),
         )
     )
     assert result.answer_text.endswith(
@@ -3356,7 +3376,11 @@ def test_member_coverage_sentence_follows_recall_rank_order() -> None:
 
 def test_member_coverage_sentence_names_all_resolve_to_recalled_handles() -> None:
     """AQ-S2c no-fabrication: every name the sentence lists resolves back to
-    a recalled handle — the offline mirror of the live P1 property check."""
+    a recalled handle — the offline mirror of the live P1 property check.
+
+    The prose names one recalled member (`_S2C_PROSE_NAMED_NAME`, recall rank
+    81) to clear the prose path's topical floor; the 80-member window it also
+    names is unchanged, so the 64-name listing and its count still hold."""
     module = _answer_module()
     read_module = _read_module()
 
@@ -3365,7 +3389,10 @@ def test_member_coverage_sentence_names_all_resolve_to_recalled_handles() -> Non
 
     def prose(result: Any) -> Any:
         return module.ProseSynthesisResult(
-            answer_text="这些企业在酒店配送场景各有侧重。",
+            answer_text=(
+                f"{_S2C_PROSE_NAMED_NAME}也属酒店配送场景；"
+                "这些企业各有侧重。"
+            ),
             selected_claim_ids=(),
             selected_handle_ids=(),
         )
@@ -3379,6 +3406,8 @@ def test_member_coverage_sentence_names_all_resolve_to_recalled_handles() -> Non
         read_module,
         session_id="session:s2c:no-fabrication",
         turn_id="turn:s2c:no-fabrication:1",
+        company_ids=(*_S2C_RECALL_IDS, _S2C_PROSE_NAMED_ID),
+        company_names=(*_S2C_RECALL_NAMES, _S2C_PROSE_NAMED_NAME),
     )
     result = answer.answer(request)
     prefix = "此外，本次检索还召回以下相关本地企业："
@@ -3401,7 +3430,11 @@ def test_member_coverage_sentence_ignores_interleaved_web_handles() -> None:
     entity_handles mixes canonical companies with web handles. The sentence
     must list only canonical companies in their relative recall-rank order —
     interleaved web handles neither appear nor consume coverage slots (the
-    unit-level lock for the AQ-S2d "fused local half" disclosure semantic)."""
+    unit-level lock for the AQ-S2d "fused local half" disclosure semantic).
+
+    The prose names one extra recalled member (`_S2C_PROSE_NAMED_NAME`) to
+    clear the prose path's topical floor; it sits after the fused window, so
+    the six-member local half and the sentence it produces are unchanged."""
     module = _answer_module()
     read_module = _read_module()
     canonical_ids = tuple(f"company:s2c-mix-{index:02d}" for index in range(1, 7))
@@ -3462,13 +3495,38 @@ def test_member_coverage_sentence_ignores_interleaved_web_handles() -> None:
         )
         for canonical_id, name in zip(canonical_ids, canonical_names, strict=True)
     )
+    # The topical-floor member rides after the fused window: the prose names it,
+    # so it is never part of the listing the assertions inspect.
+    handles = (
+        *handles,
+        _canonical_handle(
+            read_module,
+            canonical_id=_S2C_PROSE_NAMED_ID,
+            domain="company",
+            display_name=_S2C_PROSE_NAMED_NAME,
+            evidence_ids=(f"evidence:{_S2C_PROSE_NAMED_ID}",),
+        ),
+    )
+    items = (
+        *items,
+        _item(
+            read_module,
+            evidence_id=f"evidence:{_S2C_PROSE_NAMED_ID}",
+            object_id=_S2C_PROSE_NAMED_ID,
+            domain="company",
+            subject_id=_S2C_PROSE_NAMED_ID,
+            predicate="preferred_name",
+            value=_S2C_PROSE_NAMED_NAME,
+            snippet=f"{_S2C_PROSE_NAMED_NAME} 是一家深圳机器人企业。",
+        ),
+    )
 
     def selector(inner: Any) -> Any:
         return _proposal(module, inner)
 
     def prose(result: Any) -> Any:
         return module.ProseSynthesisResult(
-            answer_text="这些企业在酒店配送场景各有侧重。",
+            answer_text=f"{_S2C_PROSE_NAMED_NAME}也属酒店配送场景，这些企业各有侧重。",
             selected_claim_ids=(),
             selected_handle_ids=(),
         )
@@ -3495,6 +3553,64 @@ def test_member_coverage_sentence_ignores_interleaved_web_handles() -> None:
         "此外，本次检索还召回以下相关本地企业：" + "、".join(canonical_names) + "。"
     )
     assert "WebCo" not in result.answer_text
+
+
+def test_member_coverage_sentence_requires_a_member_named_by_the_prose() -> None:
+    """Reported case (18296, 37-sample enumeration probe): an enumeration-
+    marked CONCEPT query ("在真实数据采集路线中，有哪些具体方式") swept company
+    handles into the recall window as literal noise while the prose answered
+    the method question and named no company — the coverage sentence used to
+    append the unrelated company list there (18/37 sampled turns carried the
+    sentence, the concept family being the wrong ones). The sentence is a
+    company disclosure, so it now requires the prose to already name at least
+    one recalled local company. The control turn runs the same recall set with
+    a prose that does name one member: the AQ-S2b/S2c disclosure still ships."""
+    module = _answer_module()
+    read_module = _read_module()
+    concept_query = "在真实数据采集路线中，有哪些具体方式"
+
+    def concept_prose(result: Any) -> Any:
+        return module.ProseSynthesisResult(
+            answer_text=(
+                "真实数据采集路线主要有三类：遥操作示教、动作捕捉采集与仿真合成。"
+            ),
+            selected_claim_ids=(),
+            selected_handle_ids=(),
+        )
+
+    concept_answer = module.create_ephemeral_knowledge_answer(
+        answer_selector=_s2b_selector(module),
+        prose_renderer=concept_prose,
+    )
+    concept_result = concept_answer.answer(
+        _s2b_request(
+            module,
+            read_module,
+            session_id="session:coverage-floor:concept",
+            turn_id="turn:coverage-floor:concept:1",
+            query=concept_query,
+        )
+    )
+    assert "此外，本次检索还召回以下相关本地企业：" not in concept_result.answer_text
+    assert not any(
+        name in concept_result.answer_text
+        for name in (*_S2B_COMPANY_NAMES, "深圳市埃普西龙有限公司")
+    )
+
+    control_answer = module.create_ephemeral_knowledge_answer(
+        answer_selector=_s2b_selector(module),
+        prose_renderer=_s2b_prose_alpha_only(module),
+    )
+    control_result = control_answer.answer(
+        _s2b_request(
+            module,
+            read_module,
+            session_id="session:coverage-floor:named",
+            turn_id="turn:coverage-floor:named:1",
+            query=concept_query,
+        )
+    )
+    assert control_result.answer_text.endswith(_S2B_COVERAGE_SENTENCE)
 
 
 def test_attributed_items_failing_grounding_keep_the_degrade() -> None:

@@ -717,3 +717,153 @@ pre-existing load characteristic, not a switch regression.
 
 **Rollback preconditions** verified read-only: `serving-pack-run16-readerbound` and `index-v3-v2` untouched
 (and currently being served by the live line, which is the strongest possible proof a rollback boots).
+
+---
+
+## 9. Routing/disclosure fix (2026-10-13) — customer feedback, two rules, and the re-seal
+
+**Trigger.** Three screenshots from the customer (`问题反馈 1/2/3.png`) taken on the live 18188,
+conversation `zFTIDUZmvfzg` (turn-debug kept under `.agents/runs/close-workbook-gaps/turn-debug/`):
+general-knowledge / concept turns (e.g. 「目前有哪几种主流的JEPA变体？」, 「世界上最美丽的女人是谁」)
+ended with an unconditional 「此外，本次检索还召回以下相关本地企业：A、B…」 tail (up to 64
+companies).
+
+**Two root causes.**
+
+1. `knowledge_answer.py::_enumeration_member_coverage_sentence()` — emitted whenever the turn was an
+   "enumeration" turn (marker words 谁/几种/哪些) and any recalled-but-unmentioned company handle
+   existed; it never looked at whether the prose was about a local entity, and `handle.domain ==
+   "company"` was hardcoded.
+2. `knowledge_serving_isolated.py::_proposal_provider()` + `_infer_domains()` — a query hitting no
+   domain word fell back to **all four domains**, and enumeration markers widened
+   `max_candidates`/`max_web_results` to `_ENUMERATION_CANDIDATE_WINDOW = 128`, so off-topic queries
+   swept the whole pack and produced literal-noise candidates.
+
+**Two rules (the fix; uncommitted working tree).**
+
+- *Disclosure threshold*: the sentence is emitted on the prose path only when the prose names ≥1 of
+  this turn's recalled companies — new parameter `require_mentioned_member`; prose call sites pass
+  True, `_degraded_fallback_text` passes False to keep the fallback wording.
+- *Local-scope foothold*: `_has_local_scope_foothold(query)` = domain-word hit (`_infer_domains()`
+  ≠ all four) ∪ `_PLATFORM_TOPIC_MARKERS` (30 platform topics) ∪ name form
+  (`_explicit_organization_name` / `extract_leading_company_name` / `extract_institution_person_name`)
+  ∪ follow-up inheriting the session's local domain. No foothold ⇒ `lanes=("web",)`, no window
+  widening. `domains` stays non-empty because the A–G contract in `knowledge_read.py` rejects an
+  empty domain list (making "0 domains" semantically honest is an open contract change).
+
+Diff: 2 production files + 2 test files, +461 / −37. New tests: 16 collected cases across 5 test
+functions (answer-side threshold; web-only routing; local lanes kept; session follow-up; plan
+validity). Full `tests/canonical_v2/` directory comparison: failed set unchanged (66 → 66), passed
+1648 → 1664.
+
+**End-to-end evidence (scratch 18296 = fembed pack + fixed code; battery finished 16:20).**
+
+| Check | Method | Result |
+|---|---|---|
+| 37-case route A/B | `/tmp/route-all-before-fix.json` vs `-after-fix.json` | tail sentence **18/37 → 15/37**, none added; only routing changes: q4t1 / q8t2 → web-only (q4t1 still hits in the gate via the web lane) |
+| Screenshot queries | real endpoint (`/tmp/fb-probe.py`) | JEPA 586 chars, tail absent; 最美丽的女人 414 chars, tail absent; 优必选专利 also absent |
+| Replay gate | 7 real sessions / 27 turns | **ALL PASS** (`.worktrees/embedding-switch-line/apps/admin-console/.agents/runs/embedding-model-switch-v2/replay-18296-routingfix/`) |
+| Recall gate | `--diff` vs `baseline.json` | **REVIEW — 0 fail-level, 2 review-level** (q11t1/q15t1 concept wording drift, not entities); vector median **61 → 64** (+3 all/shared/testset, +0 probes); answer hits 31 → 32; candidate hits 22 → 31; citations 239/80 → 200/135; wall 698.7 → 479.1 s |
+
+**Re-seal (done in this slice).** A code change under `canonical_v2/` invalidates the manifest's
+`reader_contract_sha256` (boots would pay the ~285 s replay). The old pack was archived to
+`serving-pack-fembed-v1.pre-routingfix-20261013-162817` and the sealer re-run
+(`fembed-pack-20261013-v1`) — **SEAL_EXIT=0, 41.7 min (16:28:17 → 17:09:58)**. A5 re-read the
+manifest: `reader_contract_sha256 = 972752a919bc…` (identical to the A2 code-side digest),
+`index_marker_sha256 = df594dc5…` (identical to the value the cutover command carries), release
+`candidate-v2-20260922-r1`; five files, same sizes as before. Smoke on the re-sealed pack (18296):
+`health 200 after 300 s`, `Application startup complete`, JEPA turn 1187 chars with the tail
+absent. Note `fast_boot=0` in that log is the `CANONICAL_V2_FAST_BOOT` env flag being unset in
+every command file — by design, not a verification failure; the boot did a full hash pass because
+the manifest changed, wrote a fresh mount receipt (17:12), and later boots reuse it. The index
+needs no rework (its marker carries no code fingerprint) and the serve command/bundle need no
+change (no pack fingerprint) — checked before starting.
+
+**Accepted gaps (recorded, not silently fixed):** bare-name subjects (`丁文伯是谁`,
+`请介绍无界智航的相关信息`) now route web-only, locked by a tripwire test; concept turns
+q13t1/q16t1 still show the tail because their prose genuinely names companies (by design); the
+"0 domains" contract change is deferred for a product decision.
+
+---
+
+## 10. Soft-subject pattern fix (2026-10-13) — question sentences must never bind
+
+**Trigger.** Customer compared the system's answer to 「目前有哪几种主流的JEPA变体？」 with a
+7-category, 40+-variant reference answer and asked to generalize the retrieval-layer problem
+("举一反三"). Diagnosis: the *whole question sentence* was accepted as the soft subject
+(`_search_view` rstrips the trailing ？ while the echo guard compares the raw query; the
+bare-name relaxation accepts any punctuation-free CJK run; the interrogative table lacked the
+哪几/几种/几类 family), and the web subject-consistency gate then used that sentence as a bound
+entity name — **54 web results in, 51 dropped, 1 retained**. Control: 「JEPA有哪些变体？」
+(no marker hit) → 69/69 retained, 0 dropped.
+
+**Fix (chat layer only — seal-neutral: `reader_contract_digest()` covers `canonical_v2/*.py` only).**
+
+- `canonical_v2_chat.py`: the interrogative table is extended (`哪一/哪几/哪种/几种/几类/几款/几家/
+  谁/怎么/如何/为何/是否/多少/几个`), exposed as the shared predicate `soft_subject_question_shaped()`,
+  and `_soft_subject_candidate_ok` consumes it — a single choke point reached by both the injection
+  and the commit derivations. The query-level `_ENUMERATION_MARKERS` is deliberately untouched
+  (also consumed by `_enumeration_planning_context`; widening it would change planning).
+- `canonical_v2_query_interpreter.py`: validation gains check ⑦ (an LLM-resolved subject that echoes
+  the question is rejected; it previously passed check ① "subject in query").
+
+**Evidence (scratch 18296, same fembed pack).**
+
+| Axis | Result |
+|---|---|
+| Question-form matrix (before → after) | 5 leaking forms → **None**; 4 pinned positives unchanged (`优必选公司怎么样`→`优必选公司`, bare names→self); 6 extra new forms → None |
+| JEPA turn trace | **in=75, retained=75, drops={}** (was 54/1/51); answer now carries V-JEPA and V-JEPA 2 |
+| Regression probes | 最美丽女人 480 chars, no tail; 深圳具身 2319 chars (local list still shown, by design); 优必选专利 2289 chars, 31 CN numbers |
+| Replay gate | **ALL PASS** (7/7) |
+| Recall gate `--diff` vs frozen baseline | **REVIEW — 0 fail-level, 1 review-level** (q15t1 wording); answer hits 31→33, candidate hits 22→30, vector median 61→64; round-41's q11t1 review returned to hit (it is one of the whole-sentence-subject cases) |
+| Unit / static | 7-case parameterized matrix + shared predicate + interpreter ⑦ green; adjacent pinned suites 61+46 pass; one failure in the big adapter file reproduced with the change reverted ⇒ pre-existing; ruff check/format deltas identical to HEAD baseline |
+
+**Siblings — found, measured, not fixed (recorded, with reasons).** ① Article-title web handles get
+bound as the session's active anchor by the commit (measured: the JEPA session's turn 2 dropped
+42/45 because the anchor was `160行代码读懂LeCun的JEPA世界模型`); the fix point lives inside the
+sealed package (needs a re-seal) and needs an entity-form policy for web handles. ② Non-question
+topic phrases can still bind. ③ The read-side web window (`max_web_results=8`) and the 1200-char
+snippet window still cap general-question material (75 → 8 evidence items). ④ Partial-token noise
+(JEPA↔EJA/JDK) is not caught by the topical floor. Items ②–④ plus the answer-shape policy are the
+"optimization layers 2–4" awaiting a user decision.
+
+---
+
+## 11. Retrieval latency (2026-10-13) — deadline exits and page-prefetch overlap
+
+Customer feedback: TTFT too long, the retrieval phase in particular. Hard constraint: **no answer
+degradation**. Two content-neutral changes, both inside the sealed `canonical_v2` package:
+
+1. **Probe-pool deadline exit** (`_serving_supplemental_search`): the loop already stops consuming
+   probe results at `max_wall_seconds`; the `with ThreadPoolExecutor(...)` wrapper then blocked in
+   `shutdown()` until the slowest abandoned probe finished (observed: stage elapsed 12.8 s against a
+   10 s budget) — and those late results were never read. Now `pool.shutdown(wait=False,
+   cancel_futures=True)`. Log evidence: "supplemental budget wall-time overrun" 2 → 0 occurrences
+   on the same workload.
+2. **Page-prefetch overlap** (`_merged_results_for_views` + `_fire_page_prefetch`): when the merge
+   loop is about to block on a pending provider future, it fires **one** batch of page fetches for
+   the URLs already in hand (up to the turn's fetch depth; PDFs excluded). The `TieredPageFetcher`
+   caches per URL (900 s TTL), so the fetch stage after the merge becomes cache hits for whatever
+   the prefetch reached. No result is dropped; the final top-N is still fetched normally; a
+   prefetched URL that falls out of the final order costs one speculative fetch and nothing else.
+   Explicit non-goal recorded: gating the refinement round / 8-deep fetch on the local foothold —
+   rejected because the depth also lifts the snippet window to 6000 chars (would reduce material).
+
+**Measured (same instance, A/B; web-lane wall clock / TTFT).**
+
+| Query | web lane | TTFT |
+|---|---|---|
+| JEPA variants | 19.3 s → 14.1 s (another sample ≈ 8 s) | 22.8 s → 17.3 s (other sample 10.4 s) |
+| 深圳具身 | 15.0 s → 7.2 s | 28.2 s → 16.7 s (other sample 13.5 s) |
+| 优必选专利 | 10.4 s ↔ 15.4 s (noise band) | 15.7 s ↔ 15.1 s (noise band) |
+
+**Quality evidence (the no-degradation proof).** Replay gate **ALL PASS (7/7)**. Recall gate
+re-capture vs the frozen baseline: **REVIEW — 0 fail-level, 1 review-level** (q15t1 wording, the
+usual noise-band item); answer entity hits 31 → **34**, candidate-layer hits 22 → **30** (best of
+all captures), vector median +3. In the first capture the q4t2 case missed with the candidate layer
+unavailable; the boot log's traceback shows an `httpx.ReadTimeout` on the **answer-model streaming
+call** (prose synthesis) — external, unrelated to retrieval; the re-capture restored it (7.5 s,
+hit=Y). New unit test: `test_pending_provider_prefetches_pages_during_merge` (pages must be
+fetched while a provider future is still pending); adjacent suites 35 pass / 1 pre-existing red
+(`test_enumeration_lane_fetches_deeper_pages_for_recall` pins the old depth-5 expectation, red at
+HEAD too); ruff deltas identical to HEAD.

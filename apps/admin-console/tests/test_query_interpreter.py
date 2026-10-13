@@ -99,6 +99,20 @@ class TestValidation:
         )
         assert result is None
 
+    def test_question_shaped_subject_rejected(self) -> None:
+        """Check ⑦ (pattern fix 2026-10-13): a subject that echoes the whole
+        question passes check ① ('subject in query') — it must still be
+        rejected: interrogative phrases are not entity names."""
+        question = "目前有哪几种主流的JEPA变体"
+        assert interp.is_question_shaped_subject(question)
+        result = interp.validate_interpretation(
+            _make(question),
+            query="目前有哪几种主流的JEPA变体？",
+            session_manifest_names=(),
+            query_is_enumeration=False,
+        )
+        assert result is None
+
     def test_low_confidence_rejected(self) -> None:
         result = interp.validate_interpretation(
             _make(G1_SUBJECT, confidence=0.5),
