@@ -807,6 +807,75 @@ the `EnvironmentFile` key, since that is the process env).
 
 ---
 
+## 13. Routing / disclosure floors and the re-seal rule (2026-10-13)
+
+Two serving-side rules were added after customer feedback (three screenshots: general-knowledge
+answers carried an unconditional 「此外，本次检索还召回以下相关本地企业：…」 tail listing up to 64
+companies). Both live in the switch line's code:
+
+1. **Disclosure threshold** — `knowledge_answer.py::_enumeration_member_coverage_sentence()` now
+   takes `require_mentioned_member`; the sentence is emitted on the prose path only when the prose
+   itself names at least one of this turn's recalled companies (`_degraded_fallback_text` passes
+   False, preserving the fallback wording).
+2. **Local-scope foothold** — `knowledge_serving_isolated.py::_has_local_scope_foothold(query)`:
+   a query keeps the local lanes only if it hits the domain word list, a `_PLATFORM_TOPIC_MARKERS`
+   term (30 platform topics), a name form (org / leading company / institution-person), or inherits
+   the session's local domain on a follow-up turn. No foothold ⇒ `lanes=("web",)`, and the
+   enumeration candidate window (128) is NOT applied. `domains` stays non-empty — the current A–G
+   contract rejects an empty domain list (making "0 domains" legal needs a contract change; open
+   item, not done here).
+
+**Re-seal rule (operational)**: `reader_contract_sha256` in the sealed manifest is a digest over
+`canonical_v2/*.py`. Any code change there invalidates it; boots then take the ~285 s replay path
+instead of the ~120 s fast path. Re-seal with the same sealer command used for the pack
+(`s12c/build_serving_pack.py --envelope … --index-root …/index-v4-v2 --pack-dir … --expected-release-id
+candidate-v2-20260922-r1 --generator-run-id <new> --pack-schema-version canonical-v2-serving-pack-v2`),
+after archiving the current pack (the sealer requires `--pack-dir` to be absent). Measured 2026-10-13:
+~42 min (the fembed re-seal). **The index does NOT need rework**
+(`.canonical-v2-isolated-index-target.json` carries no code fingerprint) and **the serve command does
+NOT change** (the bundle payload has no pack fingerprint) — do not re-run step 7 or step 10 for a
+code-only change. Prove the pin before spending the 42 minutes (same as step 8): import
+`serving_pack_loader` with the intended `PYTHONPATH` and compare `reader_contract_digest()` with the
+manifest.
+
+**Evidence (2026-10-13, scratch 18296 = fembed pack + fixed code)**: 37-case route A/B — the tail
+sentence 18/37 → 15/37, none added, routing changed only where listed (q4t1 / q8t2 → web-only); both
+screenshot queries now answer without the tail (JEPA 586 chars, 最美丽的女人 414 chars); replay gate
+ALL PASS (7 sessions); recall gate `--diff` vs baseline: REVIEW, 0 fail-level, vector median +3
+(61 → 64), answer hits 31 → 32, candidate hits 22 → 31; unit tests: 16 new cases, zero new
+regressions (the `canonical_v2` directory's failed set is unchanged: 66 → 66).
+
+**Known, accepted gaps**: bare-name subjects (`丁文伯是谁`, `请介绍无界智航的相关信息`) now route
+web-only (a tripwire test locks this); concept turns q13t1/q16t1 still emit the sentence because the
+prose genuinely names companies (by design).
+
+**Identity-slot guard (2026-10-13 pattern fix — chat layer, seal-neutral).** A question sentence can
+no longer become a soft subject: `canonical_v2_chat._SOFT_SUBJECT_QUESTION_MARKERS` covers the
+哪几/几种/几类 family and `_soft_subject_candidate_ok` consumes the shared predicate
+`soft_subject_question_shaped()` (single choke point — injection and commit both pass through it);
+the Phase-6 interpreter gained validation check ⑦ for the same reason. Measured on 18296:
+「目前有哪几种主流的JEPA变体？」 web lane **75 in / 75 retained / 0 drops** (was 54/1/51), and the
+round-41 recall-gate review case q11t1 returned to hit. `reader_contract_digest()` covers only
+`canonical_v2/*.py`, so chat-layer edits need **no re-seal**. Not fixed (recorded): the commit can
+still bind an **article-title web handle as the active anchor** (measured: a follow-up turn dropped
+42/45 on it; fix lives in the sealed package + needs a web-handle entity-form policy); non-question
+topic phrases can still bind; the read-side web window (`max_web_results=8`, 1200-char snippets)
+still caps general-question material; partial-token noise is not caught by the topical floor.
+
+**Retrieval-latency pack (2026-10-13, "no answer degradation" constraint).** Two content-neutral
+changes in the sealed package: (1) the supplemental probe pool exits at its deadline instead of
+`shutdown()`-joining abandoned probes (their results were never read; the stage no longer overruns
+its 10 s budget — log evidence 2 → 0 warnings); (2) **page-prefetch overlap** — when the provider
+merge is about to block, the lane fires one batch of page fetches for the URLs already in hand
+(≤ fetch depth), and the 900 s per-URL fetcher cache turns the later fetch stage into cache hits;
+no result set changes. Measured: JEPA-variant web lane 19.3 → 14.1 s (TTFT 22.8 → 17.3 s, another
+sample 10.4 s), 深圳具身 web lane 15.0 → 7.2 s (TTFT 28.2 → 16.7 s, another sample 13.5 s); replay
+gate ALL PASS, recall gate re-capture 0 fail-level / 1 review at best-yet answer hits (31 → 34).
+Rejected on purpose: gating the refinement round / 8-deep fetch on the local foothold (the depth
+lifts the snippet window to 6000 chars; cutting it reduces material).
+
+---
+
 ## Estimates
 
 ### Embedding pass (the only genuinely new cost)
