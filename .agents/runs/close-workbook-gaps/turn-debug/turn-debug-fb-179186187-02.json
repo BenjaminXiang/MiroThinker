@@ -1,0 +1,895 @@
+{
+  "session_id": "probe:fb-1791861879",
+  "turn_id": "turn:chat:sha256:87b012d0dbfc3c97d5ae778112e3a1299d19f2bdfd3cec3864002c50faeffe1f",
+  "turn_count": 2,
+  "query": "世界上最美丽的女人是谁",
+  "planned_displayed_ids": [],
+  "recalled_handles": [
+    {
+      "id": "company-c-2574a3871e604ee1896520fe",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳美丽策光生物科技有限公司"
+    },
+    {
+      "id": "company-c-3bcefe6472ab0b1abed84844",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳美丽讯网络科技有限公司"
+    },
+    {
+      "id": "company-c-a8e0ea4f797407d2828da484",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "眺月科技（深圳）有限公司"
+    },
+    {
+      "id": "company-c-b4ffb69c741cc48e63930d5a",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市智绘科技有限公司"
+    },
+    {
+      "id": "company-c-d779c0b58a917976c74d9d72",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "简厨科技（深圳）有限公司"
+    },
+    {
+      "id": "company-c-f95563af1ff2fbc8491025ca",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市宜远智能科技有限公司"
+    },
+    {
+      "id": "company-c-9dc9ca3cc2c70a9337c08786",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市思坦科技有限公司"
+    },
+    {
+      "id": "company-c-04c4726f11d1e9338c3cc92e",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市微阳信息技术有限公司"
+    },
+    {
+      "id": "company-c-10892483a557d6d72f679dbb",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳中科世界机器人有限公司"
+    },
+    {
+      "id": "company-c-1cf1809b5ca134a9d0fa0db5",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市智销云科技有限公司"
+    },
+    {
+      "id": "company-c-1d9efdf6c3ed6500af8a4ebc",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市天宏汇成电子科技有限公司"
+    },
+    {
+      "id": "company-c-277383b59a4358641176fc89",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳无界智航科技有限公司"
+    },
+    {
+      "id": "company-c-3300ae2dc5ec29ebe1ca8b95",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳闻储创新科技有限公司"
+    },
+    {
+      "id": "company-c-357443c430848d5ad08e8586",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市智拓欣扬科技有限公司"
+    },
+    {
+      "id": "company-c-36481fd59d0d17ece1bd4954",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳云里物里科技股份有限公司"
+    },
+    {
+      "id": "company-c-385ea876f9b3e9a155b1241e",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市恒之易电子商务有限公司"
+    },
+    {
+      "id": "company-c-3d67b707a5a2b62df5fe0d7b",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市塔雷斯测量设备有限公司"
+    },
+    {
+      "id": "company-c-498e1bd87a678db075fcaba5",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市昇维旭技术有限公司"
+    },
+    {
+      "id": "company-c-50000b8ee3825d751bf2f683",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市欣和电子有限公司"
+    },
+    {
+      "id": "company-c-52b8be7ffeb3715120f32568",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳安维森实业有限公司"
+    },
+    {
+      "id": "company-c-555adfea306497eddda3fed3",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳面元智能科技有限公司"
+    },
+    {
+      "id": "company-c-70fa061f657b661ccf90856f",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "康佳芯盈半导体科技（深圳）有限公司"
+    },
+    {
+      "id": "company-c-75a8d7ae8efe724d21600e3c",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "隐形科技（深圳）有限公司"
+    },
+    {
+      "id": "company-c-7c14b322a2e79347312105b5",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳拜尔洛克生物技术有限公司"
+    },
+    {
+      "id": "company-c-935bdab6385450b5304dcd71",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "建瓴半导体（深圳）有限公司"
+    },
+    {
+      "id": "company-c-9484d4c6a9855db4ce61389b",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市瀚思通汽车电子有限公司"
+    },
+    {
+      "id": "company-c-9a51193bf16049ced0e0a018",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "浦东国际先进技术应用推进中心"
+    },
+    {
+      "id": "company-c-9b12cf41746000ec3ed4f4a4",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市小湾智能有限公司"
+    },
+    {
+      "id": "company-c-a07e1c7792562e465987386e",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市格松科技有限公司"
+    },
+    {
+      "id": "company-c-a26f53e6ff2772d76f05172e",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市知用电子有限公司"
+    },
+    {
+      "id": "company-c-ab72663795ff1809fb6ca887",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "视启未来（深圳）科技有限公司"
+    },
+    {
+      "id": "company-c-af2119054a161bd8fc2df462",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市美丽加互联网有限公司"
+    },
+    {
+      "id": "company-c-b05920953f60968a19b0eec2",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "恒璇机器人关节科技（深圳）有限公司"
+    },
+    {
+      "id": "company-c-b0cdb4130066999355116cfc",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市坚恒发电子有限公司"
+    },
+    {
+      "id": "company-c-bb870c11470a9bf3514638d0",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市海谱纳米光学科技有限公司"
+    },
+    {
+      "id": "company-c-be789e4e9ee179576759d646",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳形拓科技有限公司"
+    },
+    {
+      "id": "company-c-d200d16fb2ab08e2e74484c0",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳安培龙科技股份有限公司"
+    },
+    {
+      "id": "company-c-d5d564196c8fee86066c0cba",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "中科未来世界科技（深圳）有限公司"
+    },
+    {
+      "id": "company-c-de33b174a6f837639e97058b",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市无一设计有限公司"
+    },
+    {
+      "id": "company-c-dfcf416a15d0be1db00ed30f",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市泰高技术有限公司"
+    },
+    {
+      "id": "company-c-ea0fd348dea00f86de7d729e",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "原子世界（深圳）科技有限公司"
+    },
+    {
+      "id": "company-c-ebb0d90bd516545ca515890d",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳赛博格机器人有限公司"
+    },
+    {
+      "id": "company-c-eff1d7e5edf91a6a1621bd8d",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市小山世界科技有限公司"
+    },
+    {
+      "id": "company-c-f2be72add5291b6dbc255ae0",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市微合科技有限公司"
+    },
+    {
+      "id": "company-c-f5bd442f1a327e07351c8c1e",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳墨奇智能技术有限公司"
+    },
+    {
+      "id": "patent-c-997b251b9357f016ee14b13c",
+      "kind": "canonical",
+      "domain": "patent",
+      "display_name": "一种自动化超声扫描方法及系统"
+    },
+    {
+      "id": "professor-c-f1568aca537b4f7154d77c7b",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "刘美"
+    },
+    {
+      "id": "professor-c-54e2de8769ee07752f0012ed",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "苏芷庭"
+    },
+    {
+      "id": "professor-c-e5d2a0ff19f8e0795d59468a",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "江雨馨"
+    },
+    {
+      "id": "professor-c-92ea46cb5b3ed318b3b05aea",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "刘美希"
+    },
+    {
+      "id": "professor-c-840f9d42f5ffc6fc328ba427",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "索娅"
+    },
+    {
+      "id": "professor-c-72b0212ebf9fe04c5fb9a289",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "肖雯琪"
+    },
+    {
+      "id": "professor-c-61c30778b7d0ba098702af99",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "王婷"
+    },
+    {
+      "id": "professor-c-dc4b379e2b2763dc03190285",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "黄蓉"
+    },
+    {
+      "id": "professor-c-b8fa01d818b6c7b3a79af883",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "王璐璐"
+    },
+    {
+      "id": "professor-c-d05d283d6e87cee7c4e0cffb",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "孙莹莹"
+    },
+    {
+      "id": "professor-c-5319864a41165e6b4ed30525",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "卢月丽"
+    },
+    {
+      "id": "professor-c-ff546702e2555945c4760c04",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "姜梦琦"
+    },
+    {
+      "id": "professor-c-4eb4d4bf8a6827152f38e018",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "洪妍"
+    },
+    {
+      "id": "professor-c-62127b51be4bf1b0b717a2bb",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "倪婧娇"
+    },
+    {
+      "id": "professor-c-1946e2b12c200de7770c0e8d",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "王艺瑾"
+    },
+    {
+      "id": "professor-c-5965597c9140bebb0b9fa391",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "关贝贝"
+    },
+    {
+      "id": "professor-c-9d17fb8b23f68bd20c4a5982",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "王丽彩"
+    },
+    {
+      "id": "professor-c-f7110b2287acb3893f4e4da3",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "朱璇"
+    },
+    {
+      "id": "professor-c-c7f33d2a8f68ddd235a62b3d",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "韩佳禾"
+    },
+    {
+      "id": "professor-c-c78a8ded5ebaf457a33dbd65",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "严雅琦"
+    },
+    {
+      "id": "professor-c-17750c7d1519e841475ac07e",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "化梦媛"
+    },
+    {
+      "id": "professor-c-b30ddabd062098539dae7f8b",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "李茜"
+    },
+    {
+      "id": "professor-c-5a912aee9698db281261cdec",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "徐安琪"
+    },
+    {
+      "id": "professor-c-c6047c0817eea2ec09786661",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "万芳"
+    },
+    {
+      "id": "professor-c-84c0b514facaacb017c05d57",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "韩西丽"
+    },
+    {
+      "id": "professor-c-df5bb28fe72cda57789ecb2c",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "赖莎"
+    },
+    {
+      "id": "professor-c-9bcea7ea7b4dba3caa2bf264",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "毛成婷"
+    },
+    {
+      "id": "professor-c-16befbda0616c85363ca4588",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "唐英英"
+    },
+    {
+      "id": "professor-c-1d3c48fb87e99ac83174a0a2",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "戴佳妮"
+    },
+    {
+      "id": "professor-c-aed9de76625c2be171e6c7d7",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "何玥儿"
+    },
+    {
+      "id": "professor-c-17dc4addbdd65c2905dbfa3d",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "郭纾妤"
+    },
+    {
+      "id": "professor-c-452e4d0b0922306c6f55fd2c",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "孙丽媛"
+    },
+    {
+      "id": "professor-c-e443e0cc57f9d24f9818e087",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "韦婷"
+    },
+    {
+      "id": "professor-c-2594bbd4c91527e90ca38b05",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "萧若薇"
+    },
+    {
+      "id": "professor-c-ee208dce053a2e11ccecd06a",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "李颜颜"
+    },
+    {
+      "id": "professor-c-600cdf74abb5e63718f58344",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "张又丹"
+    },
+    {
+      "id": "professor-c-f892d1c87ec0a8ecc29a24b1",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "黄思雅"
+    },
+    {
+      "id": "professor-c-fb9c311292f045da630e729c",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "金春媛"
+    },
+    {
+      "id": "professor-c-6a3477ed4bdecad9a9f64650",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "刘玥扬"
+    },
+    {
+      "id": "professor-c-545acd7f10240894b35dc17c",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "李嘉敏"
+    },
+    {
+      "id": "professor-c-5a801033d808ea39c091145b",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "黄阿莎"
+    },
+    {
+      "id": "professor-c-7fab50ff6d2dc19cdcbb4baa",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "古嘉雯"
+    },
+    {
+      "id": "professor-c-a19514201751edc2c8b3074f",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "王紫璇"
+    },
+    {
+      "id": "professor-c-d975aab4aea80595cf77437b",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "杨文静"
+    },
+    {
+      "id": "professor-c-5f8a209489555b54b5cdb33a",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "杨爱姣"
+    },
+    {
+      "id": "professor-c-45c0e33b84b16311b8c68c1d",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "蒋玉婷"
+    },
+    {
+      "id": "professor-c-3ac36751b708a81976e66d05",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "朱桂妹"
+    },
+    {
+      "id": "professor-c-c64ad29d8b235f9ae4c6743a",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "成沛瑶"
+    },
+    {
+      "id": "professor-c-a8f1d0dbe8a19eca96cb5647",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "杨玉婷"
+    },
+    {
+      "id": "professor-c-f928e35b81173269007a04b9",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "赵璐"
+    },
+    {
+      "id": "professor-c-8a1efd3fd2d0848ee097a221",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "朱艳娇"
+    },
+    {
+      "id": "professor-c-d34669919242a8ccd8d8d680",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "王凤灵"
+    },
+    {
+      "id": "professor-c-d032cf33ec1b5d75bb5460d8",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "唐圆圆"
+    },
+    {
+      "id": "professor-c-f59fa606b9725fac4cc92cd9",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "范雅婷"
+    },
+    {
+      "id": "professor-c-f25013f1f217e7e30f740579",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "吴江月"
+    },
+    {
+      "id": "professor-c-8d4e162dc0d0e27c92cda779",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "廖美华"
+    },
+    {
+      "id": "professor-c-f2cb5a2c7349a4796821cb05",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "魏璐瑶"
+    },
+    {
+      "id": "professor-c-3b36abb754f98ed7f258917c",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "贺云娇"
+    },
+    {
+      "id": "professor-c-51d529182409492a3462514a",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "徐明明"
+    },
+    {
+      "id": "professor-c-c75ffe33e285e12121a84b72",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "王若希"
+    },
+    {
+      "id": "professor-c-1a3d6e3c37dac14810f8f21a",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "杨丽丽"
+    },
+    {
+      "id": "professor-c-c668e3fa56d1190da80836cd",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "季晶静"
+    },
+    {
+      "id": "professor-c-44c821c5ee4f5b16a8f8944a",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "李泳梅"
+    },
+    {
+      "id": "professor-c-01465df11670450546b37acd",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "杜婧"
+    },
+    {
+      "id": "professor-c-1acfb1b36bbe0a27503fd3ef",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "江玉琴"
+    },
+    {
+      "id": "professor-c-9c0d50575550a24daea841c5",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "周佩玲"
+    },
+    {
+      "id": "professor-c-6f1c89793a3ecea74b5ef8b9",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "董思聪"
+    },
+    {
+      "id": "professor-c-b2ed047bc5e48a406e0e4228",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "白韵溪"
+    },
+    {
+      "id": "professor-c-d3dd8b5d915591638e25ded2",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "陈海静"
+    },
+    {
+      "id": "professor-c-e5530f97bfde8b9d74671087",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "潘晓慧"
+    },
+    {
+      "id": "professor-c-47035beb1c9bda8b88276cbb",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "徐婉蓉"
+    },
+    {
+      "id": "professor-c-a3c6664e714096c280f5241f",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "吴丹"
+    },
+    {
+      "id": "professor-c-adb3853dbc33bde0da82c47a",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "宋蜜"
+    },
+    {
+      "id": "professor-c-1e40352bded7b31f3f73dbab",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "王世璇"
+    },
+    {
+      "id": "professor-c-816d379c3a4c54071bfce68e",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "曾翠兰"
+    },
+    {
+      "id": "professor-c-d40b827f5cb1c5017f85e7f0",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "崔爱娇"
+    },
+    {
+      "id": "professor-c-ac3dac08da23e38803fa5c28",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "吉坤美"
+    },
+    {
+      "id": "professor-c-6cce037fef1774525981f859",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "陈金娜"
+    },
+    {
+      "id": "professor-c-1145ffbde633219348889e12",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "王墨晗"
+    },
+    {
+      "id": "professor-c-2ddd543cd7ffe550f108b4a7",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "刘砚月"
+    },
+    {
+      "id": "professor-c-32d956947b0e75207726393e",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "谢晓霞"
+    },
+    {
+      "id": "professor-c-b9e350069dda1e34a19ba2a7",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "隋丞"
+    }
+  ],
+  "evidence_items": {
+    "total": 131,
+    "by_domain": {
+      "company": 48,
+      "patent": 1,
+      "professor": 82
+    },
+    "by_lane": {
+      "lexical": 46,
+      "vector": 85
+    },
+    "by_source_nature": {
+      "local": 131
+    },
+    "with_claim_binding": 131
+  },
+  "protected_slots": [],
+  "requested_traversal": null,
+  "admitted_claims": {
+    "total": 0,
+    "by_predicate": {},
+    "by_claim_type": {},
+    "patent_evidence_claims": 0
+  },
+  "committed_handle_ids": [
+    "company-c-2574a3871e604ee1896520fe",
+    "company-c-3bcefe6472ab0b1abed84844",
+    "company-c-a8e0ea4f797407d2828da484",
+    "company-c-b4ffb69c741cc48e63930d5a",
+    "company-c-d779c0b58a917976c74d9d72",
+    "company-c-f95563af1ff2fbc8491025ca",
+    "company-c-9dc9ca3cc2c70a9337c08786",
+    "company-c-04c4726f11d1e9338c3cc92e",
+    "company-c-10892483a557d6d72f679dbb",
+    "company-c-1cf1809b5ca134a9d0fa0db5",
+    "company-c-1d9efdf6c3ed6500af8a4ebc",
+    "company-c-277383b59a4358641176fc89",
+    "company-c-3300ae2dc5ec29ebe1ca8b95",
+    "company-c-357443c430848d5ad08e8586",
+    "company-c-36481fd59d0d17ece1bd4954",
+    "company-c-385ea876f9b3e9a155b1241e",
+    "company-c-3d67b707a5a2b62df5fe0d7b",
+    "company-c-498e1bd87a678db075fcaba5",
+    "company-c-50000b8ee3825d751bf2f683",
+    "company-c-52b8be7ffeb3715120f32568",
+    "company-c-555adfea306497eddda3fed3",
+    "company-c-70fa061f657b661ccf90856f",
+    "company-c-75a8d7ae8efe724d21600e3c",
+    "company-c-7c14b322a2e79347312105b5",
+    "company-c-935bdab6385450b5304dcd71",
+    "company-c-9484d4c6a9855db4ce61389b",
+    "company-c-9a51193bf16049ced0e0a018",
+    "company-c-9b12cf41746000ec3ed4f4a4",
+    "company-c-a07e1c7792562e465987386e",
+    "company-c-a26f53e6ff2772d76f05172e",
+    "company-c-ab72663795ff1809fb6ca887",
+    "company-c-af2119054a161bd8fc2df462"
+  ],
+  "committed_names": [
+    "深圳美丽策光生物科技有限公司",
+    "深圳美丽讯网络科技有限公司",
+    "眺月科技（深圳）有限公司",
+    "深圳市智绘科技有限公司",
+    "简厨科技（深圳）有限公司",
+    "深圳市宜远智能科技有限公司",
+    "深圳市思坦科技有限公司",
+    "深圳市微阳信息技术有限公司",
+    "深圳中科世界机器人有限公司",
+    "深圳市智销云科技有限公司",
+    "深圳市天宏汇成电子科技有限公司",
+    "深圳无界智航科技有限公司",
+    "深圳闻储创新科技有限公司",
+    "深圳市智拓欣扬科技有限公司",
+    "深圳云里物里科技股份有限公司",
+    "深圳市恒之易电子商务有限公司",
+    "深圳市塔雷斯测量设备有限公司",
+    "深圳市昇维旭技术有限公司",
+    "深圳市欣和电子有限公司",
+    "深圳安维森实业有限公司",
+    "深圳面元智能科技有限公司",
+    "康佳芯盈半导体科技（深圳）有限公司",
+    "隐形科技（深圳）有限公司",
+    "深圳拜尔洛克生物技术有限公司",
+    "建瓴半导体（深圳）有限公司",
+    "深圳市瀚思通汽车电子有限公司",
+    "浦东国际先进技术应用推进中心",
+    "深圳市小湾智能有限公司",
+    "深圳市格松科技有限公司",
+    "深圳市知用电子有限公司",
+    "视启未来（深圳）科技有限公司",
+    "深圳市美丽加互联网有限公司"
+  ],
+  "render_mode": "prose_renderer",
+  "response_mode": "answer",
+  "citations": 0,
+  "answer_chars": 977,
+  "lane_timings": [
+    [
+      "structured",
+      0.0
+    ],
+    [
+      "exact",
+      1.465
+    ],
+    [
+      "vector",
+      2.32
+    ],
+    [
+      "web",
+      28.599
+    ],
+    [
+      "lexical",
+      2.859
+    ]
+  ]
+}

@@ -1,0 +1,890 @@
+{
+  "session_id": "probe:fb-1791861879",
+  "turn_id": "turn:chat:sha256:2b679c353a86696700f662bdfd592de0bd945a4c1f808a2c5877221599236659",
+  "turn_count": 1,
+  "query": "目前有哪几种主流的JEPA变体？",
+  "planned_displayed_ids": [],
+  "recalled_handles": [
+    {
+      "id": "company-c-02930c58b6ed5419419dbf46",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市儒瀚科技有限公司"
+    },
+    {
+      "id": "paper-c-11b21ea74ee4a05935174ed3",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Particle Swarm Optimization With an Aging Leader and Challengers"
+    },
+    {
+      "id": "paper-c-60162fbb5eeb7286e74e8cd9",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Top-k with Skyline Queries: Relaxing the Preference Input while Producing Output of Controllable Size"
+    },
+    {
+      "id": "paper-c-77d6c67a6ab42c3727169c3b",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Mechanism of D-type cyclin recognition by the AMBRA1 E3 ligase receptor"
+    },
+    {
+      "id": "paper-c-7b1f4f722f0eba7d340b266a",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Deep Learning Hierarchical Representations for Image Steganalysis"
+    },
+    {
+      "id": "paper-c-a66e05cd08277e46a092373e",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Structure of the DDB1-AMBRA1 E3 ligase receptor complex linked to cell cycle regulation"
+    },
+    {
+      "id": "paper-c-a988fb081066ecef2ab48c02",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "NFRA-AIC: A RFID Reader Anti-Collision Protocol With Adaptive Interrogation Capacity"
+    },
+    {
+      "id": "company-c-3de41df8638e87b9122b826c",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳揽月动力科技有限公司"
+    },
+    {
+      "id": "paper-c-077880511da750936b32478a",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Root hair developmental regulators orchestrate drought triggered microbiome changes and the interaction with beneficial Rhizobiaceae"
+    },
+    {
+      "id": "paper-c-2c27ec103f5546084801dc54",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Are we ready for a new paradigm shift? A survey on visual deep MLP"
+    },
+    {
+      "id": "paper-c-2ff5ec634b2e7e8103bbc66d",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "NavCoT: Boosting LLM-Based Vision-and-Language Navigation via Learning Disentangled Reasoning"
+    },
+    {
+      "id": "paper-c-338928863bdafeb85b26c9ec",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Adaptive scheduling-based fine-grained greybox fuzzing for cloud-native applications"
+    },
+    {
+      "id": "paper-c-375540ecdaad13f555c78e82",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Class-Variant Margin Normalized Softmax Loss for Deep Face Recognition"
+    },
+    {
+      "id": "paper-c-4587a281a68aea9b2d98201b",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Histidine-Gated Proton-Coupled Electron Transfer to the CuA Site of Nitrous Oxide Reductase"
+    },
+    {
+      "id": "paper-c-4fcc8e5ee1353fc17692922c",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "FIERY1 promotes microRNA accumulation by suppressing rRNA-derived small interfering RNAs in Arabidopsis"
+    },
+    {
+      "id": "paper-c-5d6fa34da55f0b2a1a3cb5a8",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "An AI-designed adenine base editor"
+    },
+    {
+      "id": "paper-c-6111dd8b48d66d0c8b8a9093",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "A Quantitative Survey of Communication Optimizations in Distributed Deep Learning"
+    },
+    {
+      "id": "paper-c-86c3391b7f5cf8f26705d88b",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Retrievals Can Be Detrimental: Unveiling the Backdoor Vulnerability of Retrieval-Augmented Diffusion Models"
+    },
+    {
+      "id": "paper-c-9941c36d9a0ced11fd6c0274",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Cellular traffic prediction via deep state space models with attention mechanism"
+    },
+    {
+      "id": "paper-c-dda11ff88f663c9a647b9d92",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Residual Quotient Learning for Zero-Reference Low-Light Image Enhancement"
+    },
+    {
+      "id": "paper-c-e3e1cfb9621672201bc77802",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Performance analysis and comparison of PoW, PoS and DAG based blockchains"
+    },
+    {
+      "id": "paper-c-f7319bb1167c4690a1a342ef",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Dynamic Low-Rank Instance Adaptation for Universal Neural Image Compression"
+    },
+    {
+      "id": "professor-c-faa8b06d971397266fd4aab1",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "康熙"
+    },
+    {
+      "id": "company-c-0121db92cf682ae47060650e",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市神拓机电股份有限公司"
+    },
+    {
+      "id": "company-c-018519c75ab587fbade26f6c",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市奇普乐芯片技术有限公司"
+    },
+    {
+      "id": "company-c-049298414e97265fe04c51d6",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市恒泰实业投资发展有限公司"
+    },
+    {
+      "id": "company-c-0652566cc9c49dd5537ece83",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市云联志远网络科技有限公司"
+    },
+    {
+      "id": "company-c-08e75d79dafa1105fc7880fb",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳核芯物联科技有限公司"
+    },
+    {
+      "id": "company-c-099f99d1cf8fb666eec6267f",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市鑫鸿云数据科技有限公司"
+    },
+    {
+      "id": "company-c-0b4524a93f224ef5aec79ec0",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市赛晟科技有限公司"
+    },
+    {
+      "id": "company-c-1238eb68d92bb3b8ffae5c1c",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市合正汽车电子有限公司"
+    },
+    {
+      "id": "company-c-15f35646f20be5fdd55239b5",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市恒美兴电子有限公司"
+    },
+    {
+      "id": "company-c-2013dee1876f31e1a30c692a",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "前海七剑科技（深圳）有限公司"
+    },
+    {
+      "id": "company-c-21b64f4b74eeabd67ef5f467",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市数合泰科技有限公司"
+    },
+    {
+      "id": "company-c-27d00c7779af716def50c19a",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "柏科数据技术（深圳）股份有限公司"
+    },
+    {
+      "id": "company-c-2cee4201b2ec5befc0b23db3",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "华斯无微生物科技（深圳）有限公司"
+    },
+    {
+      "id": "company-c-2cf0a6a099fd6fa840908421",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "橙果视界（深圳）科技有限公司"
+    },
+    {
+      "id": "company-c-2eb5cf6c4d2768704401115e",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳声音动力科技有限公司"
+    },
+    {
+      "id": "company-c-31c5c0fc58d7416bccbe14b5",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市智谷天厨科技有限公司"
+    },
+    {
+      "id": "company-c-346eddeb051c9035f779034f",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市诚恒科技有限公司"
+    },
+    {
+      "id": "company-c-34e8280652f6aa75d65952e1",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳爱思企业管理顾问有限公司"
+    },
+    {
+      "id": "company-c-36481fd59d0d17ece1bd4954",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳云里物里科技股份有限公司"
+    },
+    {
+      "id": "company-c-3d1d92769bd8347ec6e4c858",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市天吉机电有限公司"
+    },
+    {
+      "id": "company-c-44fd5a7a3edc11cc693871a4",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市美好创亿医疗科技股份有限公司"
+    },
+    {
+      "id": "company-c-48230cf4bf2e334e60d58570",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市恒宇源科技有限公司"
+    },
+    {
+      "id": "company-c-4c22c6cce1d1edc2e6535255",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳炜世科技有限公司"
+    },
+    {
+      "id": "company-c-4d4662f9e7bb9471786f341c",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "丘脑智能科技（深圳）有限公司"
+    },
+    {
+      "id": "company-c-4f616267df57ea187f761c66",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市杰成电子有限公司"
+    },
+    {
+      "id": "company-c-50000b8ee3825d751bf2f683",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市欣和电子有限公司"
+    },
+    {
+      "id": "company-c-52495e82e1fc2337e4191f9f",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "中科优辰（深圳）科技有限公司"
+    },
+    {
+      "id": "company-c-54a994fd623966c519d3e750",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳华芯集成电路设计有限公司"
+    },
+    {
+      "id": "company-c-57dcce9e020e190324321b8a",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市时和科技有限公司"
+    },
+    {
+      "id": "company-c-606bf1c208fbb15767ab606e",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "心动电波（深圳）科技有限公司"
+    },
+    {
+      "id": "company-c-6fe44fb705c30faadafe7fe1",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳新声半导体有限公司"
+    },
+    {
+      "id": "company-c-72081f47ab183b77afbdf732",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市嘉宝果科技有限公司"
+    },
+    {
+      "id": "company-c-737ad1a3b0bc2674116d4545",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市骏之源电子有限公司"
+    },
+    {
+      "id": "company-c-7934cbeeebe78a8da93a48bf",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市时代速信科技有限公司"
+    },
+    {
+      "id": "company-c-7b8a0064eb145ab7022f9ddb",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市新视野科技有限公司"
+    },
+    {
+      "id": "company-c-7c14b322a2e79347312105b5",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳拜尔洛克生物技术有限公司"
+    },
+    {
+      "id": "company-c-7d81489d95af37c6fe0e086d",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市顾美科技有限公司"
+    },
+    {
+      "id": "company-c-7d8b8bdb5a4bcda9728ef7b0",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市未来智能技术服务有限公司"
+    },
+    {
+      "id": "company-c-7d924955a3a7d649f1a20c83",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "北一半导体科技（广东）有限公司"
+    },
+    {
+      "id": "company-c-7f31c00f8abfb3d7dd819a37",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳腾睿微电子科技有限公司"
+    },
+    {
+      "id": "company-c-82b2790441bde61821c09b32",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市凌研电子科技有限公司"
+    },
+    {
+      "id": "company-c-82c0decb10057659fdabd97d",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市泊吧智能有限公司"
+    },
+    {
+      "id": "company-c-838f3b8df27ec34571c85096",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市先进封装科技有限公司"
+    },
+    {
+      "id": "company-c-856f6085b3922e35508bf84e",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市诠云科技有限公司"
+    },
+    {
+      "id": "company-c-87fb524985ff313b98f6eb76",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市新微云科技有限公司"
+    },
+    {
+      "id": "company-c-8820ff15ddd2f8febea0f3ea",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市埃尔法光电科技有限公司"
+    },
+    {
+      "id": "company-c-8c6dc51f771537851a5b6c1b",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市六度人和科技有限公司"
+    },
+    {
+      "id": "company-c-8dcf5e4b3cedbedb188546e8",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "牛芯半导体（深圳）股份有限公司"
+    },
+    {
+      "id": "company-c-9eaad6ddad490a5be805a00a",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "麦思威科技（深圳）有限责任公司"
+    },
+    {
+      "id": "company-c-a1bd089e8a144023c2d28fa3",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市电速科技有限公司"
+    },
+    {
+      "id": "company-c-a81780303807eef6c905265f",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "咻享智能（深圳）有限公司"
+    },
+    {
+      "id": "company-c-a8e0ea4f797407d2828da484",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "眺月科技（深圳）有限公司"
+    },
+    {
+      "id": "company-c-cdcd04a5dc1baa42a728222c",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市傲鹏伟业软件科技有限公司"
+    },
+    {
+      "id": "company-c-d270d072f3e47e275ea0a05b",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市甲天行科技有限公司"
+    },
+    {
+      "id": "company-c-d6aa4a67e09203f10ce5892b",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市逸步科技有限公司"
+    },
+    {
+      "id": "company-c-dadff40b15c6b9377ef4bb55",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳和锐网络科技有限公司"
+    },
+    {
+      "id": "company-c-dd54f1abecb657a559525bc8",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "寻界科技（深圳）有限公司"
+    },
+    {
+      "id": "company-c-e66715e429dd230e60411cc2",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深氧未来（深圳）科技有限公司"
+    },
+    {
+      "id": "company-c-f0434aedec60c20d82ecb593",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "硅基记忆（深圳）科技有限公司"
+    },
+    {
+      "id": "company-c-f103f44ae82a8a145872008c",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳深度图灵科技有限公司"
+    },
+    {
+      "id": "company-c-f88d5bb1b7951fba35273235",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳星火半导体科技有限公司"
+    },
+    {
+      "id": "paper-c-0012640f52791c83d75827b4",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Chance-Constrained Multiple-Choice Knapsack Problem: Model, Algorithms, and Applications."
+    },
+    {
+      "id": "paper-c-0083f02c06d324bb83986e18",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Molecular architecture and catalytic mechanism of human glycogen debranching enzyme"
+    },
+    {
+      "id": "paper-c-019e601242b29136e9b2af48",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "A linearly convergent doubly stochastic Gauss–Seidel algorithm for solving linear equations and a certain class of over-parameterized optimization problems"
+    },
+    {
+      "id": "paper-c-01a2e1321bced17d2712fd59",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "RIG-I ubiquitination in fish EPC Cells: Site identification and antiviral implications"
+    },
+    {
+      "id": "paper-c-01fb8fa12319ed4a1deb26ce",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "A Unified Dual-Consensus Approach to Distributed Optimization With Globally Coupled Constraints"
+    },
+    {
+      "id": "paper-c-02c60d75ee3a967355a66848",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "R1-ShareVL: Incentivizing Reasoning Capability of Multimodal Large Language Models via Share-GRPO"
+    },
+    {
+      "id": "paper-c-03835884f1c0ee1b187d4261",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "ReinFlow: Fine-tuning Flow Matching Policy with Online Reinforcement Learning"
+    },
+    {
+      "id": "paper-c-063b091fcbbb05d8649f7286",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Investigating typed syntactic dependencies for targeted sentiment classification using graph attention neural network"
+    },
+    {
+      "id": "paper-c-0662152938966ee5e414448b",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "SATMF Suppresses the Premature Senescence Phenotype of the ATM Loss-of-Function Mutant and Improves Its Fertility in Arabidopsis"
+    },
+    {
+      "id": "paper-c-06d329f5929b8d61483901b8",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Ahsa1 and Hsp90 activity confers more severe craniofacial phenotypes in a zebrafish model of hypoparathyroidism, sensorineural deafness and renal dysplasia (HDR)"
+    },
+    {
+      "id": "paper-c-06f8c42a6bb29a1df0ca8c2d",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Improving interoperability between architectural and structural design models: An industry foundation classes-based approach with web-based tools"
+    },
+    {
+      "id": "paper-c-081ad6a29f7a036c19a4bf1e",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Efficient genome editing of genes involved in neural crest development using the CRISPR/Cas9 system in Xenopus embryos"
+    },
+    {
+      "id": "paper-c-082ecec527e2be3b6a8d2692",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Minimum-Degree Distributed Graph Filter Design"
+    },
+    {
+      "id": "paper-c-0878bb93652ad5c437a0c276",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Observation of a C-type short-range antiferromagnetic order in layer spacing expanded FeS"
+    },
+    {
+      "id": "paper-c-095baaac2358de66b2112b46",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "TDPN: Texture and Detail-Preserving Network for Single Image Super-Resolution"
+    },
+    {
+      "id": "paper-c-0ced508282f7ab5c64c9736a",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Functional Hierarchy between Two OSE2 Elements in the Control of Osteocalcin Gene Expression in Vivo"
+    },
+    {
+      "id": "paper-c-0d9799aef2ba4d6da4b65e6a",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "The Conserved Lys-95 Charged Residue Cluster Is Critical for the Homodimerization and Enzyme Activity of Human Ribonucleotide Reductase Small Subunit M2"
+    },
+    {
+      "id": "paper-c-0dec49a1d58a888f58600c5a",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "GAMETOPHYTE DEFECTIVE 1, a Putative Subunit of RNases P/MRP, Is Essential for Female Gametogenesis and Male Competence in Arabidopsis"
+    },
+    {
+      "id": "paper-c-0e5f211246bf72482ab798aa",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Frequency Fitness Assignment"
+    },
+    {
+      "id": "paper-c-0e7a1384b5512c19bb44c03b",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Extended Efficiency Range, Equal-Cell Doherty Amplifier Design Using Explicit Circuit Model"
+    },
+    {
+      "id": "paper-c-0ed4e0477c7362f857687339",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Coordinate descent with arbitrary sampling II: expected separable overapproximation"
+    },
+    {
+      "id": "paper-c-0f56b265129ed57f2a521e59",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Arabidopsis HAK5 under low K+ availability operates as PMF powered high-affinity K+ transporter"
+    },
+    {
+      "id": "paper-c-0fe860cf679b0d29f41b4c76",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Towards Compact 3D Representations via Point Feature Enhancement Masked Autoencoders"
+    },
+    {
+      "id": "paper-c-103243fc27d0d9e14cdec812",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Suppression of OsMDHAR4 enhances heat tolerance by mediating H2O2-induced stomatal closure in rice plants"
+    },
+    {
+      "id": "paper-c-108f96ea730821cea83dcb09",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Yamaguchi K$"
+    },
+    {
+      "id": "paper-c-11cae0230a6ec56e594adb7c",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Leaf Senescence Database v5.0: A Comprehensive Repository for Facilitating Plant Senescence Research"
+    },
+    {
+      "id": "paper-c-11cbf8ba36d734ded54828fc",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Disruption of ppr3, ppr4, ppr6 or ppr10 induces flocculation and filamentous growth in Schizosaccharomyces pombe"
+    },
+    {
+      "id": "paper-c-129315539fee2d129052f0a6",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Cell fate plasticity of xylem-pole-pericycle in Arabidopsis roots"
+    },
+    {
+      "id": "paper-c-13230feeb9b24132b265d5cb",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Tuning the Type 1 Reduction Potential of Multicopper Oxidases: Uncoupling the Effects of Electrostatics and H-Bonding to Histidine Ligands"
+    },
+    {
+      "id": "paper-c-1a4d253123b1c57a95399aa3",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Crystal structure of steroid reductase SRD5A reveals conserved steroid reduction mechanism"
+    },
+    {
+      "id": "paper-c-1b109fd33a548ca2e954de6b",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Finite-Time Convergent Neurodynamics Approach for Precise Grasping of Multi-Finger Robotic Hand"
+    },
+    {
+      "id": "paper-c-1bfbed8e02fb3b5b006c665d",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "CLOCK-ASSOCIATED 1 Inhibits Leaf Senescence in Arabidopsis"
+    },
+    {
+      "id": "paper-c-1d6cb089ac13042facf0c87d",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Multiple factors and features dictate the selective production of ct-siRNA in Arabidopsis"
+    },
+    {
+      "id": "paper-c-1dc0548e534300931aad1b3e",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "A Server Independent Authentication Scheme for RFID Systems"
+    },
+    {
+      "id": "paper-c-1e2590eb6529c035a09718d4",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Low-Cost Anti-Copying 2D Barcode by Exploiting Channel Noise Characteristics"
+    },
+    {
+      "id": "paper-c-203815c613c3d0d8bdebbb02",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Deep Homography Estimation for Visual Place Recognition"
+    },
+    {
+      "id": "paper-c-20cc2eaa6038b521f9013fd0",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "A Predefined-Time Convergent and Noise-Tolerant Zeroing Neural Network Model for Time Variant Quadratic Programming with Application to Robot Motion Planning"
+    },
+    {
+      "id": "paper-c-20cd1a43248aa99f5beddc2f",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Understanding the Molecular Mechanism of Enzyme Dynamics of Ribonuclease A through Protonation/Deprotonation of HIS48"
+    },
+    {
+      "id": "paper-c-2157b86bb64dae3b99adc8f6",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Multispectral LiDAR Point Cloud Classification Using SE-PointNet++"
+    },
+    {
+      "id": "paper-c-21d844abf26d486ab5b06ccb",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Trained Mamba Emulates Online Gradient Descent in In-Context Linear Regression."
+    },
+    {
+      "id": "paper-c-2204cce401e89e2bc7927863",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Intra-data-center traffic engineering with ensemble routing"
+    },
+    {
+      "id": "paper-c-23ce17683854511269b7a9cb",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "KDM5 Interacts with Foxo to Modulate Cellular Levels of Oxidative Stress"
+    },
+    {
+      "id": "paper-c-24841cd431c743e741698d58",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "Sound generated by axisymmetric non-plane entropy waves passing through flow contractions"
+    },
+    {
+      "id": "paper-c-258b33330ccf926dda2d2ae1",
+      "kind": "canonical",
+      "domain": "paper",
+      "display_name": "A unified rate-distortion analysis framework for transform coding"
+    }
+  ],
+  "evidence_items": {
+    "total": 128,
+    "by_domain": {
+      "company": 63,
+      "paper": 64,
+      "professor": 1
+    },
+    "by_lane": {
+      "lexical": 128
+    },
+    "by_source_nature": {
+      "local": 128
+    },
+    "with_claim_binding": 128
+  },
+  "protected_slots": [],
+  "requested_traversal": null,
+  "admitted_claims": {
+    "total": 0,
+    "by_predicate": {},
+    "by_claim_type": {},
+    "patent_evidence_claims": 0
+  },
+  "committed_handle_ids": [
+    "company-c-02930c58b6ed5419419dbf46",
+    "paper-c-11b21ea74ee4a05935174ed3",
+    "paper-c-60162fbb5eeb7286e74e8cd9",
+    "paper-c-77d6c67a6ab42c3727169c3b",
+    "paper-c-7b1f4f722f0eba7d340b266a",
+    "paper-c-a66e05cd08277e46a092373e",
+    "paper-c-a988fb081066ecef2ab48c02",
+    "company-c-3de41df8638e87b9122b826c",
+    "paper-c-077880511da750936b32478a",
+    "paper-c-2c27ec103f5546084801dc54",
+    "paper-c-2ff5ec634b2e7e8103bbc66d",
+    "paper-c-338928863bdafeb85b26c9ec",
+    "paper-c-375540ecdaad13f555c78e82",
+    "paper-c-4587a281a68aea9b2d98201b",
+    "paper-c-4fcc8e5ee1353fc17692922c",
+    "paper-c-5d6fa34da55f0b2a1a3cb5a8",
+    "paper-c-6111dd8b48d66d0c8b8a9093",
+    "paper-c-86c3391b7f5cf8f26705d88b",
+    "paper-c-9941c36d9a0ced11fd6c0274",
+    "paper-c-dda11ff88f663c9a647b9d92",
+    "paper-c-e3e1cfb9621672201bc77802",
+    "paper-c-f7319bb1167c4690a1a342ef",
+    "professor-c-faa8b06d971397266fd4aab1",
+    "company-c-0121db92cf682ae47060650e",
+    "company-c-018519c75ab587fbade26f6c",
+    "company-c-049298414e97265fe04c51d6",
+    "company-c-0652566cc9c49dd5537ece83",
+    "company-c-08e75d79dafa1105fc7880fb",
+    "company-c-099f99d1cf8fb666eec6267f",
+    "company-c-0b4524a93f224ef5aec79ec0",
+    "company-c-1238eb68d92bb3b8ffae5c1c",
+    "company-c-15f35646f20be5fdd55239b5"
+  ],
+  "committed_names": [
+    "深圳市儒瀚科技有限公司",
+    "Particle Swarm Optimization With an Aging Leader and Challengers",
+    "Top-k with Skyline Queries: Relaxing the Preference Input while Producing Output of Controllable Size",
+    "Mechanism of D-type cyclin recognition by the AMBRA1 E3 ligase receptor",
+    "Deep Learning Hierarchical Representations for Image Steganalysis",
+    "Structure of the DDB1-AMBRA1 E3 ligase receptor complex linked to cell cycle regulation",
+    "NFRA-AIC: A RFID Reader Anti-Collision Protocol With Adaptive Interrogation Capacity",
+    "深圳揽月动力科技有限公司",
+    "Root hair developmental regulators orchestrate drought triggered microbiome changes and the interaction with beneficial Rhizobiaceae",
+    "Are we ready for a new paradigm shift? A survey on visual deep MLP",
+    "NavCoT: Boosting LLM-Based Vision-and-Language Navigation via Learning Disentangled Reasoning",
+    "Adaptive scheduling-based fine-grained greybox fuzzing for cloud-native applications",
+    "Class-Variant Margin Normalized Softmax Loss for Deep Face Recognition",
+    "Histidine-Gated Proton-Coupled Electron Transfer to the CuA Site of Nitrous Oxide Reductase",
+    "FIERY1 promotes microRNA accumulation by suppressing rRNA-derived small interfering RNAs in Arabidopsis",
+    "An AI-designed adenine base editor",
+    "A Quantitative Survey of Communication Optimizations in Distributed Deep Learning",
+    "Retrievals Can Be Detrimental: Unveiling the Backdoor Vulnerability of Retrieval-Augmented Diffusion Models",
+    "Cellular traffic prediction via deep state space models with attention mechanism",
+    "Residual Quotient Learning for Zero-Reference Low-Light Image Enhancement",
+    "Performance analysis and comparison of PoW, PoS and DAG based blockchains",
+    "Dynamic Low-Rank Instance Adaptation for Universal Neural Image Compression",
+    "康熙",
+    "深圳市神拓机电股份有限公司",
+    "深圳市奇普乐芯片技术有限公司",
+    "深圳市恒泰实业投资发展有限公司",
+    "深圳市云联志远网络科技有限公司",
+    "深圳核芯物联科技有限公司",
+    "深圳市鑫鸿云数据科技有限公司",
+    "深圳市赛晟科技有限公司",
+    "深圳市合正汽车电子有限公司",
+    "深圳市恒美兴电子有限公司"
+  ],
+  "render_mode": "prose_renderer",
+  "response_mode": "answer",
+  "citations": 0,
+  "answer_chars": 1790,
+  "lane_timings": [
+    [
+      "structured",
+      0.0
+    ],
+    [
+      "vector",
+      1.102
+    ],
+    [
+      "exact",
+      1.208
+    ],
+    [
+      "lexical",
+      3.56
+    ]
+  ]
+}

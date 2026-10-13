@@ -1378,3 +1378,121 @@ conn_test       = ok, 347 ms（兼容路线 404 → DashScope 原生路线 200�
   - 新增的 2 条是 **DB 绑定的集成测试抖动**（`storage/test_title_resolution_cache::test_integration_set_get_roundtrip`、`storage/test_v025_migration::test_v025_adds_professor_admin_action_table`）——同类项在前面的对比里也反复出现/消失（都属于需要预置库的那批），与本次改动无关。写进"已知抖动"清单。
 - **带测试库跑 agent 套件的教训**：设 `DATABASE_URL_TEST` 会把 DB 绑定族从 **skip 变成 run**（299 → 153 skipped），而那批需要**预置好的库**（V 系列 schema + 种子），裸测试库上会成片失败（+103 条）——这不是缺陷，是**用法**。配方已按此更正进 runbook：**agent 用设计模式跑；控制台才用专用库**。
 - **控制台套件**（专用库 + 库标记 + 夹具 + 隔离 fixture）：`124 failed / 1584 passed / 29 skipped / 61 errors`；与活线树（`66 failed / 1486 passed / 61 errors`）逐条比对 **127/129 相同**，差异那 2 条已被隔离 fixture 消掉（0 新增）。
+
+---
+
+## 第 41 轮 · 2026-10-13 · 客户三张截图 → **"出示门槛 + 本地立足点"**：概念/通识问题不再挂企业清单；重封只改身份、不改行为（索引不必重做）
+
+**一、症状与来源（甲方反馈三张截图）**
+
+- 来源：活线 18188 的真实会话 `zFTIDUZmvfzg`（turn-debug 已留档 `.agents/runs/close-workbook-gaps/turn-debug/turn-debug-zFTIDUZmvfzg-0{1..4}.json`；截图即仓库根目录的「问题反馈 1/2/3.png」）。
+- 症状：**通识/概念问题**（例：「目前有哪几种主流的JEPA变体？」「世界上最美丽的女人是谁」）的答案末尾被无条件挂上一句 **「此外，本次检索还召回以下相关本地企业：A、B、C…」**（上限 64 家）——与问题无关的企业清单刷屏。
+
+**二、根因（两处，同一种病：没有门槛）**
+
+1. `knowledge_answer.py::_enumeration_member_coverage_sentence()`：只要本轮是"枚举轮"（标记词含 **谁/几种/哪些**）且存在"召回但正文没提到的 company handle"就输出——**完全不看正文是否在谈本地实体**；且 `handle.domain == "company"` 硬编码（所以只可能出企业）。
+2. `knowledge_serving_isolated.py::_proposal_provider()` + `_infer_domains()`：域词表全不命中时**兜底全四域**；枚举标记命中时把 `max_candidates/max_web_results` 放大到 `_ENUMERATION_CANDIDATE_WINDOW = 128` ⇒ 主题外问题横扫全库、拿到大量字面噪声，喂给上面那句话。
+
+**三、两条规则（修复）**
+
+| 规则 | 内容 | 落点 |
+|---|---|---|
+| **出示门槛** | 该句只在 **prose 渲染路径** 且「正文已点名 ≥1 家本轮召回企业」时才允许出现（新入参 `require_mentioned_member`；prose→True，`_degraded_fallback_text`→False 以保住既有话术规范） | `knowledge_answer.py` |
+| **本地立足点** | `_has_local_scope_foothold(query)` = 域词表命中（`_infer_domains` ≠ 全四域）∪ `_PLATFORM_TOPIC_MARKERS`（30 个平台主题词：具身智能/机器人/芯片/传感器/数据集/…）∪ 名称形态（机构名/企业名/机构人名）∪ **追问继承本地域（会话豁免）**。**无立足点 ⇒ `lanes=("web",)`、不放大枚举窗**；`domains` 保持非空（现契约里"0 域"非法——记入开口项，不在本轮擅改） | `knowledge_serving_isolated.py` |
+
+改动面：2 个生产文件 + 2 个测试文件，`+461 / −37`；新增 **16 条用例**（5 个测试函数，含参数化展开）；**单测零新增回归**——全目录 `tests/canonical_v2/` 逐条比对：failed 集合不变（66 → 66），passed 1648 → 1664（增量全是新用例）；`test_coverage_presentation.py` 未改且保持绿。
+
+**四、验证（真机：18296 = fembed 包 + 修复后代码；三件套一次跑完，16:20 收口）**
+
+| 证据 | 方法 | 结果 |
+|---|---|---|
+| 37 例路由 A/B | `/tmp/route-all-before-fix.json` vs `-after-fix.json`（`route-all.py`） | **含企业召回句 18/37 → 15/37**；消除 q12t1、q15t1、s11；**零新增**；路由仅两处变化：q4t1（「请介绍无界智航的相关信息」）与 q8t2 变 **web-only**——门里 q4t1 仍命中（web 道把证据补上，`hits[无界智航=Y]`） |
+| 截图两例实测 | `/tmp/fb-probe.py` 打真端点 | 「…JEPA变体？」586 字、**含句=False**；「世界上最美丽的女人是谁」414 字、**含句=False**；「优必选有哪些专利」也无句 |
+| replay 门 | 7 段真实会话 / 27 轮 | **ALL PASS**（产物 `…/embedding-model-switch-v2/replay-18296-routingfix/`） |
+| 召回门重采 | 对基线 `baseline.json` 跑 `--diff`（`/tmp/after-routingfix.json`） | **VERDICT: REVIEW — 0 fail 级、2 review 级**；唯一硬闸门 vector median **不降反升**（61→64，四个切片 +3/+3/+3/+0）；answer 实体命中 31→32、候选层 22→31、引用 local/web 239/80→200/135、wall 698.7→479.1s。两条 review 是 **concept 题措辞漂移**（q11t1/q15t1，非实体），属噪声带内（同配置两跑同类漂移 3 条，见第 29 轮标定） |
+
+**五、重封（本片执行）**
+
+封印里记的 `reader_contract_sha256` 是对 `canonical_v2/*.py` 的摘要——**代码一变就失效**，不重封则每次启动要走 ~285 s 的重放路径。故本片：停 18296 → 把旧包归档为 `serving-pack-fembed-v1.pre-routingfix-20261013-162817` → 用切换线树重跑封印器（`fembed-pack-20261013-v1`，16:28 发起）→ **新 digest `972752a919bc…`**（A2 实测；封印完成时由 A5 对 manifest 复核，见补记）。
+
+两处"不必做"已核对：**索引不用重做**（`index-v4-v2` 的标记只含 release/root/target_id/target_kind/forbidden_milvus_paths，不含代码指纹）；**切换命令不用改**（服务 bundle 的 payload 也不含包指纹 ⇒ checker 32/32 仍有效）。
+
+**六、遗留与开口项**
+
+- **"0 域"语义**：现契约（`knowledge_read.py` 两处校验）要求 domains 非空，故主题外问题仍带一个域但只走 web 道；要改成语义诚实的"0 域"需一次 A–G 契约扩展 + OpenSpec change（**待拍板**）。
+- **裸名主体**（「丁文伯是谁」「请介绍无界智航的相关信息」）现判 web-only——已加 tripwire 测试锁现状；若后续发现掉命中再提收法。
+- 仍在出句的 q13t1/q16t1 属**设计内**（正文确实点名了企业）；若要求"概念题一律不出句"需新证据再改。
+- 下一步：重封冒烟 → **步 12 切换**（先修后切）。
+
+**七、封印与冒烟结果（补记，2026-10-13 17:12）**
+
+- **封印完成**：`SEAL_EXIT=0`，耗时 **41.7 min**（16:28:17 → 17:09:58）。A5 对 manifest 复核：`reader_contract_sha256 = 972752a9…`（与 A2 的代码实测值逐字一致）、`index_marker_sha256 = df594dc5…`（与切换命令所载逐字一致）、release `candidate-v2-20260922-r1`；包内 5 文件，尺寸与旧包相同（relationships 3.48 GB、lookup 897 MB、manifest 11.1 MB）。
+- **冒烟通过**：18296 用新封印包启动 → `health 200 after 300s`、`Application startup complete`；JEPA 问句 **1187 字、含句=False**——出示门槛在重封后的包上同样生效。
+- 两个读法澄清：(a) 日志里的 `fast_boot=0` 是环境开关 `CANONICAL_V2_FAST_BOOT` 未被任何命令文件设置（活线/草案/门都是），属既有常态；(b) 本次启动因 manifest 变了而完整校验、并**写下了新的挂载收据**（`serving-pack-fembed-v1.mount-receipt.json`，17:12）——切换后的启动会复用该收据，不再完整校验。
+- 全程活线 18188 未受任何影响（health 200）。
+
+---
+
+## 第 42 轮 · 2026-10-13 · 客户要"JEPA 那种答案" → **检索层同类问题一举反三**：问题句不能再冒充主体（51/54 砍单归零）；排查出同类第二成员并如实记录
+
+**一、起因与定性**
+
+- 客户拿一份"7 大类、40+ 变体"的 JEPA 答案做对照（「目前有哪几种主流的JEPA变体？」），要求系统也能这样答；随后明确"这个在检索层面的问题要举一反三"。
+- 定性（两层，本轮只动第一层）：**①检索层**——答案薄的直接原因是**整句问句被当作"主体"**，身份一致性门据此砍素材（实测 54 进 / 51 丢 / 存活 1；A/B 对照：同义变体问句「JEPA有哪些变体？」不触发该 bug → 69 条全保留、丢弃 0）。**②合成层**——就算素材齐全，读侧 8 条窗口（`max_web_results=8`）与"清单题 ≤12 条、不要穷尽"的答题规范仍把答案压成短清单，这是后续策略切片（已列入规划第 2–4 层，待拍板）。
+
+**二、同类排查（pattern-repair 四车道，先诊断后动手）**
+
+- **修复 2 处**：`canonical_v2_chat._soft_subject_candidate_ok` 候选守卫（疑问词族补齐 `哪一/哪几/哪种/几种/几类/几款/几家/谁/怎么/如何/为何/是否/多少/几个` + 共享谓词 `soft_subject_question_shaped()`；单咽喉，注入点与 commit 点都覆盖）；`canonical_v2_query_interpreter` 校验新增 **⑦**（LLM 解释器的 subject 同样拒绝问句形态——它此前靠"subject in query"放行整句回声）。
+- **排除 6 处**（逐一实测或读码证明问句进不去）：`has_explicit_named_subject`、`extract_leading_company_name`、`extract_institution_person_name`、`_explicit_organization_name`、`referent_history`（handle 派生）、`_matched_bound_entity`（设计上排除软主体）。
+- **记录在案 4 处**（同类不同成员 / 相邻策略，**本轮不修并说明原因**）：① commit 会把**文章标题型 web handle 绑成 active anchor**——同一会话第 2 轮实测被砍 42/45（修复点在封印包内，需重封 +"web handle 实体形态"属策略决策）；② 非问句的 topic 短语仍可绑身份锚；③ 读侧 8 条上限与单条 1200 字符窗；④ 中文检索噪声（JEPA 与 EJA/JDK 部分匹配）未被 topical floor 拦住。
+- **排查发现的陷阱**：query 级 `_ENUMERATION_MARKERS` 被 `_enumeration_planning_context` 消费，往里加"几种"会改变规划——故本轮按**候选级**修，不动它。
+
+**三、实测证据（真机 18296）**
+
+| 轴 | 结果 |
+|---|---|
+| 句式矩阵（修复前 → 后） | 5 个泄漏形态（哪几种/哪几类/有哪几种…）**整句 → None**；4 个钉死正例不变（`优必选公司怎么样`→`优必选公司`、裸名→自身等）；扩展扫描 6 个新形态全 None |
+| JEPA 题 | trace：**`in=75 retained=75 drops={}`**（修复前 54/1/51）；答案出现 **V-JEPA、V-JEPA 2**（修复前只有 I-JEPA/LeWorldModel），含句=False |
+| 回归探针 | 最美丽女人 480 字无句；深圳具身 2319 字（企业清单仍正常出，含句=True 属设计内）；优必选专利 2289 字 / 31 个 CN 号（本地专利通道正常） |
+| replay 门（7 会话） | **ALL PASS** |
+| 召回门 diff（对冻结基线） | **REVIEW — 0 fail 级、1 review**（q15t1 措辞）；answer 实体命中 31→33、候选层 22→30、vector median 61→64；**第 41 轮那条 q11t1 review 回到 hit**（它正是"整句当主体"案例之一） |
+| 单测 / 静态 | 句式矩阵 7 例参数化 + 共享谓词 + interpreter ⑦ 全绿；相邻钉死套件 61+46 全过；大 adapter 文件 151 过、1 条失败经"还原复跑"证明**预存**；ruff check/format 差异与 HEAD 基线逐条相同（预存） |
+
+**四、口径与后续**
+
+- 改动面：2 个生产文件 + 2 个测试文件（`+91/−2`），**全部在 chat 层**——封印身份只覆盖 `canonical_v2` 包，**无需重封**；随步 12 切换一起上线。
+- 距"客户要的那种答案"仍差合成层：README 级窗口/答题形态/（可选）模型知识——见本案规划第 2–4 层；另将本次排查出的 ① 类（标题型 handle 绑锚）与 topic 短语绑身份锚合并为一个待拍板切片。
+
+---
+
+## 第 43 轮 · 2026-10-13 · 检索段 TTFT 优化（"不劣化"硬约束）：两处纯浪费修复 + **页面预取重叠**；质量门证明不劣化
+
+**一、目标与约束**：客户反馈 TTFT 过长（检索段为主）；硬约束＝**不得劣化回答**。
+
+**二、检索段分解（实测）**：JEPA 题 = merge 等慢 provider（~10s）→ 页面抓取（~8s，等最慢页）→ 判缺（~2s）→ 合成；深圳具身 = web 道 ~13s + 探针 ~9s（串行）。
+
+**三、改了什么（两处，全在封印包内）**
+
+| # | 改动 | 性质 |
+|---|---|---|
+| ① | 探针池"到点即返"：`with ThreadPoolExecutor` 退出要 join 慢探针，而那批结果**永远不会被读**（循环已按预算放弃） | 纯浪费（日志证据：超预算告警 2 次 → 0 次） |
+| ② | **页面预取重叠**：合并阶段"即将阻塞等慢 provider"时，先把**已到手结果**的页面抓起来（抓取器 900s 单 URL 缓存）⇒ "等 provider"与"抓页面"从串行变并行 | 结构性、**不丢素材**（最终 top-N 照常抓；未选中的预取页只浪费一次抓取） |
+
+（记录：窗口/深抓门控的两次试探被**主动放弃**——它同时是 6000 字符素材窗，砍掉会劣化；宁可少省。）
+
+**四、实测（同实例 A/B；web 道墙钟 / TTFT）**
+
+| 题 | web 道墙钟 | TTFT |
+|---|---|---|
+| JEPA 变体 | **19.3 → 14.1s**（另一采样 ~8s） | 22.8 → **17.3s**（另次 **10.4s**） |
+| 深圳具身 | **15.0 → 7.2s** | 28.2 → **16.7s**（另次 **13.5s**） |
+| 优必选专利 | 10.4 ↔ 15.4s（噪声带内） | 15.7 ↔ 15.1s（噪声带内） |
+
+**五、质量证据（不劣化）**
+
+- **replay 门：ALL PASS（7/7）**；
+- **召回门重采：0 fail 级、1 review**（q15t1 措辞漂移，属噪声带）；answer 实体命中 **31→34**、候选层 **22→30**（历次采集最好）；vector median +3；
+- 首采里 q4t2（无界智航）的 miss 经 traceback 证实为**回答模型流式读取超时**（`httpx.ReadTimeout` ×prose 流，外部抖动、与检索无关），重采恢复 **7.5s / hit=Y**；
+- 单测 +1（慢 provider 期间必须已开始抓页面）；相邻套件 35 过 / 1 条预存红；ruff 与 HEAD 基线一致。
+
+**六、下一步**：重封（含本轮改动 + join 修复）→ 冒烟 → 切前最终数字 → 步 12 切换。
