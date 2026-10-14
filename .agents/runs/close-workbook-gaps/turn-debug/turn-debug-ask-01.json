@@ -1,0 +1,100 @@
+{
+  "session_id": "probe:ask",
+  "turn_id": "turn:chat:sha256:2d259fa4b9816b12bf106c69d5a3caf8cb1d7ff58e596a0d0ea7a8bcd91f9c43",
+  "turn_count": 1,
+  "query": "国先中心（深圳）是做什么的",
+  "planned_displayed_ids": [],
+  "recalled_handles": [
+    {
+      "id": "web-handle:sha256:6b161b43b3b44e2410f384c017821b4ce6a047358fc7f2c32dba17493d11fdd1",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "光源资本携手国际先进技术应用推进中心(深圳),共建先进技术应用生态  光源新闻"
+    },
+    {
+      "id": "web-handle:sha256:708305df3db981797472edb2a21f71c8126c3bfa137a487a5c100fecc2bddad7",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "光源资本携手国际先进技术应用推进中心(深圳),共建先进技术应用生态 | 光源新闻_腾讯新闻"
+    },
+    {
+      "id": "web-handle:sha256:69e46e3efdd3700a16082c0f820a7a563d886ff3e7a5c49d8cc02076a657a324",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "2024"
+    },
+    {
+      "id": "web-handle:sha256:8f0b951960c184be42409dc4dc7e2ae0e32324a4622d61ac3543321dcf7af08a",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "机构职能-深圳市人民政府发展研究中心"
+    },
+    {
+      "id": "web-handle:sha256:2b37c7823884b1c365c801ba1d26dd9c605f1dffe1439a1e9ba442f7f6131261",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "深圳市人民政府关于印发新一代人工智能发展行动计划（ ..."
+    },
+    {
+      "id": "web-handle:sha256:c27903563f2d3615456d0d2ec64dfc619dd3b580f77bb5952858a5155c6e7371",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "文章详情--广东园林学会"
+    },
+    {
+      "id": "web-handle:sha256:7c4b21104fda88a70a77d3d9af53cafc76b88b351cbed5c00e812ce6aa473495",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "科技部关于支持深圳建设国家新一代人工智能创新发展试验 ..."
+    }
+  ],
+  "evidence_items": {
+    "total": 7,
+    "by_domain": {
+      "professor": 7
+    },
+    "by_lane": {
+      "web": 7
+    },
+    "by_source_nature": {
+      "current_web": 7
+    },
+    "with_claim_binding": 7
+  },
+  "protected_slots": [
+    {
+      "kind": "geography",
+      "value": "深圳",
+      "entity_ids": []
+    }
+  ],
+  "requested_traversal": null,
+  "admitted_claims": {
+    "total": 2,
+    "by_predicate": {
+      "geography": 2
+    },
+    "by_claim_type": {
+      "material_fact": 2
+    },
+    "patent_evidence_claims": 0
+  },
+  "committed_handle_ids": [
+    "web-handle:sha256:6b161b43b3b44e2410f384c017821b4ce6a047358fc7f2c32dba17493d11fdd1",
+    "web-handle:sha256:708305df3db981797472edb2a21f71c8126c3bfa137a487a5c100fecc2bddad7"
+  ],
+  "committed_names": [
+    "光源资本携手国际先进技术应用推进中心(深圳),共建先进技术应用生态  光源新闻",
+    "光源资本携手国际先进技术应用推进中心(深圳),共建先进技术应用生态 | 光源新闻_腾讯新闻"
+  ],
+  "render_mode": "prose_renderer",
+  "response_mode": "answer",
+  "citations": 2,
+  "answer_chars": 235,
+  "lane_timings": [
+    [
+      "web",
+      14.813
+    ]
+  ]
+}

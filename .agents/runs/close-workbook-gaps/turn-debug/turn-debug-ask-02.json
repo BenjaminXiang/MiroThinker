@@ -1,0 +1,112 @@
+{
+  "session_id": "probe:ask",
+  "turn_id": "turn:chat:sha256:ec329601b9af0b1ada6e58be52ee0bc0b58f68057405e232e436f5968f2b157b",
+  "turn_count": 2,
+  "query": "介绍一下国先中心",
+  "planned_displayed_ids": [],
+  "recalled_handles": [
+    {
+      "id": "web-handle:sha256:15c842ecabc4067956a368d676290aa738396013220cf73d9527d1517377adf0",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "广州市发展改革委赋能大湾区国际先进技术应用推进中心三 ..."
+    },
+    {
+      "id": "web-handle:sha256:fdf5997b5c97cb98a80814f4fb3dad40f4e0c6c9f6d9923d9bc638b6fceb0953",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "国际先进技术应用推进中心（合肥）打造世界级推广平台"
+    },
+    {
+      "id": "web-handle:sha256:3cb6c5971b31e918e6cb3dbffb2e7380ba213beadc53d1155f2500a8b5624db5",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "场景创新中心”启动大会暨深海产业发展大会在广州南沙举行"
+    },
+    {
+      "id": "web-handle:sha256:0c90c047237e01f164fd23e0bba07c58563042cb3e92433e1df15ab9694940ce",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "先进技术应用推进超级场景发布会举办合肥国先中心发布三 ..."
+    },
+    {
+      "id": "web-handle:sha256:9fb620443d327cf9f8b72185f8e7ac1cdd35abc8047afdc6f03733fffe651231",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "大湾区两大创新平台在南沙启动"
+    },
+    {
+      "id": "web-handle:sha256:4f26f657c18b0941197db3691982b2500687913a36318bdc9f57160913b96c20",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "合肥出台支持国先中心高质量发展意见"
+    },
+    {
+      "id": "web-handle:sha256:4d58462a2c307b71eb85d82498275f4dc15e64eb2e70b88f2b555793d461888e",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "大湾区国先中心参与共建国家级路空一体测试基地"
+    },
+    {
+      "id": "web-handle:sha256:7f6191a84fc2448c109a99b7bbc1fc2ee05c631b6cfd91a92357032fac46d645",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "粤港澳大湾区应用场景创新中心"
+    }
+  ],
+  "evidence_items": {
+    "total": 8,
+    "by_domain": {
+      "professor": 8
+    },
+    "by_lane": {
+      "web": 8
+    },
+    "by_source_nature": {
+      "current_web": 8
+    },
+    "with_claim_binding": 8
+  },
+  "protected_slots": [],
+  "requested_traversal": null,
+  "admitted_claims": {
+    "total": 8,
+    "by_predicate": {
+      "current_web_result": 8
+    },
+    "by_claim_type": {
+      "material_fact": 8
+    },
+    "patent_evidence_claims": 0
+  },
+  "committed_handle_ids": [
+    "web-handle:sha256:15c842ecabc4067956a368d676290aa738396013220cf73d9527d1517377adf0",
+    "web-handle:sha256:fdf5997b5c97cb98a80814f4fb3dad40f4e0c6c9f6d9923d9bc638b6fceb0953",
+    "web-handle:sha256:3cb6c5971b31e918e6cb3dbffb2e7380ba213beadc53d1155f2500a8b5624db5",
+    "web-handle:sha256:0c90c047237e01f164fd23e0bba07c58563042cb3e92433e1df15ab9694940ce",
+    "web-handle:sha256:9fb620443d327cf9f8b72185f8e7ac1cdd35abc8047afdc6f03733fffe651231",
+    "web-handle:sha256:4f26f657c18b0941197db3691982b2500687913a36318bdc9f57160913b96c20",
+    "web-handle:sha256:4d58462a2c307b71eb85d82498275f4dc15e64eb2e70b88f2b555793d461888e",
+    "web-handle:sha256:7f6191a84fc2448c109a99b7bbc1fc2ee05c631b6cfd91a92357032fac46d645"
+  ],
+  "committed_names": [
+    "广州市发展改革委赋能大湾区国际先进技术应用推进中心三 ...",
+    "国际先进技术应用推进中心（合肥）打造世界级推广平台",
+    "场景创新中心”启动大会暨深海产业发展大会在广州南沙举行",
+    "先进技术应用推进超级场景发布会举办合肥国先中心发布三 ...",
+    "大湾区两大创新平台在南沙启动",
+    "合肥出台支持国先中心高质量发展意见",
+    "大湾区国先中心参与共建国家级路空一体测试基地",
+    "粤港澳大湾区应用场景创新中心"
+  ],
+  "render_mode": "prose_renderer",
+  "response_mode": "answer",
+  "citations": 8,
+  "answer_chars": 843,
+  "lane_timings": [
+    [
+      "web",
+      6.739
+    ]
+  ]
+}

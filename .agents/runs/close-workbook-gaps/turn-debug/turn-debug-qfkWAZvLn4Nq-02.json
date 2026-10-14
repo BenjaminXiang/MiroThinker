@@ -1,0 +1,106 @@
+{
+  "session_id": "session:chat:qfkWAZvLn4NqBYocV2cEM1IGcAEm7t3D",
+  "turn_id": "turn:chat:sha256:dea31ba407bf27d885da065a904f0a5c1d8b9d8c5d6829ed2bfc90b9c4195dda",
+  "turn_count": 2,
+  "query": "有没有更详细的信息",
+  "planned_displayed_ids": [],
+  "recalled_handles": [
+    {
+      "id": "web-handle:sha256:38de9b0b5f2651edf21ac99e9d6affe18d3d8fd0817478008a9e32d2a8fcd508",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "发改委支持创新,国际先进技术应用推进中心有望落户深圳_特别措施_领域_市场准入"
+    },
+    {
+      "id": "web-handle:sha256:05a4251e841b1026eb283431c2f7cea0b61b4daeb722d95f6f43f55ec0546721",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "粤港澳大湾区数字经济研究院（国际先进技术应用推进中心 ..."
+    },
+    {
+      "id": "web-handle:sha256:d84c134baa4f7ce3d5f2b4e90582e3f6ee71402e77f0f01ee7010003c8427d50",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "建重大平台强核心攻关优产业生态深圳新质生产力加速迸发"
+    },
+    {
+      "id": "web-handle:sha256:e0ed472a46581abf18fc65e22a37fabc072a59f8ddcb5cd934be7158412e497a",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "支持国际先进技术应用推进中心（深圳）建设具身智能 ..."
+    },
+    {
+      "id": "web-handle:sha256:abcf667639bbeb6b9abd94fc0d0abcf851455af1a992d8ea2be9bfb5f48ab6b2",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "发改委支持创新，国际先进技术应用推进中心有望落户深圳"
+    },
+    {
+      "id": "web-handle:sha256:18e05c0ab7880de335b48b9c2553496ebed0935a37094bb1e6a661c56fd7d790",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "支持国际先进技术应用推进中心（深圳）建设具身智能 ..."
+    },
+    {
+      "id": "web-handle:sha256:ccf21513b5ec54f4de22035e78118519b0028b0686a2917f52771ffc7b519907",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "国际先进技术应用推进中心"
+    },
+    {
+      "id": "web-handle:sha256:e7ba971dcd36ac173d6123503073e125097bbbcd3ad800ab11949ea3983312ed",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "放宽和优化先进技术应用和产业发展领域市场准入 设立国际先进技术应用推进中心_应用_技术_市场准入"
+    }
+  ],
+  "evidence_items": {
+    "total": 8,
+    "by_domain": {
+      "professor": 8
+    },
+    "by_lane": {
+      "web": 8
+    },
+    "by_source_nature": {
+      "current_web": 8
+    },
+    "with_claim_binding": 8
+  },
+  "protected_slots": [],
+  "requested_traversal": null,
+  "admitted_claims": {
+    "total": 7,
+    "by_predicate": {
+      "current_web_result": 7
+    },
+    "by_claim_type": {
+      "material_fact": 7
+    },
+    "patent_evidence_claims": 0
+  },
+  "committed_handle_ids": [
+    "web-handle:sha256:05a4251e841b1026eb283431c2f7cea0b61b4daeb722d95f6f43f55ec0546721",
+    "web-handle:sha256:d84c134baa4f7ce3d5f2b4e90582e3f6ee71402e77f0f01ee7010003c8427d50",
+    "web-handle:sha256:e0ed472a46581abf18fc65e22a37fabc072a59f8ddcb5cd934be7158412e497a",
+    "web-handle:sha256:ccf21513b5ec54f4de22035e78118519b0028b0686a2917f52771ffc7b519907",
+    "web-handle:sha256:18e05c0ab7880de335b48b9c2553496ebed0935a37094bb1e6a661c56fd7d790"
+  ],
+  "committed_names": [
+    "粤港澳大湾区数字经济研究院（国际先进技术应用推进中心 ...",
+    "建重大平台强核心攻关优产业生态深圳新质生产力加速迸发",
+    "支持国际先进技术应用推进中心（深圳）建设具身智能 ...",
+    "国际先进技术应用推进中心",
+    "支持国际先进技术应用推进中心（深圳）建设具身智能 ..."
+  ],
+  "render_mode": "prose_renderer",
+  "response_mode": "answer",
+  "citations": 7,
+  "answer_chars": 684,
+  "lane_timings": [
+    [
+      "web",
+      12.916
+    ]
+  ]
+}

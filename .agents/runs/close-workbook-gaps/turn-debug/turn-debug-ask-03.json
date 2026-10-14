@@ -1,0 +1,62 @@
+{
+  "session_id": "probe:ask",
+  "turn_id": "turn:chat:sha256:cef2fa690476882bb30b7632fc8509d5a3eb801caac48d742d1aece1a9aa67d9",
+  "turn_count": 3,
+  "query": "介绍一下 国际先进技术应用推进中心（深圳）",
+  "planned_displayed_ids": [],
+  "recalled_handles": [
+    {
+      "id": "web-handle:sha256:4600a549a2229b19bc2649029af0b46b906cb8147e64ef9d5f0f5d1a5bfd15ce",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "光源资本携手国际先进技术应用推进中心(深圳),共建先进技术应用生态  光源新闻"
+    }
+  ],
+  "evidence_items": {
+    "total": 1,
+    "by_domain": {
+      "professor": 1
+    },
+    "by_lane": {
+      "web": 1
+    },
+    "by_source_nature": {
+      "current_web": 1
+    },
+    "with_claim_binding": 1
+  },
+  "protected_slots": [
+    {
+      "kind": "geography",
+      "value": "深圳",
+      "entity_ids": []
+    }
+  ],
+  "requested_traversal": null,
+  "admitted_claims": {
+    "total": 1,
+    "by_predicate": {
+      "geography": 1
+    },
+    "by_claim_type": {
+      "material_fact": 1
+    },
+    "patent_evidence_claims": 0
+  },
+  "committed_handle_ids": [
+    "web-handle:sha256:4600a549a2229b19bc2649029af0b46b906cb8147e64ef9d5f0f5d1a5bfd15ce"
+  ],
+  "committed_names": [
+    "光源资本携手国际先进技术应用推进中心(深圳),共建先进技术应用生态  光源新闻"
+  ],
+  "render_mode": "prose_renderer",
+  "response_mode": "answer",
+  "citations": 1,
+  "answer_chars": 229,
+  "lane_timings": [
+    [
+      "web",
+      1.581
+    ]
+  ]
+}

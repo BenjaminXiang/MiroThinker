@@ -1,0 +1,86 @@
+{
+  "session_id": "session:chat:qfkWAZvLn4NqBYocV2cEM1IGcAEm7t3D",
+  "turn_id": "turn:chat:sha256:44a008e856fdec87622b087964f5f58f47cd36e99299ec267a66ebb3cd781b50",
+  "turn_count": 1,
+  "query": "介绍一下 国际先进技术应用推进中心（深圳）",
+  "planned_displayed_ids": [],
+  "recalled_handles": [
+    {
+      "id": "web-handle:sha256:6642698f0f01113108677e20bbc84fa98ed21006c9cf988c03c63f646661417b",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "粤港澳大湾区数字经济研究院（国际先进技术应用推进中心 ..."
+    },
+    {
+      "id": "web-handle:sha256:601486457ed345a8857ed95ac0698eeeacdf3f7da3ef18ab3411d0cad5c103a0",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "支持国际先进技术应用推进中心（深圳）建设具身智能 ..."
+    },
+    {
+      "id": "web-handle:sha256:be5c565849f3aa09551c05d3d7fe399a0fc65df58ddcee5f5f3a81d9170d8195",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "建重大平台强核心攻关优产业生态深圳新质生产力加速迸发"
+    },
+    {
+      "id": "web-handle:sha256:ca2e66db3d6eb1c1a25b8ec3e7a868b4f95dd2daabfc4a634d2d0792881c4055",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "发改委支持创新，国际先进技术应用推进中心有望落户深圳"
+    }
+  ],
+  "evidence_items": {
+    "total": 4,
+    "by_domain": {
+      "professor": 4
+    },
+    "by_lane": {
+      "web": 4
+    },
+    "by_source_nature": {
+      "current_web": 4
+    },
+    "with_claim_binding": 4
+  },
+  "protected_slots": [
+    {
+      "kind": "geography",
+      "value": "深圳",
+      "entity_ids": []
+    }
+  ],
+  "requested_traversal": null,
+  "admitted_claims": {
+    "total": 4,
+    "by_predicate": {
+      "geography": 4
+    },
+    "by_claim_type": {
+      "material_fact": 4
+    },
+    "patent_evidence_claims": 0
+  },
+  "committed_handle_ids": [
+    "web-handle:sha256:be5c565849f3aa09551c05d3d7fe399a0fc65df58ddcee5f5f3a81d9170d8195",
+    "web-handle:sha256:ca2e66db3d6eb1c1a25b8ec3e7a868b4f95dd2daabfc4a634d2d0792881c4055",
+    "web-handle:sha256:6642698f0f01113108677e20bbc84fa98ed21006c9cf988c03c63f646661417b",
+    "web-handle:sha256:601486457ed345a8857ed95ac0698eeeacdf3f7da3ef18ab3411d0cad5c103a0"
+  ],
+  "committed_names": [
+    "建重大平台强核心攻关优产业生态深圳新质生产力加速迸发",
+    "发改委支持创新，国际先进技术应用推进中心有望落户深圳",
+    "粤港澳大湾区数字经济研究院（国际先进技术应用推进中心 ...",
+    "支持国际先进技术应用推进中心（深圳）建设具身智能 ..."
+  ],
+  "render_mode": "prose_renderer",
+  "response_mode": "answer",
+  "citations": 4,
+  "answer_chars": 353,
+  "lane_timings": [
+    [
+      "web",
+      10.168
+    ]
+  ]
+}

@@ -1,0 +1,110 @@
+{
+  "session_id": "session:chat:qWr_yR0Gun9GR0YtXbX9Vsco8MiscZA-",
+  "turn_id": "turn:chat:sha256:fb13e806e64f32d55de154e2ef8e428252a186e6f584228bba4120e4e70e8e02",
+  "turn_count": 1,
+  "query": "优必选科技怎么样",
+  "planned_displayed_ids": [],
+  "recalled_handles": [
+    {
+      "id": "web-handle:sha256:401c04742c4ec74cfd2f879a87e595a51403a63cce131385bb977f008ceb7be7",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "「优必选怎么样」深圳市优必选科技股份有限公司 - 企查查"
+    },
+    {
+      "id": "web-handle:sha256:735acd5ea33458230eda0fed1bc6766a7365e8955bc95f5f2e61f39855408749",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "UBTECH 优必选官网-智能服务机器人领导者"
+    },
+    {
+      "id": "web-handle:sha256:aec9c54de45b870fabacb9937e51fef2403526bdf5a9865e339d0f82156d7ef2",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "优必选科技"
+    },
+    {
+      "id": "web-handle:sha256:7e2049234d94f2fab30cf95c11e8b3e02ba06b54794c0468180f4a7bbc97cbcc",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "深圳市优必选科技股份有限公司-特种装备网"
+    },
+    {
+      "id": "web-handle:sha256:a1b07bbee84af38d2c450ae04410d814b5025bc0eb44070d15cfd65e01ffa27c",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "深圳市优必选科技股份有限公司"
+    },
+    {
+      "id": "web-handle:sha256:c7b0ba9bdeceb6f4fed2f23bf2e616659cd37c8bcb851a3e5cf2cdc3585ea628",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "「优必选怎么样」深圳市优必选科技股份有限公司 - 职友集"
+    },
+    {
+      "id": "web-handle:sha256:77fec4179bee3d4959cc2086d97d75b744b089f9d8a3611d231c73914bdc16db",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "优必选"
+    },
+    {
+      "id": "web-handle:sha256:12a4d2e1af1ff3e5bfa9acdd817ac7ba060376526bb1c2c91ef994e76394021a",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "深圳市优必选科技股份有限公司 - 企查查"
+    }
+  ],
+  "evidence_items": {
+    "total": 8,
+    "by_domain": {
+      "professor": 8
+    },
+    "by_lane": {
+      "web": 8
+    },
+    "by_source_nature": {
+      "current_web": 8
+    },
+    "with_claim_binding": 8
+  },
+  "protected_slots": [],
+  "requested_traversal": null,
+  "admitted_claims": {
+    "total": 7,
+    "by_predicate": {
+      "current_web_result": 7
+    },
+    "by_claim_type": {
+      "material_fact": 7
+    },
+    "patent_evidence_claims": 0
+  },
+  "committed_handle_ids": [
+    "web-handle:sha256:735acd5ea33458230eda0fed1bc6766a7365e8955bc95f5f2e61f39855408749",
+    "web-handle:sha256:aec9c54de45b870fabacb9937e51fef2403526bdf5a9865e339d0f82156d7ef2",
+    "web-handle:sha256:7e2049234d94f2fab30cf95c11e8b3e02ba06b54794c0468180f4a7bbc97cbcc",
+    "web-handle:sha256:a1b07bbee84af38d2c450ae04410d814b5025bc0eb44070d15cfd65e01ffa27c",
+    "web-handle:sha256:c7b0ba9bdeceb6f4fed2f23bf2e616659cd37c8bcb851a3e5cf2cdc3585ea628",
+    "web-handle:sha256:77fec4179bee3d4959cc2086d97d75b744b089f9d8a3611d231c73914bdc16db",
+    "web-handle:sha256:12a4d2e1af1ff3e5bfa9acdd817ac7ba060376526bb1c2c91ef994e76394021a"
+  ],
+  "committed_names": [
+    "UBTECH 优必选官网-智能服务机器人领导者",
+    "优必选科技",
+    "深圳市优必选科技股份有限公司-特种装备网",
+    "深圳市优必选科技股份有限公司",
+    "「优必选怎么样」深圳市优必选科技股份有限公司 - 职友集",
+    "优必选",
+    "深圳市优必选科技股份有限公司 - 企查查"
+  ],
+  "render_mode": "prose_renderer",
+  "response_mode": "answer",
+  "citations": 7,
+  "answer_chars": 511,
+  "lane_timings": [
+    [
+      "web",
+      4.34
+    ]
+  ]
+}

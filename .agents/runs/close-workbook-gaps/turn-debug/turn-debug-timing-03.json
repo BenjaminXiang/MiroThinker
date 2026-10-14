@@ -1,0 +1,104 @@
+{
+  "session_id": "probe:timing",
+  "turn_id": "turn:chat:sha256:0bea5c4e9d048c4d729c06807dcd94a87f66ebef8d3a58b39bcf52677760a6fe",
+  "turn_count": 3,
+  "query": "目前主流的JEPA（联合嵌入预测架构）变体有哪些",
+  "planned_displayed_ids": [],
+  "recalled_handles": [
+    {
+      "id": "web-handle:sha256:e9d098752f8942720eb69de7e976ee51172e3705aada11b1507dc748de7231ee",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "虚拟细胞每日研究进展2026-10-03医药新闻-ByDrug-一站式医药资源共享中心-医药魔方"
+    },
+    {
+      "id": "web-handle:sha256:0660158320840a44fca682ab90e01b17bf1d1679a61d9e41a682ca355403891a",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "联合嵌入预测架构(JEPA)"
+    },
+    {
+      "id": "web-handle:sha256:2bb94f4bad33704af65e3b0677a4d3ed01fda8d18dc2fc96d75da35febadc70b",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "RoboJEPA:扩展机器人潜在世界模型 - 今日头条"
+    },
+    {
+      "id": "web-handle:sha256:83afe439b7f843df525a58cd4c65cc337673fdb9fc8b5d85a08892f547c1c967",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "联合嵌入预测架构（JEPA）：从理论构想到世界模型的实践之路"
+    },
+    {
+      "id": "web-handle:sha256:fce8600a8c3802743811f50deacff9f82215dbea6e0220191edaa809e3312645",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "JEPA-Anything: Learning Predictive Models across Different Worlds - 智源社区论文"
+    },
+    {
+      "id": "web-handle:sha256:8bce87d8f4d0b597ef03dc892024334907312fd7ea38cc6a778337a67fa6b9bc",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "JEPA（联合嵌入预测架构）的技术演进（上）"
+    },
+    {
+      "id": "web-handle:sha256:e8f4b255be997f5cf5f4812d554cd49681e2271a002ea53066b131e0d0a8ff74",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "MotionJEPA: Preventing Temporal Feature Collapse by Capturing Visual Changes in Latent Space - 智源社区论文"
+    },
+    {
+      "id": "web-handle:sha256:87b21463afd59dd921f011e8d9c51229dc642f0f5ffeefe5a04f128c8a5fb0c2",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "我们离世界模型还有多远？Yann LeCun提出的自主机器智能 ..."
+    }
+  ],
+  "evidence_items": {
+    "total": 8,
+    "by_domain": {
+      "professor": 8
+    },
+    "by_lane": {
+      "web": 8
+    },
+    "by_source_nature": {
+      "current_web": 8
+    },
+    "with_claim_binding": 8
+  },
+  "protected_slots": [],
+  "requested_traversal": null,
+  "admitted_claims": {
+    "total": 7,
+    "by_predicate": {
+      "current_web_result": 7
+    },
+    "by_claim_type": {
+      "material_fact": 7
+    },
+    "patent_evidence_claims": 0
+  },
+  "committed_handle_ids": [
+    "web-handle:sha256:0660158320840a44fca682ab90e01b17bf1d1679a61d9e41a682ca355403891a",
+    "web-handle:sha256:2bb94f4bad33704af65e3b0677a4d3ed01fda8d18dc2fc96d75da35febadc70b",
+    "web-handle:sha256:fce8600a8c3802743811f50deacff9f82215dbea6e0220191edaa809e3312645",
+    "web-handle:sha256:e8f4b255be997f5cf5f4812d554cd49681e2271a002ea53066b131e0d0a8ff74"
+  ],
+  "committed_names": [
+    "联合嵌入预测架构(JEPA)",
+    "RoboJEPA:扩展机器人潜在世界模型 - 今日头条",
+    "JEPA-Anything: Learning Predictive Models across Different Worlds - 智源社区论文",
+    "MotionJEPA: Preventing Temporal Feature Collapse by Capturing Visual Changes in Latent Space - 智源社区论文"
+  ],
+  "render_mode": "prose_renderer",
+  "response_mode": "answer",
+  "citations": 7,
+  "answer_chars": 618,
+  "lane_timings": [
+    [
+      "web",
+      3.595
+    ]
+  ]
+}

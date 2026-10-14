@@ -1,0 +1,108 @@
+{
+  "session_id": "session:chat:qRDQR9ifc-jgL6Ws2ZjTBhTeuF-XpPSK",
+  "turn_id": "turn:chat:sha256:6eda9ff2d609744b0b65f367d5a1ca165d26a4355349cd16622fc98ff07df1b8",
+  "turn_count": 1,
+  "query": "国际先进技术应用推进中心（深圳）",
+  "planned_displayed_ids": [],
+  "recalled_handles": [
+    {
+      "id": "web-handle:sha256:47567344b7da95a23a2afd184a48cd1df84ad0531c53fde17c45db81f045606d",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "粤港澳大湾区数字经济研究院（国际先进技术应用推进中心 ..."
+    },
+    {
+      "id": "web-handle:sha256:88ba2d3cf6bbdaa1ba97f463b14af36880b0adc6ad31fdca6f2decd7d4ee07e4",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "支持国际先进技术应用推进中心（深圳）建设具身智能 ..."
+    },
+    {
+      "id": "web-handle:sha256:068d3265728c3c1ba79ea9d6bc47455ef86a2a96e72228023d7bad3b4880e808",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "建重大平台强核心攻关优产业生态深圳新质生产力加速迸发"
+    },
+    {
+      "id": "web-handle:sha256:921b26f514dc89c10de9f87467a644f70db3d08b2e71fffee6ad144b1322a8ce",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "发改委支持创新，国际先进技术应用推进中心有望落户深圳"
+    },
+    {
+      "id": "web-handle:sha256:cbed033056746d8cdb68d68fd32b9504ca576fa6c26b0480cba03ce5bc40b438",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "粤港澳大湾区数字经济研究院（国际先进技术应用推进中心 ..."
+    },
+    {
+      "id": "web-handle:sha256:102f3d82098bcd45a5e356fe67b9c260c637b589dfde2a54a702da179e25424e",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "河套深圳园区打造深港科技创新聚集地"
+    },
+    {
+      "id": "web-handle:sha256:537bdb1c497a7574860d52182542a016b4fae29b676dec31201337a6c5b46c5a",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "斯坦德携手国际先进技术应用推进中心（深圳），开启工业具身 ..."
+    },
+    {
+      "id": "web-handle:sha256:0910f4b292d565b1d862de7f232804ce43ebbec7747684ae0d64302bf2c1c591",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "支持国际先进技术应用推进中心（深圳）建设具身智能 ..."
+    }
+  ],
+  "evidence_items": {
+    "total": 8,
+    "by_domain": {
+      "professor": 8
+    },
+    "by_lane": {
+      "web": 8
+    },
+    "by_source_nature": {
+      "current_web": 8
+    },
+    "with_claim_binding": 8
+  },
+  "protected_slots": [
+    {
+      "kind": "geography",
+      "value": "深圳",
+      "entity_ids": []
+    }
+  ],
+  "requested_traversal": null,
+  "admitted_claims": {
+    "total": 5,
+    "by_predicate": {
+      "geography": 5
+    },
+    "by_claim_type": {
+      "material_fact": 5
+    },
+    "patent_evidence_claims": 0
+  },
+  "committed_handle_ids": [
+    "web-handle:sha256:47567344b7da95a23a2afd184a48cd1df84ad0531c53fde17c45db81f045606d",
+    "web-handle:sha256:102f3d82098bcd45a5e356fe67b9c260c637b589dfde2a54a702da179e25424e",
+    "web-handle:sha256:537bdb1c497a7574860d52182542a016b4fae29b676dec31201337a6c5b46c5a"
+  ],
+  "committed_names": [
+    "粤港澳大湾区数字经济研究院（国际先进技术应用推进中心 ...",
+    "河套深圳园区打造深港科技创新聚集地",
+    "斯坦德携手国际先进技术应用推进中心（深圳），开启工业具身 ..."
+  ],
+  "render_mode": "prose_renderer",
+  "response_mode": "answer",
+  "citations": 5,
+  "answer_chars": 360,
+  "lane_timings": [
+    [
+      "web",
+      10.798
+    ]
+  ]
+}

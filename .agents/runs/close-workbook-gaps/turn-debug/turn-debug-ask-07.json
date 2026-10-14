@@ -1,0 +1,100 @@
+{
+  "session_id": "probe:ask",
+  "turn_id": "turn:chat:sha256:c633c5cf4a47aa6746cfabd2f6f532c7dbc4dfe84f85716248f0b225e2845aab",
+  "turn_count": 7,
+  "query": "深圳国际先进技术应用推进中心",
+  "planned_displayed_ids": [],
+  "recalled_handles": [
+    {
+      "id": "web-handle:sha256:58e0c1b205c180375a20358c5c713957fce8e6868f5b0ce90ca2f07f0b2a145d",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "中国科学院深圳先进技术研究院"
+    },
+    {
+      "id": "web-handle:sha256:5ace153cb0ae388228d721b422dfbfe1dd040c4cb461e25f578b675f6792bd43",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "简介----中国科学院深圳先进技术研究院"
+    },
+    {
+      "id": "web-handle:sha256:c3b7f93931acd7cd4793359603a559406981360bad19d5a2ac28b737596e570f",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "机构简介--中国科学院深圳先进技术研究院"
+    },
+    {
+      "id": "web-handle:sha256:bb40349e7e367202c0802116ed7b7e6d083c52be2a1400cfe637efed52a90c5c",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "简介----中国科学院深圳先进技术研究院"
+    },
+    {
+      "id": "web-handle:sha256:69a1c105c79d30857c6031453b9d67cb55fd5582f934d1de7bbed27697028014",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "简介----中国科学院深圳先进技术研究院"
+    },
+    {
+      "id": "web-handle:sha256:b98772f2d9eac830f4c9c51cf57f17a2cc35f57d21dadd35eca4be8c882460df",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "中国科学院深圳先进技术研究院2026年诚邀全球英才"
+    },
+    {
+      "id": "web-handle:sha256:c426cfd574ac3ae030cc5fe2fb2847953d828afd02d666410220b555698cf542",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "支撑平台处----中国科学院深圳先进技术研究院"
+    }
+  ],
+  "evidence_items": {
+    "total": 7,
+    "by_domain": {
+      "professor": 7
+    },
+    "by_lane": {
+      "web": 7
+    },
+    "by_source_nature": {
+      "current_web": 7
+    },
+    "with_claim_binding": 7
+  },
+  "protected_slots": [
+    {
+      "kind": "geography",
+      "value": "深圳",
+      "entity_ids": []
+    }
+  ],
+  "requested_traversal": null,
+  "admitted_claims": {
+    "total": 5,
+    "by_predicate": {
+      "geography": 5
+    },
+    "by_claim_type": {
+      "material_fact": 5
+    },
+    "patent_evidence_claims": 0
+  },
+  "committed_handle_ids": [
+    "web-handle:sha256:58e0c1b205c180375a20358c5c713957fce8e6868f5b0ce90ca2f07f0b2a145d",
+    "web-handle:sha256:b98772f2d9eac830f4c9c51cf57f17a2cc35f57d21dadd35eca4be8c882460df"
+  ],
+  "committed_names": [
+    "中国科学院深圳先进技术研究院",
+    "中国科学院深圳先进技术研究院2026年诚邀全球英才"
+  ],
+  "render_mode": "prose_renderer",
+  "response_mode": "answer",
+  "citations": 5,
+  "answer_chars": 362,
+  "lane_timings": [
+    [
+      "web",
+      6.509
+    ]
+  ]
+}

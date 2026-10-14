@@ -1,0 +1,104 @@
+{
+  "session_id": "probe:accuracy-latency",
+  "turn_id": "turn:chat:sha256:2651b72ee8a82badf31920856ab2965438298bb351e53a35b2e92365e2ce8253",
+  "turn_count": 4,
+  "query": "详细介绍国先中心（深圳）",
+  "planned_displayed_ids": [],
+  "recalled_handles": [
+    {
+      "id": "web-handle:sha256:78abf3c68ceccc437ae388fc869f746b151b8ca97f53bbeace6336696cc93cec",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "多彩深圳——减肥达人训练营深圳国贸营地简介"
+    },
+    {
+      "id": "web-handle:sha256:9bda90a58f1e5494e2e8f216dd3673e3e850f497ddc3a506c85a7c717a00d6f0",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "百步先(深圳〉信息技术有限公司"
+    },
+    {
+      "id": "web-handle:sha256:7f70fbb7705bd698a29926c89e10cf1c3948e9ca49a9c3125031c8ec71198d41",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "建重大平台强核心攻关优产业生态深圳新质生产力加速迸发"
+    },
+    {
+      "id": "web-handle:sha256:932261f4fd384457936b51138d97b3c22fe4d156e0bb0cda5bc3d755917e67b5",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "南开国际先进研究院(深圳福田)"
+    },
+    {
+      "id": "web-handle:sha256:2f2a4b857aab68a8766baa1fdffb5dc1d98a2cdef0cc9b3e7d3f827b76449c1d",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "大湾区国创中心国际总部开工，打造技术创新与成果转化新引擎"
+    },
+    {
+      "id": "web-handle:sha256:fc57da290d541da9f030bd7c4769b74d1c9b2b8b5bf1c2d9985cd7c73f5cd58d",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "深圳的“先”与“后”,深圳,珠海论坛 - Powered by Discuz!"
+    },
+    {
+      "id": "web-handle:sha256:93b95a6cb3662fed46c00d08d72a558e6be8f734332bf592d5fe28e3b240f27a",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "跑出加速度创造新奇迹——写在深圳经济特区建立41周年之际"
+    },
+    {
+      "id": "web-handle:sha256:7d9564f95b13c3af2c2678e200e05424ed1374b0dba384cf8a33da9f69c6b198",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "深圳南先科技有限公司 - 启信宝"
+    }
+  ],
+  "evidence_items": {
+    "total": 8,
+    "by_domain": {
+      "professor": 8
+    },
+    "by_lane": {
+      "web": 8
+    },
+    "by_source_nature": {
+      "current_web": 8
+    },
+    "with_claim_binding": 8
+  },
+  "protected_slots": [
+    {
+      "kind": "geography",
+      "value": "深圳",
+      "entity_ids": []
+    }
+  ],
+  "requested_traversal": null,
+  "admitted_claims": {
+    "total": 1,
+    "by_predicate": {
+      "geography": 1
+    },
+    "by_claim_type": {
+      "material_fact": 1
+    },
+    "patent_evidence_claims": 0
+  },
+  "committed_handle_ids": [
+    "web-handle:sha256:7f70fbb7705bd698a29926c89e10cf1c3948e9ca49a9c3125031c8ec71198d41"
+  ],
+  "committed_names": [
+    "建重大平台强核心攻关优产业生态深圳新质生产力加速迸发"
+  ],
+  "render_mode": "prose_renderer",
+  "response_mode": "answer",
+  "citations": 1,
+  "answer_chars": 288,
+  "lane_timings": [
+    [
+      "web",
+      2.612
+    ]
+  ]
+}

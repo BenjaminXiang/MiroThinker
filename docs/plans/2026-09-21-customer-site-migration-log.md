@@ -1496,3 +1496,214 @@ conn_test       = ok, 347 ms（兼容路线 404 → DashScope 原生路线 200�
 - 单测 +1（慢 provider 期间必须已开始抓页面）；相邻套件 35 过 / 1 条预存红；ruff 与 HEAD 基线一致。
 
 **六、下一步**：重封（含本轮改动 + join 修复）→ 冒烟 → 切前最终数字 → 步 12 切换。
+
+**七、全目录回归与既有红闭环（补记，2026-10-14）**
+
+- `tests/canonical_v2/` 全量：**63 failed / 1668 passed / 153 skipped / 1 error**（对照基线 66/1648——失败 -3、通过 +20：+17 为新增用例，+3 为已记录的 DB 绑定族抖动）。
+- **六个"可疑文件"逐条与活线树（部署中旧代码）对照全部相同**：supplemental 8 条、answer closure 6 条、internal reference projection 12 条+1 error、turn-trace 1 条、web_page_fetch 1 条（已知 depth-5 旧断言）、multiturn 3 条（文档记录的既有三条）。
+- 其余 32 条分布在**本次未触及**的模块（build 15 / lexical 13 / manual-recall 2 / consumer-migration 1 / founder-red 1），属既有红族。
+- 结论：本轮（第 41/43 轮全部改动）**零新增回归**；该结论的边界＝六个邻接文件逐条闭环 + 未触模块的差异论证（若要 100% 全目录逐条闭环，可另跑活线树全目录对齐，约 70 分钟）。
+
+**八、活线树全目录逐条对齐（补记，2026-10-14 15:30）**
+
+- 活线树（部署中代码）`tests/canonical_v2/` 全量：**63 failed / 1541 passed / 153 skipped / 1 error**（74 分钟）。
+- **与切换线（63 failed / 1668 passed）的失败名单逐条 diff = 空**：两侧失败集合**完全一致**。
+- 通过数差异（+127）＝切换线在本会话各轮新增的用例；失败不增、不换。
+- **结论：零新增回归，100% 逐条闭环**（不再是"未触及模块"的推理，而是全量名义逐条对齐）。
+
+---
+
+## 第 44 轮 · 2026-10-14 · **18188 切换完成**：嵌入模型换成 `qwen3.7-text-embedding-flash`@1024（qianwen 网关）；三轮修复随之上线
+
+**一、切换过程（16:14:22 → 16:19:11，停机 5 分钟）**
+
+1. 备份现役命令文件 → `serve-18188-command.sh.pre-fembed.20261014-161422.sh`（回滚资产）；
+2. 生成 `embedding-key.env`（0600，密钥值不落日志）；
+3. 装 fembed 命令文件（切换线双根 PYTHONPATH + 主 venv + 新包/index/bundle/模型）；
+4. **命令校验器 32 ok / 0 fail**（此前唯一未过项＝密钥环境文件，窗口内生成后补齐）；
+5. 装 systemd drop-in（EnvironmentFile）+ daemon-reload；
+6. 重启 `canonical-v2-backend` → **health 200 after 300s**。
+
+**二、验收（全绿）**
+
+| 项 | 结果 |
+|---|---|
+| `/api/auth/me`（未登录） | 401 ✓ |
+| 页面 | /chat、/main **200**；/admin 等管理页 **302**（登录门按设计重定向）✓ |
+| 页面三项 | chat_profile=**deepseekv4flash** ✓（回答模型档未被切换改动）；frozen model=**qwen3.7-text-embedding-flash** ✓；嵌入连通性 **ok（457ms，原生路由）** ✓ |
+| 真问一轮（优必选专利） | 4790 字、含本地 CN 专利号、无企业清单尾句 ✓ |
+| **replay 门（对 18188）** | **7/7 ALL PASS** ✓（上线后最强验证） |
+
+**三、此刻起活线是什么**
+
+- **嵌入**：`qwen3.7-text-embedding-flash` @ 1024 维（`maas.qianwenaiapi.com` 原生 DashScope 路由）；包＝`serving-pack-fembed-v1`（`reader_contract_sha256=2f324ebe…`）、索引＝`index-v4-v2`；
+- **代码**：切换线（含第 41 轮"出示门槛+本地立足点"、第 42 轮"身份槽守卫"、第 43 轮"TTFT 预取重叠"）；
+- **回滚**：恢复备份命令文件 + 重启（分钟级）；旧包 `serving-pack-run16-readerbound` / `index-v3-v2` 原封未动。
+
+**四、后续**：交付物以 fembed 为准重打 → 甲方"只填 key"文档更新 → 客户现场迁移（方案已定稿）。
+
+---
+
+## 第 45 轮 · 2026-10-14 · **客户现场整体迁移**：自部署 canonical-v2 落到 100.64.0.96；站点从 star 镜像切回自部署
+
+**一、目标机侦察（网络 / 配置 / 环境）**
+
+- **网络**：两条通道 — tailscale 中继（relay "Shenzhen"，实测 0.5–0.76 MB/s），公网 GitHub（**codeload 归档 12 MB/s**；release 资产被 Fastly(185.199.x) 卡死：45 秒零字节，不可用）。
+- **配置**：Intel Core2 Duo T7700（4 vCPU）· 31GB RAM + 20GB swap · 盘 294GB（剩 208GB）· Ubuntu 20.04 / kernel 5.4 / systemd 245 · Python 3.12.14（run-9 venv 225 包，**可复用**）· PG16（docker `miro-light-pg`，127.0.0.1:5432）· nginx 80/8080 · 客户既有设施：宝塔面板(24106) + MySQL(3306) · 缺 `zstd`（apt 腾讯镜像 11 秒补齐）。
+- **环境（从目标机真打 API）**：DeepSeek 200/1.39s、`qwen3.7-text-embedding-flash` 200/0.25s/dim=1024、博查 200/0.35s、Serper 200/1.81s、GitHub 200、PyPI 慢（8s/页）、无代理变量、时钟正确。
+- **代码探针**：run-9 venv 直接 import 新代码通过（agent 1.85s / console 2.44s）。
+
+**二、传输（选型与结果）**
+
+- 载荷：4.6GB → zstd 771MB（6 倍）→ AES-256-CBC 加密（sha256 `85d7c60b…`）。
+- **GitHub codeload 归档中转**：临时仓 9 分片（每片 85MB）→ 目标机 **61 秒**下载 + 重组，**sha256 逐位匹配**；tailscale 保底同跑约 25 分钟后停用（同一载荷，只留最快一路）。
+
+**三、落位（绝对路径镜像）**
+
+- pack 4.1GB → `/var/tmp/mirothinker-data-v2/serving-pack-fembed-v1`；index 1.3GB → `.../index-v4-v2`（marker `df594dc5…`）；**哈希校验 12/12 通过**（含 bundle 的文件字节哈希与 content_sha256 双校验）。
+- venv 复制 run-9 解释器；managed secrets（四钥 embedding/llm/bocha/serper，0600+审计）落在 `code/config/managed/`；`.env` 精简为 OPENALEX/UNPAYWALL（**密钥不进环境变量，保证 web 页面配置不被压住**）；建库 `miroflow_candidate_v2_20260922_r1` + alembic 版本镜像（C2_0013）；unit `miro-fullstack-v2.service`（LimitNOFILE=65536）。
+- **mount receipt 随迁移落地** → 目标机首启跳过全量哈希（4.3GB+1.3GB）。
+
+**四、首启与冻结链证据**
+
+- 首启 **10 分 40 秒**（Core2；我方同类机器 4.5 分钟）→ health 200；修复后重启 6.5 分钟。
+- 启动标记与我方线**逐位一致**：`relationship_request_sha256=b3746c26…`、`index_projection_request_sha256=bba1d16b…`（包与重建完全同源）。
+
+**五、修复：`os.chmod(follow_symlinks=False)` 在 Python 3.12.13+ 抛错（P1，阻塞"页面改 key"）**
+
+- 现象：目标机首启 `access_log_store=disabled`、`corrections_store=disabled`、`admin credential seeding skipped (NotImplementedError: chmod: follow_symlinks unavailable on this platform)` → **管理员账号未播种，页面无法登录**。
+- 根因：同一代码在 Python 3.12.12（我方）静默忽略该参数，在 **3.12.14（目标机 venv）直接抛 NotImplementedError**（CPython 补丁版行为变化）。
+- 修复：新增 `backend/private_files.chmod_owner_only()`（带兜底）+ 6 处调用点收敛（admin_auth / access_log / corrections / manual_recall / chat_gaps / jobs.py）；新增回归测试 `tests/test_private_files.py`。
+- 验证：单测 2 passed；相邻套件 41 + 54 + 1 passed；目标机 3.12.14 真环境探针通过；重启后三 sidecar 建库、`admin-initial-password.txt` 生成。
+
+**六、验收（目标机，全部 127.0.0.1 基准）**
+
+| 项 | 结果 |
+|---|---|
+| 页面 | /chat 200、/main 200、/admin 302、/jobs 302、/api/health 200 ✓ |
+| **replay 门（7 会话）** | **ALL PASS 7/7**（逐轮 0.8–25s，含多轮指代/澄清）✓ |
+| 准确率+时延探针（8 题） | **8/8 全答**；TTFT min **3.36** / median **9.92** / max **14.70** 秒；总时长 min 3.83 / median 10.63 / max 18.06 秒 ✓ |
+| 管理员链路 | login 200 → me 200 → GET /secrets 200（四钥 configured、origin=managed-file）→ 同值 no-op **PATCH 200**（页面明确"修改后需重启服务生效"）✓ |
+| 资源 | RSS 15.6GB / 31GB，swap 2.4GB，available 14.2GB ✓ |
+
+**七、站点切换（外网验证）**
+
+- vhost：`/` → `127.0.0.1:18188`（SSE snippet）；`/guoxian/` **前缀剥离转发**（保留客户既有 `/guoxian/main` 管理页书签）。
+- 外网：`/` 302 → `/chat` 200（标题"深圳科创知识平台"）；`/guoxian/main` 200（"管理台 · 深圳科创数据平台"）；**经公网域名真问一轮 19.6s / 69KB 流式 / 答案正确** ✓。
+- 开机自启：run-9 `disabled`、v2 `enabled`（避免重启抢 18188）；run-9 现场 17G 原样保留（回滚线）。
+- 回滚：`nginx-cutover-v2.sh rollback`（恢复镜像 vhost）+ `systemctl stop miro-fullstack-v2; systemctl start miro-fullstack`。
+
+**八、遗留与注意**
+
+- 密钥：现用我方四钥（页面可改，改后需重启服务生效）；初始管理员口令在 `var/admin-initial-password.txt`（0600），对方拿到后应立即改密。
+- 我方现役线（100.64.0.4:18188）当日本时段出现明显时延退化（两次探针 300s 超时、一次 230s 首字），**与本次迁移无关**，需另开一轮排查。
+- GitHub 中转仓 `BenjaminXiang/miro-transit-20261014` 已置 private（仅加密载荷）；删除需 `delete_repo` scope（`gh auth refresh -h github.com -s delete_repo && gh repo delete BenjaminXiang/miro-transit-20261014 --yes`）。
+- 目标机 keepwarm cron（每 10 分钟一道演示题）已自动接管 v2 预热。
+
+**九、当日收尾（21:20–21:35）——时延工程与 dev 线抖动定性（第 45 轮补记）**
+
+- 目标机 **keepwarm 10 分钟 → 5 分钟一题**（crontab `3-59/5`）；新增**演示前一键预热** `/root/deploy/fullstack-v2/warmup-demo.sh`（5 道代表题，实测 68 秒跑完，逐题 3–19s）；v2 unit 补 **ExecStartPost 预热钩子**（`var/warmup-v2.sh`，重启后首批查询不再冷——run-9 注释记录的冷/热差为 3–4 倍）。
+- 目标机公网逐题分解（21:15–21:22）：丁文伯 **5.1s** / JEPA **10.2s** / 优必选 **15.5s** / 深圳具身 **19.6s**；组成 ≈ 规划 1s + 检索 2–5s + 模型首字 1.7–1.8s + 流式 2–7s + 公网 ~1.5s。页面与静态资源 ≤90ms（不是瓶颈）。
+- **dev 线（100.64.0.4）web 道抖动定性**：同日多次取样 web 车道 **3.6s / 10.2s / 12.3s / 24.5s+12.3s**，对照同题目标机 4.6s；而直连 provider 0.3–2.0s、两边页面抓取速度相当、宿主 load 3.06（31 个登录用户的共享开发机）⇒ 判定为**时段性外部/宿主抖动，非可复现代码缺陷**（复现时同题 **9.06s**、web 单趟 3.6s，已与目标机持平）。
+- 因不可复现，dev 线装**看门狗**：`.agents/runs/close-workbook-gaps/lane-watch.py`（用户 cron `7-59/15`）——每 15 分钟一题，记录墙钟 / TTFT / 流式块数 / **逐车道耗时**（读 turn-debug 的 `lane_timings`），SLOW 标记（总时长 >30s 或任一车道 >15s）；日志 `lane-watch.log`。首跑样本：`total=22.3s ttft=16.0s lanes=[['relationship',0.832],['web',10.175]]`（优必选）。
+
+**十、交接材料（2026-10-14）**：`docs/深圳科创数据平台-系统交接材料.html` —— 面向后续接手同事的完整交接文档（需求→设计→实现→部署→维护；含代码地图、启动链路逐步骤、配置面优先级、构建/传输/切包/回滚流程、故障处置手册与 12 条历史陷阱），建议随每次交付同步更新「验收数字」与「已知问题」两节。
+
+---
+
+## 第 46 轮 · 2026-10-14 · **前端品牌更名：国先·问渠**（双站同步、免重启生效）
+
+**一、决定与出处**
+
+- 新名称 **国先·问渠**，取自朱熹《观书有感》"问渠那得清如许，为有源头活水来"：既体现国先的官方智库属性，又寓意每个提问都有源头、有答案。
+- 范围＝**前端可见名称**（页面标题 / 页眉 / 管理台 / 运维页）；**不含**后端提示词、服务名、包名、数据库名与冻结链标识（避免行为与身份漂移）。
+
+**二、改动清单（9 个文件，19 处）**
+
+| 页面 | 位置 | 改前 → 改后 |
+|---|---|---|
+| `/chat` | title、h1、欢迎语、头像 aria-label | 深圳科创知识平台 → **国先·问渠** |
+| `/chat` | 品牌徽标 / 头像字 | 科创 → 问渠 |
+| `/browse` | title、h1 | 深圳科创知识平台 → **国先·问渠** |
+| `/browse` | 徽标 / 入口 / 页签 | V2 → 问渠；"进入 V2 对话"→"进入问渠对话"；"V2 Gaps"→"Gaps" |
+| `/main`（管理台） | title、brand strong | 深圳科创数据平台 → **国先·问渠** |
+| `/main` | 副标题 | "管理台 · Canonical V2" → "管理台" |
+| `/admin` `/jobs` `/logs` `/seeds` `/upload` | title 与 brand span | Canonical V2 → **国先·问渠** |
+| `admin.js` | 文件头注释 | Canonical V2 → 国先·问渠 |
+
+**三、验证（两站，改文件即生效）**
+
+- **无需重启**：所有页面均为 `FileResponse` 按请求读盘（`/main` 也是每请求 `read_text`）——直改静态文件即刻对外生效。
+- 开发线：`/chat`、`/main` 标题实测新名。
+- 现场：外网 `https://gxzx-coze-api.idea.edu.cn/chat`（title/h1/欢迎语）与 `/guoxian/main`（title/strong）实测新名；管理员会话下 `/browse` `/admin` `/jobs` `/logs` `/seeds` `/upload` 六个页面标题逐一核对为新名。
+- 现场文件属主归 `root:root`；两站静态目录 `grep` 复核**已无旧名与 "Canonical V2" 残留**。
+
+**四、刻意不改（避免行为/身份漂移）**
+
+- 后端 LLM 提示词中的"深圳科创数据平台"（`backend/api/chat.py`、`canonical_v2/tech_vocabulary.py`、`company/signal_event_extractor.py`）：提示词改动属行为变更，需 OpenSpec + 重跑回归，本次不动；
+- 嵌入身份探针文案（`canonical_v2_embedding_identity.py`）与一切内部身份（包/服务/库/冻结标识）：改名会波及冻结校验链，禁止。
+
+**五、影响与回滚**：纯展示层改动，回归门与探针无需重跑；回滚＝恢复这 9 个文件的旧版本（工作树任一历史快照 / 迁移包内副本）。
+
+---
+
+## 第 47 轮 · 2026-10-15 · **国先中心（深圳）简介：入库核验与可检索性修复（首步）**
+
+**一、背景**：甲方逐字给出「国际先进技术应用推进中心（深圳）」简介，要求"一定要记住、保证可以检索出来"。
+
+**二、核验结果：内容早已在库，问题是"路没走到"**
+
+- pack 内已存在该实体：`company-c-3970adda34eb223ab03821ff`（规范名"深圳国际先进技术应用推进中心"，别名"深圳国先中心"），其 `profile_summary` **即甲方给的全文**（逐字一致）——即内容从来不是缺口。
+- 分流由两处纯词法逻辑决定：`_infer_domains()`（领域词/后缀）与 `_has_local_scope_foothold()`（立足点）。`国先中心（深圳）` 这类**名字形状不被词法抽取器识别**的问句 → 无立足点 → 整轮 **Web-only**（代码 docstring 自述这是已知缺口，并写明"扩展需要真正的名字形状决策，而不是再加词表"）。
+
+**三、本轮动作**
+
+1. **运营注入（双线，走设计好的通道）**：以 `POST /api/canonical-v2/admin/company-documents` 把官方简介作为"企业文档"注入人工召回——
+   - 开发线 `doc-9925b848c6d22257`（point `chunk-9925b848c6d22257-0`）
+   - 现场 `doc-ad2f345af263c389`（point `chunk-ad2f345af263c389-0`）
+   - 两者均 `canonical_ref=company-c-3970adda34eb223ab03821ff`、`domain=company`，落 `var/manual-recall-v1/manual-recall.json`，**进程内即生效**（无需重启、无需重建包）。
+2. **权威文本入仓**：`docs/国先中心（深圳）-官方简介.md`（权威文本 + 叫法消歧（大湾区/合肥是不同实体）+ 落位说明 + 现状与待办 + 验收口径）。
+
+**四、验证（现场站点实测，公网路径）**
+
+| 问法 | 车道 | 结果 |
+|---|---|---|
+| **「国先中心（深圳）是什么公司」** | exact 2 + structured 0 + lexical 0 + **vector 16** + web 16 | ✅ **12.7s**，答案即官方表述（国家发展改革委/深圳市政府支持指导、深圳市科技创新局业务主管、依托粤港澳大湾区数字经济研究院、世界级平台、人工智能/具身智能/低空经济……） |
+| 「介绍一下 国际先进技术应用推进中心（深圳）」 | **web only**（5 条） | ⚠️ 9.4s，web 表述（河套揭牌等），不含官方框架要点 |
+| 「国先中心（深圳）的详细信息」 | web only（**0 条**） | ❌ 答"暂未找到对应机构"——本地明明有完整记录（最该避免的形态） |
+
+**五、结论与待办（等拍板）**：内容已"记住"于三处（pack / 双线人工召回 / 仓库文档），并已证明**带领域词的问法可检索出官方表述**；**无领域词的"介绍一下 X"族仍走 Web**。建议新开一轮「别名直通 + 立足点」（检索行为改动，需 OpenSpec + 回归门）：
+① 立足点扩展——问句命中库内实体名/别名即给立足点（真正的名字形状决策）；
+② 查询期别名解析——短名/商号 → canonical id 的可维护别名表；
+③ 本地兜底——web 0 条且库内有同名实体时回落本地作答。
+验收口径（已写入仓库文档）：4 种说法（全名/短名/简称/带领域词）答案均含官方要点且不得答成大湾区/合肥机构；replay 门 7/7。
+
+**第 46 轮补记（2026-10-15）：前端文案调整——去掉「补充公开网页信息」**
+
+- 按甲方要求，问答页副标题去掉末句：`科技信息检索 · 支持连续追问 · 补充公开网页信息` → **`科技信息检索 · 支持连续追问`**（`chat.html` 副标题）。
+- 双站同步（静态文件即生效、无需重启）：开发线与现场站点实测均为新文案，`补充公开网页信息` 零残留（含外网 `https://gxzx-coze-api.idea.edu.cn/chat`）。
+- 备注（待口径确认）：输入框下方另有一句透明性提示仍提及公开网页信息——`回答结合当前知识库与公开网页信息；重要事实可通过展示的来源核验。`（`chat.html` composer-note）。如需一并去掉"公开网页信息"字样，请示口径后同批处理。
+
+---
+
+## 第 48 轮 · 2026-10-15 · **前端主题色改为清华紫**
+
+**一、背景**：国先中心（深圳）有清华系背景（依托粤港澳大湾区数字经济研究院建设），甲方要求前端主题色改为清华紫。
+
+**二、色值依据（官方）**：清华大学校色为紫、白两色；紫色标准色 **R102 G8 B116 = `#660874`（PANTONE 259C）**（出处：清华 VI 标准色 <https://vi.tsinghua.edu.cn/gk/xxbz/scgf/bzs.htm>；另见清华图书馆配色资料）。伴生值：深色 `#4F065A`、浅底 `#F8F1F9`。
+
+**三、改动（9 个文件；只动品牌色，语义色一律保留）**
+
+| token / 位置 | 改前 | 改后 |
+|---|---|---|
+| `--navy`（品牌主色：页眉、主按钮、头像、链接） | `#143d59` | **`#660874`** |
+| `--navy-strong`（深色面 / 顶栏底 / 标题字） | `#0d2c41` | `#4F065A` |
+| `--blue-soft`（品牌浅底） | `#edf4f8` | `#F8F1F9` |
+| 环境光晕 / 焦点环（rgba） | `rgba(22,139,130,…)`、`rgba(20,61,89,…)` | `rgba(102,8,116,…)` |
+| 页签 favicon（7 个页面） | `fill='%23143d59'` | `fill='%23660874'` |
+| 问答页发送按钮 | `var(--teal)`（hover `#0e756d`） | `var(--navy)`（hover `var(--navy-strong)`） |
+| ops 页主按钮（jobs/seeds/upload） | `var(--teal / teal-strong)` | `var(--navy)` |
+
+**四、刻意保留（语义色）**：`--teal` 一族承担**成功态**（`.pill.ok`/`.notice.ok`/`.banner.saved`/process-done）与引用徽标；`--amber`＝警告、`--danger`＝错误、控制台 `--ok`＝成功——改成紫色会糊掉状态语义，故不动。
+
+**五、验证（两站，静态文件热生效、无需重启）**：浏览器**计算样式**实测——`--navy=#660874`、顶栏 `rgb(79,6,90)`（=#4F065A）、发送按钮 `rgb(102,8,116)`（=#660874）、favicon 紫、环境光晕紫；开发线与现场站数值一致；旧色（`#143d59`/`#0d2c41`/`#edf4f8`、teal rgba、旧 favicon）两站 `grep` **零残留**。截图：`artifacts/screenshots/brand-wenqu-purple-{site,devline}.png`。

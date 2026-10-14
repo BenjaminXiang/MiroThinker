@@ -1,0 +1,102 @@
+{
+  "session_id": "session:chat:qfkWAZvLn4NqBYocV2cEM1IGcAEm7t3D",
+  "turn_id": "turn:chat:sha256:10937d68c5012df3fa33cedd60c6a64daab21b48c4be12e5c66494d7eb3addff",
+  "turn_count": 3,
+  "query": "它有哪些布局和进展",
+  "planned_displayed_ids": [],
+  "recalled_handles": [
+    {
+      "id": "web-handle:sha256:48404264a7eb317a84d55235dbb57acb733c28bdc203edf70bb3c2520ac2afd6",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "中国科学院深圳先进技术研究院"
+    },
+    {
+      "id": "web-handle:sha256:d3b13ae502ad49a73f0720c3ed80bba6ca264ddb6c278dc424bcce4fb92fddf2",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "建重大平台强核心攻关优产业生态深圳新质生产力加速迸发"
+    },
+    {
+      "id": "web-handle:sha256:7b9356235a48b4aecb7d20c9e78cfc71829d6b7f5d7287a4801e5c1aff8818d8",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "粤港澳大湾区数字经济研究院（国际先进技术应用推进中心 ..."
+    },
+    {
+      "id": "web-handle:sha256:3201c4ae3aaf8d33599d73311a1178d01f1d673bff4e437cb5b70e7dee287c90",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "发改委支持创新，国际先进技术应用推进中心有望落户深圳"
+    },
+    {
+      "id": "web-handle:sha256:8e49a7c170bdc5b775cc83fd4d4ff62821ca4fe9230d22dc149f4514cc2c589b",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "孟凡利在走访调研我市人工智能与机器人企业时强调以 ..."
+    },
+    {
+      "id": "web-handle:sha256:03a8c08597da29978344e908bc9352150b8f9ee2fa78c22366b006f3f4871fc0",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "权威发布｜深圳这场重磅发布会信息量大、干货满满"
+    },
+    {
+      "id": "web-handle:sha256:ae7bf600da60f583cce822aa73ab463c645b2994b2f19f80db6172b8ec1fd3af",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "支持国际先进技术应用推进中心（深圳）建设具身智能 ..."
+    },
+    {
+      "id": "web-handle:sha256:2023f321f576a6235ae201fd28ceac5fb16fb9e72571878fb0c864a59f0d5b13",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "国际先进技术应用推进中心"
+    }
+  ],
+  "evidence_items": {
+    "total": 11,
+    "by_domain": {
+      "professor": 11
+    },
+    "by_lane": {
+      "web": 11
+    },
+    "by_source_nature": {
+      "current_web": 11
+    },
+    "with_claim_binding": 11
+  },
+  "protected_slots": [],
+  "requested_traversal": null,
+  "admitted_claims": {
+    "total": 3,
+    "by_predicate": {
+      "current_web_result": 3
+    },
+    "by_claim_type": {
+      "material_fact": 3
+    },
+    "patent_evidence_claims": 0
+  },
+  "committed_handle_ids": [
+    "web-handle:sha256:7b9356235a48b4aecb7d20c9e78cfc71829d6b7f5d7287a4801e5c1aff8818d8",
+    "web-handle:sha256:ae7bf600da60f583cce822aa73ab463c645b2994b2f19f80db6172b8ec1fd3af",
+    "web-handle:sha256:2023f321f576a6235ae201fd28ceac5fb16fb9e72571878fb0c864a59f0d5b13"
+  ],
+  "committed_names": [
+    "粤港澳大湾区数字经济研究院（国际先进技术应用推进中心 ...",
+    "支持国际先进技术应用推进中心（深圳）建设具身智能 ...",
+    "国际先进技术应用推进中心"
+  ],
+  "render_mode": "prose_renderer",
+  "response_mode": "answer",
+  "citations": 3,
+  "answer_chars": 404,
+  "lane_timings": [
+    [
+      "web",
+      17.147
+    ]
+  ]
+}

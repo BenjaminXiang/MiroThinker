@@ -1,0 +1,82 @@
+{
+  "session_id": "session:chat:gWGhUp-iIC5K-j-5CTTaxvgIyWAGOhxy",
+  "turn_id": "turn:chat:sha256:b46874537f56f595afbf585a07d8da14e405d83e551eba4f932e3de0d7f0b8ba",
+  "turn_count": 1,
+  "query": "介绍一下 国际先进技术应用推进中心（深圳）",
+  "planned_displayed_ids": [],
+  "recalled_handles": [
+    {
+      "id": "web-handle:sha256:611a93fcc85eb68f402ecec9fe97336770a7b7b8350dffff5b4995f141ae7cf0",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "粤港澳大湾区数字经济研究院（国际先进技术应用推进中心 ..."
+    },
+    {
+      "id": "web-handle:sha256:10f24757f779ab7072cedf5f935b73fabcfc0ed5b7f9fd0d29fa6ca4fabb141c",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "支持国际先进技术应用推进中心（深圳）建设具身智能 ..."
+    },
+    {
+      "id": "web-handle:sha256:d0846e53c49b7b7a13127f4d8c53e79b0ae5a7360420f7455c782f00ddb02377",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "建重大平台强核心攻关优产业生态深圳新质生产力加速迸发"
+    },
+    {
+      "id": "web-handle:sha256:228e27700eb06b61ecc666041a1f7be5ad7fec7b7a07aa787f007aaa46ff5ac8",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "发改委支持创新，国际先进技术应用推进中心有望落户深圳"
+    }
+  ],
+  "evidence_items": {
+    "total": 4,
+    "by_domain": {
+      "professor": 4
+    },
+    "by_lane": {
+      "web": 4
+    },
+    "by_source_nature": {
+      "current_web": 4
+    },
+    "with_claim_binding": 4
+  },
+  "protected_slots": [
+    {
+      "kind": "geography",
+      "value": "深圳",
+      "entity_ids": []
+    }
+  ],
+  "requested_traversal": null,
+  "admitted_claims": {
+    "total": 4,
+    "by_predicate": {
+      "geography": 4
+    },
+    "by_claim_type": {
+      "material_fact": 4
+    },
+    "patent_evidence_claims": 0
+  },
+  "committed_handle_ids": [
+    "web-handle:sha256:611a93fcc85eb68f402ecec9fe97336770a7b7b8350dffff5b4995f141ae7cf0",
+    "web-handle:sha256:d0846e53c49b7b7a13127f4d8c53e79b0ae5a7360420f7455c782f00ddb02377"
+  ],
+  "committed_names": [
+    "粤港澳大湾区数字经济研究院（国际先进技术应用推进中心 ...",
+    "建重大平台强核心攻关优产业生态深圳新质生产力加速迸发"
+  ],
+  "render_mode": "prose_renderer",
+  "response_mode": "answer",
+  "citations": 4,
+  "answer_chars": 462,
+  "lane_timings": [
+    [
+      "web",
+      9.004
+    ]
+  ]
+}

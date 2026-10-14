@@ -1,0 +1,169 @@
+{
+  "session_id": "session:chat:uU8gyskkPjA2IV87NpZUhsRhrawlhnSb",
+  "turn_id": "turn:chat:sha256:8d03c460a4243a625307f64e53346860db84b16e66348c7b513bc34cfcc932fc",
+  "turn_count": 2,
+  "query": "这个中心的企业培育情况怎么样",
+  "planned_displayed_ids": [],
+  "recalled_handles": [
+    {
+      "id": "company-c-3970adda34eb223ab03821ff",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳国际先进技术应用推进中心"
+    },
+    {
+      "id": "web-handle:sha256:e37331c6bb4ec874f88681b8760cd84861a8dd052dc92619b08f0babd4f050ce",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "深圳市政府新闻办新闻发布会（打造最好科技创新生态和人才 ..."
+    },
+    {
+      "id": "company-c-9d9e6698c505cff87c51a7e9",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "合肥国际先进技术应用推进中心"
+    },
+    {
+      "id": "web-handle:sha256:be189d80f78ed990ab7b2ca2c57d984c1dc2937119ffd45b9b5b4f9af8758519",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "孟凡利在走访调研我市人工智能与机器人企业时强调以 ..."
+    },
+    {
+      "id": "web-handle:sha256:0e35668b56e131b010abebc18ce66dd04ea35f7d4f29d8f580636931c70a415f",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "深圳市第七届人民代表大会第七次会议关于深圳市2025年 ..."
+    },
+    {
+      "id": "web-handle:sha256:d39db7e0382f3baa83fc89ef800a18413e4a9f2b4d2f75d885793fbd4c6e1ab9",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "粤港澳大湾区数字经济研究院（国际先进技术应用推进中心 ..."
+    },
+    {
+      "id": "web-handle:sha256:75044e28f2faa145748d466be60fa4c5aa918d42b7cc34dbd785332c78fd8b02",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "国家发展改革委商务部关于深圳建设中国特色社会主义先行 ..."
+    },
+    {
+      "id": "web-handle:sha256:fcb99498bac80d6fd7e0f1b1dbeac2a632821b0d6706a25ca9b5771ac634fab8",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "深圳市罗湖区人民政府关于印发《罗湖区建设营商环境创新 ..."
+    },
+    {
+      "id": "web-handle:sha256:1ebad8877b08da080537f6e35537317d86fd50a52fd9e41eb3bc0a4f66a0525e",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "发改委支持创新，国际先进技术应用推进中心有望落户深圳"
+    },
+    {
+      "id": "web-handle:sha256:82b17dbaefc206b0d9924f47f4075894cce78844e152cdfdebb8f92a6d54a6fb",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "【关于深圳建设中国特色社会主义先行示范区放宽市场准入 ..."
+    },
+    {
+      "id": "company-c-947c0dc8980fdf80ffdb56e7",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "大湾区国际先进技术应用推进中心"
+    },
+    {
+      "id": "company-c-5bab2fde1bba45b2b2c26afa",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "横琴国际先进技术应用推进中心"
+    },
+    {
+      "id": "company-c-0fa883f47729851ed894e350",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "浦东国际先进技术应用推进中心"
+    },
+    {
+      "id": "company-c-0ad8566f72d3c32b66d13483",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳芯展速科技发展有限公司"
+    },
+    {
+      "id": "company-c-2ae1bbf05f8b9bc12159acc2",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市屿智同行科技有限公司"
+    },
+    {
+      "id": "company-c-e77c0c6d1a9dbd3849478870",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳育智科创科技有限公司"
+    }
+  ],
+  "evidence_items": {
+    "total": 24,
+    "by_domain": {
+      "company": 18,
+      "professor": 6
+    },
+    "by_lane": {
+      "exact": 2,
+      "vector": 8,
+      "web": 14
+    },
+    "by_source_nature": {
+      "current_web": 14,
+      "local": 10
+    },
+    "with_claim_binding": 24
+  },
+  "protected_slots": [],
+  "requested_traversal": null,
+  "admitted_claims": {
+    "total": 5,
+    "by_predicate": {
+      "canonical_projection": 1,
+      "current_web_result": 4
+    },
+    "by_claim_type": {
+      "material_fact": 5
+    },
+    "patent_evidence_claims": 0
+  },
+  "committed_handle_ids": [
+    "company-c-3970adda34eb223ab03821ff",
+    "web-handle:sha256:d39db7e0382f3baa83fc89ef800a18413e4a9f2b4d2f75d885793fbd4c6e1ab9"
+  ],
+  "committed_names": [
+    "深圳国际先进技术应用推进中心",
+    "粤港澳大湾区数字经济研究院（国际先进技术应用推进中心 ..."
+  ],
+  "render_mode": "prose_renderer",
+  "response_mode": "answer",
+  "citations": 5,
+  "answer_chars": 705,
+  "lane_timings": [
+    [
+      "structured",
+      0.0
+    ],
+    [
+      "exact",
+      0.635
+    ],
+    [
+      "lexical",
+      0.673
+    ],
+    [
+      "vector",
+      0.779
+    ],
+    [
+      "web",
+      4.697
+    ]
+  ]
+}

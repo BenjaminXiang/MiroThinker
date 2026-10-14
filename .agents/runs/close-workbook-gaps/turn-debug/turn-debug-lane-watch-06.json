@@ -1,0 +1,30 @@
+{
+  "session_id": "probe:lane-watch",
+  "turn_id": "turn:chat:sha256:250a70eca839cfabb1c421cbc2970ad21d94ad7b5ed5d869a5d6bb5e2feb1ea4",
+  "turn_count": 6,
+  "query": "目前主流的JEPA（联合嵌入预测架构）变体有哪些",
+  "planned_displayed_ids": [],
+  "recalled_handles": [],
+  "evidence_items": {
+    "total": 0,
+    "by_domain": {},
+    "by_lane": {},
+    "by_source_nature": {},
+    "with_claim_binding": 0
+  },
+  "protected_slots": [],
+  "requested_traversal": null,
+  "admitted_claims": {
+    "total": 0,
+    "by_predicate": {},
+    "by_claim_type": {},
+    "patent_evidence_claims": 0
+  },
+  "committed_handle_ids": [],
+  "committed_names": [],
+  "render_mode": "prose_renderer",
+  "response_mode": "answer",
+  "citations": 0,
+  "answer_chars": 948,
+  "lane_timings": []
+}
