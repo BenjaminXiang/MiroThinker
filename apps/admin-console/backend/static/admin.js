@@ -1,4 +1,4 @@
-/* 管理配置中心（Canonical V2）：配置 · 展示 · 验证同卡。
+/* 管理配置中心（国先·问渠）：配置 · 展示 · 验证同卡。
  *
  * 渲染完全是服务端 payload 的函数：
  *   - /config 的 fields（含 label/kind/group/order/bounds/consumer/default/connection/test_arg）

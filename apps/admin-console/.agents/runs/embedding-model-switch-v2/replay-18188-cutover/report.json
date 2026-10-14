@@ -1,0 +1,214 @@
+{
+  "base_url": "http://127.0.0.1:18188",
+  "generated_at": "2026-10-14T16:24:04",
+  "sessions": {
+    "G1_framing": {
+      "turns": [
+        {
+          "query": "介绍一下 国际先进技术应用推进中心（深圳）",
+          "repeat": 1,
+          "sse": "G1_framing_r1_t1.sse",
+          "seconds": 13.9,
+          "query_type": "canonical_v2:A:answer",
+          "answer_head": "国际先进技术应用推进中心（深圳）是落地在深圳的国家级先进技术应用平台，聚焦科技成果的转化与产业化落地。\n\n从公开信息看，该中心于4月25日在河套深港科技创新合作区深圳园区正式揭牌，与河套数学与交叉学科研究院同日亮相，是深圳布局新质生产力、建",
+          "failures": []
+        },
+        {
+          "query": "有没有更详细的信息",
+          "repeat": 1,
+          "sse": "G1_framing_r1_t2.sse",
+          "seconds": 17.7,
+          "query_type": "canonical_v2:A:answer",
+          "answer_head": "关于粤港澳大湾区数字经济研究院（国际先进技术应用推进中心），目前公开信息可以拼出这样几条线索：\n\n**机构定位与落地背景**\n国际先进技术应用推进中心旨在服务国家重大需求，汇聚各类要素资源，推动创新链、产业链、资金链、人才链融合发展，建设先",
+          "failures": []
+        },
+        {
+          "query": "它有哪些布局和进展",
+          "repeat": 1,
+          "sse": "G1_framing_r1_t3.sse",
+          "seconds": 21.5,
+          "query_type": "canonical_v2:A:answer",
+          "answer_head": "粤港澳大湾区数字经济研究院（国际先进技术应用推进中心）落地在深圳，公开信息显示其单位地址位于深圳市福田区市花路5号长富金茂，所属行业为信息传输、软件和信息技术服务业，单位性质为其他事业单位，人员规模在500至1000人之间。\n\n在布局与推进",
+          "failures": []
+        }
+      ],
+      "pass": true
+    },
+    "G2_bare_name": {
+      "turns": [
+        {
+          "query": "国际先进技术应用推进中心（深圳）",
+          "repeat": 1,
+          "sse": "G2_bare_name_r1_t1.sse",
+          "seconds": 15.5,
+          "query_type": "canonical_v2:A:answer",
+          "answer_head": "国际先进技术应用推进中心（深圳）位于深圳市，具体依托粤港澳大湾区数字经济研究院运作，办公地点在深圳市福田区。\n\n公开信息显示，该中心在国家发展改革委支持授权下设立，依托粤港澳大湾区数字经济研究院，围绕通用机器人相关的重要技术方向，聚焦人工智",
+          "failures": []
+        },
+        {
+          "query": "这个中心的企业培育情况怎么样",
+          "repeat": 1,
+          "sse": "G2_bare_name_r1_t2.sse",
+          "seconds": 11.4,
+          "query_type": "canonical_v2:A:answer",
+          "answer_head": "关于深圳国际先进技术应用推进中心（国先中心（深圳））的企业培育情况，公开信息中并没有直接披露孵化或培育了多少家企业这类量化数据，但从其定位和运作方式可以看清它在企业培育上扮演的角色。\n\n该中心是在国家发展改革委、深圳市政府支持指导下设立，由",
+          "failures": []
+        },
+        {
+          "query": "国际先进技术应用推进中心（深圳）",
+          "repeat": 2,
+          "sse": "G2_bare_name_r2_t1.sse",
+          "seconds": 14.5,
+          "query_type": "canonical_v2:A:answer",
+          "answer_head": "国际先进技术应用推进中心（深圳）位于深圳市，具体依托粤港澳大湾区数字经济研究院运作，办公地点在深圳市福田区。\n\n公开信息显示，该中心在国家发展改革委支持授权下设立，依托粤港澳大湾区数字经济研究院，围绕通用机器人相关的重要技术方向，聚焦人工智",
+          "failures": []
+        },
+        {
+          "query": "这个中心的企业培育情况怎么样",
+          "repeat": 2,
+          "sse": "G2_bare_name_r2_t2.sse",
+          "seconds": 7.9,
+          "query_type": "canonical_v2:A:answer",
+          "answer_head": "关于深圳国际先进技术应用推进中心（国先中心（深圳））的企业培育情况，公开信息中并没有直接披露孵化或培育了多少家企业这类量化数据，但从其定位和运作方式可以看清它在企业培育上扮演的角色。\n\n该中心是在国家发展改革委、深圳市政府支持指导下设立，由",
+          "failures": []
+        },
+        {
+          "query": "国际先进技术应用推进中心（深圳）",
+          "repeat": 3,
+          "sse": "G2_bare_name_r3_t1.sse",
+          "seconds": 14.7,
+          "query_type": "canonical_v2:A:answer",
+          "answer_head": "国际先进技术应用推进中心（深圳）位于深圳市，具体依托粤港澳大湾区数字经济研究院设立，办公地点在深圳市福田区（福田保税区一带）。\n\n公开信息显示，该中心在国家发展改革委支持授权下设立，依托粤港澳大湾区数字经济研究院，围绕通用机器人相关的重要技",
+          "failures": []
+        },
+        {
+          "query": "这个中心的企业培育情况怎么样",
+          "repeat": 3,
+          "sse": "G2_bare_name_r3_t2.sse",
+          "seconds": 7.5,
+          "query_type": "canonical_v2:A:answer",
+          "answer_head": "关于深圳国际先进技术应用推进中心（国先中心（深圳））的企业培育情况，公开信息中并没有直接披露孵化或培育了多少家企业这类量化数据，但从其定位和运作方式可以看清它在企业培育上扮演的角色。\n\n该中心是在国家发展改革委、深圳市政府支持指导下设立，由",
+          "failures": []
+        }
+      ],
+      "pass": true
+    },
+    "G3_person_pronoun": {
+      "turns": [
+        {
+          "query": "介绍一下 国际先进技术应用推进中心（深圳）",
+          "repeat": 1,
+          "sse": "G3_person_pronoun_r1_t1.sse",
+          "seconds": 12.7,
+          "query_type": "canonical_v2:A:answer",
+          "answer_head": "国际先进技术应用推进中心（深圳）是落地在深圳的国家级先进技术应用平台，与粤港澳大湾区数字经济研究院关系密切。\n\n从公开信息看，该中心于4月25日在河套深港科技创新合作区深圳园区正式揭牌，同批揭牌的还有河套数学与交叉学科研究院。这一布局是深圳",
+          "failures": []
+        },
+        {
+          "query": "他有哪些论文",
+          "repeat": 1,
+          "sse": "G3_person_pronoun_r1_t2.sse",
+          "seconds": 1.2,
+          "query_type": "canonical_v2:G:clarification_only",
+          "answer_head": "您的问题里使用了“他/她/它/这家”等指代词，但我暂时无法确定具体指代对象，为了准确回答，请补充您想了解的对象（例如教授姓名、公司名、论文标题或专利号），我会立即为您查询。如果您只是想了解某一类信息的大致情况，也可以直接描述需求，我会先给出",
+          "failures": []
+        }
+      ],
+      "pass": true
+    },
+    "G4_patents": {
+      "turns": [
+        {
+          "query": "优必选科技怎么样",
+          "repeat": 1,
+          "sse": "G4_patents_r1_t1.sse",
+          "seconds": 10.3,
+          "query_type": "canonical_v2:A:answer",
+          "answer_head": "优必选科技（深圳市优必选科技股份有限公司）是一家以人形机器人为核心的人工智能与机器人企业，成立于2012年，总部位于深圳南山区，已在港交所上市（09880.HK），属于高新技术企业、专精特新中小企业及制造业单项冠军企业。\n\n从技术定位看，官",
+          "failures": []
+        },
+        {
+          "query": "该公司的专利有哪些",
+          "repeat": 1,
+          "sse": "G4_patents_r1_t2.sse",
+          "seconds": 1.0,
+          "query_type": "canonical_v2:G:clarification_only",
+          "answer_head": "您的问题里使用了“他/她/它/这家”等指代词，但我暂时无法确定具体指代对象，为了准确回答，请补充您想了解的对象（例如教授姓名、公司名、论文标题或专利号），我会立即为您查询。如果您只是想了解某一类信息的大致情况，也可以直接描述需求，我会先给出",
+          "failures": []
+        }
+      ],
+      "pass": true
+    },
+    "G5_expansion": {
+      "turns": [
+        {
+          "query": "优必选科技怎么样",
+          "repeat": 1,
+          "sse": "G5_expansion_r1_t1.sse",
+          "seconds": 8.4,
+          "query_type": "canonical_v2:A:answer",
+          "answer_head": "优必选科技（深圳市优必选科技股份有限公司）是一家以人形机器人为主业的高新技术企业，也是全球极少数具备人形机器人全栈式技术能力的公司之一。\n\n公司成立于2012年，总部位于深圳市南山区，全称为深圳市优必选科技股份有限公司，目前处于存续状态，已",
+          "failures": []
+        },
+        {
+          "query": "还有哪些类似的公司",
+          "repeat": 1,
+          "sse": "G5_expansion_r1_t2.sse",
+          "seconds": 32.8,
+          "query_type": "canonical_v2:A:answer",
+          "answer_head": "深圳市爱陪伴智能科技有限公司主打手机营销和儿童陪伴机器人，属于AI陪伴与智能硬件方向。深圳同赛道或业务形态相近的公司还有不少，以下按方向列出几家有代表性的：\n\n**AI陪伴与智能硬件**\n- 深圳市外脑科技有限公司：聚焦人工智能，定位智能穿",
+          "failures": []
+        }
+      ],
+      "pass": true
+    },
+    "G6_anaphoric_opener": {
+      "turns": [
+        {
+          "query": "这个中心是做什么的",
+          "repeat": 1,
+          "sse": "G6_anaphoric_opener_r1_t1.sse",
+          "seconds": 1.0,
+          "query_type": "canonical_v2:G:clarification_only",
+          "answer_head": "您的问题里使用了“他/她/它/这家”等指代词，但我暂时无法确定具体指代对象，为了准确回答，请补充您想了解的对象（例如教授姓名、公司名、论文标题或专利号），我会立即为您查询。如果您只是想了解某一类信息的大致情况，也可以直接描述需求，我会先给出",
+          "failures": []
+        }
+      ],
+      "pass": true
+    },
+    "G7_enumeration": {
+      "turns": [
+        {
+          "query": "深圳有哪些做具身智能的公司",
+          "repeat": 1,
+          "sse": "G7_enumeration_r1_t1.sse",
+          "seconds": 25.4,
+          "query_type": "canonical_v2:A:answer",
+          "answer_head": "深圳的具身智能公司数量不少，覆盖从整机、核心零部件到数据采集与触觉感知等多个环节。以下按业务方向列出部分有代表性的企业。\n\n**人形与通用机器人整机**\n- 深圳市优必选科技股份有限公司：Walker S、Walker S1、Walker ",
+          "failures": []
+        },
+        {
+          "query": "深圳有哪些做具身智能的公司",
+          "repeat": 2,
+          "sse": "G7_enumeration_r2_t1.sse",
+          "seconds": 17.8,
+          "query_type": "canonical_v2:A:answer",
+          "answer_head": "深圳的具身智能公司数量不少，覆盖从整机、核心零部件到数据采集与触觉感知等多个环节。以下按公开信息可确认的代表性企业列举。\n\n**整机与机器人本体方向**\n- 深圳市优必选科技股份有限公司：人形机器人代表企业，Walker S、Walker ",
+          "failures": []
+        },
+        {
+          "query": "深圳有哪些做具身智能的公司",
+          "repeat": 3,
+          "sse": "G7_enumeration_r3_t1.sse",
+          "seconds": 22.8,
+          "query_type": "canonical_v2:A:answer",
+          "answer_head": "深圳的具身智能公司数量在全国居首，覆盖人形机器人本体、核心零部件、触觉感知、工业具身智能等多个方向。以下按业务类型梳理部分代表性企业。\n\n**人形机器人本体与通用平台**\n- 深圳市优必选科技股份有限公司：Walker S、Walker S",
+          "failures": []
+        }
+      ],
+      "pass": true
+    }
+  },
+  "all_pass": true,
+  "total_failures": 0
+}

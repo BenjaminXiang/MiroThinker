@@ -657,7 +657,12 @@ def _prepare_database_file(database_path: Path) -> Path:
         raise OSError("jobs database path must be a regular file")
     if metadata.st_nlink != 1:
         raise OSError("jobs database path must not be hard-linked")
-    os.chmod(path, 0o600, follow_symlinks=False)
+    try:
+        os.chmod(path, 0o600, follow_symlinks=False)
+    except NotImplementedError:
+        # CPython >=3.12.13 raises where older patch releases ignored the flag
+        # (Linux chmod cannot honour it); the checks above pin the target.
+        os.chmod(path, 0o600)
     return path
 
 

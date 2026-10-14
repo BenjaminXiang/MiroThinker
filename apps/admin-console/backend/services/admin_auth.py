@@ -22,6 +22,8 @@ import threading
 import time
 from typing import Any
 
+from backend.private_files import chmod_owner_only
+
 SCHEMA_VERSION = "canonical-v2-admin-auth-v1"
 DB_PATH_ENV = "CANONICAL_V2_ADMIN_AUTH_DB"
 KEY_PATH_ENV = "CANONICAL_V2_ADMIN_AUTH_KEY"
@@ -233,7 +235,7 @@ def prepare_private_file(path: Path) -> Path:
         raise OSError("credential path must be a regular file")
     if os.lstat(path).st_nlink != 1:
         raise OSError("credential path must not be hard-linked")
-    os.chmod(path, 0o600, follow_symlinks=False)
+    chmod_owner_only(path)
     return path
 
 

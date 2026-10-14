@@ -22,6 +22,8 @@ import sqlite3
 import threading
 from typing import Any
 
+from backend.private_files import chmod_owner_only
+
 DB_FILENAME = "chat-gaps.sqlite3"
 DB_PATH_ENV = "CANONICAL_V2_CHAT_GAPS_DB"
 JOBS_DB_ENV = "CANONICAL_V2_JOBS_DB"
@@ -107,7 +109,7 @@ def _prepare_ledger_file(database_path: Path) -> Path:
         raise OSError("chat gap ledger path must be a regular file")
     if os.lstat(database_path).st_nlink != 1:
         raise OSError("chat gap ledger path must not be hard-linked")
-    os.chmod(database_path, 0o600, follow_symlinks=False)
+    chmod_owner_only(database_path)
     return database_path
 
 

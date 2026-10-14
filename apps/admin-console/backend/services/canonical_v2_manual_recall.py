@@ -27,6 +27,8 @@ import secrets
 import threading
 from typing import Any, Protocol
 
+from backend.private_files import chmod_owner_only
+
 SCHEMA_VERSION = "canonical-v2-manual-recall-v1"
 
 _CHUNK_MAX_CHARS = 800
@@ -253,7 +255,7 @@ class ManualRecallStore:
         with os.fdopen(descriptor, "w", encoding="utf-8") as handle:
             json.dump(payload, handle, ensure_ascii=False)
         os.replace(tmp, self._file)
-        os.chmod(self._file, 0o600, follow_symlinks=False)
+        chmod_owner_only(self._file)
 
     # -- embedding -----------------------------------------------------------
 

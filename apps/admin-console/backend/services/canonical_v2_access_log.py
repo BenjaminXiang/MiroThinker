@@ -21,6 +21,8 @@ import sqlite3
 import threading
 from typing import Any, Literal
 
+from backend.private_files import chmod_owner_only
+
 logger = logging.getLogger(__name__)
 
 # Names the *base* schema. The identity column added by this change is detected
@@ -238,7 +240,7 @@ def _prepare_database_file(database_path: Path) -> Path:
         raise OSError("access log path must be a regular file")
     if metadata.st_nlink != 1:
         raise OSError("access log path must not be hard-linked")
-    os.chmod(database_path, 0o600, follow_symlinks=False)
+    chmod_owner_only(database_path)
     return database_path
 
 

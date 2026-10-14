@@ -4,17 +4,17 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="color-scheme" content="light" />
-    <title>深圳科创知识平台</title>
-    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23143d59'/%3E%3Cpath d='M17 19h8v11l12-11h10L33 32l15 13H37L25 34v11h-8z' fill='white'/%3E%3C/svg%3E" />
+    <title>国先·问渠</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23660874'/%3E%3Cpath d='M17 19h8v11l12-11h10L33 32l15 13H37L25 34v11h-8z' fill='white'/%3E%3C/svg%3E" />
     <style>
       :root {
         --ink: #17252f;
         --muted: #677984;
-        --navy: #143d59;
-        --navy-strong: #0d2c41;
+        --navy: #660874; /* 清华紫 PANTONE 259C */
+        --navy-strong: #4F065A;
         --teal: #168b82;
         --teal-soft: #e7f5f2;
-        --blue-soft: #edf4f8;
+        --blue-soft: #F8F1F9;
         --canvas: #f3f6f7;
         --surface: #ffffff;
         --line: #dce4e7;
@@ -36,7 +36,7 @@
         margin: 0;
         color: var(--ink);
         background:
-          radial-gradient(circle at 90% 0%, rgba(22, 139, 130, 0.08), transparent 26rem),
+          radial-gradient(circle at 90% 0%, rgba(102, 8, 116, 0.08), transparent 26rem),
           var(--canvas);
         font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
           "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
@@ -45,7 +45,7 @@
 
       button, input, textarea, a { font: inherit; }
       button:focus-visible, input:focus-visible, textarea:focus-visible, a:focus-visible {
-        outline: 3px solid rgba(22, 139, 130, 0.26);
+        outline: 3px solid rgba(102, 8, 116, 0.26);
         outline-offset: 2px;
       }
 
@@ -553,13 +553,13 @@
         min-height: 48px;
         padding: 0 19px;
         color: #fff;
-        background: var(--teal);
+        background: var(--navy);
         border: 0;
         border-radius: 11px;
         cursor: pointer;
         font-weight: 760;
       }
-      .submit:hover { background: #0e756d; }
+      .submit:hover { background: var(--navy-strong); }
       .submit:disabled { opacity: 0.55; cursor: wait; }
       .composer-note { margin: 8px 1px 0; color: var(--muted); font-size: 10px; }
 
@@ -661,10 +661,10 @@
     <div class="shell" data-presentation-state="landing">
       <header class="header">
         <div class="brand">
-          <div class="brand-mark" aria-hidden="true">科创</div>
+          <div class="brand-mark" aria-hidden="true">问渠</div>
           <div>
-            <h1>深圳科创知识平台</h1>
-            <p>科技信息检索 · 支持连续追问 · 补充公开网页信息</p>
+            <h1>国先·问渠</h1>
+            <p>科技信息检索 · 支持连续追问</p>
           </div>
         </div>
         <button
@@ -690,7 +690,7 @@
         data-scroll-intent="following"
       >
         <div class="welcome" id="welcome">
-          <strong>欢迎使用深圳科创知识平台</strong>
+          <strong>欢迎使用国先·问渠</strong>
           可查询企业、教授、论文、专利、技术与产业信息。
         </div>
       </main>
@@ -1299,9 +1299,9 @@
         const row = create("article", `message ${kind}`);
         const avatar = create("div", "avatar");
         if (kind === "assistant") {
-          avatar.textContent = "科创";
+          avatar.textContent = "问渠";
           avatar.setAttribute("role", "img");
-          avatar.setAttribute("aria-label", "深圳科创知识平台");
+          avatar.setAttribute("aria-label", "国先·问渠");
           const image = create("img");
           image.src = "static/assets/guoxian-logo.jpg";
           image.alt = "";

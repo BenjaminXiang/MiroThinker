@@ -867,3 +867,22 @@ hit=Y). New unit test: `test_pending_provider_prefetches_pages_during_merge` (pa
 fetched while a provider future is still pending); adjacent suites 35 pass / 1 pre-existing red
 (`test_enumeration_lane_fetches_deeper_pages_for_recall` pins the old depth-5 expectation, red at
 HEAD too); ruff deltas identical to HEAD.
+
+**Full-directory regression, closed against the live tree (2026-10-14).** `tests/canonical_v2/`:
+**63 failed / 1668 passed / 153 skipped / 1 error** vs the 66/1648 baseline (−3 failed, +20 passed:
++17 new cases this slice, +3 the documented DB-bound jitter). The six files whose failures could
+plausibly touch this slice were compared **test-by-test against the live tree (currently deployed
+code)** and are identical: supplemental-person-criteria 8/8, answer-implementation-closure 6/6,
+internal-reference-projection 12/12 (+1 error), turn-trace 1/1, web-page-fetch 1/1 (the known
+depth-5 assertion, red at HEAD too), multiturn-contract 3/3 (the documented trio). The remaining
+32 failures live in modules this slice never touched (build 15, lexical 13, manual-recall 2,
+consumer-migration 1, founder-red 1) and belong to the known-red family. Verdict: **zero new
+regressions**; scope of that claim = the six adjacent files closed item-by-item + the
+untouched-module argument (a full live-tree whole-directory alignment would take ~70 min if ever
+required).
+
+**100 % item-by-item closure (2026-10-14 15:30).** The live tree (currently deployed code) ran the same
+whole directory: **63 failed / 1541 passed / 153 skipped / 1 error**. The failed-name diff against
+the switch line (63 failed / 1668 passed) is **empty — the two failure sets are identical**. The
++127 passed on the switch line are this session's added cases. Verdict upgraded from "six adjacent
+files closed + untouched-module argument" to **full name-by-name closure: zero new regressions**.
