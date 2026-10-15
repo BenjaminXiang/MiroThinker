@@ -543,6 +543,30 @@ def _compose_manual_recall_store(embedding_adapter: Any) -> Any:
     return store
 
 
+def _compose_local_name_linker(handoff: Any) -> Callable[[str], bool] | None:
+    """Query -> mentions-a-pack-entity-name linker for the planning foothold.
+
+    The pack loader composes it; it is lazy, so the audited lookup view is
+    paid on the first name-shaped query, never at boot. No release bundle, a
+    missing pack loader module, or a loader without the factory degrades to
+    None — the serving-input call then keeps its old single-argument shape
+    and the line keeps the old web-only routing.
+    """
+    release_bundle = getattr(handoff, "release_bundle", None)
+    if release_bundle is None:
+        return None
+    try:
+        pack_loader_module = import_module(
+            "src.data_agents.canonical_v2.serving_pack_loader"
+        )
+    except ModuleNotFoundError:
+        return None
+    create_linker = getattr(pack_loader_module, "create_local_name_linker", None)
+    if create_linker is None:
+        return None
+    return create_linker(release_bundle)
+
+
 def _serve(
     *,
     config: RunnerConfig,
@@ -573,7 +597,7 @@ def _serve(
     run_uvicorn = _required_serving_dependency(
         dependencies.uvicorn_run, name="uvicorn.run"
     )
-    recorded = load_inputs(config)
+    recorded = load_inputs(config, name_linker=_compose_local_name_linker(handoff))
     manual_recall_store = _compose_manual_recall_store(recorded.embedding_adapter)
     verification = handoff.release_verification
     evidence_ids = tuple(
@@ -966,7 +990,11 @@ def _production_dependencies(config: RunnerConfig) -> RunnerDependencies:
             app_module = import_module("backend.main")
             uvicorn_module = import_module("uvicorn")
 
-    def load_recorded_serving_inputs(value: RunnerConfig) -> Any:
+    def load_recorded_serving_inputs(
+        value: RunnerConfig,
+        *,
+        name_linker: Callable[[str], bool] | None = None,
+    ) -> Any:
         if load_serving is None:
             raise RunnerConfigurationError(
                 "isolated build module has no exported recorded S11 serving-input loader"
@@ -990,6 +1018,7 @@ def _production_dependencies(config: RunnerConfig) -> RunnerDependencies:
                 value.recorded_embedding_bundle, role="query"
             ),
             page_fetcher=page_fetch_module.create_tiered_page_fetcher(),
+            name_linker=name_linker,
         )
 
     pack_loader_module = None

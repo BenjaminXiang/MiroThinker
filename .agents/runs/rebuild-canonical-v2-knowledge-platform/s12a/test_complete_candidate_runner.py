@@ -449,7 +449,7 @@ def test_runner_serves_app_object_on_fixed_host_port_without_promotion_pointer_r
     runtime = object()
     app = object()
 
-    def load_serving_inputs(config: Any) -> Any:
+    def load_serving_inputs(config: Any, *, name_linker: Any = None) -> Any:
         events.append(("load_recorded_serving_inputs", config))
         return recorded
 

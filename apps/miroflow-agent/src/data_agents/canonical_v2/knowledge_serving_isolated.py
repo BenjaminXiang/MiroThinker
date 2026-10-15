@@ -448,30 +448,58 @@ _PLATFORM_TOPIC_MARKERS = (
 )
 
 
-def _has_local_scope_foothold(query: str) -> bool:
+_ALIAS_FOOTHOLD_ENV = "CANONICAL_V2_ALIAS_FOOTHOLD"
+_ALIAS_FOOTHOLD_DISABLED = frozenset({"0", "false", "off", "no"})
+
+
+def _alias_foothold_enabled() -> bool:
+    # Read per call, like the topical floor: the switch flips by restarting
+    # with a different environment, and tests flip it in-process.
+    return (
+        os.environ.get(_ALIAS_FOOTHOLD_ENV, "").strip().casefold()
+        not in _ALIAS_FOOTHOLD_DISABLED
+    )
+
+
+def _has_local_scope_foothold(
+    query: str,
+    *,
+    name_linker: Callable[[str], bool] | None = None,
+) -> bool:
     """Whether a query is anchored to the platform's local scope at all.
 
-    Three ways to hold a foothold: (a) the domain inference is not the
+    Four ways to hold a foothold: (a) the domain inference is not the
     all-four-domain fallback, i.e. a domain word, an organization name, or an
     institution-bound person name matched; (b) the query carries a platform
     subject word (``_PLATFORM_TOPIC_MARKERS``); (c) one of the repository's
-    name extractors recognizes a named subject. (c) is subsumed by (a) for the
-    three extractors ``_infer_domains`` itself consults and is kept explicit
-    for the case where every domain word fires alongside a name.
+    name extractors recognizes a named subject; (d) the caller supplies a
+    ``name_linker`` and the query mentions a known repository entity name or
+    alias. (c) is subsumed by (a) for the three extractors ``_infer_domains``
+    itself consults and is kept explicit for the case where every domain word
+    fires alongside a name.
 
-    Known gap: a bare person name with no role/domain word ("丁文伯是谁") and a
-    name whose shape no extractor recognizes ("请介绍无界智航的相关信息" — no
-    company suffix, no domain word) hold no foothold and execute as Web-only.
-    Widening this needs a real name-shape decision, not another marker guess.
+    (d) is the data-driven name-shape decision: ``国先中心（深圳）`` holds a
+    foothold because the pack knows ``深圳国先中心``, not because any lexical
+    extractor recognizes the shape. It runs last — the lexical checks are
+    cheap and cover the common path — and only while
+    ``CANONICAL_V2_ALIAS_FOOTHOLD`` is not switched off. A bare person name
+    with no role/domain word ("丁文伯是谁") still holds no foothold unless a
+    supplied linker knows the name.
     """
     if tuple(_infer_domains(query)) != tuple(_PUBLIC_DOMAINS):
         return True
     if any(marker in query for marker in _PLATFORM_TOPIC_MARKERS):
         return True
-    return (
+    if (
         _explicit_organization_name(query) is not None
         or extract_leading_company_name(query) is not None
         or extract_institution_person_name(query) is not None
+    ):
+        return True
+    return (
+        name_linker is not None
+        and _alias_foothold_enabled()
+        and name_linker(query)
     )
 
 
@@ -689,6 +717,7 @@ def _proposal_provider(
     bundle: RecordedServingBundle,
     query_rewriter: Callable[[str], tuple[str, ...]] | None = None,
     view_store: _ServingQueryViewStore | None = None,
+    name_linker: Callable[[str], bool] | None = None,
 ) -> Callable[[QueryPlanningRequest], RecordedPlanningProposal]:
     def provide(request: QueryPlanningRequest) -> RecordedPlanningProposal:
         if _is_lawful_safety_guidance(request.original_query):
@@ -743,7 +772,8 @@ def _proposal_provider(
                     # Web-only retrieval.
                     inherited_local_scope = True
             local_scope_foothold = inherited_local_scope or _has_local_scope_foothold(
-                request.original_query
+                request.original_query,
+                name_linker=name_linker,
             )
             lanes = (
                 ("exact", "structured", "lexical", "vector", "web")
@@ -6713,6 +6743,7 @@ def load_recorded_serving_inputs(
     clock: Callable[[], datetime] = lambda: datetime.now(timezone.utc),
     llm_keepwarm: Callable[[], None] | None = None,
     query_rewriter: Callable[[str], tuple[str, ...]] | None = None,
+    name_linker: Callable[[str], bool] | None = None,
 ) -> RecordedServingInputs:
     """Load one secret-free serving authority and bind it to runner-owned paths."""
 
@@ -6861,6 +6892,7 @@ def load_recorded_serving_inputs(
             bundle=bundle,
             query_rewriter=selected_query_rewriter,
             view_store=query_view_store,
+            name_linker=name_linker,
         ),
         ambiguity_policy=AmbiguityPolicy(
             policy_id=f"ambiguity-policy:serving:{bundle.release_id}",

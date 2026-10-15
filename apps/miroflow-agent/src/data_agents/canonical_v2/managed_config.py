@@ -79,6 +79,7 @@ _FIELD_ENV_VARS: dict[str, str] = {
     "paths.access_log_retention_days": "CANONICAL_V2_ACCESS_LOG_RETENTION_DAYS",
     "serving.chat_llm_profile": "CHAT_LLM_PROFILE",
     "serving.web_topical_floor": "CANONICAL_V2_WEB_TOPICAL_FLOOR",
+    "serving.alias_foothold": "CANONICAL_V2_ALIAS_FOOTHOLD",
     "serving.rerank_timeout_seconds": "CANONICAL_V2_RERANK_TIMEOUT_SECONDS",
     "serving.rerank_max_documents": "CANONICAL_V2_RERANK_MAX_DOCUMENTS",
     "serving.vector_lane_timeout_seconds": (

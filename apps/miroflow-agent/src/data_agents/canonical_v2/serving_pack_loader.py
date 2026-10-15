@@ -1975,6 +1975,43 @@ def create_serving_pack_query_planner(
     )
 
 
+def create_local_name_linker(release_bundle: Any) -> Callable[[str], bool]:
+    """Query -> whether the query mentions a pack entity name or alias.
+
+    Backs the planning foothold's data-driven name-shape decision. The audited
+    lookup view (documents + name index) is a full parse, so it is built
+    lazily on first use: a query whose lexical checks already pass never pays
+    it. Any failure degrades to ``False`` — the caller keeps the previous
+    web-only routing instead of failing a turn.
+    """
+    state: dict[str, Any] = {}
+    disabled = object()
+
+    def local_name_linker(query: str) -> bool:
+        view = state.get("view")
+        if view is None:
+            try:
+                view = iso._create_audited_lookup_view(release_bundle)
+            except Exception:
+                state["view"] = disabled
+                return False
+            state["view"] = view
+        if view is disabled:
+            return False
+        try:
+            return bool(
+                iso._entity_link_indexes_for_view(
+                    view=view,
+                    entries=view.public_entries,
+                    query_text=query,
+                )
+            )
+        except Exception:
+            return False
+
+    return local_name_linker
+
+
 def create_serving_pack_knowledge_read(
     *,
     authority: ServingPackAuthority,

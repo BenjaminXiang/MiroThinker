@@ -962,7 +962,7 @@ def _mocked_serving_dependencies(
         create_builder=lambda _config: object(),
         read_envelope=lambda _path: serve_calls.append("read_envelope"),
         validate_envelope=lambda value: value,
-        load_recorded_serving_inputs=lambda _config: recorded,
+        load_recorded_serving_inputs=lambda _config, name_linker=None: recorded,
         create_published_release=lambda **kwargs: SimpleNamespace(**kwargs),
         create_query_planner=lambda **kwargs: object(),
         create_knowledge_read=lambda **kwargs: object(),
