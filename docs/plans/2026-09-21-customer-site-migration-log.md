@@ -1772,3 +1772,43 @@ conn_test       = ok, 347 ms（兼容路线 404 → DashScope 原生路线 200�
 **四、片②开工**：OpenSpec change `alias-passthrough-and-foothold` 落地（proposal / acceptance / tasks）+ 验证契约（`.agents/runs/alias-passthrough-and-foothold/verification-contract.md`）；下一步 T1 RED 复现 → T3 design readout（落点盘点）→ T4 实现。
 
 **五、影响哪些问题**：§3.7 两项前端待定收口（口号/联系方式、提示文案）；G32 账本改善；片②进入实施。
+
+---
+
+## 第 53 轮 · 2026-10-15 · **片②「别名直通＋立足点」双线落地**：最小重封（只改 manifest 3 字段）→ 开发线 18188 切包 → 现场 100.64.0.96 现场重封＋切包（两线矩阵 6/6、replay 7/7）
+
+**一、为什么是「重封」而不是「重建」**
+
+- 片②改的是读包代码（`canonical_v2` 的三个模块：立足点加第四路「问句命中库内实体名/别名」＋懒加载名字连接器＋kill switch `CANONICAL_V2_ALIAS_FOOTHOLD`），数据一个字节没动；而包的 `reader_contract_sha256` 就是「读包代码的身份证」（python + pydantic + `canonical_v2` 全包字节），代码一改即失效。
+- 不重跑官方封印器（s12c，~42 分钟全量重证）：第 14 轮已证明「数据相同的两个封印，只差 manifest 的 3 个字段」。用最小重封工具 `reseal_manifest.py`：硬链接复制 4 个数据条目（**零字节拷贝**）、只重绑 `generated_at / generator_run_id / reader_contract_sha256`，并自审（硬链接 samefile、字段漂移必须恰好这 3 个、写回的 reader contract 必须等于当前代码算出的值）。官方封印器仍是兜底。
+- **解释器口径（本片两处实测确认）**：reader contract 绑定 python/pydantic 版本——本机 root venv（pydantic 2.12.5）算 `ebba1bce…`；现场 venv（Python 3.12.14 / pydantic 2.13.4）算 `ff5ed0fc…`。**结论：现场必须在现场、用现场解释器重封**，本机 manifest 不能搬运。
+
+**二、开发线 18188（先 dogfood，再切包，回滚件齐备）**
+
+- 切包方式与直觉不同：18188 不是裸进程，而是 systemd **user** unit（`canonical-v2-backend.service`，`ExecStart=deploy/start-canonical-v2.sh` → 读 s12g 命令文件）。所以切包＝改命令文件里的包路径 + `systemctl --user restart`；回滚＝恢复命令文件（备份与原包/原收据都在）+ 重启。
+- dogfood 先行：18300 旁路实例先自挂 v2 包（全量验证 409s、写收据、冒烟出官方要点）——这一步让 18188 的切包走**收据快路径**。
+- 启动：挂载 **193.2s**（收据 `verification: "receipt"`）、16:39:02 Uvicorn 就绪、`/chat` 200、**零完整性错误**；关系/索引请求哈希 `b3746c26…` / `bba1d16b…` 与冻结记录逐位一致。
+- 复验：验收矩阵 **6/6**（三种「国先」说法＋对照说法均为官方要点，exact 2 · vector 16 · web；负控「世界上最美丽的女人是谁」仍 **web only**；回归「优必选有哪些专利」relationship 128 · web 68 → **本地专利引用 12 条**）；replay 门 **ALL PASS 7/7**（19 轮 0 失败，单轮 1.0–36.4s）；时延＝冷 123.5s（惰性名字连接器首建）→ 热 6.4–15.5s。
+
+**三、现场 100.64.0.96（无停机准备 + 一个窗口；交付面只有 3 个模块）**
+
+- 差异核对：现场代码树与本地**只差这 3 个模块**（逐文件 diff 证实），`serve_s12e_port.py` 逐字节相同 ⇒ 交付＝几个模块，不需要搬包。
+- 现场重封（**不碰在跑的服务**）：把「现场代码树的硬链接镜像 + 3 个新模块」当 `PYTHONPATH`，用现场 venv 重封 → `reader_contract_sha256 = ff5ed0fc…`；manifest 只变 3 个字段、4 个条目硬链接（零字节拷贝）。
+- 切换（单窗口 ~13 分钟）：备份 4 个文件 → 安装新代码（**fail-closed**：逐文件字节 `cmp`，且现场解释器现算 reader contract 必须等于封印值 → **MATCH**）→ `run.sh` 的 PACK 指向 v2 包 → `systemctl restart`。
+- 启动：首挂全量验证 **391.2s**（收据 `verification: "full"`，此后转快路径）；`/chat` `/main` `/api/health` 全 200；启动标记与本机同源（`b3746c26…` / `bba1d16b…`）。
+- 复验：矩阵 **6/6**（冷 77.5s → 热 7.7–16.7s；负控仍 web only；优必选 12 条本地专利引用）；replay 门 **ALL PASS 7/7**（19 轮 0 失败，0.9–19.8s）。
+- 回滚件：`staging-slice2/site/site-rollback.sh`（恢复 3 模块 + `run.sh` + 重启；v1 包与其收据原样未动）。
+
+**四、验证的分层证据**（细节在 `.agents/runs/alias-passthrough-and-foothold/verification.md` ⑤）
+
+| 层 | 证据 |
+|---|---|
+| 单测（本片新增） | `test_alias_foothold.py` 9/9（名字形状矩阵、4 条负控、修复前基线、kill switch、确定性） |
+| 既有回归 | `test_llm_query_rewrite` 36 过（1 条 timing-flaky 单跑即过）、`test_followup_domain_carryover`、`test_serving_pack_loader`+`test_manual_recall_points`+`test_fast_boot` 51 过、`s12a/test_complete_candidate_runner` 7/7；1 条既有红（Milvus 环境类，暂存复跑证明预存） |
+| scratch E2E（18299） | 矩阵 6/6、replay 7/7、召回门 0 fail 级（2 review＝概念题措辞噪声，对照同现） |
+| 开发线（18188 切包后） | 矩阵 6/6、replay 7/7、收据快路径 193.2s、零完整性错误 |
+| 现场（100.64.0.96 切包后） | 矩阵 6/6、replay 7/7、首挂全量 391.2s、页面三 200、启动哈希同源 |
+
+**五、影响哪些问题**：第 47 轮留存的三个失败说法（无领域词的「介绍一下 X」「X 的详细信息」）全部转为本地作答，G「别名直通＋立足点」闭合；第 51 轮执行顺序中片②从「实施中」转「双线落地」。沉淀两件可复用资产：最小重封器（manifest-only reseal）+ 现场重封/切换/回滚脚本；口径：**重封必须用「跑服务的那个解释器」**。
+
+**六、残留**：现场首挂全量验证 391s 说明「无收据包的首启」仍需一次全量；后续若做整包搬运，可把收据随包带上（现场已有 v1 先例）。客户侧 `var/admin-initial-password.txt` 与四钥仍按第 45 轮口径（我方 key 先行、页面可换）。
