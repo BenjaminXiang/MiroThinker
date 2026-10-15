@@ -37,7 +37,7 @@ FROZEN_EMBEDDING_URL="http://100.64.0.27:18005/v1"
 FROZEN_EMBEDDING_MODEL="Qwen/Qwen3-Embedding-8B"
 FROZEN_EMBEDDING_DIMENSION="4096"
 FROZEN_RERANK_URL="http://100.64.0.27:18006"
-DEFAULT_LLM_URL="https://star.sustech.edu.cn/service/model/qwen36/v1"
+DEFAULT_LLM_URL="http://100.64.0.27:1231/v1"
 
 usage() {
 	sed -n '2,20p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
