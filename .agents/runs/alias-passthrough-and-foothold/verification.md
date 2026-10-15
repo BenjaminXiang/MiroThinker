@@ -155,3 +155,17 @@ Cold 拆分说明：首个提问付一次性进程预热（含惰性 linker 构�
 - Replay gate **ALL PASS 7/7** (19 turns, 0 failures, 0.9–19.8 s per turn).
 - Rollback asset: `staging-slice2/site/site-rollback.sh` (restores the three
   modules + `run.sh` and restarts; the v1 pack and its receipt stay untouched).
+
+### AC evidence map (AC1–AC9)
+
+| AC | Evidence |
+|---|---|
+| AC1 | All three lines (scratch 18299, dev 18188, site): the ask answers with the official points (exact 2 · vector 16 · web) |
+| AC2 | `介绍一下 国际先进技术应用推进中心（深圳）` now engages local lanes (exact 2 · lexical 1 · vector 16 · web) and carries the official points; dev 15.5 s, site 10.6 s |
+| AC3 | The four forms answer with the official points on both lines (dev q1–q4, site q1–q4) |
+| AC4 | Manual read of the `国先中心` answer (dev, 9.2 s) — it separates the entities verbatim: 「「国先中心」是国际先进技术应用推进中心的简称…目前在深圳、合肥两地设有实体机构，广州南沙还设有大湾区国先中心。由于各地分部…下面分别说明。**国先中心（深圳）**，即深圳国际先进技术应用推进中心，在国家发展改革委、深圳市政府支持指导下设立…」 — the 大湾区/合肥 organizations are named only to be distinguished, never as the subject |
+| AC5 | The round-47 RED case (web 0 items → "暂未找到") now answers locally with the official points; no "暂未找到" in any of the 18 matrix asks |
+| AC6 | Replay gate 7/7 ALL PASS on scratch, dev line and site (three runs of 19 turns each) |
+| AC7 | Recall-gate diffs (T7 ④): 0 fail-level vs both baseline and control; the two REVIEW rows are concept-wording noise rows that flip identically in the control |
+| AC8 | Unit test `test_alias_foothold.py::kill_switch` — `CANONICAL_V2_ALIAS_FOOTHOLD=0` restores the pre-fix decision |
+| AC9 | Manifest-only reseal on both lines (three rebound fields, hardlinks, self-audit); rollback assets kept byte-identical (dev: command-file backup + v1 pack; site: four file backups + v1 pack/receipt) |
