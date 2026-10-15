@@ -603,17 +603,19 @@ sudo tail -c 4000 /root/deploy/fullstack-v2/serve.log
 sudo grep -E "candidate_release_id|serving_pack|relationship_request_sha256|index_projection_request_sha256" \
      /root/deploy/fullstack-v2/serve.log | tail -4</code></pre>
 
-  <h3>9.5 前端配色 token（2026-10 起：清华紫）</h3>
-  <p>前端各页在 <code>:root</code> 里各自声明一份调色板（<code>chat.html</code>/<code>browse.html</code>/<code>jobs.html</code>/<code>logs.html</code>/<code>seeds.html</code>/<code>upload.html</code> 内联；<code>main.css</code>/<code>admin.css</code> 共享）。品牌色已于 2026-10-15 按清华大学 VI 换为清华紫，改配色时改这几处即可：</p>
+  <h3>9.5 前端配色 token（2026-10 起：清华紫 + 白皮书强调色）</h3>
+  <p>前端各页在 <code>:root</code> 里各自声明一份调色板（<code>chat.html</code>/<code>browse.html</code>/<code>jobs.html</code>/<code>logs.html</code>/<code>seeds.html</code>/<code>upload.html</code> 内联；<code>main.css</code>/<code>admin.css</code> 共享）。品牌色已于 2026-10-15 按清华大学 VI 换为清华紫；同日按国先白皮书对齐 UI 语言（字体栈前插 + 玫红点睛 + 紫系细线），并把非状态绿全部归紫（去绿化第二遍）。改配色时改这几处即可：</p>
   <table>
     <tr><th>token</th><th>值</th><th>用途</th></tr>
-    <tr><td><code>--navy</code></td><td><code>#660874</code>（清华紫 PANTONE 259C）</td><td>品牌主色：顶栏、主按钮、头像、链接</td></tr>
-    <tr><td><code>--navy-strong</code></td><td><code>#4F065A</code></td><td>深色面 / 顶栏底 / 强调字</td></tr>
-    <tr><td><code>--blue-soft</code></td><td><code>#F8F1F9</code></td><td>品牌浅底（标签、头像底）</td></tr>
-    <tr><td><code>--teal</code> 一族</td><td><code>#168b82</code> / <code>#0f6f68</code> / <code>#e7f5f2</code></td><td><strong>语义色（成功/进行中）</strong>：<code>.pill.ok</code>、<code>.notice.ok</code>、引用徽标、process-done——不要当品牌色改</td></tr>
+    <tr><td><code>--navy</code></td><td><code>#660874</code>（清华紫 PANTONE 259C）</td><td>品牌主色与交互色：顶栏、主按钮、头像、链接、选中态、加载圈</td></tr>
+    <tr><td><code>--navy-strong</code></td><td><code>#4F065A</code></td><td>深色面 / 顶栏底 / 强调字 / 按钮 hover</td></tr>
+    <tr><td><code>--accent</code> / <code>--accent-soft</code></td><td><code>#a10063</code> / <code>#e3d1f7</code>（国先白皮书）</td><td>点睛强调色（标签语言）：引用角标 <code>.citation-badge</code>、示例卡领域角标 <code>.step</code></td></tr>
+    <tr><td><code>--blue-soft</code></td><td><code>#F8F1F9</code></td><td>品牌浅底（标签底、头像底、hover 底、关联卡底）</td></tr>
+    <tr><td><code>--line</code> / <code>--line-strong</code></td><td><code>rgba(102, 8, 116, 0.14)</code> / <code>…0.28</code></td><td>细线 / 分隔线（紫系；2026-10-15 前为冷灰 <code>#dce4e7</code>/<code>#c5d2d7</code>）</td></tr>
+    <tr><td><code>--teal</code> 一族</td><td><code>#168b82</code> / <code>#0f6f68</code> / <code>#e7f5f2</code></td><td><strong>唯一允许保留绿的语义色（成功/完成）</strong>：<code>.pill.ok</code>、<code>.notice.ok</code>、<code>.banner.saved</code>、<code>.badge.completed</code>、<code>.dot.ok</code>、process-done 完成标记——链接/按钮/选中态/标签/卡片底一律紫系，不要当品牌色改</td></tr>
     <tr><td><code>--amber</code> / <code>--danger</code> / <code>--ok</code></td><td>不变</td><td>警告 / 错误 / 成功（控制台）</td></tr>
   </table>
-  <p class="small">另：favicon 为内联 data-URI（<code>fill='%23660874'</code>）；环境光晕与焦点环为 <code>rgba(102, 8, 116, …)</code>。页面按请求读盘，改完静态文件即生效、无需重启。</p>
+  <p class="small">字体栈（2026-10-15 起前插 <code>MiSans, "HarmonyOS Sans SC", …</code>）：不打包字体文件，未安装设备自动回退系统字体。另：favicon 为内联 data-URI（<code>fill='%23660874'</code>）；环境光晕与焦点环为 <code>rgba(102, 8, 116, …)</code>。页面按请求读盘，改完静态文件即生效、无需重启。</p>
 </section>
 
 <footer>
