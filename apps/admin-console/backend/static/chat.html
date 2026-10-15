@@ -12,12 +12,14 @@
         --muted: #677984;
         --navy: #660874; /* 清华紫 PANTONE 259C */
         --navy-strong: #4F065A;
+        --accent: #a10063; /* 国先白皮书强调色 */
+        --accent-soft: #e3d1f7;
         --teal: #168b82;
         --teal-soft: #e7f5f2;
         --blue-soft: #F8F1F9;
         --canvas: #f3f6f7;
         --surface: #ffffff;
-        --line: #dce4e7;
+        --line: rgba(102, 8, 116, 0.14);
         --amber: #a86319;
         --amber-soft: #fff4df;
         --danger: #a83f4c;
@@ -38,8 +40,8 @@
         background:
           radial-gradient(circle at 90% 0%, rgba(102, 8, 116, 0.08), transparent 26rem),
           var(--canvas);
-        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
-          "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+        font-family: MiSans, "HarmonyOS Sans SC", Inter, ui-sans-serif, system-ui,
+          -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
         line-height: 1.55;
       }
 
@@ -172,18 +174,17 @@
         cursor: pointer;
         text-align: left;
       }
-      .demo-chip:hover { border-color: #85bbb7; background: var(--teal-soft); }
+      .demo-chip:hover { border-color: rgba(102, 8, 116, 0.35); background: var(--blue-soft); }
       .step {
         min-width: 28px;
         padding: 3px 6px;
-        color: #fff;
-        background: var(--teal);
+        color: var(--accent);
+        background: var(--accent-soft);
         border-radius: 999px;
         font-size: 10px;
         font-weight: 800;
         text-align: center;
       }
-      .demo-chip:nth-child(2) .step { color: var(--amber); background: var(--amber-soft); }
       .demo-copy { min-width: 0; }
       .demo-copy strong { display: block; margin-bottom: 2px; font-size: 11px; }
       .demo-copy span { display: block; overflow-wrap: anywhere; color: #354853; font-size: 12px; }
@@ -232,7 +233,7 @@
         display: grid;
         place-items: center;
         color: #fff;
-        background: var(--teal);
+        background: var(--navy);
         border-radius: 11px;
         font-size: 12px;
         font-weight: 800;
@@ -340,7 +341,7 @@
       .process-web-item { display: flex; align-items: baseline; gap: 6px; min-width: 0; }
       .process-web-link {
         overflow: hidden;
-        color: var(--teal);
+        color: var(--navy);
         font-size: 12px;
         text-decoration: none;
         text-overflow: ellipsis;
@@ -383,7 +384,7 @@
         width: fit-content;
         display: inline-flex;
         align-items: center;
-        color: var(--teal);
+        color: var(--navy);
         cursor: pointer;
         font-size: 11px;
         font-weight: 700;
@@ -419,7 +420,7 @@
         font-size: 11px;
         text-decoration: none;
       }
-      .citation-badge { padding: 2px 6px; color: var(--teal); background: var(--teal-soft); border-radius: 5px; font-size: 9px; }
+      .citation-badge { padding: 2px 6px; color: var(--accent); background: var(--accent-soft); border-radius: 5px; font-size: 9px; }
       .citation-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
       .web-evidence-list { display: grid; gap: 7px; }
@@ -435,7 +436,7 @@
         max-width: 100%;
         margin-top: 6px;
         overflow: hidden;
-        color: var(--teal);
+        color: var(--navy);
         font-size: 10px;
         font-weight: 700;
         text-decoration: none;
@@ -471,8 +472,8 @@
         font-size: 11px;
       }
       .feedback-toggle:hover, .feedback-submit:hover, .feedback-cancel:hover {
-        color: var(--teal);
-        border-color: var(--teal);
+        color: var(--navy);
+        border-color: var(--navy);
       }
       .feedback-toggle:disabled, .feedback-submit:disabled, .feedback-cancel:disabled {
         color: var(--muted);
@@ -547,7 +548,7 @@
         border-radius: 11px;
         line-height: 1.55;
       }
-      .input-row textarea:focus { border-color: var(--teal); background: #fff; }
+      .input-row textarea:focus { border-color: var(--navy); background: #fff; }
       .submit {
         min-width: 44px;
         min-height: 48px;
