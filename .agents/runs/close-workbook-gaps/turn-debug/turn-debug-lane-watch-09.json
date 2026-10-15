@@ -1,104 +1,173 @@
 {
   "session_id": "probe:lane-watch",
-  "turn_id": "turn:chat:sha256:8f0ccec45ecd7bfabccb08e4c178ae3b80cc0547915b3867017c2579c89cecfd",
+  "turn_id": "turn:chat:sha256:65138362f7f58478e8e3b2ae6dd6eee71b8c8ad5709b6417e1bea66a8a6d20c3",
   "turn_count": 9,
-  "query": "目前主流的JEPA（联合嵌入预测架构）变体有哪些",
+  "query": "详细介绍国先中心（深圳）",
   "planned_displayed_ids": [],
   "recalled_handles": [
     {
-      "id": "web-handle:sha256:579c30675e16fb8064ee6806cbfafa16f5b514149e4b7f003a62ee659315ad65",
-      "kind": "web",
-      "domain": "professor",
-      "display_name": "虚拟细胞每日研究进展2026-10-03医药新闻-ByDrug-一站式医药资源共享中心-医药魔方"
+      "id": "company-c-3970adda34eb223ab03821ff",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳国际先进技术应用推进中心"
     },
     {
-      "id": "web-handle:sha256:dc342e02bdf2f4cfc9aec548824224e1cbee02e202d246e1b6dda275b661c5c5",
+      "id": "web-handle:sha256:ded1709c59ba6d7f9681f2215b21e59f368b20ac713556c2f21b20140d3c49a2",
       "kind": "web",
       "domain": "professor",
-      "display_name": "联合嵌入预测架构(JEPA)"
+      "display_name": "多彩深圳——减肥达人训练营深圳国贸营地简介"
     },
     {
-      "id": "web-handle:sha256:d909d0826c71ac81ce5ad0b8ff111df7631aea6886d9cad55a5bda83ee0760a5",
+      "id": "web-handle:sha256:e2af484eee3ce8c99f38122ff2b81d4e022c2c154f230c4d2aa6607f96407672",
       "kind": "web",
       "domain": "professor",
-      "display_name": "RoboJEPA:扩展机器人潜在世界模型 - 今日头条"
+      "display_name": "深圳国家高技术产业创新中心（深圳发展改革研究院）-直属机构"
     },
     {
-      "id": "web-handle:sha256:8a543e91c536c3a853f1dfe24decb8ff6a8d5aa2937664a7854f979d0cbc1e62",
+      "id": "web-handle:sha256:47f1824af307df45c669a0aa0679fcfda0b9236efb061e6f2e0a0d7af1c82e1c",
       "kind": "web",
       "domain": "professor",
-      "display_name": "联合嵌入预测架构（JEPA）：从理论构想到世界模型的实践之路"
+      "display_name": "百步先(深圳〉信息技术有限公司"
     },
     {
-      "id": "web-handle:sha256:e5a9191ab91b4bb77552734c91b85d7786e5cce203295fb6c3b7796df3659cb2",
+      "id": "web-handle:sha256:815ee3e59254b69c1fa769f1c3ae3e5a40de922ae491958f64658177297c48f8",
       "kind": "web",
       "domain": "professor",
-      "display_name": "JEPA-Anything: Learning Predictive Models across Different Worlds - 智源社区论文"
+      "display_name": "南开国际先进研究院(深圳福田)"
     },
     {
-      "id": "web-handle:sha256:711920e024dc13123705410563a05ba6071da5ff0f109b464b29f64bab115fcc",
+      "id": "web-handle:sha256:a036aa7cc3bf48ab9e3b7ff02571111bed51d5a59bebeb0fa2bb7f69ae002b6c",
       "kind": "web",
       "domain": "professor",
-      "display_name": "JEPA（联合嵌入预测架构）的技术演进（上）"
+      "display_name": "建重大平台强核心攻关优产业生态深圳新质生产力加速迸发"
     },
     {
-      "id": "web-handle:sha256:c9fd93244bf4801242c5c536cdf63fc7bd59edb25c1fb77731af9282b51fadda",
+      "id": "web-handle:sha256:47bc76f615971e3f149fd0c956f475a28b7c901878db9d7bf9b7dd2892dd587f",
       "kind": "web",
       "domain": "professor",
-      "display_name": "MotionJEPA: Preventing Temporal Feature Collapse by Capturing Visual Changes in Latent Space - 智源社区论文"
+      "display_name": "深圳的“先”与“后”,深圳,珠海论坛 - Powered by Discuz!"
     },
     {
-      "id": "web-handle:sha256:ff6dd99b1e7b8f76db1c23bc041c8400355ab2e3c2cf1c2b322411bfa11f1d59",
+      "id": "web-handle:sha256:e85cb263c65735d82ef56ea39c1da79fd6b0333b094b74994a783d111e5df494",
       "kind": "web",
       "domain": "professor",
-      "display_name": "我们离世界模型还有多远？Yann LeCun提出的自主机器智能 ..."
+      "display_name": "创新平台"
+    },
+    {
+      "id": "web-handle:sha256:6b65029e0ce5d16482863e04df360a88f9664487d1a506b7094859692ef7d122",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "深圳南先科技有限公司 - 启信宝"
+    },
+    {
+      "id": "company-c-80c06114924f3b04909ade7f",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳高性能医疗器械国家研究院有限公司"
+    },
+    {
+      "id": "company-c-069aa8520a91f2e48c189d7c",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市恒先科技有限公司"
+    },
+    {
+      "id": "company-c-1ef9cf68aac3c1b6dabbc9e7",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳国芯微半导体有限公司"
+    },
+    {
+      "id": "company-c-9f9adfb11ec8f4b425057ccf",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市前海深港智算科技有限公司"
+    },
+    {
+      "id": "company-c-9ffdd602d8b6852bb3e20249",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深流微智能科技（深圳）有限公司"
+    },
+    {
+      "id": "company-c-7ae53ea6e747b64360960beb",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市富创优越科技有限公司"
+    },
+    {
+      "id": "company-c-4abba5888bec9f79e3c5235c",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳国创具身智能机器人有限公司"
     }
   ],
   "evidence_items": {
-    "total": 8,
+    "total": 18,
     "by_domain": {
+      "company": 10,
       "professor": 8
     },
     "by_lane": {
+      "exact": 1,
+      "vector": 9,
       "web": 8
     },
     "by_source_nature": {
-      "current_web": 8
+      "current_web": 8,
+      "local": 10
     },
-    "with_claim_binding": 8
+    "with_claim_binding": 18
   },
-  "protected_slots": [],
+  "protected_slots": [
+    {
+      "kind": "geography",
+      "value": "深圳",
+      "entity_ids": []
+    }
+  ],
   "requested_traversal": null,
   "admitted_claims": {
-    "total": 6,
+    "total": 2,
     "by_predicate": {
-      "current_web_result": 6
+      "canonical_projection": 1,
+      "geography": 1
     },
     "by_claim_type": {
-      "material_fact": 6
+      "material_fact": 2
     },
     "patent_evidence_claims": 0
   },
   "committed_handle_ids": [
-    "web-handle:sha256:dc342e02bdf2f4cfc9aec548824224e1cbee02e202d246e1b6dda275b661c5c5",
-    "web-handle:sha256:e5a9191ab91b4bb77552734c91b85d7786e5cce203295fb6c3b7796df3659cb2",
-    "web-handle:sha256:c9fd93244bf4801242c5c536cdf63fc7bd59edb25c1fb77731af9282b51fadda",
-    "web-handle:sha256:d909d0826c71ac81ce5ad0b8ff111df7631aea6886d9cad55a5bda83ee0760a5"
+    "company-c-3970adda34eb223ab03821ff"
   ],
   "committed_names": [
-    "联合嵌入预测架构(JEPA)",
-    "JEPA-Anything: Learning Predictive Models across Different Worlds - 智源社区论文",
-    "MotionJEPA: Preventing Temporal Feature Collapse by Capturing Visual Changes in Latent Space - 智源社区论文",
-    "RoboJEPA:扩展机器人潜在世界模型 - 今日头条"
+    "深圳国际先进技术应用推进中心"
   ],
   "render_mode": "prose_renderer",
   "response_mode": "answer",
-  "citations": 6,
-  "answer_chars": 834,
+  "citations": 2,
+  "answer_chars": 616,
   "lane_timings": [
     [
+      "structured",
+      0.0
+    ],
+    [
+      "vector",
+      1.065
+    ],
+    [
+      "exact",
+      1.506
+    ],
+    [
+      "lexical",
+      1.679
+    ],
+    [
       "web",
-      8.632
+      2.427
     ]
   ]
 }

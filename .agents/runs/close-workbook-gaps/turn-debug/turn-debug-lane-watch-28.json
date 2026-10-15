@@ -1,0 +1,164 @@
+{
+  "session_id": "probe:lane-watch",
+  "turn_id": "turn:chat:sha256:95c7a29476f5efa109a37f0baae86c100e0e32625690e903c7e592dc67ad0170",
+  "turn_count": 28,
+  "query": "丁文伯创办的公司是哪家",
+  "planned_displayed_ids": [],
+  "recalled_handles": [
+    {
+      "id": "web-handle:sha256:4c59d4e9c8020f25d09dcbed1ae52ffe47705906ff2442eb735307eeb6c0606a",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "丁文伯"
+    },
+    {
+      "id": "web-handle:sha256:91d6694a14442a95a30ae11a8c8bfd5c9c06502e2ade9e20c1798db23e0c7109",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "丁文波"
+    },
+    {
+      "id": "web-handle:sha256:19702d6dbe97a53cbb88b2007531f7bc68d4c5535e0d75386328da476e54a03f",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "深圳国际研究生院丁文伯、周光敏团队合作在磁驱动柔性电池 ..."
+    },
+    {
+      "id": "company-c-e0a864dbe45374562e550b05",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳芯联半导体科技有限公司"
+    },
+    {
+      "id": "company-c-989b1e7d92e1364aa76cc845",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳承创昌博科技有限公司"
+    },
+    {
+      "id": "company-c-681273ff0fbcb138ec277a84",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市振高科技有限公司"
+    },
+    {
+      "id": "company-c-a9e3f24abe80a03b200c58cb",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳电通纬创微电子股份有限公司"
+    },
+    {
+      "id": "company-c-9d49f1afa9161cdf7f3fe351",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市民德电子科技股份有限公司"
+    },
+    {
+      "id": "company-c-c3f58d9f6fb80702f8766273",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "视启未来（深圳）科技有限公司"
+    },
+    {
+      "id": "company-c-e5c65a4397e2e2655eddaec9",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市云泥科技有限公司"
+    },
+    {
+      "id": "company-c-de2421b5e12d08fcf4f4b1e2",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳瑞文文化发展有限公司"
+    },
+    {
+      "id": "company-c-942665a4923959c61433153e",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市欧灵科技有限公司"
+    },
+    {
+      "id": "company-c-4f4f8a3128e65aee9670b332",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳鼎界科技有限公司"
+    },
+    {
+      "id": "company-c-bf628392dafc4730d466002f",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市伟文无线通讯技术有限公司"
+    },
+    {
+      "id": "company-c-d1bc046ca94220a7c4677469",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市随你探探网络科技有限公司"
+    },
+    {
+      "id": "company-c-392d1959a30d57f4c354112d",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳长城开发科技股份有限公司"
+    }
+  ],
+  "evidence_items": {
+    "total": 16,
+    "by_domain": {
+      "company": 16
+    },
+    "by_lane": {
+      "vector": 13,
+      "web": 3
+    },
+    "by_source_nature": {
+      "current_web": 3,
+      "local": 13
+    },
+    "with_claim_binding": 16
+  },
+  "protected_slots": [],
+  "requested_traversal": null,
+  "admitted_claims": {
+    "total": 2,
+    "by_predicate": {
+      "current_web_result": 2
+    },
+    "by_claim_type": {
+      "material_fact": 2
+    },
+    "patent_evidence_claims": 0
+  },
+  "committed_handle_ids": [
+    "web-handle:sha256:4c59d4e9c8020f25d09dcbed1ae52ffe47705906ff2442eb735307eeb6c0606a"
+  ],
+  "committed_names": [
+    "丁文伯"
+  ],
+  "render_mode": "prose_renderer",
+  "response_mode": "answer",
+  "citations": 2,
+  "answer_chars": 154,
+  "lane_timings": [
+    [
+      "structured",
+      0.0
+    ],
+    [
+      "lexical",
+      0.34
+    ],
+    [
+      "exact",
+      0.364
+    ],
+    [
+      "vector",
+      0.333
+    ],
+    [
+      "web",
+      2.406
+    ]
+  ]
+}

@@ -1,8 +1,8 @@
 {
   "session_id": "probe:lane-watch",
-  "turn_id": "turn:chat:sha256:2b175a97dcb65994d939e0433316c0a86e113d26387acd1dabde9f6e0f898c50",
+  "turn_id": "turn:chat:sha256:7a7dccd2f80ba793d9bc708710d593b8e5ba05232621180234c6ff9b630248cf",
   "turn_count": 5,
-  "query": "详细介绍国先中心（深圳）",
+  "query": "本地知识库收录了优必选多少专利",
   "planned_displayed_ids": [],
   "recalled_handles": [],
   "evidence_items": {
@@ -14,9 +14,11 @@
   },
   "protected_slots": [
     {
-      "kind": "geography",
-      "value": "深圳",
-      "entity_ids": []
+      "kind": "displayed_entity_set",
+      "value": "displayed_entity_set",
+      "entity_ids": [
+        "company-c-c4b02d6a3e3ff20804d96024"
+      ]
     }
   ],
   "requested_traversal": null,
@@ -31,11 +33,27 @@
   "render_mode": "prose_renderer",
   "response_mode": "answer",
   "citations": 0,
-  "answer_chars": 226,
+  "answer_chars": 133,
   "lane_timings": [
     [
+      "structured",
+      0.061
+    ],
+    [
+      "exact",
+      0.172
+    ],
+    [
+      "lexical",
+      0.169
+    ],
+    [
+      "vector",
+      0.171
+    ],
+    [
       "web",
-      0.004
+      11.333
     ]
   ]
 }

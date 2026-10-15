@@ -1,30 +1,428 @@
 {
   "session_id": "probe:lane-watch",
-  "turn_id": "turn:chat:sha256:250a70eca839cfabb1c421cbc2970ad21d94ad7b5ed5d869a5d6bb5e2feb1ea4",
+  "turn_id": "turn:chat:sha256:bca0db0391fb94485d0af2819dfc7871ebb38c9fa6ebbafc1162e9fab1c3de54",
   "turn_count": 6,
-  "query": "目前主流的JEPA（联合嵌入预测架构）变体有哪些",
+  "query": "深圳科创数据平台收录了哪些教授",
   "planned_displayed_ids": [],
-  "recalled_handles": [],
+  "recalled_handles": [
+    {
+      "id": "web-handle:sha256:c7e30a0344cb44520b346783fff7e69bd450123f137728c5f3640ac17fe4957e",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "教授团队  深圳数据经济研究院"
+    },
+    {
+      "id": "web-handle:sha256:e35f27d8f8baa60ce070c02f0d60f3a64885a7365fbd925a8ba6ad7f40e0c43c",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "我国自主创建！全球科技文献数据新平台上线"
+    },
+    {
+      "id": "web-handle:sha256:ff8540c20351c7cec6d0c2f66f20403cbd2b8cfdfc38860ed4948c4ce7ccd43b",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "全国创新争先奖公示表彰名单 最高科技人才奖深圳4人入榜_澎湃号·政务_澎湃新闻-The Paper"
+    },
+    {
+      "id": "web-handle:sha256:ba2fa6cbf61a2df653c8e51c64eb2170f8521f9479f2f4a01eca4f1d30ccdcaa",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "我自主创建全球科技文献数据平台上线"
+    },
+    {
+      "id": "web-handle:sha256:741e42a3d1286649aadbfe508779862d315d5cba940467ac5f7a83d0c1bb5682",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "全球科创高地“版图” 深圳占据一席之地"
+    },
+    {
+      "id": "web-handle:sha256:a930de8795b65d5917f91fad84dbcacaa2f389ed8b36d2407ce4e94735a4c4e9",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "深圳市科技创新局网站"
+    },
+    {
+      "id": "web-handle:sha256:4f64855c560820bde6824236dd1f8e6bc47d2b11416d2028b9bcc2d850692a6b",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "喜讯港中大(深圳)数据科学学院17位教授上榜“全球Top 2%顶尖科学家”(Version 5)  香港中文大学(深圳)数据科学学院"
+    },
+    {
+      "id": "web-handle:sha256:353b66652da0f9bf0953d320af640d81d56149ed65b2813d409f0fdec25795da",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "发展历程| SRIBD官网"
+    },
+    {
+      "id": "web-handle:sha256:dac722bdf6f90084bec2b34d7f7a428c61a5439295478095130a095bdb5ba834",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "热烈欢迎深圳大学等高校教授们加入深圳市教授协会"
+    },
+    {
+      "id": "web-handle:sha256:bafcdbf7f3ceb11f0853859ee22cce3f842f646fa1ae2ca4e4890a3cf4e1d21f",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "学院概况"
+    },
+    {
+      "id": "web-handle:sha256:39e372d9f156618e761ec670444ccbfdffb0820104011dbab9e605b5b77c114d",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "深大4教授入选今年“高被引科学家”榜-今日头条"
+    },
+    {
+      "id": "web-handle:sha256:afcdd06540a8ed348289e9531ed0354b3697cebaa7efc6c6c9a8d2543c094877",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "研究所概况 - 深圳大数据技术与应用研究所- 深圳大学"
+    },
+    {
+      "id": "web-handle:sha256:411b9b2b00378636ca507b9195443b4e2f3b9ec526b46d8c39e7c9820c175d6f",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "斯坦福大学发布2024全球前2%顶尖科学家榜单 深圳三院、深圳多所高校数百人上榜"
+    },
+    {
+      "id": "web-handle:sha256:5a82e6f876a1ce379b4e42431159576387efe2d0fa90111bbd9b4b41b8ab6f0b",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "香港中文大学（深圳）成立数据科学学院戴建岗教授担任首任 ..."
+    },
+    {
+      "id": "web-handle:sha256:130816bbaa648427e09061de19138ae770a43da9041dcde22d88a83feaaf9c0f",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "科创001 | 科创深圳,何以站上世界科研“C位”?_腾讯新闻"
+    },
+    {
+      "id": "web-handle:sha256:705a361a5aa797a2830cf678e57f660143e72791fd4ac668e5a88f5543837726",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "深圳市大数据研究院"
+    },
+    {
+      "id": "web-handle:sha256:e6609951a4b0a1e803f3a1e7bcf589fde425f737bd114983b60698c7d9b29cc4",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "科研平台-深圳大学管理学院"
+    },
+    {
+      "id": "web-handle:sha256:b313d029a4e980939d0e074bf78dfe0f3ff4d042c3d02cc90c414a7aa699a855",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "培训项目_学术活动"
+    },
+    {
+      "id": "web-handle:sha256:e2c84747f0736b00fbb78dcf8418094894a4170051646d10886fa87e94e1a29f",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "2024全球前2%顶尖科学家→深圳数百名科学家和学者上榜"
+    },
+    {
+      "id": "web-handle:sha256:22d18d3f014d5c375e4c5faa75408d72edb17b86952e38f395d5a31a1a1e2bf6",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "全国首创+深圳首发！创新情报数据集与可信社区双平台正式 ..."
+    },
+    {
+      "id": "web-handle:sha256:0aeb4b32ce444e644d05914165494851c0b2b0a3d5011a14014024641c98e1cb",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "深大要闻-深圳大学新闻网"
+    },
+    {
+      "id": "web-handle:sha256:1a415c345e90b2df39f634cd5ca151bcad7a943f78dd0260887d3625385d5f9f",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "教授-深圳大学电子与信息工程学院"
+    },
+    {
+      "id": "web-handle:sha256:a8fadbf946222a13e4cee3ab846477fd3794b2c1255bf497d7493cb79782c947",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "深圳科创学院2025招募计划"
+    },
+    {
+      "id": "web-handle:sha256:60ce7e3f4d2cbd67e69b4767f702a0b77b9459227597101fa6ef0bd1734e0379",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "教授"
+    },
+    {
+      "id": "web-handle:sha256:a4745479deed35c43be122352886753a47cba672afcfdd989b69d46d2fbc30c0",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "深圳市科技业务管理系统"
+    },
+    {
+      "id": "web-handle:sha256:1b9e7dae4fd19a5f566e846ad1c31b8833873c814dcbdf603f02c71f23054a5e",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "深圳大学构建完善高校大数据平台公共服务体系案例被《中国 ..."
+    },
+    {
+      "id": "web-handle:sha256:b6b8aac785557df1b2e091a53b91d5e389dd2c8ccdab5d2acaf46a389843c158",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "汤丽霞博士_深圳大学_中国经济特区研究中心"
+    },
+    {
+      "id": "web-handle:sha256:5125e543ecc7ea62a518d2617905b05b53646a0a8fe2530877b09f6ee23b37f6",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "深圳大学经济学院 - 教师风采"
+    },
+    {
+      "id": "web-handle:sha256:a0a765bbdc0441f4e46a42ccf290e012f651b4e31972d31ced03a992aac343a3",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "研究院概述| SRIBD官网"
+    },
+    {
+      "id": "web-handle:sha256:aa1708213f28338193fb0d72951aec2ec265f9416dc58395bf9ef454f15e6c61",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "经济数据研究中心  深圳高等金融研究院"
+    },
+    {
+      "id": "web-handle:sha256:657d1cf99bfa74493f75578816b33cd40ed056012092778e152b541484c48022",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "预入孵营、科创训练营提前解密！ - 最新消息"
+    },
+    {
+      "id": "web-handle:sha256:cb19833e5aed526cc96f419299f57d58cfa6adc3d8e9b6bd5a54d977340b62d0",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "深圳大学主页平台管理系统 王家远--中文主页-- 深圳市建设事业十四五发展规划"
+    },
+    {
+      "id": "web-handle:sha256:7d3320472d4e66ccfd2b409447f9a7ebb82872def0665b0d1e284c37fd761dd5",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "深圳科创学院- 维基百科，自由的百科全书"
+    },
+    {
+      "id": "web-handle:sha256:c5d057f4c44bfbe7c6b8c040f87f9cc9370cc0cd0d9c2593f8ac2874c6a96799",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "教授-深圳大学生命与海洋科学学院"
+    },
+    {
+      "id": "web-handle:sha256:25e006ea8caffb6c9a3cfa5dbea0822b47defda2f703c0a815f086045e0310e7",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "教授(Professor)-深圳市媒体信息内容安全重点实验室"
+    },
+    {
+      "id": "web-handle:sha256:9ff32fe5b459f1d8a2445cbbb248ca7a51f7eac931845db08c6f7a44ac5439de",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "科技智库 - 中科信网-打造中国最强势科技信用创新服务平台"
+    },
+    {
+      "id": "web-handle:sha256:b1cc1e9aead97b3a53d045607ca6e1d5ba63efdf1f30def2ce6e8c76fd82e25d",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "科技专家-深圳市科技创新局网站"
+    },
+    {
+      "id": "web-handle:sha256:4c948df1ea58bbf76b2eef957177ff5a14a83706ba48832c1214ff2fffa783b1",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "科技专家-深圳市科技创新局网站"
+    },
+    {
+      "id": "web-handle:sha256:59d48d4477c2607a384f0105536966c747b23ccadac829ff8fdc6b8e038dd0da",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "数字化信创专委会  深圳市计算机学会 SZCCF"
+    },
+    {
+      "id": "web-handle:sha256:2ec25006dec7d1048e8faf4cd4a1d7ec91acbea5c6e506cca42d78c3105f49f9",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "在库专家信息维护及新专家入库操作指引"
+    },
+    {
+      "id": "web-handle:sha256:a6776fb924ec0a64d3ce3ffce45d4f81ac01c3becaa4b0232500492f0b714188",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "专家智库-深圳市高校教育信息化学会"
+    },
+    {
+      "id": "web-handle:sha256:ca6a3a94f40e58cfa489bc073b547c01402a87c0844b3a022c8d7c08aa1aca10",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "深圳市科技专家委员会简介"
+    },
+    {
+      "id": "web-handle:sha256:3eeca754f9516a4c41612064b8a3ec242d219187b241f4e2e2666cbc7593b8d6",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "深圳市科创委关于征集科技专家进入专家库的通知-山东大学深圳研究院"
+    },
+    {
+      "id": "web-handle:sha256:704d6a994f1fa7c5bf22541c1b319b85047ec3b33b8db1f208b7a374e06b85de",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "科技专家-深圳市科技创新局网站"
+    },
+    {
+      "id": "web-handle:sha256:09d3bff2f17e836aeca5b2bf62a47b71f30903ce645ae9d6a642d8f54e11a398",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "深圳市大数据研究院"
+    },
+    {
+      "id": "web-handle:sha256:0edc2725e516e4b85c39049c6bf3bf57733481fe158307cdea0df65150704ee3",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "深圳标准专家库管理办法(2023) - 道客巴巴"
+    },
+    {
+      "id": "web-handle:sha256:0f10054fc6233abdd82b0ea301b155b74b421e3f61aa857d74697576e9378ad7",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "转发深圳市科技创新委员会关于征集重大科技项目评审专家 ..."
+    },
+    {
+      "id": "web-handle:sha256:29920f3ceeb7e6de4063b04e85ec76b0fcd9d78320960e00c96cdd5f186c8bd4",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "深圳人才一体化综合服务平台项目(17页)-原创力文档"
+    },
+    {
+      "id": "web-handle:sha256:9d6f3cee76ae3ea36813e0e9afe17c897527b42b6d9a65e46653ebc3d7117599",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "关于征聘深圳市科技专家委员会科技专家库专家的通知"
+    },
+    {
+      "id": "web-handle:sha256:df6cb45c180f718e0f97b041a58a9cb4284b67f1ad6a01b8755d4a28ea560499",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "出海·生长·破圈：深圳科创学院的2025 - 最新消息"
+    },
+    {
+      "id": "web-handle:sha256:070f34e08c3537e53ff1b0ad18d1c127d94206042015b4c6f96dbfd3c1551252",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "衣龙新-深圳大学经济学院"
+    },
+    {
+      "id": "web-handle:sha256:748b29218c5e9ec581a13dbf4e9dcf2d951ae0ed5a2c9bdb76758fb5ddb7172d",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "SZCCF走进深圳科创学院报名开启！"
+    },
+    {
+      "id": "web-handle:sha256:3268f767c29f9cffb14472b81418c66f8e9cbf20d6faf2f8981b73ee56294ef6",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "教授-深圳大学体育学院"
+    },
+    {
+      "id": "web-handle:sha256:fe38989f605613f8ae1ab44f36efca2bc73ff49555c859ac9d8e8746eead891e",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "深圳大学毛睿教授应邀来我校作报告"
+    },
+    {
+      "id": "web-handle:sha256:7a91a425418eb1dda15a3ed88a2c3e62aa3e46cb36596b5c37396e33bb9c9d50",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "深圳高校知识产权大数据平台发布会（线上）成功举办"
+    },
+    {
+      "id": "web-handle:sha256:b795616f169b085e18e1c724f544edaaf31280d37ac58cfc3ddb555c20b68b92",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "深圳市大数据研究院2023年科研人员招聘公告 - 人才"
+    },
+    {
+      "id": "web-handle:sha256:2a7c83ee7a649e21b4e637e7e1499841382b10ba233ea89d422f9d4eb037a744",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "深圳大学主页平台管理系统 龙武剑--中文主页--教研项目"
+    },
+    {
+      "id": "web-handle:sha256:4bd6d877d5a07afa08789470fe913ca92d2581e2e7909e78b0904b0929856c19",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "Jin FENG  香港中文大学(深圳)数据科学学院"
+    },
+    {
+      "id": "web-handle:sha256:8a0fc08baf9e0b8cbd7c78d695690a3d29ac40b5f89b199f696c8bebd2f1b835",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "深圳大学主页平台管理系统 龙武剑--中文主页--教学获奖"
+    }
+  ],
   "evidence_items": {
-    "total": 0,
-    "by_domain": {},
-    "by_lane": {},
-    "by_source_nature": {},
-    "with_claim_binding": 0
+    "total": 59,
+    "by_domain": {
+      "professor": 59
+    },
+    "by_lane": {
+      "web": 59
+    },
+    "by_source_nature": {
+      "current_web": 59
+    },
+    "with_claim_binding": 59
   },
-  "protected_slots": [],
+  "protected_slots": [
+    {
+      "kind": "geography",
+      "value": "深圳",
+      "entity_ids": []
+    }
+  ],
   "requested_traversal": null,
   "admitted_claims": {
-    "total": 0,
-    "by_predicate": {},
-    "by_claim_type": {},
+    "total": 3,
+    "by_predicate": {
+      "geography": 3
+    },
+    "by_claim_type": {
+      "material_fact": 3
+    },
     "patent_evidence_claims": 0
   },
-  "committed_handle_ids": [],
-  "committed_names": [],
+  "committed_handle_ids": [
+    "web-handle:sha256:c7e30a0344cb44520b346783fff7e69bd450123f137728c5f3640ac17fe4957e",
+    "web-handle:sha256:60ce7e3f4d2cbd67e69b4767f702a0b77b9459227597101fa6ef0bd1734e0379"
+  ],
+  "committed_names": [
+    "教授团队  深圳数据经济研究院",
+    "教授"
+  ],
   "render_mode": "prose_renderer",
   "response_mode": "answer",
-  "citations": 0,
-  "answer_chars": 948,
-  "lane_timings": []
+  "citations": 3,
+  "answer_chars": 298,
+  "lane_timings": [
+    [
+      "structured",
+      0.0
+    ],
+    [
+      "exact",
+      0.49
+    ],
+    [
+      "vector",
+      0.892
+    ],
+    [
+      "lexical",
+      0.963
+    ],
+    [
+      "web",
+      5.756
+    ]
+  ]
 }

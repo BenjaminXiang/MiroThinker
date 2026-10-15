@@ -1,41 +1,178 @@
 {
   "session_id": "probe:lane-watch",
-  "turn_id": "turn:chat:sha256:e02a3a2b3962953402e4b59a00a452e573f9f4f845fb3c50dbd246b38b09d26c",
+  "turn_id": "turn:chat:sha256:1956933613ff85aaeae618a59aa591414dd47cb81795e2bc943b3fafe0a317a0",
   "turn_count": 8,
-  "query": "详细介绍国先中心（深圳）",
+  "query": "丁文伯教授的研究方向",
   "planned_displayed_ids": [],
-  "recalled_handles": [],
-  "evidence_items": {
-    "total": 0,
-    "by_domain": {},
-    "by_lane": {},
-    "by_source_nature": {},
-    "with_claim_binding": 0
-  },
-  "protected_slots": [
+  "recalled_handles": [
     {
-      "kind": "geography",
-      "value": "深圳",
-      "entity_ids": []
+      "id": "professor-c-256f0b3c38173205ba95704f",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "教授"
+    },
+    {
+      "id": "web-handle:sha256:989427d3fbd6a89b71bdacdc5744d849de9254dfe18da1fc52580ddea90bcfe2",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "丁文伯"
+    },
+    {
+      "id": "professor-c-3d7191fed1133c60b492f9c3",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "丁文伯"
+    },
+    {
+      "id": "web-handle:sha256:4be9e68266fceb386cefb37431795817cb4e928562133383cac88ca072873492",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "对话Sensors期刊杰出青年学者奖获得者——清华大学深圳研究 ..."
+    },
+    {
+      "id": "web-handle:sha256:320f88da39f6fe932be074626d883cfc2b08ccf3bde1f290d5b03879bb19dd4a",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "教授"
+    },
+    {
+      "id": "web-handle:sha256:467ba74349066de68aaad9160e7ec0a1b0205494b5e243f2ac939a222036f084",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "深圳国际研究生院丁文伯团队在透明物体抓取领域取得新进展"
+    },
+    {
+      "id": "web-handle:sha256:21fdd6ca39ffe6e719cf5a80c66fa070d89eea0ffef4e218c19f58fca3e9f588",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "丁文伯:执着,让梦想开花-清华大学"
+    },
+    {
+      "id": "web-handle:sha256:7e49e2ce0e88119e47ac869b4d74b3ff324eee621f7198908a8ad13eaf9144a4",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "丁文伯"
+    },
+    {
+      "id": "web-handle:sha256:6d3f3b58e4a694951ce78b4fb028e804e22b15a36bbc496ce8334d6ebac55b9f",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "丁文波"
+    },
+    {
+      "id": "web-handle:sha256:3dc04590d6239a21c358a3d96e12904a1aa095a70535b1c5b7c91b458db03baf",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "导师风采Supervisor's Information"
+    },
+    {
+      "id": "professor-c-f87b565877c7df396f4a81a0",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "丁文华"
+    },
+    {
+      "id": "professor-c-941d80f40f8dd91741042b07",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "陈文"
+    },
+    {
+      "id": "professor-c-90c721e9882a792952ec7455",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "夏文斌"
+    },
+    {
+      "id": "professor-c-6c318d5e11a56436fd68f379",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "金文野"
+    },
+    {
+      "id": "professor-c-2249a5f08300e97d4a9f35dd",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "文苹"
+    },
+    {
+      "id": "professor-c-839810bb8b7a95544e700d39",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "杨家文"
     }
   ],
+  "evidence_items": {
+    "total": 19,
+    "by_domain": {
+      "professor": 19
+    },
+    "by_lane": {
+      "exact": 2,
+      "vector": 9,
+      "web": 8
+    },
+    "by_source_nature": {
+      "current_web": 8,
+      "local": 11
+    },
+    "with_claim_binding": 19
+  },
+  "protected_slots": [],
   "requested_traversal": null,
   "admitted_claims": {
-    "total": 0,
-    "by_predicate": {},
-    "by_claim_type": {},
+    "total": 5,
+    "by_predicate": {
+      "canonical_projection": 1,
+      "current_web_result": 4
+    },
+    "by_claim_type": {
+      "material_fact": 5
+    },
     "patent_evidence_claims": 0
   },
-  "committed_handle_ids": [],
-  "committed_names": [],
+  "committed_handle_ids": [
+    "web-handle:sha256:989427d3fbd6a89b71bdacdc5744d849de9254dfe18da1fc52580ddea90bcfe2",
+    "professor-c-256f0b3c38173205ba95704f",
+    "professor-c-3d7191fed1133c60b492f9c3",
+    "web-handle:sha256:320f88da39f6fe932be074626d883cfc2b08ccf3bde1f290d5b03879bb19dd4a",
+    "web-handle:sha256:7e49e2ce0e88119e47ac869b4d74b3ff324eee621f7198908a8ad13eaf9144a4"
+  ],
+  "committed_names": [
+    "丁文伯",
+    "教授",
+    "丁文伯",
+    "教授",
+    "丁文伯"
+  ],
   "render_mode": "prose_renderer",
   "response_mode": "answer",
-  "citations": 0,
-  "answer_chars": 384,
+  "citations": 5,
+  "answer_chars": 442,
   "lane_timings": [
     [
       "web",
-      0.003
+      23.828
+    ],
+    [
+      "structured",
+      0.0
+    ],
+    [
+      "exact",
+      0.133
+    ],
+    [
+      "lexical",
+      0.228
+    ],
+    [
+      "vector",
+      0.548
+    ],
+    [
+      "web",
+      1.572
     ]
   ]
 }

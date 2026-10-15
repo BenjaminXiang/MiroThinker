@@ -1,0 +1,112 @@
+{
+  "session_id": "session:chat:MjdVD3ypxgA6Luez_UsRJw-HpBDAomDt",
+  "turn_id": "turn:chat:sha256:af0979bf98a88d5548a7710ee16adf30d71ba52507ae36cc0e9c7d1a1b79a3d1",
+  "turn_count": 1,
+  "query": "世界上最美丽的女人是谁",
+  "planned_displayed_ids": [],
+  "recalled_handles": [
+    {
+      "id": "web-handle:sha256:643296b970ba0aa2701a8f1188e0f9b01afc7baeb39410971322c47d8df2287c",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "世界上最漂亮女人是谁? - 搜狗问问"
+    },
+    {
+      "id": "web-handle:sha256:3162963f630c0398e7b3d05293129d47ccf24d31861b7949e220985078240282",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "地球上最好看的10个女人排行榜，她们确实颜值惊艳！"
+    },
+    {
+      "id": "web-handle:sha256:62a6ff93ea433fc1729002d35ea3b7bd8481248913d0282babd5fdb25d9e1ab8",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "DeepSeek评价世界最美女人_%ub_气质_因为"
+    },
+    {
+      "id": "web-handle:sha256:7ea0eebf544700f9237794efa73768f2059fccc123c2b9d5554a4095604b89cb",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "世界上最漂亮的十大美女中国上榜三位你愿意带哪一位回家？"
+    },
+    {
+      "id": "web-handle:sha256:3d0925751769663b03bb6ec0fc5b1a80782925761d1a50dd749281e7c335d63c",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "世界上最漂亮的女人是谁"
+    },
+    {
+      "id": "web-handle:sha256:f40c9cd28adbd0261b72d68a711f19f26b025814794b6589024ec7910f28c321",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "2024世界最美丽女性榜单出炉美的标准是什么？"
+    },
+    {
+      "id": "web-handle:sha256:0857e2d0b976e38b07430712c146b2599af0fabeaa7086d48f21fb3473c72f23",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "世界上最美的人"
+    },
+    {
+      "id": "web-handle:sha256:b06a0002a11a28ed92d1ff78a1e0f82f5bf1e63ca13b800e7c28a2eee9be4ac1",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "全世界最美的10個公主！6歲靠顏值美翻全球，卻淪為生育工具“ ..."
+    }
+  ],
+  "evidence_items": {
+    "total": 8,
+    "by_domain": {
+      "professor": 8
+    },
+    "by_lane": {
+      "web": 8
+    },
+    "by_source_nature": {
+      "current_web": 8
+    },
+    "with_claim_binding": 8
+  },
+  "protected_slots": [],
+  "requested_traversal": null,
+  "admitted_claims": {
+    "total": 6,
+    "by_predicate": {
+      "current_web_result": 6
+    },
+    "by_claim_type": {
+      "material_fact": 6
+    },
+    "patent_evidence_claims": 0
+  },
+  "committed_handle_ids": [
+    "web-handle:sha256:643296b970ba0aa2701a8f1188e0f9b01afc7baeb39410971322c47d8df2287c",
+    "web-handle:sha256:3162963f630c0398e7b3d05293129d47ccf24d31861b7949e220985078240282",
+    "web-handle:sha256:62a6ff93ea433fc1729002d35ea3b7bd8481248913d0282babd5fdb25d9e1ab8",
+    "web-handle:sha256:7ea0eebf544700f9237794efa73768f2059fccc123c2b9d5554a4095604b89cb",
+    "web-handle:sha256:3d0925751769663b03bb6ec0fc5b1a80782925761d1a50dd749281e7c335d63c",
+    "web-handle:sha256:f40c9cd28adbd0261b72d68a711f19f26b025814794b6589024ec7910f28c321",
+    "web-handle:sha256:0857e2d0b976e38b07430712c146b2599af0fabeaa7086d48f21fb3473c72f23",
+    "web-handle:sha256:b06a0002a11a28ed92d1ff78a1e0f82f5bf1e63ca13b800e7c28a2eee9be4ac1"
+  ],
+  "committed_names": [
+    "世界上最漂亮女人是谁? - 搜狗问问",
+    "地球上最好看的10个女人排行榜，她们确实颜值惊艳！",
+    "DeepSeek评价世界最美女人_%ub_气质_因为",
+    "世界上最漂亮的十大美女中国上榜三位你愿意带哪一位回家？",
+    "世界上最漂亮的女人是谁",
+    "2024世界最美丽女性榜单出炉美的标准是什么？",
+    "世界上最美的人",
+    "全世界最美的10個公主！6歲靠顏值美翻全球，卻淪為生育工具“ ..."
+  ],
+  "render_mode": "prose_renderer",
+  "response_mode": "answer",
+  "citations": 6,
+  "answer_chars": 447,
+  "lane_timings": [
+    [
+      "web",
+      5.727
+    ]
+  ]
+}

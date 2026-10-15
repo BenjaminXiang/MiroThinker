@@ -1,0 +1,172 @@
+{
+  "session_id": "session:chat:YKFBMPycyBMfd83WGCa5bRs544IfMfLv",
+  "turn_id": "turn:chat:sha256:b3d0dd7dc1ec064fc331c0a10a7d8fda69508ae10d76e53bf902133668abcdd6",
+  "turn_count": 1,
+  "query": "国先中心（深圳）是什么公司",
+  "planned_displayed_ids": [],
+  "recalled_handles": [
+    {
+      "id": "company-c-3970adda34eb223ab03821ff",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳国际先进技术应用推进中心"
+    },
+    {
+      "id": "web-handle:sha256:d381ed4520f06d2deb0df07d11182015abff2a2f2bd943376ae39005f6114435",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "国家部委支持，两重量级科研机构在河套同日揭牌"
+    },
+    {
+      "id": "web-handle:sha256:cbb95096a4843a67350b344a52cf2472b8e12d3ff760bd0e94a4969ff23780a5",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "深圳国家高技术产业创新中心（深圳发展改革研究院）-直属机构"
+    },
+    {
+      "id": "web-handle:sha256:0beda670c00eab27749fe3c7277c02995270ed7bddd08c9b4e4480a15634dfd6",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "机构职能-深圳市人民政府发展研究中心"
+    },
+    {
+      "id": "web-handle:sha256:51d9e5cae70e27e6f8f5aeb87b5b84d558c4a57742ccd5aae92cae5241b9bd9c",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "深圳市国民经济和社会发展第十五个五年规划纲要"
+    },
+    {
+      "id": "web-handle:sha256:326663a2eb414872eb7723f999c32e3f39c328e56c1d3715a3b8feac127c6cd8",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "深圳市规划和自然资源局"
+    },
+    {
+      "id": "web-handle:sha256:515a2de3f8dddeaefeb30719c6b1887f124ef0a1a481888567c3133c8683bae8",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "【关于深圳建设中国特色社会主义先行示范区放宽市场准入 ..."
+    },
+    {
+      "id": "company-c-069aa8520a91f2e48c189d7c",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市恒先科技有限公司"
+    },
+    {
+      "id": "company-c-1ef9cf68aac3c1b6dabbc9e7",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳国芯微半导体有限公司"
+    },
+    {
+      "id": "company-c-80c06114924f3b04909ade7f",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳高性能医疗器械国家研究院有限公司"
+    },
+    {
+      "id": "company-c-9f9adfb11ec8f4b425057ccf",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市前海深港智算科技有限公司"
+    },
+    {
+      "id": "company-c-9ffdd602d8b6852bb3e20249",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深流微智能科技（深圳）有限公司"
+    },
+    {
+      "id": "company-c-8461b3b6bc86f5c5b21f39e8",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳芯达晟科技有限公司"
+    },
+    {
+      "id": "company-c-7ae53ea6e747b64360960beb",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市富创优越科技有限公司"
+    },
+    {
+      "id": "company-c-4abba5888bec9f79e3c5235c",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳国创具身智能机器人有限公司"
+    },
+    {
+      "id": "company-c-95bf36f7d5e755504b9d6192",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "国智恒北斗惠数据运营（深圳）集团有限公司"
+    }
+  ],
+  "evidence_items": {
+    "total": 18,
+    "by_domain": {
+      "company": 18
+    },
+    "by_lane": {
+      "exact": 1,
+      "vector": 11,
+      "web": 6
+    },
+    "by_source_nature": {
+      "current_web": 6,
+      "local": 12
+    },
+    "with_claim_binding": 18
+  },
+  "protected_slots": [
+    {
+      "kind": "geography",
+      "value": "深圳",
+      "entity_ids": []
+    }
+  ],
+  "requested_traversal": null,
+  "admitted_claims": {
+    "total": 2,
+    "by_predicate": {
+      "canonical_projection": 1,
+      "geography": 1
+    },
+    "by_claim_type": {
+      "material_fact": 2
+    },
+    "patent_evidence_claims": 0
+  },
+  "committed_handle_ids": [
+    "company-c-3970adda34eb223ab03821ff"
+  ],
+  "committed_names": [
+    "深圳国际先进技术应用推进中心"
+  ],
+  "render_mode": "prose_renderer",
+  "response_mode": "answer",
+  "citations": 2,
+  "answer_chars": 355,
+  "lane_timings": [
+    [
+      "structured",
+      0.0
+    ],
+    [
+      "exact",
+      0.416
+    ],
+    [
+      "lexical",
+      0.471
+    ],
+    [
+      "vector",
+      0.687
+    ],
+    [
+      "web",
+      6.938
+    ]
+  ]
+}

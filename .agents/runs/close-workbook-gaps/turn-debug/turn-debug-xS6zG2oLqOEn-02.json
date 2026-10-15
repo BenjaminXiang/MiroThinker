@@ -1,0 +1,59 @@
+{
+  "session_id": "session:chat:xS6zG2oLqOEnZP5EoCOgXLrstn1hfeb1",
+  "turn_id": "turn:chat:sha256:c8f2b8bd23432a2df7e42f8a5e9b47752794b44cbf978af446086c7258596e7b",
+  "turn_count": 2,
+  "query": "有没有更详细的信息",
+  "planned_displayed_ids": [
+    "company-c-3970adda34eb223ab03821ff"
+  ],
+  "recalled_handles": [],
+  "evidence_items": {
+    "total": 4,
+    "by_domain": {
+      "professor": 4
+    },
+    "by_lane": {
+      "web": 4
+    },
+    "by_source_nature": {
+      "current_web": 4
+    },
+    "with_claim_binding": 4
+  },
+  "protected_slots": [
+    {
+      "kind": "displayed_entity_set",
+      "value": "displayed_entity_set",
+      "entity_ids": [
+        "company-c-3970adda34eb223ab03821ff"
+      ]
+    }
+  ],
+  "requested_traversal": null,
+  "admitted_claims": {
+    "total": 4,
+    "by_predicate": {
+      "geography": 4
+    },
+    "by_claim_type": {
+      "material_fact": 4
+    },
+    "patent_evidence_claims": 0
+  },
+  "committed_handle_ids": [
+    "company-c-3970adda34eb223ab03821ff"
+  ],
+  "committed_names": [
+    "深圳国际先进技术应用推进中心"
+  ],
+  "render_mode": "prose_renderer",
+  "response_mode": "answer",
+  "citations": 4,
+  "answer_chars": 293,
+  "lane_timings": [
+    [
+      "web",
+      4.163
+    ]
+  ]
+}

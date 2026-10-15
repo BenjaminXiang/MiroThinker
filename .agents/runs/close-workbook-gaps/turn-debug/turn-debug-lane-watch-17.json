@@ -1,0 +1,173 @@
+{
+  "session_id": "probe:lane-watch",
+  "turn_id": "turn:chat:sha256:442cbbaa697f04bf55172660eef40dad3dddc88cca01ad1a95e7bbea2e1f4f32",
+  "turn_count": 17,
+  "query": "详细介绍国先中心（深圳）",
+  "planned_displayed_ids": [],
+  "recalled_handles": [
+    {
+      "id": "company-c-3970adda34eb223ab03821ff",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳国际先进技术应用推进中心"
+    },
+    {
+      "id": "web-handle:sha256:ded1709c59ba6d7f9681f2215b21e59f368b20ac713556c2f21b20140d3c49a2",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "多彩深圳——减肥达人训练营深圳国贸营地简介"
+    },
+    {
+      "id": "web-handle:sha256:d73edefaabaf964d601b987b88f746dfb244de54699bac4fb2e964067b4f4faf",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "深圳国家高技术产业创新中心（深圳发展改革研究院）-直属机构"
+    },
+    {
+      "id": "web-handle:sha256:47f1824af307df45c669a0aa0679fcfda0b9236efb061e6f2e0a0d7af1c82e1c",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "百步先(深圳〉信息技术有限公司"
+    },
+    {
+      "id": "web-handle:sha256:815ee3e59254b69c1fa769f1c3ae3e5a40de922ae491958f64658177297c48f8",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "南开国际先进研究院(深圳福田)"
+    },
+    {
+      "id": "web-handle:sha256:a036aa7cc3bf48ab9e3b7ff02571111bed51d5a59bebeb0fa2bb7f69ae002b6c",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "建重大平台强核心攻关优产业生态深圳新质生产力加速迸发"
+    },
+    {
+      "id": "web-handle:sha256:47bc76f615971e3f149fd0c956f475a28b7c901878db9d7bf9b7dd2892dd587f",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "深圳的“先”与“后”,深圳,珠海论坛 - Powered by Discuz!"
+    },
+    {
+      "id": "web-handle:sha256:e85cb263c65735d82ef56ea39c1da79fd6b0333b094b74994a783d111e5df494",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "创新平台"
+    },
+    {
+      "id": "web-handle:sha256:6b65029e0ce5d16482863e04df360a88f9664487d1a506b7094859692ef7d122",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "深圳南先科技有限公司 - 启信宝"
+    },
+    {
+      "id": "company-c-80c06114924f3b04909ade7f",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳高性能医疗器械国家研究院有限公司"
+    },
+    {
+      "id": "company-c-069aa8520a91f2e48c189d7c",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市恒先科技有限公司"
+    },
+    {
+      "id": "company-c-1ef9cf68aac3c1b6dabbc9e7",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳国芯微半导体有限公司"
+    },
+    {
+      "id": "company-c-9f9adfb11ec8f4b425057ccf",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市前海深港智算科技有限公司"
+    },
+    {
+      "id": "company-c-9ffdd602d8b6852bb3e20249",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深流微智能科技（深圳）有限公司"
+    },
+    {
+      "id": "company-c-7ae53ea6e747b64360960beb",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市富创优越科技有限公司"
+    },
+    {
+      "id": "company-c-4abba5888bec9f79e3c5235c",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳国创具身智能机器人有限公司"
+    }
+  ],
+  "evidence_items": {
+    "total": 18,
+    "by_domain": {
+      "company": 10,
+      "professor": 8
+    },
+    "by_lane": {
+      "exact": 1,
+      "vector": 9,
+      "web": 8
+    },
+    "by_source_nature": {
+      "current_web": 8,
+      "local": 10
+    },
+    "with_claim_binding": 18
+  },
+  "protected_slots": [
+    {
+      "kind": "geography",
+      "value": "深圳",
+      "entity_ids": []
+    }
+  ],
+  "requested_traversal": null,
+  "admitted_claims": {
+    "total": 2,
+    "by_predicate": {
+      "canonical_projection": 1,
+      "geography": 1
+    },
+    "by_claim_type": {
+      "material_fact": 2
+    },
+    "patent_evidence_claims": 0
+  },
+  "committed_handle_ids": [
+    "company-c-3970adda34eb223ab03821ff"
+  ],
+  "committed_names": [
+    "深圳国际先进技术应用推进中心"
+  ],
+  "render_mode": "prose_renderer",
+  "response_mode": "answer",
+  "citations": 2,
+  "answer_chars": 635,
+  "lane_timings": [
+    [
+      "structured",
+      0.0
+    ],
+    [
+      "vector",
+      0.757
+    ],
+    [
+      "exact",
+      1.336
+    ],
+    [
+      "lexical",
+      1.606
+    ],
+    [
+      "web",
+      7.174
+    ]
+  ]
+}

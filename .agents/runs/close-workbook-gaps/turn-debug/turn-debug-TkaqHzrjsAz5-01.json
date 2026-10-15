@@ -1,0 +1,168 @@
+{
+  "session_id": "session:chat:TkaqHzrjsAz5we1fMVr8otsCEGTO0oRc",
+  "turn_id": "turn:chat:sha256:36bc73e1fe69bd5f68894404da0ffbe00e5e4b52cc43011e2c9e7de2901141d5",
+  "turn_count": 1,
+  "query": "国际先进技术应用推进中心（深圳）",
+  "planned_displayed_ids": [],
+  "recalled_handles": [
+    {
+      "id": "company-c-3970adda34eb223ab03821ff",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳国际先进技术应用推进中心"
+    },
+    {
+      "id": "web-handle:sha256:1496181871e3fc120898ffe70efbcaec3f785b9007dff184bdcbff528207778c",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "粤港澳大湾区数字经济研究院（国际先进技术应用推进中心 ..."
+    },
+    {
+      "id": "web-handle:sha256:69ca182b9de2e008706a7f0ad5605492bb7cbf4d81e5caedec10048d94575764",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "支持国际先进技术应用推进中心（深圳）建设具身智能 ..."
+    },
+    {
+      "id": "web-handle:sha256:72d108a5903d928dd316367feb279192b08ad7f1309adbf58f335987ac8a39ff",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "建重大平台强核心攻关优产业生态深圳新质生产力加速迸发"
+    },
+    {
+      "id": "web-handle:sha256:326b3661c8614baf091eeed60ac28635c6e125c1ce52160cba0ea472ddfe3d9e",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "发改委支持创新，国际先进技术应用推进中心有望落户深圳"
+    },
+    {
+      "id": "web-handle:sha256:ef1eb802b0b5a687f99e7b9fde283432ec11bd0028a58a8efeab2eface267dea",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "粤港澳大湾区数字经济研究院（国际先进技术应用推进中心 ..."
+    },
+    {
+      "id": "web-handle:sha256:94b1dc290508e406cd544b2ee6936a65b2ba88e3b3e0b8850ce8e8dd5d9c9f24",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "河套深圳园区打造深港科技创新聚集地"
+    },
+    {
+      "id": "web-handle:sha256:9fe4121481fe417753a875740b9fac1a51e035ad8e8fde79991f6a30825dea63",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "斯坦德携手国际先进技术应用推进中心（深圳），开启工业具身 ..."
+    },
+    {
+      "id": "web-handle:sha256:2c114e0f8680ed0bdffb9680c6e66d0c49fef490c8919821a9d452ee315f3c52",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "支持国际先进技术应用推进中心（深圳）建设具身智能 ..."
+    },
+    {
+      "id": "company-c-80c06114924f3b04909ade7f",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳高性能医疗器械国家研究院有限公司"
+    },
+    {
+      "id": "company-c-e0a864dbe45374562e550b05",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳芯联半导体科技有限公司"
+    },
+    {
+      "id": "company-c-3be94ae35a7d3a247ead04a4",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "中科先进（深圳）集成技术有限公司"
+    },
+    {
+      "id": "company-c-0ad8566f72d3c32b66d13483",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳芯展速科技发展有限公司"
+    },
+    {
+      "id": "company-c-d8676d42163a8e22982c4ea2",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市集科信电子信息科技有限公司"
+    },
+    {
+      "id": "company-c-6f0a5e70c7a055cab2029780",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市展芯科技有限公司"
+    }
+  ],
+  "evidence_items": {
+    "total": 18,
+    "by_domain": {
+      "company": 10,
+      "professor": 8
+    },
+    "by_lane": {
+      "exact": 1,
+      "lexical": 1,
+      "vector": 8,
+      "web": 8
+    },
+    "by_source_nature": {
+      "current_web": 8,
+      "local": 10
+    },
+    "with_claim_binding": 18
+  },
+  "protected_slots": [
+    {
+      "kind": "geography",
+      "value": "深圳",
+      "entity_ids": []
+    }
+  ],
+  "requested_traversal": null,
+  "admitted_claims": {
+    "total": 6,
+    "by_predicate": {
+      "canonical_projection": 1,
+      "geography": 5
+    },
+    "by_claim_type": {
+      "material_fact": 6
+    },
+    "patent_evidence_claims": 0
+  },
+  "committed_handle_ids": [
+    "company-c-3970adda34eb223ab03821ff"
+  ],
+  "committed_names": [
+    "深圳国际先进技术应用推进中心"
+  ],
+  "render_mode": "prose_renderer",
+  "response_mode": "answer",
+  "citations": 6,
+  "answer_chars": 499,
+  "lane_timings": [
+    [
+      "structured",
+      0.0
+    ],
+    [
+      "vector",
+      1.075
+    ],
+    [
+      "exact",
+      1.534
+    ],
+    [
+      "lexical",
+      1.898
+    ],
+    [
+      "web",
+      11.509
+    ]
+  ]
+}

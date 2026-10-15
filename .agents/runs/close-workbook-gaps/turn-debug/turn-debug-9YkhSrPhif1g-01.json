@@ -1,0 +1,57 @@
+{
+  "session_id": "session:chat:9YkhSrPhif1gElZ2e-j6rtcAEE0Wx-r9",
+  "turn_id": "turn:chat:sha256:e60f861a34ac8d34f29e8c541bce5865f042d10ff984053461b3e5d338f45225",
+  "turn_count": 1,
+  "query": "国先中心（深圳）的详细信息",
+  "planned_displayed_ids": [],
+  "recalled_handles": [],
+  "evidence_items": {
+    "total": 0,
+    "by_domain": {},
+    "by_lane": {},
+    "by_source_nature": {},
+    "with_claim_binding": 0
+  },
+  "protected_slots": [
+    {
+      "kind": "geography",
+      "value": "深圳",
+      "entity_ids": []
+    }
+  ],
+  "requested_traversal": null,
+  "admitted_claims": {
+    "total": 0,
+    "by_predicate": {},
+    "by_claim_type": {},
+    "patent_evidence_claims": 0
+  },
+  "committed_handle_ids": [],
+  "committed_names": [],
+  "render_mode": "prose_renderer",
+  "response_mode": "answer",
+  "citations": 0,
+  "answer_chars": 319,
+  "lane_timings": [
+    [
+      "web",
+      27.292
+    ],
+    [
+      "structured",
+      0.0
+    ],
+    [
+      "vector",
+      0.51
+    ],
+    [
+      "web",
+      3.869
+    ],
+    [
+      "web",
+      2.248
+    ]
+  ]
+}

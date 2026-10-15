@@ -1,0 +1,146 @@
+{
+  "session_id": "session:chat:dWK1z8XxRi7UjVlAxZA0HwXuQ0D9VugT",
+  "turn_id": "turn:chat:sha256:aa64236b1b50566039d7ab07f21625c998bb4383755dbe290bbdfa1db6c3c151",
+  "turn_count": 1,
+  "query": "介绍一下 国际先进技术应用推进中心（深圳）",
+  "planned_displayed_ids": [],
+  "recalled_handles": [
+    {
+      "id": "company-c-3970adda34eb223ab03821ff",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳国际先进技术应用推进中心"
+    },
+    {
+      "id": "web-handle:sha256:baf3ac40db0f389a3fd9129c120361f0bf42a4b1b8f41958b2a018505bc409b6",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "粤港澳大湾区数字经济研究院（国际先进技术应用推进中心 ..."
+    },
+    {
+      "id": "web-handle:sha256:ab6d8b62df80d76144e2dd0502f4d8c7245880ca252aee04742f6a7e0b558cbb",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "支持国际先进技术应用推进中心（深圳）建设具身智能 ..."
+    },
+    {
+      "id": "web-handle:sha256:f903f225f18fe9f1f692f74e08669d6317c9299165d3132a8a155a53110d500d",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "建重大平台强核心攻关优产业生态深圳新质生产力加速迸发"
+    },
+    {
+      "id": "web-handle:sha256:ea1d089837f7130fe5fc3f8c92292958577fffa620c20218d01656eb4d0daf23",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "发改委支持创新，国际先进技术应用推进中心有望落户深圳"
+    },
+    {
+      "id": "company-c-80c06114924f3b04909ade7f",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳高性能医疗器械国家研究院有限公司"
+    },
+    {
+      "id": "company-c-e0a864dbe45374562e550b05",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳芯联半导体科技有限公司"
+    },
+    {
+      "id": "company-c-3be94ae35a7d3a247ead04a4",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "中科先进（深圳）集成技术有限公司"
+    },
+    {
+      "id": "company-c-0ad8566f72d3c32b66d13483",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳芯展速科技发展有限公司"
+    },
+    {
+      "id": "company-c-d8676d42163a8e22982c4ea2",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市集科信电子信息科技有限公司"
+    },
+    {
+      "id": "company-c-6f0a5e70c7a055cab2029780",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市展芯科技有限公司"
+    }
+  ],
+  "evidence_items": {
+    "total": 14,
+    "by_domain": {
+      "company": 10,
+      "professor": 4
+    },
+    "by_lane": {
+      "exact": 1,
+      "lexical": 1,
+      "vector": 8,
+      "web": 4
+    },
+    "by_source_nature": {
+      "current_web": 4,
+      "local": 10
+    },
+    "with_claim_binding": 14
+  },
+  "protected_slots": [
+    {
+      "kind": "geography",
+      "value": "深圳",
+      "entity_ids": []
+    }
+  ],
+  "requested_traversal": null,
+  "admitted_claims": {
+    "total": 3,
+    "by_predicate": {
+      "canonical_projection": 1,
+      "geography": 2
+    },
+    "by_claim_type": {
+      "material_fact": 3
+    },
+    "patent_evidence_claims": 0
+  },
+  "committed_handle_ids": [
+    "company-c-3970adda34eb223ab03821ff",
+    "web-handle:sha256:ab6d8b62df80d76144e2dd0502f4d8c7245880ca252aee04742f6a7e0b558cbb"
+  ],
+  "committed_names": [
+    "深圳国际先进技术应用推进中心",
+    "支持国际先进技术应用推进中心（深圳）建设具身智能 ..."
+  ],
+  "render_mode": "prose_renderer",
+  "response_mode": "answer",
+  "citations": 3,
+  "answer_chars": 640,
+  "lane_timings": [
+    [
+      "structured",
+      0.0
+    ],
+    [
+      "vector",
+      1.438
+    ],
+    [
+      "exact",
+      1.525
+    ],
+    [
+      "lexical",
+      1.762
+    ],
+    [
+      "web",
+      11.359
+    ]
+  ]
+}

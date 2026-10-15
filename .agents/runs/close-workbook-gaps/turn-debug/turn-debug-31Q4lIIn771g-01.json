@@ -1,0 +1,171 @@
+{
+  "session_id": "session:chat:31Q4lIIn771gsiCgNEb2VqWPliyZDvx0",
+  "turn_id": "turn:chat:sha256:82e0d9ba5090aaf875b9d9e557bdb8c8082cae092f57a4454b5ddd23edd28acd",
+  "turn_count": 1,
+  "query": "国先中心的详细信息",
+  "planned_displayed_ids": [],
+  "recalled_handles": [
+    {
+      "id": "company-c-3970adda34eb223ab03821ff",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳国际先进技术应用推进中心"
+    },
+    {
+      "id": "web-handle:sha256:dbc64a48b9bd29047ccc7f1cdaef006b250b38416cdde67c12824f10d574d1f0",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "广州市发展改革委赋能大湾区国际先进技术应用推进中心三 ..."
+    },
+    {
+      "id": "company-c-9d9e6698c505cff87c51a7e9",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "合肥国际先进技术应用推进中心"
+    },
+    {
+      "id": "web-handle:sha256:18e1060da0d93a14f04038ad0ba3c958757e2715bb661b82fa53c4401b230b90",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "国际先进技术应用推进中心（合肥）打造世界级推广平台"
+    },
+    {
+      "id": "web-handle:sha256:a4398f992291ba9bc22d42526022b3597477eb7e011a6959916843b638deb0e5",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "场景创新中心”启动大会暨深海产业发展大会在广州南沙举行"
+    },
+    {
+      "id": "web-handle:sha256:45b78f95eebd435804fff22b76234036a90db2f40982822ff6feb7a48f181fde",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "合肥出台支持国先中心高质量发展意见"
+    },
+    {
+      "id": "web-handle:sha256:3260a56c8043d92f9f4b3070701dd89d89dc18c22e60adc6cd7ca038714ba06c",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "大湾区国先中心参与共建国家级路空一体测试基地"
+    },
+    {
+      "id": "web-handle:sha256:9851efb9b7455b203436b7b7fa6ec323759440a3f41a44026ed32093a08df64c",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "【技术创新】重磅!合肥出台支持国先中心高质量发展意见!_合肥市发展和改革委员会"
+    },
+    {
+      "id": "web-handle:sha256:a37255d05867c069cede000450fcff1d48000a5faeee96c01b2b5d0e02e641dd",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "大湾区两大创新平台在南沙启动"
+    },
+    {
+      "id": "web-handle:sha256:76914da700c05831cd68378ff86ab87cff77dcb60fc4c3357838211c74c3ff89",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "“国先中心”场景对接专场活动-合肥场景峰会小园圈"
+    },
+    {
+      "id": "company-c-0fa883f47729851ed894e350",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "浦东国际先进技术应用推进中心"
+    },
+    {
+      "id": "company-c-5bab2fde1bba45b2b2c26afa",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "横琴国际先进技术应用推进中心"
+    },
+    {
+      "id": "company-c-069aa8520a91f2e48c189d7c",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市恒先科技有限公司"
+    },
+    {
+      "id": "company-c-947c0dc8980fdf80ffdb56e7",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "大湾区国际先进技术应用推进中心"
+    },
+    {
+      "id": "company-c-1ef9cf68aac3c1b6dabbc9e7",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳国芯微半导体有限公司"
+    },
+    {
+      "id": "professor-c-74cda10922ee8f4af53acc65",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "邓先宇"
+    }
+  ],
+  "evidence_items": {
+    "total": 19,
+    "by_domain": {
+      "company": 10,
+      "professor": 9
+    },
+    "by_lane": {
+      "exact": 2,
+      "vector": 9,
+      "web": 8
+    },
+    "by_source_nature": {
+      "current_web": 8,
+      "local": 11
+    },
+    "with_claim_binding": 19
+  },
+  "protected_slots": [],
+  "requested_traversal": null,
+  "admitted_claims": {
+    "total": 9,
+    "by_predicate": {
+      "canonical_projection": 2,
+      "current_web_result": 7
+    },
+    "by_claim_type": {
+      "material_fact": 9
+    },
+    "patent_evidence_claims": 0
+  },
+  "committed_handle_ids": [
+    "company-c-3970adda34eb223ab03821ff",
+    "company-c-9d9e6698c505cff87c51a7e9",
+    "web-handle:sha256:18e1060da0d93a14f04038ad0ba3c958757e2715bb661b82fa53c4401b230b90"
+  ],
+  "committed_names": [
+    "深圳国际先进技术应用推进中心",
+    "合肥国际先进技术应用推进中心",
+    "国际先进技术应用推进中心（合肥）打造世界级推广平台"
+  ],
+  "render_mode": "prose_renderer",
+  "response_mode": "answer",
+  "citations": 9,
+  "answer_chars": 831,
+  "lane_timings": [
+    [
+      "structured",
+      0.0
+    ],
+    [
+      "web",
+      0.599
+    ],
+    [
+      "exact",
+      1.087
+    ],
+    [
+      "vector",
+      1.117
+    ],
+    [
+      "lexical",
+      1.598
+    ]
+  ]
+}

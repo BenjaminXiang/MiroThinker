@@ -775,17 +775,20 @@
     }
   ],
   "evidence_items": {
-    "total": 128,
+    "total": 136,
     "by_domain": {
-      "patent": 128
+      "patent": 128,
+      "professor": 8
     },
     "by_lane": {
-      "relationship": 128
+      "relationship": 128,
+      "web": 8
     },
     "by_source_nature": {
+      "current_web": 8,
       "local": 128
     },
-    "with_claim_binding": 128
+    "with_claim_binding": 136
   },
   "protected_slots": [
     {
@@ -798,25 +801,31 @@
   ],
   "requested_traversal": "path_id='company_to_patent' source_domain='company' target_domain='patent' relationship_type='patent_has_applicant' direction='inverse'",
   "admitted_claims": {
-    "total": 32,
+    "total": 1,
     "by_predicate": {
-      "patent_has_applicant": 32
+      "geography": 1
     },
     "by_claim_type": {
-      "material_fact": 32
+      "material_fact": 1
     },
-    "patent_evidence_claims": 32
+    "patent_evidence_claims": 0
   },
-  "committed_handle_ids": [],
-  "committed_names": [],
+  "committed_handle_ids": [
+    "web-handle:sha256:c7e30a0344cb44520b346783fff7e69bd450123f137728c5f3640ac17fe4957e",
+    "web-handle:sha256:60ce7e3f4d2cbd67e69b4767f702a0b77b9459227597101fa6ef0bd1734e0379"
+  ],
+  "committed_names": [
+    "教授团队  深圳数据经济研究院",
+    "教授"
+  ],
   "render_mode": "prose_renderer",
   "response_mode": "answer",
-  "citations": 32,
-  "answer_chars": 2553,
+  "citations": 1,
+  "answer_chars": 333,
   "lane_timings": [
     [
       "relationship",
-      0.927
+      0.901
     ]
   ]
 }

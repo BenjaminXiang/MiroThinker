@@ -22,6 +22,10 @@ Milvus Lite + 本地 serving-pack。对外经 **dbg21（100.64.0.34）的 nginx*
 ## 对外访问（2026-08-09 已生效，两区分级）
 
 - 公网入口：`https://star.sustech.edu.cn/guoxian`（校网关 → dbg21:3001 → gpu01:18188）
+  - **退役中（2026-10-15）**：star 域名将退役；按约定入口保留到校方给出关闭日期，
+    届时在 dbg21 跑 `deploy/retire-star-entry.sh`（自带备份与回滚），并同步收紧本机
+    对 100.64.0.34 的放行（`firewall-18188.sh`）。背景见
+    `docs/plans/2026-10-15-star-couplings-retirement.md`
 - **公开区（无需登录）**：`/guoxian/chat` 对话页、`/api/chat*`、`/static/*`
   - chat 页示例问题为静态写死（`STATIC_DEMO_QUESTIONS`），不依赖需登录的数据浏览 API
 - **管理区（auth_basic）**：`/guoxian/logs`（访问日志）、`/guoxian/browse`（数据浏览）、
