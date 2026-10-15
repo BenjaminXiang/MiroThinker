@@ -21,8 +21,11 @@
   `s12a/test_complete_candidate_runner.py` — all green except
   `test_release_bound_vector_validator_exempts_manual_traces`（还原复跑证明预存：
   暂存本片改动后同样失败，Milvus mvccTs 类环境失败）
-- [ ] T7 scratch E2E (port 1829x): 4-form matrix + web-0 fallback (AC1–AC5);
+- [x] T7 scratch E2E (port 18299): 4-form matrix + web-0 fallback (AC1–AC5);
   `replay_fix_round1.py` 7/7; recall-gate `--diff`; route A/B on the round-41 set
-- [ ] T8 reseal (s12g manifest-only path) + cutover dev line (18188) + field line
-  (100.64.0.96) with rollback assets kept
-- [ ] T9 docs: human log round + index line + `verification.md` (layered evidence)
+  → `.agents/runs/alias-passthrough-and-foothold/verification.md` ④
+- [x] T8 reseal (manifest-only minimal path) + cutover dev line (18188) + field
+  line (100.64.0.96) with rollback assets kept — matrix 6/6 and replay 7/7 on
+  both lines; the site was resealed on-site with the site interpreter
+  (`ff5ed0fc…`) → `verification.md` ⑤
+- [x] T9 docs: human log round + index line + `verification.md` (layered evidence)

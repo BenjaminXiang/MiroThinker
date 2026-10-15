@@ -1,7 +1,7 @@
-# Verification — alias passthrough and local foothold (in progress)
+# Verification — alias passthrough and local foothold (complete)
 
-Layered evidence. T7 (scratch E2E) and T8 (reseal + cutover) are still open;
-this file records what is proven so far.
+Layered evidence. T7 (scratch E2E) recorded in ④; T8 (reseal + dual-line
+cutover) recorded in ⑤.
 
 ## ① New tests written this slice (9, all green)
 
@@ -30,10 +30,9 @@ hand-built vocabulary).
 
 ## ③ Replay / fault-injection (RAG/chat-level claim)
 
-Not yet run for this slice — T7 pending: scratch boot + the 4-form
-acceptance matrix + `replay_fix_round1.py` 7/7 + recall-gate `--diff`. The
-in-suite baseline assertion (①) is the current RED-class evidence; live E2E
-follows before any deploy.
+Ran three times: scratch 18299 (④), dev line 18188 after the pack cutover,
+and the customer site 100.64.0.96 after its on-site reseal (⑤) — all three
+`ALL PASS 7/7`. The recall-gate `--diff` belongs to the scratch run (④).
 
 ## Changed files
 
@@ -95,3 +94,64 @@ Cold 拆分说明：首个提问付一次性进程预热（含惰性 linker 构�
 
 **T7 判定：通过**——replay 7/7 ALL PASS、召回门 0 fail 级、验收矩阵 6/6、
 负控与回归问法无退化。（REVIEW 行为概念措辞噪声，按噪声校准口径解读。）
+
+## ⑤ T8 — reseal + dual-line cutover (dev 18188 + site 100.64.0.96)
+
+### T8a reseal (local, manifest-only minimal)
+
+- Tool `.agents/runs/alias-passthrough-and-foothold/reseal_manifest.py`
+  (proven increment, migration-log round 14): hardlink-copies the four data
+  entries (zero bytes copied) and rebinds exactly `generated_at`,
+  `generator_run_id`, `reader_contract_sha256`; self-audits (samefile on every
+  entry, drift == those three fields, written contract == running code's
+  digest). The official sealer (s12c, ~42 min full re-proof) stays the fallback.
+- Result: `/var/tmp/mirothinker-data-v2/serving-pack-fembed-v2-aliasfoothold`
+  (manifest 11,116,293 B, 4 hardlinks, data file digests unchanged vs v1).
+- Interpreter caveat (verified twice this slice): the digest binds python +
+  pydantic + every `canonical_v2/*.py` byte. Root venv (pydantic 2.12.5) →
+  `ebba1bce…`; site venv (3.12.14 / pydantic 2.13.4) → `ff5ed0fc…`. The site's
+  manifest therefore has to be resealed **on the site, with the site
+  interpreter**.
+- Dogfood before touching the line: bypass instance on 18300 mounted the v2
+  pack — full verification 409 s, receipt written, smoke answer carried the
+  official points; that receipt is what lets the real cutover take the fast
+  path.
+
+### T8b dev line (18188, systemd)
+
+- The line is a systemd **user** unit (`canonical-v2-backend.service`,
+  `ExecStart=…/deploy/start-canonical-v2.sh` → the s12g command file), so the
+  cutover edited the command file's pack path and `systemctl --user restart`ed
+  it; rollback = restore the command file (backup kept next to it) + restart.
+- Boot: mount **193.2 s** (`verification: "receipt"` fast path), Uvicorn ready
+  16:39:02, `/chat` 200, zero integrity errors, recorded hashes reproduced
+  verbatim (`relationship_request_sha256=b3746c26…`,
+  `index_projection_request_sha256=bba1d16b…`).
+- Acceptance matrix **6/6**: the three 国先 phrasings + the control phrasing
+  answer with the official points (exact 2 · vector 16 · web); the negative
+  control stays **web-only**; 优必选 patents = relationship 128 · web 68 →
+  **12 local patent citations**.
+- Replay gate **ALL PASS 7/7** (19 turns, 0 failures, 1.0–36.4 s per turn).
+- Timing: 123.5 s cold (the lazy linker's first build) → 6.4–15.5 s warm.
+
+### T8c customer site (100.64.0.96)
+
+- Delta to the site was exactly the three modules (+ the runner); the rest of
+  the site's `canonical_v2` package was byte-identical to the worktree.
+- On-site reseal (**no service impact**): a hardlink farm of the live agent
+  package with the three new modules overlaid served as `PYTHONPATH`, so the
+  site interpreter sealed the site's own contract
+  (`reader_contract_sha256 = ff5ed0fc…`, exactly three rebound fields, four
+  hardlinks, zero bytes copied).
+- Cutover (single window, ~13 min): back up four files → install the new code
+  **fail-closed** (byte `cmp` per file, then the site interpreter recomputing
+  the live tree's contract must equal the sealed value → MATCH) → point
+  `run.sh` at the v2 pack → `systemctl restart`.
+- Boot: first mount **391.2 s** (`verification: "full"`, receipt written);
+  `/chat` `/main` `/api/health` all 200; the boot reproduced the same frozen
+  hashes as the dev line.
+- Acceptance matrix **6/6** (77.5 s cold, then 7.7–16.7 s); 优必选 = 12 local
+  patent citations; the negative control stayed web-only.
+- Replay gate **ALL PASS 7/7** (19 turns, 0 failures, 0.9–19.8 s per turn).
+- Rollback asset: `staging-slice2/site/site-rollback.sh` (restores the three
+  modules + `run.sh` and restarts; the v1 pack and its receipt stay untouched).
