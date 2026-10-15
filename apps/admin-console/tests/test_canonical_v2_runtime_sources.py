@@ -235,7 +235,8 @@ def test_llm_profile_switch_changes_the_reported_source(
     llm = resolved["llm"]
 
     assert llm.endpoint_origin == "chat-profile:gemma4"
-    assert llm.base_url == "https://star.sustech.edu.cn/service/model/qwen36/v1"
+    # gemma4 moved off the star gateway 2026-10-15 (retire-star-domain-couplings).
+    assert llm.base_url == "http://100.64.0.27:1231/v1"
 
 
 def test_llm_reports_a_missing_credential_instead_of_a_401(

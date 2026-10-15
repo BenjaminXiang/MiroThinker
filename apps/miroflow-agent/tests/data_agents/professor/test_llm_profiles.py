@@ -204,7 +204,9 @@ def test_resolve_professor_llm_settings_falls_back_to_key_file(
 @pytest.mark.parametrize(
     ("profile_name", "expected_prefix"),
     [
-        ("gemma4", "https://star.sustech.edu.cn/service/model/qwen36/v1"),
+        # gemma4 left the star set 2026-10-15 (retire-star-domain-couplings);
+        # it now resolves to our own host (guarded in
+        # tests/data_agents/test_star_domain_retirement.py).
         ("qwen35", "https://star.sustech.edu.cn/service/model/qwen35/v1"),
         ("mirothinker", "https://star.sustech.edu.cn/service/model/mirothinker/v1"),
         ("ark", "https://star.sustech.edu.cn/service/model/qwen36/v1"),
