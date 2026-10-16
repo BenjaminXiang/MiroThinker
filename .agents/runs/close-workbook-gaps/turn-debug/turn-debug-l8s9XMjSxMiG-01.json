@@ -1,0 +1,102 @@
+{
+  "session_id": "session:chat:l8s9XMjSxMiGuwoutH6wJ8-wal0EzDv7",
+  "turn_id": "turn:chat:sha256:b616803242248fe4ce99b6ca709c7c4669fb6f1f99368bc2490b756f070048b7",
+  "turn_count": 1,
+  "query": "JEPA 有哪些变体？",
+  "planned_displayed_ids": [],
+  "recalled_handles": [
+    {
+      "id": "web-handle:sha256:66bc89e95857751c52c6e0d396584f18927d5cd9030c1d9959f06913094f07f3",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "160行代码读懂LeCun的JEPA世界模型|投资界"
+    },
+    {
+      "id": "web-handle:sha256:3d103be138594031e7b4a09a288ac420bca56acf3d1039eb290136ee039824c3",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "Java_35个JDK 21新特性_java jep-CSDN博客"
+    },
+    {
+      "id": "web-handle:sha256:ba8fc13150ff641fbd7455e8753e419eabcc63c7d45435fd97da14e473bdce82",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "JEPA:Yann LeCun 提出的联合嵌入预测架构JEPA(Joint-Embedding Predictive A - 掘金"
+    },
+    {
+      "id": "web-handle:sha256:352df9f5d32fd36e9663f135f483f1df36c178cd959c1019a79b26276687ee32",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "EJA选型 - 豆丁网"
+    },
+    {
+      "id": "web-handle:sha256:8815a5dad74fe8f73eaaff669bebf28d7724269fb51a0fe8ebbd8dede6cb77ba",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "jep(java表达式分析器)简介_java jep-CSDN博客"
+    },
+    {
+      "id": "web-handle:sha256:4443f21c7b161f0c624af383c6d48b020057d3428219b61a5f3939f2329af57f",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "PEPA「CAS号:141286-78-4」 – 960化工网"
+    },
+    {
+      "id": "web-handle:sha256:a86b934a054e497b052a4b5b9329a8bd5d87d050f44c82dd5588370d4ecc9afb",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "AdaJEPA: An Adaptive Latent World Model - 智源社区论文"
+    },
+    {
+      "id": "web-handle:sha256:f6181766bfb895dee5ef8fd388a3eb2d270d98817385e82e00cf9a3c57fa20c0",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "EJA选型.doc"
+    }
+  ],
+  "evidence_items": {
+    "total": 8,
+    "by_domain": {
+      "professor": 8
+    },
+    "by_lane": {
+      "web": 8
+    },
+    "by_source_nature": {
+      "current_web": 8
+    },
+    "with_claim_binding": 8
+  },
+  "protected_slots": [],
+  "requested_traversal": null,
+  "admitted_claims": {
+    "total": 3,
+    "by_predicate": {
+      "current_web_result": 3
+    },
+    "by_claim_type": {
+      "material_fact": 3
+    },
+    "patent_evidence_claims": 0
+  },
+  "committed_handle_ids": [
+    "web-handle:sha256:66bc89e95857751c52c6e0d396584f18927d5cd9030c1d9959f06913094f07f3",
+    "web-handle:sha256:ba8fc13150ff641fbd7455e8753e419eabcc63c7d45435fd97da14e473bdce82",
+    "web-handle:sha256:a86b934a054e497b052a4b5b9329a8bd5d87d050f44c82dd5588370d4ecc9afb"
+  ],
+  "committed_names": [
+    "160行代码读懂LeCun的JEPA世界模型|投资界",
+    "JEPA:Yann LeCun 提出的联合嵌入预测架构JEPA(Joint-Embedding Predictive A - 掘金",
+    "AdaJEPA: An Adaptive Latent World Model - 智源社区论文"
+  ],
+  "render_mode": "prose_renderer",
+  "response_mode": "answer",
+  "citations": 3,
+  "answer_chars": 677,
+  "lane_timings": [
+    [
+      "web",
+      2.72
+    ]
+  ]
+}

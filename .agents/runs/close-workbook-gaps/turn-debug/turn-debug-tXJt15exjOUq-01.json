@@ -1,0 +1,100 @@
+{
+  "session_id": "session:chat:tXJt15exjOUq8j8P1dGwU6n9eTIQocXr",
+  "turn_id": "turn:chat:sha256:a087ea4163048935dce4e4d308d86963cc5f0dd28c30e15bf16ec9954f7b335e",
+  "turn_count": 1,
+  "query": "目前有哪几种主流的JEPA变体？",
+  "planned_displayed_ids": [],
+  "recalled_handles": [
+    {
+      "id": "web-handle:sha256:c90dc75f2bfd56d18e6bae7664334612f1126b00e298cdf0d884f8a4a7564df6",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "EJA选型 - 豆丁网"
+    },
+    {
+      "id": "web-handle:sha256:bce1ab4f369ab39d5a1d8f7133d4818829dcf1d8ff309b884cb1ee4b8dc887a6",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "EJA选型 - 豆丁网"
+    },
+    {
+      "id": "web-handle:sha256:a78e80450a533fc319572d5b766bc4d2d8d993d974e659bb4b0f80dfc5a4be61",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "EJA选型.doc"
+    },
+    {
+      "id": "web-handle:sha256:d44abd6b9e68872fb3713c85cea6d34302bc489274f874bddb6f2569b75a4fa7",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "产品中心-紫龙雄宇科技(北京)有限公司"
+    },
+    {
+      "id": "web-handle:sha256:13e6d9faea226ddfe3667fa1e586f0017e531f5d84e84f58e192b51cf2853dcb",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "eja压力变送器型号有几种_住范儿家装官网"
+    },
+    {
+      "id": "web-handle:sha256:1a7c7f0c126d4483fa0150112cac523bf6fe74547579fb8612caac2fe6138bfe",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "eja压力变送器型号及参数大全"
+    },
+    {
+      "id": "web-handle:sha256:5fc21d2581728368b1f9f783d06a324184230372b92313b0298b40f3c35e1078",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "EJA-CXT型号对比表 - 豆丁网"
+    },
+    {
+      "id": "web-handle:sha256:0bd3a99a827f2dddd56f3e4538038b2d4022fb76340ba315c46b1fc1a41eacf5",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "横河EJA和EJX液位变送器的详细型号"
+    }
+  ],
+  "evidence_items": {
+    "total": 8,
+    "by_domain": {
+      "professor": 8
+    },
+    "by_lane": {
+      "web": 8
+    },
+    "by_source_nature": {
+      "current_web": 8
+    },
+    "with_claim_binding": 8
+  },
+  "protected_slots": [],
+  "requested_traversal": null,
+  "admitted_claims": {
+    "total": 0,
+    "by_predicate": {},
+    "by_claim_type": {},
+    "patent_evidence_claims": 0
+  },
+  "committed_handle_ids": [
+    "web-handle:sha256:d44abd6b9e68872fb3713c85cea6d34302bc489274f874bddb6f2569b75a4fa7",
+    "web-handle:sha256:13e6d9faea226ddfe3667fa1e586f0017e531f5d84e84f58e192b51cf2853dcb",
+    "web-handle:sha256:1a7c7f0c126d4483fa0150112cac523bf6fe74547579fb8612caac2fe6138bfe",
+    "web-handle:sha256:0bd3a99a827f2dddd56f3e4538038b2d4022fb76340ba315c46b1fc1a41eacf5"
+  ],
+  "committed_names": [
+    "产品中心-紫龙雄宇科技(北京)有限公司",
+    "eja压力变送器型号有几种_住范儿家装官网",
+    "eja压力变送器型号及参数大全",
+    "横河EJA和EJX液位变送器的详细型号"
+  ],
+  "render_mode": "prose_renderer",
+  "response_mode": "answer",
+  "citations": 0,
+  "answer_chars": 858,
+  "lane_timings": [
+    [
+      "web",
+      12.942
+    ]
+  ]
+}

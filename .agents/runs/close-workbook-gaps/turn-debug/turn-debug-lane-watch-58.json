@@ -1,0 +1,110 @@
+{
+  "session_id": "probe:lane-watch",
+  "turn_id": "turn:chat:sha256:34565ece33e80239b6ba697410950a3926b9cd918e17abe47671e5fd817be8be",
+  "turn_count": 58,
+  "query": "目前主流的JEPA（联合嵌入预测架构）变体有哪些",
+  "planned_displayed_ids": [],
+  "recalled_handles": [
+    {
+      "id": "web-handle:sha256:54a04ee7e7c3b292e836b2c17b2c72f867efc3d2f08e5c4d8a07f0497f6600cf",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "一个预测原则通吃七个世界?真正跨域的是那条正则项跨七个领域通用的不是「世界模型」而是一条正则项,其收益由目标的多尺度程度 - 掘金"
+    },
+    {
+      "id": "web-handle:sha256:579c30675e16fb8064ee6806cbfafa16f5b514149e4b7f003a62ee659315ad65",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "虚拟细胞每日研究进展2026-10-03医药新闻-ByDrug-一站式医药资源共享中心-医药魔方"
+    },
+    {
+      "id": "web-handle:sha256:d909d0826c71ac81ce5ad0b8ff111df7631aea6886d9cad55a5bda83ee0760a5",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "RoboJEPA:扩展机器人潜在世界模型 - 今日头条"
+    },
+    {
+      "id": "web-handle:sha256:882403df71185a2fd6c1b25977a7a150a3ff415258c94075d1539bfa00225ea1",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "JEPA-Anything: Learning Predictive Models across Different Worlds - 智源社区论文"
+    },
+    {
+      "id": "web-handle:sha256:c9fd93244bf4801242c5c536cdf63fc7bd59edb25c1fb77731af9282b51fadda",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "MotionJEPA: Preventing Temporal Feature Collapse by Capturing Visual Changes in Latent Space - 智源社区论文"
+    },
+    {
+      "id": "web-handle:sha256:11dc6ec3cffc111891e15c23d385c3ef01ac0f562cb65d5ff066caea46b2838b",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "千里智驾开源WA-JEPA世界-动作模型|jepa|wa|千里智驾|基线_手机网易网"
+    },
+    {
+      "id": "web-handle:sha256:ec98dce7a17a5736fbfbadeb8f78edae705659d3981c13e31dd79a017cd223ee",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "千里智驾开源WA-JEPA 让未来预测直接参与驾驶规划_易车"
+    },
+    {
+      "id": "web-handle:sha256:165fe87b9ed2820a4a33abc44261ab98b8e4cc21013fa69063ec795a2045e7ea",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "千里智驾开源WA-JEPA世界-动作模型|电子科技大学|世界模型|天津大学|东南大学|自动驾驶_新浪新闻"
+    }
+  ],
+  "evidence_items": {
+    "total": 8,
+    "by_domain": {
+      "professor": 8
+    },
+    "by_lane": {
+      "web": 8
+    },
+    "by_source_nature": {
+      "current_web": 8
+    },
+    "with_claim_binding": 8
+  },
+  "protected_slots": [],
+  "requested_traversal": null,
+  "admitted_claims": {
+    "total": 7,
+    "by_predicate": {
+      "current_web_result": 7
+    },
+    "by_claim_type": {
+      "material_fact": 7
+    },
+    "patent_evidence_claims": 0
+  },
+  "committed_handle_ids": [
+    "web-handle:sha256:54a04ee7e7c3b292e836b2c17b2c72f867efc3d2f08e5c4d8a07f0497f6600cf",
+    "web-handle:sha256:579c30675e16fb8064ee6806cbfafa16f5b514149e4b7f003a62ee659315ad65",
+    "web-handle:sha256:d909d0826c71ac81ce5ad0b8ff111df7631aea6886d9cad55a5bda83ee0760a5",
+    "web-handle:sha256:882403df71185a2fd6c1b25977a7a150a3ff415258c94075d1539bfa00225ea1",
+    "web-handle:sha256:c9fd93244bf4801242c5c536cdf63fc7bd59edb25c1fb77731af9282b51fadda",
+    "web-handle:sha256:11dc6ec3cffc111891e15c23d385c3ef01ac0f562cb65d5ff066caea46b2838b",
+    "web-handle:sha256:165fe87b9ed2820a4a33abc44261ab98b8e4cc21013fa69063ec795a2045e7ea"
+  ],
+  "committed_names": [
+    "一个预测原则通吃七个世界?真正跨域的是那条正则项跨七个领域通用的不是「世界模型」而是一条正则项,其收益由目标的多尺度程度 - 掘金",
+    "虚拟细胞每日研究进展2026-10-03医药新闻-ByDrug-一站式医药资源共享中心-医药魔方",
+    "RoboJEPA:扩展机器人潜在世界模型 - 今日头条",
+    "JEPA-Anything: Learning Predictive Models across Different Worlds - 智源社区论文",
+    "MotionJEPA: Preventing Temporal Feature Collapse by Capturing Visual Changes in Latent Space - 智源社区论文",
+    "千里智驾开源WA-JEPA世界-动作模型|jepa|wa|千里智驾|基线_手机网易网",
+    "千里智驾开源WA-JEPA世界-动作模型|电子科技大学|世界模型|天津大学|东南大学|自动驾驶_新浪新闻"
+  ],
+  "render_mode": "prose_renderer",
+  "response_mode": "answer",
+  "citations": 7,
+  "answer_chars": 785,
+  "lane_timings": [
+    [
+      "web",
+      11.77
+    ]
+  ]
+}

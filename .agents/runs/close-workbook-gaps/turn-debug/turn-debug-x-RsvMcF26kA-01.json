@@ -1,0 +1,165 @@
+{
+  "session_id": "session:chat:x-RsvMcF26kALjYnsRaTxnVYPBFELQb7",
+  "turn_id": "turn:chat:sha256:e831b6819b9af01addefd965b6880e2ea0bd724916547fdfd4db8d3691c75e8a",
+  "turn_count": 1,
+  "query": "国际先进技术应用推进中心（深圳）",
+  "planned_displayed_ids": [],
+  "recalled_handles": [
+    {
+      "id": "company-c-3970adda34eb223ab03821ff",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳国际先进技术应用推进中心"
+    },
+    {
+      "id": "web-handle:sha256:f26ce5d45845a7c036c304b405952639930aedab5ba05d1b62183e13934a2fb4",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "简介----中国科学院深圳先进技术研究院"
+    },
+    {
+      "id": "web-handle:sha256:37077434db8ab622ce76aafa51aac63a0a6a9345a6f67f9bbb11ee7148e5839a",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "简介----中国科学院深圳先进技术研究院"
+    },
+    {
+      "id": "web-handle:sha256:17aec5794353870c14edd340bc62ba8791bc591351d4e66f1d1882a53184729e",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "简介----中国科学院深圳先进技术研究院"
+    },
+    {
+      "id": "web-handle:sha256:290dabe6e23c430acadcda072c2b653e46741c4c8535c1f279e00f91f0b8f1de",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "科学网-中国科学院深圳先进院诚邀全球英才!"
+    },
+    {
+      "id": "web-handle:sha256:b78202d1388ac45bc0022ce4c4ee4f5e6aeb916c2b8b5b9a4d9ae4b5d902012c",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "中国科学院深圳先进技术研究院 - 搜狗百科"
+    },
+    {
+      "id": "web-handle:sha256:b3cc10069a9424d6c78e9a0ea7a99f73c84efe3a593c40ce9b83521728475654",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "中科院先进技术研究院ppt课件.ppt_淘豆网"
+    },
+    {
+      "id": "web-handle:sha256:1d8223ff346bdf2574f9a93460e25dff91668352a869f15ff52b3e6daf58ac14",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "中国科学院深圳先进技术研究院-GEV新闻中心为用户提供最新的新闻"
+    },
+    {
+      "id": "company-c-80c06114924f3b04909ade7f",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳高性能医疗器械国家研究院有限公司"
+    },
+    {
+      "id": "company-c-3be94ae35a7d3a247ead04a4",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "中科先进（深圳）集成技术有限公司"
+    },
+    {
+      "id": "company-c-e0a864dbe45374562e550b05",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳芯联半导体科技有限公司"
+    },
+    {
+      "id": "company-c-0ad8566f72d3c32b66d13483",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳芯展速科技发展有限公司"
+    },
+    {
+      "id": "company-c-d8676d42163a8e22982c4ea2",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市集科信电子信息科技有限公司"
+    },
+    {
+      "id": "company-c-6f0a5e70c7a055cab2029780",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市展芯科技有限公司"
+    }
+  ],
+  "evidence_items": {
+    "total": 17,
+    "by_domain": {
+      "company": 10,
+      "professor": 7
+    },
+    "by_lane": {
+      "exact": 1,
+      "lexical": 1,
+      "vector": 8,
+      "web": 7
+    },
+    "by_source_nature": {
+      "current_web": 7,
+      "local": 10
+    },
+    "with_claim_binding": 17
+  },
+  "protected_slots": [
+    {
+      "kind": "geography",
+      "value": "深圳",
+      "entity_ids": []
+    }
+  ],
+  "requested_traversal": null,
+  "admitted_claims": {
+    "total": 1,
+    "by_predicate": {
+      "canonical_projection": 1
+    },
+    "by_claim_type": {
+      "material_fact": 1
+    },
+    "patent_evidence_claims": 0
+  },
+  "committed_handle_ids": [
+    "company-c-3970adda34eb223ab03821ff",
+    "web-handle:sha256:b78202d1388ac45bc0022ce4c4ee4f5e6aeb916c2b8b5b9a4d9ae4b5d902012c",
+    "web-handle:sha256:1d8223ff346bdf2574f9a93460e25dff91668352a869f15ff52b3e6daf58ac14"
+  ],
+  "committed_names": [
+    "深圳国际先进技术应用推进中心",
+    "中国科学院深圳先进技术研究院 - 搜狗百科",
+    "中国科学院深圳先进技术研究院-GEV新闻中心为用户提供最新的新闻"
+  ],
+  "render_mode": "prose_renderer",
+  "response_mode": "answer",
+  "citations": 1,
+  "answer_chars": 530,
+  "lane_timings": [
+    [
+      "structured",
+      0.0
+    ],
+    [
+      "vector",
+      0.747
+    ],
+    [
+      "exact",
+      1.124
+    ],
+    [
+      "lexical",
+      1.323
+    ],
+    [
+      "web",
+      2.311
+    ]
+  ]
+}

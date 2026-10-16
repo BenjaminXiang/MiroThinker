@@ -1,0 +1,158 @@
+{
+  "session_id": "session:chat:Y6t7gfyOTz7Ikrl9cXExusE_VPa7_U3_",
+  "turn_id": "turn:chat:sha256:1b4aebcdc5d4d8b656aeb0c8dd8ad38a347d0df2a39bf13c1aaf832e5224cfd8",
+  "turn_count": 1,
+  "query": "目前有哪几种主流的JEPA变体？",
+  "planned_displayed_ids": [],
+  "recalled_handles": [
+    {
+      "id": "web-handle:sha256:cfff12bdf9f977fb772f8a0ad7ce7d6242e23abda995ab745d3782884f626a72",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "EJA选型 - 豆丁网"
+    },
+    {
+      "id": "web-handle:sha256:a82fe0ac484af0250c84abfa5c1844af0dd68ca7f346e1b11224363ab3a30844",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "EJA选型 - 豆丁网"
+    },
+    {
+      "id": "web-handle:sha256:2b0130f0f6ea843e1d1d36ea762e44c4383668079b9865b0b06a1b28fd35b16d",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "EJA选型.doc"
+    },
+    {
+      "id": "web-handle:sha256:2628000642a1f78ec1e1883aea35bf081161ad7f35310f41fd29e0db7711247e",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "产品中心-紫龙雄宇科技(北京)有限公司"
+    },
+    {
+      "id": "web-handle:sha256:3f3136a7686231a7f828ba982f1850c3f52e7acd4586d840159a98b0b2e51aab",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "变压吸附工艺分析 - 豆丁网"
+    },
+    {
+      "id": "web-handle:sha256:b49468243a890fff668afbc7442c9c8ad7bb5f352fdcd54eca7f080eea45a761",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "什么是JEPA（联合嵌入预测架构），它与现有技术有何不同？"
+    },
+    {
+      "id": "web-handle:sha256:ab2e3c54a3b0942994a20cfa39fc584a6ec6e0cacf411d092076c4445ecb0a44",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "JEPA:Yann LeCun 提出的联合嵌入预测架构JEPA(Joint-Embedding Predictive A - 掘金"
+    },
+    {
+      "id": "web-handle:sha256:e816537c63dae2dd2dc6ba2ff6630c2f3897ac4d27595e8069b2d320ec02ffa0",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "160行代码读懂LeCun的JEPA世界模型_投资界"
+    },
+    {
+      "id": "web-handle:sha256:7b802d028661420d55946b12cf7ccf9c149b2d838403ceb45c362ba0fabfbea5",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "[2505.12477] Joint Embedding vs Reconstruction: Provable Benefits of Latent Space Prediction for Self Supervised Learning – arxiv"
+    },
+    {
+      "id": "web-handle:sha256:dbe8a07486ad93bfd984d8a13cfa36ac074bb48db85b3f6dd004b77ff6e330a1",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "[2509.15470] Self-supervised learning of imaging and clinical signatures using a multimodal joint-embedding predictive architecture – arxiv"
+    },
+    {
+      "id": "web-handle:sha256:7416c9cef052debfb8b45ef53750532d608d16ee4ff6240331bed79426fd5585",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "Improving the prediction of disease-related variants using protein three-dimensional structure  BMC Bioinformatics  Full Text"
+    },
+    {
+      "id": "web-handle:sha256:94082ddadb6510e35a38d564c16a72d467f015799467db3738c0b6baaf178d46",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "Bimodal PET/MRI generative reconstruction based on VAE architectures - IOPscience"
+    },
+    {
+      "id": "web-handle:sha256:363431ebf1ceaac2e6c07070896b7d0971f88ff58f42d74f3f4ccd5df520a45d",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "给JEPA装上“眼睛”和“大脑”:DSeq-JEPA实现从整体感知到有序推理的进化,多任务性能显著提升_预测_区域_图像"
+    },
+    {
+      "id": "web-handle:sha256:64e5e64a1168f42f984559505b00f7be5cdd512d9e40d31c0e1347c09a70d9df",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "【论文解读】基于图的自监督学习联合嵌入预测架构 - 合合技术团队 - 博客园"
+    },
+    {
+      "id": "web-handle:sha256:12e772c329a450271a948593ad12e98a5b1f93f720872ecf40290bdc1103758a",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "Meta 自监督学习 I-JEPA 论文笔记-腾讯云开发者社区-腾讯云"
+    },
+    {
+      "id": "web-handle:sha256:5807c0aab923829b58da9d679cfc9a357d37b7576f72fae6512f039a4d2401e9",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "深入解析I-JEPA：自监督学习的图像特征语义探索"
+    }
+  ],
+  "evidence_items": {
+    "total": 16,
+    "by_domain": {
+      "professor": 16
+    },
+    "by_lane": {
+      "web": 16
+    },
+    "by_source_nature": {
+      "current_web": 16
+    },
+    "with_claim_binding": 16
+  },
+  "protected_slots": [],
+  "requested_traversal": null,
+  "admitted_claims": {
+    "total": 7,
+    "by_predicate": {
+      "current_web_result": 7
+    },
+    "by_claim_type": {
+      "material_fact": 7
+    },
+    "patent_evidence_claims": 0
+  },
+  "committed_handle_ids": [
+    "web-handle:sha256:b49468243a890fff668afbc7442c9c8ad7bb5f352fdcd54eca7f080eea45a761",
+    "web-handle:sha256:ab2e3c54a3b0942994a20cfa39fc584a6ec6e0cacf411d092076c4445ecb0a44",
+    "web-handle:sha256:e816537c63dae2dd2dc6ba2ff6630c2f3897ac4d27595e8069b2d320ec02ffa0",
+    "web-handle:sha256:363431ebf1ceaac2e6c07070896b7d0971f88ff58f42d74f3f4ccd5df520a45d",
+    "web-handle:sha256:64e5e64a1168f42f984559505b00f7be5cdd512d9e40d31c0e1347c09a70d9df",
+    "web-handle:sha256:12e772c329a450271a948593ad12e98a5b1f93f720872ecf40290bdc1103758a",
+    "web-handle:sha256:5807c0aab923829b58da9d679cfc9a357d37b7576f72fae6512f039a4d2401e9"
+  ],
+  "committed_names": [
+    "什么是JEPA（联合嵌入预测架构），它与现有技术有何不同？",
+    "JEPA:Yann LeCun 提出的联合嵌入预测架构JEPA(Joint-Embedding Predictive A - 掘金",
+    "160行代码读懂LeCun的JEPA世界模型_投资界",
+    "给JEPA装上“眼睛”和“大脑”:DSeq-JEPA实现从整体感知到有序推理的进化,多任务性能显著提升_预测_区域_图像",
+    "【论文解读】基于图的自监督学习联合嵌入预测架构 - 合合技术团队 - 博客园",
+    "Meta 自监督学习 I-JEPA 论文笔记-腾讯云开发者社区-腾讯云",
+    "深入解析I-JEPA：自监督学习的图像特征语义探索"
+  ],
+  "render_mode": "prose_renderer",
+  "response_mode": "answer",
+  "citations": 7,
+  "answer_chars": 766,
+  "lane_timings": [
+    [
+      "web",
+      8.326
+    ]
+  ]
+}

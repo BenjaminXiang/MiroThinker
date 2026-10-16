@@ -1,0 +1,55 @@
+{
+  "session_id": "session:chat:G9TbLEPpBByYyw6eYd_96iGWV4l_aZ0s",
+  "turn_id": "turn:chat:sha256:9aae35eb44d374b299330e3ce94026a9f5b20627472ca4dfaa1729ed0d1016cc",
+  "turn_count": 3,
+  "query": "它有哪些布局和进展",
+  "planned_displayed_ids": [
+    "company-c-3970adda34eb223ab03821ff"
+  ],
+  "recalled_handles": [],
+  "evidence_items": {
+    "total": 3,
+    "by_domain": {
+      "professor": 3
+    },
+    "by_lane": {
+      "web": 3
+    },
+    "by_source_nature": {
+      "current_web": 3
+    },
+    "with_claim_binding": 3
+  },
+  "protected_slots": [
+    {
+      "kind": "displayed_entity_set",
+      "value": "displayed_entity_set",
+      "entity_ids": [
+        "company-c-3970adda34eb223ab03821ff"
+      ]
+    }
+  ],
+  "requested_traversal": null,
+  "admitted_claims": {
+    "total": 0,
+    "by_predicate": {},
+    "by_claim_type": {},
+    "patent_evidence_claims": 0
+  },
+  "committed_handle_ids": [
+    "company-c-3970adda34eb223ab03821ff"
+  ],
+  "committed_names": [
+    "深圳国际先进技术应用推进中心"
+  ],
+  "render_mode": "prose_renderer",
+  "response_mode": "answer",
+  "citations": 0,
+  "answer_chars": 288,
+  "lane_timings": [
+    [
+      "web",
+      3.265
+    ]
+  ]
+}

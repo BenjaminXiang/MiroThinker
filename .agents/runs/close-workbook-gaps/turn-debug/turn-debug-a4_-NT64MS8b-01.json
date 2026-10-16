@@ -1,0 +1,112 @@
+{
+  "session_id": "session:chat:a4_-NT64MS8bTdNi0xmbdiTdl-Ea9vW8",
+  "turn_id": "turn:chat:sha256:6f78e5a46ffc77ce36a713a9a1dd181e23c6b4ecadf233dd8fce708de197f810",
+  "turn_count": 1,
+  "query": "世界上最美丽的女人是谁",
+  "planned_displayed_ids": [],
+  "recalled_handles": [
+    {
+      "id": "web-handle:sha256:6be5035eef256043e78d3cfab0a41116cd2b1b61f5439c9cd5e3aef4eeae502a",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "世界上最漂亮女人是谁? - 搜狗问问"
+    },
+    {
+      "id": "web-handle:sha256:da440958dac84ea9002f607f38bac7ae1d5284ea550eb479a59f8c59bb25c394",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "DeepSeek评价世界最美女人_%ub_气质_因为"
+    },
+    {
+      "id": "web-handle:sha256:f62c8ffad93ee1713c3480da570198fcdd9c017efd5729c7f36fd2b547e9ef0a",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "世界上最漂亮的女人是谁"
+    },
+    {
+      "id": "web-handle:sha256:518ea07c1980aaf8df7402bbe728157591c9b85f14df6a0e73a6a6310917f526",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "世界上最美的人"
+    },
+    {
+      "id": "web-handle:sha256:425829d7486ccb3e19bcb20d292724199a692b61df996bddbd5b1c239643a1fb",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "世界上最漂亮的50位女性名单_网易订阅"
+    },
+    {
+      "id": "web-handle:sha256:f397ed5174b21e3595086d41d6cab8128b264ef277e3d1750a193102dfd70862",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "世界上最漂亮的女人TOP10 美得让人忘记呼吸"
+    },
+    {
+      "id": "web-handle:sha256:373969bc57fa8dc3c18fc115ac25daac4078b829581316873f89414ece63d23b",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "谁是世界上最漂亮的女人 爱问知识人"
+    },
+    {
+      "id": "web-handle:sha256:141e57a60a895ffc898917f7b8114939bb3ea2c69d4122058aeeb86a150dc915",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "世界公认最美的女人 世界上最美的人？"
+    }
+  ],
+  "evidence_items": {
+    "total": 8,
+    "by_domain": {
+      "professor": 8
+    },
+    "by_lane": {
+      "web": 8
+    },
+    "by_source_nature": {
+      "current_web": 8
+    },
+    "with_claim_binding": 8
+  },
+  "protected_slots": [],
+  "requested_traversal": null,
+  "admitted_claims": {
+    "total": 5,
+    "by_predicate": {
+      "current_web_result": 5
+    },
+    "by_claim_type": {
+      "material_fact": 5
+    },
+    "patent_evidence_claims": 0
+  },
+  "committed_handle_ids": [
+    "web-handle:sha256:6be5035eef256043e78d3cfab0a41116cd2b1b61f5439c9cd5e3aef4eeae502a",
+    "web-handle:sha256:da440958dac84ea9002f607f38bac7ae1d5284ea550eb479a59f8c59bb25c394",
+    "web-handle:sha256:f62c8ffad93ee1713c3480da570198fcdd9c017efd5729c7f36fd2b547e9ef0a",
+    "web-handle:sha256:518ea07c1980aaf8df7402bbe728157591c9b85f14df6a0e73a6a6310917f526",
+    "web-handle:sha256:425829d7486ccb3e19bcb20d292724199a692b61df996bddbd5b1c239643a1fb",
+    "web-handle:sha256:f397ed5174b21e3595086d41d6cab8128b264ef277e3d1750a193102dfd70862",
+    "web-handle:sha256:373969bc57fa8dc3c18fc115ac25daac4078b829581316873f89414ece63d23b",
+    "web-handle:sha256:141e57a60a895ffc898917f7b8114939bb3ea2c69d4122058aeeb86a150dc915"
+  ],
+  "committed_names": [
+    "世界上最漂亮女人是谁? - 搜狗问问",
+    "DeepSeek评价世界最美女人_%ub_气质_因为",
+    "世界上最漂亮的女人是谁",
+    "世界上最美的人",
+    "世界上最漂亮的50位女性名单_网易订阅",
+    "世界上最漂亮的女人TOP10 美得让人忘记呼吸",
+    "谁是世界上最漂亮的女人 爱问知识人",
+    "世界公认最美的女人 世界上最美的人？"
+  ],
+  "render_mode": "prose_renderer",
+  "response_mode": "answer",
+  "citations": 5,
+  "answer_chars": 423,
+  "lane_timings": [
+    [
+      "web",
+      2.414
+    ]
+  ]
+}

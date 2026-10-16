@@ -1,0 +1,154 @@
+{
+  "session_id": "session:chat:ufSRkpv7xwsVtZuz8g4N9iH0K82Quqxb",
+  "turn_id": "turn:chat:sha256:9d19c3256213d584c729fae62ef5f20ee81c2eb07b2cf27164315a673e7926c8",
+  "turn_count": 1,
+  "query": "目前有哪几种主流的联邦学习框架？",
+  "planned_displayed_ids": [],
+  "recalled_handles": [
+    {
+      "id": "web-handle:sha256:537e7a6ab316c43dc76d422dd55f0666dd1478dd1c7a1e038fd4981f37e80430",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "十大主流联邦学习框架:技术特性、架构分析与对比研究 - deephub - 博客园"
+    },
+    {
+      "id": "web-handle:sha256:51c41c1b93e7f8b468d8356386b64d646f125357a69ef98b1b3bde82c49c1167",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "十大主流联邦学习框架:技术特性、架构分析与对比研究"
+    },
+    {
+      "id": "web-handle:sha256:678d8d7a128246cbb6ff0fe8ca07b6fb7b810ad004d3f1243b60b052d769e0b8",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "联邦学习框架和数据隐私综述"
+    },
+    {
+      "id": "web-handle:sha256:36ed6ba540aaaefed91d0e8b4382b3bb378604518d81ce72360794ef1f6ff11c",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "十大主流联邦学习框架:技术特性、架构分析与对比研究 - 腾讯云开发者社区-腾讯云"
+    },
+    {
+      "id": "web-handle:sha256:4526c9ef6b27f807fcb2e3eb60c02719795fe2ad7a20c3ee421ac9ecbe005530",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "personalized-federated-learning · GitHub Topics · GitHub"
+    },
+    {
+      "id": "web-handle:sha256:2cfeac7592e9734140bb9b935aac8f8de3e7084f8971538ed19e785f099289cb",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "GitHub - modest-Hamilton/FL-bench: Benchmark of federated learning. Dedicated to the community."
+    },
+    {
+      "id": "web-handle:sha256:b08c3ada13a7a01b7c1d578d298c5682badaef1fcf3ef171f4ef1b3e072a15a3",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "什么是Federated Learning(联邦学习)?-腾讯云开发者社区-腾讯云"
+    },
+    {
+      "id": "web-handle:sha256:8feb517af6d0ec5b92cf05aa6ed15d7f18d961a32731b54dcc84377db665bbe4",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "GitHub - KarhouTam/FL-bench: Benchmark of federated learning. Dedicated to the community."
+    },
+    {
+      "id": "web-handle:sha256:58f69649fd2b7cbc0274d4652e28e38ea5a5681481adf87d0d1adb648721cc3a",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "FederatedScope benchmark全攻略:从CV到NLP的联邦学习性能评估-CSDN博客"
+    },
+    {
+      "id": "web-handle:sha256:415bdc5d32191787a87920e9b6fad9a503a7ca6c45f3bdd5b0ff1f91bb4cf2f6",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "纵向联邦学习"
+    },
+    {
+      "id": "web-handle:sha256:dfed7c9c5b942eaa65078166b66e9c71d4a0eaea6d1e36907a94d2915d21a0cc",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "训练型横向联邦作业流程_可信智能计算服务 TICS_华为云"
+    },
+    {
+      "id": "web-handle:sha256:0a42fcbb3bedd52bb3f3357e743fa50e8c7e72d64de32680fd81d4bfd3331a8c",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "联邦学习基础_联邦学习梯度-CSDN博客"
+    },
+    {
+      "id": "web-handle:sha256:cfaba89bcb0bea611d87d55fb6f2cf3b11f898304007fbd954d49a382395dce8",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "联邦机器学习-引言 - main(void) - 博客园"
+    },
+    {
+      "id": "web-handle:sha256:e3e9b0d5958c45c49fc2295401967342d5e5c1c1bd6767f243e5bff7aa44b627",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "十大主流联邦学习框架：技术特性、架构分析与对比研究"
+    },
+    {
+      "id": "web-handle:sha256:48fd0d8fedf9987291d13c2d611a1bf04c33fb41a374c0af67b15c53ab5a6df7",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "十大主流联邦学习框架：技术特性、架构分析与对比研究"
+    },
+    {
+      "id": "web-handle:sha256:7e56a73c692e92e59ac26fa1b8bebd8c47bb2eaba1e5739ffb6da0a2d1406851",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "python - 十大主流联邦学习框架:技术特性、架构分析与对比研究 - deephub - SegmentFault 思否"
+    }
+  ],
+  "evidence_items": {
+    "total": 16,
+    "by_domain": {
+      "professor": 16
+    },
+    "by_lane": {
+      "web": 16
+    },
+    "by_source_nature": {
+      "current_web": 16
+    },
+    "with_claim_binding": 16
+  },
+  "protected_slots": [],
+  "requested_traversal": null,
+  "admitted_claims": {
+    "total": 5,
+    "by_predicate": {
+      "current_web_result": 5
+    },
+    "by_claim_type": {
+      "material_fact": 5
+    },
+    "patent_evidence_claims": 0
+  },
+  "committed_handle_ids": [
+    "web-handle:sha256:537e7a6ab316c43dc76d422dd55f0666dd1478dd1c7a1e038fd4981f37e80430",
+    "web-handle:sha256:51c41c1b93e7f8b468d8356386b64d646f125357a69ef98b1b3bde82c49c1167",
+    "web-handle:sha256:36ed6ba540aaaefed91d0e8b4382b3bb378604518d81ce72360794ef1f6ff11c",
+    "web-handle:sha256:e3e9b0d5958c45c49fc2295401967342d5e5c1c1bd6767f243e5bff7aa44b627",
+    "web-handle:sha256:7e56a73c692e92e59ac26fa1b8bebd8c47bb2eaba1e5739ffb6da0a2d1406851"
+  ],
+  "committed_names": [
+    "十大主流联邦学习框架:技术特性、架构分析与对比研究 - deephub - 博客园",
+    "十大主流联邦学习框架:技术特性、架构分析与对比研究",
+    "十大主流联邦学习框架:技术特性、架构分析与对比研究 - 腾讯云开发者社区-腾讯云",
+    "十大主流联邦学习框架：技术特性、架构分析与对比研究",
+    "python - 十大主流联邦学习框架:技术特性、架构分析与对比研究 - deephub - SegmentFault 思否"
+  ],
+  "render_mode": "prose_renderer",
+  "response_mode": "answer",
+  "citations": 5,
+  "answer_chars": 850,
+  "lane_timings": [
+    [
+      "web",
+      6.157
+    ]
+  ]
+}

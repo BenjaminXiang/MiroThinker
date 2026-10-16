@@ -1,0 +1,137 @@
+{
+  "session_id": "session:chat:G9TbLEPpBByYyw6eYd_96iGWV4l_aZ0s",
+  "turn_id": "turn:chat:sha256:b4198eea071cc66301a18591e57116f090e6add0cfb0b6713706e3ba76d55a06",
+  "turn_count": 1,
+  "query": "介绍一下 国际先进技术应用推进中心（深圳）",
+  "planned_displayed_ids": [],
+  "recalled_handles": [
+    {
+      "id": "company-c-3970adda34eb223ab03821ff",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳国际先进技术应用推进中心"
+    },
+    {
+      "id": "web-handle:sha256:375d3754874577174566d0ff525bb1b266635f8c1a9a6c71dfbab25fd6e9f2bf",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "简介----中国科学院深圳先进技术研究院"
+    },
+    {
+      "id": "web-handle:sha256:3ff6e7fb9159d3da39d283289f61eefc13a5227fcdf02389e7d83ffe27c8c6b5",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "简介----中国科学院深圳先进技术研究院"
+    },
+    {
+      "id": "web-handle:sha256:f1f20acd95e9d3be6a7fee52ef1f1b30fa32c6fc58915f6fbbd308e4e762b68d",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "深圳先进技术研究院_新工科智能科技官网"
+    },
+    {
+      "id": "company-c-80c06114924f3b04909ade7f",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳高性能医疗器械国家研究院有限公司"
+    },
+    {
+      "id": "company-c-3be94ae35a7d3a247ead04a4",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "中科先进（深圳）集成技术有限公司"
+    },
+    {
+      "id": "company-c-e0a864dbe45374562e550b05",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳芯联半导体科技有限公司"
+    },
+    {
+      "id": "company-c-0ad8566f72d3c32b66d13483",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳芯展速科技发展有限公司"
+    },
+    {
+      "id": "company-c-d8676d42163a8e22982c4ea2",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市集科信电子信息科技有限公司"
+    },
+    {
+      "id": "company-c-6f0a5e70c7a055cab2029780",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市展芯科技有限公司"
+    }
+  ],
+  "evidence_items": {
+    "total": 13,
+    "by_domain": {
+      "company": 10,
+      "professor": 3
+    },
+    "by_lane": {
+      "exact": 1,
+      "lexical": 1,
+      "vector": 8,
+      "web": 3
+    },
+    "by_source_nature": {
+      "current_web": 3,
+      "local": 10
+    },
+    "with_claim_binding": 13
+  },
+  "protected_slots": [
+    {
+      "kind": "geography",
+      "value": "深圳",
+      "entity_ids": []
+    }
+  ],
+  "requested_traversal": null,
+  "admitted_claims": {
+    "total": 1,
+    "by_predicate": {
+      "canonical_projection": 1
+    },
+    "by_claim_type": {
+      "material_fact": 1
+    },
+    "patent_evidence_claims": 0
+  },
+  "committed_handle_ids": [
+    "company-c-3970adda34eb223ab03821ff"
+  ],
+  "committed_names": [
+    "深圳国际先进技术应用推进中心"
+  ],
+  "render_mode": "prose_renderer",
+  "response_mode": "answer",
+  "citations": 1,
+  "answer_chars": 463,
+  "lane_timings": [
+    [
+      "structured",
+      0.0
+    ],
+    [
+      "lexical",
+      1.556
+    ],
+    [
+      "vector",
+      1.558
+    ],
+    [
+      "exact",
+      1.641
+    ],
+    [
+      "web",
+      1.915
+    ]
+  ]
+}

@@ -1,0 +1,171 @@
+{
+  "session_id": "probe:lane-watch",
+  "turn_id": "turn:chat:sha256:0dbaf877ce66ac2a04ca2771512547996fcc7c527b5b00dd06b4604c7af319af",
+  "turn_count": 43,
+  "query": "丁文伯教授的研究方向",
+  "planned_displayed_ids": [],
+  "recalled_handles": [
+    {
+      "id": "professor-c-256f0b3c38173205ba95704f",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "教授"
+    },
+    {
+      "id": "web-handle:sha256:3f78ba772496004728de1d9db72865434962f1ab8593fceda2322d7d9b4fac04",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "丁文伯"
+    },
+    {
+      "id": "professor-c-3d7191fed1133c60b492f9c3",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "丁文伯"
+    },
+    {
+      "id": "web-handle:sha256:34cbbd67f4230a9376d8da4b6f4b92413aab64985717dcbfe69a97f1b269f838",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "教授"
+    },
+    {
+      "id": "web-handle:sha256:b4c1ea9e3dd1fa3a4a4e8d7090b88f9ed335e2426cb053f3a7e86ded8f43cd08",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "范海波"
+    },
+    {
+      "id": "professor-c-f87b565877c7df396f4a81a0",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "丁文华"
+    },
+    {
+      "id": "professor-c-941d80f40f8dd91741042b07",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "陈文"
+    },
+    {
+      "id": "professor-c-90c721e9882a792952ec7455",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "夏文斌"
+    },
+    {
+      "id": "professor-c-2249a5f08300e97d4a9f35dd",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "文苹"
+    },
+    {
+      "id": "professor-c-6c318d5e11a56436fd68f379",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "金文野"
+    },
+    {
+      "id": "professor-c-839810bb8b7a95544e700d39",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "杨家文"
+    },
+    {
+      "id": "professor-c-5e5849606ff58ab32c7aa5a5",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "丁科元"
+    },
+    {
+      "id": "professor-c-220496468183a4928810f911",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "刘建文"
+    },
+    {
+      "id": "professor-c-9ca309293534a7f5f9b2da71",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "张长文"
+    },
+    {
+      "id": "professor-c-d67eb801cfea8fa0473f5890",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "边文娟"
+    },
+    {
+      "id": "professor-c-7e7632c86a2d0446d8969430",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "柳文军"
+    }
+  ],
+  "evidence_items": {
+    "total": 19,
+    "by_domain": {
+      "professor": 19
+    },
+    "by_lane": {
+      "exact": 2,
+      "vector": 14,
+      "web": 3
+    },
+    "by_source_nature": {
+      "current_web": 3,
+      "local": 16
+    },
+    "with_claim_binding": 19
+  },
+  "protected_slots": [],
+  "requested_traversal": null,
+  "admitted_claims": {
+    "total": 1,
+    "by_predicate": {
+      "canonical_projection": 1
+    },
+    "by_claim_type": {
+      "material_fact": 1
+    },
+    "patent_evidence_claims": 0
+  },
+  "committed_handle_ids": [
+    "web-handle:sha256:3f78ba772496004728de1d9db72865434962f1ab8593fceda2322d7d9b4fac04",
+    "professor-c-256f0b3c38173205ba95704f",
+    "professor-c-3d7191fed1133c60b492f9c3",
+    "web-handle:sha256:34cbbd67f4230a9376d8da4b6f4b92413aab64985717dcbfe69a97f1b269f838"
+  ],
+  "committed_names": [
+    "丁文伯",
+    "教授",
+    "丁文伯",
+    "教授"
+  ],
+  "render_mode": "prose_renderer",
+  "response_mode": "answer",
+  "citations": 1,
+  "answer_chars": 247,
+  "lane_timings": [
+    [
+      "structured",
+      0.0
+    ],
+    [
+      "exact",
+      0.522
+    ],
+    [
+      "vector",
+      0.595
+    ],
+    [
+      "lexical",
+      0.641
+    ],
+    [
+      "web",
+      12.208
+    ]
+  ]
+}

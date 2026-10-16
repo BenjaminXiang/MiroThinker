@@ -1,0 +1,161 @@
+{
+  "session_id": "session:chat:oa-lj19Mdeu-09QPGqB15OedQcEiyRAe",
+  "turn_id": "turn:chat:sha256:408d9a37a7c5c051a562f2b31eac1cd77be27823d827db617a622e180c7c9fa6",
+  "turn_count": 1,
+  "query": "国际先进技术应用推进中心（深圳）",
+  "planned_displayed_ids": [],
+  "recalled_handles": [
+    {
+      "id": "company-c-3970adda34eb223ab03821ff",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳国际先进技术应用推进中心"
+    },
+    {
+      "id": "web-handle:sha256:5667710d41f245a7b60501451d995d0c25a50b9324fd7371ee4d45bdcb938560",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "简介----中国科学院深圳先进技术研究院"
+    },
+    {
+      "id": "web-handle:sha256:282d87cf78310603b2e60d76d8633b08fc990fc1d83d9d9b00265abfd675cce7",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "简介----中国科学院深圳先进技术研究院"
+    },
+    {
+      "id": "web-handle:sha256:66dd0d2b539794323d7c27af1fd23815496f89b4b60f3728c35a1f9944ab713f",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "简介----中国科学院深圳先进技术研究院"
+    },
+    {
+      "id": "web-handle:sha256:6f27c5a4cba4a92db345237234de7b5e7e017ab26a2ccada515aac1b7037f81e",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "科学网-中国科学院深圳先进院诚邀全球英才!"
+    },
+    {
+      "id": "web-handle:sha256:5094b83d1d2f665114c9d33e459016763f432ab5dd496b2d47b5c5a251600015",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "中国科学院深圳先进技术研究院 - 搜狗百科"
+    },
+    {
+      "id": "web-handle:sha256:6b813ef1c5479a481d27dafec33f8a4c9cc40e8945f03cb96413fb9d408e61f3",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "中科院先进技术研究院ppt课件.ppt_淘豆网"
+    },
+    {
+      "id": "web-handle:sha256:d53387114becdee52626f449c94e0b37d1b88f34b35144d1f9663746f75b88c3",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "中国科学院深圳先进技术研究院-GEV新闻中心为用户提供最新的新闻"
+    },
+    {
+      "id": "company-c-80c06114924f3b04909ade7f",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳高性能医疗器械国家研究院有限公司"
+    },
+    {
+      "id": "company-c-3be94ae35a7d3a247ead04a4",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "中科先进（深圳）集成技术有限公司"
+    },
+    {
+      "id": "company-c-e0a864dbe45374562e550b05",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳芯联半导体科技有限公司"
+    },
+    {
+      "id": "company-c-0ad8566f72d3c32b66d13483",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳芯展速科技发展有限公司"
+    },
+    {
+      "id": "company-c-d8676d42163a8e22982c4ea2",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市集科信电子信息科技有限公司"
+    },
+    {
+      "id": "company-c-6f0a5e70c7a055cab2029780",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市展芯科技有限公司"
+    }
+  ],
+  "evidence_items": {
+    "total": 17,
+    "by_domain": {
+      "company": 10,
+      "professor": 7
+    },
+    "by_lane": {
+      "exact": 1,
+      "lexical": 1,
+      "vector": 8,
+      "web": 7
+    },
+    "by_source_nature": {
+      "current_web": 7,
+      "local": 10
+    },
+    "with_claim_binding": 17
+  },
+  "protected_slots": [
+    {
+      "kind": "geography",
+      "value": "深圳",
+      "entity_ids": []
+    }
+  ],
+  "requested_traversal": null,
+  "admitted_claims": {
+    "total": 1,
+    "by_predicate": {
+      "canonical_projection": 1
+    },
+    "by_claim_type": {
+      "material_fact": 1
+    },
+    "patent_evidence_claims": 0
+  },
+  "committed_handle_ids": [
+    "company-c-3970adda34eb223ab03821ff"
+  ],
+  "committed_names": [
+    "深圳国际先进技术应用推进中心"
+  ],
+  "render_mode": "prose_renderer",
+  "response_mode": "answer",
+  "citations": 1,
+  "answer_chars": 498,
+  "lane_timings": [
+    [
+      "structured",
+      0.0
+    ],
+    [
+      "vector",
+      0.956
+    ],
+    [
+      "exact",
+      1.422
+    ],
+    [
+      "web",
+      1.481
+    ],
+    [
+      "lexical",
+      1.696
+    ]
+  ]
+}
