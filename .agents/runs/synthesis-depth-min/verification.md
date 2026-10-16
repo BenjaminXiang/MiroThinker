@@ -98,3 +98,22 @@ results instead of 8 on list-shaped turns.
   fail-closed install (`cmp` per file + the site's live contract must equal the
   sealed value); first boot does the full verification; rollback script + the v2
   pack kept.
+
+## ⑦ Site acceptance (100.64.0.96, after its own reseal + cutover)
+
+| check | result |
+|---|---|
+| first boot (no receipt for the site's v3 pack) | full verification, **mount 389.4 s**; then `/chat` `/api/health` 200 |
+| reported question | **7 citations, 864 chars, 5 categorised groups** — same material set as the dev line (什么是JEPA / LeCun 介绍 / 投资界 / the two arXiv items) |
+| family (联邦学习) | 12 Web citations / 13.0 s |
+| 优必选专利 | 12 local patent citations / 15.5 s |
+| 国先中心（深圳） | 1 company citation / 5.0 s |
+| negative control | Web-only, 8 Web citations / 5.7 s |
+| replay gate | **ALL PASS 7/7** |
+| pages | `/chat` `/main` `/api/health` all 200 |
+| run.sh / unit | `PACK=…serving-pack-fembed-v3-synthdepth`; `miro-fullstack-v2` enabled |
+
+Rollback assets on the site: `staging-slice1min/site/site-rollback.sh`,
+`knowledge_serving_isolated.py.pre-synthdepth-20261016`,
+`managed_config.py.pre-synthdepth-20261016`, `run.sh.pre-synthdepth-20261016`,
+and the byte-identical v2 pack with its receipt.

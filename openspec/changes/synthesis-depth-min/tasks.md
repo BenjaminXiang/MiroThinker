@@ -23,8 +23,16 @@
   pack/recall/fast_boot/alias_foothold 60 passed (1 known pre-existing red),
   `test_llm_query_rewrite.py` 33 passed (1 pre-existing race-flake documented:
   the 榜单/名单 concurrent arrival order)
-- [ ] T7 scratch E2E: before/after on the reported question, the 片② matrix 6/6,
-  replay 7/7, recall gate 0 fail-level, TTFT envelope
+- [x] T7 scratch E2E: before/after on the reported question (0 citations/6 flat
+  → 7 citations/5 categorised groups), the matrix 5/5, replay 7/7, recall gate
+  REVIEW (0 fail-level — after mirroring the baseline's two case files), TTFT
+  inside the round-43 envelope → `verification.md` ③⑦
+- [x] T8 reseal + dual-line cutover: dev 18188 (manifest-only reseal `4ffbf9cd…`,
+  receipt fast path 120.9 s) and site 100.64.0.96 (site-interpreter reseal
+  `3b5623a3…`, fail-closed install, first-boot full verification 389.4 s), both
+  with rollback assets kept
+- [x] T9 docs: human log round + index line + `verification.md` (layered
+  evidence); push main
 - [ ] T8 reseal + dual-line cutover (dev 18188, site 100.64.0.96) with rollback
   assets kept
 - [ ] T9 docs: human log round + index line + `verification.md`; push main
