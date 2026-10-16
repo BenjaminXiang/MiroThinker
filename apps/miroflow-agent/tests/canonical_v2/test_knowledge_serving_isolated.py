@@ -438,22 +438,30 @@ _BARE_NAME_KNOWN_GAP_QUERIES = (
 
 
 @pytest.mark.parametrize(
-    "query",
+    ("query", "list_shaped"),
     (
-        "世界上最美丽的女人是谁",
-        "目前有哪几种主流的JEPA变体？",
-        *_BARE_NAME_KNOWN_GAP_QUERIES,
+        ("世界上最美丽的女人是谁", False),
+        # Slice ①min: a Web-only list-shaped turn keeps the Web lane's own
+        # width (bundle candidates + bundle Web results). The bundle-width
+        # assertion below is what this entry used to hold; the flip is the
+        # deliberate RED→GREEN of that slice, not drifting routing.
+        ("目前有哪几种主流的JEPA变体？", True),
+        *((query, False) for query in _BARE_NAME_KNOWN_GAP_QUERIES),
     ),
 )
 def test_no_foothold_query_executes_only_the_public_web_lane(
-    tmp_path: Path, query: str
+    tmp_path: Path, query: str, list_shaped: bool
 ) -> None:
     """A query with no local-scope foothold must not sweep the local domains:
     the execution set is the public Web lane alone. `domains` stays the full
     public scope — the candidate scope is not the execution set, and the
     information_retrieval contract requires a non-empty domain tuple — and the
-    enumeration windows stay at the bundle width, since there is no local
-    subject to widen for.
+    candidate window stays at the bundle sum, since there is no local subject
+    to widen for.
+
+    The Web window follows the same boundary: list-shaped turns keep the Web
+    lane's own width (its rewrite views carry real material past the bundle
+    cap), everything else keeps the bundle width.
 
     The bare-name entries are the known gap, asserted explicitly below (see
     ``_BARE_NAME_KNOWN_GAP_QUERIES``) so the gap has one place to change."""
@@ -469,7 +477,11 @@ def test_no_foothold_query_executes_only_the_public_web_lane(
     assert proposal.lanes == ("web",)
     assert proposal.domains == serving_module._PUBLIC_DOMAINS
     assert proposal.max_candidates == bundle.max_candidates + bundle.max_web_results
-    assert proposal.max_web_results == bundle.max_web_results
+    assert proposal.max_web_results == (
+        bundle.max_candidates + bundle.max_web_results
+        if list_shaped
+        else bundle.max_web_results
+    )
     assert proposal.professor_vector_view is None
     assert proposal.web_mode == "universal"
     if query in _BARE_NAME_KNOWN_GAP_QUERIES:

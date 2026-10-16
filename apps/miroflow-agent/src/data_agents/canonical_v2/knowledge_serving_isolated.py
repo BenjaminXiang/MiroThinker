@@ -451,6 +451,9 @@ _PLATFORM_TOPIC_MARKERS = (
 _ALIAS_FOOTHOLD_ENV = "CANONICAL_V2_ALIAS_FOOTHOLD"
 _ALIAS_FOOTHOLD_DISABLED = frozenset({"0", "false", "off", "no"})
 
+_WEB_WIDE_WINDOW_ENV = "CANONICAL_V2_WEB_WIDE_WINDOW"
+_WEB_WIDE_WINDOW_DISABLED = frozenset({"0", "false", "off", "no"})
+
 
 def _alias_foothold_enabled() -> bool:
     # Read per call, like the topical floor: the switch flips by restarting
@@ -458,6 +461,14 @@ def _alias_foothold_enabled() -> bool:
     return (
         os.environ.get(_ALIAS_FOOTHOLD_ENV, "").strip().casefold()
         not in _ALIAS_FOOTHOLD_DISABLED
+    )
+
+
+def _web_wide_window_enabled() -> bool:
+    # Same per-call contract as the alias foothold switch (slice ①min).
+    return (
+        os.environ.get(_WEB_WIDE_WINDOW_ENV, "").strip().casefold()
+        not in _WEB_WIDE_WINDOW_DISABLED
     )
 
 
@@ -852,17 +863,32 @@ def _proposal_provider(
                     if theme_part is not None:
                         material_parts = (theme_part,)
         # The widened windows exist to reach local suppliers, so a turn with no
-        # local-scope foothold keeps the bundle windows: nothing local executes
-        # for them to widen for.
-        enumeration_window_widened = local_scope_foothold and (
-            (
-                request.enumeration_context is not None
-                and request.enumeration_context.requested
-            )
-            or any(
-                marker in request.original_query
-                for marker in _ENUMERATION_QUERY_MARKERS
-            )
+        # local-scope foothold keeps the bundle candidate window: nothing local
+        # executes for it to widen for.
+        enumeration_context_requests = (
+            request.enumeration_context is not None
+            and request.enumeration_context.requested
+        )
+        enumeration_marked = enumeration_context_requests or any(
+            marker in request.original_query
+            for marker in _ENUMERATION_QUERY_MARKERS
+        )
+        enumeration_window_widened = local_scope_foothold and enumeration_marked
+        # A Web-only list-shaped turn has no local suppliers, but its Web lane
+        # still gathers more than the bundle window: the merged list is
+        # view-order concatenation and the question-shaped deterministic view
+        # leads, so the LLM rewrite views' material starts past the bundle cap
+        # (measured 2026-10-16: 0 of 8 kept results relevant at the bundle
+        # window, 3 at the lane's own width). Keep what the lane can already
+        # gather — candidates stay at the bundle sum, no local work is added.
+        web_list_shaped = (
+            enumeration_context_requests
+            or _web_list_shaped(request.original_query)
+        )
+        web_window_widened = (
+            web_list_shaped
+            and not local_scope_foothold
+            and _web_wide_window_enabled()
         )
         return RecordedPlanningProposal(
             proposal_id=f"planning-proposal:serving:{request.request_id}",
@@ -899,10 +925,18 @@ def _proposal_provider(
             # at this cap before theme probes ever see them.  The cap must
             # follow the enumeration candidate window so discovery-view tails
             # (九号 at merged rank 36-43) survive the read-side truncation.
+            # The Web-only list branch (slice ①min) keeps the lane's own width
+            # instead of the bundle cap; the bundle sum is the same number the
+            # candidate window already carries on these turns, so no additional
+            # probe or fetch is funded by it.
             max_web_results=(
                 max(bundle.max_web_results, _ENUMERATION_CANDIDATE_WINDOW)
                 if enumeration_window_widened
-                else bundle.max_web_results
+                else (
+                    bundle.max_candidates + bundle.max_web_results
+                    if web_window_widened
+                    else bundle.max_web_results
+                )
             ),
             professor_vector_view=(
                 "both" if "professor" in domains and "vector" in lanes else None
@@ -1696,6 +1730,7 @@ class _DualWebLaneAdapter:
         queries: tuple[str, ...],
         *,
         prefetch_limit: int = 0,
+        per_view_head: int | None = None,
     ) -> tuple[_NormalizedWebResult, ...]:
         if len(queries) <= 1:
             return self._merged_results(queries[0] if queries else "")
@@ -1777,6 +1812,7 @@ class _DualWebLaneAdapter:
                 for index, query in enumerate(queries[1:], start=1)
                 if _is_brand_discovery_view(query)
             ),
+            per_view_head=per_view_head,
         )
         self._report_web_degradation(
             reporter=reporter,
@@ -1858,9 +1894,24 @@ class _DualWebLaneAdapter:
             )
             else 2
         )
+        view_queries = self._request_view_queries(request, query_text)
+        # Slice ①min: a list-shaped turn splits its Web window across the views,
+        # so the question-shaped deterministic view's head cannot fill it and
+        # bury every rewrite view's material. On a local enumeration turn the
+        # window is the 128-candidate width and this slice (>= 32) exceeds what
+        # any view returns, so the cap is a no-op there; at the bundle width the
+        # kill switch keeps the pre-slice merge.
+        per_view_head = (
+            max(4, request.web_policy.max_results // len(view_queries))
+            if len(view_queries) > 1
+            and _web_list_shaped(request.original_query)
+            and _web_wide_window_enabled()
+            else None
+        )
         merged = self._merged_results_for_views(
-            self._request_view_queries(request, query_text),
+            view_queries,
             prefetch_limit=fetch_depth,
+            per_view_head=per_view_head,
         )
         gated = _apply_web_subject_consistency(results=merged, request=request)
         gated = _apply_web_topical_floor(results=gated, request=request)
@@ -2058,15 +2109,18 @@ _QUERY_REWRITE_EXECUTOR = ThreadPoolExecutor(
 _QUERY_REWRITE_SYSTEM_PROMPT = (
     "你是搜索查询改写助手，帮助检索系统查全相关公开信息。"
     "理解用户问题的真实意图，只输出一个JSON对象："
-    '{"queries": ["...", "..."]}，包含1到3条简短的中文关键词式搜索查询。'
+    '{"queries": ["...", "..."]}，包含1到3条简短的关键词式搜索查询。'
     "规则：多意图问题按意图逐条拆分；"
     "主题类/概念类问题（问方法、路线、方式、差异、原理、厂商等）："
     "围绕主题补充该领域常见子方向与行业术语作为搜索词"
     "（例如“具身智能数据采集”可补充“遥操作、动作捕捉、真机采集、仿真合成”），"
     "以便检索到相关行业内容；"
+    "当问题主体是英文缩写或专业名词时，其中一条查询用其英文全称或英文关键词"
+    "（例如“JEPA”可用“joint embedding predictive architecture variants”），"
+    "便于检索到论文与英文资料，英文查询不超过 8 个词；"
     "严格限于用户问题涉及的主题范围，不得编造具体公司、论文、专利、人名等"
     "实体名称，不得编造事实与数字；"
-    "每条不超过30个字；不要输出JSON之外的任何内容。"
+    "中文查询每条不超过30个字；不要输出JSON之外的任何内容。"
 )
 _QUERY_REWRITE_ENUMERATION_MARKERS = (
     "哪些",
@@ -2077,6 +2131,17 @@ _QUERY_REWRITE_ENUMERATION_MARKERS = (
     "列出",
     "所有",
 )
+
+
+def _web_list_shaped(text: str) -> bool:
+    """Whether a query asks for a list/set (slice ①min's shared predicate).
+
+    One predicate, two consumers: the plan widens a Web-only turn's Web window
+    here, and the Web lane splits that window across its views here.  The
+    planning marker set is not reusable — it carries the bare question word 谁,
+    and "X 是谁" is not list-shaped.
+    """
+    return any(marker in text for marker in _QUERY_REWRITE_ENUMERATION_MARKERS)
 _QUERY_REWRITE_INTENT_CONNECTORS = ("以及", "还有", "同时", "并且")
 _QUERY_REWRITE_CONJUNCTION_PATTERN = re.compile(
     r"(?<!以)及|和[^，,。；;？?！!]*(?:情况|信息|评价|特点|竞争力)"
@@ -2408,16 +2473,26 @@ class _ServingQueryViewStore:
 
 def _merge_web_results_across_views(
     per_view: list[tuple[_NormalizedWebResult, ...]],
+    *,
+    per_view_head: int | None = None,
 ) -> tuple[_NormalizedWebResult, ...]:
     """URL-dedup merge across views.
 
     The earliest view/rank wins the slot (deterministic view first); provider
     provenance unions through corroborating_provider_versions exactly like
     the per-view dual-provider merge.
+
+    ``per_view_head`` caps how many results one view may contribute before the
+    next view gets its turn (slice ①min, Web-only list-shaped turns): the
+    question-shaped deterministic view's head otherwise fills the whole window
+    and buries every rewrite view's material — measured 2026-10-16 as 0 of 10
+    kept results relevant while the lane held real material from views 2–4.
     """
     merged_by_url: dict[str, _NormalizedWebResult] = {}
     ordered_urls: list[str] = []
     for results in per_view:
+        if per_view_head is not None:
+            results = results[:per_view_head]
         for item in results:
             normalized_url = _normalized_web_url(item.url)
             previous = merged_by_url.get(normalized_url)
@@ -2452,6 +2527,7 @@ def _discovery_front_merge(
     *,
     plain_head_limit: int = 10,
     front_limit: int = 14,
+    per_view_head: int | None = None,
 ) -> tuple[_NormalizedWebResult, ...]:
     """Merge views with brand-discovery results promoted ahead of the rest.
 
@@ -2460,10 +2536,14 @@ def _discovery_front_merge(
     otherwise bury them below the candidate cut.  The literal view keeps its
     head (``plain_head_limit``), then the first ``front_limit`` discovery
     results follow, then the tail of every view.  When no discovery view is
-    present the merge degenerates to the plain earliest-view-wins merge.
+    present the merge degenerates to the plain earliest-view-wins merge
+    (``per_view_head`` still applies there — see
+    ``_merge_web_results_across_views``).
     """
     if not discovery_view_indexes:
-        return _merge_web_results_across_views(per_view)
+        return _merge_web_results_across_views(
+            per_view, per_view_head=per_view_head
+        )
     discovery = tuple(
         item
         for index in discovery_view_indexes
