@@ -1,0 +1,164 @@
+{
+  "session_id": "probe:lane-watch",
+  "turn_id": "turn:chat:sha256:8268c9230d10b08c07dc1ab8e4bf25ec88171c18bcd2491d6a6195a91291ea18",
+  "turn_count": 77,
+  "query": "目前主流的JEPA（联合嵌入预测架构）变体有哪些",
+  "planned_displayed_ids": [],
+  "recalled_handles": [
+    {
+      "id": "web-handle:sha256:4cfe431bc5da5f9744aa3b56bc5a3684d351fd051be0f340c85ac2fdd8726489",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "一个预测原则通吃七个世界?真正跨域的是那条正则项跨七个领域通用的不是「世界模型」而是一条正则项,其收益由目标的多尺度程度 - 掘金"
+    },
+    {
+      "id": "web-handle:sha256:810f43642460b5fb1de10ef0eb658044d28ab59e40c5579e116f5dcff6e962af",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "虚拟细胞每日研究进展2026-10-03医药新闻-ByDrug-一站式医药资源共享中心-医药魔方"
+    },
+    {
+      "id": "web-handle:sha256:131ebdb25a0c569848ba6d6194e2411ef137cdfbf02a23332fcc244dc108ca15",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "RoboJEPA:扩展机器人潜在世界模型 - 今日头条"
+    },
+    {
+      "id": "web-handle:sha256:7ef84228b5e53e6bb6509b2ae5cf9ac435125ad6dff6fe03fce80e78a5f29939",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "JEPA-Anything: Learning Predictive Models across Different Worlds - 智源社区论文"
+    },
+    {
+      "id": "web-handle:sha256:adfc65f643a7f5b161476262a446e907700a911a62069d338f761fb0c9c55c95",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "什么是JEPA（联合嵌入预测架构），它与现有技术有何不同？"
+    },
+    {
+      "id": "web-handle:sha256:b665f06fdcf3204fe0342c8f4edc50709d0469fcf534d546ae3bf3d088b1abf2",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "具身智能零碎知识点(四):联合嵌入预测架构(JEPAs)详解_pytorch_墨绿色的摆渡人-DAMO开发者矩阵"
+    },
+    {
+      "id": "web-handle:sha256:cda8f20bb9d2b2351c51758a4cc4a75db8710cb49de97552bf62ab795575e7a7",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "张博的博客 - 博客园"
+    },
+    {
+      "id": "web-handle:sha256:aae99277c934d008a550dad2639c21153e08ab4a8f6002ad63123d5fdfa3ebd7",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "Yann LeCun的愿景:从文本转向下一代AI系统_工具_人工智能_技术"
+    },
+    {
+      "id": "web-handle:sha256:796d3ba4be06d4b934dbf8c1c9410072a4e84fb7f172d4c95132a24d36859cea",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "[2505.12477] Joint Embedding vs Reconstruction: Provable Benefits of Latent Space Prediction for Self Supervised Learning – arxiv"
+    },
+    {
+      "id": "web-handle:sha256:5e24680d82149203b5f540b751890d17b01a6f42d0b0d2e85b94e35ad0ea6eac",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "[2509.15470] Self-supervised learning of imaging and clinical signatures using a multimodal joint-embedding predictive architecture – arxiv"
+    },
+    {
+      "id": "web-handle:sha256:5c403748ff32620b7d03ea496ac2cf4996d0218133c36ecc7d00da7e6c8afa46",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "Improving the prediction of disease-related variants using protein three-dimensional structure  BMC Bioinformatics  Full Text"
+    },
+    {
+      "id": "web-handle:sha256:713f75d17ce4549dd67b6c013025773f170e8351b7c9fc22810620ec3f50fd37",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "Bimodal PET/MRI generative reconstruction based on VAE architectures - IOPscience"
+    },
+    {
+      "id": "web-handle:sha256:b7a2c9db43f0799b1957787d62de6bd3eacacacf87703b5964e265447d21b00e",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "【论文解读】基于图的自监督学习联合嵌入预测架构 - 合合技术团队 - 博客园"
+    },
+    {
+      "id": "web-handle:sha256:70ef474f6da4418f0f31d538e33edf92c270836d7acdfa06b2518535e6a7aec8",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "Meta 自监督学习 I-JEPA 论文笔记-腾讯云开发者社区-腾讯云"
+    },
+    {
+      "id": "web-handle:sha256:3aeb7159eeccca01bab5bfaccaccb5ba84c31cd8a7472111d01125db476c95e3",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "LeCun世界模型首项研究来了:自监督视觉,像人一样学习和推理,已开源 - 腾讯云开发者社区-腾讯云"
+    },
+    {
+      "id": "web-handle:sha256:fb82b816c6b516383ce745b30b2ac151a5245f5235563e4404296e137024840a",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "【论文解读】基于图的自监督学习联合嵌入预测架构-人工智能-PHP中文网"
+    }
+  ],
+  "evidence_items": {
+    "total": 16,
+    "by_domain": {
+      "professor": 16
+    },
+    "by_lane": {
+      "web": 16
+    },
+    "by_source_nature": {
+      "current_web": 16
+    },
+    "with_claim_binding": 16
+  },
+  "protected_slots": [],
+  "requested_traversal": null,
+  "admitted_claims": {
+    "total": 10,
+    "by_predicate": {
+      "current_web_result": 10
+    },
+    "by_claim_type": {
+      "material_fact": 10
+    },
+    "patent_evidence_claims": 0
+  },
+  "committed_handle_ids": [
+    "web-handle:sha256:4cfe431bc5da5f9744aa3b56bc5a3684d351fd051be0f340c85ac2fdd8726489",
+    "web-handle:sha256:810f43642460b5fb1de10ef0eb658044d28ab59e40c5579e116f5dcff6e962af",
+    "web-handle:sha256:131ebdb25a0c569848ba6d6194e2411ef137cdfbf02a23332fcc244dc108ca15",
+    "web-handle:sha256:7ef84228b5e53e6bb6509b2ae5cf9ac435125ad6dff6fe03fce80e78a5f29939",
+    "web-handle:sha256:adfc65f643a7f5b161476262a446e907700a911a62069d338f761fb0c9c55c95",
+    "web-handle:sha256:b665f06fdcf3204fe0342c8f4edc50709d0469fcf534d546ae3bf3d088b1abf2",
+    "web-handle:sha256:b7a2c9db43f0799b1957787d62de6bd3eacacacf87703b5964e265447d21b00e",
+    "web-handle:sha256:70ef474f6da4418f0f31d538e33edf92c270836d7acdfa06b2518535e6a7aec8",
+    "web-handle:sha256:3aeb7159eeccca01bab5bfaccaccb5ba84c31cd8a7472111d01125db476c95e3",
+    "web-handle:sha256:fb82b816c6b516383ce745b30b2ac151a5245f5235563e4404296e137024840a"
+  ],
+  "committed_names": [
+    "一个预测原则通吃七个世界?真正跨域的是那条正则项跨七个领域通用的不是「世界模型」而是一条正则项,其收益由目标的多尺度程度 - 掘金",
+    "虚拟细胞每日研究进展2026-10-03医药新闻-ByDrug-一站式医药资源共享中心-医药魔方",
+    "RoboJEPA:扩展机器人潜在世界模型 - 今日头条",
+    "JEPA-Anything: Learning Predictive Models across Different Worlds - 智源社区论文",
+    "什么是JEPA（联合嵌入预测架构），它与现有技术有何不同？",
+    "具身智能零碎知识点(四):联合嵌入预测架构(JEPAs)详解_pytorch_墨绿色的摆渡人-DAMO开发者矩阵",
+    "【论文解读】基于图的自监督学习联合嵌入预测架构 - 合合技术团队 - 博客园",
+    "Meta 自监督学习 I-JEPA 论文笔记-腾讯云开发者社区-腾讯云",
+    "LeCun世界模型首项研究来了:自监督视觉,像人一样学习和推理,已开源 - 腾讯云开发者社区-腾讯云",
+    "【论文解读】基于图的自监督学习联合嵌入预测架构-人工智能-PHP中文网"
+  ],
+  "render_mode": "prose_renderer",
+  "response_mode": "answer",
+  "citations": 10,
+  "answer_chars": 1190,
+  "lane_timings": [
+    [
+      "web",
+      12.791
+    ]
+  ]
+}

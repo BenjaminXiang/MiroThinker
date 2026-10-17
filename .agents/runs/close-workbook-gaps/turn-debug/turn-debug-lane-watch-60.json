@@ -1,168 +1,172 @@
 {
   "session_id": "probe:lane-watch",
-  "turn_id": "turn:chat:sha256:77408509f0dbd64c91782b7774b3426b5cd75d34395fb904dcfbf74396486a24",
+  "turn_id": "turn:chat:sha256:8875b0ee81527b222ec76b7bd554bc5f1c5d5bb9e166380cd8ad4d0581d3704c",
   "turn_count": 60,
-  "query": "丁文伯创办的公司是哪家",
+  "query": "详细介绍国先中心（深圳）",
   "planned_displayed_ids": [],
   "recalled_handles": [
     {
-      "id": "web-handle:sha256:69e1d61ab8acaddd75fc19213fa3103293e56e422add6df074ef66a9bc7df5e0",
+      "id": "company-c-3970adda34eb223ab03821ff",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳国际先进技术应用推进中心"
+    },
+    {
+      "id": "web-handle:sha256:46ada1e2bab548b0bd9c11e901e710c12665d4aef03936efb7939c11f356ddcc",
       "kind": "web",
-      "domain": "company",
-      "display_name": "丁文波"
+      "domain": "professor",
+      "display_name": "多彩深圳——减肥达人训练营深圳国贸营地简介"
     },
     {
-      "id": "web-handle:sha256:62b7588e475dc1356e227633b2d744adcaa004a35d867c6d2afffcf6cb47ab19",
+      "id": "web-handle:sha256:d52a6e5b2fc4a76047cd2425d72b0df5ce51abc9b87b2a4855581d5253f2991c",
       "kind": "web",
-      "domain": "company",
-      "display_name": "广州文伯化工有限公司招聘简介_英才网联"
+      "domain": "professor",
+      "display_name": "百步先(深圳〉信息技术有限公司"
     },
     {
-      "id": "web-handle:sha256:c30f786fd5d516371a37348cb387d7f80ee7805bacf7dbbe01bed704745d8b07",
+      "id": "web-handle:sha256:815ee3e59254b69c1fa769f1c3ae3e5a40de922ae491958f64658177297c48f8",
       "kind": "web",
-      "domain": "company",
-      "display_name": "丁文波"
+      "domain": "professor",
+      "display_name": "南开国际先进研究院(深圳福田)"
     },
     {
-      "id": "company-c-e0a864dbe45374562e550b05",
-      "kind": "canonical",
-      "domain": "company",
-      "display_name": "深圳芯联半导体科技有限公司"
+      "id": "web-handle:sha256:47bc76f615971e3f149fd0c956f475a28b7c901878db9d7bf9b7dd2892dd587f",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "深圳的“先”与“后”,深圳,珠海论坛 - Powered by Discuz!"
     },
     {
-      "id": "company-c-989b1e7d92e1364aa76cc845",
-      "kind": "canonical",
-      "domain": "company",
-      "display_name": "深圳承创昌博科技有限公司"
+      "id": "web-handle:sha256:6b65029e0ce5d16482863e04df360a88f9664487d1a506b7094859692ef7d122",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "深圳南先科技有限公司 - 启信宝"
     },
     {
-      "id": "company-c-681273ff0fbcb138ec277a84",
-      "kind": "canonical",
-      "domain": "company",
-      "display_name": "深圳市振高科技有限公司"
+      "id": "web-handle:sha256:8d2033a522bf31a08ce455a36bdd2dcc036b16d63869221695136ffb62926f34",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "国家基础教育实验中心深圳基地"
     },
     {
-      "id": "company-c-a9e3f24abe80a03b200c58cb",
-      "kind": "canonical",
-      "domain": "company",
-      "display_name": "深圳电通纬创微电子股份有限公司"
+      "id": "web-handle:sha256:5a79e7cc333211e028dde47c229fb9a36d48462f8f5b730ccb2fcf545618b8cd",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "高先科技(深圳)有限公司 - 天眼查"
     },
     {
-      "id": "company-c-9d49f1afa9161cdf7f3fe351",
-      "kind": "canonical",
-      "domain": "company",
-      "display_name": "深圳市民德电子科技股份有限公司"
+      "id": "web-handle:sha256:fdc031ae7ad5d4d80c6242cd647c2ae006e604d3fd3f84fe2ca3618a26c182e7",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "高先科技（深圳）有限公司"
     },
     {
-      "id": "company-c-c3f58d9f6fb80702f8766273",
+      "id": "company-c-80c06114924f3b04909ade7f",
       "kind": "canonical",
       "domain": "company",
-      "display_name": "视启未来（深圳）科技有限公司"
+      "display_name": "深圳高性能医疗器械国家研究院有限公司"
     },
     {
-      "id": "company-c-e5c65a4397e2e2655eddaec9",
+      "id": "company-c-069aa8520a91f2e48c189d7c",
       "kind": "canonical",
       "domain": "company",
-      "display_name": "深圳市云泥科技有限公司"
+      "display_name": "深圳市恒先科技有限公司"
     },
     {
-      "id": "company-c-de2421b5e12d08fcf4f4b1e2",
+      "id": "company-c-1ef9cf68aac3c1b6dabbc9e7",
       "kind": "canonical",
       "domain": "company",
-      "display_name": "深圳瑞文文化发展有限公司"
+      "display_name": "深圳国芯微半导体有限公司"
     },
     {
-      "id": "company-c-942665a4923959c61433153e",
+      "id": "company-c-9f9adfb11ec8f4b425057ccf",
       "kind": "canonical",
       "domain": "company",
-      "display_name": "深圳市欧灵科技有限公司"
+      "display_name": "深圳市前海深港智算科技有限公司"
     },
     {
-      "id": "company-c-4f4f8a3128e65aee9670b332",
+      "id": "company-c-9ffdd602d8b6852bb3e20249",
       "kind": "canonical",
       "domain": "company",
-      "display_name": "深圳鼎界科技有限公司"
+      "display_name": "深流微智能科技（深圳）有限公司"
     },
     {
-      "id": "company-c-bf628392dafc4730d466002f",
+      "id": "company-c-7ae53ea6e747b64360960beb",
       "kind": "canonical",
       "domain": "company",
-      "display_name": "深圳市伟文无线通讯技术有限公司"
+      "display_name": "深圳市富创优越科技有限公司"
     },
     {
-      "id": "company-c-d1bc046ca94220a7c4677469",
+      "id": "company-c-4abba5888bec9f79e3c5235c",
       "kind": "canonical",
       "domain": "company",
-      "display_name": "深圳市随你探探网络科技有限公司"
-    },
-    {
-      "id": "company-c-392d1959a30d57f4c354112d",
-      "kind": "canonical",
-      "domain": "company",
-      "display_name": "深圳长城开发科技股份有限公司"
+      "display_name": "深圳国创具身智能机器人有限公司"
     }
   ],
   "evidence_items": {
-    "total": 16,
+    "total": 18,
     "by_domain": {
-      "company": 16
+      "company": 10,
+      "professor": 8
     },
     "by_lane": {
-      "vector": 13,
-      "web": 3
+      "exact": 1,
+      "vector": 9,
+      "web": 8
     },
     "by_source_nature": {
-      "current_web": 3,
-      "local": 13
+      "current_web": 8,
+      "local": 10
     },
-    "with_claim_binding": 16
+    "with_claim_binding": 18
   },
-  "protected_slots": [],
+  "protected_slots": [
+    {
+      "kind": "geography",
+      "value": "深圳",
+      "entity_ids": []
+    }
+  ],
   "requested_traversal": null,
   "admitted_claims": {
-    "total": 3,
+    "total": 1,
     "by_predicate": {
-      "current_web_result": 3
+      "canonical_projection": 1
     },
     "by_claim_type": {
-      "material_fact": 3
+      "material_fact": 1
     },
     "patent_evidence_claims": 0
   },
   "committed_handle_ids": [
-    "web-handle:sha256:69e1d61ab8acaddd75fc19213fa3103293e56e422add6df074ef66a9bc7df5e0",
-    "web-handle:sha256:62b7588e475dc1356e227633b2d744adcaa004a35d867c6d2afffcf6cb47ab19",
-    "web-handle:sha256:c30f786fd5d516371a37348cb387d7f80ee7805bacf7dbbe01bed704745d8b07"
+    "company-c-3970adda34eb223ab03821ff"
   ],
   "committed_names": [
-    "丁文波",
-    "广州文伯化工有限公司招聘简介_英才网联",
-    "丁文波"
+    "深圳国际先进技术应用推进中心"
   ],
   "render_mode": "prose_renderer",
   "response_mode": "answer",
-  "citations": 3,
-  "answer_chars": 277,
+  "citations": 1,
+  "answer_chars": 606,
   "lane_timings": [
     [
       "structured",
       0.0
     ],
     [
+      "vector",
+      0.849
+    ],
+    [
       "exact",
-      0.096
+      1.368
     ],
     [
       "lexical",
-      0.277
-    ],
-    [
-      "vector",
-      0.281
+      1.722
     ],
     [
       "web",
-      11.05
+      2.4
     ]
   ]
 }
