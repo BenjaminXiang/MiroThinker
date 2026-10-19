@@ -1,0 +1,154 @@
+{
+  "session_id": "probe:lane-watch",
+  "turn_id": "turn:chat:sha256:74eeb2c9dbfcb94018e5b8cb87e7d145d16858574fa6220db853075114225cd9",
+  "turn_count": 269,
+  "query": "目前主流的JEPA（联合嵌入预测架构）变体有哪些",
+  "planned_displayed_ids": [],
+  "recalled_handles": [
+    {
+      "id": "web-handle:sha256:810f43642460b5fb1de10ef0eb658044d28ab59e40c5579e116f5dcff6e962af",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "虚拟细胞每日研究进展2026-10-03医药新闻-ByDrug-一站式医药资源共享中心-医药魔方"
+    },
+    {
+      "id": "web-handle:sha256:131ebdb25a0c569848ba6d6194e2411ef137cdfbf02a23332fcc244dc108ca15",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "RoboJEPA:扩展机器人潜在世界模型 - 今日头条"
+    },
+    {
+      "id": "web-handle:sha256:491a1212eaf639131f1edd5e23db57fc107f3896931dd22a6a35c8090fba3d46",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "MotionJEPA: Preventing Temporal Feature Collapse by Capturing Visual Changes in Latent Space - 智源社区论文"
+    },
+    {
+      "id": "web-handle:sha256:29ed27401f889ecd062e7b9c8811a38ce4dfd84a535ec54375827124986178e3",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "H-JEPA: End-to-End Learning of Hierarchical World Models for Visual Planning - 智源社区论文"
+    },
+    {
+      "id": "web-handle:sha256:0c22fa2453b8b10d76076bab61743209efe331c34bbfebb41ba58aa02dbe6b73",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "H-JEPA!LeCun世界模型创业交卷,代码权重全部开源_预测_规划_表征"
+    },
+    {
+      "id": "web-handle:sha256:1fb9f3226fb00c772372bced17ab9fdc3ed9d63076b92c04e1ca140876fe359e",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "Ollama如何与JevAPI进行混合调用_Ollama结合JevAPI接口路由切换方案-人工智能-PHP中文网"
+    },
+    {
+      "id": "web-handle:sha256:3e565137d9760d5b86ef21db74ba8288c7da0b0e890914207cc07c7ad4f0a22c",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "反对Agent,反对RSI,杨立昆新模型反对当下一切AI叙事-钛媒体官方网站"
+    },
+    {
+      "id": "web-handle:sha256:7b2b087588d33bd73c0bfadb560d6b92e0a273f861aa8a48bd860c8ff1ce42bf",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "H-JEPA!LeCun世界模型创业交卷,代码权重全部开源|jepa|lecun|创业交卷|实验|尺度|层级|新模型_手机网易网"
+    },
+    {
+      "id": "web-handle:sha256:bf6c951c620f87bcaf5e18ee4d667bb563abab7155e7740bf4d0554dcd2c2574",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "H-JEPA,LeCun世界模型创业交卷,代码权重全部开源-36氪"
+    },
+    {
+      "id": "web-handle:sha256:8fdc962c0333bc9e179f7b98a25cdd9759231c34d5868c523a2ad8a037d16c5f",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "反对Agent,反对RSI,杨立昆新模型反对当下一切AI叙事_腾讯新闻"
+    },
+    {
+      "id": "web-handle:sha256:57461cdce7c4bd0ca6b7479af66f5d8443a377fc2626577c7f1722596cb52a5d",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "H-JEPA,LeCun世界模型创业交卷,代码权重全部开源 - 今日头条"
+    },
+    {
+      "id": "web-handle:sha256:c981325a2e62201b92d22ff3b3b655ed00cdadb95c6916a867cbd3e434ef681d",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "TypeSafe AI发布Jev 1.14决策模型_腾讯新闻"
+    },
+    {
+      "id": "web-handle:sha256:471c2dce8626ea9098188987cd7f9614ce4a22642725075ac2b4bfa08d50b33f",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "最常用的几种恒流源电路分析与比较-今日头条"
+    },
+    {
+      "id": "web-handle:sha256:54ae1f55b08d9c8d1ba82be8175a4fbb7161c0cb65f6a81a742fb2fd09631241",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "高压电气设备预防性试验变压器.ppt_咨信网zixin.com.cn"
+    },
+    {
+      "id": "web-handle:sha256:725a52c9c42f92ede836f20a2d9fc794015634fb18972788ecdf956652091595",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "变压器的结构图"
+    },
+    {
+      "id": "web-handle:sha256:db30bd1ab77460c23e4be4bc196571a08bfc11af3b9b8a85eb1411c48f3c3f6f",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "表征流体流变性的模型 爱问知识人"
+    }
+  ],
+  "evidence_items": {
+    "total": 16,
+    "by_domain": {
+      "professor": 16
+    },
+    "by_lane": {
+      "web": 16
+    },
+    "by_source_nature": {
+      "current_web": 16
+    },
+    "with_claim_binding": 16
+  },
+  "protected_slots": [],
+  "requested_traversal": null,
+  "admitted_claims": {
+    "total": 8,
+    "by_predicate": {
+      "current_web_result": 8
+    },
+    "by_claim_type": {
+      "material_fact": 8
+    },
+    "patent_evidence_claims": 0
+  },
+  "committed_handle_ids": [
+    "web-handle:sha256:810f43642460b5fb1de10ef0eb658044d28ab59e40c5579e116f5dcff6e962af",
+    "web-handle:sha256:131ebdb25a0c569848ba6d6194e2411ef137cdfbf02a23332fcc244dc108ca15",
+    "web-handle:sha256:491a1212eaf639131f1edd5e23db57fc107f3896931dd22a6a35c8090fba3d46",
+    "web-handle:sha256:29ed27401f889ecd062e7b9c8811a38ce4dfd84a535ec54375827124986178e3",
+    "web-handle:sha256:0c22fa2453b8b10d76076bab61743209efe331c34bbfebb41ba58aa02dbe6b73"
+  ],
+  "committed_names": [
+    "虚拟细胞每日研究进展2026-10-03医药新闻-ByDrug-一站式医药资源共享中心-医药魔方",
+    "RoboJEPA:扩展机器人潜在世界模型 - 今日头条",
+    "MotionJEPA: Preventing Temporal Feature Collapse by Capturing Visual Changes in Latent Space - 智源社区论文",
+    "H-JEPA: End-to-End Learning of Hierarchical World Models for Visual Planning - 智源社区论文",
+    "H-JEPA!LeCun世界模型创业交卷,代码权重全部开源_预测_规划_表征"
+  ],
+  "render_mode": "prose_renderer",
+  "response_mode": "answer",
+  "citations": 8,
+  "answer_chars": 919,
+  "lane_timings": [
+    [
+      "web",
+      14.42
+    ]
+  ]
+}
