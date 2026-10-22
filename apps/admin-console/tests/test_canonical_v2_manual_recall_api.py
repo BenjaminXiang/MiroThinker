@@ -12,6 +12,7 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 import hashlib
+import io
 import json
 from pathlib import Path
 from typing import Any, Iterator
@@ -132,7 +133,11 @@ def _minimal_pdf(text: str) -> bytes:
         b"<</Type/Pages/Kids[3 0 R]/Count 1>>",
         b"<</Type/Page/Parent 2 0 R/MediaBox[0 0 612 792]"
         b"/Contents 4 0 R/Resources<</Font<</F1 5 0 R>>>>>>",
-        b"<</Length " + str(len(stream)).encode("ascii") + b">>\nstream\n" + stream + b"\nendstream",
+        b"<</Length "
+        + str(len(stream)).encode("ascii")
+        + b">>\nstream\n"
+        + stream
+        + b"\nendstream",
         b"<</Type/Font/Subtype/Type1/BaseFont/Helvetica>>",
     ]
     header = b"%PDF-1.4\n"
@@ -159,7 +164,13 @@ def _minimal_pdf(text: str) -> bytes:
 def test_preview_pdf_extracts_and_chunks(client: TestClient) -> None:
     response = client.post(
         "/api/canonical-v2/admin/company-documents/preview",
-        files={"file": ("robotics.pdf", _minimal_pdf("Shenzhen Robotics"), "application/pdf")},
+        files={
+            "file": (
+                "robotics.pdf",
+                _minimal_pdf("Shenzhen Robotics"),
+                "application/pdf",
+            )
+        },
     )
     assert response.status_code == 200, response.text
     payload = response.json()
@@ -172,12 +183,50 @@ def test_preview_pdf_extracts_and_chunks(client: TestClient) -> None:
 def test_preview_text_file(client: TestClient) -> None:
     response = client.post(
         "/api/canonical-v2/admin/company-documents/preview",
-        files={"file": ("notes.txt", "公司主营业务：协作机器人。".encode("utf-8"), "text/plain")},
+        files={
+            "file": (
+                "notes.txt",
+                "公司主营业务：协作机器人。".encode("utf-8"),
+                "text/plain",
+            )
+        },
     )
     assert response.status_code == 200, response.text
     payload = response.json()
     assert payload["media_kind"] == "text"
     assert "协作机器人" in payload["text"]
+
+
+def test_preview_xlsx_flattens_rows(client: TestClient) -> None:
+    from openpyxl import Workbook
+
+    workbook = Workbook()
+    sheet = workbook.active
+    sheet.append(["公司名称", "网址", "简介"])
+    sheet.append(["深圳市测试科技有限公司", "https://test.example.com", "做工业机器人"])
+    sheet.append(["深圳市第二测试有限公司", "https://test2.example.com", "做传感器"])
+    buffer = io.BytesIO()
+    workbook.save(buffer)
+
+    response = client.post(
+        "/api/canonical-v2/admin/company-documents/preview",
+        files={
+            "file": (
+                "企业材料.xlsx",
+                buffer.getvalue(),
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            )
+        },
+    )
+
+    assert response.status_code == 200, response.text
+    payload = response.json()
+    assert payload["media_kind"] == "xlsx"
+    assert payload["row_count"] == 2
+    assert payload["analysis"]["domain"] == "company"
+    assert payload["analysis"]["confidence"] in {"high", "medium"}
+    assert "公司名称: 深圳市测试科技有限公司" in payload["text"]
+    assert "简介: 做传感器" in payload["text"]
 
 
 def test_preview_rejects_unsupported_extension(client: TestClient) -> None:

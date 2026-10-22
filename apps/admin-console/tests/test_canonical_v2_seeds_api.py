@@ -9,6 +9,8 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
+import sys
+from types import SimpleNamespace
 from typing import Any
 
 from fastapi.testclient import TestClient
@@ -84,19 +86,45 @@ def test_without_postgres_every_seed_endpoint_degrades(
     assert http.get("/api/health").status_code == 200
     assert http.get(_PREFIX).status_code == 503
     assert http.get(f"{_PREFIX}/1").status_code == 503
-    assert http.post(_PREFIX, json={"school": "S", "seed_url": _SEED_URL}).status_code == 503
     assert (
-        http.put(f"{_PREFIX}/1", json={"school": "S", "seed_url": _SEED_URL}).status_code
+        http.post(_PREFIX, json={"school": "S", "seed_url": _SEED_URL}).status_code
+        == 503
+    )
+    assert (
+        http.put(
+            f"{_PREFIX}/1", json={"school": "S", "seed_url": _SEED_URL}
+        ).status_code
         == 503
     )
     assert http.delete(f"{_PREFIX}/1").status_code == 503
-    assert http.post(f"{_PREFIX}/1/trigger", json={"mode": "preview"}).status_code == 503
+    assert (
+        http.post(f"{_PREFIX}/1/trigger", json={"mode": "preview"}).status_code == 503
+    )
     assert http.get(f"{_PREFIX}/1/runs").status_code == 503
     for response in (
         http.get(_PREFIX),
         http.post(f"{_PREFIX}/1/trigger", json={"mode": "preview"}),
     ):
         assert response.json()["detail"] == "seeds_require_postgres"
+
+
+def test_seed_dsn_env_bypasses_the_postgres_gate(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from backend.api import canonical_v2_seeds
+    from backend.console_dsn import resolve_seed_dsn
+
+    monkeypatch.setenv("CANONICAL_V2_SEED_DATABASE_URL", "postgresql://collection/seed")
+    monkeypatch.delenv("DATABASE_URL", raising=False)
+    http = _seed_client(tmp_path, postgres=False)
+    request = SimpleNamespace(
+        app=SimpleNamespace(
+            state=SimpleNamespace(seed_console_dsn=None, console_dsn=None)
+        )
+    )
+
+    assert resolve_seed_dsn() == "postgresql://collection/seed"
+    canonical_v2_seeds.require_postgres(request, http.app.state.canonical_v2_seed_gate)
 
 
 def test_a_sample_trigger_without_a_limit_is_refused(tmp_path: Path) -> None:
@@ -107,12 +135,21 @@ def test_a_sample_trigger_without_a_limit_is_refused(tmp_path: Path) -> None:
 
 def test_an_out_of_set_mode_or_limit_is_refused(tmp_path: Path) -> None:
     http = _seed_client(tmp_path, postgres=True)
-    assert http.post(f"{_PREFIX}/1/trigger", json={"mode": "everything"}).status_code == 422
     assert (
-        http.post(f"{_PREFIX}/1/trigger", json={"mode": "sample", "limit": 1000}).status_code == 422
+        http.post(f"{_PREFIX}/1/trigger", json={"mode": "everything"}).status_code
+        == 422
     )
     assert (
-        http.post(f"{_PREFIX}/1/trigger", json={"mode": "full", "limit": 20}).status_code == 422
+        http.post(
+            f"{_PREFIX}/1/trigger", json={"mode": "sample", "limit": 1000}
+        ).status_code
+        == 422
+    )
+    assert (
+        http.post(
+            f"{_PREFIX}/1/trigger", json={"mode": "full", "limit": 20}
+        ).status_code
+        == 422
     )
 
 
@@ -126,11 +163,15 @@ def test_trigger_goes_through_the_declared_task(tmp_path: Path, monkeypatch) -> 
     )
     gate = http.app.state.canonical_v2_seed_gate
 
-    assert http.post(f"{_PREFIX}/7/trigger", json={"mode": "preview"}).status_code == 202
+    assert (
+        http.post(f"{_PREFIX}/7/trigger", json={"mode": "preview"}).status_code == 202
+    )
     preview = http.post(f"{_PREFIX}/7/trigger", json={"mode": "preview"}).json()
     assert preview["task_id"] == "admin-seed-refresh"
     assert preview["status"] in {"running", "skipped"}
-    assert http.post(f"{_PREFIX}/8/trigger", json={"mode": "preview"}).status_code == 404
+    assert (
+        http.post(f"{_PREFIX}/8/trigger", json={"mode": "preview"}).status_code == 404
+    )
 
     sample = http.post(f"{_PREFIX}/7/trigger", json={"mode": "sample", "limit": 20})
     assert sample.status_code == 202
@@ -138,13 +179,12 @@ def test_trigger_goes_through_the_declared_task(tmp_path: Path, monkeypatch) -> 
 
     gate.wait_for_idle(timeout=10)
     assert spawn.calls, "the gate must have spawned the declared task"
-    assert tuple(spawn.calls[0][:6]) == (
-        "uv",
-        "run",
-        "python",
+    assert tuple(spawn.calls[0][:5]) == (
+        sys.executable,
         "scripts/run_admin_seed_refresh.py",
         "--seed-id",
         "7",
+        "--trigger-mode",
     )
     runs = http.get(f"{_PREFIX}/7/runs")
     assert runs.status_code == 200
@@ -167,7 +207,9 @@ def test_seed_runs_carry_the_outcome_fields(tmp_path: Path, monkeypatch) -> None
     )
     gate = http.app.state.canonical_v2_seed_gate
 
-    assert http.post(f"{_PREFIX}/7/trigger", json={"mode": "preview"}).status_code == 202
+    assert (
+        http.post(f"{_PREFIX}/7/trigger", json={"mode": "preview"}).status_code == 202
+    )
     gate.wait_for_idle(timeout=10)
 
     listed = http.get(f"{_PREFIX}/7/runs")
@@ -187,7 +229,9 @@ def test_seed_runs_carry_the_outcome_fields(tmp_path: Path, monkeypatch) -> None
 def test_seed_crud_round_trip(tmp_path: Path) -> None:
     from src.data_agents.canonical_v2.jobs import PostgresProbe
 
-    database_url = os.environ.get("DATABASE_URL_TEST") or os.environ.get("DATABASE_URL", "")
+    database_url = os.environ.get("DATABASE_URL_TEST") or os.environ.get(
+        "DATABASE_URL", ""
+    )
     if "miroflow_real" in database_url:
         pytest.skip("refusing to run against a real-data database")
 
@@ -198,7 +242,12 @@ def test_seed_crud_round_trip(tmp_path: Path) -> None:
 
     unique_url = f"{_SEED_URL}?w3={os.getpid()}"
     created = http.post(
-        _PREFIX, json={"school": "W3 测试大学", "department": "测试学院", "seed_url": unique_url}
+        _PREFIX,
+        json={
+            "school": "W3 测试大学",
+            "department": "测试学院",
+            "seed_url": unique_url,
+        },
     )
     assert created.status_code == 201, created.text
     seed_id = created.json()["id"]
@@ -218,9 +267,7 @@ def test_seed_crud_round_trip(tmp_path: Path) -> None:
     assert updated.status_code == 200
     assert updated.json()["school"] == "W3 测试大学（改）"
 
-    duplicate = http.post(
-        _PREFIX, json={"school": "另一所", "seed_url": unique_url}
-    )
+    duplicate = http.post(_PREFIX, json={"school": "另一所", "seed_url": unique_url})
     assert duplicate.status_code == 409
 
     deleted = http.delete(f"{_PREFIX}/{seed_id}")
@@ -276,7 +323,9 @@ def test_a_killed_run_reads_as_interrupted_not_in_progress(tmp_path: Path) -> No
     from src.data_agents.storage.postgres.connection import resolve_dsn
     from src.data_agents.storage.postgres.pipeline_run import close_pipeline_run
 
-    database_url = os.environ.get("DATABASE_URL_TEST") or os.environ.get("DATABASE_URL", "")
+    database_url = os.environ.get("DATABASE_URL_TEST") or os.environ.get(
+        "DATABASE_URL", ""
+    )
     if "miroflow_real" in database_url:
         pytest.skip("refusing to run against a real-data database")
     pg_dsn = resolve_dsn(database_url)
@@ -288,7 +337,12 @@ def test_a_killed_run_reads_as_interrupted_not_in_progress(tmp_path: Path) -> No
 
     unique_url = f"{_SEED_URL}?interrupted={os.getpid()}"
     created = http.post(
-        _PREFIX, json={"school": "中断态测试大学", "department": "测试学院", "seed_url": unique_url}
+        _PREFIX,
+        json={
+            "school": "中断态测试大学",
+            "department": "测试学院",
+            "seed_url": unique_url,
+        },
     )
     assert created.status_code == 201, created.text
     seed_id = created.json()["id"]

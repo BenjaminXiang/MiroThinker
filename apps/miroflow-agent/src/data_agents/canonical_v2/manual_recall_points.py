@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import logging
 from typing import Any, Protocol
 
 from .knowledge_read import (
@@ -37,6 +38,8 @@ MANUAL_RECALL_ADAPTER_VERSION = "manual-recall-v1"
 _FIXED_LINEAGE_SHA256 = hashlib.sha256(b"canonical-v2-manual-recall-v1").hexdigest()
 
 _PUBLIC_DOMAINS = frozenset({"company", "paper", "patent", "professor"})
+
+logger = logging.getLogger(__name__)
 
 
 class ManualRecallPoint(Protocol):
@@ -82,8 +85,9 @@ def manual_points_for_request(
     from . import knowledge_read_isolated as iso  # lazy: avoids an import cycle
 
     constraints = request.structured_constraints
+    active = provider.active_points()
     matched: list[Any] = []
-    for point in provider.active_points():
+    for point in active:
         if point.domain not in request.domains:
             continue
         if (
@@ -101,6 +105,14 @@ def manual_points_for_request(
         ):
             continue
         matched.append(point)
+    logger.warning(
+        "manual_recall_filter active=%d domains=%s displayed=%d excluded=%d matched=%d",
+        len(active),
+        sorted(getattr(request, "domains", ()) or ()),
+        len(getattr(constraints, "displayed_entity_ids", ()) or ()),
+        len(getattr(constraints, "excluded_terms", ()) or ()),
+        len(matched),
+    )
     return tuple(matched)
 
 
@@ -210,11 +222,13 @@ def append_manual_candidates(
     and append their candidates before the lane's sort/truncate step."""
 
     if provider is None:
+        logger.warning("manual_recall_append provider=none appended=0")
         return 0
     from . import knowledge_read_isolated as iso  # lazy: avoids an import cycle
 
+    points = manual_points_for_request(provider=provider, request=request)
     appended = 0
-    for point in manual_points_for_request(provider=provider, request=request):
+    for point in points:
         score = iso._cosine_similarity(query_vector, tuple(point.vector))
         candidates.append(
             manual_candidate_from_point(
@@ -226,6 +240,12 @@ def append_manual_candidates(
             )
         )
         appended += 1
+    logger.warning(
+        "manual_recall_append provider=yes eligible=%d appended=%d candidates=%d",
+        len(points),
+        appended,
+        len(candidates),
+    )
     return appended
 
 

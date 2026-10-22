@@ -1754,20 +1754,42 @@ def _create_pack_vector_recall_adapter(
         )
         with serving_timing.timed_step("vector.sort") as step:
             step.annotate(candidates=len(candidates))
-            candidates.sort(
-                key=lambda candidate: (
-                    -candidate.raw_score,
-                    candidate.domain,
-                    candidate.canonical_id or "",
-                    candidate.evidence[0].local_projection_trace.projection_view
-                    if isinstance(
-                        candidate.evidence[0].local_projection_trace,
-                        iso.LocalVectorTrace,
-                    )
-                    else "",
-                    candidate.evidence[0].source_locator,
+            sort_key = lambda candidate: (  # noqa: E731 - local ordering contract
+                -candidate.raw_score,
+                candidate.domain,
+                candidate.canonical_id or "",
+                candidate.evidence[0].local_projection_trace.projection_view
+                if isinstance(
+                    candidate.evidence[0].local_projection_trace,
+                    iso.LocalVectorTrace,
                 )
+                else "",
+                candidate.evidence[0].source_locator,
             )
+            candidates.sort(key=sort_key)
+            manual_candidates = [
+                candidate
+                for candidate in candidates
+                if manual_recall_points.is_manual_vector_trace(
+                    candidate.evidence[0].local_projection_trace
+                )
+            ]
+            if manual_candidates:
+                _LOGGER.warning(
+                    "manual_slot_reserve top_score=%.4f count=%d limit=%d",
+                    manual_candidates[0].raw_score,
+                    len(manual_candidates),
+                    validated_request.max_candidates,
+                )
+                limit = validated_request.max_candidates
+                reserve = min(len(manual_candidates), 2, limit)
+                manual_ids = {id(candidate) for candidate in manual_candidates}
+                release_candidates = [
+                    candidate for candidate in candidates if id(candidate) not in manual_ids
+                ]
+                selected = manual_candidates[:reserve] + release_candidates[: limit - reserve]
+                selected.sort(key=sort_key)
+                return RetrievalLaneResult(candidates=tuple(selected))
         return RetrievalLaneResult(
             candidates=tuple(candidates[: validated_request.max_candidates])
         )

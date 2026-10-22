@@ -15,6 +15,8 @@ from __future__ import annotations
 from collections.abc import Mapping
 import os
 
+SEED_DATABASE_URL_ENV = "CANONICAL_V2_SEED_DATABASE_URL"
+
 
 def resolve_console_dsn(environ: Mapping[str, str] | None = None) -> str | None:
     """Return the console/collection database DSN, or ``None`` when unconfigured.
@@ -34,4 +36,20 @@ def resolve_console_dsn(environ: Mapping[str, str] | None = None) -> str | None:
     return None
 
 
-__all__ = ["resolve_console_dsn"]
+def resolve_seed_dsn(environ: Mapping[str, str] | None = None) -> str | None:
+    """Return the DSN for the professor-seed surface only.
+
+    ``CANONICAL_V2_SEED_DATABASE_URL`` lets a serving node expose the seed
+    registry (raw collection DB) without configuring the build-time
+    ``DATABASE_URL`` that would also enable the ops/import surfaces. Falls back
+    to the console DSN so existing deployments keep their behaviour.
+    """
+
+    values = os.environ if environ is None else environ
+    seed = (values.get(SEED_DATABASE_URL_ENV) or "").strip()
+    if seed:
+        return seed
+    return resolve_console_dsn(values)
+
+
+__all__ = ["SEED_DATABASE_URL_ENV", "resolve_console_dsn", "resolve_seed_dsn"]

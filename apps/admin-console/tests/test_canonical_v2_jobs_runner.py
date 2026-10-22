@@ -10,7 +10,7 @@ child environment is never persisted.
 from __future__ import annotations
 
 from dataclasses import replace
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 import json
 import os
 from pathlib import Path
@@ -22,6 +22,9 @@ import pytest
 
 from src.data_agents.canonical_v2.jobs import (
     MANUAL_TRIGGER,
+    JOB_DATABASE_URL_ENV,
+    JOB_PYTHON_ENV,
+    JOB_TIMEZONE_ENV,
     _spawn_subprocess,
     QUOTA_LLM_ENV,
     QUOTA_WEB_SEARCH_ENV,
@@ -106,7 +109,8 @@ def runtime_factory(tmp_path: Path):
     created: list[JobRuntime] = []
 
     def build(
-        *, tasks=None, settings=None, spawn=None, environ=None, probe=None, console_dsn=None
+        *, tasks=None, settings=None, spawn=None, environ=None, probe=None,
+        console_dsn=None, clock=None
     ) -> JobRuntime:
         store = JobRunStore(tmp_path / "jobs.sqlite3")
         runtime = JobRuntime(
@@ -119,6 +123,7 @@ def runtime_factory(tmp_path: Path):
             spawn=spawn or _Spawn(),
             postgres_probe=probe,
             console_dsn=console_dsn,
+            clock=clock,
         )
         created.append(runtime)
         return runtime
@@ -485,6 +490,70 @@ def test_an_explicit_console_dsn_wins_over_the_probe_environment(runtime_factory
     runtime.trigger("stub-task")
     runtime.wait_for_idle(timeout=10)
     assert spawn.calls[0]["env"]["DATABASE_URL"] == "postgresql://startup/db"
+
+
+def test_job_database_url_seeds_the_child_without_touching_the_probe(runtime_factory) -> None:
+    spawn = _Spawn()
+    runtime = runtime_factory(
+        spawn=spawn, environ={JOB_DATABASE_URL_ENV: "postgresql://collection/only"}
+    )
+    runtime.trigger("stub-task")
+    runtime.wait_for_idle(timeout=10)
+    assert spawn.calls[0]["env"]["DATABASE_URL"] == "postgresql://collection/only"
+
+
+def test_declared_uv_runner_is_replaced_by_the_job_python(runtime_factory) -> None:
+    task = _task(argv_template=("uv", "run", "python", "scripts/job.py", "--flag"))
+    spawn = _Spawn()
+    runtime = runtime_factory(
+        tasks=(task,), spawn=spawn, environ={JOB_PYTHON_ENV: "/opt/job/python"}
+    )
+
+    outcome = runtime.trigger("stub-task")
+    runtime.wait_for_idle(timeout=10)
+
+    assert spawn.calls[0]["argv"] == ("/opt/job/python", "scripts/job.py", "--flag")
+    assert runtime.run_detail(outcome.run_id)["command"] == [
+        "/opt/job/python",
+        "scripts/job.py",
+        "--flag",
+    ]
+
+
+def test_task_schedule_uses_the_job_timezone(runtime_factory) -> None:
+    task = _task(schedule_cron="0 2 * * 1", schedule_display="每周一 02:00")
+    runtime = runtime_factory(
+        tasks=(task,), environ={JOB_TIMEZONE_ENV: "Asia/Shanghai"}
+    )
+
+    view = runtime.task_views()[0]
+    next_run = datetime.fromisoformat(view["next_run_at"])
+
+    assert next_run.weekday() == 0
+    assert (next_run.hour, next_run.minute) == (2, 0)
+    assert next_run.utcoffset() == timedelta(hours=8)
+
+
+def test_scheduled_monday_0200_cst_is_inside_the_collection_window(
+    runtime_factory, tmp_path: Path
+) -> None:
+    task = _task(schedule_cron="0 2 * * 1", schedule_display="每周一 02:00")
+    settings = _settings(tmp_path, window_start_hour_utc=17, window_end_hour_utc=22)
+    spawn = _Spawn()
+    runtime = runtime_factory(
+        tasks=(task,),
+        settings=settings,
+        spawn=spawn,
+        clock=lambda: datetime(2026, 10, 26, 18, 0, tzinfo=UTC),
+    )
+
+    outcome = runtime.trigger(
+        "stub-task", trigger_source=SCHEDULE_TRIGGER, operator="scheduler"
+    )
+    runtime.wait_for_idle(timeout=10)
+
+    assert outcome.status == "running"
+    assert runtime.run_detail(outcome.run_id)["inside_window"] is True
 
 
 def test_a_timed_out_spawn_leaves_no_grandchild_behind() -> None:

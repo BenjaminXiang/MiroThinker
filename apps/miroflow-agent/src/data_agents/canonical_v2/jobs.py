@@ -36,6 +36,7 @@ import re
 import signal
 import sqlite3
 import subprocess
+import sys
 import threading
 import time
 import uuid
@@ -55,6 +56,9 @@ logger = logging.getLogger(__name__)
 SCHEMA_VERSION = "canonical-v2-jobs-v1"
 JOBS_DB_ENV = "CANONICAL_V2_JOBS_DB"
 ACCESS_LOG_DB_ENV = "CANONICAL_V2_ACCESS_LOG_DB"
+JOB_PYTHON_ENV = "MIROTHINKER_JOB_PYTHON"
+JOB_DATABASE_URL_ENV = "MIROTHINKER_JOB_DATABASE_URL"
+JOB_TIMEZONE_ENV = "MIROTHINKER_JOB_TIMEZONE"
 JOBS_DB_FILENAME = "jobs.sqlite3"
 
 MANUAL_TRIGGER = "manual"
@@ -325,6 +329,7 @@ JOB_TASKS: tuple[JobTask, ...] = (
         "scripts/run_company_official_product_capture.py",
         "web_search",
         "重新抓取企业官网的产品信息，用于更新产品线描述。",
+        args=("--limit", "50"),
     ),
     _collection_task(
         "paper-search-backfill",
@@ -335,6 +340,7 @@ JOB_TASKS: tuple[JobTask, ...] = (
         "scripts/run_paper_search_backfill.py",
         "web_search",
         "为缺链接或元数据的论文做标题检索补全。",
+        args=("--limit", "20"),
     ),
     _collection_task(
         "paper-summary-zh-backfill",
@@ -345,6 +351,7 @@ JOB_TASKS: tuple[JobTask, ...] = (
         "scripts/run_paper_summary_zh_backfill.py",
         "llm",
         "为缺中文摘要的论文补写摘要；会调用本地大模型。",
+        args=("--limit", "50"),
     ),
     _collection_task(
         "paper-doi-verify",
@@ -355,6 +362,7 @@ JOB_TASKS: tuple[JobTask, ...] = (
         "scripts/run_paper_doi_verify.py",
         "llm",
         "校验论文 DOI 是否正确并修正。",
+        args=("--limit", "100"),
     ),
     _collection_task(
         "professor-homepage-rescrape",
@@ -365,7 +373,7 @@ JOB_TASKS: tuple[JobTask, ...] = (
         "scripts/run_profile_bio_rescrape.py",
         "llm",
         "重新抓取教授个人主页并更新画像；会调用本地大模型。",
-        args=("--apply", "--confirm-real-db"),
+        args=("--apply", "--confirm-real-db", "--limit", "20"),
     ),
     JobTask(
         task_id="professor-homepage-paper-ingest",
@@ -380,6 +388,8 @@ JOB_TASKS: tuple[JobTask, ...] = (
             "python",
             "scripts/run_homepage_paper_ingest.py",
             "--resume",
+            "--limit",
+            "10",
         ),
         cwd_relative="apps/miroflow-agent",
         timeout_seconds=3600,
@@ -586,6 +596,17 @@ def _parse_cron_field(field_value: str, *, minimum: int, maximum: int) -> tuple[
     return frozenset(values), restricted
 
 
+def _resolve_job_timezone(name: str) -> tzinfo:
+    if name:
+        try:
+            from zoneinfo import ZoneInfo
+
+            return ZoneInfo(name)
+        except Exception:  # noqa: BLE001 - a bad TZ name must not break the page
+            logger.warning("unknown job timezone %r; using host local time", name)
+    return datetime.now().astimezone().tzinfo
+
+
 def cron_next_fire(
     expression: str,
     *,
@@ -657,7 +678,12 @@ def _prepare_database_file(database_path: Path) -> Path:
         raise OSError("jobs database path must be a regular file")
     if metadata.st_nlink != 1:
         raise OSError("jobs database path must not be hard-linked")
-    os.chmod(path, 0o600, follow_symlinks=False)
+    try:
+        os.chmod(path, 0o600, follow_symlinks=False)
+    except NotImplementedError:
+        # CPython >=3.12.13 raises where older patch releases ignored the flag
+        # (Linux chmod cannot honour it); the checks above pin the target.
+        os.chmod(path, 0o600)
     return path
 
 
@@ -1370,6 +1396,12 @@ class JobRuntime:
         self._spawn = spawn or _spawn_subprocess
         self._probe = postgres_probe or PostgresProbe(self._environ)
         self._console_dsn = console_dsn
+        self._job_python = (
+            self._environ.get(JOB_PYTHON_ENV, "").strip() or sys.executable
+        )
+        self._job_timezone = _resolve_job_timezone(
+            self._environ.get(JOB_TIMEZONE_ENV, "").strip()
+        )
         self._threads: list[threading.Thread] = []
         self._threads_lock = threading.Lock()
 
@@ -1383,6 +1415,9 @@ class JobRuntime:
 
         if self._console_dsn is not None:
             return self._console_dsn
+        job_dsn = self._environ.get(JOB_DATABASE_URL_ENV, "").strip()
+        if job_dsn:
+            return job_dsn
         _, dsn = self._probe.resolved_dsn()
         return dsn
 
@@ -1425,7 +1460,7 @@ class JobRuntime:
                 {
                     **task.as_dict(),
                     "next_run_at": (
-                        cron_next_fire(task.schedule_cron, now=now).isoformat()
+                        cron_next_fire(task.schedule_cron, now=now, tz=self._job_timezone).isoformat()
                         if task.schedule_cron
                         else None
                     ),
@@ -1506,7 +1541,7 @@ class JobRuntime:
         trigger_source: str = MANUAL_TRIGGER,
     ) -> TriggerOutcome:
         task = self._resolve(task_id)
-        argv = task.argv_for(params)
+        argv = self._resolve_runner(task.argv_for(params))
         operator_text = (operator or "anonymous").strip()[:_OPERATOR_LIMIT] or "anonymous"
 
         if task.requires_postgres and not self._probe.available():
@@ -1600,6 +1635,11 @@ class JobRuntime:
             started_at=(started_at.started_at if started_at else now.isoformat()),
             command=argv,
         )
+
+    def _resolve_runner(self, argv: Sequence[str]) -> tuple[str, ...]:
+        if len(argv) >= 3 and tuple(argv[:3]) == ("uv", "run", "python"):
+            return (self._job_python, *argv[3:])
+        return tuple(argv)
 
     def _skip(
         self,

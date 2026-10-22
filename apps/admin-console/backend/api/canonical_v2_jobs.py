@@ -18,6 +18,7 @@ from pydantic import BaseModel, Field
 
 from backend.services.admin_session import current_operator
 from src.data_agents.canonical_v2.jobs import (
+    JOB_DATABASE_URL_ENV,
     MANUAL_TRIGGER,
     RUN_STATUSES,
     JobAlreadyRunningError,
@@ -106,6 +107,7 @@ def build_job_runtime(
         settings_store=settings,
         environ=values,
         lock_dir=database_path.parent / "locks",
+        console_dsn=values.get(JOB_DATABASE_URL_ENV) or None,
     )
 
 
