@@ -64,6 +64,12 @@ def take_lane_timings() -> tuple[tuple[str, float], ...]:
 # local provenance.
 MANUAL_RECALL_TARGET_ID = "manual-recall-v1"
 MANUAL_RECALL_SOURCE_AUTHORITY = "manual_upload"
+# Sidecar relevance floor and candidate-window reserve. An operator-uploaded
+# document that matches the query is attested local evidence, so it keeps a
+# slot in the answer's candidate window even when the release lanes fill every
+# slot; a weak match (below the floor) never displaces release evidence.
+MANUAL_RECALL_MIN_SIMILARITY = 0.52
+_MANUAL_RECALL_RESERVED_SLOTS = 2
 _INFORMATION_CLASSES = frozenset({"A", "B", "C", "D", "E", "G"})
 _SUPPORTED_LANES = frozenset(
     {
@@ -6270,6 +6276,53 @@ def _fused_candidate(
     )
 
 
+def _manual_upload_score(candidate: FusedCandidate) -> float | None:
+    """The best sidecar similarity carried by one candidate, else None."""
+
+    scores = tuple(
+        item.score
+        for item in candidate.evidence
+        if item.source_authority == MANUAL_RECALL_SOURCE_AUTHORITY
+    )
+    return max(scores) if scores else None
+
+
+def _protect_manual_candidates(
+    ordered: Sequence[FusedCandidate],
+    *,
+    limit: int,
+) -> tuple[FusedCandidate, ...]:
+    """Trim the answer candidate window while keeping matching uploads.
+
+    The window is sized for release and web candidates. A lexical lane that
+    fills every slot would otherwise drop a matching manual upload before the
+    answer selector can see it. Manual uploads are operator-attested and few,
+    so reserve up to ``_MANUAL_RECALL_RESERVED_SLOTS`` slots for the
+    best-scoring uploads that clear ``MANUAL_RECALL_MIN_SIMILARITY``.
+    """
+
+    if limit <= 0:
+        return ()
+    trimmed = list(ordered[:limit])
+    reserved = [
+        candidate
+        for candidate in ordered
+        if (score := _manual_upload_score(candidate)) is not None
+        and score >= MANUAL_RECALL_MIN_SIMILARITY
+    ][:_MANUAL_RECALL_RESERVED_SLOTS]
+    missing = [candidate for candidate in reserved if candidate not in trimmed]
+    if not missing:
+        return tuple(trimmed)
+    for candidate in missing:
+        for index in range(len(trimmed) - 1, -1, -1):
+            if _manual_upload_score(trimmed[index]) is None:
+                trimmed[index] = candidate
+                break
+        else:
+            break
+    return tuple(trimmed)
+
+
 def _apply_constraints(
     fused: Sequence[FusedCandidate],
     slots: Sequence[ProtectedSlot],
@@ -8202,7 +8255,7 @@ class _EphemeralKnowledgeRead(KnowledgeRead):
                 )
 
         candidate_limit = max(0, plan.max_candidates - direct_result_count)
-        ordered = ordered[:candidate_limit]
+        ordered = _protect_manual_candidates(ordered, limit=candidate_limit)
 
         entity_handles: list[CanonicalEntityHandle | WebEntityHandle] = []
         selected_handle_by_raw: dict[str, str] = {}

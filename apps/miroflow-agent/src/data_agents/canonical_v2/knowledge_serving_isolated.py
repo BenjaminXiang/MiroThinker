@@ -55,6 +55,8 @@ from .knowledge_answer import (
 )
 from .knowledge_gap_feedback import create_ephemeral_knowledge_gap_feedback
 from .knowledge_read import (
+    MANUAL_RECALL_MIN_SIMILARITY,
+    MANUAL_RECALL_SOURCE_AUTHORITY,
     AmbiguityPolicy,
     EvidenceClaimBinding,
     EvidenceItem,
@@ -6572,6 +6574,17 @@ def _answer_selector(
         }
         preferred_objects.update(exact_named_objects)
         focused_entity = search_view != request.query.strip().rstrip("？?。！!")
+        # Operator-attested uploads are first-class local evidence. The
+        # focused-entity and preferred-object filters below exist to keep
+        # release profile noise out; they must not hide an uploaded document
+        # that matches the query. The score floor keeps a weak sidecar match
+        # from displacing stronger release evidence in the claim window.
+        manual_items = tuple(
+            item
+            for item in request.evidence_set.items
+            if item.source_authority == MANUAL_RECALL_SOURCE_AUTHORITY
+            and item.score >= MANUAL_RECALL_MIN_SIMILARITY
+        )
         if focused_entity and not preferred_objects:
             displayed_anchor_ids = frozenset(
                 entity_id
@@ -6611,6 +6624,16 @@ def _answer_selector(
                 or enumeration
                 or not preferred_objects
                 or item.object_id in preferred_objects
+            )
+        if manual_items:
+            manual_ids = {item.evidence_id for item in manual_items}
+            eligible_items = (
+                *manual_items,
+                *(
+                    item
+                    for item in eligible_items
+                    if item.evidence_id not in manual_ids
+                ),
             )
         local_items = tuple(
             item for item in eligible_items if item.source_nature != "current_web"

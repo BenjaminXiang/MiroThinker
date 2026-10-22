@@ -1334,3 +1334,102 @@ def test_web_handles_bind_snapshot_collision_expiry_and_read_only_resolution() -
         assert hostile_receipt.source_mapping_mutation_count == 0
         assert accepted_identity_mapping == original_identity_mapping
         assert alpha_handle.model_dump(mode="json") == original_handle
+
+
+def _fused_company_candidate(
+    module: Any,
+    *,
+    result_id: str,
+    object_id: str,
+    score: float,
+    source_authority: str,
+) -> Any:
+    evidence_id = f"evidence:{result_id}"
+    evidence = module.EvidenceItem(
+        evidence_id=evidence_id,
+        object_id=object_id,
+        domain="company",
+        lane="vector",
+        source_nature="local",
+        source_locator=f"canonical-v2-isolated:{result_id}",
+        snippet=f"{object_id}：企业简介。",
+        score=score,
+        source_authority=source_authority,
+        claim_binding=module.EvidenceClaimBinding(
+            subject_id=object_id,
+            predicate="semantic_recall",
+            value="c" * 64,
+            status="admitted",
+        ),
+    )
+    return module.FusedCandidate(
+        result_id=result_id,
+        canonical_id=object_id,
+        display_name=object_id,
+        domain="company",
+        raw_candidate_ids=(result_id,),
+        evidence_ids=(evidence_id,),
+        evidence=(evidence,),
+        quality_flags=(),
+        raw_score=score,
+        identity_kind="canonical",
+        resolution_state="resolved",
+        origin_lane="vector",
+        origin_attempt=1,
+        adapter_versions=("test-adapter-v1",),
+        provider_versions=(),
+    )
+
+
+def test_answer_candidate_window_reserves_manual_upload_slot() -> None:
+    """Manual uploads are operator-attested: a full lexical/vector window must
+    not push a matching upload out before the answer selector sees it."""
+    module = _module()
+    manual = _fused_company_candidate(
+        module,
+        result_id="manual-upload:doc-window",
+        object_id="manual-upload:doc-window",
+        score=0.76,
+        source_authority="manual_upload",
+    )
+    release = tuple(
+        _fused_company_candidate(
+            module,
+            result_id=f"company-c-{index}",
+            object_id=f"company-c-{index}",
+            score=1.0 - index * 0.01,
+            source_authority="canonical_release",
+        )
+        for index in range(5)
+    )
+
+    kept = module._protect_manual_candidates((*release, manual), limit=3)
+
+    assert manual in kept
+    assert len(kept) == 3
+
+
+def test_answer_candidate_window_keeps_weak_manual_upload_out() -> None:
+    module = _module()
+    weak = _fused_company_candidate(
+        module,
+        result_id="manual-upload:doc-weak",
+        object_id="manual-upload:doc-weak",
+        score=0.3,
+        source_authority="manual_upload",
+    )
+    release = tuple(
+        _fused_company_candidate(
+            module,
+            result_id=f"company-c-{index}",
+            object_id=f"company-c-{index}",
+            score=1.0 - index * 0.01,
+            source_authority="canonical_release",
+        )
+        for index in range(5)
+    )
+
+    kept = module._protect_manual_candidates((*release, weak), limit=3)
+
+    assert weak not in kept
+    assert kept == release[:3]

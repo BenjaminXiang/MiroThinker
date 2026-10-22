@@ -8058,3 +8058,210 @@ def test_selector_prefers_exact_linked_entity_claim_on_question_turn() -> None:
         "深圳市大疆创新科技有限公司；简介：聚焦无人机与影像技术。；技术路线：飞控与影像系统。。"
     ]
     assert proposal.displayed_handle_ids == ("company:aq-s7:linked",)
+
+
+def _manual_upload_item(
+    *,
+    evidence_id: str,
+    object_id: str,
+    display_name: str,
+    snippet: str,
+    score: float,
+) -> EvidenceItem:
+    return EvidenceItem(
+        evidence_id=evidence_id,
+        object_id=object_id,
+        domain="company",
+        lane="vector",
+        source_nature="local",
+        source_locator=f"canonical-v2-isolated:manual-recall-v1:{evidence_id}",
+        snippet=snippet,
+        score=score,
+        source_authority="manual_upload",
+        claim_binding=EvidenceClaimBinding(
+            subject_id=object_id,
+            predicate="semantic_recall",
+            value="a" * 64,
+            status="admitted",
+        ),
+    )
+
+
+def _manual_upload_handle(item: EvidenceItem, display_name: str) -> CanonicalEntityHandle:
+    return CanonicalEntityHandle(
+        canonical_id=item.object_id,
+        domain="company",
+        display_name=display_name,
+        evidence_ids=(item.evidence_id,),
+    )
+
+
+def _web_company_item() -> EvidenceItem:
+    return EvidenceItem(
+        evidence_id="evidence:web:strict",
+        object_id="web:strict",
+        domain="company",
+        lane="web",
+        source_nature="current_web",
+        source_locator="https://example.com/strict",
+        snippet="深圳另一家名称相近的严格机器人公司：经营范围为工业机器人集成。",
+        score=0.9,
+        source_authority="public_web",
+        claim_binding=EvidenceClaimBinding(
+            subject_id="web:strict",
+            predicate="official_policy_reference",
+            value="工业机器人集成",
+            status="accepted",
+        ),
+    )
+
+
+def _selector_bundle() -> SimpleNamespace:
+    return SimpleNamespace(
+        max_candidates=8,
+        max_web_results=8,
+        answer_model_id="canonical-v2-deterministic-answer-v1",
+    )
+
+
+def test_selector_keeps_manual_upload_claim_on_focused_company_lookup() -> None:
+    """A focused company lookup has no release exact hit; the operator's
+    uploaded workbook is the only local evidence and must not be dropped by
+    the focused-entity web-only eligibility branch."""
+    query = "严格验收机器人公司是做什么的？"
+    company_id = "manual-upload:doc-strict"
+    display_name = "深圳市严格验收机器人有限公司"
+    manual_item = _manual_upload_item(
+        evidence_id="evidence:manual:strict",
+        object_id=company_id,
+        display_name=display_name,
+        snippet=(
+            f"{display_name}：专注协作机器人研发，核心产品 STRICT-9000 "
+            "协作机械臂，额定负载 30kg。"
+        ),
+        score=0.76,
+    )
+    evidence_set = EvidenceSet(
+        release_id=RELEASE_ID,
+        original_query=query,
+        protected_slots=(),
+        items=(manual_item, _web_company_item()),
+        traces=(),
+        limitations=(),
+        entity_handles=(_manual_upload_handle(manual_item, display_name),),
+    )
+
+    proposal = serving_module._answer_selector(bundle=_selector_bundle())(
+        TurnRequest(
+            session_id="session:manual-focused",
+            turn_id="turn:manual-focused",
+            query=query,
+            release_id=RELEASE_ID,
+            evidence_set=evidence_set,
+        )
+    )
+
+    assert any("STRICT-9000" in claim.text for claim in proposal.claims)
+
+
+def test_selector_keeps_manual_upload_claim_when_lexical_objects_preferred() -> None:
+    """A lexical lane that fills the preferred-object set must not hide a
+    matching upload: manual evidence stays eligible alongside those objects."""
+    query = "STRICT-9000 协作机械臂的负载参数是什么"
+    company_id = "manual-upload:doc-strict-2"
+    display_name = "深圳市严格验收机器人有限公司"
+    manual_item = _manual_upload_item(
+        evidence_id="evidence:manual:strict-2",
+        object_id=company_id,
+        display_name=display_name,
+        snippet=(
+            f"{display_name}：核心产品 STRICT-9000 协作机械臂，额定负载 30kg，"
+            "重复定位精度 ±0.02mm。"
+        ),
+        score=0.6592,
+    )
+    lexical_item = EvidenceItem(
+        evidence_id="evidence:lexical:other",
+        object_id="company-c-other",
+        domain="company",
+        lane="lexical",
+        source_nature="local",
+        source_locator="canonical-v2-isolated:lexical:other",
+        snippet=json.dumps(
+            {"name": "深圳市其他机器人有限公司", "profile_summary": "协作机械臂厂商。"},
+            ensure_ascii=False,
+        ),
+        score=1.0,
+        source_authority="canonical_release",
+        claim_binding=EvidenceClaimBinding(
+            subject_id="company-c-other",
+            predicate="canonical_projection",
+            value="b" * 64,
+            status="admitted",
+        ),
+    )
+    evidence_set = EvidenceSet(
+        release_id=RELEASE_ID,
+        original_query=query,
+        protected_slots=(),
+        items=(lexical_item, manual_item),
+        traces=(),
+        limitations=(),
+        entity_handles=(
+            CanonicalEntityHandle(
+                canonical_id=lexical_item.object_id,
+                domain="company",
+                display_name="深圳市其他机器人有限公司",
+                evidence_ids=(lexical_item.evidence_id,),
+            ),
+            _manual_upload_handle(manual_item, display_name),
+        ),
+    )
+
+    proposal = serving_module._answer_selector(bundle=_selector_bundle())(
+        TurnRequest(
+            session_id="session:manual-lexical",
+            turn_id="turn:manual-lexical",
+            query=query,
+            release_id=RELEASE_ID,
+            evidence_set=evidence_set,
+        )
+    )
+
+    assert any("STRICT-9000" in claim.text for claim in proposal.claims)
+
+
+def test_selector_does_not_promote_low_score_manual_upload() -> None:
+    """The sidecar floor keeps a weak upload match out of the local claim
+    window; a company query must not surface an unrelated upload."""
+    query = "严格验收机器人公司是做什么的？"
+    company_id = "manual-upload:doc-weak"
+    display_name = "深圳市严格验收机器人有限公司"
+    weak_item = _manual_upload_item(
+        evidence_id="evidence:manual:weak",
+        object_id=company_id,
+        display_name=display_name,
+        snippet=f"{display_name}：核心产品 STRICT-9000 协作机械臂。",
+        score=0.3,
+    )
+    evidence_set = EvidenceSet(
+        release_id=RELEASE_ID,
+        original_query=query,
+        protected_slots=(),
+        items=(weak_item, _web_company_item()),
+        traces=(),
+        limitations=(),
+        entity_handles=(_manual_upload_handle(weak_item, display_name),),
+    )
+
+    proposal = serving_module._answer_selector(bundle=_selector_bundle())(
+        TurnRequest(
+            session_id="session:manual-weak",
+            turn_id="turn:manual-weak",
+            query=query,
+            release_id=RELEASE_ID,
+            evidence_set=evidence_set,
+        )
+    )
+
+    assert not any("STRICT-9000" in claim.text for claim in proposal.claims)
