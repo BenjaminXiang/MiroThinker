@@ -137,6 +137,7 @@ celerybeat.pid
 
 # Environments
 .env
+.env.bak-*
 .envrc
 .venv
 env/
@@ -226,8 +227,11 @@ data/
 
 # Local secrets and environment
 .sglang_api_key
+.sglang_api_key.bak-*
 .deepseek_api_key
+.deepseek_api_key.bak-*
 .serper_api_key
+.serper_api_key.bak-*
 .bocha_api_key
 .python-version
 

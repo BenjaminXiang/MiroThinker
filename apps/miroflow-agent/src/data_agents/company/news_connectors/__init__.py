@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from .base import NewsConnector, NewsRecord, parse_news_payload
 from .cnstock import CNStockConnector
+from .deepseek import DeepSeekNewsConnector
 from .iyiou import (
     IYIOU_SITE_FILTER,
     PITCHHUB_SITE_FILTER,
@@ -21,6 +22,7 @@ from .tushare import TushareConnector
 
 __all__ = [
     "CNStockConnector",
+    "DeepSeekNewsConnector",
     "IYIOU_SITE_FILTER",
     "NewsConnector",
     "NewsRecord",

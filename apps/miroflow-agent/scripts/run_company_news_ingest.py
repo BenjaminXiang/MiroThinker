@@ -31,6 +31,7 @@ load_dotenv(PROJECT_ROOT / ".env")
 
 from src.data_agents.company.news_connectors import (  # noqa: E402
     CNStockConnector,
+    DeepSeekNewsConnector,
     NewsConnector,
     NewsRecord,
     PitchHubNewsConnector,
@@ -76,9 +77,9 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     )
     parser.add_argument(
         "--connector",
-        choices=("all", "tushare", "cnstock", "serper", "iyiou", "pitchhub"),
+        choices=("all", "tushare", "cnstock", "serper", "deepseek", "iyiou", "pitchhub"),
         default="all",
-        help="News connector to use. all defaults to Serper only.",
+        help="News connector to use. all defaults to Serper + DeepSeek.",
     )
     parser.add_argument(
         "--serper-site",
@@ -191,6 +192,21 @@ def _build_connectors(
             )
         else:
             logger.info("Skipping Serper connector: SERPER_API_KEY is not set")
+    if selection in ("all", "deepseek"):
+        api_key = os.environ.get("DEEPSEEK_API_KEY", "").strip()
+        if api_key:
+            connectors.append(
+                (
+                    "deepseek",
+                    DeepSeekNewsConnector(
+                        api_key,
+                        session=requests.Session(),
+                        result_cap=10,
+                    ),
+                )
+            )
+        else:
+            logger.info("Skipping DeepSeek connector: DEEPSEEK_API_KEY is not set")
     if selection == "iyiou":
         api_key = os.environ.get("SERPER_API_KEY", "").strip()
         if api_key:
@@ -590,7 +606,7 @@ def _fetch_company_records(
         diagnostics: dict[str, Any] | None = None
         fetch_key = (
             canonical_name
-            if connector_name in ("serper", "iyiou", "pitchhub")
+            if connector_name in ("serper", "deepseek", "iyiou", "pitchhub")
             else credit_code
         )
         try:

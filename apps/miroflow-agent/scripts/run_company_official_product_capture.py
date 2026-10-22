@@ -695,7 +695,7 @@ def _resolve_company_id_for_record(conn, record: CompanyImportRecord) -> str | N
           FROM company
          WHERE canonical_name = %s
             OR registered_name = %s
-            OR %s = ANY(aliases)
+            OR aliases @> to_jsonb(%s::text)
          ORDER BY last_refreshed_at DESC NULLS LAST, company_id
          LIMIT 1
         """,

@@ -775,7 +775,9 @@ def test_build_connectors_yiou_wraps_serper_search_with_data_iyiou_filter(monkey
     assert captured["delegate"] is not None
 
 
-def test_build_connectors_pitchhub_wraps_serper_search_with_pitchhub_filter(monkeypatch):
+def test_build_connectors_pitchhub_wraps_serper_search_with_pitchhub_filter(
+    monkeypatch,
+):
     cli = _import_cli()
     captured: dict[str, object] = {}
 
@@ -816,7 +818,7 @@ def test_build_connectors_pitchhub_wraps_serper_search_with_pitchhub_filter(monk
     assert captured["delegate"] is not None
 
 
-def test_build_connectors_all_defaults_to_serper_only(monkeypatch):
+def test_build_connectors_all_includes_serper_and_deepseek(monkeypatch):
     cli = _import_cli()
     constructed: list[str] = []
 
@@ -824,27 +826,34 @@ def test_build_connectors_all_defaults_to_serper_only(monkeypatch):
         def __init__(self, _api_key, **_kwargs):
             constructed.append("serper")
 
+    class _FakeDeepSeek:
+        def __init__(self, _api_key, **_kwargs):
+            constructed.append("deepseek")
+
     class _UnexpectedLegacy:
         def __init__(self, _api_key):
             raise AssertionError("legacy connector should not be constructed")
 
     monkeypatch.setattr(cli, "SerperNewsConnector", _FakeSerper)
+    monkeypatch.setattr(cli, "DeepSeekNewsConnector", _FakeDeepSeek)
     monkeypatch.setattr(cli, "TushareConnector", _UnexpectedLegacy)
     monkeypatch.setattr(cli, "CNStockConnector", _UnexpectedLegacy)
     monkeypatch.setenv("SERPER_API_KEY", "serper-key")
+    monkeypatch.setenv("DEEPSEEK_API_KEY", "deepseek-key")
     monkeypatch.setenv("TUSHARE_TOKEN", "tushare-token")
     monkeypatch.setenv("CNSTOCK_TOKEN", "cnstock-token")
 
     connectors = cli._build_connectors("all")
 
-    assert [name for name, _connector in connectors] == ["serper"]
-    assert constructed == ["serper"]
+    assert [name for name, _connector in connectors] == ["serper", "deepseek"]
+    assert constructed == ["serper", "deepseek"]
 
 
-def test_build_connectors_all_skips_gracefully_without_serper_key(monkeypatch, caplog):
+def test_build_connectors_all_skips_gracefully_without_search_keys(monkeypatch, caplog):
     caplog.set_level("INFO")
     cli = _import_cli()
     monkeypatch.delenv("SERPER_API_KEY", raising=False)
+    monkeypatch.delenv("DEEPSEEK_API_KEY", raising=False)
     monkeypatch.setenv("TUSHARE_TOKEN", "tushare-token")
     monkeypatch.setenv("CNSTOCK_TOKEN", "cnstock-token")
 
@@ -852,6 +861,7 @@ def test_build_connectors_all_skips_gracefully_without_serper_key(monkeypatch, c
 
     assert connectors == []
     assert "Skipping Serper connector: SERPER_API_KEY is not set" in caplog.text
+    assert "Skipping DeepSeek connector: DEEPSEEK_API_KEY is not set" in caplog.text
 
 
 def test_build_connectors_tushare_explicit_still_works(monkeypatch):

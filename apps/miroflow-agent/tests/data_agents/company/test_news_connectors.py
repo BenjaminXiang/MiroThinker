@@ -5,6 +5,7 @@ from unittest.mock import MagicMock
 
 from src.data_agents.company.news_connectors import (
     CNStockConnector,
+    DeepSeekNewsConnector,
     TushareConnector,
     parse_news_payload,
 )
@@ -101,3 +102,76 @@ def test_parse_news_payload_skips_rows_without_url_or_title():
     )
 
     assert [record.title for record in records] == ["完整新闻"]
+
+
+def test_deepseek_connector_keeps_recent_name_matched_news_only():
+    session = MagicMock()
+    session.post.return_value = _Response(
+        {
+            "results": [
+                {
+                    "title": "示例科技完成A轮融资",
+                    "url": "https://finance.example.com/news/1",
+                    "summary": "深圳市示例科技有限公司获数千万元融资。",
+                    "date": "2026-05-05T10:00:00Z",
+                    "authority": 3,
+                },
+                {
+                    "title": "示例科技工商信息",
+                    "url": "https://www.tianyancha.com/company/1",
+                    "date": "2026-05-05T10:00:00Z",
+                    "authority": 5,
+                },
+                {
+                    "title": "另一家公司发布新品",
+                    "url": "https://example.com/news/2",
+                    "date": "2026-05-06T10:00:00Z",
+                    "authority": 3,
+                },
+                {
+                    "title": "示例科技旧闻",
+                    "url": "https://example.com/news/3",
+                    "date": "2026-04-01T10:00:00Z",
+                    "authority": 3,
+                },
+                {
+                    "title": "示例科技动态",
+                    "url": "https://example.com/about",
+                    "authority": 3,
+                },
+                {
+                    "title": "示例科技新动态",
+                    "url": "https://example.com/press/6",
+                    "authority": 3,
+                },
+                {
+                    "title": "示例科技低权重转载",
+                    "url": "https://example.com/news/7",
+                    "date": "2026-05-06T10:00:00Z",
+                    "authority": 1,
+                },
+            ]
+        }
+    )
+    connector = DeepSeekNewsConnector("key", session=session)
+
+    records = connector.fetch("深圳市示例科技有限公司", date(2026, 5, 1))
+
+    assert [record.title for record in records] == [
+        "示例科技完成A轮融资",
+        "示例科技新动态",
+    ]
+    assert all(record.source_adapter == "deepseek-search" for record in records)
+    payload = session.post.call_args.kwargs["json"]
+    assert payload["query"].startswith("深圳市示例科技有限公司")
+    assert payload["ori_question"].startswith("深圳市示例科技有限公司")
+    headers = session.post.call_args.kwargs["headers"]
+    assert headers["Authorization"] == "Bearer key"
+
+
+def test_deepseek_connector_returns_empty_without_key():
+    session = MagicMock()
+    connector = DeepSeekNewsConnector("", session=session)
+
+    assert connector.fetch("深圳市示例科技有限公司", date(2026, 5, 1)) == []
+    session.post.assert_not_called()

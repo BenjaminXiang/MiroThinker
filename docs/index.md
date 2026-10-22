@@ -21,6 +21,10 @@
 - [**计划索引（活跃 + 完成 + 归档）**](./plans/index.md)
 - [解决方案与经验沉淀索引](./solutions/index.md)
 - [**Agentic RAG 运维手册**](./Agentic-RAG-Operating-Guide.md) — 当前在线 `/api/chat` 的运维口径
+- [**管理台操作手册**](./管理台操作手册.md) — 给甲方管理员（非技术背景）的 `https://gxzx-coze-api.idea.edu.cn/main` 使用说明：登录、账号、数据浏览、字段纠错、上传、日志与常见提示
+- [管理台图文教程](./管理台操作手册-图文版.md) — 同一套流程的看图操作版（真实页面截图、数据已模糊处理）
+- [管理台图文教程（PDF）](../artifacts/管理台操作手册-图文版.pdf) — 可直接打印/发给管理员
+- [管理台运维手册（平台内部）](./管理台运维手册.md) — 平台交付/运维使用的技术版：服务、配置、nginx、备份、故障排查与当前现场基线
 - [Embedding 模型一致性契约](./Embedding-Model-Consistency.md) — 入库/查询共用模型、端点、维度与三层强制校验；换端点/换模型的红线流程
 - [架构决策记录（ADR）](./architecture-decisions/README.md)
 

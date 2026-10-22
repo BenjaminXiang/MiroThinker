@@ -1,0 +1,176 @@
+{
+  "session_id": "probe:lane-watch",
+  "turn_id": "turn:chat:sha256:a22ef581f657c3542c17f1898e4774db17f57cec21da99371eba1c04d44ce51b",
+  "turn_count": 563,
+  "query": "丁文伯教授的研究方向",
+  "planned_displayed_ids": [],
+  "recalled_handles": [
+    {
+      "id": "professor-c-256f0b3c38173205ba95704f",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "教授"
+    },
+    {
+      "id": "web-handle:sha256:4d881c8d6e9c0ccd38141290c17e38202db300b928a4e9eda9762cdadec4ada0",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "对话Sensors期刊杰出青年学者奖获得者--清华大学深圳研究院丁文伯教授 | MDPI 人物专访-论文-科学网"
+    },
+    {
+      "id": "professor-c-3d7191fed1133c60b492f9c3",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "丁文伯"
+    },
+    {
+      "id": "web-handle:sha256:3f78ba772496004728de1d9db72865434962f1ab8593fceda2322d7d9b4fac04",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "丁文伯"
+    },
+    {
+      "id": "web-handle:sha256:320f88da39f6fe932be074626d883cfc2b08ccf3bde1f290d5b03879bb19dd4a",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "教授"
+    },
+    {
+      "id": "web-handle:sha256:21fdd6ca39ffe6e719cf5a80c66fa070d89eea0ffef4e218c19f58fca3e9f588",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "丁文伯:执着,让梦想开花-清华大学"
+    },
+    {
+      "id": "web-handle:sha256:6d3f3b58e4a694951ce78b4fb028e804e22b15a36bbc496ce8334d6ebac55b9f",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "丁文波"
+    },
+    {
+      "id": "web-handle:sha256:472e43c00280c4f0370c7798fc11b981492881ea5f497dd35d8a51826cb5ce42",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "丁文伯"
+    },
+    {
+      "id": "web-handle:sha256:66186c1468ffd5ec25a7f25d131c8c314668f38637d9bb29eee006b701594b8c",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "范文培"
+    },
+    {
+      "id": "web-handle:sha256:20e35ff6459c03b38a9953c7fe5afd214061e463aa00e364ee8782990eafb4e0",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "丁明武"
+    },
+    {
+      "id": "professor-c-f87b565877c7df396f4a81a0",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "丁文华"
+    },
+    {
+      "id": "professor-c-941d80f40f8dd91741042b07",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "陈文"
+    },
+    {
+      "id": "professor-c-90c721e9882a792952ec7455",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "夏文斌"
+    },
+    {
+      "id": "professor-c-2249a5f08300e97d4a9f35dd",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "文苹"
+    },
+    {
+      "id": "professor-c-6c318d5e11a56436fd68f379",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "金文野"
+    },
+    {
+      "id": "professor-c-839810bb8b7a95544e700d39",
+      "kind": "canonical",
+      "domain": "professor",
+      "display_name": "杨家文"
+    }
+  ],
+  "evidence_items": {
+    "total": 19,
+    "by_domain": {
+      "professor": 19
+    },
+    "by_lane": {
+      "exact": 2,
+      "vector": 9,
+      "web": 8
+    },
+    "by_source_nature": {
+      "current_web": 8,
+      "local": 11
+    },
+    "with_claim_binding": 19
+  },
+  "protected_slots": [],
+  "requested_traversal": null,
+  "admitted_claims": {
+    "total": 3,
+    "by_predicate": {
+      "canonical_projection": 1,
+      "current_web_result": 2
+    },
+    "by_claim_type": {
+      "material_fact": 3
+    },
+    "patent_evidence_claims": 0
+  },
+  "committed_handle_ids": [
+    "professor-c-3d7191fed1133c60b492f9c3",
+    "web-handle:sha256:21fdd6ca39ffe6e719cf5a80c66fa070d89eea0ffef4e218c19f58fca3e9f588",
+    "professor-c-256f0b3c38173205ba95704f",
+    "web-handle:sha256:3f78ba772496004728de1d9db72865434962f1ab8593fceda2322d7d9b4fac04",
+    "web-handle:sha256:320f88da39f6fe932be074626d883cfc2b08ccf3bde1f290d5b03879bb19dd4a",
+    "web-handle:sha256:472e43c00280c4f0370c7798fc11b981492881ea5f497dd35d8a51826cb5ce42"
+  ],
+  "committed_names": [
+    "丁文伯",
+    "丁文伯:执着,让梦想开花-清华大学",
+    "教授",
+    "丁文伯",
+    "教授",
+    "丁文伯"
+  ],
+  "render_mode": "prose_renderer",
+  "response_mode": "answer",
+  "citations": 3,
+  "answer_chars": 378,
+  "lane_timings": [
+    [
+      "structured",
+      0.0
+    ],
+    [
+      "lexical",
+      0.255
+    ],
+    [
+      "exact",
+      0.289
+    ],
+    [
+      "vector",
+      0.315
+    ],
+    [
+      "web",
+      2.532
+    ]
+  ]
+}
