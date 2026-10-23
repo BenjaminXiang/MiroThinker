@@ -1484,6 +1484,107 @@ def _maybe_dump_turn_debug(
         _logger.warning("turn debug dump failed", exc_info=True)
 
 
+_PROFESSOR_COMPANY_MARKERS = ("创办", "创立", "创业", "公司", "企业")
+_PROFESSOR_PAPER_MARKERS = (
+    "论文",
+    "研究成果",
+    "科研成果",
+    "学术成果",
+    "代表作",
+    "发表",
+)
+_COMPANY_PROFESSOR_MARKERS = ("教授", "老师", "学者", "创始人", "联合创始人")
+
+
+def _standalone_anchor(
+    query: str,
+    resolver: Callable[[str, str], tuple[str, str] | None] | None,
+) -> tuple[str, str] | None:
+    """Resolve a single-turn named subject for a relation-intent query.
+
+    A relation word selects the target domain; exact-name resolution must
+    produce one pack entity, otherwise no anchor is added.
+    """
+
+    if resolver is None:
+        return None
+    target: str | None = None
+    if any(marker in query for marker in _PROFESSOR_COMPANY_MARKERS):
+        target = "professor"
+    elif any(marker in query for marker in _PROFESSOR_PAPER_MARKERS):
+        target = "professor"
+    elif any(marker in query for marker in _COMPANY_PROFESSOR_MARKERS):
+        target = "company"
+    if target is None:
+        return None
+    resolved = resolver(query, target)
+    if resolved is None and target == "company":
+        resolved = resolver(query, "professor")
+    return resolved
+
+
+_LOCAL_PATENT_COUNT_MARKERS = ("多少", "几件", "数量", "收录", "总数", "共计")
+
+
+def _local_patent_count_response(
+    *,
+    query: str,
+    resolver: Callable[[str, str], tuple[str, str] | None] | None,
+    counter: Callable[[str], int] | None,
+) -> ChatResponse | None:
+    """Deterministic local patent count for a named company.
+
+    The relationship lane caps candidates at the plan window, so a
+    ``本地知识库收录了多少专利`` question cannot read the total from the lane.
+    The counter reads the full patent projection; this fast path answers the
+    count directly with the company's local citation card.
+    """
+
+    if resolver is None or counter is None or "专利" not in query:
+        return None
+    if not any(marker in query for marker in _LOCAL_PATENT_COUNT_MARKERS):
+        return None
+    resolved = resolver(query, "company")
+    if resolved is None:
+        return None
+    company_id, display_name = resolved
+    count = counter(company_id)
+    citation_id = "local-source-" + hashlib.sha256(
+        f"local:{company_id}".encode("utf-8")
+    ).hexdigest()[:16]
+    answer = (
+        f"本地知识库收录了{display_name} {count} 件专利（按专利申请人关联统计）。"
+    )
+    if count == 0:
+        answer += "当前 serving pack 中没有以该公司为申请人的专利记录。"
+    else:
+        answer += "统计口径为当前 serving pack 的专利投影；联合申请按记录计。"
+    return ChatResponse.model_validate(
+        {
+            "query": query,
+            "query_type": "canonical_v2:A:answer",
+            "answer_text": answer,
+            "citations": [
+                {
+                    "type": "company",
+                    "id": citation_id,
+                    "label": display_name,
+                    "url": None,
+                }
+            ],
+            "evidence": [],
+            "clarification": None,
+            "structured_payload": {
+                "local_patent_count": count,
+                "company_id": company_id,
+            },
+            "answer_style": "template",
+            "citation_map": {"1": citation_id},
+            "suggested_followups": ["这些专利主要涉及哪些技术方向？"],
+        }
+    )
+
+
 class CanonicalV2ChatAdapter:
     """One explicit release with copy-on-write answer-session commits."""
 
@@ -1507,6 +1608,10 @@ class CanonicalV2ChatAdapter:
         # by the http-adapter contract tests); the turn-trace journal is
         # attached post-construction instead.
         self._turn_trace: TurnTraceJournalStore | None = None
+        self._named_entity_resolver: (
+            Callable[[str, str], tuple[str, str] | None] | None
+        ) = None
+        self._company_patent_counter: Callable[[str], int] | None = None
         self._sessions: dict[str, _CommittedSession] = {}
         self._session_locks: dict[str, RLock] = {}
         self._lock = RLock()
@@ -1514,6 +1619,20 @@ class CanonicalV2ChatAdapter:
     def attach_turn_trace(self, store: TurnTraceJournalStore) -> None:
         """Attach the turn-trace journal; tracing is a no-op until attached."""
         self._turn_trace = store
+
+    def attach_named_entity_resolver(
+        self,
+        resolver: Callable[[str, str], tuple[str, str] | None],
+    ) -> None:
+        """Attach the pack exact-name resolver used for standalone anchors."""
+        self._named_entity_resolver = resolver
+
+    def attach_company_patent_counter(
+        self,
+        counter: Callable[[str], int],
+    ) -> None:
+        """Attach the full-projection company→patent counter."""
+        self._company_patent_counter = counter
 
     def get_feedback_checkpoint(self, session_id: str) -> ChatFeedbackCheckpoint | None:
         with self._session_lock(session_id):
@@ -1797,6 +1916,18 @@ class CanonicalV2ChatAdapter:
             query=normalized_query,
             option_id=option_id,
         )
+        local_count = _local_patent_count_response(
+            query=normalized_query,
+            resolver=self._named_entity_resolver,
+            counter=self._company_patent_counter,
+        )
+        if local_count is not None:
+            self._write_turn_trace(
+                trace,
+                status="ok",
+                response=local_count,
+            )
+            return local_count
         prior_displayed_ids = () if committed is None else committed.displayed_ids
         prior_context = None if committed is None else committed.context_receipt
         active_anchor_id = (
@@ -1920,16 +2051,25 @@ class CanonicalV2ChatAdapter:
             and prior_turn_query_value != normalized_query
             else None
         )
+        planning_displayed_ids = displayed_ids
+        planning_displayed_names = displayed_names
+        if not displayed_ids:
+            anchored = _standalone_anchor(
+                planning_query, self._named_entity_resolver
+            )
+            if anchored is not None:
+                planning_displayed_ids = (anchored[0],)
+                planning_displayed_names = (anchored[1],)
         planning_request = QueryPlanningRequest(
             request_id=f"query-request:chat:{turn_id}",
             release_id=self._release_id,
             original_query=planning_query,
             as_of=observed_as_of,
-            displayed_entity_ids=displayed_ids,
-            displayed_entity_names=displayed_names,
+            displayed_entity_ids=planning_displayed_ids,
+            displayed_entity_names=planning_displayed_names,
             enumeration_context=_enumeration_context(
                 query=planning_query,
-                displayed_ids=displayed_ids,
+                displayed_ids=planning_displayed_ids,
                 as_of=observed_as_of,
             ),
             soft_context_subject=soft_context_subject,

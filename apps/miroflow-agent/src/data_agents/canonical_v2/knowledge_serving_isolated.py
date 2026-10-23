@@ -28,6 +28,7 @@ from src.data_agents.professor.llm_profiles import (
     resolve_professor_llm_settings,
 )
 from src.data_agents.providers.bocha_search import BochaSearchProvider
+from src.data_agents.providers.deepseek_search import DeepSeekSearchProvider
 from src.data_agents.providers.web_search import WebSearchProvider
 
 from .contracts import ContractModel
@@ -1347,6 +1348,7 @@ class _DualWebLaneAdapter:
         clock: Callable[[], datetime],
         bocha: Any | None = None,
         serper: Any | None = None,
+        deepseek: Any | None = None,
         page_fetcher: Callable[[str], str | None] | None = None,
         extra_view_queries: Callable[[str], tuple[str, ...]] | None = None,
         gap_judge: Any | None = None,
@@ -1365,12 +1367,34 @@ class _DualWebLaneAdapter:
             "bocha-v1": max(2.0, self._timeout_ms * 0.0009),
             "serper-v1": max(4.0, self._timeout_ms * 0.0009),
         }
+        if deepseek is not None:
+            # DeepSeek's search endpoint answers in ~0.4–1.2 s; the same
+            # generous floor as the international leg keeps a cold call alive.
+            self._attempt_timeout_by_provider["deepseek-v1"] = max(
+                4.0, self._timeout_ms * 0.0009
+            )
         self._bocha = bocha or BochaSearchProvider(
             timeout=self._attempt_timeout_by_provider["bocha-v1"]
         )
         self._serper = serper or WebSearchProvider(
             timeout=self._attempt_timeout_by_provider["serper-v1"]
         )
+        self._deepseek = deepseek
+        if deepseek is not None:
+            # Customer-site composition: DeepSeek replaces the Serper leg
+            # (Serper credits are exhausted) and supplies entity-accurate
+            # recall for person names that Bocha returns lookalikes for.
+            self._provider_order: tuple[str, ...] = ("bocha-v1", "deepseek-v1")
+            self._provider_by_version: dict[str, Any] = {
+                "bocha-v1": self._bocha,
+                "deepseek-v1": deepseek,
+            }
+        else:
+            self._provider_order = ("bocha-v1", "serper-v1")
+            self._provider_by_version = {
+                "bocha-v1": self._bocha,
+                "serper-v1": self._serper,
+            }
         self._page_fetcher = page_fetcher
         self._page_fetch_timeout = max(
             2.0, self._attempt_timeout_by_provider["bocha-v1"]
@@ -1415,9 +1439,9 @@ class _DualWebLaneAdapter:
     def warm(self, provider_version: str, query: str = "深圳科技创新") -> None:
         """One keepwarm search routed through resilience (best-effort)."""
         try:
-            provider = (
-                self._bocha if provider_version == "bocha-v1" else self._serper
-            )
+            provider = self._provider_by_version.get(provider_version)
+            if provider is None:
+                return
             if not self.keepwarm_allowed(provider_version):
                 return
             self._provider_search(
@@ -1557,8 +1581,12 @@ class _DualWebLaneAdapter:
         reporter = current_turn_trace()
         error_flags: dict[str, bool] = {}
         queries = {
-            "bocha-v1": query,
-            "serper-v1": _relaxed_serper_query(query),
+            provider_version: (
+                query
+                if provider_version == "bocha-v1"
+                else _relaxed_serper_query(query)
+            )
+            for provider_version in self._provider_order
         }
         futures = {
             provider_version: self._executor.submit(
@@ -1569,10 +1597,7 @@ class _DualWebLaneAdapter:
                 reporter,
                 error_flags,
             )
-            for provider_version, provider in (
-                ("bocha-v1", self._bocha),
-                ("serper-v1", self._serper),
-            )
+            for provider_version, provider in self._provider_by_version.items()
         }
         provider_results: dict[str, list[dict[str, Any]]] = {}
         timed_out: set[str] = set()
@@ -1635,10 +1660,10 @@ class _DualWebLaneAdapter:
                 provider_version=provider_version,
                 results=provider_results[provider_version],
             )
-            for provider_version in ("bocha-v1", "serper-v1")
+            for provider_version in self._provider_order
         }
         merged_by_url: dict[str, _NormalizedWebResult] = {}
-        for provider_version in ("bocha-v1", "serper-v1"):
+        for provider_version in self._provider_order:
             for item in normalized_by_provider[provider_version]:
                 normalized_url = _normalized_web_url(item.url)
                 previous = merged_by_url.get(normalized_url)
@@ -1660,7 +1685,7 @@ class _DualWebLaneAdapter:
                 )
         ordered: list[_NormalizedWebResult] = []
         retained_urls: set[str] = set()
-        provider_order = ("bocha-v1", "serper-v1")
+        provider_order = self._provider_order
         max_provider_results = max(
             (len(normalized_by_provider[provider]) for provider in provider_order),
             default=0,
@@ -1742,31 +1767,28 @@ class _DualWebLaneAdapter:
         provider_queries: dict[tuple[int, str], str] = {}
         futures: dict[tuple[int, str], Any] = {}
         for index, query in enumerate(queries):
-            provider_queries[(index, "bocha-v1")] = query
-            futures[(index, "bocha-v1")] = self._executor.submit(
-                self._provider_search,
-                self._bocha,
-                query,
-                "bocha-v1",
-                reporter,
-                error_flags,
-            )
-            provider_queries[(index, "serper-v1")] = _relaxed_serper_query(query)
-            futures[(index, "serper-v1")] = self._executor.submit(
-                self._provider_search,
-                self._serper,
-                provider_queries[(index, "serper-v1")],
-                "serper-v1",
-                reporter,
-                error_flags,
-            )
+            for provider_version, provider in self._provider_by_version.items():
+                provider_query = (
+                    query
+                    if provider_version == "bocha-v1"
+                    else _relaxed_serper_query(query)
+                )
+                provider_queries[(index, provider_version)] = provider_query
+                futures[(index, provider_version)] = self._executor.submit(
+                    self._provider_search,
+                    provider,
+                    provider_query,
+                    provider_version,
+                    reporter,
+                    error_flags,
+                )
         per_view: list[tuple[_NormalizedWebResult, ...]] = []
         timed_out: set[str] = set()
         prefetch_started = False
         arrived_urls: list[str] = []
         for index in range(len(queries)):
             provider_results: dict[str, list[dict[str, Any]]] = {}
-            for provider_version in ("bocha-v1", "serper-v1"):
+            for provider_version in self._provider_order:
                 future = futures[(index, provider_version)]
                 if (
                     not prefetch_started
@@ -6511,6 +6533,19 @@ def _claim_binding_binds_anchor(binding: Any, displayed_anchor_ids: Any) -> bool
     )
 
 
+_PATENT_PERSON_QUERY = re.compile(
+    r"^\s*([\u4e00-\u9fff]{2,4}?)(?:教授|老师|博士|的|拥有|有|申请|获得)"
+    r"\s*(?:有)?\s*(?:哪些|什么|多少)?\s*(?:相关)?专利"
+)
+
+
+def _patent_person_subject(query: str) -> str | None:
+    """The named person in a ``<name>有哪些专利`` query, else None."""
+
+    match = _PATENT_PERSON_QUERY.match(query)
+    return match.group(1) if match is not None else None
+
+
 def _answer_selector(
     *,
     bundle: RecordedServingBundle,
@@ -6634,6 +6669,22 @@ def _answer_selector(
                     for item in eligible_items
                     if item.evidence_id not in manual_ids
                 ),
+            )
+        patent_person = _patent_person_subject(request.query)
+        if patent_person is not None:
+            # A local patent may only answer a named-person patent query when
+            # the person is in the evidence text. Patent projections often
+            # carry an empty inventor list; without this guard unrelated
+            # lexical patents become claims and their handles leak into the
+            # citations of an answer built from Web evidence.
+            eligible_items = tuple(
+                item
+                for item in eligible_items
+                if not (
+                    item.domain == "patent"
+                    and item.source_nature == "local"
+                    and patent_person not in item.snippet
+                )
             )
         local_items = tuple(
             item for item in eligible_items if item.source_nature != "current_web"
@@ -6906,10 +6957,28 @@ def load_recorded_serving_inputs(
     selected_query_rewriter = (
         _ServingQueryRewriter() if query_rewriter is None else query_rewriter
     )
+    deepseek_web = None
+    if os.getenv("CHAT_LLM_PROFILE", "").strip().lower().startswith("deepseek"):
+        try:
+            deepseek_settings = resolve_professor_llm_settings(
+                os.getenv("CHAT_LLM_PROFILE", "deepseekv4flash"),
+                apply_endpoint_env_overrides=False,
+            )
+            deepseek_key = str(
+                deepseek_settings.get("local_llm_api_key") or ""
+            ).strip()
+        except Exception:  # noqa: BLE001 - provider stays optional
+            deepseek_key = ""
+        if deepseek_key:
+            deepseek_web = DeepSeekSearchProvider(
+                api_key=deepseek_key,
+                timeout=max(4.0, bundle.web_timeout_ms * 0.0009),
+            )
     web_search = _DualWebLaneAdapter(
         timeout_ms=bundle.web_timeout_ms,
         max_snapshot_bytes=bundle.web_snapshot_max_bytes,
         clock=clock,
+        deepseek=deepseek_web,
         page_fetcher=page_fetcher,
         extra_view_queries=query_view_store.views_for,
         gap_judge=create_llm_judge(),

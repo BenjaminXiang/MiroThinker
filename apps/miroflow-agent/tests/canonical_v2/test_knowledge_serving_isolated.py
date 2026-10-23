@@ -8265,3 +8265,155 @@ def test_selector_does_not_promote_low_score_manual_upload() -> None:
     )
 
     assert not any("STRICT-9000" in claim.text for claim in proposal.claims)
+
+
+def test_dual_web_lane_uses_deepseek_second_leg_when_configured() -> None:
+    calls: list[tuple[str, str]] = []
+
+    class _Provider:
+        def __init__(self, name: str, payload: dict[str, object]) -> None:
+            self.name = name
+            self.payload = payload
+
+        def search(self, query: str) -> dict[str, object]:
+            calls.append((self.name, query))
+            return self.payload
+
+    bocha = _Provider(
+        "bocha",
+        {
+            "organic": [
+                {
+                    "title": "广州文伯化工有限公司",
+                    "link": "https://example.com/wenbo",
+                    "snippet": "添加剂企业。",
+                }
+            ]
+        },
+    )
+    deepseek = _Provider(
+        "deepseek",
+        {
+            "organic": [
+                {
+                    "title": "Xspark AI（无界智航）完成天使轮融资",
+                    "link": "https://example.com/xspark",
+                    "snippet": "丁文伯为联合创始人。",
+                    "summary": "丁文伯为联合创始人。",
+                }
+            ]
+        },
+    )
+    adapter = serving_module._DualWebLaneAdapter(
+        bocha=bocha,
+        deepseek=deepseek,
+        timeout_ms=1500,
+        max_snapshot_bytes=16384,
+        clock=lambda: NOW,
+    )
+    request = LaneRequest(
+        lane="web",
+        release_id=RELEASE_ID,
+        query_view="view:deepseek-web",
+        original_query="丁文伯创办的公司",
+        behavior_class="A",
+        interaction_mode="information_retrieval",
+        web_policy=WebSearchPolicy(
+            mode="universal",
+            max_provider_calls=2,
+            timeout_ms=1500,
+            max_results=5,
+        ),
+        query_text="丁文伯创办的公司 [lane=web]",
+        domains=("professor",),
+        protected_slots=(),
+        structured_constraints=StructuredConstraints(),
+        max_candidates=5,
+    )
+
+    result = adapter(request)
+
+    assert sorted(calls) == [
+        ("bocha", "丁文伯创办的公司"),
+        ("deepseek", "丁文伯创办的公司"),
+    ]
+    assert {candidate.provider_version for candidate in result.candidates} == {
+        "bocha-v1",
+        "deepseek-v1",
+    }
+
+
+def test_selector_drops_unrelated_local_patent_for_named_person_query() -> None:
+    """A named-person patent query must not claim local patents that do not
+    name the person: their handles would leak into the answer's citations even
+    when the answer itself is built from Web evidence."""
+    query = "丁文伯有哪些专利"
+    local_patent = EvidenceItem(
+        evidence_id="evidence:patent:unrelated",
+        object_id="patent-c-unrelated",
+        domain="patent",
+        lane="lexical",
+        source_nature="local",
+        source_locator="canonical-v2-isolated:patent:unrelated",
+        snippet=json.dumps(
+            {"title": "机械装置及机器人", "patent_number": "CN223327617U", "inventors": []},
+            ensure_ascii=False,
+        ),
+        score=1.0,
+        source_authority="canonical_release",
+        claim_binding=EvidenceClaimBinding(
+            subject_id="patent-c-unrelated",
+            predicate="canonical_projection",
+            value="d" * 64,
+            status="admitted",
+        ),
+    )
+    web_item = EvidenceItem(
+        evidence_id="evidence:web:patent",
+        object_id="web:patent",
+        domain="patent",
+        lane="web",
+        source_nature="current_web",
+        source_locator="https://example.com/ding-patent",
+        snippet="丁文伯等人的发明专利：一种基于无线光通信的目标检测与识别系统和方法。",
+        score=0.9,
+        source_authority="public_web",
+        claim_binding=EvidenceClaimBinding(
+            subject_id="web:patent",
+            predicate="patent_has_inventor",
+            value="丁文伯",
+            status="accepted",
+        ),
+    )
+    evidence_set = EvidenceSet(
+        release_id=RELEASE_ID,
+        original_query=query,
+        protected_slots=(),
+        items=(local_patent, web_item),
+        traces=(),
+        limitations=(),
+        entity_handles=(
+            CanonicalEntityHandle(
+                canonical_id=local_patent.object_id,
+                domain="patent",
+                display_name="机械装置及机器人",
+                evidence_ids=(local_patent.evidence_id,),
+            ),
+        ),
+    )
+
+    proposal = serving_module._answer_selector(bundle=_selector_bundle())(
+        TurnRequest(
+            session_id="session:patent-person",
+            turn_id="turn:patent-person",
+            query=query,
+            release_id=RELEASE_ID,
+            evidence_set=evidence_set,
+        )
+    )
+
+    claimed_ids = {
+        evidence_id for claim in proposal.claims for evidence_id in claim.evidence_ids
+    }
+    assert local_patent.evidence_id not in claimed_ids
+    assert web_item.evidence_id in claimed_ids

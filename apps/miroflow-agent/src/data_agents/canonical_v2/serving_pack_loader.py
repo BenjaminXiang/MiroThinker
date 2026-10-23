@@ -1975,6 +1975,126 @@ def create_serving_pack_query_planner(
     )
 
 
+def create_local_entity_resolver(
+    release_bundle: Any,
+) -> Callable[[str, str], tuple[str, str] | None]:
+    """Query + target domain -> the one pack entity the query names.
+
+    Backs standalone relation anchoring (``丁文伯创办的公司``). Resolution is
+    exact-name only: the entity-link index must match a display term verbatim,
+    and two distinct canonical ids sharing that term decline to anchor. The
+    audited lookup view is built lazily, like the name linker, so ordinary
+    queries never pay the parse.
+    """
+
+    state: dict[str, Any] = {}
+    disabled = object()
+
+    def resolve(query: str, target_domain: str) -> tuple[str, str] | None:
+        if target_domain not in {"professor", "company"}:
+            return None
+        view = state.get("view")
+        if view is None:
+            try:
+                view = iso._create_audited_lookup_view(release_bundle)
+            except Exception:
+                state["view"] = disabled
+                return None
+            state["view"] = view
+        if view is disabled:
+            return None
+        try:
+            indexes = iso._entity_link_entry_indexes(view.name_index, query)
+        except Exception:
+            return None
+        matches: dict[str, tuple[int, str]] = {}
+        for index in indexes:
+            entry = view.public_entries[index]
+            document = entry.document
+            if document.domain != target_domain:
+                continue
+            if document.projection_scope.value != "public_domain":
+                continue
+            # The name index already matched a name-derived form. Do not
+            # require that the *stored* display term itself is a substring of
+            # the query: company short names are derived by stripping the
+            # legal suffix and industry word (``深圳市优必选科技股份有限公司``
+            # -> ``优必选``), and that derived form is exactly why the index
+            # linked the entry.
+            match_length = len(entry.display_name)
+            prior = matches.get(document.canonical_object_id)
+            if prior is None or match_length > prior[0]:
+                matches[document.canonical_object_id] = (
+                    match_length,
+                    entry.display_name,
+                )
+        if len(matches) != 1:
+            return None
+        canonical_id, (_, display_name) = next(iter(matches.items()))
+        return canonical_id, display_name
+
+    return resolve
+
+
+def _json_has_company_id(value: Any, company_id: str) -> bool:
+    if isinstance(value, dict):
+        if value.get("canonical_company_id") == company_id:
+            return True
+        return any(_json_has_company_id(item, company_id) for item in value.values())
+    if isinstance(value, list):
+        return any(_json_has_company_id(item, company_id) for item in value)
+    return False
+
+
+def create_company_patent_counter(
+    release_bundle: Any,
+) -> Callable[[str], int]:
+    """Company id -> local patent records linked to it.
+
+    Counts patent lookup documents whose applicant subobject carries the
+    company's canonical id. The relationship lane caps its candidates at the
+    plan window (128 on the enumeration path); this counter sees the full
+    projection, so ``本地知识库收录了多少专利`` can answer with the real total.
+    The audited view is lazy and counts are cached per company.
+    """
+
+    state: dict[str, Any] = {}
+    disabled = object()
+
+    def count(company_id: str) -> int:
+        view = state.get("view")
+        if view is None:
+            try:
+                view = iso._create_audited_lookup_view(release_bundle)
+            except Exception:
+                state["view"] = disabled
+                return 0
+            state["view"] = view
+        if view is disabled:
+            return 0
+        cached: dict[str, int] = state.setdefault("counts", {})
+        if company_id in cached:
+            return cached[company_id]
+        total = 0
+        for entry in view.public_entries:
+            document = entry.document
+            if document.domain != "patent":
+                continue
+            content = document.lookup_content
+            if company_id not in content:
+                continue
+            try:
+                payload = json.loads(content)
+            except (TypeError, ValueError):
+                continue
+            if _json_has_company_id(payload, company_id):
+                total += 1
+        cached[company_id] = total
+        return total
+
+    return count
+
+
 def create_local_name_linker(release_bundle: Any) -> Callable[[str], bool]:
     """Query -> whether the query mentions a pack entity name or alias.
 
