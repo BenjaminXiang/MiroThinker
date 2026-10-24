@@ -1,0 +1,156 @@
+{
+  "session_id": "probe:lane-watch",
+  "turn_id": "turn:chat:sha256:ea6a4d99f82458096365dea4ed046082f2991882a6875af357b264c6af30d216",
+  "turn_count": 788,
+  "query": "目前主流的JEPA（联合嵌入预测架构）变体有哪些",
+  "planned_displayed_ids": [],
+  "recalled_handles": [
+    {
+      "id": "web-handle:sha256:810f43642460b5fb1de10ef0eb658044d28ab59e40c5579e116f5dcff6e962af",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "虚拟细胞每日研究进展2026-10-03医药新闻-ByDrug-一站式医药资源共享中心-医药魔方"
+    },
+    {
+      "id": "web-handle:sha256:131ebdb25a0c569848ba6d6194e2411ef137cdfbf02a23332fcc244dc108ca15",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "RoboJEPA:扩展机器人潜在世界模型 - 今日头条"
+    },
+    {
+      "id": "web-handle:sha256:c01401c81336606e5512e97afe49188ef044476e00e442d714a1dca7d4805df6",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "H-JEPA: End-to-End Learning of Hierarchical World Models for Visual Planning - 智源社区论文"
+    },
+    {
+      "id": "web-handle:sha256:7fe1f198ee764661fa52ceed4f474a63b79bf4fdb58be4734d753a0bcf79153b",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "Hamiltonian JEPA: Action-Conditioned World Models with an Inherited Control State - 智源社区论文"
+    },
+    {
+      "id": "web-handle:sha256:adfc65f643a7f5b161476262a446e907700a911a62069d338f761fb0c9c55c95",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "什么是JEPA（联合嵌入预测架构），它与现有技术有何不同？"
+    },
+    {
+      "id": "web-handle:sha256:3ffb7881658fe2d6e7d1184db723b879a26def9b29f86341f93d323969d9c79e",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "具身智能零碎知识点(四):联合嵌入预测架构(JEPAs)详解_pytorch_墨绿色的摆渡人-DAMO开发者矩阵"
+    },
+    {
+      "id": "web-handle:sha256:aae99277c934d008a550dad2639c21153e08ab4a8f6002ad63123d5fdfa3ebd7",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "Yann LeCun的愿景:从文本转向下一代AI系统_工具_人工智能_技术"
+    },
+    {
+      "id": "web-handle:sha256:e3dbed85c9f081de5088a31618fef591bd865ca02f450b033f8b4216d0311f69",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "张博的博客 - 博客园"
+    },
+    {
+      "id": "web-handle:sha256:796d3ba4be06d4b934dbf8c1c9410072a4e84fb7f172d4c95132a24d36859cea",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "[2505.12477] Joint Embedding vs Reconstruction: Provable Benefits of Latent Space Prediction for Self Supervised Learning – arxiv"
+    },
+    {
+      "id": "web-handle:sha256:5e24680d82149203b5f540b751890d17b01a6f42d0b0d2e85b94e35ad0ea6eac",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "[2509.15470] Self-supervised learning of imaging and clinical signatures using a multimodal joint-embedding predictive architecture – arxiv"
+    },
+    {
+      "id": "web-handle:sha256:5c403748ff32620b7d03ea496ac2cf4996d0218133c36ecc7d00da7e6c8afa46",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "Improving the prediction of disease-related variants using protein three-dimensional structure  BMC Bioinformatics  Full Text"
+    },
+    {
+      "id": "web-handle:sha256:713f75d17ce4549dd67b6c013025773f170e8351b7c9fc22810620ec3f50fd37",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "Bimodal PET/MRI generative reconstruction based on VAE architectures - IOPscience"
+    },
+    {
+      "id": "web-handle:sha256:3ec6176361ebb7859311a435b494652fb3a3c44db97dccea8129928506f0882e",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "【论文解读】基于图的自监督学习联合嵌入预测架构-腾讯云开发者社区-腾讯云"
+    },
+    {
+      "id": "web-handle:sha256:70874a98e827e73d2b24f658ce8d373a43d4daf9fd538beac01316fb8a6db57e",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "深入解析I-JEPA：自监督学习的图像特征语义探索"
+    },
+    {
+      "id": "web-handle:sha256:b7a2c9db43f0799b1957787d62de6bd3eacacacf87703b5964e265447d21b00e",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "【论文解读】基于图的自监督学习联合嵌入预测架构 - 合合技术团队 - 博客园"
+    },
+    {
+      "id": "web-handle:sha256:48c4661ba83eae74a8bfd97dfcd9c456163fbf4543439c2c219948edac20754b",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "【论文解读】基于图的自监督学习联合嵌入预测架构"
+    }
+  ],
+  "evidence_items": {
+    "total": 16,
+    "by_domain": {
+      "professor": 16
+    },
+    "by_lane": {
+      "web": 16
+    },
+    "by_source_nature": {
+      "current_web": 16
+    },
+    "with_claim_binding": 16
+  },
+  "protected_slots": [],
+  "requested_traversal": null,
+  "admitted_claims": {
+    "total": 10,
+    "by_predicate": {
+      "current_web_result": 10
+    },
+    "by_claim_type": {
+      "material_fact": 10
+    },
+    "patent_evidence_claims": 0
+  },
+  "committed_handle_ids": [
+    "web-handle:sha256:70874a98e827e73d2b24f658ce8d373a43d4daf9fd538beac01316fb8a6db57e",
+    "web-handle:sha256:c01401c81336606e5512e97afe49188ef044476e00e442d714a1dca7d4805df6",
+    "web-handle:sha256:7fe1f198ee764661fa52ceed4f474a63b79bf4fdb58be4734d753a0bcf79153b",
+    "web-handle:sha256:131ebdb25a0c569848ba6d6194e2411ef137cdfbf02a23332fcc244dc108ca15",
+    "web-handle:sha256:810f43642460b5fb1de10ef0eb658044d28ab59e40c5579e116f5dcff6e962af",
+    "web-handle:sha256:5e24680d82149203b5f540b751890d17b01a6f42d0b0d2e85b94e35ad0ea6eac"
+  ],
+  "committed_names": [
+    "深入解析I-JEPA：自监督学习的图像特征语义探索",
+    "H-JEPA: End-to-End Learning of Hierarchical World Models for Visual Planning - 智源社区论文",
+    "Hamiltonian JEPA: Action-Conditioned World Models with an Inherited Control State - 智源社区论文",
+    "RoboJEPA:扩展机器人潜在世界模型 - 今日头条",
+    "虚拟细胞每日研究进展2026-10-03医药新闻-ByDrug-一站式医药资源共享中心-医药魔方",
+    "[2509.15470] Self-supervised learning of imaging and clinical signatures using a multimodal joint-embedding predictive architecture – arxiv"
+  ],
+  "render_mode": "prose_renderer",
+  "response_mode": "answer",
+  "citations": 10,
+  "answer_chars": 715,
+  "lane_timings": [
+    [
+      "web",
+      12.198
+    ]
+  ]
+}

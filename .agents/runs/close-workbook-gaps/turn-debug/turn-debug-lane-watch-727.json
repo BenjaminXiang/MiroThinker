@@ -1,0 +1,164 @@
+{
+  "session_id": "probe:lane-watch",
+  "turn_id": "turn:chat:sha256:b0bef68e310e158fec749a61dead4a2717d36ca9b77223728305595e10182919",
+  "turn_count": 727,
+  "query": "丁文伯创办的公司是哪家",
+  "planned_displayed_ids": [],
+  "recalled_handles": [
+    {
+      "id": "web-handle:sha256:62b7588e475dc1356e227633b2d744adcaa004a35d867c6d2afffcf6cb47ab19",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "广州文伯化工有限公司招聘简介_英才网联"
+    },
+    {
+      "id": "web-handle:sha256:fc2dd8977c42f4d574f06d6b275648a96a664f56898e3802ef65f7f33c3f7757",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "他坚持自己的创业梦想,开办科技公司走上致富路_丁文波"
+    },
+    {
+      "id": "web-handle:sha256:efa2676beb082be76f71325849c16a1deb259ca6ea64ef05d9b13de552fa01c6",
+      "kind": "web",
+      "domain": "company",
+      "display_name": "广州文伯化工有限公司股东信息_持股比例_股东名单 - 天眼查"
+    },
+    {
+      "id": "company-c-e0a864dbe45374562e550b05",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳芯联半导体科技有限公司"
+    },
+    {
+      "id": "company-c-989b1e7d92e1364aa76cc845",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳承创昌博科技有限公司"
+    },
+    {
+      "id": "company-c-681273ff0fbcb138ec277a84",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市振高科技有限公司"
+    },
+    {
+      "id": "company-c-a9e3f24abe80a03b200c58cb",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳电通纬创微电子股份有限公司"
+    },
+    {
+      "id": "company-c-9d49f1afa9161cdf7f3fe351",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市民德电子科技股份有限公司"
+    },
+    {
+      "id": "company-c-c3f58d9f6fb80702f8766273",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "视启未来（深圳）科技有限公司"
+    },
+    {
+      "id": "company-c-e5c65a4397e2e2655eddaec9",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市云泥科技有限公司"
+    },
+    {
+      "id": "company-c-de2421b5e12d08fcf4f4b1e2",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳瑞文文化发展有限公司"
+    },
+    {
+      "id": "company-c-942665a4923959c61433153e",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市欧灵科技有限公司"
+    },
+    {
+      "id": "company-c-4f4f8a3128e65aee9670b332",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳鼎界科技有限公司"
+    },
+    {
+      "id": "company-c-bf628392dafc4730d466002f",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市伟文无线通讯技术有限公司"
+    },
+    {
+      "id": "company-c-d1bc046ca94220a7c4677469",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市随你探探网络科技有限公司"
+    },
+    {
+      "id": "company-c-392d1959a30d57f4c354112d",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳长城开发科技股份有限公司"
+    }
+  ],
+  "evidence_items": {
+    "total": 16,
+    "by_domain": {
+      "company": 16
+    },
+    "by_lane": {
+      "vector": 13,
+      "web": 3
+    },
+    "by_source_nature": {
+      "current_web": 3,
+      "local": 13
+    },
+    "with_claim_binding": 16
+  },
+  "protected_slots": [],
+  "requested_traversal": null,
+  "admitted_claims": {
+    "total": 1,
+    "by_predicate": {
+      "current_web_result": 1
+    },
+    "by_claim_type": {
+      "material_fact": 1
+    },
+    "patent_evidence_claims": 0
+  },
+  "committed_handle_ids": [
+    "web-handle:sha256:fc2dd8977c42f4d574f06d6b275648a96a664f56898e3802ef65f7f33c3f7757"
+  ],
+  "committed_names": [
+    "他坚持自己的创业梦想,开办科技公司走上致富路_丁文波"
+  ],
+  "render_mode": "prose_renderer",
+  "response_mode": "answer",
+  "citations": 1,
+  "answer_chars": 155,
+  "lane_timings": [
+    [
+      "structured",
+      0.0
+    ],
+    [
+      "exact",
+      0.348
+    ],
+    [
+      "lexical",
+      0.413
+    ],
+    [
+      "vector",
+      0.425
+    ],
+    [
+      "web",
+      11.162
+    ]
+  ]
+}

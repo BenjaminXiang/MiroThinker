@@ -166,3 +166,40 @@ and left a process that could still spend quota, write rows, and be joined by a 
 | XLSX rows processed | 3 (company, committed) + 2 (patent, dry-run) | synthetic, generated for this run |
 
 Full-suite runs consume no quota (Postgres-dependent cases skip without `DATABASE_URL_TEST`).
+
+## Customer-site activation (2026-10-23)
+
+The front door was already implemented; the customer node only lacked the console DSN, so
+`/upload` rendered but commit returned `503 console_database_not_configured`. The serving unit
+now exports `DATABASE_URL=$MIROTHINKER_JOB_DATABASE_URL`
+(`miroflow_collection_v1`) inside the process only; no global environment was changed.
+
+Evidence:
+
+- Jobs API: `postgres.available=true`, `source=DATABASE_URL`; all three
+  `upload-{company,patent,professor}-import` tasks `available=true`.
+- Company dry-run: upload `c624b56c-af17-416e-90b2-5a7c3a773330` → 202; run
+  `a0f71772-5517-47c5-98ee-fc9d5b944360` `succeeded`, exit 0, `items_processed=1`,
+  `imported=0`.
+- Patent commit: upload `25bdc57c-a6a6-4e68-960c-ad80d9a86cb0` → 202; run
+  `1027aa8c-b006-4be5-a125-7a9c5b786e1a` `succeeded`, exit 0, `imported=1`;
+  `patent` gained `CN999999999A`. A first attempt with the legacy-incompatible header
+  `专利名称` failed with `unable to locate patent header row`; the importer's documented
+  aliases (`标题`, `公开（公告）号`, `申请人`, …) succeeded. This is the importer's existing
+  header contract, not a front-door defect.
+- Cleanup: upload ledger rows, staged files, patent row and pipeline run deleted;
+  final `uploads=0`, `patent=0`, `company=7089`.
+
+Runtime caveats:
+
+- Company commits enqueue the existing enrichment batch; the test used a dry-run for the
+  company domain to avoid spending web/LLM quota.
+- The test patent had no matching company, so `company_patent_link` stayed empty.
+
+Rollback: restore `run.sh.bak-console-20261023-092327` and restart; the front door returns to
+503/hidden-commit mode.
+
+Serving-line boundary: this front door writes the collection DB. The canonical-v2 chat reads the
+static serving pack, so a fresh `/upload` row is not visible in `/chat` until a pack rebuild; the
+immediate-query path remains the data-browse upload → manual recall sidecar (verified separately
+under `enable-customer-site-excel-upload`).
