@@ -475,7 +475,9 @@ def _search_view(query: str) -> str:
     if leading_company_name is not None:
         return leading_company_name
     company = COMPANY_NAME_PATTERN.search(search_value)
-    if company is not None:
+    if company is not None and not any(
+        marker in company.group(1) for marker in _EXPLICIT_COMPANY_REJECT_MARKERS
+    ):
         return company.group(1)
     professor = PROFESSOR_NAME_PATTERN.match(value)
     if professor is not None:

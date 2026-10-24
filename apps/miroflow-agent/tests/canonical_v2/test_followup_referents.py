@@ -11,6 +11,7 @@ from __future__ import annotations
 import pytest
 
 from src.data_agents.canonical_v2.followup_referents import (
+    _search_view,
     has_anaphoric_subject_reference,
     has_continuation_intent,
     has_explicit_named_subject,
@@ -305,3 +306,33 @@ def test_subject_carryover_reference_classification(
     query: str, expected: bool
 ) -> None:
     assert is_subject_carryover_reference(query) is expected
+
+
+@pytest.mark.parametrize(
+    "query",
+    (
+        "深圳哪些公司做激光雷达",
+        "深圳有哪些公司做激光雷达",
+        "深圳什么公司做激光雷达",
+    ),
+)
+def test_search_view_keeps_content_term_after_question_word_company(
+    query: str,
+) -> None:
+    # "深圳哪些公司" matches COMPANY_NAME_PATTERN but is a quantifier, not a
+    # name; truncating there drops the technology term the lanes must search.
+    assert _search_view(query) == query
+
+
+@pytest.mark.parametrize(
+    "query,expected",
+    (
+        ("深圳市优必选科技股份有限公司有哪些专利", "深圳市优必选科技股份有限公司"),
+        ("优必选这家公司怎么样", "优必选"),
+        ("深圳激光雷达公司有哪些", "深圳激光雷达公司"),
+    ),
+)
+def test_search_view_still_compacts_real_company_names(
+    query: str, expected: str
+) -> None:
+    assert _search_view(query) == expected

@@ -993,6 +993,63 @@ async def _process_single_professor_v3(
         return profile, staging_records, company_mentions
 
 
+def _deepseek_search_key() -> str:
+    key = os.getenv("DEEPSEEK_API_KEY", "").strip()
+    if key:
+        return key
+    try:
+        from src.data_agents.canonical_v2.managed_secrets import (
+            ManagedSecretsStore,
+            default_secrets_path,
+        )
+
+        return str(
+            ManagedSecretsStore(path=default_secrets_path()).raw().get(
+                "llm.api_key", ""
+            )
+            or ""
+        ).strip()
+    except Exception:  # noqa: BLE001 - provider stays optional
+        return ""
+
+
+def _build_professor_search_provider(config: "PipelineV3Config") -> Any | None:
+    """DeepSeek first, Bocha second, Serper last.
+
+    The professor web-enrichment path used Serper directly; Serper credits are
+    exhausted on the customer site. DeepSeek's search API has the entity-accurate
+    recall this path needs, and Bocha remains the Chinese-summary fallback.
+    """
+
+    if config.skip_web_search and not config.force_web_search_for_low_signal:
+        return None
+    providers: list[Any] = []
+    deepseek_key = _deepseek_search_key()
+    if deepseek_key:
+        from src.data_agents.providers.deepseek_search import DeepSeekSearchProvider
+
+        providers.append(DeepSeekSearchProvider(api_key=deepseek_key, timeout=10.0))
+    try:
+        from src.data_agents.providers.bocha_search import BochaSearchProvider
+
+        providers.append(BochaSearchProvider(timeout=10.0))
+    except Exception:  # noqa: BLE001 - optional provider
+        pass
+    if config.serper_api_key:
+        from src.data_agents.providers.web_search import WebSearchProvider
+
+        providers.append(
+            WebSearchProvider(api_key=config.serper_api_key, timeout=10.0)
+        )
+    if not providers:
+        return None
+    from src.data_agents.providers.fallback_web_search import (
+        FallbackWebSearchProvider,
+    )
+
+    return FallbackWebSearchProvider(providers=tuple(providers))
+
+
 async def run_professor_pipeline_v3(
     config: PipelineV3Config,
 ) -> PipelineV3Result:
@@ -1048,13 +1105,8 @@ async def run_professor_pipeline_v3(
         else None
     )
 
-    # Build search provider
-    search_provider = None
-    if config.serper_api_key and (
-        not config.skip_web_search or config.force_web_search_for_low_signal
-    ):
-        from src.data_agents.providers.web_search import WebSearchProvider
-        search_provider = WebSearchProvider(api_key=config.serper_api_key)
+    # Build search provider: DeepSeek → Bocha → Serper.
+    search_provider = _build_professor_search_provider(config)
 
     # --- Stage 2-6: Per-Professor Processing ---
     _log("Stage 2-6: Per-Professor Processing")

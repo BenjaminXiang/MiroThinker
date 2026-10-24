@@ -21,11 +21,16 @@ from src.data_agents.professor.pipeline_v3 import (
     _refresh_academic_metrics_for_released_profiles,
     _build_llm_client,
     _build_fallback_llm_client,
+    _build_professor_search_provider,
     _merged_to_enriched,
     _process_single_professor_v3,
     run_professor_pipeline_v3,
 )
 from src.data_agents.professor.models import EnrichedProfessorProfile, MergedProfessorProfileRecord
+from src.data_agents.providers.bocha_search import BochaSearchProvider
+from src.data_agents.providers.deepseek_search import DeepSeekSearchProvider
+from src.data_agents.providers.fallback_web_search import FallbackWebSearchProvider
+from src.data_agents.providers.web_search import WebSearchProvider
 from src.data_agents.storage.sqlite_store import SqliteReleasedObjectStore
 
 
@@ -75,6 +80,49 @@ class TestPipelineV3Config:
         )
         assert hasattr(config, "local_llm_model")
         assert hasattr(config, "max_concurrent")
+
+
+class TestProfessorSearchProviderChain:
+    """The professor web-search chain is DeepSeek → Bocha → Serper."""
+
+    def _config(self, **kwargs) -> PipelineV3Config:
+        return PipelineV3Config(
+            seed_doc=Path("/tmp/seeds.md"),
+            output_dir=Path("/tmp/output"),
+            **kwargs,
+        )
+
+    def test_chain_prefers_deepseek_and_keeps_serper_last(self, monkeypatch):
+        monkeypatch.setenv("DEEPSEEK_API_KEY", "test-key")
+        config = self._config(serper_api_key="serper-key")
+
+        provider = _build_professor_search_provider(config)
+
+        assert isinstance(provider, FallbackWebSearchProvider)
+        chain = provider._providers
+        assert isinstance(chain[0], DeepSeekSearchProvider)
+        assert isinstance(chain[1], BochaSearchProvider)
+        assert isinstance(chain[-1], WebSearchProvider)
+
+    def test_chain_without_deepseek_key_starts_with_bocha(self, monkeypatch):
+        monkeypatch.setattr(
+            "src.data_agents.professor.pipeline_v3._deepseek_search_key",
+            lambda: "",
+        )
+        config = self._config()
+
+        provider = _build_professor_search_provider(config)
+
+        assert isinstance(provider, FallbackWebSearchProvider)
+        assert isinstance(provider._providers[0], BochaSearchProvider)
+
+    def test_skip_web_search_returns_no_provider(self):
+        config = self._config(
+            skip_web_search=True,
+            force_web_search_for_low_signal=False,
+        )
+
+        assert _build_professor_search_provider(config) is None
 
 
 class TestPipelineV3Report:

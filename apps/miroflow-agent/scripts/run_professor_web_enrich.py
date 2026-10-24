@@ -19,9 +19,11 @@ import argparse
 import json
 import os
 import re
+import sys
 import time
 import uuid
 from decimal import Decimal
+from pathlib import Path
 from typing import Any
 
 import psycopg
@@ -30,15 +32,28 @@ from dotenv import load_dotenv
 from openai import OpenAI
 from psycopg.types.json import Json
 
-from src.data_agents.professor.canonical_writer import _upsert_fact
-from src.data_agents.browser_fetch import fetch_html_with_browser_fallback
-from src.data_agents.professor.llm_profiles import resolve_professor_llm_settings
-from src.data_agents.professor.profile_summary_contract import (
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
+from src.data_agents.professor.canonical_writer import _upsert_fact  # noqa: E402
+from src.data_agents.browser_fetch import fetch_html_with_browser_fallback  # noqa: E402
+from src.data_agents.professor.llm_profiles import (  # noqa: E402
+    build_non_thinking_extra_body,
+    resolve_professor_llm_settings,
+)
+from src.data_agents.professor.profile_summary_contract import (  # noqa: E402
     PROFILE_SUMMARY_PROMPT_CONTRACT,
     is_valid_profile_summary,
     profile_summary_contract_violations,
 )
-from src.data_agents.providers.web_search import WebSearchProvider
+from src.data_agents.providers.bocha_search import BochaSearchProvider  # noqa: E402
+from src.data_agents.providers.deepseek_search import DeepSeekSearchProvider  # noqa: E402
+from src.data_agents.providers.fallback_web_search import (  # noqa: E402
+    FallbackWebSearchProvider,
+    resolve_deepseek_search_key,
+)
+from src.data_agents.providers.web_search import WebSearchProvider  # noqa: E402
 
 RUN_KIND = "backfill_real"
 _SYS_QUERY = 'You generate web search queries. Return ONLY JSON {"queries": ["..."]}.'
@@ -108,6 +123,7 @@ def _generate_queries(
             ],
             max_tokens=400,
             temperature=0.3,
+            extra_body=build_non_thinking_extra_body(model),
         )
         content = (r.choices[0].message.content or "").strip()
         content = content[content.find("{") : content.rfind("}") + 1]
@@ -203,7 +219,16 @@ def main() -> int:
         timeout=120.0,
     )
     model = settings["local_llm_model"]
-    serper = WebSearchProvider()
+    search_providers = []
+    deepseek_key = resolve_deepseek_search_key()
+    if deepseek_key:
+        search_providers.append(
+            DeepSeekSearchProvider(api_key=deepseek_key, timeout=10.0)
+        )
+    search_providers.append(BochaSearchProvider(timeout=10.0))
+    if os.getenv("SERPER_API_KEY", "").strip():
+        search_providers.append(WebSearchProvider())
+    search_provider = FallbackWebSearchProvider(providers=tuple(search_providers))
     run_id = str(uuid.uuid4())
 
     conn = psycopg.connect(args.dsn)
@@ -244,6 +269,7 @@ def main() -> int:
 
     print(f"run_id={run_id} | {len(profs)} profs to enrich | model={model}")
     enriched_count = 0
+    failed_count = 0
     for (
         pid,
         name,
@@ -259,11 +285,11 @@ def main() -> int:
                 client, model, name, institution, department, email, current_summary
             )
 
-            # 2. Serper search
+            # 2. Search chain (DeepSeek → Bocha → Serper when configured)
             all_results: list[dict] = []
             for q in queries:
                 try:
-                    raw = serper.search(q)
+                    raw = search_provider.search(q)
                     all_results.extend(raw.get("organic", []))
                 except Exception:
                     pass
@@ -272,6 +298,7 @@ def main() -> int:
             # 3. Identity filter
             verified = _identity_filter(all_results, name, institution)
             if not verified:
+                failed_count += 1
                 print(
                     f"  {name}: no verified results from {len(all_results)} total",
                     flush=True,
@@ -309,6 +336,7 @@ def main() -> int:
                     pass
 
             if not gathered_texts:
+                failed_count += 1
                 print(f"  {name}: verified results but no content fetched", flush=True)
                 time.sleep(args.sleep)
                 continue
@@ -330,9 +358,11 @@ def main() -> int:
                 ],
                 max_tokens=800,
                 temperature=0.3,
+                extra_body=build_non_thinking_extra_body(model),
             )
             enriched = (r.choices[0].message.content or "").strip()
             if len(enriched) < 50:
+                failed_count += 1
                 print(
                     f"  {name}: synthesis too short ({len(enriched)}c), skipping",
                     flush=True,
@@ -340,6 +370,7 @@ def main() -> int:
                 time.sleep(args.sleep)
                 continue
             if not is_valid_profile_summary(enriched):
+                failed_count += 1
                 violations = ",".join(profile_summary_contract_violations(enriched))
                 print(
                     f"  {name}: synthesis violates profile_summary contract ({violations}), skipping",
@@ -381,19 +412,23 @@ def main() -> int:
                 flush=True,
             )
         except Exception as exc:
+            failed_count += 1
             conn.rollback()
             print(f"  {name}: ERR {type(exc).__name__}: {str(exc)[:100]}", flush=True)
         time.sleep(args.sleep)
 
+    status = "succeeded" if (enriched_count > 0 or not profs) else "failed"
     with conn.cursor() as cur:
         cur.execute(
-            "UPDATE pipeline_run SET status='succeeded',finished_at=now(),items_processed=%s WHERE run_id=%s",
-            (enriched_count, run_id),
+            "UPDATE pipeline_run SET status=%s,finished_at=now(),items_processed=%s WHERE run_id=%s",
+            (status, enriched_count, run_id),
         )
     conn.commit()
     conn.close()
-    print(f"DONE: {enriched_count}/{len(profs)} enriched")
-    return 0
+    print(
+        f"DONE: {enriched_count}/{len(profs)} enriched, {failed_count} failed, status={status}"
+    )
+    return 0 if status == "succeeded" else 1
 
 
 if __name__ == "__main__":
