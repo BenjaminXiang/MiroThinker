@@ -39,3 +39,30 @@ standalone anchoring.
 - Professor→patent traversal (no such relationship type in the pack).
 - Web provider quality (Bocha lookalike recall is tracked separately).
 - Multi-owner ambiguous names: the resolver declines to anchor.
+
+## 2026-10-26 amendment: professor consumer completeness
+
+The deployed bundle's professor answer path rendered only institution, title,
+profile summary, and research directions; only `founder` company roles were
+kept; same-name extraction swallowed `教授`/`老师`; institution constraints
+used exact equality; there was no professor not-in-library guard and no
+professor→paper anchor preference; and the admin composer did not attach the
+named resolver that the pack-mode runner attached.
+
+This amendment:
+
+1. renders department, email, homepage, paper/patent counts, education, work,
+   awards, company roles, and **every** professor-company role (founder wording
+   preserved);
+2. strips `教授`/`老师` from same-name extraction and prefix-matches a
+   resolved institution against the projection institution;
+3. drops local professor claims that do not match the person named by a
+   profile-shaped query (mirror of the named-company guard);
+4. prefers the single displayed professor as the active anchor on `他/她`
+   attribute turns (mirror of the company `它/该公司` rescue);
+5. attaches the exact-name resolver and the full-projection company→patent
+   counter in the admin composer, closing the compose/runner parity gap.
+
+Non-goal unchanged: professor→patent traversal (the pack has no such
+relationship instances); named-person patent queries still use the existing
+patent lane and inventor guard.

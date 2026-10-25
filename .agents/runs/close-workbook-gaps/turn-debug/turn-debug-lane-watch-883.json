@@ -1,0 +1,121 @@
+{
+  "session_id": "probe:lane-watch",
+  "turn_id": "turn:chat:sha256:6be5eae282724956376cc67220f40387cd7a8e2b8f358e20c6da4584295fd3f5",
+  "turn_count": 883,
+  "query": "详细介绍国先中心（深圳）",
+  "planned_displayed_ids": [],
+  "recalled_handles": [
+    {
+      "id": "company-c-3970adda34eb223ab03821ff",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳国际先进技术应用推进中心"
+    },
+    {
+      "id": "company-c-80c06114924f3b04909ade7f",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳高性能医疗器械国家研究院有限公司"
+    },
+    {
+      "id": "company-c-069aa8520a91f2e48c189d7c",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市恒先科技有限公司"
+    },
+    {
+      "id": "company-c-1ef9cf68aac3c1b6dabbc9e7",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳国芯微半导体有限公司"
+    },
+    {
+      "id": "company-c-9f9adfb11ec8f4b425057ccf",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市前海深港智算科技有限公司"
+    },
+    {
+      "id": "company-c-9ffdd602d8b6852bb3e20249",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深流微智能科技（深圳）有限公司"
+    },
+    {
+      "id": "company-c-7ae53ea6e747b64360960beb",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳市富创优越科技有限公司"
+    },
+    {
+      "id": "company-c-4abba5888bec9f79e3c5235c",
+      "kind": "canonical",
+      "domain": "company",
+      "display_name": "深圳国创具身智能机器人有限公司"
+    }
+  ],
+  "evidence_items": {
+    "total": 10,
+    "by_domain": {
+      "company": 10
+    },
+    "by_lane": {
+      "exact": 1,
+      "vector": 9
+    },
+    "by_source_nature": {
+      "local": 10
+    },
+    "with_claim_binding": 10
+  },
+  "protected_slots": [
+    {
+      "kind": "geography",
+      "value": "深圳",
+      "entity_ids": []
+    }
+  ],
+  "requested_traversal": null,
+  "admitted_claims": {
+    "total": 1,
+    "by_predicate": {
+      "canonical_projection": 1
+    },
+    "by_claim_type": {
+      "material_fact": 1
+    },
+    "patent_evidence_claims": 0
+  },
+  "committed_handle_ids": [
+    "company-c-3970adda34eb223ab03821ff"
+  ],
+  "committed_names": [
+    "深圳国际先进技术应用推进中心"
+  ],
+  "render_mode": "prose_renderer",
+  "response_mode": "answer",
+  "citations": 1,
+  "answer_chars": 468,
+  "lane_timings": [
+    [
+      "web",
+      40.948
+    ],
+    [
+      "structured",
+      0.0
+    ],
+    [
+      "vector",
+      1.016
+    ],
+    [
+      "exact",
+      1.653
+    ],
+    [
+      "lexical",
+      2.051
+    ]
+  ]
+}

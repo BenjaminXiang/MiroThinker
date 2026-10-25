@@ -12,3 +12,6 @@
 | A8 | Count path does not hijack listing queries | `优必选有哪些专利` still uses relationship+web listing (12 local patent citations), no count fast path |
 
 Evidence: `.agents/runs/anchor-standalone-professor-relations/verification.md`.
+| A9 | Professor claims render the pack's non-summary fields and all company roles | `_semantic_text` synthetic payload → 院系/邮箱/主页/论文数/专利数/教育/工作/获奖/企业角色; non-founder role → "担任首席科学家" |
+| A10 | Honorific and institution constraints bind the intended professor | `王伟教授` → `王伟`; `清华的王伟教授的评价如何` → 王伟; prefix match `清华大学` ↔ `清华大学深圳国际研究生院` = True, `北京大学` = False |
+| A11 | A named professor with no local match does not inherit a neighbour; `他/她` attribute turns keep the professor anchor | `赵大锤教授的研究方向` no unrelated professor claim; `丁文伯有哪些论文` → `他的研究方向` keeps 丁文伯 (live) |
