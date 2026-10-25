@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from html import escape as _escape_html
 import logging
+import os
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException, Request
@@ -232,6 +233,28 @@ def create_canonical_v2_candidate_app(
         from backend.services.canonical_v2_turn_trace import TurnTraceJournalStore
 
         candidate_attach(TurnTraceJournalStore())
+    # The validated answer cache rides the same choke point: the pack-mode
+    # mirror in the candidate runner does not call the admin composer, so an
+    # attach inside that composer alone would never reach the serving process.
+    cache_db = os.environ.get("CANONICAL_V2_ANSWER_CACHE_DB", "").strip()
+    cache_attach = getattr(candidate_chat_adapter, "attach_answer_cache", None)
+    if (
+        callable(cache_attach)
+        and cache_db
+        and getattr(candidate_chat_adapter, "_answer_cache", None) is None
+    ):
+        from backend.services.canonical_v2_answer_cache import (
+            AnswerCache,
+            cache_enabled,
+        )
+
+        if cache_enabled():
+            try:
+                cache_attach(AnswerCache(Path(cache_db)))
+            except Exception:  # noqa: BLE001 - the cache is optional
+                logging.getLogger(__name__).warning(
+                    "answer cache unavailable", exc_info=True
+                )
     candidate = _create_canonical_v2_route_shell()
     candidate.state.canonical_v2_consumer_runtime = exact_runtime
     if idle_keepwarm_cycle is not None:

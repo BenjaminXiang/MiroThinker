@@ -8,6 +8,8 @@ from datetime import datetime
 import hashlib
 import json
 import logging
+import os
+from pathlib import Path
 from typing import Any, Literal, cast
 
 from pydantic import ValidationError
@@ -1246,6 +1248,17 @@ def compose_canonical_v2_consumer_runtime(
     # Turn-trace journal (fail-open, env-configurable root TURN_TRACE_DIR);
     # attached post-construction to keep the frozen S11A constructor boundary.
     chat_adapter.attach_turn_trace(TurnTraceJournalStore())
+    from backend.services.canonical_v2_answer_cache import (
+        AnswerCache,
+        cache_enabled,
+    )
+
+    cache_db_env = os.environ.get("CANONICAL_V2_ANSWER_CACHE_DB", "").strip()
+    if cache_enabled() and cache_db_env:
+        try:
+            chat_adapter.attach_answer_cache(AnswerCache(Path(cache_db_env)))
+        except Exception:  # noqa: BLE001 - the cache is optional
+            logger.warning("answer cache unavailable", exc_info=True)
     admin_runtime = CanonicalV2AdminRuntime(
         release_id=bundle.release_id,
         manifest=bundle.manifest,

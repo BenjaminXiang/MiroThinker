@@ -837,3 +837,31 @@ def test_intra_query_set_antecedent_never_binds_archived_result_set() -> None:
     assert len(planning_requests) == 2
     # The intra-query antecedent wins: no archived displayed set binding.
     assert planning_requests[1].displayed_entity_ids == ()
+
+
+def test_thing_pronoun_binds_the_single_displayed_company() -> None:
+    patent = read_module.CanonicalEntityHandle(
+        canonical_id="patent-c-endoscope",
+        domain="patent",
+        display_name="内窥镜光学系统和内窥镜",
+        evidence_ids=("evidence:history:patent-c-endoscope",),
+    )
+    receipt = _receipt(session_id="s-thing", anchor=patent, displayed=(PUDU,))
+    adjusted = service._prefer_displayed_company_for_attribute(
+        receipt, query="它有哪些专利"
+    )
+
+    assert adjusted is not None
+    assert adjusted.active_anchor is not None
+    assert adjusted.active_anchor.domain == "company"
+    assert adjusted.active_anchor.display_name == PUDU.display_name
+
+
+def test_person_pronoun_keeps_the_professor_anchor() -> None:
+    receipt = _receipt(session_id="s-person", anchor=PERSON, displayed=(PUDU,))
+    adjusted = service._prefer_displayed_company_for_attribute(
+        receipt, query="他有哪些专利"
+    )
+
+    assert adjusted is not None
+    assert adjusted.active_anchor == PERSON

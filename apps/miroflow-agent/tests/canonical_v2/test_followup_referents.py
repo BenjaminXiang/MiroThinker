@@ -12,6 +12,8 @@ import pytest
 
 from src.data_agents.canonical_v2.followup_referents import (
     _search_view,
+    company_names_match,
+    query_company_name,
     has_anaphoric_subject_reference,
     has_continuation_intent,
     has_explicit_named_subject,
@@ -336,3 +338,39 @@ def test_search_view_still_compacts_real_company_names(
     query: str, expected: str
 ) -> None:
     assert _search_view(query) == expected
+
+
+@pytest.mark.parametrize(
+    "query,expected",
+    (
+        ("严格验收机器人公司是做什么的？", "严格验收机器人公司"),
+        ("深圳普渡科技公司是做什么的", "深圳普渡科技公司"),
+        ("深圳有哪些机器人公司", None),
+        ("深圳的机器人公司有哪些", None),
+        ("介绍一下深圳的机器人公司", None),
+        ("丁文伯创办的公司是哪家", None),
+        ("他参与创立的公司有哪些", None),
+        ("这家公司是做什么的", None),
+        ("哪些公司做激光雷达", None),
+    ),
+)
+def test_query_company_name_excludes_scaffolding(
+    query: str, expected: str | None
+) -> None:
+    assert query_company_name(query) == expected
+
+
+def test_company_names_match_rejects_a_neighbour_name() -> None:
+    assert not company_names_match("严格验收机器人公司", "深圳市普渡科技有限公司")
+
+
+@pytest.mark.parametrize(
+    "left,right",
+    (
+        ("深圳普渡科技公司", "深圳市普渡科技有限公司"),
+        ("深圳市优必选科技股份有限公司", "深圳市优必选科技有限公司"),
+        ("优必选科技", "深圳市优必选科技股份有限公司"),
+    ),
+)
+def test_company_names_match_resolves_partial_forms(left: str, right: str) -> None:
+    assert company_names_match(left, right)

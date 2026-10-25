@@ -463,6 +463,80 @@ def _without_information_suffix(value: str) -> str:
     ).strip()
 
 
+_COMPANY_CORE_STRIP = (
+    "股份有限公司",
+    "有限责任公司",
+    "有限公司",
+    "公司",
+    "深圳市",
+    "深圳",
+    "集团",
+    "技术",
+    "科技",
+    "智能",
+    "机器人",
+)
+
+
+def query_company_name(query: str) -> str | None:
+    """The company name a query names, excluding question/anaphora matches.
+
+    ``深圳有哪些机器人公司`` and ``这家公司是做什么的`` name no company; a
+    concrete ``严格验收机器人公司是做什么的`` does.
+    """
+
+    value = _without_information_suffix(_without_introduction_prefix(query))
+    for match in COMPANY_NAME_PATTERN.finditer(value):
+        name = match.group(1)
+        if "的" in name or any(
+            marker in name
+            for marker in (
+                *_EXPLICIT_COMPANY_REJECT_MARKERS,
+                "创办",
+                "创立",
+                "参与",
+                "投资",
+                "收购",
+                "旗下",
+                "子公司",
+                "母公司",
+            )
+        ):
+            # "丁文伯创办的公司" / "深圳的机器人公司" name a relation or a
+            # description, never a company.
+            continue
+        core = company_core(name)
+        if len(core) < 2 or core in {"的", "企业", "公司"}:
+            # "深圳的机器人公司" / "介绍一家公司" is a description, not a name.
+            continue
+        return name
+    return None
+
+
+def company_core(name: str) -> str:
+    """Strip city/legal/industry scaffolding so two name forms can be compared."""
+
+    value = name.strip()
+    for token in _COMPANY_CORE_STRIP:
+        value = value.replace(token, "")
+    return value.strip()
+
+
+def company_names_match(left: str, right: str) -> bool:
+    """Whether two company name forms plausibly denote the same entity.
+
+    Conservative: both cores must survive stripping and one must contain the
+    other. ``严格验收机器人公司`` never matches ``深圳市普渡科技有限公司``;
+    ``深圳普渡科技公司`` matches ``深圳市普渡科技有限公司``.
+    """
+
+    left_core = company_core(left)
+    right_core = company_core(right)
+    if len(left_core) < 2 or len(right_core) < 2:
+        return False
+    return left_core in right_core or right_core in left_core
+
+
 def _search_view(query: str) -> str:
     value = query.strip()
     if any(marker in value for marker in ("不要", "不包括", "排除", "除外")):
@@ -496,6 +570,9 @@ __all__ = [
     "PROFESSOR_NAME_PATTERN",
     "SET_REFERENT_MARKERS",
     "SINGULAR_REFERENT_MARKERS",
+    "company_core",
+    "company_names_match",
+    "query_company_name",
     "extract_institution_person_name",
     "extract_leading_company_name",
     "has_continuation_intent",

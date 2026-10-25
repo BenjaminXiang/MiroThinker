@@ -40,6 +40,7 @@ import threading
 import time
 import uuid
 from typing import Any, Literal
+from zoneinfo import ZoneInfo
 
 from src.data_agents.canonical_v2.managed_config import (
     ManagedSettings,
@@ -584,6 +585,23 @@ def _parse_cron_field(field_value: str, *, minimum: int, maximum: int) -> tuple[
     if not values:
         raise ValueError(f"empty cron field {field_value!r}")
     return frozenset(values), restricted
+
+
+def job_timezone() -> tzinfo:
+    """The wall-clock zone the OS cron entries run in.
+
+    The cron table is installed in server local time; the launcher exports
+    ``MIROTHINKER_JOB_TIMEZONE`` so the admin page can render the same clock
+    instead of UTC.
+    """
+
+    name = os.environ.get("MIROTHINKER_JOB_TIMEZONE", "").strip()
+    if name:
+        try:
+            return ZoneInfo(name)
+        except Exception:  # noqa: BLE001 - fall back to server local time
+            pass
+    return datetime.now().astimezone().tzinfo
 
 
 def cron_next_fire(
@@ -1411,6 +1429,7 @@ class JobRuntime:
         summaries = self.store.summaries(task.task_id for task in self._tasks)
         postgres = self._probe.describe()
         now = self._clock()
+        zone = job_timezone()
         views: list[dict[str, Any]] = []
         for task in self._tasks:
             summary = summaries[task.task_id]
@@ -1430,7 +1449,9 @@ class JobRuntime:
                 {
                     **task.as_dict(),
                     "next_run_at": (
-                        cron_next_fire(task.schedule_cron, now=now).isoformat()
+                        cron_next_fire(
+                            task.schedule_cron, now=now, tz=zone
+                        ).isoformat()
                         if task.schedule_cron
                         else None
                     ),

@@ -25,6 +25,13 @@ from backend.api.chat_contracts import (
     ClarificationPayload,
     TargetDomain,
 )
+from backend.services.canonical_v2_answer_cache import (
+    AnswerCache,
+    cache_enabled,
+    data_epoch,
+    eligible_query,
+    validate_candidate,
+)
 from backend.services.canonical_v2_turn_trace import (
     TurnTraceCollector,
     TurnTraceJournalStore,
@@ -1297,6 +1304,47 @@ def _sanitize_soft_turn_anchor(
     return receipt.model_copy(update={"active_anchor": None})
 
 
+def _prefer_displayed_company_for_attribute(
+    receipt: ContextReceipt | None,
+    *,
+    query: str,
+) -> ContextReceipt | None:
+    """Bind the thing-pronoun to the single displayed company on attribute turns.
+
+    A company answer can capture an incidental patent/web handle as the active
+    anchor; the follow-up ``它有哪些专利`` then reads that patent instead of the
+    company. When the query uses 它 / 该公司 and asks a company attribute, and
+    the displayed set holds exactly one company, that company is the subject.
+    Person pronouns (他/她) keep the existing anchor decision.
+    """
+
+    if receipt is None or not has_singular_referent(query):
+        return receipt
+    if "它" not in query and not any(
+        marker in query for marker in ("该公司", "这家公司", "该企业", "这家企业")
+    ):
+        return receipt
+    if not any(
+        marker in query
+        for marker in ("专利", "论文", "产品", "业务", "公司", "简介", "做什么")
+    ):
+        return receipt
+    result_set = receipt.displayed_result_set
+    handles = () if result_set is None else result_set.handles
+    companies = [handle for handle in handles if handle.domain == "company"]
+    if len(companies) != 1:
+        return receipt
+    company = companies[0]
+    anchor = receipt.active_anchor
+    if (
+        anchor is not None
+        and anchor.domain == "company"
+        and anchor.display_name == company.display_name
+    ):
+        return receipt
+    return receipt.model_copy(update={"active_anchor": company})
+
+
 def _merge_prior_web_evidence(
     *,
     committed: _CommittedSession | None,
@@ -1615,6 +1663,12 @@ class CanonicalV2ChatAdapter:
         self._sessions: dict[str, _CommittedSession] = {}
         self._session_locks: dict[str, RLock] = {}
         self._lock = RLock()
+        self._answer_cache: AnswerCache | None = None
+
+    def attach_answer_cache(self, cache: AnswerCache | None) -> None:
+        """Attach the validated exact-query cache (fresh local-only turns)."""
+
+        self._answer_cache = cache
 
     def attach_turn_trace(self, store: TurnTraceJournalStore) -> None:
         """Attach the turn-trace journal; tracing is a no-op until attached."""
@@ -1877,6 +1931,22 @@ class CanonicalV2ChatAdapter:
             # turn's dynamic scope; the public entry points reset it on exit.
             trace.context_token = set_turn_trace_reporter(trace)
         selection = self._selection(committed, option_id=option_id)
+        fresh_turn = committed is None and selection is None and option_id is None
+        if (
+            fresh_turn
+            and self._answer_cache is not None
+            and cache_enabled()
+            and eligible_query(normalized_query)[0]
+        ):
+            cached_response = self._cached_turn_response(
+                cache=self._answer_cache,
+                query=normalized_query,
+                session_id=session_id,
+                emit=emit,
+                trace=trace,
+            )
+            if cached_response is not None:
+                return cached_response
         # Phase 6: contextual interpretation (default OFF). When enabled and
         # valid, the resolved subject informs the four decision points below;
         # None (off/timeout/rejected) leaves the deterministic path unchanged.
@@ -1929,7 +1999,13 @@ class CanonicalV2ChatAdapter:
             )
             return local_count
         prior_displayed_ids = () if committed is None else committed.displayed_ids
-        prior_context = None if committed is None else committed.context_receipt
+        prior_context = (
+            None
+            if committed is None
+            else _prefer_displayed_company_for_attribute(
+                committed.context_receipt, query=normalized_query
+            )
+        )
         active_anchor_id = (
             None
             if prior_context is None or prior_context.active_anchor is None
@@ -2305,6 +2381,18 @@ class CanonicalV2ChatAdapter:
         with self._lock:
             with turn_gate.commit():
                 self._sessions[session_id] = next_session
+        if fresh_turn and self._answer_cache is None:
+            _logger.warning("answer cache not attached on a fresh turn")
+        if fresh_turn and self._answer_cache is not None and cache_enabled():
+            self._store_cached_turn(
+                cache=self._answer_cache,
+                query=normalized_query,
+                response=response,
+                turn_result=turn_result,
+                checkpoint=checkpoint,
+                displayed_ids=next_displayed_ids,
+                soft_subject_name=soft_subject_name,
+            )
         if trace is not None and str(
             getattr(turn_result, "render_mode", "") or ""
         ) in {"deterministic_fallback", "prose_partial"}:
@@ -2428,6 +2516,105 @@ class CanonicalV2ChatAdapter:
             }
         )
         return f"turn:chat:sha256:{digest}"
+
+    def _cached_turn_response(
+        self,
+        *,
+        cache: AnswerCache,
+        query: str,
+        session_id: str,
+        emit: Callable[[str, dict[str, Any]], bool],
+        trace: TurnTraceCollector | None,
+    ) -> ChatResponse | None:
+        payload = cache.get(query, release_id=self._release_id, epoch=data_epoch())
+        if payload is None:
+            return None
+        try:
+            cached_turn = TurnResult.model_validate(payload["turn_result"])
+            response = ChatResponse.model_validate(payload["response"])
+            checkpoint = ChatFeedbackCheckpoint.model_validate(payload["checkpoint"])
+        except Exception:  # noqa: BLE001 - a corrupt entry is a miss
+            _logger.warning(
+                "answer cache entry unusable; treating as a miss", exc_info=True
+            )
+            return None
+        turn_id = self._turn_id(
+            session_id=session_id,
+            turn_count=1,
+            query=query,
+            option_id=None,
+        )
+        cached_turn = cached_turn.model_copy(
+            update={
+                "session_id": session_id,
+                "turn_id": turn_id,
+                "original_query": query,
+            }
+        )
+        emit("stage", {"name": "synthesis"})
+        session = _CommittedSession(
+            answer=self._answer_factory(),
+            turn_count=1,
+            context_receipt=cached_turn.context_receipt,
+            active_offer=cached_turn.continuation_offer,
+            displayed_ids=tuple(payload.get("displayed_ids") or ()),
+            checkpoint=checkpoint,
+            prior_web_items=(),
+            referent_history=(),
+            soft_subject_name=payload.get("soft_subject_name"),
+        )
+        with self._lock:
+            self._sessions[session_id] = session
+        context = cached_turn.context_receipt
+        subject = (
+            None
+            if context is None or context.active_anchor is None
+            else context.active_anchor.display_name
+        )
+        self._write_turn_trace(
+            trace,
+            status="ok",
+            response=response,
+            answer_subject=subject,
+        )
+        return response
+
+    def _store_cached_turn(
+        self,
+        *,
+        cache: AnswerCache,
+        query: str,
+        response: ChatResponse,
+        turn_result: TurnResult,
+        checkpoint: ChatFeedbackCheckpoint,
+        displayed_ids: tuple[str, ...],
+        soft_subject_name: str | None,
+    ) -> None:
+        ok, validation = validate_candidate(
+            query=query,
+            response=response,
+            turn_result=turn_result,
+        )
+        if not ok:
+            _logger.warning("answer cache skip query=%r checks=%s", query, validation)
+            return
+        payload = {
+            "response": response.model_dump(mode="json"),
+            "turn_result": turn_result.model_dump(mode="json"),
+            "displayed_ids": list(displayed_ids),
+            "checkpoint": checkpoint.model_dump(mode="json"),
+            "soft_subject_name": soft_subject_name,
+        }
+        try:
+            cache.put(
+                query,
+                payload,
+                release_id=self._release_id,
+                epoch=data_epoch(),
+                validation=validation,
+            )
+        except Exception:  # noqa: BLE001 - caching must never fail a turn
+            _logger.warning("answer cache write failed", exc_info=True)
 
     @staticmethod
     def _displayed_ids(

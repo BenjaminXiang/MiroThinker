@@ -7,7 +7,7 @@ parameters / out-of-set values, real script paths, and the declared-cadence next
 from __future__ import annotations
 
 from dataclasses import replace
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 import pytest
@@ -18,6 +18,7 @@ from src.data_agents.canonical_v2.jobs import (
     JobTaskUnknownError,
     cron_next_fire,
     get_job_task,
+    job_timezone,
 )
 from src.data_agents.canonical_v2.managed_config import PUBLIC_DOMAINS
 
@@ -236,6 +237,20 @@ def test_next_fire_weekly_expression() -> None:
     fire = cron_next_fire("0 2 * * 1", now=now)
     assert fire == datetime(2026, 9, 21, 2, 0, tzinfo=LOCAL)
     assert fire.tzinfo is not None
+
+
+def test_job_timezone_uses_the_launcher_env(monkeypatch) -> None:
+    monkeypatch.setenv("MIROTHINKER_JOB_TIMEZONE", "Asia/Shanghai")
+    zone = job_timezone()
+    assert datetime(2026, 10, 26, 2, 0, tzinfo=zone).utcoffset() == timedelta(hours=8)
+
+
+def test_next_fire_in_job_timezone_uses_local_wall_clock(monkeypatch) -> None:
+    # The OS cron entry is 02:00 server local; a UTC clock must not render 10:00.
+    monkeypatch.setenv("MIROTHINKER_JOB_TIMEZONE", "Asia/Shanghai")
+    now = datetime(2026, 10, 25, 13, 39, tzinfo=timezone.utc)
+    fire = cron_next_fire("0 2 * * 1", now=now, tz=job_timezone())
+    assert fire.isoformat() == "2026-10-26T02:00:00+08:00"
 
 
 def test_next_fire_monthly_expression_rolls_to_the_next_month() -> None:

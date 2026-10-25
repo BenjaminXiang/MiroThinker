@@ -38,9 +38,11 @@ from .followup_referents import (
     _EXPLICIT_COMPANY_REJECT_MARKERS,
     _compact_company_alias,
     _search_view,
+    company_names_match,
     extract_institution_person_name,
     extract_leading_company_name,
     has_continuation_intent,
+    query_company_name,
     has_explicit_named_subject,
     has_set_referent,
     has_singular_referent,
@@ -5011,7 +5013,7 @@ _PROSE_ANSWER_MARKER = "<|canonical_v2_answer_v1|>"
 # Both families are pure provider echo: neither string family appears
 # anywhere in the repo's protocol code, so nothing legitimate is consumed.
 _PROSE_PRIVATE_MARKER_PATTERNS = (
-    re.compile(r"<\|canonical_v2[A-Za-z0-9_]{0,48}\|>"),
+    re.compile(r"</?\|canonical_v2[A-Za-z0-9_]{0,48}\|>"),
     re.compile(r"</?[|｜]{1,4}DSML[|｜]{1,4}[^>\n]{0,64}>"),
 )
 # Bound on the held partial candidate; every family member above is <= 80
@@ -6573,6 +6575,7 @@ def _answer_selector(
                 "供应商",
             )
         )
+        named_company = query_company_name(request.query)
         # AQ-S1 (C-1): only narrowing/geography turns attach registered-place
         # evidence to company claims — a relation frame (总部/注册地址/办公室/
         # 分公司/产品能力) or a protected geography slot. Every other turn
@@ -6732,6 +6735,21 @@ def _answer_selector(
             seen_key = (item.object_id, source_group)
             if binding is None or seen_key in seen_objects:
                 continue
+            handle = handle_by_evidence.get(item.evidence_id)
+            # A query that names a company may only use local company claims
+            # for *that* company. Without this guard a name absent from the
+            # pack (严格验收机器人公司) profiles an unrelated neighbour
+            # (普渡科技) and then disclaims the name it never matched.
+            if (
+                source_group == "local"
+                and named_company is not None
+                and not enumeration
+                and handle is not None
+                and getattr(handle, "kind", None) == "canonical"
+                and getattr(handle, "domain", None) == "company"
+                and not company_names_match(named_company, handle.display_name)
+            ):
+                continue
             if source_group == "current_web":
                 if web_claim_count >= web_claim_limit:
                     continue
@@ -6741,7 +6759,6 @@ def _answer_selector(
                     continue
                 local_claim_count += 1
             seen_objects.add(seen_key)
-            handle = handle_by_evidence.get(item.evidence_id)
             display_name = handle.display_name if handle is not None else item.object_id
             claim_text = _semantic_text(
                 item, display_name, include_registered_address=geography_turn

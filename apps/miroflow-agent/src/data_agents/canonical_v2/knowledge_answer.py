@@ -1330,7 +1330,12 @@ _ENUMERATION_QUERY_MARKERS = (
 # 128, whose fused local half retains ~64 canonical companies (aq-s2d-window
 # probe: g5-t1 disclosure pool 64, 嘉立创 at disclosure rank 56); the cap
 # tracks that half so in-window members are named, not count-only.
-_ENUMERATION_MEMBER_COVERAGE_LIMIT = 64
+# Product decision 2026-10-25: the disclosure names the top 8 recalled members
+# in recall-rank order and reports the rest as a count. The former 64-name
+# window made enumeration answers end in a wall of names; the top of the
+# recall order (including the G7 rank-5 member) still ships, so narrowing
+# follow-ups keep the members most likely to be asked about.
+_ENUMERATION_MEMBER_COVERAGE_LIMIT = 8
 
 
 def _is_enumeration_turn(request: TurnRequest) -> bool:

@@ -805,6 +805,17 @@ def _prose_wire(
     )
 
 
+def test_prose_decoder_redacts_closing_answer_marker() -> None:
+    wire = _prose_wire("前文</|canonical_v2_answer_v1|>后文")
+    decoder = serving_module._ProseWireDecoder()
+    output = "".join(decoder.feed(char) for char in wire) + decoder.finish()
+
+    assert "</|canonical_v2_answer_v1|>" not in output
+    assert "前文" in output
+    assert "后文" in output
+    assert "</|canonical_v2_answer_v1|>" in decoder.redactions
+
+
 class _RecordedProseCompletions:
     def __init__(
         self,
@@ -8417,3 +8428,67 @@ def test_selector_drops_unrelated_local_patent_for_named_person_query() -> None:
     }
     assert local_patent.evidence_id not in claimed_ids
     assert web_item.evidence_id in claimed_ids
+
+
+def _company_claim_proposal(query: str) -> Any:
+    local_company = EvidenceItem(
+        evidence_id="evidence:company:pudu",
+        object_id="company-c-pudu",
+        domain="company",
+        lane="lexical",
+        source_nature="local",
+        source_locator="canonical-v2-isolated:company:pudu",
+        snippet=json.dumps(
+            {
+                "name": "深圳市普渡科技有限公司",
+                "profile_summary": "深圳市普渡科技有限公司专注商用服务机器人。",
+            },
+            ensure_ascii=False,
+        ),
+        score=1.0,
+        source_authority="canonical_release",
+        claim_binding=EvidenceClaimBinding(
+            subject_id="company-c-pudu",
+            predicate="canonical_projection",
+            value="d" * 64,
+            status="admitted",
+        ),
+    )
+    evidence_set = EvidenceSet(
+        release_id=RELEASE_ID,
+        original_query=query,
+        protected_slots=(),
+        items=(local_company,),
+        traces=(),
+        limitations=(),
+        entity_handles=(
+            CanonicalEntityHandle(
+                canonical_id=local_company.object_id,
+                domain="company",
+                display_name="深圳市普渡科技有限公司",
+                evidence_ids=(local_company.evidence_id,),
+            ),
+        ),
+    )
+    return serving_module._answer_selector(bundle=_selector_bundle())(
+        TurnRequest(
+            session_id="session:company-name-guard",
+            turn_id="turn:company-name-guard",
+            query=query,
+            release_id=RELEASE_ID,
+            evidence_set=evidence_set,
+        )
+    )
+
+
+def test_selector_drops_local_company_claims_for_an_unknown_named_company() -> None:
+    proposal = _company_claim_proposal("严格验收机器人公司是做什么的")
+    assert proposal.claims == ()
+    assert proposal.displayed_handle_ids == ()
+
+
+def test_selector_keeps_local_company_claim_for_a_matching_partial_name() -> None:
+    proposal = _company_claim_proposal("普渡科技公司是做什么的")
+    assert any(
+        "company-c-pudu" == claim.subject_id for claim in proposal.claims
+    )

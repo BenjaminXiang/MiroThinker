@@ -197,7 +197,15 @@ def main() -> int:
     p.add_argument("--professor-id", default=None, help="target a specific professor.")
     p.add_argument("--limit", type=int, default=50)
     p.add_argument("--offset", type=int, default=0)
-    p.add_argument("--llm-profile", default="gemma4")
+    p.add_argument(
+        "--llm-profile",
+        default="deepseekv4flash",
+        help=(
+            "LLM profile for query rewrite + synthesis. The default is DeepSeek "
+            "because the gemma4 star gateway is retired on the customer site; "
+            "pass gemma4 only where that gateway still answers."
+        ),
+    )
     p.add_argument("--sleep", type=float, default=2.0)
     p.add_argument(
         "--min-summary-len",
