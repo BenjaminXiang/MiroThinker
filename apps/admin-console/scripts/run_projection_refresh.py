@@ -87,6 +87,38 @@ def publish_file(source: Path, target: Path) -> None:
     os.replace(staging, target)
 
 
+MIN_ALLOWLIST_RECORDS = 300
+MAX_ALLOWLIST_SHRINK = 0.10
+
+
+def allowlist_guard_reason(
+    new_count: int,
+    current_count: int | None,
+    *,
+    min_records: int = MIN_ALLOWLIST_RECORDS,
+    max_shrink: float = MAX_ALLOWLIST_SHRINK,
+) -> str | None:
+    """Refuse a publish that would gut the allowlist.
+
+    A weekly job may publish unattended, so two cheap invariants protect the live
+    behaviour: never fewer than ``min_records`` records, and never a shrink of
+    more than ``max_shrink`` against what is currently published.
+    """
+
+    if new_count < min_records:
+        return f"too_small ({new_count} < {min_records})"
+    if current_count and new_count < current_count * (1 - max_shrink):
+        return f"shrink ({current_count} -> {new_count})"
+    return None
+
+
+def _record_count(path: Path) -> int | None:
+    try:
+        return len(json.loads(path.read_text()))
+    except (OSError, json.JSONDecodeError):
+        return None
+
+
 def resolve_allowlist_target(environ: dict[str, str]) -> Path:
     return Path(environ.get("CANONICAL_V2_PROFESSOR_PROJECTION") or DEFAULT_ALLOWLIST)
 
@@ -172,9 +204,17 @@ def main(argv: list[str] | None = None) -> int:
             print(f"no allowlist to publish at {allowlist_source}", file=sys.stderr)
             return 3
         target = resolve_allowlist_target(environ)
+        new_count = len(json.loads(allowlist_source.read_text()))
+        reason = allowlist_guard_reason(new_count, _record_count(target))
+        if reason:
+            print(f"refusing to publish allowlist: {reason}", file=sys.stderr)
+            return 4
+        if target.is_file():
+            # Keep one generation for rollback: the overlay hot-reloads, so a bad
+            # publish takes effect on the next claim.
+            publish_file(target, target.with_name(target.name + ".prev"))
         publish_file(allowlist_source, target)
-        count = len(json.loads(target.read_text()))
-        print(f"published allowlist: {target} ({count} records)")
+        print(f"published allowlist: {target} ({new_count} records)")
     return 0
 
 

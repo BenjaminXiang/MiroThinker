@@ -92,3 +92,38 @@ def test_allowlist_target_prefers_the_overlay_variable() -> None:
         wrapper.resolve_allowlist_target({"CANONICAL_V2_PROFESSOR_PROJECTION": "/x.json"})
     ) == "/x.json"
     assert str(wrapper.resolve_allowlist_target({})) == wrapper.DEFAULT_ALLOWLIST
+
+
+def test_guard_rejects_a_tiny_allowlist() -> None:
+    assert wrapper.allowlist_guard_reason(120, 536) == "too_small (120 < 300)"
+
+
+def test_guard_rejects_a_large_shrink() -> None:
+    assert wrapper.allowlist_guard_reason(400, 536) == "shrink (536 -> 400)"
+    assert wrapper.allowlist_guard_reason(500, 536) is None
+
+
+def test_guard_allows_growth_and_missing_current() -> None:
+    assert wrapper.allowlist_guard_reason(600, 536) is None
+    assert wrapper.allowlist_guard_reason(536, None) is None
+
+
+def test_record_count_reads_json_and_tolerates_missing(tmp_path: Path) -> None:
+    path = tmp_path / "a.json"
+    path.write_text('{"a": 1, "b": 2}')
+    assert wrapper._record_count(path) == 2
+    assert wrapper._record_count(tmp_path / "absent.json") is None
+
+
+def test_publish_keeps_the_previous_generation(tmp_path: Path) -> None:
+    current = tmp_path / "allowlist.json"
+    current.write_text('{"old": 1}')
+    source = tmp_path / "new.json"
+    source.write_text('{"new": 2}')
+
+    if current.is_file():
+        wrapper.publish_file(current, current.with_name(current.name + ".prev"))
+    wrapper.publish_file(source, current)
+
+    assert current.read_text() == '{"new": 2}'
+    assert (tmp_path / "allowlist.json.prev").read_text() == '{"old": 1}'
