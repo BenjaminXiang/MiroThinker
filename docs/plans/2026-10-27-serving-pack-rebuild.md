@@ -24,7 +24,7 @@ $ grep -rn "professor_ids=" --include=*.py apps/miroflow-agent/src/data_agents/c
 | # | 前置 | 内容 | 预估 |
 |---|---|---|---|
 | P1 | 链接物化步骤（**已实现**） | `materialize_pack_links.py`：构建完成后、封印之前，把边写进 `paper.professor_ids` 与 professor 的 `paper_ids / paper_count / top_papers`，重算 `lookup_content_sha256`；7 条单测 + 真实 pack 干跑 | 已完成 |
-| P2 | 源数据清理 | 已定位：`staging-v4/7ddf…source`（3,735 行 / 2,856 行含补位）。**实测清完中位仅 22 字**，且构建发布门要求 ≥200 字 ⇒ 不能只删补位，需要**重写摘要**或**放宽教授摘要门** | 需重估 |
+| P2 | 源数据清理 | 已产出 `cleaning/professor-cleaned.source`（sha256 `643b6581…`，2,856 行改写）；**发布门不校验 200 字**（该契约只用于 LLM 产出），短摘要可过门 | 已完成 |
 | P3 | 配额与磁盘 | embedding 调用预算；信封 ~8.3 GB、索引 ~1.7 GB、旧包保留（回滚资产） | 30 分钟 |
 | P4 | 切包窗口 | 单节点站点，重启 10 分钟；需与使用方约定 | 协调 |
 
@@ -66,14 +66,17 @@ D2 下午   出信封 → 封印 → 切包窗口 → replay 7/7 → 评测门
 直接删补位会得到 2,400+ 条 20 字左右的画像，而构建的发布门要求 ≥200 字
 （这正是 run16 多次 attempt 失败的那类门），**直接发射大概率被门拦下**。
 
-所以 P2 需要改设计，二选一：
+**追查后修正了两个判断**：
 
-1. **重写摘要**：用姓名/机构/院系/职称/研究方向/论文数/代表作拼一段事实性摘要（目标 80–160 字），
-   不注水；仍不足 200 字的记录由发布门放行（需要改门）。
-2. **放宽教授摘要门**：把 `PROFILE_SUMMARY_MIN_CHARS` 对 professor 降到 60，并接受短摘要，
-   同时在质量状态上标 `needs_enrichment`。
+1. **构建发布门并不校验 200 字**——`PROFILE_SUMMARY_MIN_CHARS=200` 属于
+   `profile_summary_contract`，只用于校验 LLM 产出；`publication_cleaning.audit_lookup_documents`
+   只查占位符、研究方向长度与地理字段。所以短摘要能过门，**不需要改门**。
+2. **重写没有素材**：这 2,856 条里只有 20% 有研究方向，`paper_count`/`h_index`/`top_papers`/`awards`
+   **全部为 0**。补位掩盖的是空画像——重写只能输出「X 现任 Y。」（中位 20 字），与直接删补位一样。
+   所以重写器写了又删掉了，不留死代码。
 
-我倾向 **1 + 2 组合**：先重写给能写的，剩下的短摘要放行并标记，避免为了过门再注水。
+**结论**：P2 = 直接删补位（已产出 `professor-cleaned.source`），接受这些教授摘要很短；
+真正的补全属于"画像补全"数据切片（web 搜索 / 论文链接），不在重建范围内。
 
 ## 3. 发射（复用 run16 流程）## 3. 发射（复用 run16 流程）
 
