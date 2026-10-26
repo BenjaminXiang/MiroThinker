@@ -22,14 +22,17 @@ Environment (all optional; defaults match `run.sh`):
 from __future__ import annotations
 
 import argparse
+import json
 import os
 from pathlib import Path
+import shutil
 import subprocess
 import sys
 
 DEFAULT_PACK = "/var/tmp/mirothinker-data-v2/serving-pack-fembed-v3-synthdepth"
 DEFAULT_OUT_DIR = "/root/deploy/fullstack-v2/var/professor-projection"
 DEFAULT_METRICS = "/root/deploy/fullstack-v2/var/professor-projection-metrics.json"
+DEFAULT_ALLOWLIST = "/root/deploy/fullstack-v2/var/professor-projection-allowlist.json"
 REPO_ROOT = Path(__file__).resolve().parents[3]
 REFRESH_SCRIPT = (
     REPO_ROOT
@@ -75,6 +78,19 @@ def bootstrap_managed_config(environ: dict[str, str]) -> None:
         print(f"managed config unavailable: {error}", file=sys.stderr)
 
 
+def publish_file(source: Path, target: Path) -> None:
+    """Copy ``source`` over ``target`` atomically (readers never see a partial file)."""
+
+    target.parent.mkdir(parents=True, exist_ok=True)
+    staging = target.with_name(target.name + ".tmp")
+    shutil.copyfile(source, staging)
+    os.replace(staging, target)
+
+
+def resolve_allowlist_target(environ: dict[str, str]) -> Path:
+    return Path(environ.get("CANONICAL_V2_PROFESSOR_PROJECTION") or DEFAULT_ALLOWLIST)
+
+
 def build_command(
     *, python: str, pack: Path, out_dir: Path, threshold: float, skip_coherence: bool
 ) -> list[str]:
@@ -103,6 +119,14 @@ def main(argv: list[str] | None = None) -> int:
     )
     parser.add_argument(
         "--dry-run", action="store_true", help="print the resolved command and exit"
+    )
+    parser.add_argument(
+        "--publish-allowlist",
+        action="store_true",
+        help=(
+            "also replace the live allowlist; the overlay reloads it on the next "
+            "claim (no restart). Leave off until a refresh has been reviewed."
+        ),
     )
     args = parser.parse_args(argv)
 
@@ -139,9 +163,18 @@ def main(argv: list[str] | None = None) -> int:
     if not produced.is_file():
         print(f"refresh produced no metrics at {produced}", file=sys.stderr)
         return 3
-    metrics_path.parent.mkdir(parents=True, exist_ok=True)
-    metrics_path.write_text(produced.read_text())
+    publish_file(produced, metrics_path)
     print(f"published metrics: {metrics_path}")
+
+    if args.publish_allowlist:
+        allowlist_source = out_dir / "professor-projection-allowlist.json"
+        if not allowlist_source.is_file():
+            print(f"no allowlist to publish at {allowlist_source}", file=sys.stderr)
+            return 3
+        target = resolve_allowlist_target(environ)
+        publish_file(allowlist_source, target)
+        count = len(json.loads(target.read_text()))
+        print(f"published allowlist: {target} ({count} records)")
     return 0
 
 

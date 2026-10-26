@@ -74,3 +74,21 @@ def test_dry_run_prints_the_command(tmp_path: Path, monkeypatch, capsys) -> None
 
     assert wrapper.main(["--dry-run"]) == 0
     assert "--threshold 0.33" in capsys.readouterr().out
+
+
+def test_publish_file_is_atomic(tmp_path: Path) -> None:
+    source = tmp_path / "src.json"
+    source.write_text('{"a": 1}')
+    target = tmp_path / "out" / "target.json"
+
+    wrapper.publish_file(source, target)
+
+    assert target.read_text() == '{"a": 1}'
+    assert not (target.parent / "target.json.tmp").exists()
+
+
+def test_allowlist_target_prefers_the_overlay_variable() -> None:
+    assert str(
+        wrapper.resolve_allowlist_target({"CANONICAL_V2_PROFESSOR_PROJECTION": "/x.json"})
+    ) == "/x.json"
+    assert str(wrapper.resolve_allowlist_target({})) == wrapper.DEFAULT_ALLOWLIST

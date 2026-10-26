@@ -26,6 +26,7 @@ import json
 import os
 from pathlib import Path
 import sys
+import threading
 from typing import Any, Mapping
 
 ENV_VAR = "CANONICAL_V2_PROFESSOR_PROJECTION"
@@ -103,18 +104,41 @@ def load_overlay(
     return ProfessorProjectionOverlay(records)
 
 
-_ACTIVE: ProfessorProjectionOverlay | None | bool = False
+_CACHE_KEY: tuple[str, int, int] | None = None
+_CACHE_VALUE: ProfessorProjectionOverlay | None = None
+_LOAD_LOCK = threading.Lock()
 
 
 def active_overlay() -> ProfessorProjectionOverlay | None:
-    """Process-wide overlay from the environment, loaded once."""
-    global _ACTIVE
-    if _ACTIVE is False:
-        _ACTIVE = load_overlay(os.environ.get(ENV_VAR))
-    return _ACTIVE if isinstance(_ACTIVE, ProfessorProjectionOverlay) else None
+    """Process-wide overlay, reloaded when the file changes.
+
+    The weekly refresh replaces the allowlist; requiring a service restart to
+    pick it up would turn an unattended job into a manual chore. The file's
+    mtime+size is the cache key, and the wrapper publishes with an atomic
+    rename, so a reader never sees a half-written file.
+    """
+
+    global _CACHE_KEY, _CACHE_VALUE
+    path = os.environ.get(ENV_VAR, "").strip()
+    if not path:
+        return None
+    try:
+        stat = os.stat(path)
+    except OSError:
+        return None
+    key = (path, stat.st_mtime_ns, stat.st_size)
+    with _LOAD_LOCK:
+        if _CACHE_KEY == key:
+            return _CACHE_VALUE
+        overlay = load_overlay(path)
+        _CACHE_KEY = key
+        _CACHE_VALUE = overlay
+        return overlay
 
 
 def reset_overlay_cache() -> None:
     """Test hook: forget the process-wide overlay."""
-    global _ACTIVE
-    _ACTIVE = False
+    global _CACHE_KEY, _CACHE_VALUE
+    with _LOAD_LOCK:
+        _CACHE_KEY = None
+        _CACHE_VALUE = None

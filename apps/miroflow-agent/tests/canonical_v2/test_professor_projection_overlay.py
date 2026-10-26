@@ -203,4 +203,35 @@ def test_semantic_text_dedupes_template_summary() -> None:
 
     text = _semantic_text(item, "王伟")
 
-    assert text.count("该教授在深圳科创领域有持续贡献") == 1
+    # The known padding sentence is dropped outright (template-cleanup slice),
+    # so it never reaches the claim even once.
+    assert text.count("该教授在深圳科创领域有持续贡献") == 0
+    assert "研究方向是机器人" in text
+
+
+def test_active_overlay_reloads_when_the_file_changes(tmp_path: Path, monkeypatch) -> None:
+    import os as _os
+
+    path = _write(tmp_path, {"p1": _record(paper_count=90)})
+    monkeypatch.setenv(overlay_module.ENV_VAR, str(path))
+    overlay_module.reset_overlay_cache()
+    first = overlay_module.active_overlay()
+
+    path.write_text(json.dumps({"p1": _record(paper_count=7)}, ensure_ascii=False))
+    stat = path.stat()
+    _os.utime(path, (stat.st_atime, stat.st_mtime + 5))
+
+    second = overlay_module.active_overlay()
+
+    assert second is not None and second is not first
+    assert second.apply("p1", {})["paper_count"] == 7
+
+
+def test_active_overlay_keeps_the_instance_while_the_file_is_unchanged(
+    tmp_path: Path, monkeypatch
+) -> None:
+    path = _write(tmp_path, {"p1": _record()})
+    monkeypatch.setenv(overlay_module.ENV_VAR, str(path))
+    overlay_module.reset_overlay_cache()
+
+    assert overlay_module.active_overlay() is overlay_module.active_overlay()
