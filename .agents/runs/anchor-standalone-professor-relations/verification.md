@@ -115,3 +115,55 @@ Live evidence (fresh sessions, service active/health 200):
 
 Tests: `test_standalone_anchor.py` 5 passed (anchor 3 + count 2); serving/web
 324 passed; DeepSeek provider 2 passed.
+
+## 2026-10-26 amendment: professor consumer completeness
+
+Deployed files (customer bundle) and md5:
+
+| file | md5 |
+|---|---|
+| `knowledge_serving_isolated.py` | `c91b00776f2bf404e718bffee5a3eb97` |
+| `knowledge_read_isolated.py` | `eb265b970cd49b3c3d776454aeaac66d` |
+| `followup_referents.py` | `833adb7ec766113e6ccf8c4913bb1c0e` |
+| `canonical_v2_chat.py` | `87840fde1906ae393764e4e0e273eb12` |
+| `canonical_v2_admin.py` | `850bbb9f0e47431aa260acd549b01416` |
+| `canonical_v2_answer_cache.py` | `0c90b3c0f5a24fa9b61ea129db2e9cb9` |
+
+Live evidence:
+
+- `丁文伯的邮箱和院系是什么` → `ding.wenbo@sz.tsinghua.edu.cn` +
+  数据与信息研究院；2 local professor citations.
+- `赵大锤教授的研究方向` → "没有找到公开信息"，no neighbour substitution.
+- Synthetic `_semantic_text` payload → 院系/邮箱/主页/论文数/专利数/教育/
+  工作/获奖/企业角色 all rendered; non-founder role "担任首席科学家".
+- Cookie-jar probe `丁文伯有哪些论文` → `他的研究方向有哪些？` →
+  **11.42s / 12 citations**, answers 丁文伯's research directions, no
+  clarification.  The earlier false negative came from a probe without a
+  cookie jar: `/api/chat` binds by `miroflow_chat_session`, not JSON
+  `session_id`.
+- `--mode full` golden set: 27 turns / 19 conversations, **81/120 required
+  (68%)**, 0 forbidden, 0 refusal miss, 0 errors, mean 14.0s.
+
+Not fixed in this amendment: professor→patent relationship data (pack has no
+instances); professor topic enumeration (q27 still 0/4); 54% template
+profile_summary dilution (index build issue, needs rebuild).
+
+## 2026-10-26 P0 entity grounding
+
+Deployed: `knowledge_serving_isolated.py` md5
+`982b24821d1471bfa56866595f77022f`.
+
+- Only the deterministic view carries bound subjects; llm_rewrite,
+  term_expansion, and authority_seeking views are recall-only (empty bound
+  entities and no soft subject).
+- Professor-topic queries filter company-shaped bound names; 2-char bound
+  names are not subjects.
+- `_apply_web_subject_consistency` returns the lane unfiltered for
+  `有哪些…教授`; other topic queries fail open when the gate would keep
+  less than one third of ≥20 results and log `web_subject_gate_fallback`.
+- q27 trace: web `in=76 / retained=76 / filtered=0`, `gate_drops={}`
+  (before: 75/11/64 with `web_subject_consistency: 64`).
+- q27 answer still `citation_count=0`: the selector skips web evidence with
+  `claim_binding is None`, so the 76 web results never become claims. The
+  next slice is a web discovery answer mode (topic/unbound web claims), not
+  another entity-recognition patch.
