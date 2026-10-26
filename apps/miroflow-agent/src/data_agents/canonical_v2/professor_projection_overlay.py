@@ -56,6 +56,7 @@ class ProfessorProjectionOverlay:
         count = record.get("paper_count")
         if isinstance(count, int) and merged.get("paper_count") in (None, ""):
             merged["paper_count"] = count
+            merged["_paper_count_local"] = True
         top_papers = record.get("top_papers")
         if isinstance(top_papers, list) and top_papers and not merged.get("top_papers"):
             merged["top_papers"] = top_papers

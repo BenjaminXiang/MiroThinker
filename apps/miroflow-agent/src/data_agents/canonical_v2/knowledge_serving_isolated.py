@@ -5088,6 +5088,34 @@ def _registered_address_claim_value(payload: Mapping[str, Any]) -> str | None:
     return None
 
 
+_CLAIM_SENTENCE_SPLIT = re.compile(r"(?<=[。！？；])")
+
+
+def _collapse_repetition(text: str, *, limit: int) -> str:
+    """Drop sentences that repeat an earlier one, then truncate.
+
+    Homepage-crawled professor summaries are frequently one template sentence
+    repeated up to a dozen times ("该教授在深圳科创领域有持续贡献，研究成果具有
+    重要学术价值。"). In a claim that text crowds out the real evidence (fields,
+    directions, representative papers), so repeated sentences are kept once.
+    """
+
+    if not text:
+        return ""
+    kept: list[str] = []
+    seen: set[str] = set()
+    for part in _CLAIM_SENTENCE_SPLIT.split(text):
+        stripped = part.strip()
+        if not stripped:
+            continue
+        key = stripped.rstrip("。！？；")
+        if key in seen:
+            continue
+        seen.add(key)
+        kept.append(stripped)
+    return "".join(kept)[:limit]
+
+
 def _semantic_text(
     item: EvidenceItem,
     display_name: str,
@@ -5159,13 +5187,23 @@ def _semantic_text(
         ):
             value = _claim_scalar_text(payload.get(field))
             if value and value != name and value != _PROFESSOR_MISSING_FIELD_FALLBACK:
-                parts.append(f"{label}：{value[:claim_field_limit]}")
+                if field == "profile_summary":
+                    value = _collapse_repetition(value, limit=claim_field_limit)
+                else:
+                    value = value[:claim_field_limit]
+                parts.append(f"{label}：{value}")
         for label, field in (("论文数", "paper_count"), ("专利数", "patent_count")):
             value = payload.get(field)
             if isinstance(value, (int, float)) or (
                 isinstance(value, str) and value.strip()
             ):
-                parts.append(f"{label}：{value}")
+                if field == "paper_count" and payload.get("_paper_count_local"):
+                    # The overlay counts papers in this pack's relationship
+                    # graph, not a publication total; say so, or the answer will
+                    # read it as "total papers" and contradict a web figure.
+                    parts.append(f"本地收录论文：{value} 篇")
+                else:
+                    parts.append(f"{label}：{value}")
         for label, field in (
             ("教育经历", "education_history"),
             ("工作经历", "work_history"),

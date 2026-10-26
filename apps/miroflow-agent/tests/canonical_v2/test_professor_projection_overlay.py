@@ -6,7 +6,10 @@ import json
 from pathlib import Path
 
 from src.data_agents.canonical_v2 import professor_projection_overlay as overlay_module
-from src.data_agents.canonical_v2.knowledge_serving_isolated import _semantic_text
+from src.data_agents.canonical_v2.knowledge_serving_isolated import (
+    _collapse_repetition,
+    _semantic_text,
+)
 from src.data_agents.canonical_v2.knowledge_read import EvidenceItem
 
 
@@ -152,7 +155,7 @@ def test_semantic_text_adds_count_and_representative_papers(
         "王向荣",
     )
 
-    assert "论文数：90" in text
+    assert "本地收录论文：90 篇" in text
     assert "代表作：《Topological Magnonics》2021" in text
     assert "研究方向：凝聚态理论" in text
 
@@ -163,5 +166,41 @@ def test_semantic_text_is_unchanged_without_overlay(monkeypatch) -> None:
 
     text = _semantic_text(_evidence({"name": "王向荣"}), "王向荣")
 
-    assert "论文数" not in text
+    assert "本地收录论文" not in text
     assert "代表作" not in text
+
+
+def test_collapse_repetition_keeps_each_sentence_once() -> None:
+    template = "该教授在深圳科创领域有持续贡献，研究成果具有重要学术价值。"
+
+    collapsed = _collapse_repetition(f"{template}{template}{template}", limit=400)
+
+    assert collapsed == template
+
+
+def test_collapse_repetition_keeps_normal_text() -> None:
+    text = "她研究机器人控制。近年转向人机交互。"
+
+    assert _collapse_repetition(text, limit=400) == text
+
+
+def test_collapse_repetition_truncates_after_dedupe() -> None:
+    text = "第一句。" * 5 + "第二句。"
+
+    collapsed = _collapse_repetition(text, limit=10)
+
+    assert collapsed == "第一句。第二句。"[:10]
+
+
+def test_semantic_text_dedupes_template_summary() -> None:
+    template = "该教授在深圳科创领域有持续贡献，研究成果具有重要学术价值。"
+    item = _evidence(
+        {
+            "name": "王伟",
+            "profile_summary": template * 3 + "研究方向是机器人。",
+        }
+    )
+
+    text = _semantic_text(item, "王伟")
+
+    assert text.count("该教授在深圳科创领域有持续贡献") == 1

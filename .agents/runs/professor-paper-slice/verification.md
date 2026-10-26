@@ -163,3 +163,19 @@ force the model to prefer it. The label also reads as a total; a follow-up shoul
 word it as `本地收录论文：N 篇` so it cannot be read as a publication total.
 
 Rollback (not needed): unset the variable in `run.sh`, restart.
+
+## Polish deploy (2026-10-26 23:49 – 00:00 CST)
+
+Second restart on the customer site, shipping only the two changed files
+(`knowledge_serving_isolated.py`, `professor_projection_overlay.py`); backups kept
+as `*.pre-polish` in `backups/overlay-20261027/`.
+
+Live check inside the customer runtime (`_semantic_text` on real pack documents):
+
+| professor | count source | rendered |
+|---|---|---|
+| 白冠华 | overlay | `本地收录论文：4 篇`; template sentence repeated **1** (was 3) |
+| 曲强 | pack | `论文数：5` (unchanged label) |
+
+27-turn gate: **pass** — required 77→76 (single fluctuation q25 4→3),
+product 26→26, forbidden 0, refusal-miss 0, errors 0.
