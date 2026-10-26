@@ -128,3 +128,38 @@ at all. Conclusion: a useful **review signal**, not a gate yet; needs 30+
 labelled samples before any threshold is used to filter materialisation.
 
 Artefact: `.agents/runs/professor-paper-slice/coherence.json`.
+
+## Deployment (2026-10-26 23:31–23:41 CST)
+
+Customer site `100.64.0.96`, systemd unit `miro-fullstack-v2`, code at
+`/root/deploy/fullstack-v2/code`.
+
+1. Backed up `knowledge_serving_isolated.py` and `run.sh` to
+   `backups/overlay-20261027/`.
+2. Shipped `professor_projection_overlay.py`, the 8-line wiring in
+   `knowledge_serving_isolated.py`, and the allowlist to
+   `var/professor-projection-allowlist.json`.
+3. Pre-restart import check with the prod venv: overlay loads **533** records and
+   `knowledge_serving_isolated` imports.
+4. Added `export CANONICAL_V2_PROFESSOR_PROJECTION="$B/var/professor-projection-allowlist.json"`
+   to `run.sh` (line 36), restarted the unit 23:31:34; healthy at 23:41:27
+   (10 min boot, unchanged from previous restarts).
+5. Verified in the live process: env var present; direct `_semantic_text` call on
+   the pack's 王向荣 document renders `论文数` and `代表作` (2018 Topological
+   Magnonics) — the overlay is active in the deployed runtime.
+6. Eval gate against the live site with the overlay on:
+
+```
+required_recall 77/120 (64%)   <- baseline 77/120
+product_pass 26/27             <- baseline 26/27
+forbidden 0, refusal_miss 0, errors 0
+baseline verdict: pass         exit 0
+```
+
+**Product observation**: the synthesizer does not always repeat `论文数`. Asked
+「王向荣一共发表了多少篇论文」 it answered "至少 32 篇" from web evidence rather
+than the claim's 90 — the overlay adds the number to the evidence, it does not
+force the model to prefer it. The label also reads as a total; a follow-up should
+word it as `本地收录论文：N 篇` so it cannot be read as a publication total.
+
+Rollback (not needed): unset the variable in `run.sh`, restart.
