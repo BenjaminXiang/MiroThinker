@@ -2,12 +2,17 @@ from __future__ import annotations
 
 import re
 
-PROFILE_SUMMARY_MIN_CHARS = 200
+# 120, not 200: real web-enriched summaries frequently land at 120-190 Chinese
+# characters. The old 200 floor rejected them (measured: 1 of 5 in a pilot run),
+# and the fallback summariser worked around it by padding with a sentence
+# repeated to reach the target -- the template text that later polluted vectors.
+# A shorter factual paragraph beats a longer padded one.
+PROFILE_SUMMARY_MIN_CHARS = 120
 PROFILE_SUMMARY_MAX_CHARS = 300
 PROFILE_SUMMARY_MIN_CJK_RATIO = 0.35
 PROFILE_SUMMARY_MIN_LATIN_FOR_DOMINANCE = 80
 PROFILE_SUMMARY_PROMPT_CONTRACT = (
-    "profile_summary must be a 200-300 character Chinese (中文) canonical biography. "
+    "profile_summary must be a 120-300 character Chinese (中文) canonical biography. "
     "Translate English source evidence into natural Chinese instead of writing an "
     "English+Chinese mixed paragraph. Preserve original English source text in "
     "structured facts/evidence, not in professor.profile_summary."
