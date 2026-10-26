@@ -1,0 +1,386 @@
+{
+  "pack": "/var/tmp/mirothinker-data-v2/serving-pack-fembed-v3-synthdepth",
+  "population": {
+    "professors": 3958,
+    "papers": 24520,
+    "professor_paper_edges": 10742,
+    "professors_with_edges": 1019,
+    "professors_with_edges_pct": 25.7,
+    "papers_with_edges": 10390,
+    "papers_with_edges_pct": 42.4,
+    "avg_papers_per_linked_professor": 10.5
+  },
+  "document_gap": {
+    "papers_with_professor_ids": 0,
+    "professors_with_paper_count": 235,
+    "professors_with_directions": 1861,
+    "linked_professors_missing_paper_count": 875,
+    "linked_professors_missing_directions": 271,
+    "template_summaries": 2129,
+    "template_summary_pct": 53.8
+  },
+  "sample_top_professors": [
+    {
+      "id": "professor-c-8ba5b40981aeae2d428409ed",
+      "name": "面包屑",
+      "institution": "香港中文大学（深圳）",
+      "papers": 217,
+      "paper_count_in_pack": null,
+      "directions": 7,
+      "template_summary": false
+    },
+    {
+      "id": "professor-c-5797646d251d5bf018778ba9",
+      "name": "朱军",
+      "institution": "香港中文大学（深圳）",
+      "papers": 210,
+      "paper_count_in_pack": null,
+      "directions": 7,
+      "template_summary": false
+    },
+    {
+      "id": "professor-c-fa86e2a467d6c4dc6fb5db36",
+      "name": "陈名华",
+      "institution": "香港中文大学（深圳）",
+      "papers": 91,
+      "paper_count_in_pack": null,
+      "directions": 7,
+      "template_summary": false
+    },
+    {
+      "id": "professor-c-6b8c31caae256e254307caab",
+      "name": "王向荣",
+      "institution": "香港中文大学（深圳）",
+      "papers": 90,
+      "paper_count_in_pack": null,
+      "directions": 5,
+      "template_summary": false
+    },
+    {
+      "id": "professor-c-d94a5b493653dfdd72017ee5",
+      "name": "李骏",
+      "institution": "哈尔滨工业大学（深圳）",
+      "papers": 79,
+      "paper_count_in_pack": null,
+      "directions": 2,
+      "template_summary": false
+    },
+    {
+      "id": "professor-c-20de1cdbd430621b872f7e8d",
+      "name": "李志刚",
+      "institution": "香港中文大学（深圳）",
+      "papers": 75,
+      "paper_count_in_pack": null,
+      "directions": 7,
+      "template_summary": false
+    },
+    {
+      "id": "professor-c-315358f021764af5dff88179",
+      "name": "张健全",
+      "institution": "香港中文大学（深圳）",
+      "papers": 73,
+      "paper_count_in_pack": null,
+      "directions": 7,
+      "template_summary": false
+    },
+    {
+      "id": "professor-c-17c955e0febbc97821fa1bbb",
+      "name": "张旻",
+      "institution": "清华大学深圳国际研究生院",
+      "papers": 72,
+      "paper_count_in_pack": null,
+      "directions": 7,
+      "template_summary": false
+    },
+    {
+      "id": "professor-c-50d75ff66dab7355ea244976",
+      "name": "杨朋",
+      "institution": "清华大学深圳国际研究生院",
+      "papers": 72,
+      "paper_count_in_pack": null,
+      "directions": 7,
+      "template_summary": false
+    },
+    {
+      "id": "professor-c-0c710822b4e495d7e6f914f5",
+      "name": "宋清海",
+      "institution": "哈尔滨工业大学（深圳）",
+      "papers": 66,
+      "paper_count_in_pack": null,
+      "directions": 0,
+      "template_summary": false
+    },
+    {
+      "id": "professor-c-3d236b73630d1f5195c2762c",
+      "name": "王强",
+      "institution": "哈尔滨工业大学（深圳）",
+      "papers": 66,
+      "paper_count_in_pack": null,
+      "directions": 2,
+      "template_summary": false
+    },
+    {
+      "id": "professor-c-f0a4fb894a8ed6e36a2c8555",
+      "name": "Fangxin Wang",
+      "institution": "香港中文大学（深圳）",
+      "papers": 61,
+      "paper_count_in_pack": null,
+      "directions": 7,
+      "template_summary": false
+    },
+    {
+      "id": "professor-c-0dccd95f620a07cc62fea6f2",
+      "name": "曾振中",
+      "institution": "南方科技大学",
+      "papers": 61,
+      "paper_count_in_pack": null,
+      "directions": 0,
+      "template_summary": true
+    },
+    {
+      "id": "professor-c-378f53c8a37ae35e62183516",
+      "name": "邵明文",
+      "institution": "深圳理工大学",
+      "papers": 61,
+      "paper_count_in_pack": 217,
+      "directions": 10,
+      "template_summary": false
+    },
+    {
+      "id": "professor-c-82e96606f7f66b177e0a8ee9",
+      "name": "Tinghuan Chen",
+      "institution": "香港中文大学（深圳）",
+      "papers": 57,
+      "paper_count_in_pack": null,
+      "directions": 7,
+      "template_summary": false
+    },
+    {
+      "id": "professor-c-4f68da1c5f65d02228dd3b0d",
+      "name": "李维",
+      "institution": "哈尔滨工业大学（深圳）",
+      "papers": 57,
+      "paper_count_in_pack": null,
+      "directions": 2,
+      "template_summary": false
+    },
+    {
+      "id": "professor-c-b5a4c0417e5aea583cac38b8",
+      "name": "王朝谚",
+      "institution": "香港中文大学（深圳）",
+      "papers": 56,
+      "paper_count_in_pack": null,
+      "directions": 6,
+      "template_summary": false
+    },
+    {
+      "id": "professor-c-02aa63efca826cfbf95e4595",
+      "name": "张纵辉",
+      "institution": "香港中文大学（深圳）",
+      "papers": 55,
+      "paper_count_in_pack": null,
+      "directions": 4,
+      "template_summary": false
+    },
+    {
+      "id": "professor-c-77216c80c6f088e7971e43f7",
+      "name": "张瑞茂",
+      "institution": "中山大学（深圳）",
+      "papers": 54,
+      "paper_count_in_pack": null,
+      "directions": 7,
+      "template_summary": false
+    },
+    {
+      "id": "professor-c-7feadc3d9bb3fc36d6da4e2f",
+      "name": "黄建华",
+      "institution": "香港中文大学（深圳）",
+      "papers": 54,
+      "paper_count_in_pack": null,
+      "directions": 14,
+      "template_summary": false
+    }
+  ],
+  "sample_missing_both": [
+    {
+      "id": "professor-c-0c710822b4e495d7e6f914f5",
+      "name": "宋清海",
+      "institution": "哈尔滨工业大学（深圳）",
+      "papers": 66,
+      "paper_count_in_pack": null,
+      "directions": 0,
+      "template_summary": false
+    },
+    {
+      "id": "professor-c-0dccd95f620a07cc62fea6f2",
+      "name": "曾振中",
+      "institution": "南方科技大学",
+      "papers": 61,
+      "paper_count_in_pack": null,
+      "directions": 0,
+      "template_summary": true
+    },
+    {
+      "id": "professor-c-b4c352d9ea6aef1b18f10a7d",
+      "name": "曹啸松",
+      "institution": "深圳大学",
+      "papers": 51,
+      "paper_count_in_pack": null,
+      "directions": 0,
+      "template_summary": true
+    },
+    {
+      "id": "professor-c-9e0ab493a96cd8db62ae8559",
+      "name": "刘斌",
+      "institution": "南方科技大学",
+      "papers": 48,
+      "paper_count_in_pack": null,
+      "directions": 0,
+      "template_summary": true
+    },
+    {
+      "id": "professor-c-7b57ac48e8e22e4fb1752fe2",
+      "name": "Pietro S. Oliveto",
+      "institution": "南方科技大学",
+      "papers": 40,
+      "paper_count_in_pack": null,
+      "directions": 0,
+      "template_summary": true
+    },
+    {
+      "id": "professor-c-e9af9b4a7449c10a0fa8d4d2",
+      "name": "邹继兆",
+      "institution": "深圳大学",
+      "papers": 40,
+      "paper_count_in_pack": null,
+      "directions": 0,
+      "template_summary": true
+    },
+    {
+      "id": "professor-c-5eb57190068ba17239fc1cb5",
+      "name": "郭书祥",
+      "institution": "南方科技大学",
+      "papers": 40,
+      "paper_count_in_pack": null,
+      "directions": 0,
+      "template_summary": true
+    },
+    {
+      "id": "professor-c-8c8af7ea44a35e2e086ffdc6",
+      "name": "林鹏",
+      "institution": "深圳大学",
+      "papers": 38,
+      "paper_count_in_pack": null,
+      "directions": 0,
+      "template_summary": true
+    },
+    {
+      "id": "professor-c-ab413376c865bb60d353064a",
+      "name": "李莹",
+      "institution": "南方科技大学",
+      "papers": 32,
+      "paper_count_in_pack": null,
+      "directions": 0,
+      "template_summary": true
+    },
+    {
+      "id": "professor-c-35d563d098839e7c511d4e87",
+      "name": "杨贤",
+      "institution": "南方科技大学",
+      "papers": 32,
+      "paper_count_in_pack": null,
+      "directions": 0,
+      "template_summary": true
+    },
+    {
+      "id": "professor-c-1bbd2da0893be7a0509b10f4",
+      "name": "熊玉",
+      "institution": "深圳大学",
+      "papers": 32,
+      "paper_count_in_pack": null,
+      "directions": 0,
+      "template_summary": true
+    },
+    {
+      "id": "professor-c-3c40759f458a8a1b33674623",
+      "name": "万学娟",
+      "institution": "深圳大学",
+      "papers": 31,
+      "paper_count_in_pack": null,
+      "directions": 0,
+      "template_summary": true
+    },
+    {
+      "id": "professor-c-1876566795ba4836304d5169",
+      "name": "刘琛",
+      "institution": "深圳大学",
+      "papers": 29,
+      "paper_count_in_pack": null,
+      "directions": 0,
+      "template_summary": true
+    },
+    {
+      "id": "professor-c-f46a8f87fe5547b8e89538a8",
+      "name": "饶峰",
+      "institution": "深圳大学",
+      "papers": 29,
+      "paper_count_in_pack": null,
+      "directions": 0,
+      "template_summary": true
+    },
+    {
+      "id": "professor-c-2c3150a44edee691d2484935",
+      "name": "彭业萍",
+      "institution": "深圳大学",
+      "papers": 25,
+      "paper_count_in_pack": null,
+      "directions": 0,
+      "template_summary": true
+    },
+    {
+      "id": "professor-c-b34d9cffba978f6abb7d64bb",
+      "name": "王雁",
+      "institution": "哈尔滨工业大学（深圳）",
+      "papers": 24,
+      "paper_count_in_pack": null,
+      "directions": 0,
+      "template_summary": false
+    },
+    {
+      "id": "professor-c-7570e2b300caaf0dd3097d77",
+      "name": "韩峰",
+      "institution": "南方科技大学",
+      "papers": 24,
+      "paper_count_in_pack": null,
+      "directions": 0,
+      "template_summary": true
+    },
+    {
+      "id": "professor-c-47626b115770ba95eafa1a0c",
+      "name": "瞿铮",
+      "institution": "深圳大学",
+      "papers": 23,
+      "paper_count_in_pack": null,
+      "directions": 0,
+      "template_summary": true
+    },
+    {
+      "id": "professor-c-42e2d2ee5af9ebe3baae918f",
+      "name": "Joseph, SIFAKIS",
+      "institution": "南方科技大学",
+      "papers": 22,
+      "paper_count_in_pack": null,
+      "directions": 0,
+      "template_summary": true
+    },
+    {
+      "id": "professor-c-198c506937f4363b3b6ba99d",
+      "name": "杨海朋",
+      "institution": "深圳大学",
+      "papers": 22,
+      "paper_count_in_pack": null,
+      "directions": 0,
+      "template_summary": true
+    }
+  ]
+}
