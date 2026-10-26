@@ -49,3 +49,15 @@ admin-backend:
 # Use this only when actively editing React code; otherwise rely on backend-served dist.
 frontend-dev:
     cd apps/admin-console/frontend && VITE_API_PROXY_TARGET="${VITE_API_PROXY_TARGET:-http://localhost:18188}" npm run dev -- --host 0.0.0.0 --port 5180
+
+# golden-set regression gate against a live chat endpoint (27 turns / 19 conversations)
+[group('verify')]
+eval-gate base="https://gxzx-coze-api.idea.edu.cn" mode="full" baseline="apps/admin-console/scripts/eval-baselines/baseline-full.json":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    unset http_proxy https_proxy HTTP_PROXY HTTPS_PROXY all_proxy ALL_PROXY no_proxy NO_PROXY 2>/dev/null || true
+    export no_proxy="localhost,127.0.0.1,::1,gxzx-coze-api.idea.edu.cn"
+    out="/tmp/eval-gate-$(date +%Y%m%d-%H%M%S).json"
+    uv run --with httpx --with pyyaml python apps/admin-console/scripts/eval_full_testset.py \
+        --base "{{base}}" --mode "{{mode}}" --out "$out" \
+        --baseline "{{baseline}}" --fail-on-regression --label "just-eval-gate"
