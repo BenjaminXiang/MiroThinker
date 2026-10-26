@@ -47,6 +47,8 @@ _IGNORED_DIRS = frozenset(
 )
 _IGNORED_SUFFIXES = (".pyc", ".pyo", ".swp", ".DS_Store")
 _RESIDUE_MARKERS = (".bak", ".pre", ".orig", ".rej")
+# Repo-side tooling that deliberately never ships to a host.
+_REPO_ONLY = frozenset({"apps/admin-console/scripts/check_runtime_drift.py"})
 # Runtime state that legitimately lives inside the deployed tree and is not
 # source: secrets, SQLite databases, build reports. Reported, never failed.
 _RUNTIME_NAMES = frozenset({".env", "report.html"})
@@ -61,6 +63,8 @@ def is_runtime_artifact(relative: str) -> bool:
 
 
 def is_ignored(relative: str) -> bool:
+    if relative in _REPO_ONLY:
+        return True
     parts = relative.split("/")
     if any(part in _IGNORED_DIRS for part in parts):
         return True
