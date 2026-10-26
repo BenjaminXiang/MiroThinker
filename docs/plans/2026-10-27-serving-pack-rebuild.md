@@ -23,7 +23,7 @@ $ grep -rn "professor_ids=" --include=*.py apps/miroflow-agent/src/data_agents/c
 
 | # | 前置 | 内容 | 预估 |
 |---|---|---|---|
-| P1 | 构建端投影 | 把关系边按 paper 聚合写进 `paper.professor_ids`，按 professor 聚合写进 `paper_ids / paper_count / top_papers`；单测 + 小样本构建验证 | ~1 天 |
+| P1 | 链接物化步骤（**已实现**） | `materialize_pack_links.py`：构建完成后、封印之前，把边写进 `paper.professor_ids` 与 professor 的 `paper_ids / paper_count / top_papers`，重算 `lookup_content_sha256`；7 条单测 + 真实 pack 干跑 | 已完成 |
 | P2 | 源数据清理 | 清 `released_objects` 里 2,149 条模板 summary（备份 + 计数对账 + 可回滚） | ~2 小时 |
 | P3 | 配额与磁盘 | embedding 调用预算；信封 ~8.3 GB、索引 ~1.7 GB、旧包保留（回滚资产） | 30 分钟 |
 | P4 | 切包窗口 | 单节点站点，重启 10 分钟；需与使用方约定 | 协调 |
@@ -37,6 +37,19 @@ D1 上午   P2 源数据清理 + 对账；P3 资源检查
 D1 傍晚   发射 20h 构建（脱离会话，watchdog + 十分钟巡检）
 D2 下午   出信封 → 封印 → 切包窗口 → replay 7/7 → 评测门
 ```
+
+## 2.1 P1 的实际形态（与初版计划不同）
+
+初版写的是"改构建端代码"，实际实现为**构建产出后的补丁步骤**：
+`materialize_pack_links.py --pack <dir> --edges <edges.jsonl> [--dry-run]`。
+
+原因：`paper_ids` 需要的是关系边，而边在构建最后才产出；把边一路穿进
+`index_projection` 要改三个模块并穿过冻结的 Pydantic 投影，风险高于收益。
+补丁步骤只碰 `lookup_document`（重算 content 与 hash），不碰向量与 manifest，
+**必须在封印之前执行**，这样封印哈希覆盖补丁后的文件。
+
+真实 pack 干跑：10,742 条边、0 丢弃、10,390 篇论文 / 1,019 位教授会被更新。
+规则：源数据已有的值优先（`paper_count` 不被图计数覆盖），无端点的边丢弃并计数。
 
 ## 3. 发射（复用 run16 流程）
 
