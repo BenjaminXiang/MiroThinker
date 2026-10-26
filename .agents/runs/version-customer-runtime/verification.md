@@ -92,8 +92,16 @@ ruff format --check           → only pre-existing files differ (formatter vers
                                 left unformatted to avoid drive-by reformatting
 ```
 
+## 5. Debug artefacts (task 1.5)
+
+1,683 files / 26 MB were archived to `/tmp/turn-debug-archive/` (4.3 MB tgz).
+The 75 untracked lane-watch files were deleted; the 1,608 tracked ones were kept
+(deleting them would only produce a 1,683-file noise commit). The writer is
+still enabled on both runtimes (`CANONICAL_V2_TURN_DEBUG_DIR`), so switching it
+off is part of the 1.6 restart.
+
 ## Known gaps
 
-- Dev line (`:18188`) still serves the s12a preview harness; task 1.6 open.
-- turn-debug artefacts still present; task 1.5 open.
+- Dev restart (task 1.6) open: needs a decision on copying the managed secrets
+  (`code/config/managed/secrets.json`) and the manual-recall store from the host.
 - The customer host files were not modified by this change.
