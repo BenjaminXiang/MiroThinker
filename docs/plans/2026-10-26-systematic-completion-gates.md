@@ -157,6 +157,21 @@ refresh_professor_projection.py --pack <pack> --out <dir> [--skip-coherence]
 **安全性**：2,149 条里 **0 条**是「纯补位」（去掉补位句后仍有 ≥20 字真实内容），
 所以过滤不会把任何 claim 清空。
 
+### 3.7 闸门 4 第二片：指标入台 + 周任务（2026-10-27）
+
+1. **只读接口** `GET /api/canonical-v2/admin/professor-projection`：读
+   `CANONICAL_V2_PROFESSOR_PROJECTION_METRICS` 指向的 metrics 文件；
+   未配置 503、文件缺失 404、内容损坏 500，都走既有管理员会话门。
+2. **cron 入口** `scripts/run_projection_refresh.py`：解析 pack/输出/metrics 路径 →
+   从受管 secrets 投影出 embedding key → 跑刷新 → 发布 metrics；`--dry-run` 只打印命令。
+3. **客户机实跑验证**：投影从 1 MB 的 edges 缓存重建（不加载 3.5 GB，
+   因为宿主只剩 12 GB 可用而服务占 16.7 GB），一致性用受管 key 评分，
+   发布 metrics（白名单 536 / 6,132 篇）。
+4. **周任务**：`0 3 * * 0`（周日 03:00），与既有企业新闻任务并存。
+
+**注意**：刷新写到 `var/professor-projection/`，overlay 仍读
+`var/professor-projection-allowlist.json`——替换白名单仍是显式动作（需重启才生效）。
+
 ## 4. 明确不做（本轮）
 
 - 不合并三条血统（那是独立工程，需要一次收敛计划）。

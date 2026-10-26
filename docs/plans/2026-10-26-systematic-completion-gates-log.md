@@ -581,3 +581,44 @@ Semantic Scholar 429、**ORCID 公共 API 200**（返回 ORCID iD + 姓名，ins
   王向荣（无补位）claim 637 字，行为不变。
 - 27 轮评测门：**pass**，required **77→78**（q2 0→1）、product 26→26、
   0 forbidden / 0 refusal / 0 error。
+
+## 第 15 轮 · 2026-10-27 01:05 CST · 闸门 4 第二片：指标进管理台 + 周任务
+
+### 做了什么
+
+1. 只读接口 `/api/canonical-v2/admin/professor-projection`（503/404/500 三态），4 条单测。
+2. cron 入口 `run_projection_refresh.py`：路径解析、受管 secrets 引导、dry-run、发布，6 条单测。
+3. 部署：备份 → 上传接口/`main.py`/wrapper/三个刷新脚本 → `run.sh` 加 metrics 路径 → 重启（00:46→00:56 healthy）。
+4. **客户机实跑**一次：先失败（漏传刷新脚本、pack 默认值指向旧包），补齐后用正确 `CANONICAL_V2_SERVING_PACK` 成功，
+   发布 metrics（白名单 536 / 6,132 篇）。
+5. 安装周任务 `0 3 * * 0`，保留原有企业新闻任务。
+
+### 发现了什么
+
+- **内存是真约束**：宿主 31 GB、服务占 16.7 GB、可用 12 GB；刷新若直接读 3.5 GB 的
+  `relationships.json` 会 OOM。解法：预置 1 MB 的 edges 缓存（10,742 条），
+  并给缓存加新鲜度校验（缓存比 pack 的 relationships 旧就重建）——2 条单测。
+- **默认 pack 路径不可信**：环境里的 `CANONICAL_V2_SERVING_PACK` 指向旧包
+  （`serving-pack-fembed-v1`），与运行中的服务参数不一致；cron 里必须显式写死 v3-synthdepth。
+- 接口未带会话返回 **401**（路由存在、门生效），符合预期。
+- 刷新写 `var/professor-projection/`，overlay 仍读 `var/professor-projection-allowlist.json`，
+  两者是分开的——换白名单仍需显式操作 + 重启。
+
+### 评估与决定
+
+**评估**：闸门 4 的「可重复刷新 + 指标可见 + 周期执行」三件到位。仍未做：指标页面化（现在是 JSON 接口）、
+过期缓存告警、刷新失败的通知。
+
+**决定**：判 Accepted，收口闸门 4 首轮。下一阶段留给：白名单灰度替换流程、指标入页面、
+以及需要 20 小时的重建（清向量模板 + 物化 `paper.professor_ids`）。
+
+### 怎么验证
+
+- 单测 10 条（4 接口 + 6 wrapper）+ 2 条缓存新鲜度。
+- 客户机实跑输出与 `metrics.json` 一致；`crontab -l` 可见新条目。
+- 接口无会话 401；metrics 文件结构与本地一致。
+
+### 影响哪些问题
+
+- 运营侧第一次能在不改代码的情况下看到「链接覆盖 / 模板率 / 白名单规模」，
+  并且每周自动更新。
