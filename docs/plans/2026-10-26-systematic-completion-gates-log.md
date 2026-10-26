@@ -359,3 +359,44 @@ Semantic Scholar 429、**ORCID 公共 API 200**（返回 ORCID iD + 姓名，ins
 
 - 「论文反哺画像」第一次有了可上线的候选集与判定规则，且带明确的复核桶。
 - 下一步不再是"要不要做"，而是"overlay 怎么接、怎么验、怎么灰度"。
+
+## 第 9 轮 · 2026-10-27 09:05 CST · 3.2 落代码：sidecar overlay，默认关闭
+
+### 做了什么
+
+1. 新建 OpenSpec change `materialize-professor-paper-projection`（proposal / spec delta /
+   tasks / acceptance），行为变更走 Lite 流程。
+2. 新增 `professor_projection_overlay.py`：按 canonical id 读白名单，只补
+   `paper_count` 与 `top_papers`；**不覆盖 pack 已有值**；带 `duplicate_name` 旗标的记录直接跳过；
+   文件缺失/损坏只告警并关闭，不影响请求。
+3. 接进 `_semantic_text`：教授 claim 多出「论文数」与最多三条「代表作」，由
+   `CANONICAL_V2_PROFESSOR_PROJECTION` 控制，未设置时行为与今天逐字一致。
+4. 干跑 `overlay-preview.md`：真实 pack + 真实白名单，直接用答案合成用的同一个函数渲染。
+
+### 发现了什么
+
+- 白名单 536 条里有 3 条带 `duplicate_name`，overlay 实际生效 **533** 条。
+- 干跑对照清楚：白名单里的白冠华/曲强多出「论文数：4/5；代表作：…」；
+  复核桶的黎维彬/江锦成/陈昕韫完全保持原样（没有数字）。
+- **模板简介仍在稀释 claim**：白冠华的简介重复三遍「该教授在深圳科创领域有持续贡献…」，
+  叠加后 claim 更长。overlay 不解决模板问题，需要单独一片（清理或截断）。
+- 代表作出现英文标题是正常的（`title_zh` 缺失时回落 `title`）。
+
+### 评估与决定
+
+**评估**：overlay 的形态是对的——不动 pack、不动哈希链、默认关闭、失败降级。
+代码侧可以算 Candidate，但**没有客户机验证之前不算 Accepted**。
+
+**决定**：下一轮做灰度：先在客户机以 **flag 关闭** 部署并重启（确认零变化），
+再打开 flag 跑 27 轮评测门 + 5 个教授问题抽查；门不过就 unset 变量回滚。
+
+### 怎么验证
+
+- 10 条单测：合并规则、不覆盖、同名排除、未知 id、代表作渲染、坏文件、env 缓存、
+  以及 overlay 开/关两次 `_semantic_text` 的端到端对比。
+- 干跑预览落 `overlay-preview.md`（白名单 6 位 + 复核桶 6 位）。
+
+### 影响哪些问题
+
+- 「论文反哺画像」从数据判定走到可上线的代码路径，且回滚成本是一次 unset。
+- 已知未解决：模板简介稀释、无方向教授无法评分、复核桶 200 位。

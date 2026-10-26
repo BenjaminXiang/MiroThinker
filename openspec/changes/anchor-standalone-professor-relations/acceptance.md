@@ -14,4 +14,8 @@
 Evidence: `.agents/runs/anchor-standalone-professor-relations/verification.md`.
 | A9 | Professor claims render the pack's non-summary fields and all company roles | `_semantic_text` synthetic payload → 院系/邮箱/主页/论文数/专利数/教育/工作/获奖/企业角色; non-founder role → "担任首席科学家" |
 | A10 | Honorific and institution constraints bind the intended professor | `王伟教授` → `王伟`; `清华的王伟教授的评价如何` → 王伟; prefix match `清华大学` ↔ `清华大学深圳国际研究生院` = True, `北京大学` = False |
-| A11 | A named professor with no local match does not inherit a neighbour; `他/她` attribute turns keep the professor anchor | `赵大锤教授的研究方向` no unrelated professor claim; `丁文伯有哪些论文` → `他的研究方向` keeps 丁文伯 (live) |
+| A11 | A named professor with no local match does not inherit a neighbour; `他/她` attribute turns keep the professor anchor | `赵大锤教授的研究方向` no unrelated claim; cookie-jar probe `丁文伯有哪些论文` → `他的研究方向` 11.42s / 12 citations, 丁文伯 research directions |
+| A12 | Full 27-turn golden set runs with per-conversation cookies | `--mode full`: 81/120 required, 0 forbidden, 0 refusal miss, 0 errors, mean 14.0s |
+| A13 | Topic professor queries keep the web lane and do not bind a company subject | q27 web lane `in=76 / retained=76 / filtered=0` (was 75/11/64), `gate_drops={}`; answer still 0 citations because unbound web claims are skipped (next slice) |
+| A14 | Topic professor queries are not hijacked into company→professor traversal | q27 turn-debug: planned/slots/traversal empty; evidence 147 all professor (exact 1/lexical 62/vector 21/web 63), 21 claims, 12 professor citations, 1114-char answer; cache hit 0.06s |
+| A15 | Local professor data is retrievable by name and topic | 刘桂良/柯文德 by-name answers with local professor citations; q27 lists 18+ professors with 12 citations; 丁文伯 company role answer |
