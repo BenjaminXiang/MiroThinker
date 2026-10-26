@@ -32,6 +32,7 @@ from src.data_agents.providers.deepseek_search import DeepSeekSearchProvider
 from src.data_agents.providers.web_search import WebSearchProvider
 
 from .contracts import ContractModel
+from .professor_projection_overlay import active_overlay
 from .followup_referents import (
     COMPANY_NAME_PATTERN,
     IDENTIFIER_PATTERN,
@@ -5106,6 +5107,9 @@ def _semantic_text(
         return f"{display_name}：{item.snippet}"
     if not isinstance(payload, dict):
         return display_name
+    overlay = active_overlay() if item.domain == "professor" else None
+    if overlay is not None:
+        payload = overlay.apply(item.object_id, payload)
     name = str(
         payload.get("name")
         or payload.get("canonical_name_zh")
@@ -5174,6 +5178,10 @@ def _semantic_text(
         directions = _list_names(payload.get("research_directions"))
         if directions:
             parts.append(f"研究方向：{directions}")
+        if overlay is not None:
+            top_papers = overlay.top_papers_text(payload)
+            if top_papers:
+                parts.append(f"代表作：{top_papers[:claim_field_limit]}")
     elif item.domain == "company":
         for label, field in (
             ("简介", "profile_summary"),
