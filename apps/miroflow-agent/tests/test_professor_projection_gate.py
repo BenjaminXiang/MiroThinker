@@ -193,3 +193,29 @@ def test_two_tuple_edges_stay_supported() -> None:
     assert projection["p1"]["paper_count"] == 1
     assert projection["p1"]["confidence"]["min"] is None
     assert report["confidence"]["edges_with_score"] == 0
+
+
+def test_edge_cache_is_invalidated_by_a_newer_pack(tmp_path: Path) -> None:
+    pack = tmp_path / "pack"
+    pack.mkdir()
+    relationships = pack / "relationships.json"
+    relationships.write_text("{}")
+    cache = tmp_path / "edges.jsonl"
+    cache.write_text("")
+
+    assert builder.cache_is_fresh(cache, pack) is True
+
+    relationships.write_text("{} ")
+    relationships.touch()
+    cache.touch()
+    import os as _os
+
+    _os.utime(
+        cache, (relationships.stat().st_atime - 10, relationships.stat().st_mtime - 10)
+    )
+
+    assert builder.cache_is_fresh(cache, pack) is False
+
+
+def test_missing_cache_source_is_not_fresh(tmp_path: Path) -> None:
+    assert builder.cache_is_fresh(tmp_path / "absent.jsonl", tmp_path) is False

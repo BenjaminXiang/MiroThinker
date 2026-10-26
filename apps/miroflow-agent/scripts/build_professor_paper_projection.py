@@ -169,6 +169,20 @@ def load_documents(pack: Path, domain: str) -> dict[str, dict]:
         connection.close()
 
 
+def cache_is_fresh(cache: Path, pack: Path) -> bool:
+    """The edge cache is only valid while it is newer than the pack's relationships.
+
+    A rebuild rewrites ``relationships.json``; reusing an older cache would
+    silently project stale edges, so an older cache is ignored and rebuilt.
+    """
+
+    source = pack / "relationships.json"
+    try:
+        return cache.stat().st_mtime >= source.stat().st_mtime
+    except OSError:
+        return False
+
+
 def load_edges(pack: Path, cache: Path | None = None) -> list[tuple]:
     """Professor→paper edges with decision confidence, cached as JSONL.
 
@@ -180,7 +194,7 @@ def load_edges(pack: Path, cache: Path | None = None) -> list[tuple]:
     professor name and an English author name can merge several people. The
     record-level gate cannot see that; the edge-level confidence can.
     """
-    if cache is not None and cache.exists():
+    if cache is not None and cache.exists() and cache_is_fresh(cache, pack):
         rows = []
         with cache.open() as handle:
             for line in handle:
