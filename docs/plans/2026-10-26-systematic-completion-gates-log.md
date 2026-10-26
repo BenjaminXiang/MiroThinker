@@ -656,3 +656,25 @@ Semantic Scholar 429、**ORCID 公共 API 200**（返回 ORCID iD + 姓名，ins
 
 - 周任务从"跑完还要人操心"变成"跑完就生效（若选择发布）"。
 - 遗留：`--publish-allowlist` 的默认策略、指标页面化、以及需要重建才能清的向量与 paper_ids。
+
+## 第 17 轮 · 2026-10-27 01:30 CST · 重建排期与一个坏消息
+
+### 做了什么
+
+1. 确认闸门 4 的四项能力（刷新命令、指标接口、周任务、热替换）都已上线。
+2. 为「一次重建解决向量 + paper_ids」做可行性核查，写了排期文档。
+
+### 发现了什么
+
+- **重建本身不会产生 `paper_ids`**：`grep -rn "professor_ids=" apps/miroflow-agent/src/data_agents/canonical_v2/`
+  没有任何赋值点，`PaperProjection.professor_ids` 只是模型字段；边算出来了，但只进
+  `relationships.json`，没回填文档。所以直接发射 20 小时，只有模板向量会被清掉。
+- run16 的历史说明这类构建很容易在落库阶段连挂（8 次 attempt，全部是投影形状/NOT NULL），
+  所以必须先小样本验证再发射。
+
+### 评估与决定
+
+**评估**：重建要拆成 P1（构建端投影，约 1 天）→ P2（源数据清理）→ P3（20h 发射）→ P4（切包），
+直接开跑是浪费 20 小时。
+
+**决定**：排期落档，登记 Epic change（proposed），等三项拍板后开 P1。
