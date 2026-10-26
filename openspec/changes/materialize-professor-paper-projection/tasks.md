@@ -13,10 +13,10 @@
 - [x] 1.4 Dry-run preview against the real pack and allowlist
       (`overlay-preview.md`): allowlisted claims gain count + representative
       papers; review-bucket claims are unchanged.
-- [ ] 1.5 Deploy to the customer site with the flag **off**, restart, verify
+- [x] 1.5 Deploy to the customer site with the flag **off**, restart, verify
       `/api/health` and one professor question are unchanged.
-- [ ] 1.6 Enable the flag on the customer site, run the 27-turn eval gate, and
+- [x] 1.6 Enable the flag on the customer site, run the 27-turn eval gate, and
       spot-check five professor questions; keep the flag only if the gate does
       not regress.
-- [ ] 1.7 Record acceptance evidence and the rollback (unset the variable, no
+- [x] 1.7 Record acceptance evidence and the rollback (unset the variable, no
       file or pack change needed).

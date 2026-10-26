@@ -10,4 +10,9 @@
 | A6 | Pack files stay byte-identical | overlay is read-only; no write path in the module |
 | A7 | Customer-site enablement is reversible | flip the environment variable; documented in tasks 1.6–1.7 |
 
-Status: candidate for code (tasks 1.1–1.4 done); deployment tasks 1.5–1.6 open.
+Status: **accepted** (2026-10-26 23:41 CST). Deployed to the customer site with
+the flag on; eval gate identical to baseline (77/120, product 26/27, 0 forbidden,
+0 errors, verdict pass). Evidence: `.agents/runs/professor-paper-slice/verification.md`
+§Deployment.
+Known follow-up: the synthesizer may prefer a web count over the claim's number;
+the label should read `本地收录论文：N 篇` rather than `论文数`.
