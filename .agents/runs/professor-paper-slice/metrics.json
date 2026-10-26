@@ -1,0 +1,39 @@
+{
+  "generated_at": "2026-10-26T16:11:12+00:00",
+  "population": {
+    "professors": 3958,
+    "papers": 24520,
+    "edges": 10742,
+    "linked_professors": 1019,
+    "linked_pct": 25.7,
+    "projected_professors": 1008,
+    "rejected_professors": 11,
+    "rejected_by_reason": {
+      "implausible_name": 6,
+      "bad_homepage": 5
+    },
+    "email_dropped": 107
+  },
+  "documents": {
+    "papers_with_professor_ids": 0,
+    "professors_with_paper_count": 235,
+    "professors_with_directions": 1861,
+    "template_summaries": 2129,
+    "template_pct": 53.8
+  },
+  "coherence": {
+    "threshold": 0.33,
+    "scored": 740,
+    "unscorable_no_directions": 268,
+    "median": 0.41,
+    "p10": 0.248,
+    "allowlist": 537,
+    "review": 199,
+    "allowlist_pct_of_scored": 72.6
+  },
+  "overlay": {
+    "effective_records": 534,
+    "flagged_records": 67,
+    "papers_covered": 6135
+  }
+}

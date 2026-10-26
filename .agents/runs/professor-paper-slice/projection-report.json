@@ -16,6 +16,13 @@
     "projected_distinct_papers": 10122,
     "professors_gaining_paper_count": 865
   },
+  "document_gap": {
+    "papers_with_professor_ids": 0,
+    "professors_with_paper_count": 235,
+    "professors_with_directions": 1861,
+    "template_summaries": 2129,
+    "template_summary_pct": 53.8
+  },
   "flags": {
     "template_summary": 384,
     "no_directions": 268,

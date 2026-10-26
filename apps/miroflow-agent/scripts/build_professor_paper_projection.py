@@ -333,6 +333,34 @@ def build_projection(
             "projected_distinct_papers": len(admitted_papers),
             "professors_gaining_paper_count": gaining,
         },
+        "document_gap": {
+            "papers_with_professor_ids": sum(
+                1 for content in papers.values() if content.get("professor_ids")
+            ),
+            "professors_with_paper_count": sum(
+                1
+                for content in professors.values()
+                if content.get("paper_count") is not None
+            ),
+            "professors_with_directions": sum(
+                1 for content in professors.values() if content.get("research_directions")
+            ),
+            "template_summaries": sum(
+                1
+                for content in professors.values()
+                if _is_template_summary(content.get("profile_summary") or "")
+            ),
+            "template_summary_pct": round(
+                100
+                * sum(
+                    1
+                    for content in professors.values()
+                    if _is_template_summary(content.get("profile_summary") or "")
+                )
+                / max(len(professors), 1),
+                1,
+            ),
+        },
         "flags": dict(
             collections.Counter(
                 flag for row in projection.values() for flag in row["flags"]
