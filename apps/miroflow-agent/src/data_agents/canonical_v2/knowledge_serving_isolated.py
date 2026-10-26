@@ -5088,7 +5088,34 @@ def _registered_address_claim_value(payload: Mapping[str, Any]) -> str | None:
     return None
 
 
+# Sentences the old fallback summariser produced to reach a character target.
+# They carry no evidence and, once repeated, crowd out the real profile text.
+_PROFESSOR_FILLER_SENTENCES = (
+    "该教授在深圳科创领域有持续贡献",
+    "研究成果具有重要学术价值",
+    "在深圳科创领域有持续贡献",
+)
 _CLAIM_SENTENCE_SPLIT = re.compile(r"(?<=[。！？；])")
+
+
+def _drop_filler_sentences(text: str) -> str:
+    """Remove known padding sentences from a summary.
+
+    They were generated to satisfy a character target, not to describe the
+    person; keeping them in a claim costs context and reads as noise.
+    """
+
+    if not text:
+        return ""
+    kept = []
+    for part in _CLAIM_SENTENCE_SPLIT.split(text):
+        stripped = part.strip()
+        if not stripped:
+            continue
+        if any(filler in stripped for filler in _PROFESSOR_FILLER_SENTENCES):
+            continue
+        kept.append(stripped)
+    return "".join(kept)
 
 
 def _collapse_repetition(text: str, *, limit: int) -> str:
@@ -5188,6 +5215,7 @@ def _semantic_text(
             value = _claim_scalar_text(payload.get(field))
             if value and value != name and value != _PROFESSOR_MISSING_FIELD_FALLBACK:
                 if field == "profile_summary":
+                    value = _drop_filler_sentences(value)
                     value = _collapse_repetition(value, limit=claim_field_limit)
                 else:
                     value = value[:claim_field_limit]

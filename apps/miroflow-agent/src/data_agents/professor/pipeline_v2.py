@@ -582,9 +582,10 @@ def _build_fallback_summary(profile: EnrichedProfessorProfile) -> str:
         parts.append(f"获得{profile.awards[0]}等荣誉。")
 
     summary = "".join(parts)
-    # Pad to minimum
-    while len(summary) < 200:
-        summary += "该教授在深圳科创领域有持续贡献。"
+    # No padding: a short, factual summary is better than a long one filled with
+    # "该教授在深圳科创领域有持续贡献。" repeated to reach a character target.
+    # The 200-character contract applies to LLM output; a fallback that cannot
+    # reach it is left short and marked by the quality gate instead.
     return summary[:300]
 
 
