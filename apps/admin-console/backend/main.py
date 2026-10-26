@@ -30,6 +30,9 @@ from backend.api.canonical_v2_manual_recall import (
     router as canonical_v2_manual_recall_router,
 )
 from backend.api.canonical_v2_operations import router as canonical_v2_operations_router
+from backend.api.canonical_v2_professor_projection import (
+    router as canonical_v2_professor_projection_router,
+)
 from backend.api.canonical_v2_seeds import router as canonical_v2_seeds_router
 from backend.api.canonical_v2_uploads import router as canonical_v2_uploads_router
 from backend.canonical_v2_deps import (
@@ -133,6 +136,7 @@ def _create_route_shell() -> FastAPI:
     shell.include_router(admin_auth_router)
     shell.include_router(canonical_v2_chat_router)
     shell.include_router(canonical_v2_operations_router)
+    shell.include_router(canonical_v2_professor_projection_router)
     shell.include_router(canonical_v2_consumers_router)
     shell.include_router(canonical_v2_corrections_router)
     shell.include_router(canonical_v2_manual_recall_router)
