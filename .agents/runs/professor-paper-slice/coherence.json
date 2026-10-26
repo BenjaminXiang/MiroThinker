@@ -1,0 +1,92 @@
+[
+  {
+    "name": "朱军",
+    "professor_id": "professor-c-5797646d251d5bf018778ba9",
+    "paper_count": 210,
+    "has_directions": true,
+    "directions": "自适应芳香性设计；单线态裂分材料开发；重元素稳定化卡宾/亚胺类似物合成；反芳香性物种的合成与表征；炔烃复分解反应与大环合成；物理有机化学中的动力学控制研究；金属有机化学",
+    "papers": 5,
+    "coherence": 0.374
+  },
+  {
+    "name": "陈名华",
+    "professor_id": "professor-c-fa86e2a467d6c4dc6fb5db36",
+    "paper_count": 91,
+    "has_directions": true,
+    "directions": "数据中心能效优化；电力系统运行中的机器学习应用；无线网络流控制技术；能源效率型交通系统；延迟敏感型网络资源调度；在线容量配置算法；在线算法和优化",
+    "papers": 5,
+    "coherence": 0.303
+  },
+  {
+    "name": "宋清海",
+    "professor_id": "professor-c-0c710822b4e495d7e6f914f5",
+    "paper_count": 66,
+    "has_directions": false,
+    "directions": "宋清海现就职于哈尔滨工业大学（深圳）集成电路学院，从事电子科学与技术学科的研究工作。其研究领域聚焦于集成电路与电子科学的相关前沿方向，致力于探索电子科学与技术学科下的关键技术问题。由于目前公开的研究数据有限，其具体的研究细分领域、最新的研究趋势以及针对特定技术（如基于Transformer的蛋白质结构预测等）的应用研究尚待进一步明确。\n\n在学术影响力方面，目前暂无关于其h-index、总引用次数及",
+    "papers": 5,
+    "coherence": 0.182
+  },
+  {
+    "name": "王向荣",
+    "professor_id": "professor-c-6b8c31caae256e254307caab",
+    "paper_count": 90,
+    "has_directions": true,
+    "directions": "凝聚态理论与统计物理；纳米磁学与自旋电子学；拓扑对象与拓扑态；二维系统的量子相变；低维系统的电子结构与电子输运",
+    "papers": 5,
+    "coherence": 0.351
+  },
+  {
+    "name": "李志刚",
+    "professor_id": "professor-c-20de1cdbd430621b872f7e8d",
+    "paper_count": 75,
+    "has_directions": true,
+    "directions": "含大规模风电接入的电力系统协同调度；多维协调优化调度方法；互联电力系统运行优化；可再生能源消纳与资源管理；智能电网优化理论；综合能源系统；人工智能",
+    "papers": 5,
+    "coherence": 0.434
+  },
+  {
+    "name": "张健全",
+    "professor_id": "professor-c-315358f021764af5dff88179",
+    "paper_count": 73,
+    "has_directions": true,
+    "directions": "非富勒烯受体有机太阳能电池；小分子受体材料设计；有机半导体材料；有机光电器件性能优化；有机太阳能电池材料表征；功能材料；太阳能转换",
+    "papers": 5,
+    "coherence": 0.47
+  },
+  {
+    "name": "王强",
+    "professor_id": "professor-c-3d236b73630d1f5195c2762c",
+    "paper_count": 66,
+    "has_directions": true,
+    "directions": "高性能计算；AI系统",
+    "papers": 5,
+    "coherence": 0.248
+  },
+  {
+    "name": "张旻",
+    "professor_id": "professor-c-17c955e0febbc97821fa1bbb",
+    "paper_count": 72,
+    "has_directions": true,
+    "directions": "昆虫级柔性软体机器人；微纳机电系统驱动执行器；压电/静电驱动微型机器人；复杂地形下的微型机器人运动控制；面向人机交互的柔性触觉反馈技术；微型机器人能源自给与动力管理；微/纳机电系统（MEMS/NEMS）",
+    "papers": 5,
+    "coherence": 0.203
+  },
+  {
+    "name": "李骏",
+    "professor_id": "professor-c-d94a5b493653dfdd72017ee5",
+    "paper_count": 79,
+    "has_directions": true,
+    "directions": "新体制雷达；智能信号处理",
+    "papers": 5,
+    "coherence": 0.196
+  },
+  {
+    "name": "杨朋",
+    "professor_id": "professor-c-50d75ff66dab7355ea244976",
+    "paper_count": 72,
+    "has_directions": true,
+    "directions": "协作机器人订单拣选系统；四向穿梭车自动化仓储调度；异构提升机仓储检索调度；多穿梭车能效优化调度；生产与交付集成调度优化；在线订单履行策略；机器人仓储系统",
+    "papers": 5,
+    "coherence": 0.295
+  }
+]

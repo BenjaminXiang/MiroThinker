@@ -90,3 +90,41 @@ back-compatibility.
 - `.agents/runs/professor-paper-slice/projection-audit.json` (gate 3.0 audit)
 - The 3.5 GB relationships file is not copied; the builder caches edges to a
   caller-specified JSONL (deleted after the run).
+
+## Identity-source probe (gate 3.3 pre-work, 2026-10-27)
+
+Tested whether a professor's identity can be confirmed from public sources
+before anything is materialised.
+
+| source | result |
+|---|---|
+| ORCID expanded-search + works/employments | **unusable for this population**: 丁文伯 18 candidates, all empty records (0 works, no employments) except a PolyU PhD student; 王强 79,769 candidates; no candidate carries both works and a matching institution |
+| OpenAlex | HTTP 429 (free daily budget exhausted on the shared IP) |
+| Semantic Scholar | HTTP 429 |
+| professor homepage (王强 / 张旻 / 李骏 / 朱军) | 3 pages fetched (3.3–6.9k chars), **0/3 of the linked top papers appear on the page**; 朱军's site fails TLS negotiation. Homepages are landing pages, not publication lists |
+
+## Semantic coherence experiment
+
+`scripts/measure_professor_paper_coherence.py` embeds the professor's declared
+directions and their top-5 linked paper titles, then reports the mean cosine.
+
+| professor | verdict from manual review | coherence |
+|---|---|---|
+| 张健全 | match | 0.470 |
+| 李志刚 | match | 0.434 |
+| 朱军 | match | 0.374 |
+| 王向荣 | match | 0.351 |
+| 陈名华 | match | 0.303 |
+| 杨朋 | partial | 0.295 |
+| 王强 | **merge** | 0.248 |
+| 张旻 | **merge** | 0.203 |
+| 李骏 | **merge** | 0.196 |
+| 宋清海 | match, but `no_directions` | 0.182 (scored against a generic summary) |
+
+Among professors **with** directions the five matches sit at 0.295–0.470 and
+the three merges at 0.196–0.248 — separable on this sample, but the margin is
+thin (0.248 vs 0.295) and n=8. Professors without directions cannot be scored
+at all. Conclusion: a useful **review signal**, not a gate yet; needs 30+
+labelled samples before any threshold is used to filter materialisation.
+
+Artefact: `.agents/runs/professor-paper-slice/coherence.json`.
