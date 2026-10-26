@@ -1,0 +1,181 @@
+{
+  "population": {
+    "professors": 3958,
+    "papers": 24520,
+    "edges": 10742,
+    "edges_without_paper": 0,
+    "professors_with_edges": 1019,
+    "projected_professors": 1009,
+    "rejected_professors": 10,
+    "rejected_by_reason": {
+      "bad_homepage": 5,
+      "implausible_name": 5
+    },
+    "email_dropped": 107,
+    "projected_professor_paper_pairs": 10417,
+    "projected_distinct_papers": 10123,
+    "professors_gaining_paper_count": 866
+  },
+  "flags": {
+    "template_summary": 384,
+    "no_directions": 268,
+    "duplicate_name": 8,
+    "high_paper_count": 1
+  },
+  "confidence": {
+    "edges_with_score": 10742,
+    "min": 1.0,
+    "below_threshold": 0
+  },
+  "samples": [
+    {
+      "name": "朱军",
+      "institution": "香港中文大学（深圳）",
+      "paper_count": 210,
+      "flags": [
+        "high_paper_count"
+      ],
+      "top_paper": "Planar Möbius aromatic pentalenes incorporating 16 and 18 valence electron osmiums"
+    },
+    {
+      "name": "陈名华",
+      "institution": "香港中文大学（深圳）",
+      "paper_count": 91,
+      "flags": [],
+      "top_paper": "Hiding privacy information in video surveillance system"
+    },
+    {
+      "name": "王向荣",
+      "institution": "香港中文大学（深圳）",
+      "paper_count": 90,
+      "flags": [],
+      "top_paper": "Topological Magnonics: A Paradigm for Spin-Wave Manipulation and Device Design"
+    },
+    {
+      "name": "李骏",
+      "institution": "哈尔滨工业大学（深圳）",
+      "paper_count": 79,
+      "flags": [],
+      "top_paper": "Ultrahigh-Loading of Ir Single Atoms on NiO Matrix to Dramatically Enhance Oxygen Evolution Reaction"
+    },
+    {
+      "name": "李志刚",
+      "institution": "香港中文大学（深圳）",
+      "paper_count": 75,
+      "flags": [],
+      "top_paper": "Transmission-constrained unit commitment considering combined electricity and district heating networks"
+    },
+    {
+      "name": "张健全",
+      "institution": "香港中文大学（深圳）",
+      "paper_count": 73,
+      "flags": [],
+      "top_paper": "High-Efficiency Indoor Organic Photovoltaics with a Band-Aligned Interlayer"
+    },
+    {
+      "name": "张旻",
+      "institution": "清华大学深圳国际研究生院",
+      "paper_count": 72,
+      "flags": [],
+      "top_paper": "Tunable broadband terahertz absorber based on graphene metamaterials and VO2"
+    },
+    {
+      "name": "杨朋",
+      "institution": "清华大学深圳国际研究生院",
+      "paper_count": 72,
+      "flags": [],
+      "top_paper": "DOA ESTIMATION WITH SUB-ARRAY DIVIDED TECHNIQUE AND INTERPORLATED ESPRIT ALGORITHM ON A CYLINDRICAL CONFORMAL ARRAY ANTENNA"
+    },
+    {
+      "name": "宋清海",
+      "institution": "哈尔滨工业大学（深圳）",
+      "paper_count": 66,
+      "flags": [
+        "no_directions"
+      ],
+      "top_paper": "Surface-Emitting Perovskite Random Lasers for Speckle-Free Imaging"
+    },
+    {
+      "name": "王强",
+      "institution": "哈尔滨工业大学（深圳）",
+      "paper_count": 66,
+      "flags": [],
+      "top_paper": "Learning Tensor Low-Rank Representation for Hyperspectral Anomaly Detection"
+    },
+    {
+      "name": "曾振中",
+      "institution": "南方科技大学",
+      "paper_count": 61,
+      "flags": [
+        "template_summary",
+        "no_directions"
+      ],
+      "top_paper": "Evidence for a weakening relationship between interannual temperature variability and northern vegetation activity"
+    },
+    {
+      "name": "邵明文",
+      "institution": "深圳理工大学",
+      "paper_count": 61,
+      "flags": [],
+      "top_paper": "A Fitting Model for Feature Selection With Fuzzy Rough Sets"
+    },
+    {
+      "name": "Fangxin Wang",
+      "institution": "香港中文大学（深圳）",
+      "paper_count": 61,
+      "flags": [],
+      "top_paper": "Intelligent Video Caching at Network Edge: A Multi-Agent Deep Reinforcement Learning Approach"
+    },
+    {
+      "name": "李维",
+      "institution": "哈尔滨工业大学（深圳）",
+      "paper_count": 57,
+      "flags": [],
+      "top_paper": "Black Carbon Emissions in China from 1949 to 2050"
+    },
+    {
+      "name": "Tinghuan Chen",
+      "institution": "香港中文大学（深圳）",
+      "paper_count": 57,
+      "flags": [],
+      "top_paper": "Recent advances in convolutional neural network acceleration"
+    },
+    {
+      "name": "王朝谚",
+      "institution": "香港中文大学（深圳）",
+      "paper_count": 56,
+      "flags": [],
+      "top_paper": "Preparation and Characterization of Amino-Linked Heterocyclic Carbene Palladium, Gold, and Silver Complexes and Their Use as Anticancer Agents That Act by Triggering Apoptotic Cell Death"
+    },
+    {
+      "name": "张纵辉",
+      "institution": "香港中文大学（深圳）",
+      "paper_count": 55,
+      "flags": [],
+      "top_paper": "Simultaneous information and energy transfer: A Two-user MISO interference channel case"
+    },
+    {
+      "name": "张瑞茂",
+      "institution": "中山大学（深圳）",
+      "paper_count": 54,
+      "flags": [],
+      "top_paper": "DeepFashion2: A Versatile Benchmark for Detection, Pose Estimation, Segmentation and Re-Identification of Clothing Images"
+    },
+    {
+      "name": "黄建华",
+      "institution": "香港中文大学（深圳）",
+      "paper_count": 54,
+      "flags": [],
+      "top_paper": "Joint modelling of paired sparse functional data using principal components"
+    },
+    {
+      "name": "王飞",
+      "institution": "清华大学深圳国际研究生院",
+      "paper_count": 53,
+      "flags": [
+        "duplicate_name"
+      ],
+      "top_paper": "Lactobacillus plantarum-derived indole-3-lactic acid ameliorates colorectal tumorigenesis via epigenetic regulation of CD8+ T cell immunity"
+    }
+  ]
+}
