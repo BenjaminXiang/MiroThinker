@@ -41,7 +41,7 @@ from src.data_agents.professor.llm_profiles import (
     resolve_professor_llm_settings,
 )
 
-_DEFAULT_LLM_PROFILE = "gemma4"  # qwen35's star endpoint is dead (2026-10-15); gemma4 = our own host
+_DEFAULT_LLM_PROFILE = "qwen35"
 
 
 def _repo_root() -> Path:

@@ -215,7 +215,14 @@ def append_manual_candidates(
 
     appended = 0
     for point in manual_points_for_request(provider=provider, request=request):
-        score = iso._cosine_similarity(query_vector, tuple(point.vector))
+        # Operator-attested records are first-class: a query that names the
+        # record must retrieve it even when the short query/long profile
+        # embedding falls under the similarity floor.
+        score = (
+            1.0
+            if point.display_name and point.display_name in request.original_query
+            else iso._cosine_similarity(query_vector, tuple(point.vector))
+        )
         candidates.append(
             manual_candidate_from_point(
                 point=point,

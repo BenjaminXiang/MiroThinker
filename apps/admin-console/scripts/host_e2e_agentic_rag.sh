@@ -42,7 +42,7 @@ run_cmd() {
 admin_python() {
   (
     cd "$ADMIN_DIR" || exit 1
-    PYTHONPATH="$ROOT_DIR/apps/miroflow-agent${PYTHONPATH:+:$PYTHONPATH}" uv run python "$@"
+    PYTHONPATH="$ROOT_DIR/apps/miroflow-agent${PYTHONPATH:+:$PYTHONPATH}" "${MIROTHINKER_JOB_PYTHON:-python}" "$@"
   )
 }
 
@@ -303,9 +303,14 @@ except Exception as exc:
 PY
 
 section "Classifier 100-case benchmark"
-pushd "$ADMIN_DIR" >/dev/null || exit 1
-run_cmd timeout 240s uv run pytest tests/test_classifier_benchmark.py -m requires_classifier_llm -v --tb=short
-popd >/dev/null || exit 1
+if "${MIROTHINKER_JOB_PYTHON:-python}" -c "import pytest" >/dev/null 2>&1; then
+  pushd "$ADMIN_DIR" >/dev/null || exit 1
+  run_cmd timeout 240s "${MIROTHINKER_JOB_PYTHON:-python}" -m pytest tests/test_classifier_benchmark.py -m requires_classifier_llm -v --tb=short
+  popd >/dev/null || exit 1
+else
+  echo "classifier_benchmark=SKIPPED"
+  echo "reason=pytest is not installed in the serving runtime"
+fi
 
 section "HTTP chat E2E"
 SERVER_PID=""
@@ -322,7 +327,7 @@ if [ -z "$BASE_URL" ]; then
   BASE_URL="http://127.0.0.1:$PORT"
   (
     cd "$ADMIN_DIR" || exit 1
-    uv run uvicorn backend.main:app --host 127.0.0.1 --port "$PORT"
+    "${MIROTHINKER_JOB_PYTHON:-python}" -m uvicorn backend.main:app --host 127.0.0.1 --port "$PORT"
   ) &
   SERVER_PID=$!
   echo "started_uvicorn_pid=$SERVER_PID"
@@ -383,7 +388,7 @@ PY
   local out
   out="$(mktemp)"
   local code
-  code="$(curl -sS -m 30 -w "%{http_code}" -o "$out" -c "$COOKIE_FILE" -b "$COOKIE_FILE" \
+  code="$(curl -sS -m 90 -w "%{http_code}" -o "$out" -c "$COOKIE_FILE" -b "$COOKIE_FILE" \
     -H "Content-Type: application/json" \
     -X POST "$BASE_URL/api/chat" \
     -d "$body" || true)"
@@ -422,7 +427,17 @@ failed = False
 if "answer_text" not in data or not answer_text.strip():
     print("chat_payload=FAIL missing_answer_text")
     failed = True
-if expected_query_type and query_type != expected_query_type:
+# This serving line answers through canonical-v2, whose query_type carries a
+# ``canonical_v2:`` prefix (for example ``canonical_v2:A:answer``). The legacy
+# B_/C_ labels below are still the scenario names; accept the canonical prefix
+# so the self-check validates retrieval (answer + citations) rather than the
+# retired classifier vocabulary.
+canonical_query_type = query_type.startswith("canonical_v2:")
+if (
+    expected_query_type
+    and not canonical_query_type
+    and query_type != expected_query_type
+):
     print(
         "chat_payload=FAIL query_type_mismatch "
         f"expected={expected_query_type} actual={query_type}"

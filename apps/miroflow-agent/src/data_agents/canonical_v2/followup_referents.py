@@ -297,7 +297,7 @@ PROFESSOR_NAME_PATTERN = re.compile(
 
 _INSTITUTION_TERM = r"(?:清华|北大|[一-鿿]{2,20}(?:大学|学院|研究院))"
 _INSTITUTION_PERSON_PATTERNS = (
-    _INSTITUTION_TERM + r"(?:的)?(?P<name>[一-鿿·]{2,4})(?:教授|老师)?[？?。！!]?\Z",
+    _INSTITUTION_TERM + r"(?:的)?(?P<name>[一-鿿·]{2,4}?)(?:教授|老师)?[？?。！!]?\Z",
     _INSTITUTION_TERM + r"(?:的)?(?P<name>[一-鿿·]{2,4}?)(?:教授|老师)?(?:的)?"
     r"(?=(?:评价|简介|信息|情况|研究方向|论文|专利))",
 )
@@ -537,6 +537,55 @@ def company_names_match(left: str, right: str) -> bool:
     return left_core in right_core or right_core in left_core
 
 
+_PROFESSOR_PROFILE_NAME_PATTERNS = (
+    re.compile(
+        r"^(?:请)?(?:介绍|介绍一下|了解|查一下|帮我查(?:一下)?)\s*"
+        r"(?P<name>[一-鿿·]{2,4}?)(?:教授|老师)?的?"
+        r"(?:简介|信息|情况|资料|研究方向|研究领域|评价)"
+    ),
+    re.compile(
+        r"^(?P<name>[一-鿿·]{2,4}?)(?:教授|老师)"
+        r"(?:是谁|是什么人|怎么样|的评价|的研究方向|的研究领域)"
+    ),
+)
+
+
+def query_professor_name(query: str) -> str | None:
+    """The professor name a profile/research query names, else None.
+
+    Only profile-shaped queries are recognized; a patent/company relation
+    query ("丁文伯创办的公司") is deliberately excluded so the local-claim
+    guard never blocks the relation lane.
+    """
+
+    value = query.strip()
+    institution_name = extract_institution_person_name(value)
+    if institution_name is not None:
+        return institution_name
+    for pattern in _PROFESSOR_PROFILE_NAME_PATTERNS:
+        match = pattern.match(value)
+        if match is not None:
+            return match.group("name")
+    return None
+
+
+def _professor_core(name: str) -> str:
+    value = name.strip()
+    for token in ("副教授", "教授", "老师", "博士", "院士"):
+        value = value.replace(token, "")
+    return "".join(value.split())
+
+
+def professor_names_match(left: str, right: str) -> bool:
+    """Whether two professor display forms denote the same name."""
+
+    left_core = _professor_core(left)
+    right_core = _professor_core(right)
+    if len(left_core) < 2 or len(right_core) < 2:
+        return False
+    return left_core == right_core
+
+
 def _search_view(query: str) -> str:
     value = query.strip()
     if any(marker in value for marker in ("不要", "不包括", "排除", "除外")):
@@ -573,6 +622,8 @@ __all__ = [
     "company_core",
     "company_names_match",
     "query_company_name",
+    "query_professor_name",
+    "professor_names_match",
     "extract_institution_person_name",
     "extract_leading_company_name",
     "has_continuation_intent",

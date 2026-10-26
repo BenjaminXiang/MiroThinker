@@ -963,7 +963,7 @@ def test_runner_serve_wires_fast_boot_env_flag(
         create_builder=lambda _config: object(),
         read_envelope=lambda _path: object(),
         validate_envelope=lambda value: value,
-        load_recorded_serving_inputs=lambda _config, name_linker=None: recorded,
+        load_recorded_serving_inputs=lambda _config: recorded,
         create_published_release=lambda **kwargs: SimpleNamespace(**kwargs),
         create_query_planner=lambda **kwargs: object(),
         create_knowledge_read=_create_knowledge_read,

@@ -14,7 +14,7 @@ from typing import Any, Literal
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response, status
 from pydantic import BaseModel, Field, model_validator
 
-from backend.console_dsn import resolve_console_dsn
+from backend.console_dsn import SEED_DATABASE_URL_ENV, resolve_seed_dsn
 from backend.services.admin_session import current_operator
 from backend.storage.seeds import (
     Seed,
@@ -100,18 +100,20 @@ def get_seed_gate(request: Request) -> JobRuntime:
     return runtime
 
 
-def _console_dsn(request: Request) -> str | None:
-    """The console database this app resolved at start (resolver as fallback)."""
+def _seed_dsn(request: Request) -> str | None:
+    """The database for the seed registry only (raw collection DB on a server node)."""
 
-    resolved = getattr(request.app.state, "console_dsn", None)
-    return resolved or resolve_console_dsn()
+    resolved = getattr(request.app.state, "seed_console_dsn", None)
+    return resolved or resolve_seed_dsn()
 
 
 def require_postgres(request: Request, gate: JobRuntime) -> None:
+    if (os.environ.get(SEED_DATABASE_URL_ENV) or "").strip():
+        return
     status = gate.postgres_status()
     if status.get("available"):
         return
-    if not _console_dsn(request) and status.get("source") is None:
+    if not _seed_dsn(request) and status.get("source") is None:
         raise HTTPException(status_code=503, detail=CONSOLE_DATABASE_NOT_CONFIGURED)
     raise HTTPException(status_code=503, detail=POSTGRES_UNAVAILABLE)
 
@@ -119,11 +121,13 @@ def require_postgres(request: Request, gate: JobRuntime) -> None:
 def _seed_connection(request: Request) -> Any:
     from src.data_agents.storage.postgres.connection import connect
 
-    return connect(_console_dsn(request))
+    return connect(_seed_dsn(request))
 
 
 def _seed_exists(seed_id: int, request: Request) -> bool:
-    return _with_seed_connection(request, lambda conn: get_seed(conn, seed_id)) is not None
+    return (
+        _with_seed_connection(request, lambda conn: get_seed(conn, seed_id)) is not None
+    )
 
 
 def _with_seed_connection(request: Request, work: Any) -> Any:
@@ -169,7 +173,10 @@ def create_seed_endpoint(
     except psycopg.errors.UniqueViolation:
         raise HTTPException(
             status_code=409,
-            detail={"error": "seed_url_already_exists", "seed_url": str(payload.seed_url)},
+            detail={
+                "error": "seed_url_already_exists",
+                "seed_url": str(payload.seed_url),
+            },
         ) from None
 
 
@@ -182,11 +189,16 @@ def update_seed_endpoint(
 ) -> Seed:
     require_postgres(request, gate)
     try:
-        seed = _with_seed_connection(request, lambda conn: update_seed(conn, seed_id, payload))
+        seed = _with_seed_connection(
+            request, lambda conn: update_seed(conn, seed_id, payload)
+        )
     except psycopg.errors.UniqueViolation:
         raise HTTPException(
             status_code=409,
-            detail={"error": "seed_url_already_exists", "seed_url": str(payload.seed_url)},
+            detail={
+                "error": "seed_url_already_exists",
+                "seed_url": str(payload.seed_url),
+            },
         ) from None
     if seed is None:
         raise HTTPException(status_code=404, detail=f"seed {seed_id} not found")
@@ -237,7 +249,9 @@ def trigger_seed_endpoint(
             trigger_source=MANUAL_TRIGGER,
         )
     except JobsError as exc:
-        http_status = 409 if exc.code in {"job_already_running", "job_breaker_open"} else 422
+        http_status = (
+            409 if exc.code in {"job_already_running", "job_breaker_open"} else 422
+        )
         if exc.code == "job_postgres_unavailable":
             http_status = 503
         raise HTTPException(status_code=http_status, detail=exc.code) from exc

@@ -404,7 +404,7 @@ class _ValidatingEmbeddingAdapter:
 
 
 _NAMED_PROFESSOR_RESEARCH_PATTERN = re.compile(
-    r"(?P<name>[一-鿿·]{2,4})的(?:代表性)?(?:论文|研究成果|科研成果|学术成果|代表作)"
+    r"(?P<name>[一-鿿·]{2,4}?)(?:教授|老师)?的(?:代表性)?(?:论文|研究成果|科研成果|学术成果|代表作)"
 )
 
 
@@ -552,7 +552,7 @@ def _resolve_named_company_patent_source(
 
 _SAME_NAME_PERSON_QUERY_PATTERN = re.compile(
     r"^(?:请问|请介绍一下|请介绍|介绍一下|介绍|我想了解|帮我查(?:一下)?)?\s*"
-    r"(?P<name>[一-鿿·]{2,4})(?:教授|老师)?"
+    r"(?P<name>[一-鿿·]{2,4}?)(?:教授|老师)?"
     r"(?:的)?(?:是谁|是什么人|简介|信息|情况|资料|评价如何|怎么样)?"
     r"[？?。！!]?$"
 )
@@ -583,6 +583,32 @@ def _resolved_institution_names(
             and slot.canonical_id in entries
         )
     )
+
+
+def _institution_name_matches(
+    projection_institution: str,
+    constraint_names: tuple[str, ...],
+) -> bool:
+    """Prefix-compatible institution match for same-name disambiguation.
+
+    The catalog resolves "清华大学", while a professor projection commonly
+    stores "清华大学深圳国际研究生院"; exact equality made the constraint
+    disappear.  Prefix compatibility keeps both directions (a projection may
+    also be the shorter side) without treating unrelated names as equal.
+    """
+
+    projection = (projection_institution or "").strip()
+    if not projection:
+        return False
+    for name in constraint_names:
+        constraint = (name or "").strip()
+        if not constraint:
+            continue
+        if projection == constraint:
+            return True
+        if projection.startswith(constraint) or constraint.startswith(projection):
+            return True
+    return False
 
 
 def _resolve_same_name_professor_candidates(
@@ -624,7 +650,9 @@ def _resolve_same_name_professor_candidates(
             matched = {
                 canonical_id: projection
                 for canonical_id, projection in matched.items()
-                if projection.institution in institution_names
+                if _institution_name_matches(
+                    projection.institution, institution_names
+                )
             }
             if len(matched) < 2:
                 return ()
@@ -9133,6 +9161,20 @@ _ENTITY_LINK_FORM_BLOCKLIST = frozenset(
 )
 
 
+_ENTITY_LINK_GENERIC_PERSON_NAMES = frozenset(
+    {
+        "教授",
+        "副教授",
+        "讲师",
+        "老师",
+        "教师",
+        "博士",
+        "研究员",
+        "院士",
+    }
+)
+
+
 def _entity_link_strip_legal_suffix(form: str) -> str:
     for suffix in _COMPANY_LEGAL_SUFFIXES:
         if form.endswith(suffix) and len(form) > len(suffix):
@@ -9178,7 +9220,9 @@ def _entity_name_forms(domain: str, display_terms: frozenset[str]) -> frozenset[
         forms.update(
             variant
             for variant in variants
-            if len(variant) >= 2 and variant not in _ENTITY_LINK_FORM_BLOCKLIST
+            if len(variant) >= 2
+            and variant not in _ENTITY_LINK_FORM_BLOCKLIST
+            and variant not in _ENTITY_LINK_GENERIC_PERSON_NAMES
         )
     return frozenset(forms)
 

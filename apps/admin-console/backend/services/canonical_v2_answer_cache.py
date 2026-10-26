@@ -24,6 +24,9 @@ _logger = logging.getLogger(__name__)
 _CACHE_ENV = "CANONICAL_V2_ANSWER_CACHE"
 _TTL_ENV = "CANONICAL_V2_ANSWER_CACHE_TTL_SECONDS"
 _DEFAULT_TTL_SECONDS = 86_400
+# Bump when the answer renderer/claims change shape: a cached answer
+# produced by an older renderer must not outlive the deploy.
+_ANSWER_RENDER_EPOCH = "2026-10-26-professor-claims-v1"
 _DISABLED_VALUES = frozenset({"0", "false", "off", "no"})
 
 _REFERENT_MARKERS = (
@@ -53,10 +56,21 @@ _TIME_SENSITIVE_MARKERS = (
     "股价",
     "刚刚",
 )
-_MARKER_FRAGMENTS = ("<|canonical_v2", "</|canonical_v2", "DSML")
+_MARKER_FRAGMENTS = (
+    "<|canonical_v2",
+    "</|canonical_v2",
+    "DSML",
+    "<|end_of_answer|>",
+    "<|end_of_turn|>",
+    "<|endoftext|>",
+    "<|eot_id|>",
+    "<|im_end|>",
+)
 _MEMBER_COVERAGE_PREFIX = "此外，本次检索还召回以下相关本地企业"
 _LOCAL_CITATION_TYPES = frozenset({"professor", "paper", "patent", "company"})
-_LOCAL_CITATION_PREFIX = "local-source-"
+_LOCAL_CITATION_PREFIXES = ("local-source-", "official-source-")
+# `official-source-*` is the enumerated-company citation id used by the
+# template lane; both prefixes are release-bound local evidence.
 
 
 def cache_enabled() -> bool:
@@ -106,7 +120,7 @@ def data_epoch() -> str:
             "/root/deploy/fullstack-v2/var/corrections.sqlite3",
         )
     )
-    parts: list[str] = []
+    parts: list[str] = [_ANSWER_RENDER_EPOCH]
     for path in (manual_dir / "manual-recall.json", corrections):
         try:
             stat = path.stat()
@@ -123,7 +137,14 @@ def validate_candidate(
     response: Any,
     turn_result: Any,
 ) -> tuple[bool, dict[str, Any]]:
-    """The write gate: only a grounded, local, non-degraded answer may cache."""
+    """The write gate: a grounded, non-degraded answer may cache.
+
+    The answer may combine local evidence with current-web evidence: the
+    original local-only rule rejected almost every real answer (0 rows in a
+    day), while the operator needs repeat-question TTFT wins.  Grounding is
+    still required (at least one release/manual citation), and the TTL +
+    data-epoch checks bound staleness.
+    """
 
     checks: dict[str, Any] = {}
     checks["eligible_query"] = eligible_query(query)[0]
@@ -132,11 +153,15 @@ def validate_candidate(
         getattr(turn_result, "render_mode", None) == "prose_renderer"
     )
     checks["no_fallback"] = getattr(turn_result, "fallback_sha256", None) is None
-    citations = tuple(getattr(turn_result, "citations", ()) or ())
+    # Validate the envelope the cache will replay, not the internal turn
+    # result: the public response drops non-public citations and rebuilds the
+    # citation map, so the internal tuple legitimately contains ids that can
+    # never appear in citation_map.
+    citations = tuple(getattr(response, "citations", ()) or ())
     checks["citations"] = bool(citations)
-    checks["local_only"] = bool(citations) and all(
+    checks["local_grounding"] = any(
         getattr(citation, "type", None) in _LOCAL_CITATION_TYPES
-        and str(getattr(citation, "id", "")).startswith(_LOCAL_CITATION_PREFIX)
+        and str(getattr(citation, "id", "")).startswith(_LOCAL_CITATION_PREFIXES)
         for citation in citations
     )
     citation_map = getattr(response, "citation_map", None) or {}
@@ -148,13 +173,14 @@ def validate_candidate(
     checks["citation_map"] = bool(citation_map) and all(
         str(getattr(citation, "id", "")) in mapped_ids for citation in citations
     )
-    answer_text = str(getattr(turn_result, "answer_text", "") or "")
+    answer_text = str(getattr(response, "answer_text", "") or "")
     checks["no_marker"] = not any(
         fragment in answer_text for fragment in _MARKER_FRAGMENTS
     )
-    checks["no_member_wall"] = _MEMBER_COVERAGE_PREFIX not in answer_text
     checks["no_conflicts"] = not getattr(turn_result, "conflicts", ())
-    checks["length"] = 40 <= len(answer_text) <= 1200
+    # Enumeration answers legitimately append a bounded coverage tail; only
+    # guard against runaway output, not against the normal 1-3k prose answer.
+    checks["length"] = 40 <= len(answer_text) <= 8000
     return all(checks.values()), checks
 
 

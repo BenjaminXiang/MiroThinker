@@ -51,6 +51,7 @@ from src.data_agents.canonical_v2.followup_referents import (
     has_set_referent,
     has_singular_referent,
     is_subject_carryover_reference,
+    professor_names_match,
     referent_subject_domain,
 )
 from src.data_agents.canonical_v2.knowledge_answer import (
@@ -117,6 +118,14 @@ _PUBLIC_TEXT_PATTERN = re.compile(
     r")(?![A-Za-z0-9_-]))"
 )
 _PUBLIC_TEXT_NAMESPACE_PREFIXES = ("web-object:", "web-handle:")
+# Provider prose occasionally emits HTML breaks or chat-template
+# terminators; neither is answer content.  The streaming marker filter
+# already redacts the terminator family, but the final envelope must be
+# clean even when a provider bypasses that path.
+_PUBLIC_HTML_BREAK_PATTERN = re.compile(r"</?br\s*/?>", re.IGNORECASE)
+_PROVIDER_TERMINATOR_PATTERN = re.compile(
+    r"</?\|(?:end_of_answer|end_of_turn|endoftext|eot_id|im_end)\|>"
+)
 _PUBLIC_TEXT_FIXED_MARKERS = ("source_nature=current_web",)
 _PUBLIC_TEXT_BOUNDED_MARKERS = (
     ("PROF-", frozenset("0123456789ABCDEF"), 12),
@@ -129,7 +138,8 @@ _PUBLIC_TEXT_BOUNDED_MARKERS = (
 
 
 def _sanitize_public_text(text: str) -> str:
-    projected = text
+    projected = _PUBLIC_HTML_BREAK_PATTERN.sub("", text)
+    projected = _PROVIDER_TERMINATOR_PATTERN.sub("", projected)
     while True:
         sanitized = _PUBLIC_TEXT_PATTERN.sub("", projected)
         if sanitized == projected:
@@ -780,7 +790,28 @@ def _referent_clarification_needed(
         # A subject-carryover deepening (elaboration, generic institution
         # noun, domain-unconstrained singular referent) over a soft-anchored
         # session answers about the carried subject instead of clarifying.
-        if soft_subject_name and is_subject_carryover_reference(query):
+        if soft_subject_name and (
+            is_subject_carryover_reference(query)
+            or (
+                has_personal_pronoun(query)
+                and any(
+                    marker in query
+                    for marker in (
+                        "研究方向",
+                        "研究领域",
+                        "简介",
+                        "邮箱",
+                        "院系",
+                        "论文",
+                        "专利",
+                        "团队",
+                        "获奖",
+                        "教育",
+                        "经历",
+                    )
+                )
+            )
+        ):
             return False
         return not has_explicit_named_subject(query) and not _history_displayed_ids(
             query=query, history=history
@@ -1345,6 +1376,150 @@ def _prefer_displayed_company_for_attribute(
     return receipt.model_copy(update={"active_anchor": company})
 
 
+_NAMED_PROFESSOR_RESEARCH_QUERY = re.compile(
+    r"(?P<name>[一-鿿·]{2,4}?)(?:教授|老师)?"
+    r"(?:的|有哪些|发表了哪些|发表过哪些)(?:代表性)?"
+    r"(?:论文|研究成果|科研成果|学术成果|代表作)"
+)
+_NAMED_PROFESSOR_QUERY_REJECT = frozenset(
+    {"这篇", "该", "上述", "哪些", "这些", "那些", "他的", "她的", "它的"}
+)
+
+
+def _named_professor_in_query(query: str) -> str | None:
+    """The professor named by a paper-list query, else None.
+
+    ``丁文伯有哪些论文`` / ``丁文伯的论文`` name a person; ``这篇论文`` and
+    ``他的论文`` do not.  Used to keep the first-turn anchor on the professor
+    instead of the first cited paper.
+    """
+
+    match = _NAMED_PROFESSOR_RESEARCH_QUERY.search(query.strip())
+    if match is None:
+        return None
+    name = match.group("name")
+    if any(marker in name for marker in _NAMED_PROFESSOR_QUERY_REJECT):
+        return None
+    return name
+
+
+def _prefer_named_professor_anchor(
+    receipt: ContextReceipt | None,
+    *,
+    query: str,
+    planned_ids: tuple[str, ...] = (),
+    planned_names: tuple[str, ...] = (),
+    resolver: Callable[[str, str], tuple[str, str] | None] | None = None,
+) -> ContextReceipt | None:
+    """Bind a paper-list turn's anchor to the professor named in the query.
+
+    A professor→paper answer can return papers only, with ``context_receipt``
+    null, so there is no handle to prefer.  In that case build a minimal
+    canonical professor anchor from the planning ids/names; the next ``他``
+    turn then binds the professor instead of clarifying.
+    """
+
+    name = _named_professor_in_query(query)
+    if name is None:
+        return receipt
+    result_set = None if receipt is None else receipt.displayed_result_set
+    handles = () if result_set is None else result_set.handles
+    matches = [
+        handle
+        for handle in handles
+        if handle.domain == "professor"
+        and professor_names_match(name, handle.display_name)
+    ]
+    if len(matches) == 1:
+        professor = matches[0]
+    else:
+        professor = None
+        for canonical_id, display_name in zip(planned_ids, planned_names):
+            if display_name and professor_names_match(name, display_name):
+                professor = CanonicalEntityHandle(
+                    canonical_id=canonical_id,
+                    domain="professor",
+                    display_name=display_name,
+                    evidence_ids=(),
+                )
+                break
+        if professor is None and resolver is not None:
+            resolved = resolver(query, "professor")
+            if resolved is not None:
+                canonical_id, display_name = resolved
+                if professor_names_match(name, display_name):
+                    professor = CanonicalEntityHandle(
+                        canonical_id=canonical_id,
+                        domain="professor",
+                        display_name=display_name,
+                        evidence_ids=(),
+                    )
+        if professor is None:
+            return receipt
+    if receipt is None:
+        return ContextReceipt(active_anchor=professor)
+    active = receipt.active_anchor
+    if (
+        active is not None
+        and active.domain == "professor"
+        and active.display_name == professor.display_name
+    ):
+        return receipt
+    return receipt.model_copy(update={"active_anchor": professor})
+
+
+def _prefer_displayed_professor_for_attribute(
+    receipt: ContextReceipt | None,
+    *,
+    query: str,
+) -> ContextReceipt | None:
+    """Keep a professor answer's anchor on the professor, not a cited paper.
+
+    A professor answer that lists papers can capture the first paper as the
+    active anchor; the next ``他的研究方向`` then reads the paper (or clarifies).
+    When the query uses 他/她 and asks a professor attribute, and the displayed
+    set holds exactly one professor, that professor is the subject.  The
+    company mirror handles 它/该公司 the same way.
+    """
+
+    if receipt is None or not has_singular_referent(query):
+        return receipt
+    if not has_personal_pronoun(query):
+        return receipt
+    if not any(
+        marker in query
+        for marker in (
+            "论文",
+            "专利",
+            "研究方向",
+            "研究领域",
+            "简介",
+            "团队",
+            "项目",
+            "获奖",
+            "教育",
+            "经历",
+            "公司",
+            "成果",
+        )
+    ):
+        return receipt
+    result_set = receipt.displayed_result_set
+    handles = () if result_set is None else result_set.handles
+    professors = [handle for handle in handles if handle.domain == "professor"]
+    if len(professors) != 1:
+        return receipt
+    professor = professors[0]
+    anchor = receipt.active_anchor
+    if (
+        anchor is not None
+        and anchor.domain == "professor"
+        and anchor.display_name == professor.display_name
+    ):
+        return receipt
+    return receipt.model_copy(update={"active_anchor": professor})
+
+
 def _merge_prior_web_evidence(
     *,
     committed: _CommittedSession | None,
@@ -1555,6 +1730,18 @@ def _standalone_anchor(
     """
 
     if resolver is None:
+        return None
+    # "有哪些做 X 的教授" is a topic-discovery question, not a relation to a
+    # named company.  The company→professor marker would otherwise call the
+    # exact-name resolver, which can match a company from a shared word
+    # fragment ("灵巧" inside "灵巧手") and turn the whole turn into a
+    # company→professor traversal.
+    if (
+        "教授" in query
+        and any(marker in query for marker in ("哪些", "谁", "有哪些", "列出"))
+        and "公司" not in query
+        and "企业" not in query
+    ):
         return None
     target: str | None = None
     if any(marker in query for marker in _PROFESSOR_COMPANY_MARKERS):
@@ -2002,8 +2189,11 @@ class CanonicalV2ChatAdapter:
         prior_context = (
             None
             if committed is None
-            else _prefer_displayed_company_for_attribute(
-                committed.context_receipt, query=normalized_query
+            else _prefer_displayed_professor_for_attribute(
+                _prefer_displayed_company_for_attribute(
+                    committed.context_receipt, query=normalized_query
+                ),
+                query=normalized_query,
             )
         )
         active_anchor_id = (
@@ -2321,10 +2511,16 @@ class CanonicalV2ChatAdapter:
             turn_result=turn_result,
             fallback_observed_at=observed_as_of,
         )
-        context_receipt = _sanitize_soft_turn_anchor(
-            turn_result.context_receipt,
-            planned_displayed_ids=displayed_ids,
-            soft_context_subject=soft_context_subject,
+        context_receipt = _prefer_named_professor_anchor(
+            _sanitize_soft_turn_anchor(
+                turn_result.context_receipt,
+                planned_displayed_ids=displayed_ids,
+                soft_context_subject=soft_context_subject,
+            ),
+            query=normalized_query,
+            planned_ids=tuple(displayed_ids),
+            planned_names=tuple(displayed_names),
+            resolver=self._named_entity_resolver,
         )
         next_displayed_ids = self._displayed_ids(
             context_receipt,
@@ -2363,6 +2559,11 @@ class CanonicalV2ChatAdapter:
                 query=normalized_query,
                 evidence_set=evidence_set,
             )
+        if soft_subject_name is None:
+            # A professor paper-list answer can carry no professor handle;
+            # keep the named person as the soft subject so the next 他/她
+            # turn is a carryover, not an unbound-referent clarification.
+            soft_subject_name = _named_professor_in_query(normalized_query)
         next_session = _CommittedSession(
             answer=candidate_answer,
             turn_count=turn_count,

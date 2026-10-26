@@ -36,11 +36,11 @@ import re
 import signal
 import sqlite3
 import subprocess
+import sys
 import threading
 import time
 import uuid
 from typing import Any, Literal
-from zoneinfo import ZoneInfo
 
 from src.data_agents.canonical_v2.managed_config import (
     ManagedSettings,
@@ -56,6 +56,9 @@ logger = logging.getLogger(__name__)
 SCHEMA_VERSION = "canonical-v2-jobs-v1"
 JOBS_DB_ENV = "CANONICAL_V2_JOBS_DB"
 ACCESS_LOG_DB_ENV = "CANONICAL_V2_ACCESS_LOG_DB"
+JOB_PYTHON_ENV = "MIROTHINKER_JOB_PYTHON"
+JOB_DATABASE_URL_ENV = "MIROTHINKER_JOB_DATABASE_URL"
+JOB_TIMEZONE_ENV = "MIROTHINKER_JOB_TIMEZONE"
 JOBS_DB_FILENAME = "jobs.sqlite3"
 
 MANUAL_TRIGGER = "manual"
@@ -587,20 +590,14 @@ def _parse_cron_field(field_value: str, *, minimum: int, maximum: int) -> tuple[
     return frozenset(values), restricted
 
 
-def job_timezone() -> tzinfo:
-    """The wall-clock zone the OS cron entries run in.
-
-    The cron table is installed in server local time; the launcher exports
-    ``MIROTHINKER_JOB_TIMEZONE`` so the admin page can render the same clock
-    instead of UTC.
-    """
-
-    name = os.environ.get("MIROTHINKER_JOB_TIMEZONE", "").strip()
+def _resolve_job_timezone(name: str) -> tzinfo:
     if name:
         try:
+            from zoneinfo import ZoneInfo
+
             return ZoneInfo(name)
-        except Exception:  # noqa: BLE001 - fall back to server local time
-            pass
+        except Exception:  # noqa: BLE001 - a bad TZ name must not break the page
+            logger.warning("unknown job timezone %r; using host local time", name)
     return datetime.now().astimezone().tzinfo
 
 
@@ -1393,6 +1390,12 @@ class JobRuntime:
         self._spawn = spawn or _spawn_subprocess
         self._probe = postgres_probe or PostgresProbe(self._environ)
         self._console_dsn = console_dsn
+        self._job_python = (
+            self._environ.get(JOB_PYTHON_ENV, "").strip() or sys.executable
+        )
+        self._job_timezone = _resolve_job_timezone(
+            self._environ.get(JOB_TIMEZONE_ENV, "").strip()
+        )
         self._threads: list[threading.Thread] = []
         self._threads_lock = threading.Lock()
 
@@ -1406,6 +1409,9 @@ class JobRuntime:
 
         if self._console_dsn is not None:
             return self._console_dsn
+        job_dsn = self._environ.get(JOB_DATABASE_URL_ENV, "").strip()
+        if job_dsn:
+            return job_dsn
         _, dsn = self._probe.resolved_dsn()
         return dsn
 
@@ -1429,7 +1435,6 @@ class JobRuntime:
         summaries = self.store.summaries(task.task_id for task in self._tasks)
         postgres = self._probe.describe()
         now = self._clock()
-        zone = job_timezone()
         views: list[dict[str, Any]] = []
         for task in self._tasks:
             summary = summaries[task.task_id]
@@ -1449,9 +1454,7 @@ class JobRuntime:
                 {
                     **task.as_dict(),
                     "next_run_at": (
-                        cron_next_fire(
-                            task.schedule_cron, now=now, tz=zone
-                        ).isoformat()
+                        cron_next_fire(task.schedule_cron, now=now, tz=self._job_timezone).isoformat()
                         if task.schedule_cron
                         else None
                     ),
@@ -1532,7 +1535,7 @@ class JobRuntime:
         trigger_source: str = MANUAL_TRIGGER,
     ) -> TriggerOutcome:
         task = self._resolve(task_id)
-        argv = task.argv_for(params)
+        argv = self._resolve_runner(task.argv_for(params))
         operator_text = (operator or "anonymous").strip()[:_OPERATOR_LIMIT] or "anonymous"
 
         if task.requires_postgres and not self._probe.available():
@@ -1626,6 +1629,11 @@ class JobRuntime:
             started_at=(started_at.started_at if started_at else now.isoformat()),
             command=argv,
         )
+
+    def _resolve_runner(self, argv: Sequence[str]) -> tuple[str, ...]:
+        if len(argv) >= 3 and tuple(argv[:3]) == ("uv", "run", "python"):
+            return (self._job_python, *argv[3:])
+        return tuple(argv)
 
     def _skip(
         self,

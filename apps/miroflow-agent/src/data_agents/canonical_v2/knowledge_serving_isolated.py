@@ -38,11 +38,14 @@ from .followup_referents import (
     _EXPLICIT_COMPANY_REJECT_MARKERS,
     _compact_company_alias,
     _search_view,
+    company_core,
     company_names_match,
     extract_institution_person_name,
     extract_leading_company_name,
     has_continuation_intent,
     query_company_name,
+    query_professor_name,
+    professor_names_match,
     has_explicit_named_subject,
     has_set_referent,
     has_singular_referent,
@@ -1020,7 +1023,37 @@ def _apply_web_subject_consistency(
     results: tuple[_NormalizedWebResult, ...],
     request: LaneRequest,
 ) -> tuple[_NormalizedWebResult, ...]:
-    bound_entity_names = request.bound_entity_names
+    bound_entity_names = tuple(
+        name for name in request.bound_entity_names if len(name.strip()) >= 3
+    )
+    # A subject gate may only bind a name the user actually wrote (or a
+    # displayed entity carried by a referent).  An alias/substring match can
+    # bind a company absent from the query ("浙江灵巧智能科技有限公司" for
+    # "有哪些做具身智能和灵巧手的教授"), and the gate then drops every real
+    # topic result.  Fresh turns with no displayed entity are topic queries:
+    # gating them on an unmentioned name is always wrong.
+    query_text = str(getattr(request, "original_query", "") or "")
+    # Topic-shaped professor discovery ("有哪些…的教授") has no subject to
+    # be consistent with: the web lane's job is to discover names, so the
+    # identity gate would drop exactly the pages that name them.
+    topic_query = query_text.strip().rstrip("？?。！!")
+    if (
+        "教授" in topic_query
+        and "哪些" in topic_query
+        and topic_query.endswith("教授")
+    ):
+        # A topic-discovery turn has no single subject, even if a name linker
+        # falsely bound one.  Returning the lane unfiltered is the only safe
+        # behavior; the answer layer reports coverage honestly.
+        return results
+    if (
+        bound_entity_names
+        and not request.structured_constraints.displayed_entity_ids
+        and not any(
+            len(name) >= 4 and name in query_text for name in bound_entity_names
+        )
+    ):
+        return results
     if (
         request.soft_context_subject is not None
         and request.soft_context_subject not in bound_entity_names
@@ -1087,6 +1120,28 @@ def _apply_web_subject_consistency(
         pool = unwrap(suspect) + unwrap(missed)
         filtered = tuple(unwrap(kept) + unwrap(related) + pool[:backfill_room])
     reporter = current_turn_trace()
+    query_text = str(getattr(request, "original_query", "") or "")
+    topic_professor = _professor_topic_query(query_text)
+    if (
+        topic_professor
+        and len(results) >= 20
+        and len(filtered) < len(results) // 3
+    ):
+        # A topic-discovery turn has no single subject.  If the identity gate
+        # would discard most of the lane, fail open: a broad, clearly labelled
+        # result set is better than a confident "no answer".
+        _logger.warning(
+            "web subject gate fallback query=%r kept=%d/%d bound=%r",
+            query_text,
+            len(filtered),
+            len(results),
+            bound_entity_names,
+        )
+        if reporter is not None:
+            reporter.record_gate_drop(
+                "web_subject_gate_fallback", len(results) - len(filtered)
+            )
+        return results
     if reporter is not None and len(filtered) < len(results):
         reporter.record_gate_drop(
             "web_subject_consistency", len(results) - len(filtered)
@@ -2652,12 +2707,74 @@ def _append_authority_seeking_views(
                 retained_protected_values=retained_values,
                 producer_kind="authority_seeking",
                 producer_version=_SERVING_QUERY_REWRITER_VERSION,
-                bound_entity_ids=request.displayed_entity_ids,
-                bound_entity_names=request.displayed_entity_names,
-                soft_context_subject=request.soft_context_subject,
+                bound_entity_ids=(),
+                bound_entity_names=(),
+                soft_context_subject=None,
             )
         )
     return tuple(views)
+
+
+def _rewrite_view_introduces_company(text: str, original_query: str) -> bool:
+    """Whether a rewrite view names a company the user did not name.
+
+    The rewrite prompt forbids inventing entities, but the model can still
+    emit a real company from parametric memory ("浙江灵巧智能科技有限公司"
+    for a 灵巧手 professor question).  One such name becomes the web subject
+    and the consistency gate drops every real topic result, so a view that
+    introduces an unrequested company is discarded wholesale.
+    """
+
+    for match in COMPANY_NAME_PATTERN.finditer(text):
+        name = match.group(1)
+        if name in original_query:
+            continue
+        core = company_core(name)
+        if len(core) >= 2 and core in original_query:
+            continue
+        return True
+    return False
+
+
+def _professor_topic_query(query: str) -> bool:
+    text = query.strip()
+    return "教授" in text and any(
+        marker in text for marker in ("哪些", "谁", "有哪些", "列出")
+    )
+
+
+def _company_shaped_name(name: str) -> bool:
+    return any(marker in name for marker in ("公司", "集团", "企业"))
+
+
+def _bound_subject_entities(
+    request: QueryPlanningRequest,
+) -> tuple[tuple[str, ...], tuple[str, ...]]:
+    """Subject entities that may bind a view.
+
+    A professor-topic query cannot take a company as its subject; the name
+    linker can otherwise bind a company from a shared word fragment
+    ("灵巧" inside "灵巧手").  2-char names are too ambiguous to be a subject.
+    """
+
+    ids = tuple(request.displayed_entity_ids)
+    names = tuple(request.displayed_entity_names)
+    if _professor_topic_query(request.original_query):
+        pairs = [
+            (entity_id, name)
+            for entity_id, name in zip(ids, names)
+            if not _company_shaped_name(name)
+        ]
+        ids = tuple(entity_id for entity_id, _ in pairs)
+        names = tuple(name for _, name in pairs)
+    pairs = [
+        (entity_id, name)
+        for entity_id, name in zip(ids, names)
+        if len(name.strip()) >= 3
+    ]
+    return tuple(entity_id for entity_id, _ in pairs), tuple(
+        name for _, name in pairs
+    )
 
 
 def _serving_query_views(
@@ -2679,6 +2796,7 @@ def _serving_query_views(
     views are appended last on every return path so they never displace the
     phase-1 views; they get the same missing-raw-text append.
     """
+    bound_ids, bound_names = _bound_subject_entities(request)
     deterministic = QueryViewProposal(
         view_id=f"view:serving:{request.request_id}",
         kind="serving_search",
@@ -2687,8 +2805,8 @@ def _serving_query_views(
         retained_protected_values=retained_values,
         producer_kind="deterministic",
         producer_version=planner_model_id,
-        bound_entity_ids=request.displayed_entity_ids,
-        bound_entity_names=request.displayed_entity_names,
+        bound_entity_ids=bound_ids,
+        bound_entity_names=bound_names,
         soft_context_subject=request.soft_context_subject,
     )
     required_raw_texts = tuple(
@@ -2707,7 +2825,11 @@ def _serving_query_views(
         )
     try:
         rewritten = query_rewriter(request.original_query)
-        candidates = tuple(dict.fromkeys(rewritten))
+        candidates = tuple(
+            text
+            for text in dict.fromkeys(rewritten)
+            if not _rewrite_view_introduces_company(text, request.original_query)
+        )
         producer_version = str(
             getattr(
                 query_rewriter,
@@ -2733,6 +2855,11 @@ def _serving_query_views(
             and request.soft_context_subject in missing
         ):
             soft_subject_repinned = True
+        if _rewrite_view_introduces_company(text, request.original_query):
+            _logger.warning(
+                "serving view introduces company producer=llm_rewrite text=%r",
+                text,
+            )
         views.append(
             QueryViewProposal(
                 view_id=f"view:serving:{request.request_id}:rewrite:{len(views)}",
@@ -2742,9 +2869,9 @@ def _serving_query_views(
                 retained_protected_values=retained_values,
                 producer_kind="llm_rewrite",
                 producer_version=producer_version,
-                bound_entity_ids=request.displayed_entity_ids,
-                bound_entity_names=request.displayed_entity_names,
-        soft_context_subject=request.soft_context_subject,
+                bound_entity_ids=(),
+                bound_entity_names=(),
+                soft_context_subject=None,
             )
         )
         if len(views) >= _SERVING_WEB_MAX_QUERY_VIEWS:
@@ -2776,9 +2903,9 @@ def _serving_query_views(
                 retained_protected_values=retained_values,
                 producer_kind="term_expansion",
                 producer_version=_SERVING_QUERY_REWRITER_VERSION,
-                bound_entity_ids=request.displayed_entity_ids,
-                bound_entity_names=request.displayed_entity_names,
-        soft_context_subject=request.soft_context_subject,
+                bound_entity_ids=(),
+                bound_entity_names=(),
+                soft_context_subject=None,
             ),
         )
     return _append_authority_seeking_views(
@@ -4857,6 +4984,86 @@ def _list_names(value: object) -> str:
 
 _WEB_CLAIM_SNIPPET_LIMIT = 240
 _LOCAL_CLAIM_FIELD_LIMIT = 160
+# Operator-uploaded documents are the point of the manual-recall lane: the
+# 160-char release-profile cap would cut a one-chunk upload before its
+# later facts reach the prose prompt.  A manual chunk is bounded to 800
+# chars by the sidecar, so the whole chunk is the right claim budget.
+_MANUAL_CLAIM_FIELD_LIMIT = 800
+
+_PROFESSOR_ROLE_LABELS = {
+    "founder": "创始人",
+    "co_founder": "联合创始人",
+    "co-founder": "联合创始人",
+    "chief_scientist": "首席科学家",
+    "scientist": "科学家",
+    "advisor": "顾问",
+    "director": "董事",
+    "chair": "主席",
+    "professor": "教授",
+    "researcher": "研究员",
+}
+
+
+def _claim_scalar_text(value: object) -> str:
+    """One readable string from a scalar, list, or small lookup record."""
+
+    if isinstance(value, str):
+        return value.strip()
+    if isinstance(value, (int, float)):
+        return str(value)
+    if isinstance(value, list):
+        return " ".join(
+            text for item in value[:3] if (text := _claim_scalar_text(item))
+        )
+    if isinstance(value, dict):
+        for key in (
+            "name",
+            "title",
+            "organization",
+            "institution",
+            "company_name",
+            "role",
+            "degree",
+            "period",
+            "year",
+        ):
+            text = _claim_scalar_text(value.get(key))
+            if text:
+                return text
+    return ""
+
+
+def _claim_entry_list(value: object, *, limit: int = 4) -> str:
+    """Join up to ``limit`` education/work/award/role records for a claim."""
+
+    if not isinstance(value, list):
+        return ""
+    entries: list[str] = []
+    for entry in value[:limit]:
+        if isinstance(entry, str):
+            text = entry.strip()
+        elif isinstance(entry, dict):
+            text = " ".join(
+                item
+                for key in (
+                    "name",
+                    "award",
+                    "institution",
+                    "organization",
+                    "company_name",
+                    "title",
+                    "role",
+                    "degree",
+                    "period",
+                    "year",
+                )
+                if (item := _claim_scalar_text(entry.get(key)))
+            )
+        else:
+            text = ""
+        if text:
+            entries.append(text)
+    return "、".join(entries)
 
 
 def _registered_address_claim_value(payload: Mapping[str, Any]) -> str | None:
@@ -4905,6 +5112,11 @@ def _semantic_text(
         or payload.get("title")
         or display_name
     ).strip()
+    claim_field_limit = (
+        _MANUAL_CLAIM_FIELD_LIMIT
+        if item.source_authority == MANUAL_RECALL_SOURCE_AUTHORITY
+        else _LOCAL_CLAIM_FIELD_LIMIT
+    )
     relationship = payload.get("_relationship")
     if isinstance(relationship, dict):
         relationship_type = str(relationship.get("relationship_type") or "")
@@ -4913,30 +5125,52 @@ def _semantic_text(
             for role in relationship.get("roles", ())
             if str(role).strip()
         }
-        if relationship_type == "professor_company_role" and "founder" in roles:
-            if item.domain == "company":
-                relation_text = f"该教授参与创立了{name}，角色为创始人。"
+        if relationship_type == "professor_company_role" and roles:
+            founder_roles = roles & {"founder", "co_founder", "co-founder"}
+            role_text = "、".join(
+                _PROFESSOR_ROLE_LABELS.get(role, role) for role in sorted(roles)
+            )
+            if founder_roles:
+                if item.domain == "company":
+                    relation_text = f"该教授参与创立了{name}，角色为{role_text}。"
+                else:
+                    relation_text = f"{name}参与创立了该公司，角色为{role_text}。"
+            elif item.domain == "company":
+                relation_text = f"该教授在{name}担任{role_text}。"
             else:
-                relation_text = f"{name}参与创立了该公司，角色为创始人。"
+                relation_text = f"{name}在该公司担任{role_text}。"
             profile = payload.get("profile_summary")
             if isinstance(profile, str) and profile.strip():
-                return f"{relation_text} 公司简介：{profile.strip()[:_LOCAL_CLAIM_FIELD_LIMIT]}"
+                return f"{relation_text} 公司简介：{profile.strip()[:claim_field_limit]}"
             return relation_text
     parts: list[str] = [name]
     if item.domain == "professor":
         for label, field in (
             ("机构", "institution"),
+            ("院系", "department"),
             ("职称", "title"),
+            ("邮箱", "email"),
+            ("主页", "homepage"),
             ("简介", "profile_summary"),
         ):
+            value = _claim_scalar_text(payload.get(field))
+            if value and value != name and value != _PROFESSOR_MISSING_FIELD_FALLBACK:
+                parts.append(f"{label}：{value[:claim_field_limit]}")
+        for label, field in (("论文数", "paper_count"), ("专利数", "patent_count")):
             value = payload.get(field)
-            if (
-                isinstance(value, str)
-                and value.strip()
-                and value.strip() != name
-                and value.strip() != _PROFESSOR_MISSING_FIELD_FALLBACK
+            if isinstance(value, (int, float)) or (
+                isinstance(value, str) and value.strip()
             ):
-                parts.append(f"{label}：{value.strip()[:_LOCAL_CLAIM_FIELD_LIMIT]}")
+                parts.append(f"{label}：{value}")
+        for label, field in (
+            ("教育经历", "education_history"),
+            ("工作经历", "work_history"),
+            ("获奖", "awards"),
+            ("企业角色", "company_roles"),
+        ):
+            text = _claim_entry_list(payload.get(field))
+            if text:
+                parts.append(f"{label}：{text[:claim_field_limit]}")
         directions = _list_names(payload.get("research_directions"))
         if directions:
             parts.append(f"研究方向：{directions}")
@@ -4951,7 +5185,7 @@ def _semantic_text(
         ):
             value = payload.get(field)
             if isinstance(value, str) and value.strip():
-                text = value.strip()[:_LOCAL_CLAIM_FIELD_LIMIT]
+                text = value.strip()[:claim_field_limit]
                 # Aggregated probe summaries already open with the company
                 # name ("帕西尼公司：从创始团队…"); don't print it twice.
                 if text.startswith(f"{name}："):
@@ -4996,7 +5230,14 @@ def _semantic_text(
         summary = payload.get("summary_text")
         if isinstance(summary, str) and summary.strip():
             parts.append(f"摘要：{summary.strip()}")
-    return "；".join(parts) + "。"
+    # Keep one claim bounded even after the field expansion: a 32-claim
+    # enumeration must not turn ten per-field caps into a 50k-char prompt.
+    claim_total_limit = (
+        800
+        if item.source_authority == MANUAL_RECALL_SOURCE_AUTHORITY
+        else (700 if item.domain == "professor" else 500)
+    )
+    return ("；".join(parts) + "。")[:claim_total_limit]
 
 
 _PROSE_SELECTION_MARKER = "<|canonical_v2_selection_v1|>"
@@ -5015,6 +5256,12 @@ _PROSE_ANSWER_MARKER = "<|canonical_v2_answer_v1|>"
 _PROSE_PRIVATE_MARKER_PATTERNS = (
     re.compile(r"</?\|canonical_v2[A-Za-z0-9_]{0,48}\|>"),
     re.compile(r"</?[|｜]{1,4}DSML[|｜]{1,4}[^>\n]{0,64}>"),
+    # Provider chat-template terminators observed in production prose
+    # (observed: "<|end_of_answer|>" on 2026-10-26).  They are wire echoes,
+    # never answer content, and the cache gate rejects them as well.
+    re.compile(
+        r"</?\|(?:end_of_answer|end_of_turn|endoftext|eot_id|im_end)\|>"
+    ),
 )
 # Bound on the held partial candidate; every family member above is <= 80
 # chars, so 96 never splits a real member across the cap.
@@ -6576,6 +6823,7 @@ def _answer_selector(
             )
         )
         named_company = query_company_name(request.query)
+        named_professor = query_professor_name(request.query)
         # AQ-S1 (C-1): only narrowing/geography turns attach registered-place
         # evidence to company claims — a relation frame (总部/注册地址/办公室/
         # 分公司/产品能力) or a protected geography slot. Every other turn
@@ -6748,6 +6996,22 @@ def _answer_selector(
                 and getattr(handle, "kind", None) == "canonical"
                 and getattr(handle, "domain", None) == "company"
                 and not company_names_match(named_company, handle.display_name)
+            ):
+                continue
+            # The professor mirror of the named-company guard: a profile
+            # query that names one person may only use local professor claims
+            # for that person.  Without it a name absent from the pack
+            # profiles an unrelated neighbour and then disclaims the name.
+            if (
+                source_group == "local"
+                and named_professor is not None
+                and not enumeration
+                and handle is not None
+                and getattr(handle, "kind", None) == "canonical"
+                and getattr(handle, "domain", None) == "professor"
+                and not professor_names_match(
+                    named_professor, handle.display_name
+                )
             ):
                 continue
             if source_group == "current_web":

@@ -76,9 +76,7 @@ class _LLMProfile:
 _LLM_PROFILES: dict[str, _LLMProfile] = {
     "gemma4": _LLMProfile(
         local=_LLMEndpoint(
-            # Star gateway retired 2026-10-15 (retire-star-domain-couplings);
-            # our own host serves the same model.
-            base_url="http://100.64.0.27:1231/v1",
+            base_url="https://star.sustech.edu.cn/service/model/qwen36/v1",
             model="qwen3.6-35b-a3b",
             api_key_env="API_KEY",
         ),

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 import os
+from collections.abc import Iterator
 from concurrent.futures import Future, ThreadPoolExecutor
 from functools import lru_cache
 from typing import Any, Literal
@@ -15,7 +16,7 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field, model_validator
 from psycopg.rows import dict_row
 
-from backend.deps import get_pg_conn
+from backend.console_dsn import resolve_seed_dsn
 from backend.storage.seeds import (
     Seed,
     SeedCreate,
@@ -29,10 +30,22 @@ from backend.storage.seeds import (
 )
 from src.data_agents.professor.adapter_resolution import resolve_seed_adapter_name
 from src.data_agents.professor.models import ProfessorRosterSeed
+from src.data_agents.storage.postgres.connection import connect
 from src.data_agents.storage.postgres.pipeline_run import open_pipeline_run
 
 router = APIRouter(prefix="/api")
 logger = logging.getLogger(__name__)
+
+
+def get_seed_pg_conn() -> Iterator[Any]:
+    """Seed-surface connection: explicit seed DSN, else the console DSN."""
+
+    dsn = resolve_seed_dsn()
+    if not dsn:
+        raise HTTPException(status_code=503, detail="seeds_require_postgres")
+    with connect(dsn) as conn:
+        yield conn
+
 
 _DEFAULT_SEED_CONCURRENCY = 4
 _MAX_SEED_TRIGGER_LIMIT = 1000
@@ -49,9 +62,7 @@ class SeedTriggerRequest(BaseModel):
         if self.limit is not None and (
             self.limit <= 0 or self.limit > _MAX_SEED_TRIGGER_LIMIT
         ):
-            raise ValueError(
-                f"limit must be between 1 and {_MAX_SEED_TRIGGER_LIMIT}"
-            )
+            raise ValueError(f"limit must be between 1 and {_MAX_SEED_TRIGGER_LIMIT}")
         if self.mode == "sample" and self.limit is None:
             raise ValueError("sample mode requires limit")
         return self
@@ -64,15 +75,13 @@ class SeedTriggerResponse(BaseModel):
 
 
 @router.get("/seeds", response_model=list[Seed])
-def list_seeds_endpoint(conn: Any = Depends(get_pg_conn)) -> list[Seed]:
+def list_seeds_endpoint(conn: Any = Depends(get_seed_pg_conn)) -> list[Seed]:
     """List every seed, sorted by (school, department NULLS FIRST, id)."""
     return list_seeds(conn)
 
 
 @router.get("/seeds/{seed_id}", response_model=Seed)
-def get_seed_endpoint(
-    seed_id: int, conn: Any = Depends(get_pg_conn)
-) -> Seed:
+def get_seed_endpoint(seed_id: int, conn: Any = Depends(get_seed_pg_conn)) -> Seed:
     seed = get_seed(conn, seed_id)
     if seed is None:
         raise HTTPException(status_code=404, detail=f"seed {seed_id} not found")
@@ -81,7 +90,7 @@ def get_seed_endpoint(
 
 @router.post("/seeds", response_model=Seed, status_code=status.HTTP_201_CREATED)
 def create_seed_endpoint(
-    payload: SeedCreate, conn: Any = Depends(get_pg_conn)
+    payload: SeedCreate, conn: Any = Depends(get_seed_pg_conn)
 ) -> Seed:
     try:
         return create_seed(conn, payload)
@@ -100,7 +109,7 @@ def create_seed_endpoint(
 def update_seed_endpoint(
     seed_id: int,
     payload: SeedUpdate,
-    conn: Any = Depends(get_pg_conn),
+    conn: Any = Depends(get_seed_pg_conn),
 ) -> Seed:
     """Update mutable fields. last_run_at and last_run_status are
     pipeline-managed and silently ignored if present in the request body
@@ -128,7 +137,7 @@ def update_seed_endpoint(
     response_class=Response,
 )
 def delete_seed_endpoint(
-    seed_id: int, conn: Any = Depends(get_pg_conn)
+    seed_id: int, conn: Any = Depends(get_seed_pg_conn)
 ) -> Response:
     deleted = delete_seed(conn, seed_id)
     if not deleted:
@@ -144,7 +153,7 @@ def delete_seed_endpoint(
 async def trigger_seed_endpoint(
     seed_id: int,
     payload: SeedTriggerRequest | None = Body(default=None),
-    conn: Any = Depends(get_pg_conn),
+    conn: Any = Depends(get_seed_pg_conn),
 ) -> SeedTriggerResponse | JSONResponse:
     request = payload or SeedTriggerRequest()
     outcome = trigger_seed_run(
@@ -275,7 +284,7 @@ def _run_seed_task(
     from src.data_agents.professor.seed_runner import run_single_seed
     from src.data_agents.storage.postgres.connection import resolve_dsn
 
-    raw_dsn = os.environ.get("DATABASE_URL") or os.environ.get("DATABASE_URL_TEST")
+    raw_dsn = resolve_seed_dsn()
     dsn = resolve_dsn(raw_dsn)
     result = run_single_seed(
         seed_id=seed_id,

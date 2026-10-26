@@ -1259,6 +1259,23 @@ def compose_canonical_v2_consumer_runtime(
             chat_adapter.attach_answer_cache(AnswerCache(Path(cache_db_env)))
         except Exception:  # noqa: BLE001 - the cache is optional
             logger.warning("answer cache unavailable", exc_info=True)
+    # Deployment parity: the pack-mode runner attaches the exact-name
+    # resolver and the full-projection company→patent counter, but the admin
+    # composer did not.  A compose-built serving process then lost the
+    # standalone ``丁文伯创办的公司`` anchor and the 450-patent counter even
+    # though the runner had them.  Attach at this choke point, fail-open.
+    try:
+        from src.data_agents.canonical_v2 import serving_pack_loader
+
+        chat_adapter.attach_named_entity_resolver(
+            serving_pack_loader.create_local_entity_resolver(bundle)
+        )
+        chat_adapter.attach_company_patent_counter(
+            serving_pack_loader.create_company_patent_counter(bundle)
+        )
+    except Exception:  # noqa: BLE001 - anchoring is additive
+        logger.warning("named entity resolver unavailable", exc_info=True)
+
     admin_runtime = CanonicalV2AdminRuntime(
         release_id=bundle.release_id,
         manifest=bundle.manifest,

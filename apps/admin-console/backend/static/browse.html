@@ -1244,7 +1244,7 @@
         return wrap;
       }
 
-      function confirmDocForm(previewText, chunkCount, truncated, onDone) {
+      function confirmDocForm(previewText, chunkCount, truncated, analysis, sourceFile, onDone) {
         const form = create("div", "inspector-section");
         form.id = "upload-doc-confirm";
         const hint = create(
@@ -1252,6 +1252,21 @@
           "card-limitation",
           `解析完成：${previewText.length} 字 · ${chunkCount} 个召回块` + (truncated ? " · 内容过长已截断" : ""),
         );
+        form.append(hint);
+        if (analysis && analysis.domain && analysis.domain !== "unknown") {
+          const mapping = (analysis.mapping || [])
+            .map((item) => `${item.source}→${item.field}`)
+            .join("；");
+          form.append(
+            create(
+              "p",
+              "card-limitation",
+              `识别为：${analysis.domain_label} · 置信度 ${analysis.confidence} · ` +
+                `表 ${analysis.sheet_name} · ${analysis.row_count} 行` +
+                (mapping ? ` · 字段：${mapping}` : ""),
+            ),
+          );
+        }
         const company = create("input", "edit-input");
         company.type = "text";
         company.placeholder = "企业名称（必填）";
@@ -1302,9 +1317,44 @@
             submit.disabled = false;
           }
         });
+        const structured = create("button", "primary-action", "按识别结构入库");
+        structured.type = "button";
+        structured.addEventListener("click", async () => {
+          note.textContent = "";
+          if (!analysis || !analysis.domain || analysis.domain === "unknown") {
+            note.textContent = "未识别出可入库的领域，请用「确认入库」作为资料上传";
+            return;
+          }
+          if (!reason.value.trim()) {
+            note.textContent = "请填写入库原因";
+            return;
+          }
+          structured.disabled = true;
+          try {
+            const data = new FormData();
+            data.append("file", sourceFile);
+            data.append("title", title.value.trim());
+            data.append("reason", reason.value.trim());
+            data.append("company_name", company.value.trim());
+            data.append("domain", analysis.domain);
+            const result = await postFormData(`${companyDocsPath}/structured`, data);
+            const ingest = result.ingest || {};
+            onDone(
+              true,
+              `结构化入库 · ${analysis.domain_label} · 新增 ${ingest.rows_inserted || 0} / 更新 ${ingest.rows_updated || 0} / 跳过 ${ingest.rows_skipped || 0}`,
+            );
+          } catch (error) {
+            note.textContent = `结构化入库失败 · ${errorText(error)}`;
+            structured.disabled = false;
+          }
+        });
         const buttons = create("div", "edit-buttons");
-        buttons.append(submit, cancel);
-        form.append(hint, company, title, matched, text, reason, buttons, note);
+        buttons.append(submit);
+        if (analysis && analysis.domain && analysis.domain !== "unknown") {
+          buttons.append(structured);
+        }
+        buttons.append(cancel);
+        form.append(company, title, matched, text, reason, buttons, note);
         return form;
       }
 
@@ -1314,7 +1364,7 @@
         const note = create("p", "card-limitation", "");
         const file = create("input", "edit-input");
         file.type = "file";
-        file.accept = ".pdf,.docx,.txt,.md";
+        file.accept = ".pdf,.docx,.txt,.md,.xlsx";
         const parse = create("button", "primary-action", "解析文档");
         parse.type = "button";
         const stepOne = create("div", "edit-buttons");
@@ -1324,7 +1374,7 @@
         parse.addEventListener("click", async () => {
           note.textContent = "";
           if (!file.files || !file.files.length) {
-            note.textContent = "请先选择文档（pdf / docx / txt / md）";
+            note.textContent = "请先选择文档（pdf / docx / txt / md / xlsx）";
             return;
           }
           parse.disabled = true;
@@ -1333,7 +1383,7 @@
             data.append("file", file.files[0]);
             const preview = await postFormData(`${companyDocsPath}/preview`, data);
             formRegion.replaceChildren(
-              confirmDocForm(preview.text, preview.chunk_count, preview.truncated, (saved, message) => {
+              confirmDocForm(preview.text, preview.chunk_count, preview.truncated, preview.analysis, file.files[0], (saved, message) => {
                 formRegion.replaceChildren();
                 file.value = "";
                 parse.disabled = false;

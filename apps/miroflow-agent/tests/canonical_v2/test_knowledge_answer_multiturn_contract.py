@@ -2905,10 +2905,9 @@ def test_member_coverage_sentence_triggered_by_enumeration_coverage_context() ->
     assert result.answer_text.endswith(_S2B_COVERAGE_SENTENCE)
 
 
-def test_member_coverage_sentence_caps_at_8_with_overflow_count() -> None:
-    """Product decision 2026-10-25: the sentence names at most 8 recalled
-    members in recall-rank order and discloses the overflow as a count
-    ("等（共 N 家）") instead of a 64-name wall.
+def test_member_coverage_sentence_caps_at_64_with_overflow_count() -> None:
+    """AQ-S2d: the sentence names at most 64 recalled members in recall-rank
+    order and discloses the overflow as a count ("等（共 N 家）").
 
     The prose names one recalled member (`_S2C_PROSE_NAMED_NAME`, recall rank
     81) to clear the prose path's topical floor; the 80-member window it also
@@ -2943,8 +2942,8 @@ def test_member_coverage_sentence_caps_at_8_with_overflow_count() -> None:
             company_names=(*_S2C_RECALL_NAMES, _S2C_PROSE_NAMED_NAME),
         )
     )
-    assert "深圳市粤科08机器人有限公司" in result.answer_text
-    assert "深圳市粤科09机器人有限公司" not in result.answer_text
+    assert "深圳市粤科64机器人有限公司" in result.answer_text
+    assert "深圳市粤科65机器人有限公司" not in result.answer_text
     assert "等（共 80 家）" in result.answer_text
 
 
@@ -3304,14 +3303,15 @@ def test_member_coverage_sentence_sources_the_recalled_set_beyond_the_claim_wind
             company_names=_S2C_RECALL_NAMES[:40],
         )
     )
-    # 32 unmentioned members (ranks 9-40); the compact disclosure names the
-    # first 8 of them and reports the remaining 24 as a count.
+    # 32 unmentioned members (ranks 9-40) — the claim-window cut (ranks
+    # 33-40) is exactly the newly disclosed segment; the cap is not hit.
     expected = (
         "此外，本次检索还召回以下相关本地企业："
-        + "、".join(_S2C_RECALL_NAMES[8:16])
-        + " 等（共 32 家）。"
+        + "、".join(_S2C_RECALL_NAMES[8:40])
+        + "。"
     )
     assert result.answer_text.endswith(expected)
+    assert "等（共" not in result.answer_text
 
 
 def test_member_coverage_sentence_follows_recall_rank_order() -> None:
@@ -3380,7 +3380,7 @@ def test_member_coverage_sentence_names_all_resolve_to_recalled_handles() -> Non
 
     The prose names one recalled member (`_S2C_PROSE_NAMED_NAME`, recall rank
     81) to clear the prose path's topical floor; the 80-member window it also
-    names is unchanged, so the 8-name listing and its count still hold."""
+    names is unchanged, so the 64-name listing and its count still hold."""
     module = _answer_module()
     read_module = _read_module()
 
@@ -3420,7 +3420,7 @@ def test_member_coverage_sentence_names_all_resolve_to_recalled_handles() -> Non
     recalled_names = {
         handle.display_name for handle in request.evidence_set.entity_handles
     }
-    assert len(listed) == 8
+    assert len(listed) == 64
     assert set(listed) <= recalled_names
     assert overflow == "80 家）"
 
