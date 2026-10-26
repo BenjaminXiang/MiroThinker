@@ -97,3 +97,48 @@
   `code/config/managed/secrets.json`（本地只有 example），manual-recall 数据在客户机
   `var/manual-recall-v1`（本地 `/var/tmp/.../manual-recall-v1` 只有 28 KB）。
   需要一次明确的「把哪些现场配置复制到 dev」决定，再排 6–10 分钟的重载窗口。
+
+## 第 3 轮 · 2026-10-26 23:15 CST · 闸门 2 落地（评测门）
+
+### 做了什么
+
+1. **把评测从「一次性脚本」变成「有基线的门」**：`eval_full_testset.py` 增加
+   `--baseline` / `--fail-on-regression` / `--tolerance`，逐题 diff、硬计数检查、退出码。
+2. **双分制**：
+   - `required_recall`（逐字命中）＝**回归轴**，只要求不降；
+   - `product_pass`（有答案 + ≥1 引用 + 该拒答时拒答 + 无禁词）＝**可用轴**。
+3. **波动容忍**：单题掉 1 记 `fluctuation`；单题掉 ≥2、总掉超过容差（默认 3）、
+   禁用/拒答/错误计数上升、题目消失 → 才算 `regression`。
+4. **基线入库**：`apps/admin-console/scripts/eval-baselines/baseline-full.json`
+   （客户机 2026-10-26，full 模式 27 轮）。
+5. **入口**：`just eval-gate`（默认指向客户机，输出落 `/tmp`，失败退出 1）。
+6. **14 条单测**覆盖打分、分组、可用轴、容差与回归语义（不联网）。
+
+### 发现了什么
+
+- **基线：required 77/120（64%）、product_pass 26/27、0 forbidden、0 refusal miss、
+  0 error、平均 14.51s、最大 84.01s（q15）**。比日志里上一轮的 81/120 低 4 个，
+  主要是 q2（0/5）、q15（4/6，84s）、q19/q21 表述波动——不是新退化，是同一套数据
+  在另一天的取值。
+- **product 轴唯一失败是 q2**：多轮「他是否有参与哪些企业的创立」退化成澄清、0 引用
+  ——多轮指代仍然丢主体，这条恰好把「exact 分数掩盖的多轮问题」暴露出来。
+- **两轴确实会打架**：q27（灵巧手教授）exact 仍 0/4，但 product_pass=true（有答案、
+  有引用）。这正是当初「产品口径 vs 标准集口径」争论的实证。
+- **时延不可直接做门**：第二次跑平均 5.41s、基线 14.51s，差别主要是答案缓存冷热，
+  不是性能变化。故时延只报告、不判定。
+- **门的自检通过**：对同一客户机再跑一次 → 76/120（q25 4→3），判定 `pass` +
+  1 条 fluctuation，退出码 0。这正是设计意图——单点表述波动不该把门刷红。
+
+### 怎么验证
+
+- 基线跑：`eval_full_testset.py --base https://gxzx-coze-api.idea.edu.cn --mode full`
+  → 27 轮全执行、0 error。
+- 自检跑：带上 `--baseline ... --fail-on-regression` → `baseline verdict: pass`，
+  `fluctuations: qid 25 4->3`，`totals: required 77->76`，退出码 0。
+- 单测：`pytest tests/test_eval_gate.py` → 14 passed。
+
+### 影响哪些问题
+
+- 从此「这一版比上一版好还是坏」有一条可复现的命令与一份可对账的基线；
+  闸门 3（数据竖切）的验收不再靠人肉对比日志。
+- 未做：时延门、逐题人工判定、CI 接入、`head` 模式基线（目前只有 full）。
