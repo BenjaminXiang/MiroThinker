@@ -1,0 +1,1802 @@
+[
+  {
+    "name": "朱军",
+    "professor_id": "professor-c-5797646d251d5bf018778ba9",
+    "paper_count": 210,
+    "has_directions": true,
+    "directions": "自适应芳香性设计；单线态裂分材料开发；重元素稳定化卡宾/亚胺类似物合成；反芳香性物种的合成与表征；炔烃复分解反应与大环合成；物理有机化学中的动力学控制研究；金属有机化学",
+    "papers": 5,
+    "coherence": 0.374
+  },
+  {
+    "name": "陈名华",
+    "professor_id": "professor-c-fa86e2a467d6c4dc6fb5db36",
+    "paper_count": 91,
+    "has_directions": true,
+    "directions": "数据中心能效优化；电力系统运行中的机器学习应用；无线网络流控制技术；能源效率型交通系统；延迟敏感型网络资源调度；在线容量配置算法；在线算法和优化",
+    "papers": 5,
+    "coherence": 0.303
+  },
+  {
+    "name": "王向荣",
+    "professor_id": "professor-c-6b8c31caae256e254307caab",
+    "paper_count": 90,
+    "has_directions": true,
+    "directions": "凝聚态理论与统计物理；纳米磁学与自旋电子学；拓扑对象与拓扑态；二维系统的量子相变；低维系统的电子结构与电子输运",
+    "papers": 5,
+    "coherence": 0.352
+  },
+  {
+    "name": "李骏",
+    "professor_id": "professor-c-d94a5b493653dfdd72017ee5",
+    "paper_count": 79,
+    "has_directions": true,
+    "directions": "新体制雷达；智能信号处理",
+    "papers": 5,
+    "coherence": 0.194
+  },
+  {
+    "name": "李志刚",
+    "professor_id": "professor-c-20de1cdbd430621b872f7e8d",
+    "paper_count": 75,
+    "has_directions": true,
+    "directions": "含大规模风电接入的电力系统协同调度；多维协调优化调度方法；互联电力系统运行优化；可再生能源消纳与资源管理；智能电网优化理论；综合能源系统；人工智能",
+    "papers": 5,
+    "coherence": 0.438
+  },
+  {
+    "name": "张健全",
+    "professor_id": "professor-c-315358f021764af5dff88179",
+    "paper_count": 73,
+    "has_directions": true,
+    "directions": "非富勒烯受体有机太阳能电池；小分子受体材料设计；有机半导体材料；有机光电器件性能优化；有机太阳能电池材料表征；功能材料；太阳能转换",
+    "papers": 5,
+    "coherence": 0.47
+  },
+  {
+    "name": "张旻",
+    "professor_id": "professor-c-17c955e0febbc97821fa1bbb",
+    "paper_count": 72,
+    "has_directions": true,
+    "directions": "昆虫级柔性软体机器人；微纳机电系统驱动执行器；压电/静电驱动微型机器人；复杂地形下的微型机器人运动控制；面向人机交互的柔性触觉反馈技术；微型机器人能源自给与动力管理；微/纳机电系统（MEMS/NEMS）",
+    "papers": 5,
+    "coherence": 0.2
+  },
+  {
+    "name": "杨朋",
+    "professor_id": "professor-c-50d75ff66dab7355ea244976",
+    "paper_count": 72,
+    "has_directions": true,
+    "directions": "协作机器人订单拣选系统；四向穿梭车自动化仓储调度；异构提升机仓储检索调度；多穿梭车能效优化调度；生产与交付集成调度优化；在线订单履行策略；机器人仓储系统",
+    "papers": 5,
+    "coherence": 0.295
+  },
+  {
+    "name": "王强",
+    "professor_id": "professor-c-3d236b73630d1f5195c2762c",
+    "paper_count": 66,
+    "has_directions": true,
+    "directions": "高性能计算；AI系统",
+    "papers": 5,
+    "coherence": 0.248
+  },
+  {
+    "name": "邵明文",
+    "professor_id": "professor-c-378f53c8a37ae35e62183516",
+    "paper_count": 61,
+    "has_directions": true,
+    "directions": "基于粗糙集理论的特征选择；模糊粗糙集与属性约简；基于注意力机制的图像恢复；单幅图像去雾与去雨算法；基于深度学习的图像超分辨率重建；不确定性引导的图像增强技术；深度学习；计算机视觉；粒计算；形式概念分析",
+    "papers": 5,
+    "coherence": 0.347
+  },
+  {
+    "name": "Fangxin Wang",
+    "professor_id": "professor-c-f0a4fb894a8ed6e36a2c8555",
+    "paper_count": 61,
+    "has_directions": true,
+    "directions": "基于大模型的网络协议适配；高保真生成式视频流媒体传输；点云视频神经压缩与渐进式细化；视点自适应体积视频流传输；多方实时视频流联合路由与流自适应；视觉基础模型驱动的视频流优化；人工智能网络与系统",
+    "papers": 5,
+    "coherence": 0.377
+  },
+  {
+    "name": "李维",
+    "professor_id": "professor-c-4f68da1c5f65d02228dd3b0d",
+    "paper_count": 57,
+    "has_directions": true,
+    "directions": "海洋通信；新体制探测与海洋信息获取",
+    "papers": 5,
+    "coherence": 0.145
+  },
+  {
+    "name": "Tinghuan Chen",
+    "professor_id": "professor-c-82e96606f7f66b177e0a8ee9",
+    "paper_count": 57,
+    "has_directions": true,
+    "directions": "基于大语言模型的PCB自动化设计 (LLM-based PCB Design)；模拟电路布局布线与尺寸优化 (Analog Placement and Sizing)；基于图神经网络的电路表示学习 (GNN-based Circuit Representation Learning)；基于扩散模型与强化学习的EDA算法优化 (Diffusion and RL for EDA)；FPGA高层次综合与功耗预测 (FPGA HLS and Power Estimation)；基于多智能体框架的EDA自动化流程 (Multi-Agent Frameworks for EDA)；超大规模集成电路自动化设计工具 (VLSI CAD)",
+    "papers": 5,
+    "coherence": 0.318
+  },
+  {
+    "name": "王朝谚",
+    "professor_id": "professor-c-b5a4c0417e5aea583cac38b8",
+    "paper_count": 56,
+    "has_directions": true,
+    "directions": "有机金属化学；膦配体设计与合成；烯基膦配体电子效应调控；配体构型与供电子能力研究；新能源科学与工程；碳科学",
+    "papers": 5,
+    "coherence": 0.319
+  },
+  {
+    "name": "张纵辉",
+    "professor_id": "professor-c-02aa63efca826cfbf95e4595",
+    "paper_count": 55,
+    "has_directions": true,
+    "directions": "面向移动网络优化的关键信号处理；机器学习；无线通信的关键信号处理；优化方法",
+    "papers": 5,
+    "coherence": 0.304
+  },
+  {
+    "name": "张瑞茂",
+    "professor_id": "professor-c-77216c80c6f088e7971e43f7",
+    "paper_count": 54,
+    "has_directions": true,
+    "directions": "基于多模态大模型的图像编辑；文本驱动的全身动作生成；基于大语言模型的关键点理解；以人为中心的视觉建模；跨模态指令驱动的内容生成；多模态大模型在视觉任务中的应用；计算机视觉",
+    "papers": 5,
+    "coherence": 0.313
+  },
+  {
+    "name": "黄建华",
+    "professor_id": "professor-c-7feadc3d9bb3fc36d6da4e2f",
+    "paper_count": 54,
+    "has_directions": true,
+    "directions": "大规模空间数据集的高斯过程建模；空间极值过程与Max-stable模型；基于协方差近似的大规模空间统计推断；非平稳空间过程的贝叶斯层次模型；空间回归模型与空间异质性分析；多变量空间依赖性建模；统计学渐进理论；运筹学；人工智能；统计学；统计理论；生物统计与健康数据；统计学与其它学科的交叉；数字孪生",
+    "papers": 5,
+    "coherence": 0.361
+  },
+  {
+    "name": "王飞",
+    "professor_id": "professor-c-50de19c63381516f43a60e93",
+    "paper_count": 53,
+    "has_directions": true,
+    "directions": "基于虚拟现实的应急演练设计；VR严肃游戏中的教学策略研究；安全知识培训的教学法比较；虚拟现实环境下的认知负荷与学习效果；安全韧性城市规划；灾害建模；应急演练设计与推演",
+    "papers": 5,
+    "coherence": 0.161
+  },
+  {
+    "name": "张敏",
+    "professor_id": "professor-c-c40fa2e1302ae8a262f7657d",
+    "paper_count": 51,
+    "has_directions": true,
+    "directions": "柔性突触晶体管；类脑计算与储备池计算；可重构多模态晶体管；纳米薄膜硅电子器件；二维范德华异质结界面化学；碳纳米管应变传感器；柔性电子学",
+    "papers": 5,
+    "coherence": 0.36
+  },
+  {
+    "name": "杨文明",
+    "professor_id": "professor-c-9821ad33dda81fe5530f7e1d",
+    "paper_count": 49,
+    "has_directions": true,
+    "directions": "多模态大语言模型视觉注意力机制；基于扩散模型的时序异常检测；文本生成视频的质量评估方法；基于3D Gaussian Splatting的语义SLAM；全场景组合视频检索；多模态视觉感知与理解；计算机视觉",
+    "papers": 5,
+    "coherence": 0.306
+  },
+  {
+    "name": "陈清财",
+    "professor_id": "professor-c-c005bba79c86a32052615482",
+    "paper_count": 49,
+    "has_directions": true,
+    "directions": "自然语言处理；人工智能",
+    "papers": 5,
+    "coherence": 0.29
+  },
+  {
+    "name": "汪浩",
+    "professor_id": "professor-c-7ecb93dd2b0af1f8ede7646b",
+    "paper_count": 48,
+    "has_directions": true,
+    "directions": "二维材料与器件；新能源设备制造；激光增材制造",
+    "papers": 5,
+    "coherence": 0.298
+  },
+  {
+    "name": "王筱平",
+    "professor_id": "professor-c-76e7be7bb22b70438ecac414",
+    "paper_count": 47,
+    "has_directions": true,
+    "directions": "基于扩散模型的拓扑优化方法；相场模型（Phase Field Models）的数值稳定性算法；超合金相场模拟的能量稳定格式；Landau-Lifshitz方程的高效投影数值方法；多相流与界面问题的计算力学建模；智能制造中的结构拓扑优化；界面问题与多相流的建模与仿真",
+    "papers": 5,
+    "coherence": 0.246
+  },
+  {
+    "name": "曹广忠",
+    "professor_id": "professor-c-78aed4afbb5f6c5cd6a1bd0b",
+    "paper_count": 47,
+    "has_directions": true,
+    "directions": "1. 智能控制",
+    "papers": 5,
+    "coherence": 0.196
+  },
+  {
+    "name": "罗智泉",
+    "professor_id": "professor-c-bce9cc6026e8109afa5b85f0",
+    "paper_count": 46,
+    "has_directions": true,
+    "directions": "非凸非光滑优化算法；ADMM与坐标下降法的随机化改进；低秩核高斯过程回归；鲁棒自适应波束形成；线性约束凸优化算法；时间序列回归的矩阵优化；大数据分析的优化方法",
+    "papers": 5,
+    "coherence": 0.357
+  },
+  {
+    "name": "吴亮",
+    "professor_id": "professor-c-2ba1ca5f1ac0a701ff39c64e",
+    "paper_count": 44,
+    "has_directions": true,
+    "directions": "射频/毫米波/太赫兹 CMOS 集成电路与系统；用于短距离高速互连的宽带电路；太赫兹信号源及高能效收发器",
+    "papers": 5,
+    "coherence": 0.386
+  },
+  {
+    "name": "朱雷",
+    "professor_id": "professor-c-80faa33d9233eb1d09d63356",
+    "paper_count": 42,
+    "has_directions": true,
+    "directions": "1. 大气化学 2. 痕量气体遥感 3. 数据同化 4. 空气质量 5. 大气 -地面-海洋交互作用 6. 温室气体 代表性科研项目： 在研科研项目： 1. 中国地区人为源非甲烷挥发性有机物日间逐时高分辨率卫星遥感监测",
+    "papers": 5,
+    "coherence": 0.325
+  },
+  {
+    "name": "陈高洁",
+    "professor_id": "professor-c-0424b5ad96905e64c464b1a2",
+    "paper_count": 41,
+    "has_directions": true,
+    "directions": "柔性电子智能感知通信一体化；柔性光电感知与通信；人工智能赋能柔性电子智能系统；空天地一体化通信网络；移动通信网络安全；大规模物联网组网研究",
+    "papers": 5,
+    "coherence": 0.297
+  },
+  {
+    "name": "周光敏",
+    "professor_id": "professor-c-10266519da9f528979949cfd",
+    "paper_count": 41,
+    "has_directions": true,
+    "directions": "高能量可充电电池设计；全固态锂电池的设计与组装；电池回收与再利用；电极材料与器件的3D打印技术；柔性储能材料与器件的开发；电极反应与失效机制的原位表征技术",
+    "papers": 5,
+    "coherence": 0.452
+  },
+  {
+    "name": "潘文安",
+    "professor_id": "professor-c-cead18534fe2985c42599dd9",
+    "paper_count": 41,
+    "has_directions": true,
+    "directions": "智能城市感知与通信网络；强化学习驱动的地面与城市空中交通(UAM)集成控制；基于大语言模型与强化学习的交通信号控制；语义语音通信技术；智慧城市多模态感知系统；强化学习在地面交通与城市空中交通（UAM）集成中的应用；强化学习与大语言模型在交通信号控制中的集成",
+    "papers": 5,
+    "coherence": 0.318
+  },
+  {
+    "name": "金欣",
+    "professor_id": "professor-c-8998040b0dbcc86591aaac8d",
+    "paper_count": 39,
+    "has_directions": true,
+    "directions": "散射介质下的三维目标重建；全息视频快速生成技术；基于傅里叶频谱的非线性查找表(NLUT)方法；计算摄像学；光场成像编码与压缩；三维场景重建与重建算法；多媒体信号处理",
+    "papers": 5,
+    "coherence": 0.27
+  },
+  {
+    "name": "陈张伟",
+    "professor_id": "professor-c-df7acfd906d9ad56ea1a012c",
+    "paper_count": 38,
+    "has_directions": true,
+    "directions": "【个人简介】Personal Profile 陈张伟",
+    "papers": 5,
+    "coherence": 0.129
+  },
+  {
+    "name": "荆炳义",
+    "professor_id": "professor-c-ec08c2e7c565ae7d1eed6d1a",
+    "paper_count": 37,
+    "has_directions": true,
+    "directions": "高维因子模型统计分析；不平衡数据集下的深度学习预测；基于GAN的降水图像渲染；改进型Chatterjee相关系数研究；细胞穿透肽（CPP）生物信息学预测；人工智能；数据科学",
+    "papers": 5,
+    "coherence": 0.246
+  },
+  {
+    "name": "吴辰晔",
+    "professor_id": "professor-c-24cc18fc438fef4245716945",
+    "paper_count": 36,
+    "has_directions": true,
+    "directions": "电力市场协同灵活性交易机制；电动汽车充电站隐私保护定价协调；低碳电力政策的鲁棒性分析；基于端到端学习的经济调度优化；基于因果结构学习的人类偏好挖掘；未来电力市场的定价机制与商业模式设计；碳相关金融工具的数据驱动分析",
+    "papers": 5,
+    "coherence": 0.367
+  },
+  {
+    "name": "官权学",
+    "professor_id": "professor-c-a97cfdba7d5b8ee4d26ae68f",
+    "paper_count": 36,
+    "has_directions": true,
+    "directions": "GaN基高功率密度矩阵变换器集成技术；基于深度域适应的充电桩故障诊断；基于增强随机森林的电池热管理系统控制；电力电子变换器的模型预测控制；基于数据驱动的电力电子系统动态控制；宽禁带半导体（GaN）单片集成与封装；主要的研究兴趣包括人工智能和先进控制算法在新型电力系统",
+    "papers": 5,
+    "coherence": 0.261
+  },
+  {
+    "name": "潘兴斌",
+    "professor_id": "professor-c-f02feba2d5d7d68a5e445ebb",
+    "paper_count": 35,
+    "has_directions": true,
+    "directions": "三维Ginzburg-Landau方程的Meissner解研究；非线性麦克斯韦-斯托克斯方程组；具有拓扑参数的拟线性电磁系统；超导数学理论中的变分法应用；非线性偏微分方程的还原法研究；液晶与电磁学；非线性麦克斯韦方程组",
+    "papers": 5,
+    "coherence": 0.37
+  },
+  {
+    "name": "汪汉云",
+    "professor_id": "professor-c-19b303f78e28cc221b518f0f",
+    "paper_count": 34,
+    "has_directions": true,
+    "directions": "点云几何压缩；基于占用预测的点云压缩；点云特征交互网络；三维场景几何表示；高效三维数据压缩；计算机视觉；人工智能",
+    "papers": 5,
+    "coherence": 0.276
+  },
+  {
+    "name": "龚世民",
+    "professor_id": "professor-c-b829e71f3fb11b07782ce81c",
+    "paper_count": 34,
+    "has_directions": true,
+    "directions": "基于IRS的智能无线通信环境构建；基于深度强化学习的网络资源优化；无人机辅助的移动边缘计算与任务卸载；无线能量传输与后向散射通信技术；面向通信安全的智能反射面干扰与防御；时空Transformer网络在流量预测中的应用；移动网络与边缘计算；智能网络研究；智能化校园建设",
+    "papers": 5,
+    "coherence": 0.367
+  },
+  {
+    "name": "钟任新",
+    "professor_id": "professor-c-fc38db9c8b868408e6385597",
+    "paper_count": 34,
+    "has_directions": true,
+    "directions": "不确定性下的网约车调度与重定位优化；城市低空交通流理论与空域结构化研究；基于强化学习的智能交通系统控制；空地协同预警与应急响应系统；数据驱动与模型驱动融合的交通控制优化；视觉语义导航与三维数字孪生；大规模交通数据挖掘与预测",
+    "papers": 5,
+    "coherence": 0.365
+  },
+  {
+    "name": "叶涛",
+    "professor_id": "professor-c-33b29ba04e3e85c657c680f9",
+    "paper_count": 33,
+    "has_directions": true,
+    "directions": "类脑计算集成电路设计；脉冲神经网络(SNN)硬件加速；基于RISC-V的边缘AI加速器；柔性离子电控传感器；聚电解质驱动的生物医学传感器；智能穿戴式健康监测器件；人工智能加速芯片",
+    "papers": 5,
+    "coherence": 0.353
+  },
+  {
+    "name": "李晶",
+    "professor_id": "professor-c-96f78ff13825ac7de4e2a886",
+    "paper_count": 33,
+    "has_directions": true,
+    "directions": "自然语言处理；大模型",
+    "papers": 5,
+    "coherence": 0.175
+  },
+  {
+    "name": "张大全",
+    "professor_id": "professor-c-3cb2adedd59da1b0113278a8",
+    "paper_count": 32,
+    "has_directions": true,
+    "directions": "钙钛矿纳米线生长与合成；柔性钙钛矿光电探测器；钙钛矿量子线发光二极管 (LEDs)；纳米光子学增强钙钛矿发光性能；钙钛矿异质结构集成；可拉伸钙钛矿光电器件；半导体",
+    "papers": 5,
+    "coherence": 0.374
+  },
+  {
+    "name": "谭光",
+    "professor_id": "professor-c-12c864f12882e8d23d879da0",
+    "paper_count": 30,
+    "has_directions": true,
+    "directions": "车联网协同感知；边缘计算辅助的BEV感知；资源受限设备的实时目标跟踪；视觉语言导航(VLN)；时空交互感知；具身智能与场景知识推理",
+    "papers": 5,
+    "coherence": 0.274
+  },
+  {
+    "name": "丁文伯",
+    "professor_id": "professor-c-3d7191fed1133c60b492f9c3",
+    "paper_count": 30,
+    "has_directions": true,
+    "directions": "摩擦电自供电传感器设计；基于摩擦电效应的触觉感知；柔性可穿戴智能手套；多模态人机交互界面；通信高效的联邦学习算法；基于自适应量化的分布式学习；信号处理",
+    "papers": 5,
+    "coherence": 0.369
+  },
+  {
+    "name": "张先恩",
+    "professor_id": "professor-c-b87dc8613685a7ee9804503b",
+    "paper_count": 30,
+    "has_directions": true,
+    "directions": "纳米药物递送系统与蛋白质纳米笼设计；基于量子点与纳米颗粒的生物成像技术；结核分枝杆菌（M. tuberculosis）的分子机制与耐药性研究；基于QCM与金纳米颗粒的生物传感器开发；病毒感染过程中的细胞内示踪与宿主互作；微生物代谢途径与降解酶的结构生物学；AI与机器学习在肿瘤诊断；合成生物学；生物传感；纳米生物学",
+    "papers": 5,
+    "coherence": 0.275
+  },
+  {
+    "name": "吴日",
+    "professor_id": "professor-c-1ac8bd6365d9176432f188df",
+    "paper_count": 29,
+    "has_directions": true,
+    "directions": "基于磁性纳米材料的固相萃取技术；质谱成像与基质升华技术研究；单细胞代谢组学与新型电离源开发；天然产物结构解析与电子-离子反应解离；基于DNA酶与杂交链式反应的生物标志物检测；气相结构生物学与天然质谱技术；环境污染物（农药与抗生素）的痕量分析",
+    "papers": 5,
+    "coherence": 0.266
+  },
+  {
+    "name": "黄锦圣",
+    "professor_id": "professor-c-653e94009c6444c4d4b14e87",
+    "paper_count": 29,
+    "has_directions": true,
+    "directions": "有机太阳能电池的光物理与载流子调控；绿色溶剂加工技术在有机光伏中的应用；手性超材料与非线性光学调控；手性对称元原子设计；纳米光子学中的自旋解耦调制；超快激光与光谱学；超材料与光子晶体",
+    "papers": 5,
+    "coherence": 0.321
+  },
+  {
+    "name": "戴宪华",
+    "professor_id": "professor-c-bc89cf0af8d845819c3dc587",
+    "paper_count": 29,
+    "has_directions": true,
+    "directions": "基于深度学习的CRISPR/Cas9 sgRNA活性预测；生物信息学中的基因组组装与数据缺失值填补；基于CNN与RNN的基因编辑效率预测模型；MIMO-OFDM无线通信系统信道估计；OFDMA系统载波频率偏移(CFO)补偿；WLAN自适应接入机制与吞吐量优化；染色体基因空间分布与共定位研究；无线移动通信；人工智能；生物信息处理；信息与通信工程；智能科学与技术；非线性信号处理；深度学习算法；图像识别；自然语言处理",
+    "papers": 5,
+    "coherence": 0.322
+  },
+  {
+    "name": "邱丽",
+    "professor_id": "professor-c-d2728710e0b12efde0867570",
+    "paper_count": 29,
+    "has_directions": true,
+    "directions": "网络化控制系统；模型预测控制；物理信息系统；马尔科夫跳变系统",
+    "papers": 5,
+    "coherence": 0.422
+  },
+  {
+    "name": "徐彦卿",
+    "professor_id": "professor-c-69e07aac13a7b37265043d43",
+    "paper_count": 27,
+    "has_directions": true,
+    "directions": "大规模MIMO系统中的分布式基带处理；非正交多址接入(NOMA)的符号级预编码技术；大规模MIMO系统的信道估计算法；分布式边缘网络中的协作传输机制；多载波大规模MIMO系统的联合压缩与多用户均衡；夹持天线；大规模天线系统的分布式信号处理算法设计",
+    "papers": 5,
+    "coherence": 0.334
+  },
+  {
+    "name": "张瑶晶",
+    "professor_id": "professor-c-cdcdfb8bc1ff92b72c73711c",
+    "paper_count": 27,
+    "has_directions": true,
+    "directions": "集成光子学工艺与材料；非线性光学晶体研究；微环谐振器光梳技术；硅基微腔激光器；低损耗集成光子芯片；光学计算；光学传感",
+    "papers": 5,
+    "coherence": 0.51
+  },
+  {
+    "name": "李清玉",
+    "professor_id": "professor-c-eadf2ceed18092a189417ea1",
+    "paper_count": 27,
+    "has_directions": true,
+    "directions": "遥感图像语义分割；弱监督/半监督深度学习；遥感影像变化检测；地理空间目标检测；深度学习标签自动修正；人工智能；计算机视觉",
+    "papers": 5,
+    "coherence": 0.353
+  },
+  {
+    "name": "潘毅",
+    "professor_id": "professor-c-664e4b722cee6020092a90cd",
+    "paper_count": 26,
+    "has_directions": true,
+    "directions": "基于深度学习的医学影像分割；基于生物网络与AI的药物研发；蛋白质相互作用网络分析；lncRNA-疾病关联预测；基于图神经网络的生物信息学研究；基于深度学习的神经发育障碍辅助诊断；以云计算；生物信息学；生物计算；元宇宙；数字化解决方案；AIGC大模型；生物医药",
+    "papers": 5,
+    "coherence": 0.325
+  },
+  {
+    "name": "谢洪途",
+    "professor_id": "professor-c-7031cd305c56d8c3b181947c",
+    "paper_count": 26,
+    "has_directions": true,
+    "directions": "合成孔径雷达(SAR)成像与处理；雷达微运动目标识别；宽角凝视合成孔径雷达(WasSAR)目标检测；空基/机载雷达目标跟踪与态势感知；多模态/双频雷达图像融合；时空自适应处理(STAP)技术；计算机视觉与智能信息处理",
+    "papers": 5,
+    "coherence": 0.475
+  },
+  {
+    "name": "丘立",
+    "professor_id": "professor-c-8e9b294e55b7f226589c21bc",
+    "paper_count": 26,
+    "has_directions": true,
+    "directions": "MIMO LTI系统的相位理论；复杂网络系统的相位稳定性分析；多端口网络的相位保持特性；混合增益与相位不确定性下的反馈稳定性；基于强次序目标的矩阵补全优化；复杂网络系统的控制与优化；系统理论",
+    "papers": 5,
+    "coherence": 0.404
+  },
+  {
+    "name": "韩亮",
+    "professor_id": "professor-c-f8ae7394baab839b6bc74d95",
+    "paper_count": 26,
+    "has_directions": true,
+    "directions": "多媒体计算；机器视觉",
+    "papers": 5,
+    "coherence": 0.329
+  },
+  {
+    "name": "李强",
+    "professor_id": "professor-c-fe8b8988fffb148639d96f78",
+    "paper_count": 26,
+    "has_directions": true,
+    "directions": "内波生成与地形相互作用机制；深海内部潮汐能量收支分析；基于马尔可夫决策过程的AUV路径规划；基于OFDM的水声通信节点设计；跨地转锋面内波传播研究；内波生成传播及其混合机制；海洋多尺度相互作用",
+    "papers": 5,
+    "coherence": 0.187
+  },
+  {
+    "name": "周凯",
+    "professor_id": "professor-c-074d79081d85b2802df59617",
+    "paper_count": 25,
+    "has_directions": true,
+    "directions": "基于机器学习的量子色动力学(QCD)物质研究；重离子碰撞数据的贝叶斯推断分析；中子星物态方程(EoS)的观测数据重建；基于自动微分的物理参数反演；基于机器学习的闪电结构识别；基于傅里叶流模型的费曼路径生成；人工智能科学 (AI for Science)",
+    "papers": 5,
+    "coherence": 0.33
+  },
+  {
+    "name": "高飞",
+    "professor_id": "professor-c-4e4d42beb589dbeb63d7eabc",
+    "paper_count": 25,
+    "has_directions": true,
+    "directions": "辐照损伤与缺陷动力学研究；高熵合金与多组分单相合金；锂离子电池正负极材料结构演变；3D打印生物降解水凝胶支架；软组织骨软骨再生材料；分子动力学模拟与材料缺陷分析；3D曲面建模",
+    "papers": 5,
+    "coherence": 0.2
+  },
+  {
+    "name": "江瑛芝",
+    "professor_id": "professor-c-7cf5db060e6d3bd3346ba117",
+    "paper_count": 25,
+    "has_directions": true,
+    "directions": "抗生素肽与抗病毒肽预测；基于深度学习的生物活性肽识别；核苷酸卤化酶底物特异性工程；基于分子动力学模拟的蛋白质底物识别研究；计算辅助多特征融合生物信息学分析；理论化学；计算生物学",
+    "papers": 5,
+    "coherence": 0.417
+  },
+  {
+    "name": "李佳",
+    "professor_id": "professor-c-8d2ebdba03e1c06b924348f3",
+    "paper_count": 7,
+    "has_directions": true,
+    "directions": "有机光电晶体管 (Organic Phototransistors)；超灵敏X射线探测器 (Ultrasensitive X-ray Detectors)；异质结光电探测器 (Heterojunction Photodetectors)；层状有机半导体材料 (Layered Organic Semiconductors)；分子间电荷转移机制 (Intermolecular Charge-Transfer)；超薄柔性光电器件 (Ultrathin Optoelectronic Devices)；新型光电器件",
+    "papers": 5,
+    "coherence": 0.5
+  },
+  {
+    "name": "陈道毅",
+    "professor_id": "professor-c-b4560a5331c5d05725b984b6",
+    "paper_count": 25,
+    "has_directions": true,
+    "directions": "湍流动力学方程与k-ε模型研究；切比雪夫伪谱法在流体不稳定性分析中的应用；浅水区域平面湍流尾流实验研究；地表空间变异性与水汽通量诊断；湍流密度分层流中的大尺度平面激光诱导荧光技术；海洋环境和可燃冰；海洋仪器和装备",
+    "papers": 5,
+    "coherence": 0.213
+  },
+  {
+    "name": "薛烨",
+    "professor_id": "professor-c-d310738a71393bd4db9e7eef",
+    "paper_count": 25,
+    "has_directions": true,
+    "directions": "基于学习优化的网络参数调优；基于辐射场（Radiance Fields）的信道建模；多域局部统计信道建模；数据驱动的移动通信测量分析；网络世界模型与数字孪生；学习优化（L2O）；稀疏/高效人工智能",
+    "papers": 5,
+    "coherence": 0.288
+  },
+  {
+    "name": "龚峰",
+    "professor_id": "professor-c-0a1f4d3421282ac08c29c55c",
+    "paper_count": 24,
+    "has_directions": true,
+    "directions": "光学元件精密成形工艺与装备",
+    "papers": 5,
+    "coherence": 0.315
+  },
+  {
+    "name": "陈怿",
+    "professor_id": "professor-c-4da7108c99d7affbaa9b240d",
+    "paper_count": 24,
+    "has_directions": true,
+    "directions": "基于多智能体强化学习的无线资源调度；非正交多址接入 (NOMA) 系统优化；无人机辅助数据采集技术；跨层信息驱动的网络性能预测；分布式双层优化算法在无线通信中的应用；无反馈碰撞信道吞吐量优化；无线通信与网络",
+    "papers": 5,
+    "coherence": 0.399
+  },
+  {
+    "name": "林天麟",
+    "professor_id": "professor-c-6d8da02b987c58ec7f55f9ac",
+    "paper_count": 24,
+    "has_directions": true,
+    "directions": "分布式自主机器人系统；多机器人协作控制；树攀机器人机构设计与运动规划；全向移动混合动力车辆控制；基于ROS的机器人系统开发；多机器人系统；野外机器人学",
+    "papers": 5,
+    "coherence": 0.412
+  },
+  {
+    "name": "陈谦",
+    "professor_id": "professor-c-83b92aacacdcf1c38e3ca66e",
+    "paper_count": 24,
+    "has_directions": true,
+    "directions": "热驱动海水淡化技术；非稳态热力学建模与分析；太阳能驱动蒸发式淡化系统；废热驱动低能耗脱盐技术；可再生能源耦合电解水系统优化；毛细驱动传质传热过程模拟；废水处理和资源化",
+    "papers": 5,
+    "coherence": 0.41
+  },
+  {
+    "name": "黄宪达",
+    "professor_id": "professor-c-d38aa3febf87385fcc040ed3",
+    "paper_count": 24,
+    "has_directions": true,
+    "directions": "microRNA-target相互作用数据库；植物小RNA介导的跨界信号转导；非编码RNA（circRNA）竞争性内源性RNA网络；microRNA在肿瘤发生中的调控机制；转录组数据挖掘与功能分析；基因调控网络中的前馈环路研究；生物信息",
+    "papers": 5,
+    "coherence": 0.428
+  },
+  {
+    "name": "李秀",
+    "professor_id": "professor-c-eca8ad7085dc305d0907ecee",
+    "paper_count": 24,
+    "has_directions": true,
+    "directions": "多模态大模型理解与生成；具身智能中的多智能体强化学习；人形机器人动态交互控制；基于扩散模型的视频内容生成；共语动作驱动的数字人建模；AI for Science (生命科学交叉研究)；为人工智能",
+    "papers": 5,
+    "coherence": 0.32
+  },
+  {
+    "name": "权超禹",
+    "professor_id": "professor-c-01669482018deab55ec5ea13",
+    "paper_count": 23,
+    "has_directions": true,
+    "directions": "Allen-Cahn方程的高阶数值格式；保持最大值原理的数值格式设计；相场方程的高精度时间积分方案；扩展积分公式(IFRK)在偏微分方程中的应用；非线性相场模型的数值稳定性研究；相场方程的高精度方法；时间分数阶问题的数值方法",
+    "papers": 5,
+    "coherence": 0.391
+  },
+  {
+    "name": "何兆成",
+    "professor_id": "professor-c-1e735c7d62ddce9d99c35313",
+    "paper_count": 23,
+    "has_directions": true,
+    "directions": "基于张量分解的时空交通数据补全；基于图神经网络与深度学习的交通流预测；城市交通网络时空特征挖掘与模式发现；基于非线性模型预测控制的智能车辆制动控制；基于车辆轨迹重采样的城市级交通大数据分析；集成底盘控制系统中的轮胎摩擦力自适应控制；多网融合交通系统建模与仿真；交通工程；交通系统信息物理模型理论研究；车路协同环境下的交通系统智能控制；城市级个体出行高分辨率认知体系；基于出行视角下的车路群智协同控制方法；交通与通信网络耦合的控制策略在环仿真与评价研究；交通流模型与仿真；交通信息处理；智能交通系统；云计算与大数据管理技术",
+    "papers": 5,
+    "coherence": 0.284
+  },
+  {
+    "name": "陈俊挺",
+    "professor_id": "professor-c-5be64f02dc621ca0cf5bda47",
+    "paper_count": 23,
+    "has_directions": true,
+    "directions": "基于无线电地图感知的无线定位；D2D辅助的MIMO系统预编码与反馈；非参数化源定位中的矩阵分解技术；分布式网络定位中的博弈论资源管理；FDD大规模MIMO系统中的CSI共享机制；无线中继节点的本地地图辅助定位；信号处理",
+    "papers": 5,
+    "coherence": 0.388
+  },
+  {
+    "name": "许杰",
+    "professor_id": "professor-c-77086655a3016f4339591f4c",
+    "paper_count": 23,
+    "has_directions": true,
+    "directions": "通信感知一体化 (ISAC) 轨迹与波束赋形优化；近场 MIMO 雷达 3D 定位与估计；基于移动阵列的近场感知技术；面向 6G 的神经辐射场 (NeRF) 语义通信；边缘学习中的联合预训练与微调资源管理；低空经济下的无人机协同通信；无线通信",
+    "papers": 5,
+    "coherence": 0.439
+  },
+  {
+    "name": "帅志刚",
+    "professor_id": "professor-c-78196d071dc0e76e69721462",
+    "paper_count": 23,
+    "has_directions": true,
+    "directions": "聚集诱导发光（AIE）材料；生物成像与细菌研究用荧光材料；光热与光声转换系统设计；分子聚集体的激发态动力学；有机发光材料的非辐射跃迁机制；生物医学应用材料化学；理论化学",
+    "papers": 5,
+    "coherence": 0.31
+  },
+  {
+    "name": "吴亚北",
+    "professor_id": "professor-c-87dae2b1ffc771d09be8325c",
+    "paper_count": 23,
+    "has_directions": true,
+    "directions": "二维材料的准粒子电子结构与GW计算；二维异质结中的磁邻近效应与谷电子学；MXenes及二维半导体的能带工程；基于第一性原理的二维材料结构预测；热电材料的应变工程与性能优化；低维材料的激子与介电性质研究；二维材料：专注于二维材料的电子结构",
+    "papers": 5,
+    "coherence": 0.361
+  },
+  {
+    "name": "黄宇雄",
+    "professor_id": "professor-c-a67ab81aed12c463b69ef160",
+    "paper_count": 23,
+    "has_directions": true,
+    "directions": "可见光驱动的类Fenton降解技术；二维过渡金属硫族化合物(MoS2)催化剂设计；异质结纳米材料的界面工程；抗生素污染物的降解机制研究；基于氧掺杂的超氧自由基产生调控；环境纳米技术及功能材料；污染物的环境地球化学过程及其生物效应",
+    "papers": 5,
+    "coherence": 0.33
+  },
+  {
+    "name": "冯峰",
+    "professor_id": "professor-c-d0707596cb6349e94483275e",
+    "paper_count": 23,
+    "has_directions": true,
+    "directions": "钛合金切削刀具磨损机理研究；脆性纤维复合材料切削损伤控制；基于机理-数据融合的刀具磨损监测；双周期冲击平台下的切削加工研究；多传感器融合的智能制造监测技术；智能制造与精密加工技术研究；超声加工装备与工艺",
+    "papers": 5,
+    "coherence": 0.36
+  },
+  {
+    "name": "李星辉",
+    "professor_id": "professor-c-d27450ad4b2198e25c91583f",
+    "paper_count": 23,
+    "has_directions": true,
+    "directions": "纳米级光栅干涉测量技术；混合光刻微纳结构制造；高动态范围结构光3D重建；微型偏振器阵列加工；等离子体微滴化学合成技术；精密测量技术与仪器；智能生产技术与装备",
+    "papers": 5,
+    "coherence": 0.365
+  },
+  {
+    "name": "罗智泉",
+    "professor_id": "professor-c-bce9cc6026e8109afa5b85f0",
+    "paper_count": 46,
+    "has_directions": true,
+    "directions": "非凸非光滑优化算法；ADMM与坐标下降法的随机化改进；低秩核高斯过程回归；鲁棒自适应波束形成；线性约束凸优化算法；时间序列回归的矩阵优化；大数据分析的优化方法",
+    "papers": 5,
+    "coherence": 0.36
+  },
+  {
+    "name": "韩晓光",
+    "professor_id": "professor-c-305bc8d35fe126902b35479d",
+    "paper_count": 22,
+    "has_directions": true,
+    "directions": "基于3D高斯泼溅的可动画人脸/人体建模；基于单目视频的3D人体重建；基于生成式AI的虚拟试衣技术；面向机器人操作的任务导向型视频生成；手物交互（Hand-Object Interaction）建模；基于稳定配准的3D形状对应关系研究；计算机视觉",
+    "papers": 5,
+    "coherence": 0.372
+  },
+  {
+    "name": "贺冬冬",
+    "professor_id": "professor-c-38f18d790d70bcfd8c809c13",
+    "paper_count": 22,
+    "has_directions": true,
+    "directions": "Poisson-Nernst-Planck (PNP) 系统数值解法；Navier-Stokes-Poisson-Nernst-Planck (NSPNP) 耦合系统；保正性与能量稳定性数值格式设计；多相流离子输运模拟；非线性动力学与流体丝线稳定性分析；粘弹性流体动力学；偏微分方程数值方法",
+    "papers": 5,
+    "coherence": 0.359
+  },
+  {
+    "name": "张朝华",
+    "professor_id": "professor-c-727dba660f7ddaff7e08c8ba",
+    "paper_count": 22,
+    "has_directions": true,
+    "directions": "碲化铋基热电材料的纳米结构化控制；有机无机复合热电材料；合作导师：熊启华 教授",
+    "papers": 5,
+    "coherence": 0.486
+  },
+  {
+    "name": "唐本忠",
+    "professor_id": "professor-c-a05d30222c26001c1e1c92f1",
+    "paper_count": 22,
+    "has_directions": true,
+    "directions": "聚集诱导发光(AIE)材料设计；基于AIE材料的生物成像与诊疗；光热与光声成像材料研究；分子运动与非辐射跃迁机制；生物传感器与细菌研究材料；材料科学；大分子化学",
+    "papers": 5,
+    "coherence": 0.346
+  },
+  {
+    "name": "徐斌",
+    "professor_id": "professor-c-dd74a8eef57e0bf448ce941f",
+    "paper_count": 22,
+    "has_directions": true,
+    "directions": "微细电火花加工",
+    "papers": 5,
+    "coherence": 0.279
+  },
+  {
+    "name": "崔玉康",
+    "professor_id": "professor-c-0da63a19170d0a37b0100401",
+    "paper_count": 21,
+    "has_directions": true,
+    "directions": "1. 基于雷达视觉惯导融合建图定位及其在复杂环境感知中应用 2. 基于预测控制和非合作博弈的车辆队列路径规划和竞速控制 3. 复杂网络攻击下多智能体编队跟踪及其在四旋翼编队中应用 4. 基于卡尔曼滤波的多机器人系统分布式联合定位与目标跟踪 5. 基于中心点聚合规则的多机器人系统分布式优化与联邦学习 课题组每年招收研究生若干",
+    "papers": 5,
+    "coherence": 0.256
+  },
+  {
+    "name": "付红岩",
+    "professor_id": "professor-c-0da7410f6c000a7f85002af2",
+    "paper_count": 21,
+    "has_directions": true,
+    "directions": "基于光纤束流扫描器的固态相干激光雷达；基于衍射阵列的超快敏捷光束偏转技术；非线性偏振演化锁模光纤激光器；耗散孤子动力学研究；多波段硅基光子集成耦合器设计；集成光子学及其在通信与传感领域的应用；光无线通信",
+    "papers": 5,
+    "coherence": 0.36
+  },
+  {
+    "name": "吴佳宾",
+    "professor_id": "professor-c-2a261a0720aa43a1f3083874",
+    "paper_count": 21,
+    "has_directions": true,
+    "directions": "二氧化碳电化学还原 (CO2RR)；CO2捕集与转化集成技术；多碳产物 (C2+) 高效电合成；低配位金属活性位点设计；MXene基柔性电子器件；太阳能驱动碳中和技术；燃料电池",
+    "papers": 5,
+    "coherence": 0.338
+  },
+  {
+    "name": "谭晓军",
+    "professor_id": "professor-c-4db42f487c1dfda666e6702d",
+    "paper_count": 21,
+    "has_directions": true,
+    "directions": "基于3D基础设施的协同感知；单目3D目标检测；点云引导的对比学习；开放场景下的自动驾驶感知；多模态3D目标检测与分割；新能源汽车控制系统；(1) 基于视觉与智能控制的电动汽车技术",
+    "papers": 5,
+    "coherence": 0.203
+  },
+  {
+    "name": "关迅",
+    "professor_id": "professor-c-4e2cea745cca847d922b46ba",
+    "paper_count": 21,
+    "has_directions": true,
+    "directions": "基于GaN的单片集成光传感；三轴光学运动传感技术；光声血管造影超分辨率成像；基于硅基微环调制器(MRM)的光通信；SSB-OFDM无线光通信传输；光纤通信；光纤传感",
+    "papers": 5,
+    "coherence": 0.314
+  },
+  {
+    "name": "冯建设",
+    "professor_id": "professor-c-5ac8a0441f60023fd2067297",
+    "paper_count": 21,
+    "has_directions": true,
+    "directions": "基于数据驱动的剩余寿命(RUL)预测；半导体制造中的虚拟量测(Virtual Metrology)；基于高斯过程回归的随机风速预测；基于粒子滤波与核方法的故障诊断；工业设备性能退化评估与PHM；基于深度学习的机械部件健康管理；制造过程监控与诊断",
+    "papers": 5,
+    "coherence": 0.349
+  },
+  {
+    "name": "杨余久",
+    "professor_id": "professor-c-b7ffa3dbc62d229902c97f6c",
+    "paper_count": 21,
+    "has_directions": true,
+    "directions": "生成对抗网络逆向工程 (GAN Inversion)；基于元学习的黑盒对抗攻击；基于Transformer的视频去模糊；基于补丁的帧级人脸防欺诈；非接触式二维指纹识别；机器学习；模式识别",
+    "papers": 5,
+    "coherence": 0.313
+  },
+  {
+    "name": "李烨",
+    "professor_id": "professor-c-f96e9d270f463499210dfe06",
+    "paper_count": 21,
+    "has_directions": true,
+    "directions": "OFDM系统信道估计与接收机设计；无线通信跨层优化与能效研究；海上风电及潮汐能装置流体力学仿真；海上风电机组故障诊断与运维；海洋可再生能源系统动力学控制；环境微塑料与重金属吸附机制研究；物联网与大数据；计算机与健康医疗交叉学科；知识驱动的人工智能；健康信息泛在感知；多模态医学数据计算；高场磁共振成像射频系统；成像方法；无线通信；健康信息学；正交频分复用（OFDM）技术；深度学习通信系统；健康医疗大模型",
+    "papers": 5,
+    "coherence": 0.306
+  },
+  {
+    "name": "甘培润",
+    "professor_id": "professor-c-051155f29d8773adda0a4fb9",
+    "paper_count": 20,
+    "has_directions": true,
+    "directions": "相干光通信中的载波相位与频率估计；基于机器学习的信道估计技术；M-APSK调制信号的参数估计与星座优化；光无线通信（FSO）与星间激光通信；OFDM系统的同步与参数估计；毫米波与大规模天线阵列信道识别；无线通信中的协作频谱感知与资源分配",
+    "papers": 5,
+    "coherence": 0.451
+  },
+  {
+    "name": "江锦成",
+    "professor_id": "professor-c-0620ebe8ec7abe681dbe73a1",
+    "paper_count": 20,
+    "has_directions": true,
+    "directions": "交通管控与灾害应急；时空大数据与智能计算；交通环境监测与可视化；红外图像处理；2D/3D 目标分割；2D/3D目标检测；行为分析；动态交通网络中分析；交通流建模与仿真；人形机器人；灵巧手；触觉传感器；足式机器人；物流配送机器人；以及不同平台机器人的具身智能实现；运动控制理论应用；机器人核心零部件关键技术；非线性控制；量子控制；偏微分方程动态系统；车路协同交通控制；交通大模型；混合自动驾驶交通流优化",
+    "papers": 5,
+    "coherence": 0.233
+  },
+  {
+    "name": "弥胜利",
+    "professor_id": "professor-c-0ad352eee132892bb17c9a4a",
+    "paper_count": 20,
+    "has_directions": true,
+    "directions": "弹性蛋白样多肽功能化水凝胶设计；角膜组织工程支架开发；肿瘤代谢调控与药物靶点研究；应力驱动微流控核酸检测芯片；生物材料驱动的组织再生；智能医疗装备；组织工程角膜及智能眼环",
+    "papers": 5,
+    "coherence": 0.346
+  },
+  {
+    "name": "李海洲",
+    "professor_id": "professor-c-0d847bbe2597c81c27c04324",
+    "paper_count": 20,
+    "has_directions": true,
+    "directions": "语音识别；自然语言处理",
+    "papers": 5,
+    "coherence": 0.312
+  },
+  {
+    "name": "王洋",
+    "professor_id": "professor-c-1edf552371ae28d17b6dee9e",
+    "paper_count": 20,
+    "has_directions": true,
+    "directions": "物联网入侵检测 (IoT Intrusion Detection)；开放集识别与异常检测 (Open Set Recognition)；并行与分布式计算 (Parallel and Distributed Computing)；存储与文件系统 (Storage and File Systems)；云计算与大数据处理 (Cloud Computing and Big Data Analytics)；云计算与大数据分析处理技术；数据湖仓",
+    "papers": 5,
+    "coherence": 0.216
+  },
+  {
+    "name": "钱辉环",
+    "professor_id": "professor-c-29f96a4969e8517f3e60660e",
+    "paper_count": 20,
+    "has_directions": true,
+    "directions": "多智能体协同控制与编队；微型机器人驱动机制研究；面向自闭症儿童的辅助机器人交互；时空上下文视频异常检测；空间站环境下的机器人步态设计；机器人学；人工智能",
+    "papers": 5,
+    "coherence": 0.338
+  },
+  {
+    "name": "郑庆彬",
+    "professor_id": "professor-c-2abaf837093960398d53bb23",
+    "paper_count": 20,
+    "has_directions": true,
+    "directions": "电磁屏蔽纳米复合材料；高导热界面材料 (TIMs)；柔性导电与应变传感器；MXene/碳基异质结构材料；热管理功能薄膜；纳米碳材料表面与界面工程；透明导体",
+    "papers": 5,
+    "coherence": 0.461
+  },
+  {
+    "name": "Paolo Piersanti",
+    "professor_id": "professor-c-392f624bcfb8d2850e531db9",
+    "paper_count": 20,
+    "has_directions": true,
+    "directions": "应用泛函分析；偏微分方程；微分几何；数学弹性力学；数值分析；数学冰川学；数学生物学；偏微分方程中的深度学习",
+    "papers": 5,
+    "coherence": 0.346
+  },
+  {
+    "name": "周垚",
+    "professor_id": "professor-c-40ae7a19bffb9cbaf4a6b287",
+    "paper_count": 20,
+    "has_directions": true,
+    "directions": "实时系统符号模型检测；混合系统形式化建模与分析；基于BIP框架的组件化系统设计；时序自动机的控制器综合；并发系统的形式化验证；基于Petri网的性能评估；学生发展",
+    "papers": 5,
+    "coherence": 0.421
+  },
+  {
+    "name": "颜骏",
+    "professor_id": "professor-c-44dac8ea104471ff68ddf9ce",
+    "paper_count": 20,
+    "has_directions": true,
+    "directions": "非富勒烯受体(NFA)分子设计；有机太阳能电池(OSCs)效率优化；激子解离与非绝热动力学；有机光电探测器(OPDs)器件物理；电荷传输中的无序与量子离域效应；钙钛矿与有机杂化光电器件；可再生能源",
+    "papers": 5,
+    "coherence": 0.423
+  },
+  {
+    "name": "孙海鹏",
+    "professor_id": "professor-c-4e8efe1c5d74be28d1fa7b02",
+    "paper_count": 20,
+    "has_directions": true,
+    "directions": "反铁磁拓扑绝缘体与MnBi2Te4研究；非线性霍尔效应及其量子理论；非常规反铁磁与超导异质结输运；拓扑物态中的Berry曲率与量子度规效应；拓扑功能性器件与磁性晶体管；高阶拓扑绝缘体与轴子绝缘体表面态研究；拓扑物态调控",
+    "papers": 5,
+    "coherence": 0.377
+  },
+  {
+    "name": "李锦辉",
+    "professor_id": "professor-c-7f9e7f17a5f4418a656bf65e",
+    "paper_count": 20,
+    "has_directions": true,
+    "directions": "高功率单频全纤维激光器；中红外掺铒ZBLAN光纤激光器；基于波长调制的MOEMS传感器；微机电系统（MEMS）三轴陀螺仪与加速度计；电动汽车能耗预测与协同控制；车辆主动悬架最优控制",
+    "papers": 5,
+    "coherence": 0.269
+  },
+  {
+    "name": "王凯旭",
+    "professor_id": "professor-c-829991a87b848f0ce1484c2f",
+    "paper_count": 20,
+    "has_directions": true,
+    "directions": "毫米波圆极化天线设计；介质谐振器天线 (DRA)；太赫兹超材料偏振器；可重构极化天线；基于深度学习的微带天线逆向设计；子6GHz滤波天线技术；LTCC集成电路天线组件",
+    "papers": 5,
+    "coherence": 0.458
+  },
+  {
+    "name": "王学谦",
+    "professor_id": "professor-c-84def6c9c68e5f02602a84fa",
+    "paper_count": 20,
+    "has_directions": true,
+    "directions": "LPV系统的鲁棒故障检测与隔离；基于集合理论的未知输入观测器设计；含测量误差调度变量的LPV系统状态估计；具有柔性附件的自由浮动空间机器人振动抑制控制；空间机器人自主目标捕获控制；描述符LPV系统的鲁棒故障估计；智能机器人研究",
+    "papers": 5,
+    "coherence": 0.3
+  },
+  {
+    "name": "吴乾元",
+    "professor_id": "professor-c-a2288f8f33608ff1c21a3d91",
+    "paper_count": 20,
+    "has_directions": true,
+    "directions": "臭氧化过程中溴酸盐及有机副产物的毒性机制；消毒副产物（DBPs）的生物毒性评价；基于碳纤维毡电极系统的阳极氧化技术；含溴废水的深度处理与副产物风险评估；非挥发性消毒副产物的细胞毒性研究；再生水水质安全评价与保障技术研究；生物毒性评价技术",
+    "papers": 5,
+    "coherence": 0.455
+  },
+  {
+    "name": "徐扬生",
+    "professor_id": "professor-c-a3cced0285bb7f4472336e97",
+    "paper_count": 20,
+    "has_directions": true,
+    "directions": "空间机器人动力学与控制；非合作目标自主交会对接与捕获；自由浮动空间机械臂路径规划；基于机器学习的人体行为与步态识别；人机交互中的手势识别与控制策略；复杂环境下的移动机器人设计；机器人学",
+    "papers": 5,
+    "coherence": 0.377
+  },
+  {
+    "name": "孔庆磊",
+    "professor_id": "professor-c-c1cd8d0e53e998fbfe362740",
+    "paper_count": 20,
+    "has_directions": true,
+    "directions": "基于联邦学习的无线定位技术；车联网中的隐私保护数据共享；基于区块链的车辆雾计算安全；面向工业物联网的联邦学习激励机制；基于脉冲神经网络的卫星遥感图像识别；基于小样本学习的工业控制系统入侵检测",
+    "papers": 5,
+    "coherence": 0.389
+  },
+  {
+    "name": "李勃",
+    "professor_id": "professor-c-c72bdc6754853c1038f3d8d4",
+    "paper_count": 20,
+    "has_directions": true,
+    "directions": "信息功能陶瓷及元器件；超构材料；信息功能陶瓷及元器件和超构材料",
+    "papers": 5,
+    "coherence": 0.188
+  },
+  {
+    "name": "耿洪亚",
+    "professor_id": "professor-c-d00c09b439b3907f6f3e2195",
+    "paper_count": 20,
+    "has_directions": true,
+    "directions": "导电高分子/功能性生物分子复合水凝胶；肿瘤诊疗一体化纳米杂化材料；掺钛钒酸铈纳米材料；纳米材料界面工程与结构改造；类器官及器官低温存储材料；导电高分子/功能性生物分子复合水凝胶设计；结构改造和界面工程研究",
+    "papers": 5,
+    "coherence": 0.297
+  },
+  {
+    "name": "高陈强",
+    "professor_id": "professor-c-e22419647ebb0fceb7d3a71a",
+    "paper_count": 20,
+    "has_directions": true,
+    "directions": "红外小弱目标检测；基于深度学习的牙科影像分割；多光谱与红外图像处理；基于注意力机制的时空行为识别；无人机视角目标检测；跨模态主动学习与图像分类；长期从事红外图像处理；红外图像处理；2D/3D 目标分割；2D/3D目标检测；行为分析；多模态图像理解",
+    "papers": 5,
+    "coherence": 0.338
+  },
+  {
+    "name": "李雪芳",
+    "professor_id": "professor-c-15e23de61cdb99abd1e9c074",
+    "paper_count": 19,
+    "has_directions": true,
+    "directions": "迭代学习控制 (Iterative Learning Control)；多智能体协同控制 (Multi-agent Coordination Control)；数据驱动的高速铁路控制 (Data-driven Control for High-speed Railways)；复杂动态系统智能学习控制；智能交通系统控制与优化；非线性与高阶内模控制；数据驱动控制",
+    "papers": 5,
+    "coherence": 0.477
+  },
+  {
+    "name": "赵俊华",
+    "professor_id": "professor-c-2103d2f5abda4b9ab626c372",
+    "paper_count": 19,
+    "has_directions": true,
+    "directions": "热辐射催化 (Thermal Radiative Catalysis)；二氧化碳活化与转化；碳排放实时监测与估算；城市化石燃料CO2排放分析；能源化学与催化过程；电力系统分析与计算；智能电网",
+    "papers": 5,
+    "coherence": 0.284
+  },
+  {
+    "name": "高源",
+    "professor_id": "professor-c-2bc96a553c823da0a501425e",
+    "paper_count": 19,
+    "has_directions": true,
+    "directions": "软体机器人变形估计；多模态感知与状态估计；小语言模型自我反思机制；基于信息论的语言模型优化；具身智能中的多模态学习；机器人学习算法；异构多机器人系统",
+    "papers": 5,
+    "coherence": 0.391
+  },
+  {
+    "name": "田佳峻",
+    "professor_id": "professor-c-466e2daaaffefab10398fe31",
+    "paper_count": 19,
+    "has_directions": true,
+    "directions": "基于Fabry-Perot干涉仪的光纤传感器；基于光子晶体光纤（PCF）的传感技术；利用Vernier效应的灵敏度增强传感；光响应型手性荧光分子开关材料；光调控液晶显示与智能材料；微流控光纤折射率传感器；智能光传感",
+    "papers": 5,
+    "coherence": 0.509
+  },
+  {
+    "name": "汪文锦",
+    "professor_id": "professor-c-96992048203550b24b64b94e",
+    "paper_count": 19,
+    "has_directions": true,
+    "directions": "生物分子相分离的化学调控；细胞内小分子聚集的操纵；聚集诱导发光（AIE）材料的生物医学应用；基于金属配合物的化疗药物开发；基于亲和力蛋白谱ing（APP）的药物靶点鉴定；铁死亡诱导的癌症免疫治疗；功能荧光分子",
+    "papers": 5,
+    "coherence": 0.368
+  },
+  {
+    "name": "杨高",
+    "professor_id": "professor-c-995a7f863f62d22746adb4b9",
+    "paper_count": 19,
+    "has_directions": true,
+    "directions": "先进光学制造技术；精密测量技术；智能制造技术与装备 本人指导研究生毕业去向：香港理工大学（读博深造）；欣旺达；踏实认真；且对精密光学元件；镜头模组；光学传感器",
+    "papers": 5,
+    "coherence": 0.213
+  },
+  {
+    "name": "柯志海",
+    "professor_id": "professor-c-ed05e3f66a896a81f9ff0275",
+    "paper_count": 19,
+    "has_directions": true,
+    "directions": "有机催化反应机理研究；路易斯酸催化有机合成；高价碘试剂介导的氧化反应；环丙烷的开环反应研究；绿色化学与位置选择性卤化反应；杂环化合物的选择性官能团化；合成有机化学",
+    "papers": 5,
+    "coherence": 0.338
+  },
+  {
+    "name": "谭英",
+    "professor_id": "professor-c-f617d0f20c58f13d1bd8972f",
+    "paper_count": 19,
+    "has_directions": true,
+    "directions": "微流控全息集成分析平台；肿瘤异质性高维分析；原子级精确金属纳米团簇合成；光动力治疗辅助的配位驱动超分子体系；平面手性环九烯的模块化合成；基于Aptamer-PROTACs的抗药性癌症治疗；疾病精准诊疗",
+    "papers": 5,
+    "coherence": 0.28
+  },
+  {
+    "name": "朱时裴",
+    "professor_id": "professor-c-fb3196fd534f7598daefb762",
+    "paper_count": 19,
+    "has_directions": true,
+    "directions": "水相液-液相分离 (Aqueous Liquid-Liquid Phase Separation)；人工多细胞结构与生物模拟 (Artificial Multicellular Structures)；基于水相体系的软体机器人 (Aqueous-based Soft Robotics)；可重构液体电路 (Reconfigurable Liquid Circuits)；界面驱动的液滴组装 (Interfacial-driven Droplet Assembly)；高分子共混物与动态硫化技术 (Polymer Blends and Dynamic Vulcanization)",
+    "papers": 5,
+    "coherence": 0.502
+  },
+  {
+    "name": "古博",
+    "professor_id": "professor-c-0ed88a037553926cf1f9fae2",
+    "paper_count": 18,
+    "has_directions": true,
+    "directions": "IRS辅助的安全非正交多址接入(NOMA)传输；基于强化学习的无人机轨迹规划；物联网(IoT)网络中的信息新鲜度(AoI)优化；智能反射面(IRS)辅助的波束赋形技术；无人机辅助物联网网络中的时空资源调度；时空序列预测；移动群智感知网络；毫米波雷达感知；特种车辆无人驾驶",
+    "papers": 5,
+    "coherence": 0.331
+  },
+  {
+    "name": "胡伟鹏",
+    "professor_id": "professor-c-1f44c354a34698edd5a28ead",
+    "paper_count": 18,
+    "has_directions": true,
+    "directions": "大气二次有机气溶胶(SOA)形成机制；生物源挥发性有机物(BVOCs)氧化化学；气溶胶化学组分与来源解析；有机硝酸盐与大气氮循环；棕碳(Brown Carbon)光学特性研究；集成光子处理单元(Photonic Processing Unit)；人工智能",
+    "papers": 5,
+    "coherence": 0.243
+  },
+  {
+    "name": "姚勇",
+    "professor_id": "professor-c-214d313b127b53cec3c08398",
+    "paper_count": 18,
+    "has_directions": true,
+    "directions": "基于Vernier效应的光纤传感器；基于Fabry-Perot干涉仪的光纤传感技术；光子晶体光纤（PCF）传感应用；模式复用（MDM）集成光子电路；基于拓扑绝缘体饱和吸收体的光纤激光器；二维材料（如WS2）增强型光纤激光器；硅基光子调制器与光通信技术",
+    "papers": 5,
+    "coherence": 0.372
+  },
+  {
+    "name": "钟仿洵",
+    "professor_id": "professor-c-2c85ee4276e222a225bb493c",
+    "paper_count": 18,
+    "has_directions": true,
+    "directions": "医疗机器人自主手术控制；柔性末端机械臂表面接触控制；动态场景下针具的单目3D姿态估计；水下目标高效检测与特征融合；基于视觉学习与几何建模的医疗感知；复杂环境下机器人运动规划；手术应用中的机器人自主性",
+    "papers": 5,
+    "coherence": 0.388
+  },
+  {
+    "name": "Rashid Khan",
+    "professor_id": "professor-c-5a0bf56a86b09825b921a54c",
+    "paper_count": 18,
+    "has_directions": true,
+    "directions": "基于深度学习的医学图像分割；基于注意力机制的图像描述生成；基于BiLSTM的图像字幕生成；医学图像分类与识别；水下图像增强与修复；多模态序列到序列学习；人工智能",
+    "papers": 5,
+    "coherence": 0.363
+  },
+  {
+    "name": "陈仲欣",
+    "professor_id": "professor-c-89e96e29323ce8435a7e2a2b",
+    "paper_count": 18,
+    "has_directions": true,
+    "directions": "单原子催化剂的设计与合成；单原子催化中的动态聚集机制研究；硝酸盐电合成氨技术；流动化学催化反应器工程；纳米纤维素改性的碳氮化合物；生物质光氧化催化；多相催化",
+    "papers": 5,
+    "coherence": 0.487
+  },
+  {
+    "name": "高林",
+    "professor_id": "professor-c-ef63d11de8e6ef7f4bbe27a2",
+    "paper_count": 18,
+    "has_directions": true,
+    "directions": "基于随机有限集(RFS)的多目标跟踪；分布式多传感器信息融合；基于PHD滤波器的SLAM算法；多目标联合检测、跟踪与分类(JDTC)；5G毫米波协同定位与建图；多机器人分布式协同定位与建图；人工智能与博弈论",
+    "papers": 5,
+    "coherence": 0.414
+  },
+  {
+    "name": "王怀智",
+    "professor_id": "professor-c-36d30d7fa54c4782eb5f135a",
+    "paper_count": 17,
+    "has_directions": true,
+    "directions": "(1)无人驾驶与三维重建",
+    "papers": 5,
+    "coherence": 0.167
+  },
+  {
+    "name": "Parvej Alam",
+    "professor_id": "professor-c-a48fb32b6cd739dcfdb4ccd9",
+    "paper_count": 17,
+    "has_directions": true,
+    "directions": "聚集诱导发光 (AIE) 材料；光致变色与可重写光图案化材料；基于金属有机框架 (MOF) 的荧光比率传感；单分子白光发射簇发光体 (Clusteroluminogens)；生物医学成像与生物传感；有机室温磷光 (RTP) 材料；发光功能材料",
+    "papers": 5,
+    "coherence": 0.392
+  },
+  {
+    "name": "魏亮亮",
+    "professor_id": "professor-c-b5d1504a9cd96147c751c2fe",
+    "paper_count": 17,
+    "has_directions": true,
+    "directions": "双定子直流偏置混合励磁电机控制；混合励磁电机的参数估计与协同控制；考虑电感非线性的MTPA控制策略；电机弱磁控制技术；新型电机拓扑及驱动控制；(1) 基于数据驱动的电池智能管理与寿命预测技术；（2）新型电机及驱动控制技术",
+    "papers": 5,
+    "coherence": 0.339
+  },
+  {
+    "name": "梁小丹",
+    "professor_id": "professor-c-bc2b000e1001dd98afc96bee",
+    "paper_count": 17,
+    "has_directions": true,
+    "directions": "基于视觉语言模型的细粒度图像编辑；基于大语言模型的视觉语言导航 (VLN)；多模态解耦推理研究；具身智能中的视觉-语言决策；多模态指令驱动的图像生成与编辑；多模态理解与生成大模型；多模态高阶推理",
+    "papers": 5,
+    "coherence": 0.298
+  },
+  {
+    "name": "梁雄",
+    "professor_id": "professor-c-d6ea97a5442b01f498202e59",
+    "paper_count": 17,
+    "has_directions": true,
+    "directions": "无序金属材料的成型制造与功能化研究 想了解更多请访问课题组网站：https",
+    "papers": 5,
+    "coherence": 0.31
+  },
+  {
+    "name": "李志恒",
+    "professor_id": "professor-c-e2b09e0a3f0e5d02858a47c9",
+    "paper_count": 17,
+    "has_directions": true,
+    "directions": "智能交通系统；交通信号控制系统；交通管理规划；智能公共交通系统；智能交通大数据研究",
+    "papers": 5,
+    "coherence": 0.299
+  },
+  {
+    "name": "于广军",
+    "professor_id": "professor-c-e629820f9f08deff2e364d73",
+    "paper_count": 17,
+    "has_directions": true,
+    "directions": "罕见病基因型与表型关联分析；临床决策支持系统(CDSS)评估框架；医疗大数据与流行病学调查；环境暴露与儿童皮肤病流行病学；智慧医疗与人工智能临床应用；互联网医疗；智慧医院",
+    "papers": 5,
+    "coherence": 0.308
+  },
+  {
+    "name": "冯娟",
+    "professor_id": "professor-c-eba6221c252d4485d291e081",
+    "paper_count": 17,
+    "has_directions": true,
+    "directions": "在线劳动力市场的技能匹配与跨度研究；基于在线评论的动态定价策略；社交媒体与UGC中的激励机制研究；直播带货中的渠道切换策略；数字平台中的技能不一致性分析；在线市场中的消费者行为与信息环境；IT对核心管理问题带来的挑战（定价",
+    "papers": 5,
+    "coherence": 0.18
+  },
+  {
+    "name": "金枝",
+    "professor_id": "professor-c-16a1d41edb7d766d90e6037a",
+    "paper_count": 16,
+    "has_directions": true,
+    "directions": "基于Transformer的图像恢复与去雾；低光照图像增强与频域学习；轻量化视觉感知与高效Transformer架构；基于深度学习的医学图像辅助诊断；基于大语言模型的智能代码生成Agent；基于深度学习的蛋白质-配体结合亲和力预测；复杂环境下的高效",
+    "papers": 5,
+    "coherence": 0.359
+  },
+  {
+    "name": "胡利鹏",
+    "professor_id": "professor-c-180b5edc2058b94a6033743f",
+    "paper_count": 16,
+    "has_directions": true,
+    "directions": "半导体热电能量转换材料与器件",
+    "papers": 5,
+    "coherence": 0.446
+  },
+  {
+    "name": "梅红伟",
+    "professor_id": "professor-c-1b5fa36a4db3299902d5a4f4",
+    "paper_count": 16,
+    "has_directions": true,
+    "directions": "基于太赫兹技术的复合绝缘子缺陷检测；绝缘材料介电特性光谱分析；基于光热辐射技术的绝缘子污秽程度像素级分类；硅橡胶绝缘材料红外热波无损检测；基于半监督支持向量机的绝缘状态评估；电力设备状态监测中的图像处理与解卷积算法；输变电设备绝缘技术",
+    "papers": 5,
+    "coherence": 0.357
+  },
+  {
+    "name": "彭卫文",
+    "professor_id": "professor-c-1fc3d7d0e079b480ef27dd82",
+    "paper_count": 16,
+    "has_directions": true,
+    "directions": "基于贝叶斯深度学习的故障预测与健康管理；复杂工业系统的可靠性建模与不确定性量化；基于多模态理解的2D/3D目标检测与分割；具身智能驱动的足式与灵巧手机器人控制；混合自动驾驶环境下的交通流建模与优化；非线性与学习控制理论在先进制造中的应用；统计学习 & 复杂工业系统的可靠性建模与评估 在理论方面",
+    "papers": 5,
+    "coherence": 0.309
+  },
+  {
+    "name": "赵阳",
+    "professor_id": "professor-c-2cb562da6d2f84cd2479d17a",
+    "paper_count": 16,
+    "has_directions": true,
+    "directions": "智能感知与信号处理；嵌入式人工智能技术（边缘AI）",
+    "papers": 5,
+    "coherence": 0.22
+  },
+  {
+    "name": "陈小强",
+    "professor_id": "professor-c-367c4c474abe30b9200bd1a2",
+    "paper_count": 16,
+    "has_directions": true,
+    "directions": "涉及有机；超分子光化学；化学与生物传感器；包括AIChE J.；Nat. Protoc.；J. Am. Chem. Soc.；Angew. Chem. Int. Ed.；Adv. Mater.；Adv. Sci.；ACS Nano.；H指数60；以第一发明人获授权发明专利15项",
+    "papers": 5,
+    "coherence": 0.308
+  },
+  {
+    "name": "Charlie Y. DONG",
+    "professor_id": "professor-c-37024e0f9a8cf9d8de47657c",
+    "paper_count": 16,
+    "has_directions": true,
+    "directions": "MOF改性渗透汽化膜；太阳能热驱动海水淡化膜；基于机器学习的膜性能预测；锂镁资源回收膜技术；正渗透硼回收技术；陶瓷-碳Janus复合膜；膜分离技术",
+    "papers": 5,
+    "coherence": 0.464
+  },
+  {
+    "name": "湛家铭",
+    "professor_id": "professor-c-7f666e23cdf20252d0aa88dd",
+    "paper_count": 16,
+    "has_directions": true,
+    "directions": "基于分子动力学的纳米复合材料力学行为模拟；基于近场动力学(Peridynamics)的复合材料断裂模拟；脆性陶瓷材料的延性切削与磁塑性效应研究；金属基复合材料的微观强化与损伤机制；多物理场辅助的超精密加工机理研究；纳米层状复合材料的冲击响应研究；涵盖材料的多尺度建模与计算",
+    "papers": 5,
+    "coherence": 0.291
+  },
+  {
+    "name": "孙帅",
+    "professor_id": "professor-c-8dee1368871a0f41482fefb5",
+    "paper_count": 16,
+    "has_directions": true,
+    "directions": "二维Janus范德华材料的光电效应；基于ZnO纳米四面体结构的VOC气体传感器；贵金属纳米颗粒修饰的传感器选择性增强技术；超表面增强的太赫兹生物传感技术；太赫兹时域光谱成像生物检测；超表面增强的太赫兹生物传感器研究；基于太赫兹时域光谱成像技术的生物检测技术研究",
+    "papers": 5,
+    "coherence": 0.331
+  },
+  {
+    "name": "任金科",
+    "professor_id": "professor-c-d1f7b00cc2954ec86e774c55",
+    "paper_count": 16,
+    "has_directions": true,
+    "directions": "UAV-enabled无线通信网络；无人机联邦学习优化；低空无线网络数据采集；移动天线通信技术；智能通信资源分配与轨迹设计；机器学习；大语言模型",
+    "papers": 5,
+    "coherence": 0.347
+  },
+  {
+    "name": "唐继军",
+    "professor_id": "professor-c-db3eb12b0825cf05d82fbbbf",
+    "paper_count": 16,
+    "has_directions": true,
+    "directions": "植物转录组学 (Transcriptomics)；RNA剪接与加工机制 (RNA Splicing and Processing)；m6A表观转录组学 (m6A Epitranscriptomics)；纳米孔直接RNA测序技术应用 (Nanopore Direct RNA Sequencing)；拟南芥发育遗传学 (Arabidopsis Developmental Genetics)；RNA降解与外切体功能研究 (RNA Exosome and Decay)；基因表达调控的3'端加工 (Alternative Polyadenylation)；面向多尺度生物医学大数据挖掘的算法；人工智能方法开发",
+    "papers": 5,
+    "coherence": 0.253
+  },
+  {
+    "name": "杨芳芳",
+    "professor_id": "professor-c-fbf849847116c7065772398e",
+    "paper_count": 16,
+    "has_directions": true,
+    "directions": "基于深度学习的动力电池寿命预测；基于图特征与CNN的电池状态评估；工程统计学中的数据挖掘方法；机械轴承故障诊断与剩余寿命预测；多模态图像理解与目标检测；新能源汽车动力电池电量估计；退化建模",
+    "papers": 5,
+    "coherence": 0.487
+  },
+  {
+    "name": "刘延",
+    "professor_id": "professor-c-fd93432aa1e0da8e83a30223",
+    "paper_count": 16,
+    "has_directions": true,
+    "directions": "为生态河流动力学；重点开展天然水域中的湍流结构；Water Resources Research；Journal of Fluid Mechanics；科技部重点研发项目子课题2项；广东省海上风电联合基金项目1项；《应用基础与工程科学学报》青年编委；是中国水利学会泥沙专委会和国际地质灾害与减灾协会海洋地质灾害和环境分委会的委员",
+    "papers": 5,
+    "coherence": 0.356
+  },
+  {
+    "name": "陶益",
+    "professor_id": "professor-c-0221840dd4103b57a9690633",
+    "paper_count": 15,
+    "has_directions": true,
+    "directions": "蓝藻毒性机制与细胞死亡模式研究；藻类-细菌-病毒互作及噬菌体功能研究；环境抗生素对蓝藻生理生化影响评估；有害藻类水华的物理化学协同防控技术；微藻生态系统（Phycosphere）宏基因组学分析；水生态系统沉积物修复技术；有害藻类水华防控",
+    "papers": 5,
+    "coherence": 0.352
+  },
+  {
+    "name": "卢庆龙",
+    "professor_id": "professor-c-0a63bdfa6369e2106dd3d223",
+    "paper_count": 15,
+    "has_directions": true,
+    "directions": "基于模型预测控制的动态网络容量分配；基于代理模型的城市交通韧性优化；仿真驱动的交通政策分析；非线性动力学稀疏识别与控制；城市交通流建模与仿真；数据驱动的交通网络优化；交通系统优化",
+    "papers": 5,
+    "coherence": 0.389
+  },
+  {
+    "name": "Bradley J. Nelson",
+    "professor_id": "professor-c-1aab4ec7af9bed74122e02d3",
+    "paper_count": 15,
+    "has_directions": true,
+    "directions": "磁驱动形状变形微型机器人；声学驱动细胞操控技术；4D打印与软体机器人；生物启发式微型推进器设计；微纳尺度力学传感与生物力学研究；微机器人；纳米机器人",
+    "papers": 5,
+    "coherence": 0.477
+  },
+  {
+    "name": "王希林",
+    "professor_id": "professor-c-301fc373898251f038c970cc",
+    "paper_count": 15,
+    "has_directions": true,
+    "directions": "高压断路器机构动态传感与分析；激光诱导击穿光谱(LIBS)在绝缘材料检测中的应用；硅橡胶绝缘材料的性能演化研究；碳化硅(SiC)闪速烧结技术；高电压绝缘材料的环境适应性评估；电工陶瓷的新型成型工艺研究；高电压与绝缘技术",
+    "papers": 5,
+    "coherence": 0.425
+  },
+  {
+    "name": "颜枫",
+    "professor_id": "professor-c-32a3848815f6d404f1ddd8f1",
+    "paper_count": 15,
+    "has_directions": true,
+    "directions": "[1] 工业固体废物资源化 [2] 生物质废物能源化 [3] 二氧化碳捕集及利用 [4] 生活垃圾焚烧污染控制 代表性科研项目： [1] 广东省自然科学基金面上项目",
+    "papers": 5,
+    "coherence": 0.287
+  },
+  {
+    "name": "徐小川",
+    "professor_id": "professor-c-3b6ee5d0ce741b99ba629f5a",
+    "paper_count": 15,
+    "has_directions": true,
+    "directions": "二维过渡金属硫族化合物(TMDs)载流子动力学；二维材料缺陷工程与激子物理；集成光子学与硅基光波导器件；超快非线性光学开关器件；光纤激光器中的孤子锁模技术；热电材料的纳米结构设计与合成；非线性光学材料的集成化应用",
+    "papers": 5,
+    "coherence": 0.33
+  },
+  {
+    "name": "马懋德",
+    "professor_id": "professor-c-6d98bc3dcd1bd87d7b2c553f",
+    "paper_count": 15,
+    "has_directions": true,
+    "directions": "5G/NB-IoT网络安全与认证协议；物联网(IoT)与车联网(VANET)安全机制；基于代理重加密的医疗云隐私保护；无线传感器网络(WSN)能效优化与MAC协议；基于Wi-Fi信号的人体步态识别；抗量子攻击的轻量级身份认证；软件定义车联网(SDVN)控制器优化",
+    "papers": 5,
+    "coherence": 0.303
+  },
+  {
+    "name": "肖博文",
+    "professor_id": "professor-c-6eaf5a83713125de886ff2bb",
+    "paper_count": 15,
+    "has_directions": true,
+    "directions": "色玻璃凝聚态 (Color Glass Condensate)；小x物理 (Small-x Physics)；电子-离子碰撞器 (EIC) 现象学；部分子饱和效应 (Parton Saturation)；轻子-喷注相关性研究 (Lepton-Jet Correlations)；高能核物理中的量子色动力学 (QCD)；理论物理",
+    "papers": 5,
+    "coherence": 0.402
+  },
+  {
+    "name": "程俊",
+    "professor_id": "professor-c-77ca9fdb0a55c61598f8640f",
+    "paper_count": 15,
+    "has_directions": true,
+    "directions": "电催化CO2还原与C-C/C-N偶联；电化学界面水结构与双电层理论；光催化与太阳能驱动的生物质转化；锂/钠离子电池电极材料设计；基于DFT分子动力学的界面电化学性质计算；多相催化反应动力学与BEP关系研究；人工智能；智能机器人；计算机视觉",
+    "papers": 5,
+    "coherence": 0.155
+  },
+  {
+    "name": "李海文",
+    "professor_id": "professor-c-961d3d3961c6e1d3b0a01f18",
+    "paper_count": 15,
+    "has_directions": true,
+    "directions": "固态锂金属电池复合聚合物电解质；金属氢化物储氢材料设计与机制；MXene基复合储氢材料；镁基储氢材料的催化改性；高熵合金与非晶合金能源应用；可解释机器学习在能源材料中的应用；机械化学合成与材料结构调控",
+    "papers": 5,
+    "coherence": 0.51
+  },
+  {
+    "name": "蔡小强",
+    "professor_id": "professor-c-a981e145d26b8ee1404c1409",
+    "paper_count": 15,
+    "has_directions": true,
+    "directions": "共享经济下的资源配置与市场设计；零担运输（LTL）中的成本分配机制；非完全信息下的激励机制设计；带约束的强化学习与多臂老虎机算法；零售渠道中的自有品牌侵蚀策略；共享停车系统的运营优化；工业与系统工程",
+    "papers": 5,
+    "coherence": 0.361
+  },
+  {
+    "name": "刘寻",
+    "professor_id": "professor-c-c55201010440b4d0fc9d9a35",
+    "paper_count": 15,
+    "has_directions": true,
+    "directions": "5G包络跟踪器 (Envelope Tracking) 设计；高频/高效率直流电压变换器 (DC-DC Converters)；集成电压调节器 (IVR) 与封装电感技术；快速瞬态响应电源管理芯片 (Fast-Transient PMIC)；混合型 Buck-Boost 变换器架构；功率放大器 (PA) 供电调制技术；电源管理集成电路",
+    "papers": 5,
+    "coherence": 0.428
+  },
+  {
+    "name": "何佼",
+    "professor_id": "professor-c-c7e86e5de0864b4e1eccc452",
+    "paper_count": 15,
+    "has_directions": true,
+    "directions": "星际冰壳的相变物理过程；星际复杂有机分子(COMs)的实验室合成；星际尘埃表面的化学反应动力学；星际冰层光学性质研究；一氧化碳(CO)在低温环境下的化学演化；实验天体物理学中的分子形成机制；低温和辐射条件",
+    "papers": 5,
+    "coherence": 0.35
+  },
+  {
+    "name": "高丹",
+    "professor_id": "professor-c-c9356b4a4e37f6d70a755b1e",
+    "paper_count": 15,
+    "has_directions": true,
+    "directions": "高仿生器官芯片；广东省自然科学基金项目；深圳市基础研究学科布局；基础研究自由探索等多个项目；参与“十二五”重大新药创制；973项目；新型微流控生物传感；器官芯片与人工智能融合赋能创新药研发",
+    "papers": 5,
+    "coherence": 0.29
+  },
+  {
+    "name": "张锦",
+    "professor_id": "professor-c-e1cd5b641a21e208d8def665",
+    "paper_count": 15,
+    "has_directions": true,
+    "directions": "物理化学；纳米材料 邮 箱： jinzhang@pku.edu.cn",
+    "papers": 5,
+    "coherence": 0.221
+  },
+  {
+    "name": "邹洋",
+    "professor_id": "professor-c-fcf8f4f0af377e1c0cc2f13a",
+    "paper_count": 15,
+    "has_directions": true,
+    "directions": "有机光电功能材料 近年代表性论文 : 1) W. Yang",
+    "papers": 5,
+    "coherence": 0.289
+  },
+  {
+    "name": "杜梦楠",
+    "professor_id": "professor-c-1745aeb4de793c67c0871400",
+    "paper_count": 14,
+    "has_directions": true,
+    "directions": "基于稀疏自编码器（SAE）的大模型可解释性研究；大语言模型内部表征的特征提取与控制（Steering）；增强大模型思维链（CoT）推理能力的机制研究；大语言模型的可信赖性与可靠性控制；多模态大模型（LVLM）的可解释性与对齐分析；人工智能基础；语音与自然语言处理",
+    "papers": 5,
+    "coherence": 0.366
+  },
+  {
+    "name": "崔剑方",
+    "professor_id": "professor-c-1e7a20923d92eb2dd8bf93c7",
+    "paper_count": 14,
+    "has_directions": true,
+    "directions": "手性四苯衍生物的合成与应用；不对称催化中的手性配体设计；基于异吲哚鎓类烯烃的荧光温度传感器；含硫试剂介导的金属自由环丙烷化反应；手性功能材料的开发；半胱氨酸生物共轭化学；有机金属化学",
+    "papers": 5,
+    "coherence": 0.331
+  },
+  {
+    "name": "李孟棠",
+    "professor_id": "professor-c-35b53aecf3b8db64ed8881ab",
+    "paper_count": 14,
+    "has_directions": true,
+    "directions": "微创手术机器人机构设计；眼动追踪辅助机器人控制；医疗用旋转式人工血液泵设计；锂离子电池SOH状态估计；基于物理信息约束的数据重建；医疗器械机械设计与数学建模；微创手术腹腔镜机器人",
+    "papers": 5,
+    "coherence": 0.398
+  },
+  {
+    "name": "乔宇",
+    "professor_id": "professor-c-3d067c583ad0d486703fe693",
+    "paper_count": 14,
+    "has_directions": true,
+    "directions": "计算机视觉；深度学习；多模态大模型；具身智能；模式识别；基础模型；Infra；原生多模态大模型；世界模型；算力数据基础设施；机器人；生物信息",
+    "papers": 5,
+    "coherence": 0.285
+  },
+  {
+    "name": "白小山",
+    "professor_id": "professor-c-511f96318f681995733a62b9",
+    "paper_count": 14,
+    "has_directions": true,
+    "directions": "多机器人",
+    "papers": 5,
+    "coherence": 0.356
+  },
+  {
+    "name": "范远超",
+    "professor_id": "professor-c-62ad7303a5cb6043b9632e40",
+    "paper_count": 14,
+    "has_directions": true,
+    "directions": "气候变化对农业生产的影响评估；极端热应力对人体与生态的影响；气候-土地-生态-社会耦合系统研究；陆气相互作用与能量平衡；气候干预措施的社会经济效应分析；水-碳-能量耦合过程模拟；气候变化影响与应对研究",
+    "papers": 5,
+    "coherence": 0.373
+  },
+  {
+    "name": "Faisal Nadeem Khan",
+    "professor_id": "professor-c-6f7831d6075fe4d991461016",
+    "paper_count": 14,
+    "has_directions": true,
+    "directions": "基于机器学习的光网络质量预测 (QoT Estimation)；光网络数字孪生 (Digital Twin of Optical Networks)；光网络中的小样本学习与领域自适应 (Few-shot & Domain Adaptation in Optical Networks)；光网络终身学习与持续演进 (Lifelong Learning for Optical Networks)；AI驱动的智能光通信网络架构 (AI-powered Intelligent Optical Networks)；机器学习辅助智能光纤通信网络；机器学习辅助光纤传感系统及其应用",
+    "papers": 5,
+    "coherence": 0.526
+  },
+  {
+    "name": "冯平法",
+    "professor_id": "professor-c-8445a627d6c6ecd0da1aa2d7",
+    "paper_count": 14,
+    "has_directions": true,
+    "directions": "旋转超声加工工艺研究；脆性材料超声钻削与切削；超声加工切削力与振动稳定性分析；旋转超声加工缺陷形成机制；磨削加工热特性建模与优化；超声加工工艺与装备；高速高效切削工艺与装备",
+    "papers": 5,
+    "coherence": 0.494
+  },
+  {
+    "name": "苏阳",
+    "professor_id": "professor-c-89b8e22c6fdefbffcb40ff31",
+    "paper_count": 14,
+    "has_directions": true,
+    "directions": "石墨烯基梯度分子筛膜；石墨烯基复合材料在电子垃圾贵金属回收中的应用；二维材料的溶剂响应性分离技术；二维材料限域空间内的分子输运；基于二维材料的可持续资源回收技术；二维材料的新奇吸附及应用；二维限域空间的分子",
+    "papers": 5,
+    "coherence": 0.495
+  },
+  {
+    "name": "毕文刚",
+    "professor_id": "professor-c-94b02975015cbae9ac86b6f7",
+    "paper_count": 14,
+    "has_directions": true,
+    "directions": "二维材料光电探测器；II型超晶格中红外探测器；宽禁带半导体深紫外发光器件；二维异质结激光应用；柔性光电器件；第三代半导体材料与器件；量子点纳米材料",
+    "papers": 5,
+    "coherence": 0.379
+  },
+  {
+    "name": "姚达文",
+    "professor_id": "professor-c-993bea623408934c61eb9d11",
+    "paper_count": 14,
+    "has_directions": true,
+    "directions": "机动车排放；交通环境智能监测；大气环境监测；交通环境大数据；智慧城市；城市大模型；红外图像处理；2D/3D 目标分割；2D/3D目标检测；行为分析；动态交通网络中分析；交通流建模与仿真；人形机器人；灵巧手；触觉传感器；足式机器人；物流配送机器人；以及不同平台机器人的具身智能实现；运动控制理论应用；机器人核心零部件关键技术；非线性控制；量子控制；偏微分方程动态系统；车路协同交通控制；交通大模型；混合自动驾驶交通流优化",
+    "papers": 5,
+    "coherence": 0.197
+  },
+  {
+    "name": "穆德魁",
+    "professor_id": "professor-c-c22f3b4cd1d06b73021514fa",
+    "paper_count": 14,
+    "has_directions": true,
+    "directions": "主要集中在金刚石与金属；精密磨削用金刚石工具制备和加工评价；高硬度（碳化硅；金刚石；蓝宝石等）大尺寸晶圆高效精密磨削与去除机理；金刚石固态界面微观组织调控与热管理；先进封装材料评价与开发等方面；界面反应；微观组织；金刚石工具；精密磨削；金刚石钎焊用焊料合金成分设计；高硬度大尺寸晶圆高效精密磨削与去除机理；先进封装材料评价与开发",
+    "papers": 5,
+    "coherence": 0.382
+  },
+  {
+    "name": "鞠立宝",
+    "professor_id": "professor-c-c5fd624bc16692eaf1fb7c1a",
+    "paper_count": 14,
+    "has_directions": true,
+    "directions": "超强涡旋激光与等离子体物理相互中粒子束调控；等离子体光学",
+    "papers": 5,
+    "coherence": 0.456
+  },
+  {
+    "name": "张增辉",
+    "professor_id": "professor-c-c6817b641dd88734101f4b4f",
+    "paper_count": 14,
+    "has_directions": true,
+    "directions": "基于MM/PBSA与MM/GBSA的结合自由能计算；蛋白质-配体相互作用的熵效应研究；基于量子动力学的化学反应机制模拟；基于深度学习的蛋白质稳定性与突变预测；基于图神经网络的小分子理化性质预测；神经网络驱动的反应分子动力学模拟；基于片段量子力学的生物大分子计算",
+    "papers": 5,
+    "coherence": 0.362
+  },
+  {
+    "name": "王卫军",
+    "professor_id": "professor-c-ccea5408029f2a3ea5aa2f8a",
+    "paper_count": 14,
+    "has_directions": true,
+    "directions": "二维材料（TMDCs/MoS2/MoTe2）的形貌调控与力学性质；光催化与电催化（CO2还原/氨合成/析氢）；铁电半导体及其在类脑计算/人工突触中的应用；新型能源存储材料（锂硫电池/多孔碳材料）；半导体异质结光电探测器与光电晶体管；纳米材料表面工程与功能化设计；机器人智能化技术及应用",
+    "papers": 5,
+    "coherence": 0.212
+  },
+  {
+    "name": "付晓",
+    "professor_id": "professor-c-f072b1a3b74d5cc3a4a3f197",
+    "paper_count": 14,
+    "has_directions": true,
+    "directions": "大气活性卤素排放-转化-影响；大气活性氮排放-转化-影响；大气-地面-海洋交互作用；大气污染化学数值模拟；大气污染物排放表征",
+    "papers": 5,
+    "coherence": 0.308
+  },
+  {
+    "name": "周进",
+    "professor_id": "professor-c-fefe2031e25eeb11d4500601",
+    "paper_count": 14,
+    "has_directions": true,
+    "directions": "藻菌相互作用中的群体感应机制；邻苯二甲酸酯类污染物的海洋生物毒理学；海洋无脊椎动物的代谢组学毒性评估；海洋鱼类免疫相关蛋白的功能基因组学；近海污染物对海洋生物发育的胚胎毒性研究；海洋生态与微生物分子生态学研究；近海污染物毒理及微生物在典型生态事件中的作用",
+    "papers": 5,
+    "coherence": 0.297
+  },
+  {
+    "name": "郑海涛",
+    "professor_id": "professor-c-25d823061dae46f49798fd0b",
+    "paper_count": 13,
+    "has_directions": true,
+    "directions": "轻量化卷积神经网络设计；高效神经网络架构搜索；移动端深度学习模型优化；高效卷积算子设计；人工智能；语义挖掘；智能计算",
+    "papers": 5,
+    "coherence": 0.335
+  },
+  {
+    "name": "马文静",
+    "professor_id": "professor-c-316f7b7e13b2538923f27b86",
+    "paper_count": 13,
+    "has_directions": true,
+    "directions": "单细胞转录组细胞通讯分析；基于参考集的单细胞细胞类型鉴定；组学数据的高效计算与统计方法；医疗健康领域知识图谱应用；组学人工智能 (Omics AI)；人工智能赋能科学与工程；计算生物学",
+    "papers": 5,
+    "coherence": 0.365
+  },
+  {
+    "name": "罗锴",
+    "professor_id": "professor-c-32c93794d0f401b0eedeb4ef",
+    "paper_count": 13,
+    "has_directions": true,
+    "directions": "通信感知一体化；星间激光测距与通信；MIMO系统；雷达与通信信号处理；通感一体化；星间测距与通信；MIMO系统等雷达与通信信号处理",
+    "papers": 5,
+    "coherence": 0.396
+  },
+  {
+    "name": "王兴政",
+    "professor_id": "professor-c-360e2623595d70cb366901d4",
+    "paper_count": 13,
+    "has_directions": true,
+    "directions": "计算摄像；光场成像与分析；计算机视觉；工业缺陷检测 长期招聘博士后；访问学者以及硕士研究生",
+    "papers": 5,
+    "coherence": 0.342
+  },
+  {
+    "name": "马倩",
+    "professor_id": "professor-c-386ebde2a69fe543bd6ce88f",
+    "paper_count": 13,
+    "has_directions": true,
+    "directions": "边缘-云协同资源调度与定价；边缘计算市场中的服务选择机制；跨孤岛联邦学习隐私保护；异构数据下的联盟联邦学习；边缘智能中的分布式资源交易；边缘智能：大小模型协同；分布式推理",
+    "papers": 5,
+    "coherence": 0.372
+  },
+  {
+    "name": "林进顺",
+    "professor_id": "professor-c-3fedb5aa07601f426a14ddcc",
+    "paper_count": 13,
+    "has_directions": true,
+    "directions": "不对称催化；有机合成；不对称自由基反应",
+    "papers": 5,
+    "coherence": 0.46
+  },
+  {
+    "name": "彭键清",
+    "professor_id": "professor-c-464c98922689ceefa451db37",
+    "paper_count": 13,
+    "has_directions": true,
+    "directions": "针灸机器人运动学建模与标定；模块化绳驱蛇形机械臂设计与控制；柔性/软体机器人的合规控制；基于深度学习的场景目标识别；特种机器人的感知与运动控制；主要研究特种机器人的感知与控制；“刚-柔-软”耦合机器人控制",
+    "papers": 5,
+    "coherence": 0.343
+  },
+  {
+    "name": "许银亮",
+    "professor_id": "professor-c-6080b3e9563cf88411275f44",
+    "paper_count": 13,
+    "has_directions": true,
+    "directions": "基于分布式控制的微电网频率调节；考虑不确定性的电力-天然气耦合系统优化；含大规模分布式资源的智能电网能量管理；主动配电网中的双层规划优化；电力系统与交通网络耦合的电动汽车调度；随机/鲁棒混合驱动的能源系统优化；智能电网先进控制",
+    "papers": 5,
+    "coherence": 0.453
+  },
+  {
+    "name": "陈胜利",
+    "professor_id": "professor-c-65f6e1ccffb5a0d8829d4d0f",
+    "paper_count": 13,
+    "has_directions": true,
+    "directions": "基于机器学习的船舶阻力预测；热带气旋引起的近惯性振荡研究；海上风电场尾流对鸟类气动性能的影响；海洋混合层动力学模拟；放射性核素（氚）的三维时空扩散模拟；CFD与机器学习耦合算法；海洋流体动力过程及其在海洋工程中的应用",
+    "papers": 5,
+    "coherence": 0.332
+  },
+  {
+    "name": "尹聪聪",
+    "professor_id": "professor-c-6b10d3658b791854d6d29426",
+    "paper_count": 13,
+    "has_directions": true,
+    "directions": "新型手性配体的设计合成及其在不对称氢化中的应用 代表性论文： 1. Yin",
+    "papers": 5,
+    "coherence": 0.415
+  },
+  {
+    "name": "李卓彦",
+    "professor_id": "professor-c-77bf1ed86f5b3111f696aca6",
+    "paper_count": 13,
+    "has_directions": true,
+    "directions": "自相似高斯过程的性质研究；布朗片（Brownian sheet）的几何与概率特性；各向异性高斯随机场与局部时间；粗糙初始条件的抛物型随机偏微分方程；随机热方程的解性质分析；随机过程在弯曲边界上的穿行时间；概率论",
+    "papers": 5,
+    "coherence": 0.454
+  },
+  {
+    "name": "董超",
+    "professor_id": "professor-c-833da4f06146350f2c55a969",
+    "paper_count": 13,
+    "has_directions": true,
+    "directions": "基于生成对抗网络的图像超分辨率；盲超分辨率与复杂退化建模；基于Transformer的图像超分辨率；视频恢复与时空特征提取；基于深度学习的图像压缩伪影去除；无监督与非成对图像超分辨率；图像超分辨率；深度学习；底层计算机视觉；视频超分辨率；HDR；图像视频超分辨率；画质增强",
+    "papers": 5,
+    "coherence": 0.487
+  },
+  {
+    "name": "余晨韵",
+    "professor_id": "professor-c-8e17044143d3d7eb8880ec0e",
+    "paper_count": 13,
+    "has_directions": true,
+    "directions": "基于多智能体强化学习的视频理解；基于MLLM智能体的视频推荐系统；多模态大模型（MLLM）推理与优化；生成式推荐系统；多模态表示学习与跨模态检索；1. 多模态数据挖掘：多模态表示学习；跨模态检索及性能优化 2. 智能推荐系统：多模态推荐",
+    "papers": 5,
+    "coherence": 0.352
+  },
+  {
+    "name": "尹凌",
+    "professor_id": "professor-c-ab9c55be4d56cf94bd671016",
+    "paper_count": 13,
+    "has_directions": true,
+    "directions": "时空数据挖掘；地理信息系统(GIS)与遥感融合；数字地球技术；城市计算；计算流行病学；人地交互感知；时空数据智能",
+    "papers": 5,
+    "coherence": 0.359
+  },
+  {
+    "name": "何宏辉",
+    "professor_id": "professor-c-c1b8a921fe070bb877b89990",
+    "paper_count": 13,
+    "has_directions": true,
+    "directions": "Mueller矩阵偏振成像算法优化；多层双折射介质偏振测量；偏振辅助组织病理虚拟染色；基于光学斯格明子的自适应光学技术；可重构偏振延迟器阵列设计；偏振散射成像中的像素饱和效应分析；偏振光学成像方法及其生物医学应用",
+    "papers": 5,
+    "coherence": 0.469
+  },
+  {
+    "name": "林健武",
+    "professor_id": "professor-c-c42a08183941321d32de928a",
+    "paper_count": 13,
+    "has_directions": true,
+    "directions": "基于深度学习的金融文本挖掘；基于卷积LSTM的时空序列股票相关性预测；基于Black-Litterman模型的资产配置；联邦学习在金融知识产权平台中的应用；金融科技与宏观经济风险分析；量化舆情分析与情感增强学习；中国金融市场微观结构",
+    "papers": 5,
+    "coherence": 0.348
+  },
+  {
+    "name": "操晓春",
+    "professor_id": "professor-c-c9b595ab04e379157ef3d71c",
+    "paper_count": 13,
+    "has_directions": true,
+    "directions": "多视图子空间聚类 (Multi-view Subspace Clustering)；图像退化恢复 (Image Restoration including Dehazing, Deblurring, and Super-resolution)；深度学习不确定性量化 (Uncertainty Quantification in Deep Learning)；低光照图像增强 (Low-light Image Enhancement)；显著性目标检测 (Saliency Detection)；基于深度学习的人群计数 (Deep People Counting)；人工智能基础研究；网络空间内容安全应用研究；低质视觉数据的约束重建；多样性数据表征及融合寻优；对抗样本扰动的约减与防御；计算机视觉；多媒体安全；计算机视觉基础研究",
+    "papers": 5,
+    "coherence": 0.247
+  },
+  {
+    "name": "贺艳兵",
+    "professor_id": "professor-c-d7a4ddfcff1fe52af1402f84",
+    "paper_count": 13,
+    "has_directions": true,
+    "directions": "高电压固态锂金属电池电解质；介电填料增强型复合电解质；正极/电解质界面修饰技术；硼酸盐类电解液添加剂研究；高负载量固态电池正极设计；铁电材料诱导的锂盐解离机制；高安全性电池及关键材料研究",
+    "papers": 5,
+    "coherence": 0.565
+  }
+]

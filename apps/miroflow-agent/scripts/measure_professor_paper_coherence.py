@@ -100,6 +100,27 @@ def embed(
     return vectors
 
 
+def select_names(
+    projection: dict[str, dict],
+    documents: dict[str, dict],
+    *,
+    top_n: int,
+    require_directions: bool = True,
+) -> list[str]:
+    """Pick the top-N linked professors by paper count (scoreable ones only)."""
+    rows = sorted(projection.values(), key=lambda row: -row["paper_count"])
+    names: list[str] = []
+    for row in rows:
+        if require_directions and not (
+            documents.get(row["professor_id"], {}).get("research_directions")
+        ):
+            continue
+        names.append(row["name"])
+        if len(names) >= top_n:
+            break
+    return names
+
+
 def measure(
     *,
     projection: dict[str, dict],
@@ -163,7 +184,25 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--pack", required=True)
     parser.add_argument("--projection", required=True)
-    parser.add_argument("--names", required=True, help="comma separated display names")
+    parser.add_argument("--names", default=None, help="comma separated display names")
+    parser.add_argument(
+        "--top-n",
+        type=int,
+        default=None,
+        help="instead of --names: the N linked professors with the most papers",
+    )
+    parser.add_argument(
+        "--show-low",
+        type=int,
+        default=0,
+        help="print the N lowest-scoring professors with their titles for review",
+    )
+    parser.add_argument(
+        "--show-high",
+        type=int,
+        default=0,
+        help="print the N highest-scoring professors with their titles for review",
+    )
     parser.add_argument("--out", required=True)
     parser.add_argument("--top", type=int, default=5)
     parser.add_argument("--model", default=DEFAULT_MODEL)
@@ -184,13 +223,20 @@ def main(argv: list[str] | None = None) -> int:
 
     projection = json.loads(Path(args.projection).read_text())
     documents = load_professor_documents(Path(args.pack))
+    if args.top_n:
+        names = select_names(projection, documents, top_n=args.top_n)
+    elif args.names:
+        names = [name.strip() for name in args.names.split(",") if name.strip()]
+    else:
+        print("provide --names or --top-n")
+        return 2
     endpoint = (
         args.base_url.rstrip("/") + "/services/embeddings/text-embedding/text-embedding"
     )
     results = measure(
         projection=projection,
         documents=documents,
-        names=[name.strip() for name in args.names.split(",") if name.strip()],
+        names=names,
         top=args.top,
         endpoint=endpoint,
         key=key,
@@ -212,6 +258,23 @@ def main(argv: list[str] | None = None) -> int:
             f"{entry['name']:<8}{entry['papers']:>7}"
             f"{str(entry['has_directions']):>12}{entry['coherence']:>11}"
         )
+    scored = sorted(
+        (item for item in results if item.get("coherence") is not None),
+        key=lambda item: item["coherence"],
+    )
+    for label, bucket in (("LOWEST", scored[: args.show_low]), ("HIGHEST", scored[-args.show_high :] if args.show_high else [])):
+        if not bucket:
+            continue
+        print(f"\n=== {label} ===")
+        for entry in bucket:
+            document = documents.get(entry["professor_id"], {})
+            directions = "；".join(
+                item.get("name", "") for item in (document.get("research_directions") or [])
+            )[:60]
+            print(f"  {entry['name']} ({document.get('institution')}) papers={entry['paper_count']} coherence={entry['coherence']}")
+            print(f"    directions: {directions}")
+            for paper in projection[entry["professor_id"]]["top_papers"][:3]:
+                print(f"    - {(paper.get('title') or '')[:88]}")
     print(f"\nwritten: {output}")
     return 0
 
