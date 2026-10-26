@@ -572,3 +572,12 @@ Semantic Scholar 429、**ORCID 公共 API 200**（返回 ORCID iD + 姓名，ins
 
 - 答案可读性：模板句退出 claim。
 - 检索质量：向量里的补位文本要等重建才会消失——这是下一层的收益。
+
+### 部署与门（00:23–00:35）
+
+- 备份到 `backups/template-cleanup-20261027/`；上传 serving + pipeline 两个文件；
+  导入检查通过后重启，00:23:01 起、00:32:56 healthy（约 10 分钟）。
+- 线上直调验证：**白冠华的源简介含 5 次补位句，渲染后的 claim 里 0 次**（360 字）；
+  王向荣（无补位）claim 637 字，行为不变。
+- 27 轮评测门：**pass**，required **77→78**（q2 0→1）、product 26→26、
+  0 forbidden / 0 refusal / 0 error。
