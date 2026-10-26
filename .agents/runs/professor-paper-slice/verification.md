@@ -179,3 +179,22 @@ Live check inside the customer runtime (`_semantic_text` on real pack documents)
 
 27-turn gate: **pass** — required 77→76 (single fluctuation q25 4→3),
 product 26→26, forbidden 0, refusal-miss 0, errors 0.
+
+## Template cleanup deploy (2026-10-27 00:23 – 00:35 CST)
+
+Shipped `knowledge_serving_isolated.py` (filler filter) and the professor
+`pipeline_v2.py` (padding removed); backups in `backups/template-cleanup-20261027/`.
+Restart 00:23:01 → healthy 00:32:56.
+
+Live check on real pack documents (`_semantic_text` inside the customer runtime):
+
+| professor | padding occurrences in source summary | in rendered claim | claim length |
+|---|---|---|---|
+| 白冠华 | 5 | **0** | 360 chars |
+| 王向荣 | 0 | 0 | 637 chars (unchanged) |
+
+27-turn gate: **pass** — required 77→78 (q2 improved 0→1), product 26→26,
+forbidden 0, refusal-miss 0, errors 0.
+
+Note: the pack's research vectors still contain the padding text; only a rebuild
+removes it there. Claims and answers are clean now.
