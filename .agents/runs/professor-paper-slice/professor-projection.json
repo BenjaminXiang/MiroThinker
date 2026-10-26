@@ -4893,35 +4893,6 @@
       "reasons": []
     }
   },
-  "professor-c-15507f74f0aead0d304022ee": {
-    "professor_id": "professor-c-15507f74f0aead0d304022ee",
-    "name": "师资力量",
-    "institution": "中山大学（深圳）",
-    "email": "chengyu@mail.sysu.edu.cn",
-    "paper_count": 1,
-    "paper_ids": [
-      "paper-c-ec2a6929e62d2824452ff2ee"
-    ],
-    "top_papers": [
-      {
-        "id": "paper-c-ec2a6929e62d2824452ff2ee",
-        "title": "Conditional Diffusion Probabilistic Model for Speech Enhancement",
-        "title_zh": null,
-        "year": 2022,
-        "citation_count": 178,
-        "doi": "10.1109/icassp43922.2022.9746901"
-      }
-    ],
-    "flags": [],
-    "confidence": {
-      "min": 1.0,
-      "median": 1.0,
-      "edges": 1
-    },
-    "gate": {
-      "reasons": []
-    }
-  },
   "professor-c-1551f42d8b9121c05255c96e": {
     "professor_id": "professor-c-1551f42d8b9121c05255c96e",
     "name": "丰杰华",

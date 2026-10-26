@@ -5,16 +5,16 @@
     "edges": 10742,
     "edges_without_paper": 0,
     "professors_with_edges": 1019,
-    "projected_professors": 1009,
-    "rejected_professors": 10,
+    "projected_professors": 1008,
+    "rejected_professors": 11,
     "rejected_by_reason": {
-      "bad_homepage": 5,
-      "implausible_name": 5
+      "implausible_name": 6,
+      "bad_homepage": 5
     },
     "email_dropped": 107,
-    "projected_professor_paper_pairs": 10417,
-    "projected_distinct_papers": 10123,
-    "professors_gaining_paper_count": 866
+    "projected_professor_paper_pairs": 10416,
+    "projected_distinct_papers": 10122,
+    "professors_gaining_paper_count": 865
   },
   "flags": {
     "template_summary": 384,

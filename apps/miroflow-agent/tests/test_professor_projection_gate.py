@@ -47,7 +47,7 @@ def _paper(identifier: str, *, citations: int = 0, year: int = 2020) -> dict:
 
 
 def test_page_chrome_and_generic_titles_are_not_names() -> None:
-    for name in ("面包屑", "教授", "院士", "首页", "更多", "登录"):
+    for name in ("面包屑", "教授", "院士", "首页", "更多", "登录", "师资力量"):
         assert not builder.is_plausible_name(name), name
     assert builder.is_plausible_name("王伟")
     assert builder.is_plausible_name("欧阳娜娜")

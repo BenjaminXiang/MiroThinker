@@ -173,9 +173,15 @@ def measure(
             similarities.append(cosine(direction_vector, vectors[cursor]))
             cursor += 1
         entry["papers"] = len(similarities)
+        entry["paper_scores"] = [round(value, 3) for value in similarities]
         entry["coherence"] = (
             round(sum(similarities) / len(similarities), 3) if similarities else None
         )
+        # Prolific authors legitimately span sub-topics; their mean drops even when
+        # the core papers match. The top-3 mean asks "does the core of the work sit
+        # near the declared directions", which is the question the gate needs.
+        best = sorted(similarities, reverse=True)[:3]
+        entry["coherence_top3"] = round(sum(best) / len(best), 3) if best else None
         entry.pop("titles", None)
     return selected
 
@@ -196,6 +202,14 @@ def main(argv: list[str] | None = None) -> int:
         type=int,
         default=0,
         help="print the N lowest-scoring professors with their titles for review",
+    )
+    parser.add_argument(
+        "--allowlist",
+        default=None,
+        help="write the professors scoring >= --min-coherence as a projection subset",
+    )
+    parser.add_argument(
+        "--min-coherence", type=float, default=0.33, help="allowlist threshold"
     )
     parser.add_argument(
         "--show-high",
@@ -250,17 +264,18 @@ def main(argv: list[str] | None = None) -> int:
 
     print(f"{'name':<8}{'papers':>7}{'directions':>12}{'coherence':>11}")
     for entry in sorted(
-        (item for item in results if "coherence" in item),
-        key=lambda item: item["coherence"],
+        (item for item in results if "coherence_top3" in item),
+        key=lambda item: item["coherence_top3"],
         reverse=True,
     ):
         print(
             f"{entry['name']:<8}{entry['papers']:>7}"
-            f"{str(entry['has_directions']):>12}{entry['coherence']:>11}"
+            f"{str(entry['has_directions']):>12}{entry['coherence_top3']:>11}"
+            f"{entry['coherence']:>9}"
         )
     scored = sorted(
-        (item for item in results if item.get("coherence") is not None),
-        key=lambda item: item["coherence"],
+        (item for item in results if item.get("coherence_top3") is not None),
+        key=lambda item: item["coherence_top3"],
     )
     for label, bucket in (("LOWEST", scored[: args.show_low]), ("HIGHEST", scored[-args.show_high :] if args.show_high else [])):
         if not bucket:
@@ -271,10 +286,32 @@ def main(argv: list[str] | None = None) -> int:
             directions = "；".join(
                 item.get("name", "") for item in (document.get("research_directions") or [])
             )[:60]
-            print(f"  {entry['name']} ({document.get('institution')}) papers={entry['paper_count']} coherence={entry['coherence']}")
+            print(f"  {entry['name']} ({document.get('institution')}) papers={entry['paper_count']} top3={entry['coherence_top3']} mean={entry['coherence']}")
             print(f"    directions: {directions}")
             for paper in projection[entry["professor_id"]]["top_papers"][:3]:
                 print(f"    - {(paper.get('title') or '')[:88]}")
+    if args.allowlist:
+        allowed = {}
+        for entry in results:
+            score = entry.get("coherence_top3")
+            if score is None or score < args.min_coherence:
+                continue
+            row = projection[entry["professor_id"]]
+            allowed[entry["professor_id"]] = {
+                "name": row["name"],
+                "institution": row["institution"],
+                "paper_count": row["paper_count"],
+                "coherence": score,
+                "top_papers": row["top_papers"],
+                "flags": row["flags"],
+            }
+        allowlist_path = Path(args.allowlist)
+        allowlist_path.parent.mkdir(parents=True, exist_ok=True)
+        allowlist_path.write_text(json.dumps(allowed, ensure_ascii=False, indent=2))
+        print(
+            f"\nallowlist: {len(allowed)}/{len(scored)} professors "
+            f">= {args.min_coherence} -> {allowlist_path}"
+        )
     print(f"\nwritten: {output}")
     return 0
 
