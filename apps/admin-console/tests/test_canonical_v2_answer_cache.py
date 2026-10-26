@@ -4,8 +4,6 @@ from __future__ import annotations
 
 from types import SimpleNamespace
 
-import pytest
-
 from backend.services.canonical_v2_answer_cache import (
     AnswerCache,
     eligible_query,
@@ -51,10 +49,11 @@ def test_eligible_query_rejects_referents_and_time_sensitivity() -> None:
 
 def test_validate_candidate_accepts_local_grounded_answer() -> None:
     citations = [_citation()]
+    answer = "优必选拥有多项专利。" * 5
     ok, checks = validate_candidate(
         query="优必选有哪些专利",
-        response=_response(citations),
-        turn_result=_turn_result(citations, answer_text="优必选拥有多项专利。" * 5),
+        response=_response(citations, answer_text=answer),
+        turn_result=_turn_result(citations, answer_text=answer),
     )
     assert ok, checks
     assert all(checks.values())
@@ -68,43 +67,78 @@ def test_validate_candidate_rejects_web_citation() -> None:
         turn_result=_turn_result(citations, answer_text="网页来源。" * 10),
     )
     assert not ok
-    assert checks["local_only"] is False
+    assert checks["local_grounding"] is False
 
 
-def test_validate_candidate_rejects_marker_and_member_wall() -> None:
-    citations = [_citation()]
-    marker = _turn_result(
-        citations,
-        answer_text="</|canonical_v2_answer_v1|> 这是一段足够长的回答内容。" * 2,
+def test_validate_candidate_accepts_mixed_local_and_web_citations() -> None:
+    """The gate that wrote zero rows: real answers mix local and web evidence.
+
+    Adopted from the 2026-10-26 hot patch. Before it, `local_only` demanded every
+    citation be local, so a grounded answer that also cited the current web page
+    could never cache, and the 1200-character ceiling rejected the 1–3k prose
+    answers that actually ship.
+    """
+
+    citations = [
+        _citation("professor", "local-source-abc"),
+        _citation("web", "web-source-1"),
+    ]
+    answer = "丁文伯的主要研究方向包括信号处理、机器人与机器学习。" * 60
+
+    ok, checks = validate_candidate(
+        query="丁文伯的研究方向有哪些",
+        response=_response(citations, answer_text=answer),
+        turn_result=_turn_result(citations, answer_text=answer),
     )
+
+    assert ok, checks
+    assert checks["local_grounding"] is True
+    assert checks["length"] is True
+    assert len(answer) > 1200
+
+
+def test_validate_candidate_rejects_marker_and_allows_coverage_tail() -> None:
+    """Protocol markers are refused; an enumeration coverage tail is not.
+
+    The deployed gate validates the HTTP envelope, so the checks read
+    `response.answer_text`. The old local-only gate also rejected answers that
+    listed several companies ("member wall"); enumeration answers legitimately
+    end with a bounded coverage tail, and rejecting them kept the cache empty.
+    """
+
+    citations = [_citation()]
+    marker_text = "</|canonical_v2_answer_v1|> 这是一段足够长的回答内容。" * 2
+    marker = _turn_result(citations, answer_text=marker_text)
     ok, checks = validate_candidate(
         query="优必选有哪些专利",
-        response=_response(citations),
+        response=_response(citations, answer_text=marker_text),
         turn_result=marker,
     )
     assert not ok and checks["no_marker"] is False
 
-    wall = _turn_result(
-        citations,
-        answer_text=(
-            "这是一段足够长的回答内容，满足长度要求。"
-            "此外，本次检索还召回以下相关本地企业：甲公司、乙公司。"
-        ),
+    tail_text = (
+        "这是一段足够长的回答内容，满足长度要求。"
+        "此外，本次检索还召回以下相关本地企业：甲公司、乙公司。"
     )
+    wall = _turn_result(citations, answer_text=tail_text)
     ok, checks = validate_candidate(
-        query="优必选有哪些专利",
-        response=_response(citations),
+        query="深圳有哪些机器人公司",
+        response=_response(citations, answer_text=tail_text),
         turn_result=wall,
     )
-    assert not ok and checks["no_member_wall"] is False
+    assert ok, checks
+    assert "no_member_wall" not in checks
 
 
 def test_validate_candidate_accepts_index_keyed_citation_map() -> None:
     citations = [_citation()]
+    answer = "这是一段足够长的回答内容。" * 5
     ok, checks = validate_candidate(
         query="优必选有哪些专利",
-        response=_response(citations, citation_map={"1": citations[0].id}),
-        turn_result=_turn_result(citations, answer_text="这是一段足够长的回答内容。" * 5),
+        response=_response(
+            citations, citation_map={"1": citations[0].id}, answer_text=answer
+        ),
+        turn_result=_turn_result(citations, answer_text=answer),
     )
     assert ok, checks
 

@@ -43,6 +43,45 @@ def test_standalone_anchor_declines_unrelated_or_ambiguous() -> None:
     assert _standalone_anchor("丁文伯创办的公司", ambiguous) is None
 
 
+def test_topic_professor_query_does_not_anchor_a_company() -> None:
+    """`有哪些做 X 的教授` is topic discovery, not a named-company relation.
+
+    Adopted from the 2026-10-26 hot patch: without this guard the query reached
+    the exact-name resolver, whose name forms derive `灵巧` from the alias
+    `灵巧智能`, matched 浙江灵巧智能科技有限公司 inside `灵巧手`, and turned the
+    turn into a company→professor traversal with zero evidence.
+    """
+
+    calls: list[tuple[str, str]] = []
+
+    def resolver(query: str, domain: str) -> tuple[str, str] | None:
+        calls.append((query, domain))
+        if domain == "company":
+            return ("company-c-lingqiao", "浙江灵巧智能科技有限公司")
+        return None
+
+    assert _standalone_anchor("有哪些做具身智能和灵巧手的教授", resolver) is None
+    assert calls == []
+
+
+def test_topic_guard_does_not_swallow_named_relations() -> None:
+    """A query that names a company keeps its anchor (the guard is narrow)."""
+
+    calls: list[tuple[str, str]] = []
+
+    def resolver(query: str, domain: str) -> tuple[str, str] | None:
+        calls.append((query, domain))
+        if domain == "professor":
+            return ("professor-c-ding", "丁文伯")
+        return None
+
+    assert _standalone_anchor("丁文伯教授创办了哪些公司", resolver) == (
+        "professor-c-ding",
+        "丁文伯",
+    )
+    assert calls == [("丁文伯教授创办了哪些公司", "professor")]
+
+
 def test_local_patent_count_response_answers_named_company() -> None:
     from backend.services.canonical_v2_chat import _local_patent_count_response
 

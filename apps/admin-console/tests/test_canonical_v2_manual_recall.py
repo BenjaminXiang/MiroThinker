@@ -310,6 +310,57 @@ def test_list_uploads_reports_newest_first_with_status(tmp_path: Path) -> None:
     assert uploads[1]["title"] == "甲介绍"
 
 
+# -- serializer: professor profile fields (adopted 2026-10-26) ----------------------
+
+
+def test_serialize_professor_record_keeps_profile_fields() -> None:
+    """Claims were limited to name/institution/title/summary/directions.
+
+    Adopted from the 2026-10-26 hot patch: `email`, `homepage`, `paper_count`,
+    `patent_count`, `education_history`, `work_history`, `awards` and
+    `company_roles` now survive serialization, so the answer composer can render
+    a professor's department, mailbox, counts and company roles.
+    """
+
+    content = json.loads(
+        serialize_manual_record(
+            "professor",
+            {
+                "name": "丁文伯",
+                "institution": "清华大学深圳国际研究生院",
+                "department": "数据与信息研究院",
+                "email": "ding.wenbo@sz.tsinghua.edu.cn",
+                "homepage": "https://example.edu/~ding",
+                "paper_count": 42,
+                "patent_count": 7,
+                "education_history": ["清华大学 博士"],
+                "work_history": ["清华大学 副教授"],
+                "awards": ["国家级人才"],
+                "company_roles": [
+                    {"company_name": "深圳无界智航科技有限公司", "role": "联合创始人"}
+                ],
+                "profile_summary": "信号处理与机器人方向。",
+            },
+        )
+    )
+
+    for key in (
+        "department",
+        "email",
+        "homepage",
+        "paper_count",
+        "patent_count",
+        "education_history",
+        "work_history",
+        "awards",
+        "company_roles",
+    ):
+        assert key in content, key
+    assert content["company_roles"][0]["company_name"] == "深圳无界智航科技有限公司"
+    # Absent fields stay absent rather than becoming nulls.
+    assert "title" not in content
+
+
 # -- embedding validation -----------------------------------------------------------
 
 
