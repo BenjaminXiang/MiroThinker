@@ -265,3 +265,146 @@ canonical id，构造一个最小 `CanonicalEntityHandle` 作为 active anchor�
 
 软主体 + 指代豁免 + 具名教授 anchor 三层都生效。测评脚本的 `--mode full`
 必须使用每对话一个 cookie jar，否则多轮用例全部是假阴性。
+
+## 全量 27 轮回归（2026-10-26 03:05 CST，新脚本 --mode full）
+
+- 19 个对话 / 27 轮：required **81/120（68%）**，forbidden 0，
+  refusal miss 0，error 0，平均时延 **14.0s**，最大 **75.87s**。
+- 多轮不再被跳过：q1→q2、q3→q4/q5、q7→q8、q9→q10、q11→q12、
+  q14→q15、q24→q25 都实际执行。
+- 多轮结果：q5 1/1、q10 5/6、q15 5/6、q25 4/5；q2 2/5（缺无界智航/
+  首席科学家/具身智能）、q4 3/6、q8 4/6、q12 1/2（缺 PDF 链接）。
+- 单轮：q1 6/6、q3 5/5、q6 正确拒答、q9 3/3、q11 **6/6**、q17 5/5、
+  q26 5/5；q7 5/6、q14 4/5、q16 4/5；q27 仍 0/4。
+- 波动：q18 1/2、q20 0/3 比上一轮 head 低；q23 2/6 比上一轮高。
+  这些是合成层表述波动 + 逐字口径，不是同一确定性回归。
+
+结论：教授消费端修复生效（q1/q11/q26 满分，q2 多轮能答出丁文伯但
+公司关系仍不全），但 q27 教授主题检索、q13 上传文档排名、q24 专利排序
+仍是真实缺口。
+
+## q27 灵巧手教授：web search 可行性（2026-10-26 03:40）
+
+直接公开检索**能**给出一个可用的教授名单（不是标准答案的 4 人，但质量可用）：
+
+- 柯文德，南方科技大学机械与能源工程系教学副教授，机器人/仿人机器人：
+  https://mee.sustech.edu.cn/jiaozhiyuangong/913.html
+- 刘桂良，香港中文大学（深圳）数据科学学院教授，具身智能决策与强化学习、
+  EmbodiedChain 数据引擎：http://sds.cuhk.edu.cn/teacher/630
+- 弋力，清华大学交叉信息研究院助理教授，通用灵巧操作：
+  https://cadcg2026.nju.edu.cn/?list_33/153.html
+- 方斌（北邮）、刘华平（清华）、陶永（北航）等在具身智能/灵巧操作论坛与
+  报告中出现：https://www.cyzone.cn/article/786141.html
+- 李翔，清华大学自动化系副教授，机器人灵巧操作与人机交互：
+  https://www.ccf.org.cn/Activities/Training/ADL/ADL/2025-06-11/844190.shtml
+
+但产品内 q27 仍答“没有可确认的名单”，原因不是 web 没数据：
+
+- trace：web `in=75 / retained=11 / filtered=64`，`gate_drops.web_subject_consistency=64`，
+  `citation_count=0`。
+- 第一个 web view 被短别名污染成“浙江灵巧智能科技有限公司 做具身智能和灵巧手的教授”；
+  subject-consistency 门把它当成主体，丢掉了真正列教授的页面。
+- 尝试在 `_apply_web_subject_consistency` 对“有哪些…教授”主题问法直接放行，
+  但当前 lane request 仍带 bound/displayed 实体，放行条件没有命中；q27 仍 0/4。
+
+结论：web search 可以作为教授发现通道，但需要一个**独立的 discovery 模式**：
+1. 主题枚举问法跳过 subject-consistency（或改用 topic-consistency）；
+2. web view 不再注入短别名公司名，用“具身智能 灵巧手 教授 高校 团队”等干净查询；
+3. selector 保留 web professor 候选，合成时列出“姓名 + 高校/院系 + 方向”并带引用，
+   同时设时延上限。当前实现尚未做到，q27 不能算修复。
+
+## “浙江灵巧智能科技有限公司”为什么出现在灵巧手教授问题里（2026-10-26 04:00）
+
+这家公司是真实存在的灵巧手公司（DexHand021 系列），和“灵巧手”主题相关，
+但**和用户问的教授名单没有关系**，用户也没有提它。
+
+根因不在 web provider，而在实体链接的短名派生：
+
+- pack 里该公司 `aliases=["灵巧智能"]`；
+- 实体名索引会对 alias 做“去行业词”派生，`灵巧智能` → `灵巧`（2 字）；
+- 查询“有哪些做具身智能和灵巧手的教授”包含“灵巧手”，命中 2 字形式“灵巧”；
+- 公司被绑成该轮主体，web lane 生成“浙江灵巧智能科技有限公司 + 原问题”的
+  authority view；
+- subject-consistency 门按这个公司主体过滤，75 条里丢掉 64 条，剩 11 条
+  也不含教授名单，最终 0 引用。
+
+因此：**不是整条搜索链路坏了**（provider 返回了 75 条，页面抓取也正常），
+而是“实体链接短名 + 主体门”这一层有系统性风险：任何含 2 字品牌碎片的主题
+问法都可能被劫持成公司主体。rewrite-view 过滤已加，但这次污染来自
+authority/bound-entity 路径，不在 rewrite 过滤范围；web 门放行条件也没命中
+（lane request 仍带 bound 实体）。
+
+正确修法（尚未实施）：
+
+1. **不再合成 2 字派生短名**：`_entity_name_forms` 只索引完整名、
+   去法定后缀名和**显式 alias**；由 alias/全名再去掉行业词得到的 2 字形式
+   一律不建索引。2 字品牌（华为/大疆）必须在 pack 里作为显式 alias 存在，
+   不能靠算法派生。这样 `灵巧智能` 不会再派生 `灵巧`，而 `优必选`/`华为`
+   这类显式 alias 不受影响。
+2. 问法含“教授/学者/老师”时，不把 company 实体绑成该轮主体。
+3. authority/rewrite view 统一做“不得引入原问题未命名的实体”校验。
+4. 回归：q27 的 web views 不得出现任何公司全名；subject gate 至少保留
+   若干“教授/高校/实验室”页面。
+
+**不采用 blocklist**：把“灵巧/智能/感知/工业/医疗…”加入黑名单是打补丁，
+既漏（任何未列出的 2 字词仍会中招），又误伤（真实 2 字品牌被屏蔽）。
+根因是“算法合成 2 字短名 + 中文子串匹配”，应在索引生成侧消除合成短名，
+而不是在匹配侧穷举坏词。
+
+当前 q27 仍 0/4，不能算修复。
+
+## P0 实体落地切片：主体来源 + 领域门 + 门兜底（2026-10-26 04:40）
+
+按“提及 → 候选 → 主体 → 证据”蓝图先做 P0，已部署
+`knowledge_serving_isolated.py`（md5 `982b24821d1471bfa56866595f77022f`）：
+
+1. **视图主体来源**：deterministic view 才携带 bound entity；
+   llm_rewrite / term_expansion / authority_seeking 一律 `bound_entity_ids=()`、
+   `bound_entity_names=()`、`soft_context_subject=None`，只做召回。
+2. **主体绑定**：问法含“教授”且是枚举形状时，deterministic view 过滤掉
+   company 形状的 bound name；2 字 bound name 不再当主体。
+3. **门兜底**：`_apply_web_subject_consistency` 对“有哪些…教授”主题问法直接
+   返回未过滤结果；其他情况若主题问法掉量超过 2/3，fail-open 并记
+   `web_subject_gate_fallback`。
+4. **可观测**：新增 rewrite view 引入未命名公司的 warning；gate fallback 日志。
+
+**实测 q27（cookie 探针）**：
+
+- 修前：web `in=75 / retained=11 / filtered=64`，`gate_drops.web_subject_consistency=64`。
+- 修后：web `in=76 / retained=76 / filtered=0`，`gate_drops={}`。
+- 但 `citation_count=0`，答案仍是“没有可确认名单”。
+
+结论：**门层已修好**，下一个阻塞在答案选择/合成层——web 结果没有
+`claim_binding`，selector 的 `if binding is None: continue` 直接跳过，
+76 条 web 证据进不了 claim，也就没有 citation。q27 仍 0/4。
+
+下一步是“web discovery answer mode”：主题枚举时允许未绑定 web 结果
+进入 claim/answer（以 web handle 或 topic subject 绑定），列出
+“姓名+高校+方向”并带 citation，同时设时延上限。这不是实体识别层的问题，
+是答案装配层的新切片。
+
+## 为什么“爬过的教授”搜不出来（2026-10-26 05:10）
+
+对 q27 期望的 4 位教授做了 pack 审计（lookup.sqlite，3,958 位教授）：
+
+| 姓名 | pack 状态 | 关键字段 | 能否被“具身智能/灵巧手”检索 |
+|---|---|---|---|
+| 柯文德 | 存在（南方科技大学） | `research_directions=[]`；summary 是模板重复：“柯文德现任南方科技大学教师。该教授在深圳科创领域有持续贡献，研究成果具有重要学术价值。”×N | 不能：没有任何主题文本 |
+| 王强 | 存在（哈工大深圳） | 方向=高性能计算、AI 系统 | 不能：域不匹配；标准答案的“王强”可能是另一位同名教授 |
+| 任尔夫 | 不在 pack | — | 不能 |
+| 刘桂良 | 不在 pack | — | 不能 |
+
+另外：
+
+- pack 里有 **56 位教授**的 directions/summary 含“具身智能”或“灵巧手”
+  （楼云江、余泽、江锦成、刘万泉、彭卫文等），但 q27 的本地 professor
+  车道没有把这些人变成候选/答案——这是检索车道缺口。
+- 6 位教授的 paper 文档里 **0 篇**能通过 authors 字段匹配到本人；
+  `professor_attributed_to_paper` 有 10,742 条，但论文 lookup 投影没有把
+  作者名暴露出来，服务端无法用论文反补教授主题画像。
+
+结论：**“爬过”只是身份记录，不等于“检索就绪”的主题画像。**
+54% 模板 summary 不是抽象比例，柯文德就是具体例子：记录存在，但没有
+研究方向、没有论文/官网主题文本，向量和词法都无法命中。再叠上同名
+（王强）、缺记录（任尔夫/刘桂良）、论文作者投影缺失，q27 在数据层就已经
+失败，不是单纯检索/答案装配问题。
