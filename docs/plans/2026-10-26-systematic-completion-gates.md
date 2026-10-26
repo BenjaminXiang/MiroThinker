@@ -172,6 +172,17 @@ refresh_professor_projection.py --pack <pack> --out <dir> [--skip-coherence]
 **注意**：刷新写到 `var/professor-projection/`，overlay 仍读
 `var/professor-projection-allowlist.json`——替换白名单仍是显式动作（需重启才生效）。
 
+### 3.8 闸门 4 第三片：白名单热替换（2026-10-27）
+
+周任务产出新白名单，但服务只在启动时读一次——不重启就不生效，等于把自动化又变回手工。
+现在：
+
+1. `active_overlay()` 以 `(路径, mtime_ns, size)` 为缓存键，文件变了就重载（加锁）；
+2. 发布用 `os.replace` 原子替换，读方永远看不到半个文件；
+3. 是否替换仍由 `--publish-allowlist` 显式控制——刷新默认只更新指标，不擅自改线上行为。
+
+**客户机验证**：重写文件后不重启，直接读出新值（9876）；真实原子替换后 staging 文件不残留，`/api/health` 200。
+
 ## 4. 明确不做（本轮）
 
 - 不合并三条血统（那是独立工程，需要一次收敛计划）。
