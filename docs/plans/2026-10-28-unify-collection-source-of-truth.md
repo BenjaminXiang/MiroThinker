@@ -152,3 +152,38 @@
 2. **2 位同名教授**：合并到已有 id，还是保留两条并标记 `needs_review`？倾向合并（同一人）。
 3. **55 条库独有论文**：保留（不回灌删除），在 P3 守卫里作为"库领先"记录。
 4. **`research_directions`**：先丢（库无列），还是写进 `professor_fact`？倾向先丢并在报告里计数，避免 P1 膨胀。
+
+---
+
+## 11. P1 执行结果（2026-10-28 实跑）
+
+```text
+{"pack": 3958, "already_present": 220, "to_insert": 3736, "to_merge": 2, "dropped_research_directions": 8958}
+{"written": 3736, "merged_filled": 2, "truncated_names": 2}
+```
+
+| 指标 | 值 |
+|---|---|
+| 采集库教授（回灌后） | **3,956**（220 + 3,736；2 位同名合并到已有 id） |
+| 有主页源页 | 3,956（全部） |
+| 有机构记录 | 3,757（差 199 是原有 220 位里的历史缺口，不是回灌造成） |
+| 有简介 | 3,954 |
+| `run_id` 标记为回灌 | 3,736 |
+| 幂等性 | 重跑 `to_insert = 0` |
+| 抽样一致 | 3/3（姓名、简介、quality_status 与 pack 完全一致） |
+
+**过程中发现并处理的三件事**：
+
+1. `professor.run_id` 是 **uuid 且有 FK** → 先登记一条 `pipeline_run`（`run_kind='backfill_real'`，确定性 uuid）；
+2. `primary_official_profile_page_id` 是 FK → 主页页用 `ON CONFLICT (url)` 插入后**按 url 回查 page_id**（不能直接用算出来的 uuid）；
+3. pack 里有 **2 条记录的 `name` 是一整段话**（3,762 / 5,905 字节），直接入库会炸 btree 索引 → 截断到 200 字并计数（`truncated_names: 2`）。
+
+**补全解锁**：新增 `--padded-only` 选择器——按"补位标记"选人，而不是按长度
+（补位本身就把长度撑到 200+，长度过滤器选不出来）。当前可选 **2,024** 位。
+
+## 12. P2 待办（论文回灌）
+
+1. 迁移新增 `canonical_source='pack_backfill'`（决策 B）；
+2. 按 §9 映射插入 24,003 篇（幂等键：pack id；去重：DOI → 标题）；
+3. 保留 55 条库独有记录；
+4. 验收：库论文 ≥ 24,520、重复率 < 1%、抽样 50 条一致。

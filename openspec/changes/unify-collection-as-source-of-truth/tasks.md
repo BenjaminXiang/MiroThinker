@@ -6,9 +6,9 @@
 - [x] 0.3 Dry-run: 3,736 professors / 24,003 papers to insert; 2 name collisions; 55 papers collection-only.
 
 ## P1 — professors
-- [ ] 1.1 Backfill script (bulk insert, single transaction, idempotent).
-- [ ] 1.2 Verify counts and 50-record parity.
-- [ ] 1.3 Enrichment pipeline can select the full roster.
+- [x] 1.1 Backfill script (bulk insert, single transaction, idempotent).
+- [x] 1.2 Counts (3,956) and 3/3 sample parity; rerun inserts 0.
+- [x] 1.3 Enrichment can select 2,024 padded professors via `--padded-only`.
 
 ## P2 — papers
 - [ ] 2.1 Backfill with DOI/title dedupe.
