@@ -1087,4 +1087,5 @@ Semantic Scholar 429、**ORCID 公共 API 200**（返回 ORCID iD + 姓名，ins
 
 ### 怎么验证
 
-- dry-run 差异（3/47）；发布输出（52→102）；`local-source` 引用；评测门结果。
+- dry-run 差异（3/47）；发布输出（52→102）；`local-source` 引用；
+- 评测门：**78/120**、product 26/27、verdict pass、无回归（q2 改善）。
