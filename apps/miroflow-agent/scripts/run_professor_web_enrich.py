@@ -208,6 +208,14 @@ def main() -> int:
     )
     p.add_argument("--sleep", type=float, default=2.0)
     p.add_argument(
+        "--padded-only",
+        action="store_true",
+        help=(
+            "only professors whose summary still carries the template padding; "
+            "length filters cannot find them because padding is long"
+        ),
+    )
+    p.add_argument(
         "--min-summary-len",
         type=int,
         default=200,
@@ -257,6 +265,11 @@ def main() -> int:
         if args.institution:
             where.append("pa.institution = %s")
             params.append(args.institution)
+        if args.padded_only:
+            where.append(
+                "(p.profile_summary LIKE '%该教授在深圳科创领域有持续贡献%'"
+                " OR p.profile_summary LIKE '%研究成果具有重要学术价值%')"
+            )
         if args.min_summary_len > 0:
             where.append("length(coalesce(p.profile_summary,'')) < %s")
             params.append(args.min_summary_len)
