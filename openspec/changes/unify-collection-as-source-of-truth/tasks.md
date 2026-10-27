@@ -15,4 +15,4 @@
 - [x] 2.2 24,003 inserted (24,558 total), 6 duplicate titles, idempotent.
 
 ## P3 — guard
-- [ ] 3.1 Daily pack-vs-database gap check + admin surfacing.
+- [x] 3.1 Daily pack-vs-database gap check (cron 04:00, baseline-aware).
