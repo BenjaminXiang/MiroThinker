@@ -405,7 +405,7 @@
               "<td>" + item.filename + "</td>" +
               '<td class="mono">' + shortHash(item.content_sha256) + "</td>" +
               "<td>" + dot + pill(STATUS_LABEL[item.status] || item.status, STATUS_CLASS[item.status]) +
-              (item.dry_run ? pill("干跑") : "") + "</td>" +
+              (item.dry_run ? pill("干跑（未入库）") : "") + "</td>" +
               '<td class="mono">' + (item.run_id ? item.run_id.slice(0, 8) + "…" : "—") + "</td>" +
               "<td>" + fmtTime(item.created_at) + "</td>" +
               "</tr>"
