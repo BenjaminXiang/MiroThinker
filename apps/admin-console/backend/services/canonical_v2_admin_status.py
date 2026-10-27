@@ -475,6 +475,29 @@ def collect_access_log(environ: Mapping[str, str]) -> dict[str, Any]:
 
 
 
+def _overlay_record_counts(environ: Mapping[str, str]) -> dict[str, int]:
+    """Manual-recall points per domain: pack supplements that are searchable."""
+
+    raw = environ.get(_MANUAL_RECALL_ENV, "").strip()
+    if not raw:
+        return {}
+    path = Path(raw) / "manual-recall.json"
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return {}
+    counts: dict[str, int] = {}
+    for point in payload.get("points") or []:
+        if not isinstance(point, dict) or point.get("kind") != "manual_record":
+            continue
+        if point.get("status") != "active":
+            continue
+        domain = str(point.get("domain") or "")
+        if domain:
+            counts[domain] = counts.get(domain, 0) + 1
+    return counts
+
+
 def _collection_record_counts(environ: Mapping[str, str]) -> dict[str, int | None]:
     """Row counts per domain in the collection database, or empty on failure."""
 
@@ -524,6 +547,7 @@ def collect_freshness(
         except ValueError:
             build_dt = None
     collection_counts = _collection_record_counts(environ)
+    overlay_counts = _overlay_record_counts(environ)
     per_domain = {
         domain: {
             "record_count": record_counts.get(f"published:{domain}"),
@@ -531,6 +555,16 @@ def collect_freshness(
             # collection database. Showing both is the only honest count: a bare
             # pack count made an import look like it never happened.
             "collection_record_count": collection_counts.get(domain),
+            # What a user can actually find = pack documents + overlay records
+            # that the pack does not contain (the delta bridge). The headline
+            # number must be this, not the frozen pack count.
+            "overlay_record_count": overlay_counts.get(domain, 0),
+            "searchable_record_count": (
+                None
+                if record_counts.get(f"published:{domain}") is None
+                else int(record_counts.get(f"published:{domain}") or 0)
+                + overlay_counts.get(domain, 0)
+            ),
             "pack_build_at": _iso(build_dt),
             "pack_build_age_seconds": _seconds_since(build_dt, now=now),
             "projection_as_of": _iso(as_of_dt),

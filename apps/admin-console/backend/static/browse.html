@@ -753,11 +753,14 @@
         const collectionByDomain = new Map(
           (status.domains || []).map((entry) => [entry.domain, entry.collection_record_count]),
         );
+        const searchableByDomain = new Map(
+          (status.domains || []).map((entry) => [entry.domain, entry.searchable_record_count]),
+        );
         const cards = domains.map((domain) => {
           const card = create("article", "metric-card");
           card.append(
             create("span", "metric-label", domainLabels[domain]),
-            create("strong", "metric-value", countByDomain.get(domain) ?? 0),
+            create("strong", "metric-value", searchableByDomain.get(domain) ?? countByDomain.get(domain) ?? 0),
             create(
               "span",
               "metric-caption",
@@ -790,35 +793,40 @@
 
 
       async function loadCollectionCounts() {
-        // The headline cards come from the frozen release manifest; imported rows
-        // live in the collection database. Merge those counts in as "采集库 N".
+        // The headline cards come from the frozen release manifest, but the answer
+        // to "how many can I find" is pack + overlay supplements. Show that number,
+        // and spell out the split so the frozen pack count is not mistaken for the
+        // searchable total.
         try {
           const payload = await fetchJson("api/canonical-v2/admin/system-status");
           const per = (payload.freshness && payload.freshness.per_domain) || {};
-          const map = new Map();
-          Object.keys(per).forEach((domain) => {
-            if (per[domain].collection_record_count != null) {
-              map.set(domain, per[domain].collection_record_count);
-            }
-          });
-          mergeCollectionCounts(map);
+          mergeCounts(per);
         } catch {
-          // status endpoint unavailable: keep the pack-only captions.
+          // status endpoint unavailable: keep the manifest-only numbers.
         }
       }
 
-      let collectionCounts = new Map();
-
-      function mergeCollectionCounts(map) {
-        collectionCounts = map;
+      function mergeCounts(per) {
         const cards = summaryGrid.querySelectorAll(".metric-card");
         Array.prototype.forEach.call(cards, function (card, index) {
           const domain = domains[index];
+          const entry = per[domain];
+          if (!domain || !entry) return;
+          const value = card.querySelector(".metric-value");
           const caption = card.querySelector(".metric-caption");
-          if (!domain || !caption || !collectionCounts.has(domain)) return;
-          const pack = card.querySelector(".metric-value");
-          caption.textContent =
-            "服务包 " + (pack ? pack.textContent : "—") + " · 采集库 " + collectionCounts.get(domain);
+          if (entry.searchable_record_count != null && value) {
+            value.textContent = entry.searchable_record_count;
+          }
+          if (caption) {
+            const parts = ["包 " + (entry.record_count ?? "—")];
+            if (entry.overlay_record_count != null && entry.overlay_record_count > 0) {
+              parts.push("增量 " + entry.overlay_record_count);
+            }
+            if (entry.collection_record_count != null) {
+              parts.push("采集库 " + entry.collection_record_count);
+            }
+            caption.textContent = "可检索条目（" + parts.join(" · ") + "）";
+          }
         });
       }
 
