@@ -283,16 +283,25 @@ class UploadStore:
         ).fetchone()
         return None if row is None else _record_from_row(row)
 
-    def find_active(self, *, domain: str, content_sha256: str) -> UploadRecord | None:
+    def find_active(
+        self, *, domain: str, content_sha256: str, dry_run: bool
+    ) -> UploadRecord | None:
+        """Rows that block a new upload of the same content.
+
+        A dry run writes nothing, so it MUST NOT block a later real commit of the
+        same file (that made a customer re-upload fail as "duplicate" after a
+        verification dry run). Dedupe therefore only matches the same mode.
+        """
+
         row = self._conn.execute(
             """
             SELECT * FROM upload
-             WHERE domain = ? AND content_sha256 = ?
+             WHERE domain = ? AND content_sha256 = ? AND dry_run = ?
                AND status NOT IN (?, ?)
              ORDER BY created_at DESC
              LIMIT 1
             """,
-            (domain, content_sha256, *RETRYABLE_STATUSES),
+            (domain, content_sha256, 1 if dry_run else 0, *RETRYABLE_STATUSES),
         ).fetchone()
         return None if row is None else _record_from_row(row)
 
@@ -530,7 +539,9 @@ class UploadRuntime:
                 f"an upload of this content for {domain} is being admitted right now"
             )
         try:
-            duplicate = self.store.find_active(domain=domain, content_sha256=digest)
+            duplicate = self.store.find_active(
+                domain=domain, content_sha256=digest, dry_run=dry_run
+            )
             if duplicate is not None:
                 raise UploadDuplicateError(
                     f"this file was already uploaded for {domain}", record=duplicate

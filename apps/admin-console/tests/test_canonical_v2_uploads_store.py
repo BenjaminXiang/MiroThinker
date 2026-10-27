@@ -21,7 +21,14 @@ def _store(tmp_path: Path) -> UploadStore:
     return UploadStore(tmp_path / "uploads.sqlite3")
 
 
-def _create(store: UploadStore, *, upload_id: str, domain: str = "company", digest: str = "a" * 64):
+def _create(
+    store: UploadStore,
+    *,
+    upload_id: str,
+    domain: str = "company",
+    digest: str = "a" * 64,
+    dry_run: bool = False,
+):
     return store.create(
         upload_id=upload_id,
         domain=domain,
@@ -29,7 +36,7 @@ def _create(store: UploadStore, *, upload_id: str, domain: str = "company", dige
         content_sha256=digest,
         size_bytes=1024,
         staged_path=f"/tmp/staging/{upload_id}/sample.xlsx",
-        dry_run=False,
+        dry_run=dry_run,
         operator="tester",
     )
 
@@ -60,10 +67,35 @@ def test_listing_is_newest_first_and_filters_by_domain(tmp_path: Path) -> None:
 def test_duplicate_lookup_ignores_failed_attempts(tmp_path: Path) -> None:
     store = _store(tmp_path)
     _create(store, upload_id="u-1")
-    assert store.find_active(domain="company", content_sha256="a" * 64) is not None
+    assert (
+        store.find_active(domain="company", content_sha256="a" * 64, dry_run=False)
+        is not None
+    )
     store.set_status("u-1", status=STATUS_FAILED, summary={"error": "boom"})
-    assert store.find_active(domain="company", content_sha256="a" * 64) is None
-    assert store.find_active(domain="patent", content_sha256="a" * 64) is None
+    assert (
+        store.find_active(domain="company", content_sha256="a" * 64, dry_run=False)
+        is None
+    )
+    assert (
+        store.find_active(domain="patent", content_sha256="a" * 64, dry_run=False)
+        is None
+    )
+    store.close()
+
+
+def test_a_dry_run_does_not_block_a_real_upload(tmp_path: Path) -> None:
+    store = _store(tmp_path)
+    _create(store, upload_id="dry-1", dry_run=True)
+    store.set_status("dry-1", status=STATUS_SUCCEEDED, summary={"dry_run": True})
+
+    assert (
+        store.find_active(domain="company", content_sha256="a" * 64, dry_run=False)
+        is None
+    )
+    assert (
+        store.find_active(domain="company", content_sha256="a" * 64, dry_run=True)
+        is not None
+    )
     store.close()
 
 
