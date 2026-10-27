@@ -49,3 +49,17 @@ client_max_body_size 128m;
 
 - 修复已在客户机生效（nginx 已 reload，无需重启应用）；
 - 用户可以重试上传；需要真正入库时取消「干跑」勾选即可。
+
+## 6. 企业资料上传同步检查（2026-10-27 10:45）
+
+同一台反代、同一个 server 块，所以 nginx 修复对所有域生效。逐条实测：
+
+| 路径 | 用例 | 结果 |
+|---|---|---|
+| 企业 XLSX（`/uploads/company`） | 6.9 KB 真实企业表，干跑 | **202**，`status=succeeded` |
+| 企业 XLSX | 20 MB 合成文件，干跑 | **202**（1 秒内）；内容非 zip → 任务 `failed` 且返回 `BadZipFile`，**优雅失败、无 500** |
+| 企业资料文档（`/company-documents/preview`） | 小 txt | **200**，解析出 62 字 / 1 个分块 |
+| 企业资料文档 | 20 MB | **413 JSON** `{"detail":"upload exceeds 10 MiB"}`（应用侧 10 MB 上限，错误是 JSON 不是 HTML） |
+
+**结论**：企业上传两条路径都正常；区别只在应用侧上限——
+XLSX 128 MB，企业资料文档 10 MB（超出时返回干净的 JSON 错误）。

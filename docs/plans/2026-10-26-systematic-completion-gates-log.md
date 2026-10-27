@@ -1051,3 +1051,13 @@ Semantic Scholar 429、**ORCID 公共 API 200**（返回 ORCID iD + 姓名，ins
 
 - nginx 日志：413 → 修复后 401（匿名，说明请求体已接收）；
 - 真实文件 dry-run：202 + `status=succeeded` + 17,963 行解析。
+
+### 第 29 轮补记 · 企业资料上传检查
+
+同一反代 → 修复天然覆盖企业域。实测：
+
+- 企业 XLSX 干跑（6.9 KB 真实表）：202、succeeded；
+- 企业 XLSX 20 MB 合成：202（1 秒内），内容非法时任务 failed + `BadZipFile`，无 500；
+- 企业资料文档 preview：小 txt 200（62 字/1 分块）；20 MB 返回 **413 JSON**（应用侧 10 MB 上限）。
+
+结论：企业两条上传路径都正常，应用侧上限分别是 128 MB（XLSX）与 10 MB（资料文档）。
