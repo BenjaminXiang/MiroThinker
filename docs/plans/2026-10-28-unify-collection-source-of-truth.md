@@ -270,3 +270,41 @@
 | 补全可覆盖全量薄画像 | ✅ 2,024 位可批量 |
 | 一致性可视化 | ✅ 每日 JSON + 基线告警 |
 | 重建不再覆盖库数据 | ⛔ 待 P4（构建从库导出） |
+
+---
+
+## 18. 收尾：机构补全 + 缺口进管理端（2026-10-28）
+
+### 机构补全
+
+原有 220 位教授里有 **199 位没有主机构记录**，而补全流水线的 JOIN 需要机构——等于这 199 位补不了。
+
+`backfill_missing_affiliations.py`：从 pack 取机构/院系/职称，补建主机构 + 主页源页。
+实跑：**199 条写入，剩余 0** → 3,956 位教授全部可被补全选中。
+
+### 缺口进管理端
+
+`system-status` 新增 `pack_gap` 块（读每日守卫的 JSON）：
+
+```json
+{"state":"ok","ok":true,"generated_at":"…",
+ "domains":{"company":{"pack_missing_from_collection":0,"expected_missing":0,"regressed":false},
+            "paper":{"pack_missing_from_collection":17,"expected_missing":17},
+            "professor":{"pack_missing_from_collection":2,"expected_missing":2},
+            "patent":{"pack_missing_from_collection":170,"expected_missing":170}}}
+```
+
+读取路径由 `run.sh` 的 `CANONICAL_V2_PACK_GAP_JSON` 指向；文件缺失时该块降级为
+`state: unavailable`，不影响其他状态。
+
+## 19. 阶段总结（P0–P3）
+
+| 阶段 | 结果 | 证据 |
+|---|---|---|
+| P0 映射/干跑 | 映射表 + 冲突数（3,736 / 24,003） | §8–§10 |
+| P1 教授回灌 | 3,956 位、幂等、抽样一致 | §11 |
+| P2 论文回灌 | 24,558 篇、22 秒、幂等 | §13 |
+| P3 一致性守卫 | 每日 04:00、基线判定、管理端可见 | §16、§18 |
+| 附 机构补全 | 199 条，0 缺失 | §18 |
+
+**四域均满足 pack ⊆ 库**（缺口在基线内）。剩余 P4（构建从库导出）需单独立项。

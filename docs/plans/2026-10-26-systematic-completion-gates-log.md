@@ -1313,3 +1313,28 @@ Semantic Scholar 429、**ORCID 公共 API 200**（返回 ORCID iD + 姓名，ins
 
 - 实跑 `ok=True`，四域 `regressed=false`；JSON 落在 `var/pack-collection-gap.json`；
 - crontab 可见 04:00 任务。
+
+## 第 39 轮 · 2026-10-28 01:50 CST · 收尾：机构补全 199 条 + 缺口进管理端
+
+### 做了什么
+
+1. `backfill_missing_affiliations.py`：补 199 位教授的主机构（补全流水线的 JOIN 依赖它）；
+2. `system-status` 增加 `pack_gap` 块（读每日守卫 JSON），`run.sh` 增加对应环境变量；
+3. 重启生效（01:40→01:48 healthy）。
+
+### 发现了什么
+
+- **199 位教授没有机构 → 补全选不中他们**：这是"补全只能覆盖 20 位"的第二个隐藏原因。
+- 缺口块数据正确：企业 0 / 论文 17 / 教授 2 / 专利 170，全部在基线内（ok=true）。
+
+### 评估与决定
+
+**评估**：P0–P3 全部完成；四个域都能通过管理端看到"包与库的差距"，且补全可覆盖全量。
+
+**决定**：Epic 保持 in-progress（P4 未做），但本阶段目标达成。
+
+### 怎么验证
+
+- 机构：`missing affiliations: 0`；
+- 状态：`pack_gap.state=ok, ok=true`，四域计数如上；
+- 服务健康 200。
