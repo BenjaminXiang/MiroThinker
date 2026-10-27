@@ -76,6 +76,8 @@ def import_patent_xlsx(path: Path) -> PatentImportResult:
                 continue
             skipped_counter[record] += 1
 
+        records, duplicate_counter = _dedupe_records(records)
+        skipped_counter.update(duplicate_counter)
         report = PatentImportReport(
             workbook_path=str(workbook_path),
             worksheet_title=worksheet.title,
@@ -146,6 +148,34 @@ def _normalize_header_label(value: object) -> str | None:
 
 def _is_empty_row(row: tuple[object, ...]) -> bool:
     return all(_normalize_text(cell) is None for cell in row)
+
+
+
+def _dedupe_records(
+    records: list[PatentImportRecord],
+) -> tuple[list[PatentImportRecord], Counter[str]]:
+    """Collapse rows that describe the same patent number.
+
+    Only the patent number is a safe identity: titles repeat across genuinely
+    different patents (measured: 17,963 rows, 17,963 distinct numbers, but only
+    16,417 distinct titles). Rows without a number are kept — dropping them by
+    title would delete real patents.
+    """
+
+    seen: set[str] = set()
+    unique: list[PatentImportRecord] = []
+    skipped: Counter[str] = Counter()
+    for record in records:
+        number = (record.patent_number or "").strip().lower()
+        if not number:
+            unique.append(record)
+            continue
+        if number in seen:
+            skipped["duplicate_patent_number"] += 1
+            continue
+        seen.add(number)
+        unique.append(record)
+    return unique, skipped
 
 
 def _parse_record(

@@ -35,12 +35,20 @@ import sys
 import psycopg
 
 
-def pack_names(pack: Path, domain: str) -> set[str]:
+def pack_names(pack: Path, domain: str) -> tuple[set[str], set[str]]:
+    """Return (numbers, titles) known to the pack.
+
+    Patents are matched by number first: titles repeat across genuinely different
+    patents, so title-only matching silently drops distinct patents that share a
+    title with a pack record.
+    """
+
     database = pack / "lookup.sqlite3"
     connection = sqlite3.connect(f"file:{database}?mode=ro", uri=True)
     try:
         field = {"company": "name", "paper": "title", "patent": "title"}[domain]
         names: set[str] = set()
+        numbers: set[str] = set()
         rows = connection.execute(
             "select json_extract(document_json,'$.lookup_content') from lookup_document"
             " where json_extract(document_json,'$.domain')=?",
@@ -51,7 +59,10 @@ def pack_names(pack: Path, domain: str) -> set[str]:
             value = content.get(field) or content.get("title_zh")
             if value:
                 names.add(str(value).strip())
-        return names
+            number = str(content.get("patent_number") or "").strip().lower()
+            if number:
+                numbers.add(number)
+        return numbers, names
     finally:
         connection.close()
 
@@ -87,7 +98,7 @@ def collection_rows(dsn: str, domain: str, limit: int) -> list[dict]:
             if domain == "patent":
                 cursor.execute(
                     "SELECT patent_id, title_clean, abstract_clean, technology_effect,"
-                    " title_en, ipc_codes, summary_text"
+                    " title_en, ipc_codes, summary_text, patent_number"
                     " FROM patent WHERE title_clean IS NOT NULL"
                     " ORDER BY updated_at DESC LIMIT %s",
                     (limit,),
@@ -99,6 +110,7 @@ def collection_rows(dsn: str, domain: str, limit: int) -> list[dict]:
                         {
                             "pk": row[0],
                             "name": title,
+                            "number": (row[7] or "").strip().lower(),
                             "payload": {
                                 "title": title,
                                 "abstract": row[2],
@@ -145,10 +157,19 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args(argv)
 
-    known = pack_names(Path(args.pack), args.domain)
+    known_numbers, known_titles = pack_names(Path(args.pack), args.domain)
     rows = collection_rows(args.dsn, args.domain, args.limit)
-    missing = [row for row in rows if row["name"] not in known]
-    print(f"{args.domain}: collection={len(rows)} pack={len(known)} missing={len(missing)}")
+    def _missing(row: dict) -> bool:
+        # A patent number is authoritative: titles repeat across different
+        # patents, so falling back to title when a number exists silently drops
+        # distinct patents that share a title with a pack record.
+        number = row.get("number")
+        if number:
+            return number not in known_numbers
+        return row["name"] not in known_titles
+
+    missing = [row for row in rows if _missing(row)]
+    print(f"{args.domain}: collection={len(rows)} pack_titles={len(known_titles)} missing={len(missing)}")
 
     if args.dry_run:
         for row in missing[:20]:
