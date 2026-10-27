@@ -62,6 +62,7 @@ def test_render_sql_is_idempotent_and_complete() -> None:
     assert "ON CONFLICT (professor_id) DO NOTHING" in sql
     assert "professor_affiliation" in sql
     assert "WHERE NOT EXISTS" in sql
+    assert "'待补全。'" in sql  # padded text must never be imported
     assert "BEGIN;" in sql and "COMMIT;" in sql
     assert planner.page_uuid("https://example.edu/~wang") in sql
 

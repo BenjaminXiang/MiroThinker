@@ -86,7 +86,11 @@ def render_sql(selected: list[dict]) -> str:
         institution = str(record.get("institution") or "").strip() or "未知"
         professor_id = str(record.get("canonical_identity_id"))
         homepage = str(record.get("homepage") or "").strip()
-        summary = record.get("profile_summary")
+        # Never import the padded text: the enrichment UPDATE only replaces a
+        # SHORTER summary, so a 226-character template would win against a
+        # 223-character real biography and the professor would never be upgraded.
+        # A short placeholder also satisfies the selection's "summary is not null".
+        summary = "待补全。"
 
         if homepage:
             page_id = page_uuid(homepage)
