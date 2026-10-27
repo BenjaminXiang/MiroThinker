@@ -1,0 +1,167 @@
+{
+  "pack": "/var/tmp/mirothinker-data-v2/serving-pack-fembed-v3-synthdepth",
+  "professors": 3958,
+  "thin": 2152,
+  "selected": [
+    {
+      "professor_id": "professor-c-7b2389048c79512e148ce1ec",
+      "name": "LUO JINGLI",
+      "institution": "深圳大学",
+      "homepage": "https://cmse.szu.edu.cn/szdw1/jsml/clkxygcx/j_s/LUO_JINGLI.htm",
+      "summary_chars": 226,
+      "directions": 0
+    },
+    {
+      "professor_id": "professor-c-d17181fd82ab9a9f5e0e3d25",
+      "name": "MASSIMILIANO GALLUZZI",
+      "institution": "深圳大学",
+      "homepage": "https://cmse.szu.edu.cn/szdw1/jsml/gfzclygc/fjs/MASSIMILIANO_GALLUZZI.htm",
+      "summary_chars": 209,
+      "directions": 0
+    },
+    {
+      "professor_id": "professor-c-6e1160e457565ef05b62c0fe",
+      "name": "SHUNICHI TAKEDA",
+      "institution": "深圳大学",
+      "homepage": "http://med.szu.edu.cn/szdw/jszgml/jcyxy2/content_8714",
+      "summary_chars": 201,
+      "directions": 0
+    },
+    {
+      "professor_id": "professor-c-3868fb5a386982e5bbc45250",
+      "name": "Taewan Kim",
+      "institution": "深圳大学",
+      "homepage": "http://med.szu.edu.cn/szdw/jszgml/jcyxy2/content_8703",
+      "summary_chars": 225,
+      "directions": 0
+    },
+    {
+      "professor_id": "professor-c-111c53d4ff60687c383333dd",
+      "name": "丁南",
+      "institution": "深圳大学",
+      "homepage": "https://law.szu.edu.cn/info/2164/11888.htm",
+      "summary_chars": 217,
+      "directions": 0
+    },
+    {
+      "professor_id": "professor-c-77296b1e590d4cf63a5b3db9",
+      "name": "丁惠君",
+      "institution": "深圳大学",
+      "homepage": "http://med.szu.edu.cn/szdw/jszgml/swyxgcxy2/content_7985",
+      "summary_chars": 218,
+      "directions": 0
+    },
+    {
+      "professor_id": "professor-c-f87b565877c7df396f4a81a0",
+      "name": "丁文华",
+      "institution": "深圳大学",
+      "homepage": "http://ceie.szu.edu.cn/info/1113/2947.htm",
+      "summary_chars": 224,
+      "directions": 0
+    },
+    {
+      "professor_id": "professor-c-f034fff04852995ac8b4e247",
+      "name": "丁春雨",
+      "institution": "深圳大学",
+      "homepage": "https://ias.szu.edu.cn/info/1046/2793.htm",
+      "summary_chars": 215,
+      "directions": 0
+    },
+    {
+      "professor_id": "professor-c-5e5849606ff58ab32c7aa5a5",
+      "name": "丁科元",
+      "institution": "深圳大学",
+      "homepage": "https://cmse.szu.edu.cn/szdw1/jsml/clkxygcx/j_s/dky.htm",
+      "summary_chars": 219,
+      "directions": 0
+    },
+    {
+      "professor_id": "professor-c-b663c2aebd7664850c7cf772",
+      "name": "丁聪",
+      "institution": "深圳大学",
+      "homepage": "https://www.szu.edu.cn/index.htm",
+      "summary_chars": 222,
+      "directions": 0
+    },
+    {
+      "professor_id": "professor-c-5f142e54408be923e61670f8",
+      "name": "万东睿",
+      "institution": "深圳大学",
+      "homepage": "https://www.szu.edu.cn/index.htm",
+      "summary_chars": 222,
+      "directions": 0
+    },
+    {
+      "professor_id": "professor-c-3c40759f458a8a1b33674623",
+      "name": "万学娟",
+      "institution": "深圳大学",
+      "homepage": "https://cmse.szu.edu.cn/szdw1/jsml/gfzclygc/j_s/wxj.htm",
+      "summary_chars": 219,
+      "directions": 0
+    },
+    {
+      "professor_id": "professor-c-2b39f748146bbdbd12feb1c8",
+      "name": "万欣宇",
+      "institution": "深圳大学",
+      "homepage": "http://saup.szu.edu.cn/info/1094/1468.htm",
+      "summary_chars": 224,
+      "directions": 0
+    },
+    {
+      "professor_id": "professor-c-ba970a95950dd75048782634",
+      "name": "丘学强",
+      "institution": "深圳大学",
+      "homepage": "https://wxy.szu.edu.cn/info/1025/1086.htm",
+      "summary_chars": 219,
+      "directions": 0
+    },
+    {
+      "professor_id": "professor-c-4b379e1bb150f98c98f1c573",
+      "name": "严雅琦",
+      "institution": "深圳大学",
+      "homepage": "http://saup.szu.edu.cn/info/1094/2622.htm",
+      "summary_chars": 224,
+      "directions": 0
+    },
+    {
+      "professor_id": "professor-c-2dee12613a96489beef59f14",
+      "name": "丰建文",
+      "institution": "深圳大学",
+      "homepage": "https://www.szu.edu.cn/index.htm",
+      "summary_chars": 221,
+      "directions": 0
+    },
+    {
+      "professor_id": "professor-c-e28df25f74d761820ead4cba",
+      "name": "乐志操",
+      "institution": "深圳大学",
+      "homepage": "http://med.szu.edu.cn/szdw/jszgml/jcyxy2/content_8690",
+      "summary_chars": 218,
+      "directions": 0
+    },
+    {
+      "professor_id": "professor-c-e18a8cca4a35afade7242cc4",
+      "name": "乔迅翔",
+      "institution": "深圳大学",
+      "homepage": "http://saup.szu.edu.cn/info/1092/1401.htm",
+      "summary_chars": 224,
+      "directions": 0
+    },
+    {
+      "professor_id": "professor-c-f44f03906f682f4f21e86a14",
+      "name": "乔远",
+      "institution": "深圳大学",
+      "homepage": "https://law.szu.edu.cn/info/2166/11871.htm",
+      "summary_chars": 217,
+      "directions": 0
+    },
+    {
+      "professor_id": "professor-c-ec930789971e405f46a8b3d6",
+      "name": "于从",
+      "institution": "深圳大学",
+      "homepage": "http://med.szu.edu.cn/szdw/jszgml/hlxy2/content_8044",
+      "summary_chars": 217,
+      "directions": 0
+    }
+  ]
+}
