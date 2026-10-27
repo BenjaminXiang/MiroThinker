@@ -750,12 +750,21 @@
 
       function renderMetrics(status) {
         const countByDomain = new Map((status.domains || []).map((entry) => [entry.domain, entry.record_count]));
+        const collectionByDomain = new Map(
+          (status.domains || []).map((entry) => [entry.domain, entry.collection_record_count]),
+        );
         const cards = domains.map((domain) => {
           const card = create("article", "metric-card");
           card.append(
             create("span", "metric-label", domainLabels[domain]),
             create("strong", "metric-value", countByDomain.get(domain) ?? 0),
-            create("span", "metric-caption", "已发布类型化条目"),
+            create(
+              "span",
+              "metric-caption",
+              collectionByDomain.get(domain) == null
+                ? "服务包已发布条目"
+                : "服务包 " + (countByDomain.get(domain) ?? 0) + " · 采集库 " + collectionByDomain.get(domain),
+            ),
           );
           return card;
         });
@@ -779,6 +788,40 @@
         }
       }
 
+
+      async function loadCollectionCounts() {
+        // The headline cards come from the frozen release manifest; imported rows
+        // live in the collection database. Merge those counts in as "采集库 N".
+        try {
+          const payload = await fetchJson("api/canonical-v2/admin/system-status");
+          const per = (payload.freshness && payload.freshness.per_domain) || {};
+          const map = new Map();
+          Object.keys(per).forEach((domain) => {
+            if (per[domain].collection_record_count != null) {
+              map.set(domain, per[domain].collection_record_count);
+            }
+          });
+          mergeCollectionCounts(map);
+        } catch {
+          // status endpoint unavailable: keep the pack-only captions.
+        }
+      }
+
+      let collectionCounts = new Map();
+
+      function mergeCollectionCounts(map) {
+        collectionCounts = map;
+        const cards = summaryGrid.querySelectorAll(".metric-card");
+        Array.prototype.forEach.call(cards, function (card, index) {
+          const domain = domains[index];
+          const caption = card.querySelector(".metric-caption");
+          if (!domain || !caption || !collectionCounts.has(domain)) return;
+          const pack = card.querySelector(".metric-value");
+          caption.textContent =
+            "服务包 " + (pack ? pack.textContent : "—") + " · 采集库 " + collectionCounts.get(domain);
+        });
+      }
+
       async function loadStatus() {
         summaryGrid.replaceChildren(stateBox("loading", "正在汇总版本数据"));
         try {
@@ -788,6 +831,7 @@
           asOf.textContent = `数据时间点：${formatTime(status.as_of)}`;
           renderMetrics(status);
           loadGapCount();
+          loadCollectionCounts();
         } catch (error) {
           // 版本概览依赖候选运行时；不可用时整块移除，不留报错占位。
           document.getElementById("overview-section")?.remove();

@@ -474,6 +474,33 @@ def collect_access_log(environ: Mapping[str, str]) -> dict[str, Any]:
     )
 
 
+
+def _collection_record_counts(environ: Mapping[str, str]) -> dict[str, int | None]:
+    """Row counts per domain in the collection database, or empty on failure."""
+
+    dsn = resolve_console_dsn(environ)
+    if not dsn:
+        return {}
+    try:
+        import psycopg
+    except Exception:  # noqa: BLE001 - optional at runtime
+        return {}
+    normalized = dsn.replace("postgresql+psycopg://", "postgresql://")
+    counts: dict[str, int | None] = {}
+    try:
+        with psycopg.connect(normalized, connect_timeout=3) as conn:
+            with conn.cursor() as cursor:
+                for domain in PUBLIC_DOMAINS:
+                    try:
+                        cursor.execute(f"SELECT count(*) FROM {domain}")
+                        counts[domain] = int(cursor.fetchone()[0])
+                    except Exception:  # noqa: BLE001 - a missing table is not fatal
+                        counts[domain] = None
+    except Exception:  # noqa: BLE001 - status must never fail on an optional source
+        return {}
+    return counts
+
+
 def collect_freshness(
     *,
     environ: Mapping[str, str],
@@ -496,9 +523,14 @@ def collect_freshness(
             build_dt = datetime.fromisoformat(build_created_at.replace("Z", "+00:00"))
         except ValueError:
             build_dt = None
+    collection_counts = _collection_record_counts(environ)
     per_domain = {
         domain: {
             "record_count": record_counts.get(f"published:{domain}"),
+            # The serving pack is frozen at build time; imported rows land in the
+            # collection database. Showing both is the only honest count: a bare
+            # pack count made an import look like it never happened.
+            "collection_record_count": collection_counts.get(domain),
             "pack_build_at": _iso(build_dt),
             "pack_build_age_seconds": _seconds_since(build_dt, now=now),
             "projection_as_of": _iso(as_of_dt),
