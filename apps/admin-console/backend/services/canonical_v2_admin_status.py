@@ -524,6 +524,25 @@ def _collection_record_counts(environ: Mapping[str, str]) -> dict[str, int | Non
     return counts
 
 
+def collect_pack_gap(environ: Mapping[str, str]) -> dict[str, Any]:
+    """Read the daily pack-vs-collection gap report (P3 guard)."""
+
+    raw = environ.get("CANONICAL_V2_PACK_GAP_JSON", "").strip()
+    if not raw:
+        return unavailable("CANONICAL_V2_PACK_GAP_JSON is not set")
+    try:
+        payload = json.loads(Path(raw).read_text(encoding="utf-8"))
+    except (OSError, ValueError) as exc:
+        return unavailable(f"gap report unreadable: {exc}")
+    return ok(
+        {
+            "generated_at": payload.get("generated_at"),
+            "ok": payload.get("ok"),
+            "domains": payload.get("domains") or {},
+        }
+    )
+
+
 def collect_freshness(
     *,
     environ: Mapping[str, str],
@@ -826,6 +845,7 @@ def collect_system_status(
             "access_log": collect_access_log(environ),
             "access_log_retention_days": retention,
         },
+        "pack_gap": collect_pack_gap(environ),
         "storage": collect_storage(environ),
         "disk": collect_disk(),
         "config": config_block,
