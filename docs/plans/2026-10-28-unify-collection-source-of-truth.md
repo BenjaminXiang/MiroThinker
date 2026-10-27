@@ -86,3 +86,69 @@
 - Epic：`unify-collection-as-source-of-truth`（proposal 先行，P1 落地时补 specs）；
 - P1/P2 各自可拆 Lite/Standard change；
 - 人类文档：本文；日志：`2026-10-26-systematic-completion-gates-log.md` 第 35 轮。
+
+---
+
+## 8. P0 结果（2026-10-28 实跑）
+
+脚本：`reconcile_pack_to_collection.py`（只读，输出 JSON）。
+
+| 域 | pack | 采集库 | 按 id 命中 | 按名/DOI/标题命中 | **待插入** | 缺失必填 | 库独有 |
+|---|---|---|---|---|---|---|---|
+| 教授 | 3,958 | 220 | 220 | 2（重名不同 id） | **3,736** | 0 | 0 |
+| 论文 | 24,520 | 555 | 500 | 17（15 DOI + 2 标题） | **24,003** | 0 | **55** |
+
+**结论**：
+
+1. 采集库里现有的 220 位教授**全部来自 pack**（id 一致），回灌是纯增量；
+2. 有 2 位教授是"同名不同 id"，需要合并策略（否则会重复）；
+3. 论文有 55 条库独有（不在 pack 里），回灌不能删它们；
+4. 没有因缺必填字段被挡下的记录——字段映射可行。
+
+## 9. 字段映射（P0.1）
+
+### 教授 · pack → 采集库
+
+| pack 字段 | 目标 | 说明 |
+|---|---|---|
+| `canonical_identity_id` | `professor.professor_id` | 保留 pack id（可追溯） |
+| `name` / `canonical_name_zh` | `professor.canonical_name` | NOT NULL |
+| `canonical_name_en` | `professor.canonical_name_en` | |
+| `aliases` | `professor.aliases` | `text[]`，默认空数组 |
+| `institution` | `professor_affiliation.institution` | 先建 `source_page` 再插机构 |
+| `department`（dict） | `professor_affiliation.department` | 取 `.name`，缺失留空 |
+| `title` | `professor_affiliation.title` | |
+| `homepage` | `source_page.url` | 无主页时用 `pack://<id>` 占位 |
+| `profile_summary` | `professor.profile_summary` | |
+| `paper_count` / `h_index` / `citation_count` | 同名列 | |
+| `quality_status` | `professor.quality_status` | 枚举含 `partial`，直接透传 |
+| `research_directions` | — | 库无对应列；P1 先跳过，记入待办 |
+
+固定值：`discipline_family='other'`、`identity_status='needs_review'`、`lifecycle_state='active'`、`run_id='pack-backfill-20261028'`。
+
+### 论文 · pack → 采集库
+
+| pack 字段 | 目标 | 说明 |
+|---|---|---|
+| `canonical_identity_id` | `paper.paper_id` | |
+| `title` / `title_zh` | `title_clean` / `title_raw` | |
+| `abstract` | `abstract_clean` | |
+| `authors` | `authors_display`（拼接）+ `authors_raw`（jsonb） | |
+| `doi` / `arxiv_id` | 同名列 | |
+| `venue`（dict） | `venue`（text） | 取 `.name` |
+| `year` / `citation_count` | 同名列 | |
+| `summary_text` / `summary_zh` | 同名列 | |
+| `quality_status` | `quality_status` | |
+| — | `canonical_source`（NOT NULL，枚举） | **待定**：见下 |
+
+固定值：`identity_status='unverified'`、`run_id='pack-backfill-20261028'`。
+
+## 10. P0 待决（进 P1 前必须拍板）
+
+1. **`canonical_source` 取值**：枚举有 `openalex / semantic_scholar / crossref / official_page / manual / prof_page_only / arxiv / web_search / dblp`。pack 论文来自 P4 发布包，来源混杂。
+   - 方案 A：按 `enrichment_sources` 推断，缺省 `openalex`（最接近，但可能失真）；
+   - 方案 B：加迁移新增 `pack_backfill` 值（最诚实，多一次迁移）；
+   - 我倾向 B。
+2. **2 位同名教授**：合并到已有 id，还是保留两条并标记 `needs_review`？倾向合并（同一人）。
+3. **55 条库独有论文**：保留（不回灌删除），在 P3 守卫里作为"库领先"记录。
+4. **`research_directions`**：先丢（库无列），还是写进 `professor_fact`？倾向先丢并在报告里计数，避免 P1 膨胀。

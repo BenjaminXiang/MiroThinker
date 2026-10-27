@@ -1,9 +1,9 @@
 # Tasks: unify-collection-as-source-of-truth
 
 ## P0 — mapping and design
-- [ ] 0.1 Field mapping table (professor/paper) and enum decisions.
-- [ ] 0.2 Id strategy (keep pack ids, record provenance via run_id).
-- [ ] 0.3 Dry-run: count conflicts against the existing 220/555 rows.
+- [x] 0.1 Field mapping table (professor/paper) and enum decisions.
+- [x] 0.2 Id strategy (keep pack ids, record provenance via run_id).
+- [x] 0.3 Dry-run: 3,736 professors / 24,003 papers to insert; 2 name collisions; 55 papers collection-only.
 
 ## P1 — professors
 - [ ] 1.1 Backfill script (bulk insert, single transaction, idempotent).
