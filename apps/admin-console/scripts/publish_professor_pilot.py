@@ -122,6 +122,25 @@ def build_payload(record: dict) -> dict:
     return payload
 
 
+
+def embedding_settings() -> dict:
+    """Managed-config bootstrapped embedding settings for the adapter."""
+
+    from src.data_agents.canonical_v2.managed_runtime import apply_managed_runtime_config
+
+    apply_managed_runtime_config()
+    base_url = os.environ.get(
+        "CANONICAL_V2_EMBEDDING_BASE_URL", "https://maas.qianwenaiapi.com/api/v1"
+    ).rstrip("/")
+    return {
+        "endpoint": f"{base_url}/services/embeddings/text-embedding/text-embedding",
+        "api_key": os.environ.get("CANONICAL_V2_EMBEDDING_API_KEY", ""),
+        "model": os.environ.get(
+            "CANONICAL_V2_EMBEDDING_MODEL", "qwen3.7-text-embedding-flash"
+        ),
+    }
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--dsn", required=True)
@@ -144,25 +163,11 @@ def main(argv: list[str] | None = None) -> int:
             print(f"    {record['profile_summary'][:120]}")
         return 0
 
-    from src.data_agents.canonical_v2.managed_runtime import (
-        apply_managed_runtime_config,
-    )
-
-    apply_managed_runtime_config()
-    base_url = os.environ.get(
-        "CANONICAL_V2_EMBEDDING_BASE_URL", "https://maas.qianwenaiapi.com/api/v1"
-    ).rstrip("/")
-    api_key = os.environ.get("CANONICAL_V2_EMBEDDING_API_KEY", "")
-    if not api_key:
+    settings = embedding_settings()
+    if not settings.get("api_key"):
         print("missing CANONICAL_V2_EMBEDDING_API_KEY", file=sys.stderr)
         return 2
-    adapter = HttpEmbeddingAdapter(
-        endpoint=f"{base_url}/services/embeddings/text-embedding/text-embedding",
-        api_key=api_key,
-        model=os.environ.get(
-            "CANONICAL_V2_EMBEDDING_MODEL", "qwen3.7-text-embedding-flash"
-        ),
-    )
+    adapter = HttpEmbeddingAdapter(**settings)
     store = ManualRecallStore(Path(args.store_dir), adapter)
     print(f"store points before: {len(store.active_points())}")
 
