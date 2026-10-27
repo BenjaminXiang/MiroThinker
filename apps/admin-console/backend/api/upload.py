@@ -1175,7 +1175,10 @@ def _run_patent_upload_pipeline(
     )
     from src.data_agents.patent.exact_backfill import build_patent_release_from_sources
     from src.data_agents.patent.import_xlsx import import_patent_xlsx
-    from src.data_agents.patent.linkage import link_company_ids
+    from src.data_agents.patent.linkage import (
+        build_company_link_index,
+        link_company_ids,
+    )
     from src.data_agents.patent.release import publish_patent_release
     from src.data_agents.storage.postgres.connection import connect
 
@@ -1196,22 +1199,28 @@ def _run_patent_upload_pipeline(
             released_objects_path=output_dir / "released_objects.jsonl",
         )
 
+        # One transaction for the whole batch: a transaction per patent meant
+        # 17,963 commits (and 17,963 index rebuilds in link_company_ids) for a
+        # 20 MB workbook. The company index is built once here.
         patents_written = 0
         link_candidates = 0
         links_written = 0
         link_errors = 0
-        for record in release_result.patent_records:
-            with conn.transaction():
+        company_link_index = build_company_link_index(
+            company_name_to_id, company_aliases_map
+        )
+        with conn.transaction():
+            for record in release_result.patent_records:
                 upsert_patent(conn, record=record, run_id=task_id)
-            patents_written += 1
-            for company_id, evidence_source_type, match_reason in link_company_ids(
-                record.applicants,
-                company_name_to_id,
-                company_aliases_map=company_aliases_map,
-            ):
-                link_candidates += 1
-                try:
-                    with conn.transaction():
+                patents_written += 1
+                for company_id, evidence_source_type, match_reason in link_company_ids(
+                    record.applicants,
+                    company_name_to_id,
+                    company_aliases_map=company_aliases_map,
+                    index=company_link_index,
+                ):
+                    link_candidates += 1
+                    try:
                         upsert_company_patent_link(
                             patent_id=record.id,
                             company_id=company_id,
@@ -1220,15 +1229,21 @@ def _run_patent_upload_pipeline(
                             match_reason=match_reason,
                             conn=conn,
                         )
-                except Exception:  # noqa: BLE001 - keep patent rows even if one link fails
-                    link_errors += 1
-                    logger.exception(
-                        "Admin patent upload link failed patent=%s company=%s",
-                        record.id,
-                        company_id,
+                    except Exception:  # noqa: BLE001 - keep patent rows even if one link fails
+                        link_errors += 1
+                        logger.exception(
+                            "Admin patent upload link failed patent=%s company=%s",
+                            record.id,
+                            company_id,
+                        )
+                        continue
+                    links_written += 1
+                if patents_written % 500 == 0:
+                    logger.info(
+                        "Admin patent upload progress: %s/%s written",
+                        patents_written,
+                        len(release_result.patent_records),
                     )
-                    continue
-                links_written += 1
 
     return {
         "status": (

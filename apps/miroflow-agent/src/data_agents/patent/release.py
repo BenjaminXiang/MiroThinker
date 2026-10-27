@@ -11,7 +11,7 @@ from src.data_agents.normalization import build_stable_id
 from src.data_agents.publish import publish_jsonl
 
 from .import_xlsx import _split_tokens
-from .linkage import link_company_ids, link_professor_ids
+from .linkage import build_company_link_index, link_company_ids, link_professor_ids
 from .models import PatentImportRecord
 from .quality_promotion import (
     NEEDS_ENRICHMENT,
@@ -52,6 +52,11 @@ def build_patent_release(
     patent_records: list[PatentRecord] = []
     released_objects: list[ReleasedObject] = []
     professor_index = professor_name_to_id or {}
+    # Measured: rebuilding the applicant->company indices per patent made a
+    # 17,963-row workbook spend >25 minutes before writing anything.
+    company_link_index = build_company_link_index(
+        company_name_to_id, company_aliases_map
+    )
 
     for record in records:
         title = record.title.strip()
@@ -67,6 +72,7 @@ def build_patent_release(
             applicants,
             company_name_to_id,
             company_aliases_map=company_aliases_map,
+            index=company_link_index,
         )
         patent_type = infer_patent_type(
             record.patent_number,

@@ -39,7 +39,7 @@ def pack_names(pack: Path, domain: str) -> set[str]:
     database = pack / "lookup.sqlite3"
     connection = sqlite3.connect(f"file:{database}?mode=ro", uri=True)
     try:
-        field = "name" if domain == "company" else "title"
+        field = {"company": "name", "paper": "title", "patent": "title"}[domain]
         names: set[str] = set()
         rows = connection.execute(
             "select json_extract(document_json,'$.lookup_content') from lookup_document"
@@ -84,6 +84,32 @@ def collection_rows(dsn: str, domain: str, limit: int) -> list[dict]:
                 ]
             # The collection schema stores title_clean/title_raw + abstract_clean
             # (no `title` column), so read those names.
+            if domain == "patent":
+                cursor.execute(
+                    "SELECT patent_id, title_clean, abstract_clean, technology_effect,"
+                    " title_en, ipc_codes, summary_text"
+                    " FROM patent WHERE title_clean IS NOT NULL"
+                    " ORDER BY updated_at DESC LIMIT %s",
+                    (limit,),
+                )
+                rows = []
+                for row in cursor.fetchall():
+                    title = (row[1] or "").strip()
+                    rows.append(
+                        {
+                            "pk": row[0],
+                            "name": title,
+                            "payload": {
+                                "title": title,
+                                "abstract": row[2],
+                                "technology_effect": row[3],
+                                "title_en": row[4],
+                                "ipc_codes": row[5],
+                                "summary_text": row[6],
+                            },
+                        }
+                    )
+                return rows
             cursor.execute(
                 "SELECT paper_id, title_clean, title_raw, abstract_clean, summary_zh"
                 " FROM paper WHERE title_clean IS NOT NULL OR title_raw IS NOT NULL"
@@ -111,7 +137,7 @@ def collection_rows(dsn: str, domain: str, limit: int) -> list[dict]:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--domain", required=True, choices=("company", "paper"))
+    parser.add_argument("--domain", required=True, choices=("company", "paper", "patent"))
     parser.add_argument("--dsn", required=True)
     parser.add_argument("--pack", required=True)
     parser.add_argument("--store-dir", required=True)
@@ -142,19 +168,27 @@ def main(argv: list[str] | None = None) -> int:
     adapter = HttpEmbeddingAdapter(**embedding_settings())
     store = ManualRecallStore(Path(args.store_dir), adapter)
     print(f"store points before: {len(store.active_points())}")
+    batch: list[dict] = []
     written = 0
     for row in missing:
-        payload = {key: value for key, value in row["payload"].items() if value}
-        store.add_manual_record(
-            record_id=f"delta-{args.domain}-{row['pk']}",
-            domain=args.domain,
-            manual_object_id=str(row["pk"]),
-            payload=payload,
-            operator="delta-sync",
-            reason="collection-db row absent from the serving pack",
+        batch.append(
+            {
+                "record_id": f"delta-{args.domain}-{row['pk']}",
+                "domain": args.domain,
+                "manual_object_id": str(row["pk"]),
+                "payload": {key: value for key, value in row["payload"].items() if value},
+                "operator": "delta-sync",
+                "reason": "collection-db row absent from the serving pack",
+            }
         )
-        written += 1
-        print(f"  {row['name']}: manual-delta-{args.domain}-{row['pk']}")
+        if len(batch) >= 200:
+            store.add_manual_records(batch)
+            written += len(batch)
+            print(f"  published {written}/{len(missing)}")
+            batch = []
+    if batch:
+        store.add_manual_records(batch)
+        written += len(batch)
     print(f"written: {written}; store points after: {len(store.active_points())}")
     if written and not sys.stdout.isatty():
         print("restart the service to load the new points")

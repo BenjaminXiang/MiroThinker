@@ -27,18 +27,49 @@ def build_professor_name_index(values: dict[str, str]) -> dict[str, str | None]:
     return build_normalized_index(values, normalizer=normalize_person_name)
 
 
+def build_company_link_index(
+    company_name_to_id: dict[str, str],
+    company_aliases_map: dict[str, str] | None = None,
+) -> "CompanyLinkIndex":
+    return CompanyLinkIndex(company_name_to_id, company_aliases_map)
+
+
+class CompanyLinkIndex:
+    """Prebuilt lookup tables for applicant -> company matching.
+
+    Building the three indices costs ~7k name normalizations. Rebuilding them per
+    patent made a 17,963-row workbook take tens of minutes (measured: the import
+    was still parsing after 25 minutes), so callers that loop over records build
+    this once and pass it in.
+    """
+
+    __slots__ = ("exact", "normalized", "aliases")
+
+    def __init__(
+        self,
+        company_name_to_id: dict[str, str],
+        company_aliases_map: dict[str, str] | None = None,
+    ) -> None:
+        self.exact = {
+            name.strip(): company_id
+            for name, company_id in company_name_to_id.items()
+            if name.strip()
+        }
+        self.normalized = build_company_name_index(company_name_to_id)
+        self.aliases = build_company_alias_index(company_aliases_map or {})
+
+
 def link_company_ids(
     applicants: list[str],
     company_name_to_id: dict[str, str],
     company_aliases_map: dict[str, str] | None = None,
+    *,
+    index: CompanyLinkIndex | None = None,
 ) -> list[CompanyPatentLinkCandidate]:
-    exact_index = {
-        name.strip(): company_id
-        for name, company_id in company_name_to_id.items()
-        if name.strip()
-    }
-    normalized_index = build_company_name_index(company_name_to_id)
-    alias_index = build_company_alias_index(company_aliases_map or {})
+    built = index or CompanyLinkIndex(company_name_to_id, company_aliases_map)
+    exact_index = built.exact
+    normalized_index = built.normalized
+    alias_index = built.aliases
     matched: list[CompanyPatentLinkCandidate] = []
     seen_company_ids: set[str] = set()
 

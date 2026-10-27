@@ -377,6 +377,57 @@ class ManualRecallStore:
             self._persist_locked()
         return point.point_id
 
+    def add_manual_records(
+        self,
+        records: list[dict[str, Any]],
+    ) -> list[str]:
+        """Bulk variant of :meth:`add_manual_record`.
+
+        ``add_manual_record`` rewrites the whole store file per record, which is
+        O(n^2) for a batch (measured risk: publishing a few thousand imported
+        patents would rewrite tens of gigabytes). This embeds everything first and
+        persists exactly once.
+        """
+
+        if not records:
+            return []
+        texts = tuple(
+            serialize_manual_record(item["domain"], item["payload"]) for item in records
+        )
+        vectors = self._embed(texts)
+        created_at = _utc_now_iso()
+        point_ids: list[str] = []
+        with self._lock:
+            for item, text, vector in zip(records, texts, vectors):
+                display = (
+                    item["payload"].get("name")
+                    or item["payload"].get("title")
+                    or item["manual_object_id"]
+                )
+                point = ManualPoint(
+                    point_id=f"manual-{item['record_id']}",
+                    kind="manual_record",
+                    domain=item["domain"],
+                    display_name=str(display)[:200],
+                    canonical_ref=item["manual_object_id"],
+                    embedded_content=text,
+                    vector=vector,
+                    status="active",
+                    ref_id=item["record_id"],
+                    chunk_index=0,
+                    source_label="manual-record",
+                    doc_title="",
+                    operator=(item.get("operator", "unknown").strip() or "unknown")[
+                        :_OPERATOR_MAX
+                    ],
+                    reason=item.get("reason", "").strip()[:_REASON_MAX],
+                    created_at=created_at,
+                )
+                self._points[point.point_id] = point
+                point_ids.append(point.point_id)
+            self._persist_locked()
+        return point_ids
+
     # -- tombstones -------------------------------------------------------------
 
     def tombstone_by_ref(self, ref_id: str) -> int:

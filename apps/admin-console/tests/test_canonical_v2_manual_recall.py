@@ -386,3 +386,24 @@ def test_embed_validates_cardinality_and_dimension(tmp_path: Path) -> None:
             domain="company", company_name="n", title="", text="内容。",
             reason="r", operator="a", source_label="s", matched_canonical_id=None,
         )
+
+
+def test_bulk_add_persists_once_and_keeps_all_points(tmp_path: Path) -> None:
+    store = ManualRecallStore(tmp_path, _FakeEmbeddingAdapter(8))
+    records = [
+        {
+            "record_id": f"bulk-{index}",
+            "domain": "patent",
+            "manual_object_id": f"PAT-{index}",
+            "payload": {"title": f"专利 {index}"},
+            "operator": "tester",
+            "reason": "bulk",
+        }
+        for index in range(3)
+    ]
+
+    point_ids = store.add_manual_records(records)
+
+    assert len(point_ids) == 3
+    reloaded = ManualRecallStore(tmp_path, _FakeEmbeddingAdapter(8))
+    assert len(reloaded.active_points()) == 3
