@@ -37,6 +37,15 @@ def _rows(path: Path) -> list[dict]:
     return rows
 
 
+def _counts(rows: list[dict]) -> dict[str, int]:
+    counts: dict[str, int] = {}
+    for row in rows:
+        for key, value in row.items():
+            if value not in (None, "", [], {}):
+                counts[key] = counts.get(key, 0) + 1
+    return counts
+
+
 def coverage(rows: list[dict]) -> dict[str, float]:
     if not rows:
         return {}
@@ -61,12 +70,15 @@ def validate(export_rows: list[dict], reference_rows: list[dict], domain: str) -
         except ValueError as exc:
             shape_errors.append({"row": index, "error": str(exc)})
 
-    export_cov = coverage(export_rows)
-    reference_cov = coverage(reference_rows) if reference_rows else {}
+    export_counts = _counts(export_rows)
+    reference_counts = _counts(reference_rows)
+    # Compare absolute counts, not percentages: the export legitimately contains
+    # records the source never had (pack-only professors), which would depress a
+    # percentage comparison without meaning anything.
     regressions = {
-        key: {"export": export_cov.get(key, 0.0), "reference": value}
-        for key, value in reference_cov.items()
-        if export_cov.get(key, 0.0) + 0.01 < value
+        key: {"export": export_counts.get(key, 0), "reference": count}
+        for key, count in reference_counts.items()
+        if count >= 10 and export_counts.get(key, 0) < count * 0.95
     }
     return {
         "domain": domain,

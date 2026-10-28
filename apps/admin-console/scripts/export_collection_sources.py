@@ -60,6 +60,11 @@ PROFESSOR_SOURCE_FIELDS = (
     "evaluation_summary",
     "evidence_urls",
     "extraction_status",
+    "research_directions_source",
+    "publication_evidence_urls",
+    "official_paper_count",
+    "scholarly_profile_urls",
+    "official_anchor_profile",
 )
 
 # Fields the collection database owns once it has been written to.
@@ -113,7 +118,11 @@ def source_key(pack_doc: dict) -> str | None:
 
 
 def load_source_rows(source_paths: list[Path]) -> dict[str, dict]:
-    """Original build source rows (full field coverage) keyed by professor id."""
+    """Original build source rows (full field coverage) keyed by professor id.
+
+    Also indexes them by normalized name, because some pack documents carry a
+    PROF id that is absent from the source files while the professor is there.
+    """
 
     rows: dict[str, dict] = {}
     for path in source_paths:
@@ -125,6 +134,9 @@ def load_source_rows(source_paths: list[Path]) -> dict[str, dict]:
                 identifier = str(row.get("professor_id") or "")
                 if identifier:
                     rows[identifier] = row
+                name = str(row.get("name") or "").strip().lower()
+                if name:
+                    rows.setdefault(f"name:{name}", row)
     return rows
 
 
@@ -196,7 +208,14 @@ def to_source_row(pack_doc: dict, db_row: dict, source_row: dict | None = None) 
         "evaluation_summary": None,
         "evidence_urls": [],
         "extraction_status": "exported",
+        "research_directions_source": None,
+        "publication_evidence_urls": [],
+        "official_paper_count": None,
+        "scholarly_profile_urls": [],
+        "official_anchor_profile": None,
     }
+    if source_row is None and pack_doc.get("name"):
+        source_row = None  # name fallback is resolved by the caller
     if source_row:
         for key, value in source_row.items():
             if key in row and row[key] in (None, "", [], {}) and value not in (None, "", [], {}):
@@ -229,6 +248,7 @@ def main(argv: list[str] | None = None) -> int:
 
     rows = []
     missing_in_db = 0
+    dropped_without_summary = 0
     for identifier in identifiers:
         pack_doc = pack.get(identifier)
         db_row = database.get(identifier) or {}
@@ -236,7 +256,18 @@ def main(argv: list[str] | None = None) -> int:
             missing_in_db += 1
             continue
         key = identifier if identifier in source_rows else source_key(pack_doc)
-        rows.append(to_source_row(pack_doc, db_row, source_rows.get(key or "")))
+        source_row = source_rows.get(key or "")
+        if source_row is None:
+            name = str(pack_doc.get("name") or "").strip().lower()
+            source_row = source_rows.get(f"name:{name}") if name else None
+        source = to_source_row(pack_doc, db_row, source_row)
+        # Two pack records are page headings ("本科生", "团学风采") with no
+        # biography at all; they would fail the build's publication gate, so the
+        # export drops them and reports the count instead of shipping junk.
+        if not source.get("profile_summary"):
+            dropped_without_summary += 1
+            continue
+        rows.append(source)
 
     payload = "\n".join(
         json.dumps(row, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
@@ -250,6 +281,7 @@ def main(argv: list[str] | None = None) -> int:
         "database": len(database),
         "database_only": missing_in_db,
         "source_rows": len(source_rows),
+        "dropped_without_summary": dropped_without_summary,
         "sha256": digest,
         "bytes": len(payload.encode("utf-8")),
     }
