@@ -12,6 +12,7 @@ import logging
 import os
 from pathlib import Path
 import re
+from zoneinfo import ZoneInfo
 from threading import Condition, RLock
 from typing import Any, Callable, Iterable, Iterator, Literal, Protocol, cast
 from urllib.parse import urlparse, urlsplit, urlunsplit
@@ -853,6 +854,52 @@ _REFERENT_CLARIFICATION_PROMPT = (
     "我会立即为您查询。如果您只是想了解某一类信息的大致情况，也可以直接描述需求，"
     "我会先给出概要说明。"
 )
+
+
+
+_CLOCK_QUERY = re.compile(
+    r"(今天|今日|现在|当前|此刻).{0,6}(几号|日期|几月几|周几|星期几|礼拜几|几点|时间)"
+    r"|^(几号|周几|星期几|礼拜几|今天几号|今天星期几)[?？]?$"
+    r"|what('s| is) (the )?(date|time|day)|today'?s date",
+    re.IGNORECASE,
+)
+_CLOCK_ASKS_TIME = re.compile(r"(现在|当前|此刻).{0,4}(几点|时间)|what('s| is) (the )?time", re.IGNORECASE)
+
+
+def _clock_answer(query: str, as_of: datetime) -> str | None:
+    """Answer "what is today's date" from the server clock, deterministically.
+
+    This is a meta question: no retrieval, no model, no web. Leaving it to the
+    normal pipeline produced a long "I cannot read your device clock" reply and a
+    visible stall, which is indefensible for a question the service can answer
+    exactly.
+    """
+
+    if not _CLOCK_QUERY.search(query or ""):
+        return None
+    local = as_of.astimezone(ZoneInfo("Asia/Shanghai"))
+    weekdays = ("星期一", "星期二", "星期三", "星期四", "星期五", "星期六", "星期日")
+    date_text = f"{local.year}年{local.month}月{local.day}日"
+    if _CLOCK_ASKS_TIME.search(query or ""):
+        return f"现在是 {date_text} {weekdays[local.weekday()]} {local:%H:%M}（北京时间）。"
+    return f"今天是 {date_text}，{weekdays[local.weekday()]}（北京时间）。"
+
+
+def _clock_response(query: str, answer_text: str) -> ChatResponse:
+    return ChatResponse.model_validate(
+        {
+            "query": query,
+            "query_type": "canonical_v2:A:direct_clock",
+            "answer_text": answer_text,
+            "citations": [],
+            "evidence": [],
+            "clarification": None,
+            "structured_payload": {},
+            "answer_style": "template",
+            "citation_map": {},
+            "suggested_followups": [],
+        }
+    )
 
 
 def _referent_clarification_response(query: str) -> ChatResponse:
@@ -2105,6 +2152,9 @@ class CanonicalV2ChatAdapter:
         if as_of.tzinfo is None or as_of.utcoffset() is None:
             raise ValueError("as_of must be timezone-aware")
         observed_as_of = as_of.astimezone(UTC)
+        clock_answer = _clock_answer(normalized_query, as_of)
+        if clock_answer is not None:
+            return _clock_response(normalized_query, clock_answer)
 
         with self._lock:
             committed = self._sessions.get(session_id)
