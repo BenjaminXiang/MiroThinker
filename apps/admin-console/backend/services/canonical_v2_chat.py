@@ -11,6 +11,7 @@ import json
 import logging
 import os
 from pathlib import Path
+import sqlite3
 import re
 from zoneinfo import ZoneInfo
 from threading import Condition, RLock
@@ -864,6 +865,240 @@ _CLOCK_QUERY = re.compile(
     re.IGNORECASE,
 )
 _CLOCK_ASKS_TIME = re.compile(r"(现在|当前|此刻).{0,4}(几点|时间)|what('s| is) (the )?time", re.IGNORECASE)
+
+
+
+_SELF_QUERIES = (
+    (re.compile(r"^(你是谁|您是谁|你叫什么|你是干什么的)[?？]?$"), "identity"),
+    (re.compile(r"^(你能做什么|你会什么|你有什么功能|你能干什么|你可以做什么|怎么用|如何使用|使用说明)[?？]?$"), "capabilities"),
+)
+
+_SELF_ANSWERS = {
+    "identity": (
+        "我是深圳科创数据平台的知识助手，可以围绕教授、企业、论文、专利四个数据域回答"
+        "可追溯的问题，并给出引用来源。"
+    ),
+    "capabilities": (
+        "我可以：1）查教授——研究方向、机构、论文与专利；2）查企业——业务、产品、技术方向；"
+        "3）查论文——标题、作者、发表信息；4）查专利——专利号、申请人、技术要点。"
+        "直接用自然语言提问即可，例如“丁文伯的研究方向”“优必选有哪些专利”。"
+    ),
+}
+
+
+
+def _doc_text(value: object) -> str | None:
+    if value is None:
+        return None
+    if isinstance(value, dict):
+        value = value.get("name") or value.get("value") or ""
+    text = str(value).strip()
+    return text or None
+
+
+_ENTITY_QUERY = re.compile(
+    r"^(?:请问)?\s*(?P<name>[\u4e00-\u9fa5A-Za-z·\.\s]{2,30}?)\s*"
+    r"(?:是谁|是什么人|的简介|简介|是做什么的|是干什么的|是家什么公司)[?？]?$"
+)
+_ENTITY_INTRO_QUERY = re.compile(
+    r"^(?:请问|介绍一下|介绍下)\s*(?P<name>[\u4e00-\u9fa5A-Za-z·\.\s]{2,30}?)[?？]?$"
+)
+
+
+_NAME_PREFIXES = ("深圳市", "深圳", "广东省", "广东", "中国")
+_NAME_SUFFIXES = (
+    "股份有限公司", "有限责任公司", "有限公司", "公司", "集团", "控股", "科技", "技术",
+    "实业", "发展", "智能", "信息", "网络", "电子", "机器人",
+)
+
+
+def _core_name(name: str) -> str:
+    """Strip the city prefix and company suffix so 优必选 matches its legal name."""
+
+    text = name.strip()
+    for prefix in _NAME_PREFIXES:
+        if text.startswith(prefix):
+            text = text[len(prefix) :]
+            break
+    changed = True
+    while changed:
+        changed = False
+        for suffix in _NAME_SUFFIXES:
+            if text.endswith(suffix) and len(text) > len(suffix) + 1:
+                text = text[: -len(suffix)]
+                changed = True
+                break
+    return text.strip()
+
+
+class _EntityIndex:
+    """Name -> (domain, canonical id) index over the serving pack's lookup docs.
+
+    Loaded lazily once: ~11k professors/companies. Used only by the entity fast
+    path; retrieval and the model are untouched.
+    """
+
+    def __init__(self, pack_dir: Path) -> None:
+        self._pack_dir = pack_dir
+        self._names: dict[str, tuple[str, str]] | None = None
+
+    def _load(self) -> dict[str, tuple[str, str]]:
+        if self._names is not None:
+            return self._names
+        names: dict[str, tuple[str, str]] = {}
+        database = self._pack_dir / "lookup.sqlite3"
+        if database.is_file():
+            connection = sqlite3.connect(f"file:{database}?mode=ro", uri=True)
+            try:
+                rows = connection.execute(
+                    "select json_extract(document_json,'$.domain'),"
+                    " json_extract(document_json,'$.canonical_object_id'),"
+                    " json_extract(document_json,'$.lookup_content') from lookup_document"
+                    " where json_extract(document_json,'$.domain') in ('professor','company')"
+                )
+                for domain, object_id, raw in rows:
+                    content = json.loads(raw) if isinstance(raw, str) else raw
+                    name = str(content.get("name") or content.get("canonical_name_zh") or "").strip()
+                    if name and name not in names:
+                        names[name] = (str(domain), str(object_id))
+                    core = _core_name(name) if name else ""
+                    if core and core not in names:
+                        names[core] = (str(domain), str(object_id))
+            finally:
+                connection.close()
+        self._names = names
+        return names
+
+    def resolve(self, name: str) -> tuple[str, str] | None:
+        return self._load().get(name.strip())
+
+    def document(self, object_id: str) -> dict | None:
+        database = self._pack_dir / "lookup.sqlite3"
+        if not database.is_file():
+            return None
+        connection = sqlite3.connect(f"file:{database}?mode=ro", uri=True)
+        try:
+            row = connection.execute(
+                "select json_extract(document_json,'$.lookup_content') from lookup_document"
+                " where canonical_object_id=? limit 1",
+                (object_id,),
+            ).fetchone()
+            if not row:
+                return None
+            return json.loads(row[0]) if isinstance(row[0], str) else row[0]
+        finally:
+            connection.close()
+
+
+_ENTITY_INDEX: _EntityIndex | None = None
+
+
+def _entity_index() -> _EntityIndex | None:
+    global _ENTITY_INDEX
+    pack_dir = os.environ.get("CANONICAL_V2_SERVING_PACK", "").strip()
+    if not pack_dir:
+        return None
+    if _ENTITY_INDEX is None or str(_ENTITY_INDEX._pack_dir) != pack_dir:  # noqa: SLF001
+        _ENTITY_INDEX = _EntityIndex(Path(pack_dir))
+    return _ENTITY_INDEX
+
+
+def _entity_answer(query: str) -> ChatResponse | None:
+    """Answer "X 是谁 / 是做什么的" from the pack document, without retrieval."""
+
+    text = (query or "").strip()
+    match = _ENTITY_QUERY.match(text) or _ENTITY_INTRO_QUERY.match(text)
+    if not match:
+        return None
+    index = _entity_index()
+    if index is None:
+        return None
+    resolved = index.resolve(match.group("name"))
+    if resolved is None:
+        return None
+    domain, object_id = resolved
+    document = index.document(object_id) or {}
+    name = str(document.get("name") or document.get("canonical_name_zh") or "").strip()
+    parts = [name] if name else []
+    institution = _doc_text(document.get("institution"))
+    if institution:
+        parts.append(f"（{institution}）")
+    if domain == "company":
+        industry = _doc_text(document.get("industry"))
+        if industry:
+            parts.append(f"行业：{industry}。")
+        products = _doc_text(document.get("product_description"))
+        summary_so_far = _doc_text(document.get("profile_summary")) or ""
+        if products and products[:40] not in summary_so_far:
+            parts.append(products[:200])
+    if domain == "professor":
+        for label, field in (("职称", "title"), ("院系", "department")):
+            value = _doc_text(document.get(field))
+            if value:
+                parts.append(f"{label}：{value}。")
+        directions = document.get("research_directions") or []
+        names = [str(d.get("name") or d) for d in directions if isinstance(d, (dict, str))]
+        names = [value for value in names if value][:3]
+        if names:
+            parts.append(f"研究方向包括{'、'.join(names)}。")
+    summary = _doc_text(document.get("profile_summary"))
+    if summary:
+        parts.append(summary)
+    answer_text = "".join(parts).strip()
+    if not answer_text:
+        return None
+    citation = {
+        "type": domain,
+        "id": f"local-source-{object_id}",
+        "label": name or object_id,
+        "url": None,
+    }
+    return ChatResponse.model_validate(
+        {
+            "query": query,
+            "query_type": f"canonical_v2:A:direct_entity_{domain}",
+            "answer_text": answer_text,
+            "citations": [citation],
+            "evidence": [],
+            "clarification": None,
+            "structured_payload": {},
+            "answer_style": "template",
+            "citation_map": {"1": citation["id"]},
+            "suggested_followups": [],
+        }
+    )
+
+
+def _pre_route(query: str) -> str | None:
+    """Classify questions that must not enter the retrieval/model pipeline.
+
+    These are meta questions about the assistant itself: the answer is fixed
+    text, so running classification + retrieval + the model only adds latency
+    (and once produced a wrong answer for "今天几号").
+    """
+
+    text = (query or "").strip()
+    for pattern, kind in _SELF_QUERIES:
+        if pattern.match(text):
+            return kind
+    return None
+
+
+def _self_response(query: str, kind: str) -> ChatResponse:
+    return ChatResponse.model_validate(
+        {
+            "query": query,
+            "query_type": f"canonical_v2:A:direct_{kind}",
+            "answer_text": _SELF_ANSWERS[kind],
+            "citations": [],
+            "evidence": [],
+            "clarification": None,
+            "structured_payload": {},
+            "answer_style": "template",
+            "citation_map": {},
+            "suggested_followups": [],
+        }
+    )
 
 
 def _clock_answer(query: str, as_of: datetime) -> str | None:
@@ -2155,6 +2390,12 @@ class CanonicalV2ChatAdapter:
         clock_answer = _clock_answer(normalized_query, as_of)
         if clock_answer is not None:
             return _clock_response(normalized_query, clock_answer)
+        entity_answer = _entity_answer(normalized_query)
+        if entity_answer is not None:
+            return entity_answer
+        self_route = _pre_route(normalized_query)
+        if self_route is not None:
+            return _self_response(normalized_query, self_route)
 
         with self._lock:
             committed = self._sessions.get(session_id)
