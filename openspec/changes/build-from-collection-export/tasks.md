@@ -1,9 +1,10 @@
 # Tasks: build-from-collection-export
 
 ## S0 — exporter skeleton + validator
-- [ ] 0.1 `export_collection_sources.py` (deterministic JSONL, sha256 naming).
-- [ ] 0.2 `validate_export_sources.py` running the real mapper on a sample.
-- [ ] 0.3 100-record sample per domain passes.
+- [x] 0.1 `export_collection_sources.py` (deterministic JSONL, sha256 naming; merges DB > source > pack).
+- [x] 0.2 `validate_export_sources.py` (shape + per-field coverage vs the original source).
+- [ ] 0.2b Replace coverage checks with the real mapper once the boundary harness exists.
+- [ ] 0.3 Sample passes: 2 rows lack `profile_summary`; four fields still unmapped.
 
 ## S1 — professors
 - [ ] 1.1 Export 3,956 professors; counts reconcile with the database.

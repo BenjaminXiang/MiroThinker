@@ -85,3 +85,59 @@ cat /tmp/export-prof/validation.json
 3. 评测门 ≥ 80/120，replay 7/7；
 4. 旧包可一键回滚；
 5. 重建后，采集库里 P1/P2 回灌的数据**仍在**（不再被覆盖）。
+
+---
+
+## 8. S0 结果（2026-10-28 实跑）
+
+### 一个改变设计的发现
+
+原以为"库 → 导出 → 构建"就够了。实测发现**采集库比原始源包薄得多**：
+
+| 字段 | 原始源包 | 采集库 | 当前 pack |
+|---|---|---|---|
+| `research_directions` | 37% | 0%（决策 3 丢弃） | 47% |
+| `education_structured` | 19% | 0% | **0%** |
+| `work_experience` | 20% | 0% | **0%** |
+| `academic_positions` | 17% | 0% | **0%** |
+| `awards` | 13% | 0% | **0%** |
+| `top_papers` | 17% | 0% | **0%** |
+
+也就是说：**只从库导出会让重建比现在更薄**。而 pack 本身也不是全量（上表第三列）。
+
+### 修正后的设计：三方合并，优先级明确
+
+```text
+每个字段的取值优先级：采集库 > 原始源包 > 当前 pack
+```
+
+- **采集库**：新写入的事实（补全简介、修正、计数）；
+- **原始源包**：字段最全（education/awards/top_papers 只有它有）；
+- **当前 pack**：兜底（含最新构建的规范化结果）。
+
+**id 映射**：源包用 `PROF-…`、pack 用 `professor-c-…`，两者靠 pack 文档里
+`evidence[].assertion_id` 携带的 `PROF-…` 对上——这是 S0 打通的关键。
+
+### 交付的两个脚本
+
+| 脚本 | 作用 |
+|---|---|
+| `export_collection_sources.py` | pack + 源包 + 库 → 确定性 JSONL（按 id 排序、canonical JSON、`<sha256>.source`） |
+| `validate_export_sources.py` | 形状校验 + **字段覆盖率对比**（对照原始源包），逐字段报出"导出比源包少了多少" |
+
+### 首轮结果（教授，3,958 行）
+
+```text
+{"rows": 3958, "source_rows": 3652, "sha256": "5282674b…"}
+shape_errors: 2（两行缺 profile_summary）
+覆盖率：多数字段达到源包的 ~75%；四个字段 0%——未映射，S1 补齐：
+  research_directions_source / publication_evidence_urls /
+  official_paper_count / scholarly_profile_urls
+```
+
+### S1 待办
+
+1. 补四个未映射字段；
+2. 提高源包匹配率（3,652/3,735，差 83 条）；
+3. 处理 2 行缺简介的记录（是数据问题还是映射问题）；
+4. 之后用**真实 mapper** 做最终校验（S0 的覆盖率校验是形状级，不是语义级）。
