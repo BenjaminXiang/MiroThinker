@@ -941,6 +941,7 @@ class _EntityIndex:
     def __init__(self, pack_dir: Path) -> None:
         self._pack_dir = pack_dir
         self._names: dict[str, tuple[str, str]] | None = None
+        self._manual_docs: dict[str, dict] = {}
 
     def _load(self) -> dict[str, tuple[str, str]]:
         if self._names is not None:
@@ -966,6 +967,36 @@ class _EntityIndex:
                         names[core] = (str(domain), str(object_id))
             finally:
                 connection.close()
+        # Uploaded / enriched companies and professors live in the manual-recall
+        # store, not in the frozen pack; index them too so questions about them
+        # take the fast path instead of the 78-second retrieval round trip.
+        manual_dir = os.environ.get("CANONICAL_V2_MANUAL_RECALL_DIR", "").strip()
+        if manual_dir:
+            try:
+                payload = json.loads(
+                    (Path(manual_dir) / "manual-recall.json").read_text(encoding="utf-8")
+                )
+            except (OSError, ValueError):
+                payload = {}
+            for point in payload.get("points") or []:
+                if not isinstance(point, dict) or point.get("kind") != "manual_record":
+                    continue
+                domain = str(point.get("domain") or "")
+                if domain not in ("professor", "company"):
+                    continue
+                try:
+                    content = json.loads(point.get("embedded_content") or "{}")
+                except ValueError:
+                    continue
+                name = str(content.get("name") or "").strip()
+                object_id = str(point.get("canonical_ref") or "")
+                if not name or not object_id:
+                    continue
+                self._manual_docs[object_id] = content
+                names.setdefault(name, (domain, object_id))
+                core = _core_name(name)
+                if core:
+                    names.setdefault(core, (domain, object_id))
         self._names = names
         return names
 
@@ -973,6 +1004,9 @@ class _EntityIndex:
         return self._load().get(name.strip())
 
     def document(self, object_id: str) -> dict | None:
+        manual = self._manual_docs.get(object_id)
+        if manual is not None:
+            return manual
         database = self._pack_dir / "lookup.sqlite3"
         if not database.is_file():
             return None
