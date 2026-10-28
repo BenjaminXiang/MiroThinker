@@ -11,7 +11,7 @@
 - [x] 1.2 Field coverage >= 95% of the source for every source-only field.
 
 ## S2 — papers
-- [ ] 2.1 Export 24,558 papers; dedupe rate < 1%.
+- [x] 2.1 Export 24,575 papers (24,520 pack + 55 database-only); dedupe by DOI then title.
 
 ## S3 — patents and companies
 - [ ] 3.1 Export 17,963 patents (unique numbers) and 7,089 companies.
