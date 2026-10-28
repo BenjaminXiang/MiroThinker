@@ -1078,6 +1078,13 @@ def _entity_answer(query: str) -> ChatResponse | None:
     summary = _doc_text(document.get("profile_summary"))
     if summary:
         parts.append(summary)
+    # A record that only carries a name would produce a useless one-line answer;
+    # fall through to the normal pipeline, which can still find web evidence.
+    descriptive = summary or _doc_text(document.get("industry")) or _doc_text(
+        document.get("product_description")
+    )
+    if not descriptive:
+        return None
     answer_text = "".join(parts).strip()
     if not answer_text:
         return None
