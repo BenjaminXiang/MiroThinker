@@ -141,3 +141,51 @@ shape_errors: 2（两行缺 profile_summary）
 2. 提高源包匹配率（3,652/3,735，差 83 条）；
 3. 处理 2 行缺简介的记录（是数据问题还是映射问题）；
 4. 之后用**真实 mapper** 做最终校验（S0 的覆盖率校验是形状级，不是语义级）。
+
+---
+
+## 9. S1 结果：教授导出达到源包同等覆盖（2026-10-28）
+
+### 三处改进
+
+1. **补齐 5 个未映射字段**：`research_directions_source`、`publication_evidence_urls`、
+   `official_paper_count`、`scholarly_profile_urls`、`official_anchor_profile`；
+2. **名称兜底匹配**：有些 pack 文档带的 `PROF-…` 不在源文件里，但教授本人在——
+   按规范化姓名再匹配一次，覆盖率从 **~75% 提升到 ~98%**；
+3. **剔除 2 条垃圾记录**：pack 里有两条 `name` 是网页标题（"本科生"、"团学风采"），
+   没有任何简介——构建的发布门本来也会拒，导出时直接丢弃并计数。
+
+### 结果
+
+```text
+{"rows": 3956, "pack": 3958, "source_rows": 7303, "dropped_without_summary": 2,
+ "sha256": "849ba8f5……"}
+shape_errors: 0
+coverage_regressions: {}      # 所有源包字段导出量 ≥ 源包 95%
+ok: true
+```
+
+**确定性验证**：连续两次导出，sha256 完全一致（`849ba8f5…`）。
+
+**字段绝对量对照**（导出 / 源包）：
+
+| 字段 | 导出 | 源包 | 比例 |
+|---|---|---|---|
+| `research_directions_source` | 3,665 | 3,735 | 98% |
+| `education_structured` | 703 | 713 | 99% |
+| `work_experience` | 729 | 740 | 99% |
+| `awards` | 487 | 497 | 98% |
+| `top_papers` | 639 | 651 | 98% |
+
+剩余 ~1.5% 差异是"源包有、pack 没有"的教授——他们在源包里，但不在当前 pack 里，
+导出可选地纳入（见下）。
+
+### 一个待定项
+
+源包里有 **164 位教授不在 pack 里**。是纳入导出（重建后 pack 会多出他们），
+还是排除（保持与当前 pack 一致）？倾向**纳入**——他们是真实数据，重建后应该可检索。
+
+### S2 待办
+
+论文导出（24,558 篇）：同样三方合并（库 > 源包 > pack），源包字段对照见
+`staging-v4` 的 paper 源；论文没有 `PROF-…` 式的 id 映射问题（源/库用同名 `paper_id` 家族？需确认）。

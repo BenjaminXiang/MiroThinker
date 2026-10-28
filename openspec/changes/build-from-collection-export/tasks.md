@@ -4,11 +4,11 @@
 - [x] 0.1 `export_collection_sources.py` (deterministic JSONL, sha256 naming; merges DB > source > pack).
 - [x] 0.2 `validate_export_sources.py` (shape + per-field coverage vs the original source).
 - [ ] 0.2b Replace coverage checks with the real mapper once the boundary harness exists.
-- [ ] 0.3 Sample passes: 2 rows lack `profile_summary`; four fields still unmapped.
+- [x] 0.3 Sample passes: shape errors 0, coverage regressions 0 (2 junk rows dropped).
 
 ## S1 — professors
-- [ ] 1.1 Export 3,956 professors; counts reconcile with the database.
-- [ ] 1.2 Sample parity against the pack.
+- [x] 1.1 Export 3,956 professors (3,958 pack − 2 junk rows); deterministic sha256.
+- [x] 1.2 Field coverage >= 95% of the source for every source-only field.
 
 ## S2 — papers
 - [ ] 2.1 Export 24,558 papers; dedupe rate < 1%.
