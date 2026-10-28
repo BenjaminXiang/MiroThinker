@@ -189,3 +189,17 @@ ok: true
 
 论文导出（24,558 篇）：同样三方合并（库 > 源包 > pack），源包字段对照见
 `staging-v4` 的 paper 源；论文没有 `PROF-…` 式的 id 映射问题（源/库用同名 `paper_id` 家族？需确认）。
+
+### 决定（2026-10-28）：纳入源包独有的 164 位
+
+导出改为**并集**：pack 有的 + 源包有但 pack 没有的。
+
+```text
+{"rows": 4102, "pack": 3958, "source_only_added": 146, "dropped_without_summary": 2,
+ "sha256": "727039b7…"}
+shape_errors: 0 | coverage_regressions: {} | ok: true
+```
+
+- 146 条成功纳入（164 中 16 条没有简介、2 条是垃圾记录，均已计数丢弃）；
+- 两次导出 sha256 一致；
+- 重建后这些教授会进入 pack，成为可检索记录。
