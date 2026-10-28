@@ -1338,3 +1338,29 @@ Semantic Scholar 429、**ORCID 公共 API 200**（返回 ORCID iD + 姓名，ins
 - 机构：`missing affiliations: 0`；
 - 状态：`pack_gap.state=ok, ok=true`，四域计数如上；
 - 服务健康 200。
+
+## 第 40 轮 · 2026-10-28 09:40 CST · P4 排期：构建从库导出
+
+### 做了什么
+
+1. 摸清构建的源契约：`source-manifest` → `members[]`（member_id/batch/kind/
+   content_path/sha256/parser）→ staging → `land_released_objects` → 投影。
+2. 定方案：**导出器把库行写成同格式 `.source` 成员 + 清单片段，构建端零改动**。
+3. 拆 S0–S5（校验器先行 → 教授/论文/专利/企业导出 → 清单与 ingest 干跑 → 全量重建切包）。
+4. 登记 Standard change `build-from-collection-export` 与验收标准。
+
+### 发现了什么
+
+- 构建的源是"清单 + 带哈希成员"，**不需要改构建内部**就能换源；
+- 最大风险是 schema 形状（run16 曾连挂 8 次），所以第一片必须是**校验器**，
+  用真实 mapper 在秒级反馈，而不是拿 20 小时构建去试错。
+
+### 评估与决定
+
+**评估**：P4 可行，且能保住可复现性与回滚。
+
+**决定**：按 S0 起步（导出器骨架 + 校验器），通过后再逐域导出。
+
+### 怎么验证
+
+- 设计文档 §4 的验收表；S0 的验收是"每域 100 条样本全过 mapper"。
