@@ -1,0 +1,59 @@
+{
+  "session_id": "probe:lane-watch",
+  "turn_id": "turn:chat:sha256:fb45fff46b2c62feffe71ad5bb65b4cc78ece50c37a41d9e54b067e527b50071",
+  "turn_count": 1151,
+  "query": "本地知识库收录了优必选多少专利",
+  "planned_displayed_ids": [],
+  "recalled_handles": [],
+  "evidence_items": {
+    "total": 0,
+    "by_domain": {},
+    "by_lane": {},
+    "by_source_nature": {},
+    "with_claim_binding": 0
+  },
+  "protected_slots": [
+    {
+      "kind": "displayed_entity_set",
+      "value": "displayed_entity_set",
+      "entity_ids": [
+        "company-c-c4b02d6a3e3ff20804d96024"
+      ]
+    }
+  ],
+  "requested_traversal": null,
+  "admitted_claims": {
+    "total": 0,
+    "by_predicate": {},
+    "by_claim_type": {},
+    "patent_evidence_claims": 0
+  },
+  "committed_handle_ids": [],
+  "committed_names": [],
+  "render_mode": "prose_renderer",
+  "response_mode": "answer",
+  "citations": 0,
+  "answer_chars": 206,
+  "lane_timings": [
+    [
+      "structured",
+      0.102
+    ],
+    [
+      "vector",
+      0.131
+    ],
+    [
+      "exact",
+      0.243
+    ],
+    [
+      "lexical",
+      0.232
+    ],
+    [
+      "web",
+      10.756
+    ]
+  ]
+}

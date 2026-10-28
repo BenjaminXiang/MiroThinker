@@ -1,0 +1,156 @@
+{
+  "session_id": "probe:lane-watch",
+  "turn_id": "turn:chat:sha256:681970254b08e775d330221f46745ecd8ccd1ef7f8a0ad91df4d3768d1ea24fc",
+  "turn_count": 1172,
+  "query": "目前主流的JEPA（联合嵌入预测架构）变体有哪些",
+  "planned_displayed_ids": [],
+  "recalled_handles": [
+    {
+      "id": "web-handle:sha256:348f560a85c0639161d4380b9518f810338186cbbd5f1ea400123f9449e7b921",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "Dynamic LeJEPA: Maximum Entropy Representations for Sequential Prediction and Latent Planning with Theoretical Guarantees | Research Square"
+    },
+    {
+      "id": "web-handle:sha256:810f43642460b5fb1de10ef0eb658044d28ab59e40c5579e116f5dcff6e962af",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "虚拟细胞每日研究进展2026-10-03医药新闻-ByDrug-一站式医药资源共享中心-医药魔方"
+    },
+    {
+      "id": "web-handle:sha256:131ebdb25a0c569848ba6d6194e2411ef137cdfbf02a23332fcc244dc108ca15",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "RoboJEPA:扩展机器人潜在世界模型 - 今日头条"
+    },
+    {
+      "id": "web-handle:sha256:3ec2d3dcbed604076b41ffd939dd3a4dcf6f99bed7aac2792372bb3f1b1682ea",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "Predictive Closure: A Set-Level Characterization of JEPA's Feature Selection - 智源社区论文"
+    },
+    {
+      "id": "web-handle:sha256:72b121a7070084cdb1644729a928c6f09d309a11170124a99e98de818ca02c23",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "什么是JEPA（联合嵌入预测架构），它与现有技术有何不同？"
+    },
+    {
+      "id": "web-handle:sha256:a1865e6a805f3cf6d7b3bb9f5a0e6310430f10632f53af40502ff9ee3b4e4e0d",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "具身智能零碎知识点(四):联合嵌入预测架构(JEPAs)详解_pytorch_墨绿色的摆渡人-DAMO开发者矩阵"
+    },
+    {
+      "id": "web-handle:sha256:624ebdc2caaa3034ebc644ef3510faadc2648110f478ad312a3eeb1484d91d5f",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "2025-107,#每日学习卡##大模型#继续学习《多模态大模型:新一代人工智能技术范式》1、联合嵌入预测结构JEPA结构如附图1所示,主要用于处理图像、..."
+    },
+    {
+      "id": "web-handle:sha256:aae99277c934d008a550dad2639c21153e08ab4a8f6002ad63123d5fdfa3ebd7",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "Yann LeCun的愿景:从文本转向下一代AI系统_工具_人工智能_技术"
+    },
+    {
+      "id": "web-handle:sha256:796d3ba4be06d4b934dbf8c1c9410072a4e84fb7f172d4c95132a24d36859cea",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "[2505.12477] Joint Embedding vs Reconstruction: Provable Benefits of Latent Space Prediction for Self Supervised Learning – arxiv"
+    },
+    {
+      "id": "web-handle:sha256:5e24680d82149203b5f540b751890d17b01a6f42d0b0d2e85b94e35ad0ea6eac",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "[2509.15470] Self-supervised learning of imaging and clinical signatures using a multimodal joint-embedding predictive architecture – arxiv"
+    },
+    {
+      "id": "web-handle:sha256:5c403748ff32620b7d03ea496ac2cf4996d0218133c36ecc7d00da7e6c8afa46",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "Improving the prediction of disease-related variants using protein three-dimensional structure  BMC Bioinformatics  Full Text"
+    },
+    {
+      "id": "web-handle:sha256:713f75d17ce4549dd67b6c013025773f170e8351b7c9fc22810620ec3f50fd37",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "Bimodal PET/MRI generative reconstruction based on VAE architectures - IOPscience"
+    },
+    {
+      "id": "web-handle:sha256:b7a2c9db43f0799b1957787d62de6bd3eacacacf87703b5964e265447d21b00e",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "【论文解读】基于图的自监督学习联合嵌入预测架构 - 合合技术团队 - 博客园"
+    },
+    {
+      "id": "web-handle:sha256:3eeafd4030ba3d1d3594f6630d78f76cebe40c8f9b7b68fc410ca9f50ff8acff",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "给JEPA装上“眼睛”和“大脑”:DSeq-JEPA实现从整体感知到有序推理的进化,多任务性能显著提升_预测_区域_图像"
+    },
+    {
+      "id": "web-handle:sha256:70ef474f6da4418f0f31d538e33edf92c270836d7acdfa06b2518535e6a7aec8",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "Meta 自监督学习 I-JEPA 论文笔记-腾讯云开发者社区-腾讯云"
+    },
+    {
+      "id": "web-handle:sha256:fb82b816c6b516383ce745b30b2ac151a5245f5235563e4404296e137024840a",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "【论文解读】基于图的自监督学习联合嵌入预测架构-人工智能-PHP中文网"
+    }
+  ],
+  "evidence_items": {
+    "total": 16,
+    "by_domain": {
+      "professor": 16
+    },
+    "by_lane": {
+      "web": 16
+    },
+    "by_source_nature": {
+      "current_web": 16
+    },
+    "with_claim_binding": 16
+  },
+  "protected_slots": [],
+  "requested_traversal": null,
+  "admitted_claims": {
+    "total": 6,
+    "by_predicate": {
+      "current_web_result": 6
+    },
+    "by_claim_type": {
+      "material_fact": 6
+    },
+    "patent_evidence_claims": 0
+  },
+  "committed_handle_ids": [
+    "web-handle:sha256:348f560a85c0639161d4380b9518f810338186cbbd5f1ea400123f9449e7b921",
+    "web-handle:sha256:810f43642460b5fb1de10ef0eb658044d28ab59e40c5579e116f5dcff6e962af",
+    "web-handle:sha256:131ebdb25a0c569848ba6d6194e2411ef137cdfbf02a23332fcc244dc108ca15",
+    "web-handle:sha256:b7a2c9db43f0799b1957787d62de6bd3eacacacf87703b5964e265447d21b00e",
+    "web-handle:sha256:3eeafd4030ba3d1d3594f6630d78f76cebe40c8f9b7b68fc410ca9f50ff8acff",
+    "web-handle:sha256:70ef474f6da4418f0f31d538e33edf92c270836d7acdfa06b2518535e6a7aec8"
+  ],
+  "committed_names": [
+    "Dynamic LeJEPA: Maximum Entropy Representations for Sequential Prediction and Latent Planning with Theoretical Guarantees | Research Square",
+    "虚拟细胞每日研究进展2026-10-03医药新闻-ByDrug-一站式医药资源共享中心-医药魔方",
+    "RoboJEPA:扩展机器人潜在世界模型 - 今日头条",
+    "【论文解读】基于图的自监督学习联合嵌入预测架构 - 合合技术团队 - 博客园",
+    "给JEPA装上“眼睛”和“大脑”:DSeq-JEPA实现从整体感知到有序推理的进化,多任务性能显著提升_预测_区域_图像",
+    "Meta 自监督学习 I-JEPA 论文笔记-腾讯云开发者社区-腾讯云"
+  ],
+  "render_mode": "prose_renderer",
+  "response_mode": "answer",
+  "citations": 6,
+  "answer_chars": 723,
+  "lane_timings": [
+    [
+      "web",
+      14.694
+    ]
+  ]
+}
