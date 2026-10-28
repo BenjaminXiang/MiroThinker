@@ -249,6 +249,8 @@ def main(argv: list[str] | None = None) -> int:
     rows = []
     missing_in_db = 0
     dropped_without_summary = 0
+    source_only_added = 0
+    used_source_keys: set[str] = set()
     for identifier in identifiers:
         pack_doc = pack.get(identifier)
         db_row = database.get(identifier) or {}
@@ -257,6 +259,8 @@ def main(argv: list[str] | None = None) -> int:
             continue
         key = identifier if identifier in source_rows else source_key(pack_doc)
         source_row = source_rows.get(key or "")
+        if source_row is not None and key:
+            used_source_keys.add(key)
         if source_row is None:
             name = str(pack_doc.get("name") or "").strip().lower()
             source_row = source_rows.get(f"name:{name}") if name else None
@@ -268,6 +272,28 @@ def main(argv: list[str] | None = None) -> int:
             dropped_without_summary += 1
             continue
         rows.append(source)
+
+    # Source-only professors (in the original source, absent from the pack).
+    # Decision 2026-10-28: include them — they are real records and should be
+    # searchable after the rebuild.
+    for identifier, source_row in source_rows.items():
+        if identifier.startswith("name:") or identifier in used_source_keys:
+            continue
+        source = {field: source_row.get(field) for field in PROFESSOR_SOURCE_FIELDS}
+        source["professor_id"] = identifier
+        source["enrichment_source"] = source.get("enrichment_source") or "collection-db-export"
+        source["extraction_status"] = source.get("extraction_status") or "exported"
+        db_row = database.get(identifier) or {}
+        for field in DB_OVERRIDES:
+            value = db_row.get(field)
+            if value not in (None, "", [], {}):
+                source[field] = value
+        if not source.get("profile_summary"):
+            dropped_without_summary += 1
+            continue
+        rows.append(source)
+        source_only_added += 1
+    rows.sort(key=lambda row: str(row.get("professor_id")))
 
     payload = "\n".join(
         json.dumps(row, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
@@ -282,6 +308,7 @@ def main(argv: list[str] | None = None) -> int:
         "database_only": missing_in_db,
         "source_rows": len(source_rows),
         "dropped_without_summary": dropped_without_summary,
+        "source_only_added": source_only_added,
         "sha256": digest,
         "bytes": len(payload.encode("utf-8")),
     }
