@@ -56,3 +56,45 @@ python scripts/run_company_upload_enrichment_batch.py --batch-id ba4b82e5-…
 2. **补全批次是被重启打断的**，需要单独重跑——这是"上传→可查"链路上唯一没跑完的一步；
 3. 数据已可检索（增量桥 + 重启），但画像质量要等补全；
 4. 建议把补全批次做成**服务外部的独立进程**（或用 systemd 独立单元），避免再被服务重启发版打断。
+
+---
+
+## 6. 后续处理（2026-10-28 23:10）：补全改为独立进程
+
+### 做了什么
+
+1. 写 `var/run_company_enrichment.sh`：自动挑最新未完成批次、从受管密钥取 `SERPER_API_KEY`、带 `DATABASE_URL` 启动；
+2. 新建 systemd 单元 **`miro-company-enrichment.service`**（独立于 `miro-fullstack-v2`，`Restart=on-failure`，`enable --now`）；
+3. 启动后立即续跑 `ba4b82e5`：日志 `resuming batch ba4b82e5… at 2026-10-28T23:06:30+08:00`。
+
+### 为什么这样能根治
+
+之前补全进程跑在**服务进程内部**，服务一重启（发版、改配置）补全就被杀，而批次状态仍是 `running`
+（心跳停了没人清理）。现在：
+
+- 补全是**独立 systemd 单元**，服务重启发版不再影响它；
+- 单元 `enable`，机器重启后自动续跑；
+- 脚本每次自动挑"最新未完成批次"，不需要人工传 batch id。
+
+### 怎么看进度
+
+```bash
+# 日志
+tail -f /root/deploy/fullstack-v2/var/company-enrichment.log
+
+# 批次状态分布
+docker exec miro-light-pg psql -U miroflow -d miroflow_collection_v1 -tAc \
+ "select status, count(*) from company_enrichment_company_state
+   where batch_id='ba4b82e5-ae63-4216-beb4-88c9b9e53b49' group by 1"
+```
+
+### 当前状态（23:15）
+
+| 状态 | 数量 |
+|---|---|
+| succeeded | 300 |
+| running | 20（并发处理中） |
+| queued | 2,680 |
+
+**预计**：按当前并发与单家耗时，2,680 家需要 **十几到二十几小时**。完成后新企业会有画像，
+实体快答也能覆盖它们。
