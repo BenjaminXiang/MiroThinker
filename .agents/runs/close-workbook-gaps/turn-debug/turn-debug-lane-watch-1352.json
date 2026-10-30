@@ -1,0 +1,57 @@
+{
+  "session_id": "probe:lane-watch",
+  "turn_id": "turn:chat:sha256:d294f0f86374a402b7a9e48c3f3a1322cf2ff45981b645ac65be3f2f0f3aae91",
+  "turn_count": 1352,
+  "query": "深圳科创数据平台收录了哪些教授",
+  "planned_displayed_ids": [],
+  "recalled_handles": [],
+  "evidence_items": {
+    "total": 0,
+    "by_domain": {},
+    "by_lane": {},
+    "by_source_nature": {},
+    "with_claim_binding": 0
+  },
+  "protected_slots": [
+    {
+      "kind": "geography",
+      "value": "深圳",
+      "entity_ids": []
+    }
+  ],
+  "requested_traversal": null,
+  "admitted_claims": {
+    "total": 0,
+    "by_predicate": {},
+    "by_claim_type": {},
+    "patent_evidence_claims": 0
+  },
+  "committed_handle_ids": [],
+  "committed_names": [],
+  "render_mode": "prose_renderer",
+  "response_mode": "answer",
+  "citations": 0,
+  "answer_chars": 191,
+  "lane_timings": [
+    [
+      "web",
+      20.154
+    ],
+    [
+      "structured",
+      0.0
+    ],
+    [
+      "exact",
+      0.249
+    ],
+    [
+      "vector",
+      11.281
+    ],
+    [
+      "lexical",
+      11.573
+    ]
+  ]
+}

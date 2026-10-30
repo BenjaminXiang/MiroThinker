@@ -1,0 +1,162 @@
+{
+  "session_id": "probe:lane-watch",
+  "turn_id": "turn:chat:sha256:392ae3dd87d8faf54d625910fecc8fa71399548942419cd84f391a4faf49404e",
+  "turn_count": 1332,
+  "query": "目前主流的JEPA（联合嵌入预测架构）变体有哪些",
+  "planned_displayed_ids": [],
+  "recalled_handles": [
+    {
+      "id": "web-handle:sha256:810f43642460b5fb1de10ef0eb658044d28ab59e40c5579e116f5dcff6e962af",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "虚拟细胞每日研究进展2026-10-03医药新闻-ByDrug-一站式医药资源共享中心-医药魔方"
+    },
+    {
+      "id": "web-handle:sha256:c01401c81336606e5512e97afe49188ef044476e00e442d714a1dca7d4805df6",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "H-JEPA: End-to-End Learning of Hierarchical World Models for Visual Planning - 智源社区论文"
+    },
+    {
+      "id": "web-handle:sha256:c890e3de3f63eaa032383735ec53c7e0ad0920b2bee9234d3f0d2d6943f484ea",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "H-JEPA: End-to-End Learning of Hierarchical World Models for Visual Planning - 智源社区论文"
+    },
+    {
+      "id": "web-handle:sha256:fded6a939d64f06d6f7714a02a6c43b66ab4d0c296863d2fae699c0785c78ad8",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "大模型正在改变EDA_腾讯新闻"
+    },
+    {
+      "id": "web-handle:sha256:dd180e88a3f2a2c3f1b6c9020a0014626968a2828950d45772f34dcb895fd111",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "[2602.04643] MTS-JEPA: Multi-Resolution Joint-Embedding Predictive Architecture for Time-Series Anomaly Prediction – arxiv"
+    },
+    {
+      "id": "web-handle:sha256:2908151a16688cc1d96aaa44b3538b605520d929b2bd877a615c2aa2ceab5c19",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "[2601.14354] VJEPA: Variational Joint Embedding Predictive Architectures as Probabilistic World Models – arxiv"
+    },
+    {
+      "id": "web-handle:sha256:bf71c5a94146c9bef7f1ca8ef7624490f4438638e477d0995991c510598c6ac9",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "DSeq-JEPA: Discriminative Sequential Joint-Embedding Predictive Architecture - 智源社区论文"
+    },
+    {
+      "id": "web-handle:sha256:9923fdf5708cee44af01b2e37b6185b128dbc95a96fc5cfb1eaed81c73ea5a09",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "MJEPA: A Simple and Scalable Joint-Embedding Predictive Architecture for Audio-Visual Learning - 智源社区论文"
+    },
+    {
+      "id": "web-handle:sha256:08e6d721ee9e2015e5957aed451bf2d122a4dbc6c3b84cd39377c194ac5a7ba4",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "什么是JEPA（联合嵌入预测架构），它与现有技术有何不同？"
+    },
+    {
+      "id": "web-handle:sha256:e128f415dc53ed71f6de5a0a8f8ec7a747c40cb60a85ccfc5529ac90b22df5c7",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "具身智能零碎知识点(四):联合嵌入预测架构(JEPAs)详解_pytorch_墨绿色的摆渡人-DAMO开发者矩阵"
+    },
+    {
+      "id": "web-handle:sha256:69e5563d46263644fa179282487fb90281faadf3adebd3ae5d88da260a6ac564",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "张博的博客 - 博客园"
+    },
+    {
+      "id": "web-handle:sha256:9f63e854babe9c900d71976d2a63c0598d17f604c10af8e9b3a131a7c9cfb975",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "JEPA:联合嵌入预测架构介绍 --学习笔记-CSDN博客"
+    },
+    {
+      "id": "web-handle:sha256:b7a2c9db43f0799b1957787d62de6bd3eacacacf87703b5964e265447d21b00e",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "【论文解读】基于图的自监督学习联合嵌入预测架构 - 合合技术团队 - 博客园"
+    },
+    {
+      "id": "web-handle:sha256:3eeafd4030ba3d1d3594f6630d78f76cebe40c8f9b7b68fc410ca9f50ff8acff",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "给JEPA装上“眼睛”和“大脑”:DSeq-JEPA实现从整体感知到有序推理的进化,多任务性能显著提升_预测_区域_图像"
+    },
+    {
+      "id": "web-handle:sha256:70ef474f6da4418f0f31d538e33edf92c270836d7acdfa06b2518535e6a7aec8",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "Meta 自监督学习 I-JEPA 论文笔记-腾讯云开发者社区-腾讯云"
+    },
+    {
+      "id": "web-handle:sha256:fb82b816c6b516383ce745b30b2ac151a5245f5235563e4404296e137024840a",
+      "kind": "web",
+      "domain": "professor",
+      "display_name": "【论文解读】基于图的自监督学习联合嵌入预测架构-人工智能-PHP中文网"
+    }
+  ],
+  "evidence_items": {
+    "total": 16,
+    "by_domain": {
+      "professor": 16
+    },
+    "by_lane": {
+      "web": 16
+    },
+    "by_source_nature": {
+      "current_web": 16
+    },
+    "with_claim_binding": 16
+  },
+  "protected_slots": [],
+  "requested_traversal": null,
+  "admitted_claims": {
+    "total": 10,
+    "by_predicate": {
+      "current_web_result": 10
+    },
+    "by_claim_type": {
+      "material_fact": 10
+    },
+    "patent_evidence_claims": 0
+  },
+  "committed_handle_ids": [
+    "web-handle:sha256:c01401c81336606e5512e97afe49188ef044476e00e442d714a1dca7d4805df6",
+    "web-handle:sha256:dd180e88a3f2a2c3f1b6c9020a0014626968a2828950d45772f34dcb895fd111",
+    "web-handle:sha256:2908151a16688cc1d96aaa44b3538b605520d929b2bd877a615c2aa2ceab5c19",
+    "web-handle:sha256:bf71c5a94146c9bef7f1ca8ef7624490f4438638e477d0995991c510598c6ac9",
+    "web-handle:sha256:9923fdf5708cee44af01b2e37b6185b128dbc95a96fc5cfb1eaed81c73ea5a09",
+    "web-handle:sha256:69e5563d46263644fa179282487fb90281faadf3adebd3ae5d88da260a6ac564",
+    "web-handle:sha256:b7a2c9db43f0799b1957787d62de6bd3eacacacf87703b5964e265447d21b00e",
+    "web-handle:sha256:3eeafd4030ba3d1d3594f6630d78f76cebe40c8f9b7b68fc410ca9f50ff8acff",
+    "web-handle:sha256:70ef474f6da4418f0f31d538e33edf92c270836d7acdfa06b2518535e6a7aec8"
+  ],
+  "committed_names": [
+    "H-JEPA: End-to-End Learning of Hierarchical World Models for Visual Planning - 智源社区论文",
+    "[2602.04643] MTS-JEPA: Multi-Resolution Joint-Embedding Predictive Architecture for Time-Series Anomaly Prediction – arxiv",
+    "[2601.14354] VJEPA: Variational Joint Embedding Predictive Architectures as Probabilistic World Models – arxiv",
+    "DSeq-JEPA: Discriminative Sequential Joint-Embedding Predictive Architecture - 智源社区论文",
+    "MJEPA: A Simple and Scalable Joint-Embedding Predictive Architecture for Audio-Visual Learning - 智源社区论文",
+    "张博的博客 - 博客园",
+    "【论文解读】基于图的自监督学习联合嵌入预测架构 - 合合技术团队 - 博客园",
+    "给JEPA装上“眼睛”和“大脑”:DSeq-JEPA实现从整体感知到有序推理的进化,多任务性能显著提升_预测_区域_图像",
+    "Meta 自监督学习 I-JEPA 论文笔记-腾讯云开发者社区-腾讯云"
+  ],
+  "render_mode": "prose_renderer",
+  "response_mode": "answer",
+  "citations": 10,
+  "answer_chars": 746,
+  "lane_timings": [
+    [
+      "web",
+      13.495
+    ]
+  ]
+}
